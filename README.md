@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://www.ducflair.com/assets/images/duc-lang.svg">
-  <img src="https://www.ducflair.com/assets/images/duc_logo.svg" alt="duc logo" height="70">
+  <img src="https://www.ducflair.com/assets/images/duc-lang.svg" alt="duc logo" height="70">
 </picture>
 
 ## Introduction
