@@ -1,8 +1,8 @@
 # duc File Format
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://www.ducflair.com/assets/images/duc-lang.svg">
-  <img src="https://www.ducflair.com/assets/images/duc-lang.svg" alt="duc logo" height="70">
+  <source media="(prefers-color-scheme: dark)" srcset="https://ducflair.com/assets/images/duc-lang.svg>
+  <img src="https://ducflair.com/assets/images/duc-lang.svg" alt="duc logo" height="70">
 </picture>
 
 ## Introduction
