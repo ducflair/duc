@@ -9,7 +9,7 @@
 
 Welcome to the official repository for the `duc` format! Developed by Ducflair, the .duc format is an innovative, open-source CAD file format designed to simplify and democratize design technology.
 
-## System Support 
+## Installation and Usage
 
 | | **Architecture** | **Build** |
 |---|:---:|:---:|
@@ -53,10 +53,6 @@ The .duc format is designed to cater to a diverse range of engineering and desig
 | Biomedical Engineering | - | - |
 | Energy Sector | - | - |
 | Environmental Engineering | - | - |
-
-## Installation and Usage
-
-*(No stable versions right now)*
 
 ## Contributing
 
