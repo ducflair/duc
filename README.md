@@ -1,21 +1,26 @@
 # duc File Format
 
-<table>
-<tr>
-<td>
-
-![duc logo](https://ducflair.com/assets/images/duc-lang.svg)
-
-</td>
-<td>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://ducflair.com/assets/images/duc-lang.svg">
+  <img src="https://ducflair.com/assets/images/duc-lang.svg" alt="duc logo" height="250">
+</picture>
 
 ## Introduction
 
 Welcome to the official repository for the `duc` format! Developed by Ducflair, the .duc format is an innovative, open-source CAD file format designed to simplify and democratize design technology.
 
-</td>
-</tr>
-</table>
+## System Support 
+
+| | **Architecture** | **Build** |
+|---|:---:|:---:|
+| **macOS**        | x86_64 | ❌ |
+| **Ubuntu 18.04** | x86_64 | ❌ |
+| **Ubuntu 20.04** | x86_64 | ❌ |
+| **Ubuntu 20.04** | AArch64 | ❌ |
+| **Ubuntu 22.04** | x86_64 | ❌ |
+| **Ubuntu 22.04** | AArch64 | ❌ |
+
+
 
 ## Concept
 
@@ -32,7 +37,7 @@ The .duc format is designed to cater to a diverse range of engineering and desig
 
 | Supported Project Types | Developing | Stable (Min Version) |
 | --- | --- | --- |
-| HVAC | ✅ | - |
+| HVAC | 👷‍♂️ | - |
 | Construction/Architecture | - | - |
 | Electrical | - | - |
 | Plumbing | - | - |
