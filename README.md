@@ -1,5 +1,10 @@
 # duc File Format
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://www.ducflair.com/assets/images/duc-lang.svg">
+  <img src="https://www.ducflair.com/assets/images/duc_logo.svg" alt="duc logo" height="70">
+</picture>
+
 ## Introduction
 
 Welcome to the official repository for the `duc` format! Developed by Ducflair, the .duc format is an innovative, open-source CAD file format designed to simplify and democratize design technology. 
