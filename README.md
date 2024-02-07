@@ -11,6 +11,7 @@ Welcome to the official repository for the `duc` format! Developed by Ducflair, 
 
 ## Tools
 [duc Viewer - To view content or parse to organized structure](https://view.ducflair.com)
+
 [Documentation](https://duc.ducflair.com)
 
 
