@@ -1,0 +1,52 @@
+{
+    "architecture": "architecture.svg",
+    
+    "zones": {
+        "zone-1": {
+            "name": "Extraction",
+            "description": "This is zone 1",
+
+            "units": {
+                "unit-1": {
+                    "name": "Tube",
+                    "reference": "zone-1/unit-1/tube.svg",
+                    "size": {
+                        "diametre": 100,
+                        "length": 200
+                    },
+
+                    "components": {
+                        "component-1": {
+                            "name": "Fan",
+                            "reference": "zone-1/unit-1/component-1/fan.svg",
+                            "size": {
+                                "diametre": 100,
+                                "length": 200
+                            }
+                        },
+                        "component-2": {
+                            "name": "Filter",
+                            "reference": "zone-1/unit-1/component-2/filter.svg",
+                            "size": {
+                                "diametre": 100,
+                                "length": 200
+                            }
+                        }
+                    }
+                },
+                "unit-2": {
+                    "name": "Extraction Fan",
+                    "description": "This is unit 2"
+                }
+            }
+        },
+        "zone-2": {
+            "name": "Air Conditioning",
+            "description": "This is zone 2"
+        },
+        "zone-3": {
+            "name": "Master",
+            "description": "This is zone 3"
+        }
+    }
+}
