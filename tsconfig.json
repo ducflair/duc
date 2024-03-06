@@ -1,0 +1,16 @@
+{
+    "exclude": [
+        "node_modules",
+        "dist",
+    ],
+    "compilerOptions": {
+        "lib": ["ESNext"],
+        "target": "esnext",
+        "module": "esnext",
+        "outDir": "dist",
+        "moduleDetection": "force",
+        "strict": true,
+        "skipLibCheck": true,
+        "declaration": true
+    }
+}
