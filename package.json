@@ -1,0 +1,19 @@
+{
+    "name": "@duc",
+    "private": "false",
+    "version": "0.0.1",
+    "author": "Ducflair",
+    "main": "dist/index.js",
+    "type": "module",
+    "types": "dist/types.d.ts",
+    "files": [
+        "src/typescript",
+        "README.md"
+    ],
+    "devDependencies": {
+        "typescript": "^5.3.3"
+    },
+    "scripts": {
+        "build": "npx tsc"
+    }
+}
