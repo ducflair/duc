@@ -1,9 +1,6 @@
 # Duc CAD File Format
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://ducflair-test-s3.s3.eu-west-2.amazonaws.com/docs/duc-lang.svg">
-  <img src="https://ducflair-public.s3.eu-west-2.amazonaws.com/docs/duc-extended.svg" alt="duc logo" height="250">
-</picture>
+<img src="https://ducflair-public.s3.eu-west-2.amazonaws.com/docs/duc-extended.svg" alt="duc logo" height="250">
 
 ## Introduction
 
@@ -12,8 +9,7 @@ The `duc` 2D CAD file format is a cornerstone of our advanced design system, con
 The `Core Library` and file format are a fork from [Excalidraw](https://github.com/excalidraw/excalidraw) at the [v0.17.3 Version](https://github.com/excalidraw/excalidraw/releases/tag/v0.17.3), we thank them for the amazing work they invested, it gave us a great base to build on top of.
 
 ## Tools
-[Documentation](https://duc.ducflair.com)
-[Playground](https://ducflair.com/core)
+[Documentation](https://duc.ducflair.com) | [Playground](https://ducflair.com/core)
 
 
 ## Market Insights
@@ -31,7 +27,7 @@ The project is licensed under the MIT License. See the [LICENSE](./LICENSE) file
 
 ## Community and Support
 
-Join our growing community to discuss, collaborate, and share insights about the .duc format. Connect with us on [Platform](https://www.notion.so/URL) or follow our [Social Media](https://www.notion.so/URL) for the latest updates. For support, feel free to open an issue or contact us at [Email](https://www.notion.so/URL).
+Join our growing community to discuss, collaborate, and share insights about the duc format. Connect with us on [Ducflair Community](https://www.ducflair/community) or follow our [Social Media](https://www.ducflair.com/socials) for the latest updates. For support, feel free to open an issue or contact us at [Feedback](https://www.ducflair.com/feedback).
 
 ---
 
