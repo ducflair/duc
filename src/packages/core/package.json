@@ -1,5 +1,5 @@
 {
-  "name": "@repo/core",
+  "name": "@ducflair/core",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
