@@ -116,6 +116,7 @@
   "scripts": {
     "gen:types": "rm -rf types && tsc",
     "build:esm": "rm -rf dist && node ../scripts/buildPackage.js && bun run gen:types",
+    "build": "bun run build:esm",
     "pack": "bun run build:umd && bun run pack",
     "start": "node ../scripts/buildExample.mjs && vite",
     "build:example": "node ../scripts/buildExample.mjs",
