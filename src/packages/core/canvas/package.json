@@ -1,14 +1,14 @@
 {
   "name": "@ducflair/canvas",
   "private": true,
-  "version": "0.17.1",
+  "version": "1.0.0",
   "main": "./dist/prod/index.js",
   "type": "module",
   "module": "./dist/prod/index.js",
   "exports": {
     ".": {
       "development": "./dist/dev/index.js",
-      "types": "./dist/excalidraw/index.d.ts",
+      "types": "./dist/canvas/index.d.ts",
       "default": "./dist/prod/index.js"
     },
     "./index.css": {
@@ -16,7 +16,7 @@
       "default": "./dist/prod/index.css"
     }
   },
-  "types": "./dist/excalidraw/index.d.ts",
+  "types": "./dist/canvas/index.d.ts",
   "files": [
     "dist/*",
     "dist"
@@ -115,7 +115,8 @@
   },
   "scripts": {
     "gen:types": "rm -rf types && tsc",
-    "build:esm": "rm -rf dist && node ../scripts/buildPackage.js && bun run gen:types",
+    "build:esm": "rm -rf dist && bun run ../scripts/buildPackage.js && bun run gen:types",
+    "build": "bun run build:esm",
     "pack": "bun run build:umd && bun run pack",
     "start": "node ../scripts/buildExample.mjs && vite",
     "build:example": "node ../scripts/buildExample.mjs",
