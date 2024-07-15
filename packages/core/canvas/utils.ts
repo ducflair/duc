@@ -383,6 +383,7 @@ export const updateActiveTool = (
     };
   }
 
+  
   return {
     ...appState.activeTool,
     lastActiveTool:
