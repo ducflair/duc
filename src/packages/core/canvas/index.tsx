@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { InitializeApp } from "./components/InitializeApp";
-import App from "./components/App";
+import App, { useAppProps } from "./components/App";
 import { isShallowEqual } from "./utils";
 
 import "./css/app.scss";
@@ -246,7 +246,6 @@ export {
 } from "./element/mutateElement";
 
 export { parseLibraryTokensFromUrl, useHandleLibrary } from "./data/library";
-
 export {
   sceneCoordsToViewportCoords,
   viewportCoordsToSceneCoords,

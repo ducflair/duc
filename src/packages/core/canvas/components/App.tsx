@@ -701,6 +701,7 @@ class App extends React.Component<AppProps, AppState> {
           exportToDuc: this.exportToDuc,
           openFile: this.openFile,
         },
+        state: useApp,
         elements: {
           getSceneElementsIncludingDeleted: this.getSceneElementsIncludingDeleted,
           getSceneElements: this.getSceneElements,
