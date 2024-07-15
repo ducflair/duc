@@ -663,6 +663,7 @@ export interface DucImperativeAPI {
     setActiveTool: InstanceType<typeof App>["setActiveTool"];
     setBackgroundColor: (color: string) => void;
   };
+  state: () => AppClassProperties
   elements: {
     getSceneElements: InstanceType<typeof App>["getSceneElements"];
     getElementById: InstanceType<typeof App>["getElementById"];
