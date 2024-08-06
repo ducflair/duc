@@ -1,0 +1,378 @@
+// Official FlatBuffers Compiler: https://flatbuffers.ar.je/ 
+
+namespace Duc;
+
+
+
+
+// /////////////////////
+
+// Point type
+table Point {
+  x: float;
+  y: float;
+}
+
+// Supporting types
+table PointBinding {
+  elementId: string;
+  focus: float;
+  gap: float;
+}
+
+// Define a union for DucElement types
+union DucElementUnion { 
+  DucSelectionElement, 
+  DucRectangleElement, 
+  DucDiamondElement, 
+  DucEllipseElement, 
+  DucTextElement,
+  DucLinearElement,
+  DucFreeDrawElement,
+  DucImageElement,
+  DucFrameElement,
+  DucGroupElement,
+  DucMagicFrameElement,
+  DucIframeElement,
+  DucEmbeddableElement 
+}
+
+union DucFrameLikeElement {
+  DucFrameElement,
+  DucMagicFrameElement
+}
+
+// Base table for DucElement with common fields
+table DucElement {
+  id: string;
+  x: float;
+  y: float;
+  scope: string;  // Assuming SupportedMeasures as string
+  writingLayer: string;  // Assuming WritingLayers as string
+  label: string;
+  ratioLocked: bool;
+  isVisible: bool;
+  fillStyle: string;  // Assuming FillStyle as string
+  roughness: int;
+  roundnessType: string; // Assuming StrokeRoundness as string
+  roundnessValue: int;  // Optional int
+  backgroundColor: string;
+  strokeColor: string;
+  strokeWidth: int;
+  strokeStyle: string;  // Assuming StrokeStyle as string
+  strokePlacement: string;  // Assuming StrokePlacement as string
+  opacity: float;
+  width: float;
+  height: float;
+  angle: float;
+  seed: int;
+  version: int;
+  versionNonce: int;
+  isDeleted: bool;
+  groupIds: [string];  // Vector of GroupId
+  frameId: string;
+  boundElements: [BoundElement];  // Vector of bound elements
+  updated: long;
+  link: string;
+  locked: bool;
+  customData: string;  // Simplified as string
+}
+
+// Define a table for each DucElement subtype
+table DucSelectionElement {
+  base: DucElement;
+//   type: string = "selection";
+  type: string;
+}
+
+table DucRectangleElement {
+  base: DucElement;
+//   type: string = "rectangle";
+  type: string;
+}
+
+table DucDiamondElement {
+  base: DucElement;
+//   type: string = "diamond";
+  type: string;
+}
+
+table DucEllipseElement {
+  base: DucElement;
+//   type: string = "ellipse";
+  type: string;
+}
+
+table DucTextElement {
+  base: DucElement;
+//   type: string = "text";
+  type: string;
+  fontSize: int;
+  fontFamily: string;  // Assuming FontFamilyValues as string
+  text: string;
+  textAlign: string;  // Assuming TextAlign as string
+  verticalAlign: string;  // Assuming VerticalAlign as string
+  containerId: string;
+  originalText: string;
+  lineHeight: float;  // Assuming float for unitless line height
+}
+
+table DucLinearElement {
+  base: DucElement;
+//   type: string = "line";
+  type: string;
+  points: [Point];
+  lastCommittedPoint: Point;
+  startBinding: PointBinding;
+  endBinding: PointBinding;
+  startArrowhead: string;  // Assuming Arrowhead as string
+  endArrowhead: string;
+}
+
+table DucFreeDrawElement {
+  base: DucElement;
+//   type: string = "freedraw";
+  type: string;
+  points: [Point];
+  pressures: [float];
+  simulatePressure: bool;
+  lastCommittedPoint: Point;
+}
+
+table DucImageElement {
+  base: DucElement;
+//   type: string = "image";
+  type: string;
+  fileId: string;
+  status: string;  // "pending", "saved", or "error"
+  scale: [float];  // Vector of two floats
+}
+
+table DucFrameElement {
+  base: DucElement;
+//   type: string = "frame";
+  type: string;
+  isCollapsed: bool;
+  name: string;
+}
+
+table DucGroupElement {
+  base: DucElement;
+//   type: string = "group";
+  type: string;
+  isCollapsed: bool;
+  groupIdRef: string;
+}
+
+table DucMagicFrameElement {
+  base: DucElement;
+//   type: string = "magicframe";
+  type: string;
+  isCollapsed: bool;
+  name: string;
+}
+
+table DucIframeElement {
+  base: DucElement;
+//   type: string = "iframe";
+  type: string;
+  customData: string;  // Simplified as string
+}
+
+table DucEmbeddableElement {
+  base: DucElement;
+//   type: string = "embeddable";
+  type: string;
+}
+
+// Define a table for BoundElement used in DucElement
+table BoundElement {
+  id: string;
+  type: string;  // "arrow" or "text"
+}
+
+// NonDeletedDucElement table to ensure isDeleted is always false
+table NonDeletedDucElement {
+  element: DucElementUnion;
+  isDeleted: bool = false;
+}
+
+// /////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// /////////////////////
+
+
+
+
+
+table ActiveTool {
+  lastActiveTool: string;  // Placeholder
+  locked: bool;
+}
+
+
+table DucGroup {
+  id: string;
+//   type: string = "group";
+  type: string;
+  isCollapsed: bool;
+  label: string;
+  scope: string;
+  writingLayer: string;
+}
+
+
+table UserToFollow {
+  socketId: string;
+  username: string;
+}
+
+table AppState {
+  showWelcomeScreen: bool;
+  isLoading: bool;
+  errorMessage: string;
+  activeEmbeddableElement: NonDeletedDucElement;
+  activeEmbeddableState: string;
+  draggingElement: NonDeletedDucElement;
+  resizingElement: NonDeletedDucElement;
+  multiElement: DucLinearElement;
+  selectionElement: NonDeletedDucElement;
+  frameToHighlight: DucFrameLikeElement;
+  frameRenderingEnabled: bool;
+  frameRenderingName: bool;
+  frameRenderingOutline: bool;
+  frameRenderingClip: bool;
+  editingFrame: string;
+  elementsToHighlight: [NonDeletedDucElement];
+  editingElement: NonDeletedDucElement;
+//   editingLinearElement: LinearElementEditor;
+  activeTool: ActiveTool;
+  penMode: bool;
+  penDetected: bool;
+  exportBackground: bool;
+  exportEmbedScene: bool;
+  exportWithDarkMode: bool;
+  exportScale: float;
+  currentItemStrokeColor: string;
+  currentItemBackgroundColor: string;
+  currentItemFillStyle: string;
+  currentItemStrokeWidth: int;
+  currentItemStrokeStyle: string;
+  currentItemRoughness: int;
+  currentItemOpacity: float;
+  currentItemFontFamily: string;
+  currentItemFontSize: int;
+  currentItemTextAlign: string;
+  currentItemStartArrowhead: string;
+  currentItemEndArrowhead: string;
+  currentItemRoundness: string;
+  viewBackgroundColor: string;
+  scope: string;
+  writingLayer: string;
+  groups: [DucGroup];
+  scrollX: float;
+  scrollY: float;
+  cursorButton: string;
+  scrolledOutside: bool;
+  name: string;
+  isResizing: bool;
+  isRotating: bool;
+  zoom: float;
+//   openMenu: string;
+//   openPopup: string;
+//   openSidebar: Sidebar;
+//   openDialog: Dialog;
+//   defaultSidebarDockedPreference: bool;
+  lastPointerDownWith: string;
+  selectedElementIds: [string];
+  previousSelectedElementIds: [string];
+  selectedElementsAreBeingDragged: bool;
+  shouldCacheIgnoreZoom: bool;
+//   toast: Toast;
+  zenModeEnabled: bool;
+//   theme: string;
+  gridSize: int;
+  viewModeEnabled: bool;
+  selectedGroupIds: [string];
+  editingGroupId: string;
+  width: int;
+  height: int;
+  offsetTop: int;
+  offsetLeft: int;
+  fileHandle: string;  // Placeholder
+  collaborators: [string];  // Placeholder
+//   showStats: bool;
+//   currentChartType: string;
+  pasteDialogShown: bool;
+  pasteDialogData: string;
+  pendingImageElementId: string;
+  showHyperlinkPopup: string;
+//   selectedLinearElement: LinearElementEditor;
+//   snapLines: [SnapLine];
+  originSnapOffsetX: float;
+  originSnapOffsetY: float;
+  objectsSnapModeEnabled: bool;
+  userToFollow: UserToFollow;
+  followedBy: [string];
+}
+
+
+// /////////////////////
+
+
+
+
+// Define the BinaryFileData table
+table BinaryFileData {
+  mimeType: string;
+  id: string;
+  data: [ubyte];  // Binary data as a vector of unsigned bytes
+  created: long;
+  lastRetrieved: long;  // Optional field, default value can be used
+}
+
+// Define a table to hold the BinaryFiles mapping
+table BinaryFilesEntry {
+  key: string;
+  value: BinaryFileData;
+}
+
+table BinaryFiles {
+  entries: [BinaryFilesEntry];
+}
+
+// /////////////////////
+
+
+
+
+
+
+
+
+// Finally, define the ExportedDataState table
+table ExportedDataState {
+  type: string;
+  version: int;
+  source: string;
+  elements: [DucElement];  // Array of DucElement
+  appState: AppState;
+  files: BinaryFiles;
+}
+
+root_type ExportedDataState;
