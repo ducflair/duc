@@ -4,9 +4,9 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { AppState } from '../duc/app-state.js';
-import { BinaryFiles } from '../duc/binary-files.js';
-import { DucElement } from '../duc/duc-element.js';
+import { AppState } from '../duc/app-state';
+import { BinaryFiles } from '../duc/binary-files';
+import { DucElement } from '../duc/duc-element';
 
 
 export class ExportedDataState {

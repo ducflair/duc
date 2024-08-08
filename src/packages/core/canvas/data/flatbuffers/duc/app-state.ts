@@ -4,12 +4,11 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { ActiveTool } from '../duc/active-tool.js';
-import { DucElement } from '../duc/duc-element.js';
-import { DucFrameLikeElement, unionToDucFrameLikeElement, unionListToDucFrameLikeElement } from '../duc/duc-frame-like-element.js';
-import { DucGroup } from '../duc/duc-group.js';
-import { DucLinearElement } from '../duc/duc-linear-element.js';
-import { UserToFollow } from '../duc/user-to-follow.js';
+import { ActiveTool } from '../duc/active-tool';
+import { DucElement } from '../duc/duc-element';
+import { DucFrameLikeElement, unionToDucFrameLikeElement, unionListToDucFrameLikeElement } from '../duc/duc-frame-like-element';
+import { DucGroup } from '../duc/duc-group';
+import { DucLinearElement } from '../duc/duc-linear-element';
 
 
 export class AppState {
@@ -402,85 +401,42 @@ offsetLeft():number {
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-fileHandle():string|null
-fileHandle(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-fileHandle(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 126);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-collaborators(index: number):string
-collaborators(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
-collaborators(index: number,optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 128);
-  return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
-}
-
-collaboratorsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 128);
-  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-}
-
 pasteDialogShown():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 130);
+  const offset = this.bb!.__offset(this.bb_pos, 126);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 pasteDialogData():string|null
 pasteDialogData(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 pasteDialogData(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 132);
+  const offset = this.bb!.__offset(this.bb_pos, 128);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 pendingImageElementId():string|null
 pendingImageElementId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 pendingImageElementId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 134);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-showHyperlinkPopup():string|null
-showHyperlinkPopup(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-showHyperlinkPopup(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 136);
+  const offset = this.bb!.__offset(this.bb_pos, 130);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 originSnapOffsetX():number {
-  const offset = this.bb!.__offset(this.bb_pos, 138);
+  const offset = this.bb!.__offset(this.bb_pos, 132);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
 originSnapOffsetY():number {
-  const offset = this.bb!.__offset(this.bb_pos, 140);
+  const offset = this.bb!.__offset(this.bb_pos, 134);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
 objectsSnapModeEnabled():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 142);
+  const offset = this.bb!.__offset(this.bb_pos, 136);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
-userToFollow(obj?:UserToFollow):UserToFollow|null {
-  const offset = this.bb!.__offset(this.bb_pos, 144);
-  return offset ? (obj || new UserToFollow()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
-followedBy(index: number):string
-followedBy(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
-followedBy(index: number,optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 146);
-  return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
-}
-
-followedByLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 146);
-  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-}
-
 static startAppState(builder:flatbuffers.Builder) {
-  builder.startObject(72);
+  builder.startObject(67);
 }
 
 static addIsLoading(builder:flatbuffers.Builder, isLoading:boolean) {
@@ -787,72 +743,28 @@ static addOffsetLeft(builder:flatbuffers.Builder, offsetLeft:number) {
   builder.addFieldInt32(60, offsetLeft, 0);
 }
 
-static addFileHandle(builder:flatbuffers.Builder, fileHandleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(61, fileHandleOffset, 0);
-}
-
-static addCollaborators(builder:flatbuffers.Builder, collaboratorsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(62, collaboratorsOffset, 0);
-}
-
-static createCollaboratorsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
-  for (let i = data.length - 1; i >= 0; i--) {
-    builder.addOffset(data[i]!);
-  }
-  return builder.endVector();
-}
-
-static startCollaboratorsVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(4, numElems, 4);
-}
-
 static addPasteDialogShown(builder:flatbuffers.Builder, pasteDialogShown:boolean) {
-  builder.addFieldInt8(63, +pasteDialogShown, +false);
+  builder.addFieldInt8(61, +pasteDialogShown, +false);
 }
 
 static addPasteDialogData(builder:flatbuffers.Builder, pasteDialogDataOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(64, pasteDialogDataOffset, 0);
+  builder.addFieldOffset(62, pasteDialogDataOffset, 0);
 }
 
 static addPendingImageElementId(builder:flatbuffers.Builder, pendingImageElementIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(65, pendingImageElementIdOffset, 0);
-}
-
-static addShowHyperlinkPopup(builder:flatbuffers.Builder, showHyperlinkPopupOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(66, showHyperlinkPopupOffset, 0);
+  builder.addFieldOffset(63, pendingImageElementIdOffset, 0);
 }
 
 static addOriginSnapOffsetX(builder:flatbuffers.Builder, originSnapOffsetX:number) {
-  builder.addFieldFloat32(67, originSnapOffsetX, 0.0);
+  builder.addFieldFloat32(64, originSnapOffsetX, 0.0);
 }
 
 static addOriginSnapOffsetY(builder:flatbuffers.Builder, originSnapOffsetY:number) {
-  builder.addFieldFloat32(68, originSnapOffsetY, 0.0);
+  builder.addFieldFloat32(65, originSnapOffsetY, 0.0);
 }
 
 static addObjectsSnapModeEnabled(builder:flatbuffers.Builder, objectsSnapModeEnabled:boolean) {
-  builder.addFieldInt8(69, +objectsSnapModeEnabled, +false);
-}
-
-static addUserToFollow(builder:flatbuffers.Builder, userToFollowOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(70, userToFollowOffset, 0);
-}
-
-static addFollowedBy(builder:flatbuffers.Builder, followedByOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(71, followedByOffset, 0);
-}
-
-static createFollowedByVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
-  for (let i = data.length - 1; i >= 0; i--) {
-    builder.addOffset(data[i]!);
-  }
-  return builder.endVector();
-}
-
-static startFollowedByVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(4, numElems, 4);
+  builder.addFieldInt8(66, +objectsSnapModeEnabled, +false);
 }
 
 static endAppState(builder:flatbuffers.Builder):flatbuffers.Offset {

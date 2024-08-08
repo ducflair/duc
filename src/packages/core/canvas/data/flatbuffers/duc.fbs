@@ -40,6 +40,7 @@ union DucFrameLikeElement {
 // Base table for DucElement with common fields
 table DucElement {
   id: string;
+  type: string;  // "text", "line", "freedraw", "image", "frame", "group", "magicframe", "iframe"
   x: float;
   y: float;
   scope: string;  // Assuming SupportedMeasures as string
@@ -269,21 +270,21 @@ table AppState {
   height: int;
   offsetTop: int;
   offsetLeft: int;
-  fileHandle: string;  // Placeholder
-  collaborators: [string];  // Placeholder
+  // fileHandle: string;  // Placeholder
+  // collaborators: [string];  // Placeholder
 //   showStats: bool;
 //   currentChartType: string;
   pasteDialogShown: bool;
   pasteDialogData: string;
   pendingImageElementId: string;
-  showHyperlinkPopup: string;
+  // showHyperlinkPopup: string;
 //   selectedLinearElement: LinearElementEditor;
 //   snapLines: [SnapLine];
   originSnapOffsetX: float;
   originSnapOffsetY: float;
   objectsSnapModeEnabled: bool;
-  userToFollow: UserToFollow;
-  followedBy: [string];
+  // userToFollow: UserToFollow;
+  // followedBy: [string];
 }
 
 
