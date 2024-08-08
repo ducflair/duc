@@ -30,64 +30,53 @@ base(obj?:DucElement):DucElement|null {
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-type():string|null
-type(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-type(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
 fileId():string|null
 fileId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 fileId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
+  const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 status():string|null
 status(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 status(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
+  const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 scale(index: number):number|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
+  const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? this.bb!.readFloat32(this.bb!.__vector(this.bb_pos + offset) + index * 4) : 0;
 }
 
 scaleLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
+  const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 scaleArray():Float32Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
+  const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? new Float32Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
 }
 
 static startDucImageElement(builder:flatbuffers.Builder) {
-  builder.startObject(5);
+  builder.startObject(4);
 }
 
 static addBase(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset) {
   builder.addFieldOffset(0, baseOffset, 0);
 }
 
-static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, typeOffset, 0);
-}
-
 static addFileId(builder:flatbuffers.Builder, fileIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, fileIdOffset, 0);
+  builder.addFieldOffset(1, fileIdOffset, 0);
 }
 
 static addStatus(builder:flatbuffers.Builder, statusOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, statusOffset, 0);
+  builder.addFieldOffset(2, statusOffset, 0);
 }
 
 static addScale(builder:flatbuffers.Builder, scaleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, scaleOffset, 0);
+  builder.addFieldOffset(3, scaleOffset, 0);
 }
 
 static createScaleVector(builder:flatbuffers.Builder, data:number[]|Float32Array):flatbuffers.Offset;
@@ -112,10 +101,9 @@ static endDucImageElement(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createDucImageElement(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset, typeOffset:flatbuffers.Offset, fileIdOffset:flatbuffers.Offset, statusOffset:flatbuffers.Offset, scaleOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createDucImageElement(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset, fileIdOffset:flatbuffers.Offset, statusOffset:flatbuffers.Offset, scaleOffset:flatbuffers.Offset):flatbuffers.Offset {
   DucImageElement.startDucImageElement(builder);
   DucImageElement.addBase(builder, baseOffset);
-  DucImageElement.addType(builder, typeOffset);
   DucImageElement.addFileId(builder, fileIdOffset);
   DucImageElement.addStatus(builder, statusOffset);
   DucImageElement.addScale(builder, scaleOffset);

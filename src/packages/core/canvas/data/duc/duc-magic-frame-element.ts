@@ -30,43 +30,32 @@ base(obj?:DucElement):DucElement|null {
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-type():string|null
-type(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-type(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
 isCollapsed():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
+  const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 name():string|null
 name(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 name(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
+  const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 static startDucMagicFrameElement(builder:flatbuffers.Builder) {
-  builder.startObject(4);
+  builder.startObject(3);
 }
 
 static addBase(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset) {
   builder.addFieldOffset(0, baseOffset, 0);
 }
 
-static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, typeOffset, 0);
-}
-
 static addIsCollapsed(builder:flatbuffers.Builder, isCollapsed:boolean) {
-  builder.addFieldInt8(2, +isCollapsed, +false);
+  builder.addFieldInt8(1, +isCollapsed, +false);
 }
 
 static addName(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, nameOffset, 0);
+  builder.addFieldOffset(2, nameOffset, 0);
 }
 
 static endDucMagicFrameElement(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -74,10 +63,9 @@ static endDucMagicFrameElement(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createDucMagicFrameElement(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset, typeOffset:flatbuffers.Offset, isCollapsed:boolean, nameOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createDucMagicFrameElement(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset, isCollapsed:boolean, nameOffset:flatbuffers.Offset):flatbuffers.Offset {
   DucMagicFrameElement.startDucMagicFrameElement(builder);
   DucMagicFrameElement.addBase(builder, baseOffset);
-  DucMagicFrameElement.addType(builder, typeOffset);
   DucMagicFrameElement.addIsCollapsed(builder, isCollapsed);
   DucMagicFrameElement.addName(builder, nameOffset);
   return DucMagicFrameElement.endDucMagicFrameElement(builder);

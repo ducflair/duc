@@ -32,66 +32,55 @@ base(obj?:DucElement):DucElement|null {
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-type():string|null
-type(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-type(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
 points(index: number, obj?:Point):Point|null {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
+  const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
 pointsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
+  const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 lastCommittedPoint(obj?:Point):Point|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
+  const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 startBinding(obj?:PointBinding):PointBinding|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
+  const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? (obj || new PointBinding()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 endBinding(obj?:PointBinding):PointBinding|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
+  const offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? (obj || new PointBinding()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 startArrowhead():string|null
 startArrowhead(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 startArrowhead(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 16);
+  const offset = this.bb!.__offset(this.bb_pos, 14);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 endArrowhead():string|null
 endArrowhead(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 endArrowhead(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 18);
+  const offset = this.bb!.__offset(this.bb_pos, 16);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 static startDucLinearElement(builder:flatbuffers.Builder) {
-  builder.startObject(8);
+  builder.startObject(7);
 }
 
 static addBase(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset) {
   builder.addFieldOffset(0, baseOffset, 0);
 }
 
-static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, typeOffset, 0);
-}
-
 static addPoints(builder:flatbuffers.Builder, pointsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, pointsOffset, 0);
+  builder.addFieldOffset(1, pointsOffset, 0);
 }
 
 static createPointsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -107,23 +96,23 @@ static startPointsVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addLastCommittedPoint(builder:flatbuffers.Builder, lastCommittedPointOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, lastCommittedPointOffset, 0);
+  builder.addFieldOffset(2, lastCommittedPointOffset, 0);
 }
 
 static addStartBinding(builder:flatbuffers.Builder, startBindingOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, startBindingOffset, 0);
+  builder.addFieldOffset(3, startBindingOffset, 0);
 }
 
 static addEndBinding(builder:flatbuffers.Builder, endBindingOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, endBindingOffset, 0);
+  builder.addFieldOffset(4, endBindingOffset, 0);
 }
 
 static addStartArrowhead(builder:flatbuffers.Builder, startArrowheadOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(6, startArrowheadOffset, 0);
+  builder.addFieldOffset(5, startArrowheadOffset, 0);
 }
 
 static addEndArrowhead(builder:flatbuffers.Builder, endArrowheadOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(7, endArrowheadOffset, 0);
+  builder.addFieldOffset(6, endArrowheadOffset, 0);
 }
 
 static endDucLinearElement(builder:flatbuffers.Builder):flatbuffers.Offset {
