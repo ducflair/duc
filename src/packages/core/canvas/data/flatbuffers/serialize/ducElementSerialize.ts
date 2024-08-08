@@ -1,6 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
 import { DucElement as BinDucElement } from '../duc';
-import { DucElement } from '../../element/types';
+import { DucElement } from '../../../element/types';
 
 export const serializeDucElement = (builder: flatbuffers.Builder, element: DucElement): flatbuffers.Offset => {
   const idOffset = builder.createString(element.id);
@@ -16,6 +16,7 @@ export const serializeDucElement = (builder: flatbuffers.Builder, element: DucEl
   const roundnessTypeOffset = builder.createString(String(element.roundness?.type));
   const strokeStyleOffset = builder.createString(element.strokeStyle);
   const strokePlacementOffset = builder.createString(element.strokePlacement);
+  const typeOffset = builder.createString(element.type);
 
   // Create group IDs vector
   const groupIdOffsets = element.groupIds.map(groupId => builder.createString(groupId));
@@ -24,6 +25,7 @@ export const serializeDucElement = (builder: flatbuffers.Builder, element: DucEl
 
   BinDucElement.startDucElement(builder);
   BinDucElement.addId(builder, idOffset);
+  BinDucElement.addType(builder, typeOffset);
   BinDucElement.addX(builder, element.x);
   BinDucElement.addY(builder, element.y);
   BinDucElement.addScope(builder, scopeOffset);

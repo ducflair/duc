@@ -4,9 +4,9 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { DucElement } from '../duc/duc-element.js';
-import { Point } from '../duc/point.js';
-import { PointBinding } from '../duc/point-binding.js';
+import { DucElement } from '../duc/duc-element';
+import { Point } from '../duc/point';
+import { PointBinding } from '../duc/point-binding';
 
 
 export class DucLinearElement {

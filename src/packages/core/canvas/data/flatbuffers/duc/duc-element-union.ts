@@ -2,14 +2,14 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
-import { DucFrameElement } from '../duc/duc-frame-element.js';
-import { DucFreeDrawElement } from '../duc/duc-free-draw-element.js';
-import { DucGroupElement } from '../duc/duc-group-element.js';
-import { DucIframeElement } from '../duc/duc-iframe-element.js';
-import { DucImageElement } from '../duc/duc-image-element.js';
-import { DucLinearElement } from '../duc/duc-linear-element.js';
-import { DucMagicFrameElement } from '../duc/duc-magic-frame-element.js';
-import { DucTextElement } from '../duc/duc-text-element.js';
+import { DucFrameElement } from '../duc/duc-frame-element';
+import { DucFreeDrawElement } from '../duc/duc-free-draw-element';
+import { DucGroupElement } from '../duc/duc-group-element';
+import { DucIframeElement } from '../duc/duc-iframe-element';
+import { DucImageElement } from '../duc/duc-image-element';
+import { DucLinearElement } from '../duc/duc-linear-element';
+import { DucMagicFrameElement } from '../duc/duc-magic-frame-element';
+import { DucTextElement } from '../duc/duc-text-element';
 
 
 export enum DucElementUnion {

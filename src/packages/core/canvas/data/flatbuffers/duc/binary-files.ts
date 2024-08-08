@@ -4,7 +4,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { BinaryFilesEntry } from '../duc/binary-files-entry.js';
+import { BinaryFilesEntry } from '../duc/binary-files-entry';
 
 
 export class BinaryFiles {
