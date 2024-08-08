@@ -77,13 +77,13 @@ export const saveAsJSON = async (
 ) => {
   const serialized = serializeAsJSON(elements, appState, files, "local");
   const blob = new Blob([serialized], {
-    type: MIME_TYPES.duc,
+    type: MIME_TYPES.json,
   });
 
   const fileHandle = await fileSave(blob, {
     name,
-    extension: "duc",
-    description: "Duc file",
+    extension: "json",
+    description: "Duc Debug",
     fileHandle: isImageFileHandle(appState.fileHandle)
       ? null
       : appState.fileHandle,

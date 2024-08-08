@@ -165,7 +165,7 @@ export const ALLOWED_PASTE_MIME_TYPES = ["text/plain", "text/html"] as const;
 export const MIME_TYPES = {
   json: "application/json",
   // excalidraw data
-  duc: "application/vnd.duc+json",
+  duc: "application/vnd.duc-cad",
   excalidrawlib: "application/vnd.excalidrawlib+json",
   // image-encoded excalidraw data
   "excalidraw.svg": "image/svg+xml",
@@ -184,6 +184,7 @@ export const EXPORT_IMAGE_TYPES = {
 
 export const EXPORT_DATA_TYPES = {
   duc: "duc",
+  json: "json",
   excalidrawClipboard: "excalidraw/clipboard",
   excalidrawLibrary: "excalidrawlib",
   excalidrawClipboardWithAPI: "excalidraw-api/clipboard",

@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { cleanAppStateForExport } from "../appState";
-import { IMAGE_MIME_TYPES, MIME_TYPES } from "../constants";
+import { EXPORT_DATA_TYPES, IMAGE_MIME_TYPES, MIME_TYPES } from "../constants";
 import { clearElementsForExport } from "../element";
 import { DucElement, FileId } from "../element/types";
 import { CanvasError, ImageSceneDataError } from "../errors";
@@ -12,6 +12,7 @@ import { FileSystemHandle, nativeFileSystemSupported } from "./filesystem";
 import { isValidExcalidrawData, isValidLibrary } from "./json";
 import { restore, restoreLibraryItems } from "./restore";
 import { ImportedLibraryData } from "./types";
+import { parseDucFlatBuffers } from "./flatbuffers/parse";
 
 const parseFileContents = async (blob: Blob | File) => {
   let contents: string;
@@ -75,6 +76,7 @@ export const getMimeType = (blob: Blob | string): string => {
     }
     name = blob.name || "";
   }
+
   if (/\.(excalidraw|json)$/.test(name)) {
     return MIME_TYPES.json;
   } else if (/\.png$/.test(name)) {
@@ -83,7 +85,9 @@ export const getMimeType = (blob: Blob | string): string => {
     return MIME_TYPES.jpg;
   } else if (/\.svg$/.test(name)) {
     return MIME_TYPES.svg;
-  }
+  } else if (/\.duc$/.test(name)) {
+    return MIME_TYPES.duc;
+  } 
   return "";
 };
 
@@ -121,55 +125,96 @@ export const loadSceneOrLibraryFromBlob = async (
   /** FileSystemHandle. Defaults to `blob.handle` if defined, otherwise null. */
   fileHandle?: FileSystemHandle | null,
 ) => {
-  const contents = await parseFileContents(blob);
-  let data;
-  try {
-    try {
-      data = JSON.parse(contents);
-    } catch (error: any) {
-      if (isSupportedImageFile(blob)) {
-        throw new ImageSceneDataError(
-          "Image doesn't contain scene",
-          "IMAGE_NOT_CONTAINS_SCENE_DATA",
-        );
+  const mime = getMimeType(blob);
+
+  if(mime === MIME_TYPES.duc) {
+    const { elements, appState, files } = await parseDucFlatBuffers(blob);
+    console.log("From Binary", elements, appState, files);
+
+    if (!Array.isArray(elements)) {
+      throw new Error("Parsed elements are not an array");
+    }
+
+    elements.forEach(element => {
+      if (!element || typeof element !== 'object') {
+        throw new Error("Invalid element found");
       }
-      throw error;
-    }
-    if (isValidExcalidrawData(data)) {
-      return {
-        type: MIME_TYPES.duc,
-        data: restore(
-          {
-            elements: clearElementsForExport(data.elements || []),
-            appState: {
-              theme: localAppState?.theme,
-              fileHandle: fileHandle || blob.handle || null,
-              ...cleanAppStateForExport(data.appState || {}),
-              ...(localAppState
-                ? calculateScrollCenter(data.elements || [], localAppState)
-                : {}),
-            },
-            files: data.files,
+    });
+
+    
+    return {
+      type: MIME_TYPES.duc,
+      data: restore(
+        {
+          elements: clearElementsForExport(elements),
+          appState: {
+            theme: localAppState?.theme,
+            fileHandle: fileHandle || blob.handle || null,
+            ...cleanAppStateForExport(appState),
+            ...(localAppState
+              ? calculateScrollCenter(elements, localAppState)
+              : {}),
           },
-          localAppState,
-          localElements,
-          { repairBindings: true, refreshDimensions: false },
-        ),
-      };
-    } else if (isValidLibrary(data)) {
-      return {
-        type: MIME_TYPES.excalidrawlib,
-        data,
-      };
+          files: files,
+        },
+        localAppState,
+        localElements,
+        { repairBindings: true, refreshDimensions: false },
+      ),
+    };
+    
+  } else {
+    const contents = await parseFileContents(blob);
+    let data;
+    try {
+      try {
+        data = JSON.parse(contents);
+      } catch (error: any) {
+        if (isSupportedImageFile(blob)) {
+          throw new ImageSceneDataError(
+            "Image doesn't contain scene",
+            "IMAGE_NOT_CONTAINS_SCENE_DATA",
+          );
+        }
+        throw error;
+      }
+      if (isValidExcalidrawData(data)) {
+        return {
+          type: MIME_TYPES.duc,
+          data: restore(
+            {
+              elements: clearElementsForExport(data.elements || []),
+              appState: {
+                theme: localAppState?.theme,
+                fileHandle: fileHandle || blob.handle || null,
+                ...cleanAppStateForExport(data.appState || {}),
+                ...(localAppState
+                  ? calculateScrollCenter(data.elements || [], localAppState)
+                  : {}),
+              },
+              files: data.files,
+            },
+            localAppState,
+            localElements,
+            { repairBindings: true, refreshDimensions: false },
+          ),
+        };
+      } else if (isValidLibrary(data)) {
+        return {
+          type: MIME_TYPES.excalidrawlib,
+          data,
+        };
+      }
+      throw new Error("Error: invalid file");
+    } catch (error: any) {
+      if (error instanceof ImageSceneDataError) {
+        throw error;
+      }
+      throw new Error("Error: invalid file");
     }
-    throw new Error("Error: invalid file");
-  } catch (error: any) {
-    if (error instanceof ImageSceneDataError) {
-      throw error;
-    }
-    throw new Error("Error: invalid file");
   }
 };
+
 
 export const loadFromBlob = async (
   blob: Blob,

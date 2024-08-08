@@ -2,8 +2,8 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
-import { DucFrameElement } from '../duc/duc-frame-element.js';
-import { DucMagicFrameElement } from '../duc/duc-magic-frame-element.js';
+import { DucFrameElement } from '../duc/duc-frame-element';
+import { DucMagicFrameElement } from '../duc/duc-magic-frame-element';
 
 
 export enum DucFrameLikeElement {

@@ -202,6 +202,8 @@ export type DucElement =
   | DucIframeElement
   | DucEmbeddableElement;
 
+export type DucElementTypes = DucElement["type"];
+
 export type NonDeleted<TElement extends DucElement> = TElement & {
   isDeleted: boolean;
 };

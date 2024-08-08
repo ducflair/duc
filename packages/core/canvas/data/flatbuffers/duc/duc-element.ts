@@ -4,7 +4,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { BoundElement } from '../duc/bound-element.js';
+import { BoundElement } from '../duc/bound-element';
 
 
 export class DucElement {
@@ -32,303 +32,314 @@ id(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-x():number {
+type():string|null
+type(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+type(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+x():number {
+  const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
 y():number {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
+  const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
 scope():string|null
 scope(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 scope(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
+  const offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 writingLayer():string|null
 writingLayer(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 writingLayer(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
+  const offset = this.bb!.__offset(this.bb_pos, 14);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 label():string|null
 label(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 label(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
+  const offset = this.bb!.__offset(this.bb_pos, 16);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 ratioLocked():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 16);
+  const offset = this.bb!.__offset(this.bb_pos, 18);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 isVisible():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 18);
+  const offset = this.bb!.__offset(this.bb_pos, 20);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 fillStyle():string|null
 fillStyle(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 fillStyle(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 20);
+  const offset = this.bb!.__offset(this.bb_pos, 22);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 roughness():number {
-  const offset = this.bb!.__offset(this.bb_pos, 22);
+  const offset = this.bb!.__offset(this.bb_pos, 24);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 roundnessType():string|null
 roundnessType(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 roundnessType(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 24);
+  const offset = this.bb!.__offset(this.bb_pos, 26);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 roundnessValue():number {
-  const offset = this.bb!.__offset(this.bb_pos, 26);
+  const offset = this.bb!.__offset(this.bb_pos, 28);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 backgroundColor():string|null
 backgroundColor(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 backgroundColor(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 28);
+  const offset = this.bb!.__offset(this.bb_pos, 30);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 strokeColor():string|null
 strokeColor(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 strokeColor(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 30);
+  const offset = this.bb!.__offset(this.bb_pos, 32);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 strokeWidth():number {
-  const offset = this.bb!.__offset(this.bb_pos, 32);
+  const offset = this.bb!.__offset(this.bb_pos, 34);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 strokeStyle():string|null
 strokeStyle(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 strokeStyle(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 34);
+  const offset = this.bb!.__offset(this.bb_pos, 36);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 strokePlacement():string|null
 strokePlacement(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 strokePlacement(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 36);
+  const offset = this.bb!.__offset(this.bb_pos, 38);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 opacity():number {
-  const offset = this.bb!.__offset(this.bb_pos, 38);
-  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
-}
-
-width():number {
   const offset = this.bb!.__offset(this.bb_pos, 40);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
-height():number {
+width():number {
   const offset = this.bb!.__offset(this.bb_pos, 42);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
-angle():number {
+height():number {
   const offset = this.bb!.__offset(this.bb_pos, 44);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
-seed():number {
+angle():number {
   const offset = this.bb!.__offset(this.bb_pos, 46);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
-version():number {
+seed():number {
   const offset = this.bb!.__offset(this.bb_pos, 48);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-versionNonce():number {
+version():number {
   const offset = this.bb!.__offset(this.bb_pos, 50);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-isDeleted():boolean {
+versionNonce():number {
   const offset = this.bb!.__offset(this.bb_pos, 52);
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+}
+
+isDeleted():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 54);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 groupIds(index: number):string
 groupIds(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
 groupIds(index: number,optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 54);
+  const offset = this.bb!.__offset(this.bb_pos, 56);
   return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
 }
 
 groupIdsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 54);
+  const offset = this.bb!.__offset(this.bb_pos, 56);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 frameId():string|null
 frameId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 frameId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 56);
+  const offset = this.bb!.__offset(this.bb_pos, 58);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 boundElements(index: number, obj?:BoundElement):BoundElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 58);
+  const offset = this.bb!.__offset(this.bb_pos, 60);
   return offset ? (obj || new BoundElement()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
 boundElementsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 58);
+  const offset = this.bb!.__offset(this.bb_pos, 60);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 updated():bigint {
-  const offset = this.bb!.__offset(this.bb_pos, 60);
+  const offset = this.bb!.__offset(this.bb_pos, 62);
   return offset ? this.bb!.readInt64(this.bb_pos + offset) : BigInt('0');
 }
 
 link():string|null
 link(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 link(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 62);
+  const offset = this.bb!.__offset(this.bb_pos, 64);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 locked():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 64);
+  const offset = this.bb!.__offset(this.bb_pos, 66);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 customData():string|null
 customData(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 customData(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 66);
+  const offset = this.bb!.__offset(this.bb_pos, 68);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 static startDucElement(builder:flatbuffers.Builder) {
-  builder.startObject(32);
+  builder.startObject(33);
 }
 
 static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
   builder.addFieldOffset(0, idOffset, 0);
 }
 
+static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(1, typeOffset, 0);
+}
+
 static addX(builder:flatbuffers.Builder, x:number) {
-  builder.addFieldFloat32(1, x, 0.0);
+  builder.addFieldFloat32(2, x, 0.0);
 }
 
 static addY(builder:flatbuffers.Builder, y:number) {
-  builder.addFieldFloat32(2, y, 0.0);
+  builder.addFieldFloat32(3, y, 0.0);
 }
 
 static addScope(builder:flatbuffers.Builder, scopeOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, scopeOffset, 0);
+  builder.addFieldOffset(4, scopeOffset, 0);
 }
 
 static addWritingLayer(builder:flatbuffers.Builder, writingLayerOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, writingLayerOffset, 0);
+  builder.addFieldOffset(5, writingLayerOffset, 0);
 }
 
 static addLabel(builder:flatbuffers.Builder, labelOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, labelOffset, 0);
+  builder.addFieldOffset(6, labelOffset, 0);
 }
 
 static addRatioLocked(builder:flatbuffers.Builder, ratioLocked:boolean) {
-  builder.addFieldInt8(6, +ratioLocked, +false);
+  builder.addFieldInt8(7, +ratioLocked, +false);
 }
 
 static addIsVisible(builder:flatbuffers.Builder, isVisible:boolean) {
-  builder.addFieldInt8(7, +isVisible, +false);
+  builder.addFieldInt8(8, +isVisible, +false);
 }
 
 static addFillStyle(builder:flatbuffers.Builder, fillStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(8, fillStyleOffset, 0);
+  builder.addFieldOffset(9, fillStyleOffset, 0);
 }
 
 static addRoughness(builder:flatbuffers.Builder, roughness:number) {
-  builder.addFieldInt32(9, roughness, 0);
+  builder.addFieldInt32(10, roughness, 0);
 }
 
 static addRoundnessType(builder:flatbuffers.Builder, roundnessTypeOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(10, roundnessTypeOffset, 0);
+  builder.addFieldOffset(11, roundnessTypeOffset, 0);
 }
 
 static addRoundnessValue(builder:flatbuffers.Builder, roundnessValue:number) {
-  builder.addFieldInt32(11, roundnessValue, 0);
+  builder.addFieldInt32(12, roundnessValue, 0);
 }
 
 static addBackgroundColor(builder:flatbuffers.Builder, backgroundColorOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(12, backgroundColorOffset, 0);
+  builder.addFieldOffset(13, backgroundColorOffset, 0);
 }
 
 static addStrokeColor(builder:flatbuffers.Builder, strokeColorOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(13, strokeColorOffset, 0);
+  builder.addFieldOffset(14, strokeColorOffset, 0);
 }
 
 static addStrokeWidth(builder:flatbuffers.Builder, strokeWidth:number) {
-  builder.addFieldInt32(14, strokeWidth, 0);
+  builder.addFieldInt32(15, strokeWidth, 0);
 }
 
 static addStrokeStyle(builder:flatbuffers.Builder, strokeStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(15, strokeStyleOffset, 0);
+  builder.addFieldOffset(16, strokeStyleOffset, 0);
 }
 
 static addStrokePlacement(builder:flatbuffers.Builder, strokePlacementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(16, strokePlacementOffset, 0);
+  builder.addFieldOffset(17, strokePlacementOffset, 0);
 }
 
 static addOpacity(builder:flatbuffers.Builder, opacity:number) {
-  builder.addFieldFloat32(17, opacity, 0.0);
+  builder.addFieldFloat32(18, opacity, 0.0);
 }
 
 static addWidth(builder:flatbuffers.Builder, width:number) {
-  builder.addFieldFloat32(18, width, 0.0);
+  builder.addFieldFloat32(19, width, 0.0);
 }
 
 static addHeight(builder:flatbuffers.Builder, height:number) {
-  builder.addFieldFloat32(19, height, 0.0);
+  builder.addFieldFloat32(20, height, 0.0);
 }
 
 static addAngle(builder:flatbuffers.Builder, angle:number) {
-  builder.addFieldFloat32(20, angle, 0.0);
+  builder.addFieldFloat32(21, angle, 0.0);
 }
 
 static addSeed(builder:flatbuffers.Builder, seed:number) {
-  builder.addFieldInt32(21, seed, 0);
+  builder.addFieldInt32(22, seed, 0);
 }
 
 static addVersion(builder:flatbuffers.Builder, version:number) {
-  builder.addFieldInt32(22, version, 0);
+  builder.addFieldInt32(23, version, 0);
 }
 
 static addVersionNonce(builder:flatbuffers.Builder, versionNonce:number) {
-  builder.addFieldInt32(23, versionNonce, 0);
+  builder.addFieldInt32(24, versionNonce, 0);
 }
 
 static addIsDeleted(builder:flatbuffers.Builder, isDeleted:boolean) {
-  builder.addFieldInt8(24, +isDeleted, +false);
+  builder.addFieldInt8(25, +isDeleted, +false);
 }
 
 static addGroupIds(builder:flatbuffers.Builder, groupIdsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(25, groupIdsOffset, 0);
+  builder.addFieldOffset(26, groupIdsOffset, 0);
 }
 
 static createGroupIdsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -344,11 +355,11 @@ static startGroupIdsVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addFrameId(builder:flatbuffers.Builder, frameIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(26, frameIdOffset, 0);
+  builder.addFieldOffset(27, frameIdOffset, 0);
 }
 
 static addBoundElements(builder:flatbuffers.Builder, boundElementsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(27, boundElementsOffset, 0);
+  builder.addFieldOffset(28, boundElementsOffset, 0);
 }
 
 static createBoundElementsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -364,19 +375,19 @@ static startBoundElementsVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addUpdated(builder:flatbuffers.Builder, updated:bigint) {
-  builder.addFieldInt64(28, updated, BigInt('0'));
+  builder.addFieldInt64(29, updated, BigInt('0'));
 }
 
 static addLink(builder:flatbuffers.Builder, linkOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(29, linkOffset, 0);
+  builder.addFieldOffset(30, linkOffset, 0);
 }
 
 static addLocked(builder:flatbuffers.Builder, locked:boolean) {
-  builder.addFieldInt8(30, +locked, +false);
+  builder.addFieldInt8(31, +locked, +false);
 }
 
 static addCustomData(builder:flatbuffers.Builder, customDataOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(31, customDataOffset, 0);
+  builder.addFieldOffset(32, customDataOffset, 0);
 }
 
 static endDucElement(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -384,9 +395,10 @@ static endDucElement(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createDucElement(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, x:number, y:number, scopeOffset:flatbuffers.Offset, writingLayerOffset:flatbuffers.Offset, labelOffset:flatbuffers.Offset, ratioLocked:boolean, isVisible:boolean, fillStyleOffset:flatbuffers.Offset, roughness:number, roundnessTypeOffset:flatbuffers.Offset, roundnessValue:number, backgroundColorOffset:flatbuffers.Offset, strokeColorOffset:flatbuffers.Offset, strokeWidth:number, strokeStyleOffset:flatbuffers.Offset, strokePlacementOffset:flatbuffers.Offset, opacity:number, width:number, height:number, angle:number, seed:number, version:number, versionNonce:number, isDeleted:boolean, groupIdsOffset:flatbuffers.Offset, frameIdOffset:flatbuffers.Offset, boundElementsOffset:flatbuffers.Offset, updated:bigint, linkOffset:flatbuffers.Offset, locked:boolean, customDataOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createDucElement(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, typeOffset:flatbuffers.Offset, x:number, y:number, scopeOffset:flatbuffers.Offset, writingLayerOffset:flatbuffers.Offset, labelOffset:flatbuffers.Offset, ratioLocked:boolean, isVisible:boolean, fillStyleOffset:flatbuffers.Offset, roughness:number, roundnessTypeOffset:flatbuffers.Offset, roundnessValue:number, backgroundColorOffset:flatbuffers.Offset, strokeColorOffset:flatbuffers.Offset, strokeWidth:number, strokeStyleOffset:flatbuffers.Offset, strokePlacementOffset:flatbuffers.Offset, opacity:number, width:number, height:number, angle:number, seed:number, version:number, versionNonce:number, isDeleted:boolean, groupIdsOffset:flatbuffers.Offset, frameIdOffset:flatbuffers.Offset, boundElementsOffset:flatbuffers.Offset, updated:bigint, linkOffset:flatbuffers.Offset, locked:boolean, customDataOffset:flatbuffers.Offset):flatbuffers.Offset {
   DucElement.startDucElement(builder);
   DucElement.addId(builder, idOffset);
+  DucElement.addType(builder, typeOffset);
   DucElement.addX(builder, x);
   DucElement.addY(builder, y);
   DucElement.addScope(builder, scopeOffset);

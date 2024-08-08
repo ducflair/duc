@@ -1,6 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
 import { AppState as BinAppState, UserToFollow, DucGroup, ActiveTool } from '../duc';
-import { AppState } from '../../types';
+import { AppState } from '../../../types';
 import { serializeDucElement } from './ducElementSerialize';
 
 const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppState>): flatbuffers.Offset => {
@@ -10,8 +10,8 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   const pendingImageElementIdOffset = appState.pendingImageElementId ? builder.createString(appState.pendingImageElementId) : null;
   const showHyperlinkPopupOffset = appState.showHyperlinkPopup ? builder.createString(appState.showHyperlinkPopup) : null;
 
-  const collaboratorsOffsets = appState.collaborators ? Array.from(appState.collaborators.values()).map(collaborator => builder.createString(collaborator.username)) : [];
-  const collaboratorsVector = collaboratorsOffsets.length > 0 ? BinAppState.createCollaboratorsVector(builder, collaboratorsOffsets) : null;
+  // const collaboratorsOffsets = appState.collaborators ? Array.from(appState.collaborators.values()).map(collaborator => builder.createString(collaborator.username)) : [];
+  // const collaboratorsVector = collaboratorsOffsets.length > 0 ? BinAppState.createCollaboratorsVector(builder, collaboratorsOffsets) : null;
 
   const lastPointerDownWithOffset = appState.lastPointerDownWith ? builder.createString(appState.lastPointerDownWith) : null;
 
@@ -70,11 +70,11 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   const activeToolOffset = appState.activeTool ? ActiveTool.createActiveTool(builder, builder.createString(appState.activeTool?.lastActiveTool?.type), appState.activeTool.locked) : null;
 
   // Serialize UserToFollow if it exists
-  const userToFollowOffset = appState.userToFollow ? UserToFollow.createUserToFollow(builder, builder.createString(appState.userToFollow.socketId), builder.createString(appState.userToFollow.username)) : null;
+  // const userToFollowOffset = appState.userToFollow ? UserToFollow.createUserToFollow(builder, builder.createString(appState.userToFollow.socketId), builder.createString(appState.userToFollow.username)) : null;
 
   // Serialize followedBy if it exists
-  const followedByOffsets = appState.followedBy ? Array.from(appState.followedBy).map(follower => builder.createString(follower)) : [];
-  const followedByVector = followedByOffsets.length > 0 ? BinAppState.createFollowedByVector(builder, followedByOffsets) : null;
+  // const followedByOffsets = appState.followedBy ? Array.from(appState.followedBy).map(follower => builder.createString(follower)) : [];
+  // const followedByVector = followedByOffsets.length > 0 ? BinAppState.createFollowedByVector(builder, followedByOffsets) : null;
 
   // Now start the AppState object
   BinAppState.startAppState(builder);
@@ -85,15 +85,15 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   BinAppState.addHeight(builder, appState.height || 0);
   BinAppState.addOffsetTop(builder, appState.offsetTop || 0);
   BinAppState.addOffsetLeft(builder, appState.offsetLeft || 0);
-  if (fileHandleOffset) BinAppState.addFileHandle(builder, fileHandleOffset);
-  if (collaboratorsVector) BinAppState.addCollaborators(builder, collaboratorsVector);
+  // if (fileHandleOffset) BinAppState.addFileHandle(builder, fileHandleOffset);
+  // if (collaboratorsVector) BinAppState.addCollaborators(builder, collaboratorsVector);
   if (pendingImageElementIdOffset) BinAppState.addPendingImageElementId(builder, pendingImageElementIdOffset);
-  if (showHyperlinkPopupOffset) BinAppState.addShowHyperlinkPopup(builder, showHyperlinkPopupOffset);
+  // if (showHyperlinkPopupOffset) BinAppState.addShowHyperlinkPopup(builder, showHyperlinkPopupOffset);
   BinAppState.addOriginSnapOffsetX(builder, appState.originSnapOffset?.x || 0.0);
   BinAppState.addOriginSnapOffsetY(builder, appState.originSnapOffset?.y || 0.0);
   BinAppState.addObjectsSnapModeEnabled(builder, appState.objectsSnapModeEnabled || false);
-  if (userToFollowOffset) BinAppState.addUserToFollow(builder, userToFollowOffset);
-  if (followedByVector) BinAppState.addFollowedBy(builder, followedByVector);
+  // if (userToFollowOffset) BinAppState.addUserToFollow(builder, userToFollowOffset);
+  // if (followedByVector) BinAppState.addFollowedBy(builder, followedByVector);
   BinAppState.addIsResizing(builder, appState.isResizing || false);
   BinAppState.addIsRotating(builder, appState.isRotating || false);
   BinAppState.addZoom(builder, appState.zoom?.value || 0.0);
