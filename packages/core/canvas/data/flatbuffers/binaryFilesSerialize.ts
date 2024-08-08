@@ -1,6 +1,18 @@
-import flatbuffers from 'flatbuffers';
+import * as flatbuffers from 'flatbuffers';
 import { BinaryFileData, BinaryFilesEntry, BinaryFiles as BinBinaryFiles } from '../duc';
 import { BinaryFiles as BinaryFilesType } from '../../types';
+
+// Helper function to convert a DataURL (base64 string) to Uint8Array
+const dataURLToUint8Array = (dataURL: string): Uint8Array => {
+  const base64 = dataURL.split(',')[1];
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+};
 
 const serializeBinaryFiles = (builder: flatbuffers.Builder, files: BinaryFilesType): flatbuffers.Offset => {
   const fileEntries = Object.keys(files).map(key => {
@@ -8,7 +20,8 @@ const serializeBinaryFiles = (builder: flatbuffers.Builder, files: BinaryFilesTy
     const keyOffset = builder.createString(key);
     const mimeTypeOffset = builder.createString(file.mimeType);
     const idOffset = builder.createString(file.id);
-    const dataOffset = BinaryFileData.createDataVector(builder, new Uint8Array(file.dataURL));
+    const data = dataURLToUint8Array(file.dataURL);
+    const dataOffset = BinaryFileData.createDataVector(builder, data);
     const binaryFileDataOffset = BinaryFileData.createBinaryFileData(
       builder,
       mimeTypeOffset,

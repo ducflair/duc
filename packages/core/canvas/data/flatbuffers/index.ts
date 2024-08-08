@@ -1,4 +1,4 @@
-import flatbuffers from 'flatbuffers';
+import * as flatbuffers from 'flatbuffers';
 import { AppState as BinAppState, BinaryFiles as BinBinaryFiles, ExportedDataState, BinaryFilesEntry, DucElementUnion, BinaryFileData, UserToFollow, DucElement as BinDucElement, ActiveTool, DucLinearElement as BinDucLinearElement } from '../duc';
 import { fileSave } from '../filesystem';
 import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, EXPORT_SOURCE, VERSIONS } from '../../constants';
@@ -7,7 +7,7 @@ import { DucElement } from '../../element/types';
 import { AppState, BinaryFiles } from '../../types';
 import { serializeDucElement } from './ducElementSerialize';
 import { serializeAppState } from './appStateSerialize';
-
+import { serializeBinaryFiles } from './binaryFilesSerialize';
 
 export const serializeAsFlatBuffers = (
   elements: readonly DucElement[],
@@ -27,28 +27,7 @@ export const serializeAsFlatBuffers = (
   const appStateOffset = serializeAppState(builder, appState);
 
   // Serialize files
-  const fileEntries = Object.keys(files).map(key => {
-    const keyOffset = builder.createString(key);
-    const mimeTypeOffset = builder.createString(files[key].mimeType);
-    const idOffset = builder.createString(files[key].id);
-    const dataOffset = BinaryFileData.createDataVector(builder, files[key].data);
-    const binaryFileDataOffset = BinaryFileData.createBinaryFileData(
-      builder,
-      mimeTypeOffset,
-      idOffset,
-      dataOffset,
-      files[key].created,
-      files[key].lastRetrieved || 0
-    );
-
-    BinaryFilesEntry.startBinaryFilesEntry(builder);
-    BinaryFilesEntry.addKey(builder, keyOffset);
-    BinaryFilesEntry.addValue(builder, binaryFileDataOffset);
-    return BinaryFilesEntry.endBinaryFilesEntry(builder);
-  });
-
-  const filesOffset = BinBinaryFiles.createEntriesVector(builder, fileEntries);
-  const binaryFilesOffset = BinBinaryFiles.createBinaryFiles(builder, filesOffset);
+  const binaryFilesOffset = serializeBinaryFiles(builder, files);
 
   // Serialize ExportedDataState
   const typeOffset = builder.createString(EXPORT_DATA_TYPES.duc);
