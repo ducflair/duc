@@ -1,6 +1,7 @@
-import flatbuffers from 'flatbuffers';
-import { AppState as BinAppState, UserToFollow, DucGroup, DucElement as BinDucElement, ActiveTool } from '../duc';
+import * as flatbuffers from 'flatbuffers';
+import { AppState as BinAppState, UserToFollow, DucGroup, ActiveTool } from '../duc';
 import { AppState } from '../../types';
+import { serializeDucElement } from './ducElementSerialize';
 
 const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppState>): flatbuffers.Offset => {
   BinAppState.startAppState(builder);
@@ -39,7 +40,9 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   BinAppState.addObjectsSnapModeEnabled(builder, appState.objectsSnapModeEnabled || false);
 
   if (appState.userToFollow) {
-    const userToFollowOffset = UserToFollow.createUserToFollow(builder, appState.userToFollow);
+    const socketIdOffset = builder.createString(appState.userToFollow.socketId);
+    const usernameOffset = builder.createString(appState.userToFollow.username);
+    const userToFollowOffset = UserToFollow.createUserToFollow(builder, socketIdOffset, usernameOffset);
     BinAppState.addUserToFollow(builder, userToFollowOffset);
   }
 
@@ -94,10 +97,29 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   BinAppState.addScrolledOutside(builder, appState.scrolledOutside || false);
 
   if (appState.groups) {
-    const groupsOffsets = appState.groups.map(group => DucGroup.createDucGroup(builder, group));
+    const groupsOffsets = appState.groups.map(group => {
+      const idOffset = builder.createString(group.id);
+      const labelOffset = builder.createString(group.label);
+      const typeOffset = builder.createString(group.type);
+      const writingLayerOffset = builder.createString(group.writingLayer);
+      const scopeOffset = builder.createString(group.scope);
+      const isCollapsed = group.isCollapsed || false;
+  
+      return DucGroup.createDucGroup(
+        builder,
+        idOffset,
+        typeOffset,
+        isCollapsed,
+        labelOffset,
+        scopeOffset,
+        writingLayerOffset
+      );
+    });
+  
     const groupsVector = BinAppState.createGroupsVector(builder, groupsOffsets);
     BinAppState.addGroups(builder, groupsVector);
   }
+  
 
   if (appState.scope) {
     BinAppState.addScope(builder, builder.createString(appState.scope));
@@ -134,7 +156,7 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   BinAppState.addCurrentItemOpacity(builder, appState.currentItemOpacity || 0.0);
 
   if (appState.currentItemFontFamily) {
-    BinAppState.addCurrentItemFontFamily(builder, builder.createString(appState.currentItemFontFamily));
+    BinAppState.addCurrentItemFontFamily(builder, builder.createString(appState.currentItemFontFamily.toString()));
   }
 
   BinAppState.addCurrentItemFontSize(builder, appState.currentItemFontSize || 0);
@@ -159,28 +181,31 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
     BinAppState.addViewBackgroundColor(builder, builder.createString(appState.viewBackgroundColor));
   }
 
-  BinAppState.addFrameRenderingEnabled(builder, appState.frameRendering.enabled || false);
-  BinAppState.addFrameRenderingName(builder, appState.frameRendering.name || false);
-  BinAppState.addFrameRenderingOutline(builder, appState.frameRendering.outline || false);
-  BinAppState.addFrameRenderingClip(builder, appState.frameRendering.clip || false);
+  if (appState.frameRendering) {
+    BinAppState.addFrameRenderingEnabled(builder, appState.frameRendering.enabled || false);
+    BinAppState.addFrameRenderingName(builder, appState.frameRendering.name || false);
+    BinAppState.addFrameRenderingOutline(builder, appState.frameRendering.outline || false);
+    BinAppState.addFrameRenderingClip(builder, appState.frameRendering.clip || false);
+  }
 
   if (appState.editingFrame) {
     BinAppState.addEditingFrame(builder, builder.createString(appState.editingFrame));
   }
 
   if (Array.isArray(appState.elementsToHighlight)) {
-    const elementsToHighlightOffsets = appState.elementsToHighlight.map(element => BinDucElement.createDucElement(builder, element, DucElementUnion.DucEmbeddableElement, false));
+    const elementsToHighlightOffsets = appState.elementsToHighlight.map(element => serializeDucElement(builder, element));
     const elementsToHighlightVector = BinAppState.createElementsToHighlightVector(builder, elementsToHighlightOffsets);
     BinAppState.addElementsToHighlight(builder, elementsToHighlightVector);
   }
 
   if (appState.editingElement) {
-    const editingElementOffset = BinDucElement.createDucElement(builder, appState.editingElement);
+    const editingElementOffset = serializeDucElement(builder, appState.editingElement);
     BinAppState.addEditingElement(builder, editingElementOffset);
   }
 
   if (appState.activeTool) {
-    const activeToolOffset = ActiveTool.createActiveTool(builder, appState.activeTool);
+    const lastActiveToolOffset = builder.createString(appState.activeTool?.lastActiveTool?.type);
+    const activeToolOffset = ActiveTool.createActiveTool(builder, lastActiveToolOffset, appState.activeTool.locked);
     BinAppState.addActiveTool(builder, activeToolOffset);
   }
 

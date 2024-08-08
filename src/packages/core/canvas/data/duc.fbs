@@ -176,7 +176,7 @@ table BoundElement {
 
 
 table ActiveTool {
-  lastActiveTool: string;  // Placeholder
+  lastActiveTool: string; 
   locked: bool;
 }
 
