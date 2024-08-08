@@ -15,7 +15,8 @@ const dataURLToUint8Array = (dataURL: string): Uint8Array => {
 };
 
 const serializeBinaryFiles = (builder: flatbuffers.Builder, files: BinaryFilesType): flatbuffers.Offset => {
-  const fileEntries = Object.keys(files).map(key => {
+  // Create offsets and data vectors first
+  const fileEntriesOffsets = Object.keys(files).map(key => {
     const file = files[key];
     const keyOffset = builder.createString(key);
     const mimeTypeOffset = builder.createString(file.mimeType);
@@ -31,14 +32,17 @@ const serializeBinaryFiles = (builder: flatbuffers.Builder, files: BinaryFilesTy
       BigInt(file.lastRetrieved || 0)
     );
 
+    // Start and add BinaryFilesEntry
     BinaryFilesEntry.startBinaryFilesEntry(builder);
     BinaryFilesEntry.addKey(builder, keyOffset);
     BinaryFilesEntry.addValue(builder, binaryFileDataOffset);
     return BinaryFilesEntry.endBinaryFilesEntry(builder);
   });
 
-  const filesOffset = BinBinaryFiles.createEntriesVector(builder, fileEntries);
-  const binaryFilesOffset = BinBinaryFiles.createBinaryFiles(builder, filesOffset);
+  // Create entries vector and the BinaryFiles object
+  const filesVectorOffset = BinBinaryFiles.createEntriesVector(builder, fileEntriesOffsets);
+  const binaryFilesOffset = BinBinaryFiles.createBinaryFiles(builder, filesVectorOffset);
+
   return binaryFilesOffset;
 };
 
