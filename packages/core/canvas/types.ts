@@ -648,7 +648,8 @@ export interface DucImperativeAPI {
     redo: InstanceType<typeof App>["redo"];
   };
   files: {
-    exportToDuc: InstanceType<typeof App>["exportToDuc"];
+    exportToDucJSON: InstanceType<typeof App>["exportToDucJSON"];
+    exportToDucBin: InstanceType<typeof App>["exportToDucBin"];
     openFile: InstanceType<typeof App>["openFile"];
   };
   canvas: {

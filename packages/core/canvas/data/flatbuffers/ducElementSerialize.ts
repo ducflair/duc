@@ -1,4 +1,4 @@
-import flatbuffers from 'flatbuffers';
+import * as flatbuffers from 'flatbuffers';
 import { DucElement as BinDucElement } from '../duc';
 import { DucElement } from '../../element/types';
 
