@@ -4,25 +4,25 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { DucElement } from '../duc/duc-element.js';
+import { DucElement } from '../duc/duc-element';
 
 
-export class DucMagicFrameElement {
+export class DucFrameElement {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
-  __init(i:number, bb:flatbuffers.ByteBuffer):DucMagicFrameElement {
+  __init(i:number, bb:flatbuffers.ByteBuffer):DucFrameElement {
   this.bb_pos = i;
   this.bb = bb;
   return this;
 }
 
-static getRootAsDucMagicFrameElement(bb:flatbuffers.ByteBuffer, obj?:DucMagicFrameElement):DucMagicFrameElement {
-  return (obj || new DucMagicFrameElement()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+static getRootAsDucFrameElement(bb:flatbuffers.ByteBuffer, obj?:DucFrameElement):DucFrameElement {
+  return (obj || new DucFrameElement()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-static getSizePrefixedRootAsDucMagicFrameElement(bb:flatbuffers.ByteBuffer, obj?:DucMagicFrameElement):DucMagicFrameElement {
+static getSizePrefixedRootAsDucFrameElement(bb:flatbuffers.ByteBuffer, obj?:DucFrameElement):DucFrameElement {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
-  return (obj || new DucMagicFrameElement()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+  return (obj || new DucFrameElement()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
 base(obj?:DucElement):DucElement|null {
@@ -42,7 +42,7 @@ name(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-static startDucMagicFrameElement(builder:flatbuffers.Builder) {
+static startDucFrameElement(builder:flatbuffers.Builder) {
   builder.startObject(3);
 }
 
@@ -58,16 +58,16 @@ static addName(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset) {
   builder.addFieldOffset(2, nameOffset, 0);
 }
 
-static endDucMagicFrameElement(builder:flatbuffers.Builder):flatbuffers.Offset {
+static endDucFrameElement(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   return offset;
 }
 
-static createDucMagicFrameElement(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset, isCollapsed:boolean, nameOffset:flatbuffers.Offset):flatbuffers.Offset {
-  DucMagicFrameElement.startDucMagicFrameElement(builder);
-  DucMagicFrameElement.addBase(builder, baseOffset);
-  DucMagicFrameElement.addIsCollapsed(builder, isCollapsed);
-  DucMagicFrameElement.addName(builder, nameOffset);
-  return DucMagicFrameElement.endDucMagicFrameElement(builder);
+static createDucFrameElement(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset, isCollapsed:boolean, nameOffset:flatbuffers.Offset):flatbuffers.Offset {
+  DucFrameElement.startDucFrameElement(builder);
+  DucFrameElement.addBase(builder, baseOffset);
+  DucFrameElement.addIsCollapsed(builder, isCollapsed);
+  DucFrameElement.addName(builder, nameOffset);
+  return DucFrameElement.endDucFrameElement(builder);
 }
 }

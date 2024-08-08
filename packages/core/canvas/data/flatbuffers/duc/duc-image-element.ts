@@ -4,7 +4,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { DucElement } from '../duc/duc-element.js';
+import { DucElement } from '../duc/duc-element';
 
 
 export class DucImageElement {

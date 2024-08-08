@@ -46,6 +46,17 @@ export const calculateScrollCenter = (
   elements: readonly DucElement[],
   appState: AppState,
 ): { scrollX: number; scrollY: number } => {
+
+  if (!Array.isArray(elements)) {
+    throw new Error("Elements should be an array");
+  }
+
+  elements.forEach(element => {
+    if (!element || typeof element !== 'object') {
+      throw new Error("Invalid element found");
+    }
+  });
+  
   elements = getVisibleElements(elements);
 
   if (!elements.length) {

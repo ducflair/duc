@@ -419,7 +419,7 @@ import {
 } from "./hyperlink/helpers";
 import { SupportedMeasures, WritingLayers } from "../element/measurements";
 import { changeProperty } from "../actions/actionProperties";
-import { saveAsFlatBuffers } from "../data/flatbuffers";
+import { saveAsFlatBuffers } from "../data/flatbuffers/serialize";
 
 const AppContext = React.createContext<AppClassProperties>(null!);
 const AppPropsContext = React.createContext<AppProps>(null!);
@@ -4332,7 +4332,7 @@ class App extends React.Component<AppProps, AppState> {
   };
 
   openFile = async () => {
-    const file = await fileOpen({ description: "Excalidraw or library file" });
+    const file = await fileOpen({ description: "Ducflair File" });
     const contents = await loadSceneOrLibraryFromBlob(
       file,
       {

@@ -1,10 +1,10 @@
 import * as flatbuffers from 'flatbuffers';
 import { AppState as BinAppState, BinaryFiles as BinBinaryFiles, ExportedDataState, BinaryFilesEntry, DucElementUnion, BinaryFileData, UserToFollow, DucElement as BinDucElement, ActiveTool, DucLinearElement as BinDucLinearElement } from '../duc';
-import { fileSave } from '../filesystem';
-import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, EXPORT_SOURCE, VERSIONS } from '../../constants';
-import { cleanAppStateForExport } from '../../appState';
-import { DucElement } from '../../element/types';
-import { AppState, BinaryFiles } from '../../types';
+import { fileSave } from '../../filesystem';
+import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, EXPORT_SOURCE, MIME_TYPES, VERSIONS } from '../../../constants';
+import { cleanAppStateForExport } from '../../../appState';
+import { DucElement } from '../../../element/types';
+import { AppState, BinaryFiles } from '../../../types';
 import { serializeDucElement } from './ducElementSerialize';
 import { serializeAppState } from './appStateSerialize';
 import { serializeBinaryFiles } from './binaryFilesSerialize';
@@ -56,7 +56,7 @@ export const saveAsFlatBuffers = async (
 ) => {
   const serialized = serializeAsFlatBuffers(elements, appState, files, "local");
   const blob = new Blob([serialized], {
-    type: "application/vnd.duc-cad",
+    type: MIME_TYPES.duc,
   });
 
   const fileHandle = await fileSave(blob, {
