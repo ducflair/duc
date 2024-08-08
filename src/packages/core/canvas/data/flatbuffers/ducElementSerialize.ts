@@ -12,6 +12,15 @@ export const serializeDucElement = (builder: flatbuffers.Builder, element: DucEl
   const frameIdOffset = builder.createString(element.frameId);
   const linkOffset = builder.createString(element.link);
   const customDataOffset = builder.createString(JSON.stringify(element.customData));
+  const fillStyleOffset = builder.createString(element.fillStyle);
+  const roundnessTypeOffset = builder.createString(String(element.roundness?.type));
+  const strokeStyleOffset = builder.createString(element.strokeStyle);
+  const strokePlacementOffset = builder.createString(element.strokePlacement);
+
+  // Create group IDs vector
+  const groupIdOffsets = element.groupIds.map(groupId => builder.createString(groupId));
+  const groupIdsVector = BinDucElement.createGroupIdsVector(builder, groupIdOffsets);
+
 
   BinDucElement.startDucElement(builder);
   BinDucElement.addId(builder, idOffset);
@@ -22,17 +31,17 @@ export const serializeDucElement = (builder: flatbuffers.Builder, element: DucEl
   BinDucElement.addLabel(builder, labelOffset);
   BinDucElement.addRatioLocked(builder, element.ratioLocked);
   BinDucElement.addIsVisible(builder, element.isVisible);
-  BinDucElement.addFillStyle(builder, builder.createString(element.fillStyle));
+  BinDucElement.addFillStyle(builder, fillStyleOffset);
   BinDucElement.addRoughness(builder, element.roughness);
-  BinDucElement.addRoundnessType(builder, builder.createString(String(element.roundness?.type)));
+  BinDucElement.addRoundnessType(builder, roundnessTypeOffset);
   if (element.roundness?.value) {
     BinDucElement.addRoundnessValue(builder, element.roundness.value);
   }
   BinDucElement.addBackgroundColor(builder, backgroundColorOffset);
   BinDucElement.addStrokeColor(builder, strokeColorOffset);
   BinDucElement.addStrokeWidth(builder, element.strokeWidth);
-  BinDucElement.addStrokeStyle(builder, builder.createString(element.strokeStyle));
-  BinDucElement.addStrokePlacement(builder, builder.createString(element.strokePlacement));
+  BinDucElement.addStrokeStyle(builder, strokeStyleOffset);
+  BinDucElement.addStrokePlacement(builder, strokePlacementOffset);
   BinDucElement.addOpacity(builder, element.opacity);
   BinDucElement.addWidth(builder, element.width);
   BinDucElement.addHeight(builder, element.height);
@@ -46,8 +55,7 @@ export const serializeDucElement = (builder: flatbuffers.Builder, element: DucEl
   BinDucElement.addLink(builder, linkOffset);
   BinDucElement.addLocked(builder, element.locked);
   BinDucElement.addCustomData(builder, customDataOffset);
-
-  BinDucElement.addGroupIds(builder, BinDucElement.createGroupIdsVector(builder, element.groupIds.map(groupId => builder.createString(groupId))));
+  BinDucElement.addGroupIds(builder, groupIdsVector);
 
   return BinDucElement.endDucElement(builder);
 };

@@ -56,7 +56,7 @@ export const saveAsFlatBuffers = async (
 ) => {
   const serialized = serializeAsFlatBuffers(elements, appState, files, "local");
   const blob = new Blob([serialized], {
-    type: "application/octet-stream",
+    type: "application/vnd.duc-cad",
   });
 
   const fileHandle = await fileSave(blob, {
