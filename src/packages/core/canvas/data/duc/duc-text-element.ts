@@ -30,107 +30,96 @@ base(obj?:DucElement):DucElement|null {
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-type():string|null
-type(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-type(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
 fontSize():number {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
+  const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 fontFamily():string|null
 fontFamily(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 fontFamily(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
+  const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 text():string|null
 text(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 text(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
+  const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 textAlign():string|null
 textAlign(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 textAlign(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
+  const offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 verticalAlign():string|null
 verticalAlign(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 verticalAlign(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 16);
+  const offset = this.bb!.__offset(this.bb_pos, 14);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 containerId():string|null
 containerId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 containerId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 18);
+  const offset = this.bb!.__offset(this.bb_pos, 16);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 originalText():string|null
 originalText(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 originalText(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 20);
+  const offset = this.bb!.__offset(this.bb_pos, 18);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 lineHeight():number {
-  const offset = this.bb!.__offset(this.bb_pos, 22);
+  const offset = this.bb!.__offset(this.bb_pos, 20);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
 static startDucTextElement(builder:flatbuffers.Builder) {
-  builder.startObject(10);
+  builder.startObject(9);
 }
 
 static addBase(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset) {
   builder.addFieldOffset(0, baseOffset, 0);
 }
 
-static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, typeOffset, 0);
-}
-
 static addFontSize(builder:flatbuffers.Builder, fontSize:number) {
-  builder.addFieldInt32(2, fontSize, 0);
+  builder.addFieldInt32(1, fontSize, 0);
 }
 
 static addFontFamily(builder:flatbuffers.Builder, fontFamilyOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, fontFamilyOffset, 0);
+  builder.addFieldOffset(2, fontFamilyOffset, 0);
 }
 
 static addText(builder:flatbuffers.Builder, textOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, textOffset, 0);
+  builder.addFieldOffset(3, textOffset, 0);
 }
 
 static addTextAlign(builder:flatbuffers.Builder, textAlignOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, textAlignOffset, 0);
+  builder.addFieldOffset(4, textAlignOffset, 0);
 }
 
 static addVerticalAlign(builder:flatbuffers.Builder, verticalAlignOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(6, verticalAlignOffset, 0);
+  builder.addFieldOffset(5, verticalAlignOffset, 0);
 }
 
 static addContainerId(builder:flatbuffers.Builder, containerIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(7, containerIdOffset, 0);
+  builder.addFieldOffset(6, containerIdOffset, 0);
 }
 
 static addOriginalText(builder:flatbuffers.Builder, originalTextOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(8, originalTextOffset, 0);
+  builder.addFieldOffset(7, originalTextOffset, 0);
 }
 
 static addLineHeight(builder:flatbuffers.Builder, lineHeight:number) {
-  builder.addFieldFloat32(9, lineHeight, 0.0);
+  builder.addFieldFloat32(8, lineHeight, 0.0);
 }
 
 static endDucTextElement(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -138,10 +127,9 @@ static endDucTextElement(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createDucTextElement(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset, typeOffset:flatbuffers.Offset, fontSize:number, fontFamilyOffset:flatbuffers.Offset, textOffset:flatbuffers.Offset, textAlignOffset:flatbuffers.Offset, verticalAlignOffset:flatbuffers.Offset, containerIdOffset:flatbuffers.Offset, originalTextOffset:flatbuffers.Offset, lineHeight:number):flatbuffers.Offset {
+static createDucTextElement(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset, fontSize:number, fontFamilyOffset:flatbuffers.Offset, textOffset:flatbuffers.Offset, textAlignOffset:flatbuffers.Offset, verticalAlignOffset:flatbuffers.Offset, containerIdOffset:flatbuffers.Offset, originalTextOffset:flatbuffers.Offset, lineHeight:number):flatbuffers.Offset {
   DucTextElement.startDucTextElement(builder);
   DucTextElement.addBase(builder, baseOffset);
-  DucTextElement.addType(builder, typeOffset);
   DucTextElement.addFontSize(builder, fontSize);
   DucTextElement.addFontFamily(builder, fontFamilyOffset);
   DucTextElement.addText(builder, textOffset);

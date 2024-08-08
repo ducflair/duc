@@ -31,62 +31,51 @@ base(obj?:DucElement):DucElement|null {
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-type():string|null
-type(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-type(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
 points(index: number, obj?:Point):Point|null {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
+  const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
 pointsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
+  const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 pressures(index: number):number|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
+  const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.readFloat32(this.bb!.__vector(this.bb_pos + offset) + index * 4) : 0;
 }
 
 pressuresLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
+  const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 pressuresArray():Float32Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
+  const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? new Float32Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
 }
 
 simulatePressure():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
+  const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 lastCommittedPoint(obj?:Point):Point|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
+  const offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 static startDucFreeDrawElement(builder:flatbuffers.Builder) {
-  builder.startObject(6);
+  builder.startObject(5);
 }
 
 static addBase(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset) {
   builder.addFieldOffset(0, baseOffset, 0);
 }
 
-static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, typeOffset, 0);
-}
-
 static addPoints(builder:flatbuffers.Builder, pointsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, pointsOffset, 0);
+  builder.addFieldOffset(1, pointsOffset, 0);
 }
 
 static createPointsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -102,7 +91,7 @@ static startPointsVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addPressures(builder:flatbuffers.Builder, pressuresOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, pressuresOffset, 0);
+  builder.addFieldOffset(2, pressuresOffset, 0);
 }
 
 static createPressuresVector(builder:flatbuffers.Builder, data:number[]|Float32Array):flatbuffers.Offset;
@@ -123,11 +112,11 @@ static startPressuresVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addSimulatePressure(builder:flatbuffers.Builder, simulatePressure:boolean) {
-  builder.addFieldInt8(4, +simulatePressure, +false);
+  builder.addFieldInt8(3, +simulatePressure, +false);
 }
 
 static addLastCommittedPoint(builder:flatbuffers.Builder, lastCommittedPointOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, lastCommittedPointOffset, 0);
+  builder.addFieldOffset(4, lastCommittedPointOffset, 0);
 }
 
 static endDucFreeDrawElement(builder:flatbuffers.Builder):flatbuffers.Offset {

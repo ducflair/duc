@@ -2,9 +2,6 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
-import { DucDiamondElement } from '../duc/duc-diamond-element.js';
-import { DucEllipseElement } from '../duc/duc-ellipse-element.js';
-import { DucEmbeddableElement } from '../duc/duc-embeddable-element.js';
 import { DucFrameElement } from '../duc/duc-frame-element.js';
 import { DucFreeDrawElement } from '../duc/duc-free-draw-element.js';
 import { DucGroupElement } from '../duc/duc-group-element.js';
@@ -12,38 +9,27 @@ import { DucIframeElement } from '../duc/duc-iframe-element.js';
 import { DucImageElement } from '../duc/duc-image-element.js';
 import { DucLinearElement } from '../duc/duc-linear-element.js';
 import { DucMagicFrameElement } from '../duc/duc-magic-frame-element.js';
-import { DucRectangleElement } from '../duc/duc-rectangle-element.js';
-import { DucSelectionElement } from '../duc/duc-selection-element.js';
 import { DucTextElement } from '../duc/duc-text-element.js';
 
 
 export enum DucElementUnion {
   NONE = 0,
-  DucSelectionElement = 1,
-  DucRectangleElement = 2,
-  DucDiamondElement = 3,
-  DucEllipseElement = 4,
-  DucTextElement = 5,
-  DucLinearElement = 6,
-  DucFreeDrawElement = 7,
-  DucImageElement = 8,
-  DucFrameElement = 9,
-  DucGroupElement = 10,
-  DucMagicFrameElement = 11,
-  DucIframeElement = 12,
-  DucEmbeddableElement = 13
+  DucTextElement = 1,
+  DucLinearElement = 2,
+  DucFreeDrawElement = 3,
+  DucImageElement = 4,
+  DucFrameElement = 5,
+  DucGroupElement = 6,
+  DucMagicFrameElement = 7,
+  DucIframeElement = 8
 }
 
 export function unionToDucElementUnion(
   type: DucElementUnion,
-  accessor: (obj:DucDiamondElement|DucEllipseElement|DucEmbeddableElement|DucFrameElement|DucFreeDrawElement|DucGroupElement|DucIframeElement|DucImageElement|DucLinearElement|DucMagicFrameElement|DucRectangleElement|DucSelectionElement|DucTextElement) => DucDiamondElement|DucEllipseElement|DucEmbeddableElement|DucFrameElement|DucFreeDrawElement|DucGroupElement|DucIframeElement|DucImageElement|DucLinearElement|DucMagicFrameElement|DucRectangleElement|DucSelectionElement|DucTextElement|null
-): DucDiamondElement|DucEllipseElement|DucEmbeddableElement|DucFrameElement|DucFreeDrawElement|DucGroupElement|DucIframeElement|DucImageElement|DucLinearElement|DucMagicFrameElement|DucRectangleElement|DucSelectionElement|DucTextElement|null {
+  accessor: (obj:DucFrameElement|DucFreeDrawElement|DucGroupElement|DucIframeElement|DucImageElement|DucLinearElement|DucMagicFrameElement|DucTextElement) => DucFrameElement|DucFreeDrawElement|DucGroupElement|DucIframeElement|DucImageElement|DucLinearElement|DucMagicFrameElement|DucTextElement|null
+): DucFrameElement|DucFreeDrawElement|DucGroupElement|DucIframeElement|DucImageElement|DucLinearElement|DucMagicFrameElement|DucTextElement|null {
   switch(DucElementUnion[type]) {
     case 'NONE': return null; 
-    case 'DucSelectionElement': return accessor(new DucSelectionElement())! as DucSelectionElement;
-    case 'DucRectangleElement': return accessor(new DucRectangleElement())! as DucRectangleElement;
-    case 'DucDiamondElement': return accessor(new DucDiamondElement())! as DucDiamondElement;
-    case 'DucEllipseElement': return accessor(new DucEllipseElement())! as DucEllipseElement;
     case 'DucTextElement': return accessor(new DucTextElement())! as DucTextElement;
     case 'DucLinearElement': return accessor(new DucLinearElement())! as DucLinearElement;
     case 'DucFreeDrawElement': return accessor(new DucFreeDrawElement())! as DucFreeDrawElement;
@@ -52,22 +38,17 @@ export function unionToDucElementUnion(
     case 'DucGroupElement': return accessor(new DucGroupElement())! as DucGroupElement;
     case 'DucMagicFrameElement': return accessor(new DucMagicFrameElement())! as DucMagicFrameElement;
     case 'DucIframeElement': return accessor(new DucIframeElement())! as DucIframeElement;
-    case 'DucEmbeddableElement': return accessor(new DucEmbeddableElement())! as DucEmbeddableElement;
     default: return null;
   }
 }
 
 export function unionListToDucElementUnion(
   type: DucElementUnion, 
-  accessor: (index: number, obj:DucDiamondElement|DucEllipseElement|DucEmbeddableElement|DucFrameElement|DucFreeDrawElement|DucGroupElement|DucIframeElement|DucImageElement|DucLinearElement|DucMagicFrameElement|DucRectangleElement|DucSelectionElement|DucTextElement) => DucDiamondElement|DucEllipseElement|DucEmbeddableElement|DucFrameElement|DucFreeDrawElement|DucGroupElement|DucIframeElement|DucImageElement|DucLinearElement|DucMagicFrameElement|DucRectangleElement|DucSelectionElement|DucTextElement|null, 
+  accessor: (index: number, obj:DucFrameElement|DucFreeDrawElement|DucGroupElement|DucIframeElement|DucImageElement|DucLinearElement|DucMagicFrameElement|DucTextElement) => DucFrameElement|DucFreeDrawElement|DucGroupElement|DucIframeElement|DucImageElement|DucLinearElement|DucMagicFrameElement|DucTextElement|null, 
   index: number
-): DucDiamondElement|DucEllipseElement|DucEmbeddableElement|DucFrameElement|DucFreeDrawElement|DucGroupElement|DucIframeElement|DucImageElement|DucLinearElement|DucMagicFrameElement|DucRectangleElement|DucSelectionElement|DucTextElement|null {
+): DucFrameElement|DucFreeDrawElement|DucGroupElement|DucIframeElement|DucImageElement|DucLinearElement|DucMagicFrameElement|DucTextElement|null {
   switch(DucElementUnion[type]) {
     case 'NONE': return null; 
-    case 'DucSelectionElement': return accessor(index, new DucSelectionElement())! as DucSelectionElement;
-    case 'DucRectangleElement': return accessor(index, new DucRectangleElement())! as DucRectangleElement;
-    case 'DucDiamondElement': return accessor(index, new DucDiamondElement())! as DucDiamondElement;
-    case 'DucEllipseElement': return accessor(index, new DucEllipseElement())! as DucEllipseElement;
     case 'DucTextElement': return accessor(index, new DucTextElement())! as DucTextElement;
     case 'DucLinearElement': return accessor(index, new DucLinearElement())! as DucLinearElement;
     case 'DucFreeDrawElement': return accessor(index, new DucFreeDrawElement())! as DucFreeDrawElement;
@@ -76,7 +57,6 @@ export function unionListToDucElementUnion(
     case 'DucGroupElement': return accessor(index, new DucGroupElement())! as DucGroupElement;
     case 'DucMagicFrameElement': return accessor(index, new DucMagicFrameElement())! as DucMagicFrameElement;
     case 'DucIframeElement': return accessor(index, new DucIframeElement())! as DucIframeElement;
-    case 'DucEmbeddableElement': return accessor(index, new DucEmbeddableElement())! as DucEmbeddableElement;
     default: return null;
   }
 }
