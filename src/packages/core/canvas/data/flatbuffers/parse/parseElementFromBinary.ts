@@ -1,11 +1,23 @@
-import { DucElement as BinDucElement, DucElementUnion } from '../duc';
+import { DucElement as BinDucElement } from '../duc';
 import {
   DucElement,
   DucElementTypes,
   FillStyle,
   StrokeStyle,
   StrokePlacement,
-  RoundnessType
+  RoundnessType,
+  FontFamilyValues,
+  TextAlign,
+  VerticalAlign,
+  DucTextElement,
+  DucLinearElement,
+  Arrowhead,
+  FileId,
+  DucMagicFrameElement,
+  DucFrameElement,
+  DucImageElement,
+  DucFreeDrawElement,
+  DucGroupElement
 } from '../../../element/types';
 import { SupportedMeasures, WritingLayers } from '../../../element/measurements';
 
@@ -29,6 +41,26 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
         id: e.boundElements(j)?.id() || '',
         type: e.boundElements(j)?.type() as "arrow" | "text",
       });
+    }
+  }
+
+  let points: [number, number][] = [];
+  if(e.type() === 'freedraw' || e.type() === 'line' || e.type() === 'arrow') {
+    for (let j = 0; j < e.pointsLength(); j++) {
+      const point = e.points(j);
+      if (point) {
+        points.push([point.x(), point.y()]);
+      }
+    }
+  }
+
+  let pressures: number[] = [];
+  if(e.type() === 'freedraw') {
+    for (let j = 0; j < e.pressuresLength(); j++) {
+      const pressure = e.pressures(j);
+      if (pressure) {
+        pressures.push(pressure);
+      }
     }
   }
 
@@ -73,27 +105,80 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
 
   switch (elementType) {
     case "text":
+      return {
+        ...baseElement,
+        type: elementType,
+        fontSize: e.fontSize(),
+        fontFamily: Number(e.fontFamily()) as FontFamilyValues,
+        text: e.text(),
+        textAlign: e.textAlign() as TextAlign,
+        verticalAlign: e.verticalAlign() as VerticalAlign,
+        containerId: e.containerId(),
+        originalText: e.originalText(),
+        lineHeight: e.lineHeight() as number & { _brand: "unitlessLineHeight" },
+      } as DucTextElement;
     case "arrow":
-    case "selection":
-    case "rectangle":
-    case "diamond":
-    case "ellipse":
     case "line":
+      return {
+        ...baseElement,
+        type: elementType,
+        points: points,
+        lastCommittedPoint: [e.lastCommittedPoint()?.x(), e.lastCommittedPoint()?.y()],
+        startBinding: {
+          elementId: e.startBinding()?.elementId(),
+          focus: e.startBinding()?.focus(),
+          gap: e.startBinding()?.gap()  
+        },
+        endBinding: {
+          elementId: e.endBinding()?.elementId(),
+          focus: e.endBinding()?.focus(),
+          gap: e.endBinding()?.gap()
+        },
+        startArrowhead: e.startArrowhead() as Arrowhead,
+        endArrowhead: e.endArrowhead() as Arrowhead,
+      } as DucLinearElement;
     case "freedraw":
       return {
         ...baseElement,
         type: elementType,
-        points: e.pointsArray() || [],
-      } as DucElement;
+        points: points,
+        pressures: pressures,
+        simulatePressure: e.simulatePressure(),
+        lastCommittedPoint: e.lastCommittedPoint(),
+      } as DucFreeDrawElement;
     case "image":
-    case "frame":
-    case "group":
-    case "magicframe":
-    case "iframe":
       return {
         ...baseElement,
         type: elementType,
-      } as DucElement;
+        fileId: e.fileId() as FileId | null,
+        status: e.status() as "pending" | "saved" | "error",
+        scale: [e.scale()?.x(), e.scale()?.y()],
+      } as DucImageElement;
+    case "frame":
+      return {
+        ...baseElement,
+        type: elementType,
+        isCollapsed: e.isCollapsed(),
+        name: e.name(),
+      } as DucFrameElement;
+    case "group":
+      return {
+        ...baseElement,
+        type: elementType,
+        isCollapsed: e.isCollapsed(),
+        groupIdRef: e.groupIdRef(),
+      } as DucGroupElement;
+    case "magicframe":
+      return {
+        ...baseElement,
+        type: elementType,
+        isCollapsed: e.isCollapsed(),
+        name: e.name(),
+      } as DucMagicFrameElement;
+    case "selection":
+    case "rectangle":
+    case "diamond":
+    case "ellipse":
     default:
       return null;
   }
