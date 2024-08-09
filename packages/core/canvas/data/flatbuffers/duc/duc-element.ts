@@ -5,6 +5,8 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { BoundElement } from '../duc/bound-element';
+import { Point } from '../duc/point';
+import { PointBinding } from '../duc/point-binding';
 
 
 export class DucElement {
@@ -230,8 +232,157 @@ customData(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
+fontSize():number {
+  const offset = this.bb!.__offset(this.bb_pos, 70);
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+}
+
+fontFamily():string|null
+fontFamily(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+fontFamily(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 72);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+text():string|null
+text(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+text(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 74);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+textAlign():string|null
+textAlign(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+textAlign(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 76);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+verticalAlign():string|null
+verticalAlign(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+verticalAlign(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 78);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+containerId():string|null
+containerId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+containerId(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 80);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+originalText():string|null
+originalText(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+originalText(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 82);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+lineHeight():number {
+  const offset = this.bb!.__offset(this.bb_pos, 84);
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
+}
+
+points(index: number, obj?:Point):Point|null {
+  const offset = this.bb!.__offset(this.bb_pos, 86);
+  return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+pointsLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 86);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+lastCommittedPoint(obj?:Point):Point|null {
+  const offset = this.bb!.__offset(this.bb_pos, 88);
+  return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+startBinding(obj?:PointBinding):PointBinding|null {
+  const offset = this.bb!.__offset(this.bb_pos, 90);
+  return offset ? (obj || new PointBinding()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+endBinding(obj?:PointBinding):PointBinding|null {
+  const offset = this.bb!.__offset(this.bb_pos, 92);
+  return offset ? (obj || new PointBinding()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+startArrowhead():string|null
+startArrowhead(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+startArrowhead(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 94);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+endArrowhead():string|null
+endArrowhead(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+endArrowhead(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 96);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+pressures(index: number):number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 98);
+  return offset ? this.bb!.readFloat32(this.bb!.__vector(this.bb_pos + offset) + index * 4) : 0;
+}
+
+pressuresLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 98);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+pressuresArray():Float32Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 98);
+  return offset ? new Float32Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
+}
+
+simulatePressure():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 100);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
+fileId():string|null
+fileId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+fileId(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 102);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+status():string|null
+status(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+status(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 104);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+scale(obj?:Point):Point|null {
+  const offset = this.bb!.__offset(this.bb_pos, 106);
+  return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+isCollapsed():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 108);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
+name():string|null
+name(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+name(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 110);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+groupIdRef():string|null
+groupIdRef(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+groupIdRef(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 112);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
 static startDucElement(builder:flatbuffers.Builder) {
-  builder.startObject(33);
+  builder.startObject(55);
 }
 
 static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
@@ -390,46 +541,126 @@ static addCustomData(builder:flatbuffers.Builder, customDataOffset:flatbuffers.O
   builder.addFieldOffset(32, customDataOffset, 0);
 }
 
+static addFontSize(builder:flatbuffers.Builder, fontSize:number) {
+  builder.addFieldInt32(33, fontSize, 0);
+}
+
+static addFontFamily(builder:flatbuffers.Builder, fontFamilyOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(34, fontFamilyOffset, 0);
+}
+
+static addText(builder:flatbuffers.Builder, textOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(35, textOffset, 0);
+}
+
+static addTextAlign(builder:flatbuffers.Builder, textAlignOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(36, textAlignOffset, 0);
+}
+
+static addVerticalAlign(builder:flatbuffers.Builder, verticalAlignOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(37, verticalAlignOffset, 0);
+}
+
+static addContainerId(builder:flatbuffers.Builder, containerIdOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(38, containerIdOffset, 0);
+}
+
+static addOriginalText(builder:flatbuffers.Builder, originalTextOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(39, originalTextOffset, 0);
+}
+
+static addLineHeight(builder:flatbuffers.Builder, lineHeight:number) {
+  builder.addFieldFloat32(40, lineHeight, 0.0);
+}
+
+static addPoints(builder:flatbuffers.Builder, pointsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(41, pointsOffset, 0);
+}
+
+static createPointsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startPointsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addLastCommittedPoint(builder:flatbuffers.Builder, lastCommittedPointOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(42, lastCommittedPointOffset, 0);
+}
+
+static addStartBinding(builder:flatbuffers.Builder, startBindingOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(43, startBindingOffset, 0);
+}
+
+static addEndBinding(builder:flatbuffers.Builder, endBindingOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(44, endBindingOffset, 0);
+}
+
+static addStartArrowhead(builder:flatbuffers.Builder, startArrowheadOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(45, startArrowheadOffset, 0);
+}
+
+static addEndArrowhead(builder:flatbuffers.Builder, endArrowheadOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(46, endArrowheadOffset, 0);
+}
+
+static addPressures(builder:flatbuffers.Builder, pressuresOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(47, pressuresOffset, 0);
+}
+
+static createPressuresVector(builder:flatbuffers.Builder, data:number[]|Float32Array):flatbuffers.Offset;
+/**
+ * @deprecated This Uint8Array overload will be removed in the future.
+ */
+static createPressuresVector(builder:flatbuffers.Builder, data:number[]|Uint8Array):flatbuffers.Offset;
+static createPressuresVector(builder:flatbuffers.Builder, data:number[]|Float32Array|Uint8Array):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addFloat32(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startPressuresVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addSimulatePressure(builder:flatbuffers.Builder, simulatePressure:boolean) {
+  builder.addFieldInt8(48, +simulatePressure, +false);
+}
+
+static addFileId(builder:flatbuffers.Builder, fileIdOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(49, fileIdOffset, 0);
+}
+
+static addStatus(builder:flatbuffers.Builder, statusOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(50, statusOffset, 0);
+}
+
+static addScale(builder:flatbuffers.Builder, scaleOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(51, scaleOffset, 0);
+}
+
+static addIsCollapsed(builder:flatbuffers.Builder, isCollapsed:boolean) {
+  builder.addFieldInt8(52, +isCollapsed, +false);
+}
+
+static addName(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(53, nameOffset, 0);
+}
+
+static addGroupIdRef(builder:flatbuffers.Builder, groupIdRefOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(54, groupIdRefOffset, 0);
+}
+
 static endDucElement(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   return offset;
 }
 
-static createDucElement(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, typeOffset:flatbuffers.Offset, x:number, y:number, scopeOffset:flatbuffers.Offset, writingLayerOffset:flatbuffers.Offset, labelOffset:flatbuffers.Offset, ratioLocked:boolean, isVisible:boolean, fillStyleOffset:flatbuffers.Offset, roughness:number, roundnessTypeOffset:flatbuffers.Offset, roundnessValue:number, backgroundColorOffset:flatbuffers.Offset, strokeColorOffset:flatbuffers.Offset, strokeWidth:number, strokeStyleOffset:flatbuffers.Offset, strokePlacementOffset:flatbuffers.Offset, opacity:number, width:number, height:number, angle:number, seed:number, version:number, versionNonce:number, isDeleted:boolean, groupIdsOffset:flatbuffers.Offset, frameIdOffset:flatbuffers.Offset, boundElementsOffset:flatbuffers.Offset, updated:bigint, linkOffset:flatbuffers.Offset, locked:boolean, customDataOffset:flatbuffers.Offset):flatbuffers.Offset {
-  DucElement.startDucElement(builder);
-  DucElement.addId(builder, idOffset);
-  DucElement.addType(builder, typeOffset);
-  DucElement.addX(builder, x);
-  DucElement.addY(builder, y);
-  DucElement.addScope(builder, scopeOffset);
-  DucElement.addWritingLayer(builder, writingLayerOffset);
-  DucElement.addLabel(builder, labelOffset);
-  DucElement.addRatioLocked(builder, ratioLocked);
-  DucElement.addIsVisible(builder, isVisible);
-  DucElement.addFillStyle(builder, fillStyleOffset);
-  DucElement.addRoughness(builder, roughness);
-  DucElement.addRoundnessType(builder, roundnessTypeOffset);
-  DucElement.addRoundnessValue(builder, roundnessValue);
-  DucElement.addBackgroundColor(builder, backgroundColorOffset);
-  DucElement.addStrokeColor(builder, strokeColorOffset);
-  DucElement.addStrokeWidth(builder, strokeWidth);
-  DucElement.addStrokeStyle(builder, strokeStyleOffset);
-  DucElement.addStrokePlacement(builder, strokePlacementOffset);
-  DucElement.addOpacity(builder, opacity);
-  DucElement.addWidth(builder, width);
-  DucElement.addHeight(builder, height);
-  DucElement.addAngle(builder, angle);
-  DucElement.addSeed(builder, seed);
-  DucElement.addVersion(builder, version);
-  DucElement.addVersionNonce(builder, versionNonce);
-  DucElement.addIsDeleted(builder, isDeleted);
-  DucElement.addGroupIds(builder, groupIdsOffset);
-  DucElement.addFrameId(builder, frameIdOffset);
-  DucElement.addBoundElements(builder, boundElementsOffset);
-  DucElement.addUpdated(builder, updated);
-  DucElement.addLink(builder, linkOffset);
-  DucElement.addLocked(builder, locked);
-  DucElement.addCustomData(builder, customDataOffset);
-  return DucElement.endDucElement(builder);
-}
 }
