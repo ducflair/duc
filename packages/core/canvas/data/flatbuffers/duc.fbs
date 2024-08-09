@@ -20,22 +20,6 @@ table PointBinding {
   gap: float;
 }
 
-// Define a union for DucElement types
-union DucElementUnion { 
-  DucTextElement,
-  DucLinearElement,
-  DucFreeDrawElement,
-  DucImageElement,
-  DucFrameElement,
-  DucGroupElement,
-  DucMagicFrameElement,
-  DucIframeElement 
-}
-
-union DucFrameLikeElement {
-  DucFrameElement,
-  DucMagicFrameElement
-}
 
 // Base table for DucElement with common fields
 table DucElement {
@@ -71,15 +55,12 @@ table DucElement {
   updated: long;
   link: string;
   locked: bool;
+
+  // MagicFrameElement specific fields
   customData: string;  // Simplified as string
-}
-
-// Define a table for each DucElement subtype
 
 
-table DucTextElement {
-  base: DucElement;
-//   type: string = "text";
+  // TextElement specific fields
   fontSize: int;
   fontFamily: string;  // Assuming FontFamilyValues as string
   text: string;
@@ -88,62 +69,33 @@ table DucTextElement {
   containerId: string;
   originalText: string;
   lineHeight: float;  // Assuming float for unitless line height
-}
 
-table DucLinearElement {
-  base: DucElement;
-//   type: string = "line";
+
+  // LinearElement specific fields
   points: [Point];
   lastCommittedPoint: Point;
   startBinding: PointBinding;
   endBinding: PointBinding;
   startArrowhead: string;  // Assuming Arrowhead as string
   endArrowhead: string;
-}
 
-table DucFreeDrawElement {
-  base: DucElement;
-//   type: string = "freedraw";
-  points: [Point];
+  // FreeDrawElement specific fields
   pressures: [float];
   simulatePressure: bool;
-  lastCommittedPoint: Point;
-}
 
-table DucImageElement {
-  base: DucElement;
-//   type: string = "image";
+  // ImageElement specific fields
   fileId: string;
   status: string;  // "pending", "saved", or "error"
-  scale: [float];  // Vector of two floats
-}
+  scale: Point;
 
-table DucFrameElement {
-  base: DucElement;
-//   type: string = "frame";
+  // FrameElement specific fields
   isCollapsed: bool;
-  name: string;
-}
+  name: string; // FIXME: Perhaps will be deprecated because of field "label"
 
-table DucGroupElement {
-  base: DucElement;
-//   type: string = "group";
-  isCollapsed: bool;
+  // GroupElement specific fields 
   groupIdRef: string;
 }
 
-table DucMagicFrameElement {
-  base: DucElement;
-//   type: string = "magicframe";
-  isCollapsed: bool;
-  name: string;
-}
-
-table DucIframeElement {
-  base: DucElement;
-//   type: string = "iframe";
-  customData: string;  // Simplified as string
-}
 
 
 // Define a table for BoundElement used in DucElement
@@ -206,9 +158,9 @@ table AppState {
   activeEmbeddableState: string;
   draggingElement: DucElement;
   resizingElement: DucElement;
-  multiElement: DucLinearElement;
+  multiElement: DucElement;
   selectionElement: DucElement;
-  frameToHighlight: DucFrameLikeElement;
+  frameToHighlight: DucElement;
   frameRenderingEnabled: bool;
   frameRenderingName: bool;
   frameRenderingOutline: bool;
@@ -326,7 +278,7 @@ table ExportedDataState {
   type: string;
   version: int;
   source: string;
-  elements: [DucElement];  // Array of DucElement
+  elements: [DucElement];
   appState: AppState;
   files: BinaryFiles;
 }
