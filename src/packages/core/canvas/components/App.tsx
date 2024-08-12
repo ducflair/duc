@@ -419,6 +419,7 @@ import {
 } from "./hyperlink/helpers";
 import { SupportedMeasures, WritingLayers } from "../element/measurements";
 import { changeProperty } from "../actions/actionProperties";
+import { saveAsFlatBuffers } from "../data/flatbuffers/serialize";
 
 const AppContext = React.createContext<AppClassProperties>(null!);
 const AppPropsContext = React.createContext<AppProps>(null!);
@@ -698,7 +699,8 @@ class App extends React.Component<AppProps, AppState> {
           }),
         },
         files: {
-          exportToDuc: this.exportToDuc,
+          exportToDucJSON: this.exportToDucJSON,
+          exportToDucBin: this.exportToDucBin,
           openFile: this.openFile,
         },
         state: useApp,
@@ -4305,8 +4307,20 @@ class App extends React.Component<AppProps, AppState> {
     return this.actionManager.executeAction(actionToggleElementLock);
   };
 
-  exportToDuc = async () => {
+  exportToDucJSON = async () => {
     return await saveAsJSON(
+      this.getSceneElements(),
+      {
+        ...this.state,
+        fileHandle: null,
+      },
+      this.files,
+      this.getName(),
+    );
+  };
+  
+  exportToDucBin = async () => {
+    return await saveAsFlatBuffers(
       this.getSceneElements(),
       {
         ...this.state,
@@ -4318,7 +4332,7 @@ class App extends React.Component<AppProps, AppState> {
   };
 
   openFile = async () => {
-    const file = await fileOpen({ description: "Excalidraw or library file" });
+    const file = await fileOpen({ description: "Ducflair File" });
     const contents = await loadSceneOrLibraryFromBlob(
       file,
       {

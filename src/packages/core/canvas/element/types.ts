@@ -161,7 +161,7 @@ export type DucGroup = {
   id: string;
   type: "group";
   isCollapsed: boolean;
-  label: string; // FIXME: In the future we have to support version control for group Label
+  label: string; // FIXME: In the future we have to support history control for group Label
   scope: SupportedMeasures;
   writingLayer: WritingLayers;
 };
@@ -201,6 +201,8 @@ export type DucElement =
   | DucMagicFrameElement
   | DucIframeElement
   | DucEmbeddableElement;
+
+export type DucElementTypes = DucElement["type"];
 
 export type NonDeleted<TElement extends DucElement> = TElement & {
   isDeleted: boolean;

@@ -192,7 +192,7 @@ export interface AppState {
     items: ContextMenuItems;
     top: number;
     left: number;
-  } | null;
+  } | null; // Out of the Binary
   showWelcomeScreen: boolean;
   isLoading: boolean;
   errorMessage: React.ReactNode;
@@ -204,9 +204,9 @@ export interface AppState {
   resizingElement: NonDeletedDucElement | null;
   multiElement: NonDeleted<DucLinearElement> | null;
   selectionElement: NonDeletedDucElement | null;
-  isBindingEnabled: boolean;
-  startBoundElement: NonDeleted<DucBindableElement> | null;
-  suggestedBindings: SuggestedBinding[];
+  isBindingEnabled: boolean; // Out of the Binary
+  startBoundElement: NonDeleted<DucBindableElement> | null; // Out of the Binary
+  suggestedBindings: SuggestedBinding[]; // Out of the Binary
   frameToHighlight: NonDeleted<DucFrameLikeElement> | null;
   frameRendering: {
     enabled: boolean;
@@ -219,7 +219,7 @@ export interface AppState {
   // element being edited, but not necessarily added to elements array yet
   // (e.g. text element when typing into the input)
   editingElement: NonDeletedDucElement | null;
-  editingLinearElement: LinearElementEditor | null;
+  editingLinearElement: LinearElementEditor | null; // Out of the Binary
   activeTool: {
     /**
      * indicates a previous tool we should revert back to if we deselect the
@@ -259,9 +259,9 @@ export interface AppState {
   isResizing: boolean;
   isRotating: boolean;
   zoom: Zoom;
-  openMenu: "canvas" | "shape" | null;
-  openPopup: "canvasBackground" | "elementBackground" | "elementStroke" | null;
-  openSidebar: { name: SidebarName; tab?: SidebarTabName } | null;
+  openMenu: "canvas" | "shape" | null; // Out of the Binary
+  openPopup: "canvasBackground" | "elementBackground" | "elementStroke" | null; // Out of the Binary
+  openSidebar: { name: SidebarName; tab?: SidebarTabName } | null; // Out of the Binary
   openDialog:
     | null
     | { name: "imageExport" | "help" | "jsonExport" }
@@ -273,7 +273,7 @@ export interface AppState {
           | "settings"; // when AI settings dialog is explicitly invoked
         tab: "text-to-diagram" | "diagram-to-code";
       }
-    | { name: "ttd"; tab: "text-to-diagram" | "mermaid" };
+    | { name: "ttd"; tab: "text-to-diagram" | "mermaid" }; // Out of the Binary
   /**
    * Reflects user preference for whether the default sidebar should be docked.
    *
@@ -281,16 +281,16 @@ export interface AppState {
    * state of the sidebar, because the host apps can override this through
    * a DefaultSidebar prop, which is not reflected back to the appState.
    */
-  defaultSidebarDockedPreference: boolean;
+  defaultSidebarDockedPreference: boolean;  // Out of the Binary
 
   lastPointerDownWith: PointerType;
   selectedElementIds: Readonly<{ [id: string]: true }>;
   previousSelectedElementIds: { [id: string]: true };
   selectedElementsAreBeingDragged: boolean;
   shouldCacheIgnoreZoom: boolean;
-  toast: { message: string; closable?: boolean; duration?: number } | null;
+  toast: { message: string; closable?: boolean; duration?: number } | null; // Out of the Binary
   zenModeEnabled: boolean;
-  theme: Theme;
+  theme: Theme; // Out of the Binary
   gridSize: number | null;
   viewModeEnabled: boolean;
 
@@ -306,8 +306,8 @@ export interface AppState {
 
   fileHandle: FileSystemHandle | null;
   collaborators: Map<SocketId, Collaborator>;
-  showStats: boolean;
-  currentChartType: ChartType;
+  showStats: boolean; // Out of the Binary
+  currentChartType: ChartType; // Out of the Binary
   pasteDialog:
     | {
         shown: false;
@@ -320,8 +320,8 @@ export interface AppState {
   /** imageElement waiting to be placed on canvas */
   pendingImageElementId: DucImageElement["id"] | null;
   showHyperlinkPopup: false | "info" | "editor";
-  selectedLinearElement: LinearElementEditor | null;
-  snapLines: readonly SnapLine[];
+  selectedLinearElement: LinearElementEditor | null; // Out of the Binary
+  snapLines: readonly SnapLine[]; // Out of the Binary
   originSnapOffset: {
     x: number;
     y: number;
@@ -648,7 +648,8 @@ export interface DucImperativeAPI {
     redo: InstanceType<typeof App>["redo"];
   };
   files: {
-    exportToDuc: InstanceType<typeof App>["exportToDuc"];
+    exportToDucJSON: InstanceType<typeof App>["exportToDucJSON"];
+    exportToDucBin: InstanceType<typeof App>["exportToDucBin"];
     openFile: InstanceType<typeof App>["openFile"];
   };
   canvas: {
