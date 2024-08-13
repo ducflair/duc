@@ -100,7 +100,6 @@ const rawConfig = {
   bundle: true,
   format: "esm",
   plugins: [sassPlugin()],
-
   loader: {
     ".woff2": "copy",
     ".ttf": "copy",
