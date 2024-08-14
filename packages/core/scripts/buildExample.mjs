@@ -12,7 +12,9 @@ const createDevBuild = async () => {
     },
     bundle: true,
     format: "esm",
-    plugins: [sassPlugin()],
+    plugins: [sassPlugin({
+      quietDeps: true,
+    })],
     loader: {
       ".woff2": "dataurl",
       ".html": "copy",

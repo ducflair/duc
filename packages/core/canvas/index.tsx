@@ -273,3 +273,8 @@ export {
   isElementInsideBBox,
   elementPartiallyOverlapsWithOrContainsBBox,
 } from "../utils/withinBounds";
+
+
+export {
+  parseDucFlatBuffers
+} from "./data/flatbuffers/parse";
