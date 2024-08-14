@@ -17,7 +17,12 @@ import {
   DucFrameElement,
   DucImageElement,
   DucFreeDrawElement,
-  DucGroupElement
+  DucGroupElement,
+  DucArrowElement,
+  DucSelectionElement,
+  DucRectangleElement,
+  DucDiamondElement,
+  DucEllipseElement
 } from '../../../element/types';
 import { SupportedMeasures, WritingLayers } from '../../../element/measurements';
 
@@ -77,10 +82,11 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
     roughness: e.roughness(),
     ratioLocked: e.ratioLocked(),
     isVisible: e.isVisible(),
-    roundness: {
-      type: (Number(e.roundnessType() || '1')) as RoundnessType,
-      value: e.roundnessValue(),
-    },
+    roundness: null,
+    // roundness: { FIXME: For now we won't be using roundness
+    //   type: (Number(e.roundnessType() || '1')) as RoundnessType,
+    //   value: e.roundnessValue(),
+    // },
     opacity: e.opacity(),
     width: e.width(),
     height: e.height(),
@@ -118,6 +124,24 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
         lineHeight: e.lineHeight() as number & { _brand: "unitlessLineHeight" },
       } as DucTextElement;
     case "arrow":
+      return {
+        ...baseElement,
+        type: elementType,
+        points: points,
+        lastCommittedPoint: [e.lastCommittedPoint()?.x(), e.lastCommittedPoint()?.y()],
+        startBinding: {
+          elementId: e.startBinding()?.elementId(),
+          focus: e.startBinding()?.focus(),
+          gap: e.startBinding()?.gap()
+        },
+        endBinding: {
+          elementId: e.endBinding()?.elementId(),
+          focus: e.endBinding()?.focus(),
+          gap: e.endBinding()?.gap()
+        },
+        startArrowhead: e.startArrowhead() as Arrowhead,
+        endArrowhead: e.endArrowhead() as Arrowhead,
+      } as DucArrowElement;
     case "line":
       return {
         ...baseElement,
@@ -176,9 +200,25 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
         name: e.name(),
       } as DucMagicFrameElement;
     case "selection":
+      return {
+        ...baseElement,
+        type: elementType,
+      } as DucSelectionElement;
     case "rectangle":
+      return {
+        ...baseElement,
+        type: elementType,
+      } as DucRectangleElement;
     case "diamond":
+      return {
+        ...baseElement,
+        type: elementType,
+      } as DucDiamondElement;
     case "ellipse":
+      return {
+        ...baseElement,
+        type: elementType,
+      } as DucEllipseElement;
     default:
       return null;
   }

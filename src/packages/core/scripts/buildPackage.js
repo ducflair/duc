@@ -42,7 +42,9 @@ const browserConfig = {
   bundle: true,
   format: "esm",
   plugins: [
-    sassPlugin(),
+    sassPlugin({
+      quietDeps: true,
+    }),
     externalGlobalPlugin({
       react: "React",
       "react-dom": "ReactDOM",
@@ -99,8 +101,9 @@ const rawConfig = {
   entryPoints: ["index.tsx"],
   bundle: true,
   format: "esm",
-  plugins: [sassPlugin()],
-
+  plugins: [sassPlugin({
+    quietDeps: true,
+  })],
   loader: {
     ".woff2": "copy",
     ".ttf": "copy",
