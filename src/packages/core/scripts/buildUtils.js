@@ -7,7 +7,9 @@ const browserConfig = {
   entryPoints: ["index.ts"],
   bundle: true,
   format: "esm",
-  plugins: [sassPlugin()],
+  plugins: [sassPlugin({
+    quietDeps: true,
+  })],
 };
 
 // Will be used later for treeshaking
@@ -79,7 +81,9 @@ const rawConfig = {
   bundle: true,
   format: "esm",
   packages: "external",
-  plugins: [sassPlugin()],
+  plugins: [sassPlugin({
+    quietDeps: true,
+  })],
 };
 
 // const BASE_PATH = `${path.resolve(`${__dirname}/..`)}`;

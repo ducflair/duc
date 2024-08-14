@@ -98,7 +98,6 @@
     "dotenv": "16.0.1",
     "esbuild": "0.19.10",
     "esbuild-plugin-external-global": "1.0.1",
-    "esbuild-sass-plugin": "2.16.0",
     "eslint-plugin-react": "7.32.2",
     "fake-indexeddb": "3.1.7",
     "import-meta-loader": "1.1.0",

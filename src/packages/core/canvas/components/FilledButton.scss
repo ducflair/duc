@@ -24,6 +24,10 @@
       }
     }
 
+    & {
+      user-select: none;
+    }
+
     &,
     &__contents {
       display: flex;
@@ -201,7 +205,6 @@
 
     font-family: var(--font-family);
 
-    user-select: none;
 
     transition: all 150ms ease-out;
 
