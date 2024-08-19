@@ -72,7 +72,6 @@
     "points-on-curve": "1.0.1",
     "pwacompat": "2.0.17",
     "roughjs": "4.6.4",
-    "sass": "1.51.0",
     "tunnel-rat": "0.1.2"
   },
   "devDependencies": {
@@ -104,6 +103,7 @@
     "mini-css-extract-plugin": "2.6.1",
     "postcss-loader": "7.0.1",
     "sass-loader": "13.0.2",
+    "esbuild-sass-plugin": "2.16.0",
     "size-limit": "9.0.0",
     "style-loader": "3.3.3",
     "ts-loader": "9.3.1",
