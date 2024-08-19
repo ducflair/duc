@@ -82,6 +82,7 @@ export const mutateElement = <TElement extends Mutable<DucElement>>(
   if (!didChange) {
     return element;
   }
+  
 
   if (
     typeof updates.height !== "undefined" ||
