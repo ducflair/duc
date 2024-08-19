@@ -1349,6 +1349,7 @@ class App extends React.Component<AppProps, AppState> {
 
       const reset = () => {
         mutateElement(f, { name: f.label?.trim() || null });
+        this.updateGroups();
         this.setState({ editingFrame: null });
       };
 
@@ -1370,6 +1371,7 @@ class App extends React.Component<AppProps, AppState> {
               mutateElement(f, {
                 label: e.target.value,
               });
+              this.updateGroups();
             }}
             onFocus={(e) => e.target.select()}
             onBlur={() => reset()}
@@ -1874,6 +1876,7 @@ class App extends React.Component<AppProps, AppState> {
     }
     this.magicGenerations.set(frameElement.id, data);
     this.onSceneUpdated();
+    this.updateGroups();
   };
 
   private getTextFromElements(elements: readonly DucElement[]) {
@@ -2133,13 +2136,14 @@ class App extends React.Component<AppProps, AppState> {
         for (const child of selectedElements) {
           mutateElement(child, { frameId: frame.id });
         }
-
+        
         this.setState({
           selectedElementIds: { [frame.id]: true },
         });
       }
-
+      
       this.onMagicFrameGenerate(frame, "upstream");
+      this.updateGroups();
     }
   };
 
@@ -3331,20 +3335,21 @@ class App extends React.Component<AppProps, AppState> {
             // hack to reset the `y` coord because we vertically center during
             // insertImageElement
             mutateElement(initializedImageElement, { y }, false);
-
+            
             y = imageElement.y + imageElement.height + 25;
-
+            
             nextSelectedIds[imageElement.id] = true;
           }
         }
       }
-
+      
       this.setState({
         selectedElementIds: makeNextSelectedElementIds(
           nextSelectedIds,
           this.state,
         ),
       });
+      this.updateGroups();
 
       const error = responses.find((response) => !!response.errorMessage);
       if (error && error.errorMessage) {
@@ -3748,6 +3753,7 @@ class App extends React.Component<AppProps, AppState> {
       collaborators?: SceneData["collaborators"];
       commitToHistory?: SceneData["commitToHistory"];
     }) => {
+      
       if (sceneData.commitToHistory) {
         this.history.resumeRecording();
       }
@@ -3945,6 +3951,7 @@ class App extends React.Component<AppProps, AppState> {
         });
 
         this.maybeSuggestBindingForAll(selectedElements);
+        this.updateGroups();
 
         event.preventDefault();
       } else if (event.key === KEYS.ENTER) {
@@ -4178,6 +4185,8 @@ class App extends React.Component<AppProps, AppState> {
         frameId: frameId,
       });
     }
+    this.updateGroups();
+
   };
 
   setZLayerIndexAfterElement = (afterElementId: string, activeElementId:string) => {
@@ -4290,6 +4299,7 @@ class App extends React.Component<AppProps, AppState> {
         isCollapsed: !elem.isCollapsed,
       });
     }
+    this.updateGroups();
   };
 
   sendBackwardElements = (
@@ -4897,6 +4907,7 @@ class App extends React.Component<AppProps, AppState> {
         );
       }
     }
+    this.updateGroups();
 
     const topLayerFrame = this.getTopLayerFrameAtSceneCoords({
       x: sceneX,
@@ -4949,6 +4960,7 @@ class App extends React.Component<AppProps, AppState> {
       });
     }
     this.setState({ editingElement: element });
+    this.updateGroups();
 
     if (!existingTextElement) {
       if (container && shouldBindToContainer) {
@@ -5456,6 +5468,7 @@ class App extends React.Component<AppProps, AppState> {
           ],
         });
       }
+      this.updateGroups();
 
       return;
     }
@@ -6051,6 +6064,7 @@ class App extends React.Component<AppProps, AppState> {
         y,
         frameId: frame ? frame.id : null,
       });
+      this.updateGroups();
     } else if (this.state.activeTool.type === "freedraw") {
       this.handleFreeDrawElementOnPointerDown(
         event,
@@ -6880,6 +6894,7 @@ class App extends React.Component<AppProps, AppState> {
       this.scene.getNonDeletedElementsMap(),
     );
     this.scene.addNewElement(element);
+    this.updateGroups();
     this.setState({
       draggingElement: element,
       editingElement: element,
@@ -7068,6 +7083,7 @@ class App extends React.Component<AppProps, AppState> {
             multiElement.points[multiElement.points.length - 1],
         });
         this.actionManager.executeAction(actionFinalize);
+        this.updateGroups();
         return;
       }
 
@@ -7102,6 +7118,7 @@ class App extends React.Component<AppProps, AppState> {
       mutateElement(multiElement, {
         lastCommittedPoint: multiElement.points[multiElement.points.length - 1],
       });
+      this.updateGroups();
       setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
     } else {
       const [gridX, gridY] = getGridPoint(
@@ -7170,7 +7187,7 @@ class App extends React.Component<AppProps, AppState> {
         this.scene.getNonDeletedElements(),
         this.scene.getNonDeletedElementsMap(),
       );
-
+      
       this.scene.addNewElement(element);
       this.setState({
         draggingElement: element,
@@ -7178,6 +7195,7 @@ class App extends React.Component<AppProps, AppState> {
         startBoundElement: boundElement,
         suggestedBindings: [],
       });
+      this.updateGroups();
     }
   };
 
@@ -7715,8 +7733,9 @@ class App extends React.Component<AppProps, AppState> {
               } else {
                 nextElements.push(element);
               }
-            }
+            }            
             const nextSceneElements = [...nextElements, ...elementsToAppend];
+
             bindTextToShapeAfterDuplication(
               nextElements,
               elementsToAppend,
@@ -7734,6 +7753,7 @@ class App extends React.Component<AppProps, AppState> {
               oldIdToDuplicatedId,
             );
             this.scene.replaceAllElements(nextSceneElements);
+            this.updateGroups();
             this.maybeCacheVisibleGaps(event, selectedElements, true);
             this.maybeCacheReferenceSnapPoints(event, selectedElements, true);
           }
@@ -7906,6 +7926,7 @@ class App extends React.Component<AppProps, AppState> {
           });
         }
       }
+      this.updateGroups();
     });
   }
 
@@ -8103,8 +8124,9 @@ class App extends React.Component<AppProps, AppState> {
           pressures,
           lastCommittedPoint: [dx, dy],
         });
-
+        
         this.actionManager.executeAction(actionFinalize);
+        this.updateGroups();
 
         return;
       }
@@ -8162,6 +8184,7 @@ class App extends React.Component<AppProps, AppState> {
             multiElement: draggingElement,
             editingElement: this.state.draggingElement,
           });
+          this.updateGroups();
         } else if (pointerDownState.drag.hasOccurred && !multiElement) {
           if (
             isBindingEnabled(this.state) &&
@@ -8259,6 +8282,7 @@ class App extends React.Component<AppProps, AppState> {
                   );
 
                   this.scene.informMutation();
+                  this.updateGroups();
                 }
               }
             }
@@ -8309,6 +8333,7 @@ class App extends React.Component<AppProps, AppState> {
                 this.setState({
                   editingGroupId: null,
                 });
+                this.updateGroups();
               }
             };
 
@@ -8373,6 +8398,7 @@ class App extends React.Component<AppProps, AppState> {
           draggingElement,
           getNormalizedDimensions(draggingElement),
         );
+        this.updateGroups();
       }
 
       if (resizingElement) {
@@ -8918,6 +8944,8 @@ class App extends React.Component<AppProps, AppState> {
       this.setState({
         errorMessage: error.message || t("errors.imageInsertError"),
       });
+      this.updateGroups();
+
       return null;
     }
   };
@@ -9063,6 +9091,8 @@ class App extends React.Component<AppProps, AppState> {
           width: placeholderSize,
           height: placeholderSize,
         });
+        this.updateGroups();
+
       }
 
       return;
@@ -9092,6 +9122,8 @@ class App extends React.Component<AppProps, AppState> {
       const y = imageElement.y + imageElement.height / 2 - height / 2;
 
       mutateElement(imageElement, { x, y, width, height });
+      this.updateGroups();
+
     }
   };
 
