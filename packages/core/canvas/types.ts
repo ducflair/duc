@@ -573,6 +573,7 @@ export type AppClassProperties = {
   addElementsFromPasteOrLibrary: App["addElementsFromPasteOrLibrary"];
   togglePenMode: App["togglePenMode"];
   setActiveTool: App["setActiveTool"];
+  updateGroups: App["updateGroups"];
   setOpenDialog: App["setOpenDialog"];
   insertEmbeddableElement: App["insertEmbeddableElement"];
   onMagicframeToolSelect: App["onMagicframeToolSelect"];
