@@ -169,6 +169,8 @@ export const actionGroup = register({
       ...elementsInGroup,
       ...elementsAfterGroup,
     ];
+    
+    app.updateGroups()
 
     return {
       appState: {
@@ -278,6 +280,8 @@ export const actionUngroup = register({
       },
       {},
     );
+
+    app.updateGroups()
 
     return {
       appState: { ...appState, ...updateAppState },
