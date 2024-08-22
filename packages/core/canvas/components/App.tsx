@@ -417,9 +417,10 @@ import {
   isPointHittingLink,
   isPointHittingLinkIcon,
 } from "./hyperlink/helpers";
-import { SupportedMeasures, WritingLayers } from "../element/measurements";
+import { SupportedMeasures } from "../duc/utils/measurements";
+import { WritingLayers } from "../duc/utils/writingLayers";
 import { changeProperty } from "../actions/actionProperties";
-import { saveAsFlatBuffers } from "../data/flatbuffers/serialize";
+import { saveAsFlatBuffers } from "../duc/duc-ts/serialize";
 
 const AppContext = React.createContext<AppClassProperties>(null!);
 const AppPropsContext = React.createContext<AppProps>(null!);

@@ -277,4 +277,4 @@ export {
 
 export {
   parseDucFlatBuffers
-} from "./data/flatbuffers/parse";
+} from "./duc/duc-ts/parse";
