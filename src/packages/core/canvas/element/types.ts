@@ -8,7 +8,8 @@ import {
 } from "../constants";
 import { MakeBrand, MarkNonNullable, ValueOf } from "../utility-types";
 import { MagicCacheData } from "../data/magic";
-import { SupportedMeasures, WritingLayers } from "./measurements";
+import { SupportedMeasures  } from "../duc/utils/measurements";
+import { WritingLayers } from "../duc/utils/writingLayers";
 
 export type ChartType = "bar" | "line";
 export type FillStyle = "hachure" | "cross-hatch" | "solid" | "zigzag";
