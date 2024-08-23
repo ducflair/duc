@@ -1,5 +1,6 @@
 import { AppState as BinAppState, UserToFollow, ActiveTool } from '../duc';
-import { SupportedMeasures, WritingLayers } from '../../../element/measurements';
+import { SupportedMeasures } from '../../utils/measurements';
+import { WritingLayers } from "../../utils/writingLayers";
 import { AppState, NormalizedZoomValue } from '../../../types';
 import { Arrowhead, DucGroup, FillStyle, PointerType, StrokeRoundness, StrokeStyle } from '../../../element/types';
 

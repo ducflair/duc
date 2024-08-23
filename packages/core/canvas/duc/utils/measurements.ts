@@ -1,8 +1,4 @@
 
-
-export type WritingLayers = "notes" | "loose" | "precise";
-
-
 export type SupportedMeasures = 
   MetricMeasure | 
   ImperialMeasure
