@@ -24,7 +24,8 @@ import {
   DucDiamondElement,
   DucEllipseElement
 } from '../../../element/types';
-import { SupportedMeasures, WritingLayers } from '../../../element/measurements';
+import { SupportedMeasures } from '../../utils/measurements';
+import { WritingLayers } from '../../utils/writingLayers';
 
 export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
   if (!e) return null;

@@ -1,6 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
 import { AppState as BinAppState, BinaryFiles as BinBinaryFiles, ExportedDataState, BinaryFilesEntry, BinaryFileData, UserToFollow, DucElement as BinDucElement, ActiveTool } from '../duc';
-import { fileSave } from '../../filesystem';
+import { fileSave } from '../../../data/filesystem';
 import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, EXPORT_SOURCE, MIME_TYPES, VERSIONS } from '../../../constants';
 import { cleanAppStateForExport } from '../../../appState';
 import { DucElement } from '../../../element/types';
