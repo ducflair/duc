@@ -1,0 +1,1 @@
+export type WritingLayers = "notes" | "loose" | "precise";

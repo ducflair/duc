@@ -40,7 +40,8 @@ import type { IMAGE_MIME_TYPES, MIME_TYPES } from "./constants";
 import { ContextMenuItems } from "./components/ContextMenu";
 import { SnapLine } from "./snapping";
 import { Merge, MaybePromise, ValueOf } from "./utility-types";
-import { SupportedMeasures, WritingLayers } from "./element/measurements";
+import { SupportedMeasures } from "./duc/utils/measurements";
+import { WritingLayers } from "./duc/utils/writingLayers";
 
 export type Point = Readonly<RoughPoint>;
 
