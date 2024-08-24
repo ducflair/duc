@@ -1,4 +1,4 @@
-import { FRAME_STYLE } from "../constants";
+import { FRAME_STYLE, THEME } from "../constants";
 import { getElementAbsoluteCoords } from "../element";
 
 import {
@@ -17,6 +17,7 @@ import {
   ElementsMap,
   DucFrameLikeElement,
   NonDeletedDucElement,
+  Theme,
 } from "../element/types";
 import {
   StaticCanvasRenderConfig,
@@ -28,6 +29,7 @@ import {
 } from "../components/hyperlink/helpers";
 import { bootstrapCanvas, getNormalizedCanvasDimensions } from "./helpers";
 import { throttleRAF } from "../utils";
+import transformHexColor from "../scene/hexDarkModeFilter";
 
 const strokeGrid = (
   context: CanvasRenderingContext2D,
@@ -37,12 +39,13 @@ const strokeGrid = (
   zoom: Zoom,
   width: number,
   height: number,
+  theme: Theme,
 ) => {
   const BOLD_LINE_FREQUENCY = 5;
 
   enum GridLineColor {
-    Bold = "#cccccc",
-    Regular = "#e5e5e5",
+    Light = "#E5E5E5",
+    Dark = "#313131",
   }
 
   const offsetX =
@@ -63,7 +66,7 @@ const strokeGrid = (
       Math.round(x - scrollX) % (BOLD_LINE_FREQUENCY * gridSize) === 0;
     context.beginPath();
     context.setLineDash(isBold ? [] : lineDash);
-    context.strokeStyle = isBold ? GridLineColor.Bold : GridLineColor.Regular;
+    context.strokeStyle = theme===THEME.DARK ? GridLineColor.Dark : GridLineColor.Light
     context.moveTo(x, offsetY - gridSize);
     context.lineTo(x, offsetY + height + gridSize * 2);
     context.stroke();
@@ -73,7 +76,7 @@ const strokeGrid = (
       Math.round(y - scrollY) % (BOLD_LINE_FREQUENCY * gridSize) === 0;
     context.beginPath();
     context.setLineDash(isBold ? [] : lineDash);
-    context.strokeStyle = isBold ? GridLineColor.Bold : GridLineColor.Regular;
+    context.strokeStyle = theme===THEME.DARK ? GridLineColor.Dark : GridLineColor.Light
     context.moveTo(offsetX - gridSize, y);
     context.lineTo(offsetX + width + gridSize * 2, y);
     context.stroke();
@@ -190,7 +193,8 @@ const _renderStaticScene = ({
     normalizedHeight,
     theme: appState.theme,
     isExporting,
-    viewBackgroundColor: appState.viewBackgroundColor,
+    // viewBackgroundColor: appState.viewBackgroundColor,
+    viewBackgroundColor: appState.theme === THEME.DARK ? transformHexColor(appState.viewBackgroundColor!) : appState.viewBackgroundColor,
   });
 
   // Apply zoom
@@ -206,6 +210,7 @@ const _renderStaticScene = ({
       appState.zoom,
       normalizedWidth / appState.zoom.value,
       normalizedHeight / appState.zoom.value,
+      appState.theme,
     );
   }
 

@@ -17,6 +17,7 @@ import Footer from "./components/footer/FooterCenter";
 import MainMenu from "./components/main-menu/MainMenu";
 import WelcomeScreen from "./components/welcome-screen/WelcomeScreen";
 import LiveCollaborationTrigger from "./components/live-collaboration/LiveCollaborationTrigger";
+import transformHexColor from "./scene/hexDarkModeFilter";
 
 polyfill();
 
@@ -282,3 +283,5 @@ export {
 export {
   CanvasPreview
 } from "./components/canvasPreview";
+
+export { default as transformHexColor } from "./scene/hexDarkModeFilter";

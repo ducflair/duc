@@ -421,6 +421,7 @@ import { SupportedMeasures } from "../duc/utils/measurements";
 import { WritingLayers } from "../duc/utils/writingLayers";
 import { changeProperty } from "../actions/actionProperties";
 import { saveAsFlatBuffers } from "../duc/duc-ts/serialize";
+import transformHexColor from "../scene/hexDarkModeFilter";
 
 const AppContext = React.createContext<AppClassProperties>(null!);
 const AppPropsContext = React.createContext<AppProps>(null!);
