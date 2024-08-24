@@ -12,6 +12,8 @@ import type {
   NonDeletedSceneElementsMap,
 } from "../../element/types";
 import { isRenderThrottlingEnabled } from "../../reactUtils";
+import transformHexColor from "../../scene/hexDarkModeFilter";
+import { THEME } from "../../constants";
 
 type StaticCanvasProps = {
   canvas: HTMLCanvasElement;
