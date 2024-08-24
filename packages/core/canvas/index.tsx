@@ -278,3 +278,7 @@ export {
 export {
   parseDucFlatBuffers
 } from "./duc/duc-ts/parse";
+
+export {
+  CanvasPreview
+} from "./components/canvasPreview";
