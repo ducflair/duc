@@ -38,13 +38,17 @@ export const CanvasPreview = ({
     // const [exportWithBackground, setExportWithBackground] = useState(
     //   appStateSnapshot.exportBackground,
     // );
-    // const [exportDarkMode, setExportDarkMode] = useState(
-    //   appStateSnapshot.exportWithDarkMode,
-    // );
+    const [exportDarkMode, setExportDarkMode] = useState(
+        exportWithDarkMode
+    );
     const [embedScene, setEmbedScene] = useState(
       appStateSnapshot.exportEmbedScene,
     );
     const [exportScale, setExportScale] = useState(appStateSnapshot.exportScale);
+
+    useEffect(() => {
+      setExportDarkMode(exportWithDarkMode);
+    }, [exportWithDarkMode]);
   
     const previewRef = useRef<HTMLDivElement>(null);
     const [renderError, setRenderError] = useState<Error | null>(null);
@@ -68,15 +72,14 @@ export const CanvasPreview = ({
             return;
         }
 
-        console.log("exportDarkMode",exportWithDarkMode);
         exportToCanvas({
             elements: exportedElements,
             appState: {
                 ...appStateSnapshot,
                 name: projectName,
-                // theme: exportWithDarkMode ? THEME.DARK : THEME.LIGHT,
+                theme: exportDarkMode ? THEME.DARK : THEME.LIGHT,
                 exportBackground,
-                exportWithDarkMode,
+                exportWithDarkMode: exportDarkMode,
                 exportScale,
                 exportEmbedScene: embedScene,
                 contextMenu: null,
@@ -105,13 +108,16 @@ export const CanvasPreview = ({
             console.error(error);
             setRenderError(error);
         });
+
+        console.log("exportDarkMode:", exportDarkMode);
+
     }, [
         appStateSnapshot,
         files,
         exportedElements,
         exportingFrame,
         projectName,
-        exportWithDarkMode,
+        exportDarkMode,
         exportBackground,
         exportScale,
         embedScene,
