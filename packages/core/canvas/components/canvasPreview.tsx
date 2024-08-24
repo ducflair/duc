@@ -115,7 +115,7 @@ export const CanvasPreview = ({
 
     return (
         <div className="ImageExportModal__preview__canvas h-full w-full flex flex-col items-center" ref={previewRef}>
-            {renderError && <>?</>}
+            {renderError && <ErrorCanvasPreview />}
         </div>
     )
 }
