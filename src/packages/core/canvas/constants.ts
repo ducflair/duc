@@ -119,17 +119,17 @@ export const THEME = {
 } as const;
 
 export const FRAME_STYLE = {
-  strokeColor: "#bbb" as DucElement["strokeColor"],
+  strokeColor: "#80808080" as DucElement["strokeColor"],
   strokeWidth: 2 as DucElement["strokeWidth"],
   strokeStyle: "solid" as DucElement["strokeStyle"],
   fillStyle: "solid" as DucElement["fillStyle"],
   roughness: 0 as DucElement["roughness"],
   roundness: null as DucElement["roundness"],
-  backgroundColor: "transparent" as DucElement["backgroundColor"],
+  backgroundColor: "#80808008" as DucElement["backgroundColor"],
   radius: 8,
   nameOffsetY: 3,
-  nameColorLightTheme: "#999999",
-  nameColorDarkTheme: "#7a7a7a",
+  nameColorLightTheme: "#80808080",
+  nameColorDarkTheme: "#80808080",
   nameFontSize: 14,
   nameLineHeight: 1.25,
 };
@@ -146,7 +146,7 @@ export const DEFAULT_TRANSFORM_HANDLE_SPACING = 2;
 
 export const CANVAS_ONLY_ACTIONS = ["selectAll"];
 
-export const GRID_SIZE = 10; // TODO make it configurable?
+export const GRID_SIZE = 10; // Don't change this value!
 
 export const IMAGE_MIME_TYPES = {
   svg: "image/svg+xml",

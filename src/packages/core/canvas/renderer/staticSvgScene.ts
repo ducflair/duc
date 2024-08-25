@@ -524,7 +524,7 @@ const renderElementToSvg = (
         rect.setAttribute("rx", FRAME_STYLE.radius.toString());
         rect.setAttribute("ry", FRAME_STYLE.radius.toString());
 
-        rect.setAttribute("fill", "none");
+        rect.setAttribute("fill", FRAME_STYLE.backgroundColor);
         rect.setAttribute("stroke", FRAME_STYLE.strokeColor);
         rect.setAttribute("stroke-width", FRAME_STYLE.strokeWidth.toString());
 
