@@ -2,7 +2,7 @@ import { PointSnapLine, PointerSnapLine } from "../snapping";
 import { InteractiveCanvasAppState, Point } from "../types";
 
 const SNAP_COLOR_LIGHT = "#ff6b6b";
-const SNAP_COLOR_DARK = "#ff0000";
+const SNAP_COLOR_DARK = "#ff6b6b";
 const SNAP_WIDTH = 1;
 const SNAP_CROSS_SIZE = 2;
 

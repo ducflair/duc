@@ -337,7 +337,7 @@ export const DEFAULT_ELEMENT_PROPS: {
   opacity: DucElement["opacity"];
   locked: DucElement["locked"];
 } = {
-  strokeColor: COLOR_PALETTE.black,
+  strokeColor: COLOR_PALETTE.midGray,
   backgroundColor: COLOR_PALETTE.transparent,
   isVisible: true,
   ratioLocked: true,
