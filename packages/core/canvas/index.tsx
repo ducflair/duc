@@ -222,6 +222,33 @@ export {
 } from "./data/restore";
 
 export {
+  decryptData,
+  generateEncryptionKey,
+  IV_LENGTH_BYTES,
+} from "./data/encryption";
+
+export {
+  ImportedDataState,
+} from "./data/types";
+
+export {
+  DucElement,
+  FileId,
+} from "./element/types"
+
+export {
+  AppState,
+  BinaryFileData,
+  BinaryFiles,
+  SocketId,
+  UserIdleState,
+} from "./types";
+
+export {
+  SceneBounds
+} from "./element/bounds";
+
+export {
   exportToCanvas,
   exportToBlob,
   exportToSvg,
@@ -250,6 +277,8 @@ export { parseLibraryTokensFromUrl, useHandleLibrary } from "./data/library";
 export {
   sceneCoordsToViewportCoords,
   viewportCoordsToSceneCoords,
+  debounce,
+  bytesToHexString,
 } from "./utils";
 
 export { Sidebar } from "./components/Sidebar/Sidebar";
