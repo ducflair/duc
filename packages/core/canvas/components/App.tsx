@@ -422,6 +422,9 @@ import { WritingLayers } from "../duc/utils/writingLayers";
 import { changeProperty } from "../actions/actionProperties";
 import { saveAsFlatBuffers } from "../duc/duc-ts/serialize";
 import transformHexColor from "../scene/hexDarkModeFilter";
+import {
+  actionToggleEraserTool,
+} from "../actions/actionCanvas";
 
 const AppContext = React.createContext<AppClassProperties>(null!);
 const AppPropsContext = React.createContext<AppProps>(null!);
@@ -4984,12 +4987,28 @@ class App extends React.Component<AppProps, AppState> {
     });
   };
 
+  private debounceDoubleClickTimestamp: number = 0;
   private handleCanvasDoubleClick = (
     event: React.MouseEvent<HTMLCanvasElement>,
   ) => {
     // case: double-clicking with arrow/line tool selected would both create
     // text and enter multiElement mode
     if (this.state.multiElement) {
+      return;
+    }
+    if (
+      this.state.penMode &&
+      this.lastPointerDownEvent?.pointerType === "touch" &&
+      this.state.activeTool.type !== "selection"
+    ) {
+      const now = Date.now();
+      if (now - this.debounceDoubleClickTimestamp < 200) {
+        //handleCanvasDoubleClick click fires twice in case of touch.
+        //Once from the onTouchStart event handler, once from the double click event handler
+        return;
+      }
+      this.debounceDoubleClickTimestamp = now;
+      this.updateScene(actionToggleEraserTool.perform([] as any, this.state));
       return;
     }
     // we should only be able to double click when mode is selection
