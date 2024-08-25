@@ -281,6 +281,10 @@ export {
 } from "./duc/duc-ts/parse";
 
 export {
+  serializeAsFlatBuffers
+} from "./duc/duc-ts/serialize";
+
+export {
   CanvasPreview
 } from "./components/canvasPreview";
 
