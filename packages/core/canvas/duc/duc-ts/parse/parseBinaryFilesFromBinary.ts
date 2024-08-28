@@ -3,7 +3,6 @@ import { BinaryFiles, BinaryFileData as AppBinaryFileData } from '../../../types
 
 // Helper function to convert Uint8Array to DataURL
 const uint8ArrayToDataURL = (uint8Array: Uint8Array, mimeType: string): string => {
-  console.log({ uint8Array, mimeType });
   const binaryString = Array.from(uint8Array)
     .map(byte => String.fromCharCode(byte))
     .join('');
