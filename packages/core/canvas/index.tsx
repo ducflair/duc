@@ -219,6 +219,7 @@ export {
   restoreAppState,
   restoreElements,
   restoreLibraryItems,
+  RestoredDataState
 } from "./data/restore";
 
 export {
@@ -234,6 +235,9 @@ export {
 export {
   DucElement,
   FileId,
+  NonDeletedDucElement,
+  Theme,
+  DucGroup
 } from "./element/types"
 
 export {
@@ -242,6 +246,11 @@ export {
   BinaryFiles,
   SocketId,
   UserIdleState,
+  DucImperativeAPI,
+  ExcalidrawInitialDataState,
+  Gesture,
+  LibraryItems,
+  PointerDownState,
 } from "./types";
 
 export {
@@ -265,7 +274,16 @@ export { getFreeDrawSvgPath } from "./renderer/renderElement";
 export { mergeLibraryItems, getLibraryItemsHash } from "./data/library";
 export { isLinearElement } from "./element/typeChecks";
 
-export { FONT_FAMILY, THEME, MIME_TYPES, ROUNDNESS } from "./constants";
+export { 
+  FONT_FAMILY, 
+  THEME, 
+  MIME_TYPES, 
+  ROUNDNESS,
+  APP_NAME,
+  EVENT,
+  TITLE_TIMEOUT,
+  VERSION_TIMEOUT,
+} from "./constants";
 
 export {
   mutateElement,
