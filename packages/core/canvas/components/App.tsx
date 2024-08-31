@@ -276,6 +276,7 @@ import {
   addEventListener,
   normalizeEOL,
   getDateTime,
+  arrayToMap,
 } from "../utils";
 import {
   createSrcDoc,
@@ -425,6 +426,8 @@ import transformHexColor from "../scene/hexDarkModeFilter";
 import {
   actionToggleEraserTool,
 } from "../actions/actionCanvas";
+import { syncInvalidIndices, syncMovedIndices } from "../fractionalIndex";
+import { Store, StoreAction } from "../store";
 
 const AppContext = React.createContext<AppClassProperties>(null!);
 const AppPropsContext = React.createContext<AppProps>(null!);
@@ -3185,7 +3188,7 @@ class App extends React.Component<AppProps, AppState> {
     const dx = x - elementsCenterX;
     const dy = y - elementsCenterY;
 
-    const [gridX, gridY] = getGridPoint(dx, dy, this.state.gridSize);
+    const [gridX, gridY] = getGridPoint(dx, dy, this.getEffectiveGridSize());
 
     const newElements = duplicateElements(
       elements.map((element) => {
@@ -3199,10 +3202,10 @@ class App extends React.Component<AppProps, AppState> {
       },
     );
 
-    const allElements = [
-      ...this.scene.getElementsIncludingDeleted(),
-      ...newElements,
-    ];
+    const prevElements = this.scene.getElementsIncludingDeleted();
+    const nextElements = [...prevElements, ...newElements];
+
+    syncMovedIndices(nextElements, arrayToMap(newElements));
 
     const topLayerFrame = this.getTopLayerFrameAtSceneCoords({ x, y });
 
@@ -3211,10 +3214,10 @@ class App extends React.Component<AppProps, AppState> {
         newElements,
         topLayerFrame,
       );
-      addElementsToFrame(allElements, eligibleElements, topLayerFrame);
+      addElementsToFrame(nextElements, eligibleElements, topLayerFrame);
     }
 
-    this.scene.replaceAllElements(allElements);
+    this.scene.replaceAllElements(nextElements);
 
     newElements.forEach((newElement) => {
       if (isTextElement(newElement) && isBoundToContainer(newElement)) {
@@ -3234,7 +3237,7 @@ class App extends React.Component<AppProps, AppState> {
       this.files = { ...this.files, ...opts.files };
     }
 
-    this.history.resumeRecording();
+    this.store.shouldCaptureIncrement();
 
     const nextElementsToSelect =
       excludeElementsInFramesFromSelection(newElements);
@@ -3612,7 +3615,7 @@ class App extends React.Component<AppProps, AppState> {
   ) => {
     this.cancelInProgressAnimation?.();
 
-    // convert provided target into ExcalidrawElement[] if necessary
+    // convert provided target into DucElement[] if necessary
     const targetElements = Array.isArray(target) ? target : [target];
 
     let zoom = this.state.zoom;
@@ -3758,11 +3761,39 @@ class App extends React.Component<AppProps, AppState> {
       elements?: SceneData["elements"];
       appState?: Pick<AppState, K> | null;
       collaborators?: SceneData["collaborators"];
-      commitToHistory?: SceneData["commitToHistory"];
+      /** @default StoreAction.NONE */
+      storeAction?: SceneData["storeAction"];
     }) => {
-      
-      if (sceneData.commitToHistory) {
-        this.history.resumeRecording();
+      const nextElements = syncInvalidIndices(sceneData.elements ?? []);
+
+      if (sceneData.storeAction && sceneData.storeAction !== StoreAction.NONE) {
+        const prevCommittedAppState = this.store.snapshot.appState;
+        const prevCommittedElements = this.store.snapshot.elements;
+
+        const nextCommittedAppState = sceneData.appState
+          ? Object.assign({}, prevCommittedAppState, sceneData.appState) // new instance, with partial appstate applied to previously captured one, including hidden prop inside `prevCommittedAppState`
+          : prevCommittedAppState;
+
+        const nextCommittedElements = sceneData.elements
+          ? this.store.filterUncomittedElements(
+              this.scene.getElementsMapIncludingDeleted(), // Only used to detect uncomitted local elements
+              arrayToMap(nextElements), // We expect all (already reconciled) elements
+            )
+          : prevCommittedElements;
+
+        // WARN: store action always performs deep clone of changed elements, for ephemeral remote updates (i.e. remote dragging, resizing, drawing) we might consider doing something smarter
+        // do NOT schedule store actions (execute after re-render), as it might cause unexpected concurrency issues if not handled well
+        if (sceneData.storeAction === StoreAction.CAPTURE) {
+          this.store.captureIncrement(
+            nextCommittedElements,
+            nextCommittedAppState,
+          );
+        } else if (sceneData.storeAction === StoreAction.UPDATE) {
+          this.store.updateSnapshot(
+            nextCommittedElements,
+            nextCommittedAppState,
+          );
+        }
       }
 
       if (sceneData.appState) {
@@ -3770,7 +3801,7 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       if (sceneData.elements) {
-        this.scene.replaceAllElements(sceneData.elements);
+        this.scene.replaceAllElements(nextElements);
       }
 
       if (sceneData.collaborators) {
@@ -7465,7 +7496,7 @@ class App extends React.Component<AppProps, AppState> {
       const [gridX, gridY] = getGridPoint(
         pointerCoords.x,
         pointerCoords.y,
-        event[KEYS.CTRL_OR_CMD] ? null : this.state.gridSize,
+        event[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),
       );
 
       // for arrows/lines, don't start dragging until a given threshold
@@ -7512,7 +7543,7 @@ class App extends React.Component<AppProps, AppState> {
           const ret = LinearElementEditor.addMidpoint(
             this.state.selectedLinearElement,
             pointerCoords,
-            this.state,
+            this,
             !event[KEYS.CTRL_OR_CMD],
             elementsMap,
           );
@@ -7555,7 +7586,7 @@ class App extends React.Component<AppProps, AppState> {
 
         const didDrag = LinearElementEditor.handlePointDragging(
           event,
-          this.state,
+          this,
           pointerCoords.x,
           pointerCoords.y,
           (element, pointsSceneCoords) => {
@@ -7565,7 +7596,7 @@ class App extends React.Component<AppProps, AppState> {
             );
           },
           linearElementEditor,
-          this.scene.getNonDeletedElementsMap(),
+          this.scene,
         );
         if (didDrag) {
           pointerDownState.lastCoords.x = pointerCoords.x;
@@ -7626,16 +7657,14 @@ class App extends React.Component<AppProps, AppState> {
         // Marking that click was used for dragging to check
         // if elements should be deselected on pointerup
         pointerDownState.drag.hasOccurred = true;
-        this.setState({
-          selectedElementsAreBeingDragged: true,
-        });
+
         // prevent dragging even if we're no longer holding cmd/ctrl otherwise
         // it would have weird results (stuff jumping all over the screen)
-        // Checking for editingElement to avoid jump while editing on mobile #6503
+        // Checking for editingTextElement to avoid jump while editing on mobile #6503
         if (
           selectedElements.length > 0 &&
           !pointerDownState.withCmdOrCtrl &&
-          !this.state.editingElement &&
+          !this.state.editingTextElement &&
           this.state.activeEmbeddable?.state !== "active"
         ) {
           const dragOffset = {
@@ -7675,7 +7704,7 @@ class App extends React.Component<AppProps, AppState> {
           const { snapOffset, snapLines } = snapDraggedElements(
             originalElements,
             dragOffset,
-            this.state,
+            this,
             event,
             this.scene.getNonDeletedElementsMap(),
           );
@@ -7689,13 +7718,29 @@ class App extends React.Component<AppProps, AppState> {
               pointerDownState,
               selectedElements,
               dragOffset,
-              this.state,
               this.scene,
               snapOffset,
-              event[KEYS.CTRL_OR_CMD] ? null : this.state.gridSize,
+              event[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),
             );
 
-          this.maybeSuggestBindingForAll(selectedElements);
+          this.setState({
+            selectedElementsAreBeingDragged: true,
+            // element is being dragged and selectionElement that was created on pointer down
+            // should be removed
+            selectionElement: null,
+          });
+
+          if (
+            selectedElements.length !== 1 ||
+            !isElbowArrow(selectedElements[0])
+          ) {
+            this.setState({
+              suggestedBindings: getSuggestedBindingsForArrows(
+                selectedElements,
+                this.scene.getNonDeletedElementsMap(),
+              ),
+            });
+          }
 
           // We duplicate the selected element if alt is pressed on pointer move
           if (event.altKey && !pointerDownState.hit.hasBeenDuplicated) {
@@ -7756,8 +7801,11 @@ class App extends React.Component<AppProps, AppState> {
               } else {
                 nextElements.push(element);
               }
-            }            
+            }
+
             const nextSceneElements = [...nextElements, ...elementsToAppend];
+
+            syncMovedIndices(nextSceneElements, arrayToMap(elementsToAppend));
 
             bindTextToShapeAfterDuplication(
               nextElements,
@@ -7775,8 +7823,8 @@ class App extends React.Component<AppProps, AppState> {
               elementsToAppend,
               oldIdToDuplicatedId,
             );
+
             this.scene.replaceAllElements(nextSceneElements);
-            this.updateGroups();
             this.maybeCacheVisibleGaps(event, selectedElements, true);
             this.maybeCacheReferenceSnapPoints(event, selectedElements, true);
           }
@@ -7784,72 +7832,108 @@ class App extends React.Component<AppProps, AppState> {
         }
       }
 
-      // It is very important to read this.state within each move event,
-      // otherwise we would read a stale one!
-      const draggingElement = this.state.draggingElement;
-      if (!draggingElement) {
-        return;
-      }
-
-      if (draggingElement.type === "freedraw") {
-        const points = draggingElement.points;
-        const dx = pointerCoords.x - draggingElement.x;
-        const dy = pointerCoords.y - draggingElement.y;
-
-        const lastPoint = points.length > 0 && points[points.length - 1];
-        const discardPoint =
-          lastPoint && lastPoint[0] === dx && lastPoint[1] === dy;
-
-        if (!discardPoint) {
-          const pressures = draggingElement.simulatePressure
-            ? draggingElement.pressures
-            : [...draggingElement.pressures, event.pressure];
-
-          mutateElement(draggingElement, {
-            points: [...points, [dx, dy]],
-            pressures,
-          });
-        }
-      } else if (isLinearElement(draggingElement)) {
-        pointerDownState.drag.hasOccurred = true;
-        this.setState({
-          selectedElementsAreBeingDragged: true,
-        });
-        const points = draggingElement.points;
-        let dx = gridX - draggingElement.x;
-        let dy = gridY - draggingElement.y;
-
-        if (shouldRotateWithDiscreteAngle(event) && points.length === 2) {
-          ({ width: dx, height: dy } = getLockedLinearCursorAlignSize(
-            draggingElement.x,
-            draggingElement.y,
-            pointerCoords.x,
-            pointerCoords.y,
-          ));
-        }
-
-        if (points.length === 1) {
-          mutateElement(draggingElement, {
-            points: [...points, [dx, dy]],
-          });
-        } else if (points.length === 2) {
-          mutateElement(draggingElement, {
-            points: [...points.slice(0, -1), [dx, dy]],
-          });
-        }
-
-        if (isBindingElement(draggingElement, false)) {
-          // When creating a linear element by dragging
-          this.maybeSuggestBindingsForLinearElementAtCoords(
-            draggingElement,
-            [pointerCoords],
-            this.state.startBoundElement,
-          );
-        }
-      } else {
+      if (this.state.selectionElement) {
         pointerDownState.lastCoords.x = pointerCoords.x;
         pointerDownState.lastCoords.y = pointerCoords.y;
         this.maybeDragNewGenericElement(pointerDownState, event);
+      } else {
+        // It is very important to read this.state within each move event,
+        // otherwise we would read a stale one!
+        const newElement = this.state.newElement;
+
+        if (!newElement) {
+          return;
+        }
+
+        if (newElement.type === "freedraw") {
+          const points = newElement.points;
+          const dx = pointerCoords.x - newElement.x;
+          const dy = pointerCoords.y - newElement.y;
+
+          const lastPoint = points.length > 0 && points[points.length - 1];
+          const discardPoint =
+            lastPoint && lastPoint[0] === dx && lastPoint[1] === dy;
+
+          if (!discardPoint) {
+            const pressures = newElement.simulatePressure
+              ? newElement.pressures
+              : [...newElement.pressures, event.pressure];
+
+            mutateElement(
+              newElement,
+              {
+                points: [...points, [dx, dy]],
+                pressures,
+              },
+              false,
+            );
+
+            this.setState({
+              newElement,
+            });
+          }
+        } else if (isLinearElement(newElement)) {
+          pointerDownState.drag.hasOccurred = true;
+          const points = newElement.points;
+          let dx = gridX - newElement.x;
+          let dy = gridY - newElement.y;
+
+          if (shouldRotateWithDiscreteAngle(event) && points.length === 2) {
+            ({ width: dx, height: dy } = getLockedLinearCursorAlignSize(
+              newElement.x,
+              newElement.y,
+              pointerCoords.x,
+              pointerCoords.y,
+            ));
+          }
+
+          if (points.length === 1) {
+            mutateElement(
+              newElement,
+              {
+                points: [...points, [dx, dy]],
+              },
+              false,
+            );
+          } else if (points.length > 1 && isElbowArrow(newElement)) {
+            mutateElbowArrow(
+              newElement,
+              elementsMap,
+              [...points.slice(0, -1), [dx, dy]],
+              [0, 0],
+              undefined,
+              {
+                isDragging: true,
+                informMutation: false,
+              },
+            );
+          } else if (points.length === 2) {
+            mutateElement(
+              newElement,
+              {
+                points: [...points.slice(0, -1), [dx, dy]],
+              },
+              false,
+            );
+          }
+
+          this.setState({
+            newElement,
+          });
+
+          if (isBindingElement(newElement, false)) {
+            // When creating a linear element by dragging
+            this.maybeSuggestBindingsForLinearElementAtCoords(
+              newElement,
+              [pointerCoords],
+              this.state.startBoundElement,
+            );
+          }
+        } else {
+          pointerDownState.lastCoords.x = pointerCoords.x;
+          pointerDownState.lastCoords.y = pointerCoords.y;
+          this.maybeDragNewGenericElement(pointerDownState, event, false);
+        }
       }
 
       if (this.state.activeTool.type === "selection") {
@@ -7891,11 +7975,13 @@ class App extends React.Component<AppProps, AppState> {
               shouldReuseSelection = false;
             }
           }
-          const elementsWithinSelection = getElementsWithinSelection(
-            elements,
-            draggingElement,
-            this.scene.getNonDeletedElementsMap(),
-          );
+          const elementsWithinSelection = this.state.selectionElement
+            ? getElementsWithinSelection(
+                elements,
+                this.state.selectionElement,
+                this.scene.getNonDeletedElementsMap(),
+              )
+            : [];
 
           this.setState((prevState) => {
             const nextSelectedElementIds = {
@@ -7949,9 +8035,9 @@ class App extends React.Component<AppProps, AppState> {
           });
         }
       }
-      this.updateGroups();
     });
   }
+
 
   // Returns whether the pointer move happened over either scrollbar
   private handlePointerMoveOverScrollbars(
@@ -9457,6 +9543,7 @@ class App extends React.Component<AppProps, AppState> {
   ) => {
     file = await normalizeFile(file);
     try {
+      const elements = this.scene.getElementsIncludingDeleted();
       let ret;
       try {
         ret = await loadSceneOrLibraryFromBlob(
@@ -9491,6 +9578,10 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       if (ret.type === MIME_TYPES.duc) {
+        syncInvalidIndices(elements.concat(ret.data.elements));
+        // update the store snapshot for old elements, otherwise we would end up with duplicated fractional indices on undo
+        this.store.updateSnapshot(arrayToMap(elements), this.state);
+        
         this.setState({ isLoading: true });
         this.syncActionResult({
           ...ret.data,
@@ -10104,11 +10195,13 @@ class App extends React.Component<AppProps, AppState> {
 declare global {
   interface Window {
     h: {
+      scene: Scene;
       elements: readonly DucElement[];
       state: AppState;
       setState: React.Component<any, AppState>["setState"];
       app: InstanceType<typeof App>;
       history: History;
+      store: Store;
     };
   }
 }
@@ -10124,7 +10217,15 @@ export const createTestHook = () => {
           return this.app?.scene.getElementsIncludingDeleted();
         },
         set(elements: DucElement[]) {
-          return this.app?.scene.replaceAllElements(elements);
+          return this.app?.scene.replaceAllElements(
+            syncInvalidIndices(elements),
+          );
+        },
+      },
+      scene: {
+        configurable: true,
+        get() {
+          return this.app?.scene;
         },
       },
     });

@@ -20,6 +20,7 @@ const writeData = (
   if (
     !appState.multiElement &&
     !appState.resizingElement &&
+    !appState.editingTextElement &&
     !appState.editingElement &&
     !appState.draggingElement
   ) {

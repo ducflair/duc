@@ -178,6 +178,7 @@ const getRelevantAppStateProps = (
   offsetLeft: appState.offsetLeft,
   offsetTop: appState.offsetTop,
   theme: appState.theme,
+  editingTextElement: appState.editingTextElement,
   pendingImageElementId: appState.pendingImageElementId,
   selectionElement: appState.selectionElement,
   selectedGroupIds: appState.selectedGroupIds,

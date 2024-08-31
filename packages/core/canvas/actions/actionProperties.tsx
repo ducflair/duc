@@ -98,6 +98,7 @@ import { register } from "./register";
 
 const FONT_SIZE_RELATIVE_INCREASE_STEP = 0.1;
 
+
 export const changeProperty = (
   elements: readonly DucElement[],
   appState: AppState,

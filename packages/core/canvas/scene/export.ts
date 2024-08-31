@@ -19,6 +19,7 @@ import {
   FONT_FAMILY,
   FRAME_STYLE,
   SVG_NS,
+  THEME,
   THEME_FILTER,
 } from "../constants";
 import { getDefaultAppState } from "../appState";
@@ -39,6 +40,8 @@ import { newElementWith } from "../element/mutateElement";
 import { isFrameElement, isFrameLikeElement } from "../element/typeChecks";
 import { RenderableElementsMap } from "./types";
 import { renderStaticScene } from "../renderer/staticScene";
+import { syncInvalidIndices } from "../fractionalIndex";
+import { Fonts } from "./Fonts";
 
 const SVG_EXPORT_TAG = `<!-- svg-source:excalidraw -->`;
 
@@ -183,7 +186,13 @@ export const exportToCanvas = async (
     canvas.height = height * appState.exportScale;
     return { canvas, scale: appState.exportScale };
   },
+  loadFonts: () => Promise<void> = async () => {
+    await Fonts.loadFontsForElements(elements);
+  },
 ) => {
+  // load font faces before continuing, by default leverages browsers' [FontFace API](https://developer.mozilla.org/en-US/docs/Web/API/FontFace)
+  await loadFonts();
+
   const frameRendering = getFrameRenderingConfig(
     exportingFrame ?? null,
     appState.frameRendering ?? null,
@@ -224,7 +233,7 @@ export const exportToCanvas = async (
       arrayToMap(elementsForRender),
     ),
     allElementsMap: toBrandedType<NonDeletedSceneElementsMap>(
-      arrayToMap(elements),
+      arrayToMap(syncInvalidIndices(elements)),
     ),
     visibleElements: elementsForRender,
     scale,
@@ -236,7 +245,7 @@ export const exportToCanvas = async (
       scrollY: -minY + exportPadding,
       zoom: defaultAppState.zoom,
       shouldCacheIgnoreZoom: false,
-      theme: appState.exportWithDarkMode ? "dark" : "light",
+      theme: appState.exportWithDarkMode ? THEME.DARK : THEME.LIGHT,
     },
     renderConfig: {
       canvasBackgroundColor: viewBackgroundColor,
@@ -246,6 +255,7 @@ export const exportToCanvas = async (
       // empty disables embeddable rendering
       embedsValidationStatus: new Map(),
       elementsPendingErasure: new Set(),
+      pendingFlowchartNodes: null,
     },
   });
 
