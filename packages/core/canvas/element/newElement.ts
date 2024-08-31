@@ -64,6 +64,7 @@ export type ElementConstructorOpts = MarkOptional<
   | "version"
   | "versionNonce"
   | "link"
+  | "index"
   | "strokeStyle"
   | "fillStyle"
   | "strokeColor"
@@ -91,7 +92,8 @@ const _newElementBase = <T extends DucElement>(
     y,
     writingLayer = state.writingLayer,
     scope = state.scope,
-    label = `Element ${randomInteger()}`,
+    index = null,
+    label = `Lost Element`,
     ratioLocked = DEFAULT_ELEMENT_PROPS.ratioLocked,
     isVisible = DEFAULT_ELEMENT_PROPS.isVisible,
     strokeColor = DEFAULT_ELEMENT_PROPS.strokeColor,
@@ -122,6 +124,7 @@ const _newElementBase = <T extends DucElement>(
     y,
     width,
     height,
+    index,
     strokePlacement,
     ratioLocked,
     isVisible,
@@ -435,8 +438,6 @@ export const newFreeDrawElement = (
 export const newLinearElement = (
   opts: {
     type: DucLinearElement["type"];
-    startArrowhead?: Arrowhead | null;
-    endArrowhead?: Arrowhead | null;
     points?: DucLinearElement["points"];
   } & ElementConstructorOpts,
 ): NonDeleted<DucLinearElement> => {
@@ -446,8 +447,8 @@ export const newLinearElement = (
     lastCommittedPoint: null,
     startBinding: null,
     endBinding: null,
-    startArrowhead: opts.startArrowhead || null,
-    endArrowhead: opts.endArrowhead || null,
+    startArrowhead: null,
+    endArrowhead: null,
   };
 };
 

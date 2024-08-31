@@ -27,9 +27,20 @@ export type TextAlign = typeof TEXT_ALIGN[keyof typeof TEXT_ALIGN];
 
 type VerticalAlignKeys = keyof typeof VERTICAL_ALIGN;
 export type VerticalAlign = typeof VERTICAL_ALIGN[VerticalAlignKeys];
+export type FractionalIndex = string & { _brand: "franctionalIndex" };
 
 export type OptionalDucElementBase = Partial<_DucElementBase>;
 export type OptionalDucGroup = Partial<DucGroup>;
+
+export type Ordered<TElement extends DucElement> = TElement & {
+  index: FractionalIndex;
+};
+export type OrderedDucElement = Ordered<DucElement>;
+
+export type DucNonSelectionElement = Exclude<
+  DucElement,
+  DucSelectionElement
+>;
 
 type _DucElementBase = Readonly<{
   id: string;
@@ -83,6 +94,11 @@ type _DucElementBase = Readonly<{
     | null;
   /** epoch (ms) timestamp of last element update */
   updated: number;
+  /** String in a fractional form defined by https://github.com/rocicorp/fractional-indexing.
+      Used for ordering in multiplayer scenarios, such as during reconciliation or undo / redo.
+      Always kept in sync with the array order by `syncMovedIndices` and `syncInvalidIndices`.
+      Could be null, i.e. for new elements which were not yet assigned to the scene. */
+  index: FractionalIndex | null;
   link: string | null;
   locked: boolean;
   customData?: Record<string, any>;

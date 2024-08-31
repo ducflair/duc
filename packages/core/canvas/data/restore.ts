@@ -1,9 +1,11 @@
 import {
   DucElement,
   DucElementType,
+  DucLinearElement,
   DucSelectionElement,
   DucTextElement,
   FontFamilyValues,
+  OrderedDucElement,
   PointBinding,
   StrokeRoundness,
 } from "../element/types";
@@ -20,7 +22,7 @@ import {
   isInvisiblySmallElement,
   refreshTextDimensions,
 } from "../element";
-import { isTextElement, isUsingAdaptiveRadius } from "../element/typeChecks";
+import { isArrowElement, isLinearElement, isTextElement, isUsingAdaptiveRadius } from "../element/typeChecks";
 import { randomId } from "../random";
 import {
   DEFAULT_FONT_FAMILY,
@@ -44,6 +46,7 @@ import {
   getDefaultLineHeight,
 } from "../element/textElement";
 import { normalizeLink } from "./url";
+import { syncInvalidIndices } from "../fractionalIndex";
 
 type RestoredAppState = Omit<
   AppState,
@@ -122,6 +125,7 @@ const restoreElementWithProperties = <
     // all elements must have version > 0 so getSceneVersion() will pick up
     // newly added elements
     version: element.version || 1,
+    index: element.index ?? null,
     versionNonce: element.versionNonce ?? 0,
     isDeleted: element.isDeleted ?? false,
     id: element.id || randomId(),
@@ -414,30 +418,35 @@ export const restoreElements = (
   /** NOTE doesn't serve for reconciliation */
   localElements: readonly DucElement[] | null | undefined,
   opts?: { refreshDimensions?: boolean; repairBindings?: boolean } | undefined,
-): DucElement[] => {
+): OrderedDucElement[] => {
   // used to detect duplicate top-level element ids
   const existingIds = new Set<string>();
   const localElementsMap = localElements ? arrayToMap(localElements) : null;
-  const restoredElements = (elements || []).reduce((elements, element) => {
-    // filtering out selection, which is legacy, no longer kept in elements,
-    // and causing issues if retained
-    if (element.type !== "selection" && !isInvisiblySmallElement(element)) {
-      let migratedElement: DucElement | null = restoreElement(element);
-      if (migratedElement) {
-        const localElement = localElementsMap?.get(element.id);
-        if (localElement && localElement.version > migratedElement.version) {
-          migratedElement = bumpVersion(migratedElement, localElement.version);
-        }
-        if (existingIds.has(migratedElement.id)) {
-          migratedElement = { ...migratedElement, id: randomId() };
-        }
-        existingIds.add(migratedElement.id);
+  const restoredElements = syncInvalidIndices(
+    (elements || []).reduce((elements, element) => {
+      // filtering out selection, which is legacy, no longer kept in elements,
+      // and causing issues if retained
+      if (element.type !== "selection" && !isInvisiblySmallElement(element)) {
+        let migratedElement: DucElement | null = restoreElement(element);
+        if (migratedElement) {
+          const localElement = localElementsMap?.get(element.id);
+          if (localElement && localElement.version > migratedElement.version) {
+            migratedElement = bumpVersion(
+              migratedElement,
+              localElement.version,
+            );
+          }
+          if (existingIds.has(migratedElement.id)) {
+            migratedElement = { ...migratedElement, id: randomId() };
+          }
+          existingIds.add(migratedElement.id);
 
-        elements.push(migratedElement);
+          elements.push(migratedElement);
+        }
       }
-    }
-    return elements;
-  }, [] as DucElement[]);
+      return elements;
+    }, [] as DucElement[]),
+  );
 
   if (!opts?.repairBindings) {
     return restoredElements;
@@ -466,10 +475,28 @@ export const restoreElements = (
         ),
       );
     }
+
+    if (isLinearElement(element)) {
+      if (
+        element.startBinding &&
+        (!restoredElementsMap.has(element.startBinding.elementId) ||
+          !isArrowElement(element))
+      ) {
+        (element as Mutable<DucLinearElement>).startBinding = null;
+      }
+      if (
+        element.endBinding &&
+        (!restoredElementsMap.has(element.endBinding.elementId) ||
+          !isArrowElement(element))
+      ) {
+        (element as Mutable<DucLinearElement>).endBinding = null;
+      }
+    }
   }
 
   return restoredElements;
 };
+
 
 const coalesceAppStateValue = <
   T extends keyof ReturnType<typeof getDefaultAppState>,
