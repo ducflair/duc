@@ -17,7 +17,7 @@ import {
 import { getNonDeletedElements } from "../element";
 import { randomId } from "../random";
 import { ToolButton } from "../components/ToolButton";
-import { DucElement, DucTextElement } from "../element/types";
+import { DucElement, DucTextElement, OrderedDucElement } from "../element/types";
 import { AppClassProperties, AppState } from "../types";
 import { isBoundToContainer } from "../element/typeChecks";
 import {
@@ -28,6 +28,8 @@ import {
   replaceAllElementsInFrame,
 } from "../frame";
 import { newGroupElement } from "../element/newElement";
+import { syncMovedIndices } from "../fractionalIndex";
+import { StoreAction } from "../store";
 
 const allElementsInSameGroup = (elements: readonly DucElement[]) => {
   if (elements.length >= 2) {
@@ -62,6 +64,8 @@ const enableActionGroup = (
 
 export const actionGroup = register({
   name: "group",
+  label: "labels.group",
+  icon: (appState: AppState) => <GroupIcon theme={appState.theme} />,
   trackEvent: { category: "element" },
   perform: (elements, appState, _, app) => {
     const selectedElements = app.scene.getSelectedElements({
@@ -70,7 +74,7 @@ export const actionGroup = register({
     });
     if (selectedElements.length < 2) {
       // nothing to group
-      return { appState, elements, commitToHistory: false };
+      return { appState, elements, storeAction: StoreAction.NONE, commitToHistory: false };
     }
     // if everything is already grouped into 1 group, there is nothing to do
     const selectedGroupIds = getSelectedGroupIds(appState);
@@ -90,7 +94,7 @@ export const actionGroup = register({
       ]);
       if (combinedSet.size === elementIdsInGroup.size) {
         // no incremental ids in the selected ids
-        return { appState, elements, commitToHistory: false };
+        return { appState, elements, storeAction: StoreAction.NONE, commitToHistory: false };
       }
     }
 
@@ -114,63 +118,37 @@ export const actionGroup = register({
     }
 
     const newGroupId = randomId();
-
-    // create a new group element
-    // const elementType = "group";
-    // const constructorOpts = {
-    //   groupIdRef: newGroupId,
-    //   x: 0,
-    //   y: 0,
-
-    //   label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${app.scene.getNonDeletedElements().filter((element) => element.type === elementType).length+1}`,
-    //   scope: appState.scope,
-    //   writingLayer: appState.writingLayer,
-    //   opacity: appState.currentItemOpacity,
-    //   locked: false,
-    // } as const;
-
-    // const group = newGroupElement(constructorOpts);
-    // console.log("group", group);
-
-    // app.scene.replaceAllElements([
-    //   ...app.scene.getElementsIncludingDeleted(),
-    //   group,
-    // ]);
-    //
-
     const selectElementIds = arrayToMap(selectedElements);
 
     nextElements = nextElements.map((element) => {
       if (!selectElementIds.get(element.id)) {
         return element;
       }
-
       return newElementWith(element, {
-          groupIds: addToGroup(
-            element.groupIds,
-            newGroupId,
-            appState.editingGroupId,
-          ),
+        groupIds: addToGroup(
+          element.groupIds,
+          newGroupId,
+          appState.editingGroupId,
+        ),
       });
     });
     // keep the z order within the group the same, but move them
     // to the z order of the highest element in the layer stack
     const elementsInGroup = getElementsInGroup(nextElements, newGroupId);
     const lastElementInGroup = elementsInGroup[elementsInGroup.length - 1];
-    const lastGroupElementIndex = nextElements.lastIndexOf(lastElementInGroup);
+    const lastGroupElementIndex = nextElements.lastIndexOf(
+      lastElementInGroup as OrderedDucElement,
+    );
     const elementsAfterGroup = nextElements.slice(lastGroupElementIndex + 1);
     const elementsBeforeGroup = nextElements
       .slice(0, lastGroupElementIndex)
       .filter(
         (updatedElement) => !isElementInGroup(updatedElement, newGroupId),
       );
-    nextElements = [
-      ...elementsBeforeGroup,
-      ...elementsInGroup,
-      ...elementsAfterGroup,
-    ];
-    
-    app.updateGroups()
+    const reorderedElements = syncMovedIndices(
+      [...elementsBeforeGroup, ...elementsInGroup, ...elementsAfterGroup],
+      arrayToMap(elementsInGroup),
+    );
 
     return {
       appState: {
@@ -181,11 +159,11 @@ export const actionGroup = register({
           getNonDeletedElements(nextElements),
         ),
       },
-      elements: nextElements,
+      elements: reorderedElements,
+      storeAction: StoreAction.CAPTURE,
       commitToHistory: true,
     };
   },
-  contextItemLabel: "labels.group",
   predicate: (elements, appState, _, app) =>
     enableActionGroup(elements, appState, app),
   keyTest: (event) =>

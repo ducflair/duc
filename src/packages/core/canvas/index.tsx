@@ -219,10 +219,21 @@ export {
   restoreAppState,
   restoreElements,
   restoreLibraryItems,
-  RestoredDataState
+  RestoredDataState,
 } from "./data/restore";
 
 export {
+  reconcileElements,
+  ReconciledExcalidrawElement,
+  RemoteExcalidrawElement,
+} from "./data/reconcile";
+
+export {
+  StoreAction,
+} from "./store";
+
+export {
+  encryptData,
   decryptData,
   generateEncryptionKey,
   IV_LENGTH_BYTES,
@@ -236,6 +247,8 @@ export {
   DucElement,
   FileId,
   NonDeletedDucElement,
+  InitializedDucImageElement,
+  OrderedDucElement,
   Theme,
   DucGroup
 } from "./element/types"
@@ -251,6 +264,8 @@ export {
   Gesture,
   LibraryItems,
   PointerDownState,
+  Collaborator,
+  OnUserFollowedPayload,
 } from "./types";
 
 export {
@@ -272,7 +287,20 @@ export {
 } from "./data/blob";
 export { getFreeDrawSvgPath } from "./renderer/renderElement";
 export { mergeLibraryItems, getLibraryItemsHash } from "./data/library";
-export { isLinearElement } from "./element/typeChecks";
+export { 
+  isLinearElement,
+  isImageElement,
+  isInitializedImageElement,
+} from "./element/typeChecks";
+
+export {
+  Mutable, 
+  ValueOf
+} from './utility-types'
+
+export {
+  withBatchedUpdates
+} from './reactUtils'
 
 export { 
   FONT_FAMILY, 
@@ -297,6 +325,10 @@ export {
   viewportCoordsToSceneCoords,
   debounce,
   bytesToHexString,
+  assertNever,
+  preventUnload,
+  resolvablePromise,
+  throttleRAF,
 } from "./utils";
 
 export { Sidebar } from "./components/Sidebar/Sidebar";
@@ -336,3 +368,11 @@ export {
 } from "./components/canvasPreview";
 
 export { default as transformHexColor } from "./scene/hexDarkModeFilter";
+
+export {
+  AbortError
+} from "./errors";
+
+export {
+  trackEvent
+} from './analytics'

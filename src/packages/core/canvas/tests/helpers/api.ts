@@ -1,14 +1,15 @@
 import {
-  ExcalidrawElement,
-  ExcalidrawGenericElement,
-  ExcalidrawTextElement,
-  ExcalidrawLinearElement,
-  ExcalidrawFreeDrawElement,
-  ExcalidrawImageElement,
+  DucElement,
+  DucGenericElement,
+  DucTextElement,
+  DucLinearElement,
+  DucFreeDrawElement,
+  DucImageElement,
   FileId,
-  ExcalidrawFrameElement,
-  ExcalidrawElementType,
-  ExcalidrawMagicFrameElement,
+  DucFrameElement,
+  DucElementType,
+  DucMagicFrameElement,
+  ElementsMapOrArray,
 } from "../../element/types";
 import { newElement, newTextElement, newLinearElement } from "../../element";
 import { DEFAULT_VERTICAL_ALIGN, ROUNDNESS } from "../../constants";
@@ -32,6 +33,8 @@ import { isLinearElementType } from "../../element/typeChecks";
 import { Mutable } from "../../utility-types";
 import { assertNever } from "../../utils";
 import { createTestHook } from "../../components/App";
+import { SupportedMeasures } from "../../duc/utils/measurements";
+import { WritingLayers } from "../../dist/canvas/duc/utils/writingLayers";
 
 const readFile = util.promisify(fs.readFile);
 // so that window.h is available when App.tsx is not imported as well.
@@ -40,26 +43,26 @@ createTestHook();
 const { h } = window;
 
 export class API {
-  static setSelectedElements = (elements: ExcalidrawElement[]) => {
+  static setSelectedElements = (elements: DucElement[]) => {
     h.setState({
       selectedElementIds: elements.reduce((acc, element) => {
         acc[element.id] = true;
         return acc;
-      }, {} as Record<ExcalidrawElement["id"], true>),
+      }, {} as Record<DucElement["id"], true>),
     });
   };
 
   static getSelectedElements = (
     includeBoundTextElement: boolean = false,
     includeElementsInFrames: boolean = false,
-  ): ExcalidrawElement[] => {
-    return getSelectedElements(h.elements, h.state, {
+  ): DucElement[] => {
+    return getSelectedElements(h.elements as ElementsMapOrArray, h.state, {
       includeBoundTextElement,
       includeElementsInFrames,
     });
   };
 
-  static getSelectedElement = (): ExcalidrawElement => {
+  static getSelectedElement = (): DucElement => {
     const selectedElements = API.getSelectedElements();
     if (selectedElements.length !== 1) {
       throw new Error(
@@ -81,7 +84,7 @@ export class API {
   };
 
   static createElement = <
-    T extends Exclude<ExcalidrawElementType, "selection"> = "rectangle",
+    T extends Exclude<DucElementType, "selection"> = "rectangle",
   >({
     // @ts-ignore
     type = "rectangle",
@@ -101,60 +104,67 @@ export class API {
     width?: number;
     angle?: number;
     id?: string;
+    index?: DucElement["index"];
     isDeleted?: boolean;
-    frameId?: ExcalidrawElement["id"] | null;
+    frameId?: DucElement["id"] | null;
     groupIds?: string[];
+    scope?: SupportedMeasures;
+    writingLayer?: WritingLayers;
+    label?: string;
+    ratioLocked?: boolean;
+    isVisible?: boolean;
+    strokePlacement?: DucElement["strokePlacement"];
     // generic element props
-    strokeColor?: ExcalidrawGenericElement["strokeColor"];
-    backgroundColor?: ExcalidrawGenericElement["backgroundColor"];
-    fillStyle?: ExcalidrawGenericElement["fillStyle"];
-    strokeWidth?: ExcalidrawGenericElement["strokeWidth"];
-    strokeStyle?: ExcalidrawGenericElement["strokeStyle"];
-    roundness?: ExcalidrawGenericElement["roundness"];
-    roughness?: ExcalidrawGenericElement["roughness"];
-    opacity?: ExcalidrawGenericElement["opacity"];
+    strokeColor?: DucGenericElement["strokeColor"];
+    backgroundColor?: DucGenericElement["backgroundColor"];
+    fillStyle?: DucGenericElement["fillStyle"];
+    strokeWidth?: DucGenericElement["strokeWidth"];
+    strokeStyle?: DucGenericElement["strokeStyle"];
+    roundness?: DucGenericElement["roundness"];
+    roughness?: DucGenericElement["roughness"];
+    opacity?: DucGenericElement["opacity"];
     // text props
-    text?: T extends "text" ? ExcalidrawTextElement["text"] : never;
-    fontSize?: T extends "text" ? ExcalidrawTextElement["fontSize"] : never;
-    fontFamily?: T extends "text" ? ExcalidrawTextElement["fontFamily"] : never;
-    textAlign?: T extends "text" ? ExcalidrawTextElement["textAlign"] : never;
+    text?: T extends "text" ? DucTextElement["text"] : never;
+    fontSize?: T extends "text" ? DucTextElement["fontSize"] : never;
+    fontFamily?: T extends "text" ? DucTextElement["fontFamily"] : never;
+    textAlign?: T extends "text" ? DucTextElement["textAlign"] : never;
     verticalAlign?: T extends "text"
-      ? ExcalidrawTextElement["verticalAlign"]
+      ? DucTextElement["verticalAlign"]
       : never;
-    boundElements?: ExcalidrawGenericElement["boundElements"];
+    boundElements?: DucGenericElement["boundElements"];
     containerId?: T extends "text"
-      ? ExcalidrawTextElement["containerId"]
+      ? DucTextElement["containerId"]
       : never;
     points?: T extends "arrow" | "line" ? readonly Point[] : never;
     locked?: boolean;
     fileId?: T extends "image" ? string : never;
-    scale?: T extends "image" ? ExcalidrawImageElement["scale"] : never;
-    status?: T extends "image" ? ExcalidrawImageElement["status"] : never;
+    scale?: T extends "image" ? DucImageElement["scale"] : never;
+    status?: T extends "image" ? DucImageElement["status"] : never;
     startBinding?: T extends "arrow"
-      ? ExcalidrawLinearElement["startBinding"]
+      ? DucLinearElement["startBinding"]
       : never;
     endBinding?: T extends "arrow"
-      ? ExcalidrawLinearElement["endBinding"]
+      ? DucLinearElement["endBinding"]
       : never;
   }): T extends "arrow" | "line"
-    ? ExcalidrawLinearElement
+    ? DucLinearElement
     : T extends "freedraw"
-    ? ExcalidrawFreeDrawElement
+    ? DucFreeDrawElement
     : T extends "text"
-    ? ExcalidrawTextElement
+    ? DucTextElement
     : T extends "image"
-    ? ExcalidrawImageElement
+    ? DucImageElement
     : T extends "frame"
-    ? ExcalidrawFrameElement
+    ? DucFrameElement
     : T extends "magicframe"
-    ? ExcalidrawMagicFrameElement
-    : ExcalidrawGenericElement => {
-    let element: Mutable<ExcalidrawElement> = null!;
+    ? DucMagicFrameElement
+    : DucGenericElement => {
+    let element: Mutable<DucElement> = null!;
 
     const appState = h?.state || getDefaultAppState();
 
     const base: Omit<
-      ExcalidrawGenericElement,
+      DucGenericElement,
       | "id"
       | "width"
       | "height"
@@ -170,11 +180,18 @@ export class API {
       x,
       y,
       frameId: rest.frameId ?? null,
+      index: rest.index ?? null,
+      ratioLocked: rest.ratioLocked ?? false,
       angle: rest.angle ?? 0,
+      label: rest.label ?? `Lost Element}`,
       strokeColor: rest.strokeColor ?? appState.currentItemStrokeColor,
+      strokePlacement: rest.strokePlacement ?? "center",
       backgroundColor:
         rest.backgroundColor ?? appState.currentItemBackgroundColor,
       fillStyle: rest.fillStyle ?? appState.currentItemFillStyle,
+      scope: rest.scope ?? appState.scope,
+      writingLayer: rest.writingLayer ?? appState.writingLayer,
+      isVisible: rest.isVisible ?? true,
       strokeWidth: rest.strokeWidth ?? appState.currentItemStrokeWidth,
       strokeStyle: rest.strokeStyle ?? appState.currentItemStrokeStyle,
       roundness: (
@@ -271,10 +288,11 @@ export class API {
         element = newMagicFrameElement({ ...base, width, height });
         break;
       default:
-        assertNever(
-          type,
-          `API.createElement: unimplemented element type ${type}}`,
-        );
+        if (typeof type !== 'string') {
+          assertNever(type, `API.createElement: unimplemented element type ${type}`);
+        } else {
+          throw new Error(`API.createElement: unimplemented element type ${type}`);
+        }
         break;
     }
     if (element.type === "arrow") {

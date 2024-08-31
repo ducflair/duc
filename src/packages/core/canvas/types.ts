@@ -21,6 +21,7 @@ import {
   DucElementType,
   DucIframeLikeElement,
   DucGroup,
+  DucNonSelectionElement,
 } from "./element/types";
 import { Action } from "./actions/types";
 import { Point as RoughPoint } from "roughjs/bin/geometry";
@@ -73,6 +74,25 @@ export type CollaboratorPointer = {
 };
 
 export type DataURL = string & { _brand: "DataURL" };
+
+
+export type ObservedAppState = ObservedStandaloneAppState &
+  ObservedElementsAppState;
+
+export type ObservedStandaloneAppState = {
+  name: AppState["name"];
+  viewBackgroundColor: AppState["viewBackgroundColor"];
+};
+
+export type ObservedElementsAppState = {
+  editingGroupId: AppState["editingGroupId"];
+  selectedElementIds: AppState["selectedElementIds"];
+  selectedGroupIds: AppState["selectedGroupIds"];
+  // Avoiding storing whole instance, as it could lead into state incosistencies, empty undos/redos and etc.
+  editingLinearElementId: LinearElementEditor["elementId"] | null;
+  // Right now it's coupled to `editingLinearElement`, ideally it should not be really needed as we already have selectedElementIds & editingLinearElementId
+  selectedLinearElementId: LinearElementEditor["elementId"] | null;
+};
 
 export type BinaryFileData = {
   mimeType:
@@ -185,6 +205,7 @@ export type InteractiveCanvasAppState = Readonly<
     // SnapLines
     snapLines: AppState["snapLines"];
     zenModeEnabled: AppState["zenModeEnabled"];
+    editingTextElement: AppState["editingTextElement"];
   }
 >;
 
@@ -201,9 +222,26 @@ export interface AppState {
     element: NonDeletedDucElement;
     state: "hover" | "active";
   } | null;
-  draggingElement: NonDeletedDucElement | null;
+    /**
+   * for a newly created element
+   * - set on pointer down, updated during pointer move, used on pointer up
+   */
+  newElement: NonDeleted<DucNonSelectionElement> | null;
+  /**
+   * for a single element that's being resized
+   * - set on pointer down when it's selected and the active tool is selection
+   */
   resizingElement: NonDeletedDucElement | null;
+  /**
+   * multiElement is for multi-point linear element that's created by clicking as opposed to dragging
+   * - when set and present, the editor will handle linear element creation logic accordingly
+   */
   multiElement: NonDeleted<DucLinearElement> | null;
+  /**
+   * decoupled from newElement, dragging selection only creates selectionElement
+   * - set on pointer down, updated during pointer move
+   */
+  draggingElement: NonDeletedDucElement | null;
   selectionElement: NonDeletedDucElement | null;
   isBindingEnabled: boolean; // Out of the Binary
   startBoundElement: NonDeleted<DucBindableElement> | null; // Out of the Binary
@@ -220,6 +258,7 @@ export interface AppState {
   // element being edited, but not necessarily added to elements array yet
   // (e.g. text element when typing into the input)
   editingElement: NonDeletedDucElement | null;
+  editingTextElement: NonDeletedDucElement | null;
   editingLinearElement: LinearElementEditor | null; // Out of the Binary
   activeTool: {
     /**
