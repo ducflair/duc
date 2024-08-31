@@ -178,6 +178,8 @@ export const actionFinalize = register({
         multiElement: null,
         editingElement: null,
         startBoundElement: null,
+        editingTextElement: null,
+        newElement: null,
         suggestedBindings: [],
         selectedElementIds:
           multiPointElement &&
