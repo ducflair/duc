@@ -2,6 +2,7 @@ import { newElementWith } from "../element/mutateElement";
 import { isFrameLikeElement } from "../element/typeChecks";
 import { DucElement } from "../element/types";
 import { KEYS } from "../keys";
+import { StoreAction } from "../store";
 import { arrayToMap } from "../utils";
 import { register } from "./register";
 
@@ -44,7 +45,7 @@ export const actionToggleElementLock = register({
           ? null
           : appState.selectedLinearElement,
       },
-      commitToHistory: true,
+      storeAction: StoreAction.CAPTURE,
     };
   },
   contextItemLabel: (elements, appState, app) => {
@@ -98,7 +99,7 @@ export const actionUnlockAllElements = register({
           lockedElements.map((el) => [el.id, true]),
         ),
       },
-      commitToHistory: true,
+      storeAction: StoreAction.CAPTURE,
     };
   },
   contextItemLabel: "labels.elementLock.unlockAll",

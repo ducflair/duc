@@ -90,6 +90,7 @@ import {
   TOOL_TYPE,
   EDITOR_LS_KEYS,
   isIOS,
+  DEFAULT_COLLISION_THRESHOLD,
 } from "../constants";
 import { ExportedElements, exportCanvas, loadFromBlob, loadFromJSON, saveAsJSON } from "../data";
 import Library, { distributeLibraryItemsOnSquareGrid } from "../data/library";
@@ -107,8 +108,6 @@ import {
   getResizeOffsetXY,
   getLockedLinearCursorAlignSize,
   getTransformHandleTypeFromCoords,
-  hitTest,
-  isHittingElementBoundingBoxWithoutHittingElement,
   isInvisiblySmallElement,
   isNonDeletedElement,
   isTextElement,
@@ -119,9 +118,11 @@ import {
   transformElements,
   updateTextElement,
   redrawTextBoundingBox,
+  getElementAbsoluteCoords,
 } from "../element";
 import {
   bindOrUnbindLinearElement,
+  bindOrUnbindLinearElements,
   bindOrUnbindSelectedElements,
   fixBindingsAfterDeletion,
   fixBindingsAfterDuplication,
@@ -135,7 +136,7 @@ import {
   updateBoundElements,
 } from "../element/binding";
 import { LinearElementEditor } from "../element/linearElementEditor";
-import { mutateElement, newElementWith } from "../element/mutateElement";
+import { ElementUpdate, mutateElement, newElementWith } from "../element/mutateElement";
 import {
   deepCopyElement,
   duplicateElements,
@@ -163,6 +164,7 @@ import {
   isIframeElement,
   isIframeLikeElement,
   isMagicFrameElement,
+  isTextBindableContainer,
 } from "../element/typeChecks";
 import {
   DucBindableElement,
@@ -186,6 +188,9 @@ import {
   OptionalDucElementBase,
   DucGroup,
   OptionalDucGroup,
+  OrderedDucElement,
+  DucNonSelectionElement,
+  Ordered,
 } from "../element/types";
 import { getCenter, getDistance } from "../gesture";
 import {
@@ -197,7 +202,7 @@ import {
   isSelectedViaGroup,
   selectGroupsForSelectedElements,
 } from "../groups";
-import History from "../history";
+import { History } from "../history";
 import { defaultLang, getLanguage, languages, setLanguage, t } from "../i18n";
 import {
   CODES,
@@ -226,7 +231,7 @@ import {
 import Scene from "../scene/Scene";
 import { RenderInteractiveSceneCallback, ScrollBars } from "../scene/types";
 import { getStateForZoom } from "../scene/zoom";
-import { findShapeByKey } from "../shapes";
+import { findShapeByKey, getBoundTextShape, getElementShape } from "../shapes";
 import {
   AppClassProperties,
   AppProps,
@@ -251,6 +256,7 @@ import {
   UnsubscribeCallback,
   EmbedsValidationStatus,
   ElementsPendingErasure,
+  NullableGridSize,
 } from "../types";
 import {
   debounce,
@@ -277,6 +283,7 @@ import {
   normalizeEOL,
   getDateTime,
   arrayToMap,
+  isShallowEqual,
 } from "../utils";
 import {
   createSrcDoc,
@@ -321,13 +328,11 @@ import {
   getBoundTextElement,
   getContainerCenter,
   getContainerElement,
-  getDefaultLineHeight,
   getLineHeightInPx,
-  getTextBindableContainerAtPosition,
+  getMinTextElementWidth,
   isMeasureTextSupported,
   isValidTextContainer,
 } from "../element/textElement";
-import { isHittingElementNotConsideringBoundingBox } from "../element/collision";
 import {
   showHyperlinkTooltip,
   hideHyperlinkToolip,
@@ -336,7 +341,7 @@ import {
 import { isLocalLink, normalizeLink, toValidURL } from "../data/url";
 import { shouldShowBoundingBox } from "../element/transformHandles";
 import { actionUnlockAllElements } from "../actions/actionElementLock";
-import { Fonts } from "../scene/Fonts";
+import { Fonts } from "../fonts";
 import {
   getFrameChildren,
   isCursorInFrame,
@@ -428,6 +433,10 @@ import {
 } from "../actions/actionCanvas";
 import { syncInvalidIndices, syncMovedIndices } from "../fractionalIndex";
 import { Store, StoreAction } from "../store";
+import { hitElementBoundingBoxOnly, hitElementBoundText, hitElementItself } from "../element/collision";
+import { getSelectionBoxShape } from "../../utils/geometry/shape";
+import { isPointInShape } from "../../utils/collision";
+import { getLineHeight } from "../fonts";
 
 const AppContext = React.createContext<AppClassProperties>(null!);
 const AppPropsContext = React.createContext<AppProps>(null!);
@@ -535,13 +544,14 @@ class App extends React.Component<AppProps, AppState> {
   private excalidrawContainerRef = React.createRef<HTMLDivElement>();
 
   public scene: Scene;
+  public fonts: Fonts;
   public renderer: Renderer;
-  private fonts: Fonts;
   private resizeObserver: ResizeObserver | undefined;
   private nearestScrollableContainer: HTMLElement | Document | undefined;
   public library: AppClassProperties["library"];
   public libraryItemsFromStorage: LibraryItems | undefined;
   public id: string;
+  private store: Store;
   private history: History;
   private excalidrawContainerValue: {
     container: HTMLDivElement | null;
@@ -563,6 +573,9 @@ class App extends React.Component<AppProps, AppState> {
   private initializedEmbeds = new Set<DucIframeLikeElement["id"]>();
 
   private elementsPendingErasure: ElementsPendingErasure = new Set();
+
+  // public flowChartCreator: FlowChartCreator = new FlowChartCreator();
+  // private flowChartNavigator: FlowChartNavigator = new FlowChartNavigator();
 
   hitLinkElement?: NonDeletedDucElement;
   lastPointerDownEvent: React.PointerEvent<HTMLElement> | null = null;
@@ -673,15 +686,17 @@ class App extends React.Component<AppProps, AppState> {
       id: this.id,
     };
 
-    this.fonts = new Fonts({
-      scene: this.scene,
-      onSceneUpdated: this.onSceneUpdated,
-    });
+    this.fonts = new Fonts({ scene: this.scene });
+    this.store = new Store();
     this.history = new History();
     this.actionManager.registerAll(actions);
 
-    this.actionManager.registerAction(createUndoAction(this.history));
-    this.actionManager.registerAction(createRedoAction(this.history));
+    this.actionManager.registerAction(
+      createUndoAction(this.history, this.store),
+    );
+    this.actionManager.registerAction(
+      createRedoAction(this.history, this.store),
+    );
 
     if (ducAPI) {
       const api: DucImperativeAPI = {
@@ -2174,12 +2189,12 @@ class App extends React.Component<AppProps, AppState> {
           if (shouldUpdateStrokeColor) {
             this.syncActionResult({
               appState: { ...this.state, currentItemStrokeColor: color },
-              commitToHistory: true,
+              storeAction: StoreAction.CAPTURE,
             });
           } else {
             this.syncActionResult({
               appState: { ...this.state, currentItemBackgroundColor: color },
-              commitToHistory: true,
+              storeAction: StoreAction.CAPTURE,
             });
           }
         } else {
@@ -2193,6 +2208,7 @@ class App extends React.Component<AppProps, AppState> {
               }
               return el;
             }),
+            storeAction: StoreAction.CAPTURE,
           });
         }
       },
@@ -2200,99 +2216,93 @@ class App extends React.Component<AppProps, AppState> {
     });
   };
 
-  private syncActionResult = withBatchedUpdates(
-    (actionResult: ActionResult) => {
-      if (this.unmounted || actionResult === false) {
-        return;
+  public syncActionResult = withBatchedUpdates((actionResult: ActionResult) => {
+    if (this.unmounted || actionResult === false) {
+      return;
+    }
+
+    if (actionResult.storeAction === StoreAction.UPDATE) {
+      this.store.shouldUpdateSnapshot();
+    } else if (actionResult.storeAction === StoreAction.CAPTURE) {
+      this.store.shouldCaptureIncrement();
+    }
+
+    let didUpdate = false;
+
+    let editingTextElement: AppState["editingTextElement"] | null = null;
+    if (actionResult.elements) {
+      this.scene.replaceAllElements(actionResult.elements);
+      didUpdate = true;
+    }
+
+    if (actionResult.files) {
+      this.files = actionResult.replaceFiles
+        ? actionResult.files
+        : { ...this.files, ...actionResult.files };
+      this.addNewImagesToImageCache();
+    }
+
+    if (actionResult.appState || editingTextElement || this.state.contextMenu) {
+      let viewModeEnabled = actionResult?.appState?.viewModeEnabled || false;
+      let zenModeEnabled = actionResult?.appState?.zenModeEnabled || false;
+      const theme =
+        actionResult?.appState?.theme || this.props.theme || THEME.LIGHT;
+      const name = actionResult?.appState?.name ?? this.state.name;
+      const errorMessage =
+        actionResult?.appState?.errorMessage ?? this.state.errorMessage;
+      if (typeof this.props.viewModeEnabled !== "undefined") {
+        viewModeEnabled = this.props.viewModeEnabled;
       }
 
-      let editingElement: AppState["editingElement"] | null = null;
-      if (actionResult.elements) {
+      if (typeof this.props.zenModeEnabled !== "undefined") {
+        zenModeEnabled = this.props.zenModeEnabled;
+      }
+
+      editingTextElement = actionResult.appState?.editingTextElement || null;
+
+      // make sure editingTextElement points to latest element reference
+      if (actionResult.elements && editingTextElement) {
         actionResult.elements.forEach((element) => {
           if (
-            this.state.editingElement?.id === element.id &&
-            this.state.editingElement !== element &&
-            isNonDeletedElement(element)
+            editingTextElement?.id === element.id &&
+            editingTextElement !== element &&
+            isNonDeletedElement(element) &&
+            isTextElement(element)
           ) {
-            editingElement = element;
+            editingTextElement = element;
           }
         });
-        this.scene.replaceAllElements(actionResult.elements);
-        if (actionResult.commitToHistory) {
-          this.history.resumeRecording();
-        }
       }
 
-      if (actionResult.files) {
-        this.files = actionResult.replaceFiles
-          ? actionResult.files
-          : { ...this.files, ...actionResult.files };
-        this.addNewImagesToImageCache();
+      if (editingTextElement?.isDeleted) {
+        editingTextElement = null;
       }
 
-      if (actionResult.appState || editingElement || this.state.contextMenu) {
-        if (actionResult.commitToHistory) {
-          this.history.resumeRecording();
-        }
+      this.setState((state) => {
+        // using Object.assign instead of spread to fool TS 4.2.2+ into
+        // regarding the resulting type as not containing undefined
+        // (which the following expression will never contain)
+        return Object.assign(actionResult.appState || {}, {
+          // NOTE this will prevent opening context menu using an action
+          // or programmatically from the host, so it will need to be
+          // rewritten later
+          contextMenu: null,
+          editingTextElement,
+          viewModeEnabled,
+          zenModeEnabled,
+          theme,
+          name,
+          errorMessage,
+        });
+      });
 
-        let viewModeEnabled = actionResult?.appState?.viewModeEnabled || false;
-        let zenModeEnabled = actionResult?.appState?.zenModeEnabled || false;
-        let gridSize = actionResult?.appState?.gridSize || null;
-        const theme =
-          actionResult?.appState?.theme || this.props.theme || THEME.LIGHT;
-        const name = actionResult?.appState?.name ?? this.state.name;
-        const errorMessage =
-          actionResult?.appState?.errorMessage ?? this.state.errorMessage;
-        if (typeof this.props.viewModeEnabled !== "undefined") {
-          viewModeEnabled = this.props.viewModeEnabled;
-        }
+      didUpdate = true;
+    }
 
-        if (typeof this.props.zenModeEnabled !== "undefined") {
-          zenModeEnabled = this.props.zenModeEnabled;
-        }
-
-        if (typeof this.props.gridModeEnabled !== "undefined") {
-          gridSize = this.props.gridModeEnabled ? GRID_SIZE : null;
-        }
-
-        editingElement =
-          editingElement || actionResult.appState?.editingElement || null;
-
-        if (editingElement?.isDeleted) {
-          editingElement = null;
-        }
-
-        this.setState(
-          (state) => {
-            // using Object.assign instead of spread to fool TS 4.2.2+ into
-            // regarding the resulting type as not containing undefined
-            // (which the following expression will never contain)
-            return Object.assign(actionResult.appState || {}, {
-              // NOTE this will prevent opening context menu using an action
-              // or programmatically from the host, so it will need to be
-              // rewritten later
-              contextMenu: null,
-              editingElement,
-              viewModeEnabled,
-              zenModeEnabled,
-              gridSize,
-              theme,
-              name,
-              errorMessage,
-            });
-          },
-          () => {
-            if (actionResult.syncHistory) {
-              this.history.setCurrentState(
-                this.state,
-                this.scene.getElementsIncludingDeleted(),
-              );
-            }
-          },
-        );
-      }
-    },
-  );
+    if (!didUpdate && actionResult.storeAction !== StoreAction.NONE) {
+      this.scene.informMutation();
+    }
+  });
 
   // Lifecycle
 
@@ -2313,6 +2323,11 @@ class App extends React.Component<AppProps, AppState> {
     this.history.clear();
   };
 
+
+  private resetStore = () => {
+    this.store.clear();
+  };
+
   /**
    * Resets scene & history.
    * ! Do not use to clear scene user action !
@@ -2325,6 +2340,7 @@ class App extends React.Component<AppProps, AppState> {
         isLoading: opts?.resetLoadingState ? false : state.isLoading,
         theme: this.state.theme,
       }));
+      this.resetStore();
       this.resetHistory();
     },
   );
@@ -2403,16 +2419,18 @@ class App extends React.Component<AppProps, AppState> {
         }),
       };
     }
-    // FontFaceSet loadingdone event we listen on may not always fire
-    // (looking at you Safari), so on init we manually load fonts for current
-    // text elements on canvas, and rerender them once done. This also
+    // FontFaceSet loadingdone event we listen on may not always
+    // fire (looking at you Safari), so on init we manually load all
+    // fonts and rerender scene text elements once done. This also
     // seems faster even in browsers that do fire the loadingdone event.
-    this.fonts.loadFontsForElements(scene.elements);
+    this.fonts.loadSceneFonts();
 
+
+    this.resetStore();
     this.resetHistory();
     this.syncActionResult({
       ...scene,
-      commitToHistory: true,
+      storeAction: StoreAction.UPDATE,
     });
   };
 
@@ -2494,6 +2512,10 @@ class App extends React.Component<AppProps, AppState> {
             return this.setState(...args);
           },
         },
+        store: {
+          configurable: true,
+          value: this.store,
+        },
         app: {
           configurable: true,
           value: this,
@@ -2504,6 +2526,10 @@ class App extends React.Component<AppProps, AppState> {
         },
       });
     }
+
+    this.store.onStoreIncrementEmitter.on((increment) => {
+      this.history.record(increment.elementsChange, increment.appStateChange);
+    });
 
     this.scene.addCallback(this.onSceneUpdated);
     this.addEventListeners();
@@ -2551,6 +2577,7 @@ class App extends React.Component<AppProps, AppState> {
     this.renderer.destroy();
     this.scene = new Scene();
     this.renderer = new Renderer(this.scene);
+    this.fonts = new Fonts({ scene: this.scene });
     this.files = {};
     this.imageCache.clear();
     this.resizeObserver?.disconnect();
@@ -2558,6 +2585,7 @@ class App extends React.Component<AppProps, AppState> {
     this.removeEventListeners();
     this.scene.destroy();
     this.library.destroy();
+    this.store.onStoreIncrementEmitter.clear();
     this.laserTrails.stop();
     this.eraserTrail.stop();
     this.onChangeEmitter.clear();
@@ -2632,7 +2660,7 @@ class App extends React.Component<AppProps, AppState> {
       // rerender text elements on font load to fix #637 && #1553
       addEventListener(document.fonts, "loadingdone", (event) => {
         const loadedFontFaces = (event as FontFaceSetLoadEvent).fontfaces;
-        this.fonts.onFontsLoaded(loadedFontFaces);
+        this.fonts.onLoaded(loadedFontFaces);
       }),
       // Safari-only desktop pinch zoom
       addEventListener(
@@ -2705,7 +2733,7 @@ class App extends React.Component<AppProps, AppState> {
   componentDidUpdate(prevProps: AppProps, prevState: AppState) {
     this.updateEmbeddables();
     const elements = this.scene.getElementsIncludingDeleted();
-    const elementsMap = this.scene.getNonDeletedElementsMap();
+    const elementsMap = this.scene.getElementsMapIncludingDeleted();
 
     if (!this.state.showWelcomeScreen && !elements.length) {
       this.setState({ showWelcomeScreen: true });
@@ -2821,7 +2849,7 @@ class App extends React.Component<AppProps, AppState> {
       this.state.editingLinearElement &&
       !this.state.selectedElementIds[this.state.editingLinearElement.elementId]
     ) {
-      // defer so that the commitToHistory flag isn't reset via current update
+      // defer so that the storeAction flag isn't reset via current update
       setTimeout(() => {
         // execute only if the condition still holds when the deferred callback
         // executes (it can be scheduled multiple times depending on how
@@ -2853,21 +2881,22 @@ class App extends React.Component<AppProps, AppState> {
       isBindingEnabled(this.state) &&
       isBindingElement(multiElement, false)
     ) {
-      maybeBindLinearElement(
-        multiElement,
-        this.state,
-        this.scene,
-        tupleToCoors(
-          LinearElementEditor.getPointAtIndexGlobalCoordinates(
-            multiElement,
-            -1,
-            elementsMap,
-          ),
-        ),
-        elementsMap,
-      );
+      // maybeBindLinearElement(
+      //   multiElement,
+      //   this.state,
+      //   this.scene,
+      //   tupleToCoors(
+      //     LinearElementEditor.getPointAtIndexGlobalCoordinates(
+      //       multiElement,
+      //       -1,
+      //       elementsMap,
+      //     ),
+      //   ),
+      //   elementsMap,
+      // );
     }
-    this.history.record(this.state, elements);
+    // this.history.record(this.state, elements);
+    this.store.commit(elementsMap as Map<string, OrderedDucElement>, this.state);
 
     // Do not notify consumers if we're still loading the scene. Among other
     // potential issues, this fixes a case where the tab isn't focused during
@@ -3188,7 +3217,7 @@ class App extends React.Component<AppProps, AppState> {
     const dx = x - elementsCenterX;
     const dy = y - elementsCenterY;
 
-    const [gridX, gridY] = getGridPoint(dx, dy, this.getEffectiveGridSize());
+    const [gridX, gridY] = getGridPoint(dx, dy, GRID_SIZE as NullableGridSize);
 
     const newElements = duplicateElements(
       elements.map((element) => {
@@ -3417,7 +3446,7 @@ class App extends React.Component<AppProps, AppState> {
       (acc: DucTextElement[], line, idx) => {
         const text = line.trim();
 
-        const lineHeight = getDefaultLineHeight(textElementProps.fontFamily);
+        const lineHeight = getLineHeight(textElementProps.fontFamily);
         if (text.length) {
           const topLayerFrame = this.getTopLayerFrameAtSceneCoords({
             x,
@@ -3493,7 +3522,8 @@ class App extends React.Component<AppProps, AppState> {
       PLAIN_PASTE_TOAST_SHOWN = true;
     }
 
-    this.history.resumeRecording();
+    // this.history.resumeRecording();
+    this.store.shouldCaptureIncrement();
   }
 
   setAppState: React.Component<any, AppState>["setState"] = (
@@ -3776,7 +3806,7 @@ class App extends React.Component<AppProps, AppState> {
 
         const nextCommittedElements = sceneData.elements
           ? this.store.filterUncomittedElements(
-              this.scene.getElementsMapIncludingDeleted(), // Only used to detect uncomitted local elements
+              this.scene.getElementsMapIncludingDeleted() as Map<string, OrderedDucElement>, // Only used to detect uncomitted local elements
               arrayToMap(nextElements), // We expect all (already reconciled) elements
             )
           : prevCommittedElements;
@@ -3950,10 +3980,10 @@ class App extends React.Component<AppProps, AppState> {
 
       if (isArrowKey(event.key)) {
         const step =
-          (this.state.gridSize &&
+          (GRID_SIZE as NullableGridSize &&
             (event.shiftKey
               ? ELEMENT_TRANSLATE_AMOUNT
-              : this.state.gridSize)) ||
+              : GRID_SIZE as NullableGridSize)) ||
           (event.shiftKey
             ? ELEMENT_SHIFT_TRANSLATE_AMOUNT
             : ELEMENT_TRANSLATE_AMOUNT);
@@ -4003,12 +4033,13 @@ class App extends React.Component<AppProps, AppState> {
                 this.state.editingLinearElement.elementId !==
                   selectedElements[0].id
               ) {
-                this.history.resumeRecording();
+                this.store.shouldCaptureIncrement();
+                
                 this.setState({
-                  editingLinearElement: new LinearElementEditor(
-                    selectedElement,
-                  ),
-                });
+                    editingLinearElement: new LinearElementEditor(
+                      selectedElement,
+                    ),
+                }); 
               }
             }
           } else if (
@@ -4204,12 +4235,12 @@ class App extends React.Component<AppProps, AppState> {
 
   redo = (
   ) => {
-    return this.actionManager.executeAction(createRedoAction(this.history));
+    return this.actionManager.executeAction(createRedoAction(this.history, this.store));
   };
 
   undo = (
   ) => {
-    return this.actionManager.executeAction(createUndoAction(this.history));
+    return this.actionManager.executeAction(createUndoAction(this.history, this.store));
   };
 
   setElementFrameId = (
@@ -4275,7 +4306,7 @@ class App extends React.Component<AppProps, AppState> {
       this.updateScene({
         elements: this.scene.getElementsIncludingDeleted().map((el) => {
           if (el.id === element.id) {
-            return newElementWith(el, values);
+            return newElementWith(el, values as ElementUpdate<OrderedDucElement>);
           }
           return el;
         }),
@@ -4291,7 +4322,7 @@ class App extends React.Component<AppProps, AppState> {
       this.updateScene({
         elements: this.scene.getElementsIncludingDeleted().map((el) => {
           if (this.state.selectedElementIds[el.id]) {
-            return newElementWith(el, values);
+            return newElementWith(el, values as ElementUpdate<OrderedDucElement>);
           }
           return el;
         }),
@@ -4416,7 +4447,7 @@ class App extends React.Component<AppProps, AppState> {
     });
   };
 
-  updateGroups = () => {
+  public updateGroups = () => {
     const elements = this.scene.getNonDeletedElements();
     const currentGroupIds = new Set(this.state.groups.map(group => group.id));
     const elementGroupIds = new Set(elements.flatMap(el => el.groupIds));
@@ -4498,6 +4529,11 @@ class App extends React.Component<AppProps, AppState> {
         originSnapOffset: null,
         activeEmbeddable: null,
       } as const;
+
+      if (nextActiveTool.type === "freedraw") {
+        this.store.shouldCaptureIncrement();
+      }
+
       if (nextActiveTool.type !== "selection") {
         return {
           ...prevState,
@@ -4694,7 +4730,7 @@ class App extends React.Component<AppProps, AppState> {
           ]);
         }
         if (!isDeleted || isExistingElement) {
-          this.history.resumeRecording();
+          this.store.shouldCaptureIncrement();
         }
 
         this.setState({
@@ -4776,8 +4812,6 @@ class App extends React.Component<AppProps, AppState> {
     x: number,
     y: number,
     opts?: {
-      /** if true, returns the first selected element (with highest z-index)
-        of all hit elements */
       preferSelected?: boolean;
       includeBoundTextElement?: boolean;
       includeLockedElements?: boolean;
@@ -4789,6 +4823,7 @@ class App extends React.Component<AppProps, AppState> {
       opts?.includeBoundTextElement,
       opts?.includeLockedElements,
     );
+
     if (allHitElements.length > 1) {
       if (opts?.preferSelected) {
         for (let index = allHitElements.length - 1; index > -1; index--) {
@@ -4799,22 +4834,31 @@ class App extends React.Component<AppProps, AppState> {
       }
       const elementWithHighestZIndex =
         allHitElements[allHitElements.length - 1];
+
       // If we're hitting element with highest z-index only on its bounding box
       // while also hitting other element figure, the latter should be considered.
-      return isHittingElementBoundingBoxWithoutHittingElement(
-        elementWithHighestZIndex,
-        this.state,
-        this.frameNameBoundsCache,
+      return hitElementItself({
         x,
         y,
-        this.scene.getNonDeletedElementsMap(),
-      )
-        ? allHitElements[allHitElements.length - 2]
-        : elementWithHighestZIndex;
+        element: elementWithHighestZIndex,
+        shape: getElementShape(
+          elementWithHighestZIndex,
+          this.scene.getNonDeletedElementsMap(),
+        ),
+        // when overlapping, we would like to be more precise
+        // this also avoids the need to update past tests
+        threshold: this.getElementHitThreshold() / 2,
+        frameNameBound: isFrameLikeElement(elementWithHighestZIndex)
+          ? this.frameNameBoundsCache.get(elementWithHighestZIndex)
+          : null,
+      })
+        ? elementWithHighestZIndex
+        : allHitElements[allHitElements.length - 2];
     }
     if (allHitElements.length === 1) {
       return allHitElements[0];
     }
+
     return null;
   }
 
@@ -4824,7 +4868,11 @@ class App extends React.Component<AppProps, AppState> {
     includeBoundTextElement: boolean = false,
     includeLockedElements: boolean = false,
   ): NonDeleted<DucElement>[] {
-    const elements =
+    const iframeLikes: Ordered<DucIframeElement>[] = [];
+
+    const elementsMap = this.scene.getNonDeletedElementsMap();
+
+    const elements = (
       includeBoundTextElement && includeLockedElements
         ? this.scene.getNonDeletedElements()
         : this.scene
@@ -4834,27 +4882,32 @@ class App extends React.Component<AppProps, AppState> {
                 (includeLockedElements || !element.locked) &&
                 (includeBoundTextElement ||
                   !(isTextElement(element) && element.containerId)),
-            );
+            )
+    )
+      .filter((el) => this.hitElement(x, y, el))
+      .filter((element) => {
+        // hitting a frame's element from outside the frame is not considered a hit
+        const containingFrame = getContainingFrame(element, elementsMap);
+        return containingFrame &&
+          this.state.frameRendering.enabled &&
+          this.state.frameRendering.clip
+          ? isCursorInFrame({ x, y }, containingFrame, elementsMap)
+          : true;
+      })
+      .filter((el) => {
+        // The parameter elements comes ordered from lower z-index to higher.
+        // We want to preserve that order on the returned array.
+        // Exception being embeddables which should be on top of everything else in
+        // terms of hit testing.
+        if (isIframeElement(el)) {
+          iframeLikes.push(el as Ordered<DucIframeElement>);
+          return false;
+        }
+        return true;
+      })
+      .concat(iframeLikes) as NonDeleted<DucElement>[];
 
-    const elementsMap = this.scene.getNonDeletedElementsMap();
-    return getElementsAtPosition(elements, (element) =>
-      hitTest(
-        element,
-        this.state,
-        this.frameNameBoundsCache,
-        x,
-        y,
-        elementsMap,
-      ),
-    ).filter((element) => {
-      // hitting a frame's element from outside the frame is not considered a hit
-      const containingFrame = getContainingFrame(element, elementsMap);
-      return containingFrame &&
-        this.state.frameRendering.enabled &&
-        this.state.frameRendering.clip
-        ? isCursorInFrame({ x, y }, containingFrame, elementsMap)
-        : true;
-    });
+    return elements;
   }
 
   private startTextEditing = ({
@@ -4913,7 +4966,7 @@ class App extends React.Component<AppProps, AppState> {
       existingTextElement?.fontFamily || this.state.currentItemFontFamily;
 
     const lineHeight =
-      existingTextElement?.lineHeight || getDefaultLineHeight(fontFamily);
+      existingTextElement?.lineHeight || getLineHeight(fontFamily);
     const fontSize = this.state.currentItemFontSize;
 
     if (
@@ -5027,21 +5080,6 @@ class App extends React.Component<AppProps, AppState> {
     if (this.state.multiElement) {
       return;
     }
-    if (
-      this.state.penMode &&
-      this.lastPointerDownEvent?.pointerType === "touch" &&
-      this.state.activeTool.type !== "selection"
-    ) {
-      const now = Date.now();
-      if (now - this.debounceDoubleClickTimestamp < 200) {
-        //handleCanvasDoubleClick click fires twice in case of touch.
-        //Once from the onTouchStart event handler, once from the double click event handler
-        return;
-      }
-      this.debounceDoubleClickTimestamp = now;
-      this.updateScene(actionToggleEraserTool.perform([] as any, this.state));
-      return;
-    }
     // we should only be able to double click when mode is selection
     if (this.state.activeTool.type !== "selection") {
       return;
@@ -5053,17 +5091,13 @@ class App extends React.Component<AppProps, AppState> {
       if (
         event[KEYS.CTRL_OR_CMD] &&
         (!this.state.editingLinearElement ||
-          this.state.editingLinearElement.elementId !== selectedElements[0].id)
+          this.state.editingLinearElement.elementId !==
+            selectedElements[0].id)
       ) {
-        this.history.resumeRecording();
+        this.store.shouldCaptureIncrement();
         this.setState({
           editingLinearElement: new LinearElementEditor(selectedElements[0]),
         });
-        return;
-      } else if (
-        this.state.editingLinearElement &&
-        this.state.editingLinearElement.elementId === selectedElements[0].id
-      ) {
         return;
       }
     }
@@ -5085,6 +5119,7 @@ class App extends React.Component<AppProps, AppState> {
         getSelectedGroupIdForElement(hitElement, this.state.selectedGroupIds);
 
       if (selectedGroupId) {
+        this.store.shouldCaptureIncrement();
         this.setState((prevState) => ({
           ...prevState,
           ...selectGroupsForSelectedElements(
@@ -5112,43 +5147,41 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
-      const container = getTextBindableContainerAtPosition(
-        this.scene.getNonDeletedElements(),
-        this.state,
-        sceneX,
-        sceneY,
-        this.scene.getNonDeletedElementsMap(),
-      );
+      // Commented our because we don't want to start text editing on double click
+      // const container = this.getTextBindableContainerAtPosition(sceneX, sceneY);
 
-      if (container) {
-        if (
-          hasBoundTextElement(container) ||
-          !isTransparent(container.backgroundColor) ||
-          isHittingElementNotConsideringBoundingBox(
-            container,
-            this.state,
-            this.frameNameBoundsCache,
-            [sceneX, sceneY],
-            this.scene.getNonDeletedElementsMap(),
-          )
-        ) {
-          const midPoint = getContainerCenter(
-            container,
-            this.state,
-            this.scene.getNonDeletedElementsMap(),
-          );
+      // if (container) {
+      //   if (
+      //     hasBoundTextElement(container) ||
+      //     !isTransparent(container.backgroundColor) ||
+      //     hitElementItself({
+      //       x: sceneX,
+      //       y: sceneY,
+      //       element: container,
+      //       shape: getElementShape(
+      //         container,
+      //         this.scene.getNonDeletedElementsMap(),
+      //       ),
+      //       threshold: this.getElementHitThreshold(),
+      //     })
+      //   ) {
+      //     const midPoint = getContainerCenter(
+      //       container,
+      //       this.state,
+      //       this.scene.getNonDeletedElementsMap(),
+      //     );
 
-          sceneX = midPoint.x;
-          sceneY = midPoint.y;
-        }
-      }
+      //     sceneX = midPoint.x;
+      //     sceneY = midPoint.y;
+      //   }
+      // }
 
-      this.startTextEditing({
-        sceneX,
-        sceneY,
-        insertAtParentCenter: !event.altKey,
-        container,
-      });
+      // this.startTextEditing({
+      //   sceneX,
+      //   sceneY,
+      //   insertAtParentCenter: !event.altKey,
+      //   container,
+      // });
     }
   };
 
@@ -5399,7 +5432,7 @@ class App extends React.Component<AppProps, AppState> {
         event,
         scenePointerX,
         scenePointerY,
-        this.state,
+        this,
         this.scene.getNonDeletedElementsMap(),
       );
 
@@ -5487,7 +5520,7 @@ class App extends React.Component<AppProps, AppState> {
         const [gridX, gridY] = getGridPoint(
           scenePointerX,
           scenePointerY,
-          event[KEYS.CTRL_OR_CMD] ? null : this.state.gridSize,
+          event[KEYS.CTRL_OR_CMD] ? null : GRID_SIZE as NullableGridSize,
         );
 
         const [lastCommittedX, lastCommittedY] =
@@ -5777,6 +5810,53 @@ class App extends React.Component<AppProps, AppState> {
     invalidateContextMenu = true;
   };
 
+  private getElementHitThreshold() {
+    return DEFAULT_COLLISION_THRESHOLD / this.state.zoom.value;
+  }
+  
+  private hitElement(
+    x: number,
+    y: number,
+    element: DucElement,
+    considerBoundingBox = true,
+  ) {
+    // if the element is selected, then hit test is done against its bounding box
+    if (
+      considerBoundingBox &&
+      this.state.selectedElementIds[element.id] &&
+      shouldShowBoundingBox([element], this.state)
+    ) {
+      const selectionShape = getSelectionBoxShape(
+        element,
+        this.scene.getNonDeletedElementsMap(),
+        this.getElementHitThreshold(),
+      );
+
+      return isPointInShape([x, y], selectionShape);
+    }
+
+    // take bound text element into consideration for hit collision as well
+    const hitBoundTextOfElement = hitElementBoundText(
+      x,
+      y,
+      getBoundTextShape(element, this.scene.getNonDeletedElementsMap()),
+    );
+    if (hitBoundTextOfElement) {
+      return true;
+    }
+
+    return hitElementItself({
+      x,
+      y,
+      element,
+      shape: getElementShape(element, this.scene.getNonDeletedElementsMap()),
+      threshold: this.getElementHitThreshold(),
+      frameNameBound: isFrameLikeElement(element)
+        ? this.frameNameBoundsCache.get(element)
+        : null,
+    });
+  }
+
   handleHoverSelectedLinearElement(
     linearElementEditor: LinearElementEditor,
     scenePointerX: number,
@@ -5788,7 +5868,6 @@ class App extends React.Component<AppProps, AppState> {
       linearElementEditor.elementId,
       elementsMap,
     );
-    const boundTextElement = getBoundTextElement(element, elementsMap);
 
     if (!element) {
       return;
@@ -5797,13 +5876,15 @@ class App extends React.Component<AppProps, AppState> {
       let hoverPointIndex = -1;
       let segmentMidPointHoveredCoords = null;
       if (
-        isHittingElementNotConsideringBoundingBox(
+        hitElementItself({
+          x: scenePointerX,
+          y: scenePointerY,
           element,
-          this.state,
-          this.frameNameBoundsCache,
-          [scenePointerX, scenePointerY],
-          elementsMap,
-        )
+          shape: getElementShape(
+            element,
+            this.scene.getNonDeletedElementsMap(),
+          ),
+        })
       ) {
         hoverPointIndex = LinearElementEditor.getPointIndexUnderCursor(
           element,
@@ -5822,33 +5903,16 @@ class App extends React.Component<AppProps, AppState> {
 
         if (hoverPointIndex >= 0 || segmentMidPointHoveredCoords) {
           setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
-        } else {
+        } else if (this.hitElement(scenePointerX, scenePointerY, element)) {
           setCursor(this.interactiveCanvas, CURSOR_TYPE.MOVE);
         }
-      } else if (
-        shouldShowBoundingBox([element], this.state) &&
-        isHittingElementBoundingBoxWithoutHittingElement(
-          element,
-          this.state,
-          this.frameNameBoundsCache,
-          scenePointerX,
-          scenePointerY,
-          elementsMap,
-        )
-      ) {
-        setCursor(this.interactiveCanvas, CURSOR_TYPE.MOVE);
-      } else if (
-        boundTextElement &&
-        hitTest(
-          boundTextElement,
-          this.state,
-          this.frameNameBoundsCache,
-          scenePointerX,
-          scenePointerY,
-          this.scene.getNonDeletedElementsMap(),
-        )
-      ) {
-        setCursor(this.interactiveCanvas, CURSOR_TYPE.MOVE);
+      } else if (this.hitElement(scenePointerX, scenePointerY, element)) {
+        if (
+          // !isElbowArrow(element) ||
+          !(element.startBinding || element.endBinding)
+        ) {
+          setCursor(this.interactiveCanvas, CURSOR_TYPE.MOVE);
+        }
       }
 
       if (
@@ -5880,6 +5944,7 @@ class App extends React.Component<AppProps, AppState> {
     }
   }
 
+
   private handleCanvasPointerDown = (
     event: React.PointerEvent<HTMLElement>,
   ) => {
@@ -5907,10 +5972,10 @@ class App extends React.Component<AppProps, AppState> {
     // finger is lifted
     if (
       event.pointerType === "touch" &&
-      this.state.draggingElement &&
-      this.state.draggingElement.type === "freedraw"
+      this.state.newElement &&
+      this.state.newElement.type === "freedraw"
     ) {
-      const element = this.state.draggingElement as DucFreeDrawElement;
+      const element = this.state.newElement as DucFreeDrawElement;
       this.updateScene({
         ...(element.points.length < 10
           ? {
@@ -5920,8 +5985,8 @@ class App extends React.Component<AppProps, AppState> {
             }
           : {}),
         appState: {
-          draggingElement: null,
-          editingElement: null,
+          newElement: null,
+          editingTextElement: null,
           startBoundElement: null,
           suggestedBindings: [],
           selectedElementIds: makeNextSelectedElementIds(
@@ -5934,6 +5999,7 @@ class App extends React.Component<AppProps, AppState> {
             this.state,
           ),
         },
+        storeAction: StoreAction.UPDATE,
       });
       return;
     }
@@ -6079,7 +6145,6 @@ class App extends React.Component<AppProps, AppState> {
 
     if (this.state.activeTool.type === "text") {
       this.handleTextOnPointerDown(event, pointerDownState);
-      return;
     } else if (
       this.state.activeTool.type === "arrow" ||
       this.state.activeTool.type === "line"
@@ -6103,8 +6168,7 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       this.setState({
-        draggingElement: pendingImageElement,
-        editingElement: pendingImageElement,
+        newElement: pendingImageElement as DucNonSelectionElement,
         pendingImageElementId: null,
         multiElement: null,
       });
@@ -6118,7 +6182,6 @@ class App extends React.Component<AppProps, AppState> {
         y,
         frameId: frame ? frame.id : null,
       });
-      this.updateGroups();
     } else if (this.state.activeTool.type === "freedraw") {
       this.handleFreeDrawElementOnPointerDown(
         event,
@@ -6188,6 +6251,7 @@ class App extends React.Component<AppProps, AppState> {
       pointerDownState.eventListeners.onKeyDown = onKeyDown;
     }
   };
+
 
   private handleCanvasPointerUp = (
     event: React.PointerEvent<HTMLCanvasElement>,
@@ -6430,7 +6494,7 @@ class App extends React.Component<AppProps, AppState> {
         getGridPoint(
           origin.x,
           origin.y,
-          event[KEYS.CTRL_OR_CMD] ? null : this.state.gridSize,
+          event[KEYS.CTRL_OR_CMD] ? null : GRID_SIZE as NullableGridSize,
         ),
       ),
       scrollbars: isOverScrollBars(
@@ -6598,12 +6662,11 @@ class App extends React.Component<AppProps, AppState> {
             this.state.editingLinearElement || this.state.selectedLinearElement;
           const ret = LinearElementEditor.handlePointerDown(
             event,
-            this.state,
-            this.history,
+            this,
+            this.store,
             pointerDownState.origin,
             linearElementEditor,
-            this.scene.getNonDeletedElements(),
-            elementsMap,
+            this.scene,
           );
           if (ret.hitElement) {
             pointerDownState.hit.element = ret.hitElement;
@@ -6836,6 +6899,48 @@ class App extends React.Component<AppProps, AppState> {
     );
   }
 
+  private getTextBindableContainerAtPosition(x: number, y: number) {
+    const elements = this.scene.getNonDeletedElements();
+    const selectedElements = this.scene.getSelectedElements(this.state);
+    if (selectedElements.length === 1) {
+      return isTextBindableContainer(selectedElements[0], false)
+        ? selectedElements[0]
+        : null;
+    }
+    let hitElement = null;
+    // We need to do hit testing from front (end of the array) to back (beginning of the array)
+    for (let index = elements.length - 1; index >= 0; --index) {
+      if (elements[index].isDeleted) {
+        continue;
+      }
+      const [x1, y1, x2, y2] = getElementAbsoluteCoords(
+        elements[index],
+        this.scene.getNonDeletedElementsMap(),
+      );
+      if (
+        isArrowElement(elements[index]) &&
+        hitElementItself({
+          x,
+          y,
+          element: elements[index],
+          shape: getElementShape(
+            elements[index],
+            this.scene.getNonDeletedElementsMap(),
+          ),
+          threshold: this.getElementHitThreshold(),
+        })
+      ) {
+        hitElement = elements[index];
+        break;
+      } else if (x1 < x && x < x2 && y1 < y && y < y2) {
+        hitElement = elements[index];
+        break;
+      }
+    }
+
+    return isTextBindableContainer(hitElement, false) ? hitElement : null;
+  }
+
   private handleTextOnPointerDown = (
     event: React.PointerEvent<HTMLElement>,
     pointerDownState: PointerDownState,
@@ -6853,14 +6958,7 @@ class App extends React.Component<AppProps, AppState> {
       includeBoundTextElement: true,
     });
 
-    // FIXME
-    let container = getTextBindableContainerAtPosition(
-      this.scene.getNonDeletedElements(),
-      this.state,
-      sceneX,
-      sceneY,
-      this.scene.getNonDeletedElementsMap(),
-    );
+    let container = this.getTextBindableContainerAtPosition(sceneX, sceneY);
 
     if (hasBoundTextElement(element)) {
       container = element as DucTextContainer;
@@ -6973,7 +7071,7 @@ class App extends React.Component<AppProps, AppState> {
       sceneY,
       this.lastPointerDownEvent?.[KEYS.CTRL_OR_CMD]
         ? null
-        : this.state.gridSize,
+        : GRID_SIZE as NullableGridSize,
     );
 
     const elementType = "iframe";
@@ -7022,7 +7120,7 @@ class App extends React.Component<AppProps, AppState> {
       sceneY,
       this.lastPointerDownEvent?.[KEYS.CTRL_OR_CMD]
         ? null
-        : this.state.gridSize,
+        : GRID_SIZE as NullableGridSize,
     );
 
     const embedLink = getEmbedLink(link);
@@ -7084,7 +7182,7 @@ class App extends React.Component<AppProps, AppState> {
       sceneY,
       this.lastPointerDownEvent?.[KEYS.CTRL_OR_CMD]
         ? null
-        : this.state.gridSize,
+        : GRID_SIZE as NullableGridSize,
     );
 
     const topLayerFrame = addToFrameUnderCursor
@@ -7178,7 +7276,7 @@ class App extends React.Component<AppProps, AppState> {
       const [gridX, gridY] = getGridPoint(
         pointerDownState.origin.x,
         pointerDownState.origin.y,
-        event[KEYS.CTRL_OR_CMD] ? null : this.state.gridSize,
+        event[KEYS.CTRL_OR_CMD] ? null : GRID_SIZE as NullableGridSize,
       );
 
       const topLayerFrame = this.getTopLayerFrameAtSceneCoords({
@@ -7213,8 +7311,8 @@ class App extends React.Component<AppProps, AppState> {
           // this.state.currentItemRoundness === "round"
           //   ? { type: ROUNDNESS.PROPORTIONAL_RADIUS }
           //   : null,
-        startArrowhead,
-        endArrowhead,
+        // startArrowhead,
+        // endArrowhead,
         locked: false,
         label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
         scope: this.state.scope,
@@ -7287,7 +7385,7 @@ class App extends React.Component<AppProps, AppState> {
       pointerDownState.origin.y,
       this.lastPointerDownEvent?.[KEYS.CTRL_OR_CMD]
         ? null
-        : this.state.gridSize,
+        : GRID_SIZE as NullableGridSize,
     );
 
     const topLayerFrame = this.getTopLayerFrameAtSceneCoords({
@@ -7350,7 +7448,7 @@ class App extends React.Component<AppProps, AppState> {
       pointerDownState.origin.y,
       this.lastPointerDownEvent?.[KEYS.CTRL_OR_CMD]
         ? null
-        : this.state.gridSize,
+        : GRID_SIZE as NullableGridSize,
     );
 
     const elementType = type === TOOL_TYPE.magicframe ? "magicframe" : "frame";
@@ -7496,7 +7594,7 @@ class App extends React.Component<AppProps, AppState> {
       const [gridX, gridY] = getGridPoint(
         pointerCoords.x,
         pointerCoords.y,
-        event[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),
+        event[KEYS.CTRL_OR_CMD] ? null : GRID_SIZE as NullableGridSize,
       );
 
       // for arrows/lines, don't start dragging until a given threshold
@@ -7704,7 +7802,7 @@ class App extends React.Component<AppProps, AppState> {
           const { snapOffset, snapLines } = snapDraggedElements(
             originalElements,
             dragOffset,
-            this,
+            this.state,
             event,
             this.scene.getNonDeletedElementsMap(),
           );
@@ -7718,10 +7816,13 @@ class App extends React.Component<AppProps, AppState> {
               pointerDownState,
               selectedElements,
               dragOffset,
+              this.state,
               this.scene,
               snapOffset,
-              event[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),
-            );
+              event[KEYS.CTRL_OR_CMD] ? null : GRID_SIZE as NullableGridSize,
+          );
+
+          this.maybeSuggestBindingForAll(selectedElements);
 
           this.setState({
             selectedElementsAreBeingDragged: true,
@@ -7730,17 +7831,17 @@ class App extends React.Component<AppProps, AppState> {
             selectionElement: null,
           });
 
-          if (
-            selectedElements.length !== 1 ||
-            !isElbowArrow(selectedElements[0])
-          ) {
-            this.setState({
-              suggestedBindings: getSuggestedBindingsForArrows(
-                selectedElements,
-                this.scene.getNonDeletedElementsMap(),
-              ),
-            });
-          }
+          // if (
+          //   selectedElements.length !== 1 ||
+          //   !isElbowArrow(selectedElements[0])
+          // ) {
+          //   this.setState({
+          //     suggestedBindings: getSuggestedBindingsForArrows(
+          //       selectedElements,
+          //       this.scene.getNonDeletedElementsMap(),
+          //     ),
+          //   });
+          // }
 
           // We duplicate the selected element if alt is pressed on pointer move
           if (event.altKey && !pointerDownState.hit.hasBeenDuplicated) {
@@ -7825,6 +7926,7 @@ class App extends React.Component<AppProps, AppState> {
             );
 
             this.scene.replaceAllElements(nextSceneElements);
+            this.updateGroups();
             this.maybeCacheVisibleGaps(event, selectedElements, true);
             this.maybeCacheReferenceSnapPoints(event, selectedElements, true);
           }
@@ -7895,18 +7997,18 @@ class App extends React.Component<AppProps, AppState> {
               },
               false,
             );
-          } else if (points.length > 1 && isElbowArrow(newElement)) {
-            mutateElbowArrow(
-              newElement,
-              elementsMap,
-              [...points.slice(0, -1), [dx, dy]],
-              [0, 0],
-              undefined,
-              {
-                isDragging: true,
-                informMutation: false,
-              },
-            );
+          // } else if (points.length > 1 && isElbowArrow(newElement)) {
+          //   mutateElbowArrow(
+          //     newElement,
+          //     elementsMap,
+          //     [...points.slice(0, -1), [dx, dy]],
+          //     [0, 0],
+          //     undefined,
+          //     {
+          //       isDragging: true,
+          //       informMutation: false,
+          //     },
+          //   );
           } else if (points.length === 2) {
             mutateElement(
               newElement,
@@ -7932,7 +8034,7 @@ class App extends React.Component<AppProps, AppState> {
         } else {
           pointerDownState.lastCoords.x = pointerCoords.x;
           pointerDownState.lastCoords.y = pointerCoords.y;
-          this.maybeDragNewGenericElement(pointerDownState, event, false);
+          this.maybeDragNewGenericElement(pointerDownState, event);
         }
       }
 
@@ -8075,7 +8177,7 @@ class App extends React.Component<AppProps, AppState> {
         pointerDownState.eventListeners.onMove.flush();
       }
       const {
-        draggingElement,
+        newElement,
         resizingElement,
         multiElement,
         activeTool,
@@ -8091,14 +8193,7 @@ class App extends React.Component<AppProps, AppState> {
         frameToHighlight: null,
         elementsToHighlight: null,
         cursorButton: "up",
-        // text elements are reset on finalize, and resetting on pointerup
-        // may cause issues with double taps
-        editingElement:
-          multiElement || isTextElement(this.state.editingElement)
-            ? this.state.editingElement
-            : null,
         snapLines: updateStable(prevState.snapLines, []),
-
         originSnapOffset: null,
       }));
 
@@ -8125,8 +8220,7 @@ class App extends React.Component<AppProps, AppState> {
             childEvent,
             this.state.editingLinearElement,
             this.state,
-            this.scene.getNonDeletedElements(),
-            elementsMap,
+            this.scene,
           );
           if (editingLinearElement !== this.state.editingLinearElement) {
             this.setState({
@@ -8150,8 +8244,7 @@ class App extends React.Component<AppProps, AppState> {
             childEvent,
             this.state.selectedLinearElement,
             this.state,
-            this.scene.getNonDeletedElements(),
-            elementsMap,
+            this.scene,
           );
 
           const { startBindingElement, endBindingElement } =
@@ -8208,15 +8301,15 @@ class App extends React.Component<AppProps, AppState> {
         childEvent,
       );
 
-      if (draggingElement?.type === "freedraw") {
+      if (newElement?.type === "freedraw") {
         const pointerCoords = viewportCoordsToSceneCoords(
           childEvent,
           this.state,
         );
 
-        const points = draggingElement.points;
-        let dx = pointerCoords.x - draggingElement.x;
-        let dy = pointerCoords.y - draggingElement.y;
+        const points = newElement.points;
+        let dx = pointerCoords.x - newElement.x;
+        let dy = pointerCoords.y - newElement.y;
 
         // Allows dots to avoid being flagged as infinitely small
         if (dx === points[0][0] && dy === points[0][1]) {
@@ -8224,23 +8317,22 @@ class App extends React.Component<AppProps, AppState> {
           dx += 0.0001;
         }
 
-        const pressures = draggingElement.simulatePressure
+        const pressures = newElement.simulatePressure
           ? []
-          : [...draggingElement.pressures, childEvent.pressure];
+          : [...newElement.pressures, childEvent.pressure];
 
-        mutateElement(draggingElement, {
+        mutateElement(newElement, {
           points: [...points, [dx, dy]],
           pressures,
           lastCommittedPoint: [dx, dy],
         });
-        
+
         this.actionManager.executeAction(actionFinalize);
-        this.updateGroups();
 
         return;
       }
-      if (isImageElement(draggingElement)) {
-        const imageElement = draggingElement;
+      if (isImageElement(newElement)) {
+        const imageElement = newElement;
         try {
           this.initializeImageDimensions(imageElement);
           this.setState(
@@ -8266,260 +8358,273 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
-      if (isLinearElement(draggingElement)) {
-        if (draggingElement!.points.length > 1) {
-          this.history.resumeRecording();
+      if (isLinearElement(newElement)) {
+        if (newElement!.points.length > 1) {
+          this.store.shouldCaptureIncrement();
         }
         const pointerCoords = viewportCoordsToSceneCoords(
           childEvent,
           this.state,
         );
 
-        if (
-          !pointerDownState.drag.hasOccurred &&
-          draggingElement &&
-          !multiElement
-        ) {
-          mutateElement(draggingElement, {
+        if (!pointerDownState.drag.hasOccurred && newElement && !multiElement) {
+          mutateElement(newElement, {
             points: [
-              ...draggingElement.points,
-              [
-                pointerCoords.x - draggingElement.x,
-                pointerCoords.y - draggingElement.y,
-              ],
+              ...newElement.points,
+              [pointerCoords.x - newElement.x, pointerCoords.y - newElement.y],
             ],
           });
           this.setState({
-            multiElement: draggingElement,
-            editingElement: this.state.draggingElement,
+            multiElement: newElement,
+            newElement,
           });
-          this.updateGroups();
         } else if (pointerDownState.drag.hasOccurred && !multiElement) {
           if (
             isBindingEnabled(this.state) &&
-            isBindingElement(draggingElement, false)
+            isBindingElement(newElement, false)
           ) {
-            maybeBindLinearElement(
-              draggingElement,
-              this.state,
-              this.scene,
-              pointerCoords,
-              elementsMap,
-            );
+            // maybeBindLinearElement(
+            //   newElement,
+            //   this.state,
+            //   pointerCoords,
+            //   this.scene.getNonDeletedElementsMap(),
+            //   this.scene.getNonDeletedElements(),
+            // );
           }
           this.setState({ suggestedBindings: [], startBoundElement: null });
           if (!activeTool.locked) {
             resetCursor(this.interactiveCanvas);
             this.setState((prevState) => ({
-              draggingElement: null,
+              newElement: null,
               activeTool: updateActiveTool(this.state, {
                 type: "selection",
               }),
               selectedElementIds: makeNextSelectedElementIds(
                 {
                   ...prevState.selectedElementIds,
-                  [draggingElement.id]: true,
+                  [newElement.id]: true,
                 },
                 prevState,
               ),
-              selectedLinearElement: new LinearElementEditor(draggingElement),
+              selectedLinearElement: new LinearElementEditor(newElement),
             }));
           } else {
             this.setState((prevState) => ({
-              draggingElement: null,
+              newElement: null,
             }));
           }
+          // so that the scene gets rendered again to display the newly drawn linear as well
+          this.scene.informMutation();
         }
         return;
+      }
+
+      if (isTextElement(newElement)) {
+        const minWidth = getMinTextElementWidth(
+          getFontString({
+            fontSize: newElement.fontSize,
+            fontFamily: newElement.fontFamily,
+          }),
+          newElement.lineHeight,
+        );
+
+        if (newElement.width < minWidth) {
+          mutateElement(newElement, {
+            autoResize: true,
+          });
+        }
+
+        this.resetCursor();
+
+        this.handleTextWysiwyg(newElement, {
+          isExistingElement: true,
+        });
       }
 
       if (
         activeTool.type !== "selection" &&
-        draggingElement &&
-        isInvisiblySmallElement(draggingElement)
+        newElement &&
+        isInvisiblySmallElement(newElement)
       ) {
         // remove invisible element which was added in onPointerDown
-        this.scene.replaceAllElements(
-          this.scene
+        // update the store snapshot, so that invisible elements are not captured by the store
+        this.updateScene({
+          elements: this.scene
             .getElementsIncludingDeleted()
-            .filter((el) => el.id !== draggingElement.id),
-        );
-        this.setState({
-          draggingElement: null,
+            .filter((el) => el.id !== newElement.id),
+          appState: {
+            newElement: null,
+          },
+          storeAction: StoreAction.UPDATE,
         });
+
         return;
       }
 
-      if (draggingElement) {
-        if (pointerDownState.drag.hasOccurred) {
-          const sceneCoords = viewportCoordsToSceneCoords(
-            childEvent,
-            this.state,
+      if (isFrameLikeElement(newElement)) {
+        const elementsInsideFrame = getElementsInNewFrame(
+          this.scene.getElementsIncludingDeleted(),
+          newElement,
+          this.scene.getNonDeletedElementsMap(),
+        );
+
+        this.scene.replaceAllElements(
+          addElementsToFrame(
+            this.scene.getElementsMapIncludingDeleted(),
+            elementsInsideFrame,
+            newElement,
+          ),
+        );
+      }
+
+      if (newElement) {
+        mutateElement(newElement, getNormalizedDimensions(newElement));
+        // the above does not guarantee the scene to be rendered again, hence the trigger below
+        this.scene.informMutation();
+      }
+
+      if (pointerDownState.drag.hasOccurred) {
+        const sceneCoords = viewportCoordsToSceneCoords(childEvent, this.state);
+
+        // when editing the points of a linear element, we check if the
+        // linear element still is in the frame afterwards
+        // if not, the linear element will be removed from its frame (if any)
+        if (
+          this.state.selectedLinearElement &&
+          this.state.selectedLinearElement.isDragging
+        ) {
+          const linearElement = this.scene.getElement(
+            this.state.selectedLinearElement.elementId,
           );
 
-          // when editing the points of a linear element, we check if the
-          // linear element still is in the frame afterwards
-          // if not, the linear element will be removed from its frame (if any)
-          if (
-            this.state.selectedLinearElement &&
-            this.state.selectedLinearElement.isDragging
-          ) {
-            const linearElement = this.scene.getElement(
-              this.state.selectedLinearElement.elementId,
-            );
+          if (linearElement?.frameId) {
+            const frame = getContainingFrame(linearElement, elementsMap);
 
-            if (linearElement?.frameId) {
-              const frame = getContainingFrame(linearElement, elementsMap);
+            if (frame && linearElement) {
+              if (
+                !elementOverlapsWithFrame(
+                  linearElement,
+                  frame,
+                  this.scene.getNonDeletedElementsMap(),
+                )
+              ) {
+                // remove the linear element from all groups
+                // before removing it from the frame as well
+                mutateElement(linearElement, {
+                  groupIds: [],
+                });
 
-              if (frame && linearElement) {
-                if (
-                  !elementOverlapsWithFrame(
-                    linearElement,
-                    frame,
-                    this.scene.getNonDeletedElementsMap(),
-                  )
-                ) {
-                  // remove the linear element from all groups
-                  // before removing it from the frame as well
-                  mutateElement(linearElement, {
-                    groupIds: [],
-                  });
+                removeElementsFromFrame(
+                  [linearElement],
+                  this.scene.getNonDeletedElementsMap(),
+                );
 
-                  removeElementsFromFrame(
-                    [linearElement],
-                    this.scene.getNonDeletedElementsMap(),
-                  );
-
-                  this.scene.informMutation();
-                  this.updateGroups();
-                }
+                this.scene.informMutation();
               }
             }
-          } else {
-            // update the relationships between selected elements and frames
-            const topLayerFrame =
-              this.getTopLayerFrameAtSceneCoords(sceneCoords);
+          }
+        } else {
+          // update the relationships between selected elements and frames
+          const topLayerFrame = this.getTopLayerFrameAtSceneCoords(sceneCoords);
 
-            const selectedElements = this.scene.getSelectedElements(this.state);
-            let nextElements = this.scene.getElementsMapIncludingDeleted();
+          const selectedElements = this.scene.getSelectedElements(this.state);
+          let nextElements = this.scene.getElementsMapIncludingDeleted();
 
-            const updateGroupIdsAfterEditingGroup = (
-              elements: DucElement[],
-            ) => {
-              if (elements.length > 0) {
-                for (const element of elements) {
-                  const index = element.groupIds.indexOf(
-                    this.state.editingGroupId!,
-                  );
+          const updateGroupIdsAfterEditingGroup = (
+            elements: DucElement[],
+          ) => {
+            if (elements.length > 0) {
+              for (const element of elements) {
+                const index = element.groupIds.indexOf(
+                  this.state.editingGroupId!,
+                );
 
+                mutateElement(
+                  element,
+                  {
+                    groupIds: element.groupIds.slice(0, index),
+                  },
+                  false,
+                );
+              }
+
+              nextElements.forEach((element) => {
+                if (
+                  element.groupIds.length &&
+                  getElementsInGroup(
+                    nextElements,
+                    element.groupIds[element.groupIds.length - 1],
+                  ).length < 2
+                ) {
                   mutateElement(
                     element,
                     {
-                      groupIds: element.groupIds.slice(0, index),
+                      groupIds: [],
                     },
                     false,
                   );
                 }
+              });
 
-                nextElements.forEach((element) => {
-                  if (
-                    element.groupIds.length &&
-                    getElementsInGroup(
-                      nextElements,
-                      element.groupIds[element.groupIds.length - 1],
-                    ).length < 2
-                  ) {
-                    mutateElement(
-                      element,
-                      {
-                        groupIds: [],
-                      },
-                      false,
-                    );
-                  }
-                });
-
-                this.setState({
-                  editingGroupId: null,
-                });
-                this.updateGroups();
-              }
-            };
-
-            if (
-              topLayerFrame &&
-              !this.state.selectedElementIds[topLayerFrame.id]
-            ) {
-              const elementsToAdd = selectedElements.filter(
-                (element) =>
-                  element.frameId !== topLayerFrame.id &&
-                  isElementInFrame(element, nextElements, this.state),
-              );
-
-              if (this.state.editingGroupId) {
-                updateGroupIdsAfterEditingGroup(elementsToAdd);
-              }
-
-              nextElements = addElementsToFrame(
-                nextElements,
-                elementsToAdd,
-                topLayerFrame,
-              );
-            } else if (!topLayerFrame) {
-              if (this.state.editingGroupId) {
-                const elementsToRemove = selectedElements.filter(
-                  (element) =>
-                    element.frameId &&
-                    !isElementInFrame(element, nextElements, this.state),
-                );
-
-                updateGroupIdsAfterEditingGroup(elementsToRemove);
-              }
+              this.setState({
+                editingGroupId: null,
+              });
             }
+          };
 
-            nextElements = updateFrameMembershipOfSelectedElements(
-              nextElements,
-              this.state,
-              this,
+          if (
+            topLayerFrame &&
+            !this.state.selectedElementIds[topLayerFrame.id]
+          ) {
+            const elementsToAdd = selectedElements.filter(
+              (element) =>
+                element.frameId !== topLayerFrame.id &&
+                isElementInFrame(element, nextElements, this.state),
             );
 
-            this.scene.replaceAllElements(nextElements);
+            if (this.state.editingGroupId) {
+              updateGroupIdsAfterEditingGroup(elementsToAdd);
+            }
+
+            nextElements = addElementsToFrame(
+              nextElements,
+              elementsToAdd,
+              topLayerFrame,
+            );
+          } else if (!topLayerFrame) {
+            if (this.state.editingGroupId) {
+              const elementsToRemove = selectedElements.filter(
+                (element) =>
+                  element.frameId &&
+                  !isElementInFrame(element, nextElements, this.state),
+              );
+
+              updateGroupIdsAfterEditingGroup(elementsToRemove);
+            }
           }
-        }
 
-        if (isFrameLikeElement(draggingElement)) {
-          const elementsInsideFrame = getElementsInNewFrame(
-            this.scene.getElementsIncludingDeleted(),
-            draggingElement,
-            this.scene.getNonDeletedElementsMap(),
+          nextElements = updateFrameMembershipOfSelectedElements(
+            nextElements,
+            this.state,
+            this,
           );
 
-          this.scene.replaceAllElements(
-            addElementsToFrame(
-              this.scene.getElementsMapIncludingDeleted(),
-              elementsInsideFrame,
-              draggingElement,
-            ),
-          );
+          this.scene.replaceAllElements(nextElements);
         }
-
-        mutateElement(
-          draggingElement,
-          getNormalizedDimensions(draggingElement),
-        );
-        this.updateGroups();
       }
 
       if (resizingElement) {
-        this.history.resumeRecording();
+        this.store.shouldCaptureIncrement();
       }
 
       if (resizingElement && isInvisiblySmallElement(resizingElement)) {
-        this.scene.replaceAllElements(
-          this.scene
+        // update the store snapshot, so that invisible elements are not captured by the store
+        this.updateScene({
+          elements: this.scene
             .getElementsIncludingDeleted()
             .filter((el) => el.id !== resizingElement.id),
-        );
+          storeAction: StoreAction.UPDATE,
+        });
       }
 
       // handle frame membership for resizing frames and/or selected elements
@@ -8759,16 +8864,27 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       if (
+        // not dragged
         !pointerDownState.drag.hasOccurred &&
+        // not resized
         !this.state.isResizing &&
+        // only hitting the bounding box of the previous hit element
         ((hitElement &&
-          isHittingElementBoundingBoxWithoutHittingElement(
-            hitElement,
-            this.state,
-            this.frameNameBoundsCache,
-            pointerDownState.origin.x,
-            pointerDownState.origin.y,
-            this.scene.getNonDeletedElementsMap(),
+          hitElementBoundingBoxOnly(
+            {
+              x: pointerDownState.origin.x,
+              y: pointerDownState.origin.y,
+              element: hitElement,
+              shape: getElementShape(
+                hitElement,
+                this.scene.getNonDeletedElementsMap(),
+              ),
+              threshold: this.getElementHitThreshold(),
+              frameNameBound: isFrameLikeElement(hitElement)
+                ? this.frameNameBoundsCache.get(hitElement)
+                : null,
+            },
+            elementsMap,
           )) ||
           (!hitElement &&
             pointerDownState.hit.hasHitCommonBoundingBoxOfSelectedElements))
@@ -8784,25 +8900,22 @@ class App extends React.Component<AppProps, AppState> {
             activeEmbeddable: null,
           });
         }
+        // reset cursor
+        setCursor(this.interactiveCanvas, CURSOR_TYPE.AUTO);
         return;
       }
 
-      if (
-        !activeTool.locked &&
-        activeTool.type !== "freedraw" &&
-        draggingElement &&
-        draggingElement.type !== "selection"
-      ) {
+      if (!activeTool.locked && activeTool.type !== "freedraw" && newElement) {
         this.setState((prevState) => ({
           selectedElementIds: makeNextSelectedElementIds(
             {
               ...prevState.selectedElementIds,
-              [draggingElement.id]: true,
+              [newElement.id]: true,
             },
             prevState,
           ),
           showHyperlinkPopup:
-            isEmbeddableElement(draggingElement) && !draggingElement.link
+            isEmbeddableElement(newElement) && !newElement.link
               ? "editor"
               : prevState.showHyperlinkPopup,
         }));
@@ -8810,22 +8923,30 @@ class App extends React.Component<AppProps, AppState> {
 
       if (
         activeTool.type !== "selection" ||
-        isSomeElementSelected(this.scene.getNonDeletedElements(), this.state)
+        isSomeElementSelected(this.scene.getNonDeletedElements(), this.state) ||
+        !isShallowEqual(
+          this.state.previousSelectedElementIds,
+          this.state.selectedElementIds,
+        )
       ) {
-        this.history.resumeRecording();
+        this.store.shouldCaptureIncrement();
       }
 
       if (pointerDownState.drag.hasOccurred || isResizing || isRotating) {
-        isBindingEnabled(this.state)
-          ? bindOrUnbindSelectedElements(
-              this.scene.getSelectedElements(this.state),
-              this.scene.getNonDeletedElements(),
-              elementsMap,
-            )
-          : unbindLinearElements(
-              this.scene.getSelectedElements(this.state),
-              elementsMap,
-            );
+        // We only allow binding via linear elements, specifically via dragging
+        // the endpoints ("start" or "end").
+        const linearElements = this.scene
+          .getSelectedElements(this.state)
+          .filter(isLinearElement);
+
+        bindOrUnbindLinearElements(
+          linearElements,
+          this.scene.getNonDeletedElementsMap(),
+          this.scene.getNonDeletedElements(),
+          this.scene,
+          isBindingEnabled(this.state),
+          this.state.selectedLinearElement?.selectedPointsIndices ?? [],
+        );
       }
 
       if (activeTool.type === "laser") {
@@ -8836,13 +8957,13 @@ class App extends React.Component<AppProps, AppState> {
       if (!activeTool.locked && activeTool.type !== "freedraw") {
         resetCursor(this.interactiveCanvas);
         this.setState({
-          draggingElement: null,
+          newElement: null,
           suggestedBindings: [],
           activeTool: updateActiveTool(this.state, { type: "selection" }),
         });
       } else {
         this.setState({
-          draggingElement: null,
+          newElement: null,
           suggestedBindings: [],
         });
       }
@@ -8891,7 +9012,7 @@ class App extends React.Component<AppProps, AppState> {
     this.elementsPendingErasure = new Set();
 
     if (didChange) {
-      this.history.resumeRecording();
+      this.store.shouldCaptureIncrement();
       this.scene.replaceAllElements(elements);
     }
   };
@@ -9463,7 +9584,7 @@ class App extends React.Component<AppProps, AppState> {
                 isLoading: false,
               },
               replaceFiles: true,
-              commitToHistory: true,
+              storeAction: StoreAction.CAPTURE,
             });
             return;
           } catch (error: any) {
@@ -9537,6 +9658,7 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
+
   loadFileToCanvas = async (
     file: File,
     fileHandle: FileSystemHandle | null,
@@ -9578,10 +9700,11 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       if (ret.type === MIME_TYPES.duc) {
+        // restore the fractional indices by mutating elements
         syncInvalidIndices(elements.concat(ret.data.elements));
         // update the store snapshot for old elements, otherwise we would end up with duplicated fractional indices on undo
         this.store.updateSnapshot(arrayToMap(elements), this.state);
-        
+
         this.setState({ isLoading: true });
         this.syncActionResult({
           ...ret.data,
@@ -9590,7 +9713,7 @@ class App extends React.Component<AppProps, AppState> {
             isLoading: false,
           },
           replaceFiles: true,
-          commitToHistory: true,
+          storeAction: StoreAction.CAPTURE,
         });
       } else if (ret.type === MIME_TYPES.excalidrawlib) {
         await this.library
@@ -9707,7 +9830,7 @@ class App extends React.Component<AppProps, AppState> {
       let [gridX, gridY] = getGridPoint(
         pointerCoords.x,
         pointerCoords.y,
-        event[KEYS.CTRL_OR_CMD] ? null : this.state.gridSize,
+        event[KEYS.CTRL_OR_CMD] ? null : GRID_SIZE as NullableGridSize,
       );
 
       const image =
@@ -9810,7 +9933,7 @@ class App extends React.Component<AppProps, AppState> {
     let [resizeX, resizeY] = getGridPoint(
       pointerCoords.x - pointerDownState.resize.offset.x,
       pointerCoords.y - pointerDownState.resize.offset.y,
-      event[KEYS.CTRL_OR_CMD] ? null : this.state.gridSize,
+      event[KEYS.CTRL_OR_CMD] ? null : GRID_SIZE as NullableGridSize,
     );
 
     const frameElementsOffsetsMap = new Map<
@@ -9841,7 +9964,7 @@ class App extends React.Component<AppProps, AppState> {
       const [gridX, gridY] = getGridPoint(
         pointerCoords.x,
         pointerCoords.y,
-        event[KEYS.CTRL_OR_CMD] ? null : this.state.gridSize,
+        event[KEYS.CTRL_OR_CMD] ? null : GRID_SIZE as NullableGridSize,
       );
 
       const dragOffset = {
