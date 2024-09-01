@@ -6,7 +6,7 @@ import {
   THEME,
   VERTICAL_ALIGN,
 } from "../constants";
-import { MakeBrand, MarkNonNullable, ValueOf } from "../utility-types";
+import { MakeBrand, MarkNonNullable, Merge, ValueOf } from "../utility-types";
 import { MagicCacheData } from "../data/magic";
 import { SupportedMeasures  } from "../duc/utils/measurements";
 import { WritingLayers } from "../duc/utils/writingLayers";
@@ -41,6 +41,20 @@ export type DucNonSelectionElement = Exclude<
   DucElement,
   DucSelectionElement
 >;
+
+export type DucElbowArrowElement = Merge<
+  DucArrowElement,
+  {
+    elbowed: true;
+    startBinding: FixedPointBinding | null;
+    endBinding: FixedPointBinding | null;
+  }
+>;
+
+export type FixedPoint = [number, number];
+
+
+export type FixedPointBinding = Merge<PointBinding, { fixedPoint: FixedPoint }>;
 
 type _DucElementBase = Readonly<{
   id: string;
@@ -237,6 +251,13 @@ export type DucTextElement = _DucElementBase &
     verticalAlign: VerticalAlign;
     containerId: DucGenericElement["id"] | null;
     originalText: string;
+    /**
+     * If `true` the width will fit the text. If `false`, the text will
+     * wrap to fit the width.
+     *
+     * @default true
+     */
+    autoResize: boolean;
     /**
      * Unitless line height (aligned to W3C). To get line height in px, multiply
      *  with font size (using `getLineHeightInPx` helper).

@@ -50,8 +50,10 @@ import {
   getLineHeightInPx,
   getBoundTextMaxHeight,
   getBoundTextMaxWidth,
-  getVerticalOffset,
 } from "../element/textElement";
+import {
+  getVerticalOffset
+} from "../fonts"
 import { LinearElementEditor } from "../element/linearElementEditor";
 
 import { getContainingFrame } from "../frame";

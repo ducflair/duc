@@ -150,6 +150,8 @@ export const actionGroup = register({
       arrayToMap(elementsInGroup),
     );
 
+    app.updateGroups();
+
     return {
       appState: {
         ...appState,
@@ -161,7 +163,7 @@ export const actionGroup = register({
       },
       elements: reorderedElements,
       storeAction: StoreAction.CAPTURE,
-      commitToHistory: true,
+      commitToHistory: false
     };
   },
   predicate: (elements, appState, _, app) =>
@@ -189,7 +191,7 @@ export const actionUngroup = register({
     const elementsMap = arrayToMap(elements);
 
     if (groupIds.length === 0) {
-      return { appState, elements, commitToHistory: false };
+      return { appState, elements, storeAction: StoreAction.NONE, };
     }
 
     let nextElements = [...elements];
@@ -264,7 +266,7 @@ export const actionUngroup = register({
     return {
       appState: { ...appState, ...updateAppState },
       elements: nextElements,
-      commitToHistory: true,
+      storeAction: StoreAction.CAPTURE,
     };
   },
   keyTest: (event) =>

@@ -1,6 +1,6 @@
 import {
   isTextElement,
-  isExcalidrawElement,
+  isDucElement,
   redrawTextBoundingBox,
 } from "../element";
 import { CODES, KEYS } from "../keys";
@@ -14,7 +14,6 @@ import {
 } from "../constants";
 import {
   getBoundTextElement,
-  getDefaultLineHeight,
 } from "../element/textElement";
 import {
   hasBoundTextElement,
@@ -25,6 +24,8 @@ import {
 } from "../element/typeChecks";
 import { getSelectedElements } from "../scene";
 import { DucTextElement } from "../element/types";
+import { getLineHeight } from "../fonts";
+import { StoreAction } from "..";
 
 // `copiedStyles` is exported only for tests.
 export let copiedStyles: string = "{}";
@@ -51,7 +52,7 @@ export const actionCopyStyles = register({
         ...appState,
         toast: { message: t("toast.copyStyles") },
       },
-      commitToHistory: false,
+      storeAction: StoreAction.NONE,
     };
   },
   contextItemLabel: "labels.copyStyles",
@@ -66,8 +67,8 @@ export const actionPasteStyles = register({
     const elementsCopied = JSON.parse(copiedStyles);
     const pastedElement = elementsCopied[0];
     const boundTextElement = elementsCopied[1];
-    if (!isExcalidrawElement(pastedElement)) {
-      return { elements, commitToHistory: false };
+    if (!isDucElement(pastedElement)) {
+      return { elements, storeAction: StoreAction.NONE };
     }
 
     const selectedElements = getSelectedElements(elements, appState, {
@@ -117,7 +118,7 @@ export const actionPasteStyles = register({
                 DEFAULT_TEXT_ALIGN,
               lineHeight:
                 (elementStylesToCopyFrom as DucTextElement).lineHeight ||
-                getDefaultLineHeight(fontFamily),
+                getLineHeight(fontFamily),
             });
             let container = null;
             if (newElement.containerId) {
@@ -156,7 +157,7 @@ export const actionPasteStyles = register({
         }
         return element;
       }),
-      commitToHistory: true,
+      storeAction: StoreAction.CAPTURE,
     };
   },
   contextItemLabel: "labels.pasteStyles",

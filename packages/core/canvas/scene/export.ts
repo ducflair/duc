@@ -41,7 +41,7 @@ import { isFrameElement, isFrameLikeElement } from "../element/typeChecks";
 import { RenderableElementsMap } from "./types";
 import { renderStaticScene } from "../renderer/staticScene";
 import { syncInvalidIndices } from "../fractionalIndex";
-import { Fonts } from "./Fonts";
+import { Fonts } from "../fonts";
 
 const SVG_EXPORT_TAG = `<!-- svg-source:excalidraw -->`;
 
@@ -99,7 +99,7 @@ const addFrameLabelsAsTextElements = (
       let textElement: Mutable<DucTextElement> = newTextElement({
         x: element.x,
         y: element.y - FRAME_STYLE.nameOffsetY,
-        fontFamily: FONT_FAMILY.Assistant,
+        fontFamily: FONT_FAMILY.Nunito,
         fontSize: FRAME_STYLE.nameFontSize,
         lineHeight:
           FRAME_STYLE.nameLineHeight as DucTextElement["lineHeight"],
@@ -187,7 +187,7 @@ export const exportToCanvas = async (
     return { canvas, scale: appState.exportScale };
   },
   loadFonts: () => Promise<void> = async () => {
-    await Fonts.loadFontsForElements(elements);
+    // await Fonts.loadFontsForElements(elements);
   },
 ) => {
   // load font faces before continuing, by default leverages browsers' [FontFace API](https://developer.mozilla.org/en-US/docs/Web/API/FontFace)
@@ -255,7 +255,7 @@ export const exportToCanvas = async (
       // empty disables embeddable rendering
       embedsValidationStatus: new Map(),
       elementsPendingErasure: new Set(),
-      pendingFlowchartNodes: null,
+      // pendingFlowchartNodes: null,
     },
   });
 
@@ -344,20 +344,20 @@ export const exportToSvg = async (
     svgRoot.setAttribute("filter", THEME_FILTER);
   }
 
-  let assetPath = "https://excalidraw.com/";
+  let assetPath:string = "https://ducflair.com/";
   // Asset path needs to be determined only when using package
-  if (import.meta.env.VITE_IS_EXCALIDRAW_NPM_PACKAGE) {
-    assetPath =
-      window.EXCALIDRAW_ASSET_PATH ||
-      `https://unpkg.com/${import.meta.env.VITE_PKG_NAME}@${
-        import.meta.env.PKG_VERSION
-      }`;
+  // if (import.meta.env.VITE_IS_EXCALIDRAW_NPM_PACKAGE) {
+  //   assetPath =
+  //     window.EXCALIDRAW_ASSET_PATH ||
+  //     `https://unpkg.com/${import.meta.env.VITE_PKG_NAME}@${
+  //       import.meta.env.PKG_VERSION
+  //     }`;
 
-    if (assetPath?.startsWith("/")) {
-      assetPath = assetPath.replace("/", `${window.location.origin}/`);
-    }
-    assetPath = `${assetPath}/dist/excalidraw-assets/`;
-  }
+  //   if (assetPath?.startsWith("/")) {
+  //     assetPath = assetPath.replace("/", `${window.location.origin}/`);
+  //   }
+  //   assetPath = `${assetPath}/dist/excalidraw-assets/`;
+  // }
 
   const offsetX = -minX + exportPadding;
   const offsetY = -minY + exportPadding;

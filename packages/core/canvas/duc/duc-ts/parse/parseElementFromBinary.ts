@@ -76,6 +76,7 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
     id: e.id() || '',
     x: e.x(),
     y: e.y(),
+    index: e.index(),
     strokeColor: e.strokeColor() || '',
     backgroundColor: e.backgroundColor() || '',
     fillStyle: (e.fillStyle() || '') as FillStyle,
@@ -123,6 +124,7 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
         containerId: e.containerId(),
         originalText: e.originalText(),
         lineHeight: e.lineHeight() as number & { _brand: "unitlessLineHeight" },
+        autoResize: e.autoResize(),
       } as DucTextElement;
     case "arrow":
       return {

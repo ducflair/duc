@@ -105,18 +105,31 @@ export const CLASSES = {
   SHAPE_ACTIONS_MENU: "App-menu__left",
 };
 
-// 1-based in case we ever do `if(element.fontFamily)`
+/**
+ * // TODO: shouldn't be really `const`, likely neither have integers as values, due to value for the custom fonts, which should likely be some hash.
+ *
+ * Let's think this through and consider:
+ * - https://developer.mozilla.org/en-US/docs/Web/CSS/generic-family
+ * - https://drafts.csswg.org/css-fonts-4/#font-family-prop
+ * - https://learn.microsoft.com/en-us/typography/opentype/spec/ibmfc
+ */
 export const FONT_FAMILY = {
   Virgil: 1,
   Helvetica: 2,
   Cascadia: 3,
-  Assistant: 4,
+  // leave 4 unused as it was historically used for Assistant (which we don't use anymore) or custom font (Obsidian)
+  Excalifont: 5,
+  Nunito: 6,
+  "Lilita One": 7,
+  "Comic Shanns": 8,
+  "Liberation Sans": 9,
 };
 
 export const THEME = {
   LIGHT: "light",
   DARK: "dark",
 } as const;
+
 
 export const FRAME_STYLE = {
   strokeColor: "#80808080" as DucElement["strokeColor"],
@@ -394,3 +407,11 @@ export const EDITOR_LS_KEYS = {
  * where filename is optional and we can't retrieve name from app state
  */
 export const DEFAULT_FILENAME = "Untitled";
+
+
+export const SIDE_RESIZING_THRESHOLD = 2 * DEFAULT_TRANSFORM_HANDLE_SPACING;
+// a small epsilon to make side resizing always take precedence
+// (avoids an increase in renders and changes to tests)
+const EPSILON = 0.00001;
+export const DEFAULT_COLLISION_THRESHOLD =
+2 * SIDE_RESIZING_THRESHOLD - EPSILON;

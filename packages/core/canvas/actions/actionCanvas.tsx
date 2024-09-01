@@ -22,6 +22,7 @@ import {
 import { DEFAULT_CANVAS_BACKGROUND_PICKS } from "../colors";
 import { SceneBounds } from "../element/bounds";
 import { setCursor } from "../cursor";
+import { StoreAction } from "..";
 
 export const actionChangeViewBackgroundColor = register({
   name: "changeViewBackgroundColor",
@@ -35,7 +36,9 @@ export const actionChangeViewBackgroundColor = register({
   perform: (_, appState, value) => {
     return {
       appState: { ...appState, ...value },
-      commitToHistory: !!value.viewBackgroundColor,
+      storeAction: !!value.viewBackgroundColor
+      ? StoreAction.CAPTURE
+      : StoreAction.NONE,
     };
   },
   PanelComponent: ({ elements, appState, updateData, appProps }) => {
@@ -88,7 +91,7 @@ export const actionClearCanvas = register({
             ? { ...appState.activeTool, type: "selection" }
             : appState.activeTool,
       },
-      commitToHistory: true,
+      storeAction: StoreAction.CAPTURE,
     };
   },
 });
@@ -111,7 +114,7 @@ export const actionZoomIn = register({
         ),
         userToFollow: null,
       },
-      commitToHistory: false,
+      storeAction: StoreAction.NONE,
     };
   },
   PanelComponent: ({ updateData }) => (
@@ -149,7 +152,7 @@ export const actionZoomOut = register({
         ),
         userToFollow: null,
       },
-      commitToHistory: false,
+      storeAction: StoreAction.NONE,
     };
   },
   PanelComponent: ({ updateData }) => (
@@ -187,7 +190,7 @@ export const actionResetZoom = register({
         ),
         userToFollow: null,
       },
-      commitToHistory: false,
+      storeAction: StoreAction.NONE,
     };
   },
   PanelComponent: ({ updateData, appState }) => (
@@ -308,7 +311,7 @@ export const zoomToFitBounds = ({
       scrollY,
       zoom: { value: newZoomValue },
     },
-    commitToHistory: false,
+    storeAction: StoreAction.NONE,
   };
 };
 
@@ -414,7 +417,7 @@ export const actionToggleTheme = register({
         theme:
           value || (appState.theme === THEME.LIGHT ? THEME.DARK : THEME.LIGHT),
       },
-      commitToHistory: false,
+      storeAction: StoreAction.NONE,
     };
   },
   keyTest: (event) => event.altKey && event.shiftKey && event.code === CODES.D,
@@ -451,7 +454,7 @@ export const actionToggleEraserTool = register({
         activeEmbeddable: null,
         activeTool,
       },
-      commitToHistory: true,
+      storeAction: StoreAction.CAPTURE,
     };
   },
   keyTest: (event) => event.key === KEYS.E,
@@ -486,7 +489,7 @@ export const actionToggleHandTool = register({
         activeEmbeddable: null,
         activeTool,
       },
-      commitToHistory: true,
+      storeAction: StoreAction.CAPTURE,
     };
   },
   keyTest: (event) =>
