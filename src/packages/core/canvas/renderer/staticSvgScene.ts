@@ -17,8 +17,10 @@ import {
   getBoundTextElement,
   getContainerElement,
   getLineHeightInPx,
-  getVerticalOffset,
 } from "../element/textElement";
+import {
+  getVerticalOffset
+} from "../fonts";
 import {
   isArrowElement,
   isIframeLikeElement,

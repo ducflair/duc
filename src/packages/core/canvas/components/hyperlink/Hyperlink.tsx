@@ -28,7 +28,6 @@ import { EVENT, HYPERLINK_TOOLTIP_DELAY } from "../../constants";
 import { getElementAbsoluteCoords } from "../../element/bounds";
 import { getTooltipDiv, updateTooltipPosition } from "../Tooltip";
 import { getSelectedElements } from "../../scene";
-import { isPointHittingElementBoundingBox } from "../../element/collision";
 import { isLocalLink, normalizeLink } from "../../data/url";
 
 import "./Hyperlink.scss";
@@ -36,6 +35,7 @@ import { trackEvent } from "../../analytics";
 import { useAppProps, useExcalidrawAppState } from "../App";
 import { isEmbeddableElement } from "../../element/typeChecks";
 import { getLinkHandleFromCoords } from "./helpers";
+import { hitElementBoundingBox } from "../../element/collision";
 
 const CONTAINER_WIDTH = 320;
 const SPACE_BOTTOM = 85;
@@ -426,13 +426,7 @@ const shouldHideLinkPopup = (
   const threshold = 15 / appState.zoom.value;
   // hitbox to prevent hiding when hovered in element bounding box
   if (
-    isPointHittingElementBoundingBox(
-      element,
-      elementsMap,
-      [sceneX, sceneY],
-      threshold,
-      null,
-    )
+    hitElementBoundingBox(sceneX, sceneY, element, elementsMap)
   ) {
     return false;
   }

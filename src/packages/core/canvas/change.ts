@@ -20,11 +20,12 @@ import {
   isTextElement,
 } from "./element/typeChecks";
 import type {
-  ExcalidrawElement,
-  ExcalidrawLinearElement,
-  ExcalidrawTextElement,
+  DucElement,
+  DucLinearElement,
+  DucTextElement,
+  FractionalIndex,
   NonDeleted,
-  OrderedExcalidrawElement,
+  OrderedDucElement,
   SceneElementsMap,
 } from "./element/types";
 import { orderByFractionalIndex, syncMovedIndices } from "./fractionalIndex";
@@ -471,7 +472,7 @@ export class AppStateChange implements Change<AppState> {
           ? new LinearElementEditor(
               nextElements.get(
                 selectedLinearElementId,
-              ) as NonDeleted<ExcalidrawLinearElement>,
+              ) as NonDeleted<DucLinearElement>,
             )
           : null;
 
@@ -480,7 +481,7 @@ export class AppStateChange implements Change<AppState> {
           ? new LinearElementEditor(
               nextElements.get(
                 editingLinearElementId,
-              ) as NonDeleted<ExcalidrawLinearElement>,
+              ) as NonDeleted<DucLinearElement>,
             )
           : null;
 
@@ -779,7 +780,7 @@ export class AppStateChange implements Change<AppState> {
   }
 }
 
-type ElementPartial = Omit<ElementUpdate<OrderedExcalidrawElement>, "seed">;
+type ElementPartial = Omit<ElementUpdate<OrderedDucElement>, "seed">;
 
 /**
  * Elements change is a low level primitive to capture a change between two sets of elements.
@@ -873,7 +874,7 @@ export class ElementsChange implements Change<SceneElementsMap> {
    *
    * @returns `ElementsChange` instance representing the `Delta` changes between the two sets of elements.
    */
-  public static calculate<T extends OrderedExcalidrawElement>(
+  public static calculate<T extends OrderedDucElement>(
     prevElements: Map<string, T>,
     nextElements: Map<string, T>,
   ): ElementsChange {
@@ -998,7 +999,7 @@ export class ElementsChange implements Change<SceneElementsMap> {
    */
   public applyLatestChanges(elements: SceneElementsMap): ElementsChange {
     const modifier =
-      (element: OrderedExcalidrawElement) => (partial: ElementPartial) => {
+      (element: OrderedDucElement) => (partial: ElementPartial) => {
         const latestPartial: { [key: string]: unknown } = {};
 
         for (const key of Object.keys(partial) as Array<keyof typeof partial>) {
@@ -1028,7 +1029,7 @@ export class ElementsChange implements Change<SceneElementsMap> {
           const modifiedDelta = Delta.create(
             delta.deleted,
             delta.inserted,
-            modifier(existingElement),
+            modifier(existingElement as OrderedDucElement),
             "inserted",
           );
 
@@ -1052,10 +1053,10 @@ export class ElementsChange implements Change<SceneElementsMap> {
 
   public applyTo(
     elements: SceneElementsMap,
-    snapshot: Map<string, OrderedExcalidrawElement>,
+    snapshot: Map<string, OrderedDucElement>,
   ): [SceneElementsMap, boolean] {
     let nextElements = toBrandedType<SceneElementsMap>(new Map(elements));
-    let changedElements: Map<string, OrderedExcalidrawElement>;
+    let changedElements: Map<string, OrderedDucElement>;
 
     const flags = {
       containsVisibleDifference: false,
@@ -1127,7 +1128,7 @@ export class ElementsChange implements Change<SceneElementsMap> {
 
   private static createApplier = (
     nextElements: SceneElementsMap,
-    snapshot: Map<string, OrderedExcalidrawElement>,
+    snapshot: Map<string, OrderedDucElement>,
     flags: {
       containsVisibleDifference: boolean;
       containsZindexDifference: boolean;
@@ -1144,19 +1145,19 @@ export class ElementsChange implements Change<SceneElementsMap> {
         const element = getElement(id, delta.inserted);
 
         if (element) {
-          const newElement = ElementsChange.applyDelta(element, delta, flags);
+          const newElement = ElementsChange.applyDelta(element as OrderedDucElement, delta, flags);
           nextElements.set(newElement.id, newElement);
           acc.set(newElement.id, newElement);
         }
 
         return acc;
-      }, new Map<string, OrderedExcalidrawElement>());
+      }, new Map<string, OrderedDucElement>());
   };
 
   private static createGetter =
     (
       elements: SceneElementsMap,
-      snapshot: Map<string, OrderedExcalidrawElement>,
+      snapshot: Map<string, OrderedDucElement>,
       flags: {
         containsVisibleDifference: boolean;
         containsZindexDifference: boolean;
@@ -1187,7 +1188,7 @@ export class ElementsChange implements Change<SceneElementsMap> {
     };
 
   private static applyDelta(
-    element: OrderedExcalidrawElement,
+    element: OrderedDucElement,
     delta: Delta<ElementPartial>,
     flags: {
       containsVisibleDifference: boolean;
@@ -1237,7 +1238,7 @@ export class ElementsChange implements Change<SceneElementsMap> {
    * Check for visible changes regardless of whether they were removed, added or updated.
    */
   private static checkForVisibleDifference(
-    element: OrderedExcalidrawElement,
+    element: OrderedDucElement,
     partial: ElementPartial,
   ) {
     if (element.isDeleted && partial.isDeleted !== false) {
@@ -1269,29 +1270,29 @@ export class ElementsChange implements Change<SceneElementsMap> {
     prevElements: SceneElementsMap,
     nextElements: SceneElementsMap,
   ) {
-    const nextAffectedElements = new Map<string, OrderedExcalidrawElement>();
+    const nextAffectedElements = new Map<string, OrderedDucElement>();
     const updater = (
-      element: ExcalidrawElement,
-      updates: ElementUpdate<ExcalidrawElement>,
+      element: DucElement,
+      updates: ElementUpdate<DucElement>,
     ) => {
       const nextElement = nextElements.get(element.id); // only ever modify next element!
       if (!nextElement) {
         return;
       }
 
-      let affectedElement: OrderedExcalidrawElement;
+      let affectedElement: OrderedDucElement;
 
       if (prevElements.get(element.id) === nextElement) {
         // create the new element instance in case we didn't modify the element yet
         // so that we won't end up in an incosistent state in case we would fail in the middle of mutations
         affectedElement = newElementWith(
-          nextElement,
-          updates as ElementUpdate<OrderedExcalidrawElement>,
+          nextElement as OrderedDucElement, // add type cast here
+          updates as ElementUpdate<OrderedDucElement>,
         );
       } else {
         affectedElement = mutateElement(
-          nextElement,
-          updates as ElementUpdate<OrderedExcalidrawElement>,
+          nextElement as OrderedDucElement, // add type cast here
+          updates as ElementUpdate<OrderedDucElement>,
         );
       }
 
@@ -1327,8 +1328,8 @@ export class ElementsChange implements Change<SceneElementsMap> {
     // filter only previous elements, which were now affected
     const prevAffectedElements = new Map(
       Array.from(prevElements).filter(([id]) => nextAffectedElements.has(id)),
-    );
-
+    ) as Map<string, OrderedDucElement>;
+    
     // calculate complete deltas for affected elements, and assign them back to all the deltas
     // technically we could do better here if perf. would become an issue
     const { added, removed, updated } = ElementsChange.calculate(
@@ -1360,8 +1361,8 @@ export class ElementsChange implements Change<SceneElementsMap> {
     nextElements: SceneElementsMap,
     id: string,
     updater: (
-      element: ExcalidrawElement,
-      updates: ElementUpdate<ExcalidrawElement>,
+      element: DucElement,
+      updates: ElementUpdate<DucElement>,
     ) => void,
   ) {
     // the instance could have been updated, so make sure we are passing the latest element to each function below
@@ -1384,8 +1385,8 @@ export class ElementsChange implements Change<SceneElementsMap> {
     nextElements: SceneElementsMap,
     id: string,
     updater: (
-      element: ExcalidrawElement,
-      updates: ElementUpdate<ExcalidrawElement>,
+      element: DucElement,
+      updates: ElementUpdate<DucElement>,
     ) => void,
   ) {
     // the instance could have been updated, so make sure we are passing the latest element to each function below
@@ -1411,22 +1412,22 @@ export class ElementsChange implements Change<SceneElementsMap> {
 
   private static redrawTextBoundingBoxes(
     elements: SceneElementsMap,
-    changed: Map<string, OrderedExcalidrawElement>,
+    changed: Map<string, OrderedDucElement>,
   ) {
     const boxesToRedraw = new Map<
       string,
-      { container: OrderedExcalidrawElement; boundText: ExcalidrawTextElement }
+      { container: OrderedDucElement; boundText: DucTextElement }
     >();
 
     for (const element of changed.values()) {
       if (isBoundToContainer(element)) {
-        const { containerId } = element as ExcalidrawTextElement;
+        const { containerId } = element as DucTextElement;
         const container = containerId ? elements.get(containerId) : undefined;
 
         if (container) {
           boxesToRedraw.set(container.id, {
-            container,
-            boundText: element as ExcalidrawTextElement,
+            container: container as OrderedDucElement,
+            boundText: element as DucTextElement,
           });
         }
       }
@@ -1440,7 +1441,7 @@ export class ElementsChange implements Change<SceneElementsMap> {
         if (boundText) {
           boxesToRedraw.set(element.id, {
             container: element,
-            boundText: boundText as ExcalidrawTextElement,
+            boundText: boundText as DucTextElement,
           });
         }
       }
@@ -1452,13 +1453,13 @@ export class ElementsChange implements Change<SceneElementsMap> {
         continue;
       }
 
-      redrawTextBoundingBox(boundText, container, elements, false);
+      redrawTextBoundingBox(boundText, container, elements);
     }
   }
 
   private static redrawBoundArrows(
     elements: SceneElementsMap,
-    changed: Map<string, OrderedExcalidrawElement>,
+    changed: Map<string, OrderedDucElement>,
   ) {
     for (const element of changed.values()) {
       if (!element.isDeleted && isBindableElement(element)) {
@@ -1471,7 +1472,7 @@ export class ElementsChange implements Change<SceneElementsMap> {
 
   private static reorderElements(
     elements: SceneElementsMap,
-    changed: Map<string, OrderedExcalidrawElement>,
+    changed: Map<string, OrderedDucElement>,
     flags: {
       containsVisibleDifference: boolean;
       containsZindexDifference: boolean;
@@ -1482,7 +1483,13 @@ export class ElementsChange implements Change<SceneElementsMap> {
     }
 
     const unordered = Array.from(elements.values());
-    const ordered = orderByFractionalIndex([...unordered]);
+    const ordered: OrderedDucElement[] = unordered.map((element) => {
+      return {
+        ...element,
+        index: element.index as FractionalIndex,
+      };
+    });
+    
     const moved = Delta.getRightDifferences(unordered, ordered, true).reduce(
       (acc, arrayIndex) => {
         const candidate = unordered[Number(arrayIndex)];
@@ -1528,7 +1535,7 @@ export class ElementsChange implements Change<SceneElementsMap> {
   }
 
   private static stripIrrelevantProps(
-    partial: Partial<OrderedExcalidrawElement>,
+    partial: Partial<OrderedDucElement>,
   ): ElementPartial {
     const { id, updated, version, versionNonce, seed, ...strippedPartial } =
       partial;

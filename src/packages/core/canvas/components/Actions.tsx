@@ -96,7 +96,7 @@ export const SelectedShapeActions = ({
     <div className="panelColumn">
       <div>
         {((hasStrokeColor(appState.activeTool.type) &&
-          appState.activeTool.type !== "image" &&
+          // appState.activeTool.type !== "image" &&
           commonSelectedType !== "image" &&
           commonSelectedType !== "frame" &&
           commonSelectedType !== "magicframe") ||

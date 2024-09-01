@@ -6,7 +6,7 @@ import type {
 } from "../canvas/element/types";
 import {
   isArrowElement,
-  isExcalidrawElement,
+  isDucElement,
   isFreeDrawElement,
   isLinearElement,
   isTextElement,
@@ -158,7 +158,7 @@ export const elementsOverlappingBBox = ({
    **/
   type: "overlap" | "contain" | "inside";
 }) => {
-  if (isExcalidrawElement(bounds)) {
+  if (isDucElement(bounds)) {
     bounds = getElementBounds(bounds, arrayToMap(elements));
   }
   const adjustedBBox: Bounds = [

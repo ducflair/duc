@@ -29,10 +29,7 @@ export {
   getTransformHandlesFromCoords,
   getTransformHandles,
 } from "./transformHandles";
-export {
-  hitTest,
-  isHittingElementBoundingBoxWithoutHittingElement,
-} from "./collision";
+
 export {
   resizeTest,
   getCursorForResizingElement,
@@ -49,7 +46,7 @@ export {
   getDragOffsetXY,
   dragNewElement,
 } from "./dragElements";
-export { isTextElement, isExcalidrawElement } from "./typeChecks";
+export { isTextElement, isDucElement } from "./typeChecks";
 export { redrawTextBoundingBox } from "./textElement";
 export {
   getPerfectElementSize,

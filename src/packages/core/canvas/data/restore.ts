@@ -43,10 +43,10 @@ import { MarkOptional, Mutable } from "../utility-types";
 import {
   detectLineHeight,
   getContainerElement,
-  getDefaultLineHeight,
 } from "../element/textElement";
 import { normalizeLink } from "./url";
 import { syncInvalidIndices } from "../fractionalIndex";
+import { getLineHeight } from "../fonts";
 
 type RestoredAppState = Omit<
   AppState,
@@ -76,7 +76,7 @@ export const AllowedExcalidrawActiveTools: Record<
 };
 
 export type RestoredDataState = {
-  elements: DucElement[];
+  elements: OrderedDucElement[];
   appState: RestoredAppState;
   files: BinaryFiles;
 };
@@ -215,7 +215,7 @@ const restoreElement = (
             detectLineHeight(element)
           : // no element height likely means programmatic use, so default
             // to a fixed line height
-            getDefaultLineHeight(element.fontFamily));
+            getLineHeight(element.fontFamily));
       element = restoreElementWithProperties(element, {
         fontSize,
         fontFamily,
@@ -224,7 +224,7 @@ const restoreElement = (
         verticalAlign: element.verticalAlign || DEFAULT_VERTICAL_ALIGN,
         containerId: element.containerId ?? null,
         originalText: element.originalText || text,
-
+        autoResize: element.autoResize || true,
         lineHeight,
       });
 

@@ -7,6 +7,7 @@ import {
   BinaryFiles,
 } from "../types";
 import { MarkOptional } from "../utility-types";
+import { StoreActionType } from "../store";
 
 export type ActionSource = "ui" | "keyboard" | "contextMenu" | "api";
 
@@ -19,11 +20,11 @@ export type ActionResult =
         "offsetTop" | "offsetLeft" | "width" | "height"
       > | null;
       files?: BinaryFiles | null;
-      commitToHistory: boolean;
-      syncHistory?: boolean;
+      storeAction: StoreActionType;
       replaceFiles?: boolean;
     }
   | false;
+
 
 type ActionFn = (
   elements: readonly DucElement[],
