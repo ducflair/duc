@@ -16,6 +16,9 @@ import {
   DucTextElementWithContainer,
   DucImageElement,
   ElementsMap,
+  NonDeletedElementsMap,
+  NonDeletedSceneElementsMap,
+  SceneElementsMap,
 } from "./types";
 import type { Mutable } from "../utility-types";
 import {
@@ -70,7 +73,7 @@ export const transformElements = (
   originalElements: PointerDownState["originalElements"],
   transformHandleType: MaybeTransformHandleType,
   selectedElements: readonly NonDeletedDucElement[],
-  elementsMap: ElementsMap,
+  elementsMap: NonDeletedSceneElementsMap | SceneElementsMap,
   shouldRotateWithDiscreteAngle: boolean,
   shouldResizeFromCenter: boolean,
   shouldMaintainAspectRatio: boolean,
@@ -339,7 +342,7 @@ export const resizeSingleElement = (
   originalElements: PointerDownState["originalElements"],
   shouldMaintainAspectRatio: boolean,
   element: NonDeletedDucElement,
-  elementsMap: ElementsMap,
+  elementsMap: NonDeletedSceneElementsMap | SceneElementsMap,
   transformHandleDirection: TransformHandleDirection,
   shouldResizeFromCenter: boolean,
   pointerX: number,
@@ -615,7 +618,7 @@ export const resizeSingleElement = (
     mutateElement(element, resizedElement);
 
     updateBoundElements(element, elementsMap, {
-      newSize: { width: resizedElement.width, height: resizedElement.height },
+      oldSize: { width: resizedElement.width, height: resizedElement.height },
     });
 
     if (boundTextElement && boundTextFont != null) {
@@ -635,7 +638,7 @@ export const resizeSingleElement = (
 export const resizeMultipleElements = (
   originalElements: PointerDownState["originalElements"],
   selectedElements: readonly NonDeletedDucElement[],
-  elementsMap: ElementsMap,
+  elementsMap: NonDeletedSceneElementsMap | SceneElementsMap,
   transformHandleType: "nw" | "ne" | "sw" | "se",
   shouldResizeFromCenter: boolean,
   pointerX: number,
@@ -862,7 +865,7 @@ export const resizeMultipleElements = (
 
     updateBoundElements(element, elementsMap, {
       simultaneouslyUpdated: elementsToUpdate,
-      newSize: { width, height },
+      oldSize: { width, height },
     });
 
     const boundTextElement = getBoundTextElement(element, elementsMap);
@@ -885,7 +888,7 @@ export const resizeMultipleElements = (
 const rotateMultipleElements = (
   originalElements: PointerDownState["originalElements"],
   elements: readonly NonDeletedDucElement[],
-  elementsMap: ElementsMap,
+  elementsMap: NonDeletedSceneElementsMap | SceneElementsMap,
   pointerX: number,
   pointerY: number,
   shouldRotateWithDiscreteAngle: boolean,

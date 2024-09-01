@@ -21,7 +21,7 @@ import { mutateElement } from "./element/mutateElement";
 import { AppClassProperties, AppState, StaticCanvasAppState } from "./types";
 import { getElementsWithinSelection, getSelectedElements } from "./scene";
 import { getElementsInGroup, selectGroupsFromGivenElements } from "./groups";
-import type { ExcalidrawElementsIncludingDeleted } from "./scene/Scene";
+import type { DucElementsIncludingDeleted } from "./scene/Scene";
 import { getElementLineSegments } from "./element/bounds";
 import { doLineSegmentsIntersect, elementsOverlappingBBox } from "../utils";
 import { isFrameElement, isFrameLikeElement } from "./element/typeChecks";
@@ -240,7 +240,7 @@ export const getFrameChildren = (
 };
 
 export const getFrameLikeElements = (
-  allElements: ExcalidrawElementsIncludingDeleted,
+  allElements: DucElementsIncludingDeleted,
 ): DucFrameLikeElement[] => {
   return allElements.filter((element): element is DucFrameLikeElement =>
     isFrameLikeElement(element),
@@ -256,7 +256,7 @@ export const getFrameLikeElements = (
  * Considers non-frame bound elements (container or arrow labels) as root.
  */
 export const getRootElements = (
-  allElements: ExcalidrawElementsIncludingDeleted,
+  allElements: DucElementsIncludingDeleted,
 ) => {
   const frameElements = arrayToMap(getFrameLikeElements(allElements));
   return allElements.filter(
@@ -268,7 +268,7 @@ export const getRootElements = (
 };
 
 export const getElementsInResizingFrame = (
-  allElements: ExcalidrawElementsIncludingDeleted,
+  allElements: DucElementsIncludingDeleted,
   frame: DucFrameLikeElement,
   appState: AppState,
   elementsMap: ElementsMap,
@@ -362,7 +362,7 @@ export const getElementsInResizingFrame = (
 };
 
 export const getElementsInNewFrame = (
-  elements: ExcalidrawElementsIncludingDeleted,
+  elements: DucElementsIncludingDeleted,
   frame: DucFrameLikeElement,
   elementsMap: ElementsMap,
 ) => {

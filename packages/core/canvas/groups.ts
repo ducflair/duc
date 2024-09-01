@@ -58,6 +58,24 @@ export const selectGroup = (
   };
 };
 
+export const getNonDeletedGroupIds = (elements: ElementsMap) => {
+  const nonDeletedGroupIds = new Set<string>();
+
+  for (const [, element] of elements) {
+    // defensive check
+    if (element.isDeleted) {
+      continue;
+    }
+
+    // defensive fallback
+    for (const groupId of element.groupIds ?? []) {
+      nonDeletedGroupIds.add(groupId);
+    }
+  }
+
+  return nonDeletedGroupIds;
+};
+
 export const selectGroupsForSelectedElements = (function () {
   type SelectGroupsReturnType = Pick<
     InteractiveCanvasAppState,

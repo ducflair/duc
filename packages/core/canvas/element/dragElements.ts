@@ -3,7 +3,7 @@ import { Bounds, getCommonBounds } from "./bounds";
 import { mutateElement } from "./mutateElement";
 import { getPerfectElementSize } from "./sizeHelpers";
 import { NonDeletedDucElement } from "./types";
-import { AppState, PointerDownState } from "../types";
+import { AppState, NullableGridSize, PointerDownState } from "../types";
 import { getBoundTextElement } from "./textElement";
 import { getGridPoint } from "../math";
 import Scene from "../scene/Scene";
@@ -85,7 +85,7 @@ const calculateOffset = (
     const [nextGridX, nextGridY] = getGridPoint(
       x + dragOffset.x,
       y + dragOffset.y,
-      gridSize,
+      gridSize as NullableGridSize,
     );
 
     if (snapOffset.x === 0) {

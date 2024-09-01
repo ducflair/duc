@@ -32,6 +32,7 @@ import {
   getSelectedElements,
 } from "../scene/selection";
 import { syncMovedIndices } from "../fractionalIndex";
+import { StoreAction } from "../store";
 
 
 export const actionDuplicateSelection = register({
@@ -53,13 +54,13 @@ export const actionDuplicateSelection = register({
       return {
         elements,
         appState: ret.appState,
-        commitToHistory: true,
+        storeAction: StoreAction.CAPTURE,
       };
     }
 
     return {
       ...duplicateElements(elements, appState),
-      commitToHistory: true,
+      storeAction: StoreAction.CAPTURE,
     };
   },
   contextItemLabel: "labels.duplicateSelection",
