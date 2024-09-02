@@ -4,6 +4,9 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { Point } from '../duc/point';
+
+
 export class PointBinding {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -39,8 +42,13 @@ gap():number {
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
+fixedPoint(obj?:Point):Point|null {
+  const offset = this.bb!.__offset(this.bb_pos, 10);
+  return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
 static startPointBinding(builder:flatbuffers.Builder) {
-  builder.startObject(3);
+  builder.startObject(4);
 }
 
 static addElementId(builder:flatbuffers.Builder, elementIdOffset:flatbuffers.Offset) {
@@ -55,16 +63,13 @@ static addGap(builder:flatbuffers.Builder, gap:number) {
   builder.addFieldFloat32(2, gap, 0.0);
 }
 
+static addFixedPoint(builder:flatbuffers.Builder, fixedPointOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(3, fixedPointOffset, 0);
+}
+
 static endPointBinding(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   return offset;
 }
 
-static createPointBinding(builder:flatbuffers.Builder, elementIdOffset:flatbuffers.Offset, focus:number, gap:number):flatbuffers.Offset {
-  PointBinding.startPointBinding(builder);
-  PointBinding.addElementId(builder, elementIdOffset);
-  PointBinding.addFocus(builder, focus);
-  PointBinding.addGap(builder, gap);
-  return PointBinding.endPointBinding(builder);
-}
 }
