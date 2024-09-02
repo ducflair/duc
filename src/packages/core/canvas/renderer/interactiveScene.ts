@@ -1,12 +1,11 @@
 import {
   getElementAbsoluteCoords,
-  OMIT_SIDES_FOR_MULTIPLE_ELEMENTS,
   getTransformHandlesFromCoords,
   getTransformHandles,
   getCommonBounds,
 } from "../element";
 
-import { roundRect } from "./roundRect";
+import { roundRect } from "../renderer/roundRect";
 
 import {
   getScrollBars,
@@ -14,27 +13,33 @@ import {
   SCROLLBAR_WIDTH,
 } from "../scene/scrollbars";
 
-import { renderSelectionElement } from "./renderElement";
-import { getClientColor } from "../clients";
+import { renderSelectionElement } from "../renderer/renderElement";
+import { getClientColor, renderRemoteCursors } from "../clients";
 import {
   isSelectedViaGroup,
   getSelectedGroupIds,
   getElementsInGroup,
   selectGroupsFromGivenElements,
 } from "../groups";
-import {
-  OMIT_SIDES_FOR_FRAME,
-  shouldShowBoundingBox,
+import type {
   TransformHandles,
   TransformHandleType,
 } from "../element/transformHandles";
+import {
+  getOmitSidesForDevice,
+  shouldShowBoundingBox,
+} from "../element/transformHandles";
 import { arrayToMap, throttleRAF } from "../utils";
-import { InteractiveCanvasAppState, Point, UserIdleState } from "../types";
+import type { InteractiveCanvasAppState, Point } from "../types";
 import { DEFAULT_TRANSFORM_HANDLE_SPACING, FRAME_STYLE } from "../constants";
 
-import { renderSnaps } from "./renderSnaps";
+import { renderSnaps } from "../renderer/renderSnaps";
 
-import { maxBindingGap, SuggestedBinding, SuggestedPointBinding } from "../element/binding";
+import type {
+  SuggestedBinding,
+  SuggestedPointBinding,
+} from "../element/binding";
+import { maxBindingGap } from "../element/binding";
 import { LinearElementEditor } from "../element/linearElementEditor";
 import {
   bootstrapCanvas,
@@ -42,17 +47,24 @@ import {
   getNormalizedCanvasDimensions,
 } from "./helpers";
 import oc from "open-color";
-import { isFrameLikeElement, isLinearElement } from "../element/typeChecks";
 import {
+  isArrowElement,
+  isElbowArrow,
+  isFrameLikeElement,
+  isLinearElement,
+  isTextElement,
+} from "../element/typeChecks";
+import type {
   ElementsMap,
   DucBindableElement,
   DucElement,
   DucFrameLikeElement,
   DucLinearElement,
+  DucTextElement,
   GroupId,
   NonDeleted,
 } from "../element/types";
-import {
+import type {
   InteractiveCanvasRenderConfig,
   InteractiveSceneRenderConfig,
   RenderableElementsMap,
@@ -306,7 +318,6 @@ const renderSelectionBorder = (
     cy: number;
     activeEmbeddable: boolean;
   },
-  padding = DEFAULT_TRANSFORM_HANDLE_SPACING * 2,
 ) => {
   const {
     angle,
@@ -322,6 +333,8 @@ const renderSelectionBorder = (
   } = elementProperties;
   const elementWidth = elementX2 - elementX1;
   const elementHeight = elementY2 - elementY1;
+
+  const padding = DEFAULT_TRANSFORM_HANDLE_SPACING * 2;
 
   const linePadding = padding / appState.zoom.value;
   const lineWidth = 8 / appState.zoom.value;
@@ -471,6 +484,10 @@ const renderLinearPointHandles = (
     ? POINT_HANDLE_SIZE
     : POINT_HANDLE_SIZE / 2;
   points.forEach((point, idx) => {
+    if (isElbowArrow(element) && idx !== 0 && idx !== points.length - 1) {
+      return;
+    }
+
     const isSelected =
       !!appState.editingLinearElement?.selectedPointsIndices?.includes(idx);
 
@@ -573,14 +590,38 @@ const renderTransformHandles = (
   });
 };
 
+const renderTextBox = (
+  text: NonDeleted<DucTextElement>,
+  context: CanvasRenderingContext2D,
+  appState: InteractiveCanvasAppState,
+  selectionColor: InteractiveCanvasRenderConfig["selectionColor"],
+) => {
+  context.save();
+  const padding = (DEFAULT_TRANSFORM_HANDLE_SPACING * 2) / appState.zoom.value;
+  const width = text.width + padding * 2;
+  const height = text.height + padding * 2;
+  const cx = text.x + width / 2;
+  const cy = text.y + height / 2;
+  const shiftX = -(width / 2 + padding);
+  const shiftY = -(height / 2 + padding);
+  context.translate(cx + appState.scrollX, cy + appState.scrollY);
+  context.rotate(text.angle);
+  context.lineWidth = 1 / appState.zoom.value;
+  context.strokeStyle = selectionColor;
+  context.strokeRect(shiftX, shiftY, width, height);
+  context.restore();
+};
+
 const _renderInteractiveScene = ({
   canvas,
   elementsMap,
   visibleElements,
   selectedElements,
+  allElementsMap,
   scale,
   appState,
   renderConfig,
+  device,
 }: InteractiveSceneRenderConfig) => {
   if (canvas === null) {
     return { atLeastOneVisibleElement: false, elementsMap };
@@ -628,9 +669,31 @@ const _renderInteractiveScene = ({
   // Paint selection element
   if (appState.selectionElement) {
     try {
-      renderSelectionElement(appState.selectionElement, context, appState);
+      renderSelectionElement(
+        appState.selectionElement,
+        context,
+        appState,
+        renderConfig.selectionColor,
+      );
     } catch (error: any) {
       console.error(error);
+    }
+  }
+
+  if (
+    appState.editingTextElement &&
+    isTextElement(appState.editingTextElement)
+  ) {
+    const textElement = allElementsMap.get(appState.editingTextElement.id) as
+      | DucTextElement
+      | undefined;
+    if (textElement && !textElement.autoResize) {
+      renderTextBox(
+        textElement,
+        context,
+        appState,
+        renderConfig.selectionColor,
+      );
     }
   }
 
@@ -681,7 +744,13 @@ const _renderInteractiveScene = ({
 
   if (
     appState.selectedLinearElement &&
-    appState.selectedLinearElement.hoverPointIndex >= 0
+    appState.selectedLinearElement.hoverPointIndex >= 0 &&
+    !(
+      isElbowArrow(selectedElements[0]) &&
+      appState.selectedLinearElement.hoverPointIndex > 0 &&
+      appState.selectedLinearElement.hoverPointIndex <
+        selectedElements[0].points.length - 1
+    )
   ) {
     renderLinearElementPointHighlight(context, appState, elementsMap);
   }
@@ -725,23 +794,39 @@ const _renderInteractiveScene = ({
 
       for (const element of elementsMap.values()) {
         const selectionColors = [];
-        // local user
+        const remoteClients = renderConfig.remoteSelectedElementIds.get(
+          element.id,
+        );
         if (
-          locallySelectedIds.has(element.id) &&
-          !isSelectedViaGroup(appState, element)
+          !(
+            // Elbow arrow elements cannot be selected when bound on either end
+            (
+              isSingleLinearElementSelected &&
+              isArrowElement(element) &&
+              isElbowArrow(element) &&
+              (element.startBinding || element.endBinding)
+            )
+          )
         ) {
-          selectionColors.push(selectionColor);
-        }
-        // remote users
-        if (renderConfig.remoteSelectedElementIds[element.id]) {
-          selectionColors.push(
-            ...renderConfig.remoteSelectedElementIds[element.id].map(
-              (socketId: string) => {
-                const background = getClientColor(socketId);
+          // local user
+          if (
+            locallySelectedIds.has(element.id) &&
+            !isSelectedViaGroup(appState, element)
+          ) {
+            selectionColors.push(selectionColor);
+          }
+          // remote users
+          if (remoteClients) {
+            selectionColors.push(
+              ...remoteClients.map((socketId) => {
+                const background = getClientColor(
+                  socketId,
+                  appState.collaborators.get(socketId),
+                );
                 return background;
-              },
-            ),
-          );
+              }),
+            );
+          }
         }
 
         if (selectionColors.length) {
@@ -754,7 +839,7 @@ const _renderInteractiveScene = ({
             elementX2,
             elementY2,
             selectionColors,
-            dashed: !!renderConfig.remoteSelectedElementIds[element.id],
+            dashed: !!remoteClients,
             cx,
             cy,
             activeEmbeddable:
@@ -806,8 +891,14 @@ const _renderInteractiveScene = ({
         appState.zoom,
         elementsMap,
         "mouse", // when we render we don't know which pointer type so use mouse,
+        getOmitSidesForDevice(device),
       );
-      if (!appState.viewModeEnabled && showBoundingBox) {
+      if (
+        !appState.viewModeEnabled &&
+        showBoundingBox &&
+        // do not show transform handles when text is being edited
+        !isTextElement(appState.editingTextElement)
+      ) {
         renderTransformHandles(
           context,
           renderConfig,
@@ -844,8 +935,8 @@ const _renderInteractiveScene = ({
         appState.zoom,
         "mouse",
         isFrameSelected
-          ? OMIT_SIDES_FOR_FRAME
-          : OMIT_SIDES_FOR_MULTIPLE_ELEMENTS,
+          ? { ...getOmitSidesForDevice(device), rotation: true }
+          : getOmitSidesForDevice(device),
       );
       if (selectedElements.some((element) => !element.locked)) {
         renderTransformHandles(
@@ -865,143 +956,13 @@ const _renderInteractiveScene = ({
   // Reset zoom
   context.restore();
 
-  // Paint remote pointers
-  for (const clientId in renderConfig.remotePointerViewportCoords) {
-    let { x, y } = renderConfig.remotePointerViewportCoords[clientId];
-
-    x -= appState.offsetLeft;
-    y -= appState.offsetTop;
-
-    const width = 11;
-    const height = 14;
-
-    const isOutOfBounds =
-      x < 0 ||
-      x > normalizedWidth - width ||
-      y < 0 ||
-      y > normalizedHeight - height;
-
-    x = Math.max(x, 0);
-    x = Math.min(x, normalizedWidth - width);
-    y = Math.max(y, 0);
-    y = Math.min(y, normalizedHeight - height);
-
-    const background = getClientColor(clientId);
-
-    context.save();
-    context.strokeStyle = background;
-    context.fillStyle = background;
-
-    const userState = renderConfig.remotePointerUserStates[clientId];
-    const isInactive =
-      isOutOfBounds ||
-      userState === UserIdleState.IDLE ||
-      userState === UserIdleState.AWAY;
-
-    if (isInactive) {
-      context.globalAlpha = 0.3;
-    }
-
-    if (
-      renderConfig.remotePointerButton &&
-      renderConfig.remotePointerButton[clientId] === "down"
-    ) {
-      context.beginPath();
-      context.arc(x, y, 15, 0, 2 * Math.PI, false);
-      context.lineWidth = 3;
-      context.strokeStyle = "#ffffff88";
-      context.stroke();
-      context.closePath();
-
-      context.beginPath();
-      context.arc(x, y, 15, 0, 2 * Math.PI, false);
-      context.lineWidth = 1;
-      context.strokeStyle = background;
-      context.stroke();
-      context.closePath();
-    }
-
-    // Background (white outline) for arrow
-    context.fillStyle = oc.white;
-    context.strokeStyle = oc.white;
-    context.lineWidth = 6;
-    context.lineJoin = "round";
-    context.beginPath();
-    context.moveTo(x, y);
-    context.lineTo(x + 0, y + 14);
-    context.lineTo(x + 4, y + 9);
-    context.lineTo(x + 11, y + 8);
-    context.closePath();
-    context.stroke();
-    context.fill();
-
-    // Arrow
-    context.fillStyle = background;
-    context.strokeStyle = background;
-    context.lineWidth = 2;
-    context.lineJoin = "round";
-    context.beginPath();
-    if (isInactive) {
-      context.moveTo(x - 1, y - 1);
-      context.lineTo(x - 1, y + 15);
-      context.lineTo(x + 5, y + 10);
-      context.lineTo(x + 12, y + 9);
-      context.closePath();
-      context.fill();
-    } else {
-      context.moveTo(x, y);
-      context.lineTo(x + 0, y + 14);
-      context.lineTo(x + 4, y + 9);
-      context.lineTo(x + 11, y + 8);
-      context.closePath();
-      context.fill();
-      context.stroke();
-    }
-
-    const username = renderConfig.remotePointerUsernames[clientId] || "";
-
-    if (!isOutOfBounds && username) {
-      context.font = "600 12px sans-serif"; // font has to be set before context.measureText()
-
-      const offsetX = x + width / 2;
-      const offsetY = y + height + 2;
-      const paddingHorizontal = 5;
-      const paddingVertical = 3;
-      const measure = context.measureText(username);
-      const measureHeight =
-        measure.actualBoundingBoxDescent + measure.actualBoundingBoxAscent;
-      const finalHeight = Math.max(measureHeight, 12);
-
-      const boxX = offsetX - 1;
-      const boxY = offsetY - 1;
-      const boxWidth = measure.width + 2 + paddingHorizontal * 2 + 2;
-      const boxHeight = finalHeight + 2 + paddingVertical * 2 + 2;
-      if (context.roundRect) {
-        context.beginPath();
-        context.roundRect(boxX, boxY, boxWidth, boxHeight, 8);
-        context.fillStyle = background;
-        context.fill();
-        context.strokeStyle = oc.white;
-        context.stroke();
-      } else {
-        roundRect(context, boxX, boxY, boxWidth, boxHeight, 8, oc.white);
-      }
-      context.fillStyle = oc.black;
-
-      context.fillText(
-        username,
-        offsetX + paddingHorizontal + 1,
-        offsetY +
-          paddingVertical +
-          measure.actualBoundingBoxAscent +
-          Math.floor((finalHeight - measureHeight) / 2) +
-          2,
-      );
-    }
-
-    context.restore();
-    context.closePath();
-  }
+  renderRemoteCursors({
+    context,
+    renderConfig,
+    appState,
+    normalizedWidth,
+    normalizedHeight,
+  });
 
   // Paint scrollbars
   let scrollBars;

@@ -17,8 +17,12 @@ import {
 import { getNonDeletedElements } from "../element";
 import { randomId } from "../random";
 import { ToolButton } from "../components/ToolButton";
-import { DucElement, DucTextElement, OrderedDucElement } from "../element/types";
-import { AppClassProperties, AppState } from "../types";
+import type {
+  DucElement,
+  DucTextElement,
+  OrderedDucElement,
+} from "../element/types";
+import type { AppClassProperties, AppState } from "../types";
 import { isBoundToContainer } from "../element/typeChecks";
 import {
   getElementsInResizingFrame,
@@ -27,7 +31,6 @@ import {
   removeElementsFromFrame,
   replaceAllElementsInFrame,
 } from "../frame";
-import { newGroupElement } from "../element/newElement";
 import { syncMovedIndices } from "../fractionalIndex";
 import { StoreAction } from "../store";
 
@@ -65,7 +68,7 @@ const enableActionGroup = (
 export const actionGroup = register({
   name: "group",
   label: "labels.group",
-  icon: (appState: AppState) => <GroupIcon theme={appState.theme} />,
+  icon: (appState) => <GroupIcon theme={appState.theme} />,
   trackEvent: { category: "element" },
   perform: (elements, appState, _, app) => {
     const selectedElements = app.scene.getSelectedElements({
@@ -74,7 +77,7 @@ export const actionGroup = register({
     });
     if (selectedElements.length < 2) {
       // nothing to group
-      return { appState, elements, storeAction: StoreAction.NONE, commitToHistory: false };
+      return { appState, elements, storeAction: StoreAction.NONE };
     }
     // if everything is already grouped into 1 group, there is nothing to do
     const selectedGroupIds = getSelectedGroupIds(appState);
@@ -94,7 +97,7 @@ export const actionGroup = register({
       ]);
       if (combinedSet.size === elementIdsInGroup.size) {
         // no incremental ids in the selected ids
-        return { appState, elements, storeAction: StoreAction.NONE, commitToHistory: false };
+        return { appState, elements, storeAction: StoreAction.NONE };
       }
     }
 
@@ -163,7 +166,6 @@ export const actionGroup = register({
       },
       elements: reorderedElements,
       storeAction: StoreAction.CAPTURE,
-      commitToHistory: false
     };
   },
   predicate: (elements, appState, _, app) =>
@@ -185,13 +187,15 @@ export const actionGroup = register({
 
 export const actionUngroup = register({
   name: "ungroup",
+  label: "labels.ungroup",
+  icon: (appState) => <UngroupIcon theme={appState.theme} />,
   trackEvent: { category: "element" },
   perform: (elements, appState, _, app) => {
     const groupIds = getSelectedGroupIds(appState);
     const elementsMap = arrayToMap(elements);
 
     if (groupIds.length === 0) {
-      return { appState, elements, storeAction: StoreAction.NONE, };
+      return { appState, elements, storeAction: StoreAction.NONE };
     }
 
     let nextElements = [...elements];
@@ -273,7 +277,6 @@ export const actionUngroup = register({
     event.shiftKey &&
     event[KEYS.CTRL_OR_CMD] &&
     event.key === KEYS.G.toUpperCase(),
-  contextItemLabel: "labels.ungroup",
   predicate: (elements, appState) => getSelectedGroupIds(appState).length > 0,
 
   PanelComponent: ({ elements, appState, updateData }) => (

@@ -38,6 +38,7 @@ import {
   isBindableElement,
   isBindingElement,
   isBoundToContainer,
+  isElbowArrow,
   isFrameLikeElement,
   isLinearElement,
   isRectangularElement,
@@ -45,7 +46,7 @@ import {
 } from "./typeChecks";
 import type { ElementUpdate } from "./mutateElement";
 import { mutateElement } from "./mutateElement";
-import Scene from "../scene/Scene";
+import type Scene from "../scene/Scene";
 import { LinearElementEditor } from "./linearElementEditor";
 import { arrayToMap, tupleToCoors } from "../utils";
 import { KEYS } from "../keys";
@@ -61,7 +62,16 @@ import {
   pointToVector,
   rotatePoint,
 } from "../math";
-
+import {
+  compareHeading,
+  HEADING_DOWN,
+  HEADING_LEFT,
+  HEADING_RIGHT,
+  HEADING_UP,
+  headingForPointFromElement,
+  vectorToHeading,
+  type Heading,
+} from "./heading";
 import { segmentIntersectRectangleElement } from "../../utils/geometry/geometry";
 
 export type SuggestedBinding =
@@ -105,6 +115,7 @@ export const bindOrUnbindLinearElement = (
   startBindingElement: DucBindableElement | null | "keep",
   endBindingElement: DucBindableElement | null | "keep",
   elementsMap: NonDeletedSceneElementsMap,
+  scene: Scene,
 ): void => {
   const boundToElementIds: Set<DucBindableElement["id"]> = new Set();
   const unboundFromElementIds: Set<DucBindableElement["id"]> = new Set();
@@ -131,16 +142,14 @@ export const bindOrUnbindLinearElement = (
     (id) => !boundToElementIds.has(id),
   );
 
-  getNonDeletedElements(Scene.getScene(linearElement)!, onlyUnbound).forEach(
-    (element) => {
-      mutateElement(element, {
-        boundElements: element.boundElements?.filter(
-          (element) =>
-            element.type !== "arrow" || element.id !== linearElement.id,
-        ),
-      });
-    },
-  );
+  getNonDeletedElements(scene, onlyUnbound).forEach((element) => {
+    mutateElement(element, {
+      boundElements: element.boundElements?.filter(
+        (element) =>
+          element.type !== "arrow" || element.id !== linearElement.id,
+      ),
+    });
+  });
 };
 
 const bindOrUnbindLinearElementEdge = (
@@ -249,113 +258,35 @@ const getBindingStrategyForDraggingArrowEndpoints = (
       ? getElligibleElementForBindingElement(
           selectedElement,
           "start",
-          elements,
           elementsMap,
+          elements,
         )
       : null // If binding is disabled and start is dragged, break all binds
     : // We have to update the focus and gap of the binding, so let's rebind
       getElligibleElementForBindingElement(
         selectedElement,
         "start",
-        elements,
         elementsMap,
+        elements,
       );
   const end = endDragged
     ? isBindingEnabled
       ? getElligibleElementForBindingElement(
           selectedElement,
           "end",
-          elements,
           elementsMap,
+          elements,
         )
       : null // If binding is disabled and end is dragged, break all binds
     : // We have to update the focus and gap of the binding, so let's rebind
       getElligibleElementForBindingElement(
         selectedElement,
         "end",
-        elements,
         elementsMap,
+        elements,
       );
 
   return [start, end];
-};
-
-export const bindOrUnbindSelectedElements = (
-  selectedElements: NonDeleted<DucElement>[],
-  elements: readonly DucElement[],
-  elementsMap: NonDeletedSceneElementsMap,
-): void => {
-  selectedElements.forEach((selectedElement) => {
-    if (isBindingElement(selectedElement)) {
-      bindOrUnbindLinearElement(
-        selectedElement,
-        getElligibleElementForBindingElement(
-          selectedElement,
-          "start",
-          elements,
-          elementsMap,
-        ),
-        getElligibleElementForBindingElement(
-          selectedElement,
-          "end",
-          elements,
-          elementsMap,
-        ),
-        elementsMap,
-      );
-    } else if (isBindableElement(selectedElement)) {
-      maybeBindBindableElement(selectedElement, elementsMap);
-    }
-  });
-};
-
-const maybeBindBindableElement = (
-  bindableElement: NonDeleted<DucBindableElement>,
-  elementsMap: NonDeletedSceneElementsMap,
-): void => {
-  getElligibleElementsForBindableElementAndWhere(
-    bindableElement,
-    elementsMap,
-  ).forEach(([linearElement, where]) =>
-    bindOrUnbindLinearElement(
-      linearElement,
-      where === "end" ? "keep" : bindableElement,
-      where === "start" ? "keep" : bindableElement,
-      elementsMap,
-    ),
-  );
-};
-
-export const maybeBindLinearElement = (
-  linearElement: NonDeleted<DucLinearElement>,
-  appState: AppState,
-  scene: Scene,
-  pointerCoords: { x: number; y: number },
-  elementsMap: NonDeletedSceneElementsMap,
-): void => {
-  if (appState.startBoundElement != null) {
-    bindLinearElement(
-      linearElement,
-      appState.startBoundElement,
-      "start",
-      elementsMap,
-    );
-  }
-  const hoveredElement = getHoveredElementForBinding(
-    pointerCoords,
-    scene.getNonDeletedElements(),
-    elementsMap,
-  );
-  if (
-    hoveredElement != null &&
-    !isLinearElementSimpleAndAlreadyBoundOnOppositeEdge(
-      linearElement,
-      hoveredElement,
-      "end",
-    )
-  ) {
-    bindLinearElement(linearElement, hoveredElement, "end", elementsMap);
-  }
 };
 
 const getBindingStrategyForDraggingArrowOrJoints = (
@@ -373,8 +304,8 @@ const getBindingStrategyForDraggingArrowOrJoints = (
       ? getElligibleElementForBindingElement(
           selectedElement,
           "start",
-          elements,
           elementsMap,
+          elements,
         )
       : null
     : null;
@@ -382,9 +313,9 @@ const getBindingStrategyForDraggingArrowOrJoints = (
     ? isBindingEnabled
       ? getElligibleElementForBindingElement(
           selectedElement,
-          "end", // Also, you probably want "end" here instead of "start"
-          elements,
+          "end",
           elementsMap,
+          elements,
         )
       : null
     : null;
@@ -418,7 +349,7 @@ export const bindOrUnbindLinearElements = (
           isBindingEnabled,
         );
 
-    bindOrUnbindLinearElement(selectedElement, start, end, elementsMap);
+    bindOrUnbindLinearElement(selectedElement, start, end, elementsMap, scene);
   });
 };
 
@@ -453,41 +384,41 @@ export const getSuggestedBindingsForArrows = (
   );
 };
 
-// export const maybeBindLinearElement = (
-//   linearElement: NonDeleted<DucLinearElement>,
-//   appState: AppState,
-//   pointerCoords: { x: number; y: number },
-//   elementsMap: NonDeletedSceneElementsMap,
-//   elements: readonly NonDeletedDucElement[],
-// ): void => {
-//   if (appState.startBoundElement != null) {
-//     bindLinearElement(
-//       linearElement,
-//       appState.startBoundElement,
-//       "start",
-//       elementsMap,
-//     );
-//   }
+export const maybeBindLinearElement = (
+  linearElement: NonDeleted<DucLinearElement>,
+  appState: AppState,
+  pointerCoords: { x: number; y: number },
+  elementsMap: NonDeletedSceneElementsMap,
+  elements: readonly NonDeletedDucElement[],
+): void => {
+  if (appState.startBoundElement != null) {
+    bindLinearElement(
+      linearElement,
+      appState.startBoundElement,
+      "start",
+      elementsMap,
+    );
+  }
 
-//   const hoveredElement = getHoveredElementForBinding(
-//     pointerCoords,
-//     elements,
-//     elementsMap,
-//     isElbowArrow(linearElement) && isElbowArrow(linearElement),
-//   );
+  const hoveredElement = getHoveredElementForBinding(
+    pointerCoords,
+    elements,
+    elementsMap,
+    isElbowArrow(linearElement) && isElbowArrow(linearElement),
+  );
 
-//   if (hoveredElement !== null) {
-//     if (
-//       !isLinearElementSimpleAndAlreadyBoundOnOppositeEdge(
-//         linearElement,
-//         hoveredElement,
-//         "end",
-//       )
-//     ) {
-//       bindLinearElement(linearElement, hoveredElement, "end", elementsMap);
-//     }
-//   }
-// };
+  if (hoveredElement !== null) {
+    if (
+      !isLinearElementSimpleAndAlreadyBoundOnOppositeEdge(
+        linearElement,
+        hoveredElement,
+        "end",
+      )
+    ) {
+      bindLinearElement(linearElement, hoveredElement, "end", elementsMap);
+    }
+  }
+};
 
 export const bindLinearElement = (
   linearElement: NonDeleted<DucLinearElement>,
@@ -506,14 +437,14 @@ export const bindLinearElement = (
       startOrEnd,
       elementsMap,
     ),
-    // ...(isElbowArrow(linearElement)
-    //   ? calculateFixedPointForElbowArrowBinding(
-    //       linearElement,
-    //       hoveredElement,
-    //       startOrEnd,
-    //       elementsMap,
-    //     )
-    //   : { fixedPoint: null }),
+    ...(isElbowArrow(linearElement)
+      ? calculateFixedPointForElbowArrowBinding(
+          linearElement,
+          hoveredElement,
+          startOrEnd,
+          elementsMap,
+        )
+      : { fixedPoint: null }),
   };
 
   mutateElement(linearElement, {
@@ -560,16 +491,6 @@ export const isLinearElementSimpleAndAlreadyBound = (
 const isLinearElementSimple = (
   linearElement: NonDeleted<DucLinearElement>,
 ): boolean => linearElement.points.length < 3;
-export const unbindLinearElements = (
-  elements: NonDeleted<DucElement>[],
-  elementsMap: NonDeletedSceneElementsMap,
-): void => {
-  elements.forEach((element) => {
-    if (isBindingElement(element)) {
-      bindOrUnbindLinearElement(element, null, null, elementsMap);
-    }
-  });
-};
 
 const unbindLinearElement = (
   linearElement: NonDeleted<DucLinearElement>,
@@ -733,22 +654,22 @@ export const updateBoundElements = (
       }> => update !== null,
     );
 
-    // LinearElementEditor.movePoints(
-    //   element,
-    //   updates,
-    //   elementsMap,
-    //   {
-    //     ...(changedElement.id === element.startBinding?.elementId
-    //       ? { startBinding: bindings.startBinding }
-    //       : {}),
-    //     ...(changedElement.id === element.endBinding?.elementId
-    //       ? { endBinding: bindings.endBinding }
-    //       : {}),
-    //   },
-    //   {
-    //     changedElements,
-    //   },
-    // );
+    LinearElementEditor.movePoints(
+      element,
+      updates,
+      elementsMap,
+      {
+        ...(changedElement.id === element.startBinding?.elementId
+          ? { startBinding: bindings.startBinding }
+          : {}),
+        ...(changedElement.id === element.endBinding?.elementId
+          ? { endBinding: bindings.endBinding }
+          : {}),
+      },
+      {
+        changedElements,
+      },
+    );
 
     const boundText = getBoundTextElement(element, elementsMap);
     if (boundText && !boundText.isDeleted) {
@@ -773,36 +694,36 @@ const getSimultaneouslyUpdatedElementIds = (
   return new Set((simultaneouslyUpdated || []).map((element) => element.id));
 };
 
-// export const getHeadingForElbowArrowSnap = (
-//   point: Readonly<Point>,
-//   otherPoint: Readonly<Point>,
-//   bindableElement: DucBindableElement | undefined | null,
-//   aabb: Bounds | undefined | null,
-//   elementsMap: ElementsMap,
-//   origPoint: Point,
-// ): Heading => {
-//   const otherPointHeading = vectorToHeading(pointToVector(otherPoint, point));
+export const getHeadingForElbowArrowSnap = (
+  point: Readonly<Point>,
+  otherPoint: Readonly<Point>,
+  bindableElement: DucBindableElement | undefined | null,
+  aabb: Bounds | undefined | null,
+  elementsMap: ElementsMap,
+  origPoint: Point,
+): Heading => {
+  const otherPointHeading = vectorToHeading(pointToVector(otherPoint, point));
 
-//   if (!bindableElement || !aabb) {
-//     return otherPointHeading;
-//   }
+  if (!bindableElement || !aabb) {
+    return otherPointHeading;
+  }
 
-//   const distance = getDistanceForBinding(
-//     origPoint,
-//     bindableElement,
-//     elementsMap,
-//   );
+  const distance = getDistanceForBinding(
+    origPoint,
+    bindableElement,
+    elementsMap,
+  );
 
-//   if (!distance) {
-//     return vectorToHeading(
-//       pointToVector(point, getCenterForElement(bindableElement)),
-//     );
-//   }
+  if (!distance) {
+    return vectorToHeading(
+      pointToVector(point, getCenterForElement(bindableElement)),
+    );
+  }
 
-//   const pointHeading = headingForPointFromElement(bindableElement, aabb, point);
+  const pointHeading = headingForPointFromElement(bindableElement, aabb, point);
 
-//   return pointHeading;
-// };
+  return pointHeading;
+};
 
 const getDistanceForBinding = (
   point: Readonly<Point>,
@@ -823,95 +744,95 @@ const getDistanceForBinding = (
   return distance > bindDistance ? null : distance;
 };
 
-// export const bindPointToSnapToElementOutline = (
-//   point: Readonly<Point>,
-//   otherPoint: Readonly<Point>,
-//   bindableElement: DucBindableElement | undefined,
-//   elementsMap: ElementsMap,
-// ): Point => {
-//   const aabb = bindableElement && aabbForElement(bindableElement);
+export const bindPointToSnapToElementOutline = (
+  point: Readonly<Point>,
+  otherPoint: Readonly<Point>,
+  bindableElement: DucBindableElement | undefined,
+  elementsMap: ElementsMap,
+): Point => {
+  const aabb = bindableElement && aabbForElement(bindableElement);
 
-//   if (bindableElement && aabb) {
-//     // TODO: Dirty hacks until tangents are properly calculated
-//     const heading = headingForPointFromElement(bindableElement, aabb, point);
-//     const intersections = [
-//       ...intersectElementWithLine(
-//         bindableElement,
-//         [point[0], point[1] - 2 * bindableElement.height],
-//         [point[0], point[1] + 2 * bindableElement.height],
-//         FIXED_BINDING_DISTANCE,
-//         elementsMap,
-//       ),
-//       ...intersectElementWithLine(
-//         bindableElement,
-//         [point[0] - 2 * bindableElement.width, point[1]],
-//         [point[0] + 2 * bindableElement.width, point[1]],
-//         FIXED_BINDING_DISTANCE,
-//         elementsMap,
-//       ),
-//     ];
+  if (bindableElement && aabb) {
+    // TODO: Dirty hacks until tangents are properly calculated
+    const heading = headingForPointFromElement(bindableElement, aabb, point);
+    const intersections = [
+      ...intersectElementWithLine(
+        bindableElement,
+        [point[0], point[1] - 2 * bindableElement.height],
+        [point[0], point[1] + 2 * bindableElement.height],
+        FIXED_BINDING_DISTANCE,
+        elementsMap,
+      ),
+      ...intersectElementWithLine(
+        bindableElement,
+        [point[0] - 2 * bindableElement.width, point[1]],
+        [point[0] + 2 * bindableElement.width, point[1]],
+        FIXED_BINDING_DISTANCE,
+        elementsMap,
+      ),
+    ];
 
-//     const isVertical =
-//       compareHeading(heading, HEADING_LEFT) ||
-//       compareHeading(heading, HEADING_RIGHT);
-//     const dist = Math.abs(
-//       distanceToBindableElement(bindableElement, point, elementsMap),
-//     );
-//     const isInner = isVertical
-//       ? dist < bindableElement.width * -0.1
-//       : dist < bindableElement.height * -0.1;
+    const isVertical =
+      compareHeading(heading, HEADING_LEFT) ||
+      compareHeading(heading, HEADING_RIGHT);
+    const dist = Math.abs(
+      distanceToBindableElement(bindableElement, point, elementsMap),
+    );
+    const isInner = isVertical
+      ? dist < bindableElement.width * -0.1
+      : dist < bindableElement.height * -0.1;
 
-//     intersections.sort(
-//       (a, b) => distanceSq2d(a, point) - distanceSq2d(b, point),
-//     );
+    intersections.sort(
+      (a, b) => distanceSq2d(a, point) - distanceSq2d(b, point),
+    );
 
-//     return isInner
-//       ? headingToMidBindPoint(otherPoint, bindableElement, aabb)
-//       : intersections.filter((i) =>
-//           isVertical
-//             ? Math.abs(point[1] - i[1]) < 0.1
-//             : Math.abs(point[0] - i[0]) < 0.1,
-//         )[0] ?? point;
-//   }
+    return isInner
+      ? headingToMidBindPoint(otherPoint, bindableElement, aabb)
+      : intersections.filter((i) =>
+          isVertical
+            ? Math.abs(point[1] - i[1]) < 0.1
+            : Math.abs(point[0] - i[0]) < 0.1,
+        )[0] ?? point;
+  }
 
-//   return point;
-// };
+  return point;
+};
 
-// const headingToMidBindPoint = (
-//   point: Point,
-//   bindableElement: DucBindableElement,
-//   aabb: Bounds,
-// ): Point => {
-//   const center = getCenterForBounds(aabb);
-//   const heading = vectorToHeading(pointToVector(point, center));
+const headingToMidBindPoint = (
+  point: Point,
+  bindableElement: DucBindableElement,
+  aabb: Bounds,
+): Point => {
+  const center = getCenterForBounds(aabb);
+  const heading = vectorToHeading(pointToVector(point, center));
 
-//   switch (true) {
-//     case compareHeading(heading, HEADING_UP):
-//       return rotatePoint(
-//         [(aabb[0] + aabb[2]) / 2 + 0.1, aabb[1]],
-//         center,
-//         bindableElement.angle,
-//       );
-//     case compareHeading(heading, HEADING_RIGHT):
-//       return rotatePoint(
-//         [aabb[2], (aabb[1] + aabb[3]) / 2 + 0.1],
-//         center,
-//         bindableElement.angle,
-//       );
-//     case compareHeading(heading, HEADING_DOWN):
-//       return rotatePoint(
-//         [(aabb[0] + aabb[2]) / 2 - 0.1, aabb[3]],
-//         center,
-//         bindableElement.angle,
-//       );
-//     default:
-//       return rotatePoint(
-//         [aabb[0], (aabb[1] + aabb[3]) / 2 - 0.1],
-//         center,
-//         bindableElement.angle,
-//       );
-//   }
-// };
+  switch (true) {
+    case compareHeading(heading, HEADING_UP):
+      return rotatePoint(
+        [(aabb[0] + aabb[2]) / 2 + 0.1, aabb[1]],
+        center,
+        bindableElement.angle,
+      );
+    case compareHeading(heading, HEADING_RIGHT):
+      return rotatePoint(
+        [aabb[2], (aabb[1] + aabb[3]) / 2 + 0.1],
+        center,
+        bindableElement.angle,
+      );
+    case compareHeading(heading, HEADING_DOWN):
+      return rotatePoint(
+        [(aabb[0] + aabb[2]) / 2 - 0.1, aabb[3]],
+        center,
+        bindableElement.angle,
+      );
+    default:
+      return rotatePoint(
+        [aabb[0], (aabb[1] + aabb[3]) / 2 - 0.1],
+        center,
+        bindableElement.angle,
+      );
+  }
+};
 
 export const avoidRectangularCorner = (
   element: DucBindableElement,
@@ -1076,35 +997,35 @@ const updateBoundPoint = (
   const direction = startOrEnd === "startBinding" ? -1 : 1;
   const edgePointIndex = direction === -1 ? 0 : linearElement.points.length - 1;
 
-  // if (isElbowArrow(linearElement)) {
-  //   const fixedPoint =
-  //     normalizeFixedPoint(binding.fixedPoint) ??
-  //     calculateFixedPointForElbowArrowBinding(
-  //       linearElement,
-  //       bindableElement,
-  //       startOrEnd === "startBinding" ? "start" : "end",
-  //       elementsMap,
-  //     ).fixedPoint;
-  //   const globalMidPoint = [
-  //     bindableElement.x + bindableElement.width / 2,
-  //     bindableElement.y + bindableElement.height / 2,
-  //   ] as Point;
-  //   const global = [
-  //     bindableElement.x + fixedPoint[0] * bindableElement.width,
-  //     bindableElement.y + fixedPoint[1] * bindableElement.height,
-  //   ] as Point;
-  //   const rotatedGlobal = rotatePoint(
-  //     global,
-  //     globalMidPoint,
-  //     bindableElement.angle,
-  //   );
+  if (isElbowArrow(linearElement)) {
+    const fixedPoint =
+      normalizeFixedPoint(binding.fixedPoint) ??
+      calculateFixedPointForElbowArrowBinding(
+        linearElement,
+        bindableElement,
+        startOrEnd === "startBinding" ? "start" : "end",
+        elementsMap,
+      ).fixedPoint;
+    const globalMidPoint = [
+      bindableElement.x + bindableElement.width / 2,
+      bindableElement.y + bindableElement.height / 2,
+    ] as Point;
+    const global = [
+      bindableElement.x + fixedPoint[0] * bindableElement.width,
+      bindableElement.y + fixedPoint[1] * bindableElement.height,
+    ] as Point;
+    const rotatedGlobal = rotatePoint(
+      global,
+      globalMidPoint,
+      bindableElement.angle,
+    );
 
-  //   return LinearElementEditor.pointFromAbsoluteCoords(
-  //     linearElement,
-  //     rotatedGlobal,
-  //     elementsMap,
-  //   );
-  // }
+    return LinearElementEditor.pointFromAbsoluteCoords(
+      linearElement,
+      rotatedGlobal,
+      elementsMap,
+    );
+  }
 
   const adjacentPointIndex = edgePointIndex - direction;
   const adjacentPoint = LinearElementEditor.getPointAtIndexGlobalCoordinates(
@@ -1150,55 +1071,55 @@ const updateBoundPoint = (
   );
 };
 
-// export const calculateFixedPointForElbowArrowBinding = (
-//   linearElement: NonDeleted<DucElbowArrowElement>,
-//   hoveredElement: DucBindableElement,
-//   startOrEnd: "start" | "end",
-//   elementsMap: ElementsMap,
-// ): { fixedPoint: FixedPoint } => {
-//   const bounds = [
-//     hoveredElement.x,
-//     hoveredElement.y,
-//     hoveredElement.x + hoveredElement.width,
-//     hoveredElement.y + hoveredElement.height,
-//   ] as Bounds;
-//   const edgePointIndex =
-//     startOrEnd === "start" ? 0 : linearElement.points.length - 1;
-//   const globalPoint = LinearElementEditor.getPointAtIndexGlobalCoordinates(
-//     linearElement,
-//     edgePointIndex,
-//     elementsMap,
-//   );
-//   const otherGlobalPoint = LinearElementEditor.getPointAtIndexGlobalCoordinates(
-//     linearElement,
-//     edgePointIndex,
-//     elementsMap,
-//   );
-//   const snappedPoint = bindPointToSnapToElementOutline(
-//     globalPoint,
-//     otherGlobalPoint,
-//     hoveredElement,
-//     elementsMap,
-//   );
-//   const globalMidPoint = [
-//     bounds[0] + (bounds[2] - bounds[0]) / 2,
-//     bounds[1] + (bounds[3] - bounds[1]) / 2,
-//   ] as Point;
-//   const nonRotatedSnappedGlobalPoint = rotatePoint(
-//     snappedPoint,
-//     globalMidPoint,
-//     -hoveredElement.angle,
-//   ) as Point;
+export const calculateFixedPointForElbowArrowBinding = (
+  linearElement: NonDeleted<DucElbowArrowElement>,
+  hoveredElement: DucBindableElement,
+  startOrEnd: "start" | "end",
+  elementsMap: ElementsMap,
+): { fixedPoint: FixedPoint } => {
+  const bounds = [
+    hoveredElement.x,
+    hoveredElement.y,
+    hoveredElement.x + hoveredElement.width,
+    hoveredElement.y + hoveredElement.height,
+  ] as Bounds;
+  const edgePointIndex =
+    startOrEnd === "start" ? 0 : linearElement.points.length - 1;
+  const globalPoint = LinearElementEditor.getPointAtIndexGlobalCoordinates(
+    linearElement,
+    edgePointIndex,
+    elementsMap,
+  );
+  const otherGlobalPoint = LinearElementEditor.getPointAtIndexGlobalCoordinates(
+    linearElement,
+    edgePointIndex,
+    elementsMap,
+  );
+  const snappedPoint = bindPointToSnapToElementOutline(
+    globalPoint,
+    otherGlobalPoint,
+    hoveredElement,
+    elementsMap,
+  );
+  const globalMidPoint = [
+    bounds[0] + (bounds[2] - bounds[0]) / 2,
+    bounds[1] + (bounds[3] - bounds[1]) / 2,
+  ] as Point;
+  const nonRotatedSnappedGlobalPoint = rotatePoint(
+    snappedPoint,
+    globalMidPoint,
+    -hoveredElement.angle,
+  ) as Point;
 
-//   return {
-//     fixedPoint: normalizeFixedPoint([
-//       (nonRotatedSnappedGlobalPoint[0] - hoveredElement.x) /
-//         hoveredElement.width,
-//       (nonRotatedSnappedGlobalPoint[1] - hoveredElement.y) /
-//         hoveredElement.height,
-//     ]),
-//   };
-// };
+  return {
+    fixedPoint: normalizeFixedPoint([
+      (nonRotatedSnappedGlobalPoint[0] - hoveredElement.x) /
+        hoveredElement.width,
+      (nonRotatedSnappedGlobalPoint[1] - hoveredElement.y) /
+        hoveredElement.height,
+    ]),
+  };
+};
 
 const maybeCalculateNewGapWhenScaling = (
   changedElement: DucBindableElement,
@@ -1222,61 +1143,11 @@ const maybeCalculateNewGapWhenScaling = (
   return { ...currentBinding, gap: newGap };
 };
 
-
-// TODO: this is a bottleneck, optimise
-export const getEligibleElementsForBinding = (
-  selectedElements: NonDeleted<DucElement>[],
-  elements: readonly DucElement[],
-  elementsMap: NonDeletedSceneElementsMap,
-): SuggestedBinding[] => {
-  const includedElementIds = new Set(selectedElements.map(({ id }) => id));
-  return selectedElements.flatMap((selectedElement) =>
-    isBindingElement(selectedElement, false)
-      ? (getElligibleElementsForBindingElement(
-          selectedElement as NonDeleted<DucLinearElement>,
-          elements,
-          elementsMap,
-        ).filter(
-          (element) => !includedElementIds.has(element.id),
-        ) as SuggestedBinding[])
-      : isBindableElement(selectedElement, false)
-      ? getElligibleElementsForBindableElementAndWhere(
-          selectedElement,
-          elementsMap,
-        ).filter((binding) => !includedElementIds.has(binding[0].id))
-      : [],
-  );
-};
-
-const getElligibleElementsForBindingElement = (
-  linearElement: NonDeleted<DucLinearElement>,
-  elements: readonly DucElement[],
-  elementsMap: NonDeletedSceneElementsMap,
-): NonDeleted<DucBindableElement>[] => {
-  return [
-    getElligibleElementForBindingElement(
-      linearElement,
-      "start",
-      elements,
-      elementsMap,
-    ),
-    getElligibleElementForBindingElement(
-      linearElement,
-      "end",
-      elements,
-      elementsMap,
-    ),
-  ].filter(
-    (element): element is NonDeleted<DucBindableElement> =>
-      element != null,
-  );
-};
-
 const getElligibleElementForBindingElement = (
   linearElement: NonDeleted<DucLinearElement>,
   startOrEnd: "start" | "end",
-  elements: readonly DucElement[],
   elementsMap: NonDeletedSceneElementsMap,
+  elements: readonly NonDeletedDucElement[],
 ): NonDeleted<DucBindableElement> | null => {
   return getHoveredElementForBinding(
     getLinearElementEdgeCoors(linearElement, startOrEnd, elementsMap),
@@ -1284,6 +1155,7 @@ const getElligibleElementForBindingElement = (
     elementsMap,
   );
 };
+
 const getLinearElementEdgeCoors = (
   linearElement: NonDeleted<DucLinearElement>,
   startOrEnd: "start" | "end",
@@ -1296,64 +1168,6 @@ const getLinearElementEdgeCoors = (
       index,
       elementsMap,
     ),
-  );
-};
-
-const getElligibleElementsForBindableElementAndWhere = (
-  bindableElement: NonDeleted<DucBindableElement>,
-  elementsMap: NonDeletedSceneElementsMap,
-): SuggestedPointBinding[] => {
-  const scene = Scene.getScene(bindableElement)!;
-  return scene
-    .getNonDeletedElements()
-    .map((element) => {
-      if (!isBindingElement(element, false)) {
-        return null;
-      }
-      const canBindStart = isLinearElementEligibleForNewBindingByBindable(
-        element,
-        "start",
-        bindableElement,
-        elementsMap,
-      );
-      const canBindEnd = isLinearElementEligibleForNewBindingByBindable(
-        element,
-        "end",
-        bindableElement,
-        elementsMap,
-      );
-      if (!canBindStart && !canBindEnd) {
-        return null;
-      }
-      return [
-        element,
-        canBindStart && canBindEnd ? "both" : canBindStart ? "start" : "end",
-        bindableElement,
-      ];
-    })
-    .filter((maybeElement) => maybeElement != null) as SuggestedPointBinding[];
-};
-
-const isLinearElementEligibleForNewBindingByBindable = (
-  linearElement: NonDeleted<DucLinearElement>,
-  startOrEnd: "start" | "end",
-  bindableElement: NonDeleted<DucBindableElement>,
-  elementsMap: NonDeletedSceneElementsMap,
-): boolean => {
-  const existingBinding =
-    linearElement[startOrEnd === "start" ? "startBinding" : "endBinding"];
-  return (
-    existingBinding == null &&
-    !isLinearElementSimpleAndAlreadyBoundOnOppositeEdge(
-      linearElement,
-      bindableElement,
-      startOrEnd,
-    ) &&
-    bindingBorderTest(
-      bindableElement,
-      getLinearElementEdgeCoors(linearElement, startOrEnd, elementsMap),
-      elementsMap,
-    )
   );
 };
 

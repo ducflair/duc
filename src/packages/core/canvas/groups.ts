@@ -387,3 +387,7 @@ export const elementsAreInSameGroup = (elements: DucElement[]) => {
 
   return maxGroup === elements.length;
 };
+
+export const isInGroup = (element: NonDeletedDucElement) => {
+  return element.groupIds.length > 0;
+};

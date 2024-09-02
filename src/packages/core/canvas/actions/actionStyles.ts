@@ -12,9 +12,7 @@ import {
   DEFAULT_FONT_FAMILY,
   DEFAULT_TEXT_ALIGN,
 } from "../constants";
-import {
-  getBoundTextElement,
-} from "../element/textElement";
+import { getBoundTextElement } from "../element/textElement";
 import {
   hasBoundTextElement,
   canApplyRoundnessTypeToElement,
@@ -23,15 +21,18 @@ import {
   isArrowElement,
 } from "../element/typeChecks";
 import { getSelectedElements } from "../scene";
-import { DucTextElement } from "../element/types";
+import type { DucTextElement } from "../element/types";
+// import { paintIcon } from "../components/icons";
+import { StoreAction } from "../store";
 import { getLineHeight } from "../fonts";
-import { StoreAction } from "..";
 
 // `copiedStyles` is exported only for tests.
 export let copiedStyles: string = "{}";
 
 export const actionCopyStyles = register({
   name: "copyStyles",
+  label: "labels.copyStyles",
+  // icon: paintIcon,
   trackEvent: { category: "element" },
   perform: (elements, appState, formData, app) => {
     const elementsCopied = [];
@@ -55,13 +56,14 @@ export const actionCopyStyles = register({
       storeAction: StoreAction.NONE,
     };
   },
-  contextItemLabel: "labels.copyStyles",
   keyTest: (event) =>
     event[KEYS.CTRL_OR_CMD] && event.altKey && event.code === CODES.C,
 });
 
 export const actionPasteStyles = register({
   name: "pasteStyles",
+  label: "labels.pasteStyles",
+  // icon: paintIcon,
   trackEvent: { category: "element" },
   perform: (elements, appState, formData, app) => {
     const elementsCopied = JSON.parse(copiedStyles);
@@ -160,7 +162,6 @@ export const actionPasteStyles = register({
       storeAction: StoreAction.CAPTURE,
     };
   },
-  contextItemLabel: "labels.pasteStyles",
   keyTest: (event) =>
     event[KEYS.CTRL_OR_CMD] && event.altKey && event.code === CODES.V,
 });

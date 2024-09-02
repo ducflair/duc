@@ -1,8 +1,8 @@
 import {
   BOUND_TEXT_PADDING,
   ROUNDNESS,
-  VERTICAL_ALIGN,
   TEXT_ALIGN,
+  VERTICAL_ALIGN,
 } from "../constants";
 import { isTextElement, newElement } from "../element";
 import { mutateElement } from "../element/mutateElement";
@@ -23,22 +23,22 @@ import {
   isTextBindableContainer,
   isUsingAdaptiveRadius,
 } from "../element/typeChecks";
-import {
+import type {
   DucElement,
   DucLinearElement,
   DucTextContainer,
   DucTextElement,
 } from "../element/types";
-import { AppState } from "../types";
-import { Mutable } from "../utility-types";
+import type { AppState } from "../types";
+import type { Mutable } from "../utility-types";
 import { arrayToMap, getFontString } from "../utils";
 import { register } from "./register";
 import { syncMovedIndices } from "../fractionalIndex";
-import { StoreAction } from "..";
+import { StoreAction } from "../store";
 
 export const actionUnbindText = register({
   name: "unbindText",
-  contextItemLabel: "labels.unbindText",
+  label: "labels.unbindText",
   trackEvent: { category: "element" },
   predicate: (elements, appState, _, app) => {
     const selectedElements = app.scene.getSelectedElements(appState);
@@ -93,7 +93,7 @@ export const actionUnbindText = register({
 
 export const actionBindText = register({
   name: "bindText",
-  contextItemLabel: "labels.bindText",
+  label: "labels.bindText",
   trackEvent: { category: "element" },
   predicate: (elements, appState, _, app) => {
     const selectedElements = app.scene.getSelectedElements(appState);
@@ -142,6 +142,7 @@ export const actionBindText = register({
       containerId: container.id,
       verticalAlign: VERTICAL_ALIGN.MIDDLE,
       textAlign: TEXT_ALIGN.CENTER,
+      autoResize: true,
     });
     mutateElement(container, {
       boundElements: (container.boundElements || []).concat({
@@ -207,10 +208,9 @@ const pushContainerBelowText = (
   return updatedElements;
 };
 
-
 export const actionWrapTextInContainer = register({
   name: "wrapTextInContainer",
-  contextItemLabel: "labels.createContainerFromText",
+  label: "labels.createContainerFromText",
   trackEvent: { category: "element" },
   predicate: (elements, appState, _, app) => {
     const selectedElements = app.scene.getSelectedElements(appState);
@@ -221,29 +221,22 @@ export const actionWrapTextInContainer = register({
     const selectedElements = app.scene.getSelectedElements(appState);
     let updatedElements: readonly DucElement[] = elements.slice();
     const containerIds: Mutable<AppState["selectedElementIds"]> = {};
-    const elementType = "rectangle";
-    const getNumLastElementOfType = (type: DucElement["type"]) => {
-      return elements.filter((element) => element.type === type).length+1;
-    }
+
     for (const textElement of selectedElements) {
       if (isTextElement(textElement)) {
         const container = newElement({
-          type: elementType,
+          type: "rectangle",
           backgroundColor: appState.currentItemBackgroundColor,
           boundElements: [
             ...(textElement.boundElements || []),
             { id: textElement.id, type: "text" },
           ],
           angle: textElement.angle,
-          index: textElement.index,
           fillStyle: appState.currentItemFillStyle,
           strokeColor: appState.currentItemStrokeColor,
           roughness: appState.currentItemRoughness,
-          // strokeWidth: appState.currentItemStrokeWidth,
-          strokeWidth: 0,
+          strokeWidth: appState.currentItemStrokeWidth,
           strokeStyle: appState.currentItemStrokeStyle,
-          scope: appState.scope,
-          writingLayer: appState.writingLayer,
           roundness:
             appState.currentItemRoundness === "round"
               ? {
@@ -266,7 +259,6 @@ export const actionWrapTextInContainer = register({
           ),
           groupIds: textElement.groupIds,
           frameId: textElement.frameId,
-          label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${getNumLastElementOfType(elementType)}`,
         });
 
         // update bindings
@@ -305,6 +297,7 @@ export const actionWrapTextInContainer = register({
             verticalAlign: VERTICAL_ALIGN.MIDDLE,
             boundElements: null,
             textAlign: TEXT_ALIGN.CENTER,
+            autoResize: true,
           },
           false,
         );
@@ -319,6 +312,7 @@ export const actionWrapTextInContainer = register({
           container,
           textElement,
         );
+
         containerIds[container.id] = true;
       }
     }

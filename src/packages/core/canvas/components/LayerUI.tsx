@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import React from "react";
-import { ActionManager } from "../actions/manager";
+import type { ActionManager } from "../actions/manager";
 import {
   CLASSES,
   DEFAULT_SIDEBAR,
@@ -8,10 +8,11 @@ import {
   TOOL_TYPE,
 } from "../constants";
 import { showSelectedShapeActions } from "../element";
-import { NonDeletedDucElement } from "../element/types";
-import { Language, t } from "../i18n";
+import type { NonDeletedDucElement } from "../element/types";
+import type { Language } from "../i18n";
+import { t } from "../i18n";
 import { calculateScrollCenter } from "../scene";
-import {
+import type {
   AppProps,
   AppState,
   ExcalidrawProps,
@@ -38,8 +39,6 @@ import { JSONExportDialog } from "./JSONExportDialog";
 import { PenModeButton } from "./PenModeButton";
 import { trackEvent } from "../analytics";
 import { useDevice } from "./App";
-import { Stats } from "./Stats";
-import { actionToggleStats } from "../actions/actionToggleStats";
 import Footer from "./footer/Footer";
 import { isSidebarDockedAtom } from "./Sidebar/Sidebar";
 import { jotaiScope } from "../jotai";
@@ -61,8 +60,9 @@ import { mutateElement } from "../element/mutateElement";
 import { ShapeCache } from "../scene/ShapeCache";
 import Scene from "../scene/Scene";
 import { LaserPointerButton } from "./LaserPointerButton";
-import { MagicSettings } from "./MagicSettings";
 import { TTDDialog } from "./TTDDialog/TTDDialog";
+import { Stats } from "./Stats";
+import { actionToggleStats } from "../actions";
 
 interface LayerUIProps {
   actionManager: ActionManager;
@@ -84,14 +84,6 @@ interface LayerUIProps {
   children?: React.ReactNode;
   app: AppClassProperties;
   isCollaborating: boolean;
-  openAIKey: string | null;
-  isOpenAIKeyPersisted: boolean;
-  onOpenAIAPIKeyChange: (apiKey: string, shouldPersist: boolean) => void;
-  onMagicSettingsConfirm: (
-    apiKey: string,
-    shouldPersist: boolean,
-    source: "tool" | "generation" | "settings",
-  ) => void;
 }
 
 const DefaultMainMenu: React.FC<{
@@ -148,10 +140,6 @@ const LayerUI = ({
   children,
   app,
   isCollaborating,
-  openAIKey,
-  isOpenAIKeyPersisted,
-  onOpenAIAPIKeyChange,
-  onMagicSettingsConfirm,
 }: LayerUIProps) => {
   const device = useDevice();
   const tunnels = useInitializeTunnels();
@@ -205,7 +193,7 @@ const LayerUI = ({
       {/* wrapping to Fragment stops React from occasionally complaining
                 about identical Keys */}
       <tunnels.MainMenuTunnel.Out />
-      {/* {renderWelcomeScreen && <tunnels.WelcomeScreenMenuHintTunnel.Out />} */}
+      {renderWelcomeScreen && <tunnels.WelcomeScreenMenuHintTunnel.Out />}
     </div>
   );
 
@@ -239,6 +227,11 @@ const LayerUI = ({
       appState,
       elements,
     );
+
+    // const shouldShowStats =
+    //   appState.stats.open &&
+    //   !appState.zenModeEnabled &&
+    //   !appState.viewModeEnabled;
 
     return (
       <FixedSideContainer side="top">
@@ -352,6 +345,15 @@ const LayerUI = ({
                 appState.openSidebar?.name !== DEFAULT_SIDEBAR.name) && (
                 <tunnels.DefaultSidebarTriggerTunnel.Out />
               )}
+            {/* {shouldShowStats && (
+              <Stats
+                app={app}
+                onClose={() => {
+                  actionManager.executeAction(actionToggleStats);
+                }}
+                renderCustomStats={renderCustomStats}
+              />
+            )} */}
           </div>
         </div>
       </FixedSideContainer>
@@ -444,7 +446,7 @@ const LayerUI = ({
                 );
                 ShapeCache.delete(element);
               }
-              Scene.getScene(selectedElements[0])?.informMutation();
+              Scene.getScene(selectedElements[0])?.triggerUpdate();
             } else if (colorPickerType === "elementBackground") {
               setAppState({
                 currentItemBackgroundColor: color,
@@ -463,25 +465,6 @@ const LayerUI = ({
       )}
       {appState.openDialog?.name === "help" && (
         <HelpDialog
-          onClose={() => {
-            setAppState({ openDialog: null });
-          }}
-        />
-      )}
-      {appState.openDialog?.name === "settings" && (
-        <MagicSettings
-          openAIKey={openAIKey}
-          isPersisted={isOpenAIKeyPersisted}
-          onChange={onOpenAIAPIKeyChange}
-          onConfirm={(apiKey, shouldPersist) => {
-            const source =
-              appState.openDialog?.name === "settings"
-                ? appState.openDialog?.source
-                : "settings";
-            setAppState({ openDialog: null }, () => {
-              onMagicSettingsConfirm(apiKey, shouldPersist, source);
-            });
-          }}
           onClose={() => {
             setAppState({ openDialog: null });
           }}
@@ -524,7 +507,7 @@ const LayerUI = ({
           UIOptions={UIOptions}
         />
       )} */}
-      {!device.editor.isMobile || device.editor.isMobile  && (
+      {!device.editor.isMobile && (
         <>
           <div
             className="layer-ui__wrapper"
@@ -536,27 +519,17 @@ const LayerUI = ({
                 : {}
             }
           >
-            {/* {renderWelcomeScreen && <tunnels.WelcomeScreenCenterTunnel.Out />} */}
-            {/* {renderFixedSideContainer()} */}
-            {/* <Footer
+            {/* {renderWelcomeScreen && <tunnels.WelcomeScreenCenterTunnel.Out />}
+            {renderFixedSideContainer()}
+            <Footer
               appState={appState}
               actionManager={actionManager}
               showExitZenModeBtn={showExitZenModeBtn}
               renderWelcomeScreen={renderWelcomeScreen}
             /> */}
-            {appState.showStats && (
-              <Stats
-                appState={appState}
-                setAppState={setAppState}
-                elements={elements}
-                onClose={() => {
-                  actionManager.executeAction(actionToggleStats);
-                }}
-                renderCustomStats={renderCustomStats}
-              />
-            )}
             {/* {appState.scrolledOutside && (
               <button
+                type="button"
                 className="scroll-back-to-content"
                 onClick={() => {
                   setAppState((appState) => ({

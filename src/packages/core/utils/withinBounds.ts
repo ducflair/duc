@@ -16,6 +16,7 @@ import type { Point } from "../canvas/types";
 import { Bounds, getElementBounds } from "../canvas/element/bounds";
 import { arrayToMap } from "../canvas/utils";
 
+
 type Element = NonDeletedDucElement;
 type Elements = readonly NonDeletedDucElement[];
 

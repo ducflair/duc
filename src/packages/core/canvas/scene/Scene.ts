@@ -165,7 +165,7 @@ class Scene {
    * Does not relate to elements versions, it's only a renderer
    * cache-invalidation nonce at the moment.
    */
-  private versionNonce: number | undefined;
+  private sceneNonce: number | undefined;
 
   getNonDeletedElementsMap() {
     return this.nonDeletedElementsMap;
@@ -241,8 +241,8 @@ class Scene {
     return (this.elementsMap.get(id) as T | undefined) || null;
   }
 
-  getVersionNonce() {
-    return this.versionNonce;
+  getSceneNonce() {
+    return this.sceneNonce;
   }
 
   getNonDeletedElement(
@@ -310,11 +310,11 @@ class Scene {
     this.frames = nextFrameLikes;
     this.nonDeletedFramesLikes = getNonDeletedElements(this.frames).elements;
 
-    this.informMutation();
+    this.triggerUpdate();
   }
 
-  informMutation() {
-    this.versionNonce = randomInteger();
+  triggerUpdate() {
+    this.sceneNonce = randomInteger();
 
     for (const callback of Array.from(this.callbacks)) {
       callback();
@@ -322,6 +322,22 @@ class Scene {
   }
 
   addCallback(cb: SceneStateCallback): SceneStateCallbackRemover {
+    if (this.callbacks.has(cb)) {
+      throw new Error();
+    }
+
+    this.callbacks.add(cb);
+
+    return () => {
+      if (!this.callbacks.has(cb)) {
+        throw new Error();
+      }
+      this.callbacks.delete(cb);
+    };
+  }
+
+
+  onUpdate(cb: SceneStateCallback): SceneStateCallbackRemover {
     if (this.callbacks.has(cb)) {
       throw new Error();
     }
@@ -356,6 +372,7 @@ class Scene {
     // (I guess?)
     this.callbacks.clear();
   }
+
 
   insertElementAtIndex(element: DucElement, index: number) {
     if (!Number.isFinite(index) || index < 0) {
@@ -397,7 +414,7 @@ class Scene {
     this.replaceAllElements(nextElements);
   }
 
-  addNewElement = (element: DucElement) => {
+  insertElement = (element: DucElement) => {
     const index = element.frameId
       ? this.getElementIndex(element.frameId)
       : this.elements.length;
@@ -405,7 +422,7 @@ class Scene {
     this.insertElementAtIndex(element, index);
   };
 
-  addNewElements = (elements: DucElement[]) => {
+  insertElements = (elements: DucElement[]) => {
     if (!elements.length) {
       return;
     }
