@@ -1,6 +1,6 @@
 import { KEYS } from "../keys";
 import { register } from "./register";
-import { DucElement } from "../element/types";
+import type { DucElement } from "../element/types";
 import { duplicateElement, getNonDeletedElements } from "../element";
 import { isSomeElementSelected } from "../scene";
 import { ToolButton } from "../components/ToolButton";
@@ -12,10 +12,10 @@ import {
   getSelectedGroupForElement,
   getElementsInGroup,
 } from "../groups";
-import { AppState } from "../types";
+import type { AppState } from "../types";
 import { fixBindingsAfterDuplication } from "../element/binding";
-import { ActionResult } from "./types";
-import { GRID_SIZE } from "../constants";
+import type { ActionResult } from "./types";
+import { DEFAULT_GRID_SIZE } from "../constants";
 import {
   bindTextToShapeAfterDuplication,
   getBoundTextElement,
@@ -34,17 +34,17 @@ import {
 import { syncMovedIndices } from "../fractionalIndex";
 import { StoreAction } from "../store";
 
-
 export const actionDuplicateSelection = register({
   name: "duplicateSelection",
+  label: "labels.duplicateSelection",
+  icon: DuplicateIcon,
   trackEvent: { category: "element" },
   perform: (elements, appState, formData, app) => {
-    const elementsMap = app.scene.getNonDeletedElementsMap();
     // duplicate selected point(s) if editing a line
     if (appState.editingLinearElement) {
       const ret = LinearElementEditor.duplicateSelectedPoints(
         appState,
-        elementsMap,
+        app.scene.getNonDeletedElementsMap(),
       );
 
       if (!ret) {
@@ -63,7 +63,6 @@ export const actionDuplicateSelection = register({
       storeAction: StoreAction.CAPTURE,
     };
   },
-  contextItemLabel: "labels.duplicateSelection",
   keyTest: (event) => event[KEYS.CTRL_OR_CMD] && event.key === KEYS.D,
   PanelComponent: ({ elements, appState, updateData }) => (
     <ToolButton
@@ -100,8 +99,8 @@ const duplicateElements = (
       groupIdMap,
       element,
       {
-        x: element.x + GRID_SIZE / 2,
-        y: element.y + GRID_SIZE / 2,
+        x: element.x + DEFAULT_GRID_SIZE / 2,
+        y: element.y + DEFAULT_GRID_SIZE / 2,
       },
     );
     duplicatedElementsMap.set(newElement.id, newElement);

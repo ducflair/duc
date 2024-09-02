@@ -11,6 +11,8 @@ import { register } from "./register";
 
 export const actionLink = register({
   name: "hyperlink",
+  label: (elements, appState) => getContextMenuLabel(elements, appState),
+  icon: LinkIcon,
   perform: (elements, appState) => {
     if (appState.showHyperlinkPopup === "editor") {
       return false;
@@ -28,8 +30,6 @@ export const actionLink = register({
   },
   trackEvent: { category: "hyperlink", action: "click" },
   keyTest: (event) => event[KEYS.CTRL_OR_CMD] && event.key === KEYS.K,
-  contextItemLabel: (elements, appState) =>
-    getContextMenuLabel(elements, appState),
   predicate: (elements, appState) => {
     const selectedElements = getSelectedElements(elements, appState);
     return selectedElements.length === 1;

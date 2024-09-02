@@ -751,16 +751,13 @@ export const isElementInFrame = (
   return false;
 };
 
-export const getFrameLikeTitle = (
-  element: DucFrameLikeElement,
-  frameIdx: number,
-) => {
+export const getFrameLikeTitle = (element: DucFrameLikeElement) => {
   // TODO name frames "AI" only if specific to AI frames
   return element.name === null
     ? isFrameElement(element)
-      ? element.label
-      : `AI ${element.label}`
-    : element.label;
+      ? "Frame"
+      : "AI Frame"
+    : element.name;
 };
 
 export const getElementsOverlappingFrame = (

@@ -188,7 +188,7 @@ export const newArrowElement = (
     endBinding: null,
     startArrowhead: opts.startArrowhead || null,
     endArrowhead: opts.endArrowhead || null,
-    // elbowed: opts.elbowed || false,
+    elbowed: opts.elbowed || false,
   };
 };
 
@@ -281,6 +281,7 @@ const getTextElementPositionOffsets = (
 export const newTextElement = (
   opts: {
     text: string;
+    originalText?: string;
     fontSize?: number;
     fontFamily?: FontFamilyValues;
     textAlign?: TextAlign;
@@ -307,27 +308,31 @@ export const newTextElement = (
     metrics,
   );
 
-  const textElement = newElementWith(
-    {
-      ..._newElementBase<DucTextElement>("text", opts),
-      text,
-      fontSize,
-      fontFamily,
-      textAlign,
-      verticalAlign,
-      x: opts.x - offsets.x,
-      y: opts.y - offsets.y,
-      width: metrics.width,
-      height: metrics.height,
-      containerId: opts.containerId || null,
-      autoResize: opts.autoResize ?? true,
-      originalText: text,
-      lineHeight,
-    },
+  const textElementProps: DucTextElement = {
+    ..._newElementBase<DucTextElement>("text", opts),
+    text,
+    fontSize,
+    fontFamily,
+    textAlign,
+    verticalAlign,
+    x: opts.x - offsets.x,
+    y: opts.y - offsets.y,
+    width: metrics.width,
+    height: metrics.height,
+    containerId: opts.containerId || null,
+    originalText: opts.originalText ?? text,
+    autoResize: opts.autoResize ?? true,
+    lineHeight,
+  };
+
+  const textElement: DucTextElement = newElementWith(
+    textElementProps,
     {},
   );
+
   return textElement;
 };
+
 
 const getAdjustedDimensions = (
   element: DucTextElement,
@@ -429,11 +434,11 @@ export const updateTextElement = (
   {
     text,
     isDeleted,
-    originalText,
+    nextOriginalText: originalText,
   }: {
     text: string;
     isDeleted?: boolean;
-    originalText: string;
+    nextOriginalText: string;
   },
 ): DucTextElement => {
   return newElementWith(textElement, {
@@ -448,12 +453,13 @@ export const newFreeDrawElement = (
     type: "freedraw";
     points?: DucFreeDrawElement["points"];
     simulatePressure: boolean;
+    pressures?: DucFreeDrawElement["pressures"];
   } & ElementConstructorOpts,
 ): NonDeleted<DucFreeDrawElement> => {
   return {
     ..._newElementBase<DucFreeDrawElement>(opts.type, opts),
     points: opts.points || [],
-    pressures: [],
+    pressures: opts.pressures || [],
     simulatePressure: opts.simulatePressure,
     lastCommittedPoint: null,
   };
@@ -752,3 +758,4 @@ export const duplicateElements = (
 
   return clonedElements;
 };
+

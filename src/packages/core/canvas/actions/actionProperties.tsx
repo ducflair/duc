@@ -55,7 +55,7 @@ import {
   // elbowArrowIcon,
 } from "../components/icons";
 import {
-  // ARROW_TYPE,
+  ARROW_TYPE,
   DEFAULT_FONT_FAMILY,
   DEFAULT_FONT_SIZE,
   FONT_FAMILY,
@@ -73,7 +73,7 @@ import { getBoundTextElement } from "../element/textElement";
 import {
   isArrowElement,
   isBoundToContainer,
-  // isElbowArrow,
+  isElbowArrow,
   isLinearElement,
   isUsingAdaptiveRadius,
 } from "../element/typeChecks";
@@ -107,13 +107,13 @@ import {
 import { register } from "./register";
 import { StoreAction } from "../store";
 import { Fonts, getLineHeight } from "../fonts";
-// import {
-//   bindLinearElement,
-//   bindPointToSnapToElementOutline,
-//   calculateFixedPointForElbowArrowBinding,
-//   getHoveredElementForBinding,
-// } from "../element/binding";
-// import { mutateElbowArrow } from "../element/routing";
+import {
+  bindLinearElement,
+  bindPointToSnapToElementOutline,
+  calculateFixedPointForElbowArrowBinding,
+  getHoveredElementForBinding,
+} from "../element/binding";
+import { mutateElbowArrow } from "../element/routing";
 import { LinearElementEditor } from "../element/linearElementEditor";
 
 const FONT_SIZE_RELATIVE_INCREASE_STEP = 0.1;
@@ -964,7 +964,8 @@ export const actionChangeFontFamily = register({
 
     return result;
   },
-  // PanelComponent: ({ elements, appState, app, updateData }) => {
+  PanelComponent: ({ elements, appState, app, updateData }) => {
+    return null;
   //   const cachedElementsRef = useRef<Map<string, DucElement>>(new Map());
   //   const prevSelectedFontFamilyRef = useRef<number | null>(null);
   //   // relying on state batching as multiple `FontPicker` handlers could be called in rapid succession and we want to combine them
@@ -1136,7 +1137,7 @@ export const actionChangeFontFamily = register({
   //       />
   //     </fieldset>
   //   );
-  // },
+  },
 });
 
 export const actionChangeTextAlign = register({
@@ -1326,9 +1327,9 @@ export const actionChangeRoundness = register({
   perform: (elements, appState, value) => {
     return {
       elements: changeProperty(elements, appState, (el) => {
-        // if (isElbowArrow(el)) {
-        //   return el;
-        // }
+        if (isElbowArrow(el)) {
+          return el;
+        }
 
         return newElementWith(el, {
           roundness:
@@ -1545,218 +1546,218 @@ export const actionChangeArrowhead = register({
   },
 });
 
-// export const actionChangeArrowType = register({
-//   name: "changeArrowType",
-//   label: "Change arrow types",
-//   trackEvent: false,
-//   perform: (elements, appState, value, app) => {
-//     return {
-//       elements: changeProperty(elements, appState, (el) => {
-//         if (!isArrowElement(el)) {
-//           return el;
-//         }
-//         const newElement = newElementWith(el, {
-//           roundness:
-//             value === ARROW_TYPE.round
-//               ? {
-//                   type: ROUNDNESS.PROPORTIONAL_RADIUS,
-//                 }
-//               : null,
-//           // elbowed: value === ARROW_TYPE.elbow,
-//           points:
-//             value === ARROW_TYPE.elbow
-//               ? [el.points[0], el.points[el.points.length - 1]]
-//               : el.points,
-//         });
+export const actionChangeArrowType = register({
+  name: "changeArrowType",
+  label: "Change arrow types",
+  trackEvent: false,
+  perform: (elements, appState, value, app) => {
+    return {
+      elements: changeProperty(elements, appState, (el) => {
+        if (!isArrowElement(el)) {
+          return el;
+        }
+        const newElement = newElementWith(el, {
+          roundness:
+            value === ARROW_TYPE.round
+              ? {
+                  type: ROUNDNESS.PROPORTIONAL_RADIUS,
+                }
+              : null,
+          elbowed: value === ARROW_TYPE.elbow,
+          points:
+            value === ARROW_TYPE.elbow || el.elbowed
+              ? [el.points[0], el.points[el.points.length - 1]]
+              : el.points,
+        });
 
-//         // if (isElbowArrow(newElement)) {
-//         //   const elementsMap = app.scene.getNonDeletedElementsMap();
+        if (isElbowArrow(newElement)) {
+          const elementsMap = app.scene.getNonDeletedElementsMap();
 
-//         //   app.dismissLinearEditor();
+          app.dismissLinearEditor();
 
-//         //   const startGlobalPoint =
-//         //     LinearElementEditor.getPointAtIndexGlobalCoordinates(
-//         //       newElement,
-//         //       0,
-//         //       elementsMap,
-//         //     );
-//         //   const endGlobalPoint =
-//         //     LinearElementEditor.getPointAtIndexGlobalCoordinates(
-//         //       newElement,
-//         //       -1,
-//         //       elementsMap,
-//         //     );
-//         //   const startHoveredElement =
-//         //     !newElement.startBinding &&
-//         //     getHoveredElementForBinding(
-//         //       tupleToCoors(startGlobalPoint),
-//         //       elements,
-//         //       elementsMap,
-//         //       true,
-//         //     );
-//         //   const endHoveredElement =
-//         //     !newElement.endBinding &&
-//         //     getHoveredElementForBinding(
-//         //       tupleToCoors(endGlobalPoint),
-//         //       elements,
-//         //       elementsMap,
-//         //       true,
-//         //     );
-//         //   const startElement = startHoveredElement
-//         //     ? startHoveredElement
-//         //     : newElement.startBinding &&
-//         //       (elementsMap.get(
-//         //         newElement.startBinding.elementId,
-//         //       ) as DucBindableElement);
-//         //   const endElement = endHoveredElement
-//         //     ? endHoveredElement
-//         //     : newElement.endBinding &&
-//         //       (elementsMap.get(
-//         //         newElement.endBinding.elementId,
-//         //       ) as DucBindableElement);
+          const startGlobalPoint =
+            LinearElementEditor.getPointAtIndexGlobalCoordinates(
+              newElement,
+              0,
+              elementsMap,
+            );
+          const endGlobalPoint =
+            LinearElementEditor.getPointAtIndexGlobalCoordinates(
+              newElement,
+              -1,
+              elementsMap,
+            );
+          const startHoveredElement =
+            !newElement.startBinding &&
+            getHoveredElementForBinding(
+              tupleToCoors(startGlobalPoint),
+              elements,
+              elementsMap,
+              true,
+            );
+          const endHoveredElement =
+            !newElement.endBinding &&
+            getHoveredElementForBinding(
+              tupleToCoors(endGlobalPoint),
+              elements,
+              elementsMap,
+              true,
+            );
+          const startElement = startHoveredElement
+            ? startHoveredElement
+            : newElement.startBinding &&
+              (elementsMap.get(
+                newElement.startBinding.elementId,
+              ) as DucBindableElement);
+          const endElement = endHoveredElement
+            ? endHoveredElement
+            : newElement.endBinding &&
+              (elementsMap.get(
+                newElement.endBinding.elementId,
+              ) as DucBindableElement);
 
-//         //   const finalStartPoint = startHoveredElement
-//         //     ? bindPointToSnapToElementOutline(
-//         //         startGlobalPoint,
-//         //         endGlobalPoint,
-//         //         startHoveredElement,
-//         //         elementsMap,
-//         //       )
-//         //     : startGlobalPoint;
-//         //   const finalEndPoint = endHoveredElement
-//         //     ? bindPointToSnapToElementOutline(
-//         //         endGlobalPoint,
-//         //         startGlobalPoint,
-//         //         endHoveredElement,
-//         //         elementsMap,
-//         //       )
-//         //     : endGlobalPoint;
+          const finalStartPoint = startHoveredElement
+            ? bindPointToSnapToElementOutline(
+                startGlobalPoint,
+                endGlobalPoint,
+                startHoveredElement,
+                elementsMap,
+              )
+            : startGlobalPoint;
+          const finalEndPoint = endHoveredElement
+            ? bindPointToSnapToElementOutline(
+                endGlobalPoint,
+                startGlobalPoint,
+                endHoveredElement,
+                elementsMap,
+              )
+            : endGlobalPoint;
 
-//         //   startHoveredElement &&
-//         //     bindLinearElement(
-//         //       newElement,
-//         //       startHoveredElement,
-//         //       "start",
-//         //       elementsMap,
-//         //     );
-//         //   endHoveredElement &&
-//         //     bindLinearElement(
-//         //       newElement,
-//         //       endHoveredElement,
-//         //       "end",
-//         //       elementsMap,
-//         //     );
+          startHoveredElement &&
+            bindLinearElement(
+              newElement,
+              startHoveredElement,
+              "start",
+              elementsMap,
+            );
+          endHoveredElement &&
+            bindLinearElement(
+              newElement,
+              endHoveredElement,
+              "end",
+              elementsMap,
+            );
 
-//         //   mutateElbowArrow(
-//         //     newElement,
-//         //     elementsMap,
-//         //     [finalStartPoint, finalEndPoint].map(
-//         //       (point) =>
-//         //         [point[0] - newElement.x, point[1] - newElement.y] as Point,
-//         //     ),
-//         //     [0, 0],
-//         //     {
-//         //       ...(startElement && newElement.startBinding
-//         //         ? {
-//         //             startBinding: {
-//         //               // @ts-ignore TS cannot discern check above
-//         //               ...newElement.startBinding!,
-//         //               ...calculateFixedPointForElbowArrowBinding(
-//         //                 newElement,
-//         //                 startElement,
-//         //                 "start",
-//         //                 elementsMap,
-//         //               ),
-//         //             },
-//         //           }
-//         //         : {}),
-//         //       ...(endElement && newElement.endBinding
-//         //         ? {
-//         //             endBinding: {
-//         //               // @ts-ignore TS cannot discern check above
-//         //               ...newElement.endBinding,
-//         //               ...calculateFixedPointForElbowArrowBinding(
-//         //                 newElement,
-//         //                 endElement,
-//         //                 "end",
-//         //                 elementsMap,
-//         //               ),
-//         //             },
-//         //           }
-//         //         : {}),
-//         //     },
-//         //   );
-//         // } else {
-//           mutateElement(
-//             newElement,
-//             {
-//               startBinding: newElement.startBinding
-//                 ? { ...newElement.startBinding }
-//                 : null,
-//               endBinding: newElement.endBinding
-//                 ? { ...newElement.endBinding }
-//                 : null,
-//             },
-//             false,
-//           );
-//         // }
+          mutateElbowArrow(
+            newElement,
+            elementsMap,
+            [finalStartPoint, finalEndPoint].map(
+              (point) =>
+                [point[0] - newElement.x, point[1] - newElement.y] as Point,
+            ),
+            [0, 0],
+            {
+              ...(startElement && newElement.startBinding
+                ? {
+                    startBinding: {
+                      // @ts-ignore TS cannot discern check above
+                      ...newElement.startBinding!,
+                      ...calculateFixedPointForElbowArrowBinding(
+                        newElement,
+                        startElement,
+                        "start",
+                        elementsMap,
+                      ),
+                    },
+                  }
+                : {}),
+              ...(endElement && newElement.endBinding
+                ? {
+                    endBinding: {
+                      // @ts-ignore TS cannot discern check above
+                      ...newElement.endBinding,
+                      ...calculateFixedPointForElbowArrowBinding(
+                        newElement,
+                        endElement,
+                        "end",
+                        elementsMap,
+                      ),
+                    },
+                  }
+                : {}),
+            },
+          );
+        } else {
+          mutateElement(
+            newElement,
+            {
+              startBinding: newElement.startBinding
+                ? { ...newElement.startBinding, fixedPoint: null }
+                : null,
+              endBinding: newElement.endBinding
+                ? { ...newElement.endBinding, fixedPoint: null }
+                : null,
+            },
+            false,
+          );
+        }
 
-//         return newElement;
-//       }),
-//       appState: {
-//         ...appState,
-//         currentItemArrowType: value,
-//       },
-//       storeAction: StoreAction.CAPTURE,
-//     };
-//   },
-//   // PanelComponent: ({ elements, appState, updateData }) => {
-//   //   return (
-//   //     <fieldset>
-//   //       <legend>{t("labels.arrowtypes")}</legend>
-//   //       <ButtonIconSelect
-//   //         group="arrowtypes"
-//   //         options={[
-//   //           {
-//   //             value: ARROW_TYPE.sharp,
-//   //             text: t("labels.arrowtype_sharp"),
-//   //             icon: sharpArrowIcon,
-//   //             testId: "sharp-arrow",
-//   //           },
-//   //           {
-//   //             value: ARROW_TYPE.round,
-//   //             text: t("labels.arrowtype_round"),
-//   //             icon: roundArrowIcon,
-//   //             testId: "round-arrow",
-//   //           },
-//   //           {
-//   //             value: ARROW_TYPE.elbow,
-//   //             text: t("labels.arrowtype_elbowed"),
-//   //             icon: elbowArrowIcon,
-//   //             testId: "elbow-arrow",
-//   //           },
-//   //         ]}
-//   //         value={getFormValue(
-//   //           elements,
-//   //           appState,
-//   //           (element) => {
-//   //             if (isArrowElement(element)) {
-//   //               return element.elbowed
-//   //                 ? ARROW_TYPE.elbow
-//   //                 : element.roundness
-//   //                 ? ARROW_TYPE.round
-//   //                 : ARROW_TYPE.sharp;
-//   //             }
+        return newElement;
+      }),
+      appState: {
+        ...appState,
+        currentItemArrowType: value,
+      },
+      storeAction: StoreAction.CAPTURE,
+    };
+  },
+  // PanelComponent: ({ elements, appState, updateData }) => {
+  //   return (
+  //     <fieldset>
+  //       <legend>{t("labels.arrowtypes")}</legend>
+  //       <ButtonIconSelect
+  //         group="arrowtypes"
+  //         options={[
+  //           {
+  //             value: ARROW_TYPE.sharp,
+  //             text: t("labels.arrowtype_sharp"),
+  //             icon: sharpArrowIcon,
+  //             testId: "sharp-arrow",
+  //           },
+  //           {
+  //             value: ARROW_TYPE.round,
+  //             text: t("labels.arrowtype_round"),
+  //             icon: roundArrowIcon,
+  //             testId: "round-arrow",
+  //           },
+  //           {
+  //             value: ARROW_TYPE.elbow,
+  //             text: t("labels.arrowtype_elbowed"),
+  //             icon: elbowArrowIcon,
+  //             testId: "elbow-arrow",
+  //           },
+  //         ]}
+  //         value={getFormValue(
+  //           elements,
+  //           appState,
+  //           (element) => {
+  //             if (isArrowElement(element)) {
+  //               return element.elbowed
+  //                 ? ARROW_TYPE.elbow
+  //                 : element.roundness
+  //                 ? ARROW_TYPE.round
+  //                 : ARROW_TYPE.sharp;
+  //             }
 
-//   //             return null;
-//   //           },
-//   //           (element) => isArrowElement(element),
-//   //           (hasSelection) =>
-//   //             hasSelection ? null : appState.currentItemArrowType,
-//   //         )}
-//   //         onChange={(value) => updateData(value)}
-//   //       />
-//   //     </fieldset>
-//   //   );
-//   // },
-// });
+  //             return null;
+  //           },
+  //           (element) => isArrowElement(element),
+  //           (hasSelection) =>
+  //             hasSelection ? null : appState.currentItemArrowType,
+  //         )}
+  //         onChange={(value) => updateData(value)}
+  //       />
+  //     </fieldset>
+  //   );
+  // },
+});

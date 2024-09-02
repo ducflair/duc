@@ -1,4 +1,4 @@
-import { AppState, ExcalidrawProps, Point } from "../../types";
+import type { AppState, ExcalidrawProps, Point, UIAppState } from "../../types";
 import {
   sceneCoordsToViewportCoords,
   viewportCoordsToSceneCoords,
@@ -6,7 +6,7 @@ import {
 } from "../../utils";
 import { getEmbedLink, embeddableURLValidator } from "../../element/embeddable";
 import { mutateElement } from "../../element/mutateElement";
-import {
+import type {
   ElementsMap,
   DucEmbeddableElement,
   NonDeletedDucElement,
@@ -26,8 +26,9 @@ import clsx from "clsx";
 import { KEYS } from "../../keys";
 import { EVENT, HYPERLINK_TOOLTIP_DELAY } from "../../constants";
 import { getElementAbsoluteCoords } from "../../element/bounds";
-import { getTooltipDiv, updateTooltipPosition } from "../Tooltip";
+import { getTooltipDiv, updateTooltipPosition } from "../../components/Tooltip";
 import { getSelectedElements } from "../../scene";
+import { hitElementBoundingBox } from "../../element/collision";
 import { isLocalLink, normalizeLink } from "../../data/url";
 
 import "./Hyperlink.scss";
@@ -35,7 +36,6 @@ import { trackEvent } from "../../analytics";
 import { useAppProps, useExcalidrawAppState } from "../App";
 import { isEmbeddableElement } from "../../element/typeChecks";
 import { getLinkHandleFromCoords } from "./helpers";
-import { hitElementBoundingBox } from "../../element/collision";
 
 const CONTAINER_WIDTH = 320;
 const SPACE_BOTTOM = 85;
@@ -211,7 +211,7 @@ export const Hyperlink = ({
   const { x, y } = getCoordsForPopover(element, appState, elementsMap);
   if (
     appState.contextMenu ||
-    appState.draggingElement ||
+    appState.selectedElementsAreBeingDragged ||
     appState.resizingElement ||
     appState.isRotating ||
     appState.openMenu ||
@@ -332,10 +332,10 @@ const getCoordsForPopover = (
 
 export const getContextMenuLabel = (
   elements: readonly NonDeletedDucElement[],
-  appState: AppState,
+  appState: UIAppState,
 ) => {
   const selectedElements = getSelectedElements(elements, appState);
-  const label = selectedElements[0]!.link
+  const label = selectedElements[0]?.link
     ? isEmbeddableElement(selectedElements[0])
       ? "labels.link.editEmbed"
       : "labels.link.edit"
@@ -425,9 +425,7 @@ const shouldHideLinkPopup = (
 
   const threshold = 15 / appState.zoom.value;
   // hitbox to prevent hiding when hovered in element bounding box
-  if (
-    hitElementBoundingBox(sceneX, sceneY, element, elementsMap)
-  ) {
+  if (hitElementBoundingBox(sceneX, sceneY, element, elementsMap)) {
     return false;
   }
   const [x1, y1, x2] = getElementAbsoluteCoords(element, elementsMap);
