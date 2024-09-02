@@ -22,7 +22,7 @@ import { getElementAbsoluteCoords } from "./element";
 import { shouldTestInside } from "./element/collision";
 import { LinearElementEditor } from "./element/linearElementEditor";
 import { getBoundTextElement } from "./element/textElement";
-import type { ElementsMap, DucElement } from "./element/types";
+import type { ElementsMap, DucElement, DucRectangleElement } from "./element/types";
 import { KEYS } from "./keys";
 import { ShapeCache } from "./scene/ShapeCache";
 
@@ -128,6 +128,7 @@ export const getElementShape = (
     case "embeddable":
     case "image":
     case "iframe":
+    case "group":
     case "text":
     case "selection":
       return getPolygonShape(element);
@@ -151,7 +152,6 @@ export const getElementShape = (
             cy,
           ]);
     }
-
     case "ellipse":
       return getEllipseShape(element);
 
@@ -159,9 +159,8 @@ export const getElementShape = (
       const [, , , , cx, cy] = getElementAbsoluteCoords(element, elementsMap);
       return getFreedrawShape(element, [cx, cy], shouldTestInside(element));
     }
-
-    default:
-      throw new Error(`Unsupported element type: ${element.type}`);
+    // default:
+      // return getPolygonShape(element); // or some other default shape
   }
 };
 

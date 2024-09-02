@@ -117,7 +117,7 @@ export class Fonts {
     }
 
     if (didUpdate) {
-      this.scene.informMutation();
+      this.scene.triggerUpdate();
     }
   };
 

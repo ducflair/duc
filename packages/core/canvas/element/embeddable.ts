@@ -1,19 +1,19 @@
 import { register } from "../actions/register";
 import { FONT_FAMILY, VERTICAL_ALIGN } from "../constants";
-import { ExcalidrawProps } from "../types";
+import type { ExcalidrawProps } from "../types";
 import { getFontString, updateActiveTool } from "../utils";
 import { setCursorForShape } from "../cursor";
 import { newTextElement } from "./newElement";
 import { wrapText } from "./textElement";
 import { isIframeElement } from "./typeChecks";
-import {
+import type {
   DucElement,
   DucIframeLikeElement,
   IframeData,
 } from "./types";
-import { MarkRequired } from "../utility-types";
-import { StoreAction } from "../store";
 import { sanitizeHTMLAttribute } from "../data/url";
+import type { MarkRequired } from "../utility-types";
+import { StoreAction } from "../store";
 
 type IframeDataWithSandbox = MarkRequired<IframeData, "sandbox">;
 

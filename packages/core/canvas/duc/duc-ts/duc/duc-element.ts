@@ -335,66 +335,71 @@ endArrowhead(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-pressures(index: number):number|null {
+elbowed():boolean {
   const offset = this.bb!.__offset(this.bb_pos, 102);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
+pressures(index: number):number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 104);
   return offset ? this.bb!.readFloat32(this.bb!.__vector(this.bb_pos + offset) + index * 4) : 0;
 }
 
 pressuresLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 102);
+  const offset = this.bb!.__offset(this.bb_pos, 104);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 pressuresArray():Float32Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 102);
+  const offset = this.bb!.__offset(this.bb_pos, 104);
   return offset ? new Float32Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
 }
 
 simulatePressure():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 104);
+  const offset = this.bb!.__offset(this.bb_pos, 106);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 fileId():string|null
 fileId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 fileId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 106);
+  const offset = this.bb!.__offset(this.bb_pos, 108);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 status():string|null
 status(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 status(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 108);
+  const offset = this.bb!.__offset(this.bb_pos, 110);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 scale(obj?:Point):Point|null {
-  const offset = this.bb!.__offset(this.bb_pos, 110);
+  const offset = this.bb!.__offset(this.bb_pos, 112);
   return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 isCollapsed():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 112);
+  const offset = this.bb!.__offset(this.bb_pos, 114);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 name():string|null
 name(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 name(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 114);
+  const offset = this.bb!.__offset(this.bb_pos, 116);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 groupIdRef():string|null
 groupIdRef(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 groupIdRef(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 116);
+  const offset = this.bb!.__offset(this.bb_pos, 118);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 static startDucElement(builder:flatbuffers.Builder) {
-  builder.startObject(57);
+  builder.startObject(58);
 }
 
 static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
@@ -629,8 +634,12 @@ static addEndArrowhead(builder:flatbuffers.Builder, endArrowheadOffset:flatbuffe
   builder.addFieldOffset(48, endArrowheadOffset, 0);
 }
 
+static addElbowed(builder:flatbuffers.Builder, elbowed:boolean) {
+  builder.addFieldInt8(49, +elbowed, +false);
+}
+
 static addPressures(builder:flatbuffers.Builder, pressuresOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(49, pressuresOffset, 0);
+  builder.addFieldOffset(50, pressuresOffset, 0);
 }
 
 static createPressuresVector(builder:flatbuffers.Builder, data:number[]|Float32Array):flatbuffers.Offset;
@@ -651,31 +660,31 @@ static startPressuresVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addSimulatePressure(builder:flatbuffers.Builder, simulatePressure:boolean) {
-  builder.addFieldInt8(50, +simulatePressure, +false);
+  builder.addFieldInt8(51, +simulatePressure, +false);
 }
 
 static addFileId(builder:flatbuffers.Builder, fileIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(51, fileIdOffset, 0);
+  builder.addFieldOffset(52, fileIdOffset, 0);
 }
 
 static addStatus(builder:flatbuffers.Builder, statusOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(52, statusOffset, 0);
+  builder.addFieldOffset(53, statusOffset, 0);
 }
 
 static addScale(builder:flatbuffers.Builder, scaleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(53, scaleOffset, 0);
+  builder.addFieldOffset(54, scaleOffset, 0);
 }
 
 static addIsCollapsed(builder:flatbuffers.Builder, isCollapsed:boolean) {
-  builder.addFieldInt8(54, +isCollapsed, +false);
+  builder.addFieldInt8(55, +isCollapsed, +false);
 }
 
 static addName(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(55, nameOffset, 0);
+  builder.addFieldOffset(56, nameOffset, 0);
 }
 
 static addGroupIdRef(builder:flatbuffers.Builder, groupIdRefOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(56, groupIdRefOffset, 0);
+  builder.addFieldOffset(57, groupIdRefOffset, 0);
 }
 
 static endDucElement(builder:flatbuffers.Builder):flatbuffers.Offset {

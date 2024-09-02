@@ -1,11 +1,13 @@
 import { COLOR_PALETTE } from "./colors";
 import {
+  ARROW_TYPE,
   DEFAULT_ELEMENT_PROPS,
   DEFAULT_FONT_FAMILY,
   DEFAULT_FONT_SIZE,
+  DEFAULT_GRID_SIZE,
+  DEFAULT_GRID_STEP,
   DEFAULT_TEXT_ALIGN,
   EXPORT_SCALES,
-  GRID_SIZE,
   THEME,
 } from "./constants";
 import { AppState, NormalizedZoomValue } from "./types";
@@ -40,6 +42,7 @@ export const getDefaultAppState = (): Omit<
     currentItemStrokeStyle: DEFAULT_ELEMENT_PROPS.strokeStyle,
     currentItemStrokeWidth: DEFAULT_ELEMENT_PROPS.strokeWidth,
     currentItemTextAlign: DEFAULT_TEXT_ALIGN,
+    currentItemArrowType: ARROW_TYPE.round,
     cursorButton: "up",
     activeEmbeddable: null,
     newElement: null,
@@ -62,7 +65,9 @@ export const getDefaultAppState = (): Omit<
     exportEmbedScene: false,
     exportWithDarkMode: false,
     fileHandle: null,
-    gridSize: GRID_SIZE,
+    gridSize: DEFAULT_GRID_SIZE,
+    gridStep: DEFAULT_GRID_STEP,
+    gridModeEnabled: false,
     isBindingEnabled: true,
     defaultSidebarDockedPreference: false,
     isLoading: false,
@@ -150,6 +155,11 @@ const APP_STATE_STORAGE_CONF = (<
     export: false,
     server: false,
   },
+  currentItemArrowType: {
+    browser: true,
+    export: false,
+    server: false,
+  },
   currentItemOpacity: { browser: true, export: false, server: false },
   currentItemRoughness: { browser: true, export: false, server: false },
   currentItemStartArrowhead: { browser: true, export: false, server: false },
@@ -175,6 +185,8 @@ const APP_STATE_STORAGE_CONF = (<
   exportWithDarkMode: { browser: true, export: false, server: false },
   fileHandle: { browser: false, export: false, server: false },
   gridSize: { browser: true, export: true, server: true },
+  gridStep: { browser: true, export: true, server: true },
+  gridModeEnabled: { browser: true, export: true, server: true },
   height: { browser: false, export: false, server: false },
   isBindingEnabled: { browser: false, export: false, server: false },
   defaultSidebarDockedPreference: {

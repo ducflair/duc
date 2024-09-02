@@ -98,7 +98,7 @@ export const mutateElement = <TElement extends Mutable<DucElement>>(
   element.updated = getUpdatedTimestamp();
 
   if (informMutation) {
-    Scene.getScene(element)?.informMutation();
+    Scene.getScene(element)?.triggerUpdate();
   }
 
   return element;
