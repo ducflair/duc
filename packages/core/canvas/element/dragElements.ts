@@ -1,26 +1,57 @@
 import { updateBoundElements } from "./binding";
-import { Bounds, getCommonBounds } from "./bounds";
+import type { Bounds } from "./bounds";
+import { getCommonBounds } from "./bounds";
 import { mutateElement } from "./mutateElement";
 import { getPerfectElementSize } from "./sizeHelpers";
-import { NonDeletedDucElement } from "./types";
-import { AppState, NullableGridSize, PointerDownState } from "../types";
-import { getBoundTextElement } from "./textElement";
+import type { NonDeletedDucElement } from "./types";
+import type {
+  AppState,
+  NormalizedZoomValue,
+  NullableGridSize,
+  PointerDownState,
+} from "../types";
+import { getBoundTextElement, getMinTextElementWidth } from "./textElement";
 import { getGridPoint } from "../math";
-import Scene from "../scene/Scene";
-import { isArrowElement, isFrameLikeElement } from "./typeChecks";
+import type Scene from "../scene/Scene";
+import {
+  isArrowElement,
+  isElbowArrow,
+  isFrameLikeElement,
+  isTextElement,
+} from "./typeChecks";
+import { getFontString } from "../utils";
+import { TEXT_AUTOWRAP_THRESHOLD } from "../constants";
 
 export const dragSelectedElements = (
   pointerDownState: PointerDownState,
-  selectedElements: NonDeletedDucElement[],
+  _selectedElements: NonDeletedDucElement[],
   offset: { x: number; y: number },
-  appState: AppState,
   scene: Scene,
   snapOffset: {
     x: number;
     y: number;
   },
-  gridSize: AppState["gridSize"],
+  gridSize: NullableGridSize,
 ) => {
+  if (
+    _selectedElements.length === 1 &&
+    isArrowElement(_selectedElements[0]) &&
+    isElbowArrow(_selectedElements[0]) &&
+    (_selectedElements[0].startBinding || _selectedElements[0].endBinding)
+  ) {
+    return;
+  }
+
+  const selectedElements = _selectedElements.filter(
+    (el) =>
+      !(
+        isArrowElement(el) &&
+        isElbowArrow(el) &&
+        el.startBinding &&
+        el.endBinding
+      ),
+  );
+
   // we do not want a frame and its elements to be selected at the same time
   // but when it happens (due to some bug), we want to avoid updating element
   // in the frame twice, hence the use of set
@@ -75,7 +106,7 @@ const calculateOffset = (
   commonBounds: Bounds,
   dragOffset: { x: number; y: number },
   snapOffset: { x: number; y: number },
-  gridSize: AppState["gridSize"],
+  gridSize: NullableGridSize,
 ): { x: number; y: number } => {
   const [x, y] = commonBounds;
   let nextX = x + dragOffset.x + snapOffset.x;
@@ -85,7 +116,7 @@ const calculateOffset = (
     const [nextGridX, nextGridY] = getGridPoint(
       x + dragOffset.x,
       y + dragOffset.y,
-      gridSize as NullableGridSize,
+      gridSize,
     );
 
     if (snapOffset.x === 0) {
@@ -128,26 +159,43 @@ export const getDragOffsetXY = (
   return [x - x1, y - y1];
 };
 
-export const dragNewElement = (
-  draggingElement: NonDeletedDucElement,
-  elementType: AppState["activeTool"]["type"],
-  originX: number,
-  originY: number,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  shouldMaintainAspectRatio: boolean,
-  shouldResizeFromCenter: boolean,
+export const dragNewElement = ({
+  newElement,
+  elementType,
+  originX,
+  originY,
+  x,
+  y,
+  width,
+  height,
+  shouldMaintainAspectRatio,
+  shouldResizeFromCenter,
+  zoom,
+  widthAspectRatio = null,
+  originOffset = null,
+  informMutation = true,
+}: {
+  newElement: NonDeletedDucElement;
+  elementType: AppState["activeTool"]["type"];
+  originX: number;
+  originY: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  shouldMaintainAspectRatio: boolean;
+  shouldResizeFromCenter: boolean;
+  zoom: NormalizedZoomValue;
   /** whether to keep given aspect ratio when `isResizeWithSidesSameLength` is
       true */
-  widthAspectRatio?: number | null,
-  originOffset: {
+  widthAspectRatio?: number | null;
+  originOffset?: {
     x: number;
     y: number;
-  } | null = null,
-) => {
-  if (shouldMaintainAspectRatio && draggingElement.type !== "selection") {
+  } | null;
+  informMutation?: boolean;
+}) => {
+  if (shouldMaintainAspectRatio && newElement.type !== "selection") {
     if (widthAspectRatio) {
       height = width / widthAspectRatio;
     } else {
@@ -184,12 +232,42 @@ export const dragNewElement = (
     newY = originY - height / 2;
   }
 
+  let textAutoResize = null;
+
+  if (isTextElement(newElement)) {
+    height = newElement.height;
+    const minWidth = getMinTextElementWidth(
+      getFontString({
+        fontSize: newElement.fontSize,
+        fontFamily: newElement.fontFamily,
+      }),
+      newElement.lineHeight,
+    );
+    width = Math.max(width, minWidth);
+
+    if (Math.abs(x - originX) > TEXT_AUTOWRAP_THRESHOLD / zoom) {
+      textAutoResize = {
+        autoResize: false,
+      };
+    }
+
+    newY = originY;
+    if (shouldResizeFromCenter) {
+      newX = originX - width / 2;
+    }
+  }
+
   if (width !== 0 && height !== 0) {
-    mutateElement(draggingElement, {
-      x: newX + (originOffset?.x ?? 0),
-      y: newY + (originOffset?.y ?? 0),
-      width,
-      height,
-    });
+    mutateElement(
+      newElement,
+      {
+        x: newX + (originOffset?.x ?? 0),
+        y: newY + (originOffset?.y ?? 0),
+        width,
+        height,
+        ...textAutoResize,
+      },
+      informMutation,
+    );
   }
 };

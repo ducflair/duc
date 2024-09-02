@@ -12,6 +12,7 @@
  * to pure shapes
  */
 
+import { DucGroup } from "../../canvas/duc/duc-ts/duc";
 import { getElementAbsoluteCoords } from "../../canvas/element";
 import type {
   ElementsMap,
@@ -26,6 +27,7 @@ import type {
   DucLinearElement,
   DucRectangleElement,
   DucSelectionElement,
+  DucGroupElement,
   DucTextElement,
 } from "../../canvas/element/types";
 import { angleToDegrees, close, pointAdd, pointRotate } from "./geometry";
@@ -89,7 +91,8 @@ export type GeometricShape =
   | {
       type: "polycurve";
       data: Polycurve;
-    };
+};
+
 
 type RectangularElement =
   | DucRectangleElement
@@ -99,7 +102,8 @@ type RectangularElement =
   | DucImageElement
   | DucIframeElement
   | DucTextElement
-  | DucSelectionElement;
+  | DucSelectionElement
+  | DucGroupElement;
 
 // polygon
 export const getPolygonShape = (

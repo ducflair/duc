@@ -1,11 +1,11 @@
 // -----------------------------------------------------------------------------
-// ExcalidrawImageElement & related helpers
+// DucImageElement & related helpers
 // -----------------------------------------------------------------------------
 
 import { MIME_TYPES, SVG_NS } from "../constants";
-import { AppClassProperties, DataURL, BinaryFiles } from "../types";
+import type { AppClassProperties, DataURL, BinaryFiles } from "../types";
 import { isInitializedImageElement } from "./typeChecks";
-import {
+import type {
   DucElement,
   FileId,
   InitializedDucImageElement,

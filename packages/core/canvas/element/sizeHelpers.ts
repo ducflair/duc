@@ -3,7 +3,7 @@ import { mutateElement } from "./mutateElement";
 import { isFreeDrawElement, isLinearElement } from "./typeChecks";
 import { SHIFT_LOCKING_ANGLE } from "../constants";
 import { AppState, Zoom } from "../types";
-import { getElementBounds } from "./bounds";
+import { getCommonBounds, getElementBounds } from "./bounds";
 import { viewportCoordsToSceneCoords } from "../utils";
 
 export const isInvisiblySmallElement = (
@@ -157,6 +157,49 @@ export const resizePerfectLineForNWHandler = (
       height: nextHeight,
     });
   }
+};
+
+export const isElementCompletelyInViewport = (
+  elements: DucElement[],
+  width: number,
+  height: number,
+  viewTransformations: {
+    zoom: Zoom;
+    offsetLeft: number;
+    offsetTop: number;
+    scrollX: number;
+    scrollY: number;
+  },
+  elementsMap: ElementsMap,
+  padding?: Partial<{
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  }>,
+) => {
+  const [x1, y1, x2, y2] = getCommonBounds(elements, elementsMap); // scene coordinates
+  const topLeftSceneCoords = viewportCoordsToSceneCoords(
+    {
+      clientX: viewTransformations.offsetLeft + (padding?.left || 0),
+      clientY: viewTransformations.offsetTop + (padding?.top || 0),
+    },
+    viewTransformations,
+  );
+  const bottomRightSceneCoords = viewportCoordsToSceneCoords(
+    {
+      clientX: viewTransformations.offsetLeft + width - (padding?.right || 0),
+      clientY: viewTransformations.offsetTop + height - (padding?.bottom || 0),
+    },
+    viewTransformations,
+  );
+
+  return (
+    x1 >= topLeftSceneCoords.x &&
+    y1 >= topLeftSceneCoords.y &&
+    x2 <= bottomRightSceneCoords.x &&
+    y2 <= bottomRightSceneCoords.y
+  );
 };
 
 export const getNormalizedDimensions = (

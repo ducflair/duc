@@ -49,6 +49,7 @@ export type Point = Readonly<RoughPoint>;
 
 export type SocketId = string & { _brand: "SocketId" };
 
+
 export type Collaborator = Readonly<{
   pointer?: CollaboratorPointer;
   button?: "up" | "down";
@@ -66,12 +67,28 @@ export type Collaborator = Readonly<{
   id?: string;
   socketId?: SocketId;
   isCurrentUser?: boolean;
+  isInCall?: boolean;
+  isSpeaking?: boolean;
+  isMuted?: boolean;
 }>;
 
 export type CollaboratorPointer = {
   x: number;
   y: number;
   tool: "pointer" | "laser";
+  /**
+   * Whether to render cursor + username. Useful when you only want to render
+   * laser trail.
+   *
+   * @default true
+   */
+  renderCursor?: boolean;
+  /**
+   * Explicit laser color.
+   *
+   * @default string collaborator's cursor color
+   */
+  laserColor?: string;
 };
 
 export type DataURL = string & { _brand: "DataURL" };
@@ -184,6 +201,7 @@ export type StaticCanvasAppState = Readonly<
     exportScale: AppState["exportScale"];
     selectedElementsAreBeingDragged: AppState["selectedElementsAreBeingDragged"];
     gridSize: AppState["gridSize"];
+    gridStep: AppState["gridStep"];
     frameRendering: AppState["frameRendering"];
     currentHoveredFontFamily: AppState["currentHoveredFontFamily"];
   }
@@ -289,6 +307,7 @@ export interface AppState {
   currentItemTextAlign: TextAlign;
   currentItemStartArrowhead: Arrowhead | null;
   currentItemEndArrowhead: Arrowhead | null;
+  currentItemArrowType: "sharp" | "round" | "elbow";
   currentItemRoundness: StrokeRoundness;
   viewBackgroundColor: string;
   scope: SupportedMeasures,
@@ -334,7 +353,10 @@ export interface AppState {
   toast: { message: string; closable?: boolean; duration?: number } | null; // Out of the Binary
   zenModeEnabled: boolean;
   theme: Theme; // Out of the Binary
-  gridSize: number | null;
+  /** grid cell px size */
+  gridSize: number;
+  gridStep: number;
+  gridModeEnabled: boolean;
   viewModeEnabled: boolean;
 
   /** top-most selected groups (i.e. does not include nested groups) */
@@ -453,7 +475,9 @@ export interface ExcalidrawProps {
     appState: AppState,
     files: BinaryFiles,
   ) => void;
-  initialData?: MaybePromise<ExcalidrawInitialDataState | null>;
+  initialData?:
+  | (() => MaybePromise<ExcalidrawInitialDataState | null>)
+  | MaybePromise<ExcalidrawInitialDataState | null>;
   ducAPI?: (api: DucImperativeAPI) => void;
   isCollaborating?: boolean;
   onPointerUpdate?: (payload: {
@@ -516,6 +540,7 @@ export interface ExcalidrawProps {
     appState: AppState,
   ) => JSX.Element | null;
   aiEnabled?: boolean;
+  showDeprecatedFonts?: boolean;
 }
 
 export type SceneData = {
@@ -625,9 +650,9 @@ export type AppClassProperties = {
   insertEmbeddableElement: App["insertEmbeddableElement"];
   onMagicframeToolSelect: App["onMagicframeToolSelect"];
   getName: App["getName"];
-  // dismissLinearEditor: App["dismissLinearEditor"];
-  // flowChartCreator: App["flowChartCreator"];
-  // getEffectiveGridSize: App["getEffectiveGridSize"];
+  dismissLinearEditor: App["dismissLinearEditor"];
+  flowChartCreator: App["flowChartCreator"];
+  getEffectiveGridSize: App["getEffectiveGridSize"];
   // setPlugins: App["setPlugins"];
   // plugins: App["plugins"];
 };
@@ -844,3 +869,8 @@ export type ElementsPendingErasure = Set<DucElement["id"]>;
 export type NullableGridSize =
   | (AppState["gridSize"] & MakeBrand<"NullableGridSize">)
   | null;
+
+
+export type PendingDucElements = DucElement[];
+
+

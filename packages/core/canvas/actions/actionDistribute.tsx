@@ -3,16 +3,17 @@ import {
   DistributeVerticallyIcon,
 } from "../components/icons";
 import { ToolButton } from "../components/ToolButton";
-import { distributeElements, Distribution } from "../distribute";
+import type { Distribution } from "../distribute";
+import { distributeElements } from "../distribute";
 import { getNonDeletedElements } from "../element";
 import { isFrameLikeElement } from "../element/typeChecks";
-import { DucElement } from "../element/types";
+import type { DucElement } from "../element/types";
 import { updateFrameMembershipOfSelectedElements } from "../frame";
 import { t } from "../i18n";
 import { CODES, KEYS } from "../keys";
 import { isSomeElementSelected } from "../scene";
 import { StoreAction } from "../store";
-import { AppClassProperties, AppState } from "../types";
+import type { AppClassProperties, AppState } from "../types";
 import { arrayToMap, getShortcutKey } from "../utils";
 import { register } from "./register";
 
@@ -50,6 +51,7 @@ const distributeSelectedElements = (
 
 export const distributeHorizontally = register({
   name: "distributeHorizontally",
+  label: "labels.distributeHorizontally",
   trackEvent: { category: "element" },
   perform: (elements, appState, _, app) => {
     return {
@@ -80,6 +82,7 @@ export const distributeHorizontally = register({
 
 export const distributeVertically = register({
   name: "distributeVertically",
+  label: "labels.distributeVertically",
   trackEvent: { category: "element" },
   perform: (elements, appState, _, app) => {
     return {

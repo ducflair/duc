@@ -1,4 +1,3 @@
-import React from "react";
 import {
   moveOneLeft,
   moveOneRight,
@@ -20,6 +19,9 @@ import { StoreAction } from "../store";
 
 export const actionSendBackward = register({
   name: "sendBackward",
+  label: "labels.sendBackward",
+  keywords: ["move down", "zindex", "layer"],
+  icon: SendBackwardIcon,
   trackEvent: { category: "element" },
   perform: (elements, appState) => {
     return {
@@ -28,7 +30,6 @@ export const actionSendBackward = register({
       storeAction: StoreAction.CAPTURE,
     };
   },
-  contextItemLabel: "labels.sendBackward",
   keyPriority: 40,
   keyTest: (event) =>
     event[KEYS.CTRL_OR_CMD] &&
@@ -48,6 +49,9 @@ export const actionSendBackward = register({
 
 export const actionBringForward = register({
   name: "bringForward",
+  label: "labels.bringForward",
+  keywords: ["move up", "zindex", "layer"],
+  icon: BringForwardIcon,
   trackEvent: { category: "element" },
   perform: (elements, appState) => {
     return {
@@ -56,7 +60,6 @@ export const actionBringForward = register({
       storeAction: StoreAction.CAPTURE,
     };
   },
-  contextItemLabel: "labels.bringForward",
   keyPriority: 40,
   keyTest: (event) =>
     event[KEYS.CTRL_OR_CMD] &&
@@ -76,6 +79,9 @@ export const actionBringForward = register({
 
 export const actionSendToBack = register({
   name: "sendToBack",
+  label: "labels.sendToBack",
+  keywords: ["move down", "zindex", "layer"],
+  icon: SendToBackIcon,
   trackEvent: { category: "element" },
   perform: (elements, appState) => {
     return {
@@ -84,7 +90,6 @@ export const actionSendToBack = register({
       storeAction: StoreAction.CAPTURE,
     };
   },
-  contextItemLabel: "labels.sendToBack",
   keyTest: (event) =>
     isDarwin
       ? event[KEYS.CTRL_OR_CMD] &&
@@ -111,6 +116,9 @@ export const actionSendToBack = register({
 
 export const actionBringToFront = register({
   name: "bringToFront",
+  label: "labels.bringToFront",
+  keywords: ["move up", "zindex", "layer"],
+  icon: BringToFrontIcon,
   trackEvent: { category: "element" },
 
   perform: (elements, appState) => {
@@ -120,7 +128,6 @@ export const actionBringToFront = register({
       storeAction: StoreAction.CAPTURE,
     };
   },
-  contextItemLabel: "labels.bringToFront",
   keyTest: (event) =>
     isDarwin
       ? event[KEYS.CTRL_OR_CMD] &&

@@ -24,8 +24,8 @@ const executeHistoryAction = (
     !appState.editingTextElement &&
     !appState.newElement &&
     !appState.selectedElementsAreBeingDragged &&
-    !appState.selectionElement
-    // !app.flowChartCreator.isCreatingChart
+    !appState.selectionElement &&
+    !app.flowChartCreator.isCreatingChart
   ) {
     const result = updater();
 

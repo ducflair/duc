@@ -26,6 +26,7 @@ import type {
   DucElbowArrowElement,
   PointBinding,
   FixedPointBinding,
+  DucFlowchartNodeElement,
 } from "./types";
 
 export const isInitializedImageElement = (
@@ -105,12 +106,6 @@ export const isLinearElement = (
   return element != null && isLinearElementType(element.type);
 };
 
-export const isArrowElement = (
-  element?: DucElement | null,
-): element is DucArrowElement => {
-  return element != null && element.type === "arrow";
-};
-
 
 export const isLinearElementType = (
   elementType: ElementOrToolType,
@@ -118,6 +113,28 @@ export const isLinearElementType = (
   return (
     elementType === "arrow" || elementType === "line" // || elementType === "freedraw"
   );
+};
+
+export const isFlowchartNodeElement = (
+  element: DucElement,
+): element is DucFlowchartNodeElement => {
+  return (
+    element.type === "rectangle" ||
+    element.type === "ellipse" ||
+    element.type === "diamond"
+  );
+};
+
+export const isArrowElement = (
+  element?: DucElement | null,
+): element is DucArrowElement => {
+  return element != null && element.type === "arrow";
+};
+
+export const isElbowArrow = (
+  element?: DucElement,
+): element is DucElbowArrowElement => {
+  return isArrowElement(element) && element.elbowed;
 };
 
 export const isBindingElement = (
@@ -326,3 +343,10 @@ export const isLineSegment = (segment: unknown): segment is LineSegment =>
   segment.length === 2 &&
   isPoint(segment[0]) &&
   isPoint(segment[0]);
+
+
+export const isFixedPointBinding = (
+  binding: PointBinding,
+): binding is FixedPointBinding => {
+  return binding.fixedPoint != null;
+};
