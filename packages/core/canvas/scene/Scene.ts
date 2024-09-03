@@ -321,22 +321,6 @@ class Scene {
     }
   }
 
-  addCallback(cb: SceneStateCallback): SceneStateCallbackRemover {
-    if (this.callbacks.has(cb)) {
-      throw new Error();
-    }
-
-    this.callbacks.add(cb);
-
-    return () => {
-      if (!this.callbacks.has(cb)) {
-        throw new Error();
-      }
-      this.callbacks.delete(cb);
-    };
-  }
-
-
   onUpdate(cb: SceneStateCallback): SceneStateCallbackRemover {
     if (this.callbacks.has(cb)) {
       throw new Error();

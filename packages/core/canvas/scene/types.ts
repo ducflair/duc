@@ -97,10 +97,6 @@ export type SceneScroll = {
   scrollY: number;
 };
 
-export interface Scene {
-  elements: DucTextElement[];
-}
-
 export type ExportType =
   | "png"
   | "clipboard"

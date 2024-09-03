@@ -20,8 +20,15 @@ export const isIOS =
 export const isBrave = () =>
   (navigator as any).brave?.isBrave?.name === "isBrave";
 
-export const APP_NAME = "Duc";
+export const supportsResizeObserver =
+  typeof window !== "undefined" && "ResizeObserver" in window;
 
+export const APP_NAME = "Excalidraw";
+
+// distance when creating text before it's considered `autoResize: false`
+// we're using higher threshold so that clicks that end up being drags
+// don't unintentionally create text elements that are wrapped to a few chars
+// (happens a lot with fast clicks with the text tool)
 export const TEXT_AUTOWRAP_THRESHOLD = 36; // px
 export const DRAGGING_THRESHOLD = 10; // px
 export const LINE_CONFIRM_THRESHOLD = 8; // px
@@ -29,7 +36,6 @@ export const ELEMENT_SHIFT_TRANSLATE_AMOUNT = 5;
 export const ELEMENT_TRANSLATE_AMOUNT = 1;
 export const TEXT_TO_CENTER_SNAP_THRESHOLD = 30;
 export const SHIFT_LOCKING_ANGLE = Math.PI / 12;
-
 export const DEFAULT_LASER_COLOR = "red";
 export const CURSOR_TYPE = {
   TEXT: "text",
@@ -106,6 +112,7 @@ export const ENV = {
 
 export const CLASSES = {
   SHAPE_ACTIONS_MENU: "App-menu__left",
+  ZOOM_ACTIONS: "zoom-actions",
 };
 
 /**
@@ -133,7 +140,6 @@ export const THEME = {
   DARK: "dark",
 } as const;
 
-
 export const FRAME_STYLE = {
   strokeColor: "#80808080" as DucElement["strokeColor"],
   strokeWidth: 2 as DucElement["strokeWidth"],
@@ -158,13 +164,19 @@ export const DEFAULT_FONT_FAMILY: FontFamilyValues = FONT_FAMILY.Virgil;
 export const DEFAULT_TEXT_ALIGN = "left";
 export const DEFAULT_VERTICAL_ALIGN = "top";
 export const DEFAULT_VERSION = "{version}";
-export const DEFAULT_TRANSFORM_HANDLE_SPACING = 0;
+export const DEFAULT_TRANSFORM_HANDLE_SPACING = 2;
+
+export const SIDE_RESIZING_THRESHOLD = 2 * DEFAULT_TRANSFORM_HANDLE_SPACING;
+// a small epsilon to make side resizing always take precedence
+// (avoids an increase in renders and changes to tests)
+const EPSILON = 0.00001;
+export const DEFAULT_COLLISION_THRESHOLD =
+  2 * SIDE_RESIZING_THRESHOLD - EPSILON;
 
 export const COLOR_WHITE = "#ffffff";
 export const COLOR_CHARCOAL_BLACK = "#1e1e1e";
 // keep this in sync with CSS
 export const COLOR_VOICE_CALL = "#a2f1a6";
-
 
 export const CANVAS_ONLY_ACTIONS = ["selectAll"];
 
@@ -277,7 +289,7 @@ export const DEFAULT_EXPORT_PADDING = 10; // px
 
 export const DEFAULT_MAX_IMAGE_WIDTH_OR_HEIGHT = 1440;
 
-export const MAX_ALLOWED_FILE_BYTES = 2 * 1024 * 1024;
+export const MAX_ALLOWED_FILE_BYTES = 4 * 1024 * 1024;
 
 export const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -331,10 +343,6 @@ export const ROUNDNESS = {
   // (see DEFAULT_ADAPTIVE_RADIUS constant)
   ADAPTIVE_RADIUS: 3,
 } as const;
-
-/** key containt id of precedeing elemnt id we use in reconciliation during
- * collaboration */
-export const PRECEDING_ELEMENT_KEY = "__precedingElement__";
 
 export const ROUGHNESS = {
   architect: 0,
@@ -419,13 +427,9 @@ export const EDITOR_LS_KEYS = {
  */
 export const DEFAULT_FILENAME = "Untitled";
 
+export const STATS_PANELS = { generalStats: 1, elementProperties: 2 } as const;
 
-export const SIDE_RESIZING_THRESHOLD = 2 * DEFAULT_TRANSFORM_HANDLE_SPACING;
-// a small epsilon to make side resizing always take precedence
-// (avoids an increase in renders and changes to tests)
-const EPSILON = 0.00001;
-export const DEFAULT_COLLISION_THRESHOLD =
-2 * SIDE_RESIZING_THRESHOLD - EPSILON;
+export const MIN_WIDTH_OR_HEIGHT = 1;
 
 export const ARROW_TYPE: { [T in AppState["currentItemArrowType"]]: T } = {
   sharp: "sharp",

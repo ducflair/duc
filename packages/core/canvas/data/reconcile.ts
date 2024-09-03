@@ -47,7 +47,8 @@ const validateIndicesThrottled = throttle(
   ) => {
     if (
       import.meta.env.DEV ||
-      import.meta.env.MODE === ENV.TEST
+      import.meta.env.MODE === ENV.TEST ||
+      window?.DEBUG_FRACTIONAL_INDICES
     ) {
       // create new instances due to the mutation
       const elements = syncInvalidIndices(
