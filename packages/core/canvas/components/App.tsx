@@ -117,7 +117,6 @@ import {
   newTextElement,
   newImageElement,
   transformElements,
-  updateTextElement,
   redrawTextBoundingBox,
   refreshTextDimensions,
   getElementAbsoluteCoords,
