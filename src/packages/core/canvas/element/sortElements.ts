@@ -1,5 +1,5 @@
 import { arrayToMapWithIndex } from "../utils";
-import { DucElement } from "./types";
+import type { DucElement } from "./types";
 
 const normalizeGroupElementOrder = (elements: readonly DucElement[]) => {
   const origElements: DucElement[] = elements.slice();

@@ -1,56 +1,70 @@
-import {
+import type {
+  DucArrowElement,
   DucElement,
   DucElementType,
+  DucLinearElement,
   DucSelectionElement,
   DucTextElement,
   FontFamilyValues,
+  OrderedDucElement,
   PointBinding,
   StrokeRoundness,
 } from "../element/types";
-import {
-  AppState,
-  BinaryFiles,
-  LibraryItem,
-  NormalizedZoomValue,
-} from "../types";
-import { ImportedDataState, LegacyAppState } from "./types";
+import type { AppState, BinaryFiles, LibraryItem } from "../types";
+import type { ImportedDataState, LegacyAppState } from "./types";
 import {
   getNonDeletedElements,
   getNormalizedDimensions,
   isInvisiblySmallElement,
   refreshTextDimensions,
 } from "../element";
-import { isTextElement, isUsingAdaptiveRadius } from "../element/typeChecks";
+import {
+  isArrowElement,
+  isElbowArrow,
+  isLinearElement,
+  isTextElement,
+  isUsingAdaptiveRadius,
+} from "../element/typeChecks";
 import { randomId } from "../random";
 import {
   DEFAULT_FONT_FAMILY,
   DEFAULT_TEXT_ALIGN,
   DEFAULT_VERTICAL_ALIGN,
-  PRECEDING_ELEMENT_KEY,
   FONT_FAMILY,
   ROUNDNESS,
   DEFAULT_SIDEBAR,
   DEFAULT_ELEMENT_PROPS,
+  DEFAULT_GRID_SIZE,
+  DEFAULT_GRID_STEP,
 } from "../constants";
 import { getDefaultAppState } from "../appState";
 import { LinearElementEditor } from "../element/linearElementEditor";
 import { bumpVersion } from "../element/mutateElement";
-import { getUpdatedTimestamp, updateActiveTool } from "../utils";
-import { arrayToMap } from "../utils";
-import { MarkOptional, Mutable } from "../utility-types";
 import {
-  detectLineHeight,
-  getContainerElement,
-  getDefaultLineHeight,
-} from "../element/textElement";
+  getUpdatedTimestamp,
+  isFiniteNumber,
+  updateActiveTool,
+} from "../utils";
+import { arrayToMap } from "../utils";
+import type { MarkOptional, Mutable } from "../utility-types";
+import { detectLineHeight, getContainerElement } from "../element/textElement";
 import { normalizeLink } from "./url";
+import { syncInvalidIndices } from "../fractionalIndex";
+import { getSizeFromPoints } from "../points";
+import { getLineHeight } from "../fonts";
+import { normalizeFixedPoint } from "../element/binding";
+import {
+  getNormalizedGridSize,
+  getNormalizedGridStep,
+  getNormalizedZoom,
+} from "../scene";
 
 type RestoredAppState = Omit<
   AppState,
   "offsetTop" | "offsetLeft" | "width" | "height"
 >;
 
-export const AllowedExcalidrawActiveTools: Record<
+export const AllowedDucActiveTools: Record<
   AppState["activeTool"]["type"],
   boolean
 > = {
@@ -73,7 +87,7 @@ export const AllowedExcalidrawActiveTools: Record<
 };
 
 export type RestoredDataState = {
-  elements: DucElement[];
+  elements: OrderedDucElement[];
   appState: RestoredAppState;
   files: BinaryFiles;
 };
@@ -87,11 +101,21 @@ const getFontFamilyByName = (fontFamilyName: string): FontFamilyValues => {
   return DEFAULT_FONT_FAMILY;
 };
 
-const repairBinding = (binding: PointBinding | null) => {
+const repairBinding = (
+  element: DucLinearElement,
+  binding: PointBinding | null,
+): PointBinding | null => {
   if (!binding) {
     return null;
   }
-  return { ...binding, focus: binding.focus || 0 };
+
+  return {
+    ...binding,
+    focus: binding.focus || 0,
+    fixedPoint: isElbowArrow(element)
+      ? normalizeFixedPoint(binding.fixedPoint ?? [0, 0])
+      : null,
+  };
 };
 
 const restoreElementWithProperties = <
@@ -101,8 +125,6 @@ const restoreElementWithProperties = <
     boundElementIds?: readonly DucElement["id"][];
     /** @deprecated */
     strokeSharpness?: StrokeRoundness;
-    /** metadata that may be present in elements during collaboration */
-    [PRECEDING_ELEMENT_KEY]?: string;
   },
   K extends Pick<T, keyof Omit<Required<T>, keyof DucElement>>,
 >(
@@ -115,14 +137,13 @@ const restoreElementWithProperties = <
   > &
     Partial<Pick<DucElement, "type" | "x" | "y" | "customData">>,
 ): T => {
-  const base: Pick<T, keyof DucElement> & {
-    [PRECEDING_ELEMENT_KEY]?: string;
-  } = {
+  const base: Pick<T, keyof DucElement> = {
     type: extra.type || element.type,
     // all elements must have version > 0 so getSceneVersion() will pick up
     // newly added elements
     version: element.version || 1,
     versionNonce: element.versionNonce ?? 0,
+    index: element.index ?? null,
     isDeleted: element.isDeleted ?? false,
     id: element.id || randomId(),
     fillStyle: element.fillStyle || DEFAULT_ELEMENT_PROPS.fillStyle,
@@ -172,10 +193,6 @@ const restoreElementWithProperties = <
       "customData" in extra ? extra.customData : element.customData;
   }
 
-  if (PRECEDING_ELEMENT_KEY in element) {
-    base[PRECEDING_ELEMENT_KEY] = element[PRECEDING_ELEMENT_KEY];
-  }
-
   return {
     ...base,
     ...getNormalizedDimensions(base),
@@ -211,7 +228,7 @@ const restoreElement = (
             detectLineHeight(element)
           : // no element height likely means programmatic use, so default
             // to a fixed line height
-            getDefaultLineHeight(element.fontFamily));
+            getLineHeight(element.fontFamily));
       element = restoreElementWithProperties(element, {
         fontSize,
         fontFamily,
@@ -220,7 +237,7 @@ const restoreElement = (
         verticalAlign: element.verticalAlign || DEFAULT_VERTICAL_ALIGN,
         containerId: element.containerId ?? null,
         originalText: element.originalText || text,
-
+        autoResize: element.autoResize ?? true,
         lineHeight,
       });
 
@@ -250,11 +267,7 @@ const restoreElement = (
     // @ts-ignore LEGACY type
     // eslint-disable-next-line no-fallthrough
     case "draw":
-    case "arrow": {
-      const {
-        startArrowhead = null,
-        endArrowhead = element.type === "arrow" ? "arrow" : null,
-      } = element;
+      const { startArrowhead = null, endArrowhead = null } = element;
       let x = element.x;
       let y = element.y;
       let points = // migrate old arrow model to new one
@@ -274,14 +287,45 @@ const restoreElement = (
           (element.type as DucElementType | "draw") === "draw"
             ? "line"
             : element.type,
-        startBinding: repairBinding(element.startBinding),
-        endBinding: repairBinding(element.endBinding),
+        startBinding: repairBinding(element, element.startBinding),
+        endBinding: repairBinding(element, element.endBinding),
         lastCommittedPoint: null,
         startArrowhead,
         endArrowhead,
         points,
         x,
         y,
+        ...getSizeFromPoints(points),
+      });
+    case "arrow": {
+      const { startArrowhead = null, endArrowhead = "arrow" } = element;
+      let x = element.x;
+      let y = element.y;
+      let points = // migrate old arrow model to new one
+        !Array.isArray(element.points) || element.points.length < 2
+          ? [
+              [0, 0],
+              [element.width, element.height],
+            ]
+          : element.points;
+
+      if (points[0][0] !== 0 || points[0][1] !== 0) {
+        ({ points, x, y } = LinearElementEditor.getNormalizedPoints(element));
+      }
+
+      // TODO: Separate arrow from linear element
+      return restoreElementWithProperties(element as DucArrowElement, {
+        type: element.type,
+        startBinding: repairBinding(element, element.startBinding),
+        endBinding: repairBinding(element, element.endBinding),
+        lastCommittedPoint: null,
+        startArrowhead,
+        endArrowhead,
+        points,
+        x,
+        y,
+        elbowed: (element as DucArrowElement).elbowed,
+        ...getSizeFromPoints(points),
       });
     }
 
@@ -295,8 +339,8 @@ const restoreElement = (
     case "magicframe":
     case "frame":
       return restoreElementWithProperties(element, {
-        isCollapsed: element.isCollapsed ?? false,
         name: element.name ?? null,
+        isCollapsed: element.isCollapsed ?? false,
       });
 
     // Don't use default case so as to catch a missing an element type case.
@@ -307,7 +351,7 @@ const restoreElement = (
 };
 
 /**
- * Repairs contaienr element's boundElements array by removing duplicates and
+ * Repairs container element's boundElements array by removing duplicates and
  * fixing containerId of bound elements if not present. Also removes any
  * bound elements that do not exist in the elements array.
  *
@@ -414,30 +458,35 @@ export const restoreElements = (
   /** NOTE doesn't serve for reconciliation */
   localElements: readonly DucElement[] | null | undefined,
   opts?: { refreshDimensions?: boolean; repairBindings?: boolean } | undefined,
-): DucElement[] => {
+): OrderedDucElement[] => {
   // used to detect duplicate top-level element ids
   const existingIds = new Set<string>();
   const localElementsMap = localElements ? arrayToMap(localElements) : null;
-  const restoredElements = (elements || []).reduce((elements, element) => {
-    // filtering out selection, which is legacy, no longer kept in elements,
-    // and causing issues if retained
-    if (element.type !== "selection" && !isInvisiblySmallElement(element)) {
-      let migratedElement: DucElement | null = restoreElement(element);
-      if (migratedElement) {
-        const localElement = localElementsMap?.get(element.id);
-        if (localElement && localElement.version > migratedElement.version) {
-          migratedElement = bumpVersion(migratedElement, localElement.version);
-        }
-        if (existingIds.has(migratedElement.id)) {
-          migratedElement = { ...migratedElement, id: randomId() };
-        }
-        existingIds.add(migratedElement.id);
+  const restoredElements = syncInvalidIndices(
+    (elements || []).reduce((elements, element) => {
+      // filtering out selection, which is legacy, no longer kept in elements,
+      // and causing issues if retained
+      if (element.type !== "selection" && !isInvisiblySmallElement(element)) {
+        let migratedElement: DucElement | null = restoreElement(element);
+        if (migratedElement) {
+          const localElement = localElementsMap?.get(element.id);
+          if (localElement && localElement.version > migratedElement.version) {
+            migratedElement = bumpVersion(
+              migratedElement,
+              localElement.version,
+            );
+          }
+          if (existingIds.has(migratedElement.id)) {
+            migratedElement = { ...migratedElement, id: randomId() };
+          }
+          existingIds.add(migratedElement.id);
 
-        elements.push(migratedElement);
+          elements.push(migratedElement);
+        }
       }
-    }
-    return elements;
-  }, [] as DucElement[]);
+      return elements;
+    }, [] as DucElement[]),
+  );
 
   if (!opts?.repairBindings) {
     return restoredElements;
@@ -465,6 +514,23 @@ export const restoreElements = (
           restoredElementsMap,
         ),
       );
+    }
+
+    if (isLinearElement(element)) {
+      if (
+        element.startBinding &&
+        (!restoredElementsMap.has(element.startBinding.elementId) ||
+          !isArrowElement(element))
+      ) {
+        (element as Mutable<DucLinearElement>).startBinding = null;
+      }
+      if (
+        element.endBinding &&
+        (!restoredElementsMap.has(element.endBinding.elementId) ||
+          !isArrowElement(element))
+      ) {
+        (element as Mutable<DucLinearElement>).endBinding = null;
+      }
     }
   }
 
@@ -553,7 +619,7 @@ export const restoreAppState = (
       ...updateActiveTool(
         defaultAppState,
         nextAppState.activeTool.type &&
-          AllowedExcalidrawActiveTools[nextAppState.activeTool.type]
+          AllowedDucActiveTools[nextAppState.activeTool.type]
           ? nextAppState.activeTool
           : { type: "selection" },
       ),
@@ -561,19 +627,24 @@ export const restoreAppState = (
       locked: nextAppState.activeTool.locked ?? false,
     },
     // Migrates from previous version where appState.zoom was a number
-    zoom:
-      typeof appState.zoom === "number"
-        ? {
-            value: appState.zoom as NormalizedZoomValue,
-          }
-        : appState.zoom?.value
-        ? appState.zoom
-        : defaultAppState.zoom,
+    zoom: {
+      value: getNormalizedZoom(
+        isFiniteNumber(appState.zoom)
+          ? appState.zoom
+          : appState.zoom?.value ?? defaultAppState.zoom.value,
+      ),
+    },
     openSidebar:
       // string (legacy)
       typeof (appState.openSidebar as any as string) === "string"
         ? { name: DEFAULT_SIDEBAR.name }
         : nextAppState.openSidebar,
+    gridSize: getNormalizedGridSize(
+      isFiniteNumber(appState.gridSize) ? appState.gridSize : DEFAULT_GRID_SIZE,
+    ),
+    gridStep: getNormalizedGridStep(
+      isFiniteNumber(appState.gridStep) ? appState.gridStep : DEFAULT_GRID_STEP,
+    ),
   };
 };
 

@@ -5,8 +5,10 @@ import {
   AppState,
   ExcalidrawProps,
   BinaryFiles,
+  UIAppState,
 } from "../types";
 import { MarkOptional } from "../utility-types";
+import { StoreActionType } from "../store";
 
 export type ActionSource = "ui" | "keyboard" | "contextMenu" | "api";
 
@@ -19,11 +21,11 @@ export type ActionResult =
         "offsetTop" | "offsetLeft" | "width" | "height"
       > | null;
       files?: BinaryFiles | null;
-      commitToHistory: boolean;
-      syncHistory?: boolean;
+      storeAction: StoreActionType;
       replaceFiles?: boolean;
     }
   | false;
+
 
 type ActionFn = (
   elements: readonly DucElement[],
@@ -124,7 +126,9 @@ export type ActionName =
   | "setFrameAsActiveTool"
   | "setEmbeddableAsActiveTool"
   | "createContainerFromText"
-  | "wrapTextInContainer";
+  | "wrapTextInContainer"
+  | "changeArrowType"
+  | "autoResize";
 
 export type PanelComponentProps = {
   elements: readonly DucElement[];
@@ -137,6 +141,20 @@ export type PanelComponentProps = {
 
 export interface Action {
   name: ActionName;
+  label:
+    | string
+    | ((
+        elements: readonly DucElement[],
+        appState: Readonly<AppState>,
+        app: AppClassProperties,
+      ) => string);
+  keywords?: string[];
+  icon?:
+    | React.ReactNode
+    | ((
+        appState: UIAppState,
+        elements: readonly DucElement[],
+      ) => React.ReactNode);
   PanelComponent?: React.FC<PanelComponentProps>;
   perform: ActionFn;
   keyPriority?: number;
@@ -146,13 +164,6 @@ export interface Action {
     elements: readonly DucElement[],
     app: AppClassProperties,
   ) => boolean;
-  contextItemLabel?:
-    | string
-    | ((
-        elements: readonly DucElement[],
-        appState: Readonly<AppState>,
-        app: AppClassProperties,
-      ) => string);
   predicate?: (
     elements: readonly DucElement[],
     appState: AppState,
