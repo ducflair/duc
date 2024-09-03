@@ -699,22 +699,8 @@ class App extends React.Component<AppProps, AppState> {
     this.rc = rough.canvas(this.canvas);
     this.renderer = new Renderer(this.scene);
 
-    this.excalidrawContainerValue = {
-      container: this.excalidrawContainerRef.current,
-      id: this.id,
-    };
-
-    this.fonts = new Fonts({ scene: this.scene });
     this.store = new Store();
     this.history = new History();
-    this.actionManager.registerAll(actions);
-
-    this.actionManager.registerAction(
-      createUndoAction(this.history, this.store),
-    );
-    this.actionManager.registerAction(
-      createRedoAction(this.history, this.store),
-    );
 
     if (ducAPI) {
       const api: DucImperativeAPI = {
@@ -788,6 +774,22 @@ class App extends React.Component<AppProps, AppState> {
         console.error("ducAPI should be a function!");
       }
     }
+
+    this.excalidrawContainerValue = {
+      container: this.excalidrawContainerRef.current,
+      id: this.id,
+    };
+
+    this.fonts = new Fonts({ scene: this.scene });
+    this.history = new History();
+
+    this.actionManager.registerAll(actions);
+    this.actionManager.registerAction(
+      createUndoAction(this.history, this.store),
+    );
+    this.actionManager.registerAction(
+      createRedoAction(this.history, this.store),
+    );
   }
 
   private onWindowMessage(event: MessageEvent) {
@@ -1365,15 +1367,8 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     const isDarkTheme = this.state.theme === THEME.DARK;
-    let frameIndex = 0;
-    let magicFrameIndex = 0;
 
     return this.scene.getNonDeletedFramesLikes().map((f) => {
-      if (isFrameElement(f)) {
-        frameIndex++;
-      } else {
-        magicFrameIndex++;
-      }
       if (
         !isElementInViewport(
           f,
@@ -1965,17 +1960,17 @@ class App extends React.Component<AppProps, AppState> {
     magicFrame: DucMagicFrameElement,
     source: "button" | "upstream",
   ) {
-    if (!this.OPENAI_KEY) {
-      this.setState({
-        openDialog: {
-          name: "settings",
-          tab: "diagram-to-code",
-          source: "generation",
-        },
-      });
-      trackEvent("ai", "generate (missing key)", "d2c");
-      return;
-    }
+    // if (!this.OPENAI_KEY) {
+    //   this.setState({
+    //     openDialog: {
+    //       name: "settings",
+    //       tab: "diagram-to-code",
+    //       source: "generation",
+    //     },
+    //   });
+    //   trackEvent("ai", "generate (missing key)", "d2c");
+    //   return;
+    // }
 
     const magicFrameChildren = getElementsOverlappingFrame(
       this.scene.getNonDeletedElements(),
@@ -2012,68 +2007,50 @@ class App extends React.Component<AppProps, AppState> {
       selectedElementIds: { [frameElement.id]: true },
     });
 
-    const blob = await exportToBlob({
-      elements: this.scene.getNonDeletedElements(),
-      appState: {
-        ...this.state,
-        exportBackground: true,
-        viewBackgroundColor: this.state.viewBackgroundColor,
-      },
-      exportingFrame: magicFrame,
-      files: this.files,
-    });
-
-    const dataURL = await getDataURL(blob);
-
-    const textFromFrameChildren = this.getTextFromElements(magicFrameChildren);
-
     trackEvent("ai", "generate (start)", "d2c");
+    // try {
+    //   const { html } = await generateDiagramToCode({
+    //     frame: magicFrame,
+    //     children: magicFrameChildren,
+    //   });
 
-    const result = await diagramToHTML({
-      image: dataURL,
-      apiKey: this.OPENAI_KEY,
-      text: textFromFrameChildren,
-      theme: this.state.theme,
-    });
+    //   trackEvent("ai", "generate (success)", "d2c");
 
-    if (!result.ok) {
-      trackEvent("ai", "generate (failed)", "d2c");
-      console.error(result.error);
-      this.updateMagicGeneration({
-        frameElement,
-        data: {
-          status: "error",
-          code: "ERR_OAI",
-          message: result.error?.message || "Unknown error during generation",
-        },
-      });
-      return;
-    }
-    trackEvent("ai", "generate (success)", "d2c");
+    //   if (!html.trim()) {
+    //   this.updateMagicGeneration({
+    //     frameElement,
+    //     data: {
+    //       status: "error",
+    //       code: "ERR_OAI",
+    //         message: "Nothing genereated :(",
+    //     },
+    //   });
+    //   return;
+    // }
 
-    if (result.choices[0].message.content == null) {
-      this.updateMagicGeneration({
-        frameElement,
-        data: {
-          status: "error",
-          code: "ERR_OAI",
-          message: "Nothing genereated :(",
-        },
-      });
-      return;
-    }
+    //   const parsedHtml =
+    //     html.includes("<!DOCTYPE html>") && html.includes("</html>")
+    //       ? html.slice(
+    //           html.indexOf("<!DOCTYPE html>"),
+    //           html.indexOf("</html>") + "</html>".length,
+    //         )
+    //       : html;
 
-    const message = result.choices[0].message.content;
-
-    const html = message.slice(
-      message.indexOf("<!DOCTYPE html>"),
-      message.indexOf("</html>") + "</html>".length,
-    );
-
-    this.updateMagicGeneration({
-      frameElement,
-      data: { status: "done", html },
-    });
+    //   this.updateMagicGeneration({
+    //     frameElement,
+    //     data: { status: "done", html: parsedHtml },
+    //   });
+    // } catch (error: any) {
+    //   trackEvent("ai", "generate (failed)", "d2c");
+    //   this.updateMagicGeneration({
+    //     frameElement,
+    //     data: {
+    //       status: "error",
+    //       code: "ERR_OAI",
+    //       message: "Nothing genereated :(",
+    //     },
+    //   });
+    // }
   }
 
   private onIframeSrcCopy(element: DucIframeElement) {
@@ -2087,70 +2064,7 @@ class App extends React.Component<AppProps, AppState> {
     }
   }
 
-  private OPENAI_KEY: string | null = EditorLocalStorage.get(
-    EDITOR_LS_KEYS.OAI_API_KEY,
-  );
-  private OPENAI_KEY_IS_PERSISTED: boolean =
-    EditorLocalStorage.has(EDITOR_LS_KEYS.OAI_API_KEY) || false;
-
-  private onOpenAIKeyChange = (
-    openAIKey: string | null,
-    shouldPersist: boolean,
-  ) => {
-    this.OPENAI_KEY = openAIKey || null;
-    if (shouldPersist) {
-      const didPersist = EditorLocalStorage.set(
-        EDITOR_LS_KEYS.OAI_API_KEY,
-        openAIKey,
-      );
-      this.OPENAI_KEY_IS_PERSISTED = didPersist;
-    } else {
-      this.OPENAI_KEY_IS_PERSISTED = false;
-    }
-  };
-
-  private onMagicSettingsConfirm = (
-    apiKey: string,
-    shouldPersist: boolean,
-    source: "tool" | "generation" | "settings",
-  ) => {
-    this.OPENAI_KEY = apiKey || null;
-    this.onOpenAIKeyChange(this.OPENAI_KEY, shouldPersist);
-
-    if (source === "settings") {
-      return;
-    }
-
-    const selectedElements = this.scene.getSelectedElements({
-      selectedElementIds: this.state.selectedElementIds,
-    });
-
-    if (apiKey) {
-      if (selectedElements.length) {
-        this.onMagicframeToolSelect();
-      } else {
-        this.setActiveTool({ type: "magicframe" });
-      }
-    } else if (!isMagicFrameElement(selectedElements[0])) {
-      // even if user didn't end up setting api key, let's pick the tool
-      // so they can draw up a frame and move forward
-      this.setActiveTool({ type: "magicframe" });
-    }
-  };
-
   public onMagicframeToolSelect = () => {
-    if (!this.OPENAI_KEY) {
-      this.setState({
-        openDialog: {
-          name: "settings",
-          tab: "diagram-to-code",
-          source: "tool",
-        },
-      });
-      trackEvent("ai", "tool-select (missing key)", "d2c");
-      return;
-    }
-
     const selectedElements = this.scene.getSelectedElements({
       selectedElementIds: this.state.selectedElementIds,
     });

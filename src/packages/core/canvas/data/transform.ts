@@ -401,6 +401,15 @@ const bindLinearElementToElement = (
     }
   }
 
+  // Safe check to early return for single point
+  if (linearElement.points.length < 2) {
+    return {
+      linearElement,
+      startBoundElement,
+      endBoundElement,
+    };
+  }
+
   // Update start/end points by 0.5 so bindings don't overlap with start/end bound element coordinates.
   const endPointIndex = linearElement.points.length - 1;
   const delta = 0.5;
@@ -555,7 +564,7 @@ export const convertToExcalidrawElements = (
       case "text": {
         const fontFamily = element?.fontFamily || DEFAULT_FONT_FAMILY;
         const fontSize = element?.fontSize || DEFAULT_FONT_SIZE;
-        const lineHeight = element?.lineHeight ?? getLineHeight(fontFamily);
+        const lineHeight = element?.lineHeight || getLineHeight(fontFamily);
         const text = element.text ?? "";
         const normalizedText = normalizeText(text);
         const metrics = measureText(

@@ -25,6 +25,7 @@ import type {
   DucTextElement,
   FractionalIndex,
   NonDeleted,
+  Ordered,
   OrderedDucElement,
   SceneElementsMap,
 } from "./element/types";
@@ -1453,7 +1454,7 @@ export class ElementsChange implements Change<SceneElementsMap> {
         continue;
       }
 
-      redrawTextBoundingBox(boundText, container, elements);
+      redrawTextBoundingBox(boundText, container, elements, false);
     }
   }
 
@@ -1483,13 +1484,7 @@ export class ElementsChange implements Change<SceneElementsMap> {
     }
 
     const unordered = Array.from(elements.values());
-    const ordered: OrderedDucElement[] = unordered.map((element) => {
-      return {
-        ...element,
-        index: element.index as FractionalIndex,
-      };
-    });
-    
+    const ordered = orderByFractionalIndex([...unordered as Ordered<DucElement>[]]);
     const moved = Delta.getRightDifferences(unordered, ordered, true).reduce(
       (acc, arrayIndex) => {
         const candidate = unordered[Number(arrayIndex)];
