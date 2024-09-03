@@ -319,6 +319,7 @@ export const getClosedCurveShape = (
     return transform(mutablePoint);
   });
 
+
   return {
     type: "polygon",
     data: polygonPoints,
