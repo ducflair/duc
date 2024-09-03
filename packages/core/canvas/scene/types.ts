@@ -5,6 +5,7 @@ import {
   NonDeletedElementsMap,
   NonDeletedDucElement,
   NonDeletedSceneElementsMap,
+  DucElement,
 } from "../element/types";
 import {
   AppClassProperties,
@@ -13,6 +14,10 @@ import {
   ElementsPendingErasure,
   InteractiveCanvasAppState,
   StaticCanvasAppState,
+  PendingDucElements,
+  SocketId,
+  UserIdleState,
+  Device,
 } from "../types";
 import { MakeBrand } from "../utility-types";
 
@@ -30,6 +35,7 @@ export type StaticCanvasRenderConfig = {
   isExporting: boolean;
   embedsValidationStatus: EmbedsValidationStatus;
   elementsPendingErasure: ElementsPendingErasure;
+  pendingFlowchartNodes: PendingDucElements | null;
 };
 
 export type SVGRenderConfig = {
@@ -46,12 +52,12 @@ export type SVGRenderConfig = {
 export type InteractiveCanvasRenderConfig = {
   // collab-related state
   // ---------------------------------------------------------------------------
-  remoteSelectedElementIds: { [elementId: string]: string[] };
-  remotePointerViewportCoords: { [id: string]: { x: number; y: number } };
-  remotePointerUserStates: { [id: string]: string };
-  remotePointerUsernames: { [id: string]: string };
-  remotePointerButton?: { [id: string]: string | undefined };
-  selectionColor?: string;
+  remoteSelectedElementIds: Map<DucElement["id"], SocketId[]>;
+  remotePointerViewportCoords: Map<SocketId, { x: number; y: number }>;
+  remotePointerUserStates: Map<SocketId, UserIdleState>;
+  remotePointerUsernames: Map<SocketId, string>;
+  remotePointerButton: Map<SocketId, string | undefined>;
+  selectionColor: string;
   // extra options passed to the renderer
   // ---------------------------------------------------------------------------
   renderScrollbars?: boolean;
@@ -79,20 +85,17 @@ export type InteractiveSceneRenderConfig = {
   elementsMap: RenderableElementsMap;
   visibleElements: readonly NonDeletedDucElement[];
   selectedElements: readonly NonDeletedDucElement[];
+  allElementsMap: NonDeletedSceneElementsMap;
   scale: number;
   appState: InteractiveCanvasAppState;
   renderConfig: InteractiveCanvasRenderConfig;
+  device: Device;
   callback: (data: RenderInteractiveSceneCallback) => void;
 };
-
 export type SceneScroll = {
   scrollX: number;
   scrollY: number;
 };
-
-export interface Scene {
-  elements: DucTextElement[];
-}
 
 export type ExportType =
   | "png"
@@ -131,4 +134,15 @@ export type ElementShapes = {
   image: null;
   frame: null;
   magicframe: null;
+};
+
+export type NewElementSceneRenderConfig = {
+  canvas: HTMLCanvasElement | null;
+  rc: RoughCanvas;
+  newElement: DucElement | null;
+  elementsMap: RenderableElementsMap;
+  allElementsMap: NonDeletedSceneElementsMap;
+  scale: number;
+  appState: AppState;
+  renderConfig: StaticCanvasRenderConfig;
 };

@@ -58,6 +58,24 @@ export const selectGroup = (
   };
 };
 
+export const getNonDeletedGroupIds = (elements: ElementsMap) => {
+  const nonDeletedGroupIds = new Set<string>();
+
+  for (const [, element] of elements) {
+    // defensive check
+    if (element.isDeleted) {
+      continue;
+    }
+
+    // defensive fallback
+    for (const groupId of element.groupIds ?? []) {
+      nonDeletedGroupIds.add(groupId);
+    }
+  }
+
+  return nonDeletedGroupIds;
+};
+
 export const selectGroupsForSelectedElements = (function () {
   type SelectGroupsReturnType = Pick<
     InteractiveCanvasAppState,
@@ -368,4 +386,8 @@ export const elementsAreInSameGroup = (elements: DucElement[]) => {
   }
 
   return maxGroup === elements.length;
+};
+
+export const isInGroup = (element: NonDeletedDucElement) => {
+  return element.groupIds.length > 0;
 };

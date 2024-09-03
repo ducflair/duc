@@ -76,6 +76,7 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
     id: e.id() || '',
     x: e.x(),
     y: e.y(),
+    index: e.index(),
     strokeColor: e.strokeColor() || '',
     backgroundColor: e.backgroundColor() || '',
     fillStyle: (e.fillStyle() || '') as FillStyle,
@@ -123,6 +124,7 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
         containerId: e.containerId(),
         originalText: e.originalText(),
         lineHeight: e.lineHeight() as number & { _brand: "unitlessLineHeight" },
+        autoResize: e.autoResize(),
       } as DucTextElement;
     case "arrow":
       return {
@@ -133,15 +135,18 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
         startBinding: {
           elementId: e.startBinding()?.elementId(),
           focus: e.startBinding()?.focus(),
-          gap: e.startBinding()?.gap()
+          gap: e.startBinding()?.gap(),
+          fixedPoint: e.startBinding()?.fixedPoint()
         },
         endBinding: {
           elementId: e.endBinding()?.elementId(),
           focus: e.endBinding()?.focus(),
-          gap: e.endBinding()?.gap()
+          gap: e.endBinding()?.gap(),
+          fixedPoint: e.endBinding()?.fixedPoint()
         },
         startArrowhead: e.startArrowhead() as Arrowhead,
         endArrowhead: e.endArrowhead() as Arrowhead,
+        elbowed: e.elbowed()
       } as DucArrowElement;
     case "line":
       return {
@@ -152,12 +157,14 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
         startBinding: {
           elementId: e.startBinding()?.elementId(),
           focus: e.startBinding()?.focus(),
-          gap: e.startBinding()?.gap()  
+          gap: e.startBinding()?.gap(),
+          fixedPoint: e.startBinding()?.fixedPoint()
         },
         endBinding: {
           elementId: e.endBinding()?.elementId(),
           focus: e.endBinding()?.focus(),
-          gap: e.endBinding()?.gap()
+          gap: e.endBinding()?.gap(),
+          fixedPoint: e.endBinding()?.fixedPoint()
         },
         startArrowhead: e.startArrowhead() as Arrowhead,
         endArrowhead: e.endArrowhead() as Arrowhead,

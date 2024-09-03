@@ -18,6 +18,7 @@ table PointBinding {
   elementId: string;
   focus: float;
   gap: float;
+  fixedPoint: Point;
 }
 
 
@@ -27,6 +28,7 @@ table DucElement {
   type: string;  // "text", "line", "freedraw", "image", "frame", "group", "magicframe", "iframe"
   x: float;
   y: float;
+  index: string;
   scope: string;  // Assuming SupportedMeasures as string
   writingLayer: string;  // Assuming WritingLayers as string
   label: string;
@@ -69,7 +71,7 @@ table DucElement {
   containerId: string;
   originalText: string;
   lineHeight: float;  // Assuming float for unitless line height
-
+  autoResize: bool;
 
   // LinearElement specific fields
   points: [Point];
@@ -78,6 +80,8 @@ table DucElement {
   endBinding: PointBinding;
   startArrowhead: string;  // Assuming Arrowhead as string
   endArrowhead: string;
+  elbowed: bool;
+
 
   // FreeDrawElement specific fields
   pressures: [float];

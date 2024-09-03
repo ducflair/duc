@@ -51,338 +51,355 @@ y():number {
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
+index():string|null
+index(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+index(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 12);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
 scope():string|null
 scope(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 scope(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
+  const offset = this.bb!.__offset(this.bb_pos, 14);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 writingLayer():string|null
 writingLayer(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 writingLayer(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
+  const offset = this.bb!.__offset(this.bb_pos, 16);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 label():string|null
 label(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 label(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 16);
+  const offset = this.bb!.__offset(this.bb_pos, 18);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 ratioLocked():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 18);
+  const offset = this.bb!.__offset(this.bb_pos, 20);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 isVisible():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 20);
+  const offset = this.bb!.__offset(this.bb_pos, 22);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 fillStyle():string|null
 fillStyle(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 fillStyle(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 22);
+  const offset = this.bb!.__offset(this.bb_pos, 24);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 roughness():number {
-  const offset = this.bb!.__offset(this.bb_pos, 24);
+  const offset = this.bb!.__offset(this.bb_pos, 26);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 roundnessType():string|null
 roundnessType(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 roundnessType(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 26);
+  const offset = this.bb!.__offset(this.bb_pos, 28);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 roundnessValue():number {
-  const offset = this.bb!.__offset(this.bb_pos, 28);
+  const offset = this.bb!.__offset(this.bb_pos, 30);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 backgroundColor():string|null
 backgroundColor(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 backgroundColor(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 30);
+  const offset = this.bb!.__offset(this.bb_pos, 32);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 strokeColor():string|null
 strokeColor(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 strokeColor(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 32);
+  const offset = this.bb!.__offset(this.bb_pos, 34);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 strokeWidth():number {
-  const offset = this.bb!.__offset(this.bb_pos, 34);
+  const offset = this.bb!.__offset(this.bb_pos, 36);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 strokeStyle():string|null
 strokeStyle(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 strokeStyle(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 36);
+  const offset = this.bb!.__offset(this.bb_pos, 38);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 strokePlacement():string|null
 strokePlacement(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 strokePlacement(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 38);
+  const offset = this.bb!.__offset(this.bb_pos, 40);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 opacity():number {
-  const offset = this.bb!.__offset(this.bb_pos, 40);
-  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
-}
-
-width():number {
   const offset = this.bb!.__offset(this.bb_pos, 42);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
-height():number {
+width():number {
   const offset = this.bb!.__offset(this.bb_pos, 44);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
-angle():number {
+height():number {
   const offset = this.bb!.__offset(this.bb_pos, 46);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
-seed():number {
+angle():number {
   const offset = this.bb!.__offset(this.bb_pos, 48);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
-version():number {
+seed():number {
   const offset = this.bb!.__offset(this.bb_pos, 50);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-versionNonce():number {
+version():number {
   const offset = this.bb!.__offset(this.bb_pos, 52);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-isDeleted():boolean {
+versionNonce():number {
   const offset = this.bb!.__offset(this.bb_pos, 54);
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+}
+
+isDeleted():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 56);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 groupIds(index: number):string
 groupIds(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
 groupIds(index: number,optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 56);
+  const offset = this.bb!.__offset(this.bb_pos, 58);
   return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
 }
 
 groupIdsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 56);
+  const offset = this.bb!.__offset(this.bb_pos, 58);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 frameId():string|null
 frameId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 frameId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 58);
+  const offset = this.bb!.__offset(this.bb_pos, 60);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 boundElements(index: number, obj?:BoundElement):BoundElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 60);
+  const offset = this.bb!.__offset(this.bb_pos, 62);
   return offset ? (obj || new BoundElement()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
 boundElementsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 60);
+  const offset = this.bb!.__offset(this.bb_pos, 62);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 updated():bigint {
-  const offset = this.bb!.__offset(this.bb_pos, 62);
+  const offset = this.bb!.__offset(this.bb_pos, 64);
   return offset ? this.bb!.readInt64(this.bb_pos + offset) : BigInt('0');
 }
 
 link():string|null
 link(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 link(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 64);
+  const offset = this.bb!.__offset(this.bb_pos, 66);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 locked():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 66);
+  const offset = this.bb!.__offset(this.bb_pos, 68);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 customData():string|null
 customData(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 customData(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 68);
+  const offset = this.bb!.__offset(this.bb_pos, 70);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 fontSize():number {
-  const offset = this.bb!.__offset(this.bb_pos, 70);
+  const offset = this.bb!.__offset(this.bb_pos, 72);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 fontFamily():string|null
 fontFamily(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 fontFamily(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 72);
+  const offset = this.bb!.__offset(this.bb_pos, 74);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 text():string|null
 text(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 text(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 74);
+  const offset = this.bb!.__offset(this.bb_pos, 76);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 textAlign():string|null
 textAlign(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 textAlign(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 76);
+  const offset = this.bb!.__offset(this.bb_pos, 78);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 verticalAlign():string|null
 verticalAlign(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 verticalAlign(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 78);
+  const offset = this.bb!.__offset(this.bb_pos, 80);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 containerId():string|null
 containerId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 containerId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 80);
+  const offset = this.bb!.__offset(this.bb_pos, 82);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 originalText():string|null
 originalText(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 originalText(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 82);
+  const offset = this.bb!.__offset(this.bb_pos, 84);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 lineHeight():number {
-  const offset = this.bb!.__offset(this.bb_pos, 84);
+  const offset = this.bb!.__offset(this.bb_pos, 86);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
+autoResize():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 88);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
 points(index: number, obj?:Point):Point|null {
-  const offset = this.bb!.__offset(this.bb_pos, 86);
+  const offset = this.bb!.__offset(this.bb_pos, 90);
   return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
 pointsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 86);
+  const offset = this.bb!.__offset(this.bb_pos, 90);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 lastCommittedPoint(obj?:Point):Point|null {
-  const offset = this.bb!.__offset(this.bb_pos, 88);
+  const offset = this.bb!.__offset(this.bb_pos, 92);
   return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 startBinding(obj?:PointBinding):PointBinding|null {
-  const offset = this.bb!.__offset(this.bb_pos, 90);
+  const offset = this.bb!.__offset(this.bb_pos, 94);
   return offset ? (obj || new PointBinding()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 endBinding(obj?:PointBinding):PointBinding|null {
-  const offset = this.bb!.__offset(this.bb_pos, 92);
+  const offset = this.bb!.__offset(this.bb_pos, 96);
   return offset ? (obj || new PointBinding()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 startArrowhead():string|null
 startArrowhead(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 startArrowhead(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 94);
+  const offset = this.bb!.__offset(this.bb_pos, 98);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 endArrowhead():string|null
 endArrowhead(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 endArrowhead(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 96);
+  const offset = this.bb!.__offset(this.bb_pos, 100);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
+elbowed():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 102);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
 pressures(index: number):number|null {
-  const offset = this.bb!.__offset(this.bb_pos, 98);
+  const offset = this.bb!.__offset(this.bb_pos, 104);
   return offset ? this.bb!.readFloat32(this.bb!.__vector(this.bb_pos + offset) + index * 4) : 0;
 }
 
 pressuresLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 98);
+  const offset = this.bb!.__offset(this.bb_pos, 104);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 pressuresArray():Float32Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 98);
+  const offset = this.bb!.__offset(this.bb_pos, 104);
   return offset ? new Float32Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
 }
 
 simulatePressure():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 100);
+  const offset = this.bb!.__offset(this.bb_pos, 106);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 fileId():string|null
 fileId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 fileId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 102);
+  const offset = this.bb!.__offset(this.bb_pos, 108);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 status():string|null
 status(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 status(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 104);
+  const offset = this.bb!.__offset(this.bb_pos, 110);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 scale(obj?:Point):Point|null {
-  const offset = this.bb!.__offset(this.bb_pos, 106);
+  const offset = this.bb!.__offset(this.bb_pos, 112);
   return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 isCollapsed():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 108);
+  const offset = this.bb!.__offset(this.bb_pos, 114);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 name():string|null
 name(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 name(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 110);
+  const offset = this.bb!.__offset(this.bb_pos, 116);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 groupIdRef():string|null
 groupIdRef(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 groupIdRef(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 112);
+  const offset = this.bb!.__offset(this.bb_pos, 118);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 static startDucElement(builder:flatbuffers.Builder) {
-  builder.startObject(55);
+  builder.startObject(58);
 }
 
 static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
@@ -401,96 +418,100 @@ static addY(builder:flatbuffers.Builder, y:number) {
   builder.addFieldFloat32(3, y, 0.0);
 }
 
+static addIndex(builder:flatbuffers.Builder, indexOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(4, indexOffset, 0);
+}
+
 static addScope(builder:flatbuffers.Builder, scopeOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, scopeOffset, 0);
+  builder.addFieldOffset(5, scopeOffset, 0);
 }
 
 static addWritingLayer(builder:flatbuffers.Builder, writingLayerOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, writingLayerOffset, 0);
+  builder.addFieldOffset(6, writingLayerOffset, 0);
 }
 
 static addLabel(builder:flatbuffers.Builder, labelOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(6, labelOffset, 0);
+  builder.addFieldOffset(7, labelOffset, 0);
 }
 
 static addRatioLocked(builder:flatbuffers.Builder, ratioLocked:boolean) {
-  builder.addFieldInt8(7, +ratioLocked, +false);
+  builder.addFieldInt8(8, +ratioLocked, +false);
 }
 
 static addIsVisible(builder:flatbuffers.Builder, isVisible:boolean) {
-  builder.addFieldInt8(8, +isVisible, +false);
+  builder.addFieldInt8(9, +isVisible, +false);
 }
 
 static addFillStyle(builder:flatbuffers.Builder, fillStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(9, fillStyleOffset, 0);
+  builder.addFieldOffset(10, fillStyleOffset, 0);
 }
 
 static addRoughness(builder:flatbuffers.Builder, roughness:number) {
-  builder.addFieldInt32(10, roughness, 0);
+  builder.addFieldInt32(11, roughness, 0);
 }
 
 static addRoundnessType(builder:flatbuffers.Builder, roundnessTypeOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(11, roundnessTypeOffset, 0);
+  builder.addFieldOffset(12, roundnessTypeOffset, 0);
 }
 
 static addRoundnessValue(builder:flatbuffers.Builder, roundnessValue:number) {
-  builder.addFieldInt32(12, roundnessValue, 0);
+  builder.addFieldInt32(13, roundnessValue, 0);
 }
 
 static addBackgroundColor(builder:flatbuffers.Builder, backgroundColorOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(13, backgroundColorOffset, 0);
+  builder.addFieldOffset(14, backgroundColorOffset, 0);
 }
 
 static addStrokeColor(builder:flatbuffers.Builder, strokeColorOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(14, strokeColorOffset, 0);
+  builder.addFieldOffset(15, strokeColorOffset, 0);
 }
 
 static addStrokeWidth(builder:flatbuffers.Builder, strokeWidth:number) {
-  builder.addFieldInt32(15, strokeWidth, 0);
+  builder.addFieldInt32(16, strokeWidth, 0);
 }
 
 static addStrokeStyle(builder:flatbuffers.Builder, strokeStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(16, strokeStyleOffset, 0);
+  builder.addFieldOffset(17, strokeStyleOffset, 0);
 }
 
 static addStrokePlacement(builder:flatbuffers.Builder, strokePlacementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(17, strokePlacementOffset, 0);
+  builder.addFieldOffset(18, strokePlacementOffset, 0);
 }
 
 static addOpacity(builder:flatbuffers.Builder, opacity:number) {
-  builder.addFieldFloat32(18, opacity, 0.0);
+  builder.addFieldFloat32(19, opacity, 0.0);
 }
 
 static addWidth(builder:flatbuffers.Builder, width:number) {
-  builder.addFieldFloat32(19, width, 0.0);
+  builder.addFieldFloat32(20, width, 0.0);
 }
 
 static addHeight(builder:flatbuffers.Builder, height:number) {
-  builder.addFieldFloat32(20, height, 0.0);
+  builder.addFieldFloat32(21, height, 0.0);
 }
 
 static addAngle(builder:flatbuffers.Builder, angle:number) {
-  builder.addFieldFloat32(21, angle, 0.0);
+  builder.addFieldFloat32(22, angle, 0.0);
 }
 
 static addSeed(builder:flatbuffers.Builder, seed:number) {
-  builder.addFieldInt32(22, seed, 0);
+  builder.addFieldInt32(23, seed, 0);
 }
 
 static addVersion(builder:flatbuffers.Builder, version:number) {
-  builder.addFieldInt32(23, version, 0);
+  builder.addFieldInt32(24, version, 0);
 }
 
 static addVersionNonce(builder:flatbuffers.Builder, versionNonce:number) {
-  builder.addFieldInt32(24, versionNonce, 0);
+  builder.addFieldInt32(25, versionNonce, 0);
 }
 
 static addIsDeleted(builder:flatbuffers.Builder, isDeleted:boolean) {
-  builder.addFieldInt8(25, +isDeleted, +false);
+  builder.addFieldInt8(26, +isDeleted, +false);
 }
 
 static addGroupIds(builder:flatbuffers.Builder, groupIdsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(26, groupIdsOffset, 0);
+  builder.addFieldOffset(27, groupIdsOffset, 0);
 }
 
 static createGroupIdsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -506,11 +527,11 @@ static startGroupIdsVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addFrameId(builder:flatbuffers.Builder, frameIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(27, frameIdOffset, 0);
+  builder.addFieldOffset(28, frameIdOffset, 0);
 }
 
 static addBoundElements(builder:flatbuffers.Builder, boundElementsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(28, boundElementsOffset, 0);
+  builder.addFieldOffset(29, boundElementsOffset, 0);
 }
 
 static createBoundElementsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -526,55 +547,59 @@ static startBoundElementsVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addUpdated(builder:flatbuffers.Builder, updated:bigint) {
-  builder.addFieldInt64(29, updated, BigInt('0'));
+  builder.addFieldInt64(30, updated, BigInt('0'));
 }
 
 static addLink(builder:flatbuffers.Builder, linkOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(30, linkOffset, 0);
+  builder.addFieldOffset(31, linkOffset, 0);
 }
 
 static addLocked(builder:flatbuffers.Builder, locked:boolean) {
-  builder.addFieldInt8(31, +locked, +false);
+  builder.addFieldInt8(32, +locked, +false);
 }
 
 static addCustomData(builder:flatbuffers.Builder, customDataOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(32, customDataOffset, 0);
+  builder.addFieldOffset(33, customDataOffset, 0);
 }
 
 static addFontSize(builder:flatbuffers.Builder, fontSize:number) {
-  builder.addFieldInt32(33, fontSize, 0);
+  builder.addFieldInt32(34, fontSize, 0);
 }
 
 static addFontFamily(builder:flatbuffers.Builder, fontFamilyOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(34, fontFamilyOffset, 0);
+  builder.addFieldOffset(35, fontFamilyOffset, 0);
 }
 
 static addText(builder:flatbuffers.Builder, textOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(35, textOffset, 0);
+  builder.addFieldOffset(36, textOffset, 0);
 }
 
 static addTextAlign(builder:flatbuffers.Builder, textAlignOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(36, textAlignOffset, 0);
+  builder.addFieldOffset(37, textAlignOffset, 0);
 }
 
 static addVerticalAlign(builder:flatbuffers.Builder, verticalAlignOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(37, verticalAlignOffset, 0);
+  builder.addFieldOffset(38, verticalAlignOffset, 0);
 }
 
 static addContainerId(builder:flatbuffers.Builder, containerIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(38, containerIdOffset, 0);
+  builder.addFieldOffset(39, containerIdOffset, 0);
 }
 
 static addOriginalText(builder:flatbuffers.Builder, originalTextOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(39, originalTextOffset, 0);
+  builder.addFieldOffset(40, originalTextOffset, 0);
 }
 
 static addLineHeight(builder:flatbuffers.Builder, lineHeight:number) {
-  builder.addFieldFloat32(40, lineHeight, 0.0);
+  builder.addFieldFloat32(41, lineHeight, 0.0);
+}
+
+static addAutoResize(builder:flatbuffers.Builder, autoResize:boolean) {
+  builder.addFieldInt8(42, +autoResize, +false);
 }
 
 static addPoints(builder:flatbuffers.Builder, pointsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(41, pointsOffset, 0);
+  builder.addFieldOffset(43, pointsOffset, 0);
 }
 
 static createPointsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -590,27 +615,31 @@ static startPointsVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addLastCommittedPoint(builder:flatbuffers.Builder, lastCommittedPointOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(42, lastCommittedPointOffset, 0);
+  builder.addFieldOffset(44, lastCommittedPointOffset, 0);
 }
 
 static addStartBinding(builder:flatbuffers.Builder, startBindingOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(43, startBindingOffset, 0);
+  builder.addFieldOffset(45, startBindingOffset, 0);
 }
 
 static addEndBinding(builder:flatbuffers.Builder, endBindingOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(44, endBindingOffset, 0);
+  builder.addFieldOffset(46, endBindingOffset, 0);
 }
 
 static addStartArrowhead(builder:flatbuffers.Builder, startArrowheadOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(45, startArrowheadOffset, 0);
+  builder.addFieldOffset(47, startArrowheadOffset, 0);
 }
 
 static addEndArrowhead(builder:flatbuffers.Builder, endArrowheadOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(46, endArrowheadOffset, 0);
+  builder.addFieldOffset(48, endArrowheadOffset, 0);
+}
+
+static addElbowed(builder:flatbuffers.Builder, elbowed:boolean) {
+  builder.addFieldInt8(49, +elbowed, +false);
 }
 
 static addPressures(builder:flatbuffers.Builder, pressuresOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(47, pressuresOffset, 0);
+  builder.addFieldOffset(50, pressuresOffset, 0);
 }
 
 static createPressuresVector(builder:flatbuffers.Builder, data:number[]|Float32Array):flatbuffers.Offset;
@@ -631,31 +660,31 @@ static startPressuresVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addSimulatePressure(builder:flatbuffers.Builder, simulatePressure:boolean) {
-  builder.addFieldInt8(48, +simulatePressure, +false);
+  builder.addFieldInt8(51, +simulatePressure, +false);
 }
 
 static addFileId(builder:flatbuffers.Builder, fileIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(49, fileIdOffset, 0);
+  builder.addFieldOffset(52, fileIdOffset, 0);
 }
 
 static addStatus(builder:flatbuffers.Builder, statusOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(50, statusOffset, 0);
+  builder.addFieldOffset(53, statusOffset, 0);
 }
 
 static addScale(builder:flatbuffers.Builder, scaleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(51, scaleOffset, 0);
+  builder.addFieldOffset(54, scaleOffset, 0);
 }
 
 static addIsCollapsed(builder:flatbuffers.Builder, isCollapsed:boolean) {
-  builder.addFieldInt8(52, +isCollapsed, +false);
+  builder.addFieldInt8(55, +isCollapsed, +false);
 }
 
 static addName(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(53, nameOffset, 0);
+  builder.addFieldOffset(56, nameOffset, 0);
 }
 
 static addGroupIdRef(builder:flatbuffers.Builder, groupIdRefOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(54, groupIdRefOffset, 0);
+  builder.addFieldOffset(57, groupIdRefOffset, 0);
 }
 
 static endDucElement(builder:flatbuffers.Builder):flatbuffers.Offset {

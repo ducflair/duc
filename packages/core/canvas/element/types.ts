@@ -6,7 +6,7 @@ import {
   THEME,
   VERTICAL_ALIGN,
 } from "../constants";
-import { MakeBrand, MarkNonNullable, ValueOf } from "../utility-types";
+import { MakeBrand, MarkNonNullable, Merge, ValueOf } from "../utility-types";
 import { MagicCacheData } from "../data/magic";
 import { SupportedMeasures  } from "../duc/utils/measurements";
 import { WritingLayers } from "../duc/utils/writingLayers";
@@ -27,9 +27,34 @@ export type TextAlign = typeof TEXT_ALIGN[keyof typeof TEXT_ALIGN];
 
 type VerticalAlignKeys = keyof typeof VERTICAL_ALIGN;
 export type VerticalAlign = typeof VERTICAL_ALIGN[VerticalAlignKeys];
+export type FractionalIndex = string & { _brand: "franctionalIndex" };
 
 export type OptionalDucElementBase = Partial<_DucElementBase>;
 export type OptionalDucGroup = Partial<DucGroup>;
+
+export type Ordered<TElement extends DucElement> = TElement & {
+  index: FractionalIndex;
+};
+export type OrderedDucElement = Ordered<DucElement>;
+
+export type DucNonSelectionElement = Exclude<
+  DucElement,
+  DucSelectionElement
+>;
+
+export type DucElbowArrowElement = Merge<
+  DucArrowElement,
+  {
+    elbowed: true;
+    startBinding: FixedPointBinding | null;
+    endBinding: FixedPointBinding | null;
+  }
+>;
+
+export type FixedPoint = [number, number];
+
+
+export type FixedPointBinding = Merge<PointBinding, { fixedPoint: FixedPoint }>;
 
 type _DucElementBase = Readonly<{
   id: string;
@@ -83,6 +108,11 @@ type _DucElementBase = Readonly<{
     | null;
   /** epoch (ms) timestamp of last element update */
   updated: number;
+  /** String in a fractional form defined by https://github.com/rocicorp/fractional-indexing.
+      Used for ordering in multiplayer scenarios, such as during reconciliation or undo / redo.
+      Always kept in sync with the array order by `syncMovedIndices` and `syncInvalidIndices`.
+      Could be null, i.e. for new elements which were not yet assigned to the scene. */
+  index: FractionalIndex | null;
   link: string | null;
   locked: boolean;
   customData?: Record<string, any>;
@@ -203,6 +233,7 @@ export type DucElement =
   | DucIframeElement
   | DucEmbeddableElement;
 
+
 export type DucElementTypes = DucElement["type"];
 
 export type NonDeleted<TElement extends DucElement> = TElement & {
@@ -221,6 +252,13 @@ export type DucTextElement = _DucElementBase &
     verticalAlign: VerticalAlign;
     containerId: DucGenericElement["id"] | null;
     originalText: string;
+    /**
+     * If `true` the width will fit the text. If `false`, the text will
+     * wrap to fit the width.
+     *
+     * @default true
+     */
+    autoResize: boolean;
     /**
      * Unitless line height (aligned to W3C). To get line height in px, multiply
      *  with font size (using `getLineHeightInPx` helper).
@@ -245,6 +283,12 @@ export type DucTextContainer =
   | DucEllipseElement
   | DucArrowElement;
 
+export type DucFlowchartNodeElement =
+  | DucRectangleElement
+  | DucDiamondElement
+  | DucEllipseElement;
+
+
 export type DucTextElementWithContainer = {
   containerId: DucTextContainer["id"];
 } & DucTextElement;
@@ -253,6 +297,12 @@ export type PointBinding = {
   elementId: DucBindableElement["id"];
   focus: number;
   gap: number;
+  // Represents the fixed point binding information in form of a vertical and
+  // horizontal ratio (i.e. a percentage value in the 0.0-1.0 range). This ratio
+  // gives the user selected fixed point by multiplying the bound element width
+  // with fixedPoint[0] and the bound element height with fixedPoint[1] to get the
+  // bound element-local point coordinate.
+  fixedPoint: FixedPoint | null;
 };
 
 export type Arrowhead =
@@ -280,6 +330,7 @@ export type DucLinearElement = _DucElementBase &
 export type DucArrowElement = DucLinearElement &
   Readonly<{
     type: "arrow";
+    elbowed: boolean;
   }>;
 
 export type DucFreeDrawElement = _DucElementBase &
