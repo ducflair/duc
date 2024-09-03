@@ -9,7 +9,6 @@
   --button-gray-2: #{$oc-gray-4};
   --button-gray-3: #{$oc-gray-5};
   --button-special-active-bg-color: #{$oc-green-0};
-  --select-text: #3c3c3c;
   --dialog-border-color: var(--color-gray-20);
   --dropdown-icon: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="292.4" height="292.4" viewBox="0 0 292 292"><path d="M287 197L159 69c-4-3-8-5-13-5s-9 2-13 5L5 197c-3 4-5 8-5 13s2 9 5 13c4 4 8 5 13 5h256c5 0 9-1 13-5s5-8 5-13-1-9-5-13z"/></svg>');
   --focus-highlight-color: #{$oc-blue-2};
@@ -99,6 +98,8 @@
   --color-gray-85: #242424;
   --color-gray-90: #1e1e1e;
   --color-gray-100: #121212;
+
+  --color-disabled: var(--color-gray-40);
 
   --color-warning: #fceeca;
   --color-warning-dark: #f5c354;
@@ -212,6 +213,7 @@
     --color-promo: #d297ff;
 
     --color-icon-white: var(--color-gray-90);
+    --color-disabled: var(--color-gray-70);
 
 
     --color-text-warning: var(--color-gray-80);

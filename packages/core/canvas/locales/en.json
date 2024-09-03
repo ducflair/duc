@@ -22,6 +22,7 @@
     "pasteStyles": "Paste styles",
     "stroke": "Stroke",
     "background": "Background",
+    "toggleGrid": "Toggle grid",
     "fill": "Fill",
     "strokeWidth": "Stroke width",
     "strokeStyle": "Stroke style",

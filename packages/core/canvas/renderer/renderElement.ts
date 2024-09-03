@@ -1,4 +1,4 @@
-import {
+import type {
   DucElement,
   DucTextElement,
   NonDeletedDucElement,
@@ -21,19 +21,21 @@ import {
 import { getElementAbsoluteCoords } from "../element/bounds";
 import type { RoughCanvas } from "roughjs/bin/canvas";
 
-import {
+import type {
   StaticCanvasRenderConfig,
   RenderableElementsMap,
+  InteractiveCanvasRenderConfig,
 } from "../scene/types";
 import { distance, getFontString, isRTL } from "../utils";
 import { getCornerRadius, isRightAngle } from "../math";
 import rough from "roughjs/bin/rough";
-import {
+import type {
   AppState,
   StaticCanvasAppState,
   Zoom,
   InteractiveCanvasAppState,
   ElementsPendingErasure,
+  PendingDucElements,
 } from "../types";
 import { getDefaultAppState } from "../appState";
 import {
@@ -41,8 +43,10 @@ import {
   ELEMENT_READY_TO_ERASE_OPACITY,
   FRAME_STYLE,
   MIME_TYPES,
+  THEME,
 } from "../constants";
-import { getStroke, StrokeOptions } from "perfect-freehand";
+import type { StrokeOptions } from "perfect-freehand";
+import { getStroke } from "perfect-freehand";
 import {
   getBoundTextElement,
   getContainerCoords,
@@ -50,19 +54,20 @@ import {
   getLineHeightInPx,
   getBoundTextMaxHeight,
   getBoundTextMaxWidth,
-  getVerticalOffset,
 } from "../element/textElement";
 import { LinearElementEditor } from "../element/linearElementEditor";
 
 import { getContainingFrame } from "../frame";
 import { ShapeCache } from "../scene/ShapeCache";
+import { getVerticalOffset } from "../fonts";
+import { COLOR_PALETTE } from "../colors";
 
 // using a stronger invert (100% vs our regular 93%) and saturate
 // as a temp hack to make images in dark theme look closer to original
 // color scheme (it's still not quite there and the colors look slightly
 // desatured, alas...)
-export const IMAGE_INVERT_FILTER = ""
-  // "invert(100%) hue-rotate(180deg) saturate(1.25)";
+export const IMAGE_INVERT_FILTER =
+  "invert(100%) hue-rotate(180deg) saturate(1.25)";
 
 const defaultAppState = getDefaultAppState();
 
@@ -79,20 +84,29 @@ const shouldResetImageFilter = (
   appState: StaticCanvasAppState,
 ) => {
   return (
-    appState.theme === "dark" &&
+    appState.theme === THEME.DARK &&
     isInitializedImageElement(element) &&
     !isPendingImageElement(element, renderConfig) &&
     renderConfig.imageCache.get(element.fileId)?.mimeType !== MIME_TYPES.svg
   );
 };
 
-const getCanvasPadding = (element: DucElement) =>
-  element.type === "freedraw" ? element.strokeWidth * 12 : 20;
+const getCanvasPadding = (element: DucElement) => {
+  switch (element.type) {
+    case "freedraw":
+      return element.strokeWidth * 12;
+    case "text":
+      return element.fontSize / 2;
+    default:
+      return 20;
+  }
+};
 
 export const getRenderOpacity = (
   element: DucElement,
   containingFrame: DucFrameLikeElement | null,
   elementsPendingErasure: ElementsPendingErasure,
+  pendingNodes: Readonly<PendingDucElements> | null,
 ) => {
   // multiplying frame opacity with element opacity to combine them
   // (e.g. frame 50% and element 50% opacity should result in 25% opacity)
@@ -102,6 +116,7 @@ export const getRenderOpacity = (
   // (so that erasing always results in lower opacity than original)
   if (
     elementsPendingErasure.has(element.id) ||
+    (pendingNodes && pendingNodes.some((node) => node.id === element.id)) ||
     (containingFrame && elementsPendingErasure.has(containingFrame.id))
   ) {
     opacity *= ELEMENT_READY_TO_ERASE_OPACITY / 100;
@@ -110,16 +125,18 @@ export const getRenderOpacity = (
   return opacity;
 };
 
-export interface ExcalidrawElementWithCanvas {
+export interface DucElementWithCanvas {
   element: DucElement | DucTextElement;
   canvas: HTMLCanvasElement;
   theme: AppState["theme"];
   scale: number;
+  angle: number;
   zoomValue: AppState["zoom"]["value"];
   canvasOffsetX: number;
   canvasOffsetY: number;
   boundTextElementVersion: number | null;
   containingFrameOpacity: number;
+  boundTextCanvas: HTMLCanvasElement;
 }
 
 const cappedElementCanvasSize = (
@@ -179,11 +196,11 @@ const cappedElementCanvasSize = (
 
 const generateElementCanvas = (
   element: NonDeletedDucElement,
-  elementsMap: RenderableElementsMap,
+  elementsMap: NonDeletedSceneElementsMap,
   zoom: Zoom,
   renderConfig: StaticCanvasRenderConfig,
   appState: StaticCanvasAppState,
-): ExcalidrawElementWithCanvas => {
+): DucElementWithCanvas | null => {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d")!;
   const padding = getCanvasPadding(element);
@@ -194,10 +211,14 @@ const generateElementCanvas = (
     zoom,
   );
 
+  if (!width || !height) {
+    return null;
+  }
+
   canvas.width = width;
   canvas.height = height;
 
-  let canvasOffsetX = 0;
+  let canvasOffsetX = -100;
   let canvasOffsetY = 0;
 
   if (isLinearElement(element) || isFreeDrawElement(element)) {
@@ -231,7 +252,71 @@ const generateElementCanvas = (
   }
 
   drawElementOnCanvas(element, rc, context, renderConfig, appState);
+
   context.restore();
+
+  const boundTextElement = getBoundTextElement(element, elementsMap);
+  const boundTextCanvas = document.createElement("canvas");
+  const boundTextCanvasContext = boundTextCanvas.getContext("2d")!;
+
+  if (isArrowElement(element) && boundTextElement) {
+    const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
+    // Take max dimensions of arrow canvas so that when canvas is rotated
+    // the arrow doesn't get clipped
+    const maxDim = Math.max(distance(x1, x2), distance(y1, y2));
+    boundTextCanvas.width =
+      maxDim * window.devicePixelRatio * scale + padding * scale * 10;
+    boundTextCanvas.height =
+      maxDim * window.devicePixelRatio * scale + padding * scale * 10;
+    boundTextCanvasContext.translate(
+      boundTextCanvas.width / 2,
+      boundTextCanvas.height / 2,
+    );
+    boundTextCanvasContext.rotate(element.angle);
+    boundTextCanvasContext.drawImage(
+      canvas!,
+      -canvas.width / 2,
+      -canvas.height / 2,
+      canvas.width,
+      canvas.height,
+    );
+
+    const [, , , , boundTextCx, boundTextCy] = getElementAbsoluteCoords(
+      boundTextElement,
+      elementsMap,
+    );
+
+    boundTextCanvasContext.rotate(-element.angle);
+    const offsetX = (boundTextCanvas.width - canvas!.width) / 2;
+    const offsetY = (boundTextCanvas.height - canvas!.height) / 2;
+    const shiftX =
+      boundTextCanvas.width / 2 -
+      (boundTextCx - x1) * window.devicePixelRatio * scale -
+      offsetX -
+      padding * scale;
+
+    const shiftY =
+      boundTextCanvas.height / 2 -
+      (boundTextCy - y1) * window.devicePixelRatio * scale -
+      offsetY -
+      padding * scale;
+    boundTextCanvasContext.translate(-shiftX, -shiftY);
+    // Clear the bound text area
+    boundTextCanvasContext.clearRect(
+      -(boundTextElement.width / 2 + BOUND_TEXT_PADDING) *
+        window.devicePixelRatio *
+        scale,
+      -(boundTextElement.height / 2 + BOUND_TEXT_PADDING) *
+        window.devicePixelRatio *
+        scale,
+      (boundTextElement.width + BOUND_TEXT_PADDING * 2) *
+        window.devicePixelRatio *
+        scale,
+      (boundTextElement.height + BOUND_TEXT_PADDING * 2) *
+        window.devicePixelRatio *
+        scale,
+    );
+  }
 
   return {
     element,
@@ -245,6 +330,8 @@ const generateElementCanvas = (
       getBoundTextElement(element, elementsMap)?.version || null,
     containingFrameOpacity:
       getContainingFrame(element, elementsMap)?.opacity || 100,
+    boundTextCanvas,
+    angle: element.angle,
   };
 };
 
@@ -252,27 +339,26 @@ export const DEFAULT_LINK_SIZE = 14;
 
 const IMAGE_PLACEHOLDER_IMG = document.createElement("img");
 IMAGE_PLACEHOLDER_IMG.src = `data:${MIME_TYPES.svg},${encodeURIComponent(
-  `<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="image" class="svg-inline--fa fa-image fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#888" d="M464 448H48c-26.51 0-48-21.49-48-48V112c0-26.51 21.49-48 48-48h416c26.51 0 48 21.49 48 48v288c0 26.51-21.49 48-48 48zM112 120c-30.928 0-56 25.072-56 56s25.072 56 56 56 56-25.072 56-56-25.072-56-56-56zM64 384h384V272l-87.515-87.515c-4.686-4.686-12.284-4.686-16.971 0L208 320l-55.515-55.515c-4.686-4.686-12.284-4.686-16.971 0L64 336v48z"></path></svg>`,
+  `<svg width="1400" height="1400" viewBox="0 0 1400 1400" fill="none" xmlns="http://www.w3.org/2000/svg"><g opacity="0.5"><g opacity="0.5"><path d="M450 700.003C450 838.074 561.929 950.002 700.001 950.002C838.071 950.002 950 838.074 950 700.003C950 561.931 838.071 450.002 700.001 450.002C561.929 450.002 450 561.931 450 700.003Z" fill="#DEDEDE" fill-opacity="0.8" stroke="#C9C9C9" stroke-width="4.7619"/></g><path d="M1176.19 700L223.81 700.001" stroke="url(#paint0_linear_4954_71968)" stroke-width="4.15993"/><path d="M1165.33 232.284L233.333 1164.29" stroke="url(#paint1_linear_4954_71968)" stroke-width="5.75714"/><path d="M1165.34 1165.33L233.333 233.334" stroke="url(#paint2_linear_4954_71968)" stroke-width="5.75714"/><path d="M700.001 1176.19L700 223.812" stroke="url(#paint3_linear_4954_71968)" stroke-width="4.15993"/><path d="M699.583 834.881C624.859 834.881 564.286 774.307 564.286 699.586C564.286 624.862 624.859 564.288 699.583 564.288C774.305 564.288 834.879 624.862 834.879 699.586C834.879 774.307 774.305 834.881 699.583 834.881Z" fill="white"/><path d="M699.583 834.881C624.859 834.881 564.286 774.307 564.286 699.586C564.286 624.862 624.859 564.288 699.583 564.288C774.305 564.288 834.879 624.862 834.879 699.586C834.879 774.307 774.305 834.881 699.583 834.881Z" stroke="#C9C9C9" stroke-width="5.75714"/><path d="M734.722 655.359H665.278C659.799 655.359 655.357 659.801 655.357 665.28V734.724C655.357 740.203 659.799 744.645 665.278 744.645H734.722C740.201 744.645 744.643 740.203 744.643 734.724V665.28C744.643 659.801 740.201 655.359 734.722 655.359Z" stroke="#8C8C8C" stroke-width="9.92064" stroke-linecap="round" stroke-linejoin="round"/><path d="M685.119 695.042C690.598 695.042 695.04 690.6 695.04 685.121C695.04 679.642 690.598 675.201 685.119 675.201C679.64 675.201 675.198 679.642 675.198 685.121C675.198 690.6 679.64 695.042 685.119 695.042Z" stroke="#8C8C8C" stroke-width="9.92064" stroke-linecap="round" stroke-linejoin="round"/><path d="M744.643 714.884L729.335 699.576C727.475 697.716 724.952 696.671 722.321 696.671C719.691 696.671 717.168 697.716 715.307 699.576L670.238 744.645" stroke="#8C8C8C" stroke-width="9.92064" stroke-linecap="round" stroke-linejoin="round"/></g><defs><linearGradient id="paint0_linear_4954_71968" x1="222.982" y1="697.777" x2="1177.02" y2="697.771" gradientUnits="userSpaceOnUse"><stop stop-color="#C9C9C9" stop-opacity="0"/><stop offset="0.208" stop-color="#C9C9C9"/><stop offset="0.792" stop-color="#C9C9C9"/><stop offset="1" stop-color="#C9C9C9" stop-opacity="0"/></linearGradient><linearGradient id="paint1_linear_4954_71968" x1="230.347" y1="1162.92" x2="1163.96" y2="229.296" gradientUnits="userSpaceOnUse"><stop stop-color="#C9C9C9" stop-opacity="0"/><stop offset="0.208" stop-color="#C9C9C9"/><stop offset="0.792" stop-color="#C9C9C9"/><stop offset="1" stop-color="#C9C9C9" stop-opacity="0"/></linearGradient><linearGradient id="paint2_linear_4954_71968" x1="234.7" y1="230.349" x2="1168.32" y2="1163.96" gradientUnits="userSpaceOnUse"><stop stop-color="#C9C9C9" stop-opacity="0"/><stop offset="0.208" stop-color="#C9C9C9"/><stop offset="0.792" stop-color="#C9C9C9"/><stop offset="1" stop-color="#C9C9C9" stop-opacity="0"/></linearGradient><linearGradient id="paint3_linear_4954_71968" x1="702.224" y1="222.985" x2="702.23" y2="1177.02" gradientUnits="userSpaceOnUse"><stop stop-color="#C9C9C9" stop-opacity="0"/><stop offset="0.208" stop-color="#C9C9C9"/><stop offset="0.792" stop-color="#C9C9C9"/><stop offset="1" stop-color="#C9C9C9" stop-opacity="0"/></linearGradient></defs></svg>`,
 )}`;
 
 const IMAGE_ERROR_PLACEHOLDER_IMG = document.createElement("img");
 IMAGE_ERROR_PLACEHOLDER_IMG.src = `data:${MIME_TYPES.svg},${encodeURIComponent(
-  `<svg viewBox="0 0 668 668" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2"><path d="M464 448H48c-26.51 0-48-21.49-48-48V112c0-26.51 21.49-48 48-48h416c26.51 0 48 21.49 48 48v288c0 26.51-21.49 48-48 48ZM112 120c-30.928 0-56 25.072-56 56s25.072 56 56 56 56-25.072 56-56-25.072-56-56-56ZM64 384h384V272l-87.515-87.515c-4.686-4.686-12.284-4.686-16.971 0L208 320l-55.515-55.515c-4.686-4.686-12.284-4.686-16.971 0L64 336v48Z" style="fill:#888;fill-rule:nonzero" transform="matrix(.81709 0 0 .81709 124.825 145.825)"/><path d="M256 8C119.034 8 8 119.033 8 256c0 136.967 111.034 248 248 248s248-111.034 248-248S392.967 8 256 8Zm130.108 117.892c65.448 65.448 70 165.481 20.677 235.637L150.47 105.216c70.204-49.356 170.226-44.735 235.638 20.676ZM125.892 386.108c-65.448-65.448-70-165.481-20.677-235.637L361.53 406.784c-70.203 49.356-170.226 44.736-235.638-20.676Z" style="fill:#888;fill-rule:nonzero" transform="matrix(.30366 0 0 .30366 506.822 60.065)"/></svg>`,
+  `<svg width="1400" height="1400" viewBox="0 0 1400 1400" fill="none" xmlns="http://www.w3.org/2000/svg"><g opacity="0.5"><g opacity="0.5"><path d="M449.999 700.003C449.999 838.073 561.928 950.002 700 950.002C838.071 950.002 949.999 838.073 949.999 700.003C949.999 561.931 838.071 450.002 700 450.002C561.928 450.002 449.999 561.931 449.999 700.003Z" fill="#DEDEDE" fill-opacity="0.8" stroke="#C9C9C9" stroke-width="4.76191"/></g><path d="M1176.19 700L223.81 700.001" stroke="url(#paint0_linear_4954_79613)" stroke-width="4.15993"/><path d="M1165.33 232.284L233.333 1164.29" stroke="url(#paint1_linear_4954_79613)" stroke-width="5.75714"/><path d="M1165.34 1165.33L233.334 233.334" stroke="url(#paint2_linear_4954_79613)" stroke-width="5.75714"/><path d="M700.001 1176.19L700 223.812" stroke="url(#paint3_linear_4954_79613)" stroke-width="4.15993"/><path d="M699.583 834.881C624.859 834.881 564.286 774.307 564.286 699.586C564.286 624.862 624.859 564.288 699.583 564.288C774.305 564.288 834.879 624.862 834.879 699.586C834.879 774.307 774.305 834.881 699.583 834.881Z" fill="white"/><path d="M699.583 834.881C624.859 834.881 564.285 774.307 564.285 699.586C564.285 624.862 624.859 564.288 699.583 564.288C774.304 564.288 834.878 624.862 834.878 699.586C834.878 774.307 774.304 834.881 699.583 834.881Z" stroke="#C9C9C9" stroke-width="5.75714"/><path d="M650.396 650.396L749.603 749.603" stroke="#8C8C8C" stroke-width="9.92064" stroke-linecap="round" stroke-linejoin="round"/><path d="M692.113 692.113C691.191 693.035 690.097 693.766 688.893 694.265C687.688 694.763 686.398 695.02 685.094 695.02C683.791 695.02 682.5 694.763 681.296 694.265C680.091 693.766 678.997 693.035 678.075 692.113C677.154 691.191 676.422 690.097 675.924 688.893C675.425 687.688 675.168 686.398 675.168 685.094C675.168 683.791 675.425 682.5 675.924 681.295C676.422 680.091 677.154 678.997 678.075 678.075" stroke="#8C8C8C" stroke-width="9.92064" stroke-linecap="round" stroke-linejoin="round"/><path d="M707.44 707.44L670.238 744.643" stroke="#8C8C8C" stroke-width="9.92064" stroke-linecap="round" stroke-linejoin="round"/><path d="M729.762 700L744.643 714.881" stroke="#8C8C8C" stroke-width="9.92064" stroke-linecap="round" stroke-linejoin="round"/><path d="M658.284 658.284C657.359 659.199 656.624 660.288 656.122 661.489C655.62 662.689 655.36 663.977 655.357 665.278V734.722C655.357 737.353 656.402 739.877 658.263 741.737C660.123 743.598 662.646 744.643 665.278 744.643H734.722C737.45 744.643 739.94 743.552 741.716 741.716" stroke="#8C8C8C" stroke-width="9.92064" stroke-linecap="round" stroke-linejoin="round"/><path d="M744.643 714.881V665.278C744.643 662.646 743.598 660.123 741.737 658.263C739.877 656.402 737.353 655.357 734.722 655.357H685.119" stroke="#8C8C8C" stroke-width="9.92064" stroke-linecap="round" stroke-linejoin="round"/></g><defs><linearGradient id="paint0_linear_4954_79613" x1="222.982" y1="697.777" x2="1177.02" y2="697.771" gradientUnits="userSpaceOnUse"><stop stop-color="#C9C9C9" stop-opacity="0"/><stop offset="0.208" stop-color="#C9C9C9"/><stop offset="0.792" stop-color="#C9C9C9"/><stop offset="1" stop-color="#C9C9C9" stop-opacity="0"/></linearGradient><linearGradient id="paint1_linear_4954_79613" x1="230.347" y1="1162.92" x2="1163.96" y2="229.296" gradientUnits="userSpaceOnUse"><stop stop-color="#C9C9C9" stop-opacity="0"/><stop offset="0.208" stop-color="#C9C9C9"/><stop offset="0.792" stop-color="#C9C9C9"/><stop offset="1" stop-color="#C9C9C9" stop-opacity="0"/></linearGradient><linearGradient id="paint2_linear_4954_79613" x1="234.701" y1="230.349" x2="1168.32" y2="1163.96" gradientUnits="userSpaceOnUse"><stop stop-color="#C9C9C9" stop-opacity="0"/><stop offset="0.208" stop-color="#C9C9C9"/><stop offset="0.792" stop-color="#C9C9C9"/><stop offset="1" stop-color="#C9C9C9" stop-opacity="0"/></linearGradient><linearGradient id="paint3_linear_4954_79613" x1="702.224" y1="222.985" x2="702.23" y2="1177.02" gradientUnits="userSpaceOnUse"><stop stop-color="#C9C9C9" stop-opacity="0"/><stop offset="0.208" stop-color="#C9C9C9"/><stop offset="0.792" stop-color="#C9C9C9"/><stop offset="1" stop-color="#C9C9C9" stop-opacity="0"/></linearGradient></defs></svg>`,
 )}`;
 
 const drawImagePlaceholder = (
   element: DucImageElement,
   context: CanvasRenderingContext2D,
-  zoomValue: AppState["zoom"]["value"],
 ) => {
-  context.fillStyle = "#E7E7E7";
+  context.fillStyle = "#E9E9E9";
   context.fillRect(0, 0, element.width, element.height);
 
   const imageMinWidthOrHeight = Math.min(element.width, element.height);
 
   const size = Math.min(
     imageMinWidthOrHeight,
-    Math.min(imageMinWidthOrHeight * 0.4, 100),
+    imageMinWidthOrHeight * 0.8,
   );
 
   context.drawImage(
@@ -356,7 +442,7 @@ const drawElementOnCanvas = (
           element.height,
         );
       } else {
-        drawImagePlaceholder(element, context, appState.zoom.value);
+        drawImagePlaceholder(element, context);
       }
       break;
     }
@@ -416,12 +502,12 @@ const drawElementOnCanvas = (
 
 export const elementWithCanvasCache = new WeakMap<
   DucElement,
-  ExcalidrawElementWithCanvas
+  DucElementWithCanvas
 >();
 
 const generateElementWithCanvas = (
   element: NonDeletedDucElement,
-  elementsMap: RenderableElementsMap,
+  elementsMap: NonDeletedSceneElementsMap,
   renderConfig: StaticCanvasRenderConfig,
   appState: StaticCanvasAppState,
 ) => {
@@ -431,8 +517,8 @@ const generateElementWithCanvas = (
     prevElementWithCanvas &&
     prevElementWithCanvas.zoomValue !== zoom.value &&
     !appState?.shouldCacheIgnoreZoom;
-  const boundTextElementVersion =
-    getBoundTextElement(element, elementsMap)?.version || null;
+  const boundTextElement = getBoundTextElement(element, elementsMap);
+  const boundTextElementVersion = boundTextElement?.version || null;
 
   const containingFrameOpacity =
     getContainingFrame(element, elementsMap)?.opacity || 100;
@@ -442,7 +528,14 @@ const generateElementWithCanvas = (
     shouldRegenerateBecauseZoom ||
     prevElementWithCanvas.theme !== appState.theme ||
     prevElementWithCanvas.boundTextElementVersion !== boundTextElementVersion ||
-    prevElementWithCanvas.containingFrameOpacity !== containingFrameOpacity
+    prevElementWithCanvas.containingFrameOpacity !== containingFrameOpacity ||
+    // since we rotate the canvas when copying from cached canvas, we don't
+    // regenerate the cached canvas. But we need to in case of labels which are
+    // cached alongside the arrow, and we want the labels to remain unrotated
+    // with respect to the arrow.
+    (isArrowElement(element) &&
+      boundTextElement &&
+      element.angle !== prevElementWithCanvas.angle)
   ) {
     const elementWithCanvas = generateElementCanvas(
       element,
@@ -452,6 +545,10 @@ const generateElementWithCanvas = (
       appState,
     );
 
+    if (!elementWithCanvas) {
+      return null;
+    }
+
     elementWithCanvasCache.set(element, elementWithCanvas);
 
     return elementWithCanvas;
@@ -460,7 +557,7 @@ const generateElementWithCanvas = (
 };
 
 const drawElementFromCanvas = (
-  elementWithCanvas: ExcalidrawElementWithCanvas,
+  elementWithCanvas: DucElementWithCanvas,
   context: CanvasRenderingContext2D,
   renderConfig: StaticCanvasRenderConfig,
   appState: StaticCanvasAppState,
@@ -469,16 +566,7 @@ const drawElementFromCanvas = (
   const element = elementWithCanvas.element;
   const padding = getCanvasPadding(element);
   const zoom = elementWithCanvas.scale;
-  let [x1, y1, x2, y2] = getElementAbsoluteCoords(element, allElementsMap);
-
-  // Free draw elements will otherwise "shuffle" as the min x and y change
-  if (isFreeDrawElement(element)) {
-    x1 = Math.floor(x1);
-    x2 = Math.ceil(x2);
-    y1 = Math.floor(y1);
-    y2 = Math.ceil(y2);
-  }
-
+  const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, allElementsMap);
   const cx = ((x1 + x2) / 2 + appState.scrollX) * window.devicePixelRatio;
   const cy = ((y1 + y2) / 2 + appState.scrollY) * window.devicePixelRatio;
 
@@ -488,75 +576,21 @@ const drawElementFromCanvas = (
   const boundTextElement = getBoundTextElement(element, allElementsMap);
 
   if (isArrowElement(element) && boundTextElement) {
-    const tempCanvas = document.createElement("canvas");
-    const tempCanvasContext = tempCanvas.getContext("2d")!;
-
-    // Take max dimensions of arrow canvas so that when canvas is rotated
-    // the arrow doesn't get clipped
-    const maxDim = Math.max(distance(x1, x2), distance(y1, y2));
-    tempCanvas.width =
-      maxDim * window.devicePixelRatio * zoom +
-      padding * elementWithCanvas.scale * 10;
-    tempCanvas.height =
-      maxDim * window.devicePixelRatio * zoom +
-      padding * elementWithCanvas.scale * 10;
-    const offsetX = (tempCanvas.width - elementWithCanvas.canvas!.width) / 2;
-    const offsetY = (tempCanvas.height - elementWithCanvas.canvas!.height) / 2;
-
-    tempCanvasContext.translate(tempCanvas.width / 2, tempCanvas.height / 2);
-    tempCanvasContext.rotate(element.angle);
-
-    tempCanvasContext.drawImage(
-      elementWithCanvas.canvas!,
-      -elementWithCanvas.canvas.width / 2,
-      -elementWithCanvas.canvas.height / 2,
-      elementWithCanvas.canvas.width,
-      elementWithCanvas.canvas.height,
-    );
-
-    const [, , , , boundTextCx, boundTextCy] = getElementAbsoluteCoords(
-      boundTextElement,
-      allElementsMap,
-    );
-
-    tempCanvasContext.rotate(-element.angle);
-
-    // Shift the canvas to the center of the bound text element
-    const shiftX =
-      tempCanvas.width / 2 -
-      (boundTextCx - x1) * window.devicePixelRatio * zoom -
-      offsetX -
-      padding * zoom;
-
-    const shiftY =
-      tempCanvas.height / 2 -
-      (boundTextCy - y1) * window.devicePixelRatio * zoom -
-      offsetY -
-      padding * zoom;
-    tempCanvasContext.translate(-shiftX, -shiftY);
-    // Clear the bound text area
-    tempCanvasContext.clearRect(
-      -(boundTextElement.width / 2 + BOUND_TEXT_PADDING) *
-        window.devicePixelRatio *
-        zoom,
-      -(boundTextElement.height / 2 + BOUND_TEXT_PADDING) *
-        window.devicePixelRatio *
-        zoom,
-      (boundTextElement.width + BOUND_TEXT_PADDING * 2) *
-        window.devicePixelRatio *
-        zoom,
-      (boundTextElement.height + BOUND_TEXT_PADDING * 2) *
-        window.devicePixelRatio *
-        zoom,
-    );
-
+    const offsetX =
+      (elementWithCanvas.boundTextCanvas.width -
+        elementWithCanvas.canvas!.width) /
+      2;
+    const offsetY =
+      (elementWithCanvas.boundTextCanvas.height -
+        elementWithCanvas.canvas!.height) /
+      2;
     context.translate(cx, cy);
     context.drawImage(
-      tempCanvas,
+      elementWithCanvas.boundTextCanvas,
       (-(x2 - x1) / 2) * window.devicePixelRatio - offsetX / zoom - padding,
       (-(y2 - y1) / 2) * window.devicePixelRatio - offsetY / zoom - padding,
-      tempCanvas.width / zoom,
-      tempCanvas.height / zoom,
+      elementWithCanvas.boundTextCanvas.width / zoom,
+      elementWithCanvas.boundTextCanvas.height / zoom,
     );
   } else {
     // we translate context to element center so that rotation and scale
@@ -617,6 +651,7 @@ export const renderSelectionElement = (
   element: NonDeletedDucElement,
   context: CanvasRenderingContext2D,
   appState: InteractiveCanvasAppState,
+  selectionColor: InteractiveCanvasRenderConfig["selectionColor"],
 ) => {
   context.save();
   context.translate(element.x + appState.scrollX, element.y + appState.scrollY);
@@ -630,7 +665,7 @@ export const renderSelectionElement = (
 
   context.fillRect(offset, offset, element.width, element.height);
   context.lineWidth = 1 / appState.zoom.value;
-  context.strokeStyle = " rgb(105, 101, 219)";
+  context.strokeStyle = selectionColor ? selectionColor : COLOR_PALETTE.midGray;
   context.strokeRect(offset, offset, element.width, element.height);
 
   context.restore();
@@ -649,6 +684,7 @@ export const renderElement = (
     element,
     getContainingFrame(element, elementsMap),
     renderConfig.elementsPendingErasure,
+    renderConfig.pendingFlowchartNodes,
   );
 
   switch (element.type) {
@@ -668,8 +704,11 @@ export const renderElement = (
         // TODO change later to only affect AI frames
         if (isMagicFrameElement(element)) {
           context.strokeStyle =
-            appState.theme === "light" ? "#7affd7" : "#1d8264";
+            appState.theme === THEME.LIGHT ? "#7affd7" : "#1d8264";
         }
+
+        context.fillStyle = FRAME_STYLE.backgroundColor;
+        context.fillRect(0, 0, element.width, element.height);
 
         if (FRAME_STYLE.radius && context.roundRect) {
           context.beginPath();
@@ -711,10 +750,14 @@ export const renderElement = (
       } else {
         const elementWithCanvas = generateElementWithCanvas(
           element,
-          elementsMap,
+          allElementsMap,
           renderConfig,
           appState,
         );
+        if (!elementWithCanvas) {
+          return;
+        }
+
         drawElementFromCanvas(
           elementWithCanvas,
           context,
@@ -849,10 +892,14 @@ export const renderElement = (
       } else {
         const elementWithCanvas = generateElementWithCanvas(
           element,
-          elementsMap,
+          allElementsMap,
           renderConfig,
           appState,
         );
+
+        if (!elementWithCanvas) {
+          return;
+        }
 
         const currentImageSmoothingStatus = context.imageSmoothingEnabled;
 

@@ -48,14 +48,26 @@ export const serializeDucElement = (builder: flatbuffers.Builder, element: DucEl
   let endArrowheadOffset: flatbuffers.Offset | undefined;
   
   if (element.type === 'line' || element.type === 'arrow') {    
-    if (element.startBinding) {
+    if (element.startBinding && element.startBinding.fixedPoint) {
       const startBindingElementId = builder.createString(element.startBinding.elementId);
-      startBindingOffset = PointBinding.createPointBinding(builder, startBindingElementId, element.startBinding.focus, element.startBinding.gap);
+      const fixedPointBindingOffset = Point.createPoint(builder, element.startBinding.fixedPoint?.[0], element.startBinding.fixedPoint?.[1]);
+      PointBinding.startPointBinding(builder);
+      PointBinding.addElementId(builder, startBindingElementId);
+      PointBinding.addFocus(builder, element.startBinding.focus);
+      PointBinding.addGap(builder, element.startBinding.gap);
+      PointBinding.addFixedPoint(builder, fixedPointBindingOffset);
+      startBindingOffset = PointBinding.endPointBinding(builder);
     }
 
-    if (element.endBinding) {
+    if (element.endBinding && element.endBinding.fixedPoint) {
       const endBindingElementId = builder.createString(element.endBinding.elementId);
-      endBindingOffset = PointBinding.createPointBinding(builder, endBindingElementId, element.endBinding.focus, element.endBinding.gap);
+      const fixedPointBindingOffset = Point.createPoint(builder, element.endBinding.fixedPoint?.[0], element.endBinding.fixedPoint?.[1]);
+      PointBinding.startPointBinding(builder);
+      PointBinding.addElementId(builder, endBindingElementId);
+      PointBinding.addFocus(builder, element.endBinding.focus);
+      PointBinding.addGap(builder, element.endBinding.gap);
+      PointBinding.addFixedPoint(builder, fixedPointBindingOffset);
+      endBindingOffset = PointBinding.endPointBinding(builder);
     }
 
     startArrowheadOffset = builder.createString(element.startArrowhead);

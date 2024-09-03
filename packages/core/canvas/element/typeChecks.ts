@@ -1,8 +1,10 @@
+import type { LineSegment } from "../../utils";
 import { ROUNDNESS } from "../constants";
-import { ElementOrToolType } from "../types";
-import { MarkNonNullable } from "../utility-types";
+import type { ElementOrToolType, Point } from "../types";
+import type { MarkNonNullable } from "../utility-types";
 import { assertNever } from "../utils";
-import {
+import type { Bounds } from "./bounds";
+import type {
   DucElement,
   DucTextElement,
   DucEmbeddableElement,
@@ -20,6 +22,11 @@ import {
   DucIframeElement,
   DucIframeLikeElement,
   DucMagicFrameElement,
+  DucArrowElement,
+  DucElbowArrowElement,
+  PointBinding,
+  FixedPointBinding,
+  DucFlowchartNodeElement,
 } from "./types";
 
 export const isInitializedImageElement = (
@@ -99,11 +106,6 @@ export const isLinearElement = (
   return element != null && isLinearElementType(element.type);
 };
 
-export const isArrowElement = (
-  element?: DucElement | null,
-): element is DucLinearElement => {
-  return element != null && element.type === "arrow";
-};
 
 export const isLinearElementType = (
   elementType: ElementOrToolType,
@@ -111,6 +113,28 @@ export const isLinearElementType = (
   return (
     elementType === "arrow" || elementType === "line" // || elementType === "freedraw"
   );
+};
+
+export const isFlowchartNodeElement = (
+  element: DucElement,
+): element is DucFlowchartNodeElement => {
+  return (
+    element.type === "rectangle" ||
+    element.type === "ellipse" ||
+    element.type === "diamond"
+  );
+};
+
+export const isArrowElement = (
+  element?: DucElement | null,
+): element is DucArrowElement => {
+  return element != null && element.type === "arrow";
+};
+
+export const isElbowArrow = (
+  element?: DucElement,
+): element is DucElbowArrowElement => {
+  return isArrowElement(element) && element.elbowed;
 };
 
 export const isBindingElement = (
@@ -131,7 +155,7 @@ export const isBindingElementType = (
 };
 
 export const isBindableElement = (
-  element: DucElement | null,
+  element: DucElement | null | undefined,
   includeLocked = true,
 ): element is DucBindableElement => {
   return (
@@ -149,6 +173,39 @@ export const isBindableElement = (
   );
 };
 
+export const isRectanguloidElement = (
+  element?: DucElement | null,
+): element is DucBindableElement => {
+  return (
+    element != null &&
+    (element.type === "rectangle" ||
+      element.type === "diamond" ||
+      element.type === "image" ||
+      element.type === "iframe" ||
+      element.type === "embeddable" ||
+      element.type === "frame" ||
+      element.type === "magicframe" ||
+      (element.type === "text" && !element.containerId))
+  );
+};
+
+// TODO: Remove this when proper distance calculation is introduced
+// @see binding.ts:distanceToBindableElement()
+export const isRectangularElement = (
+  element?: DucElement | null,
+): element is DucBindableElement => {
+  return (
+    element != null &&
+    (element.type === "rectangle" ||
+      element.type === "image" ||
+      element.type === "text" ||
+      element.type === "iframe" ||
+      element.type === "embeddable" ||
+      element.type === "frame" ||
+      element.type === "magicframe")
+  );
+};
+
 export const isTextBindableContainer = (
   element: DucElement | null,
   includeLocked = true,
@@ -163,7 +220,7 @@ export const isTextBindableContainer = (
   );
 };
 
-export const isExcalidrawElement = (
+export const isDucElement = (
   element: any,
 ): element is DucElement => {
   const type: DucElementType | undefined = element?.type;
@@ -181,8 +238,8 @@ export const isExcalidrawElement = (
     case "freedraw":
     case "line":
     case "frame":
-    case "group":
     case "magicframe":
+    case "group":
     case "image":
     case "selection": {
       return true;
@@ -193,6 +250,7 @@ export const isExcalidrawElement = (
     }
   }
 };
+
 
 export const hasBoundTextElement = (
   element: DucElement | null,
@@ -262,4 +320,33 @@ export const getDefaultRoundnessTypeForElement = (
   }
 
   return null;
+};
+
+
+
+// TODO: Move this to @excalidraw/math
+export const isPoint = (point: unknown): point is Point =>
+  Array.isArray(point) && point.length === 2;
+
+// TODO: Move this to @excalidraw/math
+export const isBounds = (box: unknown): box is Bounds =>
+  Array.isArray(box) &&
+  box.length === 4 &&
+  typeof box[0] === "number" &&
+  typeof box[1] === "number" &&
+  typeof box[2] === "number" &&
+  typeof box[3] === "number";
+
+// TODO: Move this to @excalidraw/math
+export const isLineSegment = (segment: unknown): segment is LineSegment =>
+  Array.isArray(segment) &&
+  segment.length === 2 &&
+  isPoint(segment[0]) &&
+  isPoint(segment[0]);
+
+
+export const isFixedPointBinding = (
+  binding: PointBinding,
+): binding is FixedPointBinding => {
+  return binding.fixedPoint != null;
 };
