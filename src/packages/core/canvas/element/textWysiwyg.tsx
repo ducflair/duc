@@ -295,7 +295,7 @@ export const textWysiwyg = ({
   editable.dataset.type = "wysiwyg";
   // prevent line wrapping on Safari
   editable.wrap = "off";
-  editable.classList.add("Duc-wysiwyg");
+  editable.classList.add("excalidraw-wysiwyg");
 
   let whiteSpace = "pre";
   let wordBreak = "normal";
@@ -659,7 +659,7 @@ export const textWysiwyg = ({
       ((event.target instanceof HTMLElement ||
         event.target instanceof SVGElement) &&
         event.target.closest(
-          `.${CLASSES.SHAPE_ACTIONS_MENU}`,
+          `.${CLASSES.SHAPE_ACTIONS_MENU}, .${CLASSES.ZOOM_ACTIONS}`,
         ) &&
         !isWritableElement(event.target)) ||
       isPropertiesTrigger
@@ -730,6 +730,6 @@ export const textWysiwyg = ({
   });
   window.addEventListener("beforeunload", handleSubmit);
   excalidrawContainer
-    ?.querySelector(".Duc-textEditorContainer")!
+    ?.querySelector(".excalidraw-textEditorContainer")!
     .appendChild(editable);
 };

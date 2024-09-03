@@ -80,7 +80,7 @@ const StaticCanvas = (props: StaticCanvasProps) => {
     );
   });
 
-  return <div className="Duc__canvas-wrapper" ref={wrapperRef} />;
+  return <div className="excalidraw__canvas-wrapper" ref={wrapperRef} />;
 };
 
 const getRelevantAppStateProps = (
