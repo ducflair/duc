@@ -18,6 +18,7 @@ import {
   DucIframeElement,
   ElementsMap,
   DucGroupElement,
+  DucArrowElement,
 } from "./types";
 import {
   arrayToMap,
@@ -37,7 +38,6 @@ import {
   normalizeText,
   wrapText,
   getBoundTextMaxWidth,
-  getDefaultLineHeight,
 } from "./textElement";
 import {
   DEFAULT_ELEMENT_PROPS,
@@ -50,6 +50,7 @@ import {
 import { MarkOptional, Merge, Mutable } from "../utility-types";
 import { getDefaultAppState } from "../appState";
 import App from "../components/App";
+import { getLineHeight } from "../fonts";
 
 export type ElementConstructorOpts = MarkOptional<
   Omit<DucGenericElement, "id" | "type" | "isDeleted" | "updated">,
@@ -64,6 +65,7 @@ export type ElementConstructorOpts = MarkOptional<
   | "version"
   | "versionNonce"
   | "link"
+  | "index"
   | "strokeStyle"
   | "fillStyle"
   | "strokeColor"
@@ -89,9 +91,10 @@ const _newElementBase = <T extends DucElement>(
   {
     x,
     y,
-    writingLayer = state.writingLayer,
-    scope = state.scope,
-    label = `Element ${randomInteger()}`,
+    writingLayer = "notes",
+    scope = "mm",
+    index = null,
+    label = `Lost Element`,
     ratioLocked = DEFAULT_ELEMENT_PROPS.ratioLocked,
     isVisible = DEFAULT_ELEMENT_PROPS.isVisible,
     strokeColor = DEFAULT_ELEMENT_PROPS.strokeColor,
@@ -122,6 +125,7 @@ const _newElementBase = <T extends DucElement>(
     y,
     width,
     height,
+    index,
     strokePlacement,
     ratioLocked,
     isVisible,
@@ -165,6 +169,27 @@ export const newEmbeddableElement = (
   } & ElementConstructorOpts,
 ): NonDeleted<DucEmbeddableElement> => {
   return _newElementBase<DucEmbeddableElement>("embeddable", opts);
+};
+
+export const newArrowElement = (
+  opts: {
+    type: DucArrowElement["type"];
+    startArrowhead?: Arrowhead | null;
+    endArrowhead?: Arrowhead | null;
+    points?: DucArrowElement["points"];
+    elbowed?: boolean;
+  } & ElementConstructorOpts,
+): NonDeleted<DucArrowElement> => {
+  return {
+    ..._newElementBase<DucArrowElement>(opts.type, opts),
+    points: opts.points || [],
+    lastCommittedPoint: null,
+    startBinding: null,
+    endBinding: null,
+    startArrowhead: opts.startArrowhead || null,
+    endArrowhead: opts.endArrowhead || null,
+    elbowed: opts.elbowed || false,
+  };
 };
 
 export const newIframeElement = (
@@ -256,6 +281,7 @@ const getTextElementPositionOffsets = (
 export const newTextElement = (
   opts: {
     text: string;
+    originalText?: string;
     fontSize?: number;
     fontFamily?: FontFamilyValues;
     textAlign?: TextAlign;
@@ -263,11 +289,12 @@ export const newTextElement = (
     containerId?: DucTextContainer["id"] | null;
     lineHeight?: DucTextElement["lineHeight"];
     strokeWidth?: DucTextElement["strokeWidth"];
+    autoResize?: DucTextElement["autoResize"];
   } & ElementConstructorOpts,
 ): NonDeleted<DucTextElement> => {
   const fontFamily = opts.fontFamily || DEFAULT_FONT_FAMILY;
   const fontSize = opts.fontSize || DEFAULT_FONT_SIZE;
-  const lineHeight = opts.lineHeight || getDefaultLineHeight(fontFamily);
+  const lineHeight = opts.lineHeight || getLineHeight(fontFamily);
   const text = normalizeText(opts.text);
   const metrics = measureText(
     text,
@@ -281,26 +308,31 @@ export const newTextElement = (
     metrics,
   );
 
-  const textElement = newElementWith(
-    {
-      ..._newElementBase<DucTextElement>("text", opts),
-      text,
-      fontSize,
-      fontFamily,
-      textAlign,
-      verticalAlign,
-      x: opts.x - offsets.x,
-      y: opts.y - offsets.y,
-      width: metrics.width,
-      height: metrics.height,
-      containerId: opts.containerId || null,
-      originalText: text,
-      lineHeight,
-    },
+  const textElementProps: DucTextElement = {
+    ..._newElementBase<DucTextElement>("text", opts),
+    text,
+    fontSize,
+    fontFamily,
+    textAlign,
+    verticalAlign,
+    x: opts.x - offsets.x,
+    y: opts.y - offsets.y,
+    width: metrics.width,
+    height: metrics.height,
+    containerId: opts.containerId || null,
+    originalText: opts.originalText ?? text,
+    autoResize: opts.autoResize ?? true,
+    lineHeight,
+  };
+
+  const textElement: DucTextElement = newElementWith(
+    textElementProps,
     {},
   );
+
   return textElement;
 };
+
 
 const getAdjustedDimensions = (
   element: DucTextElement,
@@ -402,11 +434,11 @@ export const updateTextElement = (
   {
     text,
     isDeleted,
-    originalText,
+    nextOriginalText: originalText,
   }: {
     text: string;
     isDeleted?: boolean;
-    originalText: string;
+    nextOriginalText: string;
   },
 ): DucTextElement => {
   return newElementWith(textElement, {
@@ -421,12 +453,13 @@ export const newFreeDrawElement = (
     type: "freedraw";
     points?: DucFreeDrawElement["points"];
     simulatePressure: boolean;
+    pressures?: DucFreeDrawElement["pressures"];
   } & ElementConstructorOpts,
 ): NonDeleted<DucFreeDrawElement> => {
   return {
     ..._newElementBase<DucFreeDrawElement>(opts.type, opts),
     points: opts.points || [],
-    pressures: [],
+    pressures: opts.pressures || [],
     simulatePressure: opts.simulatePressure,
     lastCommittedPoint: null,
   };
@@ -435,8 +468,6 @@ export const newFreeDrawElement = (
 export const newLinearElement = (
   opts: {
     type: DucLinearElement["type"];
-    startArrowhead?: Arrowhead | null;
-    endArrowhead?: Arrowhead | null;
     points?: DucLinearElement["points"];
   } & ElementConstructorOpts,
 ): NonDeleted<DucLinearElement> => {
@@ -446,8 +477,8 @@ export const newLinearElement = (
     lastCommittedPoint: null,
     startBinding: null,
     endBinding: null,
-    startArrowhead: opts.startArrowhead || null,
-    endArrowhead: opts.endArrowhead || null,
+    startArrowhead: null,
+    endArrowhead: null,
   };
 };
 
@@ -470,7 +501,7 @@ export const newImageElement = (
   };
 };
 
-// Simplified deep clone for the purpose of cloning ExcalidrawElement.
+// Simplified deep clone for the purpose of cloning DucElement.
 //
 // Only clones plain objects and arrays. Doesn't clone Date, RegExp, Map, Set,
 // Typed arrays and other non-null objects.
@@ -478,7 +509,7 @@ export const newImageElement = (
 // Adapted from https://github.com/lukeed/klona
 //
 // The reason for `deepCopyElement()` wrapper is type safety (only allow
-// passing ExcalidrawElement as the top-level argument).
+// passing DucElement as the top-level argument).
 const _deepCopyElement = (val: any, depth: number = 0) => {
   // only clone non-primitives
   if (val == null || typeof val !== "object") {
@@ -533,7 +564,7 @@ const _deepCopyElement = (val: any, depth: number = 0) => {
 };
 
 /**
- * Clones ExcalidrawElement data structure. Does not regenerate id, nonce, or
+ * Clones DucElement data structure. Does not regenerate id, nonce, or
  * any value. The purpose is to to break object references for immutability
  * reasons, whenever we want to keep the original element, but ensure it's not
  * mutated.
@@ -727,3 +758,4 @@ export const duplicateElements = (
 
   return clonedElements;
 };
+

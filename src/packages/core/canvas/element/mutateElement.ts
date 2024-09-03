@@ -1,15 +1,15 @@
-import { DucElement } from "./types";
+import type { DucElement } from "./types";
 import Scene from "../scene/Scene";
 import { getSizeFromPoints } from "../points";
 import { randomInteger } from "../random";
-import { Point } from "../types";
+import type { Point } from "../types";
 import { getUpdatedTimestamp } from "../utils";
-import { Mutable } from "../utility-types";
+import type { Mutable } from "../utility-types";
 import { ShapeCache } from "../scene/ShapeCache";
 
-type ElementUpdate<TElement extends DucElement> = Omit<
+export type ElementUpdate<TElement extends DucElement> = Omit<
   Partial<TElement>,
-  "id" | "version" | "versionNonce"
+  "id" | "version" | "versionNonce" | "updated"
 >;
 
 // This function tracks updates of text elements for the purposes for collaboration.
@@ -79,10 +79,10 @@ export const mutateElement = <TElement extends Mutable<DucElement>>(
       didChange = true;
     }
   }
+
   if (!didChange) {
     return element;
   }
-  
 
   if (
     typeof updates.height !== "undefined" ||
@@ -98,7 +98,7 @@ export const mutateElement = <TElement extends Mutable<DucElement>>(
   element.updated = getUpdatedTimestamp();
 
   if (informMutation) {
-    Scene.getScene(element)?.informMutation();
+    Scene.getScene(element)?.triggerUpdate();
   }
 
   return element;
@@ -107,6 +107,8 @@ export const mutateElement = <TElement extends Mutable<DucElement>>(
 export const newElementWith = <TElement extends DucElement>(
   element: TElement,
   updates: ElementUpdate<TElement>,
+  /** pass `true` to always regenerate */
+  force = false,
 ): TElement => {
   let didChange = false;
   for (const key in updates) {
@@ -123,7 +125,7 @@ export const newElementWith = <TElement extends DucElement>(
     }
   }
 
-  if (!didChange) {
+  if (!didChange && !force) {
     return element;
   }
 

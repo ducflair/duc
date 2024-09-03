@@ -45,7 +45,26 @@ export const isToolIcon = (
 ): target is HTMLElement =>
   target instanceof HTMLElement && target.className.includes("ToolIcon");
 
-export const isInputLike = (
+
+/**
+ * Transform array into an object, use only when array order is irrelevant.
+ */
+export const arrayToObject = <T>(
+  array: readonly T[],
+  groupBy?: (value: T) => string | number,
+) =>
+  array.reduce((acc, value) => {
+    acc[groupBy ? groupBy(value) : String(value)] = value;
+    return acc;
+  }, {} as { [key: string]: T });
+
+/** Doubly linked node */
+export type Node<T> = T & {
+  prev: Node<T> | null;
+  next: Node<T> | null;
+};
+
+  export const isInputLike = (
   target: Element | EventTarget | null,
 ): target is
   | HTMLInputElement
@@ -1102,4 +1121,22 @@ export const promiseTry = async <TValue, TArgs extends unknown[]>(
   return new Promise((resolve) => {
     resolve(fn(...args));
   });
+};
+
+
+export function invariant(condition: any, message: string): asserts condition {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
+export const isAnyTrue = (...args: boolean[]): boolean =>
+  Math.max(...args.map((arg) => (arg ? 1 : 0))) > 0;
+
+export const safelyParseJSON = (json: string): Record<string, any> | null => {
+  try {
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
 };

@@ -1,16 +1,36 @@
+
 import { LinearElementEditor } from "../element/linearElementEditor";
-import { isLinearElement } from "../element/typeChecks";
-import { DucLinearElement } from "../element/types";
+import { isElbowArrow, isLinearElement } from "../element/typeChecks";
+import type { DucLinearElement } from "../element/types";
+import { StoreAction } from "../store";
 import { register } from "./register";
+import { ToolButton } from "../components/ToolButton";
+import { t } from "../i18n";
 
 export const actionToggleLinearEditor = register({
   name: "toggleLinearEditor",
+  // category: DEFAULT_CATEGORIES.elements,
+  label: (elements, appState, app) => {
+    const selectedElement = app.scene.getSelectedElements({
+      selectedElementIds: appState.selectedElementIds,
+    })[0] as DucLinearElement | undefined;
+
+    return selectedElement?.type === "arrow"
+      ? "labels.lineEditor.editArrow"
+      : "labels.lineEditor.edit";
+  },
+  keywords: ["line"],
   trackEvent: {
     category: "element",
   },
   predicate: (elements, appState, _, app) => {
     const selectedElements = app.scene.getSelectedElements(appState);
-    if (selectedElements.length === 1 && isLinearElement(selectedElements[0])) {
+    if (
+      !appState.editingLinearElement &&
+      selectedElements.length === 1 &&
+      isLinearElement(selectedElements[0]) &&
+      !isElbowArrow(selectedElements[0])
+    ) {
       return true;
     }
     return false;
@@ -30,16 +50,28 @@ export const actionToggleLinearEditor = register({
         ...appState,
         editingLinearElement,
       },
-      commitToHistory: false,
+      storeAction: StoreAction.CAPTURE,
     };
   },
-  contextItemLabel: (elements, appState, app) => {
-    const selectedElement = app.scene.getSelectedElements({
-      selectedElementIds: appState.selectedElementIds,
-      includeBoundTextElement: true,
-    })[0] as DucLinearElement;
-    return appState.editingLinearElement?.elementId === selectedElement.id
-      ? "labels.lineEditor.exit"
-      : "labels.lineEditor.edit";
+  PanelComponent: ({ appState, updateData, app }) => {
+    // const selectedElement = app.scene.getSelectedElements({
+    //   selectedElementIds: appState.selectedElementIds,
+    // })[0] as DucLinearElement;
+
+    // const label = t(
+    //   selectedElement.type === "arrow"
+    //     ? "labels.lineEditor.editArrow"
+    //     : "labels.lineEditor.edit",
+    // );
+    // return (
+    //   <ToolButton
+    //     type="button"
+    //     icon={lineEditorIcon}
+    //     title={label}
+    //     aria-label={label}
+    //     onClick={() => updateData(null)}
+    //   />
+    // );
+    return null;
   },
 });

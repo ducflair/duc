@@ -1,24 +1,26 @@
-import {
-  ExcalidrawElement,
-  ExcalidrawGenericElement,
-  ExcalidrawTextElement,
-  ExcalidrawLinearElement,
-  ExcalidrawFreeDrawElement,
-  ExcalidrawImageElement,
+import type {
+  DucElement,
+  DucGenericElement,
+  DucTextElement,
+  DucLinearElement,
+  DucFreeDrawElement,
+  DucImageElement,
   FileId,
-  ExcalidrawFrameElement,
-  ExcalidrawElementType,
-  ExcalidrawMagicFrameElement,
+  DucFrameElement,
+  DucElementType,
+  DucMagicFrameElement,
+  ElementsMapOrArray,
 } from "../../element/types";
 import { newElement, newTextElement, newLinearElement } from "../../element";
 import { DEFAULT_VERTICAL_ALIGN, ROUNDNESS } from "../../constants";
 import { getDefaultAppState } from "../../appState";
-import { GlobalTestState, createEvent, fireEvent } from "../test-utils";
+import { GlobalTestState, createEvent, fireEvent, act } from "../test-utils";
 import fs from "fs";
 import util from "util";
 import path from "path";
 import { getMimeType } from "../../data/blob";
 import {
+  newArrowElement,
   newEmbeddableElement,
   newFrameElement,
   newFreeDrawElement,
@@ -26,12 +28,17 @@ import {
   newImageElement,
   newMagicFrameElement,
 } from "../../element/newElement";
-import { Point } from "../../types";
+import type { AppState, Point } from "../../types";
 import { getSelectedElements } from "../../scene/selection";
 import { isLinearElementType } from "../../element/typeChecks";
-import { Mutable } from "../../utility-types";
+import type { Mutable } from "../../utility-types";
 import { assertNever } from "../../utils";
+import type App from "../../components/App";
 import { createTestHook } from "../../components/App";
+import type { Action } from "../../actions/types";
+import { mutateElement } from "../../element/mutateElement";
+import { WritingLayers } from "../../duc/utils/writingLayers";
+import { SupportedMeasures } from "../../duc/utils/measurements";
 
 const readFile = util.promisify(fs.readFile);
 // so that window.h is available when App.tsx is not imported as well.
@@ -40,26 +47,26 @@ createTestHook();
 const { h } = window;
 
 export class API {
-  static setSelectedElements = (elements: ExcalidrawElement[]) => {
-    h.setState({
-      selectedElementIds: elements.reduce((acc, element) => {
-        acc[element.id] = true;
-        return acc;
-      }, {} as Record<ExcalidrawElement["id"], true>),
+  static setSelectedElements = (elements: DucElement[]) => {
+      h.setState({
+        selectedElementIds: elements.reduce((acc, element) => {
+          acc[element.id] = true;
+          return acc;
+        }, {} as Record<DucElement["id"], true>),
     });
   };
 
   static getSelectedElements = (
     includeBoundTextElement: boolean = false,
     includeElementsInFrames: boolean = false,
-  ): ExcalidrawElement[] => {
-    return getSelectedElements(h.elements, h.state, {
+  ): DucElement[] => {
+    return getSelectedElements(h.elements as ElementsMapOrArray, h.state, {
       includeBoundTextElement,
       includeElementsInFrames,
     });
   };
 
-  static getSelectedElement = (): ExcalidrawElement => {
+  static getSelectedElement = (): DucElement => {
     const selectedElements = API.getSelectedElements();
     if (selectedElements.length !== 1) {
       throw new Error(
@@ -69,19 +76,30 @@ export class API {
     return selectedElements[0];
   };
 
-  static getStateHistory = () => {
+  static getUndoStack = () => {
     // @ts-ignore
-    return h.history.stateHistory;
+    return h.history.undoStack;
+  };
+
+  static getRedoStack = () => {
+    // @ts-ignore
+    return h.history.redoStack;
+  };
+
+  static getSnapshot = () => {
+    return Array.from(h.store.snapshot.elements.values());
   };
 
   static clearSelection = () => {
-    // @ts-ignore
-    h.app.clearSelection(null);
+    act(() => {
+      // @ts-ignore
+      h.app.clearSelection(null);
+    });
     expect(API.getSelectedElements().length).toBe(0);
   };
 
   static createElement = <
-    T extends Exclude<ExcalidrawElementType, "selection"> = "rectangle",
+    T extends Exclude<DucElementType, "selection"> = "rectangle",
   >({
     // @ts-ignore
     type = "rectangle",
@@ -101,60 +119,68 @@ export class API {
     width?: number;
     angle?: number;
     id?: string;
+    index?: DucElement["index"];
     isDeleted?: boolean;
-    frameId?: ExcalidrawElement["id"] | null;
+    frameId?: DucElement["id"] | null;
     groupIds?: string[];
+    scope?: SupportedMeasures;
+    writingLayer?: WritingLayers;
+    label?: string;
+    ratioLocked?: boolean;
+    isVisible?: boolean;
+    strokePlacement?: DucElement["strokePlacement"];
     // generic element props
-    strokeColor?: ExcalidrawGenericElement["strokeColor"];
-    backgroundColor?: ExcalidrawGenericElement["backgroundColor"];
-    fillStyle?: ExcalidrawGenericElement["fillStyle"];
-    strokeWidth?: ExcalidrawGenericElement["strokeWidth"];
-    strokeStyle?: ExcalidrawGenericElement["strokeStyle"];
-    roundness?: ExcalidrawGenericElement["roundness"];
-    roughness?: ExcalidrawGenericElement["roughness"];
-    opacity?: ExcalidrawGenericElement["opacity"];
+    strokeColor?: DucGenericElement["strokeColor"];
+    backgroundColor?: DucGenericElement["backgroundColor"];
+    fillStyle?: DucGenericElement["fillStyle"];
+    strokeWidth?: DucGenericElement["strokeWidth"];
+    strokeStyle?: DucGenericElement["strokeStyle"];
+    roundness?: DucGenericElement["roundness"];
+    roughness?: DucGenericElement["roughness"];
+    opacity?: DucGenericElement["opacity"];
     // text props
-    text?: T extends "text" ? ExcalidrawTextElement["text"] : never;
-    fontSize?: T extends "text" ? ExcalidrawTextElement["fontSize"] : never;
-    fontFamily?: T extends "text" ? ExcalidrawTextElement["fontFamily"] : never;
-    textAlign?: T extends "text" ? ExcalidrawTextElement["textAlign"] : never;
+    text?: T extends "text" ? DucTextElement["text"] : never;
+    fontSize?: T extends "text" ? DucTextElement["fontSize"] : never;
+    fontFamily?: T extends "text" ? DucTextElement["fontFamily"] : never;
+    textAlign?: T extends "text" ? DucTextElement["textAlign"] : never;
     verticalAlign?: T extends "text"
-      ? ExcalidrawTextElement["verticalAlign"]
+      ? DucTextElement["verticalAlign"]
       : never;
-    boundElements?: ExcalidrawGenericElement["boundElements"];
+    boundElements?: DucGenericElement["boundElements"];
     containerId?: T extends "text"
-      ? ExcalidrawTextElement["containerId"]
+      ? DucTextElement["containerId"]
       : never;
     points?: T extends "arrow" | "line" ? readonly Point[] : never;
     locked?: boolean;
     fileId?: T extends "image" ? string : never;
-    scale?: T extends "image" ? ExcalidrawImageElement["scale"] : never;
-    status?: T extends "image" ? ExcalidrawImageElement["status"] : never;
+    scale?: T extends "image" ? DucImageElement["scale"] : never;
+    status?: T extends "image" ? DucImageElement["status"] : never;
     startBinding?: T extends "arrow"
-      ? ExcalidrawLinearElement["startBinding"]
+      ? DucLinearElement["startBinding"]
       : never;
     endBinding?: T extends "arrow"
-      ? ExcalidrawLinearElement["endBinding"]
+      ? DucLinearElement["endBinding"]
       : never;
+    elbowed?: boolean;
   }): T extends "arrow" | "line"
-    ? ExcalidrawLinearElement
+    ? DucLinearElement
     : T extends "freedraw"
-    ? ExcalidrawFreeDrawElement
+    ? DucFreeDrawElement
     : T extends "text"
-    ? ExcalidrawTextElement
+    ? DucTextElement
     : T extends "image"
-    ? ExcalidrawImageElement
+    ? DucImageElement
     : T extends "frame"
-    ? ExcalidrawFrameElement
+    ? DucFrameElement
     : T extends "magicframe"
-    ? ExcalidrawMagicFrameElement
-    : ExcalidrawGenericElement => {
-    let element: Mutable<ExcalidrawElement> = null!;
+    ? DucMagicFrameElement
+    : DucGenericElement => {
+    let element: Mutable<DucElement> = null!;
 
     const appState = h?.state || getDefaultAppState();
 
     const base: Omit<
-      ExcalidrawGenericElement,
+      DucGenericElement,
       | "id"
       | "width"
       | "height"
@@ -170,11 +196,18 @@ export class API {
       x,
       y,
       frameId: rest.frameId ?? null,
+      index: rest.index ?? null,
+      ratioLocked: rest.ratioLocked ?? false,
       angle: rest.angle ?? 0,
+      label: rest.label ?? `Lost Element}`,
       strokeColor: rest.strokeColor ?? appState.currentItemStrokeColor,
+      strokePlacement: rest.strokePlacement ?? "center",
       backgroundColor:
         rest.backgroundColor ?? appState.currentItemBackgroundColor,
       fillStyle: rest.fillStyle ?? appState.currentItemFillStyle,
+      scope: rest.scope ?? appState.scope,
+      writingLayer: rest.writingLayer ?? appState.writingLayer,
+      isVisible: rest.isVisible ?? true,
       strokeWidth: rest.strokeWidth ?? appState.currentItemStrokeWidth,
       strokeStyle: rest.strokeStyle ?? appState.currentItemStrokeStyle,
       roundness: (
@@ -239,14 +272,24 @@ export class API {
         });
         break;
       case "arrow":
+        element = newArrowElement({
+          ...base,
+          width,
+          height,
+          type,
+          points: rest.points ?? [
+            [0, 0],
+            [100, 100],
+          ],
+          elbowed: rest.elbowed ?? false,
+        });
+        break;
       case "line":
         element = newLinearElement({
           ...base,
           width,
           height,
           type,
-          startArrowhead: null,
-          endArrowhead: null,
           points: rest.points ?? [
             [0, 0],
             [100, 100],
@@ -266,6 +309,8 @@ export class API {
         break;
       case "frame":
         element = newFrameElement({ ...base, width, height });
+        break;
+      case "group":
         break;
       case "magicframe":
         element = newMagicFrameElement({ ...base, width, height });
@@ -338,6 +383,12 @@ export class API {
         },
       },
     });
-    fireEvent(GlobalTestState.interactiveCanvas, fileDropEvent);
+    await fireEvent(GlobalTestState.interactiveCanvas, fileDropEvent);
+  };
+
+  static executeAction = (action: Action) => {
+    act(() => {
+      h.app.actionManager.executeAction(action as any);
+    });
   };
 }

@@ -5,7 +5,7 @@ import { isShallowEqual } from "./utils";
 
 import "./css/app.scss";
 import "./css/styles.scss";
-import "../fonts/fonts.css";
+import "./fonts/assets/fonts.css";
 import polyfill from "./polyfill";
 
 import { AppProps, ExcalidrawProps } from "./types";
@@ -51,6 +51,7 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
     validateEmbeddable,
     renderEmbeddable,
     aiEnabled,
+    showDeprecatedFonts,
   } = props;
 
   const canvasActions = props.UIOptions?.canvasActions;
@@ -138,6 +139,7 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
           validateEmbeddable={validateEmbeddable}
           renderEmbeddable={renderEmbeddable}
           aiEnabled={aiEnabled !== false}
+          showDeprecatedFonts={showDeprecatedFonts}
         >
           {children}
         </App>
@@ -219,7 +221,58 @@ export {
   restoreAppState,
   restoreElements,
   restoreLibraryItems,
+  RestoredDataState,
 } from "./data/restore";
+
+export {
+  reconcileElements,
+  ReconciledExcalidrawElement,
+  RemoteExcalidrawElement,
+} from "./data/reconcile";
+
+export {
+  StoreAction,
+} from "./store";
+
+export {
+  encryptData,
+  decryptData,
+  generateEncryptionKey,
+  IV_LENGTH_BYTES,
+} from "./data/encryption";
+
+export {
+  ImportedDataState,
+} from "./data/types";
+
+export {
+  DucElement,
+  FileId,
+  NonDeletedDucElement,
+  InitializedDucImageElement,
+  OrderedDucElement,
+  Theme,
+  DucGroup
+} from "./element/types"
+
+export {
+  AppState,
+  BinaryFileData,
+  BinaryFiles,
+  SocketId,
+  UserIdleState,
+  DucImperativeAPI,
+  ExcalidrawInitialDataState,
+  Gesture,
+  LibraryItems,
+  PointerDownState,
+  Collaborator,
+  OnUserFollowedPayload,
+} from "./types";
+
+export {
+  SceneBounds
+} from "./element/bounds";
 
 export {
   exportToCanvas,
@@ -236,9 +289,31 @@ export {
 } from "./data/blob";
 export { getFreeDrawSvgPath } from "./renderer/renderElement";
 export { mergeLibraryItems, getLibraryItemsHash } from "./data/library";
-export { isLinearElement } from "./element/typeChecks";
+export { 
+  isLinearElement,
+  isImageElement,
+  isInitializedImageElement,
+} from "./element/typeChecks";
 
-export { FONT_FAMILY, THEME, MIME_TYPES, ROUNDNESS } from "./constants";
+export {
+  Mutable, 
+  ValueOf
+} from './utility-types'
+
+export {
+  withBatchedUpdates
+} from './reactUtils'
+
+export { 
+  FONT_FAMILY, 
+  THEME, 
+  MIME_TYPES, 
+  ROUNDNESS,
+  APP_NAME,
+  EVENT,
+  TITLE_TIMEOUT,
+  VERSION_TIMEOUT,
+} from "./constants";
 
 export {
   mutateElement,
@@ -250,6 +325,12 @@ export { parseLibraryTokensFromUrl, useHandleLibrary } from "./data/library";
 export {
   sceneCoordsToViewportCoords,
   viewportCoordsToSceneCoords,
+  debounce,
+  bytesToHexString,
+  assertNever,
+  preventUnload,
+  resolvablePromise,
+  throttleRAF,
 } from "./utils";
 
 export { Sidebar } from "./components/Sidebar/Sidebar";
@@ -281,7 +362,19 @@ export {
 } from "./duc/duc-ts/parse";
 
 export {
+  serializeAsFlatBuffers
+} from "./duc/duc-ts/serialize";
+
+export {
   CanvasPreview
 } from "./components/canvasPreview";
 
 export { default as transformHexColor } from "./scene/hexDarkModeFilter";
+
+export {
+  AbortError
+} from "./errors";
+
+export {
+  trackEvent
+} from './analytics'

@@ -1,5 +1,5 @@
 import React from "react";
-import {
+import type {
   Action,
   UpdaterFn,
   ActionName,
@@ -7,8 +7,11 @@ import {
   PanelComponentProps,
   ActionSource,
 } from "./types";
-import { DucElement } from "../element/types";
-import { AppClassProperties, AppState } from "../types";
+import type {
+  DucElement,
+  OrderedDucElement,
+} from "../element/types";
+import type { AppClassProperties, AppState } from "../types";
 import { trackEvent } from "../analytics";
 import { isPromiseLike } from "../utils";
 
@@ -46,13 +49,13 @@ export class ActionManager {
   updater: (actionResult: ActionResult | Promise<ActionResult>) => void;
 
   getAppState: () => Readonly<AppState>;
-  getElementsIncludingDeleted: () => readonly DucElement[];
+  getElementsIncludingDeleted: () => readonly OrderedDucElement[];
   app: AppClassProperties;
 
   constructor(
     updater: UpdaterFn,
     getAppState: () => AppState,
-    getElementsIncludingDeleted: () => readonly DucElement[],
+    getElementsIncludingDeleted: () => readonly OrderedDucElement[],
     app: AppClassProperties,
   ) {
     this.updater = (actionResult) => {

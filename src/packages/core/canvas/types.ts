@@ -21,6 +21,7 @@ import {
   DucElementType,
   DucIframeLikeElement,
   DucGroup,
+  DucNonSelectionElement,
 } from "./element/types";
 import { Action } from "./actions/types";
 import { Point as RoughPoint } from "roughjs/bin/geometry";
@@ -39,13 +40,15 @@ import type { FileSystemHandle } from "./data/filesystem";
 import type { IMAGE_MIME_TYPES, MIME_TYPES } from "./constants";
 import { ContextMenuItems } from "./components/ContextMenu";
 import { SnapLine } from "./snapping";
-import { Merge, MaybePromise, ValueOf } from "./utility-types";
+import { Merge, MaybePromise, ValueOf, MakeBrand } from "./utility-types";
 import { SupportedMeasures } from "./duc/utils/measurements";
 import { WritingLayers } from "./duc/utils/writingLayers";
+import { StoreActionType } from "./store";
 
 export type Point = Readonly<RoughPoint>;
 
 export type SocketId = string & { _brand: "SocketId" };
+
 
 export type Collaborator = Readonly<{
   pointer?: CollaboratorPointer;
@@ -64,15 +67,50 @@ export type Collaborator = Readonly<{
   id?: string;
   socketId?: SocketId;
   isCurrentUser?: boolean;
+  isInCall?: boolean;
+  isSpeaking?: boolean;
+  isMuted?: boolean;
 }>;
 
 export type CollaboratorPointer = {
   x: number;
   y: number;
   tool: "pointer" | "laser";
+  /**
+   * Whether to render cursor + username. Useful when you only want to render
+   * laser trail.
+   *
+   * @default true
+   */
+  renderCursor?: boolean;
+  /**
+   * Explicit laser color.
+   *
+   * @default string collaborator's cursor color
+   */
+  laserColor?: string;
 };
 
 export type DataURL = string & { _brand: "DataURL" };
+
+
+export type ObservedAppState = ObservedStandaloneAppState &
+  ObservedElementsAppState;
+
+export type ObservedStandaloneAppState = {
+  name: AppState["name"];
+  viewBackgroundColor: AppState["viewBackgroundColor"];
+};
+
+export type ObservedElementsAppState = {
+  editingGroupId: AppState["editingGroupId"];
+  selectedElementIds: AppState["selectedElementIds"];
+  selectedGroupIds: AppState["selectedGroupIds"];
+  // Avoiding storing whole instance, as it could lead into state incosistencies, empty undos/redos and etc.
+  editingLinearElementId: LinearElementEditor["elementId"] | null;
+  // Right now it's coupled to `editingLinearElement`, ideally it should not be really needed as we already have selectedElementIds & editingLinearElementId
+  selectedLinearElementId: LinearElementEditor["elementId"] | null;
+};
 
 export type BinaryFileData = {
   mimeType:
@@ -163,7 +201,9 @@ export type StaticCanvasAppState = Readonly<
     exportScale: AppState["exportScale"];
     selectedElementsAreBeingDragged: AppState["selectedElementsAreBeingDragged"];
     gridSize: AppState["gridSize"];
+    gridStep: AppState["gridStep"];
     frameRendering: AppState["frameRendering"];
+    currentHoveredFontFamily: AppState["currentHoveredFontFamily"];
   }
 >;
 
@@ -185,6 +225,7 @@ export type InteractiveCanvasAppState = Readonly<
     // SnapLines
     snapLines: AppState["snapLines"];
     zenModeEnabled: AppState["zenModeEnabled"];
+    editingTextElement: AppState["editingTextElement"];
   }
 >;
 
@@ -201,9 +242,26 @@ export interface AppState {
     element: NonDeletedDucElement;
     state: "hover" | "active";
   } | null;
-  draggingElement: NonDeletedDucElement | null;
+    /**
+   * for a newly created element
+   * - set on pointer down, updated during pointer move, used on pointer up
+   */
+  newElement: NonDeleted<DucNonSelectionElement> | null;
+  /**
+   * for a single element that's being resized
+   * - set on pointer down when it's selected and the active tool is selection
+   */
   resizingElement: NonDeletedDucElement | null;
+  /**
+   * multiElement is for multi-point linear element that's created by clicking as opposed to dragging
+   * - when set and present, the editor will handle linear element creation logic accordingly
+   */
   multiElement: NonDeleted<DucLinearElement> | null;
+  /**
+   * decoupled from newElement, dragging selection only creates selectionElement
+   * - set on pointer down, updated during pointer move
+   */
+  draggingElement: NonDeletedDucElement | null;
   selectionElement: NonDeletedDucElement | null;
   isBindingEnabled: boolean; // Out of the Binary
   startBoundElement: NonDeleted<DucBindableElement> | null; // Out of the Binary
@@ -220,6 +278,7 @@ export interface AppState {
   // element being edited, but not necessarily added to elements array yet
   // (e.g. text element when typing into the input)
   editingElement: NonDeletedDucElement | null;
+  editingTextElement: NonDeletedDucElement | null;
   editingLinearElement: LinearElementEditor | null; // Out of the Binary
   activeTool: {
     /**
@@ -244,9 +303,11 @@ export interface AppState {
   currentItemOpacity: number;
   currentItemFontFamily: FontFamilyValues;
   currentItemFontSize: number;
+  currentHoveredFontFamily: FontFamilyValues | null;
   currentItemTextAlign: TextAlign;
   currentItemStartArrowhead: Arrowhead | null;
   currentItemEndArrowhead: Arrowhead | null;
+  currentItemArrowType: "sharp" | "round" | "elbow";
   currentItemRoundness: StrokeRoundness;
   viewBackgroundColor: string;
   scope: SupportedMeasures,
@@ -292,7 +353,10 @@ export interface AppState {
   toast: { message: string; closable?: boolean; duration?: number } | null; // Out of the Binary
   zenModeEnabled: boolean;
   theme: Theme; // Out of the Binary
-  gridSize: number | null;
+  /** grid cell px size */
+  gridSize: number;
+  gridStep: number;
+  gridModeEnabled: boolean;
   viewModeEnabled: boolean;
 
   /** top-most selected groups (i.e. does not include nested groups) */
@@ -411,7 +475,9 @@ export interface ExcalidrawProps {
     appState: AppState,
     files: BinaryFiles,
   ) => void;
-  initialData?: MaybePromise<ExcalidrawInitialDataState | null>;
+  initialData?:
+  | (() => MaybePromise<ExcalidrawInitialDataState | null>)
+  | MaybePromise<ExcalidrawInitialDataState | null>;
   ducAPI?: (api: DucImperativeAPI) => void;
   isCollaborating?: boolean;
   onPointerUpdate?: (payload: {
@@ -474,13 +540,14 @@ export interface ExcalidrawProps {
     appState: AppState,
   ) => JSX.Element | null;
   aiEnabled?: boolean;
+  showDeprecatedFonts?: boolean;
 }
 
 export type SceneData = {
   elements?: ImportedDataState["elements"];
   appState?: ImportedDataState["appState"];
   collaborators?: Map<SocketId, Collaborator>;
-  commitToHistory?: boolean;
+  storeAction?: StoreActionType;
 };
 
 export enum UserIdleState {
@@ -549,6 +616,7 @@ export type AppProps = Merge<
  * in the app, eg Manager. Factored out into a separate type to keep DRY. */
 export type AppClassProperties = {
   props: AppProps;
+  state: AppState;
   interactiveCanvas: HTMLCanvasElement | null;
   /** static canvas */
   canvas: HTMLCanvasElement;
@@ -564,6 +632,8 @@ export type AppClassProperties = {
   files: BinaryFiles;
   device: App["device"];
   scene: App["scene"];
+  syncActionResult: App["syncActionResult"];
+  fonts: App["fonts"];
   pasteFromClipboard: App["pasteFromClipboard"];
   id: App["id"];
   onInsertElements: App["onInsertElements"];
@@ -573,12 +643,18 @@ export type AppClassProperties = {
   addFiles: App["addFiles"];
   addElementsFromPasteOrLibrary: App["addElementsFromPasteOrLibrary"];
   togglePenMode: App["togglePenMode"];
-  setActiveTool: App["setActiveTool"];
   updateGroups: App["updateGroups"];
+  toggleLock: App["toggleLock"];
+  setActiveTool: App["setActiveTool"];
   setOpenDialog: App["setOpenDialog"];
   insertEmbeddableElement: App["insertEmbeddableElement"];
   onMagicframeToolSelect: App["onMagicframeToolSelect"];
   getName: App["getName"];
+  dismissLinearEditor: App["dismissLinearEditor"];
+  flowChartCreator: App["flowChartCreator"];
+  getEffectiveGridSize: App["getEffectiveGridSize"];
+  // setPlugins: App["setPlugins"];
+  // plugins: App["plugins"];
 };
 
 export type PointerDownState = Readonly<{
@@ -743,7 +819,7 @@ export type Device = Readonly<{
   isTouchScreen: boolean;
 }>;
 
-type FrameNameBounds = {
+export type FrameNameBounds = {
   x: number;
   y: number;
   width: number;
@@ -788,3 +864,13 @@ export type EmbedsValidationStatus = Map<
 >;
 
 export type ElementsPendingErasure = Set<DucElement["id"]>;
+
+/** Runtime gridSize value. Null indicates disabled grid. */
+export type NullableGridSize =
+  | (AppState["gridSize"] & MakeBrand<"NullableGridSize">)
+  | null;
+
+
+export type PendingDucElements = DucElement[];
+
+

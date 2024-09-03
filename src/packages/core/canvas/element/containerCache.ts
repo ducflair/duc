@@ -1,4 +1,4 @@
-import { DucTextContainer } from "./types";
+import type { DucTextContainer } from "./types";
 
 export const originalContainerCache: {
   [id: DucTextContainer["id"]]:

@@ -1,5 +1,3 @@
-import "./Stack.scss";
-
 import React, { forwardRef } from "react";
 import clsx from "clsx";
 
@@ -10,14 +8,10 @@ type StackProps = {
   justifyContent?: "center" | "space-around" | "space-between";
   className?: string | boolean;
   style?: React.CSSProperties;
-  ref: React.RefObject<HTMLDivElement>;
 };
 
-const RowStack = forwardRef(
-  (
-    { children, gap, align, justifyContent, className, style }: StackProps,
-    ref: React.ForwardedRef<HTMLDivElement>,
-  ) => {
+const RowStack = forwardRef<HTMLDivElement, StackProps>(
+  ({ children, gap, align, justifyContent, className, style }, ref) => {
     return (
       <div
         className={clsx("Stack Stack_horizontal", className)}
@@ -35,11 +29,8 @@ const RowStack = forwardRef(
   },
 );
 
-const ColStack = forwardRef(
-  (
-    { children, gap, align, justifyContent, className, style }: StackProps,
-    ref: React.ForwardedRef<HTMLDivElement>,
-  ) => {
+const ColStack = forwardRef<HTMLDivElement, StackProps>(
+  ({ children, gap, align, justifyContent, className, style }, ref) => {
     return (
       <div
         className={clsx("Stack Stack_vertical", className)}

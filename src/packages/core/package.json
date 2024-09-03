@@ -7,10 +7,12 @@
     "@sentry/browser": "6.2.5",
     "@sentry/integrations": "6.2.5",
     "esbuild-plugin-external-global": "^1.0.1",
+    "fonteditor-core": "^2.4.1",
     "i18next-browser-languagedetector": "6.1.4",
     "idb-keyval": "6.0.3",
     "jotai": "1.13.1",
-    "socket.io-client": "4.7.2"
+    "socket.io-client": "4.7.2",
+    "wawoff2": "^2.0.1"
   },
   "devDependencies": {
     "@excalidraw/eslint-config": "1.0.3",
