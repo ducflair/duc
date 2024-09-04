@@ -226,8 +226,8 @@ export {
 
 export {
   reconcileElements,
-  ReconciledExcalidrawElement,
-  RemoteExcalidrawElement,
+  ReconciledDucElement as ReconciledExcalidrawElement,
+  RemoteDucElement as RemoteExcalidrawElement,
 } from "./data/reconcile";
 
 export {
