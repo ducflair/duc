@@ -201,6 +201,7 @@ export const MIME_TYPES = {
   json: "application/json",
   // excalidraw data
   duc: "application/vnd.duc-cad",
+  ducfig: "application/vnd.duc-config",
   excalidrawlib: "application/vnd.excalidrawlib+json",
   // image-encoded excalidraw data
   "excalidraw.svg": "image/svg+xml",
