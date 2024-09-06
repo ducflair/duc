@@ -1,13 +1,11 @@
 import * as flatbuffers from 'flatbuffers';
-import { BinaryFiles as BinBinaryFiles, ExportedDataState, BinaryFilesEntry, BinaryFileData, UserToFollow, DucElement as BinDucElement } from '../duc';
+import { AppState as BinAppState, ExportedDataState, ActiveTool } from '../ducfig';
 import { fileSave } from '../../../data/filesystem';
 import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, EXPORT_SOURCE, MIME_TYPES, VERSIONS } from '../../../constants';
 import { cleanAppStateForExport } from '../../../appState';
 import { DucElement } from '../../../element/types';
 import { AppState, BinaryFiles } from '../../../types';
-import { serializeDucElement } from './ducElementSerialize';
-import { serializeBinaryFiles } from './binaryFilesSerialize';
-import { serializeDucGroup } from './groupSerialize';
+import { serializeAppState } from './appStateSerialize';
 
 export const serializeAsFlatBuffers = (
   elements: readonly DucElement[],
@@ -17,20 +15,10 @@ export const serializeAsFlatBuffers = (
 ): Uint8Array => {
   const builder = new flatbuffers.Builder(1024);
 
-  // Serialize elements
-  const elementOffsets = elements.map((element) => {
-    return serializeDucElement(builder, element);
-  });
-  const elementsOffset = ExportedDataState.createElementsVector(builder, elementOffsets);
+  
 
-  // Serialize groups
-  const groupOffsets = appState.groups && appState.groups.map((group) => {
-    return serializeDucGroup(builder, group);
-  });
-  const groupsOffsets = ExportedDataState.createGroupsVector(builder, groupOffsets || []);
-
-  // Serialize files
-  const binaryFilesOffset = serializeBinaryFiles(builder, files);
+  // Serialize appState
+  const appStateOffset = serializeAppState(builder, appState);
 
   // Serialize ExportedDataState
   const typeOffset = builder.createString(EXPORT_DATA_TYPES.duc);
@@ -40,9 +28,7 @@ export const serializeAsFlatBuffers = (
   ExportedDataState.addType(builder, typeOffset);
   ExportedDataState.addVersion(builder, VERSIONS.excalidraw);
   ExportedDataState.addSource(builder, sourceOffset);
-  ExportedDataState.addElements(builder, elementsOffset);
-  ExportedDataState.addGroups(builder, groupsOffsets);
-  ExportedDataState.addFiles(builder, binaryFilesOffset);
+  ExportedDataState.addAppState(builder, appStateOffset);
   const exportedDataStateOffset = ExportedDataState.endExportedDataState(builder);
 
   builder.finish(exportedDataStateOffset);
@@ -51,7 +37,7 @@ export const serializeAsFlatBuffers = (
 };
 
 
-export const saveAsFlatBuffers = async (
+export const saveAsDucfig = async (
   elements: readonly DucElement[],
   appState: AppState,
   files: BinaryFiles,
@@ -59,13 +45,13 @@ export const saveAsFlatBuffers = async (
 ) => {
   const serialized = serializeAsFlatBuffers(elements, appState, files, "local");
   const blob = new Blob([serialized], {
-    type: MIME_TYPES.duc,
+    type: MIME_TYPES.ducfig,
   });
 
   const fileHandle = await fileSave(blob, {
     name,
-    extension: "duc",
-    description: "Duc file",
+    extension: "ducfig",
+    description: "Duc Config file",
   });
   return { fileHandle };
 };
