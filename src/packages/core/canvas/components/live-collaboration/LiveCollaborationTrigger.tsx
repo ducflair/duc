@@ -1,5 +1,5 @@
 import { t } from "../../i18n";
-import { share } from "../icons";
+import { share } from "../excalicons";
 import { Button } from "../Button";
 
 import clsx from "clsx";

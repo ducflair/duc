@@ -13,7 +13,7 @@ import {
   BringToFrontIcon,
   SendBackwardIcon,
   SendToBackIcon,
-} from "../components/icons";
+} from "../components/excalicons";
 import { isDarwin } from "../constants";
 import { StoreAction } from "../store";
 

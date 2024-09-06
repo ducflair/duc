@@ -6,7 +6,7 @@ import StatsDragInput from "./DragInput";
 import type { DragInputCallbackType } from "./DragInput";
 import { mutateElement } from "../../element/mutateElement";
 import { getStepSizedValue } from "./utils";
-import { fontSizeIcon } from "../icons";
+import { fontSizeIcon } from "../excalicons";
 import type Scene from "../../scene/Scene";
 import type { AppState } from "../../types";
 import { isTextElement, redrawTextBoundingBox } from "../../element";

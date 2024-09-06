@@ -4,7 +4,7 @@ import { t } from "../i18n";
 
 import { ExportOpts, BinaryFiles, UIAppState } from "../types";
 import { Dialog } from "./Dialog";
-import { exportToFileIcon, LinkIcon } from "./icons";
+import { exportToFileIcon, LinkIcon } from "./excalicons";
 import { ToolButton } from "./ToolButton";
 import { actionSaveFileToDisk } from "../actions/actionExport";
 import { Card } from "./Card";

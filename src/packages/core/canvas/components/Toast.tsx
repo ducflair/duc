@@ -1,5 +1,5 @@
 import { CSSProperties, useCallback, useEffect, useRef } from "react";
-import { CloseIcon } from "./icons";
+import { CloseIcon } from "./excalicons";
 import "./Toast.scss";
 import { ToolButton } from "./ToolButton";
 
