@@ -8,7 +8,7 @@ import {
   ZoomInIcon,
   ZoomOutIcon,
   // ZoomResetIcon,
-} from "../components/icons";
+} from "../components/excalicons";
 import { ToolButton } from "../components/ToolButton";
 import {
   CURSOR_TYPE,

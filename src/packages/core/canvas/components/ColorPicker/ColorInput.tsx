@@ -5,7 +5,7 @@ import {
   ColorPickerType,
   activeColorPickerSectionAtom,
 } from "./colorPickerUtils";
-import { eyeDropperIcon } from "../icons";
+import { eyeDropperIcon } from "../excalicons";
 import { jotaiScope } from "../../jotai";
 import { KEYS } from "../../keys";
 import { activeEyeDropperAtom } from "../EyeDropper";

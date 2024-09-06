@@ -2,7 +2,7 @@ import { KEYS } from "../keys";
 import { isInvisiblySmallElement } from "../element";
 import { arrayToMap, updateActiveTool } from "../utils";
 import { ToolButton } from "../components/ToolButton";
-import { done } from "../components/icons";
+import { done } from "../components/excalicons";
 import { t } from "../i18n";
 import { register } from "./register";
 import { mutateElement } from "../element/mutateElement";

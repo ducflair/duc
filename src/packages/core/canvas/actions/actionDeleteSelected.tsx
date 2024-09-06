@@ -16,7 +16,7 @@ import {
   isFrameLikeElement,
 } from "../element/typeChecks";
 import { updateActiveTool } from "../utils";
-import { TrashIcon } from "../components/icons";
+import { TrashIcon } from "../components/excalicons";
 import { StoreAction } from "../store";
 import { mutateElbowArrow } from "../element/routing";
 
