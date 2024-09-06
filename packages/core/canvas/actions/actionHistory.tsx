@@ -1,5 +1,5 @@
 import type { Action, ActionResult } from "./types";
-import { UndoIcon, RedoIcon } from "../components/icons";
+import { UndoIcon, RedoIcon } from "../components/excalicons";
 import { ToolButton } from "../components/ToolButton";
 import { t } from "../i18n";
 import type { History } from "../history";

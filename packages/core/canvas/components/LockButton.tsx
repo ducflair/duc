@@ -2,7 +2,7 @@ import "./ToolIcon.scss";
 
 import clsx from "clsx";
 import { ToolButtonSize } from "./ToolButton";
-import { LockedIcon, UnlockedIcon } from "./icons";
+import { LockedIcon, UnlockedIcon } from "./excalicons";
 
 type LockIconProps = {
   title?: string;

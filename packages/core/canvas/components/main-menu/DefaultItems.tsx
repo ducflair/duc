@@ -16,8 +16,8 @@ import {
   SunIcon,
   TrashIcon,
   usersIcon,
-} from "../icons";
-import { GithubIcon, DiscordIcon, XBrandIcon } from "../icons";
+} from "../excalicons";
+import { GithubIcon, DiscordIcon, XBrandIcon } from "../excalicons";
 import DropdownMenuItem from "../dropdownMenu/DropdownMenuItem";
 import DropdownMenuItemLink from "../dropdownMenu/DropdownMenuItemLink";
 import {

@@ -365,6 +365,7 @@ export const DEFAULT_ELEMENT_PROPS: {
   strokeWidth: DucElement["strokeWidth"];
   strokeStyle: DucElement["strokeStyle"];
   strokePlacement: DucElement["strokePlacement"];
+  roundness: DucElement["roundness"];
   roughness: DucElement["roughness"];
   opacity: DucElement["opacity"];
   locked: DucElement["locked"];
@@ -377,6 +378,7 @@ export const DEFAULT_ELEMENT_PROPS: {
   strokePlacement: "outside",
   strokeWidth: 2,
   strokeStyle: "solid",
+  roundness: null,
   roughness: ROUGHNESS.architect,
   opacity: 100,
   locked: false,

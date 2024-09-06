@@ -1,6 +1,6 @@
 import React from "react";
 import clsx from "clsx";
-import { checkIcon } from "./icons";
+import { checkIcon } from "./excalicons";
 
 import "./CheckboxItem.scss";
 

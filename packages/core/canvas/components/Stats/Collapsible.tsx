@@ -1,5 +1,5 @@
 import { InlineIcon } from "../InlineIcon";
-import { collapseDownIcon, collapseUpIcon } from "../icons";
+import { collapseDownIcon, collapseUpIcon } from "../excalicons";
 
 interface CollapsibleProps {
   label: React.ReactNode;

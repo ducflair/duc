@@ -1,5 +1,5 @@
 import { getContextMenuLabel } from "../components/hyperlink/Hyperlink";
-import { LinkIcon } from "../components/icons";
+import { LinkIcon } from "../components/excalicons";
 import { ToolButton } from "../components/ToolButton";
 import { isEmbeddableElement } from "../element/typeChecks";
 import { t } from "../i18n";

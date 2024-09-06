@@ -1,7 +1,7 @@
 import {
   DistributeHorizontallyIcon,
   DistributeVerticallyIcon,
-} from "../components/icons";
+} from "../components/excalicons";
 import { ToolButton } from "../components/ToolButton";
 import type { Distribution } from "../distribute";
 import { distributeElements } from "../distribute";

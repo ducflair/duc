@@ -21,7 +21,7 @@ import {
 } from "./common";
 import { NonDeletedDucElement } from "../../element/types";
 import { BinaryFiles } from "../../types";
-import { ArrowRightIcon } from "../icons";
+import { ArrowRightIcon } from "../excalicons";
 
 import "./TTDDialog.scss";
 import { isFiniteNumber } from "../../utils";
