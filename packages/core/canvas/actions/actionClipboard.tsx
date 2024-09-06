@@ -13,7 +13,7 @@ import { exportCanvas, prepareElementsForExport } from "../data/index";
 import { getTextFromElements, isTextElement } from "../element";
 import { t } from "../i18n";
 import { isFirefox } from "../constants";
-import { DuplicateIcon } from "../components/icons";
+import { DuplicateIcon } from "../components/excalicons";
 import { StoreAction } from "../store";
 
 export const actionCopy = register({

@@ -160,8 +160,9 @@ export const isSnappingEnabled = ({
     return (
       (app.state.objectsSnapModeEnabled && !event[KEYS.CTRL_OR_CMD]) ||
       (!app.state.objectsSnapModeEnabled &&
-        event[KEYS.CTRL_OR_CMD] &&
-        !isGridModeEnabled(app))
+        event[KEYS.CTRL_OR_CMD]
+        // !isGridModeEnabled(app)
+      )
     );
   }
 

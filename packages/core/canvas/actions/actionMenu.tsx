@@ -1,4 +1,4 @@
-import { HamburgerMenuIcon, palette } from "../components/icons";
+import { HamburgerMenuIcon, palette } from "../components/excalicons";
 import { ToolButton } from "../components/ToolButton";
 import { t } from "../i18n";
 import { showSelectedShapeActions, getNonDeletedElements } from "../element";

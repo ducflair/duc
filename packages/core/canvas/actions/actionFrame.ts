@@ -8,7 +8,7 @@ import { updateActiveTool } from "../utils";
 import { setCursorForShape } from "../cursor";
 import { register } from "./register";
 import { isFrameLikeElement } from "../element/typeChecks";
-import { frameToolIcon } from "../components/icons";
+import { frameToolIcon } from "../components/excalicons";
 import { StoreAction } from "../store";
 
 const isSingleFrameSelected = (

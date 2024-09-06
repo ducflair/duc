@@ -2,7 +2,7 @@ import { KEYS } from "../keys";
 import { t } from "../i18n";
 import { arrayToMap, getShortcutKey } from "../utils";
 import { register } from "./register";
-import { UngroupIcon, GroupIcon } from "../components/icons";
+import { UngroupIcon, GroupIcon } from "../components/excalicons";
 import { newElementWith } from "../element/mutateElement";
 import { isSomeElementSelected } from "../scene";
 import {

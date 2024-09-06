@@ -8,7 +8,7 @@ import type {
 } from "../../element/types";
 import { isInGroup } from "../../groups";
 import type Scene from "../../scene/Scene";
-import { fontSizeIcon } from "../icons";
+import { fontSizeIcon } from "../excalicons";
 import StatsDragInput from "./DragInput";
 import type { DragInputCallbackType } from "./DragInput";
 import { getStepSizedValue } from "./utils";

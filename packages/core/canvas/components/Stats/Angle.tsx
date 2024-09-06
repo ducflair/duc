@@ -3,7 +3,7 @@ import { getBoundTextElement } from "../../element/textElement";
 import { isArrowElement, isElbowArrow } from "../../element/typeChecks";
 import type { DucElement } from "../../element/types";
 import { degreeToRadian, radianToDegree } from "../../math";
-import { angleIcon } from "../icons";
+import { angleIcon } from "../excalicons";
 import DragInput from "./DragInput";
 import type { DragInputCallbackType } from "./DragInput";
 import { getStepSizedValue, isPropertyEditable, updateBindings } from "./utils";
