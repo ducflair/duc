@@ -1,13 +1,13 @@
 import * as flatbuffers from 'flatbuffers';
-import { AppState as BinAppState, BinaryFiles as BinBinaryFiles, ExportedDataState, BinaryFilesEntry, BinaryFileData, UserToFollow, DucElement as BinDucElement, ActiveTool } from '../duc';
+import { BinaryFiles as BinBinaryFiles, ExportedDataState, BinaryFilesEntry, BinaryFileData, UserToFollow, DucElement as BinDucElement } from '../duc';
 import { fileSave } from '../../../data/filesystem';
 import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, EXPORT_SOURCE, MIME_TYPES, VERSIONS } from '../../../constants';
 import { cleanAppStateForExport } from '../../../appState';
 import { DucElement } from '../../../element/types';
 import { AppState, BinaryFiles } from '../../../types';
 import { serializeDucElement } from './ducElementSerialize';
-import { serializeAppState } from './appStateSerialize';
 import { serializeBinaryFiles } from './binaryFilesSerialize';
+import { serializeDucGroup } from './groupSerialize';
 
 export const serializeAsFlatBuffers = (
   elements: readonly DucElement[],
@@ -23,8 +23,11 @@ export const serializeAsFlatBuffers = (
   });
   const elementsOffset = ExportedDataState.createElementsVector(builder, elementOffsets);
 
-  // Serialize appState
-  const appStateOffset = serializeAppState(builder, appState);
+  // Serialize groups
+  const groupOffsets = appState.groups && appState.groups.map((group) => {
+    return serializeDucGroup(builder, group);
+  });
+  const groupsOffsets = ExportedDataState.createGroupsVector(builder, groupOffsets || []);
 
   // Serialize files
   const binaryFilesOffset = serializeBinaryFiles(builder, files);
@@ -38,7 +41,7 @@ export const serializeAsFlatBuffers = (
   ExportedDataState.addVersion(builder, VERSIONS.excalidraw);
   ExportedDataState.addSource(builder, sourceOffset);
   ExportedDataState.addElements(builder, elementsOffset);
-  ExportedDataState.addAppState(builder, appStateOffset);
+  ExportedDataState.addGroups(builder, groupsOffsets);
   ExportedDataState.addFiles(builder, binaryFilesOffset);
   const exportedDataStateOffset = ExportedDataState.endExportedDataState(builder);
 
