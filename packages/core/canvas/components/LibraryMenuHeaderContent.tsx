@@ -12,7 +12,7 @@ import {
   LoadIcon,
   publishIcon,
   TrashIcon,
-} from "./icons";
+} from "./excalicons";
 import { ToolButton } from "./ToolButton";
 import { fileOpen } from "../data/filesystem";
 import { muteFSAbortError } from "../utils";

@@ -7,7 +7,7 @@ import {
   AlignTopIcon,
   CenterHorizontallyIcon,
   CenterVerticallyIcon,
-} from "../components/icons";
+} from "../components/excalicons";
 import { ToolButton } from "../components/ToolButton";
 import { getNonDeletedElements } from "../element";
 import { isFrameLikeElement } from "../element/typeChecks";

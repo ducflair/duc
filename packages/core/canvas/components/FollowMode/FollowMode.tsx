@@ -1,5 +1,5 @@
 import { UserToFollow } from "../../types";
-import { CloseIcon } from "../icons";
+import { CloseIcon } from "../excalicons";
 import "./FollowMode.scss";
 
 interface FollowModeProps {
