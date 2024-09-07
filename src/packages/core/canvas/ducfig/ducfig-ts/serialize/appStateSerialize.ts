@@ -1,7 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
-import { AppState as BinAppState, UserToFollow, DucGroup, ActiveTool } from '../duc';
+import { AppState as BinAppState, UserToFollow, ActiveTool } from '../ducfig';
 import { AppState } from '../../../types';
-import { serializeDucElement } from './ducElementSerialize';
 
 const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppState>): flatbuffers.Offset => {
   // Create string offsets and vectors
@@ -21,30 +20,8 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   const previousSelectedElementIdsOffsets = appState.previousSelectedElementIds ? Object.keys(appState.previousSelectedElementIds).map(id => builder.createString(id)) : [];
   const previousSelectedElementIdsVector = previousSelectedElementIdsOffsets.length > 0 ? BinAppState.createPreviousSelectedElementIdsVector(builder, previousSelectedElementIdsOffsets) : null;
 
-  const selectedGroupIdsOffsets = appState.selectedGroupIds ? Object.keys(appState.selectedGroupIds).map(id => builder.createString(id)) : [];
-  const selectedGroupIdsVector = selectedGroupIdsOffsets.length > 0 ? BinAppState.createSelectedGroupIdsVector(builder, selectedGroupIdsOffsets) : null;
-
   const editingGroupIdOffset = appState.editingGroupId ? builder.createString(appState.editingGroupId) : null;
   const cursorButtonOffset = appState.cursorButton ? builder.createString(appState.cursorButton) : null;
-
-  const groupsOffsets = appState.groups ? appState.groups.map(group => {
-    const idOffset = builder.createString(group.id);
-    const labelOffset = builder.createString(group.label);
-    const typeOffset = builder.createString(group.type);
-    const writingLayerOffset = builder.createString(group.writingLayer);
-    const scopeOffset = builder.createString(group.scope);
-    const isCollapsed = group.isCollapsed || false;
-    return DucGroup.createDucGroup(
-      builder,
-      idOffset,
-      typeOffset,
-      isCollapsed,
-      labelOffset,
-      scopeOffset,
-      writingLayerOffset
-    );
-  }) : [];
-  const groupsVector = groupsOffsets.length > 0 ? BinAppState.createGroupsVector(builder, groupsOffsets) : null;
 
   const scopeOffset = appState.scope ? builder.createString(appState.scope) : null;
   const writingLayerOffset = appState.writingLayer ? builder.createString(appState.writingLayer) : null;
@@ -61,11 +38,6 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
 
   const viewBackgroundColorOffset = appState.viewBackgroundColor ? builder.createString(appState.viewBackgroundColor) : null;
   const editingFrameOffset = appState.editingFrame ? builder.createString(appState.editingFrame) : null;
-
-  const elementsToHighlightOffsets = Array.isArray(appState.elementsToHighlight) ? appState.elementsToHighlight.map(element => serializeDucElement(builder, element)) : [];
-  const elementsToHighlightVector = elementsToHighlightOffsets.length > 0 ? BinAppState.createElementsToHighlightVector(builder, elementsToHighlightOffsets) : null;
-
-  const editingElementOffset = appState.editingElement ? serializeDucElement(builder, appState.editingElement) : null;
 
   const activeToolOffset = appState.activeTool ? ActiveTool.createActiveTool(builder, builder.createString(appState.activeTool?.lastActiveTool?.type), appState.activeTool.locked) : null;
 
@@ -104,13 +76,10 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   BinAppState.addShouldCacheIgnoreZoom(builder, appState.shouldCacheIgnoreZoom || false);
   BinAppState.addGridSize(builder, appState.gridSize || 0);
   BinAppState.addViewModeEnabled(builder, appState.viewModeEnabled || false);
-  if (selectedGroupIdsVector) BinAppState.addSelectedGroupIds(builder, selectedGroupIdsVector);
-  if (editingGroupIdOffset) BinAppState.addEditingGroupId(builder, editingGroupIdOffset);
   BinAppState.addScrollX(builder, appState.scrollX || 0.0);
   BinAppState.addScrollY(builder, appState.scrollY || 0.0);
   if (cursorButtonOffset) BinAppState.addCursorButton(builder, cursorButtonOffset);
   BinAppState.addScrolledOutside(builder, appState.scrolledOutside || false);
-  if (groupsVector) BinAppState.addGroups(builder, groupsVector);
   if (scopeOffset) BinAppState.addScope(builder, scopeOffset);
   if (writingLayerOffset) BinAppState.addWritingLayer(builder, writingLayerOffset);
   BinAppState.addExportBackground(builder, appState.exportBackground || false);
@@ -138,8 +107,6 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
     BinAppState.addFrameRenderingClip(builder, appState.frameRendering.clip || false);
   }
   if (editingFrameOffset) BinAppState.addEditingFrame(builder, editingFrameOffset);
-  if (elementsToHighlightVector) BinAppState.addElementsToHighlight(builder, elementsToHighlightVector);
-  if (editingElementOffset) BinAppState.addEditingElement(builder, editingElementOffset);
   if (activeToolOffset) BinAppState.addActiveTool(builder, activeToolOffset);
   BinAppState.addPenMode(builder, appState.penMode || false);
   BinAppState.addPenDetected(builder, appState.penDetected || false);

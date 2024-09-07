@@ -18,7 +18,7 @@ import { ExportedLibraryData } from "../data/types";
 import { canvasToBlob, resizeImageFile } from "../data/blob";
 import { chunk } from "../utils";
 import DialogActionButton from "./DialogActionButton";
-import { CloseIcon } from "./icons";
+import { CloseIcon } from "./excalicons";
 import { ToolButton } from "./ToolButton";
 import { EditorLocalStorage } from "../data/EditorLocalStorage";
 

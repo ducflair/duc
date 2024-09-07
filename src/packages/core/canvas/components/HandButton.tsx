@@ -2,7 +2,7 @@ import "./ToolIcon.scss";
 
 import clsx from "clsx";
 import { ToolButton } from "./ToolButton";
-import { handIcon } from "./icons";
+import { handIcon } from "./excalicons";
 import { KEYS } from "../keys";
 
 type LockIconProps = {
