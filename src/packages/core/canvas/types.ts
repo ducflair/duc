@@ -653,6 +653,9 @@ export type AppClassProperties = {
   dismissLinearEditor: App["dismissLinearEditor"];
   flowChartCreator: App["flowChartCreator"];
   getEffectiveGridSize: App["getEffectiveGridSize"];
+  closeEyeDropper: App["closeEyeDropper"];
+  openEyeDropper: App["openEyeDropper"];
+  getEyeDropper: App["getEyeDropper"];
   // setPlugins: App["setPlugins"];
   // plugins: App["plugins"];
 };
