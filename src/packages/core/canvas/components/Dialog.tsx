@@ -9,7 +9,7 @@ import {
 } from "./App";
 import { KEYS } from "../keys";
 import "./Dialog.scss";
-import { back, CloseIcon } from "./icons";
+import { SendBackwardIcon, CloseIcon } from "./excalicons";
 import { Island } from "./Island";
 import { Modal } from "./Modal";
 import { queryFocusableElements } from "../utils";
@@ -121,7 +121,7 @@ export const Dialog = (props: DialogProps) => {
           title={t("buttons.close")}
           aria-label={t("buttons.close")}
         >
-          {isFullscreen ? back : CloseIcon}
+          {isFullscreen ? SendBackwardIcon : CloseIcon}
         </button>
         <div className="Dialog__content">{props.children}</div>
       </Island>

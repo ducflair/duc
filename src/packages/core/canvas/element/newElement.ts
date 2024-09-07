@@ -60,19 +60,19 @@ export type ElementConstructorOpts = MarkOptional<
   | "angle"
   | "groupIds"
   | "frameId"
+  | "index"
   | "boundElements"
   | "seed"
   | "version"
   | "versionNonce"
   | "link"
-  | "index"
   | "strokeStyle"
   | "fillStyle"
   | "strokeColor"
   | "strokePlacement"
   | "backgroundColor"
-  | "strokeWidth"
   | "roughness"
+  | "strokeWidth"
   | "roundness"
   | "locked"
   | "opacity"
@@ -82,9 +82,6 @@ export type ElementConstructorOpts = MarkOptional<
   | "writingLayer"
   | "scope"
 >;
-
-const state = getDefaultAppState();
-
 
 const _newElementBase = <T extends DucElement>(
   type: T["type"],
@@ -110,7 +107,7 @@ const _newElementBase = <T extends DucElement>(
     angle = 0,
     groupIds = [],
     frameId = null,
-    roundness = null,
+    roundness = DEFAULT_ELEMENT_PROPS.roundness,
     boundElements = null,
     link = null,
     locked = DEFAULT_ELEMENT_PROPS.locked,
@@ -169,27 +166,6 @@ export const newEmbeddableElement = (
   } & ElementConstructorOpts,
 ): NonDeleted<DucEmbeddableElement> => {
   return _newElementBase<DucEmbeddableElement>("embeddable", opts);
-};
-
-export const newArrowElement = (
-  opts: {
-    type: DucArrowElement["type"];
-    startArrowhead?: Arrowhead | null;
-    endArrowhead?: Arrowhead | null;
-    points?: DucArrowElement["points"];
-    elbowed?: boolean;
-  } & ElementConstructorOpts,
-): NonDeleted<DucArrowElement> => {
-  return {
-    ..._newElementBase<DucArrowElement>(opts.type, opts),
-    points: opts.points || [],
-    lastCommittedPoint: null,
-    startBinding: null,
-    endBinding: null,
-    startArrowhead: opts.startArrowhead || null,
-    endArrowhead: opts.endArrowhead || null,
-    elbowed: opts.elbowed || false,
-  };
 };
 
 export const newIframeElement = (
@@ -333,7 +309,6 @@ export const newTextElement = (
   return textElement;
 };
 
-
 const getAdjustedDimensions = (
   element: DucTextElement,
   elementsMap: ElementsMap,
@@ -344,18 +319,25 @@ const getAdjustedDimensions = (
   width: number;
   height: number;
 } => {
-  const { width: nextWidth, height: nextHeight } = measureText(
+  let { width: nextWidth, height: nextHeight } = measureText(
     nextText,
     getFontString(element),
     element.lineHeight,
   );
+
+  // wrapped text
+  if (!element.autoResize) {
+    nextWidth = element.width;
+  }
+
   const { textAlign, verticalAlign } = element;
   let x: number;
   let y: number;
   if (
     textAlign === "center" &&
     verticalAlign === VERTICAL_ALIGN.MIDDLE &&
-    !element.containerId
+    !element.containerId &&
+    element.autoResize
   ) {
     const prevMetrics = measureText(
       element.text,
@@ -416,36 +398,17 @@ export const refreshTextDimensions = (
   if (textElement.isDeleted) {
     return;
   }
-  if (container) {
+  if (container || !textElement.autoResize) {
     text = wrapText(
       text,
       getFontString(textElement),
-      getBoundTextMaxWidth(container, textElement),
+      container
+        ? getBoundTextMaxWidth(container, textElement)
+        : textElement.width,
     );
   }
   const dimensions = getAdjustedDimensions(textElement, elementsMap, text);
   return { text, ...dimensions };
-};
-
-export const updateTextElement = (
-  textElement: DucTextElement,
-  container: DucTextContainer | null,
-  elementsMap: ElementsMap,
-  {
-    text,
-    isDeleted,
-    nextOriginalText: originalText,
-  }: {
-    text: string;
-    isDeleted?: boolean;
-    nextOriginalText: string;
-  },
-): DucTextElement => {
-  return newElementWith(textElement, {
-    originalText,
-    isDeleted: isDeleted ?? textElement.isDeleted,
-    ...refreshTextDimensions(textElement, container, elementsMap, originalText),
-  });
 };
 
 export const newFreeDrawElement = (
@@ -479,6 +442,27 @@ export const newLinearElement = (
     endBinding: null,
     startArrowhead: null,
     endArrowhead: null,
+  };
+};
+
+export const newArrowElement = (
+  opts: {
+    type: DucArrowElement["type"];
+    startArrowhead?: Arrowhead | null;
+    endArrowhead?: Arrowhead | null;
+    points?: DucArrowElement["points"];
+    elbowed?: boolean;
+  } & ElementConstructorOpts,
+): NonDeleted<DucArrowElement> => {
+  return {
+    ..._newElementBase<DucArrowElement>(opts.type, opts),
+    points: opts.points || [],
+    lastCommittedPoint: null,
+    startBinding: null,
+    endBinding: null,
+    startArrowhead: opts.startArrowhead || null,
+    endArrowhead: opts.endArrowhead || null,
+    elbowed: opts.elbowed || false,
   };
 };
 
@@ -592,7 +576,7 @@ export const regenerateId = (
     if (
       window.h?.app
         ?.getSceneElementsIncludingDeleted()
-        .find((el) => el.id === nextId)
+        .find((el: DucElement) => el.id === nextId)
     ) {
       nextId += "_copy";
     }
@@ -758,4 +742,3 @@ export const duplicateElements = (
 
   return clonedElements;
 };
-

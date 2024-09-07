@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { t } from "../../i18n";
 import { useDevice } from "../App";
 import { SidebarPropsContext } from "./common";
-import { CloseIcon, PinIcon } from "../icons";
+import { CloseIcon, PinIcon } from "../excalicons";
 import { Tooltip } from "../Tooltip";
 import { Button } from "../Button";
 
