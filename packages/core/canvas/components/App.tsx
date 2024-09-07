@@ -2133,15 +2133,15 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  private closeEyeDropper = () => {
+  public closeEyeDropper = () => {
     jotaiStore.set(activeEyeDropperAtom, null);
   };
 
-  private getEyeDropper = () => {
+  public getEyeDropper = () => {
     return jotaiStore.get(activeEyeDropperAtom);
   };
 
-  private openEyeDropper = ({ type }: { type: "stroke" | "background" }) => {
+  public openEyeDropper = ({ type }: { type: "stroke" | "background" }) => {
     jotaiStore.set(activeEyeDropperAtom, {
       swapPreviewOnAlt: true,
       colorPickerType:
