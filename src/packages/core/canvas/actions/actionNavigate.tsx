@@ -5,7 +5,7 @@ import {
   eyeIcon,
   // microphoneIcon,
   // microphoneMutedIcon,
-} from "../components/icons";
+} from "../components/excalicons";
 import { t } from "../i18n";
 import { StoreAction } from "../store";
 import type { Collaborator } from "../types";

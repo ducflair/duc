@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog } from "./Dialog";
 import { TextField } from "./TextField";
-import { MagicIcon, OpenAIIcon } from "./icons";
+import { MagicIcon, OpenAIIcon } from "./excalicons";
 import { FilledButton } from "./FilledButton";
 import { CheckboxItem } from "./CheckboxItem";
 import { KEYS } from "../keys";

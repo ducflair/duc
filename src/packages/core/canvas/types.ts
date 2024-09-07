@@ -653,6 +653,9 @@ export type AppClassProperties = {
   dismissLinearEditor: App["dismissLinearEditor"];
   flowChartCreator: App["flowChartCreator"];
   getEffectiveGridSize: App["getEffectiveGridSize"];
+  closeEyeDropper: App["closeEyeDropper"];
+  openEyeDropper: App["openEyeDropper"];
+  getEyeDropper: App["getEyeDropper"];
   // setPlugins: App["setPlugins"];
   // plugins: App["plugins"];
 };
@@ -741,6 +744,9 @@ export interface DucImperativeAPI {
     mutateGroup: InstanceType<typeof App>["mutateGroup"];
     setActiveTool: InstanceType<typeof App>["setActiveTool"];
     setBackgroundColor: (color: string) => void;
+    openEyeDropper: InstanceType<typeof App>["openEyeDropper"];
+    closeEyeDropper: InstanceType<typeof App>["closeEyeDropper"];
+    getEyeDropper: InstanceType<typeof App>["getEyeDropper"];
   };
   state: () => AppClassProperties
   elements: {

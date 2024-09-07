@@ -53,7 +53,7 @@ import {
   // sharpArrowIcon,
   // roundArrowIcon,
   // elbowArrowIcon,
-} from "../components/icons";
+} from "../components/excalicons";
 import {
   ARROW_TYPE,
   DEFAULT_FONT_FAMILY,

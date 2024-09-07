@@ -13,7 +13,7 @@ import type {
 } from "../../element/types";
 
 import { ToolButton } from "../ToolButton";
-import { FreedrawIcon, TrashIcon } from "../icons";
+import { FreedrawIcon, TrashIcon } from "../excalicons";
 import { t } from "../../i18n";
 import {
   useCallback,

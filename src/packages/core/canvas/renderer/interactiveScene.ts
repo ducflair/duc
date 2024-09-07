@@ -773,7 +773,7 @@ const _renderInteractiveScene = ({
         elementsMap,
       );
     }
-    const selectionColor = renderConfig.selectionColor || oc.black;
+    const selectionColor = renderConfig.selectionColor || "#6965db";
 
     if (showBoundingBox) {
       // Optimisation for finding quickly relevant element ids
@@ -859,7 +859,7 @@ const _renderInteractiveScene = ({
           elementX2,
           elementY1,
           elementY2,
-          selectionColors: [oc.black],
+          selectionColors: ['#6965db'],
           dashed: true,
           cx: elementX1 + (elementX2 - elementX1) / 2,
           cy: elementY1 + (elementY2 - elementY1) / 2,

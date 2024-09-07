@@ -201,6 +201,7 @@ export const MIME_TYPES = {
   json: "application/json",
   // excalidraw data
   duc: "application/vnd.duc-cad",
+  ducfig: "application/vnd.duc-config",
   excalidrawlib: "application/vnd.excalidrawlib+json",
   // image-encoded excalidraw data
   "excalidraw.svg": "image/svg+xml",
@@ -365,6 +366,7 @@ export const DEFAULT_ELEMENT_PROPS: {
   strokeWidth: DucElement["strokeWidth"];
   strokeStyle: DucElement["strokeStyle"];
   strokePlacement: DucElement["strokePlacement"];
+  roundness: DucElement["roundness"];
   roughness: DucElement["roughness"];
   opacity: DucElement["opacity"];
   locked: DucElement["locked"];
@@ -377,6 +379,7 @@ export const DEFAULT_ELEMENT_PROPS: {
   strokePlacement: "outside",
   strokeWidth: 2,
   strokeStyle: "solid",
+  roundness: null,
   roughness: ROUGHNESS.architect,
   opacity: 100,
   locked: false,
