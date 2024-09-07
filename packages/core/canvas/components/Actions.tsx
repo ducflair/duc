@@ -46,7 +46,7 @@ import {
   mermaidLogoIcon,
   laserPointerToolIcon,
   MagicIcon,
-} from "./icons";
+} from "./excalicons";
 import { KEYS } from "../keys";
 import { useTunnels } from "../context/tunnels";
 import { CLASSES } from "../constants";

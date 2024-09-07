@@ -4,7 +4,7 @@ import { KEYS } from "../keys";
 import { Dialog } from "./Dialog";
 import { getShortcutKey } from "../utils";
 import "./HelpDialog.scss";
-import { ExternalLinkIcon } from "./icons";
+import { ExternalLinkIcon } from "./excalicons";
 import { probablySupportsClipboardBlob } from "../clipboard";
 import { isDarwin, isFirefox, isWindows } from "../constants";
 
@@ -263,7 +263,7 @@ export const HelpDialog = ({ onClose }: { onClose?: () => void }) => {
               shortcuts={[getShortcutKey("Alt+S")]}
             />
             <Shortcut
-              label={t("labels.showGrid")}
+              label={t("labels.toggleGrid")}
               shortcuts={[getShortcutKey("CtrlOrCmd+'")]}
             />
             <Shortcut

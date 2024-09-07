@@ -17,7 +17,7 @@ import {
   RectangleIcon,
   SelectionIcon,
   TextIcon,
-} from "./components/icons";
+} from "./components/excalicons";
 import { getElementAbsoluteCoords } from "./element";
 import { shouldTestInside } from "./element/collision";
 import { LinearElementEditor } from "./element/linearElementEditor";

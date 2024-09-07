@@ -5,7 +5,7 @@ import type { DucElement } from "../../element/types";
 import { isInGroup } from "../../groups";
 import { degreeToRadian, radianToDegree } from "../../math";
 import type Scene from "../../scene/Scene";
-import { angleIcon } from "../icons";
+import { angleIcon } from "../excalicons";
 import DragInput from "./DragInput";
 import type { DragInputCallbackType } from "./DragInput";
 import { getStepSizedValue, isPropertyEditable } from "./utils";

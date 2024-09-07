@@ -7,7 +7,7 @@ import type {
   AppState,
   ExcalidrawProps,
 } from "../../types";
-import { CloseIcon } from "../icons";
+import { CloseIcon } from "../excalicons";
 import { Island } from "../Island";
 import { throttle } from "lodash";
 import Dimension from "./Dimension";
