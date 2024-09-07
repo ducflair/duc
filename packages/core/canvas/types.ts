@@ -741,6 +741,9 @@ export interface DucImperativeAPI {
     mutateGroup: InstanceType<typeof App>["mutateGroup"];
     setActiveTool: InstanceType<typeof App>["setActiveTool"];
     setBackgroundColor: (color: string) => void;
+    openEyeDropper: InstanceType<typeof App>["openEyeDropper"];
+    closeEyeDropper: InstanceType<typeof App>["closeEyeDropper"];
+    getEyeDropper: InstanceType<typeof App>["getEyeDropper"];
   };
   state: () => AppClassProperties
   elements: {

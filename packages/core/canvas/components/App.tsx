@@ -718,6 +718,9 @@ class App extends React.Component<AppProps, AppState> {
           setCurrentScope: this.setCurrentScope,
           setWritingLayer: this.setWritingLayer,
           updateGroups: this.updateGroups,
+          openEyeDropper: this.openEyeDropper,
+          closeEyeDropper: this.closeEyeDropper,
+          getEyeDropper: this.getEyeDropper,
           mutateGroup: this.mutateGroup,
           setActiveTool: this.setActiveTool,
           setBackgroundColor: (color: string) => this.setState({
@@ -2128,6 +2131,14 @@ class App extends React.Component<AppProps, AppState> {
       this.onMagicFrameGenerate(frame, "upstream");
       this.updateGroups();
     }
+  };
+
+  private closeEyeDropper = () => {
+    jotaiStore.set(activeEyeDropperAtom, null);
+  };
+
+  private getEyeDropper = () => {
+    return jotaiStore.get(activeEyeDropperAtom);
   };
 
   private openEyeDropper = ({ type }: { type: "stroke" | "background" }) => {
