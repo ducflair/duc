@@ -117,7 +117,6 @@ import {
   newTextElement,
   newImageElement,
   transformElements,
-  updateTextElement,
   redrawTextBoundingBox,
   refreshTextDimensions,
   getElementAbsoluteCoords,
@@ -416,7 +415,7 @@ import { MagicCacheData, diagramToHTML } from "../data/magic";
 import { exportToBlob } from "../../utils/export";
 import { COLOR_PALETTE } from "../colors";
 import { ElementCanvasButton } from "./MagicButton";
-import { MagicIcon, copyIcon, fullscreenIcon } from "./icons";
+import { MagicIcon, copyIcon, fullscreenIcon } from "./excalicons";
 import { EditorLocalStorage } from "../data/EditorLocalStorage";
 import FollowMode from "./FollowMode/FollowMode";
 
@@ -719,6 +718,9 @@ class App extends React.Component<AppProps, AppState> {
           setCurrentScope: this.setCurrentScope,
           setWritingLayer: this.setWritingLayer,
           updateGroups: this.updateGroups,
+          openEyeDropper: this.openEyeDropper,
+          closeEyeDropper: this.closeEyeDropper,
+          getEyeDropper: this.getEyeDropper,
           mutateGroup: this.mutateGroup,
           setActiveTool: this.setActiveTool,
           setBackgroundColor: (color: string) => this.setState({
@@ -2131,7 +2133,15 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  private openEyeDropper = ({ type }: { type: "stroke" | "background" }) => {
+  public closeEyeDropper = () => {
+    jotaiStore.set(activeEyeDropperAtom, null);
+  };
+
+  public getEyeDropper = () => {
+    return jotaiStore.get(activeEyeDropperAtom);
+  };
+
+  public openEyeDropper = ({ type }: { type: "stroke" | "background" }) => {
     jotaiStore.set(activeEyeDropperAtom, {
       swapPreviewOnAlt: true,
       colorPickerType:

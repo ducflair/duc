@@ -3,7 +3,7 @@ import { getShortcutFromShortcutName } from "../../actions/shortcuts";
 import { t, useI18n } from "../../i18n";
 import { useDevice, useExcalidrawActionManager } from "../App";
 import { useTunnels } from "../../context/tunnels";
-import { HelpIcon, LoadIcon, usersIcon } from "../icons";
+import { HelpIcon, LoadIcon, usersIcon } from "../excalicons";
 import { useUIAppState } from "../../context/ui-appState";
 import { ExcalidrawLogo } from "../ExcalidrawLogo";
 

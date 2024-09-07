@@ -1,8 +1,8 @@
+import type { KeyboardEvent } from "react";
 import {
   forwardRef,
   useRef,
   useImperativeHandle,
-  KeyboardEvent,
   useLayoutEffect,
   useState,
 } from "react";
@@ -10,7 +10,7 @@ import clsx from "clsx";
 
 import "./TextField.scss";
 import { Button } from "./Button";
-import { eyeIcon, eyeClosedIcon } from "./icons";
+import { eyeIcon, eyeClosedIcon } from "./excalicons";
 
 type TextFieldProps = {
   onChange?: (value: string) => void;

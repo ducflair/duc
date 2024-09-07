@@ -1,4 +1,4 @@
-import { eyeIcon } from "../components/icons";
+import { eyeIcon } from "../components/excalicons";
 import { CODES, KEYS } from "../keys";
 import { StoreAction } from "../store";
 import { register } from "./register";

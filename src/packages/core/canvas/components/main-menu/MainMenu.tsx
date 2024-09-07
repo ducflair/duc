@@ -6,7 +6,7 @@ import * as DefaultItems from "./DefaultItems";
 
 import { UserList } from "../UserList";
 import { t } from "../../i18n";
-import { HamburgerMenuIcon } from "../icons";
+import { HamburgerMenuIcon } from "../excalicons";
 import { withInternalFallback } from "../hoc/withInternalFallback";
 import { composeEventHandlers } from "../../utils";
 import { useTunnels } from "../../context/tunnels";
