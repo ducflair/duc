@@ -283,7 +283,7 @@ table ExportedDataState {
   version: int;
   source: string;
   elements: [DucElement];
-  appState: AppState;
+  groups: [DucGroup];
   files: BinaryFiles;
 }
 

@@ -3,7 +3,7 @@ import {
   // FontFamilyHeadingIcon,
   FontFamilyNormalIcon,
   FreedrawIcon,
-} from "../components/icons";
+} from "../components/excalicons";
 import { FONT_FAMILY } from "../constants";
 
 /**

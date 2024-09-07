@@ -7,7 +7,7 @@ import { useI18n } from "../i18n";
 import { Dialog } from "./Dialog";
 import { TextField } from "./TextField";
 import { FilledButton } from "./FilledButton";
-import { copyIcon, tablerCheckIcon } from "./icons";
+import { copyIcon, tablerCheckIcon } from "./excalicons";
 
 import "./ShareableLinkDialog.scss";
 

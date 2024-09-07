@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { useTunnels } from "../../context/tunnels";
 import DropdownMenu from "../dropdownMenu/DropdownMenu";
 import { useExcalidrawSetAppState } from "../App";
-import { brainIcon } from "../icons";
+import { brainIcon } from "../excalicons";
 import { t } from "../../i18n";
 import { trackEvent } from "../../analytics";
 

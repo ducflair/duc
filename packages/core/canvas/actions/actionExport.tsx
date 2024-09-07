@@ -1,4 +1,4 @@
-import { ExportIcon, questionCircle, saveAs } from "../components/icons";
+import { ExportIcon, questionCircle, saveAs } from "../components/excalicons";
 import { ProjectName } from "../components/ProjectName";
 import { ToolButton } from "../components/ToolButton";
 import { Tooltip } from "../components/Tooltip";

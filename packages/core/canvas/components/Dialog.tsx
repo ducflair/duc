@@ -9,7 +9,7 @@ import {
 } from "./App";
 import { KEYS } from "../keys";
 import "./Dialog.scss";
-import { SendBackwardIcon, CloseIcon } from "./icons";
+import { SendBackwardIcon, CloseIcon } from "./excalicons";
 import { Island } from "./Island";
 import { Modal } from "./Modal";
 import { queryFocusableElements } from "../utils";

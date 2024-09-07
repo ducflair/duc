@@ -22,7 +22,7 @@ import {
 } from "../element/textElement";
 import { isBoundToContainer, isFrameLikeElement } from "../element/typeChecks";
 import { normalizeElementOrder } from "../element/sortElements";
-import { DuplicateIcon } from "../components/icons";
+import { DuplicateIcon } from "../components/excalicons";
 import {
   bindElementsToFramesAfterDuplication,
   getFrameChildren,

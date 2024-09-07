@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useDeferredValue } from "react";
 import { BinaryFiles } from "../../types";
 import { useApp } from "../App";
 import { NonDeletedDucElement } from "../../element/types";
-import { ArrowRightIcon } from "../icons";
+import { ArrowRightIcon } from "../excalicons";
 import "./MermaidToExcalidraw.scss";
 import { t } from "../../i18n";
 import Trans from "../Trans";
