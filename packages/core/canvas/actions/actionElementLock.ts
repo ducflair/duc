@@ -1,4 +1,4 @@
-import { LockedIcon, UnlockedIcon } from "../components/icons";
+import { LockedIcon, UnlockedIcon } from "../components/excalicons";
 import { newElementWith } from "../element/mutateElement";
 import { isFrameLikeElement } from "../element/typeChecks";
 import type { DucElement } from "../element/types";

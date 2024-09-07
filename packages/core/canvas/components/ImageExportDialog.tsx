@@ -25,7 +25,7 @@ import { t } from "../i18n";
 import { isSomeElementSelected } from "../scene";
 import { exportToCanvas } from "../../utils/export";
 
-import { copyIcon, downloadIcon, helpIcon } from "./icons";
+import { copyIcon, downloadIcon, helpIcon } from "./excalicons";
 import { Dialog } from "./Dialog";
 import { RadioGroup } from "./RadioGroup";
 import { Switch } from "./Switch";

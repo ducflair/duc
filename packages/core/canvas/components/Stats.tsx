@@ -4,7 +4,7 @@ import { NonDeletedDucElement } from "../element/types";
 import { t } from "../i18n";
 import { getTargetElements } from "../scene";
 import { ExcalidrawProps, UIAppState } from "../types";
-import { CloseIcon } from "./icons";
+import { CloseIcon } from "./excalicons";
 import { Island } from "./Island";
 import "./Stats.scss";
 

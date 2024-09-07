@@ -4,7 +4,7 @@ import {
   WelcomeScreenHelpArrow,
   WelcomeScreenMenuArrow,
   WelcomeScreenTopToolbarArrow,
-} from "../icons";
+} from "../excalicons";
 
 const MenuHint = ({ children }: { children?: React.ReactNode }) => {
   const { WelcomeScreenMenuHintTunnel } = useTunnels();

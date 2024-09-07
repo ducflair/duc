@@ -4,7 +4,7 @@ import { useDevice } from "./App";
 import { LibraryItem } from "../types";
 import "./LibraryUnit.scss";
 import { CheckboxItem } from "./CheckboxItem";
-import { PlusIcon } from "./icons";
+import { PlusIcon } from "./excalicons";
 import { SvgCache, useLibraryItemSvg } from "../hooks/useLibraryItemSvg";
 
 export const LibraryUnit = memo(
