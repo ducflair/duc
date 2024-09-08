@@ -18,16 +18,21 @@ type CanvasPreviewProps = {
     name: string;
     exportWithDarkMode: boolean;
     exportBackground: boolean;
+    exportScale: number;
 };
   
 export const CanvasPreview = ({
-    appStateSnapshot,
+    appStateSnapshot: appStateSnapshotInitial,
     elementsSnapshot,
     files,
     name,
     exportWithDarkMode,
     exportBackground,
+    exportScale
 }: CanvasPreviewProps) => {
+
+    const appStateSnapshot:AppState = {...appStateSnapshotInitial, selectedElementIds: {}, exportScale};
+    
     const hasSelection = isSomeElementSelected(
       elementsSnapshot,
       appStateSnapshot,
@@ -38,10 +43,7 @@ export const CanvasPreview = ({
     // const [exportWithBackground, setExportWithBackground] = useState(
     //   appStateSnapshot.exportBackground,
     // );
-    const [embedScene, setEmbedScene] = useState(
-      appStateSnapshot.exportEmbedScene,
-    );
-    const [exportScale, setExportScale] = useState(appStateSnapshot.exportScale);
+    const [embedScene, setEmbedScene] = useState(false);
   
     const previewRef = useRef<HTMLDivElement>(null);
     const [renderError, setRenderError] = useState<Error | null>(null);
@@ -49,7 +51,7 @@ export const CanvasPreview = ({
     const { exportedElements, exportingFrame } = prepareElementsForExport(
       elementsSnapshot,
       appStateSnapshot,
-      exportSelectionOnly,
+      false,
     );
 
 
@@ -109,7 +111,7 @@ export const CanvasPreview = ({
         projectName,
         exportWithDarkMode,
         exportBackground,
-        exportScale,
+        // exportScale,
         embedScene,
     ]);
 
