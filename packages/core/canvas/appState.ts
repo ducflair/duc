@@ -67,7 +67,7 @@ export const getDefaultAppState = (): Omit<
     fileHandle: null,
     gridSize: DEFAULT_GRID_SIZE,
     gridStep: DEFAULT_GRID_STEP,
-    gridModeEnabled: false,
+    gridModeEnabled: true,
     isBindingEnabled: true,
     defaultSidebarDockedPreference: false,
     isLoading: false,
