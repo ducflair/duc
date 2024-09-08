@@ -225,6 +225,11 @@ export {
 } from "./data/restore";
 
 export {
+  clearAppStateForLocalStorage,
+  getDefaultAppState,
+} from "./appState";
+
+export {
   reconcileElements,
   ReconciledDucElement as ReconciledExcalidrawElement,
   RemoteDucElement as RemoteExcalidrawElement,
