@@ -26,5 +26,6 @@ export const parseGroupsToAppStateFromBinary = (d: ExportedDataState | null): Pa
 
   return {
     groups: groups,
+    viewBackgroundColor: d.backgroundColor() || '',
   };
 };
