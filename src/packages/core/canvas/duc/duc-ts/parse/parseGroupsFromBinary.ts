@@ -3,6 +3,7 @@ import { SupportedMeasures } from '../../utils/measurements';
 import { WritingLayers } from "../../utils/writingLayers";
 import { AppState, NormalizedZoomValue } from '../../../types';
 import { Arrowhead, DucGroup, FillStyle, PointerType, StrokeRoundness, StrokeStyle } from '../../../element/types';
+import { getDefaultAppState } from '../../../appState';
 
 
 export const parseGroupsToAppStateFromBinary = (d: ExportedDataState | null): Partial<AppState> => {
