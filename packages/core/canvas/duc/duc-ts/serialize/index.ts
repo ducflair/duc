@@ -29,19 +29,24 @@ export const serializeAsFlatBuffers = (
   });
   const groupsOffsets = ExportedDataState.createGroupsVector(builder, groupOffsets || []);
 
+  // Serialize backgroundColor
+  const backgroundColorOffset = builder.createString(appState.viewBackgroundColor);
+
   // Serialize files
   const binaryFilesOffset = serializeBinaryFiles(builder, files);
-
+  
   // Serialize ExportedDataState
   const typeOffset = builder.createString(EXPORT_DATA_TYPES.duc);
   const sourceOffset = builder.createString(EXPORT_SOURCE);
-
+  
+  
   ExportedDataState.startExportedDataState(builder);
   ExportedDataState.addType(builder, typeOffset);
   ExportedDataState.addVersion(builder, VERSIONS.excalidraw);
   ExportedDataState.addSource(builder, sourceOffset);
   ExportedDataState.addElements(builder, elementsOffset);
   ExportedDataState.addGroups(builder, groupsOffsets);
+  ExportedDataState.addBackgroundColor(builder, backgroundColorOffset);
   ExportedDataState.addFiles(builder, binaryFilesOffset);
   const exportedDataStateOffset = ExportedDataState.endExportedDataState(builder);
 
