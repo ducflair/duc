@@ -10,16 +10,16 @@ import type { AppState } from "../types";
 import type { MakeBrand } from "../utility-types";
 import { arrayToMap } from "../utils";
 
-export type ReconciledExcalidrawElement = OrderedDucElement &
+export type ReconciledDucElement = OrderedDucElement &
   MakeBrand<"ReconciledElement">;
 
-export type RemoteExcalidrawElement = OrderedDucElement &
-  MakeBrand<"RemoteExcalidrawElement">;
+export type RemoteDucElement = OrderedDucElement &
+  MakeBrand<"RemoteDucElement">;
 
 const shouldDiscardRemoteElement = (
   localAppState: AppState,
   local: OrderedDucElement | undefined,
-  remote: RemoteExcalidrawElement,
+  remote: RemoteDucElement,
 ): boolean => {
   if (
     local &&
@@ -43,7 +43,7 @@ const validateIndicesThrottled = throttle(
   (
     orderedElements: readonly OrderedDucElement[],
     localElements: readonly OrderedDucElement[],
-    remoteElements: readonly RemoteExcalidrawElement[],
+    remoteElements: readonly RemoteDucElement[],
   ) => {
     if (
       import.meta.env.DEV ||
@@ -72,9 +72,9 @@ const validateIndicesThrottled = throttle(
 
 export const reconcileElements = (
   localElements: readonly OrderedDucElement[],
-  remoteElements: readonly RemoteExcalidrawElement[],
+  remoteElements: readonly RemoteDucElement[],
   localAppState: AppState,
-): ReconciledExcalidrawElement[] => {
+): ReconciledDucElement[] => {
   const localElementsMap = arrayToMap(localElements);
   const reconciledElements: OrderedDucElement[] = [];
   const added = new Set<string>();
@@ -114,5 +114,5 @@ export const reconcileElements = (
   // de-duplicate indices
   syncInvalidIndices(orderedElements);
 
-  return orderedElements as ReconciledExcalidrawElement[];
+  return orderedElements as ReconciledDucElement[];
 };
