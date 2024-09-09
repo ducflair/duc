@@ -66,13 +66,20 @@ groupsLength():number {
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-files(obj?:BinaryFiles):BinaryFiles|null {
+backgroundColor():string|null
+backgroundColor(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+backgroundColor(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 14);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+files(obj?:BinaryFiles):BinaryFiles|null {
+  const offset = this.bb!.__offset(this.bb_pos, 16);
   return offset ? (obj || new BinaryFiles()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 static startExportedDataState(builder:flatbuffers.Builder) {
-  builder.startObject(6);
+  builder.startObject(7);
 }
 
 static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
@@ -119,8 +126,12 @@ static startGroupsVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
 }
 
+static addBackgroundColor(builder:flatbuffers.Builder, backgroundColorOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(5, backgroundColorOffset, 0);
+}
+
 static addFiles(builder:flatbuffers.Builder, filesOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, filesOffset, 0);
+  builder.addFieldOffset(6, filesOffset, 0);
 }
 
 static endExportedDataState(builder:flatbuffers.Builder):flatbuffers.Offset {
