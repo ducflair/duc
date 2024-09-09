@@ -284,6 +284,7 @@ table ExportedDataState {
   source: string;
   elements: [DucElement];
   groups: [DucGroup];
+  backgroundColor: string;
   files: BinaryFiles;
 }
 
