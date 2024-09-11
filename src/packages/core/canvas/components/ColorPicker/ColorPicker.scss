@@ -38,7 +38,7 @@
     height: 1.35rem;
     border: 1px solid var(--color-gray-30);
     border-radius: var(--radius);
-    filter: var(--theme-filter);
+    // filter: var(--theme-filter);
     background-color: var(--swatch-color);
     background-position: left center;
     position: relative;
@@ -55,7 +55,7 @@
         bottom: -2px;
         box-shadow: 0 0 0 1px var(--color-gray-30);
         border-radius: calc(var(--radius) + 1px);
-        filter: var(--theme-filter);
+        // filter: var(--theme-filter);
       }
     }
 
@@ -69,7 +69,7 @@
         box-shadow: 0 0 0 1px var(--color-primary-darkest);
         z-index: 1; // due hover state so this has preference
         border-radius: calc(var(--radius) + 1px);
-        filter: var(--theme-filter);
+        // filter: var(--theme-filter);
       }
     }
 
@@ -254,7 +254,7 @@
     box-sizing: border-box;
     border: 1px solid #ddd;
     background-color: currentColor !important;
-    filter: var(--theme-filter);
+    // filter: var(--theme-filter);
 
     &:focus {
       /* TODO: only show the border when the color is too light to see as a shadow */
@@ -382,7 +382,7 @@
     background-color: var(--swatch-color) !important;
     overflow: hidden;
     position: relative;
-    filter: var(--theme-filter);
+    // filter: var(--theme-filter);
     border: 0 !important;
 
     &:after {

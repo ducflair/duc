@@ -760,6 +760,7 @@ class App extends React.Component<AppProps, AppState> {
         setToast: this.setToast,
         id: this.id,
         setCursor: this.setCursor,
+        setAppState: this.setAppState,
         resetCursor: this.resetCursor,
         updateFrameRendering: this.updateFrameRendering,
 
