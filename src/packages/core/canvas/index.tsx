@@ -276,6 +276,10 @@ export {
 } from "./types";
 
 export {
+  TOOL_TYPE
+} from "./constants";
+
+export {
   SceneBounds
 } from "./element/bounds";
 
