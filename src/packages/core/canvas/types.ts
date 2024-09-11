@@ -772,6 +772,7 @@ export interface DucImperativeAPI {
   refresh: InstanceType<typeof App>["refresh"];
 
   setToast: InstanceType<typeof App>["setToast"];
+  setAppState: InstanceType<typeof App>["setAppState"];
   addFiles: (data: BinaryFileData[]) => void;
   id: string;
   
