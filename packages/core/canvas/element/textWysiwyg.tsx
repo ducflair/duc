@@ -275,7 +275,7 @@ export const textWysiwyg = ({
         verticalAlign,
         color: updatedTextElement.strokeColor,
         opacity: updatedTextElement.opacity / 100,
-        filter: "var(--theme-filter)",
+        // filter: "var(--theme-filter)",
         maxHeight: `${editorMaxHeight}px`,
       });
       editable.scrollTop = 0;
