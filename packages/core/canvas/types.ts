@@ -22,6 +22,7 @@ import {
   DucIframeLikeElement,
   DucGroup,
   DucNonSelectionElement,
+  OrderedDucElement,
 } from "./element/types";
 import { Action } from "./actions/types";
 import { Point as RoughPoint } from "roughjs/bin/geometry";
@@ -40,10 +41,11 @@ import type { FileSystemHandle } from "./data/filesystem";
 import type { IMAGE_MIME_TYPES, MIME_TYPES } from "./constants";
 import { ContextMenuItems } from "./components/ContextMenu";
 import { SnapLine } from "./snapping";
-import { Merge, MaybePromise, ValueOf, MakeBrand } from "./utility-types";
+import { Merge, MaybePromise, ValueOf, MakeBrand, Mutable } from "./utility-types";
 import { SupportedMeasures } from "./duc/utils/measurements";
 import { WritingLayers } from "./duc/utils/writingLayers";
 import { StoreActionType } from "./store";
+import { ElementUpdate } from "./element/mutateElement";
 
 export type Point = Readonly<RoughPoint>;
 
@@ -471,7 +473,7 @@ export type OnUserFollowedPayload = {
 
 export interface ExcalidrawProps {
   onChange?: (
-    elements: readonly DucElement[],
+    elements: readonly OrderedDucElement[],
     appState: AppState,
     files: BinaryFiles,
   ) => void;
@@ -757,6 +759,7 @@ export interface DucImperativeAPI {
     mutateElementWithValues: InstanceType<typeof App>["mutateElementWithValues"];
     sendBackwardElements: InstanceType<typeof App>["sendBackwardElements"];
     mutateSelectedElementsWithValues: InstanceType<typeof App>["mutateSelectedElementsWithValues"];
+    // mutateSelectedElementsWithValues: <TElement extends Mutable<DucElement>> ( values: ElementUpdate<TElement> ) => void;
     bringForwardElements: InstanceType<typeof App>["bringForwardElements"];
     toggleCollapseFrame: InstanceType<typeof App>["toggleCollapseFrame"];
     toggleLockElement: InstanceType<typeof App>["toggleLockElement"];
