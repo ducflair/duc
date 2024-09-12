@@ -397,7 +397,7 @@ import {
   DucElementSkeleton,
   convertToExcalidrawElements,
 } from "../data/transform";
-import { ValueOf } from "../utility-types";
+import { Mutable, ValueOf } from "../utility-types";
 import { isSidebarDockedAtom } from "./Sidebar/Sidebar";
 import { StaticCanvas, InteractiveCanvas } from "./canvases";
 import { Renderer } from "../scene/Renderer";
@@ -1035,7 +1035,7 @@ class App extends React.Component<AppProps, AppState> {
     const embeddableElements = this.scene
       .getNonDeletedElements()
       .filter(
-        (el): el is NonDeleted<DucIframeLikeElement> =>
+        (el): el is Ordered<NonDeleted<DucIframeLikeElement>> =>
           (isEmbeddableElement(el) &&
             this.embedsValidationStatus.get(el.id) === true) ||
           isIframeElement(el),
@@ -4604,39 +4604,39 @@ class App extends React.Component<AppProps, AppState> {
   };
   
 
-  mutateElementWithValues = (
-    element: NonDeletedDucElement, values:OptionalDucElementBase
+  mutateElementWithValues = <TElement extends Mutable<DucElement>> (
+      element: NonDeletedDucElement, values: ElementUpdate<TElement>,
+  ) => mutateElement(element, values);
+
+  
+
+  public mutateSelectedElementsWithValues = async <TElement extends Mutable<DucElement>> (
+    values: ElementUpdate<TElement>,
   ) => {
+    const elementsToUpdate = Object.keys(this.state.selectedElementIds)
+    .map((elId) => this.scene.getElement(elId))
+    .filter((el): el is DucElement => el != null);
 
-    if (element != null && values) {
-
-
-      this.updateScene({
-        elements: this.scene.getElementsIncludingDeleted().map((el) => {
-          if (el.id === element.id) {
-            return newElementWith(el, values as ElementUpdate<OrderedDucElement>);
-          }
-          return el;
-        }),
-      });
-    };
-  }
-
-  mutateSelectedElementsWithValues = (
-    values:OptionalDucElementBase
-  ) => {
-
+    // if (elementsToUpdate) {
+    //   elementsToUpdate.map((el) => {
+    //     mutateElement(
+    //       el,
+    //       values,
+    //     );
+    //   })
+    // }
     if (values) {
       this.updateScene({
         elements: this.scene.getElementsIncludingDeleted().map((el) => {
           if (this.state.selectedElementIds[el.id]) {
-            return newElementWith(el, values as ElementUpdate<OrderedDucElement>);
+            return newElementWith(el, values as ElementUpdate<OrderedDucElement>);          
           }
           return el;
         }),
       });
-    };
-  }
+    }
+  } 
+
 
   mutateGroup = (
     groupId: string,
@@ -5463,6 +5463,7 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
+  private debounceDoubleClickTimestamp: number = 0;
   private handleCanvasDoubleClick = (
     event: React.MouseEvent<HTMLCanvasElement>,
   ) => {
@@ -5471,6 +5472,23 @@ class App extends React.Component<AppProps, AppState> {
     if (this.state.multiElement) {
       return;
     }
+
+    if (
+      this.state.penMode &&
+      this.lastPointerDownEvent?.pointerType === "touch" &&
+      this.state.activeTool.type !== "selection"
+    ) {
+      const now = Date.now();
+      if (now - this.debounceDoubleClickTimestamp < 200) {
+        //handleCanvasDoubleClick click fires twice in case of touch.
+        //Once from the onTouchStart event handler, once from the double click event handler
+        return;
+      }
+      this.debounceDoubleClickTimestamp = now;
+      this.updateScene(actionToggleEraserTool.perform([] as any, this.state));
+      return;
+    }
+
     // we should only be able to double click when mode is selection
     if (this.state.activeTool.type !== "selection") {
       return;
