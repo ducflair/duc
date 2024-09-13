@@ -1,9 +1,9 @@
 import * as flatbuffers from 'flatbuffers';
 import { ExportedDataState, DucElement as BinDucElement, AppState as BinAppState, BinaryFiles as BinBinaryFiles, BoundElement } from '../duc';
 import { AppState, BinaryFiles } from '../../../types';
-import { DucElement, DucElementTypes, DucGroup, DucLinearElement, FillStyle, RoundnessType, StrokePlacement, StrokeStyle } from '../../../element/types';
+import { DucElement, DucElementTypes, DucLinearElement, FillStyle, RoundnessType, StrokePlacement, StrokeStyle } from '../../../element/types';
 import { parseElementFromBinary } from './parseElementFromBinary';
-import { parseGroupsToAppStateFromBinary } from './parseGroupsFromBinary';
+import { parseAppStateFromBinary } from './parseAppStateFromBinary';
 import { parseBinaryFilesFromBinary } from './parseBinaryFilesFromBinary';
 
 // Helper function to convert Uint8Array to DataURL (optional, depending on usage)
@@ -22,6 +22,7 @@ export const parseDucFlatBuffers = async (blob: Blob | File): Promise<{
 
   const data = ExportedDataState.getRootAsExportedDataState(byteBuffer);
 
+
   // Parse elements
   const elements: DucElement[] = [];
   for (let i = 0; i < data.elementsLength(); i++) {
@@ -34,12 +35,14 @@ export const parseDucFlatBuffers = async (blob: Blob | File): Promise<{
     }
   }
 
-  // Parse groups
-  const appState = parseGroupsToAppStateFromBinary(data);
+  // Parse appState
+  const appState = data.appState();
+  const parsedAppState: Partial<AppState> = parseAppStateFromBinary(appState);
 
   // Parse files
-  const files: BinaryFiles = parseBinaryFilesFromBinary(data.files());
+  const binaryFiles = data.files();
+  const parsedFiles: BinaryFiles = parseBinaryFilesFromBinary(binaryFiles);
 
 
-  return { elements, appState, files };
+  return { elements, appState: parsedAppState, files: parsedFiles };
 };
