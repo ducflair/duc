@@ -4,9 +4,9 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { AppState } from '../duc/app-state';
 import { BinaryFiles } from '../duc/binary-files';
 import { DucElement } from '../duc/duc-element';
-import { DucGroup } from '../duc/duc-group';
 
 
 export class ExportedDataState {
@@ -56,30 +56,18 @@ elementsLength():number {
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-groups(index: number, obj?:DucGroup):DucGroup|null {
+appState(obj?:AppState):AppState|null {
   const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? (obj || new DucGroup()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
-}
-
-groupsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-}
-
-backgroundColor():string|null
-backgroundColor(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-backgroundColor(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+  return offset ? (obj || new AppState()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 files(obj?:BinaryFiles):BinaryFiles|null {
-  const offset = this.bb!.__offset(this.bb_pos, 16);
+  const offset = this.bb!.__offset(this.bb_pos, 14);
   return offset ? (obj || new BinaryFiles()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 static startExportedDataState(builder:flatbuffers.Builder) {
-  builder.startObject(7);
+  builder.startObject(6);
 }
 
 static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
@@ -110,28 +98,12 @@ static startElementsVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
 }
 
-static addGroups(builder:flatbuffers.Builder, groupsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, groupsOffset, 0);
-}
-
-static createGroupsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
-  for (let i = data.length - 1; i >= 0; i--) {
-    builder.addOffset(data[i]!);
-  }
-  return builder.endVector();
-}
-
-static startGroupsVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(4, numElems, 4);
-}
-
-static addBackgroundColor(builder:flatbuffers.Builder, backgroundColorOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, backgroundColorOffset, 0);
+static addAppState(builder:flatbuffers.Builder, appStateOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(4, appStateOffset, 0);
 }
 
 static addFiles(builder:flatbuffers.Builder, filesOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(6, filesOffset, 0);
+  builder.addFieldOffset(5, filesOffset, 0);
 }
 
 static endExportedDataState(builder:flatbuffers.Builder):flatbuffers.Offset {
