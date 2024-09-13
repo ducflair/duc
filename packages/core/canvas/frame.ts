@@ -26,6 +26,7 @@ import { getElementLineSegments } from "./element/bounds";
 import { doLineSegmentsIntersect, elementsOverlappingBBox } from "../utils";
 import { isFrameElement, isFrameLikeElement } from "./element/typeChecks";
 import { ReadonlySetLike } from "./utility-types";
+import { moveAboveElement } from "./zindex";
 
 // --------------------------- Frame State ------------------------------------
 export const bindElementsToFramesAfterDuplication = (
@@ -620,6 +621,7 @@ export const updateFrameMembershipOfSelectedElements = <
   if (elementsToRemove.size > 0) {
     removeElementsFromFrame(elementsToRemove, elementsMap);
   }
+
   return allElements;
 };
 

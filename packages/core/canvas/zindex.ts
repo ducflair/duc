@@ -1,11 +1,14 @@
-import { bumpVersion } from "./element/mutateElement";
 import { isFrameLikeElement } from "./element/typeChecks";
-import { DucElement, DucFrameLikeElement } from "./element/types";
+import type {
+  DucElement,
+  DucFrameLikeElement,
+  ElementsMapOrArray,
+} from "./element/types";
+import { syncMovedIndices } from "./fractionalIndex";
 import { getElementsInGroup } from "./groups";
 import { getSelectedElements } from "./scene";
 import Scene from "./scene/Scene";
-import { AppState } from "./types";
-import { syncMovedIndices } from "./fractionalIndex";
+import type { AppState } from "./types";
 import { arrayToMap, findIndex, findLastIndex } from "./utils";
 
 const isOfTargetFrame = (element: DucElement, frameId: string) => {
@@ -78,10 +81,10 @@ const getTargetIndexAccountingForBinding = (
   direction: "left" | "right",
 ) => {
   if ("containerId" in nextElement && nextElement.containerId) {
-      const containerElement = Scene.getScene(nextElement)!.getElement(
-        nextElement.containerId,
-      );
-      if (containerElement) {
+    const containerElement = Scene.getScene(nextElement)!.getElement(
+      nextElement.containerId,
+    );
+    if (containerElement) {
       return direction === "left"
         ? Math.min(
             elements.indexOf(containerElement),
@@ -327,7 +330,6 @@ const shiftElementsByOne = (
   return elements;
 };
 
-
 const shiftElementsToEnd = (
   elements: readonly DucElement[],
   appState: AppState,
@@ -391,10 +393,9 @@ const shiftElementsToEnd = (
     }
   }
 
-  // const targetElements:DucElement[] = Array.from(targetElementsMap.values());
-  const targetElements = Object.values(targetElementsMap);
-  const leadingElements:DucElement[] = elements.slice(0, leadingIndex);
-  const trailingElements:DucElement[] = elements.slice(trailingIndex + 1);
+  const targetElements = Array.from(targetElementsMap.values());
+  const leadingElements = elements.slice(0, leadingIndex);
+  const trailingElements = elements.slice(trailingIndex + 1);
   const nextElements =
     direction === "left"
       ? [
@@ -534,4 +535,35 @@ export const moveAllRight = (
     "right",
     shiftElementsToEnd,
   );
+};
+
+export const moveAboveElement = <T extends ElementsMapOrArray>(
+  allElements: T,
+  elementsToMove: readonly DucElement[],
+  targetElement: DucElement
+): T => {
+  if (Array.isArray(allElements)) {
+    const targetIndex = allElements.findIndex(el => el.id === targetElement.id);
+    if (targetIndex === -1) {
+      return allElements;
+    }
+
+    const elementsToMoveSet = new Set(elementsToMove.map(el => el.id));
+    const filteredElements = allElements.filter(el => !elementsToMoveSet.has(el.id));
+    
+    filteredElements.splice(targetIndex, 0, ...elementsToMove);
+    return filteredElements as unknown as T;
+  } else {
+    const elementsArray = Array.from(allElements.values());
+    const targetIndex = elementsArray.findIndex(el => el.id === targetElement.id);
+    if (targetIndex === -1) {
+      return allElements;
+    }
+
+    const elementsToMoveSet = new Set(elementsToMove.map(el => el.id));
+    const filteredElements = elementsArray.filter(el => !elementsToMoveSet.has(el.id));
+    
+    filteredElements.splice(targetIndex, 0, ...elementsToMove);
+    return new Map(filteredElements.map(el => [el.id, el])) as T;
+  }
 };
