@@ -167,6 +167,10 @@ class Scene {
    */
   private sceneNonce: number | undefined;
 
+  getSceneNonce() {
+    return this.sceneNonce;
+  }
+
   getNonDeletedElementsMap() {
     return this.nonDeletedElementsMap;
   }
@@ -179,7 +183,7 @@ class Scene {
     return this.elementsMap;
   }
 
-  getNonDeletedElements(): readonly NonDeletedDucElement[] {
+  getNonDeletedElements() {
     return this.nonDeletedElements;
   }
 
@@ -239,10 +243,6 @@ class Scene {
 
   getElement<T extends DucElement>(id: T["id"]): T | null {
     return (this.elementsMap.get(id) as T | undefined) || null;
-  }
-
-  getSceneNonce() {
-    return this.sceneNonce;
   }
 
   getNonDeletedElement(
@@ -356,7 +356,6 @@ class Scene {
     // (I guess?)
     this.callbacks.clear();
   }
-
 
   insertElementAtIndex(element: DucElement, index: number) {
     if (!Number.isFinite(index) || index < 0) {
