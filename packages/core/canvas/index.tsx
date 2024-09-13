@@ -231,8 +231,8 @@ export {
 
 export {
   reconcileElements,
-  ReconciledDucElement as ReconciledExcalidrawElement,
-  RemoteDucElement as RemoteExcalidrawElement,
+  ReconciledDucElement,
+  RemoteDucElement,
 } from "./data/reconcile";
 
 export {
@@ -276,8 +276,15 @@ export {
 } from "./types";
 
 export {
-  TOOL_TYPE
+  TOOL_TYPE,
+  IDLE_THRESHOLD,
+  ACTIVE_THRESHOLD,
+  ENV,
 } from "./constants";
+
+export {
+  ErrorDialog
+} from "./components/ErrorDialog";
 
 export {
   SceneBounds
@@ -329,6 +336,14 @@ export {
   newElementWith,
   bumpVersion,
 } from "./element/mutateElement";
+
+export {
+  useCallbackRefState
+} from "./hooks/useCallbackRefState";
+
+export {
+  StoreActionType
+} from "./store";
 
 export { parseLibraryTokensFromUrl, useHandleLibrary } from "./data/library";
 export {
