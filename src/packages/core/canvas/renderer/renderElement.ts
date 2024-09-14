@@ -687,6 +687,12 @@ export const renderElement = (
     renderConfig.pendingFlowchartNodes,
   );
 
+  // if element.isVisible is false, we should render with opacity 0
+  if (!element.isVisible) {
+    context.globalAlpha = 0;
+    return; // no need to render
+  }
+
   switch (element.type) {
     case "magicframe":
     case "frame": {
@@ -942,6 +948,7 @@ export const renderElement = (
     }
   }
 
+  // element.isVisible ? context.globalAlpha = 1 : context.globalAlpha = 0;
   context.globalAlpha = 1;
 };
 
