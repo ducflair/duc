@@ -231,12 +231,37 @@ export type InteractiveCanvasAppState = Readonly<
   }
 >;
 
-export interface AppState {
+export interface Ducfig { // User's Config of AppState
+	activeTool: {
+			/**
+			 * indicates a previous tool we should revert back to if we deselect the
+			 * currently active tool. At the moment applies to `eraser` and `hand` tool.
+			 */
+			lastActiveTool: ActiveTool | null;
+			locked: boolean;
+	} & ActiveTool;
+	penMode: boolean;
+	penDetected: boolean;
+	exportBackground: boolean;
+	exportEmbedScene: boolean;
+	exportWithDarkMode: boolean;
+	exportScale: number;
+      
+  gridModeEnabled: boolean;
+  viewModeEnabled: boolean; // Don't Save
+  zenModeEnabled: boolean; // Don't Save
+  showStats: boolean; // Don't Save
+
+  showHyperlinkPopup: false | "info" | "editor";
+  objectsSnapModeEnabled: boolean;
+}
+
+export interface AppState extends Ducfig {
   contextMenu: {
     items: ContextMenuItems;
     top: number;
     left: number;
-  } | null; // Out of the Binary
+  } | null; 
   showWelcomeScreen: boolean;
   isLoading: boolean;
   errorMessage: React.ReactNode;
@@ -265,9 +290,9 @@ export interface AppState {
    */
   draggingElement: NonDeletedDucElement | null;
   selectionElement: NonDeletedDucElement | null;
-  isBindingEnabled: boolean; // Out of the Binary
-  startBoundElement: NonDeleted<DucBindableElement> | null; // Out of the Binary
-  suggestedBindings: SuggestedBinding[]; // Out of the Binary
+  isBindingEnabled: boolean;
+  startBoundElement: NonDeleted<DucBindableElement> | null;
+  suggestedBindings: SuggestedBinding[];
   frameToHighlight: NonDeleted<DucFrameLikeElement> | null;
   frameRendering: {
     enabled: boolean;
@@ -281,36 +306,7 @@ export interface AppState {
   // (e.g. text element when typing into the input)
   editingElement: NonDeletedDucElement | null;
   editingTextElement: NonDeletedDucElement | null;
-  editingLinearElement: LinearElementEditor | null; // Out of the Binary
-  activeTool: {
-    /**
-     * indicates a previous tool we should revert back to if we deselect the
-     * currently active tool. At the moment applies to `eraser` and `hand` tool.
-     */
-    lastActiveTool: ActiveTool | null;
-    locked: boolean;
-  } & ActiveTool;
-  penMode: boolean;
-  penDetected: boolean;
-  exportBackground: boolean;
-  exportEmbedScene: boolean;
-  exportWithDarkMode: boolean;
-  exportScale: number;
-  currentItemStrokeColor: string;
-  currentItemBackgroundColor: string;
-  currentItemFillStyle: DucElement["fillStyle"];
-  currentItemStrokeWidth: number;
-  currentItemStrokeStyle: DucElement["strokeStyle"];
-  currentItemRoughness: number;
-  currentItemOpacity: number;
-  currentItemFontFamily: FontFamilyValues;
-  currentItemFontSize: number;
-  currentHoveredFontFamily: FontFamilyValues | null;
-  currentItemTextAlign: TextAlign;
-  currentItemStartArrowhead: Arrowhead | null;
-  currentItemEndArrowhead: Arrowhead | null;
-  currentItemArrowType: "sharp" | "round" | "elbow";
-  currentItemRoundness: StrokeRoundness;
+  editingLinearElement: LinearElementEditor | null;
   viewBackgroundColor: string;
   scope: SupportedMeasures,
   writingLayer: WritingLayers,
@@ -323,7 +319,7 @@ export interface AppState {
   isResizing: boolean;
   isRotating: boolean;
   zoom: Zoom;
-  openMenu: "canvas" | "shape" | null; // Out of the Binary
+  openMenu: "canvas" | "shape" | null;
   openPopup: "canvasBackground" | "elementBackground" | "elementStroke" | null; // Out of the Binary
   openSidebar: { name: SidebarName; tab?: SidebarTabName } | null; // Out of the Binary
   openDialog:
@@ -346,6 +342,21 @@ export interface AppState {
    * a DefaultSidebar prop, which is not reflected back to the appState.
    */
   defaultSidebarDockedPreference: boolean;  // Out of the Binary
+	currentItemStrokeColor: string;
+	currentItemBackgroundColor: string;
+	currentItemFillStyle: DucElement["fillStyle"];
+	currentItemStrokeWidth: number;
+	currentItemStrokeStyle: DucElement["strokeStyle"];
+	currentItemRoughness: number;
+	currentItemOpacity: number;
+	currentItemFontFamily: FontFamilyValues;
+	currentItemFontSize: number;
+	currentHoveredFontFamily: FontFamilyValues | null;
+	currentItemTextAlign: TextAlign;
+	currentItemStartArrowhead: Arrowhead | null;
+	currentItemEndArrowhead: Arrowhead | null;
+	currentItemArrowType: "sharp" | "round" | "elbow";
+	currentItemRoundness: StrokeRoundness;
 
   lastPointerDownWith: PointerType;
   selectedElementIds: Readonly<{ [id: string]: true }>;
@@ -353,13 +364,10 @@ export interface AppState {
   selectedElementsAreBeingDragged: boolean;
   shouldCacheIgnoreZoom: boolean;
   toast: { message: string; closable?: boolean; duration?: number } | null; // Out of the Binary
-  zenModeEnabled: boolean;
-  theme: Theme; // Out of the Binary
+  theme: Theme; // Is Always overridden on load
   /** grid cell px size */
   gridSize: number;
   gridStep: number;
-  gridModeEnabled: boolean;
-  viewModeEnabled: boolean;
 
   /** top-most selected groups (i.e. does not include nested groups) */
   selectedGroupIds: { [groupId: string]: boolean };
@@ -373,7 +381,6 @@ export interface AppState {
 
   fileHandle: FileSystemHandle | null;
   collaborators: Map<SocketId, Collaborator>;
-  showStats: boolean; // Out of the Binary
   currentChartType: ChartType; // Out of the Binary
   pasteDialog:
     | {
@@ -386,14 +393,12 @@ export interface AppState {
       };
   /** imageElement waiting to be placed on canvas */
   pendingImageElementId: DucImageElement["id"] | null;
-  showHyperlinkPopup: false | "info" | "editor";
   selectedLinearElement: LinearElementEditor | null; // Out of the Binary
   snapLines: readonly SnapLine[]; // Out of the Binary
   originSnapOffset: {
     x: number;
     y: number;
   } | null;
-  objectsSnapModeEnabled: boolean;
   /** the user's clientId & username who is being followed on the canvas */
   userToFollow: UserToFollow | null;
   /** the clientIds of the users following the current user */
