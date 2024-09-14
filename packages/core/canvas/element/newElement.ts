@@ -53,7 +53,7 @@ import App from "../components/App";
 import { getLineHeight } from "../fonts";
 
 export type ElementConstructorOpts = MarkOptional<
-  Omit<DucGenericElement, "id" | "type" | "isDeleted" | "updated">,
+  Omit<DucGenericElement, "id" | "type" | "isDeleted" | "updated" | "shouldNotRender">,
   | "width"
   | "label"
   | "height"
@@ -106,6 +106,7 @@ const _newElementBase = <T extends DucElement>(
     height = 0,
     angle = 0,
     groupIds = [],
+    shouldNotRender = false,
     frameId = null,
     roundness = DEFAULT_ELEMENT_PROPS.roundness,
     boundElements = null,
@@ -138,6 +139,7 @@ const _newElementBase = <T extends DucElement>(
     frameId,
     roundness,
     label,
+    shouldNotRender,
     writingLayer,
     scope,
     seed: rest.seed ?? randomInteger(),

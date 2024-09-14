@@ -430,7 +430,7 @@ import {
   isPointHittingLink,
   isPointHittingLinkIcon,
 } from "./hyperlink/helpers";
-import { SupportedMeasures } from "../duc/utils/measurements";
+import { adjustElementToCurrentScope, SupportedMeasures } from "../duc/utils/measurements";
 import { WritingLayers } from "../duc/utils/writingLayers";
 import { changeProperty } from "../actions/actionProperties";
 import { saveAsFlatBuffers } from "../duc/duc-ts/serialize";
@@ -692,7 +692,7 @@ class App extends React.Component<AppProps, AppState> {
       () => this.scene.getElementsIncludingDeleted(),
       this,
     );
-    this.scene = new Scene();
+    this.scene = new Scene(this.state.scope);
 
     this.canvas = document.createElement("canvas");
     this.rc = rough.canvas(this.canvas);
@@ -713,6 +713,7 @@ class App extends React.Component<AppProps, AppState> {
         canvas: {
           updateScene: this.updateScene,
           resetScene: this.resetScene,
+          rerender: this.rerenderCanvas,
           scrollToContent: this.scrollToContent,
           toggleSnapMode: this.toggleSnapMode,
           setCurrentScope: this.setCurrentScope,
@@ -2563,7 +2564,7 @@ class App extends React.Component<AppProps, AppState> {
     (window as any).launchQueue?.setConsumer(() => {});
     this.renderer.destroy();
     this.scene.destroy();
-    this.scene = new Scene();
+    this.scene = new Scene(this.state.scope);
     this.fonts = new Fonts({ scene: this.scene });
     this.renderer = new Renderer(this.scene);
     this.files = {};
@@ -3647,7 +3648,10 @@ class App extends React.Component<AppProps, AppState> {
     this.cancelInProgressAnimation?.();
 
     // convert provided target into DucElement[] if necessary
-    const targetElements = Array.isArray(target) ? target : [target];
+    const targets = Array.isArray(target) ? target : [target];
+    const targetElements = targets.map((target) => {
+      return adjustElementToCurrentScope(target as DucElement, this.state.scope) as DucElement;
+    })
 
     let zoom = this.state.zoom;
     let scrollX = this.state.scrollX;
@@ -4534,6 +4538,8 @@ class App extends React.Component<AppProps, AppState> {
         ...commonResets,
       };
     });
+    this.scene.setCurrentScope(newScope);
+    this.rerenderCanvas();
   };
 
   toggleSnapMode = (
@@ -4606,7 +4612,10 @@ class App extends React.Component<AppProps, AppState> {
 
   mutateElementWithValues = <TElement extends Mutable<DucElement>> (
       element: NonDeletedDucElement, values: ElementUpdate<TElement>,
-  ) => mutateElement(element, values);
+  ) => {
+    mutateElement(element, values);
+    this.rerenderCanvas();
+  }
 
   
 
@@ -4617,24 +4626,15 @@ class App extends React.Component<AppProps, AppState> {
     .map((elId) => this.scene.getElement(elId))
     .filter((el): el is DucElement => el != null);
 
-    // if (elementsToUpdate) {
-    //   elementsToUpdate.map((el) => {
-    //     mutateElement(
-    //       el,
-    //       values,
-    //     );
-    //   })
-    // }
-    if (values) {
-      this.updateScene({
-        elements: this.scene.getElementsIncludingDeleted().map((el) => {
-          if (this.state.selectedElementIds[el.id]) {
-            return newElementWith(el, values as ElementUpdate<OrderedDucElement>);          
-          }
-          return el;
-        }),
-      });
+    if (elementsToUpdate) {
+      elementsToUpdate.map((el) => {
+        mutateElement(
+          el,
+          values,
+        );
+      })
     }
+    this.rerenderCanvas();
   } 
 
 
@@ -7731,6 +7731,8 @@ class App extends React.Component<AppProps, AppState> {
               type: elementType,
               x: gridX,
               y: gridY,
+              scope: this.state.scope,
+              writingLayer: this.state.writingLayer,
               strokeColor: this.state.currentItemStrokeColor,
               backgroundColor: this.state.currentItemBackgroundColor,
               fillStyle: this.state.currentItemFillStyle,
@@ -10710,6 +10712,17 @@ class App extends React.Component<AppProps, AppState> {
   public refresh = () => {
     this.setState({ ...this.getCanvasOffsets() });
   };
+
+
+  public rerenderCanvas = () => {
+    this.updateScene({
+      elements: this.scene.getElementsIncludingDeleted().map((el) => {
+        return newElementWith(el, {
+          seed: Math.random(),
+        });
+      }),
+    });
+  }
 
   private getCanvasOffsets(): Pick<AppState, "offsetTop" | "offsetLeft"> {
     if (this.excalidrawContainerRef?.current) {

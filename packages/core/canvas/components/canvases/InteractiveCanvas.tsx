@@ -15,6 +15,7 @@ import type {
 } from "../../element/types";
 import { isRenderThrottlingEnabled } from "../../reactUtils";
 import { renderInteractiveScene } from "../../renderer/interactiveScene";
+import { adjustElementToCurrentScope } from "../../duc/utils/measurements";
 
 type InteractiveCanvasProps = {
   containerRef: React.RefObject<HTMLDivElement>;
@@ -120,13 +121,32 @@ const InteractiveCanvas = (props: InteractiveCanvasProps) => {
         )) ||
       "#6965db";
 
+    const adjustedVisibleElements = props.visibleElements.map((element) =>
+      adjustElementToCurrentScope(element, props.appState.scope),
+    );
+    const adjustedSelectedElements = props.selectedElements.map((element) =>
+      adjustElementToCurrentScope(element, props.appState.scope),
+    );
+    const adjustedElementsMap = new Map<string, NonDeletedDucElement>();
+    props.elementsMap.forEach((element) => {
+      adjustedElementsMap.set(element.id, adjustElementToCurrentScope(element, props.appState.scope));
+    });
+    const adjustedAllElementsMap = new Map<string, NonDeletedDucElement>();
+    props.allElementsMap.forEach((element) => {
+      adjustedAllElementsMap.set(element.id, adjustElementToCurrentScope(element, props.appState.scope));
+    });
+
     renderInteractiveScene(
       {
         canvas: props.canvas,
-        elementsMap: props.elementsMap,
-        visibleElements: props.visibleElements,
-        selectedElements: props.selectedElements,
-        allElementsMap: props.allElementsMap,
+        // elementsMap: props.elementsMap,
+        // visibleElements: props.visibleElements,
+        // selectedElements: props.selectedElements,
+        // allElementsMap: props.allElementsMap,
+        allElementsMap: adjustedAllElementsMap as NonDeletedSceneElementsMap,
+        elementsMap: adjustedElementsMap as RenderableElementsMap,
+        visibleElements: adjustedVisibleElements,
+        selectedElements: adjustedSelectedElements,
         scale: window.devicePixelRatio,
         appState: props.appState,
         renderConfig: {
@@ -188,6 +208,7 @@ const getRelevantAppStateProps = (
   frameToHighlight: appState.frameToHighlight,
   offsetLeft: appState.offsetLeft,
   offsetTop: appState.offsetTop,
+  scope: appState.scope,
   theme: appState.theme,
   pendingImageElementId: appState.pendingImageElementId,
   selectionElement: appState.selectionElement,
