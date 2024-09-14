@@ -116,6 +116,9 @@ type _DucElementBase = Readonly<{
   link: string | null;
   locked: boolean;
   customData?: Record<string, any>;
+  
+  // Used to hide elements that are way too big or too small
+  shouldNotRender: boolean;
 }>;
 
 export type DucSelectionElement = _DucElementBase & {
