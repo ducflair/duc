@@ -2,7 +2,6 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
-export { ActiveTool } from './duc/active-tool';
 export { AppState } from './duc/app-state';
 export { BinaryFileData } from './duc/binary-file-data';
 export { BinaryFiles } from './duc/binary-files';

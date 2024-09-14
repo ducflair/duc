@@ -132,12 +132,6 @@ table BoundElement {
 
 
 
-table ActiveTool {
-  lastActiveTool: string; 
-  locked: bool;
-}
-
-
 table DucGroup {
   id: string;
 //   type: string = "group";
@@ -173,13 +167,6 @@ table AppState {
   elementsToHighlight: [DucElement];
   editingElement: DucElement;
 //   editingLinearElement: LinearElementEditor;
-  activeTool: ActiveTool;
-  penMode: bool;
-  penDetected: bool;
-  exportBackground: bool;
-  exportEmbedScene: bool;
-  exportWithDarkMode: bool;
-  exportScale: float;
   currentItemStrokeColor: string;
   currentItemBackgroundColor: string;
   currentItemFillStyle: string;
@@ -216,10 +203,8 @@ table AppState {
   selectedElementsAreBeingDragged: bool;
   shouldCacheIgnoreZoom: bool;
 //   toast: Toast;
-//   zenModeEnabled: bool;
 //   theme: string;
   gridSize: int;
-  viewModeEnabled: bool;
   selectedGroupIds: [string];
   editingGroupId: string;
   width: int;
@@ -228,17 +213,14 @@ table AppState {
   offsetLeft: int;
   // fileHandle: string;  // Placeholder
   // collaborators: [string];  // Placeholder
-//   showStats: bool;
 //   currentChartType: string;
   pasteDialogShown: bool;
   pasteDialogData: string;
   pendingImageElementId: string;
-  // showHyperlinkPopup: string;
 //   selectedLinearElement: LinearElementEditor;
 //   snapLines: [SnapLine];
   originSnapOffsetX: float;
   originSnapOffsetY: float;
-  objectsSnapModeEnabled: bool;
   // userToFollow: UserToFollow;
   // followedBy: [string];
 }
@@ -283,8 +265,7 @@ table ExportedDataState {
   version: int;
   source: string;
   elements: [DucElement];
-  groups: [DucGroup];
-  backgroundColor: string;
+  appState: AppState;
   files: BinaryFiles;
 }
 
