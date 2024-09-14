@@ -1,6 +1,6 @@
-import { AppState as BinAppState, UserToFollow, ActiveTool } from '../ducfig';
-import { SupportedMeasures } from '../../../duc/utils/measurements';
-import { WritingLayers } from "../../../duc/utils/writingLayers";
+import { AppState as BinAppState, UserToFollow } from '../duc';
+import { SupportedMeasures } from '../../utils/measurements';
+import { WritingLayers } from "../../utils/writingLayers";
 import { AppState, NormalizedZoomValue } from '../../../types';
 import { Arrowhead, DucGroup, FillStyle, PointerType, StrokeRoundness, StrokeStyle } from '../../../element/types';
 
@@ -29,6 +29,22 @@ export const parseAppStateFromBinary = (appState: BinAppState | null): Partial<A
 //     followedBy.add(appState.followedBy(i) || '');
 //   }
 
+  // Parse groups
+  let groups: DucGroup[] = [];
+  for (let i = 0; i < appState.groupsLength(); i++) {
+    const group = appState.groups(i);
+    if (group) {
+      groups.push({
+        id: group.id() || '',
+        label: group.label() || '',
+        type: 'group',
+        writingLayer: (group.writingLayer() || '') as WritingLayers,
+        scope: (group.scope() || '') as SupportedMeasures,
+        isCollapsed: group.isCollapsed(),
+      });
+    }
+  }
+
   return {
     isLoading: appState.isLoading() || false,
     name: appState.name() || '',
@@ -42,7 +58,6 @@ export const parseAppStateFromBinary = (appState: BinAppState | null): Partial<A
       x: appState.originSnapOffsetX() || 0,
       y: appState.originSnapOffsetY() || 0,
     },
-    objectsSnapModeEnabled: appState.objectsSnapModeEnabled() || false,
     // userToFollow: userToFollow,
     // followedBy: followedBy,
     isResizing: appState.isResizing() || false,
@@ -66,17 +81,20 @@ export const parseAppStateFromBinary = (appState: BinAppState | null): Partial<A
     selectedElementsAreBeingDragged: appState.selectedElementsAreBeingDragged() || false,
     shouldCacheIgnoreZoom: appState.shouldCacheIgnoreZoom() || false,
     gridSize: appState.gridSize() || 0,
-    viewModeEnabled: appState.viewModeEnabled() || false,
+    selectedGroupIds: Object.fromEntries(
+      Array.from({ length: appState.selectedGroupIdsLength() }, (_, i) => [
+        appState.selectedGroupIds(i),
+        true,
+      ])
+    ),
+    editingGroupId: appState.editingGroupId() || '',
     scrollX: appState.scrollX() || 0.0,
     scrollY: appState.scrollY() || 0.0,
     cursorButton: appState.cursorButton() as "up" | "down" | undefined || undefined,
     scrolledOutside: appState.scrolledOutside() || false,
+    groups: groups,
     scope: (appState.scope() || 'mm') as SupportedMeasures,
     writingLayer: (appState.writingLayer() || 'notes') as WritingLayers,
-    exportBackground: appState.exportBackground() || false,
-    exportEmbedScene: appState.exportEmbedScene() || false,
-    exportWithDarkMode: appState.exportWithDarkMode() || false,
-    exportScale: appState.exportScale() || 0.0,
     currentItemStrokeColor: appState.currentItemStrokeColor() || '',
     currentItemBackgroundColor: appState.currentItemBackgroundColor() || '',
     currentItemFillStyle: (appState.currentItemFillStyle() || '') as FillStyle,
