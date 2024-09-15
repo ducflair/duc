@@ -17,7 +17,6 @@ type ExportCanvasPreviewProps = {
   files: BinaryFiles;
   name: string;
   exportWithDarkMode: boolean;
-  exportBackground: boolean;
   exportScale: number;
   embedScene: boolean;
 };
@@ -28,7 +27,6 @@ export const ExportCanvasPreview: React.FC<ExportCanvasPreviewProps> = ({
   files,
   name,
   exportWithDarkMode,
-  exportBackground,
   exportScale,
   embedScene,
 }) => {
@@ -36,7 +34,6 @@ export const ExportCanvasPreview: React.FC<ExportCanvasPreviewProps> = ({
   const appStateSnapshot = {
     ...initialAppStateSnapshot,
     name,
-    exportBackground,
     exportWithDarkMode,
     exportScale,
     exportEmbedScene: embedScene,
@@ -74,7 +71,7 @@ export const ExportCanvasPreview: React.FC<ExportCanvasPreviewProps> = ({
         ...appStateSnapshot,
         name,
         exportWithDarkMode,
-        exportBackground,
+        exportBackground: false,
         exportScale,
         exportEmbedScene: embedScene,
         contextMenu: null,
@@ -108,14 +105,13 @@ export const ExportCanvasPreview: React.FC<ExportCanvasPreviewProps> = ({
     exportingFrame,
     name,
     exportWithDarkMode,
-    exportBackground,
     exportScale,
     embedScene,
   ]);
 
   return (
     <div
-      className="ExportCanvasPreview"
+      className="ExportCanvasPreview flex items-center justify-center"
       ref={previewRef}
       style={{ width: '100%', height: '100%', position: 'relative' }}
     >
