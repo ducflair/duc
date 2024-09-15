@@ -133,10 +133,10 @@ export class Renderer {
         pendingImageElementId: AppState["pendingImageElementId"];
         sceneNonce: ReturnType<InstanceType<typeof Scene>["getSceneNonce"]>;
       }) => {
-        // const elements = this.scene.getNonDeletedElements();
-        const elements = this.scene.getNonDeletedElements().map(
-          (element) => adjustElementToCurrentScope(element, this.scene.getCurrentScope())
-        ).filter((el) => el !== null) as NonDeletedDucElement[];
+        const elements = this.scene.getNonDeletedElements();
+        // const elements = this.scene.getNonDeletedElements().map(
+        //   (element) => adjustElementToCurrentScope(element, this.scene.getCurrentScope())
+        // ).filter((el) => el !== null) as NonDeletedDucElement[];
         
         const elementsMap = getRenderableElements({
           elements,
