@@ -1,3 +1,4 @@
+import { adjustElementToCurrentScope } from "../duc/utils/measurements";
 import { isElementInViewport } from "../element/sizeHelpers";
 import { isImageElement } from "../element/typeChecks";
 import {
@@ -133,7 +134,10 @@ export class Renderer {
         sceneNonce: ReturnType<InstanceType<typeof Scene>["getSceneNonce"]>;
       }) => {
         const elements = this.scene.getNonDeletedElements();
-
+        // const elements = this.scene.getNonDeletedElements().map(
+        //   (element) => adjustElementToCurrentScope(element, this.scene.getCurrentScope())
+        // ).filter((el) => el !== null) as NonDeletedDucElement[];
+        
         const elementsMap = getRenderableElements({
           elements,
           editingTextElement,

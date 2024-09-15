@@ -215,6 +215,7 @@ export type InteractiveCanvasAppState = Readonly<
     activeEmbeddable: AppState["activeEmbeddable"];
     editingLinearElement: AppState["editingLinearElement"];
     selectionElement: AppState["selectionElement"];
+    scope: AppState["scope"];
     selectedGroupIds: AppState["selectedGroupIds"];
     selectedLinearElement: AppState["selectedLinearElement"];
     multiElement: AppState["multiElement"];
@@ -742,6 +743,7 @@ export interface DucImperativeAPI {
   };
   canvas: {
     resetScene: InstanceType<typeof App>["resetScene"];
+    rerender: InstanceType<typeof App>["rerenderCanvas"];
     updateScene: InstanceType<typeof App>["updateScene"];
     scrollToContent: InstanceType<typeof App>["scrollToContent"];
     toggleSnapMode: InstanceType<typeof App>["toggleSnapMode"];
