@@ -246,6 +246,8 @@ const addNewNode = (
     y: element.y + offsets.y,
     // TODO: extract this to a util
     width: element.width,
+    scope: element.scope,
+    writingLayer: element.writingLayer,
     height: element.height,
     roundness: element.roundness,
     roughness: element.roughness,
@@ -322,6 +324,8 @@ export const addNewNodes = (
       // TODO: extract this to a util
       width: startNode.width,
       height: startNode.height,
+      scope: startNode.scope,
+      writingLayer: startNode.writingLayer,
       roundness: startNode.roundness,
       roughness: startNode.roughness,
       backgroundColor: startNode.backgroundColor,
@@ -415,6 +419,8 @@ const createBindingArrow = (
     x: startX,
     y: startY,
     startArrowhead: appState.currentItemStartArrowhead,
+    scope: startBindingElement.scope,
+    writingLayer: startBindingElement.writingLayer,
     endArrowhead: appState.currentItemEndArrowhead,
     strokeColor: appState.currentItemStrokeColor,
     strokeStyle: appState.currentItemStrokeStyle,

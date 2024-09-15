@@ -194,6 +194,7 @@ import {
   DucNonSelectionElement,
   Ordered,
   DucArrowElement,
+  NonDeletedSceneElementsMap,
 } from "../element/types";
 import { getCenter, getDistance } from "../gesture";
 import {
@@ -232,7 +233,7 @@ import {
   isSomeElementSelected,
 } from "../scene";
 import Scene from "../scene/Scene";
-import { RenderInteractiveSceneCallback, ScrollBars } from "../scene/types";
+import { RenderableElementsMap, RenderInteractiveSceneCallback, ScrollBars } from "../scene/types";
 import { getStateForZoom } from "../scene/zoom";
 import { findShapeByKey, getBoundTextShape, getElementShape } from "../shapes";
 import {
@@ -430,7 +431,7 @@ import {
   isPointHittingLink,
   isPointHittingLinkIcon,
 } from "./hyperlink/helpers";
-import { adjustElementToCurrentScope, SupportedMeasures } from "../duc/utils/measurements";
+import { adjustElementsMapToCurrentScope, adjustElementToCurrentScope, SupportedMeasures } from "../duc/utils/measurements";
 import { WritingLayers } from "../duc/utils/writingLayers";
 import { changeProperty } from "../actions/actionProperties";
 import { saveAsFlatBuffers } from "../duc/duc-ts/serialize";
@@ -5168,13 +5169,16 @@ class App extends React.Component<AppProps, AppState> {
   ): NonDeleted<DucElement>[] {
     const iframeLikes: Ordered<DucIframeElement>[] = [];
 
-    const elementsMap = this.scene.getNonDeletedElementsMap();
+    const elementsMap = adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope);
+    // const elementsMap = this.scene.getNonDeletedElementsMap();
 
+    const nonDeletedElements = this.scene.getNonDeletedElements().map((el) => {
+      return adjustElementToCurrentScope(el, this.state.scope);
+    })
     const elements = (
       includeBoundTextElement && includeLockedElements
-        ? this.scene.getNonDeletedElements()
-        : this.scene
-            .getNonDeletedElements()
+        ? nonDeletedElements
+        : nonDeletedElements
             .filter(
               (element) =>
                 (includeLockedElements || !element.locked) &&
@@ -5218,6 +5222,7 @@ class App extends React.Component<AppProps, AppState> {
     element: DucElement,
     considerBoundingBox = true,
   ) {
+
     // if the element is selected, then hit test is done against its bounding box
     if (
       considerBoundingBox &&
@@ -5226,7 +5231,8 @@ class App extends React.Component<AppProps, AppState> {
     ) {
       const selectionShape = getSelectionBoxShape(
         element,
-        this.scene.getNonDeletedElementsMap(),
+        // this.scene.getNonDeletedElementsMap(),
+        adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope),
         this.getElementHitThreshold(),
       );
 
@@ -6062,7 +6068,8 @@ class App extends React.Component<AppProps, AppState> {
         scenePointerY,
         this.state.zoom,
         event.pointerType,
-        this.scene.getNonDeletedElementsMap(),
+        // this.scene.getNonDeletedElementsMap(),
+        adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope) as RenderableElementsMap,
         this.device,
       );
       if (
@@ -6295,16 +6302,20 @@ class App extends React.Component<AppProps, AppState> {
     scenePointerX: number,
     scenePointerY: number,
   ) {
-    const elementsMap = this.scene.getNonDeletedElementsMap();
+    // const elementsMap = this.scene.getNonDeletedElementsMap();
+    const elementsMap = adjustElementsMapToCurrentScope( this.scene.getNonDeletedElementsMap(), this.state.scope );
 
-    const element = LinearElementEditor.getElement(
+    const linearElement = LinearElementEditor.getElement(
       linearElementEditor.elementId,
       elementsMap,
     );
 
-    if (!element) {
+    if (!linearElement) {
       return;
     }
+
+    const element = adjustElementToCurrentScope(linearElement, this.state.scope);
+
     if (this.state.selectedLinearElement) {
       let hoverPointIndex = -1;
       let segmentMidPointHoveredCoords = null;
@@ -6315,7 +6326,7 @@ class App extends React.Component<AppProps, AppState> {
           element,
           shape: getElementShape(
             element,
-            this.scene.getNonDeletedElementsMap(),
+            elementsMap,
           ),
         })
       ) {
@@ -6331,7 +6342,7 @@ class App extends React.Component<AppProps, AppState> {
             linearElementEditor,
             { x: scenePointerX, y: scenePointerY },
             this.state,
-            this.scene.getNonDeletedElementsMap(),
+            elementsMap,
           );
 
         if (hoverPointIndex >= 0 || segmentMidPointHoveredCoords) {
@@ -6359,18 +6370,20 @@ class App extends React.Component<AppProps, AppState> {
         });
       }
 
-      if (
-        !LinearElementEditor.arePointsEqual(
-          this.state.selectedLinearElement.segmentMidPointHoveredCoords,
-          segmentMidPointHoveredCoords,
-        )
-      ) {
-        this.setState({
-          selectedLinearElement: {
-            ...this.state.selectedLinearElement,
-            segmentMidPointHoveredCoords,
-          },
-        });
+      if (Array.isArray(segmentMidPointHoveredCoords)) {
+        if (
+          !LinearElementEditor.arePointsEqual(
+            this.state.selectedLinearElement.segmentMidPointHoveredCoords,
+            segmentMidPointHoveredCoords as readonly [number, number] | null,
+          )
+        ) {
+          this.setState({
+            selectedLinearElement: {
+              ...this.state.selectedLinearElement,
+              segmentMidPointHoveredCoords: segmentMidPointHoveredCoords as readonly [number, number] | null,
+            },
+          });
+        }
       }
     } else {
       setCursor(this.interactiveCanvas, CURSOR_TYPE.AUTO);
@@ -8465,7 +8478,8 @@ class App extends React.Component<AppProps, AppState> {
             event,
             this.state,
             this.setState.bind(this),
-            this.scene.getNonDeletedElementsMap(),
+            // this.scene.getNonDeletedElementsMap(),
+            adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope) as NonDeletedSceneElementsMap,
           );
           // regular box-select
         } else {
