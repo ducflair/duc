@@ -120,6 +120,7 @@ export const getElementShape = (
   element: DucElement,
   elementsMap: ElementsMap,
 ): GeometricShape => {
+
   switch (element.type) {
     case "rectangle":
     case "diamond":
