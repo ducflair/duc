@@ -247,6 +247,10 @@ export {
 } from "./data/encryption";
 
 export {
+  SupportedMeasures, MetricMeasure, ImperialMeasure
+} from "./duc/utils/measurements";
+
+export {
   ImportedDataState,
 } from "./data/types";
 
