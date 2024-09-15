@@ -60,6 +60,7 @@ import { ShapeCache } from "../scene/ShapeCache";
 import type { Store } from "../store";
 import { mutateElbowArrow } from "./routing";
 import type Scene from "../scene/Scene";
+import { adjustElementsMapToCurrentScope, adjustElementToCurrentScope } from "../duc/utils/measurements";
 
 const editorMidPointsCache: {
   version: number | null;
@@ -225,11 +226,18 @@ export class LinearElementEditor {
       return false;
     }
     const { elementId } = linearElementEditor;
-    const elementsMap = scene.getNonDeletedElementsMap();
-    const element = LinearElementEditor.getElement(elementId, elementsMap);
-    if (!element) {
+    // const elementsMap = scene.getNonDeletedElementsMap();
+    const elementsMap = adjustElementsMapToCurrentScope(
+      scene.getNonDeletedElementsMap(),
+      app.state.scope,
+    )
+
+    // const element = LinearElementEditor.getElement(elementId, elementsMap);
+    const linearElement = LinearElementEditor.getElement(elementId, elementsMap);
+    if (!linearElement) {
       return false;
     }
+    const element = adjustElementToCurrentScope(linearElement, app.state.scope)
 
     if (
       isElbowArrow(element) &&
@@ -293,7 +301,7 @@ export class LinearElementEditor {
               isDragging: selectedIndex === lastClickedPoint,
             },
           ],
-          elementsMap,
+          elementsMap as NonDeletedSceneElementsMap,
         );
       } else {
         const newDraggingPointPosition = LinearElementEditor.createPointAt(
@@ -329,7 +337,7 @@ export class LinearElementEditor {
               isDragging: pointIndex === lastClickedPoint,
             };
           }),
-          elementsMap,
+          elementsMap as NonDeletedSceneElementsMap,
         );
       }
 
@@ -386,15 +394,22 @@ export class LinearElementEditor {
     appState: AppState,
     scene: Scene,
   ): LinearElementEditor {
-    const elementsMap = scene.getNonDeletedElementsMap();
-    const elements = scene.getNonDeletedElements();
+    // const elementsMap = scene.getNonDeletedElementsMap();
+    // const elements = scene.getNonDeletedElements();
+    const elementsMap = adjustElementsMapToCurrentScope(
+      scene.getNonDeletedElementsMap(),
+      appState.scope,
+    )
+    const elements = scene.getNonDeletedElements().map(element => adjustElementToCurrentScope(element, appState.scope))
 
     const { elementId, selectedPointsIndices, isDragging, pointerDownState } =
       editingLinearElement;
-    const element = LinearElementEditor.getElement(elementId, elementsMap);
-    if (!element) {
+
+    const linearElement = LinearElementEditor.getElement(elementId, elementsMap);
+    if (!linearElement) {
       return editingLinearElement;
     }
+    const element = adjustElementToCurrentScope(linearElement, appState.scope)
 
     const bindings: Mutable<
       Partial<
@@ -423,7 +438,7 @@ export class LinearElementEditor {
                       : element.points[0],
                 },
               ],
-              elementsMap,
+              elementsMap as NonDeletedSceneElementsMap,
             );
           }
 
@@ -437,7 +452,7 @@ export class LinearElementEditor {
                   ),
                 ),
                 elements,
-                elementsMap,
+                elementsMap as NonDeletedSceneElementsMap,
               )
             : null;
 
@@ -551,10 +566,12 @@ export class LinearElementEditor {
     elementsMap: ElementsMap,
   ) => {
     const { elementId } = linearElementEditor;
-    const element = LinearElementEditor.getElement(elementId, elementsMap);
-    if (!element) {
-      return null;
+    const linearElement = LinearElementEditor.getElement(elementId, elementsMap);
+    if (!linearElement) {
+      return false;
     }
+    const element = adjustElementToCurrentScope(linearElement, appState.scope)
+
     const clickedPointIndex = LinearElementEditor.getPointIndexUnderCursor(
       element,
       elementsMap,
@@ -708,8 +725,14 @@ export class LinearElementEditor {
     linearElementEditor: LinearElementEditor | null;
   } {
     const appState = app.state;
-    const elementsMap = scene.getNonDeletedElementsMap();
-    const elements = scene.getNonDeletedElements();
+    // const elementsMap = scene.getNonDeletedElementsMap();
+    // const elements = scene.getNonDeletedElements();
+    const elementsMap = adjustElementsMapToCurrentScope(
+      scene.getNonDeletedElementsMap(),
+      appState.scope,
+    )
+    const elements = scene.getNonDeletedElements().map(element => adjustElementToCurrentScope(element, appState.scope))
+
 
     const ret: ReturnType<typeof LinearElementEditor["handlePointerDown"]> = {
       didAddPoint: false,
@@ -770,7 +793,7 @@ export class LinearElementEditor {
           lastClickedIsEndPoint: false,
           origin: { x: scenePointer.x, y: scenePointer.y },
           segmentMidpoint: {
-            value: segmentMidpoint,
+            value: segmentMidpoint === false ? null : segmentMidpoint,
             index: segmentMidpointIndex,
             added: false,
           },
@@ -780,7 +803,7 @@ export class LinearElementEditor {
         endBindingElement: getHoveredElementForBinding(
           scenePointer,
           elements,
-          elementsMap,
+          elementsMap as NonDeletedSceneElementsMap,
         ),
       };
 
@@ -811,7 +834,7 @@ export class LinearElementEditor {
           element,
           startBindingElement,
           endBindingElement,
-          elementsMap,
+          elementsMap as NonDeletedSceneElementsMap,
           scene,
         );
       }
@@ -848,7 +871,7 @@ export class LinearElementEditor {
         lastClickedIsEndPoint: clickedPointIndex === element.points.length - 1,
         origin: { x: scenePointer.x, y: scenePointer.y },
         segmentMidpoint: {
-          value: segmentMidpoint,
+          value: segmentMidpoint === false ? null : segmentMidpoint,
           index: segmentMidpointIndex,
           added: false,
         },

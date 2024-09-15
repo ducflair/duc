@@ -15,6 +15,7 @@ import type {
 } from "../../element/types";
 import { isRenderThrottlingEnabled } from "../../reactUtils";
 import { renderInteractiveScene } from "../../renderer/interactiveScene";
+import { adjustElementToCurrentScope } from "../../duc/utils/measurements";
 
 type InteractiveCanvasProps = {
   containerRef: React.RefObject<HTMLDivElement>;
@@ -120,15 +121,38 @@ const InteractiveCanvas = (props: InteractiveCanvasProps) => {
         )) ||
       "#6965db";
 
+    const adjustedVisibleElements = props.visibleElements.map((element) =>
+      adjustElementToCurrentScope(element, props.appState.scope),
+    );
+    const adjustedSelectedElements = props.selectedElements.map((element) =>
+      adjustElementToCurrentScope(element, props.appState.scope),
+    );
+    const adjustedElementsMap = new Map<string, NonDeletedDucElement>();
+    props.elementsMap.forEach((element) => {
+      adjustedElementsMap.set(element.id, adjustElementToCurrentScope(element, props.appState.scope));
+    });
+    const adjustedAllElementsMap = new Map<string, NonDeletedDucElement>();
+    props.allElementsMap.forEach((element) => {
+      adjustedAllElementsMap.set(element.id, adjustElementToCurrentScope(element, props.appState.scope));
+    });
+
     renderInteractiveScene(
       {
         canvas: props.canvas,
-        elementsMap: props.elementsMap,
-        visibleElements: props.visibleElements,
-        selectedElements: props.selectedElements,
-        allElementsMap: props.allElementsMap,
+        // elementsMap: props.elementsMap,
+        // visibleElements: props.visibleElements,
+        // selectedElements: props.selectedElements,
+        // allElementsMap: props.allElementsMap,
+        elementsMap: adjustedElementsMap as RenderableElementsMap,
+        selectedElements: adjustedSelectedElements,
+        allElementsMap: adjustedAllElementsMap as NonDeletedSceneElementsMap,
+        visibleElements: adjustedVisibleElements,
         scale: window.devicePixelRatio,
-        appState: props.appState,
+        appState: {
+          ...props.appState,
+          frameToHighlight: props.appState.frameToHighlight ? adjustElementToCurrentScope(props.appState.frameToHighlight, props.appState.scope) : null,
+          elementsToHighlight: props.appState.elementsToHighlight ? props.appState.elementsToHighlight.map((element) => adjustElementToCurrentScope(element, props.appState.scope)) : null,
+        },
         renderConfig: {
           remotePointerViewportCoords,
           remotePointerButton,
@@ -185,9 +209,9 @@ const getRelevantAppStateProps = (
   editingGroupId: appState.editingGroupId,
   editingLinearElement: appState.editingLinearElement,
   selectedElementIds: appState.selectedElementIds,
-  frameToHighlight: appState.frameToHighlight,
   offsetLeft: appState.offsetLeft,
   offsetTop: appState.offsetTop,
+  scope: appState.scope,
   theme: appState.theme,
   pendingImageElementId: appState.pendingImageElementId,
   selectionElement: appState.selectionElement,
@@ -197,6 +221,7 @@ const getRelevantAppStateProps = (
   isBindingEnabled: appState.isBindingEnabled,
   suggestedBindings: appState.suggestedBindings,
   isRotating: appState.isRotating,
+  frameToHighlight: appState.frameToHighlight,
   elementsToHighlight: appState.elementsToHighlight,
   collaborators: appState.collaborators, // Necessary for collab. sessions
   activeEmbeddable: appState.activeEmbeddable,
