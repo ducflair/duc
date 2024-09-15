@@ -194,6 +194,7 @@ import {
   DucNonSelectionElement,
   Ordered,
   DucArrowElement,
+  NonDeletedSceneElementsMap,
 } from "../element/types";
 import { getCenter, getDistance } from "../gesture";
 import {
@@ -232,7 +233,7 @@ import {
   isSomeElementSelected,
 } from "../scene";
 import Scene from "../scene/Scene";
-import { RenderInteractiveSceneCallback, ScrollBars } from "../scene/types";
+import { RenderableElementsMap, RenderInteractiveSceneCallback, ScrollBars } from "../scene/types";
 import { getStateForZoom } from "../scene/zoom";
 import { findShapeByKey, getBoundTextShape, getElementShape } from "../shapes";
 import {
@@ -430,7 +431,7 @@ import {
   isPointHittingLink,
   isPointHittingLinkIcon,
 } from "./hyperlink/helpers";
-import { SupportedMeasures } from "../duc/utils/measurements";
+import { adjustElementsMapToCurrentScope, adjustElementToCurrentScope, SupportedMeasures } from "../duc/utils/measurements";
 import { WritingLayers } from "../duc/utils/writingLayers";
 import { changeProperty } from "../actions/actionProperties";
 import { saveAsFlatBuffers } from "../duc/duc-ts/serialize";
@@ -692,7 +693,7 @@ class App extends React.Component<AppProps, AppState> {
       () => this.scene.getElementsIncludingDeleted(),
       this,
     );
-    this.scene = new Scene();
+    this.scene = new Scene(this.state.scope);
 
     this.canvas = document.createElement("canvas");
     this.rc = rough.canvas(this.canvas);
@@ -713,6 +714,7 @@ class App extends React.Component<AppProps, AppState> {
         canvas: {
           updateScene: this.updateScene,
           resetScene: this.resetScene,
+          rerender: this.rerenderCanvas,
           scrollToContent: this.scrollToContent,
           toggleSnapMode: this.toggleSnapMode,
           setCurrentScope: this.setCurrentScope,
@@ -2563,7 +2565,7 @@ class App extends React.Component<AppProps, AppState> {
     (window as any).launchQueue?.setConsumer(() => {});
     this.renderer.destroy();
     this.scene.destroy();
-    this.scene = new Scene();
+    this.scene = new Scene(this.state.scope);
     this.fonts = new Fonts({ scene: this.scene });
     this.renderer = new Renderer(this.scene);
     this.files = {};
@@ -3647,7 +3649,10 @@ class App extends React.Component<AppProps, AppState> {
     this.cancelInProgressAnimation?.();
 
     // convert provided target into DucElement[] if necessary
-    const targetElements = Array.isArray(target) ? target : [target];
+    const targets = Array.isArray(target) ? target : [target];
+    const targetElements = targets.map((target) => {
+      return adjustElementToCurrentScope(target as DucElement, this.state.scope) as DucElement;
+    })
 
     let zoom = this.state.zoom;
     let scrollX = this.state.scrollX;
@@ -4534,6 +4539,8 @@ class App extends React.Component<AppProps, AppState> {
         ...commonResets,
       };
     });
+    this.scene.setCurrentScope(newScope);
+    this.rerenderCanvas();
   };
 
   toggleSnapMode = (
@@ -4606,7 +4613,10 @@ class App extends React.Component<AppProps, AppState> {
 
   mutateElementWithValues = <TElement extends Mutable<DucElement>> (
       element: NonDeletedDucElement, values: ElementUpdate<TElement>,
-  ) => mutateElement(element, values);
+  ) => {
+    mutateElement(element, values);
+    this.rerenderCanvas();
+  }
 
   
 
@@ -4617,24 +4627,15 @@ class App extends React.Component<AppProps, AppState> {
     .map((elId) => this.scene.getElement(elId))
     .filter((el): el is DucElement => el != null);
 
-    // if (elementsToUpdate) {
-    //   elementsToUpdate.map((el) => {
-    //     mutateElement(
-    //       el,
-    //       values,
-    //     );
-    //   })
-    // }
-    if (values) {
-      this.updateScene({
-        elements: this.scene.getElementsIncludingDeleted().map((el) => {
-          if (this.state.selectedElementIds[el.id]) {
-            return newElementWith(el, values as ElementUpdate<OrderedDucElement>);          
-          }
-          return el;
-        }),
-      });
+    if (elementsToUpdate) {
+      elementsToUpdate.map((el) => {
+        mutateElement(
+          el,
+          values,
+        );
+      })
     }
+    this.rerenderCanvas();
   } 
 
 
@@ -5168,13 +5169,16 @@ class App extends React.Component<AppProps, AppState> {
   ): NonDeleted<DucElement>[] {
     const iframeLikes: Ordered<DucIframeElement>[] = [];
 
-    const elementsMap = this.scene.getNonDeletedElementsMap();
+    const elementsMap = adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope);
+    // const elementsMap = this.scene.getNonDeletedElementsMap();
 
+    const nonDeletedElements = this.scene.getNonDeletedElements().map((el) => {
+      return adjustElementToCurrentScope(el, this.state.scope);
+    })
     const elements = (
       includeBoundTextElement && includeLockedElements
-        ? this.scene.getNonDeletedElements()
-        : this.scene
-            .getNonDeletedElements()
+        ? nonDeletedElements
+        : nonDeletedElements
             .filter(
               (element) =>
                 (includeLockedElements || !element.locked) &&
@@ -5218,6 +5222,7 @@ class App extends React.Component<AppProps, AppState> {
     element: DucElement,
     considerBoundingBox = true,
   ) {
+
     // if the element is selected, then hit test is done against its bounding box
     if (
       considerBoundingBox &&
@@ -5226,7 +5231,8 @@ class App extends React.Component<AppProps, AppState> {
     ) {
       const selectionShape = getSelectionBoxShape(
         element,
-        this.scene.getNonDeletedElementsMap(),
+        // this.scene.getNonDeletedElementsMap(),
+        adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope),
         this.getElementHitThreshold(),
       );
 
@@ -6062,7 +6068,8 @@ class App extends React.Component<AppProps, AppState> {
         scenePointerY,
         this.state.zoom,
         event.pointerType,
-        this.scene.getNonDeletedElementsMap(),
+        // this.scene.getNonDeletedElementsMap(),
+        adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope) as RenderableElementsMap,
         this.device,
       );
       if (
@@ -6295,16 +6302,20 @@ class App extends React.Component<AppProps, AppState> {
     scenePointerX: number,
     scenePointerY: number,
   ) {
-    const elementsMap = this.scene.getNonDeletedElementsMap();
+    // const elementsMap = this.scene.getNonDeletedElementsMap();
+    const elementsMap = adjustElementsMapToCurrentScope( this.scene.getNonDeletedElementsMap(), this.state.scope );
 
-    const element = LinearElementEditor.getElement(
+    const linearElement = LinearElementEditor.getElement(
       linearElementEditor.elementId,
       elementsMap,
     );
 
-    if (!element) {
+    if (!linearElement) {
       return;
     }
+
+    const element = adjustElementToCurrentScope(linearElement, this.state.scope);
+
     if (this.state.selectedLinearElement) {
       let hoverPointIndex = -1;
       let segmentMidPointHoveredCoords = null;
@@ -6315,7 +6326,7 @@ class App extends React.Component<AppProps, AppState> {
           element,
           shape: getElementShape(
             element,
-            this.scene.getNonDeletedElementsMap(),
+            elementsMap,
           ),
         })
       ) {
@@ -6331,7 +6342,7 @@ class App extends React.Component<AppProps, AppState> {
             linearElementEditor,
             { x: scenePointerX, y: scenePointerY },
             this.state,
-            this.scene.getNonDeletedElementsMap(),
+            elementsMap,
           );
 
         if (hoverPointIndex >= 0 || segmentMidPointHoveredCoords) {
@@ -6359,18 +6370,20 @@ class App extends React.Component<AppProps, AppState> {
         });
       }
 
-      if (
-        !LinearElementEditor.arePointsEqual(
-          this.state.selectedLinearElement.segmentMidPointHoveredCoords,
-          segmentMidPointHoveredCoords,
-        )
-      ) {
-        this.setState({
-          selectedLinearElement: {
-            ...this.state.selectedLinearElement,
-            segmentMidPointHoveredCoords,
-          },
-        });
+      if (Array.isArray(segmentMidPointHoveredCoords)) {
+        if (
+          !LinearElementEditor.arePointsEqual(
+            this.state.selectedLinearElement.segmentMidPointHoveredCoords,
+            segmentMidPointHoveredCoords as readonly [number, number] | null,
+          )
+        ) {
+          this.setState({
+            selectedLinearElement: {
+              ...this.state.selectedLinearElement,
+              segmentMidPointHoveredCoords: segmentMidPointHoveredCoords as readonly [number, number] | null,
+            },
+          });
+        }
       }
     } else {
       setCursor(this.interactiveCanvas, CURSOR_TYPE.AUTO);
@@ -7731,6 +7744,8 @@ class App extends React.Component<AppProps, AppState> {
               type: elementType,
               x: gridX,
               y: gridY,
+              scope: this.state.scope,
+              writingLayer: this.state.writingLayer,
               strokeColor: this.state.currentItemStrokeColor,
               backgroundColor: this.state.currentItemBackgroundColor,
               fillStyle: this.state.currentItemFillStyle,
@@ -8463,7 +8478,8 @@ class App extends React.Component<AppProps, AppState> {
             event,
             this.state,
             this.setState.bind(this),
-            this.scene.getNonDeletedElementsMap(),
+            // this.scene.getNonDeletedElementsMap(),
+            adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope) as NonDeletedSceneElementsMap,
           );
           // regular box-select
         } else {
@@ -10710,6 +10726,17 @@ class App extends React.Component<AppProps, AppState> {
   public refresh = () => {
     this.setState({ ...this.getCanvasOffsets() });
   };
+
+
+  public rerenderCanvas = () => {
+    this.updateScene({
+      elements: this.scene.getElementsIncludingDeleted().map((el) => {
+        return newElementWith(el, {
+          seed: Math.random(),
+        });
+      }),
+    });
+  }
 
   private getCanvasOffsets(): Pick<AppState, "offsetTop" | "offsetLeft"> {
     if (this.excalidrawContainerRef?.current) {
