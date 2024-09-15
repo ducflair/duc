@@ -109,6 +109,7 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
     strokeStyle: (e.strokeStyle() || '') as StrokeStyle,
     boundElements: boundElements,
     strokePlacement: (e.strokePlacement() || '') as StrokePlacement,
+    shouldNotRender: false,
   };
 
   switch (elementType) {

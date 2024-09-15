@@ -146,6 +146,7 @@ export const getSelectionBoxShape = (
   elementsMap: ElementsMap,
   padding = 10,
 ) => {
+
   let [x1, y1, x2, y2, cx, cy] = getElementAbsoluteCoords(
     element,
     elementsMap,
