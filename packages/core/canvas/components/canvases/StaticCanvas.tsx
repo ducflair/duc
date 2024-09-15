@@ -12,6 +12,7 @@ import type {
   NonDeletedSceneElementsMap,
 } from "../../element/types";
 import { isRenderThrottlingEnabled } from "../../reactUtils";
+import { adjustElementsMapToCurrentScope, adjustElementToCurrentScope } from "../../duc/utils/measurements";
 
 type StaticCanvasProps = {
   canvas: HTMLCanvasElement;
@@ -70,9 +71,12 @@ const StaticCanvas = (props: StaticCanvasProps) => {
         canvas,
         rc: props.rc,
         scale: props.scale,
-        elementsMap: props.elementsMap,
-        allElementsMap: props.allElementsMap,
-        visibleElements: props.visibleElements,
+        // elementsMap: props.elementsMap,
+        elementsMap: adjustElementsMapToCurrentScope(props.elementsMap, props.appState.scope) as RenderableElementsMap,
+        // allElementsMap: props.allElementsMap,
+        allElementsMap: adjustElementsMapToCurrentScope(props.allElementsMap, props.appState.scope) as NonDeletedSceneElementsMap,
+        // visibleElements: props.visibleElements,
+        visibleElements: props.visibleElements.map((el) => adjustElementToCurrentScope(el, props.appState.scope) as NonDeletedDucElement),
         appState: props.appState,
         renderConfig: props.renderConfig,
       },
