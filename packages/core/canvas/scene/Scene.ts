@@ -25,6 +25,7 @@ import {
 import { arrayToMap } from "../utils";
 import { toBrandedType } from "../utils";
 import { ENV } from "../constants";
+import { CombinedMeasure, getTranslationFactor, SupportedMeasures } from "../duc/utils/measurements";
 
 type ElementIdKey = InstanceType<typeof LinearElementEditor>["elementId"];
 type ElementKey = DucElement | ElementIdKey;
@@ -106,9 +107,23 @@ class Scene {
   // ---------------------------------------------------------------------------
   // static methods/props
   // ---------------------------------------------------------------------------
-
+  private currentScope: CombinedMeasure
   private static sceneMapByElement = new WeakMap<DucElement, Scene>();
   private static sceneMapById = new Map<string, Scene>();
+
+  constructor(initialScope: CombinedMeasure) {
+    this.currentScope = initialScope;
+  }
+
+  setCurrentScope(scope: CombinedMeasure) {
+    if (this.currentScope !== scope) {
+      this.currentScope = scope;
+    }
+  }
+
+  getCurrentScope() {
+    return this.currentScope;
+  }
 
   static mapElementToScene(elementKey: ElementKey, scene: Scene) {
     if (isIdKey(elementKey)) {
