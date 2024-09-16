@@ -160,6 +160,8 @@ const restoreElementWithProperties = <
     backgroundColor:
       element.backgroundColor || DEFAULT_ELEMENT_PROPS.backgroundColor,
     scope: element.scope || "lost",
+    isStrokeDisabled: element.isStrokeDisabled ?? false,
+    isBackgroundDisabled: element.isBackgroundDisabled ?? false,
     writingLayer: element.writingLayer || "notes",
     label: element.label || "Lost Element Label",
     isVisible: element.isVisible ?? DEFAULT_ELEMENT_PROPS.isVisible,
