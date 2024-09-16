@@ -761,6 +761,7 @@ export interface DucImperativeAPI {
   elements: {
     getSceneElements: InstanceType<typeof App>["getSceneElements"];
     getElementById: InstanceType<typeof App>["getElementById"];
+    getVisibleElements: InstanceType<typeof App>["getVisibleElements"];
     getSceneElementsMap: InstanceType<typeof App>["getSceneElementsMap"];
     getSceneElementsIncludingDeleted: InstanceType<typeof App>["getSceneElementsIncludingDeleted"];
     mutateElementWithValues: InstanceType<typeof App>["mutateElementWithValues"];
@@ -775,7 +776,10 @@ export interface DucImperativeAPI {
     setElementFrameId: InstanceType<typeof App>["setElementFrameId"];
     selectElements: InstanceType<typeof App>["selectElements"]; 
   };
+
+  coordToRealMeasure: InstanceType<typeof App>["coordToRealMeasure"];
   getAppState: () => InstanceType<typeof App>["state"];
+  getScene: () => InstanceType<typeof App>["scene"];
   getFiles: () => InstanceType<typeof App>["files"];
   getName: InstanceType<typeof App>["getName"];
   registerAction: (action: Action) => void;
