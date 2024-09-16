@@ -78,6 +78,9 @@ type _DucElementBase = Readonly<{
   strokeWidth: number;
   strokeStyle: StrokeStyle;
   strokePlacement: StrokePlacement;
+  
+  isStrokeDisabled: boolean;
+  isBackgroundDisabled: boolean;
 
   opacity: number;
   width: number;
