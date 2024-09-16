@@ -180,6 +180,13 @@ export const adjustElementsMapToCurrentScope = (
   return adjustedMap;
 }
 
+export const adjustElementsToCurrentScope = (
+  elements: readonly NonDeletedDucElement[],
+  currentScope: CombinedMeasure
+): NonDeletedDucElement[] => {
+  return elements.map((element) => adjustElementToCurrentScope(element, currentScope)).filter(Boolean) as NonDeletedDucElement[];
+}
+
 export function filterElementsByScope<T extends DucElement>(
   elements: readonly T[],
   currentScope: CombinedMeasure,
