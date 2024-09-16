@@ -404,6 +404,17 @@ export interface AppState extends Ducfig {
   userToFollow: UserToFollow | null;
   /** the clientIds of the users following the current user */
   followedBy: Set<SocketId>;
+
+  scaleRatioLocked: boolean;
+  displayAllPointDistances: boolean;
+  displayDistanceOnDrawing: boolean;
+  enableLineBendingOnEdit: boolean;
+
+  // if false the curve handles are parallel, if true the curve handles are independent 
+  // (this only takes place if the point as other points associated with it, making it a curve)
+  allowIndependentCurveHandles: boolean; 
+  
+  coordDecimalPlaces: number;
 }
 
 export type UIAppState = Omit<

@@ -91,8 +91,17 @@ export const isArrowKey = (key: string) =>
 export const shouldResizeFromCenter = (event: MouseEvent | KeyboardEvent) =>
   event.altKey;
 
-export const shouldMaintainAspectRatio = (event: MouseEvent | KeyboardEvent) =>
-  event.shiftKey;
+export const shouldMaintainAspectRatio = (
+  event: MouseEvent | KeyboardEvent,
+  scaleRatioLocked: boolean
+) => {
+  if (scaleRatioLocked) {
+    return true;
+  }
+  
+  return event.shiftKey;
+};
+
 
 export const shouldRotateWithDiscreteAngle = (
   event: MouseEvent | KeyboardEvent | React.PointerEvent<HTMLCanvasElement>,

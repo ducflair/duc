@@ -53,7 +53,7 @@ import App from "../components/App";
 import { getLineHeight } from "../fonts";
 
 export type ElementConstructorOpts = MarkOptional<
-  Omit<DucGenericElement, "id" | "type" | "isDeleted" | "updated" | "shouldNotRender">,
+  Omit<DucGenericElement, "id" | "type" | "isDeleted" | "updated">,
   | "width"
   | "label"
   | "height"
@@ -77,7 +77,6 @@ export type ElementConstructorOpts = MarkOptional<
   | "locked"
   | "opacity"
   | "customData"
-  | "ratioLocked"
   | "isVisible"
   | "writingLayer"
   | "scope"
@@ -92,7 +91,6 @@ const _newElementBase = <T extends DucElement>(
     scope = "mm",
     index = null,
     label = `Lost Element`,
-    ratioLocked = DEFAULT_ELEMENT_PROPS.ratioLocked,
     isVisible = DEFAULT_ELEMENT_PROPS.isVisible,
     strokeColor = DEFAULT_ELEMENT_PROPS.strokeColor,
     backgroundColor = DEFAULT_ELEMENT_PROPS.backgroundColor,
@@ -106,7 +104,6 @@ const _newElementBase = <T extends DucElement>(
     height = 0,
     angle = 0,
     groupIds = [],
-    shouldNotRender = false,
     frameId = null,
     roundness = DEFAULT_ELEMENT_PROPS.roundness,
     boundElements = null,
@@ -125,7 +122,6 @@ const _newElementBase = <T extends DucElement>(
     height,
     index,
     strokePlacement,
-    ratioLocked,
     isVisible,
     angle,
     strokeColor,
@@ -139,7 +135,6 @@ const _newElementBase = <T extends DucElement>(
     frameId,
     roundness,
     label,
-    shouldNotRender,
     writingLayer,
     scope,
     seed: rest.seed ?? randomInteger(),
