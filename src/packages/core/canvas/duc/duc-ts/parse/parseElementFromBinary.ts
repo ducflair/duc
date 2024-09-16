@@ -82,7 +82,6 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
     fillStyle: (e.fillStyle() || '') as FillStyle,
     strokeWidth: e.strokeWidth(),
     roughness: e.roughness(),
-    ratioLocked: e.ratioLocked(),
     isVisible: e.isVisible(),
     roundness: null,
     // roundness: { FIXME: For now we won't be using roundness
