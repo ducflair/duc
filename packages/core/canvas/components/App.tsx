@@ -93,7 +93,7 @@ import {
   DEFAULT_TEXT_ALIGN,
   ARROW_TYPE,
 } from "../constants";
-import { ExportedElements, exportCanvas, loadFromBlob, loadFromJSON, saveAsJSON } from "../data";
+import { ExportedElements, exportCanvas, loadFromBlob, loadFromJSON, prepareElementsForExport, saveAsJSON } from "../data";
 import Library, { distributeLibraryItemsOnSquareGrid } from "../data/library";
 import { restore, restoreElements } from "../data/restore";
 import {
@@ -432,7 +432,7 @@ import {
   isPointHittingLink,
   isPointHittingLinkIcon,
 } from "./hyperlink/helpers";
-import { adjustElementsMapToCurrentScope, adjustElementToCurrentScope, CombinedMeasure, coordinateToRealMeasure, realMeasureToCoordinate, SupportedMeasures } from "../duc/utils/measurements";
+import { adjustElementsMapToCurrentScope, adjustElementsToCurrentScope, adjustElementToCurrentScope, CombinedMeasure, coordinateToRealMeasure, realMeasureToCoordinate, SupportedMeasures } from "../duc/utils/measurements";
 import { WritingLayers } from "../duc/utils/writingLayers";
 import { changeProperty } from "../actions/actionProperties";
 import { saveAsFlatBuffers } from "../duc/duc-ts/serialize";
@@ -733,6 +733,8 @@ class App extends React.Component<AppProps, AppState> {
         files: {
           exportToDucJSON: this.exportToDucJSON,
           exportToDucBin: this.exportToDucBin,
+          exportToPng: this.exportToPng,
+          exportToSvg: this.exportToSvg,
           openFile: this.openFile,
         },
         state: useApp,
@@ -3533,11 +3535,14 @@ class App extends React.Component<AppProps, AppState> {
     this.store.shouldCaptureIncrement();
   }
 
-  setAppState: React.Component<any, AppState>["setState"] = (
+  setAppState: React.Component<any, Partial<AppState>>["setState"] = (
     state,
     callback,
   ) => {
-    this.setState(state, callback);
+    this.setState(
+      {...this.state, ...state},
+      callback
+    );
   };
 
   removePointer = (event: React.PointerEvent<HTMLElement> | PointerEvent) => {
@@ -4749,6 +4754,28 @@ class App extends React.Component<AppProps, AppState> {
       this.files,
       this.getName(),
     );
+  };
+  
+  exportToPng = () => {
+    const { exportedElements, exportingFrame } = prepareElementsForExport(
+      adjustElementsToCurrentScope(this.scene.getNonDeletedElements(), this.state.scope),
+      this.state,
+      false
+    );
+    this.onExportImage(EXPORT_IMAGE_TYPES.png, exportedElements, {
+      exportingFrame,
+    })
+  };
+
+  exportToSvg = () => {
+    const { exportedElements, exportingFrame } = prepareElementsForExport(
+      adjustElementsToCurrentScope(this.scene.getNonDeletedElements(), this.state.scope),
+      this.state,
+      false
+    );
+    this.onExportImage(EXPORT_IMAGE_TYPES.svg, exportedElements, {
+      exportingFrame,
+    })
   };
 
   openFile = async () => {
