@@ -432,7 +432,7 @@ import {
   isPointHittingLink,
   isPointHittingLinkIcon,
 } from "./hyperlink/helpers";
-import { adjustElementsMapToCurrentScope, adjustElementToCurrentScope, CombinedMeasure, coordinateToRealMeasure, SupportedMeasures } from "../duc/utils/measurements";
+import { adjustElementsMapToCurrentScope, adjustElementToCurrentScope, CombinedMeasure, coordinateToRealMeasure, realMeasureToCoordinate, SupportedMeasures } from "../duc/utils/measurements";
 import { WritingLayers } from "../duc/utils/writingLayers";
 import { changeProperty } from "../actions/actionProperties";
 import { saveAsFlatBuffers } from "../duc/duc-ts/serialize";
@@ -752,9 +752,12 @@ class App extends React.Component<AppProps, AppState> {
           bringToFrontElement: () => {this.actionManager.executeAction(actionBringToFront);},
           setZLayerIndexAfterElement: this.setZLayerIndexAfterElement,
           setElementFrameId: this.setElementFrameId,
+          flipHorizontal: this.flipHorizontal,
+          flipVertical: this.flipVertical,
         },
 
         coordToRealMeasure: this.coordToRealMeasure,
+        realMeasureToCoord: this.realMeasureToCoord,
         getAppState: () => this.state,
         getScene: () => this.scene,
         getFiles: () => this.files,
@@ -4584,6 +4587,12 @@ class App extends React.Component<AppProps, AppState> {
     return coordinateToRealMeasure(coordinate, this.state.scope, elementScope);
   };
 
+  realMeasureToCoord = (
+    coordinate: number,
+  ) => {
+    return realMeasureToCoordinate(coordinate, this.state.gridSize);
+  };
+
   setZLayerIndexAfterElement = (afterElementId: string, activeElementId:string) => {
 
     const elementKeys = Array.from(this.scene.getNonDeletedElementsMap().keys()); // Get all keys from the map
@@ -4778,6 +4787,14 @@ class App extends React.Component<AppProps, AppState> {
       };
     });
   };
+
+  public flipHorizontal = () => {
+    this.actionManager.executeAction(actionFlipHorizontal);
+  }
+
+  public flipVertical = () => {
+    this.actionManager.executeAction(actionFlipVertical);
+  }
 
   public updateGroups = () => {
     const elements = this.scene.getNonDeletedElements();
