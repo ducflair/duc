@@ -750,6 +750,8 @@ export interface DucImperativeAPI {
   files: {
     exportToDucJSON: InstanceType<typeof App>["exportToDucJSON"];
     exportToDucBin: InstanceType<typeof App>["exportToDucBin"];
+    exportToPng: InstanceType<typeof App>["exportToPng"];
+    exportToSvg: InstanceType<typeof App>["exportToSvg"];
     openFile: InstanceType<typeof App>["openFile"];
   };
   canvas: {
