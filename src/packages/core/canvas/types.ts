@@ -775,9 +775,13 @@ export interface DucImperativeAPI {
     setZLayerIndexAfterElement: InstanceType<typeof App>["setZLayerIndexAfterElement"];
     setElementFrameId: InstanceType<typeof App>["setElementFrameId"];
     selectElements: InstanceType<typeof App>["selectElements"]; 
+    flipHorizontal: InstanceType<typeof App>["flipHorizontal"];
+    flipVertical: InstanceType<typeof App>["flipVertical"];
   };
 
   coordToRealMeasure: InstanceType<typeof App>["coordToRealMeasure"];
+  realMeasureToCoord: InstanceType<typeof App>["realMeasureToCoord"];
+  
   getAppState: () => InstanceType<typeof App>["state"];
   getScene: () => InstanceType<typeof App>["scene"];
   getFiles: () => InstanceType<typeof App>["files"];
