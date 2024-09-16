@@ -399,8 +399,12 @@ export {
 } from "./duc/duc-ts/serialize";
 
 export {
-  CanvasPreview
+  CanvasPreview,
 } from "./components/canvasPreview";
+
+export {
+  ExportCanvasPreview
+} from "./components/exportPreview";
 
 export { default as transformHexColor } from "./scene/hexDarkModeFilter";
 
