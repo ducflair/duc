@@ -162,7 +162,6 @@ const restoreElementWithProperties = <
     scope: element.scope || "lost",
     writingLayer: element.writingLayer || "notes",
     label: element.label || "Lost Element Label",
-    ratioLocked: element.ratioLocked ?? DEFAULT_ELEMENT_PROPS.ratioLocked,
     isVisible: element.isVisible ?? DEFAULT_ELEMENT_PROPS.isVisible,
     width: element.width || 0,
     height: element.height || 0,
@@ -186,7 +185,6 @@ const restoreElementWithProperties = <
     updated: element.updated ?? getUpdatedTimestamp(),
     link: element.link ? normalizeLink(element.link) : null,
     locked: element.locked ?? false,
-    shouldNotRender: element.shouldNotRender ?? false,
   };
 
   if ("customData" in element || "customData" in extra) {

@@ -361,7 +361,6 @@ export const DEFAULT_ELEMENT_PROPS: {
   strokeColor: DucElement["strokeColor"];
   backgroundColor: DucElement["backgroundColor"];
   isVisible: DucElement["isVisible"];
-  ratioLocked: DucElement["ratioLocked"];
   fillStyle: DucElement["fillStyle"];
   strokeWidth: DucElement["strokeWidth"];
   strokeStyle: DucElement["strokeStyle"];
@@ -374,7 +373,6 @@ export const DEFAULT_ELEMENT_PROPS: {
   strokeColor: COLOR_PALETTE.midGray,
   backgroundColor: `${COLOR_PALETTE.midGray}15`,
   isVisible: true,
-  ratioLocked: true,
   fillStyle: "solid",
   strokePlacement: "outside",
   strokeWidth: 2,

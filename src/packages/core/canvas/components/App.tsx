@@ -10270,7 +10270,7 @@ class App extends React.Component<AppProps, AppState> {
         y: pointerCoords.y,
         width: distance(pointerDownState.origin.x, pointerCoords.x),
         height: distance(pointerDownState.origin.y, pointerCoords.y),
-        shouldMaintainAspectRatio: shouldMaintainAspectRatio(event),
+        shouldMaintainAspectRatio: shouldMaintainAspectRatio(event, this.state.scaleRatioLocked),
         shouldResizeFromCenter: shouldResizeFromCenter(event),
         zoom: this.state.zoom.value,
         informMutation,
@@ -10333,8 +10333,8 @@ class App extends React.Component<AppProps, AppState> {
         width: distance(pointerDownState.originInGrid.x, gridX),
         height: distance(pointerDownState.originInGrid.y, gridY),
         shouldMaintainAspectRatio: isImageElement(newElement)
-            ? !shouldMaintainAspectRatio(event)
-            : shouldMaintainAspectRatio(event),
+            ? !shouldMaintainAspectRatio(event, this.state.scaleRatioLocked)
+            : shouldMaintainAspectRatio(event, this.state.scaleRatioLocked),
         shouldResizeFromCenter: shouldResizeFromCenter(event),
         zoom: this.state.zoom.value,
         widthAspectRatio: aspectRatio,
@@ -10464,8 +10464,8 @@ class App extends React.Component<AppProps, AppState> {
         shouldRotateWithDiscreteAngle(event),
         shouldResizeFromCenter(event),
         selectedElements.some((element) => isImageElement(element))
-          ? !shouldMaintainAspectRatio(event)
-          : shouldMaintainAspectRatio(event),
+          ? !shouldMaintainAspectRatio(event, this.state.scaleRatioLocked)
+          : shouldMaintainAspectRatio(event, this.state.scaleRatioLocked),
         resizeX,
         resizeY,
         pointerDownState.resize.center.x,
