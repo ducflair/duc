@@ -33,8 +33,6 @@ table DucElement {
   writingLayer: string;  // Assuming WritingLayers as string
   label: string;
   isVisible: bool;
-  fillStyle: string;  // Assuming FillStyle as string
-  roughness: int;
   roundnessType: string; // Assuming StrokeRoundness as string
   roundnessValue: int;  // Optional int
   backgroundColor: string;
@@ -46,20 +44,18 @@ table DucElement {
   width: float;
   height: float;
   angle: float;
-  seed: int;
-  version: int;
-  versionNonce: int;
   isDeleted: bool;
   groupIds: [string];  // Vector of GroupId
   frameId: string;
   boundElements: [BoundElement];  // Vector of bound elements
-  updated: long;
   link: string;
   locked: bool;
 
   // MagicFrameElement specific fields
   customData: string;  // Simplified as string
-
+  
+  isStrokeDisabled: bool;
+  isBackgroundDisabled: bool;
 
   // TextElement specific fields
   fontSize: int;
