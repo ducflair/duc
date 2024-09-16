@@ -118,6 +118,13 @@ export const getDefaultAppState = (): Omit<
     objectsSnapModeEnabled: true,
     userToFollow: null,
     followedBy: new Set(),
+
+    scaleRatioLocked: false,
+    displayAllPointDistances: false,
+    displayDistanceOnDrawing: true,
+    enableLineBendingOnEdit: false,
+    allowIndependentCurveHandles: false,
+    coordDecimalPlaces: 3,
   };
 };
 
@@ -243,6 +250,13 @@ const APP_STATE_STORAGE_CONF = (<
   objectsSnapModeEnabled: { browser: true, export: false, server: false },
   userToFollow: { browser: false, export: false, server: false },
   followedBy: { browser: false, export: false, server: false },
+
+  scaleRatioLocked: { browser: false, export: true, server: true },
+  displayAllPointDistances: { browser: false, export: true, server: true },
+  displayDistanceOnDrawing: { browser: false, export: true, server: true },
+  enableLineBendingOnEdit: { browser: false, export: true, server: true },
+  allowIndependentCurveHandles: { browser: false, export: true, server: true },
+  coordDecimalPlaces: { browser: false, export: true, server: true },
 });
 
 const _clearAppStateForStorage = <

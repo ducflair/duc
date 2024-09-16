@@ -32,7 +32,6 @@ table DucElement {
   scope: string;  // Assuming SupportedMeasures as string
   writingLayer: string;  // Assuming WritingLayers as string
   label: string;
-  ratioLocked: bool;
   isVisible: bool;
   fillStyle: string;  // Assuming FillStyle as string
   roughness: int;
@@ -223,6 +222,12 @@ table AppState {
   originSnapOffsetY: float;
   // userToFollow: UserToFollow;
   // followedBy: [string];
+  scaleRatioLocked: bool;
+  displayAllPointDistances: bool;
+  displayDistanceOnDrawing: bool;
+  enableLineBendingOnEdit: bool;
+  allowIndependentCurveHandles: bool; 
+  coordDecimalPlaces: int;
 }
 
 
