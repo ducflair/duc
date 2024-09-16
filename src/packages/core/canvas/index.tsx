@@ -248,7 +248,8 @@ export {
 
 export {
   SupportedMeasures, MetricMeasure, ImperialMeasure,
-  coordinateToRealMeasure, adjustElementToCurrentScope, adjustElementsMapToCurrentScope,
+  coordinateToRealMeasure, adjustElementToCurrentScope, adjustElementsMapToCurrentScope, 
+  realMeasureToCoordinate
 } from "./duc/utils/measurements";
 
 export {
@@ -257,6 +258,7 @@ export {
 
 export {
   DucElement,
+  StrokePlacement,
   FileId,
   NonDeletedDucElement,
   InitializedDucImageElement,
