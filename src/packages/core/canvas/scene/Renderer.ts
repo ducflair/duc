@@ -21,48 +21,49 @@ export class Renderer {
     this.scene = scene;
   }
 
-  public getRenderableElements = (() => {
-    const getVisibleCanvasElements = ({
-      elementsMap,
-      zoom,
-      offsetLeft,
-      offsetTop,
-      scrollX,
-      scrollY,
-      height,
-      width,
-    }: {
-      elementsMap: NonDeletedElementsMap;
-      zoom: AppState["zoom"];
-      offsetLeft: AppState["offsetLeft"];
-      offsetTop: AppState["offsetTop"];
-      scrollX: AppState["scrollX"];
-      scrollY: AppState["scrollY"];
-      height: AppState["height"];
-      width: AppState["width"];
-    }): readonly NonDeletedDucElement[] => {
-      const visibleElements: NonDeletedDucElement[] = [];
-      for (const element of elementsMap.values()) {
-        if (
-          isElementInViewport(
-            element,
-            width,
-            height,
-            {
-              zoom,
-              offsetLeft,
-              offsetTop,
-              scrollX,
-              scrollY,
-            },
-            elementsMap,
-          )
-        ) {
-          visibleElements.push(element);
-        }
+  public getVisibleCanvasElements = ({
+    elementsMap,
+    zoom,
+    offsetLeft,
+    offsetTop,
+    scrollX,
+    scrollY,
+    height,
+    width,
+  }: {
+    elementsMap: NonDeletedElementsMap;
+    zoom: AppState["zoom"];
+    offsetLeft: AppState["offsetLeft"];
+    offsetTop: AppState["offsetTop"];
+    scrollX: AppState["scrollX"];
+    scrollY: AppState["scrollY"];
+    height: AppState["height"];
+    width: AppState["width"];
+  }): readonly NonDeletedDucElement[] => {
+    const visibleElements: NonDeletedDucElement[] = [];
+    for (const element of elementsMap.values()) {
+      if (
+        isElementInViewport(
+          element,
+          width,
+          height,
+          {
+            zoom,
+            offsetLeft,
+            offsetTop,
+            scrollX,
+            scrollY,
+          },
+          elementsMap,
+        )
+      ) {
+        visibleElements.push(element);
       }
-      return visibleElements;
-    };
+    }
+    return visibleElements;
+  };
+
+  public getRenderableElements = (() => {
 
     const getRenderableElements = ({
       elements,
@@ -145,7 +146,7 @@ export class Renderer {
           pendingImageElementId,
         });
 
-        const visibleElements = getVisibleCanvasElements({
+        const visibleElements = this.getVisibleCanvasElements({
           elementsMap,
           zoom,
           offsetLeft,

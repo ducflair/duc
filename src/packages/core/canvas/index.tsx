@@ -247,7 +247,8 @@ export {
 } from "./data/encryption";
 
 export {
-  SupportedMeasures, MetricMeasure, ImperialMeasure
+  SupportedMeasures, MetricMeasure, ImperialMeasure,
+  coordinateToRealMeasure, adjustElementToCurrentScope, adjustElementsMapToCurrentScope,
 } from "./duc/utils/measurements";
 
 export {
@@ -383,6 +384,8 @@ export {
   isElementInsideBBox,
   elementPartiallyOverlapsWithOrContainsBBox,
 } from "../utils/withinBounds";
+
+export { default as DimensionDragInput} from "./components/Stats/Dimension";
 
 
 export {
