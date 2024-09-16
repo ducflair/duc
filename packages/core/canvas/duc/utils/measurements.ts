@@ -154,6 +154,14 @@ export const coordinateToRealMeasure = (
   return coordinate * translationFactor / 100;
 }
 
+export const realMeasureToCoordinate = (
+  realMeasure: number,
+  gridUnit: number,
+) => {
+  // x grid units * 100 = 1,00 real unit
+  return realMeasure * 10 * gridUnit;
+}
+
 
 
 
