@@ -123,7 +123,6 @@ export const serializeDucElement = (builder: flatbuffers.Builder, element: DucEl
   BinDucElement.addScope(builder, scopeOffset);
   BinDucElement.addWritingLayer(builder, writingLayerOffset);
   BinDucElement.addLabel(builder, labelOffset);
-  BinDucElement.addRatioLocked(builder, element.ratioLocked);
   BinDucElement.addIsVisible(builder, element.isVisible);
   BinDucElement.addFillStyle(builder, fillStyleOffset);
   BinDucElement.addRoughness(builder, element.roughness);
