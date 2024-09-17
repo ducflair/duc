@@ -82,11 +82,11 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
     backgroundColor: e.backgroundColor() || '',
     strokeWidth: e.strokeWidth(),
     isVisible: e.isVisible(),
-    // roundness: null,
-    roundness: {
-      type: (Number(e.roundnessType() || '1')) as RoundnessType,
-      value: e.roundnessValue(),
-    },
+    roundness: null,
+    // roundness: {
+    //   type: (Number(e.roundnessType() || '1')) as RoundnessType,
+    //   value: e.roundnessValue(),
+    // },
     isStrokeDisabled: e.isStrokeDisabled(),
     isBackgroundDisabled: e.isBackgroundDisabled(),
     opacity: e.opacity(),
