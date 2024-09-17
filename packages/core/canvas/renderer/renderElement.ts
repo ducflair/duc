@@ -458,7 +458,7 @@ const drawElementOnCanvas = (
         context.canvas.setAttribute("dir", rtl ? "rtl" : "ltr");
         context.save();
         context.font = getFontString(element);
-        context.fillStyle = element.strokeColor;
+        context.fillStyle = element.isStrokeDisabled ? "transparent" : element.strokeColor;
         context.textAlign = element.textAlign as CanvasTextAlign;
 
         // Canvas does not support multiline text by default
@@ -976,7 +976,7 @@ export function getFreeDrawSvgPath(element: DucFreeDrawElement) {
   // Consider changing the options for simulated pressure vs real pressure
   const options: StrokeOptions = {
     simulatePressure: element.simulatePressure,
-    size: element.strokeWidth * 4.25,
+    size: element.isStrokeDisabled ? 0 : element.strokeWidth * 4.25,
     thinning: 0.6,
     smoothing: 0.5,
     streamline: 0.5,
