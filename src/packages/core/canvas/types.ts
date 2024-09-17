@@ -206,6 +206,9 @@ export type StaticCanvasAppState = Readonly<
     gridStep: AppState["gridStep"];
     frameRendering: AppState["frameRendering"];
     currentHoveredFontFamily: AppState["currentHoveredFontFamily"];
+    displayDistanceOnDrawing: AppState["displayDistanceOnDrawing"];
+    coordDecimalPlaces: AppState["coordDecimalPlaces"];
+    newElement: AppState["newElement"];
   }
 >;
 
