@@ -8,6 +8,8 @@ import type {
   DucFrameLikeElement,
   NonDeletedSceneElementsMap,
   ElementsMap,
+  DucLinearElement,
+  NonDeleted,
 } from "../element/types";
 import {
   isTextElement,
@@ -27,7 +29,7 @@ import type {
   InteractiveCanvasRenderConfig,
 } from "../scene/types";
 import { distance, getFontString, isRTL } from "../utils";
-import { getCornerRadius, isRightAngle } from "../math";
+import { distance2d, getCornerRadius, isRightAngle } from "../math";
 import rough from "roughjs/bin/rough";
 import type {
   AppState,
@@ -61,6 +63,10 @@ import { getContainingFrame } from "../frame";
 import { ShapeCache } from "../scene/ShapeCache";
 import { getVerticalOffset } from "../fonts";
 import { COLOR_PALETTE } from "../colors";
+import { coordinateToRealMeasure } from "../duc/utils/measurements";
+import { offset } from "../ga";
+import { getNormalizedZoom } from "../scene";
+import { renderDistanceOnDrawingLine, renderTextWithBox } from "./helpers";
 
 // using a stronger invert (100% vs our regular 93%) and saturate
 // as a temp hack to make images in dark theme look closer to original
@@ -936,6 +942,19 @@ export const renderElement = (
           appState,
           allElementsMap,
         );
+
+
+        // Additional logic for rendering distance on "line" elements
+        if (
+          element.type === "line" &&
+          appState.newElement && appState.newElement.id === element.id && // Only render if it is the newElement
+          appState.displayDistanceOnDrawing &&
+          element.points.length >= 2
+        ) {
+          renderDistanceOnDrawingLine(element, appState, allElementsMap, context);
+        }
+
+
 
         // reset
         context.imageSmoothingEnabled = currentImageSmoothingStatus;

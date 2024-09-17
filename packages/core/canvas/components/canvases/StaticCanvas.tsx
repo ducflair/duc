@@ -114,6 +114,9 @@ const getRelevantAppStateProps = (
   frameToHighlight: appState.frameToHighlight,
   editingGroupId: appState.editingGroupId,
   currentHoveredFontFamily: appState.currentHoveredFontFamily,
+  displayDistanceOnDrawing: appState.displayDistanceOnDrawing,
+  coordDecimalPlaces: appState.coordDecimalPlaces,
+  newElement: appState.newElement,
 });
 
 const areEqual = (

@@ -1,3 +1,4 @@
+import { LinearElementEditor } from "../element/linearElementEditor";
 import type { NewElementSceneRenderConfig } from "../scene/types";
 import { throttleRAF } from "../utils";
 import { bootstrapCanvas, getNormalizedCanvasDimensions } from "./helpers";
