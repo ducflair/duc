@@ -133,6 +133,7 @@ export const FONT_FAMILY = {
   "Lilita One": 7,
   "Comic Shanns": 8,
   "Liberation Sans": 9,
+  "Roboto Mono": 10,
 };
 
 export const THEME = {
@@ -160,7 +161,7 @@ export const WINDOWS_EMOJI_FALLBACK_FONT = "Segoe UI Emoji";
 
 export const MIN_FONT_SIZE = 1;
 export const DEFAULT_FONT_SIZE = 20;
-export const DEFAULT_FONT_FAMILY: FontFamilyValues = FONT_FAMILY.Virgil;
+export const DEFAULT_FONT_FAMILY: FontFamilyValues = FONT_FAMILY["Roboto Mono"];
 export const DEFAULT_TEXT_ALIGN = "left";
 export const DEFAULT_VERTICAL_ALIGN = "top";
 export const DEFAULT_VERSION = "{version}";
@@ -437,3 +438,29 @@ export const ARROW_TYPE: { [T in AppState["currentItemArrowType"]]: T } = {
   round: "round",
   elbow: "elbow",
 };
+
+
+
+// No Support for Background
+export const toolNsBackgroundSet = new Set([
+  TOOL_TYPE.eraser, 
+  TOOL_TYPE.laser, 
+  TOOL_TYPE.image, 
+  TOOL_TYPE.arrow,
+  TOOL_TYPE.hand, 
+  TOOL_TYPE.magicframe,
+  TOOL_TYPE.frame,
+  TOOL_TYPE.text, 
+  "custom"
+]);
+
+// No Support for Stroke
+export const toolsNsStrokeSet = new Set([
+  TOOL_TYPE.eraser, 
+  TOOL_TYPE.laser, 
+  TOOL_TYPE.image,
+  TOOL_TYPE.magicframe,
+  TOOL_TYPE.frame,
+  TOOL_TYPE.hand, 
+  "custom"
+]);

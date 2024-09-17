@@ -59,6 +59,15 @@ export const FONT_METADATA: Record<number, FontMetadata> = {
     },
     icon: FontFamilyNormalIcon,
   },
+  [FONT_FAMILY["Roboto Mono"]]: {
+    metrics: {
+      unitsPerEm: 1000,
+      ascender: 923,
+      descender: -220,
+      lineHeight: 1.15,
+    },
+    icon: FontFamilyNormalIcon,
+  },
   [FONT_FAMILY["Comic Shanns"]]: {
     metrics: {
       unitsPerEm: 1000,

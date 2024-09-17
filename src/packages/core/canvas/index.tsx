@@ -287,6 +287,8 @@ export {
   IDLE_THRESHOLD,
   ACTIVE_THRESHOLD,
   ENV,
+  toolsNsStrokeSet,
+  toolNsBackgroundSet,
 } from "./constants";
 
 export {

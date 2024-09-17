@@ -13,7 +13,7 @@ import { isPathALoop, getCornerRadius, distanceSq2d } from "../math";
 import { generateFreeDrawShape } from "../renderer/renderElement";
 import { isTransparent, assertNever } from "../utils";
 import { simplify } from "points-on-curve";
-import { ROUGHNESS } from "../constants";
+import { ROUGHNESS, toolNsBackgroundSet, toolsNsStrokeSet } from "../constants";
 import {
   isElbowArrow,
   isEmbeddableElement,
@@ -55,6 +55,7 @@ export const generateRoughOptions = (
   element: DucElement,
   continuousPath = false,
 ): Options => {
+
   const options: Options = {
     seed: element.seed,
     strokeLineDash:
@@ -68,7 +69,7 @@ export const generateRoughOptions = (
     disableMultiStroke: element.strokeStyle !== "solid",
     // for non-solid strokes, increase the width a bit to make it visually
     // similar to solid strokes, because we're also disabling multiStroke
-    strokeWidth:
+    strokeWidth: 
       element.strokeStyle !== "solid"
         ? element.strokeWidth + 0.5
         : element.strokeWidth,
@@ -78,7 +79,8 @@ export const generateRoughOptions = (
     fillWeight: element.strokeWidth / 2,
     hachureGap: element.strokeWidth * 4,
     roughness: adjustRoughness(element),
-    stroke: element.strokeColor,
+    stroke: element.isStrokeDisabled ? "transparent" : element.strokeColor,
+
     preserveVertices:
       continuousPath || element.roughness < ROUGHNESS.cartoonist,
   };
@@ -90,9 +92,10 @@ export const generateRoughOptions = (
     case "diamond":
     case "ellipse": {
       options.fillStyle = element.fillStyle;
-      options.fill = isTransparent(element.backgroundColor)
-        ? undefined
-        : element.backgroundColor;
+      options.fill = element.isBackgroundDisabled ? "transparent" : 
+        isTransparent(element.backgroundColor)
+          ? undefined
+          : element.backgroundColor;
       if (element.type === "ellipse") {
         options.curveFitting = 1;
       }
@@ -102,7 +105,7 @@ export const generateRoughOptions = (
     case "freedraw": {
       if (isPathALoop(element.points)) {
         options.fillStyle = element.fillStyle;
-        options.fill =
+        options.fill = element.isBackgroundDisabled ? "transparent" : 
           element.backgroundColor === "transparent"
             ? undefined
             : element.backgroundColor;
