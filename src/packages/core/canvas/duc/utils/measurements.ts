@@ -140,6 +140,28 @@ export function adjustElementToCurrentScope<T extends DucElement>(
   return adjustedElement;
 }
 
+export const coordinateToRealMeasure = (
+  coordinate: number,
+  currentScope: CombinedMeasure,
+  elementScope: CombinedMeasure
+): number => {
+  const translationFactor = getTranslationFactor(
+    currentScope,
+    elementScope
+  );
+
+  // 100 grid units is 1,00 real unit
+  return coordinate * translationFactor / 100;
+}
+
+export const realMeasureToCoordinate = (
+  realMeasure: number,
+  gridUnit: number,
+) => {
+  // x grid units * 100 = 1,00 real unit
+  return realMeasure * 10 * gridUnit;
+}
+
 
 
 
