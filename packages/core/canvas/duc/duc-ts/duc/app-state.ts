@@ -382,8 +382,43 @@ originSnapOffsetY():number {
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
+scaleRatioLocked():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 118);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
+displayAllPointDistances():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 120);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
+displayDistanceOnDrawing():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 122);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
+displayAllPointCoordinates():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 124);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
+enableLineBendingOnEdit():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 126);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
+allowIndependentCurveHandles():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 128);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
+coordDecimalPlaces():number {
+  const offset = this.bb!.__offset(this.bb_pos, 130);
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+}
+
 static startAppState(builder:flatbuffers.Builder) {
-  builder.startObject(57);
+  builder.startObject(64);
 }
 
 static addIsLoading(builder:flatbuffers.Builder, isLoading:boolean) {
@@ -672,6 +707,34 @@ static addOriginSnapOffsetX(builder:flatbuffers.Builder, originSnapOffsetX:numbe
 
 static addOriginSnapOffsetY(builder:flatbuffers.Builder, originSnapOffsetY:number) {
   builder.addFieldFloat32(56, originSnapOffsetY, 0.0);
+}
+
+static addScaleRatioLocked(builder:flatbuffers.Builder, scaleRatioLocked:boolean) {
+  builder.addFieldInt8(57, +scaleRatioLocked, +false);
+}
+
+static addDisplayAllPointDistances(builder:flatbuffers.Builder, displayAllPointDistances:boolean) {
+  builder.addFieldInt8(58, +displayAllPointDistances, +false);
+}
+
+static addDisplayDistanceOnDrawing(builder:flatbuffers.Builder, displayDistanceOnDrawing:boolean) {
+  builder.addFieldInt8(59, +displayDistanceOnDrawing, +false);
+}
+
+static addDisplayAllPointCoordinates(builder:flatbuffers.Builder, displayAllPointCoordinates:boolean) {
+  builder.addFieldInt8(60, +displayAllPointCoordinates, +false);
+}
+
+static addEnableLineBendingOnEdit(builder:flatbuffers.Builder, enableLineBendingOnEdit:boolean) {
+  builder.addFieldInt8(61, +enableLineBendingOnEdit, +false);
+}
+
+static addAllowIndependentCurveHandles(builder:flatbuffers.Builder, allowIndependentCurveHandles:boolean) {
+  builder.addFieldInt8(62, +allowIndependentCurveHandles, +false);
+}
+
+static addCoordDecimalPlaces(builder:flatbuffers.Builder, coordDecimalPlaces:number) {
+  builder.addFieldInt32(63, coordDecimalPlaces, 0);
 }
 
 static endAppState(builder:flatbuffers.Builder):flatbuffers.Offset {
