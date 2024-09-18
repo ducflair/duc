@@ -221,6 +221,7 @@ table AppState {
   scaleRatioLocked: bool;
   displayAllPointDistances: bool;
   displayDistanceOnDrawing: bool;
+  displayAllPointCoordinates: bool;
   enableLineBendingOnEdit: bool;
   allowIndependentCurveHandles: bool; 
   coordDecimalPlaces: int;
