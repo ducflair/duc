@@ -137,6 +137,7 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   BinAppState.addScaleRatioLocked(builder, appState.scaleRatioLocked || false);
   BinAppState.addDisplayAllPointDistances(builder, appState.displayAllPointDistances || false);
   BinAppState.addDisplayDistanceOnDrawing(builder, appState.displayDistanceOnDrawing || true);
+  BinAppState.addDisplayAllPointCoordinates(builder, appState.displayAllPointCoordinates || false);
   BinAppState.addEnableLineBendingOnEdit(builder, appState.enableLineBendingOnEdit || false);
   BinAppState.addAllowIndependentCurveHandles(builder, appState.allowIndependentCurveHandles || false);
   BinAppState.addCoordDecimalPlaces(builder, appState.coordDecimalPlaces || 3);
