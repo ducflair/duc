@@ -86,11 +86,13 @@ export function renderTextWithBox(
   text: string,
   textX: number,
   textY: number,
+  color: string,
   appState: StaticCanvasAppState,
 ) {
   // Set font size (constant in screen pixels)
-  const fontSize = 14; // Constant size regardless of zoom
-  context.font = `${fontSize}px Arial`;
+  const fontSize = 12; // Constant size regardless of zoom
+  const fontWeight = 500;
+  context.font = `${fontWeight} ${fontSize}px 'Roboto Mono', monospace`;
   context.textAlign = "center";
   context.textBaseline = "middle";
 
@@ -102,19 +104,40 @@ export function renderTextWithBox(
 
   // Calculate box dimensions
   const boxWidth = textWidth + 2 * padding;
-  const boxHeight = textHeight + 2 * padding;
+  const boxHeight = textHeight + 2 * padding-3;
 
   // Calculate top-left corner of the box
   const boxX = textX - boxWidth / 2;
   const boxY = textY - boxHeight / 2;
 
   // Draw the background box
-  context.fillStyle = "#7C5EFF90"; // Box background color
+  context.fillStyle = color;
   drawRoundedRect(context, boxX, boxY, boxWidth, boxHeight, 10);
   context.fill();
 
   // Set text color based on the theme
   context.fillStyle = appState.theme === THEME.DARK ? "#FFFFFF" : "#000000";
+
+  // Draw the text inside the box
+  context.fillText(text, textX, textY);
+}
+
+export function renderQuickText(
+  context: CanvasRenderingContext2D,
+  text: string,
+  textX: number,
+  textY: number,
+  color: string,
+) {
+  // Set font size (constant in screen pixels)
+  const fontSize = 12; // Constant size regardless of zoom
+  const fontWeight = 500;
+  context.font = `${fontWeight} ${fontSize}px 'Roboto Mono', monospace`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+
+  // Set text color based on the theme
+  context.fillStyle = color;
 
   // Draw the text inside the box
   context.fillText(text, textX, textY);
@@ -149,11 +172,103 @@ function drawRoundedRect(
 }
 
 
+// Function to render distances between each consecutive point in a linear element
+export function renderAllPointDistances(
+  element: DucLinearElement,
+  appState: StaticCanvasAppState,
+  allElementsMap: NonDeletedSceneElementsMap,
+  context: CanvasRenderingContext2D,
+  color: string,
+) {
+  
+  const zoom = appState.zoom.value;
+
+  // Iterate through each pair of consecutive points
+  for (let i = 1; i < element.points.length; i++) {
+    const previousPoint = element.points[i - 1];
+    const currentPoint = element.points[i];
+
+    if(
+      appState.displayDistanceOnDrawing 
+      && i === element.points.length - 1
+      && appState.newElement && appState.newElement.id === element.id // Only render if it is the newElement
+    ) continue
+
+    // Use global coordinates for the points
+    const previousPointSceneCoords =
+      LinearElementEditor.getPointGlobalCoordinates(
+        element,
+        previousPoint,
+        allElementsMap,
+      );
+    const currentPointSceneCoords =
+      LinearElementEditor.getPointGlobalCoordinates(
+        element,
+        currentPoint,
+        allElementsMap,
+      );
+
+    // Calculate distance between the points
+    const distance = distance2d(
+      previousPointSceneCoords[0],
+      previousPointSceneCoords[1],
+      currentPointSceneCoords[0],
+      currentPointSceneCoords[1],
+    );
+
+    // Format the distance for display
+    const formattedDistance = coordinateToRealMeasure(
+      distance,
+      appState.scope,
+      element.scope,
+    ).toFixed(appState.coordDecimalPlaces);
+
+    // Calculate screen coordinates for both points
+    const previousPointX =
+      (previousPointSceneCoords[0] + appState.scrollX) * zoom;
+    const previousPointY =
+      (previousPointSceneCoords[1] + appState.scrollY) * zoom;
+    const currentPointX = (currentPointSceneCoords[0] + appState.scrollX) * zoom;
+    const currentPointY = (currentPointSceneCoords[1] + appState.scrollY) * zoom;
+
+    // Calculate the midpoint between the two points
+    const midX = (previousPointX + currentPointX) / 2;
+    const midY = (previousPointY + currentPointY) / 2;
+
+    // Offset the label slightly to ensure it doesn't overlap the line
+    const offset = 10;
+    const angle = Math.atan2(
+      currentPointY - previousPointY,
+      currentPointX - previousPointX,
+    );
+    const textX = midX + Math.cos(angle - Math.PI / 2) * offset;
+    const textY = midY + Math.sin(angle - Math.PI / 2) * offset;
+
+    // Save the current context state
+    context.save();
+
+    // Reset transformations to draw in screen coordinates
+    context.setTransform(1, 0, 0, 1, 0, 0);
+
+    // Adjust for devicePixelRatio
+    const pixelRatio = window.devicePixelRatio || 1;
+    context.scale(pixelRatio, pixelRatio);
+
+    // Render the distance label at the midpoint of the line
+    renderTextWithBox(context, formattedDistance, textX / pixelRatio, textY / pixelRatio, color, appState);
+
+    // Restore the context to its previous state
+    context.restore();
+  }
+}
+
+
 export function renderDistanceOnDrawingLine( 
   element: DucLinearElement, 
   appState: StaticCanvasAppState,
   allElementsMap: NonDeletedSceneElementsMap,
   context: CanvasRenderingContext2D,
+  color: string
 ) {
   const lastCommittedPoint = element.points[element.points.length - 2];
   const currentPoint = element.points[element.points.length - 1];
@@ -225,9 +340,72 @@ export function renderDistanceOnDrawingLine(
     formattedDistance,
     textX / pixelRatio,
     textY / pixelRatio,
+    color,
     appState,
   );
 
   // Restore the context to its previous state
   context.restore();
+}
+
+
+
+
+// Function to render the coordinates of each point in a linear element
+export function renderAllPointCoordinates(
+  element: DucLinearElement,
+  appState: StaticCanvasAppState,
+  allElementsMap: NonDeletedSceneElementsMap,
+  context: CanvasRenderingContext2D,
+  color: string,
+) {
+  if (element.points.length === 0) {
+    return; // No points to render
+  }
+
+  const zoom = appState.zoom.value;
+
+  // Iterate through each point in the element
+  for (let i = 0; i < element.points.length; i++) {
+    const point = element.points[i];
+
+    // Use global coordinates for the point
+    const pointSceneCoords = LinearElementEditor.getPointGlobalCoordinates(
+      element,
+      point,
+      allElementsMap,
+    );
+
+    // Convert the coordinates to the desired number of decimal places
+    const formattedX = pointSceneCoords[0].toFixed(appState.coordDecimalPlaces);
+    const formattedY = pointSceneCoords[1].toFixed(appState.coordDecimalPlaces);
+
+    // Combine the coordinates into a display string
+    const formattedCoordinates = `(${formattedX}, ${formattedY})`;
+
+    // Convert scene coordinates to screen coordinates, taking zoom and scroll into account
+    const pointX = (pointSceneCoords[0] + appState.scrollX) * zoom;
+    const pointY = (pointSceneCoords[1] + appState.scrollY) * zoom;
+
+    // Offset the label slightly to ensure it's not right on top of the point
+    const offset = 15; // Adjust offset to avoid overlap with the point
+    const textX = pointX + offset;
+    const textY = pointY - offset;
+
+    // Save the current context state
+    context.save();
+
+    // Reset transformations to draw in screen coordinates
+    context.setTransform(1, 0, 0, 1, 0, 0);
+
+    // Adjust for devicePixelRatio
+    const pixelRatio = window.devicePixelRatio || 1;
+    context.scale(pixelRatio, pixelRatio);
+
+    // Render the coordinates next to each point
+    renderTextWithBox(context, formattedCoordinates, textX / pixelRatio, textY / pixelRatio, color, appState);
+
+    // Restore the context to its previous state
+    context.restore();
+  }
 }

@@ -115,6 +115,8 @@ const getRelevantAppStateProps = (
   editingGroupId: appState.editingGroupId,
   currentHoveredFontFamily: appState.currentHoveredFontFamily,
   displayDistanceOnDrawing: appState.displayDistanceOnDrawing,
+  displayAllPointDistances: appState.displayAllPointDistances,
+  displayAllPointCoordinates: appState.displayAllPointCoordinates,
   coordDecimalPlaces: appState.coordDecimalPlaces,
   newElement: appState.newElement,
 });

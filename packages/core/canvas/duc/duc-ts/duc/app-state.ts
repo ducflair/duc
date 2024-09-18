@@ -397,23 +397,28 @@ displayDistanceOnDrawing():boolean {
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
-enableLineBendingOnEdit():boolean {
+displayAllPointCoordinates():boolean {
   const offset = this.bb!.__offset(this.bb_pos, 124);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
-allowIndependentCurveHandles():boolean {
+enableLineBendingOnEdit():boolean {
   const offset = this.bb!.__offset(this.bb_pos, 126);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
-coordDecimalPlaces():number {
+allowIndependentCurveHandles():boolean {
   const offset = this.bb!.__offset(this.bb_pos, 128);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
+coordDecimalPlaces():number {
+  const offset = this.bb!.__offset(this.bb_pos, 130);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 static startAppState(builder:flatbuffers.Builder) {
-  builder.startObject(63);
+  builder.startObject(64);
 }
 
 static addIsLoading(builder:flatbuffers.Builder, isLoading:boolean) {
@@ -716,16 +721,20 @@ static addDisplayDistanceOnDrawing(builder:flatbuffers.Builder, displayDistanceO
   builder.addFieldInt8(59, +displayDistanceOnDrawing, +false);
 }
 
+static addDisplayAllPointCoordinates(builder:flatbuffers.Builder, displayAllPointCoordinates:boolean) {
+  builder.addFieldInt8(60, +displayAllPointCoordinates, +false);
+}
+
 static addEnableLineBendingOnEdit(builder:flatbuffers.Builder, enableLineBendingOnEdit:boolean) {
-  builder.addFieldInt8(60, +enableLineBendingOnEdit, +false);
+  builder.addFieldInt8(61, +enableLineBendingOnEdit, +false);
 }
 
 static addAllowIndependentCurveHandles(builder:flatbuffers.Builder, allowIndependentCurveHandles:boolean) {
-  builder.addFieldInt8(61, +allowIndependentCurveHandles, +false);
+  builder.addFieldInt8(62, +allowIndependentCurveHandles, +false);
 }
 
 static addCoordDecimalPlaces(builder:flatbuffers.Builder, coordDecimalPlaces:number) {
-  builder.addFieldInt32(62, coordDecimalPlaces, 0);
+  builder.addFieldInt32(63, coordDecimalPlaces, 0);
 }
 
 static endAppState(builder:flatbuffers.Builder):flatbuffers.Offset {
