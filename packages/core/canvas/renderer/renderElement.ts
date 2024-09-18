@@ -8,6 +8,8 @@ import type {
   DucFrameLikeElement,
   NonDeletedSceneElementsMap,
   ElementsMap,
+  DucLinearElement,
+  NonDeleted,
 } from "../element/types";
 import {
   isTextElement,
@@ -27,7 +29,7 @@ import type {
   InteractiveCanvasRenderConfig,
 } from "../scene/types";
 import { distance, getFontString, isRTL } from "../utils";
-import { getCornerRadius, isRightAngle } from "../math";
+import { distance2d, getCornerRadius, isRightAngle } from "../math";
 import rough from "roughjs/bin/rough";
 import type {
   AppState,
@@ -61,6 +63,10 @@ import { getContainingFrame } from "../frame";
 import { ShapeCache } from "../scene/ShapeCache";
 import { getVerticalOffset } from "../fonts";
 import { COLOR_PALETTE } from "../colors";
+import { coordinateToRealMeasure } from "../duc/utils/measurements";
+import { offset } from "../ga";
+import { getNormalizedZoom } from "../scene";
+import { renderAllPointCoordinates, renderAllPointDistances, renderDistanceOnDrawingLine, renderTextWithBox } from "./helpers";
 
 // using a stronger invert (100% vs our regular 93%) and saturate
 // as a temp hack to make images in dark theme look closer to original
@@ -458,7 +464,7 @@ const drawElementOnCanvas = (
         context.canvas.setAttribute("dir", rtl ? "rtl" : "ltr");
         context.save();
         context.font = getFontString(element);
-        context.fillStyle = element.strokeColor;
+        context.fillStyle = element.isStrokeDisabled ? "transparent" : element.strokeColor;
         context.textAlign = element.textAlign as CanvasTextAlign;
 
         // Canvas does not support multiline text by default
@@ -937,6 +943,33 @@ export const renderElement = (
           allElementsMap,
         );
 
+
+        // Additional logic for rendering distance on "line" elements
+        if (
+          element.type === "line" &&
+          appState.newElement && appState.newElement.id === element.id && // Only render if it is the newElement
+          appState.displayDistanceOnDrawing &&
+          element.points.length >= 2
+        ) {
+          renderDistanceOnDrawingLine(element, appState, allElementsMap, context, "#FF443390");
+        }
+
+        if (
+          element.type === "line" &&
+          appState.displayAllPointDistances &&
+          element.points.length >= 2
+        ) {
+          renderAllPointDistances(element, appState, allElementsMap, context, "#FF443390");
+        }
+
+        if (
+          element.type === "line" &&
+          appState.displayAllPointCoordinates
+        ) {
+          renderAllPointCoordinates(element, appState, allElementsMap, context, "#FF9C3390");
+        }
+        
+
         // reset
         context.imageSmoothingEnabled = currentImageSmoothingStatus;
       }
@@ -976,7 +1009,7 @@ export function getFreeDrawSvgPath(element: DucFreeDrawElement) {
   // Consider changing the options for simulated pressure vs real pressure
   const options: StrokeOptions = {
     simulatePressure: element.simulatePressure,
-    size: element.strokeWidth * 4.25,
+    size: element.isStrokeDisabled ? 0 : element.strokeWidth * 4.25,
     thinning: 0.6,
     smoothing: 0.5,
     streamline: 0.5,

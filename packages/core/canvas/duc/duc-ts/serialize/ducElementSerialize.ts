@@ -123,10 +123,7 @@ export const serializeDucElement = (builder: flatbuffers.Builder, element: DucEl
   BinDucElement.addScope(builder, scopeOffset);
   BinDucElement.addWritingLayer(builder, writingLayerOffset);
   BinDucElement.addLabel(builder, labelOffset);
-  BinDucElement.addRatioLocked(builder, element.ratioLocked);
   BinDucElement.addIsVisible(builder, element.isVisible);
-  BinDucElement.addFillStyle(builder, fillStyleOffset);
-  BinDucElement.addRoughness(builder, element.roughness);
   BinDucElement.addRoundnessType(builder, roundnessTypeOffset);
   if (element.roundness?.value) {
     BinDucElement.addRoundnessValue(builder, element.roundness.value);
@@ -140,16 +137,14 @@ export const serializeDucElement = (builder: flatbuffers.Builder, element: DucEl
   BinDucElement.addWidth(builder, element.width);
   BinDucElement.addHeight(builder, element.height);
   BinDucElement.addAngle(builder, element.angle);
-  BinDucElement.addSeed(builder, element.seed);
-  BinDucElement.addVersion(builder, element.version);
-  BinDucElement.addVersionNonce(builder, element.versionNonce);
   BinDucElement.addIsDeleted(builder, element.isDeleted);
   BinDucElement.addFrameId(builder, frameIdOffset);
-  BinDucElement.addUpdated(builder, BigInt(element.updated));
   BinDucElement.addLink(builder, linkOffset);
   BinDucElement.addLocked(builder, element.locked);
   BinDucElement.addCustomData(builder, customDataOffset);
   BinDucElement.addGroupIds(builder, groupIdsVector);
+  BinDucElement.addIsStrokeDisabled(builder, element.isStrokeDisabled);
+  BinDucElement.addIsBackgroundDisabled(builder, element.isBackgroundDisabled);
 
   // TextElement specific fields
   if (element.type === 'text') {

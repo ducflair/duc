@@ -195,6 +195,7 @@ import {
   Ordered,
   DucArrowElement,
   NonDeletedSceneElementsMap,
+  NonDeletedElementsMap,
 } from "../element/types";
 import { getCenter, getDistance } from "../gesture";
 import {
@@ -431,7 +432,7 @@ import {
   isPointHittingLink,
   isPointHittingLinkIcon,
 } from "./hyperlink/helpers";
-import { adjustElementsMapToCurrentScope, adjustElementsToCurrentScope, adjustElementToCurrentScope, SupportedMeasures } from "../duc/utils/measurements";
+import { adjustElementsMapToCurrentScope, adjustElementsToCurrentScope, adjustElementToCurrentScope, CombinedMeasure, coordinateToRealMeasure, realMeasureToCoordinate, SupportedMeasures } from "../duc/utils/measurements";
 import { WritingLayers } from "../duc/utils/writingLayers";
 import { changeProperty } from "../actions/actionProperties";
 import { saveAsFlatBuffers } from "../duc/duc-ts/serialize";
@@ -741,6 +742,7 @@ class App extends React.Component<AppProps, AppState> {
           getSceneElementsIncludingDeleted: this.getSceneElementsIncludingDeleted,
           getSceneElements: this.getSceneElements,
           getElementById: this.getElementById,
+          getVisibleElements: this.getVisibleElements,
           sendBackwardElements: this.sendBackwardElements,
           bringForwardElements: this.bringForwardElements,
           toggleLockElement: this.toggleLockElement,
@@ -752,9 +754,14 @@ class App extends React.Component<AppProps, AppState> {
           bringToFrontElement: () => {this.actionManager.executeAction(actionBringToFront);},
           setZLayerIndexAfterElement: this.setZLayerIndexAfterElement,
           setElementFrameId: this.setElementFrameId,
+          flipHorizontal: this.flipHorizontal,
+          flipVertical: this.flipVertical,
         },
 
+        coordToRealMeasure: this.coordToRealMeasure,
+        realMeasureToCoord: this.realMeasureToCoord,
         getAppState: () => this.state,
+        getScene: () => this.scene,
         getFiles: () => this.files,
         getName: this.getName,
         registerAction: (action: Action) => {
@@ -4578,6 +4585,19 @@ class App extends React.Component<AppProps, AppState> {
 
   };
 
+  coordToRealMeasure = (
+    coordinate: number,
+    elementScope: CombinedMeasure,
+  ) => {
+    return coordinateToRealMeasure(coordinate, this.state.scope, elementScope);
+  };
+
+  realMeasureToCoord = (
+    coordinate: number,
+  ) => {
+    return realMeasureToCoordinate(coordinate, this.state.gridSize);
+  };
+
   setZLayerIndexAfterElement = (afterElementId: string, activeElementId:string) => {
 
     const elementKeys = Array.from(this.scene.getNonDeletedElementsMap().keys()); // Get all keys from the map
@@ -4623,7 +4643,19 @@ class App extends React.Component<AppProps, AppState> {
     this.rerenderCanvas();
   }
 
-  
+  getVisibleElements = () => {
+    const elementsMap = adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope);
+    return this.renderer.getVisibleCanvasElements({
+      elementsMap: elementsMap as NonDeletedElementsMap,
+      zoom: this.state.zoom,
+      offsetLeft: this.state.offsetLeft,
+      offsetTop: this.state.offsetTop,
+      scrollX: this.state.scrollX,
+      scrollY: this.state.scrollY,
+      height: this.state.height,
+      width: this.state.width,
+    });
+  }
 
   public mutateSelectedElementsWithValues = async <TElement extends Mutable<DucElement>> (
     values: ElementUpdate<TElement>,
@@ -4782,6 +4814,14 @@ class App extends React.Component<AppProps, AppState> {
       };
     });
   };
+
+  public flipHorizontal = () => {
+    this.actionManager.executeAction(actionFlipHorizontal);
+  }
+
+  public flipVertical = () => {
+    this.actionManager.executeAction(actionFlipVertical);
+  }
 
   public updateGroups = () => {
     const elements = this.scene.getNonDeletedElements();
@@ -10257,7 +10297,7 @@ class App extends React.Component<AppProps, AppState> {
         y: pointerCoords.y,
         width: distance(pointerDownState.origin.x, pointerCoords.x),
         height: distance(pointerDownState.origin.y, pointerCoords.y),
-        shouldMaintainAspectRatio: shouldMaintainAspectRatio(event),
+        shouldMaintainAspectRatio: shouldMaintainAspectRatio(event, this.state.scaleRatioLocked),
         shouldResizeFromCenter: shouldResizeFromCenter(event),
         zoom: this.state.zoom.value,
         informMutation,
@@ -10320,8 +10360,8 @@ class App extends React.Component<AppProps, AppState> {
         width: distance(pointerDownState.originInGrid.x, gridX),
         height: distance(pointerDownState.originInGrid.y, gridY),
         shouldMaintainAspectRatio: isImageElement(newElement)
-            ? !shouldMaintainAspectRatio(event)
-            : shouldMaintainAspectRatio(event),
+            ? !shouldMaintainAspectRatio(event, this.state.scaleRatioLocked)
+            : shouldMaintainAspectRatio(event, this.state.scaleRatioLocked),
         shouldResizeFromCenter: shouldResizeFromCenter(event),
         zoom: this.state.zoom.value,
         widthAspectRatio: aspectRatio,
@@ -10451,8 +10491,8 @@ class App extends React.Component<AppProps, AppState> {
         shouldRotateWithDiscreteAngle(event),
         shouldResizeFromCenter(event),
         selectedElements.some((element) => isImageElement(element))
-          ? !shouldMaintainAspectRatio(event)
-          : shouldMaintainAspectRatio(event),
+          ? !shouldMaintainAspectRatio(event, this.state.scaleRatioLocked)
+          : shouldMaintainAspectRatio(event, this.state.scaleRatioLocked),
         resizeX,
         resizeY,
         pointerDownState.resize.center.x,

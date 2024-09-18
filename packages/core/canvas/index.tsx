@@ -247,7 +247,9 @@ export {
 } from "./data/encryption";
 
 export {
-  SupportedMeasures, MetricMeasure, ImperialMeasure
+  SupportedMeasures, MetricMeasure, ImperialMeasure,
+  coordinateToRealMeasure, adjustElementToCurrentScope, adjustElementsMapToCurrentScope, 
+  realMeasureToCoordinate
 } from "./duc/utils/measurements";
 
 export {
@@ -256,6 +258,7 @@ export {
 
 export {
   DucElement,
+  StrokePlacement,
   FileId,
   NonDeletedDucElement,
   InitializedDucImageElement,
@@ -284,6 +287,8 @@ export {
   IDLE_THRESHOLD,
   ACTIVE_THRESHOLD,
   ENV,
+  toolsNsStrokeSet,
+  toolNsBackgroundSet,
 } from "./constants";
 
 export {
@@ -383,6 +388,8 @@ export {
   isElementInsideBBox,
   elementPartiallyOverlapsWithOrContainsBBox,
 } from "../utils/withinBounds";
+
+export { default as DimensionDragInput} from "./components/Stats/Dimension";
 
 
 export {
