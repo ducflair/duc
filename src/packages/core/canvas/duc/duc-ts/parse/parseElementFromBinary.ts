@@ -22,7 +22,8 @@ import {
   DucSelectionElement,
   DucRectangleElement,
   DucDiamondElement,
-  DucEllipseElement
+  DucEllipseElement,
+  FractionalIndex
 } from '../../../element/types';
 import { SupportedMeasures } from '../../utils/measurements';
 import { WritingLayers } from '../../utils/writingLayers';
@@ -72,33 +73,28 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
 
   const elementType = e.type() as DucElementTypes;
 
-  const baseElement = {
+  const baseElement: Partial<DucElement> = {
     id: e.id() || '',
     x: e.x(),
     y: e.y(),
-    index: e.index(),
+    index: e.index() as FractionalIndex,
     strokeColor: e.strokeColor() || '',
     backgroundColor: e.backgroundColor() || '',
-    fillStyle: (e.fillStyle() || '') as FillStyle,
     strokeWidth: e.strokeWidth(),
-    roughness: e.roughness(),
-    ratioLocked: e.ratioLocked(),
     isVisible: e.isVisible(),
     roundness: null,
-    // roundness: { FIXME: For now we won't be using roundness
+    // roundness: {
     //   type: (Number(e.roundnessType() || '1')) as RoundnessType,
     //   value: e.roundnessValue(),
     // },
+    isStrokeDisabled: e.isStrokeDisabled(),
+    isBackgroundDisabled: e.isBackgroundDisabled(),
     opacity: e.opacity(),
     width: e.width(),
     height: e.height(),
     angle: e.angle(),
-    seed: e.seed(),
-    version: e.version(),
-    versionNonce: e.versionNonce(),
     isDeleted: e.isDeleted(),
     frameId: e.frameId() || '',
-    updated: Number(e.updated()),
     link: e.link() || '',
     locked: e.locked(),
     customData: e.customData()?.length ? JSON.parse(e.customData()!) : '',
@@ -109,7 +105,6 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
     strokeStyle: (e.strokeStyle() || '') as StrokeStyle,
     boundElements: boundElements,
     strokePlacement: (e.strokePlacement() || '') as StrokePlacement,
-    shouldNotRender: false,
   };
 
   switch (elementType) {

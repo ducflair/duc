@@ -32,6 +32,9 @@ import NunitoLatinExt from "https://fonts.gstatic.com/s/nunito/v26/XRXI3I6Li01BK
 import NunitoCyrilic from "https://fonts.gstatic.com/s/nunito/v26/XRXI3I6Li01BKofiOc5wtlZ2di8HDIkhdTA3j6zbXWjgevT5.woff2";
 import NunitoCyrilicExt from "https://fonts.gstatic.com/s/nunito/v26/XRXI3I6Li01BKofiOc5wtlZ2di8HDIkhdTk3j6zbXWjgevT5.woff2";
 import NunitoVietnamese from "https://fonts.gstatic.com/s/nunito/v26/XRXI3I6Li01BKofiOc5wtlZ2di8HDIkhdTs3j6zbXWjgevT5.woff2";
+import RobotoMono from "https://fonts.gstatic.com/s/robotomono/v23/L0xuDF4xlVMF-BfR8bXMIhJHg45mwgGEFl0_3vq_ROW4AJi8SJQt.woff2";
+
+// How to find Fonts ? -> Follow the README
 
 export class Fonts {
   // it's ok to track fonts across multiple instances only once, so let's use
@@ -245,6 +248,12 @@ export class Fonts {
       FONT_METADATA[FONT_FAMILY["Lilita One"]],
       { uri: LilitaLatinExt, descriptors: { unicodeRange: RANGES.LATIN_EXT } },
       { uri: LilitaLatin, descriptors: { unicodeRange: RANGES.LATIN } },
+    );
+
+    _register(
+      "Roboto Mono",
+      FONT_METADATA[FONT_FAMILY["Roboto Mono"]],
+      { uri: RobotoMono, descriptors: { unicodeRange: RANGES.LATIN, weight: "500" } },
     );
 
     _register(
