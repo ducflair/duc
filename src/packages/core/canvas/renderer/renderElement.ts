@@ -66,7 +66,7 @@ import { COLOR_PALETTE } from "../colors";
 import { coordinateToRealMeasure } from "../duc/utils/measurements";
 import { offset } from "../ga";
 import { getNormalizedZoom } from "../scene";
-import { renderDistanceOnDrawingLine, renderTextWithBox } from "./helpers";
+import { renderAllPointCoordinates, renderAllPointDistances, renderDistanceOnDrawingLine, renderTextWithBox } from "./helpers";
 
 // using a stronger invert (100% vs our regular 93%) and saturate
 // as a temp hack to make images in dark theme look closer to original
@@ -951,10 +951,24 @@ export const renderElement = (
           appState.displayDistanceOnDrawing &&
           element.points.length >= 2
         ) {
-          renderDistanceOnDrawingLine(element, appState, allElementsMap, context);
+          renderDistanceOnDrawingLine(element, appState, allElementsMap, context, "#FF443390");
         }
 
+        if (
+          element.type === "line" &&
+          appState.displayAllPointDistances &&
+          element.points.length >= 2
+        ) {
+          renderAllPointDistances(element, appState, allElementsMap, context, "#FF443390");
+        }
 
+        if (
+          element.type === "line" &&
+          appState.displayAllPointCoordinates
+        ) {
+          renderAllPointCoordinates(element, appState, allElementsMap, context, "#FF9C3390");
+        }
+        
 
         // reset
         context.imageSmoothingEnabled = currentImageSmoothingStatus;
