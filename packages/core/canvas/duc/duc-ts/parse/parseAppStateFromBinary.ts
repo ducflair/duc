@@ -119,6 +119,7 @@ export const parseAppStateFromBinary = (appState: BinAppState | null): Partial<A
     scaleRatioLocked: appState.scaleRatioLocked() || false,
     displayAllPointDistances: appState.displayAllPointDistances() || false,
     displayDistanceOnDrawing: appState.displayDistanceOnDrawing() || true,
+    displayAllPointCoordinates: appState.displayAllPointCoordinates() || false,
     enableLineBendingOnEdit: appState.enableLineBendingOnEdit() || false,
     allowIndependentCurveHandles: appState.allowIndependentCurveHandles() || false,
     coordDecimalPlaces: appState.coordDecimalPlaces() || 3,
