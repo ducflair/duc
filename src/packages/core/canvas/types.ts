@@ -206,6 +206,11 @@ export type StaticCanvasAppState = Readonly<
     gridStep: AppState["gridStep"];
     frameRendering: AppState["frameRendering"];
     currentHoveredFontFamily: AppState["currentHoveredFontFamily"];
+    displayDistanceOnDrawing: AppState["displayDistanceOnDrawing"];
+    displayAllPointDistances: AppState["displayAllPointDistances"];
+    displayAllPointCoordinates: AppState["displayAllPointCoordinates"];
+    coordDecimalPlaces: AppState["coordDecimalPlaces"];
+    newElement: AppState["newElement"];
   }
 >;
 
@@ -404,6 +409,18 @@ export interface AppState extends Ducfig {
   userToFollow: UserToFollow | null;
   /** the clientIds of the users following the current user */
   followedBy: Set<SocketId>;
+
+  scaleRatioLocked: boolean;
+  displayAllPointDistances: boolean;
+  displayDistanceOnDrawing: boolean;
+  displayAllPointCoordinates: boolean;
+  enableLineBendingOnEdit: boolean;
+
+  // if false the curve handles are parallel, if true the curve handles are independent 
+  // (this only takes place if the point as other points associated with it, making it a curve)
+  allowIndependentCurveHandles: boolean; 
+  
+  coordDecimalPlaces: number;
 }
 
 export type UIAppState = Omit<
@@ -763,6 +780,7 @@ export interface DucImperativeAPI {
   elements: {
     getSceneElements: InstanceType<typeof App>["getSceneElements"];
     getElementById: InstanceType<typeof App>["getElementById"];
+    getVisibleElements: InstanceType<typeof App>["getVisibleElements"];
     getSceneElementsMap: InstanceType<typeof App>["getSceneElementsMap"];
     getSceneElementsIncludingDeleted: InstanceType<typeof App>["getSceneElementsIncludingDeleted"];
     mutateElementWithValues: InstanceType<typeof App>["mutateElementWithValues"];
@@ -776,8 +794,15 @@ export interface DucImperativeAPI {
     setZLayerIndexAfterElement: InstanceType<typeof App>["setZLayerIndexAfterElement"];
     setElementFrameId: InstanceType<typeof App>["setElementFrameId"];
     selectElements: InstanceType<typeof App>["selectElements"]; 
+    flipHorizontal: InstanceType<typeof App>["flipHorizontal"];
+    flipVertical: InstanceType<typeof App>["flipVertical"];
   };
+
+  coordToRealMeasure: InstanceType<typeof App>["coordToRealMeasure"];
+  realMeasureToCoord: InstanceType<typeof App>["realMeasureToCoord"];
+  
   getAppState: () => InstanceType<typeof App>["state"];
+  getScene: () => InstanceType<typeof App>["scene"];
   getFiles: () => InstanceType<typeof App>["files"];
   getName: InstanceType<typeof App>["getName"];
   registerAction: (action: Action) => void;

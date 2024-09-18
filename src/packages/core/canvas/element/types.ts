@@ -65,7 +65,6 @@ type _DucElementBase = Readonly<{
   writingLayer: WritingLayers;
   
   label: string;
-  ratioLocked: boolean; // Resize ratio locked
   isVisible: boolean;
 
   // Don't know for what to use
@@ -79,6 +78,9 @@ type _DucElementBase = Readonly<{
   strokeWidth: number;
   strokeStyle: StrokeStyle;
   strokePlacement: StrokePlacement;
+  
+  isStrokeDisabled: boolean;
+  isBackgroundDisabled: boolean;
 
   opacity: number;
   width: number;
@@ -116,9 +118,6 @@ type _DucElementBase = Readonly<{
   link: string | null;
   locked: boolean;
   customData?: Record<string, any>;
-  
-  // Used to hide elements that are way too big or too small
-  shouldNotRender: boolean;
 }>;
 
 export type DucSelectionElement = _DucElementBase & {

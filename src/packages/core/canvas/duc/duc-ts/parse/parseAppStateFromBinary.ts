@@ -116,5 +116,12 @@ export const parseAppStateFromBinary = (appState: BinAppState | null): Partial<A
       clip: appState.frameRenderingClip() || false,
     },
     editingFrame: appState.editingFrame() || '',
+    scaleRatioLocked: appState.scaleRatioLocked() || false,
+    displayAllPointDistances: appState.displayAllPointDistances() || false,
+    displayDistanceOnDrawing: appState.displayDistanceOnDrawing() || true,
+    displayAllPointCoordinates: appState.displayAllPointCoordinates() || false,
+    enableLineBendingOnEdit: appState.enableLineBendingOnEdit() || false,
+    allowIndependentCurveHandles: appState.allowIndependentCurveHandles() || false,
+    coordDecimalPlaces: appState.coordDecimalPlaces() || 3,
   };
 };
