@@ -376,9 +376,17 @@ export function renderAllPointCoordinates(
       allElementsMap,
     );
 
-    // Convert the coordinates to the desired number of decimal places
-    const formattedX = pointSceneCoords[0].toFixed(appState.coordDecimalPlaces);
-    const formattedY = pointSceneCoords[1].toFixed(appState.coordDecimalPlaces);
+    const formattedX = coordinateToRealMeasure(
+      pointSceneCoords[0],
+      appState.scope,
+      element.scope,
+    ).toFixed(appState.coordDecimalPlaces);
+
+    const formattedY = coordinateToRealMeasure(
+      pointSceneCoords[1],
+      appState.scope,
+      element.scope,
+    ).toFixed(appState.coordDecimalPlaces);
 
     // Combine the coordinates into a display string
     const formattedCoordinates = `(${formattedX}, ${formattedY})`;
