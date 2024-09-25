@@ -123,9 +123,11 @@ export const getDefaultAppState = (): Omit<
     displayAllPointDistances: false,
     displayDistanceOnDrawing: true,
     displayAllPointCoordinates: false,
+    displayAllPointInfoSelected: true,
+    
     enableLineBendingOnEdit: false,
     allowIndependentCurveHandles: false,
-    coordDecimalPlaces: 3,
+    coordDecimalPlaces: 2,
   };
 };
 
@@ -256,6 +258,7 @@ const APP_STATE_STORAGE_CONF = (<
   displayAllPointDistances: { browser: false, export: true, server: true },
   displayDistanceOnDrawing: { browser: false, export: true, server: true },
   displayAllPointCoordinates: { browser: false, export: true, server: true },
+  displayAllPointInfoSelected: { browser: false, export: true, server: true },
   enableLineBendingOnEdit: { browser: false, export: true, server: true },
   allowIndependentCurveHandles: { browser: false, export: true, server: true },
   coordDecimalPlaces: { browser: false, export: true, server: true },
