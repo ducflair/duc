@@ -222,6 +222,8 @@ table AppState {
   displayAllPointDistances: bool;
   displayDistanceOnDrawing: bool;
   displayAllPointCoordinates: bool;
+  displayAllPointInfoSelected: bool;
+
   enableLineBendingOnEdit: bool;
   allowIndependentCurveHandles: bool; 
   coordDecimalPlaces: int;
