@@ -209,6 +209,7 @@ export type StaticCanvasAppState = Readonly<
     displayDistanceOnDrawing: AppState["displayDistanceOnDrawing"];
     displayAllPointDistances: AppState["displayAllPointDistances"];
     displayAllPointCoordinates: AppState["displayAllPointCoordinates"];
+    displayAllPointInfoSelected: AppState["displayAllPointInfoSelected"];
     coordDecimalPlaces: AppState["coordDecimalPlaces"];
     newElement: AppState["newElement"];
   }
@@ -414,6 +415,7 @@ export interface AppState extends Ducfig {
   displayAllPointDistances: boolean;
   displayDistanceOnDrawing: boolean;
   displayAllPointCoordinates: boolean;
+  displayAllPointInfoSelected: boolean;
   enableLineBendingOnEdit: boolean;
 
   // if false the curve handles are parallel, if true the curve handles are independent 
