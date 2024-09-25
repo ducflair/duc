@@ -102,7 +102,7 @@ export const parseAppStateFromBinary = (appState: BinAppState | null): Partial<A
     currentItemStrokeStyle: (appState.currentItemStrokeStyle() || '') as StrokeStyle,
     currentItemRoughness: appState.currentItemRoughness() || 0,
     currentItemOpacity: appState.currentItemOpacity() || 0.0,
-    currentItemFontFamily: Number(appState.currentItemFontFamily() || '1'),
+    currentItemFontFamily: Number(appState.currentItemFontFamily() || '10'),
     currentItemFontSize: appState.currentItemFontSize() || 0,
     currentItemTextAlign: appState.currentItemTextAlign() || '',
     currentItemStartArrowhead: (appState.currentItemStartArrowhead() || '') as Arrowhead,
@@ -120,8 +120,10 @@ export const parseAppStateFromBinary = (appState: BinAppState | null): Partial<A
     displayAllPointDistances: appState.displayAllPointDistances() || false,
     displayDistanceOnDrawing: appState.displayDistanceOnDrawing() || true,
     displayAllPointCoordinates: appState.displayAllPointCoordinates() || false,
+    displayAllPointInfoSelected: appState.displayAllPointInfoSelected() || true,
+
     enableLineBendingOnEdit: appState.enableLineBendingOnEdit() || false,
     allowIndependentCurveHandles: appState.allowIndependentCurveHandles() || false,
-    coordDecimalPlaces: appState.coordDecimalPlaces() || 3,
+    coordDecimalPlaces: appState.coordDecimalPlaces() || 2,
   };
 };
