@@ -959,13 +959,13 @@ export const renderElement = (
           element.type === "line" &&
           appState.displayAllPointInfoSelected &&
           !(appState.newElement && appState.newElement.id === element.id) && // Only render if not the newElement
-          (!appState.displayAllPointDistances || !appState.displayAllPointCoordinates) &&
           appState.selectedElementIds && appState.selectedElementIds[element.id]
         ) {
-          if(element.points.length >= 2) {
+          if(element.points.length >= 2 && !appState.displayAllPointDistances)
             renderAllPointDistances(element, appState, allElementsMap, context);
-          }
-          renderAllPointCoordinates(element, appState, allElementsMap, context);
+
+          if(!appState.displayAllPointCoordinates)
+            renderAllPointCoordinates(element, appState, allElementsMap, context);
         }
 
         if (
