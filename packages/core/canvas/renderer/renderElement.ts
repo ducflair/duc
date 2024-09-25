@@ -43,6 +43,7 @@ import { getDefaultAppState } from "../appState";
 import {
   BOUND_TEXT_PADDING,
   ELEMENT_READY_TO_ERASE_OPACITY,
+  FONT_FAMILY,
   FRAME_STYLE,
   MIME_TYPES,
   THEME,
@@ -97,7 +98,7 @@ const shouldResetImageFilter = (
   );
 };
 
-const getCanvasPadding = (element: DucElement) => {
+export const getCanvasPadding = (element: DucElement) => {
   switch (element.type) {
     case "freedraw":
       return element.strokeWidth * 12;
@@ -145,7 +146,7 @@ export interface DucElementWithCanvas {
   boundTextCanvas: HTMLCanvasElement;
 }
 
-const cappedElementCanvasSize = (
+export const cappedElementCanvasSize = (
   element: NonDeletedDucElement,
   elementsMap: ElementsMap,
   zoom: Zoom,
@@ -511,7 +512,7 @@ export const elementWithCanvasCache = new WeakMap<
   DucElementWithCanvas
 >();
 
-const generateElementWithCanvas = (
+export const generateElementWithCanvas = (
   element: NonDeletedDucElement,
   elementsMap: NonDeletedSceneElementsMap,
   renderConfig: StaticCanvasRenderConfig,
@@ -562,7 +563,7 @@ const generateElementWithCanvas = (
   return prevElementWithCanvas;
 };
 
-const drawElementFromCanvas = (
+export const drawElementFromCanvas = (
   elementWithCanvas: DucElementWithCanvas,
   context: CanvasRenderingContext2D,
   renderConfig: StaticCanvasRenderConfig,
@@ -947,11 +948,24 @@ export const renderElement = (
         // Additional logic for rendering distance on "line" elements
         if (
           element.type === "line" &&
-          appState.newElement && appState.newElement.id === element.id && // Only render if it is the newElement
           appState.displayDistanceOnDrawing &&
+          appState.newElement && appState.newElement.id === element.id && // Only render if it is the newElement
           element.points.length >= 2
         ) {
-          renderDistanceOnDrawingLine(element, appState, allElementsMap, context, "#FF443390");
+          renderDistanceOnDrawingLine(element, appState, allElementsMap, context);
+        }
+
+        if (
+          element.type === "line" &&
+          appState.displayAllPointInfoSelected &&
+          !(appState.newElement && appState.newElement.id === element.id) && // Only render if not the newElement
+          appState.selectedElementIds && appState.selectedElementIds[element.id]
+        ) {
+          if(element.points.length >= 2 && !appState.displayAllPointDistances)
+            renderAllPointDistances(element, appState, allElementsMap, context);
+
+          if(!appState.displayAllPointCoordinates)
+            renderAllPointCoordinates(element, appState, allElementsMap, context);
         }
 
         if (
@@ -959,14 +973,14 @@ export const renderElement = (
           appState.displayAllPointDistances &&
           element.points.length >= 2
         ) {
-          renderAllPointDistances(element, appState, allElementsMap, context, "#FF443390");
+          renderAllPointDistances(element, appState, allElementsMap, context);
         }
 
         if (
           element.type === "line" &&
           appState.displayAllPointCoordinates
         ) {
-          renderAllPointCoordinates(element, appState, allElementsMap, context, "#FF9C3390");
+          renderAllPointCoordinates(element, appState, allElementsMap, context);
         }
         
 
