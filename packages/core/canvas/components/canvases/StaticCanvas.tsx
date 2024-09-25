@@ -117,6 +117,7 @@ const getRelevantAppStateProps = (
   displayDistanceOnDrawing: appState.displayDistanceOnDrawing,
   displayAllPointDistances: appState.displayAllPointDistances,
   displayAllPointCoordinates: appState.displayAllPointCoordinates,
+  displayAllPointInfoSelected: appState.displayAllPointInfoSelected,
   coordDecimalPlaces: appState.coordDecimalPlaces,
   newElement: appState.newElement,
 });
