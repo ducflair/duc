@@ -391,6 +391,13 @@ export {
 
 export { default as DimensionDragInput} from "./components/Stats/Dimension";
 
+export {
+  getNormalizedZoom
+} from "./scene/normalize";
+
+export {
+  getStateForZoom
+} from "./scene/zoom";
 
 export {
   parseDucFlatBuffers
