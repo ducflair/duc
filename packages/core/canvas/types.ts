@@ -154,6 +154,7 @@ export type ToolType =
   | "frame"
   | "magicframe"
   | "embeddable"
+  | "ruler"
   | "laser";
 
 export type ElementOrToolType = DucElementType | ToolType | "custom";
