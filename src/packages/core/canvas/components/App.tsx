@@ -3657,6 +3657,7 @@ class App extends React.Component<AppProps, AppState> {
           animate?: boolean;
           duration?: number;
         },
+    position?: {x:number, y:number}
   ) => {
     this.cancelInProgressAnimation?.();
 
@@ -3685,6 +3686,11 @@ class App extends React.Component<AppProps, AppState> {
       const scroll = calculateScrollCenter(targetElements, this.state);
       scrollX = scroll.scrollX;
       scrollY = scroll.scrollY;
+    }
+
+    if(position) {
+      scrollX=position.x;
+      scrollY=position.y;
     }
 
     // when animating, we use RequestAnimationFrame to prevent the animation
@@ -6715,6 +6721,13 @@ class App extends React.Component<AppProps, AppState> {
         pointerDownState.lastCoords.x,
         pointerDownState.lastCoords.y,
       );
+    } else if (this.state.activeTool.type === "ruler") {
+      // TODO: Ruler Tool
+      // this.handleRulerOnPointerDown(
+      //   event,
+      //   this.state.activeTool.type,
+      //   pointerDownState,
+      // );
     } else if (
       this.state.activeTool.type !== "eraser" &&
       this.state.activeTool.type !== "hand"
@@ -7691,6 +7704,175 @@ class App extends React.Component<AppProps, AppState> {
   };
 
   private handleLinearElementOnPointerDown = (
+    event: React.PointerEvent<HTMLElement>,
+    elementType: DucLinearElement["type"],
+    pointerDownState: PointerDownState,
+  ): void => {
+    if (this.state.multiElement) {
+      const { multiElement } = this.state;
+
+      // finalize if completing a loop
+      if (
+        multiElement.type === "line" &&
+        isPathALoop(multiElement.points, this.state.zoom.value)
+      ) {
+        mutateElement(multiElement, {
+          lastCommittedPoint:
+            multiElement.points[multiElement.points.length - 1],
+        });
+        this.actionManager.executeAction(actionFinalize);
+        return;
+      }
+
+      // Elbow arrows cannot be created by putting down points
+      // only the start and end points can be defined
+      if (isElbowArrow(multiElement) && multiElement.points.length > 1) {
+        mutateElement(multiElement, {
+          lastCommittedPoint:
+            multiElement.points[multiElement.points.length - 1],
+        });
+        this.actionManager.executeAction(actionFinalize);
+        return;
+      }
+      this.updateGroups();
+
+      const { x: rx, y: ry, lastCommittedPoint } = multiElement;
+
+      // clicking inside commit zone → finalize arrow
+      if (
+        multiElement.points.length > 1 &&
+        lastCommittedPoint &&
+        distance2d(
+          pointerDownState.origin.x - rx,
+          pointerDownState.origin.y - ry,
+          lastCommittedPoint[0],
+          lastCommittedPoint[1],
+        ) < LINE_CONFIRM_THRESHOLD
+      ) {
+        this.actionManager.executeAction(actionFinalize);
+        return;
+      }
+
+      this.setState((prevState) => ({
+        selectedElementIds: makeNextSelectedElementIds(
+          {
+            ...prevState.selectedElementIds,
+            [multiElement.id]: true,
+          },
+          prevState,
+        ),
+      }));
+      // clicking outside commit zone → update reference for last committed
+      // point
+      mutateElement(multiElement, {
+        lastCommittedPoint: multiElement.points[multiElement.points.length - 1],
+      });
+      this.updateGroups();
+      setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
+    } else {
+      const [gridX, gridY] = getGridPoint(
+        pointerDownState.origin.x,
+        pointerDownState.origin.y,
+        event[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),
+      );
+
+      const topLayerFrame = this.getTopLayerFrameAtSceneCoords({
+        x: gridX,
+        y: gridY,
+      });
+
+      /* If arrow is pre-arrowheads, it will have undefined for both start and end arrowheads.
+      If so, we want it to be null for start and "arrow" for end. If the linear item is not
+      an arrow, we want it to be null for both. Otherwise, we want it to use the
+      values from appState. */
+
+      const { currentItemStartArrowhead, currentItemEndArrowhead } = this.state;
+      const [startArrowhead, endArrowhead] =
+        elementType === "arrow"
+          ? [currentItemStartArrowhead, currentItemEndArrowhead]
+          : [null, null];
+
+      const element =
+        elementType === "arrow"
+          ? newArrowElement({
+              type: elementType,
+              x: gridX,
+              y: gridY,
+              strokeColor: this.state.currentItemStrokeColor,
+              backgroundColor: this.state.currentItemBackgroundColor,
+              fillStyle: this.state.currentItemFillStyle,
+              strokeWidth: this.state.currentItemStrokeWidth,
+              strokeStyle: this.state.currentItemStrokeStyle,
+              roughness: this.state.currentItemRoughness,
+              opacity: this.state.currentItemOpacity,
+              roundness:
+                this.state.currentItemArrowType === ARROW_TYPE.round
+                  ? { type: ROUNDNESS.PROPORTIONAL_RADIUS }
+                  : // note, roundness doesn't have any effect for elbow arrows,
+                    // but it's best to set it to null as well
+                    null,
+              startArrowhead,
+              endArrowhead,
+              locked: false,
+              label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
+              scope: this.state.scope,
+              writingLayer: this.state.writingLayer,
+              frameId: topLayerFrame ? topLayerFrame.id : null,
+              elbowed: this.state.currentItemArrowType === ARROW_TYPE.elbow,
+            })
+          : newLinearElement({
+              type: elementType,
+              x: gridX,
+              y: gridY,
+              scope: this.state.scope,
+              writingLayer: this.state.writingLayer,
+              strokeColor: this.state.currentItemStrokeColor,
+              backgroundColor: this.state.currentItemBackgroundColor,
+              fillStyle: this.state.currentItemFillStyle,
+              strokeWidth: this.state.currentItemStrokeWidth,
+              strokeStyle: this.state.currentItemStrokeStyle,
+              roughness: this.state.currentItemRoughness,
+              opacity: this.state.currentItemOpacity,
+              roundness:
+                this.state.currentItemRoundness === "round"
+                  ? { type: ROUNDNESS.PROPORTIONAL_RADIUS }
+                  : null,
+              locked: false,
+              frameId: topLayerFrame ? topLayerFrame.id : null,
+      });
+      this.setState((prevState) => {
+        const nextSelectedElementIds = {
+          ...prevState.selectedElementIds,
+        };
+        delete nextSelectedElementIds[element.id];
+        return {
+          selectedElementIds: makeNextSelectedElementIds(
+            nextSelectedElementIds,
+            prevState,
+          ),
+        };
+      });
+      mutateElement(element, {
+        points: [...element.points, [0, 0]],
+      });
+      const boundElement = getHoveredElementForBinding(
+        pointerDownState.origin,
+        this.scene.getNonDeletedElements(),
+        this.scene.getNonDeletedElementsMap(),
+        isElbowArrow(element),
+      );
+      
+      this.scene.insertElement(element);
+      this.setState({
+        newElement: element,
+        startBoundElement: boundElement,
+        suggestedBindings: [],
+      });
+      this.updateGroups();
+    }
+  };
+
+  private handleRulerOnPointerDown = (
     event: React.PointerEvent<HTMLElement>,
     elementType: DucLinearElement["type"],
     pointerDownState: PointerDownState,
