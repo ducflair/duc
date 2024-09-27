@@ -227,7 +227,7 @@ export function renderDistanceOnDrawingLine(
   const screenY = (currentPointSceneCoords[1] + appState.scrollY);
 
   // Offset the label slightly to ensure it's not right on top of the point
-  const offset = 30 * pixelRatio;
+  const offset = 0 * pixelRatio;
 
   const textX = screenX + offset / zoom;
   const textY = screenY - offset / zoom;
@@ -237,11 +237,12 @@ export function renderDistanceOnDrawingLine(
     context,
     formattedDistance,
     textX,
-    textY,
-    "#FF443390",
+    textY + (40 / zoom),
+    "#5E310190",
     appState,
     pixelRatio,
-    8 / zoom
+    8 / zoom,
+    "#FFDD84"
   );
 
   // Restore the context to its previous state
@@ -324,10 +325,11 @@ export function renderAllPointDistances(
       formattedDistance,
       textX,
       textY,
-      "#FF443390",
+      "#5E310190",
       appState,
       pixelRatio,
-      2
+      2,
+      "#FFDD84"
     );
   }
 
@@ -395,11 +397,12 @@ export function renderAllPointCoordinates(
       context,
       formattedCoordinates,
       textX,
-      textY-6,
-      "#FF9C3390",
+      textY+6,
+      "#FFDD84",
       appState,
       pixelRatio,
-      1.2
+      1.2,
+      "#6E461A"
     );
   }
 
@@ -419,6 +422,7 @@ export function renderTextWithBoxAtPosition(
   appState: StaticCanvasAppState,
   pixelRatio: number,
   size?: number,
+  textColor?: string,
 ) {
   const baseSize = size ? size : 4;
   // Set font size (constant in screen pixels)
@@ -432,7 +436,7 @@ export function renderTextWithBoxAtPosition(
   const textMetrics = context.measureText(text);
   const textWidth = textMetrics.width;
   const textHeight = fontSize; // Approximate text height
-  const padding = baseSize/2 * pixelRatio; // Adjust padding as needed
+  const padding = baseSize / 2 * pixelRatio; // Adjust padding as needed
 
   // Calculate box dimensions
   const boxWidth = textWidth + 2 * padding;
@@ -448,7 +452,7 @@ export function renderTextWithBoxAtPosition(
   context.fill();
 
   // Set text color based on the theme
-  context.fillStyle = appState.theme === THEME.DARK ? "#FFFFFF" : "#000000";
+  context.fillStyle = textColor ? textColor : appState.theme === THEME.DARK ? "#FFFFFF" : "#000000";
 
   // Draw the text inside the box
   context.fillText(text, textX, textY);

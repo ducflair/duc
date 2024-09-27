@@ -83,6 +83,7 @@ export const AllowedDucActiveTools: Record<
   embeddable: true,
   hand: true,
   laser: false,
+  ruler: false,
   magicframe: false,
 };
 
