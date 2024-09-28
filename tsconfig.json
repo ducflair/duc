@@ -4,13 +4,13 @@
         "dist",
     ],
     "compilerOptions": {
-        "lib": ["ESNext"],
         "target": "esnext",
         "module": "esnext",
         "outDir": "dist",
-        "moduleDetection": "force",
+        "rootDir": "src",
+        "lib": ["ESNext"],
         "strict": true,
+        "esModuleInterop": true,
         "skipLibCheck": true,
-        "declaration": true
     }
 }
