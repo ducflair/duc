@@ -15,11 +15,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Fetch all history for Semantic Release
-
+      - uses: actions/checkout@v4
+      
       # Install Bun
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -31,16 +28,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
-
+      
       # Install dependencies using Bun
       - run: bun install
-
+      
       # Build using Bun
       - run: bun run build
-
+      
       # Run security audit (if Bun does not support npm audit signatures, fallback to npm)
       - run: npm audit signatures
-
+      
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
