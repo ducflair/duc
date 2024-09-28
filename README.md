@@ -29,6 +29,9 @@ The project is licensed under the MIT License. See the [LICENSE](./LICENSE) file
 
 Join our growing community to discuss, collaborate, and share insights about the duc format. Connect with us on [Ducflair Community](https://www.ducflair/community) or follow our [Social Media](https://www.ducflair.com/socials) for the latest updates. For support, feel free to open an issue or contact us at [Feedback](https://www.ducflair.com/feedback).
 
+## Commit Message Guidelines
+To assure semantic release works, follow [these guidelines](https://semantic-release.gitbook.io/semantic-release#how-does-it-work)
+
 ---
 
 *The duc format and libraries are constantly evolving, with the aim to set new standards in the 2D CAD industry. Be a part of this change and help shape the future of design technology!*
