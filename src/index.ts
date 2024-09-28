@@ -1,1 +1,1 @@
-console.log("Duc File.")
+console.log("Duc File")
