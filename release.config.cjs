@@ -3,4 +3,4 @@ module.exports = {
         name: "next",
         prerelease: true
     }],
-};
+};    
