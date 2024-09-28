@@ -1,19 +1,26 @@
 {
-    "name": "@duc",
-    "private": "false",
-    "version": "0.0.1",
-    "author": "Ducflair",
-    "main": "dist/index.js",
-    "type": "module",
-    "types": "dist/types.d.ts",
-    "files": [
-        "src/typescript",
-        "README.md"
-    ],
-    "devDependencies": {
-        "typescript": "^5.3.3"
-    },
-    "scripts": {
-        "build": "npx tsc"
-    }
+  "name": "duc",
+  "version": "0.0.0-development",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "semantic-release": "semantic-release"
+  },
+  "author": "Ducflair",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "semantic-release": "^24.1.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
