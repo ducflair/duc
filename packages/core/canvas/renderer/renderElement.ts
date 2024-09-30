@@ -73,8 +73,8 @@ import { renderAllPointCoordinates, renderAllPointDistances, renderDistanceOnDra
 // as a temp hack to make images in dark theme look closer to original
 // color scheme (it's still not quite there and the colors look slightly
 // desatured, alas...)
-export const IMAGE_INVERT_FILTER =
-  "invert(100%) hue-rotate(180deg) saturate(1.25)";
+export const IMAGE_INVERT_FILTER = ""
+  // "invert(100%) hue-rotate(180deg) saturate(1.25)";
 
 const defaultAppState = getDefaultAppState();
 
