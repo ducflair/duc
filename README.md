@@ -1,6 +1,6 @@
 # Duc CAD File Format
 
-<img src="https://ducflair-public.s3.eu-west-2.amazonaws.com/duc/duc-extended.png" alt="duc logo" height="250">
+<img src="https://ducflair-public.s3.eu-west-2.amazonaws.com/duc/duc-extended.png" alt="duc logo" height="250"> 
 
 ## Introduction
 
