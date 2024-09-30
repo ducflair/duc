@@ -5636,41 +5636,40 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
-      // Commented our because we don't want to start text editing on double click
-      // const container = this.getTextBindableContainerAtPosition(sceneX, sceneY);
+      const container = this.getTextBindableContainerAtPosition(sceneX, sceneY);
 
-      // if (container) {
-      //   if (
-      //     hasBoundTextElement(container) ||
-      //     !isTransparent(container.backgroundColor) ||
-      //     hitElementItself({
-      //       x: sceneX,
-      //       y: sceneY,
-      //       element: container,
-      //       shape: getElementShape(
-      //         container,
-      //         this.scene.getNonDeletedElementsMap(),
-      //       ),
-      //       threshold: this.getElementHitThreshold(),
-      //     })
-      //   ) {
-      //     const midPoint = getContainerCenter(
-      //       container,
-      //       this.state,
-      //       this.scene.getNonDeletedElementsMap(),
-      //     );
+      if (container) {
+        if (
+          hasBoundTextElement(container) ||
+          !isTransparent(container.backgroundColor) ||
+          hitElementItself({
+            x: sceneX,
+            y: sceneY,
+            element: container,
+            shape: getElementShape(
+              container,
+              this.scene.getNonDeletedElementsMap(),
+            ),
+            threshold: this.getElementHitThreshold(),
+          })
+        ) {
+          const midPoint = getContainerCenter(
+            container,
+            this.state,
+            this.scene.getNonDeletedElementsMap(),
+          );
 
-      //     sceneX = midPoint.x;
-      //     sceneY = midPoint.y;
-      //   }
-      // }
+          sceneX = midPoint.x;
+          sceneY = midPoint.y;
+        }
+      }
+      hitElement && this.startTextEditing({
+        sceneX,
+        sceneY,
+        insertAtParentCenter: !event.altKey,
+        container,
+      });
 
-      // this.startTextEditing({
-      //   sceneX,
-      //   sceneY,
-      //   insertAtParentCenter: !event.altKey,
-      //   container,
-      // });
     }
   };
 
