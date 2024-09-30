@@ -1,5 +1,6 @@
 {
   "name": "@ducflair/duc",
+  "private": true,
   "version": "0.0.0-development",
   "description": "",
   "main": "index.js",
