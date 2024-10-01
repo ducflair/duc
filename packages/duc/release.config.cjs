@@ -1,8 +1,5 @@
 module.exports = {
-  branches: ["main", {
-      name: "next",
-      prerelease: true
-  }],
+  branches: ["main", { name: "next", prerelease: true }],
   plugins: [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
@@ -10,8 +7,8 @@ module.exports = {
     [
       "@semantic-release/npm",
       {
-        "pkgRoot": ".", // Default root for the package
-        "tarballDir": "dist/duc"
+        pkgRoot: ".",
+        tarballDir: "dist"
       }
     ],
     "@semantic-release/github",
