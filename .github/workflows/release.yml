@@ -20,9 +20,6 @@ jobs:
         # package: ["canvas", "duc"]
         
     steps:
-      - name: Install npm@latest
-        run: npm install -g npm@latest
-
       - uses: actions/checkout@v4
       
       # Install Bun
