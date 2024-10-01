@@ -1,6 +1,6 @@
 {
   "name": "@ducflair/duc",
-  "version": "0.0.0-development",
+  "version": "1.0.0",
   "description": "The duc 2D CAD file format is a cornerstone of our advanced design system, conceived to cater to professionals seeking precision and efficiency in their design work.",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,7 @@
   "author": "Ducflair",
   "license": "MIT",
   "dependencies": {
-    "@ducflair/canvas": "workspace:*"
+    "@ducflair/canvas": "*"
   },
   "devDependencies": {
     "@types/bun": "latest",
