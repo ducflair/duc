@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/ducflair/duc/compare/@ducflair/duc@1.1.4...@ducflair/duc@1.1.5) (2024-10-01)
+
+
+### Bug Fixes
+
+* bump release ([a0f764a](https://github.com/ducflair/duc/commit/a0f764af06239141725c79db26f4fe588124f8c6))
+
 ## [1.1.4](https://github.com/ducflair/duc/compare/@ducflair/duc@1.1.3...@ducflair/duc@1.1.4) (2024-10-01)
 
 
