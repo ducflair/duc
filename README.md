@@ -1,11 +1,12 @@
 # Duc CAD File Format
 
+The `duc` 2D CAD file format is a cornerstone of our advanced design system, conceived to cater to professionals seeking precision and efficiency in their design work. It integrates seamlessly with [Ducflair's CAD Application](https://ducflair.com), leveraging the power of modern computing and graphical rendering technologies. 
+
 <img src="https://ducflair-public.s3.eu-west-2.amazonaws.com/duc/duc-extended.png" alt="duc logo" height="250"> 
 
 ## Introduction
 
-The `duc` 2D CAD file format is a cornerstone of our advanced design system, conceived to cater to professionals seeking precision and efficiency in their design work. It integrates seamlessly with [Ducflair's CAD Application](https://ducflair.com), leveraging the power of modern computing and graphical rendering technologies. This documentation aims to provide a comprehensive guide to the format's structure, capabilities, and integration with various applications.
-
+This documentation aims to provide a comprehensive guide to the format's structure, capabilities, and integration with various applications.
 The `Core Library` and file format are a fork from [Excalidraw](https://github.com/excalidraw/excalidraw) at the [v0.17.3 Version](https://github.com/excalidraw/excalidraw/releases/tag/v0.17.3), we thank them for the amazing work they invested, it gave us a great base to build on top of.
 
 ## Tools
