@@ -399,13 +399,19 @@ export {
   getStateForZoom
 } from "./scene/zoom";
 
-export {
-  parseDucFlatBuffers
-} from "./duc/duc-ts/parse";
+export { parseAppStateFromBinary } from "./duc/duc-ts/parse/parseAppStateFromBinary";
+export { parseElementFromBinary } from "./duc/duc-ts/parse/parseElementFromBinary";
+export { parseBinaryFilesFromBinary } from "./duc/duc-ts/parse/parseBinaryFilesFromBinary";
 
-export {
-  serializeAsFlatBuffers
-} from "./duc/duc-ts/serialize";
+export { parseDucFlatBuffers } from "./duc/duc-ts/parse/index";
+
+export { serializeAppState } from "./duc/duc-ts/serialize/appStateSerialize";
+export { serializeDucElement } from "./duc/duc-ts/serialize/ducElementSerialize";
+export { serializeBinaryFiles } from "./duc/duc-ts/serialize/binaryFilesSerialize";
+
+export { serializeAsFlatBuffers } from "./duc/duc-ts/serialize/index";
+
+export * as DucBin from "./duc/duc-ts/duc";
 
 export {
   CanvasPreview,
