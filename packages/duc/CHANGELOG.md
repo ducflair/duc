@@ -1,3 +1,10 @@
+## [1.1.6](https://github.com/ducflair/duc/compare/@ducflair/duc@1.1.5...@ducflair/duc@1.1.6) (2024-10-01)
+
+
+### Bug Fixes
+
+* upload to npm ([89a1b2a](https://github.com/ducflair/duc/commit/89a1b2af741140070bf1304e33120eb8f99b2f99))
+
 ## [1.1.5](https://github.com/ducflair/duc/compare/@ducflair/duc@1.1.4...@ducflair/duc@1.1.5) (2024-10-01)
 
 
