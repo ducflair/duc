@@ -411,7 +411,8 @@ export { serializeBinaryFiles } from "./duc/duc-ts/serialize/binaryFilesSerializ
 
 export { serializeAsFlatBuffers } from "./duc/duc-ts/serialize/index";
 
-export * from "./duc/duc-ts/duc";
+export * as DucBin from "./duc/duc-ts/duc";
+
 export {
   CanvasPreview,
 } from "./components/canvasPreview";
