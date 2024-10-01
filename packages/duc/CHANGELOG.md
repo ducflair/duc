@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/ducflair/duc/compare/@ducflair/duc@1.0.0...@ducflair/duc@1.0.1) (2024-10-01)
+
+
+### Bug Fixes
+
+* get the last version before publishing ([bd4c7ce](https://github.com/ducflair/duc/commit/bd4c7ce9bf72dedef14aeaa4200ec03bee8b129f))
+
 # 1.0.0 (2024-10-01)
 
 
