@@ -17,30 +17,31 @@ jobs:
     strategy:
       matrix:
         package: ["duc"]
-        # package: ["canvas", "duc"]
         
     steps:
       - uses: actions/checkout@v4
       
-      # Install Bun
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: "latest"  # Use the latest version of Bun
+          bun-version: "latest"
       
-      # Set up Node environment using Bun
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
       
-      # Install dependencies using Bun
+      - name: Update npm
+        run: npm install -g npm@latest
+      
       - run: bun install
       
-      # Build the specific package using Bun
+      - name: Replace workspace dependencies
+        run: |
+          sed -i 's/"workspace:\*"/"*"/g' packages/${{ matrix.package }}/package.json
+      
       - run: bun ${{ matrix.package }}:build
 
-      # Run semantic-release for each package
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -48,3 +49,7 @@ jobs:
           NPM_CONFIG_LEGACY_PEER_DEPS: "true"
         run: npx semantic-release --ci
         working-directory: ./packages/${{ matrix.package }}
+
+      - name: Restore workspace dependencies
+        run: |
+          git checkout packages/${{ matrix.package }}/package.json
