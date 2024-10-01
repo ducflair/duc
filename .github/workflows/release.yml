@@ -18,7 +18,11 @@ jobs:
       matrix:
         package: ["duc"]
         # package: ["canvas", "duc"]
+        
     steps:
+      - name: Install npm@latest
+        run: npm install -g npm@latest
+
       - uses: actions/checkout@v4
       
       # Install Bun
@@ -44,5 +48,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release --ci
+        run: npx semantic-release --ci -- --legacy-peer-deps
         working-directory: ./packages/${{ matrix.package }}
+    
