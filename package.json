@@ -1,26 +1,22 @@
 {
-  "name": "@ducflair/duc",
+  "name": "duc-monorepo",
   "version": "0.0.0-development",
-  "description": "The duc 2D CAD file format is a cornerstone of our advanced design system, conceived to cater to professionals seeking precision and efficiency in their design work.",
-  "main": "index.js",
-  "scripts": {
-    "build": "tsc",
-    "semantic-release": "semantic-release"
-  },
-  "author": "Ducflair",
-  "license": "MIT",
-  "devDependencies": {
-    "@types/bun": "latest",
-    "semantic-release": "^24.1.2"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
-  "files": [
-    "dist",
-    "README.md"
+  "private": true,
+  "workspaces": [
+    "src/packages/*",
+    "src/packages/core/canvas"
   ],
-  "publishConfig": {
-    "access": "public"
+  "scripts": {
+    "build": "turbo run build",
+    "duc:build": "turbo build --filter=@ducflair/duc",
+    "w:build": "turbo build --filter=@ducflair/web",
+    "check-types": "turbo run check-types",
+    "semantic-release": "turbo run semantic-release",
+    "dev": "turbo run dev"
+  },
+  "packageManager": "bun@1.1.24",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "turbo": "^2.1.3"
   }
 }

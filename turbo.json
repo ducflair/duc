@@ -1,0 +1,27 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "@ducflair/canvas#build": {
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    "@ducflair/duc#build": {
+      "dependsOn": ["@ducflair/canvas#build"],
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    
+    "semantic-release": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
