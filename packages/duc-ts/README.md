@@ -1,8 +1,18 @@
+<p align="center">
+  <br/>
+  <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://ducflair-public.s3.eu-west-2.amazonaws.com/duc/duc-extended.png" /></a>
+  <p align="center">2D CAD File Format</p>
+  <p align="center" style="align: center;">
+    <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/npm/v/@ducflair/duc/latest?style=flat-square&label=latest%20stable" alt="NPM @ducflair/duc@latest release" /></a>
+    <a href="https://www.npmtrends.com/@ducflair/duc"><img src="https://img.shields.io/npm/dm/@ducflair/duc?style=flat-square&color=salmon" alt="Downloads" /></a>
+  </p>
+</p>
+
+
 # @ducflair/duc
 
 The `@ducflair/duc` package provides robust TypeScript definitions and utilities for the `duc` 2D CAD file format, a cornerstone of our advanced design system. Designed for professionals seeking precision and efficiency, this package ensures seamless integration and manipulation of `duc` files within your TypeScript projects.
 
-![duc logo](https://ducflair-public.s3.eu-west-2.amazonaws.com/duc/duc-extended.png)
 
 ## Introduction
 
