@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/ducflair/duc/compare/@ducflair/duc@1.0.1...@ducflair/duc@1.1.0) (2024-10-01)
+
+
+### Features
+
+* bump correction ([35ffb26](https://github.com/ducflair/duc/commit/35ffb2652618cab73b2b6505e82e6dc2d40a7df1))
+
 ## [1.0.1](https://github.com/ducflair/duc/compare/@ducflair/duc@1.0.0...@ducflair/duc@1.0.1) (2024-10-01)
 
 
