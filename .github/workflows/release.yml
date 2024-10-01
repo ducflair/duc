@@ -48,6 +48,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release --ci -- --legacy-peer-deps
+          NPM_CONFIG_LEGACY_PEER_DEPS: "true"
+        run: npx semantic-release --ci
         working-directory: ./packages/${{ matrix.package }}
-    
