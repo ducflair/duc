@@ -2,4 +2,4 @@ export { parseDucFlatBuffers, parseAppStateFromBinary, parseElementFromBinary, p
 
 export { serializeAsFlatBuffers, serializeAppState, serializeDucElement, serializeBinaryFiles } from "@ducflair/canvas";
 
-export { DucBin } from "@ducflair/canvas"
+export { DucBin } from "@ducflair/canvas";
