@@ -3,20 +3,23 @@
   "version": "0.0.0-development",
   "private": true,
   "workspaces": [
-    "src/packages/*",
-    "src/packages/core/canvas"
+    "packages/*",
+    "packages/core/canvas"
   ],
   "scripts": {
     "build": "turbo run build",
-    "duc:build": "turbo build --filter=@ducflair/duc",
-    "w:build": "turbo build --filter=@ducflair/web",
+    "@ducflair/duc:build": "turbo build --filter=@ducflair/duc",
     "check-types": "turbo run check-types",
     "semantic-release": "turbo run semantic-release",
     "dev": "turbo run dev"
   },
   "packageManager": "bun@1.1.24",
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "turbo": "^2.1.3"
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.0",
+    "@semantic-release/npm": "^12.0.1",
+    "semantic-release": "^24.1.2",
+    "turbo": "^2.1.3",
+    "typescript": "^5.0.0"
   }
 }

@@ -7,7 +7,7 @@
         "target": "esnext",
         "module": "esnext",
         "outDir": "dist",
-        "rootDir": "src",
+        "rootDir": ".",
         "lib": ["ESNext"],
         "strict": true,
         "esModuleInterop": true,
