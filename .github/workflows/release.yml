@@ -51,7 +51,7 @@ jobs:
           NPM_CONFIG_LEGACY_PEER_DEPS: "true"
         run: npx semantic-release --ci
         working-directory: ./packages/${{ matrix.package }}
-
-      - name: Restore workspace dependencies
+      
+      - name: Restore `package.json` to maintain `0.0.0-development`
         run: |
           git checkout packages/${{ matrix.package }}/package.json
