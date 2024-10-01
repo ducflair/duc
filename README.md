@@ -1,8 +1,12 @@
-# Duc CAD File Format
+<p align="center">
+  <br/>
+  <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://ducflair-public.s3.eu-west-2.amazonaws.com/duc/duc-extended.png" /></a>
+  <p align="center">2D CAD File Format</p>
+  <br/><br/>
+</p>
 
 The `duc` 2D CAD file format is a cornerstone of our advanced design system, conceived to cater to professionals seeking precision and efficiency in their design work. It integrates seamlessly with [Ducflair's CAD Application](https://ducflair.com), leveraging the power of modern computing and graphical rendering technologies. 
 
-<img src="https://ducflair-public.s3.eu-west-2.amazonaws.com/duc/duc-extended.png" alt="duc logo" height="250"> 
 
 ## Introduction
 
