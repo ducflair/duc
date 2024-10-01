@@ -27,5 +27,21 @@
   ],
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ducflair/duc.git",
+    "directory": "packages/duc-ts"
+  },
+  "homepage": "https://duc.ducflair.com/",
+  "bugs": {
+    "url": "https://github.com/ducflair/duc/issues"
+  },
+  "keywords": [
+    "CAD",
+    "2D",
+    "Design",
+    "TypeScript",
+    "Ducflair"
+  ]
 }
