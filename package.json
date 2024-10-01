@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "duc:build": "turbo build --filter=@ducflair/duc",
+    "duc-ts:build": "turbo build --filter=@ducflair/duc",
     "check-types": "turbo run check-types",
     "semantic-release": "turbo run semantic-release",
     "dev": "turbo run dev"
