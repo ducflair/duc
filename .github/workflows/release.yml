@@ -142,6 +142,8 @@ jobs:
         run: |
           git fetch origin main
           git reset --hard origin/main
+      - name: Pull latest changes from origin/main
+        run: git pull origin main --rebase
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
