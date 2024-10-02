@@ -9,6 +9,8 @@
   "scripts": {
     "build": "turbo run build",
     "duc-ts:build": "turbo build --filter=@ducflair/duc",
+    "duc-py:build": "turbo build --filter=@ducflair/duc-py",
+    "duc-rs:build": "turbo build --filter=@ducflair/duc-rs",
     "check-types": "turbo run check-types",
     "semantic-release": "turbo run semantic-release",
     "dev": "turbo run dev"

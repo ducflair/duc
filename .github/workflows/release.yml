@@ -16,42 +16,43 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: ["duc-ts"]
+        package: ["duc", "duc-py", "duc-rs"]
         
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: "latest"
-      
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
       
-      - name: Update npm
-        run: npm install -g npm@latest
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
       
-      - run: bun install
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
       
-      - name: Replace workspace dependencies
+      - name: Install dependencies
         run: |
-          sed -i 's/"workspace:\*"/"*"/g' packages/${{ matrix.package }}/package.json
+          npm install
+          python3 -m pip install --upgrade pip
+          python3 -m pip install build twine
+          cargo install cargo-release
       
-      - run: bun ${{ matrix.package }}:build
+      - name: Build and Test
+        run: npx turbo run install-deps build test --filter=${{ matrix.package }}
 
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_LEGACY_PEER_DEPS: "true"
-        run: npx semantic-release --ci
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: npx semantic-release
         working-directory: ./packages/${{ matrix.package }}
-      
-      - name: Restore `package.json` to maintain `0.0.0-development`
-        run: |
-          git checkout packages/${{ matrix.package }}/package.json
