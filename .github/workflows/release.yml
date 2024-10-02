@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0
       - name: Filter paths
         id: filter
-        uses: dorny/paths-filter@v2
+        uses: dorny/paths-filter@v3
         with:
           filters: |
             core:
@@ -56,7 +56,7 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
       - name: Setup Node
@@ -99,7 +99,7 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
       - name: Setup Node
@@ -107,7 +107,7 @@ jobs:
         with:
           node-version: "lts/*"
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - name: Update npm
@@ -143,7 +143,7 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
       - name: Setup Node
