@@ -8,5 +8,8 @@
     "test": "python3 -m unittest discover tests",
     "prepublish": "python3 setup.py sdist bdist_wheel",
     "semantic-release": "semantic-release"
+  },
+  "devDependencies": {
+    "semantic-release": "^24.1.2"
   }
 }
