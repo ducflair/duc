@@ -6,8 +6,8 @@ module.exports = {
     [
       "@semantic-release/exec",
       {
-        prepareCmd: "python setup.py sdist bdist_wheel",
-        publishCmd: "twine upload dist/*"
+        prepareCmd: "python3 setup.py sdist bdist_wheel",
+        publishCmd: "python3 -m twine upload dist/* -u __token__ -p ${process.env.PYPI_TOKEN}"
       }
     ],
     "@semantic-release/github",
