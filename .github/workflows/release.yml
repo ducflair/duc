@@ -49,6 +49,11 @@ jobs:
         with:
           toolchain: stable
         if: matrix.package == 'duc-rs'
+
+      - name: Update Rust toolchain
+        run: rustup update stable
+        if: matrix.package == 'duc-rs'
+
       
       - name: Update npm
         run: npm install -g npm@latest
