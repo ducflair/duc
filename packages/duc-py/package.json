@@ -6,6 +6,7 @@
     "install-deps": "python3 -m pip install -r requirements.txt",
     "build": "python3 -m build",
     "test": "python3 -m unittest discover tests",
-    "prepublish": "python3 setup.py sdist bdist_wheel"
+    "prepublish": "python3 setup.py sdist bdist_wheel",
+    "semantic-release": "semantic-release"
   }
 }
