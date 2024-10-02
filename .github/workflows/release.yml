@@ -32,6 +32,7 @@ jobs:
             core:
               - 'packages/core/**'
               - 'turbo.json'
+              - 'package.json'
             duc_ts:
               - 'packages/duc-ts/**'
             duc_py:
