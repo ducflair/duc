@@ -10,7 +10,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Ducflair",
     author_email="support@ducflair.com",
-    url="https://github.com/ducflair/duc/packages/duc-py",
+    url="https://github.com/ducflair/duc/tree/main/packages/duc-py",
     license="MIT",
     classifiers=[
         "Development Status :: 3 - Alpha",
