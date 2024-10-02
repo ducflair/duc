@@ -6,7 +6,8 @@ module.exports = {
     [
       "@semantic-release/exec",
       {
-        prepareCmd: "cargo install cargo-set-version && cargo set-version ${nextRelease.version} && cargo build --release",
+        // Install cargo-edit instead of cargo-set-version
+        prepareCmd: "cargo install cargo-edit && cargo set-version ${nextRelease.version} && cargo build --release",
         publishCmd: "cargo publish"
       }
     ],
