@@ -10,14 +10,27 @@
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
-    
+    "@ducflair/duc-py#build": {
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    "@ducflair/duc-rs#build": {
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
     "semantic-release": {
       "dependsOn": ["build"],
       "outputs": []
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "src/index.js"]
+      "outputs": ["dist/**", "src/index.js", "target/**", "*.egg-info/**"]
+    },
+    "test": {
+      "dependsOn": ["build"]
+    },
+    "install-deps": {
+      "cache": false
     },
     "dev": {
       "cache": false,

@@ -14,6 +14,6 @@
     "editor.tabSize": 2,
     "editor.detectIndentation": false,
     "rust-analyzer.linkedProjects": [
-      "packages/core/canvas/duc/duc-rs/Cargo.toml",
+      "packages/duc-rs/Cargo.toml",
     ],
 }
