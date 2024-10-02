@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ducflair-duc",
-    version="0.0.0",
+    version="1.0.0",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     description="The duc 2D CAD file format Python implementation",
