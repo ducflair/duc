@@ -1,24 +1,10 @@
 {
   "name": "duc-monorepo",
   "version": "0.0.0-development",
-  "private": true,
-  "workspaces": [
-    "packages/*",
-    "packages/core/canvas"
-  ],
-  "scripts": {
-    "build": "turbo run build",
-    "duc-ts:build": "turbo build --filter=@ducflair/duc",
-    "duc-py:build": "turbo build --filter=@ducflair/duc-py",
-    "duc-rs:build": "turbo build --filter=@ducflair/duc-rs",
-    "check-types": "turbo run check-types",
-    "semantic-release": "turbo run semantic-release",
-    "dev": "turbo run dev"
-  },
-  "packageManager": "bun@1.1.24",
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.0",
+    "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.0",
     "@semantic-release/npm": "^12.0.1",
@@ -29,5 +15,20 @@
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "packageManager": "bun@1.1.24",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "duc-ts:build": "turbo build --filter=@ducflair/duc",
+    "duc-py:build": "turbo build --filter=@ducflair/duc-py",
+    "duc-rs:build": "turbo build --filter=@ducflair/duc-rs",
+    "check-types": "turbo run check-types",
+    "semantic-release": "turbo run semantic-release",
+    "dev": "turbo run dev"
+  },
+  "workspaces": [
+    "packages/*",
+    "packages/core/canvas"
+  ]
 }
