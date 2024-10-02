@@ -15,6 +15,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false  # This prevents canceling other jobs when one fails
       matrix:
         package: ["duc-ts", "duc-py", "duc-rs"]
         include:
@@ -78,13 +79,14 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           if [ "${{ matrix.package }}" == "duc-py" ]; then
-            python3 -m twine upload dist/*
+            python3 -m twine upload dist/* -u __token__ -p $PYPI_TOKEN
           elif [ "${{ matrix.package }}" == "duc-rs" ]; then
             cargo publish
           elif [ "${{ matrix.package }}" == "duc-ts" ]; then
             npx semantic-release --ci
           fi
         working-directory: ./packages/${{ matrix.package }}
+
       
       - name: Restore `package.json` to maintain `0.0.0-development`
         run: |
