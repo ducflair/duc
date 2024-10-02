@@ -1,4 +1,4 @@
-# ducflair-duc (Rust)
+# ducflair-duc (Rust) (⚠️ Not working yet)
 
 <p align="center">
   <br/>
@@ -10,8 +10,6 @@
     <img src="https://shields.io/badge/Rust-CE412B?logo=Rust&logoColor=fff&style=round-square" alt="Rust" />
   </p>
 </p>
-
-# ducflair-duc
 
 The `ducflair-duc` crate provides a robust Rust implementation for the `duc` 2D CAD file format, a cornerstone of our advanced design system. Designed for professionals seeking precision and efficiency, this crate ensures seamless integration and manipulation of `duc` files within your Rust projects.
 
