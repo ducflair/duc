@@ -6,7 +6,8 @@ module.exports = {
     [
       "@semantic-release/exec",
       {
-        prepareCmd: "python3 setup.py sdist bdist_wheel",
+        // Update the setup.py version before building
+        prepareCmd: "sed -i 's/version=.*,/version=\"${nextRelease.version}\",/' setup.py && python3 setup.py sdist bdist_wheel",
         publishCmd: "python3 -m twine upload dist/* -u __token__ -p ${process.env.PYPI_TOKEN}"
       }
     ],
@@ -15,7 +16,7 @@ module.exports = {
       "@semantic-release/git",
       {
         assets: ["setup.py"],
-        message: "chore(release): ${nextRelease.version} \n\n${nextRelease.notes}"
+        message: "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
       }
     ]
   ],
