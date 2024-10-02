@@ -16,12 +16,21 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: ["duc", "duc-py", "duc-rs"]
+        package: ["duc-ts", "duc-py", "duc-rs"]
+        include:
+          - package: duc-ts
+          - package: duc-py
+          - package: duc-rs
         
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: "latest"
       
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -32,27 +41,52 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
+        if: matrix.package == 'duc-py'
       
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+        if: matrix.package == 'duc-rs'
       
-      - name: Install dependencies
+      - name: Update npm
+        run: npm install -g npm@latest
+      
+      - run: bun install
+      
+      - name: Install Python dependencies
         run: |
-          npm install
           python3 -m pip install --upgrade pip
           python3 -m pip install build twine
-          cargo install cargo-release
+        if: matrix.package == 'duc-py'
       
-      - name: Build and Test
-        run: npx turbo run install-deps build test --filter=${{ matrix.package }}
+      - name: Replace workspace dependencies
+        run: |
+          sed -i 's/"workspace:\*"/"*"/g' packages/${{ matrix.package }}/package.json
+        if: matrix.package == 'duc-ts'
+      
+      - name: Build
+        run: bun ${{ matrix.package }}:build
+
 
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_LEGACY_PEER_DEPS: "true"
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: npx semantic-release
+        run: |
+          if [ "${{ matrix.package }}" == "duc-py" ]; then
+            python3 -m twine upload dist/*
+          elif [ "${{ matrix.package }}" == "duc-rs" ]; then
+            cargo publish
+          elif [ "${{ matrix.package }}" == "duc-ts" ]; then
+            npx semantic-release --ci
+          fi
         working-directory: ./packages/${{ matrix.package }}
+      
+      - name: Restore `package.json` to maintain `0.0.0-development`
+        run: |
+          git checkout packages/${{ matrix.package }}/package.json
+        if: matrix.package == 'duc-ts'
