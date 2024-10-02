@@ -12,81 +12,177 @@ permissions:
   pull-requests: write
 
 jobs:
-  release:
+  # 1. Path Filtering Job
+  paths:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false  # This prevents canceling other jobs when one fails
-      matrix:
-        package: ["duc-ts", "duc-py", "duc-rs"]
-        include:
-          - package: duc-ts
-          - package: duc-py
-          - package: duc-rs
-        
+    outputs:
+      core_changed: ${{ steps.filter.outputs.core }}
+      duc_ts_changed: ${{ steps.filter.outputs.duc_ts }}
+      duc_py_changed: ${{ steps.filter.outputs.duc_py }}
+      duc_rs_changed: ${{ steps.filter.outputs.duc_rs }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Ensures full history is fetched
+
+      - name: Filter Changed Paths
+        id: filter
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            core:
+              - 'packages/core/**'
+              - 'turbo.json'
+            duc_ts:
+              - 'packages/duc-ts/**'
+            duc_py:
+              - 'packages/duc-py/**'
+            duc_rs:
+              - 'packages/duc-rs/**'
+
+  # 2. Release Job for TypeScript Package (duc-ts)
+  release_duc_ts:
+    needs: paths
+    runs-on: ubuntu-latest
+    if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_ts_changed == 'true'
+    concurrency:
+      group: release
+      cancel-in-progress: false  # Ensures releases run sequentially
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: "latest"
-      
-      - name: Setup Node
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
-      
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-        if: matrix.package == 'duc-py'
-      
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-        if: matrix.package == 'duc-rs'
 
-      - name: Update Rust toolchain
-        run: rustup update stable
-        if: matrix.package == 'duc-rs'
-
-      
-      - name: Update npm
+      - name: Update npm to Latest Version
         run: npm install -g npm@latest
-      
-      - run: bun install
-      
-      - name: Install Python dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install build twine
-        if: matrix.package == 'duc-py'
-      
-      - name: Replace workspace dependencies
-        run: |
-          sed -i 's/"workspace:\*"/"*"/g' packages/${{ matrix.package }}/package.json
-        if: matrix.package == 'duc-ts'
-      
-      - name: Build
-        run: bun ${{ matrix.package }}:build
 
+      - name: Install Dependencies
+        run: bun install
 
-      - name: Release
+      - name: Replace Workspace Dependencies in package.json
+        run: |
+          sed -i 's/"workspace:\*"/"*"/g' packages/duc-ts/package.json
+
+      - name: Build duc-ts Package
+        run: bun duc-ts:build
+
+      - name: Fetch and Synchronize Local Branch
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Release duc-ts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_LEGACY_PEER_DEPS: "true"
+        run: npx semantic-release --ci
+        working-directory: ./packages/duc-ts
+
+      - name: Restore package.json to Maintain Development Version
+        run: |
+          git checkout packages/duc-ts/package.json
+
+  # 3. Release Job for Python Package (duc-py)
+  release_duc_py:
+    needs: paths
+    runs-on: ubuntu-latest
+    if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_py_changed == 'true'
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Update npm to Latest Version
+        run: npm install -g npm@latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Install Python Build Tools
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install build twine
+
+      - name: Prepare duc-py Package
+        run: |
+          pip install setuptools
+          sed -i "s/version=['\"]\\([^'\"]*\\)['\"],/version='${nextRelease.version}',/" setup.py
+          python3 setup.py sdist bdist_wheel
+
+      - name: Fetch and Synchronize Local Branch
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Release duc-py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: npx semantic-release --ci
+        working-directory: ./packages/duc-py
+
+      - name: Restore setup.py to Maintain Development Version
+        run: |
+          git checkout packages/duc-py/setup.py
+
+  # 4. Release Job for Rust Package (duc-rs)
+  release_duc_rs:
+    needs: paths
+    runs-on: ubuntu-latest
+    if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_rs_changed == 'true'
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Update Rust to Latest Stable Version
+        run: rustup update stable
+
+      - name: Install Dependencies and Set Version
+        run: |
+          cargo install cargo-edit
+          cargo set-version ${nextRelease.version}
+          cargo build --release
+
+      - name: Fetch and Synchronize Local Branch
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Release duc-rs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: npx semantic-release --ci
-        working-directory: ./packages/${{ matrix.package }}
-
-      
-      - name: Restore `package.json` to maintain `0.0.0-development`
-        run: |
-          git checkout packages/${{ matrix.package }}/package.json
-        if: matrix.package == 'duc-ts'
+        working-directory: ./packages/duc-rs
