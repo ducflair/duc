@@ -778,6 +778,7 @@ export interface DucImperativeAPI {
     openEyeDropper: InstanceType<typeof App>["openEyeDropper"];
     closeEyeDropper: InstanceType<typeof App>["closeEyeDropper"];
     getEyeDropper: InstanceType<typeof App>["getEyeDropper"];
+    handleCanvasContextMenu: InstanceType<typeof App>["handleCanvasContextMenu"];
   };
   state: () => AppClassProperties
   elements: {
