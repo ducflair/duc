@@ -726,6 +726,7 @@ class App extends React.Component<AppProps, AppState> {
           getEyeDropper: this.getEyeDropper,
           mutateGroup: this.mutateGroup,
           setActiveTool: this.setActiveTool,
+          handleCanvasContextMenu: this.handleCanvasContextMenu,
           setBackgroundColor: (color: string) => this.setState({
             viewBackgroundColor: color,
           }),
@@ -1509,7 +1510,7 @@ class App extends React.Component<AppProps, AppState> {
           }}
           onPointerDown={(event) => this.handleCanvasPointerDown(event)}
           onWheel={(event) => this.handleWheel(event)}
-          onContextMenu={this.handleCanvasContextMenu}
+          // onContextMenu={this.handleCanvasContextMenu}
           onDoubleClick={() => {
             this.setState({
               editingFrame: f.id,
@@ -1629,7 +1630,7 @@ class App extends React.Component<AppProps, AppState> {
                         </LayerUI>
 
                         <div className="excalidraw-textEditorContainer" />
-                        <div className="excalidraw-contextMenuContainer" />
+                        {/* <div className="excalidraw-contextMenuContainer" /> */}
                         <div className="excalidraw-eye-dropper-container" />
                         <SVGLayer
                           trails={[this.laserTrails, this.eraserTrail]}
@@ -1727,7 +1728,7 @@ class App extends React.Component<AppProps, AppState> {
                             closable={this.state.toast.closable}
                           />
                         )}
-                        {this.state.contextMenu && (
+                        {/* {this.state.contextMenu && (
                           <ContextMenu
                             items={this.state.contextMenu.items}
                             top={this.state.contextMenu.top}
@@ -1740,7 +1741,7 @@ class App extends React.Component<AppProps, AppState> {
                               });
                             }}
                           />
-                        )}
+                        )} */}
                         <StaticCanvas
                           canvas={this.canvas}
                           rc={this.rc}
@@ -10395,7 +10396,7 @@ class App extends React.Component<AppProps, AppState> {
   private handleCanvasContextMenu = (
     event: React.MouseEvent<HTMLElement | HTMLCanvasElement>,
   ) => {
-    event.preventDefault();
+    // event.preventDefault();
 
     if (
       (("pointerType" in event.nativeEvent &&
@@ -10453,12 +10454,14 @@ class App extends React.Component<AppProps, AppState> {
           : this.state),
         showHyperlinkPopup: false,
       },
-      () => {
-        this.setState({
-          contextMenu: { top, left, items: this.getContextMenuItems(type) },
-        });
-      },
+      // () => {
+      //   this.setState({
+      //     contextMenu: { top, left, items: this.getContextMenuItems(type) },
+      //   });
+      // },
     );
+
+    return type;
   };
 
   private maybeDragNewGenericElement = (
