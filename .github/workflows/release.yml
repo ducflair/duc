@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: paths
     concurrency:
-      group: release
+      group: release-ts
       cancel-in-progress: false
     if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_ts_changed == 'true'
     steps:
@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: paths
     concurrency:
-      group: release
+      group: release-py
       cancel-in-progress: false
     if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_py_changed == 'true'
     steps:
@@ -142,7 +142,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: paths
     concurrency:
-      group: release
+      group: release-rs
       cancel-in-progress: false
     if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_rs_changed == 'true'
     steps:
