@@ -2447,6 +2447,7 @@ class App extends React.Component<AppProps, AppState> {
         },
       };
     }
+
     const scene = restore(initialData, null, null, { repairBindings: true });
     scene.appState = {
       ...scene.appState,
@@ -2488,6 +2489,7 @@ class App extends React.Component<AppProps, AppState> {
     // fonts and rerender scene text elements once done. This also
     // seems faster even in browsers that do fire the loadingdone event.
     this.fonts.loadSceneFonts();
+    this.refreshImages(scene.elements, scene.files);
   };
 
   private isMobileBreakpoint = (width: number, height: number) => {
@@ -4859,11 +4861,33 @@ class App extends React.Component<AppProps, AppState> {
     );
 
     if (contents.type === MIME_TYPES.duc) {
-      this.updateScene(contents.data as any);
-      return true;
+      if(contents.data)
+      {
+        this.updateScene(contents.data);
+        if(contents.data.files) {
+          this.files = {...this.files, ...contents.data.files};
+        }
+        if(contents.data.elements) {
+          this.refreshImages(contents.data.elements, contents.data.files);
+        }
+        this.rerenderCanvas();
+        this.scrollToContent(undefined, { fitToContent: true, animate: false });
+        return true;
+      }
     }
 
     return false;
+  };
+
+  refreshImages = async (
+    elements: OrderedDucElement[],
+    files: BinaryFiles | undefined,
+  ) => {
+    const imageElements:InitializedDucImageElement[] = elements.filter(
+      (el) => el.type === "image" && isInitializedImageElement(el),
+    ) as InitializedDucImageElement[];
+
+    this.addNewImagesToImageCache(imageElements, files);
   };
 
   setWritingLayer = (
@@ -10153,6 +10177,7 @@ class App extends React.Component<AppProps, AppState> {
       );
       if (updatedFiles.size) {
         this.scene.triggerUpdate();
+        this.rerenderCanvas();
       }
     }
   };
@@ -11047,6 +11072,22 @@ class App extends React.Component<AppProps, AppState> {
   public rerenderCanvas = () => {
     this.updateScene({
       elements: this.scene.getElementsIncludingDeleted().map((el) => {
+        return newElementWith(el, {
+          seed: Math.random(),
+        });
+      }),
+    });
+  }
+
+  public rerenderImages = () => {
+    this.updateScene({
+      elements: this.scene.getElementsIncludingDeleted().map((el) => {
+        if(isImageElement(el)) {
+          return newElementWith(el, {
+            status: "saved",
+            seed: Math.random(),
+          });
+        }
         return newElementWith(el, {
           seed: Math.random(),
         });
