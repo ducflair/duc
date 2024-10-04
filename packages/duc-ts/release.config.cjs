@@ -11,13 +11,6 @@ module.exports = {
       }
     ],
     "@semantic-release/github",
-    [
-      "@semantic-release/git",
-      {
-        assets: [], // No assets to commit
-        message: "chore(release): ${nextRelease.version} \n\n${nextRelease.notes}"
-      }
-    ]
   ],
   tagFormat: "@ducflair/duc@${version}"
 };
