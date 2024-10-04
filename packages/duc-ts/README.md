@@ -3,6 +3,7 @@
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://ducflair-public.s3.eu-west-2.amazonaws.com/duc/duc-extended.png" /></a>
   <p align="center">2D CAD File Format</p>
   <p align="center" style="align: center;">
+    <a href="https://www.npmjs.com/package/@ducflair/duc"><img src="https://shields.io/badge/NPM-cc3534?logo=Npm&logoColor=white&style=round-square" alt="NPM" /></a>
     <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/npm/v/@ducflair/duc/latest?style=round-square&label=latest%20stable" alt="NPM @ducflair/duc@latest release" /></a>
     <a href="https://www.npmtrends.com/@ducflair/duc"><img src="https://img.shields.io/npm/dm/@ducflair/duc?style=round-square&color=salmon" alt="Downloads" /></a>
     <img src="https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=fff&style=round-square" alt="TypeScript" />
