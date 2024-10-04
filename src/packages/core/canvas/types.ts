@@ -354,6 +354,7 @@ export interface AppState extends Ducfig {
 	currentItemBackgroundColor: string;
 	currentItemFillStyle: DucElement["fillStyle"];
 	currentItemStrokeWidth: number;
+  currentItemStrokePlacement: DucElement["strokePlacement"];
 	currentItemStrokeStyle: DucElement["strokeStyle"];
 	currentItemRoughness: number;
 	currentItemOpacity: number;
@@ -778,12 +779,16 @@ export interface DucImperativeAPI {
     openEyeDropper: InstanceType<typeof App>["openEyeDropper"];
     closeEyeDropper: InstanceType<typeof App>["closeEyeDropper"];
     getEyeDropper: InstanceType<typeof App>["getEyeDropper"];
+    handleCanvasContextMenu: InstanceType<typeof App>["handleCanvasContextMenu"];
   };
   state: () => AppClassProperties
   elements: {
     getSceneElements: InstanceType<typeof App>["getSceneElements"];
     getElementById: InstanceType<typeof App>["getElementById"];
     getVisibleElements: InstanceType<typeof App>["getVisibleElements"];
+    getSelectedElements: InstanceType<typeof App>["getSelectedElements"];
+    getMajoritySelectedElementsType: InstanceType<typeof App>["getMajoritySelectedElementsType"];
+    getSelectedElementsType: InstanceType<typeof App>["getSelectedElementsType"];
     getSceneElementsMap: InstanceType<typeof App>["getSceneElementsMap"];
     getSceneElementsIncludingDeleted: InstanceType<typeof App>["getSceneElementsIncludingDeleted"];
     mutateElementWithValues: InstanceType<typeof App>["mutateElementWithValues"];
@@ -808,7 +813,7 @@ export interface DucImperativeAPI {
   getScene: () => InstanceType<typeof App>["scene"];
   getFiles: () => InstanceType<typeof App>["files"];
   getName: InstanceType<typeof App>["getName"];
-  registerAction: (action: Action) => void;
+  executeAction: InstanceType<typeof App>["executeAction"];
   refresh: InstanceType<typeof App>["refresh"];
 
   setToast: InstanceType<typeof App>["setToast"];
