@@ -285,6 +285,7 @@ export {
 export {
   TOOL_TYPE,
   IDLE_THRESHOLD,
+  STROKE_PLACEMENT,
   ACTIVE_THRESHOLD,
   ENV,
   toolsNsStrokeSet,
@@ -403,17 +404,17 @@ export {
   getStateForZoom
 } from "./scene/zoom";
 
-export { parseAppStateFromBinary } from "./duc/duc-ts/parse/parseAppStateFromBinary";
-export { parseElementFromBinary } from "./duc/duc-ts/parse/parseElementFromBinary";
-export { parseBinaryFilesFromBinary } from "./duc/duc-ts/parse/parseBinaryFilesFromBinary";
+export { parseAppStateFromBinary } from "./duc/duc-ts/src/parse/parseAppStateFromBinary";
+export { parseElementFromBinary } from "./duc/duc-ts/src/parse/parseElementFromBinary";
+export { parseBinaryFilesFromBinary } from "./duc/duc-ts/src/parse/parseBinaryFilesFromBinary";
 
-export { parseDucFlatBuffers } from "./duc/duc-ts/parse/index";
+export { parseDucFlatBuffers } from "./duc/duc-ts/src/parseDuc";
 
-export { serializeAppState } from "./duc/duc-ts/serialize/appStateSerialize";
-export { serializeDucElement } from "./duc/duc-ts/serialize/ducElementSerialize";
-export { serializeBinaryFiles } from "./duc/duc-ts/serialize/binaryFilesSerialize";
+export { serializeAppState } from "./duc/duc-ts/src/serialize/serializeAppStateFromDuc";
+export { serializeDucElement } from "./duc/duc-ts/src/serialize/serializeElementFromDuc";
+export { serializeBinaryFiles } from "./duc/duc-ts/src/serialize/serializeBinaryFilesFromDuc";
 
-export { serializeAsFlatBuffers } from "./duc/duc-ts/serialize/index";
+export { serializeAsFlatBuffers } from "./duc/duc-ts/src/serializeDuc";
 
 export * as DucBin from "./duc/duc-ts/duc";
 

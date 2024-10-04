@@ -12,7 +12,7 @@ import { FileSystemHandle, nativeFileSystemSupported } from "./filesystem";
 import { isValidExcalidrawData, isValidLibrary } from "./json";
 import { restore, restoreLibraryItems } from "./restore";
 import { ImportedLibraryData } from "./types";
-import { parseDucFlatBuffers } from "../duc/duc-ts/parse";
+import { parseDucFlatBuffers } from "../duc/duc-ts/src/parseDuc";
 
 const parseFileContents = async (blob: Blob | File) => {
   let contents: string;
