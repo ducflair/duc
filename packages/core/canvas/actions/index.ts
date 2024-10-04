@@ -74,6 +74,7 @@ export {
   actionCut,
   actionCopyAsPng,
   actionCopyAsSvg,
+  actionPaste,
   copyText,
 } from "./actionClipboard";
 
