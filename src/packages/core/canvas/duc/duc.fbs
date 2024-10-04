@@ -39,7 +39,7 @@ table DucElement {
   strokeColor: string;
   strokeWidth: int;
   strokeStyle: string;  // Assuming StrokeStyle as string
-  strokePlacement: string;  // Assuming StrokePlacement as string
+  strokePlacement: int;
   opacity: float;
   width: float;
   height: float;
@@ -138,15 +138,7 @@ table DucGroup {
 }
 
 
-table UserToFollow {
-  socketId: string;
-  username: string;
-}
-
 table AppState {
-//   showWelcomeScreen: bool;
-  isLoading: bool;
-//   errorMessage: string;
   activeEmbeddableElement: DucElement;
   activeEmbeddableState: string;
   draggingElement: DucElement;
@@ -161,8 +153,8 @@ table AppState {
   editingFrame: string;
   elementsToHighlight: [DucElement];
   editingElement: DucElement;
-//   editingLinearElement: LinearElementEditor;
   currentItemStrokeColor: string;
+  currentItemStrokePlacement: int;
   currentItemBackgroundColor: string;
   currentItemFillStyle: string;
   currentItemStrokeWidth: int;
@@ -184,40 +176,17 @@ table AppState {
   cursorButton: string;
   scrolledOutside: bool;
   name: string;
-  isResizing: bool;
-  isRotating: bool;
   zoom: float;
-//   openMenu: string;
-//   openPopup: string;
-//   openSidebar: Sidebar;
-//   openDialog: Dialog;
-//   defaultSidebarDockedPreference: bool;
   lastPointerDownWith: string;
   selectedElementIds: [string];
   previousSelectedElementIds: [string];
   selectedElementsAreBeingDragged: bool;
   shouldCacheIgnoreZoom: bool;
-//   toast: Toast;
-//   theme: string;
   gridSize: int;
   selectedGroupIds: [string];
   editingGroupId: string;
-  width: int;
-  height: int;
-  offsetTop: int;
-  offsetLeft: int;
-  // fileHandle: string;  // Placeholder
-  // collaborators: [string];  // Placeholder
-//   currentChartType: string;
   pasteDialogShown: bool;
   pasteDialogData: string;
-  pendingImageElementId: string;
-//   selectedLinearElement: LinearElementEditor;
-//   snapLines: [SnapLine];
-  originSnapOffsetX: float;
-  originSnapOffsetY: float;
-  // userToFollow: UserToFollow;
-  // followedBy: [string];
   scaleRatioLocked: bool;
   displayAllPointDistances: bool;
   displayDistanceOnDrawing: bool;

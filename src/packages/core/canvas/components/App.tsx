@@ -452,7 +452,7 @@ import {
 import { adjustElementsMapToCurrentScope, adjustElementsToCurrentScope, adjustElementToCurrentScope, CombinedMeasure, coordinateToRealMeasure, realMeasureToCoordinate, SupportedMeasures } from "../duc/utils/measurements";
 import { WritingLayers } from "../duc/utils/writingLayers";
 import { actionChangeBackgroundColor, actionChangeFontFamily, actionChangeFontSize, actionChangeOpacity, actionChangeSloppiness, actionChangeStrokeColor, actionChangeStrokeWidth, actionChangeTextAlign, actionChangeVerticalAlign, changeProperty } from "../actions/actionProperties";
-import { saveAsFlatBuffers } from "../duc/duc-ts/serialize";
+import { saveAsFlatBuffers } from "../duc/duc-ts/src/serializeDuc";
 import transformHexColor from "../scene/hexDarkModeFilter";
 import {
   actionToggleEraserTool,
