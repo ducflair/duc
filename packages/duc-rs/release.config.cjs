@@ -14,13 +14,6 @@ module.exports = {
       }
     ],
     "@semantic-release/github",
-    [
-      "@semantic-release/git",
-      {
-        assets: ["Cargo.toml"],
-        message: "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
-      }
-    ]
   ],
   tagFormat: "@ducflair/duc-rs@${version}"
 };

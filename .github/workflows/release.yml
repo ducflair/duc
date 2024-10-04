@@ -83,14 +83,6 @@ jobs:
           NPM_CONFIG_LEGACY_PEER_DEPS: "true"
         run: npx semantic-release --ci
         working-directory: ./packages/duc-ts
-      - name: Restore `package.json` to maintain `0.0.0-development`
-        run: |
-          git checkout packages/duc-ts/package.json
-      - name: Retry Git Push if it Fails
-        if: ${{ failure() }}
-        run: |
-          git pull --rebase origin main
-          git push --tags origin HEAD:main || true
 
 
   # Release job for duc-py package
@@ -140,14 +132,6 @@ jobs:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: npx semantic-release --ci
         working-directory: ./packages/duc-py
-      - name: Restore `setup.py` to maintain `0.0.0-development`
-        run: |
-          git checkout packages/duc-py/setup.py
-      - name: Retry Git Push if it Fails
-        if: ${{ failure() }}
-        run: |
-          git pull --rebase origin main
-          git push --tags origin HEAD:main || true
 
 
   # Release job for duc-rs package
@@ -193,6 +177,3 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: npx semantic-release --ci
         working-directory: ./packages/duc-rs
-      - name: Restore `Cargo.toml` to maintain `0.0.0-development`
-        run: |
-          git checkout packages/duc-rs/Cargo.toml
