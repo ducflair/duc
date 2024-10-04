@@ -122,11 +122,9 @@ strokeStyle(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-strokePlacement():string|null
-strokePlacement(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-strokePlacement(optionalEncoding?:any):string|Uint8Array|null {
+strokePlacement():number {
   const offset = this.bb!.__offset(this.bb_pos, 34);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 opacity():number {
@@ -435,8 +433,8 @@ static addStrokeStyle(builder:flatbuffers.Builder, strokeStyleOffset:flatbuffers
   builder.addFieldOffset(14, strokeStyleOffset, 0);
 }
 
-static addStrokePlacement(builder:flatbuffers.Builder, strokePlacementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(15, strokePlacementOffset, 0);
+static addStrokePlacement(builder:flatbuffers.Builder, strokePlacement:number) {
+  builder.addFieldInt32(15, strokePlacement, 0);
 }
 
 static addOpacity(builder:flatbuffers.Builder, opacity:number) {
