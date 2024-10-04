@@ -2,6 +2,7 @@ import cssVariables from "./css/variables.module.scss";
 import { AppProps, AppState } from "./types";
 import { DucElement, FontFamilyValues } from "./element/types";
 import { COLOR_PALETTE } from "./colors";
+import { getDefaultAppState } from "./appState";
 export const isDarwin = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
 export const isWindows = /^Win/.test(navigator.platform);
 export const isAndroid = /\b(android)\b/i.test(navigator.userAgent);
@@ -352,6 +353,12 @@ export const ROUGHNESS = {
   cartoonist: 2,
 } as const;
 
+export const STROKE_PLACEMENT = {
+  outside: 2,
+  center: 1,
+  inside: 0,
+} as const;
+
 export const STROKE_WIDTH = {
   thin: 1,
   bold: 2,
@@ -370,18 +377,44 @@ export const DEFAULT_ELEMENT_PROPS: {
   roughness: DucElement["roughness"];
   opacity: DucElement["opacity"];
   locked: DucElement["locked"];
+  writingLayer: DucElement["writingLayer"];
+  scope: DucElement["scope"];
+  label: DucElement["label"];
+  index: DucElement["index"];
+  width: DucElement["width"];
+  height: DucElement["height"];
+  angle: DucElement["angle"];
+  groupIds: DucElement["groupIds"];
+  boundElements: DucElement["boundElements"];
+  link: DucElement["link"];
+  frameId: DucElement["frameId"];
+  isStrokeDisabled: DucElement["isStrokeDisabled"];
+  isBackgroundDisabled: DucElement["isBackgroundDisabled"];
 } = {
   strokeColor: COLOR_PALETTE.midGray,
   backgroundColor: `${COLOR_PALETTE.midGray}15`,
   isVisible: true,
   fillStyle: "solid",
-  strokePlacement: "outside",
+  strokePlacement: STROKE_PLACEMENT.center,
   strokeWidth: 2,
   strokeStyle: "solid",
   roundness: null,
   roughness: ROUGHNESS.architect,
   opacity: 100,
   locked: false,
+  writingLayer: 'notes',
+  scope: 'mm',
+  index: null,
+  label: `Lost Element`,
+  width: 0,
+  height: 0,
+  angle: 0,
+  groupIds: [],
+  frameId: null,
+  boundElements: null,
+  link: null,
+  isStrokeDisabled: false,
+  isBackgroundDisabled: false,
 };
 
 export const LIBRARY_SIDEBAR_TAB = "library";
