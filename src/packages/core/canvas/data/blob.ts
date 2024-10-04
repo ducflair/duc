@@ -129,7 +129,6 @@ export const loadSceneOrLibraryFromBlob = async (
 
   if(mime === MIME_TYPES.duc) {
     const { elements, appState, files } = await parseDucFlatBuffers(blob);
-    console.log("From Binary", elements, appState, files);
 
     if (!Array.isArray(elements)) {
       throw new Error("Parsed elements are not an array");
