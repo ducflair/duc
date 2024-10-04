@@ -3,6 +3,13 @@
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://ducflair-public.s3.eu-west-2.amazonaws.com/duc/duc-extended.png" /></a>
   <p align="center">2D CAD File Format</p>
   <br/><br/>
+    <p align="center" style="align: center;">
+    <a href="https://github.com/ducflair/duc/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-780000" alt="NPM" /></a>
+    <a href="https://www.npmjs.com/package/@ducflair/duc"><img src="https://shields.io/badge/NPM-cc3534?logo=Npm&logoColor=white&style=round-square" alt="NPM" /></a>
+    <a href="https://pypi.org/project/ducflair-duc/"><img src="https://shields.io/badge/Pip-blue?logo=Pypi&logoColor=white&style=round-square" alt="Pip" /></a>
+    <a href="https://crates.io/crates/ducflair-duc/"><img src="https://shields.io/badge/Crates-FFC933?logo=Rust&logoColor=646464&style=round-square" alt="Crates" /></a>
+  </p>
+
 </p>
 
 The `duc` 2D CAD file format is a cornerstone of our advanced design system, conceived to cater to professionals seeking precision and efficiency in their design work. It integrates seamlessly with [Ducflair's CAD Application](https://ducflair.com), leveraging the power of modern computing and graphical rendering technologies. 

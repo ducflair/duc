@@ -5,6 +5,7 @@
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://ducflair-public.s3.eu-west-2.amazonaws.com/duc/duc-extended.png" /></a>
   <p align="center">2D CAD File Format</p>
   <p align="center" style="align: center;">
+    <a href="https://crates.io/crates/ducflair-duc/"><img src="https://shields.io/badge/Crates-FFC933?logo=Rust&logoColor=646464&style=round-square" alt="Crates" /></a>
     <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/crates/v/ducflair-duc?style=round-square&label=latest%20stable" alt="Crates.io ducflair-duc@latest release" /></a>
     <a href="https://crates.io/crates/ducflair-duc"><img src="https://img.shields.io/crates/d/ducflair-duc?style=round-square&color=salmon" alt="Downloads" /></a>
     <img src="https://shields.io/badge/Rust-CE412B?logo=Rust&logoColor=fff&style=round-square" alt="Rust" />
