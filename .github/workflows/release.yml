@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: paths
     concurrency:
-      group: release-duc-ts
+      group: release
       cancel-in-progress: false
     if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_ts_changed == 'true'
     steps:
@@ -82,13 +82,18 @@ jobs:
       - name: Restore `package.json` to maintain `0.0.0-development`
         run: |
           git checkout packages/duc-ts/package.json
+      - name: Retry Git Push if it Fails (due to other repository push)
+        if: ${{ failure() && (steps.release.outcome == 'failure') }}
+        run: |
+          git pull origin main --rebase
+          git push --tags origin HEAD:main || true
 
   # Release job for duc-py package
   release_duc_py:
     runs-on: ubuntu-latest
     needs: paths
     concurrency:
-      group: release-duc-py
+      group: release
       cancel-in-progress: false
     if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_py_changed == 'true'
     steps:
@@ -126,13 +131,18 @@ jobs:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: npx semantic-release --ci
         working-directory: ./packages/duc-py
+      - name: Retry Git Push if it Fails (due to other repository push)
+        if: ${{ failure() && (steps.release.outcome == 'failure') }}
+        run: |
+          git pull origin main --rebase
+          git push --tags origin HEAD:main || true
 
   # Release job for duc-rs package
   release_duc_rs:
     runs-on: ubuntu-latest
     needs: paths
     concurrency:
-      group: release-duc-rs
+      group: release
       cancel-in-progress: false
     if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_rs_changed == 'true'
     steps:
@@ -168,3 +178,8 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: npx semantic-release --ci
         working-directory: ./packages/duc-rs
+      - name: Retry Git Push if it Fails (due to other repository push)
+        if: ${{ failure() && (steps.release.outcome == 'failure') }}
+        run: |
+          git pull origin main --rebase
+          git push --tags origin HEAD:main || true
