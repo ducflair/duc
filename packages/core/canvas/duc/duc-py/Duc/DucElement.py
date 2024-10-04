@@ -133,8 +133,8 @@ class DucElement(object):
     def StrokePlacement(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
         if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
+            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+        return 0
 
     # DucElement
     def Opacity(self):
@@ -577,7 +577,7 @@ def AddStrokeStyle(builder, strokeStyle):
     DucElementAddStrokeStyle(builder, strokeStyle)
 
 def DucElementAddStrokePlacement(builder, strokePlacement):
-    builder.PrependUOffsetTRelativeSlot(15, flatbuffers.number_types.UOffsetTFlags.py_type(strokePlacement), 0)
+    builder.PrependInt32Slot(15, strokePlacement, 0)
 
 def AddStrokePlacement(builder, strokePlacement):
     DucElementAddStrokePlacement(builder, strokePlacement)
