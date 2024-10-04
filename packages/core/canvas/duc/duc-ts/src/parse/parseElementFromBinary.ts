@@ -1,4 +1,4 @@
-import { DucElement as BinDucElement } from '../duc';
+import { DucElement as BinDucElement } from '../../duc';
 import {
   DucElement,
   DucElementTypes,
@@ -24,9 +24,11 @@ import {
   DucDiamondElement,
   DucEllipseElement,
   FractionalIndex
-} from '../../../element/types';
-import { SupportedMeasures } from '../../utils/measurements';
-import { WritingLayers } from '../../utils/writingLayers';
+} from '../../../../element/types';
+import { SupportedMeasures } from '../../../utils/measurements';
+import { WritingLayers } from '../../../utils/writingLayers';
+import { nanoid } from 'nanoid';
+import { DEFAULT_ELEMENT_PROPS } from '../../../../constants';
 
 export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
   if (!e) return null;
@@ -74,12 +76,12 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
   const elementType = e.type() as DucElementTypes;
 
   const baseElement: Partial<DucElement> = {
-    id: e.id() || '',
+    id: e.id() || nanoid(),
     x: e.x(),
     y: e.y(),
     index: e.index() as FractionalIndex,
-    strokeColor: e.strokeColor() || '',
-    backgroundColor: e.backgroundColor() || '',
+    strokeColor: e.strokeColor() || DEFAULT_ELEMENT_PROPS.strokeColor,
+    backgroundColor: e.backgroundColor() || DEFAULT_ELEMENT_PROPS.backgroundColor,
     strokeWidth: e.strokeWidth(),
     isVisible: e.isVisible(),
     roundness: null,
@@ -94,17 +96,17 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
     height: e.height(),
     angle: e.angle(),
     isDeleted: e.isDeleted(),
-    frameId: e.frameId() || '',
-    link: e.link() || '',
+    frameId: e.frameId() || DEFAULT_ELEMENT_PROPS.frameId,
+    link: e.link() || DEFAULT_ELEMENT_PROPS.link,
     locked: e.locked(),
     customData: e.customData()?.length ? JSON.parse(e.customData()!) : '',
     groupIds: groupIds,
-    scope: (e.scope() || '') as SupportedMeasures,
-    writingLayer: (e.writingLayer() || '') as WritingLayers,
-    label: e.label() || '',
-    strokeStyle: (e.strokeStyle() || '') as StrokeStyle,
+    scope: (e.scope() || DEFAULT_ELEMENT_PROPS.scope) as SupportedMeasures,
+    writingLayer: (e.writingLayer() || DEFAULT_ELEMENT_PROPS.writingLayer) as WritingLayers,
+    label: e.label() || DEFAULT_ELEMENT_PROPS.label,
+    strokeStyle: (e.strokeStyle() || DEFAULT_ELEMENT_PROPS.strokeStyle) as StrokeStyle,
     boundElements: boundElements,
-    strokePlacement: (e.strokePlacement() || '') as StrokePlacement,
+    strokePlacement: (e.strokePlacement() || DEFAULT_ELEMENT_PROPS.strokePlacement) as StrokePlacement,
   };
 
   switch (elementType) {

@@ -1,6 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
-import { DucElement as BinDucElement, Point, PointBinding } from '../duc';
-import { DucElement } from '../../../element/types';
+import { DucElement as BinDucElement, Point, PointBinding } from '../../duc';
+import { DucElement } from '../../../../element/types';
 
 export const serializeDucElement = (builder: flatbuffers.Builder, element: DucElement): flatbuffers.Offset => {
   const idOffset = builder.createString(element.id);
@@ -15,7 +15,6 @@ export const serializeDucElement = (builder: flatbuffers.Builder, element: DucEl
   const fillStyleOffset = builder.createString(element.fillStyle);
   const roundnessTypeOffset = builder.createString(String(element.roundness?.type));
   const strokeStyleOffset = builder.createString(element.strokeStyle);
-  const strokePlacementOffset = builder.createString(element.strokePlacement);
   const typeOffset = builder.createString(element.type);
 
   // Create group IDs vector
@@ -132,7 +131,7 @@ export const serializeDucElement = (builder: flatbuffers.Builder, element: DucEl
   BinDucElement.addStrokeColor(builder, strokeColorOffset);
   BinDucElement.addStrokeWidth(builder, element.strokeWidth);
   BinDucElement.addStrokeStyle(builder, strokeStyleOffset);
-  BinDucElement.addStrokePlacement(builder, strokePlacementOffset);
+  BinDucElement.addStrokePlacement(builder, element.strokePlacement);
   BinDucElement.addOpacity(builder, element.opacity);
   BinDucElement.addWidth(builder, element.width);
   BinDucElement.addHeight(builder, element.height);

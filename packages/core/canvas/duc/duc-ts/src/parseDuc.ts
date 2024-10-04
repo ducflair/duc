@@ -2,9 +2,9 @@ import * as flatbuffers from 'flatbuffers';
 import { ExportedDataState, DucElement as BinDucElement, AppState as BinAppState, BinaryFiles as BinBinaryFiles, BoundElement } from '../duc';
 import { AppState, BinaryFiles } from '../../../types';
 import { DucElement, DucElementTypes, DucLinearElement, FillStyle, RoundnessType, StrokePlacement, StrokeStyle } from '../../../element/types';
-import { parseElementFromBinary } from './parseElementFromBinary';
-import { parseAppStateFromBinary } from './parseAppStateFromBinary';
-import { parseBinaryFilesFromBinary } from './parseBinaryFilesFromBinary';
+import { parseElementFromBinary } from './parse/parseElementFromBinary';
+import { parseAppStateFromBinary } from './parse/parseAppStateFromBinary';
+import { parseBinaryFilesFromBinary } from './parse/parseBinaryFilesFromBinary';
 
 // Helper function to convert Uint8Array to DataURL (optional, depending on usage)
 const uint8ArrayToDataURL = (uint8Array: Uint8Array): string => {

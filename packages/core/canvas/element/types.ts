@@ -2,6 +2,7 @@ import { Point } from "../types";
 import {
   FONT_FAMILY,
   ROUNDNESS,
+  STROKE_PLACEMENT,
   TEXT_ALIGN,
   THEME,
   VERTICAL_ALIGN,
@@ -22,7 +23,7 @@ export type PointerType = "mouse" | "pen" | "touch";
 export type StrokeRoundness = "round" | "sharp";
 export type RoundnessType = ValueOf<typeof ROUNDNESS>;
 export type StrokeStyle = "solid" | "dashed" | "dotted";
-export type StrokePlacement = "inside" | "center" | "outside";
+export type StrokePlacement = ValueOf<typeof STROKE_PLACEMENT>;
 export type TextAlign = typeof TEXT_ALIGN[keyof typeof TEXT_ALIGN];
 
 type VerticalAlignKeys = keyof typeof VERTICAL_ALIGN;

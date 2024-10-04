@@ -25,15 +25,8 @@ class AppState(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # AppState
-    def IsLoading(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
-        if o != 0:
-            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
-        return False
-
-    # AppState
     def ActiveEmbeddableElement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from Duc.DucElement import DucElement
@@ -44,14 +37,14 @@ class AppState(object):
 
     # AppState
     def ActiveEmbeddableState(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # AppState
     def DraggingElement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from Duc.DucElement import DucElement
@@ -62,7 +55,7 @@ class AppState(object):
 
     # AppState
     def ResizingElement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from Duc.DucElement import DucElement
@@ -73,7 +66,7 @@ class AppState(object):
 
     # AppState
     def MultiElement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from Duc.DucElement import DucElement
@@ -84,7 +77,7 @@ class AppState(object):
 
     # AppState
     def SelectionElement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from Duc.DucElement import DucElement
@@ -95,7 +88,7 @@ class AppState(object):
 
     # AppState
     def FrameToHighlight(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from Duc.DucElement import DucElement
@@ -106,42 +99,42 @@ class AppState(object):
 
     # AppState
     def FrameRenderingEnabled(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def FrameRenderingName(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def FrameRenderingOutline(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def FrameRenderingClip(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def EditingFrame(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # AppState
     def ElementsToHighlight(self, j):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
         if o != 0:
             x = self._tab.Vector(o)
             x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
@@ -154,19 +147,19 @@ class AppState(object):
 
     # AppState
     def ElementsToHighlightLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # AppState
     def ElementsToHighlightIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
         return o == 0
 
     # AppState
     def EditingElement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from Duc.DucElement import DucElement
@@ -177,10 +170,17 @@ class AppState(object):
 
     # AppState
     def CurrentItemStrokeColor(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
+
+    # AppState
+    def CurrentItemStrokePlacement(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+        return 0
 
     # AppState
     def CurrentItemBackgroundColor(self):
@@ -348,36 +348,22 @@ class AppState(object):
         return None
 
     # AppState
-    def IsResizing(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(78))
-        if o != 0:
-            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
-        return False
-
-    # AppState
-    def IsRotating(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(80))
-        if o != 0:
-            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
-        return False
-
-    # AppState
     def Zoom(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(82))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(78))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
     # AppState
     def LastPointerDownWith(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(84))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(80))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # AppState
     def SelectedElementIds(self, j):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(86))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(82))
         if o != 0:
             a = self._tab.Vector(o)
             return self._tab.String(a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
@@ -385,19 +371,19 @@ class AppState(object):
 
     # AppState
     def SelectedElementIdsLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(86))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(82))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # AppState
     def SelectedElementIdsIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(86))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(82))
         return o == 0
 
     # AppState
     def PreviousSelectedElementIds(self, j):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(88))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(84))
         if o != 0:
             a = self._tab.Vector(o)
             return self._tab.String(a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
@@ -405,40 +391,40 @@ class AppState(object):
 
     # AppState
     def PreviousSelectedElementIdsLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(88))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(84))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # AppState
     def PreviousSelectedElementIdsIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(88))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(84))
         return o == 0
 
     # AppState
     def SelectedElementsAreBeingDragged(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(90))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(86))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def ShouldCacheIgnoreZoom(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(92))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(88))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def GridSize(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(94))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(90))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
     # AppState
     def SelectedGroupIds(self, j):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(96))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(92))
         if o != 0:
             a = self._tab.Vector(o)
             return self._tab.String(a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
@@ -446,228 +432,173 @@ class AppState(object):
 
     # AppState
     def SelectedGroupIdsLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(96))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(92))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # AppState
     def SelectedGroupIdsIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(96))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(92))
         return o == 0
 
     # AppState
     def EditingGroupId(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(98))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(94))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # AppState
-    def Width(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(100))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # AppState
-    def Height(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(102))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # AppState
-    def OffsetTop(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(104))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # AppState
-    def OffsetLeft(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(106))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # AppState
     def PasteDialogShown(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(108))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(96))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def PasteDialogData(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(110))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(98))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
-
-    # AppState
-    def PendingImageElementId(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(112))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # AppState
-    def OriginSnapOffsetX(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(114))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
-        return 0.0
-
-    # AppState
-    def OriginSnapOffsetY(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(116))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
-        return 0.0
 
     # AppState
     def ScaleRatioLocked(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(118))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(100))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def DisplayAllPointDistances(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(120))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(102))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def DisplayDistanceOnDrawing(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(122))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(104))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def DisplayAllPointCoordinates(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(124))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(106))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def DisplayAllPointInfoSelected(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(126))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(108))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def EnableLineBendingOnEdit(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(128))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(110))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def AllowIndependentCurveHandles(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(130))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(112))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
     def CoordDecimalPlaces(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(132))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(114))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
 def AppStateStart(builder):
-    builder.StartObject(65)
+    builder.StartObject(56)
 
 def Start(builder):
     AppStateStart(builder)
 
-def AppStateAddIsLoading(builder, isLoading):
-    builder.PrependBoolSlot(0, isLoading, 0)
-
-def AddIsLoading(builder, isLoading):
-    AppStateAddIsLoading(builder, isLoading)
-
 def AppStateAddActiveEmbeddableElement(builder, activeEmbeddableElement):
-    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(activeEmbeddableElement), 0)
+    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(activeEmbeddableElement), 0)
 
 def AddActiveEmbeddableElement(builder, activeEmbeddableElement):
     AppStateAddActiveEmbeddableElement(builder, activeEmbeddableElement)
 
 def AppStateAddActiveEmbeddableState(builder, activeEmbeddableState):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(activeEmbeddableState), 0)
+    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(activeEmbeddableState), 0)
 
 def AddActiveEmbeddableState(builder, activeEmbeddableState):
     AppStateAddActiveEmbeddableState(builder, activeEmbeddableState)
 
 def AppStateAddDraggingElement(builder, draggingElement):
-    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(draggingElement), 0)
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(draggingElement), 0)
 
 def AddDraggingElement(builder, draggingElement):
     AppStateAddDraggingElement(builder, draggingElement)
 
 def AppStateAddResizingElement(builder, resizingElement):
-    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(resizingElement), 0)
+    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(resizingElement), 0)
 
 def AddResizingElement(builder, resizingElement):
     AppStateAddResizingElement(builder, resizingElement)
 
 def AppStateAddMultiElement(builder, multiElement):
-    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(multiElement), 0)
+    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(multiElement), 0)
 
 def AddMultiElement(builder, multiElement):
     AppStateAddMultiElement(builder, multiElement)
 
 def AppStateAddSelectionElement(builder, selectionElement):
-    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(selectionElement), 0)
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(selectionElement), 0)
 
 def AddSelectionElement(builder, selectionElement):
     AppStateAddSelectionElement(builder, selectionElement)
 
 def AppStateAddFrameToHighlight(builder, frameToHighlight):
-    builder.PrependUOffsetTRelativeSlot(7, flatbuffers.number_types.UOffsetTFlags.py_type(frameToHighlight), 0)
+    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(frameToHighlight), 0)
 
 def AddFrameToHighlight(builder, frameToHighlight):
     AppStateAddFrameToHighlight(builder, frameToHighlight)
 
 def AppStateAddFrameRenderingEnabled(builder, frameRenderingEnabled):
-    builder.PrependBoolSlot(8, frameRenderingEnabled, 0)
+    builder.PrependBoolSlot(7, frameRenderingEnabled, 0)
 
 def AddFrameRenderingEnabled(builder, frameRenderingEnabled):
     AppStateAddFrameRenderingEnabled(builder, frameRenderingEnabled)
 
 def AppStateAddFrameRenderingName(builder, frameRenderingName):
-    builder.PrependBoolSlot(9, frameRenderingName, 0)
+    builder.PrependBoolSlot(8, frameRenderingName, 0)
 
 def AddFrameRenderingName(builder, frameRenderingName):
     AppStateAddFrameRenderingName(builder, frameRenderingName)
 
 def AppStateAddFrameRenderingOutline(builder, frameRenderingOutline):
-    builder.PrependBoolSlot(10, frameRenderingOutline, 0)
+    builder.PrependBoolSlot(9, frameRenderingOutline, 0)
 
 def AddFrameRenderingOutline(builder, frameRenderingOutline):
     AppStateAddFrameRenderingOutline(builder, frameRenderingOutline)
 
 def AppStateAddFrameRenderingClip(builder, frameRenderingClip):
-    builder.PrependBoolSlot(11, frameRenderingClip, 0)
+    builder.PrependBoolSlot(10, frameRenderingClip, 0)
 
 def AddFrameRenderingClip(builder, frameRenderingClip):
     AppStateAddFrameRenderingClip(builder, frameRenderingClip)
 
 def AppStateAddEditingFrame(builder, editingFrame):
-    builder.PrependUOffsetTRelativeSlot(12, flatbuffers.number_types.UOffsetTFlags.py_type(editingFrame), 0)
+    builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(editingFrame), 0)
 
 def AddEditingFrame(builder, editingFrame):
     AppStateAddEditingFrame(builder, editingFrame)
 
 def AppStateAddElementsToHighlight(builder, elementsToHighlight):
-    builder.PrependUOffsetTRelativeSlot(13, flatbuffers.number_types.UOffsetTFlags.py_type(elementsToHighlight), 0)
+    builder.PrependUOffsetTRelativeSlot(12, flatbuffers.number_types.UOffsetTFlags.py_type(elementsToHighlight), 0)
 
 def AddElementsToHighlight(builder, elementsToHighlight):
     AppStateAddElementsToHighlight(builder, elementsToHighlight)
@@ -679,16 +610,22 @@ def StartElementsToHighlightVector(builder, numElems):
     return AppStateStartElementsToHighlightVector(builder, numElems)
 
 def AppStateAddEditingElement(builder, editingElement):
-    builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(editingElement), 0)
+    builder.PrependUOffsetTRelativeSlot(13, flatbuffers.number_types.UOffsetTFlags.py_type(editingElement), 0)
 
 def AddEditingElement(builder, editingElement):
     AppStateAddEditingElement(builder, editingElement)
 
 def AppStateAddCurrentItemStrokeColor(builder, currentItemStrokeColor):
-    builder.PrependUOffsetTRelativeSlot(15, flatbuffers.number_types.UOffsetTFlags.py_type(currentItemStrokeColor), 0)
+    builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(currentItemStrokeColor), 0)
 
 def AddCurrentItemStrokeColor(builder, currentItemStrokeColor):
     AppStateAddCurrentItemStrokeColor(builder, currentItemStrokeColor)
+
+def AppStateAddCurrentItemStrokePlacement(builder, currentItemStrokePlacement):
+    builder.PrependInt32Slot(15, currentItemStrokePlacement, 0)
+
+def AddCurrentItemStrokePlacement(builder, currentItemStrokePlacement):
+    AppStateAddCurrentItemStrokePlacement(builder, currentItemStrokePlacement)
 
 def AppStateAddCurrentItemBackgroundColor(builder, currentItemBackgroundColor):
     builder.PrependUOffsetTRelativeSlot(16, flatbuffers.number_types.UOffsetTFlags.py_type(currentItemBackgroundColor), 0)
@@ -822,32 +759,20 @@ def AppStateAddName(builder, name):
 def AddName(builder, name):
     AppStateAddName(builder, name)
 
-def AppStateAddIsResizing(builder, isResizing):
-    builder.PrependBoolSlot(37, isResizing, 0)
-
-def AddIsResizing(builder, isResizing):
-    AppStateAddIsResizing(builder, isResizing)
-
-def AppStateAddIsRotating(builder, isRotating):
-    builder.PrependBoolSlot(38, isRotating, 0)
-
-def AddIsRotating(builder, isRotating):
-    AppStateAddIsRotating(builder, isRotating)
-
 def AppStateAddZoom(builder, zoom):
-    builder.PrependFloat32Slot(39, zoom, 0.0)
+    builder.PrependFloat32Slot(37, zoom, 0.0)
 
 def AddZoom(builder, zoom):
     AppStateAddZoom(builder, zoom)
 
 def AppStateAddLastPointerDownWith(builder, lastPointerDownWith):
-    builder.PrependUOffsetTRelativeSlot(40, flatbuffers.number_types.UOffsetTFlags.py_type(lastPointerDownWith), 0)
+    builder.PrependUOffsetTRelativeSlot(38, flatbuffers.number_types.UOffsetTFlags.py_type(lastPointerDownWith), 0)
 
 def AddLastPointerDownWith(builder, lastPointerDownWith):
     AppStateAddLastPointerDownWith(builder, lastPointerDownWith)
 
 def AppStateAddSelectedElementIds(builder, selectedElementIds):
-    builder.PrependUOffsetTRelativeSlot(41, flatbuffers.number_types.UOffsetTFlags.py_type(selectedElementIds), 0)
+    builder.PrependUOffsetTRelativeSlot(39, flatbuffers.number_types.UOffsetTFlags.py_type(selectedElementIds), 0)
 
 def AddSelectedElementIds(builder, selectedElementIds):
     AppStateAddSelectedElementIds(builder, selectedElementIds)
@@ -859,7 +784,7 @@ def StartSelectedElementIdsVector(builder, numElems):
     return AppStateStartSelectedElementIdsVector(builder, numElems)
 
 def AppStateAddPreviousSelectedElementIds(builder, previousSelectedElementIds):
-    builder.PrependUOffsetTRelativeSlot(42, flatbuffers.number_types.UOffsetTFlags.py_type(previousSelectedElementIds), 0)
+    builder.PrependUOffsetTRelativeSlot(40, flatbuffers.number_types.UOffsetTFlags.py_type(previousSelectedElementIds), 0)
 
 def AddPreviousSelectedElementIds(builder, previousSelectedElementIds):
     AppStateAddPreviousSelectedElementIds(builder, previousSelectedElementIds)
@@ -871,25 +796,25 @@ def StartPreviousSelectedElementIdsVector(builder, numElems):
     return AppStateStartPreviousSelectedElementIdsVector(builder, numElems)
 
 def AppStateAddSelectedElementsAreBeingDragged(builder, selectedElementsAreBeingDragged):
-    builder.PrependBoolSlot(43, selectedElementsAreBeingDragged, 0)
+    builder.PrependBoolSlot(41, selectedElementsAreBeingDragged, 0)
 
 def AddSelectedElementsAreBeingDragged(builder, selectedElementsAreBeingDragged):
     AppStateAddSelectedElementsAreBeingDragged(builder, selectedElementsAreBeingDragged)
 
 def AppStateAddShouldCacheIgnoreZoom(builder, shouldCacheIgnoreZoom):
-    builder.PrependBoolSlot(44, shouldCacheIgnoreZoom, 0)
+    builder.PrependBoolSlot(42, shouldCacheIgnoreZoom, 0)
 
 def AddShouldCacheIgnoreZoom(builder, shouldCacheIgnoreZoom):
     AppStateAddShouldCacheIgnoreZoom(builder, shouldCacheIgnoreZoom)
 
 def AppStateAddGridSize(builder, gridSize):
-    builder.PrependInt32Slot(45, gridSize, 0)
+    builder.PrependInt32Slot(43, gridSize, 0)
 
 def AddGridSize(builder, gridSize):
     AppStateAddGridSize(builder, gridSize)
 
 def AppStateAddSelectedGroupIds(builder, selectedGroupIds):
-    builder.PrependUOffsetTRelativeSlot(46, flatbuffers.number_types.UOffsetTFlags.py_type(selectedGroupIds), 0)
+    builder.PrependUOffsetTRelativeSlot(44, flatbuffers.number_types.UOffsetTFlags.py_type(selectedGroupIds), 0)
 
 def AddSelectedGroupIds(builder, selectedGroupIds):
     AppStateAddSelectedGroupIds(builder, selectedGroupIds)
@@ -901,109 +826,67 @@ def StartSelectedGroupIdsVector(builder, numElems):
     return AppStateStartSelectedGroupIdsVector(builder, numElems)
 
 def AppStateAddEditingGroupId(builder, editingGroupId):
-    builder.PrependUOffsetTRelativeSlot(47, flatbuffers.number_types.UOffsetTFlags.py_type(editingGroupId), 0)
+    builder.PrependUOffsetTRelativeSlot(45, flatbuffers.number_types.UOffsetTFlags.py_type(editingGroupId), 0)
 
 def AddEditingGroupId(builder, editingGroupId):
     AppStateAddEditingGroupId(builder, editingGroupId)
 
-def AppStateAddWidth(builder, width):
-    builder.PrependInt32Slot(48, width, 0)
-
-def AddWidth(builder, width):
-    AppStateAddWidth(builder, width)
-
-def AppStateAddHeight(builder, height):
-    builder.PrependInt32Slot(49, height, 0)
-
-def AddHeight(builder, height):
-    AppStateAddHeight(builder, height)
-
-def AppStateAddOffsetTop(builder, offsetTop):
-    builder.PrependInt32Slot(50, offsetTop, 0)
-
-def AddOffsetTop(builder, offsetTop):
-    AppStateAddOffsetTop(builder, offsetTop)
-
-def AppStateAddOffsetLeft(builder, offsetLeft):
-    builder.PrependInt32Slot(51, offsetLeft, 0)
-
-def AddOffsetLeft(builder, offsetLeft):
-    AppStateAddOffsetLeft(builder, offsetLeft)
-
 def AppStateAddPasteDialogShown(builder, pasteDialogShown):
-    builder.PrependBoolSlot(52, pasteDialogShown, 0)
+    builder.PrependBoolSlot(46, pasteDialogShown, 0)
 
 def AddPasteDialogShown(builder, pasteDialogShown):
     AppStateAddPasteDialogShown(builder, pasteDialogShown)
 
 def AppStateAddPasteDialogData(builder, pasteDialogData):
-    builder.PrependUOffsetTRelativeSlot(53, flatbuffers.number_types.UOffsetTFlags.py_type(pasteDialogData), 0)
+    builder.PrependUOffsetTRelativeSlot(47, flatbuffers.number_types.UOffsetTFlags.py_type(pasteDialogData), 0)
 
 def AddPasteDialogData(builder, pasteDialogData):
     AppStateAddPasteDialogData(builder, pasteDialogData)
 
-def AppStateAddPendingImageElementId(builder, pendingImageElementId):
-    builder.PrependUOffsetTRelativeSlot(54, flatbuffers.number_types.UOffsetTFlags.py_type(pendingImageElementId), 0)
-
-def AddPendingImageElementId(builder, pendingImageElementId):
-    AppStateAddPendingImageElementId(builder, pendingImageElementId)
-
-def AppStateAddOriginSnapOffsetX(builder, originSnapOffsetX):
-    builder.PrependFloat32Slot(55, originSnapOffsetX, 0.0)
-
-def AddOriginSnapOffsetX(builder, originSnapOffsetX):
-    AppStateAddOriginSnapOffsetX(builder, originSnapOffsetX)
-
-def AppStateAddOriginSnapOffsetY(builder, originSnapOffsetY):
-    builder.PrependFloat32Slot(56, originSnapOffsetY, 0.0)
-
-def AddOriginSnapOffsetY(builder, originSnapOffsetY):
-    AppStateAddOriginSnapOffsetY(builder, originSnapOffsetY)
-
 def AppStateAddScaleRatioLocked(builder, scaleRatioLocked):
-    builder.PrependBoolSlot(57, scaleRatioLocked, 0)
+    builder.PrependBoolSlot(48, scaleRatioLocked, 0)
 
 def AddScaleRatioLocked(builder, scaleRatioLocked):
     AppStateAddScaleRatioLocked(builder, scaleRatioLocked)
 
 def AppStateAddDisplayAllPointDistances(builder, displayAllPointDistances):
-    builder.PrependBoolSlot(58, displayAllPointDistances, 0)
+    builder.PrependBoolSlot(49, displayAllPointDistances, 0)
 
 def AddDisplayAllPointDistances(builder, displayAllPointDistances):
     AppStateAddDisplayAllPointDistances(builder, displayAllPointDistances)
 
 def AppStateAddDisplayDistanceOnDrawing(builder, displayDistanceOnDrawing):
-    builder.PrependBoolSlot(59, displayDistanceOnDrawing, 0)
+    builder.PrependBoolSlot(50, displayDistanceOnDrawing, 0)
 
 def AddDisplayDistanceOnDrawing(builder, displayDistanceOnDrawing):
     AppStateAddDisplayDistanceOnDrawing(builder, displayDistanceOnDrawing)
 
 def AppStateAddDisplayAllPointCoordinates(builder, displayAllPointCoordinates):
-    builder.PrependBoolSlot(60, displayAllPointCoordinates, 0)
+    builder.PrependBoolSlot(51, displayAllPointCoordinates, 0)
 
 def AddDisplayAllPointCoordinates(builder, displayAllPointCoordinates):
     AppStateAddDisplayAllPointCoordinates(builder, displayAllPointCoordinates)
 
 def AppStateAddDisplayAllPointInfoSelected(builder, displayAllPointInfoSelected):
-    builder.PrependBoolSlot(61, displayAllPointInfoSelected, 0)
+    builder.PrependBoolSlot(52, displayAllPointInfoSelected, 0)
 
 def AddDisplayAllPointInfoSelected(builder, displayAllPointInfoSelected):
     AppStateAddDisplayAllPointInfoSelected(builder, displayAllPointInfoSelected)
 
 def AppStateAddEnableLineBendingOnEdit(builder, enableLineBendingOnEdit):
-    builder.PrependBoolSlot(62, enableLineBendingOnEdit, 0)
+    builder.PrependBoolSlot(53, enableLineBendingOnEdit, 0)
 
 def AddEnableLineBendingOnEdit(builder, enableLineBendingOnEdit):
     AppStateAddEnableLineBendingOnEdit(builder, enableLineBendingOnEdit)
 
 def AppStateAddAllowIndependentCurveHandles(builder, allowIndependentCurveHandles):
-    builder.PrependBoolSlot(63, allowIndependentCurveHandles, 0)
+    builder.PrependBoolSlot(54, allowIndependentCurveHandles, 0)
 
 def AddAllowIndependentCurveHandles(builder, allowIndependentCurveHandles):
     AppStateAddAllowIndependentCurveHandles(builder, allowIndependentCurveHandles)
 
 def AppStateAddCoordDecimalPlaces(builder, coordDecimalPlaces):
-    builder.PrependInt32Slot(64, coordDecimalPlaces, 0)
+    builder.PrependInt32Slot(55, coordDecimalPlaces, 0)
 
 def AddCoordDecimalPlaces(builder, coordDecimalPlaces):
     AppStateAddCoordDecimalPlaces(builder, coordDecimalPlaces)
