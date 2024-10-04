@@ -396,6 +396,10 @@ export {
 } from "./scene/normalize";
 
 export {
+  allElementsInSameGroup
+} from "./actions/actionGroup";
+
+export {
   getStateForZoom
 } from "./scene/zoom";
 
