@@ -34,7 +34,7 @@ import {
 import { syncMovedIndices } from "../fractionalIndex";
 import { StoreAction } from "../store";
 
-const allElementsInSameGroup = (elements: readonly DucElement[]) => {
+export const allElementsInSameGroup = (elements: readonly DucElement[]) => {
   if (elements.length >= 2) {
     const groupIds = elements[0].groupIds;
     for (const groupId of groupIds) {
