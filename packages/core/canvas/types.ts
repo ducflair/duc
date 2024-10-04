@@ -354,6 +354,7 @@ export interface AppState extends Ducfig {
 	currentItemBackgroundColor: string;
 	currentItemFillStyle: DucElement["fillStyle"];
 	currentItemStrokeWidth: number;
+  currentItemStrokePlacement: DucElement["strokePlacement"];
 	currentItemStrokeStyle: DucElement["strokeStyle"];
 	currentItemRoughness: number;
 	currentItemOpacity: number;

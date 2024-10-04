@@ -1,6 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
-import { BinaryFileData, BinaryFilesEntry, BinaryFiles as BinBinaryFiles } from '../duc';
-import { BinaryFiles as BinaryFilesType } from '../../../types';
+import { BinaryFileData, BinaryFilesEntry, BinaryFiles as BinBinaryFiles } from '../../duc';
+import { BinaryFiles as BinaryFilesType } from '../../../../types';
 
 // Helper function to convert a DataURL (base64 string) to Uint8Array
 const dataURLToUint8Array = (dataURL: string): Uint8Array => {
