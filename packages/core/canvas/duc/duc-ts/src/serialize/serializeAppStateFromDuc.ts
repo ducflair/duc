@@ -1,17 +1,12 @@
 import * as flatbuffers from 'flatbuffers';
-import { AppState as BinAppState, UserToFollow, DucGroup } from '../duc';
-import { AppState } from '../../../types';
-import { serializeDucElement } from './ducElementSerialize';
+import { AppState as BinAppState, DucGroup } from '../../duc';
+import { AppState } from '../../../../types';
+import { serializeDucElement } from './serializeElementFromDuc';
+import { getDefaultAppState } from '../../../../appState';
 
 const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppState>): flatbuffers.Offset => {
   // Create string offsets and vectors
   const nameOffset = appState.name ? builder.createString(appState.name) : null;
-  const fileHandleOffset = appState.fileHandle ? builder.createString(appState.fileHandle.toString()) : null;
-  const pendingImageElementIdOffset = appState.pendingImageElementId ? builder.createString(appState.pendingImageElementId) : null;
-  const showHyperlinkPopupOffset = appState.showHyperlinkPopup ? builder.createString(appState.showHyperlinkPopup) : null;
-
-  // const collaboratorsOffsets = appState.collaborators ? Array.from(appState.collaborators.values()).map(collaborator => builder.createString(collaborator.username)) : [];
-  // const collaboratorsVector = collaboratorsOffsets.length > 0 ? BinAppState.createCollaboratorsVector(builder, collaboratorsOffsets) : null;
 
   const lastPointerDownWithOffset = appState.lastPointerDownWith ? builder.createString(appState.lastPointerDownWith) : null;
 
@@ -78,70 +73,56 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   // Now start the AppState object
   BinAppState.startAppState(builder);
 
-  BinAppState.addIsLoading(builder, appState.isLoading || false);
   if (nameOffset) BinAppState.addName(builder, nameOffset);
-  BinAppState.addWidth(builder, appState.width || 0);
-  BinAppState.addHeight(builder, appState.height || 0);
-  BinAppState.addOffsetTop(builder, appState.offsetTop || 0);
-  BinAppState.addOffsetLeft(builder, appState.offsetLeft || 0);
-  // if (fileHandleOffset) BinAppState.addFileHandle(builder, fileHandleOffset);
-  // if (collaboratorsVector) BinAppState.addCollaborators(builder, collaboratorsVector);
-  if (pendingImageElementIdOffset) BinAppState.addPendingImageElementId(builder, pendingImageElementIdOffset);
-  // if (showHyperlinkPopupOffset) BinAppState.addShowHyperlinkPopup(builder, showHyperlinkPopupOffset);
-  BinAppState.addOriginSnapOffsetX(builder, appState.originSnapOffset?.x || 0.0);
-  BinAppState.addOriginSnapOffsetY(builder, appState.originSnapOffset?.y || 0.0);
-  // if (userToFollowOffset) BinAppState.addUserToFollow(builder, userToFollowOffset);
-  // if (followedByVector) BinAppState.addFollowedBy(builder, followedByVector);
-  BinAppState.addIsResizing(builder, appState.isResizing || false);
-  BinAppState.addIsRotating(builder, appState.isRotating || false);
-  BinAppState.addZoom(builder, appState.zoom?.value || 0.0);
+  BinAppState.addZoom(builder, appState.zoom?.value || getDefaultAppState().zoom.value);
   if (lastPointerDownWithOffset) BinAppState.addLastPointerDownWith(builder, lastPointerDownWithOffset);
   if (selectedElementIdsVector) BinAppState.addSelectedElementIds(builder, selectedElementIdsVector);
   if (previousSelectedElementIdsVector) BinAppState.addPreviousSelectedElementIds(builder, previousSelectedElementIdsVector);
-  BinAppState.addSelectedElementsAreBeingDragged(builder, appState.selectedElementsAreBeingDragged || false);
-  BinAppState.addShouldCacheIgnoreZoom(builder, appState.shouldCacheIgnoreZoom || false);
-  BinAppState.addGridSize(builder, appState.gridSize || 0);
+  BinAppState.addSelectedElementsAreBeingDragged(builder, appState.selectedElementsAreBeingDragged || getDefaultAppState().selectedElementsAreBeingDragged);
+  BinAppState.addShouldCacheIgnoreZoom(builder, appState.shouldCacheIgnoreZoom || getDefaultAppState().shouldCacheIgnoreZoom);
+  BinAppState.addGridSize(builder, appState.gridSize || getDefaultAppState().gridSize);
   if (selectedGroupIdsVector) BinAppState.addSelectedGroupIds(builder, selectedGroupIdsVector);
   if (editingGroupIdOffset) BinAppState.addEditingGroupId(builder, editingGroupIdOffset);
-  BinAppState.addScrollX(builder, appState.scrollX || 0.0);
-  BinAppState.addScrollY(builder, appState.scrollY || 0.0);
+  BinAppState.addScrollX(builder, appState.scrollX || getDefaultAppState().scrollX);
+  BinAppState.addScrollY(builder, appState.scrollY || getDefaultAppState().scrollY);
   if (cursorButtonOffset) BinAppState.addCursorButton(builder, cursorButtonOffset);
-  BinAppState.addScrolledOutside(builder, appState.scrolledOutside || false);
+  BinAppState.addScrolledOutside(builder, appState.scrolledOutside || getDefaultAppState().scrolledOutside);
   if (groupsVector) BinAppState.addGroups(builder, groupsVector);
   if (scopeOffset) BinAppState.addScope(builder, scopeOffset);
   if (writingLayerOffset) BinAppState.addWritingLayer(builder, writingLayerOffset);
   if (currentItemStrokeColorOffset) BinAppState.addCurrentItemStrokeColor(builder, currentItemStrokeColorOffset);
+  BinAppState.addCurrentItemStrokePlacement(builder, appState.currentItemStrokePlacement || getDefaultAppState().currentItemStrokePlacement);
   if (currentItemBackgroundColorOffset) BinAppState.addCurrentItemBackgroundColor(builder, currentItemBackgroundColorOffset);
   if (currentItemFillStyleOffset) BinAppState.addCurrentItemFillStyle(builder, currentItemFillStyleOffset);
-  BinAppState.addCurrentItemStrokeWidth(builder, appState.currentItemStrokeWidth || 0);
+  BinAppState.addCurrentItemStrokeWidth(builder, appState.currentItemStrokeWidth || getDefaultAppState().currentItemStrokeWidth);
   if (currentItemStrokeStyleOffset) BinAppState.addCurrentItemStrokeStyle(builder, currentItemStrokeStyleOffset);
-  BinAppState.addCurrentItemRoughness(builder, appState.currentItemRoughness || 0);
-  BinAppState.addCurrentItemOpacity(builder, appState.currentItemOpacity || 0.0);
+  BinAppState.addCurrentItemRoughness(builder, appState.currentItemRoughness || getDefaultAppState().currentItemRoughness);
+  BinAppState.addCurrentItemOpacity(builder, appState.currentItemOpacity || getDefaultAppState().currentItemOpacity);
   if (currentItemFontFamilyOffset) BinAppState.addCurrentItemFontFamily(builder, currentItemFontFamilyOffset);
-  BinAppState.addCurrentItemFontSize(builder, appState.currentItemFontSize || 0);
+  BinAppState.addCurrentItemFontSize(builder, appState.currentItemFontSize || getDefaultAppState().currentItemFontSize);
   if (currentItemTextAlignOffset) BinAppState.addCurrentItemTextAlign(builder, currentItemTextAlignOffset);
   if (currentItemStartArrowheadOffset) BinAppState.addCurrentItemStartArrowhead(builder, currentItemStartArrowheadOffset);
   if (currentItemEndArrowheadOffset) BinAppState.addCurrentItemEndArrowhead(builder, currentItemEndArrowheadOffset);
   if (currentItemRoundnessOffset) BinAppState.addCurrentItemRoundness(builder, currentItemRoundnessOffset);
   if (viewBackgroundColorOffset) BinAppState.addViewBackgroundColor(builder, viewBackgroundColorOffset);
   if (appState.frameRendering) {
-    BinAppState.addFrameRenderingEnabled(builder, appState.frameRendering.enabled || false);
-    BinAppState.addFrameRenderingName(builder, appState.frameRendering.name || false);
-    BinAppState.addFrameRenderingOutline(builder, appState.frameRendering.outline || false);
-    BinAppState.addFrameRenderingClip(builder, appState.frameRendering.clip || false);
+    BinAppState.addFrameRenderingEnabled(builder, appState.frameRendering.enabled || getDefaultAppState().frameRendering.enabled);
+    BinAppState.addFrameRenderingName(builder, appState.frameRendering.name || getDefaultAppState().frameRendering.name);
+    BinAppState.addFrameRenderingOutline(builder, appState.frameRendering.outline || getDefaultAppState().frameRendering.outline);
+    BinAppState.addFrameRenderingClip(builder, appState.frameRendering.clip || getDefaultAppState().frameRendering.clip);
   }
   if (editingFrameOffset) BinAppState.addEditingFrame(builder, editingFrameOffset);
   if (elementsToHighlightVector) BinAppState.addElementsToHighlight(builder, elementsToHighlightVector);
   if (editingElementOffset) BinAppState.addEditingElement(builder, editingElementOffset);
   
-  BinAppState.addScaleRatioLocked(builder, appState.scaleRatioLocked || false);
-  BinAppState.addDisplayAllPointDistances(builder, appState.displayAllPointDistances || false);
-  BinAppState.addDisplayDistanceOnDrawing(builder, appState.displayDistanceOnDrawing || true);
-  BinAppState.addDisplayAllPointCoordinates(builder, appState.displayAllPointCoordinates || false);
-  BinAppState.addEnableLineBendingOnEdit(builder, appState.enableLineBendingOnEdit || false);
-  BinAppState.addAllowIndependentCurveHandles(builder, appState.allowIndependentCurveHandles || false);
-  BinAppState.addCoordDecimalPlaces(builder, appState.coordDecimalPlaces || 2);
-  BinAppState.addDisplayAllPointInfoSelected(builder, appState.displayAllPointInfoSelected || true);
+  BinAppState.addScaleRatioLocked(builder, appState.scaleRatioLocked || getDefaultAppState().scaleRatioLocked);
+  BinAppState.addDisplayAllPointDistances(builder, appState.displayAllPointDistances || getDefaultAppState().displayAllPointDistances);
+  BinAppState.addDisplayDistanceOnDrawing(builder, appState.displayDistanceOnDrawing || getDefaultAppState().displayDistanceOnDrawing);
+  BinAppState.addDisplayAllPointCoordinates(builder, appState.displayAllPointCoordinates || getDefaultAppState().displayAllPointCoordinates);
+  BinAppState.addEnableLineBendingOnEdit(builder, appState.enableLineBendingOnEdit || getDefaultAppState().enableLineBendingOnEdit);
+  BinAppState.addAllowIndependentCurveHandles(builder, appState.allowIndependentCurveHandles || getDefaultAppState().allowIndependentCurveHandles);
+  BinAppState.addCoordDecimalPlaces(builder, appState.coordDecimalPlaces || getDefaultAppState().coordDecimalPlaces);
+  BinAppState.addDisplayAllPointInfoSelected(builder, appState.displayAllPointInfoSelected || getDefaultAppState().displayAllPointInfoSelected);
   
 
   return BinAppState.endAppState(builder);
