@@ -182,7 +182,7 @@ const InteractiveCanvas = (props: InteractiveCanvasProps) => {
       width={props.appState.width * props.scale}
       height={props.appState.height * props.scale}
       ref={props.handleCanvasRef}
-      onContextMenu={props.onContextMenu}
+      // onContextMenu={props.onContextMenu}
       onPointerMove={props.onPointerMove}
       onPointerUp={props.onPointerUp}
       onPointerCancel={props.onPointerCancel}

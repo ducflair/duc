@@ -389,7 +389,7 @@ impl<'a> DucElement<'a> {
     builder.add_height(args.height);
     builder.add_width(args.width);
     builder.add_opacity(args.opacity);
-    if let Some(x) = args.strokePlacement { builder.add_strokePlacement(x); }
+    builder.add_strokePlacement(args.strokePlacement);
     if let Some(x) = args.strokeStyle { builder.add_strokeStyle(x); }
     builder.add_strokeWidth(args.strokeWidth);
     if let Some(x) = args.strokeColor { builder.add_strokeColor(x); }
@@ -523,11 +523,11 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_STROKESTYLE, None)}
   }
   #[inline]
-  pub fn strokePlacement(&self) -> Option<&'a str> {
+  pub fn strokePlacement(&self) -> i32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_STROKEPLACEMENT, None)}
+    unsafe { self._tab.get::<i32>(DucElement::VT_STROKEPLACEMENT, Some(0)).unwrap()}
   }
   #[inline]
   pub fn opacity(&self) -> f32 {
@@ -812,7 +812,7 @@ impl flatbuffers::Verifiable for DucElement<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("strokeColor", Self::VT_STROKECOLOR, false)?
      .visit_field::<i32>("strokeWidth", Self::VT_STROKEWIDTH, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("strokeStyle", Self::VT_STROKESTYLE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("strokePlacement", Self::VT_STROKEPLACEMENT, false)?
+     .visit_field::<i32>("strokePlacement", Self::VT_STROKEPLACEMENT, false)?
      .visit_field::<f32>("opacity", Self::VT_OPACITY, false)?
      .visit_field::<f32>("width", Self::VT_WIDTH, false)?
      .visit_field::<f32>("height", Self::VT_HEIGHT, false)?
@@ -870,7 +870,7 @@ pub struct DucElementArgs<'a> {
     pub strokeColor: Option<flatbuffers::WIPOffset<&'a str>>,
     pub strokeWidth: i32,
     pub strokeStyle: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub strokePlacement: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub strokePlacement: i32,
     pub opacity: f32,
     pub width: f32,
     pub height: f32,
@@ -928,7 +928,7 @@ impl<'a> Default for DucElementArgs<'a> {
       strokeColor: None,
       strokeWidth: 0,
       strokeStyle: None,
-      strokePlacement: None,
+      strokePlacement: 0,
       opacity: 0.0,
       width: 0.0,
       height: 0.0,
@@ -1036,8 +1036,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_STROKESTYLE, strokeStyle);
   }
   #[inline]
-  pub fn add_strokePlacement(&mut self, strokePlacement: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_STROKEPLACEMENT, strokePlacement);
+  pub fn add_strokePlacement(&mut self, strokePlacement: i32) {
+    self.fbb_.push_slot::<i32>(DucElement::VT_STROKEPLACEMENT, strokePlacement, 0);
   }
   #[inline]
   pub fn add_opacity(&mut self, opacity: f32) {
@@ -1557,120 +1557,6 @@ impl core::fmt::Debug for DucGroup<'_> {
       ds.finish()
   }
 }
-pub enum UserToFollowOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct UserToFollow<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for UserToFollow<'a> {
-  type Inner = UserToFollow<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
-  }
-}
-
-impl<'a> UserToFollow<'a> {
-  pub const VT_SOCKETID: flatbuffers::VOffsetT = 4;
-  pub const VT_USERNAME: flatbuffers::VOffsetT = 6;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    UserToFollow { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args UserToFollowArgs<'args>
-  ) -> flatbuffers::WIPOffset<UserToFollow<'bldr>> {
-    let mut builder = UserToFollowBuilder::new(_fbb);
-    if let Some(x) = args.username { builder.add_username(x); }
-    if let Some(x) = args.socketId { builder.add_socketId(x); }
-    builder.finish()
-  }
-
-
-  #[inline]
-  pub fn socketId(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(UserToFollow::VT_SOCKETID, None)}
-  }
-  #[inline]
-  pub fn username(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(UserToFollow::VT_USERNAME, None)}
-  }
-}
-
-impl flatbuffers::Verifiable for UserToFollow<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("socketId", Self::VT_SOCKETID, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("username", Self::VT_USERNAME, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct UserToFollowArgs<'a> {
-    pub socketId: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub username: Option<flatbuffers::WIPOffset<&'a str>>,
-}
-impl<'a> Default for UserToFollowArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    UserToFollowArgs {
-      socketId: None,
-      username: None,
-    }
-  }
-}
-
-pub struct UserToFollowBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> UserToFollowBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_socketId(&mut self, socketId: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(UserToFollow::VT_SOCKETID, socketId);
-  }
-  #[inline]
-  pub fn add_username(&mut self, username: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(UserToFollow::VT_USERNAME, username);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> UserToFollowBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    UserToFollowBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<UserToFollow<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for UserToFollow<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("UserToFollow");
-      ds.field("socketId", &self.socketId());
-      ds.field("username", &self.username());
-      ds.finish()
-  }
-}
 pub enum AppStateOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -1687,22 +1573,22 @@ impl<'a> flatbuffers::Follow<'a> for AppState<'a> {
 }
 
 impl<'a> AppState<'a> {
-  pub const VT_ISLOADING: flatbuffers::VOffsetT = 4;
-  pub const VT_ACTIVEEMBEDDABLEELEMENT: flatbuffers::VOffsetT = 6;
-  pub const VT_ACTIVEEMBEDDABLESTATE: flatbuffers::VOffsetT = 8;
-  pub const VT_DRAGGINGELEMENT: flatbuffers::VOffsetT = 10;
-  pub const VT_RESIZINGELEMENT: flatbuffers::VOffsetT = 12;
-  pub const VT_MULTIELEMENT: flatbuffers::VOffsetT = 14;
-  pub const VT_SELECTIONELEMENT: flatbuffers::VOffsetT = 16;
-  pub const VT_FRAMETOHIGHLIGHT: flatbuffers::VOffsetT = 18;
-  pub const VT_FRAMERENDERINGENABLED: flatbuffers::VOffsetT = 20;
-  pub const VT_FRAMERENDERINGNAME: flatbuffers::VOffsetT = 22;
-  pub const VT_FRAMERENDERINGOUTLINE: flatbuffers::VOffsetT = 24;
-  pub const VT_FRAMERENDERINGCLIP: flatbuffers::VOffsetT = 26;
-  pub const VT_EDITINGFRAME: flatbuffers::VOffsetT = 28;
-  pub const VT_ELEMENTSTOHIGHLIGHT: flatbuffers::VOffsetT = 30;
-  pub const VT_EDITINGELEMENT: flatbuffers::VOffsetT = 32;
-  pub const VT_CURRENTITEMSTROKECOLOR: flatbuffers::VOffsetT = 34;
+  pub const VT_ACTIVEEMBEDDABLEELEMENT: flatbuffers::VOffsetT = 4;
+  pub const VT_ACTIVEEMBEDDABLESTATE: flatbuffers::VOffsetT = 6;
+  pub const VT_DRAGGINGELEMENT: flatbuffers::VOffsetT = 8;
+  pub const VT_RESIZINGELEMENT: flatbuffers::VOffsetT = 10;
+  pub const VT_MULTIELEMENT: flatbuffers::VOffsetT = 12;
+  pub const VT_SELECTIONELEMENT: flatbuffers::VOffsetT = 14;
+  pub const VT_FRAMETOHIGHLIGHT: flatbuffers::VOffsetT = 16;
+  pub const VT_FRAMERENDERINGENABLED: flatbuffers::VOffsetT = 18;
+  pub const VT_FRAMERENDERINGNAME: flatbuffers::VOffsetT = 20;
+  pub const VT_FRAMERENDERINGOUTLINE: flatbuffers::VOffsetT = 22;
+  pub const VT_FRAMERENDERINGCLIP: flatbuffers::VOffsetT = 24;
+  pub const VT_EDITINGFRAME: flatbuffers::VOffsetT = 26;
+  pub const VT_ELEMENTSTOHIGHLIGHT: flatbuffers::VOffsetT = 28;
+  pub const VT_EDITINGELEMENT: flatbuffers::VOffsetT = 30;
+  pub const VT_CURRENTITEMSTROKECOLOR: flatbuffers::VOffsetT = 32;
+  pub const VT_CURRENTITEMSTROKEPLACEMENT: flatbuffers::VOffsetT = 34;
   pub const VT_CURRENTITEMBACKGROUNDCOLOR: flatbuffers::VOffsetT = 36;
   pub const VT_CURRENTITEMFILLSTYLE: flatbuffers::VOffsetT = 38;
   pub const VT_CURRENTITEMSTROKEWIDTH: flatbuffers::VOffsetT = 40;
@@ -1724,34 +1610,25 @@ impl<'a> AppState<'a> {
   pub const VT_CURSORBUTTON: flatbuffers::VOffsetT = 72;
   pub const VT_SCROLLEDOUTSIDE: flatbuffers::VOffsetT = 74;
   pub const VT_NAME: flatbuffers::VOffsetT = 76;
-  pub const VT_ISRESIZING: flatbuffers::VOffsetT = 78;
-  pub const VT_ISROTATING: flatbuffers::VOffsetT = 80;
-  pub const VT_ZOOM: flatbuffers::VOffsetT = 82;
-  pub const VT_LASTPOINTERDOWNWITH: flatbuffers::VOffsetT = 84;
-  pub const VT_SELECTEDELEMENTIDS: flatbuffers::VOffsetT = 86;
-  pub const VT_PREVIOUSSELECTEDELEMENTIDS: flatbuffers::VOffsetT = 88;
-  pub const VT_SELECTEDELEMENTSAREBEINGDRAGGED: flatbuffers::VOffsetT = 90;
-  pub const VT_SHOULDCACHEIGNOREZOOM: flatbuffers::VOffsetT = 92;
-  pub const VT_GRIDSIZE: flatbuffers::VOffsetT = 94;
-  pub const VT_SELECTEDGROUPIDS: flatbuffers::VOffsetT = 96;
-  pub const VT_EDITINGGROUPID: flatbuffers::VOffsetT = 98;
-  pub const VT_WIDTH: flatbuffers::VOffsetT = 100;
-  pub const VT_HEIGHT: flatbuffers::VOffsetT = 102;
-  pub const VT_OFFSETTOP: flatbuffers::VOffsetT = 104;
-  pub const VT_OFFSETLEFT: flatbuffers::VOffsetT = 106;
-  pub const VT_PASTEDIALOGSHOWN: flatbuffers::VOffsetT = 108;
-  pub const VT_PASTEDIALOGDATA: flatbuffers::VOffsetT = 110;
-  pub const VT_PENDINGIMAGEELEMENTID: flatbuffers::VOffsetT = 112;
-  pub const VT_ORIGINSNAPOFFSETX: flatbuffers::VOffsetT = 114;
-  pub const VT_ORIGINSNAPOFFSETY: flatbuffers::VOffsetT = 116;
-  pub const VT_SCALERATIOLOCKED: flatbuffers::VOffsetT = 118;
-  pub const VT_DISPLAYALLPOINTDISTANCES: flatbuffers::VOffsetT = 120;
-  pub const VT_DISPLAYDISTANCEONDRAWING: flatbuffers::VOffsetT = 122;
-  pub const VT_DISPLAYALLPOINTCOORDINATES: flatbuffers::VOffsetT = 124;
-  pub const VT_DISPLAYALLPOINTINFOSELECTED: flatbuffers::VOffsetT = 126;
-  pub const VT_ENABLELINEBENDINGONEDIT: flatbuffers::VOffsetT = 128;
-  pub const VT_ALLOWINDEPENDENTCURVEHANDLES: flatbuffers::VOffsetT = 130;
-  pub const VT_COORDDECIMALPLACES: flatbuffers::VOffsetT = 132;
+  pub const VT_ZOOM: flatbuffers::VOffsetT = 78;
+  pub const VT_LASTPOINTERDOWNWITH: flatbuffers::VOffsetT = 80;
+  pub const VT_SELECTEDELEMENTIDS: flatbuffers::VOffsetT = 82;
+  pub const VT_PREVIOUSSELECTEDELEMENTIDS: flatbuffers::VOffsetT = 84;
+  pub const VT_SELECTEDELEMENTSAREBEINGDRAGGED: flatbuffers::VOffsetT = 86;
+  pub const VT_SHOULDCACHEIGNOREZOOM: flatbuffers::VOffsetT = 88;
+  pub const VT_GRIDSIZE: flatbuffers::VOffsetT = 90;
+  pub const VT_SELECTEDGROUPIDS: flatbuffers::VOffsetT = 92;
+  pub const VT_EDITINGGROUPID: flatbuffers::VOffsetT = 94;
+  pub const VT_PASTEDIALOGSHOWN: flatbuffers::VOffsetT = 96;
+  pub const VT_PASTEDIALOGDATA: flatbuffers::VOffsetT = 98;
+  pub const VT_SCALERATIOLOCKED: flatbuffers::VOffsetT = 100;
+  pub const VT_DISPLAYALLPOINTDISTANCES: flatbuffers::VOffsetT = 102;
+  pub const VT_DISPLAYDISTANCEONDRAWING: flatbuffers::VOffsetT = 104;
+  pub const VT_DISPLAYALLPOINTCOORDINATES: flatbuffers::VOffsetT = 106;
+  pub const VT_DISPLAYALLPOINTINFOSELECTED: flatbuffers::VOffsetT = 108;
+  pub const VT_ENABLELINEBENDINGONEDIT: flatbuffers::VOffsetT = 110;
+  pub const VT_ALLOWINDEPENDENTCURVEHANDLES: flatbuffers::VOffsetT = 112;
+  pub const VT_COORDDECIMALPLACES: flatbuffers::VOffsetT = 114;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -1764,14 +1641,7 @@ impl<'a> AppState<'a> {
   ) -> flatbuffers::WIPOffset<AppState<'bldr>> {
     let mut builder = AppStateBuilder::new(_fbb);
     builder.add_coordDecimalPlaces(args.coordDecimalPlaces);
-    builder.add_originSnapOffsetY(args.originSnapOffsetY);
-    builder.add_originSnapOffsetX(args.originSnapOffsetX);
-    if let Some(x) = args.pendingImageElementId { builder.add_pendingImageElementId(x); }
     if let Some(x) = args.pasteDialogData { builder.add_pasteDialogData(x); }
-    builder.add_offsetLeft(args.offsetLeft);
-    builder.add_offsetTop(args.offsetTop);
-    builder.add_height(args.height);
-    builder.add_width(args.width);
     if let Some(x) = args.editingGroupId { builder.add_editingGroupId(x); }
     if let Some(x) = args.selectedGroupIds { builder.add_selectedGroupIds(x); }
     builder.add_gridSize(args.gridSize);
@@ -1799,6 +1669,7 @@ impl<'a> AppState<'a> {
     builder.add_currentItemStrokeWidth(args.currentItemStrokeWidth);
     if let Some(x) = args.currentItemFillStyle { builder.add_currentItemFillStyle(x); }
     if let Some(x) = args.currentItemBackgroundColor { builder.add_currentItemBackgroundColor(x); }
+    builder.add_currentItemStrokePlacement(args.currentItemStrokePlacement);
     if let Some(x) = args.currentItemStrokeColor { builder.add_currentItemStrokeColor(x); }
     if let Some(x) = args.editingElement { builder.add_editingElement(x); }
     if let Some(x) = args.elementsToHighlight { builder.add_elementsToHighlight(x); }
@@ -1820,25 +1691,15 @@ impl<'a> AppState<'a> {
     builder.add_pasteDialogShown(args.pasteDialogShown);
     builder.add_shouldCacheIgnoreZoom(args.shouldCacheIgnoreZoom);
     builder.add_selectedElementsAreBeingDragged(args.selectedElementsAreBeingDragged);
-    builder.add_isRotating(args.isRotating);
-    builder.add_isResizing(args.isResizing);
     builder.add_scrolledOutside(args.scrolledOutside);
     builder.add_frameRenderingClip(args.frameRenderingClip);
     builder.add_frameRenderingOutline(args.frameRenderingOutline);
     builder.add_frameRenderingName(args.frameRenderingName);
     builder.add_frameRenderingEnabled(args.frameRenderingEnabled);
-    builder.add_isLoading(args.isLoading);
     builder.finish()
   }
 
 
-  #[inline]
-  pub fn isLoading(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(AppState::VT_ISLOADING, Some(false)).unwrap()}
-  }
   #[inline]
   pub fn activeEmbeddableElement(&self) -> Option<DucElement<'a>> {
     // Safety:
@@ -1943,6 +1804,13 @@ impl<'a> AppState<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_CURRENTITEMSTROKECOLOR, None)}
+  }
+  #[inline]
+  pub fn currentItemStrokePlacement(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(AppState::VT_CURRENTITEMSTROKEPLACEMENT, Some(0)).unwrap()}
   }
   #[inline]
   pub fn currentItemBackgroundColor(&self) -> Option<&'a str> {
@@ -2092,20 +1960,6 @@ impl<'a> AppState<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_NAME, None)}
   }
   #[inline]
-  pub fn isResizing(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(AppState::VT_ISRESIZING, Some(false)).unwrap()}
-  }
-  #[inline]
-  pub fn isRotating(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(AppState::VT_ISROTATING, Some(false)).unwrap()}
-  }
-  #[inline]
   pub fn zoom(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
@@ -2169,34 +2023,6 @@ impl<'a> AppState<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_EDITINGGROUPID, None)}
   }
   #[inline]
-  pub fn width(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AppState::VT_WIDTH, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn height(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AppState::VT_HEIGHT, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn offsetTop(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AppState::VT_OFFSETTOP, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn offsetLeft(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AppState::VT_OFFSETLEFT, Some(0)).unwrap()}
-  }
-  #[inline]
   pub fn pasteDialogShown(&self) -> bool {
     // Safety:
     // Created from valid Table for this object
@@ -2209,27 +2035,6 @@ impl<'a> AppState<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_PASTEDIALOGDATA, None)}
-  }
-  #[inline]
-  pub fn pendingImageElementId(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_PENDINGIMAGEELEMENTID, None)}
-  }
-  #[inline]
-  pub fn originSnapOffsetX(&self) -> f32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(AppState::VT_ORIGINSNAPOFFSETX, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn originSnapOffsetY(&self) -> f32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(AppState::VT_ORIGINSNAPOFFSETY, Some(0.0)).unwrap()}
   }
   #[inline]
   pub fn scaleRatioLocked(&self) -> bool {
@@ -2296,7 +2101,6 @@ impl flatbuffers::Verifiable for AppState<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<bool>("isLoading", Self::VT_ISLOADING, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucElement>>("activeEmbeddableElement", Self::VT_ACTIVEEMBEDDABLEELEMENT, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("activeEmbeddableState", Self::VT_ACTIVEEMBEDDABLESTATE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucElement>>("draggingElement", Self::VT_DRAGGINGELEMENT, false)?
@@ -2312,6 +2116,7 @@ impl flatbuffers::Verifiable for AppState<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucElement>>>>("elementsToHighlight", Self::VT_ELEMENTSTOHIGHLIGHT, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucElement>>("editingElement", Self::VT_EDITINGELEMENT, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemStrokeColor", Self::VT_CURRENTITEMSTROKECOLOR, false)?
+     .visit_field::<i32>("currentItemStrokePlacement", Self::VT_CURRENTITEMSTROKEPLACEMENT, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemBackgroundColor", Self::VT_CURRENTITEMBACKGROUNDCOLOR, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemFillStyle", Self::VT_CURRENTITEMFILLSTYLE, false)?
      .visit_field::<i32>("currentItemStrokeWidth", Self::VT_CURRENTITEMSTROKEWIDTH, false)?
@@ -2333,8 +2138,6 @@ impl flatbuffers::Verifiable for AppState<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("cursorButton", Self::VT_CURSORBUTTON, false)?
      .visit_field::<bool>("scrolledOutside", Self::VT_SCROLLEDOUTSIDE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
-     .visit_field::<bool>("isResizing", Self::VT_ISRESIZING, false)?
-     .visit_field::<bool>("isRotating", Self::VT_ISROTATING, false)?
      .visit_field::<f32>("zoom", Self::VT_ZOOM, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("lastPointerDownWith", Self::VT_LASTPOINTERDOWNWITH, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("selectedElementIds", Self::VT_SELECTEDELEMENTIDS, false)?
@@ -2344,15 +2147,8 @@ impl flatbuffers::Verifiable for AppState<'_> {
      .visit_field::<i32>("gridSize", Self::VT_GRIDSIZE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("selectedGroupIds", Self::VT_SELECTEDGROUPIDS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("editingGroupId", Self::VT_EDITINGGROUPID, false)?
-     .visit_field::<i32>("width", Self::VT_WIDTH, false)?
-     .visit_field::<i32>("height", Self::VT_HEIGHT, false)?
-     .visit_field::<i32>("offsetTop", Self::VT_OFFSETTOP, false)?
-     .visit_field::<i32>("offsetLeft", Self::VT_OFFSETLEFT, false)?
      .visit_field::<bool>("pasteDialogShown", Self::VT_PASTEDIALOGSHOWN, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("pasteDialogData", Self::VT_PASTEDIALOGDATA, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("pendingImageElementId", Self::VT_PENDINGIMAGEELEMENTID, false)?
-     .visit_field::<f32>("originSnapOffsetX", Self::VT_ORIGINSNAPOFFSETX, false)?
-     .visit_field::<f32>("originSnapOffsetY", Self::VT_ORIGINSNAPOFFSETY, false)?
      .visit_field::<bool>("scaleRatioLocked", Self::VT_SCALERATIOLOCKED, false)?
      .visit_field::<bool>("displayAllPointDistances", Self::VT_DISPLAYALLPOINTDISTANCES, false)?
      .visit_field::<bool>("displayDistanceOnDrawing", Self::VT_DISPLAYDISTANCEONDRAWING, false)?
@@ -2366,7 +2162,6 @@ impl flatbuffers::Verifiable for AppState<'_> {
   }
 }
 pub struct AppStateArgs<'a> {
-    pub isLoading: bool,
     pub activeEmbeddableElement: Option<flatbuffers::WIPOffset<DucElement<'a>>>,
     pub activeEmbeddableState: Option<flatbuffers::WIPOffset<&'a str>>,
     pub draggingElement: Option<flatbuffers::WIPOffset<DucElement<'a>>>,
@@ -2382,6 +2177,7 @@ pub struct AppStateArgs<'a> {
     pub elementsToHighlight: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucElement<'a>>>>>,
     pub editingElement: Option<flatbuffers::WIPOffset<DucElement<'a>>>,
     pub currentItemStrokeColor: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub currentItemStrokePlacement: i32,
     pub currentItemBackgroundColor: Option<flatbuffers::WIPOffset<&'a str>>,
     pub currentItemFillStyle: Option<flatbuffers::WIPOffset<&'a str>>,
     pub currentItemStrokeWidth: i32,
@@ -2403,8 +2199,6 @@ pub struct AppStateArgs<'a> {
     pub cursorButton: Option<flatbuffers::WIPOffset<&'a str>>,
     pub scrolledOutside: bool,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub isResizing: bool,
-    pub isRotating: bool,
     pub zoom: f32,
     pub lastPointerDownWith: Option<flatbuffers::WIPOffset<&'a str>>,
     pub selectedElementIds: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
@@ -2414,15 +2208,8 @@ pub struct AppStateArgs<'a> {
     pub gridSize: i32,
     pub selectedGroupIds: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
     pub editingGroupId: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub width: i32,
-    pub height: i32,
-    pub offsetTop: i32,
-    pub offsetLeft: i32,
     pub pasteDialogShown: bool,
     pub pasteDialogData: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub pendingImageElementId: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub originSnapOffsetX: f32,
-    pub originSnapOffsetY: f32,
     pub scaleRatioLocked: bool,
     pub displayAllPointDistances: bool,
     pub displayDistanceOnDrawing: bool,
@@ -2436,7 +2223,6 @@ impl<'a> Default for AppStateArgs<'a> {
   #[inline]
   fn default() -> Self {
     AppStateArgs {
-      isLoading: false,
       activeEmbeddableElement: None,
       activeEmbeddableState: None,
       draggingElement: None,
@@ -2452,6 +2238,7 @@ impl<'a> Default for AppStateArgs<'a> {
       elementsToHighlight: None,
       editingElement: None,
       currentItemStrokeColor: None,
+      currentItemStrokePlacement: 0,
       currentItemBackgroundColor: None,
       currentItemFillStyle: None,
       currentItemStrokeWidth: 0,
@@ -2473,8 +2260,6 @@ impl<'a> Default for AppStateArgs<'a> {
       cursorButton: None,
       scrolledOutside: false,
       name: None,
-      isResizing: false,
-      isRotating: false,
       zoom: 0.0,
       lastPointerDownWith: None,
       selectedElementIds: None,
@@ -2484,15 +2269,8 @@ impl<'a> Default for AppStateArgs<'a> {
       gridSize: 0,
       selectedGroupIds: None,
       editingGroupId: None,
-      width: 0,
-      height: 0,
-      offsetTop: 0,
-      offsetLeft: 0,
       pasteDialogShown: false,
       pasteDialogData: None,
-      pendingImageElementId: None,
-      originSnapOffsetX: 0.0,
-      originSnapOffsetY: 0.0,
       scaleRatioLocked: false,
       displayAllPointDistances: false,
       displayDistanceOnDrawing: false,
@@ -2510,10 +2288,6 @@ pub struct AppStateBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_isLoading(&mut self, isLoading: bool) {
-    self.fbb_.push_slot::<bool>(AppState::VT_ISLOADING, isLoading, false);
-  }
   #[inline]
   pub fn add_activeEmbeddableElement(&mut self, activeEmbeddableElement: flatbuffers::WIPOffset<DucElement<'b >>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucElement>>(AppState::VT_ACTIVEEMBEDDABLEELEMENT, activeEmbeddableElement);
@@ -2573,6 +2347,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_currentItemStrokeColor(&mut self, currentItemStrokeColor: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_CURRENTITEMSTROKECOLOR, currentItemStrokeColor);
+  }
+  #[inline]
+  pub fn add_currentItemStrokePlacement(&mut self, currentItemStrokePlacement: i32) {
+    self.fbb_.push_slot::<i32>(AppState::VT_CURRENTITEMSTROKEPLACEMENT, currentItemStrokePlacement, 0);
   }
   #[inline]
   pub fn add_currentItemBackgroundColor(&mut self, currentItemBackgroundColor: flatbuffers::WIPOffset<&'b  str>) {
@@ -2659,14 +2437,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_NAME, name);
   }
   #[inline]
-  pub fn add_isResizing(&mut self, isResizing: bool) {
-    self.fbb_.push_slot::<bool>(AppState::VT_ISRESIZING, isResizing, false);
-  }
-  #[inline]
-  pub fn add_isRotating(&mut self, isRotating: bool) {
-    self.fbb_.push_slot::<bool>(AppState::VT_ISROTATING, isRotating, false);
-  }
-  #[inline]
   pub fn add_zoom(&mut self, zoom: f32) {
     self.fbb_.push_slot::<f32>(AppState::VT_ZOOM, zoom, 0.0);
   }
@@ -2703,40 +2473,12 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_EDITINGGROUPID, editingGroupId);
   }
   #[inline]
-  pub fn add_width(&mut self, width: i32) {
-    self.fbb_.push_slot::<i32>(AppState::VT_WIDTH, width, 0);
-  }
-  #[inline]
-  pub fn add_height(&mut self, height: i32) {
-    self.fbb_.push_slot::<i32>(AppState::VT_HEIGHT, height, 0);
-  }
-  #[inline]
-  pub fn add_offsetTop(&mut self, offsetTop: i32) {
-    self.fbb_.push_slot::<i32>(AppState::VT_OFFSETTOP, offsetTop, 0);
-  }
-  #[inline]
-  pub fn add_offsetLeft(&mut self, offsetLeft: i32) {
-    self.fbb_.push_slot::<i32>(AppState::VT_OFFSETLEFT, offsetLeft, 0);
-  }
-  #[inline]
   pub fn add_pasteDialogShown(&mut self, pasteDialogShown: bool) {
     self.fbb_.push_slot::<bool>(AppState::VT_PASTEDIALOGSHOWN, pasteDialogShown, false);
   }
   #[inline]
   pub fn add_pasteDialogData(&mut self, pasteDialogData: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_PASTEDIALOGDATA, pasteDialogData);
-  }
-  #[inline]
-  pub fn add_pendingImageElementId(&mut self, pendingImageElementId: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_PENDINGIMAGEELEMENTID, pendingImageElementId);
-  }
-  #[inline]
-  pub fn add_originSnapOffsetX(&mut self, originSnapOffsetX: f32) {
-    self.fbb_.push_slot::<f32>(AppState::VT_ORIGINSNAPOFFSETX, originSnapOffsetX, 0.0);
-  }
-  #[inline]
-  pub fn add_originSnapOffsetY(&mut self, originSnapOffsetY: f32) {
-    self.fbb_.push_slot::<f32>(AppState::VT_ORIGINSNAPOFFSETY, originSnapOffsetY, 0.0);
   }
   #[inline]
   pub fn add_scaleRatioLocked(&mut self, scaleRatioLocked: bool) {
@@ -2788,7 +2530,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
 impl core::fmt::Debug for AppState<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("AppState");
-      ds.field("isLoading", &self.isLoading());
       ds.field("activeEmbeddableElement", &self.activeEmbeddableElement());
       ds.field("activeEmbeddableState", &self.activeEmbeddableState());
       ds.field("draggingElement", &self.draggingElement());
@@ -2804,6 +2545,7 @@ impl core::fmt::Debug for AppState<'_> {
       ds.field("elementsToHighlight", &self.elementsToHighlight());
       ds.field("editingElement", &self.editingElement());
       ds.field("currentItemStrokeColor", &self.currentItemStrokeColor());
+      ds.field("currentItemStrokePlacement", &self.currentItemStrokePlacement());
       ds.field("currentItemBackgroundColor", &self.currentItemBackgroundColor());
       ds.field("currentItemFillStyle", &self.currentItemFillStyle());
       ds.field("currentItemStrokeWidth", &self.currentItemStrokeWidth());
@@ -2825,8 +2567,6 @@ impl core::fmt::Debug for AppState<'_> {
       ds.field("cursorButton", &self.cursorButton());
       ds.field("scrolledOutside", &self.scrolledOutside());
       ds.field("name", &self.name());
-      ds.field("isResizing", &self.isResizing());
-      ds.field("isRotating", &self.isRotating());
       ds.field("zoom", &self.zoom());
       ds.field("lastPointerDownWith", &self.lastPointerDownWith());
       ds.field("selectedElementIds", &self.selectedElementIds());
@@ -2836,15 +2576,8 @@ impl core::fmt::Debug for AppState<'_> {
       ds.field("gridSize", &self.gridSize());
       ds.field("selectedGroupIds", &self.selectedGroupIds());
       ds.field("editingGroupId", &self.editingGroupId());
-      ds.field("width", &self.width());
-      ds.field("height", &self.height());
-      ds.field("offsetTop", &self.offsetTop());
-      ds.field("offsetLeft", &self.offsetLeft());
       ds.field("pasteDialogShown", &self.pasteDialogShown());
       ds.field("pasteDialogData", &self.pasteDialogData());
-      ds.field("pendingImageElementId", &self.pendingImageElementId());
-      ds.field("originSnapOffsetX", &self.originSnapOffsetX());
-      ds.field("originSnapOffsetY", &self.originSnapOffsetY());
       ds.field("scaleRatioLocked", &self.scaleRatioLocked());
       ds.field("displayAllPointDistances", &self.displayAllPointDistances());
       ds.field("displayDistanceOnDrawing", &self.displayDistanceOnDrawing());
