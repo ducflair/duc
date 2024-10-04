@@ -12,7 +12,7 @@ import { FileSystemHandle, nativeFileSystemSupported } from "./filesystem";
 import { isValidExcalidrawData, isValidLibrary } from "./json";
 import { restore, restoreLibraryItems } from "./restore";
 import { ImportedLibraryData } from "./types";
-import { parseDucFlatBuffers } from "../duc/duc-ts/parse";
+import { parseDucFlatBuffers } from "../duc/duc-ts/src/parseDuc";
 
 const parseFileContents = async (blob: Blob | File) => {
   let contents: string;
@@ -129,7 +129,6 @@ export const loadSceneOrLibraryFromBlob = async (
 
   if(mime === MIME_TYPES.duc) {
     const { elements, appState, files } = await parseDucFlatBuffers(blob);
-    console.log("From Binary", elements, appState, files);
 
     if (!Array.isArray(elements)) {
       throw new Error("Parsed elements are not an array");
