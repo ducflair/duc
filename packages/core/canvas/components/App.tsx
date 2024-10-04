@@ -36,11 +36,28 @@ import {
   actionToggleLinearEditor,
   actionToggleObjectsSnapMode,
   actionChangeFillStyle,
+  actionAlignBottom,
+  actionAlignHorizontallyCentered,
+  actionAlignLeft,
+  actionAlignRight,
+  actionAlignTop,
+  actionAlignVerticallyCentered,
+  actionChangeExportBackground,
+  actionChangeProjectName,
+  actionGoToCollaborator,
+  actionLoadScene,
+  actionSaveFileToDisk,
+  actionSaveToActiveFile,
+  actionShortcuts,
+  actionToggleCanvasMenu,
+  actionToggleEditMenu,
+  distributeHorizontally,
+  distributeVertically,
 } from "../actions";
 import { createRedoAction, createUndoAction } from "../actions/actionHistory";
 import { ActionManager } from "../actions/manager";
 import { actions, register } from "../actions/register";
-import { Action, ActionResult } from "../actions/types";
+import { Action, ActionName, ActionResult } from "../actions/types";
 import { trackEvent } from "../analytics";
 import {
   getDefaultAppState,
@@ -376,7 +393,7 @@ import {
   actionRemoveAllElementsFromFrame,
   actionSelectAllElementsInFrame,
 } from "../actions/actionFrame";
-import { actionChangeViewBackgroundColor, actionClearCanvas, actionToggleHandTool, zoomToFit } from "../actions/actionCanvas";
+import { actionChangeViewBackgroundColor, actionClearCanvas, actionResetZoom, actionToggleHandTool, actionToggleTheme, actionZoomIn, actionZoomOut, actionZoomToFit, zoomToFit } from "../actions/actionCanvas";
 import { jotaiStore } from "../jotai";
 import { activeConfirmDialogAtom } from "./ActiveConfirmDialog";
 import { ImageSceneDataError } from "../errors";
@@ -434,8 +451,8 @@ import {
 } from "./hyperlink/helpers";
 import { adjustElementsMapToCurrentScope, adjustElementsToCurrentScope, adjustElementToCurrentScope, CombinedMeasure, coordinateToRealMeasure, realMeasureToCoordinate, SupportedMeasures } from "../duc/utils/measurements";
 import { WritingLayers } from "../duc/utils/writingLayers";
-import { changeProperty } from "../actions/actionProperties";
-import { saveAsFlatBuffers } from "../duc/duc-ts/serialize";
+import { actionChangeBackgroundColor, actionChangeFontFamily, actionChangeFontSize, actionChangeOpacity, actionChangeSloppiness, actionChangeStrokeColor, actionChangeStrokeWidth, actionChangeTextAlign, actionChangeVerticalAlign, changeProperty } from "../actions/actionProperties";
+import { saveAsFlatBuffers } from "../duc/duc-ts/src/serializeDuc";
 import transformHexColor from "../scene/hexDarkModeFilter";
 import {
   actionToggleEraserTool,
@@ -726,6 +743,7 @@ class App extends React.Component<AppProps, AppState> {
           getEyeDropper: this.getEyeDropper,
           mutateGroup: this.mutateGroup,
           setActiveTool: this.setActiveTool,
+          handleCanvasContextMenu: this.handleCanvasContextMenu,
           setBackgroundColor: (color: string) => this.setState({
             viewBackgroundColor: color,
           }),
@@ -741,6 +759,9 @@ class App extends React.Component<AppProps, AppState> {
         elements: {
           getSceneElementsIncludingDeleted: this.getSceneElementsIncludingDeleted,
           getSceneElements: this.getSceneElements,
+          getSelectedElements: this.getSelectedElements,
+          getMajoritySelectedElementsType: this.getMajoritySelectedElementsType,
+          getSelectedElementsType: this.getSelectedElementsType,
           getElementById: this.getElementById,
           getVisibleElements: this.getVisibleElements,
           sendBackwardElements: this.sendBackwardElements,
@@ -764,9 +785,7 @@ class App extends React.Component<AppProps, AppState> {
         getScene: () => this.scene,
         getFiles: () => this.files,
         getName: this.getName,
-        registerAction: (action: Action) => {
-          this.actionManager.registerAction(action);
-        },
+        executeAction: this.executeAction,
         refresh: this.refresh,
         setToast: this.setToast,
         id: this.id,
@@ -1509,7 +1528,7 @@ class App extends React.Component<AppProps, AppState> {
           }}
           onPointerDown={(event) => this.handleCanvasPointerDown(event)}
           onWheel={(event) => this.handleWheel(event)}
-          onContextMenu={this.handleCanvasContextMenu}
+          // onContextMenu={this.handleCanvasContextMenu}
           onDoubleClick={() => {
             this.setState({
               editingFrame: f.id,
@@ -1629,7 +1648,7 @@ class App extends React.Component<AppProps, AppState> {
                         </LayerUI>
 
                         <div className="excalidraw-textEditorContainer" />
-                        <div className="excalidraw-contextMenuContainer" />
+                        {/* <div className="excalidraw-contextMenuContainer" /> */}
                         <div className="excalidraw-eye-dropper-container" />
                         <SVGLayer
                           trails={[this.laserTrails, this.eraserTrail]}
@@ -1727,7 +1746,7 @@ class App extends React.Component<AppProps, AppState> {
                             closable={this.state.toast.closable}
                           />
                         )}
-                        {this.state.contextMenu && (
+                        {/* {this.state.contextMenu && (
                           <ContextMenu
                             items={this.state.contextMenu.items}
                             top={this.state.contextMenu.top}
@@ -1740,7 +1759,7 @@ class App extends React.Component<AppProps, AppState> {
                               });
                             }}
                           />
-                        )}
+                        )} */}
                         <StaticCanvas
                           canvas={this.canvas}
                           rc={this.rc}
@@ -1845,6 +1864,50 @@ class App extends React.Component<AppProps, AppState> {
   public getSceneElements = () => {
     return this.scene.getNonDeletedElements();
   };
+
+  public getSelectedElements = () => {
+    return this.scene.getSelectedElements(this.state);
+  };
+
+  public getMajoritySelectedElementsType = (): DucElement["type"] | null => {
+    const typeFrequency: Record<DucElement["type"], number> = {} as Record<DucElement["type"], number>;
+  
+    // Count frequency of each element type
+    this.getSelectedElements().forEach((element) => {
+      typeFrequency[element.type] = (typeFrequency[element.type] || 0) + 1;
+    });
+  
+    // Find the highest frequency count
+    const maxCount = Math.max(...Object.values(typeFrequency));
+  
+    // Find all types that have the maximum count
+    const majorityTypes = Object.entries(typeFrequency)
+      .filter(([, count]) => count === maxCount)
+      .map(([type]) => type as DucElement["type"]);
+  
+    // Return the type if only one majority exists, otherwise return null
+    return majorityTypes.length === 1 ? majorityTypes[0] : null;
+  };
+
+  public getSelectedElementsType = (): DucElement["type"] | null => {
+    const selectedElements = this.getSelectedElements();
+  
+    if (selectedElements.length === 0) {
+      return null; // No elements selected, return null
+    }
+  
+    const firstElementType = selectedElements[0].type;
+  
+    // Check if all selected elements have the same type
+    const allSameType = selectedElements.every(
+      (element) => element.type === firstElementType
+    );
+  
+    // If all elements have the same type, return that type; otherwise, return null
+    return allSameType ? firstElementType : null;
+  };
+  
+  
   
   public getElementById = (elementId:string) => {
     return this.scene.getElement(elementId);
@@ -2384,6 +2447,7 @@ class App extends React.Component<AppProps, AppState> {
         },
       };
     }
+
     const scene = restore(initialData, null, null, { repairBindings: true });
     scene.appState = {
       ...scene.appState,
@@ -2425,6 +2489,7 @@ class App extends React.Component<AppProps, AppState> {
     // fonts and rerender scene text elements once done. This also
     // seems faster even in browsers that do fire the loadingdone event.
     this.fonts.loadSceneFonts();
+    this.refreshImages(scene.elements, scene.files);
   };
 
   private isMobileBreakpoint = (width: number, height: number) => {
@@ -4796,11 +4861,33 @@ class App extends React.Component<AppProps, AppState> {
     );
 
     if (contents.type === MIME_TYPES.duc) {
-      this.updateScene(contents.data as any);
-      return true;
+      if(contents.data)
+      {
+        this.updateScene(contents.data);
+        if(contents.data.files) {
+          this.files = {...this.files, ...contents.data.files};
+        }
+        if(contents.data.elements) {
+          this.refreshImages(contents.data.elements, contents.data.files);
+        }
+        this.rerenderCanvas();
+        this.scrollToContent(undefined, { fitToContent: true, animate: false });
+        return true;
+      }
     }
 
     return false;
+  };
+
+  refreshImages = async (
+    elements: OrderedDucElement[],
+    files: BinaryFiles | undefined,
+  ) => {
+    const imageElements:InitializedDucImageElement[] = elements.filter(
+      (el) => el.type === "image" && isInitializedImageElement(el),
+    ) as InitializedDucImageElement[];
+
+    this.addNewImagesToImageCache(imageElements, files);
   };
 
   setWritingLayer = (
@@ -10090,6 +10177,7 @@ class App extends React.Component<AppProps, AppState> {
       );
       if (updatedFiles.size) {
         this.scene.triggerUpdate();
+        this.rerenderCanvas();
       }
     }
   };
@@ -10395,7 +10483,7 @@ class App extends React.Component<AppProps, AppState> {
   private handleCanvasContextMenu = (
     event: React.MouseEvent<HTMLElement | HTMLCanvasElement>,
   ) => {
-    event.preventDefault();
+    // event.preventDefault();
 
     if (
       (("pointerType" in event.nativeEvent &&
@@ -10453,12 +10541,14 @@ class App extends React.Component<AppProps, AppState> {
           : this.state),
         showHyperlinkPopup: false,
       },
-      () => {
-        this.setState({
-          contextMenu: { top, left, items: this.getContextMenuItems(type) },
-        });
-      },
+      // () => {
+      //   this.setState({
+      //     contextMenu: { top, left, items: this.getContextMenuItems(type) },
+      //   });
+      // },
     );
+
+    return type;
   };
 
   private maybeDragNewGenericElement = (
@@ -10975,10 +11065,29 @@ class App extends React.Component<AppProps, AppState> {
     this.setState({ ...this.getCanvasOffsets() });
   };
 
+  public executeAction = (actionName: ActionName) => {
+    this.actionManager.executeAction(this.actionManager.actions[actionName]);
+  };
 
   public rerenderCanvas = () => {
     this.updateScene({
       elements: this.scene.getElementsIncludingDeleted().map((el) => {
+        return newElementWith(el, {
+          seed: Math.random(),
+        });
+      }),
+    });
+  }
+
+  public rerenderImages = () => {
+    this.updateScene({
+      elements: this.scene.getElementsIncludingDeleted().map((el) => {
+        if(isImageElement(el)) {
+          return newElementWith(el, {
+            status: "saved",
+            seed: Math.random(),
+          });
+        }
         return newElementWith(el, {
           seed: Math.random(),
         });
