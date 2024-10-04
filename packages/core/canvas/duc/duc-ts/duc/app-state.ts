@@ -26,95 +26,95 @@ static getSizePrefixedRootAsAppState(bb:flatbuffers.ByteBuffer, obj?:AppState):A
   return (obj || new AppState()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-isLoading():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
-}
-
 activeEmbeddableElement(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
+  const offset = this.bb!.__offset(this.bb_pos, 4);
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 activeEmbeddableState():string|null
 activeEmbeddableState(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 activeEmbeddableState(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
+  const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 draggingElement(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
+  const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 resizingElement(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
+  const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 multiElement(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
+  const offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 selectionElement(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 16);
+  const offset = this.bb!.__offset(this.bb_pos, 14);
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 frameToHighlight(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 18);
+  const offset = this.bb!.__offset(this.bb_pos, 16);
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 frameRenderingEnabled():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 20);
+  const offset = this.bb!.__offset(this.bb_pos, 18);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 frameRenderingName():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 22);
+  const offset = this.bb!.__offset(this.bb_pos, 20);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 frameRenderingOutline():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 24);
+  const offset = this.bb!.__offset(this.bb_pos, 22);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 frameRenderingClip():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 26);
+  const offset = this.bb!.__offset(this.bb_pos, 24);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 editingFrame():string|null
 editingFrame(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 editingFrame(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 28);
+  const offset = this.bb!.__offset(this.bb_pos, 26);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 elementsToHighlight(index: number, obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 30);
+  const offset = this.bb!.__offset(this.bb_pos, 28);
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
 elementsToHighlightLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 30);
+  const offset = this.bb!.__offset(this.bb_pos, 28);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 editingElement(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 32);
+  const offset = this.bb!.__offset(this.bb_pos, 30);
   return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 currentItemStrokeColor():string|null
 currentItemStrokeColor(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 currentItemStrokeColor(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 34);
+  const offset = this.bb!.__offset(this.bb_pos, 32);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+currentItemStrokePlacement():number {
+  const offset = this.bb!.__offset(this.bb_pos, 34);
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 currentItemBackgroundColor():string|null
@@ -253,233 +253,182 @@ name(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-isResizing():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 78);
-  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
-}
-
-isRotating():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 80);
-  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
-}
-
 zoom():number {
-  const offset = this.bb!.__offset(this.bb_pos, 82);
+  const offset = this.bb!.__offset(this.bb_pos, 78);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
 lastPointerDownWith():string|null
 lastPointerDownWith(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 lastPointerDownWith(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 84);
+  const offset = this.bb!.__offset(this.bb_pos, 80);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 selectedElementIds(index: number):string
 selectedElementIds(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
 selectedElementIds(index: number,optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 86);
+  const offset = this.bb!.__offset(this.bb_pos, 82);
   return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
 }
 
 selectedElementIdsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 86);
+  const offset = this.bb!.__offset(this.bb_pos, 82);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 previousSelectedElementIds(index: number):string
 previousSelectedElementIds(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
 previousSelectedElementIds(index: number,optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 88);
+  const offset = this.bb!.__offset(this.bb_pos, 84);
   return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
 }
 
 previousSelectedElementIdsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 88);
+  const offset = this.bb!.__offset(this.bb_pos, 84);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 selectedElementsAreBeingDragged():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 90);
+  const offset = this.bb!.__offset(this.bb_pos, 86);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 shouldCacheIgnoreZoom():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 92);
+  const offset = this.bb!.__offset(this.bb_pos, 88);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 gridSize():number {
-  const offset = this.bb!.__offset(this.bb_pos, 94);
+  const offset = this.bb!.__offset(this.bb_pos, 90);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 selectedGroupIds(index: number):string
 selectedGroupIds(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
 selectedGroupIds(index: number,optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 96);
+  const offset = this.bb!.__offset(this.bb_pos, 92);
   return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
 }
 
 selectedGroupIdsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 96);
+  const offset = this.bb!.__offset(this.bb_pos, 92);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 editingGroupId():string|null
 editingGroupId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 editingGroupId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 98);
+  const offset = this.bb!.__offset(this.bb_pos, 94);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-width():number {
-  const offset = this.bb!.__offset(this.bb_pos, 100);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
-height():number {
-  const offset = this.bb!.__offset(this.bb_pos, 102);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
-offsetTop():number {
-  const offset = this.bb!.__offset(this.bb_pos, 104);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
-offsetLeft():number {
-  const offset = this.bb!.__offset(this.bb_pos, 106);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
 pasteDialogShown():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 108);
+  const offset = this.bb!.__offset(this.bb_pos, 96);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 pasteDialogData():string|null
 pasteDialogData(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 pasteDialogData(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 110);
+  const offset = this.bb!.__offset(this.bb_pos, 98);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-pendingImageElementId():string|null
-pendingImageElementId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-pendingImageElementId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 112);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-originSnapOffsetX():number {
-  const offset = this.bb!.__offset(this.bb_pos, 114);
-  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
-}
-
-originSnapOffsetY():number {
-  const offset = this.bb!.__offset(this.bb_pos, 116);
-  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
 scaleRatioLocked():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 118);
+  const offset = this.bb!.__offset(this.bb_pos, 100);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 displayAllPointDistances():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 120);
+  const offset = this.bb!.__offset(this.bb_pos, 102);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 displayDistanceOnDrawing():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 122);
+  const offset = this.bb!.__offset(this.bb_pos, 104);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 displayAllPointCoordinates():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 124);
+  const offset = this.bb!.__offset(this.bb_pos, 106);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 displayAllPointInfoSelected():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 126);
+  const offset = this.bb!.__offset(this.bb_pos, 108);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 enableLineBendingOnEdit():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 128);
+  const offset = this.bb!.__offset(this.bb_pos, 110);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 allowIndependentCurveHandles():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 130);
+  const offset = this.bb!.__offset(this.bb_pos, 112);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 coordDecimalPlaces():number {
-  const offset = this.bb!.__offset(this.bb_pos, 132);
+  const offset = this.bb!.__offset(this.bb_pos, 114);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 static startAppState(builder:flatbuffers.Builder) {
-  builder.startObject(65);
-}
-
-static addIsLoading(builder:flatbuffers.Builder, isLoading:boolean) {
-  builder.addFieldInt8(0, +isLoading, +false);
+  builder.startObject(56);
 }
 
 static addActiveEmbeddableElement(builder:flatbuffers.Builder, activeEmbeddableElementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, activeEmbeddableElementOffset, 0);
+  builder.addFieldOffset(0, activeEmbeddableElementOffset, 0);
 }
 
 static addActiveEmbeddableState(builder:flatbuffers.Builder, activeEmbeddableStateOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, activeEmbeddableStateOffset, 0);
+  builder.addFieldOffset(1, activeEmbeddableStateOffset, 0);
 }
 
 static addDraggingElement(builder:flatbuffers.Builder, draggingElementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, draggingElementOffset, 0);
+  builder.addFieldOffset(2, draggingElementOffset, 0);
 }
 
 static addResizingElement(builder:flatbuffers.Builder, resizingElementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, resizingElementOffset, 0);
+  builder.addFieldOffset(3, resizingElementOffset, 0);
 }
 
 static addMultiElement(builder:flatbuffers.Builder, multiElementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, multiElementOffset, 0);
+  builder.addFieldOffset(4, multiElementOffset, 0);
 }
 
 static addSelectionElement(builder:flatbuffers.Builder, selectionElementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(6, selectionElementOffset, 0);
+  builder.addFieldOffset(5, selectionElementOffset, 0);
 }
 
 static addFrameToHighlight(builder:flatbuffers.Builder, frameToHighlightOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(7, frameToHighlightOffset, 0);
+  builder.addFieldOffset(6, frameToHighlightOffset, 0);
 }
 
 static addFrameRenderingEnabled(builder:flatbuffers.Builder, frameRenderingEnabled:boolean) {
-  builder.addFieldInt8(8, +frameRenderingEnabled, +false);
+  builder.addFieldInt8(7, +frameRenderingEnabled, +false);
 }
 
 static addFrameRenderingName(builder:flatbuffers.Builder, frameRenderingName:boolean) {
-  builder.addFieldInt8(9, +frameRenderingName, +false);
+  builder.addFieldInt8(8, +frameRenderingName, +false);
 }
 
 static addFrameRenderingOutline(builder:flatbuffers.Builder, frameRenderingOutline:boolean) {
-  builder.addFieldInt8(10, +frameRenderingOutline, +false);
+  builder.addFieldInt8(9, +frameRenderingOutline, +false);
 }
 
 static addFrameRenderingClip(builder:flatbuffers.Builder, frameRenderingClip:boolean) {
-  builder.addFieldInt8(11, +frameRenderingClip, +false);
+  builder.addFieldInt8(10, +frameRenderingClip, +false);
 }
 
 static addEditingFrame(builder:flatbuffers.Builder, editingFrameOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(12, editingFrameOffset, 0);
+  builder.addFieldOffset(11, editingFrameOffset, 0);
 }
 
 static addElementsToHighlight(builder:flatbuffers.Builder, elementsToHighlightOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(13, elementsToHighlightOffset, 0);
+  builder.addFieldOffset(12, elementsToHighlightOffset, 0);
 }
 
 static createElementsToHighlightVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -495,11 +444,15 @@ static startElementsToHighlightVector(builder:flatbuffers.Builder, numElems:numb
 }
 
 static addEditingElement(builder:flatbuffers.Builder, editingElementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(14, editingElementOffset, 0);
+  builder.addFieldOffset(13, editingElementOffset, 0);
 }
 
 static addCurrentItemStrokeColor(builder:flatbuffers.Builder, currentItemStrokeColorOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(15, currentItemStrokeColorOffset, 0);
+  builder.addFieldOffset(14, currentItemStrokeColorOffset, 0);
+}
+
+static addCurrentItemStrokePlacement(builder:flatbuffers.Builder, currentItemStrokePlacement:number) {
+  builder.addFieldInt32(15, currentItemStrokePlacement, 0);
 }
 
 static addCurrentItemBackgroundColor(builder:flatbuffers.Builder, currentItemBackgroundColorOffset:flatbuffers.Offset) {
@@ -598,24 +551,16 @@ static addName(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset) {
   builder.addFieldOffset(36, nameOffset, 0);
 }
 
-static addIsResizing(builder:flatbuffers.Builder, isResizing:boolean) {
-  builder.addFieldInt8(37, +isResizing, +false);
-}
-
-static addIsRotating(builder:flatbuffers.Builder, isRotating:boolean) {
-  builder.addFieldInt8(38, +isRotating, +false);
-}
-
 static addZoom(builder:flatbuffers.Builder, zoom:number) {
-  builder.addFieldFloat32(39, zoom, 0.0);
+  builder.addFieldFloat32(37, zoom, 0.0);
 }
 
 static addLastPointerDownWith(builder:flatbuffers.Builder, lastPointerDownWithOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(40, lastPointerDownWithOffset, 0);
+  builder.addFieldOffset(38, lastPointerDownWithOffset, 0);
 }
 
 static addSelectedElementIds(builder:flatbuffers.Builder, selectedElementIdsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(41, selectedElementIdsOffset, 0);
+  builder.addFieldOffset(39, selectedElementIdsOffset, 0);
 }
 
 static createSelectedElementIdsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -631,7 +576,7 @@ static startSelectedElementIdsVector(builder:flatbuffers.Builder, numElems:numbe
 }
 
 static addPreviousSelectedElementIds(builder:flatbuffers.Builder, previousSelectedElementIdsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(42, previousSelectedElementIdsOffset, 0);
+  builder.addFieldOffset(40, previousSelectedElementIdsOffset, 0);
 }
 
 static createPreviousSelectedElementIdsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -647,19 +592,19 @@ static startPreviousSelectedElementIdsVector(builder:flatbuffers.Builder, numEle
 }
 
 static addSelectedElementsAreBeingDragged(builder:flatbuffers.Builder, selectedElementsAreBeingDragged:boolean) {
-  builder.addFieldInt8(43, +selectedElementsAreBeingDragged, +false);
+  builder.addFieldInt8(41, +selectedElementsAreBeingDragged, +false);
 }
 
 static addShouldCacheIgnoreZoom(builder:flatbuffers.Builder, shouldCacheIgnoreZoom:boolean) {
-  builder.addFieldInt8(44, +shouldCacheIgnoreZoom, +false);
+  builder.addFieldInt8(42, +shouldCacheIgnoreZoom, +false);
 }
 
 static addGridSize(builder:flatbuffers.Builder, gridSize:number) {
-  builder.addFieldInt32(45, gridSize, 0);
+  builder.addFieldInt32(43, gridSize, 0);
 }
 
 static addSelectedGroupIds(builder:flatbuffers.Builder, selectedGroupIdsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(46, selectedGroupIdsOffset, 0);
+  builder.addFieldOffset(44, selectedGroupIdsOffset, 0);
 }
 
 static createSelectedGroupIdsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -675,75 +620,47 @@ static startSelectedGroupIdsVector(builder:flatbuffers.Builder, numElems:number)
 }
 
 static addEditingGroupId(builder:flatbuffers.Builder, editingGroupIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(47, editingGroupIdOffset, 0);
-}
-
-static addWidth(builder:flatbuffers.Builder, width:number) {
-  builder.addFieldInt32(48, width, 0);
-}
-
-static addHeight(builder:flatbuffers.Builder, height:number) {
-  builder.addFieldInt32(49, height, 0);
-}
-
-static addOffsetTop(builder:flatbuffers.Builder, offsetTop:number) {
-  builder.addFieldInt32(50, offsetTop, 0);
-}
-
-static addOffsetLeft(builder:flatbuffers.Builder, offsetLeft:number) {
-  builder.addFieldInt32(51, offsetLeft, 0);
+  builder.addFieldOffset(45, editingGroupIdOffset, 0);
 }
 
 static addPasteDialogShown(builder:flatbuffers.Builder, pasteDialogShown:boolean) {
-  builder.addFieldInt8(52, +pasteDialogShown, +false);
+  builder.addFieldInt8(46, +pasteDialogShown, +false);
 }
 
 static addPasteDialogData(builder:flatbuffers.Builder, pasteDialogDataOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(53, pasteDialogDataOffset, 0);
-}
-
-static addPendingImageElementId(builder:flatbuffers.Builder, pendingImageElementIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(54, pendingImageElementIdOffset, 0);
-}
-
-static addOriginSnapOffsetX(builder:flatbuffers.Builder, originSnapOffsetX:number) {
-  builder.addFieldFloat32(55, originSnapOffsetX, 0.0);
-}
-
-static addOriginSnapOffsetY(builder:flatbuffers.Builder, originSnapOffsetY:number) {
-  builder.addFieldFloat32(56, originSnapOffsetY, 0.0);
+  builder.addFieldOffset(47, pasteDialogDataOffset, 0);
 }
 
 static addScaleRatioLocked(builder:flatbuffers.Builder, scaleRatioLocked:boolean) {
-  builder.addFieldInt8(57, +scaleRatioLocked, +false);
+  builder.addFieldInt8(48, +scaleRatioLocked, +false);
 }
 
 static addDisplayAllPointDistances(builder:flatbuffers.Builder, displayAllPointDistances:boolean) {
-  builder.addFieldInt8(58, +displayAllPointDistances, +false);
+  builder.addFieldInt8(49, +displayAllPointDistances, +false);
 }
 
 static addDisplayDistanceOnDrawing(builder:flatbuffers.Builder, displayDistanceOnDrawing:boolean) {
-  builder.addFieldInt8(59, +displayDistanceOnDrawing, +false);
+  builder.addFieldInt8(50, +displayDistanceOnDrawing, +false);
 }
 
 static addDisplayAllPointCoordinates(builder:flatbuffers.Builder, displayAllPointCoordinates:boolean) {
-  builder.addFieldInt8(60, +displayAllPointCoordinates, +false);
+  builder.addFieldInt8(51, +displayAllPointCoordinates, +false);
 }
 
 static addDisplayAllPointInfoSelected(builder:flatbuffers.Builder, displayAllPointInfoSelected:boolean) {
-  builder.addFieldInt8(61, +displayAllPointInfoSelected, +false);
+  builder.addFieldInt8(52, +displayAllPointInfoSelected, +false);
 }
 
 static addEnableLineBendingOnEdit(builder:flatbuffers.Builder, enableLineBendingOnEdit:boolean) {
-  builder.addFieldInt8(62, +enableLineBendingOnEdit, +false);
+  builder.addFieldInt8(53, +enableLineBendingOnEdit, +false);
 }
 
 static addAllowIndependentCurveHandles(builder:flatbuffers.Builder, allowIndependentCurveHandles:boolean) {
-  builder.addFieldInt8(63, +allowIndependentCurveHandles, +false);
+  builder.addFieldInt8(54, +allowIndependentCurveHandles, +false);
 }
 
 static addCoordDecimalPlaces(builder:flatbuffers.Builder, coordDecimalPlaces:number) {
-  builder.addFieldInt32(64, coordDecimalPlaces, 0);
+  builder.addFieldInt32(55, coordDecimalPlaces, 0);
 }
 
 static endAppState(builder:flatbuffers.Builder):flatbuffers.Offset {

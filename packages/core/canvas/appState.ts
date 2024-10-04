@@ -12,7 +12,7 @@ import {
 } from "./constants";
 import { AppState, NormalizedZoomValue } from "./types";
 
-const defaultExportScale = EXPORT_SCALES.includes(devicePixelRatio)
+const defaultExportScale = (EXPORT_SCALES ?? [1]).includes(devicePixelRatio)
   ? devicePixelRatio
   : 1;
 
@@ -38,6 +38,7 @@ export const getDefaultAppState = (): Omit<
     currentItemRoughness: DEFAULT_ELEMENT_PROPS.roughness,
     currentItemStartArrowhead: null,
     currentItemStrokeColor: DEFAULT_ELEMENT_PROPS.strokeColor,
+    currentItemStrokePlacement: DEFAULT_ELEMENT_PROPS.strokePlacement,
     currentItemRoundness: "sharp",
     currentItemStrokeStyle: DEFAULT_ELEMENT_PROPS.strokeStyle,
     currentItemStrokeWidth: DEFAULT_ELEMENT_PROPS.strokeWidth,
@@ -176,6 +177,7 @@ const APP_STATE_STORAGE_CONF = (<
   currentItemStrokeColor: { browser: true, export: false, server: false },
   currentItemStrokeStyle: { browser: true, export: false, server: false },
   currentItemStrokeWidth: { browser: true, export: false, server: false },
+  currentItemStrokePlacement: { browser: true, export: false, server: false },
   currentItemTextAlign: { browser: true, export: false, server: false },
   cursorButton: { browser: true, export: false, server: false },
   newElement: { browser: false, export: false, server: false },

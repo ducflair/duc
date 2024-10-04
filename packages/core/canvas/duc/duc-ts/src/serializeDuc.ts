@@ -1,13 +1,13 @@
 import * as flatbuffers from 'flatbuffers';
-import { AppState as BinAppState, BinaryFiles as BinBinaryFiles, ExportedDataState, BinaryFilesEntry, BinaryFileData, UserToFollow, DucElement as BinDucElement } from '../duc';
+import { AppState as BinAppState, BinaryFiles as BinBinaryFiles, ExportedDataState, BinaryFilesEntry, BinaryFileData, DucElement as BinDucElement } from '../duc';
 import { fileSave } from '../../../data/filesystem';
 import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, EXPORT_SOURCE, MIME_TYPES, VERSIONS } from '../../../constants';
 import { cleanAppStateForExport } from '../../../appState';
 import { DucElement } from '../../../element/types';
 import { AppState, BinaryFiles } from '../../../types';
-import { serializeDucElement } from './ducElementSerialize';
-import { serializeAppState } from './appStateSerialize';
-import { serializeBinaryFiles } from './binaryFilesSerialize';
+import { serializeDucElement } from './serialize/serializeElementFromDuc';
+import { serializeAppState } from './serialize/serializeAppStateFromDuc';
+import { serializeBinaryFiles } from './serialize/serializeBinaryFilesFromDuc';
 
 export const serializeAsFlatBuffers = (
   elements: readonly DucElement[],
