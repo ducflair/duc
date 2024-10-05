@@ -269,6 +269,7 @@ export {
 
 export {
   AppState,
+  Ducfig,
   BinaryFileData,
   BinaryFiles,
   SocketId,
@@ -287,6 +288,7 @@ export {
   IDLE_THRESHOLD,
   STROKE_PLACEMENT,
   ACTIVE_THRESHOLD,
+  DEFAULT_ELEMENT_PROPS,
   ENV,
   toolsNsStrokeSet,
   toolNsBackgroundSet,
