@@ -2,7 +2,7 @@
 name = "ducflair-duc"
 version = "0.0.0-development"
 edition = "2021"
-description = "The duc 2D CAD file format Rust implementation"
+description = "The duc 2D CAD file format Rust implementation."
 license = "MIT"
 authors = ["Ducflair support@ducflair.com"]
 repository = "https://github.com/ducflair/duc/tree/main/packages/duc-rs"
