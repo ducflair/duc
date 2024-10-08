@@ -4,7 +4,7 @@ import { measureText } from "../element/textElement";
 import { getSelectedElements } from "../scene";
 import { StoreAction } from "../store";
 import type { AppClassProperties } from "../types";
-import { getFontString } from "../utils";
+import { arrayToMap, getFontString } from "../utils";
 import { register } from "./register";
 
 export const actionTextAutoResize = register({
@@ -15,18 +15,22 @@ export const actionTextAutoResize = register({
   predicate: (elements, appState, _: unknown, app: AppClassProperties) => {
     const selectedElements = getSelectedElements(elements, appState);
     return (
-      selectedElements.length === 1 &&
-      isTextElement(selectedElements[0]) &&
-      !selectedElements[0].autoResize
+      // if finds a text element in the selection with autoResize to false
+      selectedElements.some((element) => isTextElement(element) && !element.autoResize)
     );
   },
   perform: (elements, appState, _, app) => {
     const selectedElements = getSelectedElements(elements, appState);
+    const selectedElementsMap = arrayToMap(selectedElements);
 
     return {
       appState,
       elements: elements.map((element) => {
-        if (element.id === selectedElements[0].id && isTextElement(element)) {
+        if (!selectedElementsMap.has(element.id)) {
+          return element;
+        }
+
+        if (isTextElement(element)) {
           const metrics = measureText(
             element.originalText,
             getFontString(element),
@@ -40,6 +44,7 @@ export const actionTextAutoResize = register({
             text: element.originalText,
           });
         }
+
         return element;
       }),
       storeAction: StoreAction.CAPTURE,

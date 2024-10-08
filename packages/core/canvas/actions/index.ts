@@ -89,3 +89,13 @@ export { actionToggleElementLock } from "./actionElementLock";
 export { actionToggleLinearEditor } from "./actionLinearEditor";
 
 export { actionTextAutoResize } from "./actionTextAutoResize";
+
+export { actionUnlockAllElements } from "../actions/actionElementLock";
+export {
+  actionRemoveAllElementsFromFrame,
+  actionSelectAllElementsInFrame,
+} from "../actions/actionFrame";
+export { actionToggleHandTool } from "../actions/actionCanvas";
+export {
+  actionToggleEraserTool,
+} from "../actions/actionCanvas";
