@@ -310,6 +310,8 @@ const StatsDragInput = <
         spellCheck="false"
         onKeyDown={(event) => {
           if (editable) {
+            event.stopPropagation()
+            event.preventDefault()
             const eventTarget = event.target;
             if (
               eventTarget instanceof HTMLInputElement &&
