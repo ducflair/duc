@@ -6508,7 +6508,7 @@ class App extends React.Component<AppProps, AppState> {
     if (selection?.anchorNode) {
       selection.removeAllRanges();
     }
-    this.maybeOpenContextMenuAfterPointerDownOnTouchDevices(event);
+    // this.maybeOpenContextMenuAfterPointerDownOnTouchDevices(event);
 
     //fires only once, if pen is detected, penMode is enabled
     //the user can disable this by toggling the penMode button
@@ -10378,17 +10378,17 @@ class App extends React.Component<AppProps, AppState> {
   ) => {
     // event.preventDefault();
 
-    if (
-      (("pointerType" in event.nativeEvent &&
-        event.nativeEvent.pointerType === "touch") ||
-        ("pointerType" in event.nativeEvent &&
-          event.nativeEvent.pointerType === "pen" &&
-          // always allow if user uses a pen secondary button
-          event.button !== POINTER_BUTTON.SECONDARY)) &&
-      this.state.activeTool.type !== "selection"
-    ) {
-      return;
-    }
+    // if (
+    //   (("pointerType" in event.nativeEvent &&
+    //     event.nativeEvent.pointerType === "touch") ||
+    //     ("pointerType" in event.nativeEvent &&
+    //       event.nativeEvent.pointerType === "pen" &&
+    //       // always allow if user uses a pen secondary button
+    //       event.button !== POINTER_BUTTON.SECONDARY)) &&
+    //   this.state.activeTool.type !== "selection"
+    // ) {
+    //   return;
+    // }
 
     const { x, y } = viewportCoordsToSceneCoords(event, this.state);
     const element = this.getElementAtPosition(x, y, {
