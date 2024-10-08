@@ -734,6 +734,7 @@ class App extends React.Component<AppProps, AppState> {
           resetScene: this.resetScene,
           rerender: this.rerenderCanvas,
           scrollToContent: this.scrollToContent,
+          scrollToRoot: this.scrollToRoot,
           toggleSnapMode: this.toggleSnapMode,
           setCurrentScope: this.setCurrentScope,
           setWritingLayer: this.setWritingLayer,
@@ -3700,6 +3701,17 @@ class App extends React.Component<AppProps, AppState> {
 
   private cancelInProgressAnimation: (() => void) | null = null;
 
+  scrollToRoot = () => {
+    this.setAppState({
+      scrollX: window.innerWidth / 2,
+      scrollY: window.innerHeight / 2,
+      zoom: {
+        value: getNormalizedZoom(1),
+      },
+      userToFollow: null,
+    })
+  };
+
   scrollToContent = (
     target:
       | DucElement
@@ -4183,7 +4195,6 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
-      // TODO: Analise with keyboard
       if (event.key === KEYS.PAGE_UP || event.key === KEYS.PAGE_DOWN) {
         let offset =
           (event.shiftKey ? this.state.width : this.state.height) /
@@ -4294,24 +4305,25 @@ class App extends React.Component<AppProps, AppState> {
         const selectedElements = this.scene.getSelectedElements(this.state);
         if (selectedElements.length === 1) {
           const selectedElement = selectedElements[0];
-          if (event[KEYS.CTRL_OR_CMD]) {
-            if (isLinearElement(selectedElement)) {
-              if (
-                !this.state.editingLinearElement ||
-                this.state.editingLinearElement.elementId !==
-                  selectedElements[0].id
-              ) {
-                this.store.shouldCaptureIncrement();
-                if (!isElbowArrow(selectedElement)) {
-                  this.setState({
-                      editingLinearElement: new LinearElementEditor(
-                        selectedElement,
-                      ),
-                  }); 
-                }
-              }
-            }
-          } else if (
+          // if (event[KEYS.CTRL_OR_CMD]) {
+          //   if (isLinearElement(selectedElement)) {
+          //     if (
+          //       !this.state.editingLinearElement ||
+          //       this.state.editingLinearElement.elementId !==
+          //         selectedElements[0].id
+          //     ) {
+          //       this.store.shouldCaptureIncrement();
+          //       if (!isElbowArrow(selectedElement)) {
+          //         this.setState({
+          //             editingLinearElement: new LinearElementEditor(
+          //               selectedElement,
+          //             ),
+          //         }); 
+          //       }
+          //     }
+          //   }
+          // } else 
+          if (
             isTextElement(selectedElement) ||
             isValidTextContainer(selectedElement)
           ) {
@@ -4347,33 +4359,30 @@ class App extends React.Component<AppProps, AppState> {
         !this.state.selectionElement &&
         !this.state.selectedElementsAreBeingDragged
       ) {
-        const shape = findShapeByKey(event.key);
-        if (shape) {
-          if (this.state.activeTool.type !== shape) {
-            trackEvent(
-              "toolbar",
-              shape,
-              `keyboard (${
-                this.device.editor.isMobile ? "mobile" : "desktop"
-              })`,
-            );
-          }
-          if (shape === "arrow" && this.state.activeTool.type === "arrow") {
-            this.setState((prevState) => ({
-              currentItemArrowType:
-                prevState.currentItemArrowType === ARROW_TYPE.sharp
-                  ? ARROW_TYPE.round
-                  : prevState.currentItemArrowType === ARROW_TYPE.round
-                  ? ARROW_TYPE.elbow
-                  : ARROW_TYPE.sharp,
-            }));
-          }
-          this.setActiveTool({ type: shape });
-          event.stopPropagation();
-        } else if (event.key === KEYS.Q) {
-          this.toggleLock("keyboard");
-          event.stopPropagation();
-        }
+        // const shape = findShapeByKey(event.key);
+        // if (shape) {
+        //   if (this.state.activeTool.type !== shape) {
+        //     trackEvent(
+        //       "toolbar",
+        //       shape,
+        //       `keyboard (${
+        //         this.device.editor.isMobile ? "mobile" : "desktop"
+        //       })`,
+        //     );
+        //   }
+        //   if (shape === "arrow" && this.state.activeTool.type === "arrow") {
+        //     this.setState((prevState) => ({
+        //       currentItemArrowType:
+        //         prevState.currentItemArrowType === ARROW_TYPE.sharp
+        //           ? ARROW_TYPE.round
+        //           : prevState.currentItemArrowType === ARROW_TYPE.round
+        //           ? ARROW_TYPE.elbow
+        //           : ARROW_TYPE.sharp,
+        //     }));
+        //   }
+        //   this.setActiveTool({ type: shape });
+        //   event.stopPropagation();
+        // }
       }
 
 
