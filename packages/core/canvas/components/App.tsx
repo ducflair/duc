@@ -734,6 +734,7 @@ class App extends React.Component<AppProps, AppState> {
           resetScene: this.resetScene,
           rerender: this.rerenderCanvas,
           scrollToContent: this.scrollToContent,
+          scrollToRoot: this.scrollToRoot,
           toggleSnapMode: this.toggleSnapMode,
           setCurrentScope: this.setCurrentScope,
           setWritingLayer: this.setWritingLayer,
@@ -3700,6 +3701,17 @@ class App extends React.Component<AppProps, AppState> {
 
   private cancelInProgressAnimation: (() => void) | null = null;
 
+  scrollToRoot = () => {
+    this.setAppState({
+      scrollX: window.innerWidth / 2,
+      scrollY: window.innerHeight / 2,
+      zoom: {
+        value: getNormalizedZoom(1),
+      },
+      userToFollow: null,
+    })
+  };
+
   scrollToContent = (
     target:
       | DucElement
@@ -4152,21 +4164,6 @@ class App extends React.Component<AppProps, AppState> {
         }
       }
 
-      // if (
-      //   event[KEYS.CTRL_OR_CMD] &&
-      //   event.key === KEYS.P &&
-      //   !event.shiftKey &&
-      //   !event.altKey
-      // ) {
-      //   this.setToast({
-      //     message: t("commandPalette.shortcutHint", {
-      //       shortcut: getShortcutFromShortcutName("commandPalette"),
-      //     }),
-      //   });
-      //   event.preventDefault();
-      //   return;
-      // }
-
       if (event[KEYS.CTRL_OR_CMD] && event.key.toLowerCase() === KEYS.V) {
         IS_PLAIN_PASTE = event.shiftKey;
         clearTimeout(IS_PLAIN_PASTE_TIMER);
@@ -4179,12 +4176,12 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       // prevent browser zoom in input fields
-      if (event[KEYS.CTRL_OR_CMD] && isWritableElement(event.target)) {
-        if (event.code === CODES.MINUS || event.code === CODES.EQUAL) {
-          event.preventDefault();
-          return;
-        }
-      }
+      // if (event[KEYS.CTRL_OR_CMD] && isWritableElement(event.target)) {
+        // if (event.code === CODES.MINUS || event.code === CODES.EQUAL) {
+      //     event.preventDefault();
+      //     return;
+      //   }
+      // }
 
       // bail if
       if (
@@ -4195,21 +4192,6 @@ class App extends React.Component<AppProps, AppState> {
         // or unless using arrows (to move between buttons)
         (isArrowKey(event.key) && isInputLike(event.target))
       ) {
-        return;
-      }
-
-      if (event.key === KEYS.QUESTION_MARK) {
-        this.setState({
-          openDialog: { name: "help" },
-        });
-        return;
-      } else if (
-        event.key.toLowerCase() === KEYS.E &&
-        event.shiftKey &&
-        event[KEYS.CTRL_OR_CMD]
-      ) {
-        event.preventDefault();
-        this.setState({ openDialog: { name: "imageExport" } });
         return;
       }
 
@@ -4230,14 +4212,11 @@ class App extends React.Component<AppProps, AppState> {
           }));
         }
       }
+      //
 
-      if (this.actionManager.handleKeyDown(event)) {
-        return;
-      }
-
-      if (this.state.viewModeEnabled) {
-        return;
-      }
+      // if (this.actionManager.handleKeyDown(event)) {
+      //   return;
+      // }
 
       if (event[KEYS.CTRL_OR_CMD] && this.state.isBindingEnabled) {
         this.setState({ isBindingEnabled: false });
@@ -4326,24 +4305,25 @@ class App extends React.Component<AppProps, AppState> {
         const selectedElements = this.scene.getSelectedElements(this.state);
         if (selectedElements.length === 1) {
           const selectedElement = selectedElements[0];
-          if (event[KEYS.CTRL_OR_CMD]) {
-            if (isLinearElement(selectedElement)) {
-              if (
-                !this.state.editingLinearElement ||
-                this.state.editingLinearElement.elementId !==
-                  selectedElements[0].id
-              ) {
-                this.store.shouldCaptureIncrement();
-                if (!isElbowArrow(selectedElement)) {
-                  this.setState({
-                      editingLinearElement: new LinearElementEditor(
-                        selectedElement,
-                      ),
-                  }); 
-                }
-              }
-            }
-          } else if (
+          // if (event[KEYS.CTRL_OR_CMD]) {
+          //   if (isLinearElement(selectedElement)) {
+          //     if (
+          //       !this.state.editingLinearElement ||
+          //       this.state.editingLinearElement.elementId !==
+          //         selectedElements[0].id
+          //     ) {
+          //       this.store.shouldCaptureIncrement();
+          //       if (!isElbowArrow(selectedElement)) {
+          //         this.setState({
+          //             editingLinearElement: new LinearElementEditor(
+          //               selectedElement,
+          //             ),
+          //         }); 
+          //       }
+          //     }
+          //   }
+          // } else 
+          if (
             isTextElement(selectedElement) ||
             isValidTextContainer(selectedElement)
           ) {
@@ -4379,126 +4359,39 @@ class App extends React.Component<AppProps, AppState> {
         !this.state.selectionElement &&
         !this.state.selectedElementsAreBeingDragged
       ) {
-        const shape = findShapeByKey(event.key);
-        if (shape) {
-          if (this.state.activeTool.type !== shape) {
-            trackEvent(
-              "toolbar",
-              shape,
-              `keyboard (${
-                this.device.editor.isMobile ? "mobile" : "desktop"
-              })`,
-            );
-          }
-          if (shape === "arrow" && this.state.activeTool.type === "arrow") {
-            this.setState((prevState) => ({
-              currentItemArrowType:
-                prevState.currentItemArrowType === ARROW_TYPE.sharp
-                  ? ARROW_TYPE.round
-                  : prevState.currentItemArrowType === ARROW_TYPE.round
-                  ? ARROW_TYPE.elbow
-                  : ARROW_TYPE.sharp,
-            }));
-          }
-          this.setActiveTool({ type: shape });
-          event.stopPropagation();
-        } else if (event.key === KEYS.Q) {
-          this.toggleLock("keyboard");
-          event.stopPropagation();
-        }
+        // const shape = findShapeByKey(event.key);
+        // if (shape) {
+        //   if (this.state.activeTool.type !== shape) {
+        //     trackEvent(
+        //       "toolbar",
+        //       shape,
+        //       `keyboard (${
+        //         this.device.editor.isMobile ? "mobile" : "desktop"
+        //       })`,
+        //     );
+        //   }
+        //   if (shape === "arrow" && this.state.activeTool.type === "arrow") {
+        //     this.setState((prevState) => ({
+        //       currentItemArrowType:
+        //         prevState.currentItemArrowType === ARROW_TYPE.sharp
+        //           ? ARROW_TYPE.round
+        //           : prevState.currentItemArrowType === ARROW_TYPE.round
+        //           ? ARROW_TYPE.elbow
+        //           : ARROW_TYPE.sharp,
+        //     }));
+        //   }
+        //   this.setActiveTool({ type: shape });
+        //   event.stopPropagation();
+        // }
       }
+
+
       if (event.key === KEYS.SPACE && gesture.pointers.size === 0) {
         isHoldingSpace = true;
         setCursor(this.interactiveCanvas, CURSOR_TYPE.GRAB);
         event.preventDefault();
       }
 
-      if (
-        (event.key === KEYS.G || event.key === KEYS.S) &&
-        !event.altKey &&
-        !event[KEYS.CTRL_OR_CMD]
-      ) {
-        const selectedElements = this.scene.getSelectedElements(this.state);
-        if (
-          this.state.activeTool.type === "selection" &&
-          !selectedElements.length
-        ) {
-          return;
-        }
-
-        if (
-          event.key === KEYS.G &&
-          (hasBackground(this.state.activeTool.type) ||
-            selectedElements.some((element) => hasBackground(element.type)))
-        ) {
-          this.setState({ openPopup: "elementBackground" });
-          event.stopPropagation();
-        }
-        if (event.key === KEYS.S) {
-          this.setState({ openPopup: "elementStroke" });
-          event.stopPropagation();
-        }
-      }
-
-      if (
-        !event[KEYS.CTRL_OR_CMD] &&
-        event.shiftKey &&
-        event.key.toLowerCase() === KEYS.F
-      ) {
-        const selectedElements = this.scene.getSelectedElements(this.state);
-
-        if (
-          this.state.activeTool.type === "selection" &&
-          !selectedElements.length
-        ) {
-          return;
-        }
-
-        if (
-          this.state.activeTool.type === "text" ||
-          selectedElements.find(
-            (element) =>
-              isTextElement(element) ||
-              getBoundTextElement(
-                element,
-                this.scene.getNonDeletedElementsMap(),
-              ),
-          )
-        ) {
-          event.preventDefault();
-          // this.setState({ openPopup: "fontFamily" });
-        }
-      }
-
-      if (event.key === KEYS.K && !event.altKey && !event[KEYS.CTRL_OR_CMD]) {
-        if (this.state.activeTool.type === "laser") {
-          this.setActiveTool({ type: "selection" });
-        } else {
-          this.setActiveTool({ type: "laser" });
-        }
-        return;
-      }
-
-      if (
-        event[KEYS.CTRL_OR_CMD] &&
-        (event.key === KEYS.BACKSPACE || event.key === KEYS.DELETE)
-      ) {
-        jotaiStore.set(activeConfirmDialogAtom, "clearCanvas");
-      }
-
-      // eye dropper
-      // -----------------------------------------------------------------------
-      const lowerCased = event.key.toLocaleLowerCase();
-      const isPickingStroke = lowerCased === KEYS.S && event.shiftKey;
-      const isPickingBackground =
-        event.key === KEYS.I || (lowerCased === KEYS.G && event.shiftKey);
-
-      if (isPickingStroke || isPickingBackground) {
-        this.openEyeDropper({
-          type: isPickingStroke ? "stroke" : "background",
-        });
-      }
-      // -----------------------------------------------------------------------
     },
   );
 
@@ -6615,7 +6508,7 @@ class App extends React.Component<AppProps, AppState> {
     if (selection?.anchorNode) {
       selection.removeAllRanges();
     }
-    this.maybeOpenContextMenuAfterPointerDownOnTouchDevices(event);
+    // this.maybeOpenContextMenuAfterPointerDownOnTouchDevices(event);
 
     //fires only once, if pen is detected, penMode is enabled
     //the user can disable this by toggling the penMode button
@@ -10485,17 +10378,17 @@ class App extends React.Component<AppProps, AppState> {
   ) => {
     // event.preventDefault();
 
-    if (
-      (("pointerType" in event.nativeEvent &&
-        event.nativeEvent.pointerType === "touch") ||
-        ("pointerType" in event.nativeEvent &&
-          event.nativeEvent.pointerType === "pen" &&
-          // always allow if user uses a pen secondary button
-          event.button !== POINTER_BUTTON.SECONDARY)) &&
-      this.state.activeTool.type !== "selection"
-    ) {
-      return;
-    }
+    // if (
+    //   (("pointerType" in event.nativeEvent &&
+    //     event.nativeEvent.pointerType === "touch") ||
+    //     ("pointerType" in event.nativeEvent &&
+    //       event.nativeEvent.pointerType === "pen" &&
+    //       // always allow if user uses a pen secondary button
+    //       event.button !== POINTER_BUTTON.SECONDARY)) &&
+    //   this.state.activeTool.type !== "selection"
+    // ) {
+    //   return;
+    // }
 
     const { x, y } = viewportCoordsToSceneCoords(event, this.state);
     const element = this.getElementAtPosition(x, y, {
