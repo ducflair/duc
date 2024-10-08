@@ -769,6 +769,7 @@ export interface DucImperativeAPI {
     rerender: InstanceType<typeof App>["rerenderCanvas"];
     updateScene: InstanceType<typeof App>["updateScene"];
     scrollToContent: InstanceType<typeof App>["scrollToContent"];
+    scrollToRoot: InstanceType<typeof App>["scrollToRoot"];
     toggleSnapMode: InstanceType<typeof App>["toggleSnapMode"];
     setCurrentScope: InstanceType<typeof App>["setCurrentScope"];
     setWritingLayer: InstanceType<typeof App>["setWritingLayer"];
