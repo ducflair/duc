@@ -1626,9 +1626,10 @@ impl<'a> AppState<'a> {
   pub const VT_DISPLAYDISTANCEONDRAWING: flatbuffers::VOffsetT = 104;
   pub const VT_DISPLAYALLPOINTCOORDINATES: flatbuffers::VOffsetT = 106;
   pub const VT_DISPLAYALLPOINTINFOSELECTED: flatbuffers::VOffsetT = 108;
-  pub const VT_ENABLELINEBENDINGONEDIT: flatbuffers::VOffsetT = 110;
-  pub const VT_ALLOWINDEPENDENTCURVEHANDLES: flatbuffers::VOffsetT = 112;
-  pub const VT_COORDDECIMALPLACES: flatbuffers::VOffsetT = 114;
+  pub const VT_DISPLAYROOTAXIS: flatbuffers::VOffsetT = 110;
+  pub const VT_ENABLELINEBENDINGONEDIT: flatbuffers::VOffsetT = 112;
+  pub const VT_ALLOWINDEPENDENTCURVEHANDLES: flatbuffers::VOffsetT = 114;
+  pub const VT_COORDDECIMALPLACES: flatbuffers::VOffsetT = 116;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -1683,6 +1684,7 @@ impl<'a> AppState<'a> {
     if let Some(x) = args.activeEmbeddableElement { builder.add_activeEmbeddableElement(x); }
     builder.add_allowIndependentCurveHandles(args.allowIndependentCurveHandles);
     builder.add_enableLineBendingOnEdit(args.enableLineBendingOnEdit);
+    builder.add_displayRootAxis(args.displayRootAxis);
     builder.add_displayAllPointInfoSelected(args.displayAllPointInfoSelected);
     builder.add_displayAllPointCoordinates(args.displayAllPointCoordinates);
     builder.add_displayDistanceOnDrawing(args.displayDistanceOnDrawing);
@@ -2072,6 +2074,13 @@ impl<'a> AppState<'a> {
     unsafe { self._tab.get::<bool>(AppState::VT_DISPLAYALLPOINTINFOSELECTED, Some(false)).unwrap()}
   }
   #[inline]
+  pub fn displayRootAxis(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(AppState::VT_DISPLAYROOTAXIS, Some(false)).unwrap()}
+  }
+  #[inline]
   pub fn enableLineBendingOnEdit(&self) -> bool {
     // Safety:
     // Created from valid Table for this object
@@ -2154,6 +2163,7 @@ impl flatbuffers::Verifiable for AppState<'_> {
      .visit_field::<bool>("displayDistanceOnDrawing", Self::VT_DISPLAYDISTANCEONDRAWING, false)?
      .visit_field::<bool>("displayAllPointCoordinates", Self::VT_DISPLAYALLPOINTCOORDINATES, false)?
      .visit_field::<bool>("displayAllPointInfoSelected", Self::VT_DISPLAYALLPOINTINFOSELECTED, false)?
+     .visit_field::<bool>("displayRootAxis", Self::VT_DISPLAYROOTAXIS, false)?
      .visit_field::<bool>("enableLineBendingOnEdit", Self::VT_ENABLELINEBENDINGONEDIT, false)?
      .visit_field::<bool>("allowIndependentCurveHandles", Self::VT_ALLOWINDEPENDENTCURVEHANDLES, false)?
      .visit_field::<i32>("coordDecimalPlaces", Self::VT_COORDDECIMALPLACES, false)?
@@ -2215,6 +2225,7 @@ pub struct AppStateArgs<'a> {
     pub displayDistanceOnDrawing: bool,
     pub displayAllPointCoordinates: bool,
     pub displayAllPointInfoSelected: bool,
+    pub displayRootAxis: bool,
     pub enableLineBendingOnEdit: bool,
     pub allowIndependentCurveHandles: bool,
     pub coordDecimalPlaces: i32,
@@ -2276,6 +2287,7 @@ impl<'a> Default for AppStateArgs<'a> {
       displayDistanceOnDrawing: false,
       displayAllPointCoordinates: false,
       displayAllPointInfoSelected: false,
+      displayRootAxis: false,
       enableLineBendingOnEdit: false,
       allowIndependentCurveHandles: false,
       coordDecimalPlaces: 0,
@@ -2501,6 +2513,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<bool>(AppState::VT_DISPLAYALLPOINTINFOSELECTED, displayAllPointInfoSelected, false);
   }
   #[inline]
+  pub fn add_displayRootAxis(&mut self, displayRootAxis: bool) {
+    self.fbb_.push_slot::<bool>(AppState::VT_DISPLAYROOTAXIS, displayRootAxis, false);
+  }
+  #[inline]
   pub fn add_enableLineBendingOnEdit(&mut self, enableLineBendingOnEdit: bool) {
     self.fbb_.push_slot::<bool>(AppState::VT_ENABLELINEBENDINGONEDIT, enableLineBendingOnEdit, false);
   }
@@ -2583,6 +2599,7 @@ impl core::fmt::Debug for AppState<'_> {
       ds.field("displayDistanceOnDrawing", &self.displayDistanceOnDrawing());
       ds.field("displayAllPointCoordinates", &self.displayAllPointCoordinates());
       ds.field("displayAllPointInfoSelected", &self.displayAllPointInfoSelected());
+      ds.field("displayRootAxis", &self.displayRootAxis());
       ds.field("enableLineBendingOnEdit", &self.enableLineBendingOnEdit());
       ds.field("allowIndependentCurveHandles", &self.allowIndependentCurveHandles());
       ds.field("coordDecimalPlaces", &self.coordDecimalPlaces());

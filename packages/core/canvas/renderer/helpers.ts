@@ -82,70 +82,6 @@ export const bootstrapCanvas = ({
 
 
 
-// Function to render the text with a background box
-export function renderTextWithBox(
-  context: CanvasRenderingContext2D,
-  text: string,
-  textX: number,
-  textY: number,
-  color: string,
-  appState: StaticCanvasAppState,
-) {
-  // Set font size (constant in screen pixels)
-  const fontSize = 12; // Constant size regardless of zoom
-  const fontWeight = 500;
-  context.font = `${fontWeight} ${fontSize}px 'Roboto Mono', monospace`;
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-
-  // Measure text size
-  const textMetrics = context.measureText(text);
-  const textWidth = textMetrics.width;
-  const textHeight = fontSize; // Approximate text height
-  const padding = 6; // Constant padding in pixels
-
-  // Calculate box dimensions
-  const boxWidth = textWidth + 2 * padding;
-  const boxHeight = textHeight + 2 * padding-3;
-
-  // Calculate top-left corner of the box
-  const boxX = textX - boxWidth / 2;
-  const boxY = textY - boxHeight / 2;
-
-  // Draw the background box
-  context.fillStyle = color;
-  drawRoundedRect(context, boxX, boxY, boxWidth, boxHeight, 10);
-  context.fill();
-
-  // Set text color based on the theme
-  context.fillStyle = appState.theme === THEME.DARK ? "#FFFFFF" : "#000000";
-
-  // Draw the text inside the box
-  context.fillText(text, textX, textY);
-}
-
-export function renderQuickText(
-  context: CanvasRenderingContext2D,
-  text: string,
-  textX: number,
-  textY: number,
-  color: string,
-) {
-  // Set font size (constant in screen pixels)
-  const fontSize = 12; // Constant size regardless of zoom
-  const fontWeight = 500;
-  context.font = `${fontWeight} ${fontSize}px 'Roboto Mono', monospace`;
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-
-  // Set text color based on the theme
-  context.fillStyle = color;
-
-  // Draw the text inside the box
-  context.fillText(text, textX, textY);
-}
-
-
 // Utility function to draw a rounded rectangle
 function drawRoundedRect(
   context: CanvasRenderingContext2D,
@@ -458,3 +394,115 @@ export function renderTextWithBoxAtPosition(
   context.fillText(text, textX, textY);
 }
 
+
+function drawArrow(
+  context: CanvasRenderingContext2D,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  radius: number
+) {
+  const headLen = radius * 2;
+  const angle = Math.atan2(toY - fromY, toX - fromX);
+
+  context.beginPath();
+  context.moveTo(fromX, fromY);
+  context.lineTo(toX, toY);
+  context.stroke();
+
+  context.beginPath();
+  context.arc(toX, toY, radius, angle - Math.PI / 2, angle + Math.PI / 2);
+  context.fill();
+}
+
+export const renderRootAxis = (
+  context: CanvasRenderingContext2D,
+  appState: StaticCanvasAppState,
+  xAxisColor: string = "#FF0000",  // Red color for X-axis
+  yAxisColor: string = "#00FF00"   // Green color for Y-axis
+) => {
+  const zoom = appState.zoom.value;
+  const pixelRatio = window.devicePixelRatio || 1;
+
+  // Save the current context state
+  context.save();
+
+  // Set up scaling for zoom and pixel ratio
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.scale(zoom * pixelRatio, zoom * pixelRatio);
+
+  // Calculate the root origin (0,0) in terms of canvas space, adjusted for scroll
+  const originX = appState.scrollX;
+  const originY = appState.scrollY;
+
+  // Calculate canvas dimensions in scene coordinates
+  const canvasWidth = context.canvas.width / (zoom * pixelRatio);
+  const canvasHeight = context.canvas.height / (zoom * pixelRatio);
+
+  // Set common axis styles
+  const baseLineWidth = 1; // Base line width in pixels
+  context.lineWidth = baseLineWidth / zoom;
+  context.globalAlpha = 0.6; // Set 60% opacity
+
+  // Draw full X axis line
+  context.strokeStyle = xAxisColor;
+  context.fillStyle = xAxisColor;
+  context.beginPath();
+  context.moveTo(0, originY);
+  context.lineTo(canvasWidth, originY);
+  context.stroke();
+
+  // Draw full Y axis line
+  context.strokeStyle = yAxisColor;
+  context.fillStyle = yAxisColor;
+  context.beginPath();
+  context.moveTo(originX, 0);
+  context.lineTo(originX, canvasHeight);
+  context.stroke();
+
+  // Reset opacity for arrows and labels
+  context.globalAlpha = 1;
+
+  // Constants for arrow dimensions
+  const axisLength = 50;
+  const arrowRadius = 3 / zoom; // Arrow size adjusts with zoom
+
+  // Draw X axis arrow (red)
+  context.strokeStyle = xAxisColor;
+  context.fillStyle = xAxisColor;
+  drawArrow(context, originX, originY, originX + axisLength, originY, arrowRadius);
+
+  // Draw Y axis arrow (green)
+  context.strokeStyle = yAxisColor;
+  context.fillStyle = yAxisColor;
+  drawArrow(context, originX, originY, originX, originY - axisLength, arrowRadius);
+
+  // Set text styles
+  const baseFontSize = 4 * zoom; // Base font size in pixels
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+
+  // Draw X label (red)
+  context.save();
+  context.setTransform(1, 0, 0, 1, 0, 0); // Reset transformation for consistent text size
+  const xLabelX = (originX + axisLength + 5) * zoom * pixelRatio;
+  const xLabelY = originY * zoom * pixelRatio;
+  context.font = `${baseFontSize}px 'Roboto Mono', monospace`;
+  context.fillStyle = xAxisColor;
+  context.fillText("X", xLabelX, xLabelY);
+  context.restore();
+
+  // Draw Y label (green)
+  context.save();
+  context.setTransform(1, 0, 0, 1, 0, 0); // Reset transformation for consistent text size
+  const yLabelX = originX * zoom * pixelRatio;
+  const yLabelY = (originY - axisLength - 5) * zoom * pixelRatio;
+  context.font = `${baseFontSize}px 'Roboto Mono', monospace`;
+  context.fillStyle = yAxisColor;
+  context.fillText("Y", yLabelX, yLabelY);
+  context.restore();
+
+  // Restore the context state
+  context.restore();
+};

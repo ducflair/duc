@@ -1,3 +1,5 @@
+"use client";
+
 import type Scene from "../scene/Scene";
 import type { ValueOf } from "../utility-types";
 import type {
@@ -23,16 +25,8 @@ import Excalifont from "./assets/Excalifont-Regular.woff2";
 import Cascadia from "./assets/CascadiaCode-Regular.woff2";
 import ComicShanns from "./assets/ComicShanns-Regular.woff2";
 import LiberationSans from "./assets/LiberationSans-Regular.woff2";
+import RobotoMono from "./assets/RobotoMono-Regular.woff2";
 
-import LilitaLatin from "https://fonts.gstatic.com/s/lilitaone/v15/i7dPIFZ9Zz-WBtRtedDbYEF8RXi4EwQ.woff2";
-import LilitaLatinExt from "https://fonts.gstatic.com/s/lilitaone/v15/i7dPIFZ9Zz-WBtRtedDbYE98RXi4EwSsbg.woff2";
-
-import NunitoLatin from "https://fonts.gstatic.com/s/nunito/v26/XRXI3I6Li01BKofiOc5wtlZ2di8HDIkhdTQ3j6zbXWjgeg.woff2";
-import NunitoLatinExt from "https://fonts.gstatic.com/s/nunito/v26/XRXI3I6Li01BKofiOc5wtlZ2di8HDIkhdTo3j6zbXWjgevT5.woff2";
-import NunitoCyrilic from "https://fonts.gstatic.com/s/nunito/v26/XRXI3I6Li01BKofiOc5wtlZ2di8HDIkhdTA3j6zbXWjgevT5.woff2";
-import NunitoCyrilicExt from "https://fonts.gstatic.com/s/nunito/v26/XRXI3I6Li01BKofiOc5wtlZ2di8HDIkhdTk3j6zbXWjgevT5.woff2";
-import NunitoVietnamese from "https://fonts.gstatic.com/s/nunito/v26/XRXI3I6Li01BKofiOc5wtlZ2di8HDIkhdTs3j6zbXWjgevT5.woff2";
-import RobotoMono from "https://fonts.gstatic.com/s/robotomono/v23/L0xuDF4xlVMF-BfR8bXMIhJHg45mwgGEFl0_3vq_ROW4AJi8SJQt.woff2";
 
 // How to find Fonts ? -> Follow the README
 
@@ -221,6 +215,11 @@ export class Fonts {
       uri: Excalifont,
     });
 
+    _register(
+      "Roboto Mono", FONT_METADATA[FONT_FAMILY["Roboto Mono"]],
+      { uri: RobotoMono, }
+    );
+
     // keeping for backwards compatibility reasons, uses system font (Helvetica on MacOS, Arial on Win)
     _register("Helvetica", FONT_METADATA[FONT_FAMILY.Helvetica], {
       uri: LOCAL_FONT_PROTOCOL,
@@ -243,43 +242,6 @@ export class Fonts {
       uri: ComicShanns,
     });
 
-    _register(
-      "Lilita One",
-      FONT_METADATA[FONT_FAMILY["Lilita One"]],
-      { uri: LilitaLatinExt, descriptors: { unicodeRange: RANGES.LATIN_EXT } },
-      { uri: LilitaLatin, descriptors: { unicodeRange: RANGES.LATIN } },
-    );
-
-    _register(
-      "Roboto Mono",
-      FONT_METADATA[FONT_FAMILY["Roboto Mono"]],
-      { uri: RobotoMono, descriptors: { unicodeRange: RANGES.LATIN, weight: "500" } },
-    );
-
-    _register(
-      "Nunito",
-      FONT_METADATA[FONT_FAMILY.Nunito],
-      {
-        uri: NunitoCyrilicExt,
-        descriptors: { unicodeRange: RANGES.CYRILIC_EXT, weight: "500" },
-      },
-      {
-        uri: NunitoCyrilic,
-        descriptors: { unicodeRange: RANGES.CYRILIC, weight: "500" },
-      },
-      {
-        uri: NunitoVietnamese,
-        descriptors: { unicodeRange: RANGES.VIETNAMESE, weight: "500" },
-      },
-      {
-        uri: NunitoLatinExt,
-        descriptors: { unicodeRange: RANGES.LATIN_EXT, weight: "500" },
-      },
-      {
-        uri: NunitoLatin,
-        descriptors: { unicodeRange: RANGES.LATIN, weight: "500" },
-      },
-    );
 
     Fonts._initialized = true;
 
