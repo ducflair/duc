@@ -499,28 +499,35 @@ class AppState(object):
         return False
 
     # AppState
-    def EnableLineBendingOnEdit(self):
+    def DisplayRootAxis(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(110))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
-    def AllowIndependentCurveHandles(self):
+    def EnableLineBendingOnEdit(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(112))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
-    def CoordDecimalPlaces(self):
+    def AllowIndependentCurveHandles(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(114))
+        if o != 0:
+            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
+        return False
+
+    # AppState
+    def CoordDecimalPlaces(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(116))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
 def AppStateStart(builder):
-    builder.StartObject(56)
+    builder.StartObject(57)
 
 def Start(builder):
     AppStateStart(builder)
@@ -873,20 +880,26 @@ def AppStateAddDisplayAllPointInfoSelected(builder, displayAllPointInfoSelected)
 def AddDisplayAllPointInfoSelected(builder, displayAllPointInfoSelected):
     AppStateAddDisplayAllPointInfoSelected(builder, displayAllPointInfoSelected)
 
+def AppStateAddDisplayRootAxis(builder, displayRootAxis):
+    builder.PrependBoolSlot(53, displayRootAxis, 0)
+
+def AddDisplayRootAxis(builder, displayRootAxis):
+    AppStateAddDisplayRootAxis(builder, displayRootAxis)
+
 def AppStateAddEnableLineBendingOnEdit(builder, enableLineBendingOnEdit):
-    builder.PrependBoolSlot(53, enableLineBendingOnEdit, 0)
+    builder.PrependBoolSlot(54, enableLineBendingOnEdit, 0)
 
 def AddEnableLineBendingOnEdit(builder, enableLineBendingOnEdit):
     AppStateAddEnableLineBendingOnEdit(builder, enableLineBendingOnEdit)
 
 def AppStateAddAllowIndependentCurveHandles(builder, allowIndependentCurveHandles):
-    builder.PrependBoolSlot(54, allowIndependentCurveHandles, 0)
+    builder.PrependBoolSlot(55, allowIndependentCurveHandles, 0)
 
 def AddAllowIndependentCurveHandles(builder, allowIndependentCurveHandles):
     AppStateAddAllowIndependentCurveHandles(builder, allowIndependentCurveHandles)
 
 def AppStateAddCoordDecimalPlaces(builder, coordDecimalPlaces):
-    builder.PrependInt32Slot(55, coordDecimalPlaces, 0)
+    builder.PrependInt32Slot(56, coordDecimalPlaces, 0)
 
 def AddCoordDecimalPlaces(builder, coordDecimalPlaces):
     AppStateAddCoordDecimalPlaces(builder, coordDecimalPlaces)

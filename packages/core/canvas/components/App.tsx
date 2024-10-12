@@ -4407,7 +4407,7 @@ class App extends React.Component<AppProps, AppState> {
       if (this.state.viewModeEnabled) {
         setCursor(this.interactiveCanvas, CURSOR_TYPE.GRAB);
       } else if (this.state.activeTool.type === "selection") {
-        resetCursor(this.interactiveCanvas);
+        resetCursor(this.interactiveCanvas, this.state);
       } else {
         setCursorForShape(this.interactiveCanvas, this.state);
         this.setState({
@@ -4924,7 +4924,7 @@ class App extends React.Component<AppProps, AppState> {
   };
 
   private resetCursor = () => {
-    resetCursor(this.interactiveCanvas);
+    resetCursor(this.interactiveCanvas, this.state);
   };
   /**
    * returns whether user is making a gesture with >= 2 fingers (points)
@@ -5571,7 +5571,7 @@ class App extends React.Component<AppProps, AppState> {
       }
     }
 
-    resetCursor(this.interactiveCanvas);
+    resetCursor(this.interactiveCanvas, this.state);
 
     let { x: sceneX, y: sceneY } = viewportCoordsToSceneCoords(
       event,
@@ -5605,7 +5605,7 @@ class App extends React.Component<AppProps, AppState> {
       }
     }
 
-    resetCursor(this.interactiveCanvas);
+    resetCursor(this.interactiveCanvas, this.state);
     if (!event[KEYS.CTRL_OR_CMD] && !this.state.viewModeEnabled) {
       const hitElement = this.getElementAtPosition(sceneX, sceneY);
 
@@ -5848,7 +5848,7 @@ class App extends React.Component<AppProps, AppState> {
       !this.state.multiElement
     ) {
       if (isOverScrollBar) {
-        resetCursor(this.interactiveCanvas);
+        resetCursor(this.interactiveCanvas, this.state);
       } else {
         setCursorForShape(this.interactiveCanvas, this.state);
       }
@@ -5982,7 +5982,7 @@ class App extends React.Component<AppProps, AppState> {
             false,
           );
         } else {
-          setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
+          // setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
           // in this branch, we're inside the commit zone, and no uncommitted
           // point exists. Thus do nothing (don't add/remove points).
         }
@@ -5996,7 +5996,7 @@ class App extends React.Component<AppProps, AppState> {
           lastCommittedPoint[1],
         ) < LINE_CONFIRM_THRESHOLD
       ) {
-        setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
+        // setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
         mutateElement(
           multiElement,
           {
@@ -6032,7 +6032,7 @@ class App extends React.Component<AppProps, AppState> {
         }
 
         if (isPathALoop(points, this.state.zoom.value)) {
-          setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
+          // setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
         }
         if (isElbowArrow(multiElement)) {
           mutateElbowArrow(
@@ -6229,7 +6229,7 @@ class App extends React.Component<AppProps, AppState> {
               activeEmbeddable: { element: hitElement, state: "hover" },
             });
           } else {
-            setCursor(this.interactiveCanvas, CURSOR_TYPE.MOVE);
+            // setCursor(this.interactiveCanvas, CURSOR_TYPE.MOVE);
             if (this.state.activeEmbeddable?.state === "hover") {
               this.setState({ activeEmbeddable: null });
             }
@@ -6398,16 +6398,19 @@ class App extends React.Component<AppProps, AppState> {
           );
 
         if (hoverPointIndex >= 0 || segmentMidPointHoveredCoords) {
-          setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
+          // setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
+          this.resetCursor();
         } else if (this.hitElement(scenePointerX, scenePointerY, element)) {
-          setCursor(this.interactiveCanvas, CURSOR_TYPE.MOVE);
+          // setCursor(this.interactiveCanvas, CURSOR_TYPE.MOVE);
+          this.resetCursor();
         }
       } else if (this.hitElement(scenePointerX, scenePointerY, element)) {
         if (
           !isElbowArrow(element) ||
           !(element.startBinding || element.endBinding)
         ) {
-          setCursor(this.interactiveCanvas, CURSOR_TYPE.MOVE);
+          // setCursor(this.interactiveCanvas, CURSOR_TYPE.MOVE);
+          this.resetCursor();
         }
       }
 
@@ -6438,7 +6441,8 @@ class App extends React.Component<AppProps, AppState> {
         }
       }
     } else {
-      setCursor(this.interactiveCanvas, CURSOR_TYPE.AUTO);
+      // setCursor(this.interactiveCanvas, CURSOR_TYPE.AUTO);
+      this.resetCursor();
     }
   }
 
@@ -6822,31 +6826,6 @@ class App extends React.Component<AppProps, AppState> {
         activeEmbeddable: null,
         selectedElementIds: {},
       });
-    }
-  };
-
-  private maybeOpenContextMenuAfterPointerDownOnTouchDevices = (
-    event: React.PointerEvent<HTMLElement>,
-  ): void => {
-    // deal with opening context menu on touch devices
-    if (event.pointerType === "touch") {
-      invalidateContextMenu = false;
-
-      if (touchTimeout) {
-        // If there's already a touchTimeout, this means that there's another
-        // touch down and we are doing another touch, so we shouldn't open the
-        // context menu.
-        invalidateContextMenu = true;
-      } else {
-        // open the context menu with the first touch's clientX and clientY
-        // if the touch is not moving
-        touchTimeout = window.setTimeout(() => {
-          touchTimeout = 0;
-          if (!invalidateContextMenu) {
-            this.handleCanvasContextMenu(event);
-          }
-        }, TOUCH_CTX_MENU_TIMEOUT);
-      }
     }
   };
 
@@ -7451,7 +7430,7 @@ class App extends React.Component<AppProps, AppState> {
       autoEdit: false,
     });
 
-    resetCursor(this.interactiveCanvas);
+    resetCursor(this.interactiveCanvas, this.state);
     if (!this.state.activeTool.locked) {
       this.setState({
         activeTool: updateActiveTool(this.state, { type: "selection" }),
@@ -7747,7 +7726,7 @@ class App extends React.Component<AppProps, AppState> {
         lastCommittedPoint: multiElement.points[multiElement.points.length - 1],
       });
       this.updateGroups();
-      setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
+      // setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
     } else {
       const [gridX, gridY] = getGridPoint(
         pointerDownState.origin.x,
@@ -7856,168 +7835,8 @@ class App extends React.Component<AppProps, AppState> {
     elementType: DucLinearElement["type"],
     pointerDownState: PointerDownState,
   ): void => {
-    if (this.state.multiElement) {
-      const { multiElement } = this.state;
+    // TODO: Develop ruler tool
 
-      // finalize if completing a loop
-      if (
-        multiElement.type === "line" &&
-        isPathALoop(multiElement.points, this.state.zoom.value)
-      ) {
-        mutateElement(multiElement, {
-          lastCommittedPoint:
-            multiElement.points[multiElement.points.length - 1],
-        });
-        this.actionManager.executeAction(actionFinalize);
-        return;
-      }
-
-      // Elbow arrows cannot be created by putting down points
-      // only the start and end points can be defined
-      if (isElbowArrow(multiElement) && multiElement.points.length > 1) {
-        mutateElement(multiElement, {
-          lastCommittedPoint:
-            multiElement.points[multiElement.points.length - 1],
-        });
-        this.actionManager.executeAction(actionFinalize);
-        return;
-      }
-      this.updateGroups();
-
-      const { x: rx, y: ry, lastCommittedPoint } = multiElement;
-
-      // clicking inside commit zone → finalize arrow
-      if (
-        multiElement.points.length > 1 &&
-        lastCommittedPoint &&
-        distance2d(
-          pointerDownState.origin.x - rx,
-          pointerDownState.origin.y - ry,
-          lastCommittedPoint[0],
-          lastCommittedPoint[1],
-        ) < LINE_CONFIRM_THRESHOLD
-      ) {
-        this.actionManager.executeAction(actionFinalize);
-        return;
-      }
-
-      this.setState((prevState) => ({
-        selectedElementIds: makeNextSelectedElementIds(
-          {
-            ...prevState.selectedElementIds,
-            [multiElement.id]: true,
-          },
-          prevState,
-        ),
-      }));
-      // clicking outside commit zone → update reference for last committed
-      // point
-      mutateElement(multiElement, {
-        lastCommittedPoint: multiElement.points[multiElement.points.length - 1],
-      });
-      this.updateGroups();
-      setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
-    } else {
-      const [gridX, gridY] = getGridPoint(
-        pointerDownState.origin.x,
-        pointerDownState.origin.y,
-        event[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),
-      );
-
-      const topLayerFrame = this.getTopLayerFrameAtSceneCoords({
-        x: gridX,
-        y: gridY,
-      });
-
-      /* If arrow is pre-arrowheads, it will have undefined for both start and end arrowheads.
-      If so, we want it to be null for start and "arrow" for end. If the linear item is not
-      an arrow, we want it to be null for both. Otherwise, we want it to use the
-      values from appState. */
-
-      const { currentItemStartArrowhead, currentItemEndArrowhead } = this.state;
-      const [startArrowhead, endArrowhead] =
-        elementType === "arrow"
-          ? [currentItemStartArrowhead, currentItemEndArrowhead]
-          : [null, null];
-
-      const element =
-        elementType === "arrow"
-          ? newArrowElement({
-              type: elementType,
-              x: gridX,
-              y: gridY,
-              strokeColor: this.state.currentItemStrokeColor,
-              backgroundColor: this.state.currentItemBackgroundColor,
-              fillStyle: this.state.currentItemFillStyle,
-              strokeWidth: this.state.currentItemStrokeWidth,
-              strokeStyle: this.state.currentItemStrokeStyle,
-              roughness: this.state.currentItemRoughness,
-              opacity: this.state.currentItemOpacity,
-              roundness:
-                this.state.currentItemArrowType === ARROW_TYPE.round
-                  ? { type: ROUNDNESS.PROPORTIONAL_RADIUS }
-                  : // note, roundness doesn't have any effect for elbow arrows,
-                    // but it's best to set it to null as well
-                    null,
-              startArrowhead,
-              endArrowhead,
-              locked: false,
-              label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
-              scope: this.state.scope,
-              writingLayer: this.state.writingLayer,
-              frameId: topLayerFrame ? topLayerFrame.id : null,
-              elbowed: this.state.currentItemArrowType === ARROW_TYPE.elbow,
-            })
-          : newLinearElement({
-              type: elementType,
-              x: gridX,
-              y: gridY,
-              scope: this.state.scope,
-              writingLayer: this.state.writingLayer,
-              strokeColor: this.state.currentItemStrokeColor,
-              backgroundColor: this.state.currentItemBackgroundColor,
-              fillStyle: this.state.currentItemFillStyle,
-              strokeWidth: this.state.currentItemStrokeWidth,
-              strokeStyle: this.state.currentItemStrokeStyle,
-              roughness: this.state.currentItemRoughness,
-              opacity: this.state.currentItemOpacity,
-              roundness:
-                this.state.currentItemRoundness === "round"
-                  ? { type: ROUNDNESS.PROPORTIONAL_RADIUS }
-                  : null,
-              locked: false,
-              frameId: topLayerFrame ? topLayerFrame.id : null,
-      });
-      this.setState((prevState) => {
-        const nextSelectedElementIds = {
-          ...prevState.selectedElementIds,
-        };
-        delete nextSelectedElementIds[element.id];
-        return {
-          selectedElementIds: makeNextSelectedElementIds(
-            nextSelectedElementIds,
-            prevState,
-          ),
-        };
-      });
-      mutateElement(element, {
-        points: [...element.points, [0, 0]],
-      });
-      const boundElement = getHoveredElementForBinding(
-        pointerDownState.origin,
-        this.scene.getNonDeletedElements(),
-        this.scene.getNonDeletedElementsMap(),
-        isElbowArrow(element),
-      );
-      
-      this.scene.insertElement(element);
-      this.setState({
-        newElement: element,
-        startBoundElement: boundElement,
-        suggestedBindings: [],
-      });
-      this.updateGroups();
-    }
   };
 
   private getCurrentItemRoundness(
@@ -9051,7 +8870,7 @@ class App extends React.Component<AppProps, AppState> {
           }
           this.setState({ suggestedBindings: [], startBoundElement: null });
           if (!activeTool.locked) {
-            resetCursor(this.interactiveCanvas);
+            resetCursor(this.interactiveCanvas, this.state);
             this.setState((prevState) => ({
               newElement: null,
               activeTool: updateActiveTool(this.state, {
@@ -9559,7 +9378,8 @@ class App extends React.Component<AppProps, AppState> {
           });
         }
         // reset cursor
-        setCursor(this.interactiveCanvas, CURSOR_TYPE.AUTO);
+        // setCursor(this.interactiveCanvas, CURSOR_TYPE.AUTO);
+        this.resetCursor();
         return;
       }
 
@@ -9613,7 +9433,7 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       if (!activeTool.locked && activeTool.type !== "freedraw") {
-        resetCursor(this.interactiveCanvas);
+        resetCursor(this.interactiveCanvas, this.state);
         this.setState({
           newElement: null,
           suggestedBindings: [],
@@ -9794,7 +9614,7 @@ class App extends React.Component<AppProps, AppState> {
           reject(new Error(t("errors.imageInsertError")));
         } finally {
           if (!showCursorImagePreview) {
-            resetCursor(this.interactiveCanvas);
+            resetCursor(this.interactiveCanvas, this.state);
           }
         }
       },
@@ -10373,10 +10193,9 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  private handleCanvasContextMenu = (
+  public handleCanvasContextMenu = (
     event: React.MouseEvent<HTMLElement | HTMLCanvasElement>,
   ) => {
-    // event.preventDefault();
 
     // if (
     //   (("pointerType" in event.nativeEvent &&
@@ -10434,11 +10253,6 @@ class App extends React.Component<AppProps, AppState> {
           : this.state),
         showHyperlinkPopup: false,
       },
-      // () => {
-      //   this.setState({
-      //     contextMenu: { top, left, items: this.getContextMenuItems(type) },
-      //   });
-      // },
     );
 
     return type;

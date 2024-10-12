@@ -67,7 +67,7 @@ import { COLOR_PALETTE } from "../colors";
 import { coordinateToRealMeasure } from "../duc/utils/measurements";
 import { offset } from "../ga";
 import { getNormalizedZoom } from "../scene";
-import { renderAllPointCoordinates, renderAllPointDistances, renderDistanceOnDrawingLine, renderTextWithBox } from "./helpers";
+import { renderAllPointCoordinates, renderAllPointDistances, renderDistanceOnDrawingLine } from "./helpers";
 
 // using a stronger invert (100% vs our regular 93%) and saturate
 // as a temp hack to make images in dark theme look closer to original

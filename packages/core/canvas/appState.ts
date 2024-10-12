@@ -86,8 +86,8 @@ export const getDefaultAppState = (): Omit<
     previousSelectedElementIds: {},
     resizingElement: null,
     scrolledOutside: false,
-    scrollX: 0,
-    scrollY: 0,
+    scrollX: window ? window.innerWidth / 2 : 0,
+    scrollY: window ? window.innerHeight / 2 : 0,
     selectedElementIds: {},
     selectedGroupIds: {},
     selectedElementsAreBeingDragged: false,
@@ -129,6 +129,8 @@ export const getDefaultAppState = (): Omit<
     enableLineBendingOnEdit: false,
     allowIndependentCurveHandles: false,
     coordDecimalPlaces: 2,
+
+    displayRootAxis: false,
   };
 };
 
@@ -264,6 +266,7 @@ const APP_STATE_STORAGE_CONF = (<
   enableLineBendingOnEdit: { browser: false, export: true, server: true },
   allowIndependentCurveHandles: { browser: false, export: true, server: true },
   coordDecimalPlaces: { browser: false, export: true, server: true },
+  displayRootAxis: { browser: false, export: false, server: false },
 });
 
 const _clearAppStateForStorage = <

@@ -192,6 +192,7 @@ table AppState {
   displayDistanceOnDrawing: bool;
   displayAllPointCoordinates: bool;
   displayAllPointInfoSelected: bool;
+  displayRootAxis: bool;
 
   enableLineBendingOnEdit: bool;
   allowIndependentCurveHandles: bool; 
