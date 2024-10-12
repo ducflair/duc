@@ -211,6 +211,7 @@ export type StaticCanvasAppState = Readonly<
     displayAllPointDistances: AppState["displayAllPointDistances"];
     displayAllPointCoordinates: AppState["displayAllPointCoordinates"];
     displayAllPointInfoSelected: AppState["displayAllPointInfoSelected"];
+    displayRootAxis: AppState["displayRootAxis"];
     coordDecimalPlaces: AppState["coordDecimalPlaces"];
     newElement: AppState["newElement"];
   }
@@ -425,6 +426,8 @@ export interface AppState extends Ducfig {
   allowIndependentCurveHandles: boolean; 
   
   coordDecimalPlaces: number;
+
+  displayRootAxis: boolean;
 }
 
 export type UIAppState = Omit<

@@ -118,6 +118,7 @@ const getRelevantAppStateProps = (
   displayAllPointDistances: appState.displayAllPointDistances,
   displayAllPointCoordinates: appState.displayAllPointCoordinates,
   displayAllPointInfoSelected: appState.displayAllPointInfoSelected,
+  displayRootAxis: appState.displayRootAxis,
   coordDecimalPlaces: appState.coordDecimalPlaces,
   newElement: appState.newElement,
 });

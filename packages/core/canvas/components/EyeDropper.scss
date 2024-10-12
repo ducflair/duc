@@ -6,6 +6,7 @@
     height: 100%;
     z-index: var(--zIndex-eyeDropperBackdrop);
     touch-action: none;
+    // cursor: url('/path/to/pipette.svg') 16 16, crosshair;
   }
 
   .excalidraw-eye-dropper-container {

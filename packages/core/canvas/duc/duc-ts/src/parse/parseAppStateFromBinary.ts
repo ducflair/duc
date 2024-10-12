@@ -87,6 +87,7 @@ export const parseAppStateFromBinary = (appState: BinAppState | null): Partial<A
     displayDistanceOnDrawing: appState.displayDistanceOnDrawing() || getDefaultAppState().displayDistanceOnDrawing,
     displayAllPointCoordinates: appState.displayAllPointCoordinates() || getDefaultAppState().displayAllPointCoordinates,
     displayAllPointInfoSelected: appState.displayAllPointInfoSelected() || getDefaultAppState().displayAllPointInfoSelected,
+    displayRootAxis: appState.displayRootAxis() || getDefaultAppState().displayRootAxis,
 
     enableLineBendingOnEdit: appState.enableLineBendingOnEdit() || getDefaultAppState().enableLineBendingOnEdit,
     allowIndependentCurveHandles: appState.allowIndependentCurveHandles() || getDefaultAppState().allowIndependentCurveHandles,

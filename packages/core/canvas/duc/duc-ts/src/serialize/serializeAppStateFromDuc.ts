@@ -123,6 +123,7 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   BinAppState.addAllowIndependentCurveHandles(builder, appState.allowIndependentCurveHandles || getDefaultAppState().allowIndependentCurveHandles);
   BinAppState.addCoordDecimalPlaces(builder, appState.coordDecimalPlaces || getDefaultAppState().coordDecimalPlaces);
   BinAppState.addDisplayAllPointInfoSelected(builder, appState.displayAllPointInfoSelected || getDefaultAppState().displayAllPointInfoSelected);
+  BinAppState.addDisplayRootAxis(builder, appState.displayRootAxis || getDefaultAppState().displayRootAxis);
   
 
   return BinAppState.endAppState(builder);

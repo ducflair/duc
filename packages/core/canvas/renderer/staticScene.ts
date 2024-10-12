@@ -28,7 +28,7 @@ import {
   EXTERNAL_LINK_IMG,
   getLinkHandleFromCoords,
 } from "../components/hyperlink/helpers";
-import { bootstrapCanvas, getNormalizedCanvasDimensions } from "./helpers";
+import { bootstrapCanvas, getNormalizedCanvasDimensions, renderRootAxis, renderTextWithBoxAtPosition } from "./helpers";
 import { throttleRAF } from "../utils";
 import { getBoundTextElement } from "../element/textElement";
 import transformHexColor from "../scene/hexDarkModeFilter";
@@ -247,6 +247,10 @@ const _renderStaticScene = ({
   }
 
   const groupsToBeAddedToFrame = new Set<string>();
+
+  if(appState.displayRootAxis) {
+    renderRootAxis(context, appState);
+  }
 
   visibleElements.forEach((element) => {
     if (
