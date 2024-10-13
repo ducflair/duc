@@ -16,10 +16,11 @@ export const fillCircle = (
   cy: number,
   radius: number,
   stroke = true,
+  fill: string = "white"
 ) => {
   context.beginPath();
   context.arc(cx, cy, radius, 0, Math.PI * 2);
-  context.fill();
+  context.fillStyle = fill;
   if (stroke) {
     context.stroke();
   }

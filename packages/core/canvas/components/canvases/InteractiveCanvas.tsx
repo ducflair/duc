@@ -161,6 +161,7 @@ const InteractiveCanvas = (props: InteractiveCanvasProps) => {
           remotePointerUserStates,
           selectionColor,
           renderScrollbars: false,
+          selectionDirection: props.appState.selectionDirection,
         },
         device: props.device,
         callback: props.renderInteractiveSceneCallback,
@@ -168,6 +169,7 @@ const InteractiveCanvas = (props: InteractiveCanvasProps) => {
       isRenderThrottlingEnabled(),
     );
   });
+
 
   return (
     <canvas
@@ -228,6 +230,8 @@ const getRelevantAppStateProps = (
   snapLines: appState.snapLines,
   zenModeEnabled: appState.zenModeEnabled,
   editingTextElement: appState.editingTextElement,
+  elementHovered: appState.elementHovered,
+  selectionDirection: appState.selectionDirection,
 });
 
 const areEqual = (

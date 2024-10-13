@@ -430,6 +430,9 @@ export const LIBRARY_DISABLED_TYPES = new Set([
   "image",
 ] as const);
 
+export const STROKE_SELECTION_COLOR = "#6965db";
+export const STROKE_SELECTION_CONTRAST_COLOR = "#7B77FF";
+
 // use these constants to easily identify reference sites
 export const TOOL_TYPE = {
   selection: "selection",

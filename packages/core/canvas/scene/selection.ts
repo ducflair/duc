@@ -47,6 +47,7 @@ export const getElementsWithinSelection = (
   selection: NonDeletedDucElement,
   elementsMap: ElementsMap,
   excludeElementsInFrames: boolean = true,
+  selectionDirection: "left" | "right" = "right", // default to 'right'
 ) => {
   const [selectionX1, selectionY1, selectionX2, selectionY2] =
     getElementAbsoluteCoords(selection, elementsMap);
@@ -70,20 +71,34 @@ export const getElementsWithinSelection = (
       elementY2 = Math.min(fy2, elementY2);
     }
 
-    return (
-      element.locked === false &&
-      element.type !== "selection" &&
-      !isBoundToContainer(element) &&
-      selectionX1 <= elementX1 &&
-      selectionY1 <= elementY1 &&
-      selectionX2 >= elementX2 &&
-      selectionY2 >= elementY2
-    );
+    if (selectionDirection === "right") {
+      // Select elements fully inside the selection area
+      return (
+        element.locked === false &&
+        element.type !== "selection" &&
+        !isBoundToContainer(element) &&
+        selectionX1 <= elementX1 &&
+        selectionY1 <= elementY1 &&
+        selectionX2 >= elementX2 &&
+        selectionY2 >= elementY2
+      );
+    } else {
+      // Select elements that intersect with the selection area
+      return (
+        element.locked === false &&
+        element.type !== "selection" &&
+        !isBoundToContainer(element) &&
+        !(elementX2 < selectionX1 ||
+          elementX1 > selectionX2 ||
+          elementY2 < selectionY1 ||
+          elementY1 > selectionY2)
+      );
+    }
   });
 
   elementsInSelection = excludeElementsInFrames
-    ? excludeElementsInFramesFromSelection(elementsInSelection)
-    : elementsInSelection;
+  ? excludeElementsInFramesFromSelection(elementsInSelection)
+  : elementsInSelection;
 
   elementsInSelection = elementsInSelection.filter((element) => {
     const containingFrame = getContainingFrame(element, elementsMap);
