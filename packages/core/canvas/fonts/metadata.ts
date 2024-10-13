@@ -66,6 +66,7 @@ export const FONT_METADATA: Record<number, FontMetadata> = {
       descender: -220,
       lineHeight: 1.15,
     },
+    local: true,
     icon: FontFamilyNormalIcon,
   },
   [FONT_FAMILY["Comic Shanns"]]: {

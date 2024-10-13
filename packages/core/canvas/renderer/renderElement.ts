@@ -46,6 +46,7 @@ import {
   FONT_FAMILY,
   FRAME_STYLE,
   MIME_TYPES,
+  STROKE_SELECTION_COLOR,
   THEME,
 } from "../constants";
 import type { StrokeOptions } from "perfect-freehand";
@@ -655,28 +656,43 @@ export const drawElementFromCanvas = (
 };
 
 export const renderSelectionElement = (
-  element: NonDeletedDucElement,
+  element: NonDeleted<DucElement>,
   context: CanvasRenderingContext2D,
   appState: InteractiveCanvasAppState,
-  selectionColor: InteractiveCanvasRenderConfig["selectionColor"],
+  selectionDirection: AppState["selectionDirection"] = "right",
 ) => {
   context.save();
   context.translate(element.x + appState.scrollX, element.y + appState.scrollY);
-  context.fillStyle = "rgba(0, 0, 200, 0.04)";
 
   // render from 0.5px offset  to get 1px wide line
   // https://stackoverflow.com/questions/7530593/html5-canvas-and-line-width/7531540#7531540
   // TODO can be be improved by offseting to the negative when user selects
   // from right to left
   const offset = 0.5 / appState.zoom.value;
-
-  context.fillRect(offset, offset, element.width, element.height);
   context.lineWidth = 1 / appState.zoom.value;
-  context.strokeStyle = selectionColor ? selectionColor : COLOR_PALETTE.midGray;
+
+  if (selectionDirection === "right") {
+    // Normal selection to the right (solid blue)
+    context.fillStyle = "rgba(0, 0, 200, 0.04)"; // Light blue fill for right selection
+    context.strokeStyle = STROKE_SELECTION_COLOR;
+    context.setLineDash([]); // Solid stroke
+
+  } else if (selectionDirection === "left") {
+    // Selection to the left (dashed green)
+    context.fillStyle = "rgba(0, 255, 0, 0.1)"; // Soft green fill for left selection
+    context.strokeStyle = "rgba(0, 255, 0, 0.6)"; // Soft green stroke
+    context.setLineDash([5 / appState.zoom.value, 5 / appState.zoom.value]); // Dashed line
+  }
+
+  // Draw the filled rectangle
+  context.fillRect(offset, offset, element.width, element.height);
+
+  // Draw the border (either solid or dashed based on the direction)
   context.strokeRect(offset, offset, element.width, element.height);
 
   context.restore();
 };
+
 
 export const renderElement = (
   element: NonDeletedDucElement,

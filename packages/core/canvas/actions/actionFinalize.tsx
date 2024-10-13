@@ -146,7 +146,7 @@ export const actionFinalize = register({
         appState.activeTool.type !== "freedraw") ||
       !multiPointElement
     ) {
-      resetCursor(interactiveCanvas, appState);
+      resetCursor(interactiveCanvas);
     }
 
     let activeTool: AppState["activeTool"];

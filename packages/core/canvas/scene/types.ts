@@ -61,6 +61,7 @@ export type InteractiveCanvasRenderConfig = {
   // extra options passed to the renderer
   // ---------------------------------------------------------------------------
   renderScrollbars?: boolean;
+  selectionDirection: AppState["selectionDirection"];
 };
 
 export type RenderInteractiveSceneCallback = {

@@ -52,6 +52,7 @@ export const getDefaultAppState = (): Omit<
     editingElement: null,
     editingGroupId: null,
     editingLinearElement: null,
+    elementHovered: null,
     activeTool: {
       type: "selection",
       customType: null,
@@ -131,6 +132,7 @@ export const getDefaultAppState = (): Omit<
     coordDecimalPlaces: 2,
 
     displayRootAxis: false,
+    selectionDirection: null,
   };
 };
 
@@ -185,6 +187,7 @@ const APP_STATE_STORAGE_CONF = (<
   newElement: { browser: false, export: false, server: false },
   editingTextElement: { browser: false, export: false, server: false },
   activeEmbeddable: { browser: false, export: false, server: false },
+  elementHovered: { browser: false, export: false, server: false },
   draggingElement: { browser: false, export: false, server: false },
   editingElement: { browser: false, export: false, server: false },
   editingGroupId: { browser: true, export: false, server: false },
@@ -267,6 +270,7 @@ const APP_STATE_STORAGE_CONF = (<
   allowIndependentCurveHandles: { browser: false, export: true, server: true },
   coordDecimalPlaces: { browser: false, export: true, server: true },
   displayRootAxis: { browser: false, export: false, server: false },
+  selectionDirection: { browser: false, export: false, server: false },
 });
 
 const _clearAppStateForStorage = <
