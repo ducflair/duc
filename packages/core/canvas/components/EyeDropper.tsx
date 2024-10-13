@@ -82,7 +82,7 @@ export const EyeDropper: React.FC<{
     }) => {
       const pixel = ctx.getImageData(
         (clientX - appState.offsetLeft) * window.devicePixelRatio,
-        (clientY - appState.offsetTop) * window.devicePixelRatio,
+        ((clientY - appState.offsetTop) + 21) * window.devicePixelRatio,
         1,
         1,
       ).data;
@@ -100,7 +100,7 @@ export const EyeDropper: React.FC<{
       altKey: boolean;
     }) => {
       // FIXME swap offset when the preview gets outside viewport
-      colorPreviewDiv.style.top = `${clientY + 20}px`;
+      colorPreviewDiv.style.top = `${clientY + 41}px`;
       colorPreviewDiv.style.left = `${clientX + 20}px`;
 
       const currentColor = getCurrentColor({ clientX, clientY });

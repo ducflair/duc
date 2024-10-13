@@ -237,6 +237,8 @@ export type InteractiveCanvasAppState = Readonly<
     snapLines: AppState["snapLines"];
     zenModeEnabled: AppState["zenModeEnabled"];
     editingTextElement: AppState["editingTextElement"];
+    elementHovered: AppState["elementHovered"];
+    selectionDirection: AppState["selectionDirection"];
   }
 >;
 
@@ -313,6 +315,7 @@ export interface AppState extends Ducfig {
   elementsToHighlight: NonDeleted<DucElement>[] | null;
   // element being edited, but not necessarily added to elements array yet
   // (e.g. text element when typing into the input)
+  elementHovered: NonDeleted<DucElement> | null;
   editingElement: NonDeletedDucElement | null;
   editingTextElement: NonDeletedDucElement | null;
   editingLinearElement: LinearElementEditor | null;
@@ -428,6 +431,7 @@ export interface AppState extends Ducfig {
   coordDecimalPlaces: number;
 
   displayRootAxis: boolean;
+  selectionDirection: 'left' | 'right' | null;
 }
 
 export type UIAppState = Omit<
