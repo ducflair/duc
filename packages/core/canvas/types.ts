@@ -39,7 +39,6 @@ import { MaybeTransformHandleType } from "./element/transformHandles";
 import Library from "./data/library";
 import type { FileSystemHandle } from "./data/filesystem";
 import type { IMAGE_MIME_TYPES, MIME_TYPES } from "./constants";
-import { ContextMenuItems } from "./components/ContextMenu";
 import { SnapLine } from "./snapping";
 import { Merge, MaybePromise, ValueOf, MakeBrand, Mutable } from "./utility-types";
 import { SupportedMeasures } from "./duc/utils/measurements";
@@ -269,7 +268,7 @@ export interface Ducfig { // User's Config of AppState
 
 export interface AppState extends Ducfig {
   contextMenu: {
-    items: ContextMenuItems;
+    items: {};
     top: number;
     left: number;
   } | null; 
