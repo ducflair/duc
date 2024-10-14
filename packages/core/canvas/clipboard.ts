@@ -81,7 +81,7 @@ export const createPasteEvent = ({
   if (!types && !files) {
     console.warn("createPasteEvent: no types or files provided");
   }
-
+  // console.log("createPasteEvent", { types, files });
   const event = new ClipboardEvent("paste", {
     clipboardData: new DataTransfer(),
   });
@@ -89,35 +89,47 @@ export const createPasteEvent = ({
   if (types) {
     for (const [type, value] of Object.entries(types)) {
       try {
-        event.clipboardData?.setData(type, value);
-        if (event.clipboardData?.getData(type) !== value) {
-          throw new Error(`Failed to set "${type}" as clipboardData item`);
+        if (type.startsWith('image/')) {
+          // Convert data URL back to a file
+          const file = dataURLtoFile(value, `pasted-image.${type.split('/')[1]}`);
+          event.clipboardData?.items.add(file);
+        } else {
+          event.clipboardData?.setData(type, value);
+          if (event.clipboardData?.getData(type) !== value) {
+            throw new Error(`Failed to set "${type}" as clipboardData item`);
+          }
         }
       } catch (error: any) {
-        throw new Error(error.message);
+        console.error(`Error processing ${type}:`, error);
       }
     }
   }
 
   if (files) {
-    let idx = -1;
     for (const file of files) {
-      idx++;
       try {
         event.clipboardData?.items.add(file);
-        if (event.clipboardData?.files[idx] !== file) {
-          throw new Error(
-            `Failed to set file "${file.name}" as clipboardData item`,
-          );
-        }
       } catch (error: any) {
-        throw new Error(error.message);
+        console.error(`Error adding file ${file.name}:`, error);
       }
     }
   }
 
   return event;
 };
+
+// Helper function to convert data URL to File
+function dataURLtoFile(dataurl: string, filename: string): File {
+  const arr = dataurl.split(',');
+  const mime = arr[0].match(/:(.*?);/)?.[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+}
 
 export const serializeAsClipboardJSON = ({
   elements,
@@ -241,58 +253,63 @@ const maybeParseHTMLPaste = (
 export const readSystemClipboard = async () => {
   const types: { [key in AllowedPasteMimeTypes]?: string } = {};
 
-  try {
-    if (navigator.clipboard?.readText) {
-      return { "text/plain": await navigator.clipboard?.readText() };
-    }
-  } catch (error: any) {
-    // @ts-ignore
-    if (navigator.clipboard?.read) {
-      console.warn(
-        `navigator.clipboard.readText() failed (${error.message}). Failling back to navigator.clipboard.read()`,
-      );
-    } else {
-      throw error;
-    }
-  }
-
   let clipboardItems: ClipboardItems;
 
   try {
     clipboardItems = await navigator.clipboard?.read();
   } catch (error: any) {
-    if (error.name === "DataError") {
-      console.warn(
-        `navigator.clipboard.read() error, clipboard is probably empty: ${error.message}`,
-      );
-      return types;
-    }
-    throw error;
+    console.error(`Error reading clipboard: ${error.message}`);
+    return types;
   }
 
+  // console.log("clipboardItems", clipboardItems);
+
   for (const item of clipboardItems) {
+    // console.log("Processing clipboard item:", item);
+    // console.log("Item types:", item.types);
+
     for (const type of item.types) {
+      // console.log("Processing type:", type);
+      
       if (!isMemberOf(ALLOWED_PASTE_MIME_TYPES, type)) {
+        console.warn(`Type ${type} is not in ALLOWED_PASTE_MIME_TYPES, skipping`);
         continue;
       }
+
       try {
-        types[type] = await (await item.getType(type)).text();
+        if (type.startsWith('image/')) {
+          const blob = await item.getType(type);
+          // console.log("Image blob:", blob);
+          types[type] = await blobToDataURL(blob);
+          // console.log("Converted image to DataURL");
+        } else {
+          types[type] = await (await item.getType(type)).text();
+          // console.log("Processed text data");
+        }
       } catch (error: any) {
-        console.warn(
-          `Cannot retrieve ${type} from clipboardItem: ${error.message}`,
-        );
+        console.error(`Error processing ${type}: ${error.message}`);
       }
     }
   }
+
+  // console.log("Final types object:", types);
 
   if (Object.keys(types).length === 0) {
     console.warn("No clipboard data found from clipboard.read().");
-    return types;
   }
 
   return types;
 };
 
+// Helper function to convert Blob to DataURL
+const blobToDataURL = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
 /**
  * Parses "paste" ClipboardEvent.
  */

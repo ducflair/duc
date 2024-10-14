@@ -13,13 +13,11 @@ import { exportCanvas, prepareElementsForExport } from "../data/index";
 import { getTextFromElements, isTextElement } from "../element";
 import { t } from "../i18n";
 import { isFirefox } from "../constants";
-import { DuplicateIcon } from "../components/excalicons";
 import { StoreAction } from "../store";
 
 export const actionCopy = register({
   name: "copy",
   label: "labels.copy",
-  icon: DuplicateIcon,
   trackEvent: { category: "element" },
   perform: async (elements, appState, event: ClipboardEvent | null, app) => {
     const elementsToCopy = app.scene.getSelectedElements({
@@ -108,7 +106,6 @@ export const actionPaste = register({
 export const actionCut = register({
   name: "cut",
   label: "labels.cut",
-  // icon: cutIcon,
   trackEvent: { category: "element" },
   perform: (elements, appState, event: ClipboardEvent | null, app) => {
     actionCopy.perform(elements, appState, event, app);
@@ -120,7 +117,6 @@ export const actionCut = register({
 export const actionCopyAsSvg = register({
   name: "copyAsSvg",
   label: "labels.copyAsSvg",
-  // icon: svgIcon,
   trackEvent: { category: "element" },
   perform: async (elements, appState, _data, app) => {
     if (!app.canvas) {
@@ -170,7 +166,6 @@ export const actionCopyAsSvg = register({
 export const actionCopyAsPng = register({
   name: "copyAsPng",
   label: "labels.copyAsPng",
-  // icon: pngIcon,
   trackEvent: { category: "element" },
   perform: async (elements, appState, _data, app) => {
     if (!app.canvas) {

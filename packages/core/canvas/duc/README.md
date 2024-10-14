@@ -5,24 +5,8 @@
 - [FlatBuffers Compiler](https://flatbuffers.ar.je/)
 
 
-## Generate All (Recommended for Updating duc.fbs) 
+## Update all FlatBuffers Generated Code
 ```sh
-flatc --ts --ts-no-import-ext -o duc-ts duc.fbs
-flatc --python -o duc-py duc.fbs
-flatc --rust -o duc-rs duc.fbs
-```
-
-## Generating TypeScript code from FlatBuffers schema
-```sh
-flatc --ts --ts-no-import-ext -o duc-ts duc.fbs
-```
-
-## Generating Python code from FlatBuffers schema
-```sh
-flatc --python -o duc-py duc.fbs
-```
-
-## Generating Rust code from FlatBuffers schema
-```sh
-flatc --rust -o duc-rs duc.fbs
+chmod +x update-all.sh # Just the first time
+./update-all.sh
 ```
