@@ -197,8 +197,6 @@ export const IMAGE_MIME_TYPES = {
   jfif: "image/jfif",
 } as const;
 
-export const ALLOWED_PASTE_MIME_TYPES = ["text/plain", "text/html"] as const;
-
 export const MIME_TYPES = {
   json: "application/json",
   // excalidraw data
@@ -230,6 +228,14 @@ export const EXPORT_DATA_TYPES = {
 
 export const EXPORT_SOURCE =
   window.EXCALIDRAW_EXPORT_SOURCE || window.location.origin;
+
+export const ALLOWED_PASTE_MIME_TYPES = [
+  "text/plain",
+  "text/html",
+  EXPORT_DATA_TYPES.excalidrawClipboard,
+  ...Object.values(IMAGE_MIME_TYPES)
+] as const;
+  
 
 // time in milliseconds
 export const IMAGE_RENDER_TIMEOUT = 500;
@@ -431,7 +437,11 @@ export const LIBRARY_DISABLED_TYPES = new Set([
 ] as const);
 
 export const STROKE_SELECTION_COLOR = "#6965db";
+export const FILL_SELECTION_COLOR = "rgba(0, 0, 200, 0.04)";
 export const STROKE_SELECTION_CONTRAST_COLOR = "#7B77FF";
+
+export const STROKE_INTERSECT_SELECTION_COLOR = "#009100";
+export const FILL_INTERSECT_SELECTION_COLOR = "rgba(0, 200, 0, 0.04)";
 
 // use these constants to easily identify reference sites
 export const TOOL_TYPE = {

@@ -43,9 +43,12 @@ import { getDefaultAppState } from "../appState";
 import {
   BOUND_TEXT_PADDING,
   ELEMENT_READY_TO_ERASE_OPACITY,
+  FILL_INTERSECT_SELECTION_COLOR,
+  FILL_SELECTION_COLOR,
   FONT_FAMILY,
   FRAME_STYLE,
   MIME_TYPES,
+  STROKE_INTERSECT_SELECTION_COLOR,
   STROKE_SELECTION_COLOR,
   THEME,
 } from "../constants";
@@ -673,14 +676,14 @@ export const renderSelectionElement = (
 
   if (selectionDirection === "right") {
     // Normal selection to the right (solid blue)
-    context.fillStyle = "rgba(0, 0, 200, 0.04)"; // Light blue fill for right selection
+    context.fillStyle = FILL_SELECTION_COLOR;
     context.strokeStyle = STROKE_SELECTION_COLOR;
     context.setLineDash([]); // Solid stroke
 
   } else if (selectionDirection === "left") {
     // Selection to the left (dashed green)
-    context.fillStyle = "rgba(0, 255, 0, 0.1)"; // Soft green fill for left selection
-    context.strokeStyle = "rgba(0, 255, 0, 0.6)"; // Soft green stroke
+    context.fillStyle = FILL_INTERSECT_SELECTION_COLOR;
+    context.strokeStyle = STROKE_INTERSECT_SELECTION_COLOR;
     context.setLineDash([5 / appState.zoom.value, 5 / appState.zoom.value]); // Dashed line
   }
 
