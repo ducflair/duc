@@ -47,7 +47,7 @@ export const getElementsWithinSelection = (
   selection: NonDeletedDucElement,
   elementsMap: ElementsMap,
   excludeElementsInFrames: boolean = true,
-  selectionDirection: "left" | "right" = "right", // default to 'right'
+  selectionDirection: AppState["selectionDirection"] = "right", // default to 'right'
 ) => {
   const [selectionX1, selectionY1, selectionX2, selectionY2] =
     getElementAbsoluteCoords(selection, elementsMap);
