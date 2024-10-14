@@ -5,6 +5,8 @@ setup(
     version='0.0.0',
     packages=find_packages(where="src"),
     package_dir={"": "src"},
+    install_requires=['flatbuffers', 'duc-py'],
+    dependency_links=['file:///path/to/your/monorepo/core/canvas/duc/duc-py'],
     description="The duc 2D CAD file format Python implementation",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
