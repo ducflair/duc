@@ -1,4 +1,4 @@
-# ducflair-duc (Python) (⚠️ Not working yet)
+# ducflair-duc (Python)
 
 <p align="center">
   <br/>
@@ -35,7 +35,10 @@ pip install ducflair-duc
 ```
 
 ## Usage
-> To be written ...
+
+```python
+from ducflair_duc import Duc # imports the raw `duc` class
+```
 
 ## Documentation
 

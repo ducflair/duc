@@ -2,4 +2,15 @@
 requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools_scm]
+[project]
+name = "ducflair-duc"
+version = "0.1.0"
+requires-python = ">=3.7"
+dependencies = ["flatbuffers", "duc-py"]
+
+[project.urls]
+Homepage = "https://duc.ducflair.com"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["ducflair_duc*"]
