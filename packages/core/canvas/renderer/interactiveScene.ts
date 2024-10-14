@@ -188,16 +188,16 @@ const renderSingleLinearPoint = (
   
   context.strokeStyle = strokeColor;
   context.setLineDash([]);
-  context.fillStyle = isEditMode ? fillColor : (isSelected ? "rgba(134, 131, 226, 0.9)" : themeFillColor);
+  context.fillStyle = isEditMode ? (isSelected ? "rgba(134, 131, 226, 0.9)" : fillColor) : themeFillColor;
 
   const circleRadius = isEditMode ? (radius * 0.55) / appState.zoom.value : (element.strokeWidth/2) / appState.zoom.value;
-  const lineWidth = isEditMode ? 6 / appState.zoom.value : 2 / appState.zoom.value;
+  const lineWidth = isEditMode ? 4 / appState.zoom.value : 2 / appState.zoom.value;
 
   context.beginPath();
   context.arc(point[0], point[1], circleRadius, 0, Math.PI * 2);
   context.lineWidth = lineWidth;
   context.stroke(); // Stroke first
-  context.fillStyle = isEditMode ? fillColor : context.fillStyle;
+  // context.fillStyle = isEditMode ? fillColor : context.fillStyle;
   context.fill(); // Fill second
 };
 
@@ -406,7 +406,7 @@ export const renderSelectionBorder = (
     if (element) {
       switch (element.type) {
         case "freedraw":
-          strokeFreeDrawPath(context, element, elementsMap);
+          strokeFreeDrawPath(context, element, elementsMap, appState);
           break;
         case "diamond":
           strokeDiamondWithRotation(
@@ -479,38 +479,37 @@ const strokeFreeDrawPath = (
   context: CanvasRenderingContext2D,
   element: DucFreeDrawElement,
   elementsMap: ElementsMap,
+  appState: InteractiveCanvasAppState,
 ) => {
-  context.save();
-
-  // Get the absolute coordinates of the element
-  const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
   
-  // Calculate the center of the element
+  const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
   const cx = (x1 + x2) / 2;
   const cy = (y1 + y2) / 2;
-
-  // Translate to the center of the element
+  const shiftX = (x2 - x1) / 2 - (element.x - x1);
+  const shiftY = (y2 - y1) / 2 - (element.y - y1);
+  context.save();
   context.translate(cx, cy);
-  
-  // Rotate around the center
-  if (element.angle !== 0) {
-    context.rotate(element.angle);
+  context.rotate(element.angle);
+  context.translate(-shiftX, -shiftY);
+
+  // // Rotate if necessary
+  // if (element.angle !== 0) {
+  //   const centerX = element.width / 2;
+  //   const centerY = element.height / 2;
+  //   context.translate(centerX, centerY);
+  //   context.rotate(element.angle);
+  //   context.translate(-centerX, -centerY);
+  // }
+
+  // Get the path and stroke it
+  const path = getFreeDrawPath2D(element);
+  if (path) {
+    context.stroke(path);
   }
-
-  // Scale the element
-  const scaleX = element.width / (x2 - x1);
-  const scaleY = element.height / (y2 - y1);
-  context.scale(scaleX, scaleY);
-
-  // Translate back to the top-left corner of the element
-  context.translate(-cx, -cy);
-
-  // Create and stroke the path
-  const path = getFreeDrawPath2D(element) as Path2D;
-  context.stroke(path);
 
   context.restore();
 };
+
 
 const renderBindingHighlight = (
   context: CanvasRenderingContext2D,

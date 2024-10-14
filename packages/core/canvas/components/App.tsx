@@ -474,6 +474,7 @@ import NewElementCanvas from "./canvases/NewElementCanvas";
 import { getShortcutFromShortcutName } from "../actions/shortcuts";
 import { mutateElbowArrow } from "../element/routing";
 import { actionTextAutoResize } from "../actions/actionTextAutoResize";
+import { isMaybeMermaidDefinition } from "../mermaid";
 
 const AppContext = React.createContext<AppClassProperties>(null!);
 const AppPropsContext = React.createContext<AppProps>(null!);
@@ -3199,6 +3200,31 @@ class App extends React.Component<AppProps, AppState> {
           retainSeed: isPlainPaste,
         });
       } else if (data.text) {
+        if (data.text && isMaybeMermaidDefinition(data.text)) {
+          const api = await import("@excalidraw/mermaid-to-excalidraw");
+
+          try {
+            const { elements: skeletonElements, files } =
+              await api.parseMermaidToExcalidraw(data.text);
+
+            const elements = convertToExcalidrawElements(skeletonElements, {
+              regenerateIds: true,
+            });
+
+            this.addElementsFromPasteOrLibrary({
+              elements,
+              files,
+              position: "cursor",
+            });
+
+            return;
+          } catch (err: any) {
+            console.warn(
+              `parsing pasted text as mermaid definition failed: ${err.message}`,
+            );
+          }
+        }
+
         const nonEmptyLines = normalizeEOL(data.text)
           .split(/\n+/)
           .map((s) => s.trim())
@@ -3443,14 +3469,14 @@ class App extends React.Component<AppProps, AppState> {
             // hack to reset the `y` coord because we vertically center during
             // insertImageElement
             mutateElement(initializedImageElement, { y }, false);
-            
+
             y = imageElement.y + imageElement.height + 25;
-            
+
             nextSelectedIds[imageElement.id] = true;
           }
         }
       }
-      
+
       this.setState({
         selectedElementIds: makeNextSelectedElementIds(
           nextSelectedIds,
@@ -4883,7 +4909,7 @@ class App extends React.Component<AppProps, AppState> {
     if (nextActiveTool.type === "image") {
       this.onImageAction({
         insertOnCanvasDirectly:
-          (tool.type === "image" && tool.insertOnCanvasDirectly) ?? false,
+          tool.type === "image" && this.isTouchScreen(),
       });
     }
 
@@ -4939,6 +4965,13 @@ class App extends React.Component<AppProps, AppState> {
     // only work on touch screens, so checking for >= pointers means we're on a
     // touchscreen
     return gesture.pointers.size >= 2;
+  };
+
+  private isTouchScreen = () => {
+    return Boolean (
+      'ontouchstart' in window || 
+      (navigator.maxTouchPoints && navigator.maxTouchPoints > 1)
+    );
   };
 
   public getName = () => {
@@ -8587,6 +8620,8 @@ class App extends React.Component<AppProps, AppState> {
                 elements,
                 this.state.selectionElement,
                 this.scene.getNonDeletedElementsMap(),
+                true,
+                this.state.selectionDirection,
               )
             : [];
 
@@ -8833,9 +8868,9 @@ class App extends React.Component<AppProps, AppState> {
         });
 
         this.actionManager.executeAction(actionFinalize);
+
         return;
       }
-
       if (isImageElement(newElement)) {
         const imageElement = newElement;
         try {
@@ -8962,6 +8997,7 @@ class App extends React.Component<AppProps, AppState> {
           },
           storeAction: StoreAction.UPDATE,
         });
+
         return;
       }
 
@@ -8985,39 +9021,6 @@ class App extends React.Component<AppProps, AppState> {
         mutateElement(newElement, getNormalizedDimensions(newElement));
         // the above does not guarantee the scene to be rendered again, hence the trigger below
         this.scene.triggerUpdate();
-      }
-
-      // Handle selection element logic here
-      if (this.state.selectionElement) {
-        const elements = this.scene.getNonDeletedElements();
-
-        const elementsWithinSelection = getElementsWithinSelection(
-          elements,
-          this.state.selectionElement,
-          this.scene.getNonDeletedElementsMap(),
-          true, // excludeElementsInFrames
-          this.state.selectionDirection || "right", // default to 'right' if null
-        );
-
-        this.setState((prevState) => {
-          const nextSelectedElementIds = {
-            ...elementsWithinSelection.reduce(
-              (acc: Record<DucElement["id"], true>, element) => {
-                acc[element.id] = true;
-                return acc;
-              },
-              {},
-            ),
-          };
-
-          return {
-            selectedElementIds: makeNextSelectedElementIds(
-              nextSelectedElementIds,
-              prevState,
-            ),
-            selectionDirection: null, // Reset selectionDirection
-          };
-        });
       }
 
       if (pointerDownState.drag.hasOccurred) {
@@ -9061,7 +9064,9 @@ class App extends React.Component<AppProps, AppState> {
             }
           }
         } else {
+          // update the relationships between selected elements and frames
         const topLayerFrame = this.getTopLayerFrameAtSceneCoords(sceneCoords);
+
         const selectedElements = this.scene.getSelectedElements(this.state);
         let nextElements = this.scene.getElementsMapIncludingDeleted();
 
@@ -9524,7 +9529,6 @@ class App extends React.Component<AppProps, AppState> {
       }
     });
   }
-
 
   private restoreReadyToEraseElements = () => {
     this.elementsPendingErasure = new Set();
@@ -10396,9 +10400,7 @@ class App extends React.Component<AppProps, AppState> {
         y: gridY,
         width: distance(pointerDownState.originInGrid.x, gridX),
         height: distance(pointerDownState.originInGrid.y, gridY),
-        shouldMaintainAspectRatio: isImageElement(newElement)
-            ? !shouldMaintainAspectRatio(event, this.state.scaleRatioLocked)
-            : shouldMaintainAspectRatio(event, this.state.scaleRatioLocked),
+        shouldMaintainAspectRatio: shouldMaintainAspectRatio(event, this.state.scaleRatioLocked),
         shouldResizeFromCenter: shouldResizeFromCenter(event),
         zoom: this.state.zoom.value,
         widthAspectRatio: aspectRatio,
@@ -10527,9 +10529,7 @@ class App extends React.Component<AppProps, AppState> {
         this.scene.getElementsMapIncludingDeleted(),
         shouldRotateWithDiscreteAngle(event),
         shouldResizeFromCenter(event),
-        selectedElements.some((element) => isImageElement(element))
-          ? !shouldMaintainAspectRatio(event, this.state.scaleRatioLocked)
-          : shouldMaintainAspectRatio(event, this.state.scaleRatioLocked),
+        selectedElements.some((element) => shouldMaintainAspectRatio(event, this.state.scaleRatioLocked)),
         resizeX,
         resizeY,
         pointerDownState.resize.center.x,
