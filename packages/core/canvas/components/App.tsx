@@ -313,11 +313,6 @@ import {
   maybeParseEmbedSrc,
   getEmbedLink,
 } from "../element/embeddable";
-import {
-  ContextMenu,
-  ContextMenuItems,
-  CONTEXT_MENU_SEPARATOR,
-} from "./ContextMenu";
 import LayerUI from "./LayerUI";
 import { Toast } from "./Toast";
 import { actionToggleViewMode } from "../actions/actionToggleViewMode";
@@ -3092,7 +3087,7 @@ class App extends React.Component<AppProps, AppState> {
   public pasteFromClipboard = withBatchedUpdates(
     async (event: ClipboardEvent) => {
       const isPlainPaste = !!IS_PLAIN_PASTE;
-
+      
       // #686
       const target = document.activeElement;
       const isExcalidrawActive =
@@ -9644,7 +9639,7 @@ class App extends React.Component<AppProps, AppState> {
       false,
     ) as NonDeleted<InitializedDucImageElement>;
 
-    return new Promise<NonDeleted<InitializedDucImageElement>>(
+    return new Promise<NonDeleted<InitializedDucImageElement> | null>(
       async (resolve, reject) => {
         try {
           this.files = {
@@ -9671,6 +9666,7 @@ class App extends React.Component<AppProps, AppState> {
           ) {
             this.initializeImageDimensions(imageElement, true);
           }
+
           resolve(imageElement);
         } catch (error: any) {
           console.error(error);
@@ -9692,21 +9688,30 @@ class App extends React.Component<AppProps, AppState> {
     imageFile: File,
     showCursorImagePreview?: boolean,
   ) => {
-    // we should be handling all cases upstream, but in case we forget to handle
-    // a future case, let's throw here
     if (!this.isToolSupported("image")) {
       this.setState({ errorMessage: t("errors.imageToolNotSupported") });
       return;
     }
-
+  
     this.scene.insertElement(imageElement);
-
+  
     try {
-      return await this.initializeImage({
+      const initializedElement = await this.initializeImage({
         imageFile,
         imageElement,
         showCursorImagePreview,
       });
+  
+      if (initializedElement) {
+        this.scene.replaceAllElements(
+          this.scene.getElementsIncludingDeleted().map((el) =>
+            el.id === initializedElement.id ? initializedElement : el
+          )
+        );
+        this.setState({ selectedElementIds: { [initializedElement.id]: true } });
+      }
+  
+      return initializedElement;
     } catch (error: any) {
       mutateElement(imageElement, {
         isDeleted: true,
@@ -9716,7 +9721,7 @@ class App extends React.Component<AppProps, AppState> {
         errorMessage: error.message || t("errors.imageInsertError"),
       });
       this.updateGroups();
-
+  
       return null;
     }
   };
@@ -9842,28 +9847,28 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  private initializeImageDimensions = (
+  private initializeImageDimensions = async (
     imageElement: DucImageElement,
+    // image: HTMLImageElement,
     forceNaturalSize = false,
   ) => {
     const image =
-      isInitializedImageElement(imageElement) &&
-      this.imageCache.get(imageElement.fileId)?.image;
+    isInitializedImageElement(imageElement) &&
+    this.imageCache.get(imageElement.fileId)?.image;
 
     if (!image || image instanceof Promise) {
-      if (
-        imageElement.width < DRAGGING_THRESHOLD / this.state.zoom.value &&
-        imageElement.height < DRAGGING_THRESHOLD / this.state.zoom.value
-      ) {
-        const placeholderSize = 100 / this.state.zoom.value;
-        mutateElement(imageElement, {
-          x: imageElement.x - placeholderSize / 2,
-          y: imageElement.y - placeholderSize / 2,
-          width: placeholderSize,
-          height: placeholderSize,
-        });
-        this.updateGroups();
+      const placeholderSize = 100 / this.state.zoom.value;
+      mutateElement(imageElement, {
+        x: imageElement.x - placeholderSize / 2,
+        y: imageElement.y - placeholderSize / 2,
+        width: placeholderSize,
+        height: placeholderSize,
+      });
+      this.updateGroups();
 
+      if (image instanceof Promise) {
+        const loadedImage = await image;
+        this.updateImageElementWithLoadedImage(imageElement, loadedImage, forceNaturalSize);
       }
 
       return;
@@ -9896,6 +9901,47 @@ class App extends React.Component<AppProps, AppState> {
       this.updateGroups();
 
     }
+    this.updateImageElementWithLoadedImage(imageElement, image, forceNaturalSize);
+  };
+
+  private updateImageElementWithLoadedImage = (
+    imageElement: DucImageElement,
+    image: HTMLImageElement,
+    forceNaturalSize: boolean
+  ) => {
+    if (
+      forceNaturalSize ||
+      // if user-created bounding box is below threshold, assume the
+      // intention was to click instead of drag, and use the image's
+      // intrinsic size
+      (imageElement.width < DRAGGING_THRESHOLD / this.state.zoom.value &&
+        imageElement.height < DRAGGING_THRESHOLD / this.state.zoom.value)
+    ) {
+      const minHeight = Math.max(this.state.height - 120, 160);
+      // max 65% of canvas height, clamped to <300px, vh - 120px>
+      const maxHeight = Math.min(
+        minHeight,
+        Math.floor(this.state.height * 0.5) / this.state.zoom.value,
+      );
+  
+      const height = Math.min(image.naturalHeight, maxHeight);
+      const width = height * (image.naturalWidth / image.naturalHeight);
+  
+      // add current imageElement width/height to account for previous centering
+      // of the placeholder image
+      const x = imageElement.x + imageElement.width / 2 - width / 2;
+      const y = imageElement.y + imageElement.height / 2 - height / 2;
+  
+      mutateElement(imageElement, { x, y, width, height });
+      this.updateGroups();
+    }
+  
+    // Trigger a re-render to reflect the updated image
+    this.scene.replaceAllElements(
+      this.scene.getElementsIncludingDeleted().map((el) =>
+        el.id === imageElement.id ? imageElement : el
+      )
+    );
   };
 
   /** updates image cache, refreshing updated elements and/or setting status
@@ -10559,92 +10605,6 @@ class App extends React.Component<AppProps, AppState> {
       return true;
     }
     return false;
-  };
-
-  private getContextMenuItems = (
-    type: "canvas" | "element",
-  ): ContextMenuItems => {
-    const options: ContextMenuItems = [];
-
-    options.push(actionCopyAsPng, actionCopyAsSvg);
-
-    // canvas contextMenu
-    // -------------------------------------------------------------------------
-
-    if (type === "canvas") {
-      if (this.state.viewModeEnabled) {
-        return [
-          ...options,
-          actionToggleGridMode,
-          actionToggleZenMode,
-          actionToggleViewMode,
-          // actionToggleStats,
-        ];
-      }
-
-      return [
-        actionPaste,
-        CONTEXT_MENU_SEPARATOR,
-        actionCopyAsPng,
-        actionCopyAsSvg,
-        copyText,
-        CONTEXT_MENU_SEPARATOR,
-        actionSelectAll,
-        actionUnlockAllElements,
-        CONTEXT_MENU_SEPARATOR,
-        actionToggleGridMode,
-        actionToggleObjectsSnapMode,
-        actionToggleZenMode,
-        actionToggleViewMode,
-        // actionToggleStats,
-      ];
-    }
-
-    // element contextMenu
-    // -------------------------------------------------------------------------
-
-    options.push(copyText);
-
-    if (this.state.viewModeEnabled) {
-      return [actionCopy, ...options];
-    }
-
-    return [
-      actionCut,
-      actionCopy,
-      actionPaste,
-      actionSelectAllElementsInFrame,
-      actionRemoveAllElementsFromFrame,
-      CONTEXT_MENU_SEPARATOR,
-      ...options,
-      CONTEXT_MENU_SEPARATOR,
-      actionCopyStyles,
-      actionPasteStyles,
-      CONTEXT_MENU_SEPARATOR,
-      actionGroup,
-      actionTextAutoResize,
-      actionUnbindText,
-      actionBindText,
-      actionWrapTextInContainer,
-      actionUngroup,
-      CONTEXT_MENU_SEPARATOR,
-      actionAddToLibrary,
-      CONTEXT_MENU_SEPARATOR,
-      actionSendBackward,
-      actionBringForward,
-      actionSendToBack,
-      actionBringToFront,
-      CONTEXT_MENU_SEPARATOR,
-      actionFlipHorizontal,
-      actionFlipVertical,
-      CONTEXT_MENU_SEPARATOR,
-      actionToggleLinearEditor,
-      actionLink,
-      actionDuplicateSelection,
-      actionToggleElementLock,
-      CONTEXT_MENU_SEPARATOR,
-      actionDeleteSelected,
-    ];
   };
 
   private handleWheel = withBatchedUpdates(
