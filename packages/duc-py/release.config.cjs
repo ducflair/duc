@@ -6,9 +6,9 @@ module.exports = {
     [
       "@semantic-release/exec",
       {
-        // Clean the dist directory and use double quotes for variable expansion
+        // Clean the dist directory and update version in pyproject.toml
         prepareCmd:
-          'pip install setuptools && rm -rf dist && sed -i "s/version=[\'\\\"][^\'\\\"]*[\'\\\"],/version=\'${nextRelease.version}\',/" setup.py && python3 setup.py sdist bdist_wheel',
+          'pip install build && rm -rf dist && sed -i "s/version = \\"[^\\"].*\\"/version = \\"${nextRelease.version}\\"/" pyproject.toml && python3 -m build',
         publishCmd:
           "python3 -m twine upload dist/* -u __token__ -p ${process.env.PYPI_TOKEN}"
       }
