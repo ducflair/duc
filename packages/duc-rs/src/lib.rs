@@ -1,11 +1,10 @@
-// #[path = "../core/canvas/duc/duc-rs/duc_generated.rs"]
-// include!("../../core/canvas/duc/duc-rs/duc_generated.rs");
-
-// mod duc_generated;
-// pub mod duc_generated { pub use duc_generated::*; }
+// Export all raw flatbuffers methods
+pub mod duc_rs {
+  pub use duc_rs::duc_generated::duc::*;
+}
 
 pub fn hello() -> String {
-    "Hello from ducflair-duc Rust package!".to_string()
+  "Hello from ducflair-duc Rust package!".to_string()
 }
 
 #[cfg(test)]
