@@ -34,7 +34,10 @@ cargo add ducflair-duc
 ```
 
 ## Usage
-> To be written ...
+```rust
+use ducflair_duc::duc::*;
+```
+
 
 ## Documentation
 
