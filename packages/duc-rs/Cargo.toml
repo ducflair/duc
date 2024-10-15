@@ -9,5 +9,7 @@ repository = "https://github.com/ducflair/duc/tree/main/packages/duc-rs"
 readme = "README.md"
 
 [dependencies]
+flatbuffers = "24.3.25"
+duc-rs = { path = "../core/canvas/duc/duc-rs" }
 
 [dev-dependencies]
