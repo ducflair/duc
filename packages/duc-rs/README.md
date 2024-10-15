@@ -1,4 +1,4 @@
-# ducflair-duc (Rust) (⚠️ Not working yet)
+# ducflair-duc (Rust)
 
 <p align="center">
   <br/>
