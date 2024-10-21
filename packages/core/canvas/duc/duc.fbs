@@ -29,43 +29,44 @@ table DucElement {
   x: float;
   y: float;
   index: string;
-  scope: string;  // Assuming SupportedMeasures as string
-  writingLayer: string;  // Assuming WritingLayers as string
+  scope: string;
+  writingLayer: string;  // FIXME: Perhaps we can remove this field
   label: string;
   isVisible: bool;
-  roundnessType: string; // Assuming StrokeRoundness as string
-  roundnessValue: int;  // Optional int
+  roundnessType: string;  // FIXME: Perhaps we can remove this field
+  roundnessValue: int;  // Will need to make an adjustment to favor this and default the roundnessType
   backgroundColor: string;
   strokeColor: string;
   strokeWidth: int;
-  strokeStyle: string;  // Assuming StrokeStyle as string
+  strokeStyle: string;  
+  fillStyle: string; // FIXME: Add this field
   strokePlacement: int;
   opacity: float;
   width: float;
   height: float;
   angle: float;
   isDeleted: bool;
-  groupIds: [string];  // Vector of GroupId
+  groupIds: [string]; 
   frameId: string;
-  boundElements: [BoundElement];  // Vector of bound elements
+  boundElements: [BoundElement];
   link: string;
   locked: bool;
 
   // MagicFrameElement specific fields
-  customData: string;  // Simplified as string
+  customData: string; 
   
   isStrokeDisabled: bool;
   isBackgroundDisabled: bool;
 
   // TextElement specific fields
   fontSize: int;
-  fontFamily: string;  // Assuming FontFamilyValues as string
+  fontFamily: string;
   text: string;
-  textAlign: string;  // Assuming TextAlign as string
-  verticalAlign: string;  // Assuming VerticalAlign as string
+  textAlign: string;
+  verticalAlign: string;
   containerId: string;
   originalText: string;
-  lineHeight: float;  // Assuming float for unitless line height
+  lineHeight: float;
   autoResize: bool;
 
   // LinearElement specific fields
@@ -73,7 +74,7 @@ table DucElement {
   lastCommittedPoint: Point;
   startBinding: PointBinding;
   endBinding: PointBinding;
-  startArrowhead: string;  // Assuming Arrowhead as string
+  startArrowhead: string;
   endArrowhead: string;
   elbowed: bool;
 
@@ -129,7 +130,6 @@ table BoundElement {
 
 table DucGroup {
   id: string;
-//   type: string = "group";
   type: string;
   isCollapsed: bool;
   label: string;
@@ -161,7 +161,7 @@ table AppState {
   currentItemStrokeStyle: string;
   currentItemRoughness: int;
   currentItemOpacity: float;
-  currentItemFontFamily: string;
+  currentItemFontFamily: int;
   currentItemFontSize: int;
   currentItemTextAlign: string;
   currentItemStartArrowhead: string;

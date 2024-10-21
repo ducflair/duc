@@ -228,8 +228,8 @@ class AppState(object):
     def CurrentItemFontFamily(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(48))
         if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
+            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+        return 0
 
     # AppState
     def CurrentItemFontSize(self):
@@ -671,7 +671,7 @@ def AddCurrentItemOpacity(builder, currentItemOpacity):
     AppStateAddCurrentItemOpacity(builder, currentItemOpacity)
 
 def AppStateAddCurrentItemFontFamily(builder, currentItemFontFamily):
-    builder.PrependUOffsetTRelativeSlot(22, flatbuffers.number_types.UOffsetTFlags.py_type(currentItemFontFamily), 0)
+    builder.PrependInt32Slot(22, currentItemFontFamily, 0)
 
 def AddCurrentItemFontFamily(builder, currentItemFontFamily):
     AppStateAddCurrentItemFontFamily(builder, currentItemFontFamily)

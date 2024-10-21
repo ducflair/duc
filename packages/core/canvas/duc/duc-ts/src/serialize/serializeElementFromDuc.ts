@@ -131,6 +131,7 @@ export const serializeDucElement = (builder: flatbuffers.Builder, element: DucEl
   BinDucElement.addStrokeColor(builder, strokeColorOffset);
   BinDucElement.addStrokeWidth(builder, element.strokeWidth);
   BinDucElement.addStrokeStyle(builder, strokeStyleOffset);
+  BinDucElement.addFillStyle(builder, fillStyleOffset);
   BinDucElement.addStrokePlacement(builder, element.strokePlacement);
   BinDucElement.addOpacity(builder, element.opacity);
   BinDucElement.addWidth(builder, element.width);
