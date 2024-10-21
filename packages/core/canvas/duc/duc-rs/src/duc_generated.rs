@@ -311,44 +311,45 @@ impl<'a> DucElement<'a> {
   pub const VT_STROKECOLOR: flatbuffers::VOffsetT = 28;
   pub const VT_STROKEWIDTH: flatbuffers::VOffsetT = 30;
   pub const VT_STROKESTYLE: flatbuffers::VOffsetT = 32;
-  pub const VT_STROKEPLACEMENT: flatbuffers::VOffsetT = 34;
-  pub const VT_OPACITY: flatbuffers::VOffsetT = 36;
-  pub const VT_WIDTH: flatbuffers::VOffsetT = 38;
-  pub const VT_HEIGHT: flatbuffers::VOffsetT = 40;
-  pub const VT_ANGLE: flatbuffers::VOffsetT = 42;
-  pub const VT_ISDELETED: flatbuffers::VOffsetT = 44;
-  pub const VT_GROUPIDS: flatbuffers::VOffsetT = 46;
-  pub const VT_FRAMEID: flatbuffers::VOffsetT = 48;
-  pub const VT_BOUNDELEMENTS: flatbuffers::VOffsetT = 50;
-  pub const VT_LINK: flatbuffers::VOffsetT = 52;
-  pub const VT_LOCKED: flatbuffers::VOffsetT = 54;
-  pub const VT_CUSTOMDATA: flatbuffers::VOffsetT = 56;
-  pub const VT_ISSTROKEDISABLED: flatbuffers::VOffsetT = 58;
-  pub const VT_ISBACKGROUNDDISABLED: flatbuffers::VOffsetT = 60;
-  pub const VT_FONTSIZE: flatbuffers::VOffsetT = 62;
-  pub const VT_FONTFAMILY: flatbuffers::VOffsetT = 64;
-  pub const VT_TEXT: flatbuffers::VOffsetT = 66;
-  pub const VT_TEXTALIGN: flatbuffers::VOffsetT = 68;
-  pub const VT_VERTICALALIGN: flatbuffers::VOffsetT = 70;
-  pub const VT_CONTAINERID: flatbuffers::VOffsetT = 72;
-  pub const VT_ORIGINALTEXT: flatbuffers::VOffsetT = 74;
-  pub const VT_LINEHEIGHT: flatbuffers::VOffsetT = 76;
-  pub const VT_AUTORESIZE: flatbuffers::VOffsetT = 78;
-  pub const VT_POINTS: flatbuffers::VOffsetT = 80;
-  pub const VT_LASTCOMMITTEDPOINT: flatbuffers::VOffsetT = 82;
-  pub const VT_STARTBINDING: flatbuffers::VOffsetT = 84;
-  pub const VT_ENDBINDING: flatbuffers::VOffsetT = 86;
-  pub const VT_STARTARROWHEAD: flatbuffers::VOffsetT = 88;
-  pub const VT_ENDARROWHEAD: flatbuffers::VOffsetT = 90;
-  pub const VT_ELBOWED: flatbuffers::VOffsetT = 92;
-  pub const VT_PRESSURES: flatbuffers::VOffsetT = 94;
-  pub const VT_SIMULATEPRESSURE: flatbuffers::VOffsetT = 96;
-  pub const VT_FILEID: flatbuffers::VOffsetT = 98;
-  pub const VT_STATUS: flatbuffers::VOffsetT = 100;
-  pub const VT_SCALE: flatbuffers::VOffsetT = 102;
-  pub const VT_ISCOLLAPSED: flatbuffers::VOffsetT = 104;
-  pub const VT_NAME: flatbuffers::VOffsetT = 106;
-  pub const VT_GROUPIDREF: flatbuffers::VOffsetT = 108;
+  pub const VT_FILLSTYLE: flatbuffers::VOffsetT = 34;
+  pub const VT_STROKEPLACEMENT: flatbuffers::VOffsetT = 36;
+  pub const VT_OPACITY: flatbuffers::VOffsetT = 38;
+  pub const VT_WIDTH: flatbuffers::VOffsetT = 40;
+  pub const VT_HEIGHT: flatbuffers::VOffsetT = 42;
+  pub const VT_ANGLE: flatbuffers::VOffsetT = 44;
+  pub const VT_ISDELETED: flatbuffers::VOffsetT = 46;
+  pub const VT_GROUPIDS: flatbuffers::VOffsetT = 48;
+  pub const VT_FRAMEID: flatbuffers::VOffsetT = 50;
+  pub const VT_BOUNDELEMENTS: flatbuffers::VOffsetT = 52;
+  pub const VT_LINK: flatbuffers::VOffsetT = 54;
+  pub const VT_LOCKED: flatbuffers::VOffsetT = 56;
+  pub const VT_CUSTOMDATA: flatbuffers::VOffsetT = 58;
+  pub const VT_ISSTROKEDISABLED: flatbuffers::VOffsetT = 60;
+  pub const VT_ISBACKGROUNDDISABLED: flatbuffers::VOffsetT = 62;
+  pub const VT_FONTSIZE: flatbuffers::VOffsetT = 64;
+  pub const VT_FONTFAMILY: flatbuffers::VOffsetT = 66;
+  pub const VT_TEXT: flatbuffers::VOffsetT = 68;
+  pub const VT_TEXTALIGN: flatbuffers::VOffsetT = 70;
+  pub const VT_VERTICALALIGN: flatbuffers::VOffsetT = 72;
+  pub const VT_CONTAINERID: flatbuffers::VOffsetT = 74;
+  pub const VT_ORIGINALTEXT: flatbuffers::VOffsetT = 76;
+  pub const VT_LINEHEIGHT: flatbuffers::VOffsetT = 78;
+  pub const VT_AUTORESIZE: flatbuffers::VOffsetT = 80;
+  pub const VT_POINTS: flatbuffers::VOffsetT = 82;
+  pub const VT_LASTCOMMITTEDPOINT: flatbuffers::VOffsetT = 84;
+  pub const VT_STARTBINDING: flatbuffers::VOffsetT = 86;
+  pub const VT_ENDBINDING: flatbuffers::VOffsetT = 88;
+  pub const VT_STARTARROWHEAD: flatbuffers::VOffsetT = 90;
+  pub const VT_ENDARROWHEAD: flatbuffers::VOffsetT = 92;
+  pub const VT_ELBOWED: flatbuffers::VOffsetT = 94;
+  pub const VT_PRESSURES: flatbuffers::VOffsetT = 96;
+  pub const VT_SIMULATEPRESSURE: flatbuffers::VOffsetT = 98;
+  pub const VT_FILEID: flatbuffers::VOffsetT = 100;
+  pub const VT_STATUS: flatbuffers::VOffsetT = 102;
+  pub const VT_SCALE: flatbuffers::VOffsetT = 104;
+  pub const VT_ISCOLLAPSED: flatbuffers::VOffsetT = 106;
+  pub const VT_NAME: flatbuffers::VOffsetT = 108;
+  pub const VT_GROUPIDREF: flatbuffers::VOffsetT = 110;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -390,6 +391,7 @@ impl<'a> DucElement<'a> {
     builder.add_width(args.width);
     builder.add_opacity(args.opacity);
     builder.add_strokePlacement(args.strokePlacement);
+    if let Some(x) = args.fillStyle { builder.add_fillStyle(x); }
     if let Some(x) = args.strokeStyle { builder.add_strokeStyle(x); }
     builder.add_strokeWidth(args.strokeWidth);
     if let Some(x) = args.strokeColor { builder.add_strokeColor(x); }
@@ -521,6 +523,13 @@ impl<'a> DucElement<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_STROKESTYLE, None)}
+  }
+  #[inline]
+  pub fn fillStyle(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_FILLSTYLE, None)}
   }
   #[inline]
   pub fn strokePlacement(&self) -> i32 {
@@ -812,6 +821,7 @@ impl flatbuffers::Verifiable for DucElement<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("strokeColor", Self::VT_STROKECOLOR, false)?
      .visit_field::<i32>("strokeWidth", Self::VT_STROKEWIDTH, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("strokeStyle", Self::VT_STROKESTYLE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("fillStyle", Self::VT_FILLSTYLE, false)?
      .visit_field::<i32>("strokePlacement", Self::VT_STROKEPLACEMENT, false)?
      .visit_field::<f32>("opacity", Self::VT_OPACITY, false)?
      .visit_field::<f32>("width", Self::VT_WIDTH, false)?
@@ -870,6 +880,7 @@ pub struct DucElementArgs<'a> {
     pub strokeColor: Option<flatbuffers::WIPOffset<&'a str>>,
     pub strokeWidth: i32,
     pub strokeStyle: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub fillStyle: Option<flatbuffers::WIPOffset<&'a str>>,
     pub strokePlacement: i32,
     pub opacity: f32,
     pub width: f32,
@@ -928,6 +939,7 @@ impl<'a> Default for DucElementArgs<'a> {
       strokeColor: None,
       strokeWidth: 0,
       strokeStyle: None,
+      fillStyle: None,
       strokePlacement: 0,
       opacity: 0.0,
       width: 0.0,
@@ -1034,6 +1046,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_strokeStyle(&mut self, strokeStyle: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_STROKESTYLE, strokeStyle);
+  }
+  #[inline]
+  pub fn add_fillStyle(&mut self, fillStyle: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_FILLSTYLE, fillStyle);
   }
   #[inline]
   pub fn add_strokePlacement(&mut self, strokePlacement: i32) {
@@ -1220,6 +1236,7 @@ impl core::fmt::Debug for DucElement<'_> {
       ds.field("strokeColor", &self.strokeColor());
       ds.field("strokeWidth", &self.strokeWidth());
       ds.field("strokeStyle", &self.strokeStyle());
+      ds.field("fillStyle", &self.fillStyle());
       ds.field("strokePlacement", &self.strokePlacement());
       ds.field("opacity", &self.opacity());
       ds.field("width", &self.width());
@@ -1663,7 +1680,7 @@ impl<'a> AppState<'a> {
     if let Some(x) = args.currentItemStartArrowhead { builder.add_currentItemStartArrowhead(x); }
     if let Some(x) = args.currentItemTextAlign { builder.add_currentItemTextAlign(x); }
     builder.add_currentItemFontSize(args.currentItemFontSize);
-    if let Some(x) = args.currentItemFontFamily { builder.add_currentItemFontFamily(x); }
+    builder.add_currentItemFontFamily(args.currentItemFontFamily);
     builder.add_currentItemOpacity(args.currentItemOpacity);
     builder.add_currentItemRoughness(args.currentItemRoughness);
     if let Some(x) = args.currentItemStrokeStyle { builder.add_currentItemStrokeStyle(x); }
@@ -1857,11 +1874,11 @@ impl<'a> AppState<'a> {
     unsafe { self._tab.get::<f32>(AppState::VT_CURRENTITEMOPACITY, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn currentItemFontFamily(&self) -> Option<&'a str> {
+  pub fn currentItemFontFamily(&self) -> i32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_CURRENTITEMFONTFAMILY, None)}
+    unsafe { self._tab.get::<i32>(AppState::VT_CURRENTITEMFONTFAMILY, Some(0)).unwrap()}
   }
   #[inline]
   pub fn currentItemFontSize(&self) -> i32 {
@@ -2132,7 +2149,7 @@ impl flatbuffers::Verifiable for AppState<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemStrokeStyle", Self::VT_CURRENTITEMSTROKESTYLE, false)?
      .visit_field::<i32>("currentItemRoughness", Self::VT_CURRENTITEMROUGHNESS, false)?
      .visit_field::<f32>("currentItemOpacity", Self::VT_CURRENTITEMOPACITY, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemFontFamily", Self::VT_CURRENTITEMFONTFAMILY, false)?
+     .visit_field::<i32>("currentItemFontFamily", Self::VT_CURRENTITEMFONTFAMILY, false)?
      .visit_field::<i32>("currentItemFontSize", Self::VT_CURRENTITEMFONTSIZE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemTextAlign", Self::VT_CURRENTITEMTEXTALIGN, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemStartArrowhead", Self::VT_CURRENTITEMSTARTARROWHEAD, false)?
@@ -2194,7 +2211,7 @@ pub struct AppStateArgs<'a> {
     pub currentItemStrokeStyle: Option<flatbuffers::WIPOffset<&'a str>>,
     pub currentItemRoughness: i32,
     pub currentItemOpacity: f32,
-    pub currentItemFontFamily: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub currentItemFontFamily: i32,
     pub currentItemFontSize: i32,
     pub currentItemTextAlign: Option<flatbuffers::WIPOffset<&'a str>>,
     pub currentItemStartArrowhead: Option<flatbuffers::WIPOffset<&'a str>>,
@@ -2256,7 +2273,7 @@ impl<'a> Default for AppStateArgs<'a> {
       currentItemStrokeStyle: None,
       currentItemRoughness: 0,
       currentItemOpacity: 0.0,
-      currentItemFontFamily: None,
+      currentItemFontFamily: 0,
       currentItemFontSize: 0,
       currentItemTextAlign: None,
       currentItemStartArrowhead: None,
@@ -2389,8 +2406,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<f32>(AppState::VT_CURRENTITEMOPACITY, currentItemOpacity, 0.0);
   }
   #[inline]
-  pub fn add_currentItemFontFamily(&mut self, currentItemFontFamily: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_CURRENTITEMFONTFAMILY, currentItemFontFamily);
+  pub fn add_currentItemFontFamily(&mut self, currentItemFontFamily: i32) {
+    self.fbb_.push_slot::<i32>(AppState::VT_CURRENTITEMFONTFAMILY, currentItemFontFamily, 0);
   }
   #[inline]
   pub fn add_currentItemFontSize(&mut self, currentItemFontSize: i32) {

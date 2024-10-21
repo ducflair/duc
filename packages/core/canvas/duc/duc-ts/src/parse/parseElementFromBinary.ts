@@ -105,6 +105,7 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
     writingLayer: (e.writingLayer() || DEFAULT_ELEMENT_PROPS.writingLayer) as WritingLayers,
     label: e.label() || DEFAULT_ELEMENT_PROPS.label,
     strokeStyle: (e.strokeStyle() || DEFAULT_ELEMENT_PROPS.strokeStyle) as StrokeStyle,
+    fillStyle: (e.fillStyle() || DEFAULT_ELEMENT_PROPS.fillStyle) as FillStyle,
     boundElements: boundElements,
     strokePlacement: (e.strokePlacement() || DEFAULT_ELEMENT_PROPS.strokePlacement) as StrokePlacement,
   };

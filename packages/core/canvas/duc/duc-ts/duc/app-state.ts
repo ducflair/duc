@@ -153,11 +153,9 @@ currentItemOpacity():number {
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
-currentItemFontFamily():string|null
-currentItemFontFamily(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-currentItemFontFamily(optionalEncoding?:any):string|Uint8Array|null {
+currentItemFontFamily():number {
   const offset = this.bb!.__offset(this.bb_pos, 48);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 currentItemFontSize():number {
@@ -484,8 +482,8 @@ static addCurrentItemOpacity(builder:flatbuffers.Builder, currentItemOpacity:num
   builder.addFieldFloat32(21, currentItemOpacity, 0.0);
 }
 
-static addCurrentItemFontFamily(builder:flatbuffers.Builder, currentItemFontFamilyOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(22, currentItemFontFamilyOffset, 0);
+static addCurrentItemFontFamily(builder:flatbuffers.Builder, currentItemFontFamily:number) {
+  builder.addFieldInt32(22, currentItemFontFamily, 0);
 }
 
 static addCurrentItemFontSize(builder:flatbuffers.Builder, currentItemFontSize:number) {
