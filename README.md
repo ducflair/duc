@@ -1,6 +1,6 @@
 <p align="center">
   <br/>
-  <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://ducflair-public.s3.eu-west-2.amazonaws.com/duc/duc-extended.png" /></a>
+  <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://raw.githubusercontent.com/ducflair/assets/refs/heads/main/src/duc/duc-extended.png" /></a>
   <p align="center">2D CAD File Format</p>
   <br/><br/>
     <p align="center" style="align: center;">
