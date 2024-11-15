@@ -12,3 +12,4 @@ export { DucGroup } from './duc/duc-group';
 export { ExportedDataState } from './duc/exported-data-state';
 export { Point } from './duc/point';
 export { PointBinding } from './duc/point-binding';
+export { SimplePoint } from './duc/simple-point';

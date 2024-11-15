@@ -13,7 +13,8 @@ import {
   SCROLLBAR_WIDTH,
 } from "../scene/scrollbars";
 
-import { getFreeDrawPath2D, renderSelectionElement } from "../renderer/renderElement";
+import { getFreeDrawPath2D } from "../renderer/renderElement";
+import { renderLinearPath } from "../element/linearElementEditor";;
 import { getClientColor, renderRemoteCursors } from "../clients";
 import {
   isSelectedViaGroup,
@@ -30,8 +31,8 @@ import {
   shouldShowBoundingBox,
 } from "../element/transformHandles";
 import { arrayToMap, throttleRAF } from "../utils";
-import type { InteractiveCanvasAppState, Point } from "../types";
-import { DEFAULT_TRANSFORM_HANDLE_SPACING, FRAME_STYLE, STROKE_SELECTION_COLOR, STROKE_SELECTION_CONTRAST_COLOR, THEME } from "../constants";
+import type { AppState, InteractiveCanvasAppState, Point } from "../types";
+import { DEFAULT_TRANSFORM_HANDLE_SPACING, FILL_SELECTION_COLOR, FILL_INTERSECT_SELECTION_COLOR, FRAME_STYLE, POINT_SELECTION_COLOR, STROKE_INTERSECT_SELECTION_COLOR, STROKE_LINEAR_EDITOR_COLOR, THEME } from "../constants";
 
 import { renderSnaps } from "../renderer/renderSnaps";
 
@@ -113,8 +114,8 @@ const highlightPoint = (
 
   fillCircle(
     context,
-    point[0],
-    point[1],
+    point.x,
+    point.y,
     LinearElementEditor.POINT_HANDLE_SIZE / appState.zoom.value,
     false,
   );
@@ -172,34 +173,117 @@ const strokeDiamondWithRotation = (
 };
 
 const renderSingleLinearPoint = (
+  renderConfig: InteractiveCanvasRenderConfig,
   context: CanvasRenderingContext2D,
   appState: InteractiveCanvasAppState,
   point: Point,
   radius: number,
   isSelected: boolean,
   isPhantomPoint = false,
-  element: NonDeleted<DucLinearElement>,
 ) => {
   const isEditMode = !!appState.editingLinearElement;
-  const strokeColor = STROKE_SELECTION_CONTRAST_COLOR;
-  const fillColor = "white";
-  const themeFillColor = appState.theme === THEME.LIGHT ? "rgba(0, 0, 0, 0.4)" : "rgba(255, 255, 255, 0.4)";
-
+  const themeFillColor = appState.theme === THEME.LIGHT ? "white" : "#1E1E1E";
+  const fillColor = isEditMode ? POINT_SELECTION_COLOR : themeFillColor;
+  const strokeColor = isPhantomPoint ? (isEditMode ? STROKE_LINEAR_EDITOR_COLOR : renderConfig.selectionColor) : "#DFDFDF";
   
   context.strokeStyle = strokeColor;
   context.setLineDash([]);
-  context.fillStyle = isEditMode ? (isSelected ? "rgba(134, 131, 226, 0.9)" : fillColor) : themeFillColor;
+  context.fillStyle = isSelected ? "#fff" : fillColor;
 
-  const circleRadius = isEditMode ? (radius * 0.55) / appState.zoom.value : (element.strokeWidth/2) / appState.zoom.value;
-  const lineWidth = isEditMode ? 4 / appState.zoom.value : 2 / appState.zoom.value;
+  const baseRadius = isEditMode ? (radius * 0.55) : radius;
+  const circleRadius = (isSelected ? baseRadius * 1.5 : baseRadius) / appState.zoom.value;
+  
+  const lineWidth = isEditMode ? 4 / appState.zoom.value : 3.5 / appState.zoom.value;
+  
+  if (isSelected && point.isCurve) {
+    context.save();
+    context.strokeStyle = strokeColor;
+    context.fillStyle = fillColor;
 
-  context.beginPath();
-  context.arc(point[0], point[1], circleRadius, 0, Math.PI * 2);
-  context.lineWidth = lineWidth;
-  context.stroke(); // Stroke first
-  // context.fillStyle = isEditMode ? fillColor : context.fillStyle;
-  context.fill(); // Fill second
+    const controlPointRadius = circleRadius * 0.6;  // Keep control point radius same as non-curve points
+    const handlesLineWidth = lineWidth * 0.8;
+    
+    // Draw handleIn
+    if (point.handleIn) {
+      context.beginPath();
+      context.moveTo(point.x, point.y);
+      context.lineTo(point.handleIn.x, point.handleIn.y);
+      context.lineWidth = handlesLineWidth;
+      context.stroke();
+
+      context.beginPath();
+      context.arc(
+        point.handleIn.x,
+        point.handleIn.y,
+        controlPointRadius,
+        0,
+        Math.PI * 2,
+      );
+      context.lineWidth = handlesLineWidth;
+      context.stroke();
+      context.fill();
+    }
+
+    // Draw handleOut
+    if (point.handleOut) {
+      context.beginPath();
+      context.moveTo(point.x, point.y);
+      context.lineTo(point.handleOut.x, point.handleOut.y);
+      context.lineWidth = handlesLineWidth;
+      context.stroke();
+
+      context.beginPath();
+      context.arc(
+        point.handleOut.x,
+        point.handleOut.y,
+        controlPointRadius,
+        0,
+        Math.PI * 2,
+      );
+      context.lineWidth = handlesLineWidth;
+      context.stroke();
+      context.fill();
+    }
+
+    context.restore();
+  }
+
+  if (point.isCurve) {
+    // Draw diamond for curve points
+    context.save();
+    context.beginPath();
+    const size = circleRadius;
+    
+    // Align to pixel grid to avoid sub-pixel rendering issues
+    const x = Math.round(point.x);
+    const y = Math.round(point.y);
+    
+    // Use translate to ensure the shape is centered on the point
+    context.translate(x, y);
+    context.moveTo(0, -size);
+    context.lineTo(size, 0);
+    context.lineTo(0, size);
+    context.lineTo(-size, 0);
+    context.closePath();
+    context.translate(-x, -y);
+    
+    context.lineWidth = lineWidth;
+    context.stroke();
+    context.fill();
+    context.restore();
+  } else {
+    // Draw circle for regular points
+    context.beginPath();
+    // Align to pixel grid
+    const x = Math.round(point.x);
+    const y = Math.round(point.y);
+    context.arc(x, y, circleRadius, 0, Math.PI * 2);
+    context.lineWidth = lineWidth;
+    context.stroke();
+    context.fill();
+  }
 };
+
 
 const strokeEllipseWithRotation = (
   context: CanvasRenderingContext2D,
@@ -301,7 +385,7 @@ const renderBindingHighlightForSuggestedPointBinding = (
   const pointIndices =
     startOrEnd === "both" ? [0, -1] : startOrEnd === "start" ? [0] : [-1];
   pointIndices.forEach((index) => {
-    const [x, y] = LinearElementEditor.getPointAtIndexGlobalCoordinates(
+    const {x, y} = LinearElementEditor.getPointAtIndexGlobalCoordinates(
       element,
       index,
       elementsMap,
@@ -311,6 +395,7 @@ const renderBindingHighlightForSuggestedPointBinding = (
 };
 
 const handleBorderOnHover = (
+  renderConfig: InteractiveCanvasRenderConfig,
   context: CanvasRenderingContext2D, 
   appState: InteractiveCanvasAppState,
   elementsMap: ElementsMap,
@@ -336,7 +421,7 @@ const handleBorderOnHover = (
       elementY1,
       elementX2,
       elementY2,
-      selectionColors: [STROKE_SELECTION_COLOR],
+      selectionColors: [renderConfig.selectionColor],
       dashed: false,
       cx: elementX1 + width / 2,
       cy: elementY1 + height / 2,
@@ -348,6 +433,45 @@ const handleBorderOnHover = (
 
   // context.restore();
 }
+
+export const renderSelectionElement = (
+  renderConfig: InteractiveCanvasRenderConfig,
+  element: NonDeleted<DucElement>,
+  context: CanvasRenderingContext2D,
+  appState: InteractiveCanvasAppState,
+  selectionDirection: AppState["selectionDirection"] = "right",
+) => {
+  context.save();
+  context.translate(element.x + appState.scrollX, element.y + appState.scrollY);
+
+  // render from 0.5px offset  to get 1px wide line
+  // https://stackoverflow.com/questions/7530593/html5-canvas-and-line-width/7531540#7531540
+  // TODO can be be improved by offseting to the negative when user selects
+  // from right to left
+  const offset = 0.5 / appState.zoom.value;
+  context.lineWidth = 1 / appState.zoom.value;
+
+  if (selectionDirection === "right") {
+    // Normal selection to the right (solid blue)
+    context.fillStyle = FILL_SELECTION_COLOR;
+    context.strokeStyle = renderConfig.selectionColor;
+    context.setLineDash([]); // Solid stroke
+
+  } else if (selectionDirection === "left") {
+    // Selection to the left (dashed green)
+    context.fillStyle = FILL_INTERSECT_SELECTION_COLOR;
+    context.strokeStyle = STROKE_INTERSECT_SELECTION_COLOR;
+    context.setLineDash([5 / appState.zoom.value, 5 / appState.zoom.value]); // Dashed line
+  }
+
+  // Draw the filled rectangle
+  context.fillRect(offset, offset, element.width, element.height);
+
+  // Draw the border (either solid or dashed based on the direction)
+  context.strokeRect(offset, offset, element.width, element.height);
+
+  context.restore();
+};
 
 export const renderSelectionBorder = (
   context: CanvasRenderingContext2D,
@@ -433,10 +557,7 @@ export const renderSelectionBorder = (
           if (isLinearElement(element)) {
             const points = LinearElementEditor.getPointsGlobalCoordinates(element, elementsMap);
             context.beginPath();
-            context.moveTo(points[0][0], points[0][1]);
-            for (let i = 1; i < points.length; i++) {
-              context.lineTo(points[i][0], points[i][1]);
-            }
+            renderLinearPath(points, context);
             context.stroke();
           }
           break;
@@ -613,25 +734,20 @@ const renderLinearElementSkeleton = (
   elementsMap: RenderableElementsMap,
 ) => {
   const points = LinearElementEditor.getPointsGlobalCoordinates(element, elementsMap);
-  const strokeColor = element.strokeColor || "#000000";
-  const skeletonColor = getContrastNeutralColor(strokeColor);
-
   context.save();
-  context.strokeStyle = skeletonColor;
-  context.lineWidth = 1 / appState.zoom.value;
+  context.strokeStyle = STROKE_LINEAR_EDITOR_COLOR;
+  context.lineWidth = 3 / appState.zoom.value;
   context.setLineDash([]);
-
+  
   context.beginPath();
-  context.moveTo(points[0][0], points[0][1]);
-  for (let i = 1; i < points.length; i++) {
-    context.lineTo(points[i][0], points[i][1]);
-  }
+  renderLinearPath(points, context);
   context.stroke();
 
   context.restore();
 };
 
 const renderLinearPointHandles = (
+  renderConfig: InteractiveCanvasRenderConfig,
   context: CanvasRenderingContext2D,
   appState: InteractiveCanvasAppState,
   element: NonDeleted<DucLinearElement>,
@@ -658,47 +774,121 @@ const renderLinearPointHandles = (
     renderLinearElementSkeleton(context, appState, element, elementsMap);
   }
 
+  // Render regular points
   points.forEach((point, idx) => {
     if (isElbowArrow(element) && idx !== 0 && idx !== points.length - 1) {
       return;
     }
 
+    // Skip first point if it's at the same position as the last point
+    if (idx === 0 && points.length > 1) {
+      const lastPoint = points[points.length - 1];
+      if (LinearElementEditor.arePointsEqual(point, lastPoint)) {
+        return;
+      }
+    }
+
     const isSelected =
       !!appState.editingLinearElement?.selectedPointsIndices?.includes(idx);
+    const isHovered =
+      appState.selectedLinearElement?.hoverPointIndex === idx;
 
-    renderSingleLinearPoint(context, appState, point, radius, isSelected, false, element);
+    renderSingleLinearPoint(
+      renderConfig,
+      context,
+      appState,
+      point,
+      radius,
+      isSelected,
+      !isHovered
+    );
   });
 
   // Rendering segment mid points
   if (appState.editingLinearElement) {
+      
+    //Rendering segment mid points
     const midPoints = LinearElementEditor.getEditorMidPoints(
       element,
       elementsMap,
       appState,
     ).filter((midPoint) => midPoint !== null) as Point[];
 
+    
+    // TODO: for the hover midpoint implementation
+    // const MIDPOINT_HOVER_THRESHOLD = 10 / appState.zoom.value;
+    // const midPoints = [];
+
+    // for (let i = 0; i < points.length - 1; i++) {
+    //   const point1 = points[i];
+    //   const point2 = points[i + 1];
+    //   const midPoint = {
+    //     x: (point1.x + point2.x) / 2,
+    //     y: (point1.y + point2.y) / 2,
+    //   };
+  
+    //   const distance = distanceFromPointToLineSegment(
+    //     { x: appState.cursorX, y: appState.cursorY },
+    //     point1,
+    //     point2,
+    //   );
+  
+    //   if (distance < MIDPOINT_HOVER_THRESHOLD) {
+    //     midPoints.push({ midPoint, index: i });
+    //   }
+    // }
+
     midPoints.forEach((segmentMidPoint) => {
-      const isHovered =
+      if (
         appState?.selectedLinearElement?.segmentMidPointHoveredCoords &&
         LinearElementEditor.arePointsEqual(
           segmentMidPoint,
           appState.selectedLinearElement.segmentMidPointHoveredCoords,
+        )
+      ) {
+        // The order of renderingSingleLinearPoint and highLight points is different
+        // inside vs outside editor as hover states are different,
+        // in editor when hovered the original point is not visible as hover state fully covers it whereas outside the
+        // editor original point is visible and hover state is just an outer circle.
+        if (appState.editingLinearElement) {
+          renderSingleLinearPoint(
+            renderConfig,
+            context,
+            appState,
+            segmentMidPoint,
+            radius,
+            false,
+          );
+          highlightPoint(segmentMidPoint, context, appState);
+        } else {
+          highlightPoint(segmentMidPoint, context, appState);
+          renderSingleLinearPoint(
+            renderConfig,
+            context,
+            appState,
+            segmentMidPoint,
+            radius,
+            false,
+          );
+        }
+      } else if (appState.editingLinearElement || points.length === 2) {
+        renderSingleLinearPoint(
+          renderConfig,
+          context,
+          appState,
+          segmentMidPoint,
+          POINT_HANDLE_SIZE / 2,
+          false,
+          true,
         );
-
-      renderSingleLinearPoint(
-        context,
-        appState,
-        segmentMidPoint,
-        POINT_HANDLE_SIZE / 2,
-        false,
-        !isHovered,
-        element
-      );
+      }
     });
   }
 
   context.restore();
 };
+
+
 
 const renderTransformHandles = (
   context: CanvasRenderingContext2D,
@@ -801,7 +991,7 @@ const _renderInteractiveScene = ({
   context.scale(appState.zoom.value, appState.zoom.value);
 
   // Paint selection border if any element is hovered
-  handleBorderOnHover(context, appState, elementsMap);
+  handleBorderOnHover(renderConfig, context, appState, elementsMap);
 
   let editingLinearElement: NonDeleted<DucLinearElement> | undefined =
     undefined;
@@ -819,6 +1009,7 @@ const _renderInteractiveScene = ({
 
   if (editingLinearElement) {
     renderLinearPointHandles(
+      renderConfig,
       context,
       appState,
       editingLinearElement,
@@ -830,6 +1021,7 @@ const _renderInteractiveScene = ({
   if (appState.selectionElement) {
     try {
       renderSelectionElement(
+        renderConfig,
         appState.selectionElement,
         context,
         appState,
@@ -896,6 +1088,7 @@ const _renderInteractiveScene = ({
     appState.editingLinearElement?.elementId === selectedElements[0].id
   ) {
     renderLinearPointHandles(
+      renderConfig,
       context,
       appState,
       selectedElements[0] as NonDeleted<DucLinearElement>,
@@ -921,20 +1114,8 @@ const _renderInteractiveScene = ({
 
     const isSingleLinearElementSelected =
       selectedElements.length === 1 && isLinearElement(selectedElements[0]);
-    // render selected linear element points
-    if (
-      isSingleLinearElementSelected &&
-      appState.selectedLinearElement?.elementId === selectedElements[0].id &&
-      !selectedElements[0].locked
-    ) {
-      renderLinearPointHandles(
-        context,
-        appState,
-        selectedElements[0] as DucLinearElement,
-        elementsMap,
-      );
-    }
-    const selectionColor = renderConfig.selectionColor || "#6965db";
+
+    const selectionColor = renderConfig.selectionColor;
 
     if (showBoundingBox) {
       // Optimisation for finding quickly relevant element ids
@@ -1114,6 +1295,22 @@ const _renderInteractiveScene = ({
       }
     }
     context.restore();
+
+    // We are not rendering the points on selection now...
+    // // render selected linear element points
+    // if (
+    //   isSingleLinearElementSelected &&
+    //   appState.selectedLinearElement?.elementId === selectedElements[0].id &&
+    //   !selectedElements[0].locked
+    // ) {
+    //   renderLinearPointHandles(
+    //     renderConfig,
+    //     context,
+    //     appState,
+    //     selectedElements[0] as DucLinearElement,
+    //     elementsMap,
+    //   );
+    // }
   }
 
   renderSnaps(context, appState);
@@ -1236,4 +1433,39 @@ const getContrastNeutralColor = (color: string): string => {
 
   // Return a neutral gray depending on the luminance
   return luminance > 0.5 ? "#333333" : "#CCCCCC"; // Light gray for dark colors, dark gray for light colors
+};
+
+const distanceFromPointToLineSegment = (point: Point, lineStart: Point, lineEnd: Point) => {
+  const { x: x0, y: y0 } = point;
+  const { x: x1, y: y1 } = lineStart;
+  const { x: x2, y: y2 } = lineEnd;
+
+  const A = x0 - x1;
+  const B = y0 - y1;
+  const C = x2 - x1;
+  const D = y2 - y1;
+
+  const dot = A * C + B * D;
+  const len_sq = C * C + D * D;
+  let param = -1;
+  if (len_sq !== 0) {
+    param = dot / len_sq;
+  }
+
+  let xx, yy;
+
+  if (param < 0) {
+    xx = x1;
+    yy = y1;
+  } else if (param > 1) {
+    xx = x2;
+    yy = y2;
+  } else {
+    xx = x1 + param * C;
+    yy = y1 + param * D;
+  }
+
+  const dx = x0 - xx;
+  const dy = y0 - yy;
+  return Math.sqrt(dx * dx + dy * dy);
 };

@@ -691,7 +691,7 @@ export const getContainerCenter = (
       container.points[index],
       elementsMap,
     );
-    return { x: midPoint[0], y: midPoint[1] };
+    return { x: midPoint.x, y: midPoint.y };
   }
   const index = container.points.length / 2 - 1;
   let midSegmentMidpoint = LinearElementEditor.getEditorMidPoints(
@@ -708,7 +708,7 @@ export const getContainerCenter = (
       elementsMap,
     );
   }
-  return { x: midSegmentMidpoint[0], y: midSegmentMidpoint[1] };
+  return { x: midSegmentMidpoint.x, y: midSegmentMidpoint.y };
 };
 
 export const getContainerCoords = (container: NonDeletedDucElement) => {

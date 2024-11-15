@@ -5,10 +5,10 @@
  * an ellipse is defined by its center, angle, semi major axis and semi minor axis
  * (but in semi-width and semi-height so it's more relevant to Duc)
  *
- * the idea with pure shapes is so that we can provide collision and other geoemtric methods not depending on
+ * the idea with pure shapes is so that we can provide collision and other geometric methods not depending on
  * the specifics of roughjs or elements in Duc; instead, we can focus on the pure shapes themselves
  *
- * also included in this file are methods for converting an Duc element or a Drawable from roughjs
+ * also included in this file are methods for converting a Duc element or a Drawable from roughjs
  * to pure shapes
  */
 
@@ -35,7 +35,7 @@ import { pointsOnBezierCurves } from "points-on-curve";
 import type { Drawable, Op } from "roughjs/bin/core";
 
 // a point is specified by its coordinate (x, y)
-export type Point = [number, number];
+export type Point = { x: number; y: number };
 export type Vector = Point;
 
 // a line (segment) is defined by two endpoints
@@ -49,17 +49,17 @@ export type Polyline = Line[];
 // cubic bezier curve with four control points
 export type Curve = [Point, Point, Point, Point];
 
-// a polycurve is a curve consisting of ther curves, this corresponds to a complex
+// a polycurve is a curve consisting of other curves, this corresponds to a complex
 // curve on the canvas
 export type Polycurve = Curve[];
 
 // a polygon is a closed shape by connecting the given points
-// rectangles and diamonds are modelled by polygons
+// rectangles and diamonds are modeled by polygons
 export type Polygon = Point[];
 
 // an ellipse is specified by its center, angle, and its major and minor axes
 // but for the sake of simplicity, we've used halfWidth and halfHeight instead
-// in replace of semi major and semi minor axes
+// in place of semi-major and semi-minor axes
 export type Ellipse = {
   center: Point;
   angle: number;
@@ -91,7 +91,7 @@ export type GeometricShape =
   | {
       type: "polycurve";
       data: Polycurve;
-};
+  };
 
 
 type RectangularElement =
@@ -114,24 +114,24 @@ export const getPolygonShape = (
   const cx = x + width / 2;
   const cy = y + height / 2;
 
-  const center: Point = [cx, cy];
+  const center: Point = { x: cx, y: cy };
 
   let data: Polygon = [];
 
   if (element.type === "diamond") {
     data = [
-      pointRotate([cx, y], angleInDegrees, center),
-      pointRotate([x + width, cy], angleInDegrees, center),
-      pointRotate([cx, y + height], angleInDegrees, center),
-      pointRotate([x, cy], angleInDegrees, center),
-    ] as Polygon;
+      pointRotate({ x: cx, y }, angleInDegrees, center),
+      pointRotate({ x: x + width, y: cy }, angleInDegrees, center),
+      pointRotate({ x: cx, y: y + height }, angleInDegrees, center),
+      pointRotate({ x, y: cy }, angleInDegrees, center),
+    ];
   } else {
     data = [
-      pointRotate([x, y], angleInDegrees, center),
-      pointRotate([x + width, y], angleInDegrees, center),
-      pointRotate([x + width, y + height], angleInDegrees, center),
-      pointRotate([x, y + height], angleInDegrees, center),
-    ] as Polygon;
+      pointRotate({ x: x, y: y }, angleInDegrees, center),
+      pointRotate({ x: x + width, y }, angleInDegrees, center),
+      pointRotate({ x: x + width, y: y + height }, angleInDegrees, center),
+      pointRotate({ x, y: y + height }, angleInDegrees, center),
+    ];
   }
 
   return {
@@ -159,11 +159,11 @@ export const getSelectionBoxShape = (
   y2 += padding;
 
   const angleInDegrees = angleToDegrees(element.angle);
-  const center: Point = [cx, cy];
-  const topLeft = pointRotate([x1, y1], angleInDegrees, center);
-  const topRight = pointRotate([x2, y1], angleInDegrees, center);
-  const bottomLeft = pointRotate([x1, y2], angleInDegrees, center);
-  const bottomRight = pointRotate([x2, y2], angleInDegrees, center);
+  const center: Point = { x: cx, y: cy };
+  const topLeft = pointRotate({ x: x1, y: y1 }, angleInDegrees, center);
+  const topRight = pointRotate({ x: x2, y: y1 }, angleInDegrees, center);
+  const bottomLeft = pointRotate({ x: x1, y: y2 }, angleInDegrees, center);
+  const bottomRight = pointRotate({ x: x2, y: y2 }, angleInDegrees, center);
 
   return {
     type: "polygon",
@@ -180,7 +180,7 @@ export const getEllipseShape = (
   return {
     type: "ellipse",
     data: {
-      center: [x + width / 2, y + height / 2],
+      center: { x: x + width / 2, y: y + height / 2 },
       angle,
       halfWidth: width / 2,
       halfHeight: height / 2,
@@ -196,33 +196,33 @@ export const getCurvePathOps = (shape: Drawable): Op[] => {
   }
   return shape.sets[0].ops;
 };
-
-// linear
 export const getCurveShape = (
   roughShape: Drawable,
-  startingPoint: Point = [0, 0],
+  startingPoint: Point = { x: 0, y: 0 },
   angleInRadian: number,
   center: Point,
 ): GeometricShape => {
   const transform = (p: Point) =>
     pointRotate(
-      [p[0] + startingPoint[0], p[1] + startingPoint[1]],
+      { x: p.x + startingPoint.x, y: p.y + startingPoint.y },
       angleToDegrees(angleInRadian),
       center,
     );
 
   const ops = getCurvePathOps(roughShape);
   const polycurve: Polycurve = [];
-  let p0: Point = [0, 0];
+  let p0: Point = { x: 0, y: 0 };
 
   for (const op of ops) {
     if (op.op === "move") {
-      p0 = transform(op.data as Point);
+      const [x, y] = op.data as number[];
+      p0 = transform({ x, y });
     }
     if (op.op === "bcurveTo") {
-      const p1: Point = transform([op.data[0], op.data[1]]);
-      const p2: Point = transform([op.data[2], op.data[3]]);
-      const p3: Point = transform([op.data[4], op.data[5]]);
+      const [x1, y1, x2, y2, x3, y3] = op.data as number[];
+      const p1: Point = transform({ x: x1, y: y1 });
+      const p2: Point = transform({ x: x2, y: y2 });
+      const p3: Point = transform({ x: x3, y: y3 });
       polycurve.push([p0, p1, p2, p3]);
       p0 = p3;
     }
@@ -254,7 +254,7 @@ export const getFreedrawShape = (
 ): GeometricShape => {
   const angle = angleToDegrees(element.angle);
   const transform = (p: Point) =>
-    pointRotate(pointAdd(p, [element.x, element.y] as Point), angle, center);
+    pointRotate(pointAdd(p, { x: element.x, y: element.y } as Point), angle, center);
 
   const polyline = polylineFromPoints(
     element.points.map((p) => transform(p as Point)),
@@ -274,13 +274,13 @@ export const getFreedrawShape = (
 export const getClosedCurveShape = (
   element: DucLinearElement,
   roughShape: Drawable,
-  startingPoint: Point = [0, 0],
+  startingPoint: Point = { x: 0, y: 0 },
   angleInRadian: number,
   center: Point,
 ): GeometricShape => {
   const transform = (p: Point) =>
     pointRotate(
-      [p[0] + startingPoint[0], p[1] + startingPoint[1]],
+      { x: p.x + startingPoint.x, y: p.y + startingPoint.y },
       angleToDegrees(angleInRadian),
       center,
     );
@@ -300,26 +300,24 @@ export const getClosedCurveShape = (
     if (operation.op === "move") {
       odd = !odd;
       if (odd) {
-        points.push([operation.data[0], operation.data[1]]);
+        points.push({ x: operation.data[0], y: operation.data[1] });
       }
     } else if (operation.op === "bcurveTo") {
       if (odd) {
-        points.push([operation.data[0], operation.data[1]]);
-        points.push([operation.data[2], operation.data[3]]);
-        points.push([operation.data[4], operation.data[5]]);
+        points.push({ x: operation.data[0], y: operation.data[1] });
+        points.push({ x: operation.data[2], y: operation.data[3] });
+        points.push({ x: operation.data[4], y: operation.data[5] });
       }
     } else if (operation.op === "lineTo") {
       if (odd) {
-        points.push([operation.data[0], operation.data[1]]);
+        points.push({ x: operation.data[0], y: operation.data[1] });
       }
     }
   }
 
-  const polygonPoints = pointsOnBezierCurves(points, 10, 5).map((p) => {
-    const mutablePoint: Point = [p[0], p[1]];
-    return transform(mutablePoint);
+  const polygonPoints = pointsOnBezierCurves(points.map((p) => [p.x, p.y]), 10, 5).map((p) => {
+    return transform({ x: p[0], y: p[1] });
   });
-
 
   return {
     type: "polygon",

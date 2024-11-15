@@ -113,7 +113,7 @@ const calculateOffset = (
   let nextY = y + dragOffset.y + snapOffset.y;
 
   if (snapOffset.x === 0 || snapOffset.y === 0) {
-    const [nextGridX, nextGridY] = getGridPoint(
+    const {x: nextGridX, y: nextGridY} = getGridPoint(
       x + dragOffset.x,
       y + dragOffset.y,
       gridSize,

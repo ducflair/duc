@@ -145,10 +145,10 @@ export function renderDistanceOnDrawingLine(
 
   // Calculate distance between the points
   const distance = distance2d(
-    lastCommittedPointSceneCoords[0],
-    lastCommittedPointSceneCoords[1],
-    currentPointSceneCoords[0],
-    currentPointSceneCoords[1],
+    lastCommittedPointSceneCoords.x,
+    lastCommittedPointSceneCoords.y,
+    currentPointSceneCoords.x,
+    currentPointSceneCoords.y,
   );
 
   // Format the distance
@@ -160,8 +160,8 @@ export function renderDistanceOnDrawingLine(
 
   
   // Apply zoom and scroll to calculate the accurate position
-  const screenX = (currentPointSceneCoords[0] + appState.scrollX);
-  const screenY = (currentPointSceneCoords[1] + appState.scrollY);
+  const screenX = (currentPointSceneCoords.x + appState.scrollX);
+  const screenY = (currentPointSceneCoords.y + appState.scrollY);
 
   // Offset the label slightly to ensure it's not right on top of the point
   const offset = 0 * pixelRatio;
@@ -230,10 +230,10 @@ export function renderAllPointDistances(
 
     // Calculate distance between the points
     const distance = distance2d(
-      previousPointSceneCoords[0],
-      previousPointSceneCoords[1],
-      currentPointSceneCoords[0],
-      currentPointSceneCoords[1],
+      previousPointSceneCoords.x,
+      previousPointSceneCoords.y,
+      currentPointSceneCoords.x,
+      currentPointSceneCoords.y,
     );
 
     // Format the distance for display
@@ -244,14 +244,14 @@ export function renderAllPointDistances(
     ).toFixed(appState.coordDecimalPlaces);
 
     // Calculate the midpoint between the two points
-    const midX = (previousPointSceneCoords[0] + currentPointSceneCoords[0]) / 2 + appState.scrollX;
-    const midY = (previousPointSceneCoords[1] + currentPointSceneCoords[1]) / 2 + appState.scrollY;
+    const midX = (previousPointSceneCoords.x + currentPointSceneCoords.x) / 2 + appState.scrollX;
+    const midY = (previousPointSceneCoords.y + currentPointSceneCoords.y) / 2 + appState.scrollY;
 
     // Offset the label slightly to ensure it doesn't overlap the line
     const offset = 1 / zoom; // Offset adjusted based on zoom
     const angle = Math.atan2(
-      currentPointSceneCoords[1] - previousPointSceneCoords[1],
-      currentPointSceneCoords[0] - previousPointSceneCoords[0],
+      currentPointSceneCoords.y - previousPointSceneCoords.y,
+      currentPointSceneCoords.x - previousPointSceneCoords.x,
     );
     const textX = midX + Math.cos(angle - Math.PI / 2) * offset;
     const textY = midY + Math.sin(angle - Math.PI / 2) * offset;
@@ -305,13 +305,13 @@ export function renderAllPointCoordinates(
     );
 
     const formattedX = coordinateToRealMeasure(
-      pointSceneCoords[0],
+      pointSceneCoords.x,
       appState.scope,
       element.scope,
     ).toFixed(appState.coordDecimalPlaces);
 
     const formattedY = coordinateToRealMeasure(
-      pointSceneCoords[1],
+      pointSceneCoords.y,
       appState.scope,
       element.scope,
     ).toFixed(appState.coordDecimalPlaces);
@@ -320,8 +320,8 @@ export function renderAllPointCoordinates(
     const formattedCoordinates = `(${formattedX}, ${formattedY})`;
 
     // Apply zoom and scroll to calculate the accurate position
-    const screenX = (pointSceneCoords[0] + appState.scrollX);
-    const screenY = (pointSceneCoords[1] + appState.scrollY);
+    const screenX = (pointSceneCoords.x + appState.scrollX);
+    const screenY = (pointSceneCoords.y + appState.scrollY);
 
     // Offset the label slightly to ensure it's not right on top of the point
     const offset = 0; // This offset is scaled by zoom, so it becomes less as you zoom out

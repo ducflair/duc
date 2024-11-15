@@ -5,6 +5,7 @@ import {
   MAX_DECIMALS_FOR_SVG_EXPORT,
   MIME_TYPES,
   SVG_NS,
+  TEXT_ALIGN,
 } from "../constants";
 import { normalizeLink, toValidURL } from "../data/url";
 import { getElementAbsoluteCoords } from "../element";
@@ -552,9 +553,9 @@ const renderElementToSvg = (
           element.lineHeight,
         );
         const horizontalOffset =
-          element.textAlign === "center"
+          element.textAlign === TEXT_ALIGN.CENTER
             ? element.width / 2
-            : element.textAlign === "right"
+            : element.textAlign === TEXT_ALIGN.RIGHT
             ? element.width
             : 0;
         const verticalOffset = getVerticalOffset(
@@ -564,9 +565,9 @@ const renderElementToSvg = (
         );
         const direction = isRTL(element.text) ? "rtl" : "ltr";
         const textAnchor =
-          element.textAlign === "center"
+          element.textAlign === TEXT_ALIGN.CENTER
             ? "middle"
-            : element.textAlign === "right" || direction === "rtl"
+            : element.textAlign === TEXT_ALIGN.RIGHT || direction === "rtl"
             ? "end"
             : "start";
         for (let i = 0; i < lines.length; i++) {
