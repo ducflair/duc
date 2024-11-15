@@ -258,6 +258,8 @@ export {
 
 export {
   DucElement,
+  DucLinearElement,
+  DucFreeDrawElement,
   StrokePlacement,
   FileId,
   NonDeletedDucElement,
