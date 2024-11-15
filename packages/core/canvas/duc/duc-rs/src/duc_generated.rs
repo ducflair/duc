@@ -34,8 +34,15 @@ impl<'a> flatbuffers::Follow<'a> for Point<'a> {
 }
 
 impl<'a> Point<'a> {
-  pub const VT_X: flatbuffers::VOffsetT = 4;
-  pub const VT_Y: flatbuffers::VOffsetT = 6;
+  pub const VT_X_V2: flatbuffers::VOffsetT = 4;
+  pub const VT_Y_V2: flatbuffers::VOffsetT = 6;
+  pub const VT_ISCURVE: flatbuffers::VOffsetT = 8;
+  pub const VT_MIRRORING: flatbuffers::VOffsetT = 10;
+  pub const VT_BORDERRADIUS: flatbuffers::VOffsetT = 12;
+  pub const VT_HANDLEIN: flatbuffers::VOffsetT = 14;
+  pub const VT_HANDLEOUT: flatbuffers::VOffsetT = 16;
+  pub const VT_X_V3: flatbuffers::VOffsetT = 18;
+  pub const VT_Y_V3: flatbuffers::VOffsetT = 20;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -44,28 +51,84 @@ impl<'a> Point<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PointArgs
+    args: &'args PointArgs<'args>
   ) -> flatbuffers::WIPOffset<Point<'bldr>> {
     let mut builder = PointBuilder::new(_fbb);
-    builder.add_y(args.y);
-    builder.add_x(args.x);
+    builder.add_y_v3(args.y_v3);
+    builder.add_x_v3(args.x_v3);
+    if let Some(x) = args.borderRadius { builder.add_borderRadius(x); }
+    if let Some(x) = args.handleOut { builder.add_handleOut(x); }
+    if let Some(x) = args.handleIn { builder.add_handleIn(x); }
+    if let Some(x) = args.y_v2 { builder.add_y_v2(x); }
+    if let Some(x) = args.x_v2 { builder.add_x_v2(x); }
+    if let Some(x) = args.mirroring { builder.add_mirroring(x); }
+    if let Some(x) = args.isCurve { builder.add_isCurve(x); }
     builder.finish()
   }
 
 
   #[inline]
-  pub fn x(&self) -> f32 {
+  pub fn x_v2(&self) -> Option<f32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(Point::VT_X, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(Point::VT_X_V2, None)}
   }
   #[inline]
-  pub fn y(&self) -> f32 {
+  pub fn y_v2(&self) -> Option<f32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(Point::VT_Y, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(Point::VT_Y_V2, None)}
+  }
+  #[inline]
+  pub fn isCurve(&self) -> Option<bool> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(Point::VT_ISCURVE, None)}
+  }
+  #[inline]
+  pub fn mirroring(&self) -> Option<i8> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i8>(Point::VT_MIRRORING, None)}
+  }
+  #[inline]
+  pub fn borderRadius(&self) -> Option<f64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(Point::VT_BORDERRADIUS, None)}
+  }
+  #[inline]
+  pub fn handleIn(&self) -> Option<SimplePoint<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<SimplePoint>>(Point::VT_HANDLEIN, None)}
+  }
+  #[inline]
+  pub fn handleOut(&self) -> Option<SimplePoint<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<SimplePoint>>(Point::VT_HANDLEOUT, None)}
+  }
+  #[inline]
+  pub fn x_v3(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(Point::VT_X_V3, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn y_v3(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(Point::VT_Y_V3, Some(0.0)).unwrap()}
   }
 }
 
@@ -76,22 +139,43 @@ impl flatbuffers::Verifiable for Point<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<f32>("x", Self::VT_X, false)?
-     .visit_field::<f32>("y", Self::VT_Y, false)?
+     .visit_field::<f32>("x_v2", Self::VT_X_V2, false)?
+     .visit_field::<f32>("y_v2", Self::VT_Y_V2, false)?
+     .visit_field::<bool>("isCurve", Self::VT_ISCURVE, false)?
+     .visit_field::<i8>("mirroring", Self::VT_MIRRORING, false)?
+     .visit_field::<f64>("borderRadius", Self::VT_BORDERRADIUS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<SimplePoint>>("handleIn", Self::VT_HANDLEIN, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<SimplePoint>>("handleOut", Self::VT_HANDLEOUT, false)?
+     .visit_field::<f64>("x_v3", Self::VT_X_V3, false)?
+     .visit_field::<f64>("y_v3", Self::VT_Y_V3, false)?
      .finish();
     Ok(())
   }
 }
-pub struct PointArgs {
-    pub x: f32,
-    pub y: f32,
+pub struct PointArgs<'a> {
+    pub x_v2: Option<f32>,
+    pub y_v2: Option<f32>,
+    pub isCurve: Option<bool>,
+    pub mirroring: Option<i8>,
+    pub borderRadius: Option<f64>,
+    pub handleIn: Option<flatbuffers::WIPOffset<SimplePoint<'a>>>,
+    pub handleOut: Option<flatbuffers::WIPOffset<SimplePoint<'a>>>,
+    pub x_v3: f64,
+    pub y_v3: f64,
 }
-impl<'a> Default for PointArgs {
+impl<'a> Default for PointArgs<'a> {
   #[inline]
   fn default() -> Self {
     PointArgs {
-      x: 0.0,
-      y: 0.0,
+      x_v2: None,
+      y_v2: None,
+      isCurve: None,
+      mirroring: None,
+      borderRadius: None,
+      handleIn: None,
+      handleOut: None,
+      x_v3: 0.0,
+      y_v3: 0.0,
     }
   }
 }
@@ -102,12 +186,40 @@ pub struct PointBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PointBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_x(&mut self, x: f32) {
-    self.fbb_.push_slot::<f32>(Point::VT_X, x, 0.0);
+  pub fn add_x_v2(&mut self, x_v2: f32) {
+    self.fbb_.push_slot_always::<f32>(Point::VT_X_V2, x_v2);
   }
   #[inline]
-  pub fn add_y(&mut self, y: f32) {
-    self.fbb_.push_slot::<f32>(Point::VT_Y, y, 0.0);
+  pub fn add_y_v2(&mut self, y_v2: f32) {
+    self.fbb_.push_slot_always::<f32>(Point::VT_Y_V2, y_v2);
+  }
+  #[inline]
+  pub fn add_isCurve(&mut self, isCurve: bool) {
+    self.fbb_.push_slot_always::<bool>(Point::VT_ISCURVE, isCurve);
+  }
+  #[inline]
+  pub fn add_mirroring(&mut self, mirroring: i8) {
+    self.fbb_.push_slot_always::<i8>(Point::VT_MIRRORING, mirroring);
+  }
+  #[inline]
+  pub fn add_borderRadius(&mut self, borderRadius: f64) {
+    self.fbb_.push_slot_always::<f64>(Point::VT_BORDERRADIUS, borderRadius);
+  }
+  #[inline]
+  pub fn add_handleIn(&mut self, handleIn: flatbuffers::WIPOffset<SimplePoint<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<SimplePoint>>(Point::VT_HANDLEIN, handleIn);
+  }
+  #[inline]
+  pub fn add_handleOut(&mut self, handleOut: flatbuffers::WIPOffset<SimplePoint<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<SimplePoint>>(Point::VT_HANDLEOUT, handleOut);
+  }
+  #[inline]
+  pub fn add_x_v3(&mut self, x_v3: f64) {
+    self.fbb_.push_slot::<f64>(Point::VT_X_V3, x_v3, 0.0);
+  }
+  #[inline]
+  pub fn add_y_v3(&mut self, y_v3: f64) {
+    self.fbb_.push_slot::<f64>(Point::VT_Y_V3, y_v3, 0.0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> PointBuilder<'a, 'b, A> {
@@ -127,8 +239,15 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PointBuilder<'a, 'b, A> {
 impl core::fmt::Debug for Point<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("Point");
-      ds.field("x", &self.x());
-      ds.field("y", &self.y());
+      ds.field("x_v2", &self.x_v2());
+      ds.field("y_v2", &self.y_v2());
+      ds.field("isCurve", &self.isCurve());
+      ds.field("mirroring", &self.mirroring());
+      ds.field("borderRadius", &self.borderRadius());
+      ds.field("handleIn", &self.handleIn());
+      ds.field("handleOut", &self.handleOut());
+      ds.field("x_v3", &self.x_v3());
+      ds.field("y_v3", &self.y_v3());
       ds.finish()
   }
 }
@@ -280,6 +399,120 @@ impl core::fmt::Debug for PointBinding<'_> {
       ds.finish()
   }
 }
+pub enum SimplePointOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct SimplePoint<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for SimplePoint<'a> {
+  type Inner = SimplePoint<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> SimplePoint<'a> {
+  pub const VT_X: flatbuffers::VOffsetT = 4;
+  pub const VT_Y: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    SimplePoint { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args SimplePointArgs
+  ) -> flatbuffers::WIPOffset<SimplePoint<'bldr>> {
+    let mut builder = SimplePointBuilder::new(_fbb);
+    builder.add_y(args.y);
+    builder.add_x(args.x);
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn x(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(SimplePoint::VT_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn y(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(SimplePoint::VT_Y, Some(0.0)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for SimplePoint<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<f64>("x", Self::VT_X, false)?
+     .visit_field::<f64>("y", Self::VT_Y, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct SimplePointArgs {
+    pub x: f64,
+    pub y: f64,
+}
+impl<'a> Default for SimplePointArgs {
+  #[inline]
+  fn default() -> Self {
+    SimplePointArgs {
+      x: 0.0,
+      y: 0.0,
+    }
+  }
+}
+
+pub struct SimplePointBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SimplePointBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_x(&mut self, x: f64) {
+    self.fbb_.push_slot::<f64>(SimplePoint::VT_X, x, 0.0);
+  }
+  #[inline]
+  pub fn add_y(&mut self, y: f64) {
+    self.fbb_.push_slot::<f64>(SimplePoint::VT_Y, y, 0.0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SimplePointBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    SimplePointBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<SimplePoint<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for SimplePoint<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("SimplePoint");
+      ds.field("x", &self.x());
+      ds.field("y", &self.y());
+      ds.finish()
+  }
+}
 pub enum DucElementOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -298,42 +531,32 @@ impl<'a> flatbuffers::Follow<'a> for DucElement<'a> {
 impl<'a> DucElement<'a> {
   pub const VT_ID: flatbuffers::VOffsetT = 4;
   pub const VT_TYPE_: flatbuffers::VOffsetT = 6;
-  pub const VT_X: flatbuffers::VOffsetT = 8;
-  pub const VT_Y: flatbuffers::VOffsetT = 10;
-  pub const VT_INDEX: flatbuffers::VOffsetT = 12;
+  pub const VT_X_V2: flatbuffers::VOffsetT = 8;
+  pub const VT_Y_V2: flatbuffers::VOffsetT = 10;
   pub const VT_SCOPE: flatbuffers::VOffsetT = 14;
-  pub const VT_WRITINGLAYER: flatbuffers::VOffsetT = 16;
   pub const VT_LABEL: flatbuffers::VOffsetT = 18;
   pub const VT_ISVISIBLE: flatbuffers::VOffsetT = 20;
-  pub const VT_ROUNDNESSTYPE: flatbuffers::VOffsetT = 22;
-  pub const VT_ROUNDNESSVALUE: flatbuffers::VOffsetT = 24;
   pub const VT_BACKGROUNDCOLOR: flatbuffers::VOffsetT = 26;
   pub const VT_STROKECOLOR: flatbuffers::VOffsetT = 28;
-  pub const VT_STROKEWIDTH: flatbuffers::VOffsetT = 30;
-  pub const VT_STROKESTYLE: flatbuffers::VOffsetT = 32;
-  pub const VT_FILLSTYLE: flatbuffers::VOffsetT = 34;
+  pub const VT_STROKEWIDTH_V2: flatbuffers::VOffsetT = 30;
   pub const VT_STROKEPLACEMENT: flatbuffers::VOffsetT = 36;
   pub const VT_OPACITY: flatbuffers::VOffsetT = 38;
-  pub const VT_WIDTH: flatbuffers::VOffsetT = 40;
-  pub const VT_HEIGHT: flatbuffers::VOffsetT = 42;
-  pub const VT_ANGLE: flatbuffers::VOffsetT = 44;
+  pub const VT_WIDTH_V2: flatbuffers::VOffsetT = 40;
+  pub const VT_HEIGHT_V2: flatbuffers::VOffsetT = 42;
+  pub const VT_ANGLE_V2: flatbuffers::VOffsetT = 44;
   pub const VT_ISDELETED: flatbuffers::VOffsetT = 46;
   pub const VT_GROUPIDS: flatbuffers::VOffsetT = 48;
   pub const VT_FRAMEID: flatbuffers::VOffsetT = 50;
   pub const VT_BOUNDELEMENTS: flatbuffers::VOffsetT = 52;
   pub const VT_LINK: flatbuffers::VOffsetT = 54;
   pub const VT_LOCKED: flatbuffers::VOffsetT = 56;
-  pub const VT_CUSTOMDATA: flatbuffers::VOffsetT = 58;
   pub const VT_ISSTROKEDISABLED: flatbuffers::VOffsetT = 60;
   pub const VT_ISBACKGROUNDDISABLED: flatbuffers::VOffsetT = 62;
-  pub const VT_FONTSIZE: flatbuffers::VOffsetT = 64;
+  pub const VT_FONTSIZE_V2: flatbuffers::VOffsetT = 64;
   pub const VT_FONTFAMILY: flatbuffers::VOffsetT = 66;
   pub const VT_TEXT: flatbuffers::VOffsetT = 68;
-  pub const VT_TEXTALIGN: flatbuffers::VOffsetT = 70;
-  pub const VT_VERTICALALIGN: flatbuffers::VOffsetT = 72;
   pub const VT_CONTAINERID: flatbuffers::VOffsetT = 74;
-  pub const VT_ORIGINALTEXT: flatbuffers::VOffsetT = 76;
-  pub const VT_LINEHEIGHT: flatbuffers::VOffsetT = 78;
+  pub const VT_LINEHEIGHT_V2: flatbuffers::VOffsetT = 78;
   pub const VT_AUTORESIZE: flatbuffers::VOffsetT = 80;
   pub const VT_POINTS: flatbuffers::VOffsetT = 82;
   pub const VT_LASTCOMMITTEDPOINT: flatbuffers::VOffsetT = 84;
@@ -342,14 +565,27 @@ impl<'a> DucElement<'a> {
   pub const VT_STARTARROWHEAD: flatbuffers::VOffsetT = 90;
   pub const VT_ENDARROWHEAD: flatbuffers::VOffsetT = 92;
   pub const VT_ELBOWED: flatbuffers::VOffsetT = 94;
-  pub const VT_PRESSURES: flatbuffers::VOffsetT = 96;
   pub const VT_SIMULATEPRESSURE: flatbuffers::VOffsetT = 98;
   pub const VT_FILEID: flatbuffers::VOffsetT = 100;
   pub const VT_STATUS: flatbuffers::VOffsetT = 102;
-  pub const VT_SCALE: flatbuffers::VOffsetT = 104;
   pub const VT_ISCOLLAPSED: flatbuffers::VOffsetT = 106;
   pub const VT_NAME: flatbuffers::VOffsetT = 108;
   pub const VT_GROUPIDREF: flatbuffers::VOffsetT = 110;
+  pub const VT_STROKESTYLE_V3: flatbuffers::VOffsetT = 112;
+  pub const VT_FILLSTYLE_V3: flatbuffers::VOffsetT = 114;
+  pub const VT_TEXTALIGN_V3: flatbuffers::VOffsetT = 116;
+  pub const VT_VERTICALALIGN_V3: flatbuffers::VOffsetT = 118;
+  pub const VT_X_V3: flatbuffers::VOffsetT = 120;
+  pub const VT_Y_V3: flatbuffers::VOffsetT = 122;
+  pub const VT_SCALE_V3: flatbuffers::VOffsetT = 124;
+  pub const VT_PRESSURES_V3: flatbuffers::VOffsetT = 126;
+  pub const VT_STROKEWIDTH_V3: flatbuffers::VOffsetT = 128;
+  pub const VT_ANGLE_V3: flatbuffers::VOffsetT = 130;
+  pub const VT_BORDERRADIUS: flatbuffers::VOffsetT = 132;
+  pub const VT_WIDTH_V3: flatbuffers::VOffsetT = 134;
+  pub const VT_HEIGHT_V3: flatbuffers::VOffsetT = 136;
+  pub const VT_FONTSIZE_V3: flatbuffers::VOffsetT = 138;
+  pub const VT_LINEHEIGHT_V3: flatbuffers::VOffsetT = 140;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -361,59 +597,62 @@ impl<'a> DucElement<'a> {
     args: &'args DucElementArgs<'args>
   ) -> flatbuffers::WIPOffset<DucElement<'bldr>> {
     let mut builder = DucElementBuilder::new(_fbb);
+    if let Some(x) = args.lineHeight_v3 { builder.add_lineHeight_v3(x); }
+    if let Some(x) = args.fontSize_v3 { builder.add_fontSize_v3(x); }
+    builder.add_height_v3(args.height_v3);
+    builder.add_width_v3(args.width_v3);
+    builder.add_borderRadius(args.borderRadius);
+    builder.add_angle_v3(args.angle_v3);
+    builder.add_strokeWidth_v3(args.strokeWidth_v3);
+    builder.add_y_v3(args.y_v3);
+    builder.add_x_v3(args.x_v3);
+    if let Some(x) = args.pressures_v3 { builder.add_pressures_v3(x); }
+    if let Some(x) = args.scale_v3 { builder.add_scale_v3(x); }
     if let Some(x) = args.groupIdRef { builder.add_groupIdRef(x); }
     if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.scale { builder.add_scale(x); }
     if let Some(x) = args.status { builder.add_status(x); }
     if let Some(x) = args.fileId { builder.add_fileId(x); }
-    if let Some(x) = args.pressures { builder.add_pressures(x); }
     if let Some(x) = args.endArrowhead { builder.add_endArrowhead(x); }
     if let Some(x) = args.startArrowhead { builder.add_startArrowhead(x); }
     if let Some(x) = args.endBinding { builder.add_endBinding(x); }
     if let Some(x) = args.startBinding { builder.add_startBinding(x); }
     if let Some(x) = args.lastCommittedPoint { builder.add_lastCommittedPoint(x); }
     if let Some(x) = args.points { builder.add_points(x); }
-    builder.add_lineHeight(args.lineHeight);
-    if let Some(x) = args.originalText { builder.add_originalText(x); }
+    if let Some(x) = args.lineHeight_v2 { builder.add_lineHeight_v2(x); }
     if let Some(x) = args.containerId { builder.add_containerId(x); }
-    if let Some(x) = args.verticalAlign { builder.add_verticalAlign(x); }
-    if let Some(x) = args.textAlign { builder.add_textAlign(x); }
     if let Some(x) = args.text { builder.add_text(x); }
     if let Some(x) = args.fontFamily { builder.add_fontFamily(x); }
-    builder.add_fontSize(args.fontSize);
-    if let Some(x) = args.customData { builder.add_customData(x); }
+    if let Some(x) = args.fontSize_v2 { builder.add_fontSize_v2(x); }
     if let Some(x) = args.link { builder.add_link(x); }
     if let Some(x) = args.boundElements { builder.add_boundElements(x); }
     if let Some(x) = args.frameId { builder.add_frameId(x); }
     if let Some(x) = args.groupIds { builder.add_groupIds(x); }
-    builder.add_angle(args.angle);
-    builder.add_height(args.height);
-    builder.add_width(args.width);
+    if let Some(x) = args.angle_v2 { builder.add_angle_v2(x); }
+    if let Some(x) = args.height_v2 { builder.add_height_v2(x); }
+    if let Some(x) = args.width_v2 { builder.add_width_v2(x); }
     builder.add_opacity(args.opacity);
-    builder.add_strokePlacement(args.strokePlacement);
-    if let Some(x) = args.fillStyle { builder.add_fillStyle(x); }
-    if let Some(x) = args.strokeStyle { builder.add_strokeStyle(x); }
-    builder.add_strokeWidth(args.strokeWidth);
+    if let Some(x) = args.strokeWidth_v2 { builder.add_strokeWidth_v2(x); }
     if let Some(x) = args.strokeColor { builder.add_strokeColor(x); }
     if let Some(x) = args.backgroundColor { builder.add_backgroundColor(x); }
-    builder.add_roundnessValue(args.roundnessValue);
-    if let Some(x) = args.roundnessType { builder.add_roundnessType(x); }
     if let Some(x) = args.label { builder.add_label(x); }
-    if let Some(x) = args.writingLayer { builder.add_writingLayer(x); }
     if let Some(x) = args.scope { builder.add_scope(x); }
-    if let Some(x) = args.index { builder.add_index(x); }
-    builder.add_y(args.y);
-    builder.add_x(args.x);
+    if let Some(x) = args.y_v2 { builder.add_y_v2(x); }
+    if let Some(x) = args.x_v2 { builder.add_x_v2(x); }
     if let Some(x) = args.type_ { builder.add_type_(x); }
     if let Some(x) = args.id { builder.add_id(x); }
-    builder.add_isCollapsed(args.isCollapsed);
-    builder.add_simulatePressure(args.simulatePressure);
-    builder.add_elbowed(args.elbowed);
-    builder.add_autoResize(args.autoResize);
+    builder.add_verticalAlign_v3(args.verticalAlign_v3);
+    if let Some(x) = args.textAlign_v3 { builder.add_textAlign_v3(x); }
+    builder.add_fillStyle_v3(args.fillStyle_v3);
+    builder.add_strokeStyle_v3(args.strokeStyle_v3);
+    if let Some(x) = args.isCollapsed { builder.add_isCollapsed(x); }
+    if let Some(x) = args.simulatePressure { builder.add_simulatePressure(x); }
+    if let Some(x) = args.elbowed { builder.add_elbowed(x); }
+    if let Some(x) = args.autoResize { builder.add_autoResize(x); }
     builder.add_isBackgroundDisabled(args.isBackgroundDisabled);
     builder.add_isStrokeDisabled(args.isStrokeDisabled);
     builder.add_locked(args.locked);
     builder.add_isDeleted(args.isDeleted);
+    builder.add_strokePlacement(args.strokePlacement);
     builder.add_isVisible(args.isVisible);
     builder.finish()
   }
@@ -434,25 +673,18 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_TYPE_, None)}
   }
   #[inline]
-  pub fn x(&self) -> f32 {
+  pub fn x_v2(&self) -> Option<f32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(DucElement::VT_X, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(DucElement::VT_X_V2, None)}
   }
   #[inline]
-  pub fn y(&self) -> f32 {
+  pub fn y_v2(&self) -> Option<f32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(DucElement::VT_Y, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn index(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_INDEX, None)}
+    unsafe { self._tab.get::<f32>(DucElement::VT_Y_V2, None)}
   }
   #[inline]
   pub fn scope(&self) -> Option<&'a str> {
@@ -460,13 +692,6 @@ impl<'a> DucElement<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_SCOPE, None)}
-  }
-  #[inline]
-  pub fn writingLayer(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_WRITINGLAYER, None)}
   }
   #[inline]
   pub fn label(&self) -> Option<&'a str> {
@@ -483,20 +708,6 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<bool>(DucElement::VT_ISVISIBLE, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn roundnessType(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_ROUNDNESSTYPE, None)}
-  }
-  #[inline]
-  pub fn roundnessValue(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(DucElement::VT_ROUNDNESSVALUE, Some(0)).unwrap()}
-  }
-  #[inline]
   pub fn backgroundColor(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
@@ -511,32 +722,18 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_STROKECOLOR, None)}
   }
   #[inline]
-  pub fn strokeWidth(&self) -> i32 {
+  pub fn strokeWidth_v2(&self) -> Option<i32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(DucElement::VT_STROKEWIDTH, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i32>(DucElement::VT_STROKEWIDTH_V2, None)}
   }
   #[inline]
-  pub fn strokeStyle(&self) -> Option<&'a str> {
+  pub fn strokePlacement(&self) -> i8 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_STROKESTYLE, None)}
-  }
-  #[inline]
-  pub fn fillStyle(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_FILLSTYLE, None)}
-  }
-  #[inline]
-  pub fn strokePlacement(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(DucElement::VT_STROKEPLACEMENT, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i8>(DucElement::VT_STROKEPLACEMENT, Some(0)).unwrap()}
   }
   #[inline]
   pub fn opacity(&self) -> f32 {
@@ -546,25 +743,25 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<f32>(DucElement::VT_OPACITY, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn width(&self) -> f32 {
+  pub fn width_v2(&self) -> Option<f32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(DucElement::VT_WIDTH, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(DucElement::VT_WIDTH_V2, None)}
   }
   #[inline]
-  pub fn height(&self) -> f32 {
+  pub fn height_v2(&self) -> Option<f32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(DucElement::VT_HEIGHT, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(DucElement::VT_HEIGHT_V2, None)}
   }
   #[inline]
-  pub fn angle(&self) -> f32 {
+  pub fn angle_v2(&self) -> Option<f32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(DucElement::VT_ANGLE, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(DucElement::VT_ANGLE_V2, None)}
   }
   #[inline]
   pub fn isDeleted(&self) -> bool {
@@ -609,13 +806,6 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<bool>(DucElement::VT_LOCKED, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn customData(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_CUSTOMDATA, None)}
-  }
-  #[inline]
   pub fn isStrokeDisabled(&self) -> bool {
     // Safety:
     // Created from valid Table for this object
@@ -630,11 +820,11 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<bool>(DucElement::VT_ISBACKGROUNDDISABLED, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn fontSize(&self) -> i32 {
+  pub fn fontSize_v2(&self) -> Option<i32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(DucElement::VT_FONTSIZE, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i32>(DucElement::VT_FONTSIZE_V2, None)}
   }
   #[inline]
   pub fn fontFamily(&self) -> Option<&'a str> {
@@ -651,20 +841,6 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_TEXT, None)}
   }
   #[inline]
-  pub fn textAlign(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_TEXTALIGN, None)}
-  }
-  #[inline]
-  pub fn verticalAlign(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_VERTICALALIGN, None)}
-  }
-  #[inline]
   pub fn containerId(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
@@ -672,25 +848,18 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_CONTAINERID, None)}
   }
   #[inline]
-  pub fn originalText(&self) -> Option<&'a str> {
+  pub fn lineHeight_v2(&self) -> Option<f32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_ORIGINALTEXT, None)}
+    unsafe { self._tab.get::<f32>(DucElement::VT_LINEHEIGHT_V2, None)}
   }
   #[inline]
-  pub fn lineHeight(&self) -> f32 {
+  pub fn autoResize(&self) -> Option<bool> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(DucElement::VT_LINEHEIGHT, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn autoResize(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(DucElement::VT_AUTORESIZE, Some(false)).unwrap()}
+    unsafe { self._tab.get::<bool>(DucElement::VT_AUTORESIZE, None)}
   }
   #[inline]
   pub fn points(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Point<'a>>>> {
@@ -735,25 +904,18 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_ENDARROWHEAD, None)}
   }
   #[inline]
-  pub fn elbowed(&self) -> bool {
+  pub fn elbowed(&self) -> Option<bool> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(DucElement::VT_ELBOWED, Some(false)).unwrap()}
+    unsafe { self._tab.get::<bool>(DucElement::VT_ELBOWED, None)}
   }
   #[inline]
-  pub fn pressures(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+  pub fn simulatePressure(&self) -> Option<bool> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(DucElement::VT_PRESSURES, None)}
-  }
-  #[inline]
-  pub fn simulatePressure(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(DucElement::VT_SIMULATEPRESSURE, Some(false)).unwrap()}
+    unsafe { self._tab.get::<bool>(DucElement::VT_SIMULATEPRESSURE, None)}
   }
   #[inline]
   pub fn fileId(&self) -> Option<&'a str> {
@@ -770,18 +932,11 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_STATUS, None)}
   }
   #[inline]
-  pub fn scale(&self) -> Option<Point<'a>> {
+  pub fn isCollapsed(&self) -> Option<bool> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Point>>(DucElement::VT_SCALE, None)}
-  }
-  #[inline]
-  pub fn isCollapsed(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(DucElement::VT_ISCOLLAPSED, Some(false)).unwrap()}
+    unsafe { self._tab.get::<bool>(DucElement::VT_ISCOLLAPSED, None)}
   }
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
@@ -797,6 +952,111 @@ impl<'a> DucElement<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_GROUPIDREF, None)}
   }
+  #[inline]
+  pub fn strokeStyle_v3(&self) -> i8 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i8>(DucElement::VT_STROKESTYLE_V3, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn fillStyle_v3(&self) -> i8 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i8>(DucElement::VT_FILLSTYLE_V3, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn textAlign_v3(&self) -> Option<i8> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i8>(DucElement::VT_TEXTALIGN_V3, None)}
+  }
+  #[inline]
+  pub fn verticalAlign_v3(&self) -> i8 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i8>(DucElement::VT_VERTICALALIGN_V3, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn x_v3(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_X_V3, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn y_v3(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_Y_V3, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn scale_v3(&self) -> Option<SimplePoint<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<SimplePoint>>(DucElement::VT_SCALE_V3, None)}
+  }
+  #[inline]
+  pub fn pressures_v3(&self) -> Option<flatbuffers::Vector<'a, f64>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(DucElement::VT_PRESSURES_V3, None)}
+  }
+  #[inline]
+  pub fn strokeWidth_v3(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_STROKEWIDTH_V3, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn angle_v3(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_ANGLE_V3, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn borderRadius(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_BORDERRADIUS, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn width_v3(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_WIDTH_V3, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn height_v3(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_HEIGHT_V3, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn fontSize_v3(&self) -> Option<f64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_FONTSIZE_V3, None)}
+  }
+  #[inline]
+  pub fn lineHeight_v3(&self) -> Option<f64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_LINEHEIGHT_V3, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for DucElement<'_> {
@@ -808,42 +1068,32 @@ impl flatbuffers::Verifiable for DucElement<'_> {
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("type_", Self::VT_TYPE_, false)?
-     .visit_field::<f32>("x", Self::VT_X, false)?
-     .visit_field::<f32>("y", Self::VT_Y, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("index", Self::VT_INDEX, false)?
+     .visit_field::<f32>("x_v2", Self::VT_X_V2, false)?
+     .visit_field::<f32>("y_v2", Self::VT_Y_V2, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("scope", Self::VT_SCOPE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("writingLayer", Self::VT_WRITINGLAYER, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("label", Self::VT_LABEL, false)?
      .visit_field::<bool>("isVisible", Self::VT_ISVISIBLE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("roundnessType", Self::VT_ROUNDNESSTYPE, false)?
-     .visit_field::<i32>("roundnessValue", Self::VT_ROUNDNESSVALUE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("backgroundColor", Self::VT_BACKGROUNDCOLOR, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("strokeColor", Self::VT_STROKECOLOR, false)?
-     .visit_field::<i32>("strokeWidth", Self::VT_STROKEWIDTH, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("strokeStyle", Self::VT_STROKESTYLE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("fillStyle", Self::VT_FILLSTYLE, false)?
-     .visit_field::<i32>("strokePlacement", Self::VT_STROKEPLACEMENT, false)?
+     .visit_field::<i32>("strokeWidth_v2", Self::VT_STROKEWIDTH_V2, false)?
+     .visit_field::<i8>("strokePlacement", Self::VT_STROKEPLACEMENT, false)?
      .visit_field::<f32>("opacity", Self::VT_OPACITY, false)?
-     .visit_field::<f32>("width", Self::VT_WIDTH, false)?
-     .visit_field::<f32>("height", Self::VT_HEIGHT, false)?
-     .visit_field::<f32>("angle", Self::VT_ANGLE, false)?
+     .visit_field::<f32>("width_v2", Self::VT_WIDTH_V2, false)?
+     .visit_field::<f32>("height_v2", Self::VT_HEIGHT_V2, false)?
+     .visit_field::<f32>("angle_v2", Self::VT_ANGLE_V2, false)?
      .visit_field::<bool>("isDeleted", Self::VT_ISDELETED, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("groupIds", Self::VT_GROUPIDS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("frameId", Self::VT_FRAMEID, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<BoundElement>>>>("boundElements", Self::VT_BOUNDELEMENTS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("link", Self::VT_LINK, false)?
      .visit_field::<bool>("locked", Self::VT_LOCKED, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("customData", Self::VT_CUSTOMDATA, false)?
      .visit_field::<bool>("isStrokeDisabled", Self::VT_ISSTROKEDISABLED, false)?
      .visit_field::<bool>("isBackgroundDisabled", Self::VT_ISBACKGROUNDDISABLED, false)?
-     .visit_field::<i32>("fontSize", Self::VT_FONTSIZE, false)?
+     .visit_field::<i32>("fontSize_v2", Self::VT_FONTSIZE_V2, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("fontFamily", Self::VT_FONTFAMILY, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text", Self::VT_TEXT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("textAlign", Self::VT_TEXTALIGN, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("verticalAlign", Self::VT_VERTICALALIGN, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("containerId", Self::VT_CONTAINERID, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("originalText", Self::VT_ORIGINALTEXT, false)?
-     .visit_field::<f32>("lineHeight", Self::VT_LINEHEIGHT, false)?
+     .visit_field::<f32>("lineHeight_v2", Self::VT_LINEHEIGHT_V2, false)?
      .visit_field::<bool>("autoResize", Self::VT_AUTORESIZE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Point>>>>("points", Self::VT_POINTS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<Point>>("lastCommittedPoint", Self::VT_LASTCOMMITTEDPOINT, false)?
@@ -852,14 +1102,27 @@ impl flatbuffers::Verifiable for DucElement<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("startArrowhead", Self::VT_STARTARROWHEAD, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("endArrowhead", Self::VT_ENDARROWHEAD, false)?
      .visit_field::<bool>("elbowed", Self::VT_ELBOWED, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("pressures", Self::VT_PRESSURES, false)?
      .visit_field::<bool>("simulatePressure", Self::VT_SIMULATEPRESSURE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("fileId", Self::VT_FILEID, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("status", Self::VT_STATUS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<Point>>("scale", Self::VT_SCALE, false)?
      .visit_field::<bool>("isCollapsed", Self::VT_ISCOLLAPSED, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("groupIdRef", Self::VT_GROUPIDREF, false)?
+     .visit_field::<i8>("strokeStyle_v3", Self::VT_STROKESTYLE_V3, false)?
+     .visit_field::<i8>("fillStyle_v3", Self::VT_FILLSTYLE_V3, false)?
+     .visit_field::<i8>("textAlign_v3", Self::VT_TEXTALIGN_V3, false)?
+     .visit_field::<i8>("verticalAlign_v3", Self::VT_VERTICALALIGN_V3, false)?
+     .visit_field::<f64>("x_v3", Self::VT_X_V3, false)?
+     .visit_field::<f64>("y_v3", Self::VT_Y_V3, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<SimplePoint>>("scale_v3", Self::VT_SCALE_V3, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("pressures_v3", Self::VT_PRESSURES_V3, false)?
+     .visit_field::<f64>("strokeWidth_v3", Self::VT_STROKEWIDTH_V3, false)?
+     .visit_field::<f64>("angle_v3", Self::VT_ANGLE_V3, false)?
+     .visit_field::<f64>("borderRadius", Self::VT_BORDERRADIUS, false)?
+     .visit_field::<f64>("width_v3", Self::VT_WIDTH_V3, false)?
+     .visit_field::<f64>("height_v3", Self::VT_HEIGHT_V3, false)?
+     .visit_field::<f64>("fontSize_v3", Self::VT_FONTSIZE_V3, false)?
+     .visit_field::<f64>("lineHeight_v3", Self::VT_LINEHEIGHT_V3, false)?
      .finish();
     Ok(())
   }
@@ -867,58 +1130,61 @@ impl flatbuffers::Verifiable for DucElement<'_> {
 pub struct DucElementArgs<'a> {
     pub id: Option<flatbuffers::WIPOffset<&'a str>>,
     pub type_: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub x: f32,
-    pub y: f32,
-    pub index: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub x_v2: Option<f32>,
+    pub y_v2: Option<f32>,
     pub scope: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub writingLayer: Option<flatbuffers::WIPOffset<&'a str>>,
     pub label: Option<flatbuffers::WIPOffset<&'a str>>,
     pub isVisible: bool,
-    pub roundnessType: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub roundnessValue: i32,
     pub backgroundColor: Option<flatbuffers::WIPOffset<&'a str>>,
     pub strokeColor: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub strokeWidth: i32,
-    pub strokeStyle: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub fillStyle: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub strokePlacement: i32,
+    pub strokeWidth_v2: Option<i32>,
+    pub strokePlacement: i8,
     pub opacity: f32,
-    pub width: f32,
-    pub height: f32,
-    pub angle: f32,
+    pub width_v2: Option<f32>,
+    pub height_v2: Option<f32>,
+    pub angle_v2: Option<f32>,
     pub isDeleted: bool,
     pub groupIds: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
     pub frameId: Option<flatbuffers::WIPOffset<&'a str>>,
     pub boundElements: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<BoundElement<'a>>>>>,
     pub link: Option<flatbuffers::WIPOffset<&'a str>>,
     pub locked: bool,
-    pub customData: Option<flatbuffers::WIPOffset<&'a str>>,
     pub isStrokeDisabled: bool,
     pub isBackgroundDisabled: bool,
-    pub fontSize: i32,
+    pub fontSize_v2: Option<i32>,
     pub fontFamily: Option<flatbuffers::WIPOffset<&'a str>>,
     pub text: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub textAlign: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub verticalAlign: Option<flatbuffers::WIPOffset<&'a str>>,
     pub containerId: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub originalText: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub lineHeight: f32,
-    pub autoResize: bool,
+    pub lineHeight_v2: Option<f32>,
+    pub autoResize: Option<bool>,
     pub points: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Point<'a>>>>>,
     pub lastCommittedPoint: Option<flatbuffers::WIPOffset<Point<'a>>>,
     pub startBinding: Option<flatbuffers::WIPOffset<PointBinding<'a>>>,
     pub endBinding: Option<flatbuffers::WIPOffset<PointBinding<'a>>>,
     pub startArrowhead: Option<flatbuffers::WIPOffset<&'a str>>,
     pub endArrowhead: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub elbowed: bool,
-    pub pressures: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
-    pub simulatePressure: bool,
+    pub elbowed: Option<bool>,
+    pub simulatePressure: Option<bool>,
     pub fileId: Option<flatbuffers::WIPOffset<&'a str>>,
     pub status: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub scale: Option<flatbuffers::WIPOffset<Point<'a>>>,
-    pub isCollapsed: bool,
+    pub isCollapsed: Option<bool>,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub groupIdRef: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub strokeStyle_v3: i8,
+    pub fillStyle_v3: i8,
+    pub textAlign_v3: Option<i8>,
+    pub verticalAlign_v3: i8,
+    pub x_v3: f64,
+    pub y_v3: f64,
+    pub scale_v3: Option<flatbuffers::WIPOffset<SimplePoint<'a>>>,
+    pub pressures_v3: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
+    pub strokeWidth_v3: f64,
+    pub angle_v3: f64,
+    pub borderRadius: f64,
+    pub width_v3: f64,
+    pub height_v3: f64,
+    pub fontSize_v3: Option<f64>,
+    pub lineHeight_v3: Option<f64>,
 }
 impl<'a> Default for DucElementArgs<'a> {
   #[inline]
@@ -926,58 +1192,61 @@ impl<'a> Default for DucElementArgs<'a> {
     DucElementArgs {
       id: None,
       type_: None,
-      x: 0.0,
-      y: 0.0,
-      index: None,
+      x_v2: None,
+      y_v2: None,
       scope: None,
-      writingLayer: None,
       label: None,
       isVisible: false,
-      roundnessType: None,
-      roundnessValue: 0,
       backgroundColor: None,
       strokeColor: None,
-      strokeWidth: 0,
-      strokeStyle: None,
-      fillStyle: None,
+      strokeWidth_v2: None,
       strokePlacement: 0,
       opacity: 0.0,
-      width: 0.0,
-      height: 0.0,
-      angle: 0.0,
+      width_v2: None,
+      height_v2: None,
+      angle_v2: None,
       isDeleted: false,
       groupIds: None,
       frameId: None,
       boundElements: None,
       link: None,
       locked: false,
-      customData: None,
       isStrokeDisabled: false,
       isBackgroundDisabled: false,
-      fontSize: 0,
+      fontSize_v2: None,
       fontFamily: None,
       text: None,
-      textAlign: None,
-      verticalAlign: None,
       containerId: None,
-      originalText: None,
-      lineHeight: 0.0,
-      autoResize: false,
+      lineHeight_v2: None,
+      autoResize: None,
       points: None,
       lastCommittedPoint: None,
       startBinding: None,
       endBinding: None,
       startArrowhead: None,
       endArrowhead: None,
-      elbowed: false,
-      pressures: None,
-      simulatePressure: false,
+      elbowed: None,
+      simulatePressure: None,
       fileId: None,
       status: None,
-      scale: None,
-      isCollapsed: false,
+      isCollapsed: None,
       name: None,
       groupIdRef: None,
+      strokeStyle_v3: 0,
+      fillStyle_v3: 0,
+      textAlign_v3: None,
+      verticalAlign_v3: 0,
+      x_v3: 0.0,
+      y_v3: 0.0,
+      scale_v3: None,
+      pressures_v3: None,
+      strokeWidth_v3: 0.0,
+      angle_v3: 0.0,
+      borderRadius: 0.0,
+      width_v3: 0.0,
+      height_v3: 0.0,
+      fontSize_v3: None,
+      lineHeight_v3: None,
     }
   }
 }
@@ -996,24 +1265,16 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_TYPE_, type_);
   }
   #[inline]
-  pub fn add_x(&mut self, x: f32) {
-    self.fbb_.push_slot::<f32>(DucElement::VT_X, x, 0.0);
+  pub fn add_x_v2(&mut self, x_v2: f32) {
+    self.fbb_.push_slot_always::<f32>(DucElement::VT_X_V2, x_v2);
   }
   #[inline]
-  pub fn add_y(&mut self, y: f32) {
-    self.fbb_.push_slot::<f32>(DucElement::VT_Y, y, 0.0);
-  }
-  #[inline]
-  pub fn add_index(&mut self, index: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_INDEX, index);
+  pub fn add_y_v2(&mut self, y_v2: f32) {
+    self.fbb_.push_slot_always::<f32>(DucElement::VT_Y_V2, y_v2);
   }
   #[inline]
   pub fn add_scope(&mut self, scope: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_SCOPE, scope);
-  }
-  #[inline]
-  pub fn add_writingLayer(&mut self, writingLayer: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_WRITINGLAYER, writingLayer);
   }
   #[inline]
   pub fn add_label(&mut self, label: flatbuffers::WIPOffset<&'b  str>) {
@@ -1024,14 +1285,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<bool>(DucElement::VT_ISVISIBLE, isVisible, false);
   }
   #[inline]
-  pub fn add_roundnessType(&mut self, roundnessType: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_ROUNDNESSTYPE, roundnessType);
-  }
-  #[inline]
-  pub fn add_roundnessValue(&mut self, roundnessValue: i32) {
-    self.fbb_.push_slot::<i32>(DucElement::VT_ROUNDNESSVALUE, roundnessValue, 0);
-  }
-  #[inline]
   pub fn add_backgroundColor(&mut self, backgroundColor: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_BACKGROUNDCOLOR, backgroundColor);
   }
@@ -1040,36 +1293,28 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_STROKECOLOR, strokeColor);
   }
   #[inline]
-  pub fn add_strokeWidth(&mut self, strokeWidth: i32) {
-    self.fbb_.push_slot::<i32>(DucElement::VT_STROKEWIDTH, strokeWidth, 0);
+  pub fn add_strokeWidth_v2(&mut self, strokeWidth_v2: i32) {
+    self.fbb_.push_slot_always::<i32>(DucElement::VT_STROKEWIDTH_V2, strokeWidth_v2);
   }
   #[inline]
-  pub fn add_strokeStyle(&mut self, strokeStyle: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_STROKESTYLE, strokeStyle);
-  }
-  #[inline]
-  pub fn add_fillStyle(&mut self, fillStyle: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_FILLSTYLE, fillStyle);
-  }
-  #[inline]
-  pub fn add_strokePlacement(&mut self, strokePlacement: i32) {
-    self.fbb_.push_slot::<i32>(DucElement::VT_STROKEPLACEMENT, strokePlacement, 0);
+  pub fn add_strokePlacement(&mut self, strokePlacement: i8) {
+    self.fbb_.push_slot::<i8>(DucElement::VT_STROKEPLACEMENT, strokePlacement, 0);
   }
   #[inline]
   pub fn add_opacity(&mut self, opacity: f32) {
     self.fbb_.push_slot::<f32>(DucElement::VT_OPACITY, opacity, 0.0);
   }
   #[inline]
-  pub fn add_width(&mut self, width: f32) {
-    self.fbb_.push_slot::<f32>(DucElement::VT_WIDTH, width, 0.0);
+  pub fn add_width_v2(&mut self, width_v2: f32) {
+    self.fbb_.push_slot_always::<f32>(DucElement::VT_WIDTH_V2, width_v2);
   }
   #[inline]
-  pub fn add_height(&mut self, height: f32) {
-    self.fbb_.push_slot::<f32>(DucElement::VT_HEIGHT, height, 0.0);
+  pub fn add_height_v2(&mut self, height_v2: f32) {
+    self.fbb_.push_slot_always::<f32>(DucElement::VT_HEIGHT_V2, height_v2);
   }
   #[inline]
-  pub fn add_angle(&mut self, angle: f32) {
-    self.fbb_.push_slot::<f32>(DucElement::VT_ANGLE, angle, 0.0);
+  pub fn add_angle_v2(&mut self, angle_v2: f32) {
+    self.fbb_.push_slot_always::<f32>(DucElement::VT_ANGLE_V2, angle_v2);
   }
   #[inline]
   pub fn add_isDeleted(&mut self, isDeleted: bool) {
@@ -1096,10 +1341,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<bool>(DucElement::VT_LOCKED, locked, false);
   }
   #[inline]
-  pub fn add_customData(&mut self, customData: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_CUSTOMDATA, customData);
-  }
-  #[inline]
   pub fn add_isStrokeDisabled(&mut self, isStrokeDisabled: bool) {
     self.fbb_.push_slot::<bool>(DucElement::VT_ISSTROKEDISABLED, isStrokeDisabled, false);
   }
@@ -1108,8 +1349,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<bool>(DucElement::VT_ISBACKGROUNDDISABLED, isBackgroundDisabled, false);
   }
   #[inline]
-  pub fn add_fontSize(&mut self, fontSize: i32) {
-    self.fbb_.push_slot::<i32>(DucElement::VT_FONTSIZE, fontSize, 0);
+  pub fn add_fontSize_v2(&mut self, fontSize_v2: i32) {
+    self.fbb_.push_slot_always::<i32>(DucElement::VT_FONTSIZE_V2, fontSize_v2);
   }
   #[inline]
   pub fn add_fontFamily(&mut self, fontFamily: flatbuffers::WIPOffset<&'b  str>) {
@@ -1120,28 +1361,16 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_TEXT, text);
   }
   #[inline]
-  pub fn add_textAlign(&mut self, textAlign: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_TEXTALIGN, textAlign);
-  }
-  #[inline]
-  pub fn add_verticalAlign(&mut self, verticalAlign: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_VERTICALALIGN, verticalAlign);
-  }
-  #[inline]
   pub fn add_containerId(&mut self, containerId: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_CONTAINERID, containerId);
   }
   #[inline]
-  pub fn add_originalText(&mut self, originalText: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_ORIGINALTEXT, originalText);
-  }
-  #[inline]
-  pub fn add_lineHeight(&mut self, lineHeight: f32) {
-    self.fbb_.push_slot::<f32>(DucElement::VT_LINEHEIGHT, lineHeight, 0.0);
+  pub fn add_lineHeight_v2(&mut self, lineHeight_v2: f32) {
+    self.fbb_.push_slot_always::<f32>(DucElement::VT_LINEHEIGHT_V2, lineHeight_v2);
   }
   #[inline]
   pub fn add_autoResize(&mut self, autoResize: bool) {
-    self.fbb_.push_slot::<bool>(DucElement::VT_AUTORESIZE, autoResize, false);
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_AUTORESIZE, autoResize);
   }
   #[inline]
   pub fn add_points(&mut self, points: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Point<'b >>>>) {
@@ -1169,15 +1398,11 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
   }
   #[inline]
   pub fn add_elbowed(&mut self, elbowed: bool) {
-    self.fbb_.push_slot::<bool>(DucElement::VT_ELBOWED, elbowed, false);
-  }
-  #[inline]
-  pub fn add_pressures(&mut self, pressures: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_PRESSURES, pressures);
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_ELBOWED, elbowed);
   }
   #[inline]
   pub fn add_simulatePressure(&mut self, simulatePressure: bool) {
-    self.fbb_.push_slot::<bool>(DucElement::VT_SIMULATEPRESSURE, simulatePressure, false);
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_SIMULATEPRESSURE, simulatePressure);
   }
   #[inline]
   pub fn add_fileId(&mut self, fileId: flatbuffers::WIPOffset<&'b  str>) {
@@ -1188,12 +1413,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_STATUS, status);
   }
   #[inline]
-  pub fn add_scale(&mut self, scale: flatbuffers::WIPOffset<Point<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Point>>(DucElement::VT_SCALE, scale);
-  }
-  #[inline]
   pub fn add_isCollapsed(&mut self, isCollapsed: bool) {
-    self.fbb_.push_slot::<bool>(DucElement::VT_ISCOLLAPSED, isCollapsed, false);
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_ISCOLLAPSED, isCollapsed);
   }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
@@ -1202,6 +1423,66 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_groupIdRef(&mut self, groupIdRef: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_GROUPIDREF, groupIdRef);
+  }
+  #[inline]
+  pub fn add_strokeStyle_v3(&mut self, strokeStyle_v3: i8) {
+    self.fbb_.push_slot::<i8>(DucElement::VT_STROKESTYLE_V3, strokeStyle_v3, 0);
+  }
+  #[inline]
+  pub fn add_fillStyle_v3(&mut self, fillStyle_v3: i8) {
+    self.fbb_.push_slot::<i8>(DucElement::VT_FILLSTYLE_V3, fillStyle_v3, 0);
+  }
+  #[inline]
+  pub fn add_textAlign_v3(&mut self, textAlign_v3: i8) {
+    self.fbb_.push_slot_always::<i8>(DucElement::VT_TEXTALIGN_V3, textAlign_v3);
+  }
+  #[inline]
+  pub fn add_verticalAlign_v3(&mut self, verticalAlign_v3: i8) {
+    self.fbb_.push_slot::<i8>(DucElement::VT_VERTICALALIGN_V3, verticalAlign_v3, 0);
+  }
+  #[inline]
+  pub fn add_x_v3(&mut self, x_v3: f64) {
+    self.fbb_.push_slot::<f64>(DucElement::VT_X_V3, x_v3, 0.0);
+  }
+  #[inline]
+  pub fn add_y_v3(&mut self, y_v3: f64) {
+    self.fbb_.push_slot::<f64>(DucElement::VT_Y_V3, y_v3, 0.0);
+  }
+  #[inline]
+  pub fn add_scale_v3(&mut self, scale_v3: flatbuffers::WIPOffset<SimplePoint<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<SimplePoint>>(DucElement::VT_SCALE_V3, scale_v3);
+  }
+  #[inline]
+  pub fn add_pressures_v3(&mut self, pressures_v3: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f64>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_PRESSURES_V3, pressures_v3);
+  }
+  #[inline]
+  pub fn add_strokeWidth_v3(&mut self, strokeWidth_v3: f64) {
+    self.fbb_.push_slot::<f64>(DucElement::VT_STROKEWIDTH_V3, strokeWidth_v3, 0.0);
+  }
+  #[inline]
+  pub fn add_angle_v3(&mut self, angle_v3: f64) {
+    self.fbb_.push_slot::<f64>(DucElement::VT_ANGLE_V3, angle_v3, 0.0);
+  }
+  #[inline]
+  pub fn add_borderRadius(&mut self, borderRadius: f64) {
+    self.fbb_.push_slot::<f64>(DucElement::VT_BORDERRADIUS, borderRadius, 0.0);
+  }
+  #[inline]
+  pub fn add_width_v3(&mut self, width_v3: f64) {
+    self.fbb_.push_slot::<f64>(DucElement::VT_WIDTH_V3, width_v3, 0.0);
+  }
+  #[inline]
+  pub fn add_height_v3(&mut self, height_v3: f64) {
+    self.fbb_.push_slot::<f64>(DucElement::VT_HEIGHT_V3, height_v3, 0.0);
+  }
+  #[inline]
+  pub fn add_fontSize_v3(&mut self, fontSize_v3: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_FONTSIZE_V3, fontSize_v3);
+  }
+  #[inline]
+  pub fn add_lineHeight_v3(&mut self, lineHeight_v3: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_LINEHEIGHT_V3, lineHeight_v3);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucElementBuilder<'a, 'b, A> {
@@ -1223,42 +1504,32 @@ impl core::fmt::Debug for DucElement<'_> {
     let mut ds = f.debug_struct("DucElement");
       ds.field("id", &self.id());
       ds.field("type_", &self.type_());
-      ds.field("x", &self.x());
-      ds.field("y", &self.y());
-      ds.field("index", &self.index());
+      ds.field("x_v2", &self.x_v2());
+      ds.field("y_v2", &self.y_v2());
       ds.field("scope", &self.scope());
-      ds.field("writingLayer", &self.writingLayer());
       ds.field("label", &self.label());
       ds.field("isVisible", &self.isVisible());
-      ds.field("roundnessType", &self.roundnessType());
-      ds.field("roundnessValue", &self.roundnessValue());
       ds.field("backgroundColor", &self.backgroundColor());
       ds.field("strokeColor", &self.strokeColor());
-      ds.field("strokeWidth", &self.strokeWidth());
-      ds.field("strokeStyle", &self.strokeStyle());
-      ds.field("fillStyle", &self.fillStyle());
+      ds.field("strokeWidth_v2", &self.strokeWidth_v2());
       ds.field("strokePlacement", &self.strokePlacement());
       ds.field("opacity", &self.opacity());
-      ds.field("width", &self.width());
-      ds.field("height", &self.height());
-      ds.field("angle", &self.angle());
+      ds.field("width_v2", &self.width_v2());
+      ds.field("height_v2", &self.height_v2());
+      ds.field("angle_v2", &self.angle_v2());
       ds.field("isDeleted", &self.isDeleted());
       ds.field("groupIds", &self.groupIds());
       ds.field("frameId", &self.frameId());
       ds.field("boundElements", &self.boundElements());
       ds.field("link", &self.link());
       ds.field("locked", &self.locked());
-      ds.field("customData", &self.customData());
       ds.field("isStrokeDisabled", &self.isStrokeDisabled());
       ds.field("isBackgroundDisabled", &self.isBackgroundDisabled());
-      ds.field("fontSize", &self.fontSize());
+      ds.field("fontSize_v2", &self.fontSize_v2());
       ds.field("fontFamily", &self.fontFamily());
       ds.field("text", &self.text());
-      ds.field("textAlign", &self.textAlign());
-      ds.field("verticalAlign", &self.verticalAlign());
       ds.field("containerId", &self.containerId());
-      ds.field("originalText", &self.originalText());
-      ds.field("lineHeight", &self.lineHeight());
+      ds.field("lineHeight_v2", &self.lineHeight_v2());
       ds.field("autoResize", &self.autoResize());
       ds.field("points", &self.points());
       ds.field("lastCommittedPoint", &self.lastCommittedPoint());
@@ -1267,14 +1538,27 @@ impl core::fmt::Debug for DucElement<'_> {
       ds.field("startArrowhead", &self.startArrowhead());
       ds.field("endArrowhead", &self.endArrowhead());
       ds.field("elbowed", &self.elbowed());
-      ds.field("pressures", &self.pressures());
       ds.field("simulatePressure", &self.simulatePressure());
       ds.field("fileId", &self.fileId());
       ds.field("status", &self.status());
-      ds.field("scale", &self.scale());
       ds.field("isCollapsed", &self.isCollapsed());
       ds.field("name", &self.name());
       ds.field("groupIdRef", &self.groupIdRef());
+      ds.field("strokeStyle_v3", &self.strokeStyle_v3());
+      ds.field("fillStyle_v3", &self.fillStyle_v3());
+      ds.field("textAlign_v3", &self.textAlign_v3());
+      ds.field("verticalAlign_v3", &self.verticalAlign_v3());
+      ds.field("x_v3", &self.x_v3());
+      ds.field("y_v3", &self.y_v3());
+      ds.field("scale_v3", &self.scale_v3());
+      ds.field("pressures_v3", &self.pressures_v3());
+      ds.field("strokeWidth_v3", &self.strokeWidth_v3());
+      ds.field("angle_v3", &self.angle_v3());
+      ds.field("borderRadius", &self.borderRadius());
+      ds.field("width_v3", &self.width_v3());
+      ds.field("height_v3", &self.height_v3());
+      ds.field("fontSize_v3", &self.fontSize_v3());
+      ds.field("lineHeight_v3", &self.lineHeight_v3());
       ds.finish()
   }
 }
@@ -1413,7 +1697,6 @@ impl<'a> DucGroup<'a> {
   pub const VT_ISCOLLAPSED: flatbuffers::VOffsetT = 8;
   pub const VT_LABEL: flatbuffers::VOffsetT = 10;
   pub const VT_SCOPE: flatbuffers::VOffsetT = 12;
-  pub const VT_WRITINGLAYER: flatbuffers::VOffsetT = 14;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -1425,7 +1708,6 @@ impl<'a> DucGroup<'a> {
     args: &'args DucGroupArgs<'args>
   ) -> flatbuffers::WIPOffset<DucGroup<'bldr>> {
     let mut builder = DucGroupBuilder::new(_fbb);
-    if let Some(x) = args.writingLayer { builder.add_writingLayer(x); }
     if let Some(x) = args.scope { builder.add_scope(x); }
     if let Some(x) = args.label { builder.add_label(x); }
     if let Some(x) = args.type_ { builder.add_type_(x); }
@@ -1470,13 +1752,6 @@ impl<'a> DucGroup<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucGroup::VT_SCOPE, None)}
   }
-  #[inline]
-  pub fn writingLayer(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucGroup::VT_WRITINGLAYER, None)}
-  }
 }
 
 impl flatbuffers::Verifiable for DucGroup<'_> {
@@ -1491,7 +1766,6 @@ impl flatbuffers::Verifiable for DucGroup<'_> {
      .visit_field::<bool>("isCollapsed", Self::VT_ISCOLLAPSED, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("label", Self::VT_LABEL, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("scope", Self::VT_SCOPE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("writingLayer", Self::VT_WRITINGLAYER, false)?
      .finish();
     Ok(())
   }
@@ -1502,7 +1776,6 @@ pub struct DucGroupArgs<'a> {
     pub isCollapsed: bool,
     pub label: Option<flatbuffers::WIPOffset<&'a str>>,
     pub scope: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub writingLayer: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for DucGroupArgs<'a> {
   #[inline]
@@ -1513,7 +1786,6 @@ impl<'a> Default for DucGroupArgs<'a> {
       isCollapsed: false,
       label: None,
       scope: None,
-      writingLayer: None,
     }
   }
 }
@@ -1544,10 +1816,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucGroupBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucGroup::VT_SCOPE, scope);
   }
   #[inline]
-  pub fn add_writingLayer(&mut self, writingLayer: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucGroup::VT_WRITINGLAYER, writingLayer);
-  }
-  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucGroupBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     DucGroupBuilder {
@@ -1570,7 +1838,6 @@ impl core::fmt::Debug for DucGroup<'_> {
       ds.field("isCollapsed", &self.isCollapsed());
       ds.field("label", &self.label());
       ds.field("scope", &self.scope());
-      ds.field("writingLayer", &self.writingLayer());
       ds.finish()
   }
 }
@@ -1590,37 +1857,18 @@ impl<'a> flatbuffers::Follow<'a> for AppState<'a> {
 }
 
 impl<'a> AppState<'a> {
-  pub const VT_ACTIVEEMBEDDABLEELEMENT: flatbuffers::VOffsetT = 4;
-  pub const VT_ACTIVEEMBEDDABLESTATE: flatbuffers::VOffsetT = 6;
-  pub const VT_DRAGGINGELEMENT: flatbuffers::VOffsetT = 8;
-  pub const VT_RESIZINGELEMENT: flatbuffers::VOffsetT = 10;
-  pub const VT_MULTIELEMENT: flatbuffers::VOffsetT = 12;
-  pub const VT_SELECTIONELEMENT: flatbuffers::VOffsetT = 14;
-  pub const VT_FRAMETOHIGHLIGHT: flatbuffers::VOffsetT = 16;
   pub const VT_FRAMERENDERINGENABLED: flatbuffers::VOffsetT = 18;
   pub const VT_FRAMERENDERINGNAME: flatbuffers::VOffsetT = 20;
   pub const VT_FRAMERENDERINGOUTLINE: flatbuffers::VOffsetT = 22;
   pub const VT_FRAMERENDERINGCLIP: flatbuffers::VOffsetT = 24;
-  pub const VT_EDITINGFRAME: flatbuffers::VOffsetT = 26;
-  pub const VT_ELEMENTSTOHIGHLIGHT: flatbuffers::VOffsetT = 28;
-  pub const VT_EDITINGELEMENT: flatbuffers::VOffsetT = 30;
   pub const VT_CURRENTITEMSTROKECOLOR: flatbuffers::VOffsetT = 32;
-  pub const VT_CURRENTITEMSTROKEPLACEMENT: flatbuffers::VOffsetT = 34;
   pub const VT_CURRENTITEMBACKGROUNDCOLOR: flatbuffers::VOffsetT = 36;
-  pub const VT_CURRENTITEMFILLSTYLE: flatbuffers::VOffsetT = 38;
-  pub const VT_CURRENTITEMSTROKEWIDTH: flatbuffers::VOffsetT = 40;
-  pub const VT_CURRENTITEMSTROKESTYLE: flatbuffers::VOffsetT = 42;
-  pub const VT_CURRENTITEMROUGHNESS: flatbuffers::VOffsetT = 44;
   pub const VT_CURRENTITEMOPACITY: flatbuffers::VOffsetT = 46;
   pub const VT_CURRENTITEMFONTFAMILY: flatbuffers::VOffsetT = 48;
-  pub const VT_CURRENTITEMFONTSIZE: flatbuffers::VOffsetT = 50;
-  pub const VT_CURRENTITEMTEXTALIGN: flatbuffers::VOffsetT = 52;
   pub const VT_CURRENTITEMSTARTARROWHEAD: flatbuffers::VOffsetT = 54;
   pub const VT_CURRENTITEMENDARROWHEAD: flatbuffers::VOffsetT = 56;
-  pub const VT_CURRENTITEMROUNDNESS: flatbuffers::VOffsetT = 58;
   pub const VT_VIEWBACKGROUNDCOLOR: flatbuffers::VOffsetT = 60;
   pub const VT_SCOPE: flatbuffers::VOffsetT = 62;
-  pub const VT_WRITINGLAYER: flatbuffers::VOffsetT = 64;
   pub const VT_GROUPS: flatbuffers::VOffsetT = 66;
   pub const VT_SCROLLX: flatbuffers::VOffsetT = 68;
   pub const VT_SCROLLY: flatbuffers::VOffsetT = 70;
@@ -1630,23 +1878,22 @@ impl<'a> AppState<'a> {
   pub const VT_ZOOM: flatbuffers::VOffsetT = 78;
   pub const VT_LASTPOINTERDOWNWITH: flatbuffers::VOffsetT = 80;
   pub const VT_SELECTEDELEMENTIDS: flatbuffers::VOffsetT = 82;
-  pub const VT_PREVIOUSSELECTEDELEMENTIDS: flatbuffers::VOffsetT = 84;
-  pub const VT_SELECTEDELEMENTSAREBEINGDRAGGED: flatbuffers::VOffsetT = 86;
   pub const VT_SHOULDCACHEIGNOREZOOM: flatbuffers::VOffsetT = 88;
   pub const VT_GRIDSIZE: flatbuffers::VOffsetT = 90;
-  pub const VT_SELECTEDGROUPIDS: flatbuffers::VOffsetT = 92;
-  pub const VT_EDITINGGROUPID: flatbuffers::VOffsetT = 94;
-  pub const VT_PASTEDIALOGSHOWN: flatbuffers::VOffsetT = 96;
-  pub const VT_PASTEDIALOGDATA: flatbuffers::VOffsetT = 98;
   pub const VT_SCALERATIOLOCKED: flatbuffers::VOffsetT = 100;
   pub const VT_DISPLAYALLPOINTDISTANCES: flatbuffers::VOffsetT = 102;
   pub const VT_DISPLAYDISTANCEONDRAWING: flatbuffers::VOffsetT = 104;
   pub const VT_DISPLAYALLPOINTCOORDINATES: flatbuffers::VOffsetT = 106;
   pub const VT_DISPLAYALLPOINTINFOSELECTED: flatbuffers::VOffsetT = 108;
   pub const VT_DISPLAYROOTAXIS: flatbuffers::VOffsetT = 110;
-  pub const VT_ENABLELINEBENDINGONEDIT: flatbuffers::VOffsetT = 112;
-  pub const VT_ALLOWINDEPENDENTCURVEHANDLES: flatbuffers::VOffsetT = 114;
-  pub const VT_COORDDECIMALPLACES: flatbuffers::VOffsetT = 116;
+  pub const VT_CURRENTITEMFILLSTYLE_V3: flatbuffers::VOffsetT = 118;
+  pub const VT_CURRENTITEMSTROKESTYLE_V3: flatbuffers::VOffsetT = 120;
+  pub const VT_CURRENTITEMTEXTALIGN_V3: flatbuffers::VOffsetT = 122;
+  pub const VT_LINEBENDINGMODE: flatbuffers::VOffsetT = 124;
+  pub const VT_CURRENTITEMSTROKEWIDTH_V3: flatbuffers::VOffsetT = 126;
+  pub const VT_CURRENTITEMSTROKEPLACEMENT_V3: flatbuffers::VOffsetT = 128;
+  pub const VT_CURRENTITEMFONTSIZE_V3: flatbuffers::VOffsetT = 130;
+  pub const VT_COORDDECIMALPLACES_V3: flatbuffers::VOffsetT = 132;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -1658,12 +1905,9 @@ impl<'a> AppState<'a> {
     args: &'args AppStateArgs<'args>
   ) -> flatbuffers::WIPOffset<AppState<'bldr>> {
     let mut builder = AppStateBuilder::new(_fbb);
-    builder.add_coordDecimalPlaces(args.coordDecimalPlaces);
-    if let Some(x) = args.pasteDialogData { builder.add_pasteDialogData(x); }
-    if let Some(x) = args.editingGroupId { builder.add_editingGroupId(x); }
-    if let Some(x) = args.selectedGroupIds { builder.add_selectedGroupIds(x); }
+    builder.add_currentItemFontSize_v3(args.currentItemFontSize_v3);
+    builder.add_currentItemStrokeWidth_v3(args.currentItemStrokeWidth_v3);
     builder.add_gridSize(args.gridSize);
-    if let Some(x) = args.previousSelectedElementIds { builder.add_previousSelectedElementIds(x); }
     if let Some(x) = args.selectedElementIds { builder.add_selectedElementIds(x); }
     if let Some(x) = args.lastPointerDownWith { builder.add_lastPointerDownWith(x); }
     builder.add_zoom(args.zoom);
@@ -1672,44 +1916,27 @@ impl<'a> AppState<'a> {
     builder.add_scrollY(args.scrollY);
     builder.add_scrollX(args.scrollX);
     if let Some(x) = args.groups { builder.add_groups(x); }
-    if let Some(x) = args.writingLayer { builder.add_writingLayer(x); }
     if let Some(x) = args.scope { builder.add_scope(x); }
     if let Some(x) = args.viewBackgroundColor { builder.add_viewBackgroundColor(x); }
-    if let Some(x) = args.currentItemRoundness { builder.add_currentItemRoundness(x); }
     if let Some(x) = args.currentItemEndArrowhead { builder.add_currentItemEndArrowhead(x); }
     if let Some(x) = args.currentItemStartArrowhead { builder.add_currentItemStartArrowhead(x); }
-    if let Some(x) = args.currentItemTextAlign { builder.add_currentItemTextAlign(x); }
-    builder.add_currentItemFontSize(args.currentItemFontSize);
     builder.add_currentItemFontFamily(args.currentItemFontFamily);
     builder.add_currentItemOpacity(args.currentItemOpacity);
-    builder.add_currentItemRoughness(args.currentItemRoughness);
-    if let Some(x) = args.currentItemStrokeStyle { builder.add_currentItemStrokeStyle(x); }
-    builder.add_currentItemStrokeWidth(args.currentItemStrokeWidth);
-    if let Some(x) = args.currentItemFillStyle { builder.add_currentItemFillStyle(x); }
     if let Some(x) = args.currentItemBackgroundColor { builder.add_currentItemBackgroundColor(x); }
-    builder.add_currentItemStrokePlacement(args.currentItemStrokePlacement);
     if let Some(x) = args.currentItemStrokeColor { builder.add_currentItemStrokeColor(x); }
-    if let Some(x) = args.editingElement { builder.add_editingElement(x); }
-    if let Some(x) = args.elementsToHighlight { builder.add_elementsToHighlight(x); }
-    if let Some(x) = args.editingFrame { builder.add_editingFrame(x); }
-    if let Some(x) = args.frameToHighlight { builder.add_frameToHighlight(x); }
-    if let Some(x) = args.selectionElement { builder.add_selectionElement(x); }
-    if let Some(x) = args.multiElement { builder.add_multiElement(x); }
-    if let Some(x) = args.resizingElement { builder.add_resizingElement(x); }
-    if let Some(x) = args.draggingElement { builder.add_draggingElement(x); }
-    if let Some(x) = args.activeEmbeddableState { builder.add_activeEmbeddableState(x); }
-    if let Some(x) = args.activeEmbeddableElement { builder.add_activeEmbeddableElement(x); }
-    builder.add_allowIndependentCurveHandles(args.allowIndependentCurveHandles);
-    builder.add_enableLineBendingOnEdit(args.enableLineBendingOnEdit);
+    builder.add_coordDecimalPlaces_v3(args.coordDecimalPlaces_v3);
+    builder.add_currentItemStrokePlacement_v3(args.currentItemStrokePlacement_v3);
+    builder.add_lineBendingMode(args.lineBendingMode);
+    builder.add_currentItemTextAlign_v3(args.currentItemTextAlign_v3);
+    builder.add_currentItemStrokeStyle_v3(args.currentItemStrokeStyle_v3);
+    builder.add_currentItemFillStyle_v3(args.currentItemFillStyle_v3);
     builder.add_displayRootAxis(args.displayRootAxis);
     builder.add_displayAllPointInfoSelected(args.displayAllPointInfoSelected);
     builder.add_displayAllPointCoordinates(args.displayAllPointCoordinates);
     builder.add_displayDistanceOnDrawing(args.displayDistanceOnDrawing);
     builder.add_displayAllPointDistances(args.displayAllPointDistances);
     builder.add_scaleRatioLocked(args.scaleRatioLocked);
-    builder.add_pasteDialogShown(args.pasteDialogShown);
     builder.add_shouldCacheIgnoreZoom(args.shouldCacheIgnoreZoom);
-    builder.add_selectedElementsAreBeingDragged(args.selectedElementsAreBeingDragged);
     builder.add_scrolledOutside(args.scrolledOutside);
     builder.add_frameRenderingClip(args.frameRenderingClip);
     builder.add_frameRenderingOutline(args.frameRenderingOutline);
@@ -1719,55 +1946,6 @@ impl<'a> AppState<'a> {
   }
 
 
-  #[inline]
-  pub fn activeEmbeddableElement(&self) -> Option<DucElement<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucElement>>(AppState::VT_ACTIVEEMBEDDABLEELEMENT, None)}
-  }
-  #[inline]
-  pub fn activeEmbeddableState(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_ACTIVEEMBEDDABLESTATE, None)}
-  }
-  #[inline]
-  pub fn draggingElement(&self) -> Option<DucElement<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucElement>>(AppState::VT_DRAGGINGELEMENT, None)}
-  }
-  #[inline]
-  pub fn resizingElement(&self) -> Option<DucElement<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucElement>>(AppState::VT_RESIZINGELEMENT, None)}
-  }
-  #[inline]
-  pub fn multiElement(&self) -> Option<DucElement<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucElement>>(AppState::VT_MULTIELEMENT, None)}
-  }
-  #[inline]
-  pub fn selectionElement(&self) -> Option<DucElement<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucElement>>(AppState::VT_SELECTIONELEMENT, None)}
-  }
-  #[inline]
-  pub fn frameToHighlight(&self) -> Option<DucElement<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucElement>>(AppState::VT_FRAMETOHIGHLIGHT, None)}
-  }
   #[inline]
   pub fn frameRenderingEnabled(&self) -> bool {
     // Safety:
@@ -1797,27 +1975,6 @@ impl<'a> AppState<'a> {
     unsafe { self._tab.get::<bool>(AppState::VT_FRAMERENDERINGCLIP, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn editingFrame(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_EDITINGFRAME, None)}
-  }
-  #[inline]
-  pub fn elementsToHighlight(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucElement<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucElement>>>>(AppState::VT_ELEMENTSTOHIGHLIGHT, None)}
-  }
-  #[inline]
-  pub fn editingElement(&self) -> Option<DucElement<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucElement>>(AppState::VT_EDITINGELEMENT, None)}
-  }
-  #[inline]
   pub fn currentItemStrokeColor(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
@@ -1825,46 +1982,11 @@ impl<'a> AppState<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_CURRENTITEMSTROKECOLOR, None)}
   }
   #[inline]
-  pub fn currentItemStrokePlacement(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AppState::VT_CURRENTITEMSTROKEPLACEMENT, Some(0)).unwrap()}
-  }
-  #[inline]
   pub fn currentItemBackgroundColor(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_CURRENTITEMBACKGROUNDCOLOR, None)}
-  }
-  #[inline]
-  pub fn currentItemFillStyle(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_CURRENTITEMFILLSTYLE, None)}
-  }
-  #[inline]
-  pub fn currentItemStrokeWidth(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AppState::VT_CURRENTITEMSTROKEWIDTH, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn currentItemStrokeStyle(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_CURRENTITEMSTROKESTYLE, None)}
-  }
-  #[inline]
-  pub fn currentItemRoughness(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AppState::VT_CURRENTITEMROUGHNESS, Some(0)).unwrap()}
   }
   #[inline]
   pub fn currentItemOpacity(&self) -> f32 {
@@ -1881,20 +2003,6 @@ impl<'a> AppState<'a> {
     unsafe { self._tab.get::<i32>(AppState::VT_CURRENTITEMFONTFAMILY, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn currentItemFontSize(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AppState::VT_CURRENTITEMFONTSIZE, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn currentItemTextAlign(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_CURRENTITEMTEXTALIGN, None)}
-  }
-  #[inline]
   pub fn currentItemStartArrowhead(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
@@ -1909,13 +2017,6 @@ impl<'a> AppState<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_CURRENTITEMENDARROWHEAD, None)}
   }
   #[inline]
-  pub fn currentItemRoundness(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_CURRENTITEMROUNDNESS, None)}
-  }
-  #[inline]
   pub fn viewBackgroundColor(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
@@ -1928,13 +2029,6 @@ impl<'a> AppState<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_SCOPE, None)}
-  }
-  #[inline]
-  pub fn writingLayer(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_WRITINGLAYER, None)}
   }
   #[inline]
   pub fn groups(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucGroup<'a>>>> {
@@ -2000,20 +2094,6 @@ impl<'a> AppState<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(AppState::VT_SELECTEDELEMENTIDS, None)}
   }
   #[inline]
-  pub fn previousSelectedElementIds(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(AppState::VT_PREVIOUSSELECTEDELEMENTIDS, None)}
-  }
-  #[inline]
-  pub fn selectedElementsAreBeingDragged(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(AppState::VT_SELECTEDELEMENTSAREBEINGDRAGGED, Some(false)).unwrap()}
-  }
-  #[inline]
   pub fn shouldCacheIgnoreZoom(&self) -> bool {
     // Safety:
     // Created from valid Table for this object
@@ -2026,34 +2106,6 @@ impl<'a> AppState<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i32>(AppState::VT_GRIDSIZE, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn selectedGroupIds(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(AppState::VT_SELECTEDGROUPIDS, None)}
-  }
-  #[inline]
-  pub fn editingGroupId(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_EDITINGGROUPID, None)}
-  }
-  #[inline]
-  pub fn pasteDialogShown(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(AppState::VT_PASTEDIALOGSHOWN, Some(false)).unwrap()}
-  }
-  #[inline]
-  pub fn pasteDialogData(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_PASTEDIALOGDATA, None)}
   }
   #[inline]
   pub fn scaleRatioLocked(&self) -> bool {
@@ -2098,25 +2150,60 @@ impl<'a> AppState<'a> {
     unsafe { self._tab.get::<bool>(AppState::VT_DISPLAYROOTAXIS, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn enableLineBendingOnEdit(&self) -> bool {
+  pub fn currentItemFillStyle_v3(&self) -> i8 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(AppState::VT_ENABLELINEBENDINGONEDIT, Some(false)).unwrap()}
+    unsafe { self._tab.get::<i8>(AppState::VT_CURRENTITEMFILLSTYLE_V3, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn allowIndependentCurveHandles(&self) -> bool {
+  pub fn currentItemStrokeStyle_v3(&self) -> i8 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(AppState::VT_ALLOWINDEPENDENTCURVEHANDLES, Some(false)).unwrap()}
+    unsafe { self._tab.get::<i8>(AppState::VT_CURRENTITEMSTROKESTYLE_V3, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn coordDecimalPlaces(&self) -> i32 {
+  pub fn currentItemTextAlign_v3(&self) -> i8 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AppState::VT_COORDDECIMALPLACES, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i8>(AppState::VT_CURRENTITEMTEXTALIGN_V3, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn lineBendingMode(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(AppState::VT_LINEBENDINGMODE, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn currentItemStrokeWidth_v3(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(AppState::VT_CURRENTITEMSTROKEWIDTH_V3, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn currentItemStrokePlacement_v3(&self) -> i8 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i8>(AppState::VT_CURRENTITEMSTROKEPLACEMENT_V3, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn currentItemFontSize_v3(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(AppState::VT_CURRENTITEMFONTSIZE_V3, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn coordDecimalPlaces_v3(&self) -> i8 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i8>(AppState::VT_COORDDECIMALPLACES_V3, Some(0)).unwrap()}
   }
 }
 
@@ -2127,37 +2214,18 @@ impl flatbuffers::Verifiable for AppState<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<DucElement>>("activeEmbeddableElement", Self::VT_ACTIVEEMBEDDABLEELEMENT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("activeEmbeddableState", Self::VT_ACTIVEEMBEDDABLESTATE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<DucElement>>("draggingElement", Self::VT_DRAGGINGELEMENT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<DucElement>>("resizingElement", Self::VT_RESIZINGELEMENT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<DucElement>>("multiElement", Self::VT_MULTIELEMENT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<DucElement>>("selectionElement", Self::VT_SELECTIONELEMENT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<DucElement>>("frameToHighlight", Self::VT_FRAMETOHIGHLIGHT, false)?
      .visit_field::<bool>("frameRenderingEnabled", Self::VT_FRAMERENDERINGENABLED, false)?
      .visit_field::<bool>("frameRenderingName", Self::VT_FRAMERENDERINGNAME, false)?
      .visit_field::<bool>("frameRenderingOutline", Self::VT_FRAMERENDERINGOUTLINE, false)?
      .visit_field::<bool>("frameRenderingClip", Self::VT_FRAMERENDERINGCLIP, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("editingFrame", Self::VT_EDITINGFRAME, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucElement>>>>("elementsToHighlight", Self::VT_ELEMENTSTOHIGHLIGHT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<DucElement>>("editingElement", Self::VT_EDITINGELEMENT, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemStrokeColor", Self::VT_CURRENTITEMSTROKECOLOR, false)?
-     .visit_field::<i32>("currentItemStrokePlacement", Self::VT_CURRENTITEMSTROKEPLACEMENT, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemBackgroundColor", Self::VT_CURRENTITEMBACKGROUNDCOLOR, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemFillStyle", Self::VT_CURRENTITEMFILLSTYLE, false)?
-     .visit_field::<i32>("currentItemStrokeWidth", Self::VT_CURRENTITEMSTROKEWIDTH, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemStrokeStyle", Self::VT_CURRENTITEMSTROKESTYLE, false)?
-     .visit_field::<i32>("currentItemRoughness", Self::VT_CURRENTITEMROUGHNESS, false)?
      .visit_field::<f32>("currentItemOpacity", Self::VT_CURRENTITEMOPACITY, false)?
      .visit_field::<i32>("currentItemFontFamily", Self::VT_CURRENTITEMFONTFAMILY, false)?
-     .visit_field::<i32>("currentItemFontSize", Self::VT_CURRENTITEMFONTSIZE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemTextAlign", Self::VT_CURRENTITEMTEXTALIGN, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemStartArrowhead", Self::VT_CURRENTITEMSTARTARROWHEAD, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemEndArrowhead", Self::VT_CURRENTITEMENDARROWHEAD, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("currentItemRoundness", Self::VT_CURRENTITEMROUNDNESS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("viewBackgroundColor", Self::VT_VIEWBACKGROUNDCOLOR, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("scope", Self::VT_SCOPE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("writingLayer", Self::VT_WRITINGLAYER, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucGroup>>>>("groups", Self::VT_GROUPS, false)?
      .visit_field::<f32>("scrollX", Self::VT_SCROLLX, false)?
      .visit_field::<f32>("scrollY", Self::VT_SCROLLY, false)?
@@ -2167,59 +2235,39 @@ impl flatbuffers::Verifiable for AppState<'_> {
      .visit_field::<f32>("zoom", Self::VT_ZOOM, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("lastPointerDownWith", Self::VT_LASTPOINTERDOWNWITH, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("selectedElementIds", Self::VT_SELECTEDELEMENTIDS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("previousSelectedElementIds", Self::VT_PREVIOUSSELECTEDELEMENTIDS, false)?
-     .visit_field::<bool>("selectedElementsAreBeingDragged", Self::VT_SELECTEDELEMENTSAREBEINGDRAGGED, false)?
      .visit_field::<bool>("shouldCacheIgnoreZoom", Self::VT_SHOULDCACHEIGNOREZOOM, false)?
      .visit_field::<i32>("gridSize", Self::VT_GRIDSIZE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("selectedGroupIds", Self::VT_SELECTEDGROUPIDS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("editingGroupId", Self::VT_EDITINGGROUPID, false)?
-     .visit_field::<bool>("pasteDialogShown", Self::VT_PASTEDIALOGSHOWN, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("pasteDialogData", Self::VT_PASTEDIALOGDATA, false)?
      .visit_field::<bool>("scaleRatioLocked", Self::VT_SCALERATIOLOCKED, false)?
      .visit_field::<bool>("displayAllPointDistances", Self::VT_DISPLAYALLPOINTDISTANCES, false)?
      .visit_field::<bool>("displayDistanceOnDrawing", Self::VT_DISPLAYDISTANCEONDRAWING, false)?
      .visit_field::<bool>("displayAllPointCoordinates", Self::VT_DISPLAYALLPOINTCOORDINATES, false)?
      .visit_field::<bool>("displayAllPointInfoSelected", Self::VT_DISPLAYALLPOINTINFOSELECTED, false)?
      .visit_field::<bool>("displayRootAxis", Self::VT_DISPLAYROOTAXIS, false)?
-     .visit_field::<bool>("enableLineBendingOnEdit", Self::VT_ENABLELINEBENDINGONEDIT, false)?
-     .visit_field::<bool>("allowIndependentCurveHandles", Self::VT_ALLOWINDEPENDENTCURVEHANDLES, false)?
-     .visit_field::<i32>("coordDecimalPlaces", Self::VT_COORDDECIMALPLACES, false)?
+     .visit_field::<i8>("currentItemFillStyle_v3", Self::VT_CURRENTITEMFILLSTYLE_V3, false)?
+     .visit_field::<i8>("currentItemStrokeStyle_v3", Self::VT_CURRENTITEMSTROKESTYLE_V3, false)?
+     .visit_field::<i8>("currentItemTextAlign_v3", Self::VT_CURRENTITEMTEXTALIGN_V3, false)?
+     .visit_field::<bool>("lineBendingMode", Self::VT_LINEBENDINGMODE, false)?
+     .visit_field::<f64>("currentItemStrokeWidth_v3", Self::VT_CURRENTITEMSTROKEWIDTH_V3, false)?
+     .visit_field::<i8>("currentItemStrokePlacement_v3", Self::VT_CURRENTITEMSTROKEPLACEMENT_V3, false)?
+     .visit_field::<f64>("currentItemFontSize_v3", Self::VT_CURRENTITEMFONTSIZE_V3, false)?
+     .visit_field::<i8>("coordDecimalPlaces_v3", Self::VT_COORDDECIMALPLACES_V3, false)?
      .finish();
     Ok(())
   }
 }
 pub struct AppStateArgs<'a> {
-    pub activeEmbeddableElement: Option<flatbuffers::WIPOffset<DucElement<'a>>>,
-    pub activeEmbeddableState: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub draggingElement: Option<flatbuffers::WIPOffset<DucElement<'a>>>,
-    pub resizingElement: Option<flatbuffers::WIPOffset<DucElement<'a>>>,
-    pub multiElement: Option<flatbuffers::WIPOffset<DucElement<'a>>>,
-    pub selectionElement: Option<flatbuffers::WIPOffset<DucElement<'a>>>,
-    pub frameToHighlight: Option<flatbuffers::WIPOffset<DucElement<'a>>>,
     pub frameRenderingEnabled: bool,
     pub frameRenderingName: bool,
     pub frameRenderingOutline: bool,
     pub frameRenderingClip: bool,
-    pub editingFrame: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub elementsToHighlight: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucElement<'a>>>>>,
-    pub editingElement: Option<flatbuffers::WIPOffset<DucElement<'a>>>,
     pub currentItemStrokeColor: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub currentItemStrokePlacement: i32,
     pub currentItemBackgroundColor: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub currentItemFillStyle: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub currentItemStrokeWidth: i32,
-    pub currentItemStrokeStyle: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub currentItemRoughness: i32,
     pub currentItemOpacity: f32,
     pub currentItemFontFamily: i32,
-    pub currentItemFontSize: i32,
-    pub currentItemTextAlign: Option<flatbuffers::WIPOffset<&'a str>>,
     pub currentItemStartArrowhead: Option<flatbuffers::WIPOffset<&'a str>>,
     pub currentItemEndArrowhead: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub currentItemRoundness: Option<flatbuffers::WIPOffset<&'a str>>,
     pub viewBackgroundColor: Option<flatbuffers::WIPOffset<&'a str>>,
     pub scope: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub writingLayer: Option<flatbuffers::WIPOffset<&'a str>>,
     pub groups: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucGroup<'a>>>>>,
     pub scrollX: f32,
     pub scrollY: f32,
@@ -2229,59 +2277,39 @@ pub struct AppStateArgs<'a> {
     pub zoom: f32,
     pub lastPointerDownWith: Option<flatbuffers::WIPOffset<&'a str>>,
     pub selectedElementIds: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
-    pub previousSelectedElementIds: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
-    pub selectedElementsAreBeingDragged: bool,
     pub shouldCacheIgnoreZoom: bool,
     pub gridSize: i32,
-    pub selectedGroupIds: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
-    pub editingGroupId: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub pasteDialogShown: bool,
-    pub pasteDialogData: Option<flatbuffers::WIPOffset<&'a str>>,
     pub scaleRatioLocked: bool,
     pub displayAllPointDistances: bool,
     pub displayDistanceOnDrawing: bool,
     pub displayAllPointCoordinates: bool,
     pub displayAllPointInfoSelected: bool,
     pub displayRootAxis: bool,
-    pub enableLineBendingOnEdit: bool,
-    pub allowIndependentCurveHandles: bool,
-    pub coordDecimalPlaces: i32,
+    pub currentItemFillStyle_v3: i8,
+    pub currentItemStrokeStyle_v3: i8,
+    pub currentItemTextAlign_v3: i8,
+    pub lineBendingMode: bool,
+    pub currentItemStrokeWidth_v3: f64,
+    pub currentItemStrokePlacement_v3: i8,
+    pub currentItemFontSize_v3: f64,
+    pub coordDecimalPlaces_v3: i8,
 }
 impl<'a> Default for AppStateArgs<'a> {
   #[inline]
   fn default() -> Self {
     AppStateArgs {
-      activeEmbeddableElement: None,
-      activeEmbeddableState: None,
-      draggingElement: None,
-      resizingElement: None,
-      multiElement: None,
-      selectionElement: None,
-      frameToHighlight: None,
       frameRenderingEnabled: false,
       frameRenderingName: false,
       frameRenderingOutline: false,
       frameRenderingClip: false,
-      editingFrame: None,
-      elementsToHighlight: None,
-      editingElement: None,
       currentItemStrokeColor: None,
-      currentItemStrokePlacement: 0,
       currentItemBackgroundColor: None,
-      currentItemFillStyle: None,
-      currentItemStrokeWidth: 0,
-      currentItemStrokeStyle: None,
-      currentItemRoughness: 0,
       currentItemOpacity: 0.0,
       currentItemFontFamily: 0,
-      currentItemFontSize: 0,
-      currentItemTextAlign: None,
       currentItemStartArrowhead: None,
       currentItemEndArrowhead: None,
-      currentItemRoundness: None,
       viewBackgroundColor: None,
       scope: None,
-      writingLayer: None,
       groups: None,
       scrollX: 0.0,
       scrollY: 0.0,
@@ -2291,23 +2319,22 @@ impl<'a> Default for AppStateArgs<'a> {
       zoom: 0.0,
       lastPointerDownWith: None,
       selectedElementIds: None,
-      previousSelectedElementIds: None,
-      selectedElementsAreBeingDragged: false,
       shouldCacheIgnoreZoom: false,
       gridSize: 0,
-      selectedGroupIds: None,
-      editingGroupId: None,
-      pasteDialogShown: false,
-      pasteDialogData: None,
       scaleRatioLocked: false,
       displayAllPointDistances: false,
       displayDistanceOnDrawing: false,
       displayAllPointCoordinates: false,
       displayAllPointInfoSelected: false,
       displayRootAxis: false,
-      enableLineBendingOnEdit: false,
-      allowIndependentCurveHandles: false,
-      coordDecimalPlaces: 0,
+      currentItemFillStyle_v3: 0,
+      currentItemStrokeStyle_v3: 0,
+      currentItemTextAlign_v3: 0,
+      lineBendingMode: false,
+      currentItemStrokeWidth_v3: 0.0,
+      currentItemStrokePlacement_v3: 0,
+      currentItemFontSize_v3: 0.0,
+      coordDecimalPlaces_v3: 0,
     }
   }
 }
@@ -2317,34 +2344,6 @@ pub struct AppStateBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_activeEmbeddableElement(&mut self, activeEmbeddableElement: flatbuffers::WIPOffset<DucElement<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucElement>>(AppState::VT_ACTIVEEMBEDDABLEELEMENT, activeEmbeddableElement);
-  }
-  #[inline]
-  pub fn add_activeEmbeddableState(&mut self, activeEmbeddableState: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_ACTIVEEMBEDDABLESTATE, activeEmbeddableState);
-  }
-  #[inline]
-  pub fn add_draggingElement(&mut self, draggingElement: flatbuffers::WIPOffset<DucElement<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucElement>>(AppState::VT_DRAGGINGELEMENT, draggingElement);
-  }
-  #[inline]
-  pub fn add_resizingElement(&mut self, resizingElement: flatbuffers::WIPOffset<DucElement<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucElement>>(AppState::VT_RESIZINGELEMENT, resizingElement);
-  }
-  #[inline]
-  pub fn add_multiElement(&mut self, multiElement: flatbuffers::WIPOffset<DucElement<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucElement>>(AppState::VT_MULTIELEMENT, multiElement);
-  }
-  #[inline]
-  pub fn add_selectionElement(&mut self, selectionElement: flatbuffers::WIPOffset<DucElement<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucElement>>(AppState::VT_SELECTIONELEMENT, selectionElement);
-  }
-  #[inline]
-  pub fn add_frameToHighlight(&mut self, frameToHighlight: flatbuffers::WIPOffset<DucElement<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucElement>>(AppState::VT_FRAMETOHIGHLIGHT, frameToHighlight);
-  }
   #[inline]
   pub fn add_frameRenderingEnabled(&mut self, frameRenderingEnabled: bool) {
     self.fbb_.push_slot::<bool>(AppState::VT_FRAMERENDERINGENABLED, frameRenderingEnabled, false);
@@ -2362,44 +2361,12 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<bool>(AppState::VT_FRAMERENDERINGCLIP, frameRenderingClip, false);
   }
   #[inline]
-  pub fn add_editingFrame(&mut self, editingFrame: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_EDITINGFRAME, editingFrame);
-  }
-  #[inline]
-  pub fn add_elementsToHighlight(&mut self, elementsToHighlight: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucElement<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_ELEMENTSTOHIGHLIGHT, elementsToHighlight);
-  }
-  #[inline]
-  pub fn add_editingElement(&mut self, editingElement: flatbuffers::WIPOffset<DucElement<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucElement>>(AppState::VT_EDITINGELEMENT, editingElement);
-  }
-  #[inline]
   pub fn add_currentItemStrokeColor(&mut self, currentItemStrokeColor: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_CURRENTITEMSTROKECOLOR, currentItemStrokeColor);
   }
   #[inline]
-  pub fn add_currentItemStrokePlacement(&mut self, currentItemStrokePlacement: i32) {
-    self.fbb_.push_slot::<i32>(AppState::VT_CURRENTITEMSTROKEPLACEMENT, currentItemStrokePlacement, 0);
-  }
-  #[inline]
   pub fn add_currentItemBackgroundColor(&mut self, currentItemBackgroundColor: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_CURRENTITEMBACKGROUNDCOLOR, currentItemBackgroundColor);
-  }
-  #[inline]
-  pub fn add_currentItemFillStyle(&mut self, currentItemFillStyle: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_CURRENTITEMFILLSTYLE, currentItemFillStyle);
-  }
-  #[inline]
-  pub fn add_currentItemStrokeWidth(&mut self, currentItemStrokeWidth: i32) {
-    self.fbb_.push_slot::<i32>(AppState::VT_CURRENTITEMSTROKEWIDTH, currentItemStrokeWidth, 0);
-  }
-  #[inline]
-  pub fn add_currentItemStrokeStyle(&mut self, currentItemStrokeStyle: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_CURRENTITEMSTROKESTYLE, currentItemStrokeStyle);
-  }
-  #[inline]
-  pub fn add_currentItemRoughness(&mut self, currentItemRoughness: i32) {
-    self.fbb_.push_slot::<i32>(AppState::VT_CURRENTITEMROUGHNESS, currentItemRoughness, 0);
   }
   #[inline]
   pub fn add_currentItemOpacity(&mut self, currentItemOpacity: f32) {
@@ -2410,14 +2377,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<i32>(AppState::VT_CURRENTITEMFONTFAMILY, currentItemFontFamily, 0);
   }
   #[inline]
-  pub fn add_currentItemFontSize(&mut self, currentItemFontSize: i32) {
-    self.fbb_.push_slot::<i32>(AppState::VT_CURRENTITEMFONTSIZE, currentItemFontSize, 0);
-  }
-  #[inline]
-  pub fn add_currentItemTextAlign(&mut self, currentItemTextAlign: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_CURRENTITEMTEXTALIGN, currentItemTextAlign);
-  }
-  #[inline]
   pub fn add_currentItemStartArrowhead(&mut self, currentItemStartArrowhead: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_CURRENTITEMSTARTARROWHEAD, currentItemStartArrowhead);
   }
@@ -2426,20 +2385,12 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_CURRENTITEMENDARROWHEAD, currentItemEndArrowhead);
   }
   #[inline]
-  pub fn add_currentItemRoundness(&mut self, currentItemRoundness: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_CURRENTITEMROUNDNESS, currentItemRoundness);
-  }
-  #[inline]
   pub fn add_viewBackgroundColor(&mut self, viewBackgroundColor: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_VIEWBACKGROUNDCOLOR, viewBackgroundColor);
   }
   #[inline]
   pub fn add_scope(&mut self, scope: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_SCOPE, scope);
-  }
-  #[inline]
-  pub fn add_writingLayer(&mut self, writingLayer: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_WRITINGLAYER, writingLayer);
   }
   #[inline]
   pub fn add_groups(&mut self, groups: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucGroup<'b >>>>) {
@@ -2478,36 +2429,12 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_SELECTEDELEMENTIDS, selectedElementIds);
   }
   #[inline]
-  pub fn add_previousSelectedElementIds(&mut self, previousSelectedElementIds: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_PREVIOUSSELECTEDELEMENTIDS, previousSelectedElementIds);
-  }
-  #[inline]
-  pub fn add_selectedElementsAreBeingDragged(&mut self, selectedElementsAreBeingDragged: bool) {
-    self.fbb_.push_slot::<bool>(AppState::VT_SELECTEDELEMENTSAREBEINGDRAGGED, selectedElementsAreBeingDragged, false);
-  }
-  #[inline]
   pub fn add_shouldCacheIgnoreZoom(&mut self, shouldCacheIgnoreZoom: bool) {
     self.fbb_.push_slot::<bool>(AppState::VT_SHOULDCACHEIGNOREZOOM, shouldCacheIgnoreZoom, false);
   }
   #[inline]
   pub fn add_gridSize(&mut self, gridSize: i32) {
     self.fbb_.push_slot::<i32>(AppState::VT_GRIDSIZE, gridSize, 0);
-  }
-  #[inline]
-  pub fn add_selectedGroupIds(&mut self, selectedGroupIds: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_SELECTEDGROUPIDS, selectedGroupIds);
-  }
-  #[inline]
-  pub fn add_editingGroupId(&mut self, editingGroupId: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_EDITINGGROUPID, editingGroupId);
-  }
-  #[inline]
-  pub fn add_pasteDialogShown(&mut self, pasteDialogShown: bool) {
-    self.fbb_.push_slot::<bool>(AppState::VT_PASTEDIALOGSHOWN, pasteDialogShown, false);
-  }
-  #[inline]
-  pub fn add_pasteDialogData(&mut self, pasteDialogData: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_PASTEDIALOGDATA, pasteDialogData);
   }
   #[inline]
   pub fn add_scaleRatioLocked(&mut self, scaleRatioLocked: bool) {
@@ -2534,16 +2461,36 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<bool>(AppState::VT_DISPLAYROOTAXIS, displayRootAxis, false);
   }
   #[inline]
-  pub fn add_enableLineBendingOnEdit(&mut self, enableLineBendingOnEdit: bool) {
-    self.fbb_.push_slot::<bool>(AppState::VT_ENABLELINEBENDINGONEDIT, enableLineBendingOnEdit, false);
+  pub fn add_currentItemFillStyle_v3(&mut self, currentItemFillStyle_v3: i8) {
+    self.fbb_.push_slot::<i8>(AppState::VT_CURRENTITEMFILLSTYLE_V3, currentItemFillStyle_v3, 0);
   }
   #[inline]
-  pub fn add_allowIndependentCurveHandles(&mut self, allowIndependentCurveHandles: bool) {
-    self.fbb_.push_slot::<bool>(AppState::VT_ALLOWINDEPENDENTCURVEHANDLES, allowIndependentCurveHandles, false);
+  pub fn add_currentItemStrokeStyle_v3(&mut self, currentItemStrokeStyle_v3: i8) {
+    self.fbb_.push_slot::<i8>(AppState::VT_CURRENTITEMSTROKESTYLE_V3, currentItemStrokeStyle_v3, 0);
   }
   #[inline]
-  pub fn add_coordDecimalPlaces(&mut self, coordDecimalPlaces: i32) {
-    self.fbb_.push_slot::<i32>(AppState::VT_COORDDECIMALPLACES, coordDecimalPlaces, 0);
+  pub fn add_currentItemTextAlign_v3(&mut self, currentItemTextAlign_v3: i8) {
+    self.fbb_.push_slot::<i8>(AppState::VT_CURRENTITEMTEXTALIGN_V3, currentItemTextAlign_v3, 0);
+  }
+  #[inline]
+  pub fn add_lineBendingMode(&mut self, lineBendingMode: bool) {
+    self.fbb_.push_slot::<bool>(AppState::VT_LINEBENDINGMODE, lineBendingMode, false);
+  }
+  #[inline]
+  pub fn add_currentItemStrokeWidth_v3(&mut self, currentItemStrokeWidth_v3: f64) {
+    self.fbb_.push_slot::<f64>(AppState::VT_CURRENTITEMSTROKEWIDTH_V3, currentItemStrokeWidth_v3, 0.0);
+  }
+  #[inline]
+  pub fn add_currentItemStrokePlacement_v3(&mut self, currentItemStrokePlacement_v3: i8) {
+    self.fbb_.push_slot::<i8>(AppState::VT_CURRENTITEMSTROKEPLACEMENT_V3, currentItemStrokePlacement_v3, 0);
+  }
+  #[inline]
+  pub fn add_currentItemFontSize_v3(&mut self, currentItemFontSize_v3: f64) {
+    self.fbb_.push_slot::<f64>(AppState::VT_CURRENTITEMFONTSIZE_V3, currentItemFontSize_v3, 0.0);
+  }
+  #[inline]
+  pub fn add_coordDecimalPlaces_v3(&mut self, coordDecimalPlaces_v3: i8) {
+    self.fbb_.push_slot::<i8>(AppState::VT_COORDDECIMALPLACES_V3, coordDecimalPlaces_v3, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AppStateBuilder<'a, 'b, A> {
@@ -2563,37 +2510,18 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
 impl core::fmt::Debug for AppState<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("AppState");
-      ds.field("activeEmbeddableElement", &self.activeEmbeddableElement());
-      ds.field("activeEmbeddableState", &self.activeEmbeddableState());
-      ds.field("draggingElement", &self.draggingElement());
-      ds.field("resizingElement", &self.resizingElement());
-      ds.field("multiElement", &self.multiElement());
-      ds.field("selectionElement", &self.selectionElement());
-      ds.field("frameToHighlight", &self.frameToHighlight());
       ds.field("frameRenderingEnabled", &self.frameRenderingEnabled());
       ds.field("frameRenderingName", &self.frameRenderingName());
       ds.field("frameRenderingOutline", &self.frameRenderingOutline());
       ds.field("frameRenderingClip", &self.frameRenderingClip());
-      ds.field("editingFrame", &self.editingFrame());
-      ds.field("elementsToHighlight", &self.elementsToHighlight());
-      ds.field("editingElement", &self.editingElement());
       ds.field("currentItemStrokeColor", &self.currentItemStrokeColor());
-      ds.field("currentItemStrokePlacement", &self.currentItemStrokePlacement());
       ds.field("currentItemBackgroundColor", &self.currentItemBackgroundColor());
-      ds.field("currentItemFillStyle", &self.currentItemFillStyle());
-      ds.field("currentItemStrokeWidth", &self.currentItemStrokeWidth());
-      ds.field("currentItemStrokeStyle", &self.currentItemStrokeStyle());
-      ds.field("currentItemRoughness", &self.currentItemRoughness());
       ds.field("currentItemOpacity", &self.currentItemOpacity());
       ds.field("currentItemFontFamily", &self.currentItemFontFamily());
-      ds.field("currentItemFontSize", &self.currentItemFontSize());
-      ds.field("currentItemTextAlign", &self.currentItemTextAlign());
       ds.field("currentItemStartArrowhead", &self.currentItemStartArrowhead());
       ds.field("currentItemEndArrowhead", &self.currentItemEndArrowhead());
-      ds.field("currentItemRoundness", &self.currentItemRoundness());
       ds.field("viewBackgroundColor", &self.viewBackgroundColor());
       ds.field("scope", &self.scope());
-      ds.field("writingLayer", &self.writingLayer());
       ds.field("groups", &self.groups());
       ds.field("scrollX", &self.scrollX());
       ds.field("scrollY", &self.scrollY());
@@ -2603,23 +2531,22 @@ impl core::fmt::Debug for AppState<'_> {
       ds.field("zoom", &self.zoom());
       ds.field("lastPointerDownWith", &self.lastPointerDownWith());
       ds.field("selectedElementIds", &self.selectedElementIds());
-      ds.field("previousSelectedElementIds", &self.previousSelectedElementIds());
-      ds.field("selectedElementsAreBeingDragged", &self.selectedElementsAreBeingDragged());
       ds.field("shouldCacheIgnoreZoom", &self.shouldCacheIgnoreZoom());
       ds.field("gridSize", &self.gridSize());
-      ds.field("selectedGroupIds", &self.selectedGroupIds());
-      ds.field("editingGroupId", &self.editingGroupId());
-      ds.field("pasteDialogShown", &self.pasteDialogShown());
-      ds.field("pasteDialogData", &self.pasteDialogData());
       ds.field("scaleRatioLocked", &self.scaleRatioLocked());
       ds.field("displayAllPointDistances", &self.displayAllPointDistances());
       ds.field("displayDistanceOnDrawing", &self.displayDistanceOnDrawing());
       ds.field("displayAllPointCoordinates", &self.displayAllPointCoordinates());
       ds.field("displayAllPointInfoSelected", &self.displayAllPointInfoSelected());
       ds.field("displayRootAxis", &self.displayRootAxis());
-      ds.field("enableLineBendingOnEdit", &self.enableLineBendingOnEdit());
-      ds.field("allowIndependentCurveHandles", &self.allowIndependentCurveHandles());
-      ds.field("coordDecimalPlaces", &self.coordDecimalPlaces());
+      ds.field("currentItemFillStyle_v3", &self.currentItemFillStyle_v3());
+      ds.field("currentItemStrokeStyle_v3", &self.currentItemStrokeStyle_v3());
+      ds.field("currentItemTextAlign_v3", &self.currentItemTextAlign_v3());
+      ds.field("lineBendingMode", &self.lineBendingMode());
+      ds.field("currentItemStrokeWidth_v3", &self.currentItemStrokeWidth_v3());
+      ds.field("currentItemStrokePlacement_v3", &self.currentItemStrokePlacement_v3());
+      ds.field("currentItemFontSize_v3", &self.currentItemFontSize_v3());
+      ds.field("coordDecimalPlaces_v3", &self.coordDecimalPlaces_v3());
       ds.finish()
   }
 }

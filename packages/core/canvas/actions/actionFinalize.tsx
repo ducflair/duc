@@ -114,7 +114,7 @@ export const actionFinalize = register({
           mutateElement(multiPointElement, {
             points: linePoints.map((point, index) =>
               index === linePoints.length - 1
-                ? ([firstPoint[0], firstPoint[1]] as const)
+                ? ({x: firstPoint.x, y: firstPoint.y} as const)
                 : point,
             ),
           });
@@ -126,7 +126,7 @@ export const actionFinalize = register({
         !isLoop &&
         multiPointElement.points.length > 1
       ) {
-        const [x, y] = LinearElementEditor.getPointAtIndexGlobalCoordinates(
+        const {x, y} = LinearElementEditor.getPointAtIndexGlobalCoordinates(
           multiPointElement,
           -1,
           arrayToMap(elements),

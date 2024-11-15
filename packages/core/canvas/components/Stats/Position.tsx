@@ -32,7 +32,7 @@ const handlePositionChange: DragInputCallbackType<"x" | "y"> = ({
     origElement.x + origElement.width / 2,
     origElement.y + origElement.height / 2,
   ];
-  const [topLeftX, topLeftY] = rotate(
+  const {x: topLeftX, y: topLeftY} = rotate(
     origElement.x,
     origElement.y,
     cx,
@@ -94,7 +94,7 @@ const Position = ({
   scene,
   appState,
 }: PositionProps) => {
-  const [topLeftX, topLeftY] = rotate(
+  const {x: topLeftX, y: topLeftY} = rotate(
     element.x,
     element.y,
     element.x + element.width / 2,

@@ -248,7 +248,7 @@ const _renderStaticScene = ({
 
   const groupsToBeAddedToFrame = new Set<string>();
 
-  if(appState.displayRootAxis) {
+  if(appState.displayRootAxis && !isExporting) {
     renderRootAxis(context, appState);
   }
 

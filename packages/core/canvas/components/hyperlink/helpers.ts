@@ -33,7 +33,7 @@ export const getLinkHandleFromCoords = (
   const x = x2 + dashedLineMargin - centeringOffset;
   const y = y1 - dashedLineMargin - linkMarginY + centeringOffset;
 
-  const [rotatedX, rotatedY] = rotate(
+  const {x: rotatedX, y: rotatedY} = rotate(
     x + linkWidth / 2,
     y + linkHeight / 2,
     centerX,
@@ -52,7 +52,7 @@ export const isPointHittingLinkIcon = (
   element: NonDeletedDucElement,
   elementsMap: ElementsMap,
   appState: AppState,
-  [x, y]: Point,
+  {x, y}: Point,
 ) => {
   const threshold = 4 / appState.zoom.value;
   const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
@@ -73,7 +73,7 @@ export const isPointHittingLink = (
   element: NonDeletedDucElement,
   elementsMap: ElementsMap,
   appState: AppState,
-  [x, y]: Point,
+  {x, y}: Point,
   isMobile: boolean,
 ) => {
   if (!element.link || appState.selectedElementIds[element.id]) {
@@ -86,5 +86,5 @@ export const isPointHittingLink = (
   ) {
     return true;
   }
-  return isPointHittingLinkIcon(element, elementsMap, appState, [x, y]);
+  return isPointHittingLinkIcon(element, elementsMap, appState, {x, y});
 };

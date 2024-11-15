@@ -144,21 +144,21 @@ export const getElementShape = (
         ? getClosedCurveShape(
             element,
             roughShape,
-            [element.x, element.y],
+            {x: element.x, y: element.y},
             element.angle,
-            [cx, cy],
+            {x: cx, y: cy},
           )
-        : getCurveShape(roughShape, [element.x, element.y], element.angle, [
-            cx,
-            cy,
-          ]);
+        : getCurveShape(roughShape, {x: element.x, y: element.y}, element.angle, {
+            x: cx,
+            y: cy,
+          });
     }
     case "ellipse":
       return getEllipseShape(element);
 
     case "freedraw": {
       const [, , , , cx, cy] = getElementAbsoluteCoords(element, elementsMap);
-      return getFreedrawShape(element, [cx, cy], shouldTestInside(element));
+      return getFreedrawShape(element, {x: cx, y: cy}, shouldTestInside(element));
     }
     // default:
       // return getPolygonShape(element); // or some other default shape

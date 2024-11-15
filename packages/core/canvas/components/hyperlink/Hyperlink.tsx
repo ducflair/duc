@@ -176,10 +176,10 @@ export const Hyperlink = ({
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      const shouldHide = shouldHideLinkPopup(element, elementsMap, appState, [
-        event.clientX,
-        event.clientY,
-      ]) as boolean;
+      const shouldHide = shouldHideLinkPopup(element, elementsMap, appState, {
+        x: event.clientX,
+        y: event.clientY,
+      }) as boolean;
       if (shouldHide) {
         timeoutId = window.setTimeout(() => {
           setAppState({ showHyperlinkPopup: false });
@@ -416,7 +416,7 @@ const shouldHideLinkPopup = (
   element: NonDeletedDucElement,
   elementsMap: ElementsMap,
   appState: AppState,
-  [clientX, clientY]: Point,
+  {x: clientX, y: clientY}: Point,
 ): Boolean => {
   const { x: sceneX, y: sceneY } = viewportCoordsToSceneCoords(
     { clientX, clientY },

@@ -4,7 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { DucElement } from '../duc/duc-element';
 import { DucGroup } from '../duc/duc-group';
 
 
@@ -24,43 +23,6 @@ static getRootAsAppState(bb:flatbuffers.ByteBuffer, obj?:AppState):AppState {
 static getSizePrefixedRootAsAppState(bb:flatbuffers.ByteBuffer, obj?:AppState):AppState {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new AppState()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-}
-
-activeEmbeddableElement(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
-activeEmbeddableState():string|null
-activeEmbeddableState(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-activeEmbeddableState(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-draggingElement(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
-resizingElement(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
-  return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
-multiElement(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
-selectionElement(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
-  return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
-frameToHighlight(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 16);
-  return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 frameRenderingEnabled():boolean {
@@ -83,28 +45,6 @@ frameRenderingClip():boolean {
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
-editingFrame():string|null
-editingFrame(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-editingFrame(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 26);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-elementsToHighlight(index: number, obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 28);
-  return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
-}
-
-elementsToHighlightLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 28);
-  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-}
-
-editingElement(obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 30);
-  return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
 currentItemStrokeColor():string|null
 currentItemStrokeColor(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 currentItemStrokeColor(optionalEncoding?:any):string|Uint8Array|null {
@@ -112,40 +52,11 @@ currentItemStrokeColor(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-currentItemStrokePlacement():number {
-  const offset = this.bb!.__offset(this.bb_pos, 34);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
 currentItemBackgroundColor():string|null
 currentItemBackgroundColor(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 currentItemBackgroundColor(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 36);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-currentItemFillStyle():string|null
-currentItemFillStyle(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-currentItemFillStyle(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 38);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-currentItemStrokeWidth():number {
-  const offset = this.bb!.__offset(this.bb_pos, 40);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
-currentItemStrokeStyle():string|null
-currentItemStrokeStyle(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-currentItemStrokeStyle(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 42);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-currentItemRoughness():number {
-  const offset = this.bb!.__offset(this.bb_pos, 44);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 currentItemOpacity():number {
@@ -156,18 +67,6 @@ currentItemOpacity():number {
 currentItemFontFamily():number {
   const offset = this.bb!.__offset(this.bb_pos, 48);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
-currentItemFontSize():number {
-  const offset = this.bb!.__offset(this.bb_pos, 50);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
-currentItemTextAlign():string|null
-currentItemTextAlign(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-currentItemTextAlign(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 52);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 currentItemStartArrowhead():string|null
@@ -184,13 +83,6 @@ currentItemEndArrowhead(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-currentItemRoundness():string|null
-currentItemRoundness(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-currentItemRoundness(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 58);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
 viewBackgroundColor():string|null
 viewBackgroundColor(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 viewBackgroundColor(optionalEncoding?:any):string|Uint8Array|null {
@@ -202,13 +94,6 @@ scope():string|null
 scope(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 scope(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 62);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-writingLayer():string|null
-writingLayer(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-writingLayer(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 64);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
@@ -275,23 +160,6 @@ selectedElementIdsLength():number {
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-previousSelectedElementIds(index: number):string
-previousSelectedElementIds(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
-previousSelectedElementIds(index: number,optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 84);
-  return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
-}
-
-previousSelectedElementIdsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 84);
-  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-}
-
-selectedElementsAreBeingDragged():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 86);
-  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
-}
-
 shouldCacheIgnoreZoom():boolean {
   const offset = this.bb!.__offset(this.bb_pos, 88);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
@@ -300,37 +168,6 @@ shouldCacheIgnoreZoom():boolean {
 gridSize():number {
   const offset = this.bb!.__offset(this.bb_pos, 90);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
-selectedGroupIds(index: number):string
-selectedGroupIds(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
-selectedGroupIds(index: number,optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 92);
-  return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
-}
-
-selectedGroupIdsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 92);
-  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-}
-
-editingGroupId():string|null
-editingGroupId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-editingGroupId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 94);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-pasteDialogShown():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 96);
-  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
-}
-
-pasteDialogData():string|null
-pasteDialogData(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-pasteDialogData(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 98);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 scaleRatioLocked():boolean {
@@ -363,51 +200,48 @@ displayRootAxis():boolean {
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
-enableLineBendingOnEdit():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 112);
+currentItemFillStyleV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 118);
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
+}
+
+currentItemStrokeStyleV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 120);
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
+}
+
+currentItemTextAlignV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 122);
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
+}
+
+lineBendingMode():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 124);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
-allowIndependentCurveHandles():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 114);
-  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+currentItemStrokeWidthV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 126);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
-coordDecimalPlaces():number {
-  const offset = this.bb!.__offset(this.bb_pos, 116);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+currentItemStrokePlacementV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 128);
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
+}
+
+currentItemFontSizeV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 130);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+}
+
+coordDecimalPlacesV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 132);
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
 }
 
 static startAppState(builder:flatbuffers.Builder) {
-  builder.startObject(57);
-}
-
-static addActiveEmbeddableElement(builder:flatbuffers.Builder, activeEmbeddableElementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(0, activeEmbeddableElementOffset, 0);
-}
-
-static addActiveEmbeddableState(builder:flatbuffers.Builder, activeEmbeddableStateOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, activeEmbeddableStateOffset, 0);
-}
-
-static addDraggingElement(builder:flatbuffers.Builder, draggingElementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, draggingElementOffset, 0);
-}
-
-static addResizingElement(builder:flatbuffers.Builder, resizingElementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, resizingElementOffset, 0);
-}
-
-static addMultiElement(builder:flatbuffers.Builder, multiElementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, multiElementOffset, 0);
-}
-
-static addSelectionElement(builder:flatbuffers.Builder, selectionElementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, selectionElementOffset, 0);
-}
-
-static addFrameToHighlight(builder:flatbuffers.Builder, frameToHighlightOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(6, frameToHighlightOffset, 0);
+  builder.startObject(65);
 }
 
 static addFrameRenderingEnabled(builder:flatbuffers.Builder, frameRenderingEnabled:boolean) {
@@ -426,56 +260,12 @@ static addFrameRenderingClip(builder:flatbuffers.Builder, frameRenderingClip:boo
   builder.addFieldInt8(10, +frameRenderingClip, +false);
 }
 
-static addEditingFrame(builder:flatbuffers.Builder, editingFrameOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(11, editingFrameOffset, 0);
-}
-
-static addElementsToHighlight(builder:flatbuffers.Builder, elementsToHighlightOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(12, elementsToHighlightOffset, 0);
-}
-
-static createElementsToHighlightVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
-  for (let i = data.length - 1; i >= 0; i--) {
-    builder.addOffset(data[i]!);
-  }
-  return builder.endVector();
-}
-
-static startElementsToHighlightVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(4, numElems, 4);
-}
-
-static addEditingElement(builder:flatbuffers.Builder, editingElementOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(13, editingElementOffset, 0);
-}
-
 static addCurrentItemStrokeColor(builder:flatbuffers.Builder, currentItemStrokeColorOffset:flatbuffers.Offset) {
   builder.addFieldOffset(14, currentItemStrokeColorOffset, 0);
 }
 
-static addCurrentItemStrokePlacement(builder:flatbuffers.Builder, currentItemStrokePlacement:number) {
-  builder.addFieldInt32(15, currentItemStrokePlacement, 0);
-}
-
 static addCurrentItemBackgroundColor(builder:flatbuffers.Builder, currentItemBackgroundColorOffset:flatbuffers.Offset) {
   builder.addFieldOffset(16, currentItemBackgroundColorOffset, 0);
-}
-
-static addCurrentItemFillStyle(builder:flatbuffers.Builder, currentItemFillStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(17, currentItemFillStyleOffset, 0);
-}
-
-static addCurrentItemStrokeWidth(builder:flatbuffers.Builder, currentItemStrokeWidth:number) {
-  builder.addFieldInt32(18, currentItemStrokeWidth, 0);
-}
-
-static addCurrentItemStrokeStyle(builder:flatbuffers.Builder, currentItemStrokeStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(19, currentItemStrokeStyleOffset, 0);
-}
-
-static addCurrentItemRoughness(builder:flatbuffers.Builder, currentItemRoughness:number) {
-  builder.addFieldInt32(20, currentItemRoughness, 0);
 }
 
 static addCurrentItemOpacity(builder:flatbuffers.Builder, currentItemOpacity:number) {
@@ -486,14 +276,6 @@ static addCurrentItemFontFamily(builder:flatbuffers.Builder, currentItemFontFami
   builder.addFieldInt32(22, currentItemFontFamily, 0);
 }
 
-static addCurrentItemFontSize(builder:flatbuffers.Builder, currentItemFontSize:number) {
-  builder.addFieldInt32(23, currentItemFontSize, 0);
-}
-
-static addCurrentItemTextAlign(builder:flatbuffers.Builder, currentItemTextAlignOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(24, currentItemTextAlignOffset, 0);
-}
-
 static addCurrentItemStartArrowhead(builder:flatbuffers.Builder, currentItemStartArrowheadOffset:flatbuffers.Offset) {
   builder.addFieldOffset(25, currentItemStartArrowheadOffset, 0);
 }
@@ -502,20 +284,12 @@ static addCurrentItemEndArrowhead(builder:flatbuffers.Builder, currentItemEndArr
   builder.addFieldOffset(26, currentItemEndArrowheadOffset, 0);
 }
 
-static addCurrentItemRoundness(builder:flatbuffers.Builder, currentItemRoundnessOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(27, currentItemRoundnessOffset, 0);
-}
-
 static addViewBackgroundColor(builder:flatbuffers.Builder, viewBackgroundColorOffset:flatbuffers.Offset) {
   builder.addFieldOffset(28, viewBackgroundColorOffset, 0);
 }
 
 static addScope(builder:flatbuffers.Builder, scopeOffset:flatbuffers.Offset) {
   builder.addFieldOffset(29, scopeOffset, 0);
-}
-
-static addWritingLayer(builder:flatbuffers.Builder, writingLayerOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(30, writingLayerOffset, 0);
 }
 
 static addGroups(builder:flatbuffers.Builder, groupsOffset:flatbuffers.Offset) {
@@ -578,60 +352,12 @@ static startSelectedElementIdsVector(builder:flatbuffers.Builder, numElems:numbe
   builder.startVector(4, numElems, 4);
 }
 
-static addPreviousSelectedElementIds(builder:flatbuffers.Builder, previousSelectedElementIdsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(40, previousSelectedElementIdsOffset, 0);
-}
-
-static createPreviousSelectedElementIdsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
-  for (let i = data.length - 1; i >= 0; i--) {
-    builder.addOffset(data[i]!);
-  }
-  return builder.endVector();
-}
-
-static startPreviousSelectedElementIdsVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(4, numElems, 4);
-}
-
-static addSelectedElementsAreBeingDragged(builder:flatbuffers.Builder, selectedElementsAreBeingDragged:boolean) {
-  builder.addFieldInt8(41, +selectedElementsAreBeingDragged, +false);
-}
-
 static addShouldCacheIgnoreZoom(builder:flatbuffers.Builder, shouldCacheIgnoreZoom:boolean) {
   builder.addFieldInt8(42, +shouldCacheIgnoreZoom, +false);
 }
 
 static addGridSize(builder:flatbuffers.Builder, gridSize:number) {
   builder.addFieldInt32(43, gridSize, 0);
-}
-
-static addSelectedGroupIds(builder:flatbuffers.Builder, selectedGroupIdsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(44, selectedGroupIdsOffset, 0);
-}
-
-static createSelectedGroupIdsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
-  for (let i = data.length - 1; i >= 0; i--) {
-    builder.addOffset(data[i]!);
-  }
-  return builder.endVector();
-}
-
-static startSelectedGroupIdsVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(4, numElems, 4);
-}
-
-static addEditingGroupId(builder:flatbuffers.Builder, editingGroupIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(45, editingGroupIdOffset, 0);
-}
-
-static addPasteDialogShown(builder:flatbuffers.Builder, pasteDialogShown:boolean) {
-  builder.addFieldInt8(46, +pasteDialogShown, +false);
-}
-
-static addPasteDialogData(builder:flatbuffers.Builder, pasteDialogDataOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(47, pasteDialogDataOffset, 0);
 }
 
 static addScaleRatioLocked(builder:flatbuffers.Builder, scaleRatioLocked:boolean) {
@@ -658,16 +384,36 @@ static addDisplayRootAxis(builder:flatbuffers.Builder, displayRootAxis:boolean) 
   builder.addFieldInt8(53, +displayRootAxis, +false);
 }
 
-static addEnableLineBendingOnEdit(builder:flatbuffers.Builder, enableLineBendingOnEdit:boolean) {
-  builder.addFieldInt8(54, +enableLineBendingOnEdit, +false);
+static addCurrentItemFillStyleV3(builder:flatbuffers.Builder, currentItemFillStyleV3:number) {
+  builder.addFieldInt8(57, currentItemFillStyleV3, 0);
 }
 
-static addAllowIndependentCurveHandles(builder:flatbuffers.Builder, allowIndependentCurveHandles:boolean) {
-  builder.addFieldInt8(55, +allowIndependentCurveHandles, +false);
+static addCurrentItemStrokeStyleV3(builder:flatbuffers.Builder, currentItemStrokeStyleV3:number) {
+  builder.addFieldInt8(58, currentItemStrokeStyleV3, 0);
 }
 
-static addCoordDecimalPlaces(builder:flatbuffers.Builder, coordDecimalPlaces:number) {
-  builder.addFieldInt32(56, coordDecimalPlaces, 0);
+static addCurrentItemTextAlignV3(builder:flatbuffers.Builder, currentItemTextAlignV3:number) {
+  builder.addFieldInt8(59, currentItemTextAlignV3, 0);
+}
+
+static addLineBendingMode(builder:flatbuffers.Builder, lineBendingMode:boolean) {
+  builder.addFieldInt8(60, +lineBendingMode, +false);
+}
+
+static addCurrentItemStrokeWidthV3(builder:flatbuffers.Builder, currentItemStrokeWidthV3:number) {
+  builder.addFieldFloat64(61, currentItemStrokeWidthV3, 0.0);
+}
+
+static addCurrentItemStrokePlacementV3(builder:flatbuffers.Builder, currentItemStrokePlacementV3:number) {
+  builder.addFieldInt8(62, currentItemStrokePlacementV3, 0);
+}
+
+static addCurrentItemFontSizeV3(builder:flatbuffers.Builder, currentItemFontSizeV3:number) {
+  builder.addFieldFloat64(63, currentItemFontSizeV3, 0.0);
+}
+
+static addCoordDecimalPlacesV3(builder:flatbuffers.Builder, coordDecimalPlacesV3:number) {
+  builder.addFieldInt8(64, coordDecimalPlacesV3, 0);
 }
 
 static endAppState(builder:flatbuffers.Builder):flatbuffers.Offset {

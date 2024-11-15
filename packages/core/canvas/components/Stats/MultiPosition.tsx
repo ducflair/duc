@@ -43,7 +43,7 @@ const moveElements = (
       origElement.x + origElement.width / 2,
       origElement.y + origElement.height / 2,
     ];
-    const [topLeftX, topLeftY] = rotate(
+    const {x: topLeftX, y: topLeftY} = rotate(
       origElement.x,
       origElement.y,
       cx,
@@ -98,7 +98,7 @@ const moveGroupTo = (
         latestElement.y + latestElement.height / 2,
       ];
 
-      const [topLeftX, topLeftY] = rotate(
+      const {x: topLeftX, y: topLeftY} = rotate(
         latestElement.x,
         latestElement.y,
         cx,
@@ -174,7 +174,7 @@ const handlePositionChange: DragInputCallbackType<
             origElement.x + origElement.width / 2,
             origElement.y + origElement.height / 2,
           ];
-          const [topLeftX, topLeftY] = rotate(
+          const {x: topLeftX, y: topLeftY} = rotate(
             origElement.x,
             origElement.y,
             cx,
@@ -246,7 +246,7 @@ const MultiPosition = ({
         const [el] = elementsInUnit;
         const [cx, cy] = [el.x + el.width / 2, el.y + el.height / 2];
 
-        const [topLeftX, topLeftY] = rotate(el.x, el.y, cx, cy, el.angle);
+        const {x: topLeftX, y: topLeftY} = rotate(el.x, el.y, cx, cy, el.angle);
 
         return Math.round((property === "x" ? topLeftX : topLeftY) * 100) / 100;
       }),
