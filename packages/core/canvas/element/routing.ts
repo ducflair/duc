@@ -3,15 +3,17 @@ import BinaryHeap from "../binaryheap";
 import {
   aabbForElement,
   arePointsEqual,
+  headingToPoint,
   pointInsideBounds,
   pointToVector,
   scalePointFromOrigin,
   scaleVector,
   translatePoint,
+  vectorToPoint,
 } from "../math";
 import { getSizeFromPoints } from "../points";
 import type { Point } from "../types";
-import { isAnyTrue, toBrandedType, tupleToCoors } from "../utils";
+import { convertPointToTuple, isAnyTrue, toBrandedType, tupleToCoors } from "../utils";
 import {
   bindPointToSnapToElementOutline,
   distanceToBindableElement,
@@ -36,6 +38,7 @@ import { isBindableElement, isRectanguloidElement } from "./typeChecks";
 import type {
   DucElbowArrowElement,
   FixedPointBinding,
+  NonDeletedDucElement,
   NonDeletedSceneElementsMap,
   SceneElementsMap,
 } from "./types";
@@ -75,14 +78,14 @@ export const mutateElbowArrow = (
     informMutation?: boolean;
   },
 ) => {
-  const origStartGlobalPoint = translatePoint(nextPoints[0], [
-    arrow.x + (offset ? offset[0] : 0),
-    arrow.y + (offset ? offset[1] : 0),
-  ]);
-  const origEndGlobalPoint = translatePoint(nextPoints[nextPoints.length - 1], [
-    arrow.x + (offset ? offset[0] : 0),
-    arrow.y + (offset ? offset[1] : 0),
-  ]);
+  const origStartGlobalPoint = translatePoint(nextPoints[0], {
+    x: arrow.x + (offset ? offset.x : 0),
+    y: arrow.y + (offset ? offset.y : 0),
+  });
+  const origEndGlobalPoint = translatePoint(nextPoints[nextPoints.length - 1], {
+    x: arrow.x + (offset ? offset.x : 0),
+    y: arrow.y + (offset ? offset.y : 0),
+  });
 
   const startElement =
     arrow.startBinding &&
@@ -126,16 +129,16 @@ export const mutateElbowArrow = (
     origEndGlobalPoint,
   );
   const startPointBounds = [
-    startGlobalPoint[0] - 2,
-    startGlobalPoint[1] - 2,
-    startGlobalPoint[0] + 2,
-    startGlobalPoint[1] + 2,
+    startGlobalPoint.x - 2,
+    startGlobalPoint.y - 2,
+    startGlobalPoint.x + 2,
+    startGlobalPoint.y + 2,
   ] as Bounds;
   const endPointBounds = [
-    endGlobalPoint[0] - 2,
-    endGlobalPoint[1] - 2,
-    endGlobalPoint[0] + 2,
-    endGlobalPoint[1] + 2,
+    endGlobalPoint.x - 2,
+    endGlobalPoint.y - 2,
+    endGlobalPoint.x + 2,
+    endGlobalPoint.y + 2,
   ] as Bounds;
   const startElementBounds = hoveredStartElement
     ? aabbForElement(
@@ -273,9 +276,8 @@ export const mutateElbowArrow = (
     endHeading ? endHeading : HEADING_RIGHT,
     dongleOverlap ? [] : dynamicAABBs,
   );
-
   if (path) {
-    const points = path.map((node) => [node.pos[0], node.pos[1]]) as Point[];
+    const points = path.map((node) => node.pos) as Point[];
     startDongle && points.unshift(startGlobalPoint);
     endDongle && points.push(endGlobalPoint);
 
@@ -384,13 +386,13 @@ const astar = (
         : startHeading;
 
       // Do not allow going in reverse
-      const reverseHeading = scaleVector(previousDirection, -1);
+      const reverseHeading:Point = vectorToPoint(scaleVector(previousDirection, -1));
       const neighborIsReverseRoute =
-        arePointsEqual(reverseHeading, neighborHeading) ||
-        (arePointsEqual(start.addr, neighbor.addr) &&
-          arePointsEqual(neighborHeading, startHeading)) ||
-        (arePointsEqual(end.addr, neighbor.addr) &&
-          arePointsEqual(neighborHeading, endHeading));
+        arePointsEqual(reverseHeading, headingToPoint(neighborHeading)) ||
+        (arePointsEqual({x: start.addr[0], y: start.addr[1]}, {x: neighbor.addr[0], y: neighbor.addr[1]}) &&
+          arePointsEqual(headingToPoint(neighborHeading), headingToPoint(startHeading))) ||
+        (arePointsEqual({x: end.addr[0], y: end.addr[1]}, {x: neighbor.addr[0], y: neighbor.addr[1]}) &&
+          arePointsEqual(headingToPoint(neighborHeading), headingToPoint(endHeading)));
       if (neighborIsReverseRoute) {
         continue;
       }
@@ -445,7 +447,7 @@ const pathTo = (start: Node, node: Node) => {
 };
 
 const m_dist = (a: Point, b: Point) =>
-  Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+  Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 
 /**
  * Create dynamically resizing, always touching
@@ -541,7 +543,7 @@ const generateDynamicAABBs = (
       const cX = first[2] + (second[0] - first[2]) / 2;
       const cY = second[3] + (first[1] - second[3]) / 2;
 
-      if (cross([a[2], a[1]], [a[0], a[3]], [endCenterX, endCenterY]) > 0) {
+      if (cross({x: a[2], y: a[1]}, { x: a[0], y: a[3] }, { x: endCenterX, y: endCenterY }) > 0) {
         return [
           [first[0], first[1], cX, first[3]],
           [cX, second[1], second[2], second[3]],
@@ -557,7 +559,7 @@ const generateDynamicAABBs = (
       const cX = first[2] + (second[0] - first[2]) / 2;
       const cY = first[3] + (second[1] - first[3]) / 2;
 
-      if (cross([a[0], a[1]], [a[2], a[3]], [endCenterX, endCenterY]) > 0) {
+      if (cross({x: a[0], y: a[1]}, { x: a[2], y: a[3] }, { x: endCenterX, y: endCenterY }) > 0) {
         return [
           [first[0], first[1], first[2], cY],
           [second[0], cY, second[2], second[3]],
@@ -573,7 +575,7 @@ const generateDynamicAABBs = (
       const cX = second[2] + (first[0] - second[2]) / 2;
       const cY = first[3] + (second[1] - first[3]) / 2;
 
-      if (cross([a[2], a[1]], [a[0], a[3]], [endCenterX, endCenterY]) > 0) {
+      if (cross({x: a[2], y: a[1]}, { x: a[0], y: a[3] }, { x: endCenterX, y: endCenterY }) > 0) {
         return [
           [cX, first[1], first[2], first[3]],
           [second[0], second[1], cX, second[3]],
@@ -589,7 +591,7 @@ const generateDynamicAABBs = (
       const cX = second[2] + (first[0] - second[2]) / 2;
       const cY = second[3] + (first[1] - second[3]) / 2;
 
-      if (cross([a[0], a[1]], [a[2], a[3]], [endCenterX, endCenterY]) > 0) {
+      if (cross({x: a[0], y: a[1]}, { x: a[2], y: a[3] }, { x: endCenterX, y: endCenterY }) > 0) {
         return [
           [cX, first[1], first[2], first[3]],
           [second[0], second[1], cX, second[3]],
@@ -625,14 +627,14 @@ const calculateGrid = (
   const vertical = new Set<number>();
 
   if (startHeading === HEADING_LEFT || startHeading === HEADING_RIGHT) {
-    vertical.add(start[1]);
+    vertical.add(start.y);
   } else {
-    horizontal.add(start[0]);
+    horizontal.add(start.x);
   }
   if (endHeading === HEADING_LEFT || endHeading === HEADING_RIGHT) {
-    vertical.add(end[1]);
+    vertical.add(end.y);
   } else {
-    horizontal.add(end[0]);
+    horizontal.add(end.x);
   }
 
   aabbs.forEach((aabb) => {
@@ -663,7 +665,7 @@ const calculateGrid = (
           visited: false,
           parent: null,
           addr: [col, row] as [number, number],
-          pos: [x, y] as Point,
+          pos: {x, y} as Point,
         }),
       ),
     ),
@@ -677,13 +679,13 @@ const getDonglePosition = (
 ): Point => {
   switch (heading) {
     case HEADING_UP:
-      return [point[0], bounds[1]];
+      return {x: point.x, y: bounds[1]};
     case HEADING_RIGHT:
-      return [bounds[2], point[1]];
+      return {x: bounds[2], y: point.y};
     case HEADING_DOWN:
-      return [point[0], bounds[3]];
+      return {x: point.x, y: bounds[3]};
   }
-  return [bounds[0], point[1]];
+  return {x: bounds[0], y: point.y};
 };
 
 const estimateSegmentCount = (
@@ -695,26 +697,26 @@ const estimateSegmentCount = (
   if (endHeading === HEADING_RIGHT) {
     switch (startHeading) {
       case HEADING_RIGHT: {
-        if (start.pos[0] >= end.pos[0]) {
+        if (start.pos.x >= end.pos.x) {
           return 4;
         }
-        if (start.pos[1] === end.pos[1]) {
+        if (start.pos.y === end.pos.y) {
           return 0;
         }
         return 2;
       }
       case HEADING_UP:
-        if (start.pos[1] > end.pos[1] && start.pos[0] < end.pos[0]) {
+        if (start.pos.y > end.pos.y && start.pos.x < end.pos.x) {
           return 1;
         }
         return 3;
       case HEADING_DOWN:
-        if (start.pos[1] < end.pos[1] && start.pos[0] < end.pos[0]) {
+        if (start.pos.y < end.pos.y && start.pos.x < end.pos.x) {
           return 1;
         }
         return 3;
       case HEADING_LEFT:
-        if (start.pos[1] === end.pos[1]) {
+        if (start.pos.y === end.pos.y) {
           return 4;
         }
         return 2;
@@ -722,25 +724,25 @@ const estimateSegmentCount = (
   } else if (endHeading === HEADING_LEFT) {
     switch (startHeading) {
       case HEADING_RIGHT:
-        if (start.pos[1] === end.pos[1]) {
+        if (start.pos.y === end.pos.y) {
           return 4;
         }
         return 2;
       case HEADING_UP:
-        if (start.pos[1] > end.pos[1] && start.pos[0] > end.pos[0]) {
+        if (start.pos.y > end.pos.y && start.pos.x > end.pos.x) {
           return 1;
         }
         return 3;
       case HEADING_DOWN:
-        if (start.pos[1] < end.pos[1] && start.pos[0] > end.pos[0]) {
+        if (start.pos.y < end.pos.y && start.pos.x > end.pos.x) {
           return 1;
         }
         return 3;
       case HEADING_LEFT:
-        if (start.pos[0] <= end.pos[0]) {
+        if (start.pos.x <= end.pos.x) {
           return 4;
         }
-        if (start.pos[1] === end.pos[1]) {
+        if (start.pos.y === end.pos.y) {
           return 0;
         }
         return 2;
@@ -748,25 +750,25 @@ const estimateSegmentCount = (
   } else if (endHeading === HEADING_UP) {
     switch (startHeading) {
       case HEADING_RIGHT:
-        if (start.pos[1] > end.pos[1] && start.pos[0] < end.pos[0]) {
+        if (start.pos.y > end.pos.y && start.pos.x < end.pos.x) {
           return 1;
         }
         return 3;
       case HEADING_UP:
-        if (start.pos[1] >= end.pos[1]) {
+        if (start.pos.y >= end.pos.y) {
           return 4;
         }
-        if (start.pos[0] === end.pos[0]) {
+        if (start.pos.x === end.pos.x) {
           return 0;
         }
         return 2;
       case HEADING_DOWN:
-        if (start.pos[0] === end.pos[0]) {
+        if (start.pos.x === end.pos.x) {
           return 4;
         }
         return 2;
       case HEADING_LEFT:
-        if (start.pos[1] > end.pos[1] && start.pos[0] > end.pos[0]) {
+        if (start.pos.y > end.pos.y && start.pos.x > end.pos.x) {
           return 1;
         }
         return 3;
@@ -774,25 +776,25 @@ const estimateSegmentCount = (
   } else if (endHeading === HEADING_DOWN) {
     switch (startHeading) {
       case HEADING_RIGHT:
-        if (start.pos[1] < end.pos[1] && start.pos[0] < end.pos[0]) {
+        if (start.pos.y < end.pos.y && start.pos.x < end.pos.x) {
           return 1;
         }
         return 3;
       case HEADING_UP:
-        if (start.pos[0] === end.pos[0]) {
+        if (start.pos.x === end.pos.x) {
           return 4;
         }
         return 2;
       case HEADING_DOWN:
-        if (start.pos[1] <= end.pos[1]) {
+        if (start.pos.y <= end.pos.y) {
           return 4;
         }
-        if (start.pos[0] === end.pos[0]) {
+        if (start.pos.x === end.pos.x) {
           return 0;
         }
         return 2;
       case HEADING_LEFT:
-        if (start.pos[1] < end.pos[1] && start.pos[0] > end.pos[0]) {
+        if (start.pos.y < end.pos.y && start.pos.x > end.pos.x) {
           return 1;
         }
         return 3;
@@ -832,8 +834,8 @@ const pointToGridNode = (point: Point, grid: Grid): Node | null => {
       const candidate = gridNodeFromAddr([col, row], grid);
       if (
         candidate &&
-        point[0] === candidate.pos[0] &&
-        point[1] === candidate.pos[1]
+        point.x === candidate.pos.x &&
+        point.y === candidate.pos.y
       ) {
         return candidate;
       }
@@ -869,11 +871,11 @@ const normalizedArrowElementUpdate = (
   externalOffsetX?: number,
   externalOffsetY?: number,
 ) => {
-  const offsetX = global[0][0];
-  const offsetY = global[0][1];
+  const offsetX = global[0].x;
+  const offsetY = global[0].y;
 
   const points = global.map(
-    (point) => [point[0] - offsetX, point[1] - offsetY] as const,
+    (point) => ({x: point.x - offsetX, y: point.y - offsetY} as const),
   );
 
   return {
@@ -891,14 +893,21 @@ const simplifyElbowArrowPoints = (points: Point[]): Point[] =>
     .reduce(
       (result, point) =>
         arePointsEqual(
-          vectorToHeading(
-            pointToVector(result[result.length - 1], result[result.length - 2]),
+          vectorToPoint(
+            vectorToHeading(
+              pointToVector(result[result.length - 1], result[result.length - 2])
+            ),
           ),
-          vectorToHeading(pointToVector(point, result[result.length - 1])),
+          vectorToPoint(
+            vectorToHeading(pointToVector(point, result[result.length - 1]))
+          )
         )
           ? [...result.slice(0, -1), point]
           : [...result, point],
-      [points[0] ?? [0, 0], points[1] ?? [1, 0]],
+      [
+        points[0] ?? { x: 0, y: 0 },
+        points[1] ?? { x: 1, y: 0 },
+      ]
     );
 
 const neighborIndexToHeading = (idx: number): Heading => {
@@ -914,7 +923,7 @@ const neighborIndexToHeading = (idx: number): Heading => {
 };
 
 const getGlobalPoint = (
-  fixedPointRatio: [number, number] | undefined | null,
+  fixedPointRatio: Point | undefined | null,
   initialPoint: Point,
   otherPoint: Point,
   elementsMap: NonDeletedSceneElementsMap | SceneElementsMap,
@@ -939,7 +948,7 @@ const getGlobalPoint = (
 
   if (boundElement) {
     const fixedGlobalPoint = getGlobalFixedPointForBindableElement(
-      fixedPointRatio || [0, 0],
+      fixedPointRatio || { x:0, y:0 },
       boundElement,
     );
 
@@ -992,6 +1001,10 @@ const getBindPointHeading = (
     origPoint,
   );
 
+
+  // Utility function to convert Point to tuple if required
+// Utility function to convert Point to a tuple if needed
+
 const getHoveredElements = (
   origStartGlobalPoint: Point,
   origEndGlobalPoint: Point,
@@ -1005,16 +1018,17 @@ const getHoveredElements = (
   const elements = Array.from(elementsMap.values());
   return [
     getHoveredElementForBinding(
-      tupleToCoors(origStartGlobalPoint),
+      origStartGlobalPoint as { x: number; y: number },
       elements,
       nonDeletedSceneElementsMap,
       true,
     ),
     getHoveredElementForBinding(
-      tupleToCoors(origEndGlobalPoint),
+      origEndGlobalPoint as { x: number; y: number },
       elements,
       nonDeletedSceneElementsMap,
       true,
     ),
   ];
 };
+

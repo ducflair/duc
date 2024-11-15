@@ -45,6 +45,7 @@ import {
   DEFAULT_FONT_SIZE,
   DEFAULT_TEXT_ALIGN,
   DEFAULT_VERTICAL_ALIGN,
+  TEXT_ALIGN,
   VERTICAL_ALIGN,
 } from "../constants";
 import { MarkOptional, Merge, Mutable } from "../utility-types";
@@ -78,7 +79,6 @@ export type ElementConstructorOpts = MarkOptional<
   | "opacity"
   | "customData"
   | "isVisible"
-  | "writingLayer"
   | "scope"
 >;
 
@@ -87,7 +87,6 @@ const _newElementBase = <T extends DucElement>(
   {
     x,
     y,
-    writingLayer = DEFAULT_ELEMENT_PROPS.writingLayer,
     scope = DEFAULT_ELEMENT_PROPS.scope,
     index = DEFAULT_ELEMENT_PROPS.index,
     label = DEFAULT_ELEMENT_PROPS.label,
@@ -137,7 +136,6 @@ const _newElementBase = <T extends DucElement>(
     frameId,
     roundness,
     label,
-    writingLayer,
     scope,
     isStrokeDisabled,
     isBackgroundDisabled,
@@ -246,12 +244,12 @@ const getTextElementPositionOffsets = (
 ) => {
   return {
     x:
-      opts.textAlign === "center"
+      opts.textAlign === TEXT_ALIGN.CENTER
         ? metrics.width / 2
-        : opts.textAlign === "right"
+        : opts.textAlign === TEXT_ALIGN.RIGHT
         ? metrics.width
         : 0,
-    y: opts.verticalAlign === "middle" ? metrics.height / 2 : 0,
+    y: opts.verticalAlign === VERTICAL_ALIGN.MIDDLE ? metrics.height / 2 : 0,
   };
 };
 
@@ -335,7 +333,7 @@ const getAdjustedDimensions = (
   let x: number;
   let y: number;
   if (
-    textAlign === "center" &&
+    textAlign === TEXT_ALIGN.CENTER &&
     verticalAlign === VERTICAL_ALIGN.MIDDLE &&
     !element.containerId &&
     element.autoResize
@@ -366,11 +364,11 @@ const getAdjustedDimensions = (
     const deltaX2 = (x2 - nextX2) / 2;
     const deltaY2 = (y2 - nextY2) / 2;
 
-    [x, y] = adjustXYWithRotation(
+    const rotationPoint = adjustXYWithRotation(
       {
         s: true,
-        e: textAlign === "center" || textAlign === "left",
-        w: textAlign === "center" || textAlign === "right",
+        e: textAlign === TEXT_ALIGN.CENTER || textAlign === TEXT_ALIGN.LEFT,
+        w: textAlign === TEXT_ALIGN.CENTER || textAlign === TEXT_ALIGN.RIGHT,
       },
       element.x,
       element.y,
@@ -380,6 +378,8 @@ const getAdjustedDimensions = (
       deltaX2,
       deltaY2,
     );
+    x = rotationPoint.x;
+    y = rotationPoint.y;
   }
 
   return {

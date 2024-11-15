@@ -24,7 +24,7 @@ import { getBoundTextElement, getContainerElement } from "./textElement";
 import { LinearElementEditor } from "./linearElementEditor";
 import { Mutable } from "../utility-types";
 import { ShapeCache } from "../scene/ShapeCache";
-import { arrayToMap } from "../utils";
+import { arrayToMap, OldPoint, TuplePoint } from "../utils";
 
 export type RectangleBox = {
   x: number;
@@ -96,7 +96,7 @@ export class ElementBounds {
     );
     if (isFreeDrawElement(element)) {
       const [minX, minY, maxX, maxY] = getBoundsFromPoints(
-        element.points.map(([x, y]) =>
+        element.points.map(({x, y}) =>
           rotate(x, y, cx - element.x, cy - element.y, element.angle),
         ),
       );
@@ -110,10 +110,10 @@ export class ElementBounds {
     } else if (isLinearElement(element)) {
       bounds = getLinearElementRotatedBounds(element, cx, cy, elementsMap);
     } else if (element.type === "diamond") {
-      const [x11, y11] = rotate(cx, y1, cx, cy, element.angle);
-      const [x12, y12] = rotate(cx, y2, cx, cy, element.angle);
-      const [x22, y22] = rotate(x1, cy, cx, cy, element.angle);
-      const [x21, y21] = rotate(x2, cy, cx, cy, element.angle);
+      const {x: x11, y: y11} = rotate(cx, y1, cx, cy, element.angle);
+      const {x: x12, y: y12} = rotate(cx, y2, cx, cy, element.angle);
+      const {x: x22, y: y22} = rotate(x1, cy, cx, cy, element.angle);
+      const {x: x21, y: y21} = rotate(x2, cy, cx, cy, element.angle);
       const minX = Math.min(x11, x12, x22, x21);
       const minY = Math.min(y11, y12, y22, y21);
       const maxX = Math.max(x11, x12, x22, x21);
@@ -128,10 +128,10 @@ export class ElementBounds {
       const hh = Math.hypot(h * cos, w * sin);
       bounds = [cx - ww, cy - hh, cx + ww, cy + hh];
     } else {
-      const [x11, y11] = rotate(x1, y1, cx, cy, element.angle);
-      const [x12, y12] = rotate(x1, y2, cx, cy, element.angle);
-      const [x22, y22] = rotate(x2, y2, cx, cy, element.angle);
-      const [x21, y21] = rotate(x2, y1, cx, cy, element.angle);
+      const {x: x11, y: y11} = rotate(x1, y1, cx, cy, element.angle);
+      const {x: x12, y: y12} = rotate(x1, y2, cx, cy, element.angle);
+      const {x: x22, y: y22} = rotate(x2, y2, cx, cy, element.angle);
+      const {x: x21, y: y21} = rotate(x2, y1, cx, cy, element.angle);
       const minX = Math.min(x11, x12, x22, x21);
       const minY = Math.min(y11, y12, y22, y21);
       const maxX = Math.max(x11, x12, x22, x21);
@@ -204,48 +204,81 @@ export const getElementLineSegments = (
     elementsMap,
   );
 
-  const center: Point = [cx, cy];
+  const center: Point = {x: cx, y: cy};
 
-  if (isLinearElement(element) || isFreeDrawElement(element)) {
+  if (isLinearElement(element)) {
     const segments: [Point, Point][] = [];
+    const points = element.points;
 
-    let i = 0;
-
-    while (i < element.points.length - 1) {
-      segments.push([
-        rotatePoint(
-          [
-            element.points[i][0] + element.x,
-            element.points[i][1] + element.y,
-          ] as Point,
-          center,
-          element.angle,
-        ),
-        rotatePoint(
-          [
-            element.points[i + 1][0] + element.x,
-            element.points[i + 1][1] + element.y,
-          ] as Point,
-          center,
-          element.angle,
-        ),
-      ]);
-      i++;
+    for (let i = 0; i < points.length - 1; i++) {
+      const current = points[i];
+      const next = points[i + 1];
+      
+      if (current.handleOut || next.handleIn) {
+        // For curved segments, sample points along the curve
+        const samples = sampleBezierCurve(
+          current,
+          current.handleOut || current,
+          next.handleIn || next,
+          next,
+          10 // number of samples
+        );
+        
+        for (let j = 0; j < samples.length - 1; j++) {
+          segments.push([
+            rotatePoint(
+              {
+                x: samples[j].x + element.x,
+                y: samples[j].y + element.y,
+              },
+              center,
+              element.angle
+            ),
+            rotatePoint(
+              {
+                x: samples[j + 1].x + element.x,
+                y: samples[j + 1].y + element.y,
+              },
+              center,
+              element.angle
+            ),
+          ]);
+        }
+      } else {
+        // For straight segments, use the original logic
+        segments.push([
+          rotatePoint(
+            {
+              x: current.x + element.x,
+              y: current.y + element.y,
+            },
+            center,
+            element.angle
+          ),
+          rotatePoint(
+            {
+              x: next.x + element.x,
+              y: next.y + element.y,
+            },
+            center,
+            element.angle
+          ),
+        ]);
+      }
     }
-
     return segments;
   }
 
   const [nw, ne, sw, se, n, s, w, e] = (
     [
-      [x1, y1],
-      [x2, y1],
-      [x1, y2],
-      [x2, y2],
-      [cx, y1],
-      [cx, y2],
-      [x1, cy],
-      [x2, cy],
+      {x: x1, y: y1},
+      {x: x2, y: y1},
+      {x: x1, y: y2},
+      {x: x2, y: y2},
+      {x: cx, y: y1},
+      {x: cx, y: y2},
+      {x: x1, y: cy},
+      {x: x2, y: cy},
     ] as Point[]
   ).map((point) => rotatePoint(point, center, element.angle));
 
@@ -303,7 +336,7 @@ export const pointRelativeTo = (
   element: DucElement,
   absoluteCoords: Point,
 ): Point => {
-  return [absoluteCoords[0] - element.x, absoluteCoords[1] - element.y];
+  return {x: absoluteCoords.x - element.x, y: absoluteCoords.y - element.y};
 };
 
 export const getDiamondPoints = (element: DucElement) => {
@@ -398,11 +431,11 @@ const getCubicBezierCurveBound = (
   p2: Point,
   p3: Point,
 ): Bounds => {
-  const solX = solveQuadratic(p0[0], p1[0], p2[0], p3[0]);
-  const solY = solveQuadratic(p0[1], p1[1], p2[1], p3[1]);
+  const solX = solveQuadratic(p0.x, p1.x, p2.x, p3.x);
+  const solY = solveQuadratic(p0.y, p1.y, p2.y, p3.y);
 
-  let minX = Math.min(p0[0], p3[0]);
-  let maxX = Math.max(p0[0], p3[0]);
+  let minX = Math.min(p0.x, p3.x);
+  let maxX = Math.max(p0.x, p3.x);
 
   if (solX) {
     const xs = solX.filter((x) => x !== null) as number[];
@@ -410,8 +443,8 @@ const getCubicBezierCurveBound = (
     maxX = Math.max(maxX, ...xs);
   }
 
-  let minY = Math.min(p0[1], p3[1]);
-  let maxY = Math.max(p0[1], p3[1]);
+  let minY = Math.min(p0.y, p3.y);
+  let maxY = Math.max(p0.y, p3.y);
   if (solY) {
     const ys = solY.filter((y) => y !== null) as number[];
     minY = Math.min(minY, ...ys);
@@ -422,54 +455,75 @@ const getCubicBezierCurveBound = (
 
 export const getMinMaxXYFromCurvePathOps = (
   ops: Op[],
-  transformXY?: (x: number, y: number) => [number, number],
+  transformXY?: (x: number, y: number) => Point,
 ): Bounds => {
-  let currentP: Point = [0, 0];
+  let currentP: Point = { x: 0, y: 0 };
 
   const { minX, minY, maxX, maxY } = ops.reduce(
     (limits, { op, data }) => {
-      // There are only four operation types:
-      // move, bcurveTo, lineTo, and curveTo
-      if (op === "move") {
-        // change starting point
-        currentP = data as unknown as Point;
-        // move operation does not draw anything; so, it always
-        // returns false
-      } else if (op === "bcurveTo") {
-        const _p1 = [data[0], data[1]] as Point;
-        const _p2 = [data[2], data[3]] as Point;
-        const _p3 = [data[4], data[5]] as Point;
+      if (op === "move" && data) {
+        // Ensure data has the correct structure
+        currentP = { x: data[0], y: data[1] };
+      } else if (op === "bcurveTo" && data.length === 6) {
+        const _p1 = { x: data[0], y: data[1] };
+        const _p2 = { x: data[2], y: data[3] };
+        const _p3 = { x: data[4], y: data[5] };
 
-        const p1 = transformXY ? transformXY(..._p1) : _p1;
-        const p2 = transformXY ? transformXY(..._p2) : _p2;
-        const p3 = transformXY ? transformXY(..._p3) : _p3;
+        const p1 = transformXY ? transformXY(_p1.x, _p1.y) : _p1;
+        const p2 = transformXY ? transformXY(_p2.x, _p2.y) : _p2;
+        const p3 = transformXY ? transformXY(_p3.x, _p3.y) : _p3;
+        const p0 = transformXY ? transformXY(currentP.x, currentP.y) : currentP;
 
-        const p0 = transformXY ? transformXY(...currentP) : currentP;
         currentP = _p3;
 
-        const [minX, minY, maxX, maxY] = getCubicBezierCurveBound(
+        const [cMinX, cMinY, cMaxX, cMaxY] = getCubicBezierCurveBound(
           p0,
           p1,
           p2,
           p3,
         );
 
-        limits.minX = Math.min(limits.minX, minX);
-        limits.minY = Math.min(limits.minY, minY);
+        limits.minX = Math.min(limits.minX, cMinX);
+        limits.minY = Math.min(limits.minY, cMinY);
+        limits.maxX = Math.max(limits.maxX, cMaxX);
+        limits.maxY = Math.max(limits.maxY, cMaxY);
+      } else if (op === "lineTo" && data.length === 2) {
+        const lineEnd = transformXY
+          ? transformXY(data[0], data[1])
+          : { x: data[0], y: data[1] };
+        
+        limits.minX = Math.min(limits.minX, currentP.x, lineEnd.x);
+        limits.minY = Math.min(limits.minY, currentP.y, lineEnd.y);
+        limits.maxX = Math.max(limits.maxX, currentP.x, lineEnd.x);
+        limits.maxY = Math.max(limits.maxY, currentP.y, lineEnd.y);
+        
+        currentP = lineEnd;
+      } 
+      // else if (op === "qcurveTo" && data.length === 4) {
+      //   // For quadratic Bezier curves, implement appropriate bounding box logic
+      //   const controlP = transformXY
+      //     ? transformXY(data[0], data[1])
+      //     : { x: data[0], y: data[1] };
+      //   const endP = transformXY
+      //     ? transformXY(data[2], data[3])
+      //     : { x: data[2], y: data[3] };
 
-        limits.maxX = Math.max(limits.maxX, maxX);
-        limits.maxY = Math.max(limits.maxY, maxY);
-      } else if (op === "lineTo") {
-        // TODO: Implement this
-      } else if (op === "qcurveTo") {
-        // TODO: Implement this
-      }
+      //   // Implement bounds logic specific to quadratic curve if needed here
+      //   limits.minX = Math.min(limits.minX, currentP.x, controlP.x, endP.x);
+      //   limits.minY = Math.min(limits.minY, currentP.y, controlP.y, endP.y);
+      //   limits.maxX = Math.max(limits.maxX, currentP.x, controlP.x, endP.x);
+      //   limits.maxY = Math.max(limits.maxY, currentP.y, controlP.y, endP.y);
+
+      //   currentP = endP;
+      // }
       return limits;
     },
     { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity },
   );
+
   return [minX, minY, maxX, maxY];
 };
+
 
 export const getBoundsFromPoints = (
   points: DucFreeDrawElement["points"],
@@ -479,7 +533,7 @@ export const getBoundsFromPoints = (
   let maxX = -Infinity;
   let maxY = -Infinity;
 
-  for (const [x, y] of points) {
+  for (const {x, y} of points) {
     minX = Math.min(minX, x);
     minY = Math.min(minY, y);
     maxX = Math.max(maxX, x);
@@ -506,7 +560,6 @@ export const getArrowheadSize = (arrowhead: Arrowhead): number => {
     case "arrow":
       return 25;
     case "diamond":
-    case "diamond_outline":
       return 12;
     default:
       return 15;
@@ -530,131 +583,109 @@ export const getArrowheadPoints = (
   shape: Drawable[],
   position: "start" | "end",
   arrowhead: Arrowhead,
-) => {
+): number[] | null => {
   const ops = getCurvePathOps(shape[0]);
+  
+  // If no operations found, cannot determine arrowhead points
   if (ops.length < 1) {
+    console.warn("No operations found in shape for arrowhead calculation.");
     return null;
   }
 
-  // The index of the bCurve operation to examine.
-  const index = position === "start" ? 1 : ops.length - 1;
-
-  const data = ops[index].data;
-  const p3 = [data[4], data[5]] as Point;
-  const p2 = [data[2], data[3]] as Point;
-  const p1 = [data[0], data[1]] as Point;
-
-  // We need to find p0 of the bezier curve.
-  // It is typically the last point of the previous
-  // curve; it can also be the position of moveTo operation.
-  const prevOp = ops[index - 1];
-  let p0: Point = [0, 0];
-  if (prevOp.op === "move") {
-    p0 = prevOp.data as unknown as Point;
-  } else if (prevOp.op === "bcurveTo") {
-    p0 = [prevOp.data[4], prevOp.data[5]];
+  // Ensure there are enough points for 'start' and 'end' arrowheads
+  if (position === "start" && element.points.length < 2) {
+    console.warn("Not enough points for start arrowhead.");
+    return null;
+  }
+  if (position === "end" && element.points.length < 2) {
+    console.warn("Not enough points for end arrowhead.");
+    return null;
   }
 
-  // B(t) = p0 * (1-t)^3 + 3p1 * t * (1-t)^2 + 3p2 * t^2 * (1-t) + p3 * t^3
-  const equation = (t: number, idx: number) =>
-    Math.pow(1 - t, 3) * p3[idx] +
-    3 * t * Math.pow(1 - t, 2) * p2[idx] +
-    3 * Math.pow(t, 2) * (1 - t) * p1[idx] +
-    p0[idx] * Math.pow(t, 3);
+  // Get the target point where the arrowhead will be attached
+  const targetPoint = position === "start"
+    ? element.points[0]
+    : element.points[element.points.length - 1];
 
-  // Ee know the last point of the arrow (or the first, if start arrowhead).
-  const [x2, y2] = position === "start" ? p0 : p3;
+  // Get the previous point to determine direction
+  const prevPoint = position === "start"
+    ? (element.points.length > 1 ? element.points[1] : { x: targetPoint.x - 1, y: targetPoint.y })
+    : (element.points.length > 1 ? element.points[element.points.length - 2] : { x: targetPoint.x + 1, y: targetPoint.y });
 
-  // By using cubic bezier equation (B(t)) and the given parameters,
-  // we calculate a point that is closer to the last point.
-  // The value 0.3 is chosen arbitrarily and it works best for all
-  // the tested cases.
-  const [x1, y1] = [equation(0.3, 0), equation(0.3, 1)];
+  // Calculate the direction vector from prevPoint to targetPoint
+  const dx = targetPoint.x - prevPoint.x;
+  const dy = targetPoint.y - prevPoint.y;
+  const distance = Math.hypot(dx, dy);
 
-  // Find the normalized direction vector based on the
-  // previously calculated points.
-  const distance = Math.hypot(x2 - x1, y2 - y1);
-  const nx = (x2 - x1) / distance;
-  const ny = (y2 - y1) / distance;
+  // Normalize the direction vector, defaulting to (1, 0) if distance is too small
+  const nx = distance < 0.001 ? 1 : dx / distance;
+  const ny = distance < 0.001 ? 0 : dy / distance;
 
+  // Determine the size of the arrowhead based on the element and arrowhead type
   const size = getArrowheadSize(arrowhead);
+  const minSize = Math.min(size, distance * (arrowhead.includes("diamond") ? 0.25 : 0.5));
 
-  let length = 0;
+  // Calculate the base point of the arrowhead (where it starts from the line)
+  const baseX = targetPoint.x - nx * minSize;
+  const baseY = targetPoint.y - ny * minSize;
 
-  {
-    // Length for -> arrows is based on the length of the last section
-    const [cx, cy] =
-      position === "end"
-        ? element.points[element.points.length - 1]
-        : element.points[0];
-    const [px, py] =
-      element.points.length > 1
-        ? position === "end"
-          ? element.points[element.points.length - 2]
-          : element.points[1]
-        : [0, 0];
-
-    length = Math.hypot(cx - px, cy - py);
-  }
-
-  // Scale down the arrowhead until we hit a certain size so that it doesn't look weird.
-  // This value is selected by minimizing a minimum size with the last segment of the arrowhead
-  const lengthMultiplier =
-    arrowhead === "diamond" || arrowhead === "diamond_outline" ? 0.25 : 0.5;
-  const minSize = Math.min(size, length * lengthMultiplier);
-  const xs = x2 - nx * minSize;
-  const ys = y2 - ny * minSize;
-
+  // Handle different arrowhead types
   if (
-    arrowhead === "dot" ||
-    arrowhead === "circle" ||
-    arrowhead === "circle_outline"
+    arrowhead === "circle"
   ) {
-    const diameter = Math.hypot(ys - y2, xs - x2) + element.strokeWidth - 2;
-    return [x2, y2, diameter];
+    const diameter = Math.hypot(baseX - targetPoint.x, baseY - targetPoint.y) + element.strokeWidth - 2;
+    return [targetPoint.x, targetPoint.y, diameter];
   }
 
+  // Calculate the angle for the wings of the arrowhead
   const angle = getArrowheadAngle(arrowhead);
 
-  // Return points
-  const [x3, y3] = rotate(xs, ys, x2, y2, (-angle * Math.PI) / 180);
-  const [x4, y4] = rotate(xs, ys, x2, y2, (angle * Math.PI) / 180);
+  // Rotate the base point to get the wing points
+  const { x: wingX1, y: wingY1 } = rotate(baseX, baseY, targetPoint.x, targetPoint.y, (-angle * Math.PI) / 180);
+  const { x: wingX2, y: wingY2 } = rotate(baseX, baseY, targetPoint.x, targetPoint.y, (angle * Math.PI) / 180);
 
-  if (arrowhead === "diamond" || arrowhead === "diamond_outline") {
-    // point opposite to the arrowhead point
-    let ox;
-    let oy;
+  if (arrowhead === "diamond") {
+    let oppositeX: number, oppositeY: number;
 
     if (position === "start") {
-      const [px, py] = element.points.length > 1 ? element.points[1] : [0, 0];
-
-      [ox, oy] = rotate(
-        x2 + minSize * 2,
-        y2,
-        x2,
-        y2,
-        Math.atan2(py - y2, px - x2),
+      // For start arrowheads, use the second point to determine the opposite point
+      const referencePoint = element.points.length > 1 ? element.points[1] : { x: targetPoint.x - 1, y: targetPoint.y };
+      const angleToRef = Math.atan2(referencePoint.y - targetPoint.y, referencePoint.x - targetPoint.x);
+      
+      // Rotate to find the opposite point
+      const rotated = rotate(
+        targetPoint.x + minSize * 2 * nx, // Extend in the direction of the arrow
+        targetPoint.y + minSize * 2 * ny,
+        targetPoint.x,
+        targetPoint.y,
+        angleToRef,
       );
+      oppositeX = rotated.x;
+      oppositeY = rotated.y;
     } else {
-      const [px, py] =
-        element.points.length > 1
-          ? element.points[element.points.length - 2]
-          : [0, 0];
-
-      [ox, oy] = rotate(
-        x2 - minSize * 2,
-        y2,
-        x2,
-        y2,
-        Math.atan2(y2 - py, x2 - px),
+      // For end arrowheads, use the second last point to determine the opposite point
+      const referencePoint = element.points.length > 1 ? element.points[element.points.length - 2] : { x: targetPoint.x + 1, y: targetPoint.y };
+      const angleToRef = Math.atan2(referencePoint.y - targetPoint.y, referencePoint.x - targetPoint.x);
+      
+      // Rotate to find the opposite point
+      const rotated = rotate(
+        targetPoint.x - minSize * 2 * nx, // Extend in the opposite direction of the arrow
+        targetPoint.y - minSize * 2 * ny,
+        targetPoint.x,
+        targetPoint.y,
+        angleToRef,
       );
+      oppositeX = rotated.x;
+      oppositeY = rotated.y;
     }
 
-    return [x2, y2, x3, y3, ox, oy, x4, y4];
+    return [targetPoint.x, targetPoint.y, wingX1, wingY1, oppositeX, oppositeY, wingX2, wingY2];
   }
 
-  return [x2, y2, x3, y3, x4, y4];
+  // For other arrowhead types (e.g., "triangle"), return the wing points
+  return [targetPoint.x, targetPoint.y, wingX1, wingY1, wingX2, wingY2];
 };
+
 
 const generateLinearElementShape = (
   element: DucLinearElement,
@@ -672,8 +703,93 @@ const generateLinearElementShape = (
     return "linearPath";
   })();
 
-  return generator[method](element.points as Mutable<Point>[], options);
+  return generator[method](element.points.map(({x, y}) => [x, y]) as Mutable<OldPoint>[], options);
 };
+
+function getQuadraticBezierBoundingBox(
+  p0: { x: number; y: number },
+  p1: { x: number; y: number },
+  p2: { x: number; y: number },
+): { minX: number; minY: number; maxX: number; maxY: number } {
+  const tValues = [];
+  for (const coord of ['x', 'y'] as const) {
+    const a = p0[coord] - 2 * p1[coord] + p2[coord];
+    const b = 2 * (p1[coord] - p0[coord]);
+    if (a === 0) continue;
+    const t = -b / (2 * a);
+    if (t > 0 && t < 1) tValues.push(t);
+  }
+
+  const xValues = [p0.x, p2.x];
+  const yValues = [p0.y, p2.y];
+
+  for (const t of tValues) {
+    const x = (1 - t) * (1 - t) * p0.x + 2 * (1 - t) * t * p1.x + t * t * p2.x;
+    const y = (1 - t) * (1 - t) * p0.y + 2 * (1 - t) * t * p1.y + t * t * p2.y;
+    xValues.push(x);
+    yValues.push(y);
+  }
+
+  return {
+    minX: Math.min(...xValues),
+    minY: Math.min(...yValues),
+    maxX: Math.max(...xValues),
+    maxY: Math.max(...yValues),
+  };
+}
+
+function getCubicBezierBoundingBox(
+  p0: { x: number; y: number },
+  p1: { x: number; y: number },
+  p2: { x: number; y: number },
+  p3: { x: number; y: number },
+): { minX: number; minY: number; maxX: number; maxY: number } {
+  const tValues = [];
+  for (const coord of ['x', 'y'] as const) {
+    const b = 6 * p0[coord] - 12 * p1[coord] + 6 * p2[coord];
+    const a = -3 * p0[coord] + 9 * p1[coord] - 9 * p2[coord] + 3 * p3[coord];
+    const c = 3 * p1[coord] - 3 * p0[coord];
+    if (a === 0) {
+      if (b === 0) continue;
+      const t = -c / b;
+      if (t > 0 && t < 1) tValues.push(t);
+      continue;
+    }
+    const discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) continue;
+    const sqrtDiscriminant = Math.sqrt(discriminant);
+    const t1 = (-b + sqrtDiscriminant) / (2 * a);
+    const t2 = (-b - sqrtDiscriminant) / (2 * a);
+    if (t1 > 0 && t1 < 1) tValues.push(t1);
+    if (t2 > 0 && t2 < 1) tValues.push(t2);
+  }
+
+  const xValues = [p0.x, p3.x];
+  const yValues = [p0.y, p3.y];
+
+  for (const t of tValues) {
+    const x =
+      Math.pow(1 - t, 3) * p0.x +
+      3 * Math.pow(1 - t, 2) * t * p1.x +
+      3 * (1 - t) * t * t * p2.x +
+      t * t * t * p3.x;
+    const y =
+      Math.pow(1 - t, 3) * p0.y +
+      3 * Math.pow(1 - t, 2) * t * p1.y +
+      3 * (1 - t) * t * t * p2.y +
+      t * t * t * p3.y;
+    xValues.push(x);
+    yValues.push(y);
+  }
+
+  return {
+    minX: Math.min(...xValues),
+    minY: Math.min(...yValues),
+    maxX: Math.max(...xValues),
+    maxY: Math.max(...yValues),
+  };
+}
+
 
 const getLinearElementRotatedBounds = (
   element: DucLinearElement,
@@ -684,8 +800,8 @@ const getLinearElementRotatedBounds = (
   const boundTextElement = getBoundTextElement(element, elementsMap);
 
   if (element.points.length < 2) {
-    const [pointX, pointY] = element.points[0];
-    const [x, y] = rotate(
+    const {x: pointX, y: pointY} = element.points[0];
+    const {x, y} = rotate(
       element.x + pointX,
       element.y + pointY,
       cx,
@@ -711,14 +827,82 @@ const getLinearElementRotatedBounds = (
     return coords;
   }
 
-  // first element is always the curve
-  const cachedShape = ShapeCache.get(element)?.[0];
-  const shape = cachedShape ?? generateLinearElementShape(element);
-  const ops = getCurvePathOps(shape);
-  const transformXY = (x: number, y: number) =>
-    rotate(element.x + x, element.y + y, cx, cy, element.angle);
-  const res = getMinMaxXYFromCurvePathOps(ops, transformXY);
-  let coords: Bounds = [res[0], res[1], res[2], res[3]];
+  const points = element.points.map((pt) => ({
+    x: element.x + pt.x,
+    y: element.y + pt.y,
+    handleIn: pt.handleIn
+      ? { x: element.x + pt.handleIn.x, y: element.y + pt.handleIn.y }
+      : undefined,
+    handleOut: pt.handleOut
+      ? { x: element.x + pt.handleOut.x, y: element.y + pt.handleOut.y }
+      : undefined,
+  }));
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const current = points[i];
+    const next = points[i + 1];
+
+    if (current.handleOut && next.handleIn) {
+      // Cubic Bezier curve segment
+      const bbox = getCubicBezierBoundingBox(
+        current,
+        current.handleOut,
+        next.handleIn,
+        next,
+      );
+
+      // Rotate bbox corners
+      const corners = [
+        rotate(bbox.minX, bbox.minY, cx, cy, element.angle),
+        rotate(bbox.maxX, bbox.minY, cx, cy, element.angle),
+        rotate(bbox.minX, bbox.maxY, cx, cy, element.angle),
+        rotate(bbox.maxX, bbox.maxY, cx, cy, element.angle),
+      ];
+
+      for (const corner of corners) {
+        minX = Math.min(minX, corner.x);
+        minY = Math.min(minY, corner.y);
+        maxX = Math.max(maxX, corner.x);
+        maxY = Math.max(maxY, corner.y);
+      }
+    } else if (current.handleOut || next.handleIn) {
+      // Quadratic Bezier curve segment
+      const controlPoint = current.handleOut || next.handleIn;
+      const bbox = getQuadraticBezierBoundingBox(current, controlPoint!, next);
+
+      // Rotate bbox corners
+      const corners = [
+        rotate(bbox.minX, bbox.minY, cx, cy, element.angle),
+        rotate(bbox.maxX, bbox.minY, cx, cy, element.angle),
+        rotate(bbox.minX, bbox.maxY, cx, cy, element.angle),
+        rotate(bbox.maxX, bbox.maxY, cx, cy, element.angle),
+      ];
+
+      for (const corner of corners) {
+        minX = Math.min(minX, corner.x);
+        minY = Math.min(minY, corner.y);
+        maxX = Math.max(maxX, corner.x);
+        maxY = Math.max(maxY, corner.y);
+      }
+    } else {
+      // Line segment
+      const p0 = rotate(current.x, current.y, cx, cy, element.angle);
+      const p1 = rotate(next.x, next.y, cx, cy, element.angle);
+
+      minX = Math.min(minX, p0.x, p1.x);
+      minY = Math.min(minY, p0.y, p1.y);
+      maxX = Math.max(maxX, p0.x, p1.x);
+      maxY = Math.max(maxY, p0.y, p1.y);
+    }
+  }
+
+  let coords: Bounds = [minX, minY, maxX, maxY];
+
   if (boundTextElement) {
     const coordsWithBoundText = LinearElementEditor.getMinMaxXYWithBoundText(
       element,
@@ -733,8 +917,10 @@ const getLinearElementRotatedBounds = (
       coordsWithBoundText[3],
     ];
   }
+
   return coords;
 };
+
 
 export const getElementBounds = (
   element: DucElement,
@@ -798,9 +984,9 @@ export const getResizedElementAbsoluteCoords = (
   }
 
   const points = rescalePoints(
-    0,
+    'x',
     nextWidth,
-    rescalePoints(1, nextHeight, element.points, normalizePoints),
+    rescalePoints('y', nextHeight, element.points, normalizePoints),
     normalizePoints,
   );
 
@@ -814,10 +1000,10 @@ export const getResizedElementAbsoluteCoords = (
     const gen = rough.generator();
     const curve = !element.roundness
       ? gen.linearPath(
-          points as [number, number][],
+          points.map(({x,y}) => [x, y]) as TuplePoint[],
           generateRoughOptions(element),
         )
-      : gen.curve(points as [number, number][], generateRoughOptions(element));
+      : gen.curve(points.map(({x,y}) => [x, y]) as TuplePoint[], generateRoughOptions(element));
 
     const ops = getCurvePathOps(curve);
     bounds = getMinMaxXYFromCurvePathOps(ops);
@@ -834,17 +1020,17 @@ export const getResizedElementAbsoluteCoords = (
 
 export const getElementPointsCoords = (
   element: DucLinearElement,
-  points: readonly (readonly [number, number])[],
+  points: readonly Point[],
 ): Bounds => {
   // This might be computationally heavey
   const gen = rough.generator();
   const curve =
     element.roundness == null
       ? gen.linearPath(
-          points as [number, number][],
+          points.map((p) => [p.x, p.y]) as TuplePoint[],
           generateRoughOptions(element),
         )
-      : gen.curve(points as [number, number][], generateRoughOptions(element));
+      : gen.curve(points.map((p) => [p.x, p.y]) as TuplePoint[], generateRoughOptions(element));
   const ops = getCurvePathOps(curve);
   const [minX, minY, maxX, maxY] = getMinMaxXYFromCurvePathOps(ops);
   return [
@@ -923,3 +1109,40 @@ export const getVisibleSceneBounds = ({
     -scrollY + height / zoom.value,
   ];
 };
+
+function sampleBezierCurve(
+  start: Point,
+  cp1: Point,
+  cp2: Point,
+  end: Point,
+  numSamples: number
+): Point[] {
+  const points: Point[] = [];
+  for (let i = 0; i <= numSamples; i++) {
+    const t = i / numSamples;
+    points.push(getBezierPoint(start, cp1, cp2, end, t));
+  }
+  return points;
+}
+
+function getBezierPoint(
+  start: Point,
+  cp1: Point,
+  cp2: Point,
+  end: Point,
+  t: number
+): Point {
+  const mt = 1 - t;
+  return {
+    x:
+      mt * mt * mt * start.x +
+      3 * mt * mt * t * cp1.x +
+      3 * mt * t * t * cp2.x +
+      t * t * t * end.x,
+    y:
+      mt * mt * mt * start.y +
+      3 * mt * mt * t * cp1.y +
+      3 * mt * t * t * cp2.y +
+      t * t * t * end.y,
+  };
+}

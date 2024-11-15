@@ -101,7 +101,6 @@ const getRelevantAppStateProps = (
   theme: appState.theme,
   scope: appState.scope,
   groups: appState.groups,
-  writingLayer: appState.writingLayer,
   pendingImageElementId: appState.pendingImageElementId,
   shouldCacheIgnoreZoom: appState.shouldCacheIgnoreZoom,
   viewBackgroundColor: appState.viewBackgroundColor,

@@ -25,79 +25,6 @@ class AppState(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # AppState
-    def ActiveEmbeddableElement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.DucElement import DucElement
-            obj = DucElement()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # AppState
-    def ActiveEmbeddableState(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # AppState
-    def DraggingElement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.DucElement import DucElement
-            obj = DucElement()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # AppState
-    def ResizingElement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.DucElement import DucElement
-            obj = DucElement()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # AppState
-    def MultiElement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.DucElement import DucElement
-            obj = DucElement()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # AppState
-    def SelectionElement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.DucElement import DucElement
-            obj = DucElement()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # AppState
-    def FrameToHighlight(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.DucElement import DucElement
-            obj = DucElement()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # AppState
     def FrameRenderingEnabled(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
         if o != 0:
@@ -126,49 +53,6 @@ class AppState(object):
         return False
 
     # AppState
-    def EditingFrame(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # AppState
-    def ElementsToHighlight(self, j):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
-        if o != 0:
-            x = self._tab.Vector(o)
-            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
-            x = self._tab.Indirect(x)
-            from Duc.DucElement import DucElement
-            obj = DucElement()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # AppState
-    def ElementsToHighlightLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
-        if o != 0:
-            return self._tab.VectorLen(o)
-        return 0
-
-    # AppState
-    def ElementsToHighlightIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
-        return o == 0
-
-    # AppState
-    def EditingElement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.DucElement import DucElement
-            obj = DucElement()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # AppState
     def CurrentItemStrokeColor(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
         if o != 0:
@@ -176,46 +60,11 @@ class AppState(object):
         return None
 
     # AppState
-    def CurrentItemStrokePlacement(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # AppState
     def CurrentItemBackgroundColor(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(36))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
-
-    # AppState
-    def CurrentItemFillStyle(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(38))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # AppState
-    def CurrentItemStrokeWidth(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(40))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # AppState
-    def CurrentItemStrokeStyle(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(42))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # AppState
-    def CurrentItemRoughness(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(44))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
 
     # AppState
     def CurrentItemOpacity(self):
@@ -232,20 +81,6 @@ class AppState(object):
         return 0
 
     # AppState
-    def CurrentItemFontSize(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(50))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # AppState
-    def CurrentItemTextAlign(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(52))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # AppState
     def CurrentItemStartArrowhead(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(54))
         if o != 0:
@@ -260,13 +95,6 @@ class AppState(object):
         return None
 
     # AppState
-    def CurrentItemRoundness(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(58))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # AppState
     def ViewBackgroundColor(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(60))
         if o != 0:
@@ -276,13 +104,6 @@ class AppState(object):
     # AppState
     def Scope(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(62))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # AppState
-    def WritingLayer(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(64))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
@@ -382,33 +203,6 @@ class AppState(object):
         return o == 0
 
     # AppState
-    def PreviousSelectedElementIds(self, j):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(84))
-        if o != 0:
-            a = self._tab.Vector(o)
-            return self._tab.String(a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
-        return ""
-
-    # AppState
-    def PreviousSelectedElementIdsLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(84))
-        if o != 0:
-            return self._tab.VectorLen(o)
-        return 0
-
-    # AppState
-    def PreviousSelectedElementIdsIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(84))
-        return o == 0
-
-    # AppState
-    def SelectedElementsAreBeingDragged(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(86))
-        if o != 0:
-            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
-        return False
-
-    # AppState
     def ShouldCacheIgnoreZoom(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(88))
         if o != 0:
@@ -421,47 +215,6 @@ class AppState(object):
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
-
-    # AppState
-    def SelectedGroupIds(self, j):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(92))
-        if o != 0:
-            a = self._tab.Vector(o)
-            return self._tab.String(a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
-        return ""
-
-    # AppState
-    def SelectedGroupIdsLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(92))
-        if o != 0:
-            return self._tab.VectorLen(o)
-        return 0
-
-    # AppState
-    def SelectedGroupIdsIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(92))
-        return o == 0
-
-    # AppState
-    def EditingGroupId(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(94))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # AppState
-    def PasteDialogShown(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(96))
-        if o != 0:
-            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
-        return False
-
-    # AppState
-    def PasteDialogData(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(98))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
 
     # AppState
     def ScaleRatioLocked(self):
@@ -506,73 +259,66 @@ class AppState(object):
         return False
 
     # AppState
-    def EnableLineBendingOnEdit(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(112))
+    def CurrentItemFillStyleV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(118))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+        return 0
+
+    # AppState
+    def CurrentItemStrokeStyleV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(120))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+        return 0
+
+    # AppState
+    def CurrentItemTextAlignV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(122))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+        return 0
+
+    # AppState
+    def LineBendingMode(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(124))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # AppState
-    def AllowIndependentCurveHandles(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(114))
+    def CurrentItemStrokeWidthV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(126))
         if o != 0:
-            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
-        return False
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
 
     # AppState
-    def CoordDecimalPlaces(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(116))
+    def CurrentItemStrokePlacementV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(128))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+        return 0
+
+    # AppState
+    def CurrentItemFontSizeV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(130))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # AppState
+    def CoordDecimalPlacesV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(132))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
         return 0
 
 def AppStateStart(builder):
-    builder.StartObject(57)
+    builder.StartObject(65)
 
 def Start(builder):
     AppStateStart(builder)
-
-def AppStateAddActiveEmbeddableElement(builder, activeEmbeddableElement):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(activeEmbeddableElement), 0)
-
-def AddActiveEmbeddableElement(builder, activeEmbeddableElement):
-    AppStateAddActiveEmbeddableElement(builder, activeEmbeddableElement)
-
-def AppStateAddActiveEmbeddableState(builder, activeEmbeddableState):
-    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(activeEmbeddableState), 0)
-
-def AddActiveEmbeddableState(builder, activeEmbeddableState):
-    AppStateAddActiveEmbeddableState(builder, activeEmbeddableState)
-
-def AppStateAddDraggingElement(builder, draggingElement):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(draggingElement), 0)
-
-def AddDraggingElement(builder, draggingElement):
-    AppStateAddDraggingElement(builder, draggingElement)
-
-def AppStateAddResizingElement(builder, resizingElement):
-    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(resizingElement), 0)
-
-def AddResizingElement(builder, resizingElement):
-    AppStateAddResizingElement(builder, resizingElement)
-
-def AppStateAddMultiElement(builder, multiElement):
-    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(multiElement), 0)
-
-def AddMultiElement(builder, multiElement):
-    AppStateAddMultiElement(builder, multiElement)
-
-def AppStateAddSelectionElement(builder, selectionElement):
-    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(selectionElement), 0)
-
-def AddSelectionElement(builder, selectionElement):
-    AppStateAddSelectionElement(builder, selectionElement)
-
-def AppStateAddFrameToHighlight(builder, frameToHighlight):
-    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(frameToHighlight), 0)
-
-def AddFrameToHighlight(builder, frameToHighlight):
-    AppStateAddFrameToHighlight(builder, frameToHighlight)
 
 def AppStateAddFrameRenderingEnabled(builder, frameRenderingEnabled):
     builder.PrependBoolSlot(7, frameRenderingEnabled, 0)
@@ -598,71 +344,17 @@ def AppStateAddFrameRenderingClip(builder, frameRenderingClip):
 def AddFrameRenderingClip(builder, frameRenderingClip):
     AppStateAddFrameRenderingClip(builder, frameRenderingClip)
 
-def AppStateAddEditingFrame(builder, editingFrame):
-    builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(editingFrame), 0)
-
-def AddEditingFrame(builder, editingFrame):
-    AppStateAddEditingFrame(builder, editingFrame)
-
-def AppStateAddElementsToHighlight(builder, elementsToHighlight):
-    builder.PrependUOffsetTRelativeSlot(12, flatbuffers.number_types.UOffsetTFlags.py_type(elementsToHighlight), 0)
-
-def AddElementsToHighlight(builder, elementsToHighlight):
-    AppStateAddElementsToHighlight(builder, elementsToHighlight)
-
-def AppStateStartElementsToHighlightVector(builder, numElems):
-    return builder.StartVector(4, numElems, 4)
-
-def StartElementsToHighlightVector(builder, numElems):
-    return AppStateStartElementsToHighlightVector(builder, numElems)
-
-def AppStateAddEditingElement(builder, editingElement):
-    builder.PrependUOffsetTRelativeSlot(13, flatbuffers.number_types.UOffsetTFlags.py_type(editingElement), 0)
-
-def AddEditingElement(builder, editingElement):
-    AppStateAddEditingElement(builder, editingElement)
-
 def AppStateAddCurrentItemStrokeColor(builder, currentItemStrokeColor):
     builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(currentItemStrokeColor), 0)
 
 def AddCurrentItemStrokeColor(builder, currentItemStrokeColor):
     AppStateAddCurrentItemStrokeColor(builder, currentItemStrokeColor)
 
-def AppStateAddCurrentItemStrokePlacement(builder, currentItemStrokePlacement):
-    builder.PrependInt32Slot(15, currentItemStrokePlacement, 0)
-
-def AddCurrentItemStrokePlacement(builder, currentItemStrokePlacement):
-    AppStateAddCurrentItemStrokePlacement(builder, currentItemStrokePlacement)
-
 def AppStateAddCurrentItemBackgroundColor(builder, currentItemBackgroundColor):
     builder.PrependUOffsetTRelativeSlot(16, flatbuffers.number_types.UOffsetTFlags.py_type(currentItemBackgroundColor), 0)
 
 def AddCurrentItemBackgroundColor(builder, currentItemBackgroundColor):
     AppStateAddCurrentItemBackgroundColor(builder, currentItemBackgroundColor)
-
-def AppStateAddCurrentItemFillStyle(builder, currentItemFillStyle):
-    builder.PrependUOffsetTRelativeSlot(17, flatbuffers.number_types.UOffsetTFlags.py_type(currentItemFillStyle), 0)
-
-def AddCurrentItemFillStyle(builder, currentItemFillStyle):
-    AppStateAddCurrentItemFillStyle(builder, currentItemFillStyle)
-
-def AppStateAddCurrentItemStrokeWidth(builder, currentItemStrokeWidth):
-    builder.PrependInt32Slot(18, currentItemStrokeWidth, 0)
-
-def AddCurrentItemStrokeWidth(builder, currentItemStrokeWidth):
-    AppStateAddCurrentItemStrokeWidth(builder, currentItemStrokeWidth)
-
-def AppStateAddCurrentItemStrokeStyle(builder, currentItemStrokeStyle):
-    builder.PrependUOffsetTRelativeSlot(19, flatbuffers.number_types.UOffsetTFlags.py_type(currentItemStrokeStyle), 0)
-
-def AddCurrentItemStrokeStyle(builder, currentItemStrokeStyle):
-    AppStateAddCurrentItemStrokeStyle(builder, currentItemStrokeStyle)
-
-def AppStateAddCurrentItemRoughness(builder, currentItemRoughness):
-    builder.PrependInt32Slot(20, currentItemRoughness, 0)
-
-def AddCurrentItemRoughness(builder, currentItemRoughness):
-    AppStateAddCurrentItemRoughness(builder, currentItemRoughness)
 
 def AppStateAddCurrentItemOpacity(builder, currentItemOpacity):
     builder.PrependFloat32Slot(21, currentItemOpacity, 0.0)
@@ -676,18 +368,6 @@ def AppStateAddCurrentItemFontFamily(builder, currentItemFontFamily):
 def AddCurrentItemFontFamily(builder, currentItemFontFamily):
     AppStateAddCurrentItemFontFamily(builder, currentItemFontFamily)
 
-def AppStateAddCurrentItemFontSize(builder, currentItemFontSize):
-    builder.PrependInt32Slot(23, currentItemFontSize, 0)
-
-def AddCurrentItemFontSize(builder, currentItemFontSize):
-    AppStateAddCurrentItemFontSize(builder, currentItemFontSize)
-
-def AppStateAddCurrentItemTextAlign(builder, currentItemTextAlign):
-    builder.PrependUOffsetTRelativeSlot(24, flatbuffers.number_types.UOffsetTFlags.py_type(currentItemTextAlign), 0)
-
-def AddCurrentItemTextAlign(builder, currentItemTextAlign):
-    AppStateAddCurrentItemTextAlign(builder, currentItemTextAlign)
-
 def AppStateAddCurrentItemStartArrowhead(builder, currentItemStartArrowhead):
     builder.PrependUOffsetTRelativeSlot(25, flatbuffers.number_types.UOffsetTFlags.py_type(currentItemStartArrowhead), 0)
 
@@ -700,12 +380,6 @@ def AppStateAddCurrentItemEndArrowhead(builder, currentItemEndArrowhead):
 def AddCurrentItemEndArrowhead(builder, currentItemEndArrowhead):
     AppStateAddCurrentItemEndArrowhead(builder, currentItemEndArrowhead)
 
-def AppStateAddCurrentItemRoundness(builder, currentItemRoundness):
-    builder.PrependUOffsetTRelativeSlot(27, flatbuffers.number_types.UOffsetTFlags.py_type(currentItemRoundness), 0)
-
-def AddCurrentItemRoundness(builder, currentItemRoundness):
-    AppStateAddCurrentItemRoundness(builder, currentItemRoundness)
-
 def AppStateAddViewBackgroundColor(builder, viewBackgroundColor):
     builder.PrependUOffsetTRelativeSlot(28, flatbuffers.number_types.UOffsetTFlags.py_type(viewBackgroundColor), 0)
 
@@ -717,12 +391,6 @@ def AppStateAddScope(builder, scope):
 
 def AddScope(builder, scope):
     AppStateAddScope(builder, scope)
-
-def AppStateAddWritingLayer(builder, writingLayer):
-    builder.PrependUOffsetTRelativeSlot(30, flatbuffers.number_types.UOffsetTFlags.py_type(writingLayer), 0)
-
-def AddWritingLayer(builder, writingLayer):
-    AppStateAddWritingLayer(builder, writingLayer)
 
 def AppStateAddGroups(builder, groups):
     builder.PrependUOffsetTRelativeSlot(31, flatbuffers.number_types.UOffsetTFlags.py_type(groups), 0)
@@ -790,24 +458,6 @@ def AppStateStartSelectedElementIdsVector(builder, numElems):
 def StartSelectedElementIdsVector(builder, numElems):
     return AppStateStartSelectedElementIdsVector(builder, numElems)
 
-def AppStateAddPreviousSelectedElementIds(builder, previousSelectedElementIds):
-    builder.PrependUOffsetTRelativeSlot(40, flatbuffers.number_types.UOffsetTFlags.py_type(previousSelectedElementIds), 0)
-
-def AddPreviousSelectedElementIds(builder, previousSelectedElementIds):
-    AppStateAddPreviousSelectedElementIds(builder, previousSelectedElementIds)
-
-def AppStateStartPreviousSelectedElementIdsVector(builder, numElems):
-    return builder.StartVector(4, numElems, 4)
-
-def StartPreviousSelectedElementIdsVector(builder, numElems):
-    return AppStateStartPreviousSelectedElementIdsVector(builder, numElems)
-
-def AppStateAddSelectedElementsAreBeingDragged(builder, selectedElementsAreBeingDragged):
-    builder.PrependBoolSlot(41, selectedElementsAreBeingDragged, 0)
-
-def AddSelectedElementsAreBeingDragged(builder, selectedElementsAreBeingDragged):
-    AppStateAddSelectedElementsAreBeingDragged(builder, selectedElementsAreBeingDragged)
-
 def AppStateAddShouldCacheIgnoreZoom(builder, shouldCacheIgnoreZoom):
     builder.PrependBoolSlot(42, shouldCacheIgnoreZoom, 0)
 
@@ -819,36 +469,6 @@ def AppStateAddGridSize(builder, gridSize):
 
 def AddGridSize(builder, gridSize):
     AppStateAddGridSize(builder, gridSize)
-
-def AppStateAddSelectedGroupIds(builder, selectedGroupIds):
-    builder.PrependUOffsetTRelativeSlot(44, flatbuffers.number_types.UOffsetTFlags.py_type(selectedGroupIds), 0)
-
-def AddSelectedGroupIds(builder, selectedGroupIds):
-    AppStateAddSelectedGroupIds(builder, selectedGroupIds)
-
-def AppStateStartSelectedGroupIdsVector(builder, numElems):
-    return builder.StartVector(4, numElems, 4)
-
-def StartSelectedGroupIdsVector(builder, numElems):
-    return AppStateStartSelectedGroupIdsVector(builder, numElems)
-
-def AppStateAddEditingGroupId(builder, editingGroupId):
-    builder.PrependUOffsetTRelativeSlot(45, flatbuffers.number_types.UOffsetTFlags.py_type(editingGroupId), 0)
-
-def AddEditingGroupId(builder, editingGroupId):
-    AppStateAddEditingGroupId(builder, editingGroupId)
-
-def AppStateAddPasteDialogShown(builder, pasteDialogShown):
-    builder.PrependBoolSlot(46, pasteDialogShown, 0)
-
-def AddPasteDialogShown(builder, pasteDialogShown):
-    AppStateAddPasteDialogShown(builder, pasteDialogShown)
-
-def AppStateAddPasteDialogData(builder, pasteDialogData):
-    builder.PrependUOffsetTRelativeSlot(47, flatbuffers.number_types.UOffsetTFlags.py_type(pasteDialogData), 0)
-
-def AddPasteDialogData(builder, pasteDialogData):
-    AppStateAddPasteDialogData(builder, pasteDialogData)
 
 def AppStateAddScaleRatioLocked(builder, scaleRatioLocked):
     builder.PrependBoolSlot(48, scaleRatioLocked, 0)
@@ -886,23 +506,53 @@ def AppStateAddDisplayRootAxis(builder, displayRootAxis):
 def AddDisplayRootAxis(builder, displayRootAxis):
     AppStateAddDisplayRootAxis(builder, displayRootAxis)
 
-def AppStateAddEnableLineBendingOnEdit(builder, enableLineBendingOnEdit):
-    builder.PrependBoolSlot(54, enableLineBendingOnEdit, 0)
+def AppStateAddCurrentItemFillStyleV3(builder, currentItemFillStyleV3):
+    builder.PrependInt8Slot(57, currentItemFillStyleV3, 0)
 
-def AddEnableLineBendingOnEdit(builder, enableLineBendingOnEdit):
-    AppStateAddEnableLineBendingOnEdit(builder, enableLineBendingOnEdit)
+def AddCurrentItemFillStyleV3(builder, currentItemFillStyleV3):
+    AppStateAddCurrentItemFillStyleV3(builder, currentItemFillStyleV3)
 
-def AppStateAddAllowIndependentCurveHandles(builder, allowIndependentCurveHandles):
-    builder.PrependBoolSlot(55, allowIndependentCurveHandles, 0)
+def AppStateAddCurrentItemStrokeStyleV3(builder, currentItemStrokeStyleV3):
+    builder.PrependInt8Slot(58, currentItemStrokeStyleV3, 0)
 
-def AddAllowIndependentCurveHandles(builder, allowIndependentCurveHandles):
-    AppStateAddAllowIndependentCurveHandles(builder, allowIndependentCurveHandles)
+def AddCurrentItemStrokeStyleV3(builder, currentItemStrokeStyleV3):
+    AppStateAddCurrentItemStrokeStyleV3(builder, currentItemStrokeStyleV3)
 
-def AppStateAddCoordDecimalPlaces(builder, coordDecimalPlaces):
-    builder.PrependInt32Slot(56, coordDecimalPlaces, 0)
+def AppStateAddCurrentItemTextAlignV3(builder, currentItemTextAlignV3):
+    builder.PrependInt8Slot(59, currentItemTextAlignV3, 0)
 
-def AddCoordDecimalPlaces(builder, coordDecimalPlaces):
-    AppStateAddCoordDecimalPlaces(builder, coordDecimalPlaces)
+def AddCurrentItemTextAlignV3(builder, currentItemTextAlignV3):
+    AppStateAddCurrentItemTextAlignV3(builder, currentItemTextAlignV3)
+
+def AppStateAddLineBendingMode(builder, lineBendingMode):
+    builder.PrependBoolSlot(60, lineBendingMode, 0)
+
+def AddLineBendingMode(builder, lineBendingMode):
+    AppStateAddLineBendingMode(builder, lineBendingMode)
+
+def AppStateAddCurrentItemStrokeWidthV3(builder, currentItemStrokeWidthV3):
+    builder.PrependFloat64Slot(61, currentItemStrokeWidthV3, 0.0)
+
+def AddCurrentItemStrokeWidthV3(builder, currentItemStrokeWidthV3):
+    AppStateAddCurrentItemStrokeWidthV3(builder, currentItemStrokeWidthV3)
+
+def AppStateAddCurrentItemStrokePlacementV3(builder, currentItemStrokePlacementV3):
+    builder.PrependInt8Slot(62, currentItemStrokePlacementV3, 0)
+
+def AddCurrentItemStrokePlacementV3(builder, currentItemStrokePlacementV3):
+    AppStateAddCurrentItemStrokePlacementV3(builder, currentItemStrokePlacementV3)
+
+def AppStateAddCurrentItemFontSizeV3(builder, currentItemFontSizeV3):
+    builder.PrependFloat64Slot(63, currentItemFontSizeV3, 0.0)
+
+def AddCurrentItemFontSizeV3(builder, currentItemFontSizeV3):
+    AppStateAddCurrentItemFontSizeV3(builder, currentItemFontSizeV3)
+
+def AppStateAddCoordDecimalPlacesV3(builder, coordDecimalPlacesV3):
+    builder.PrependInt8Slot(64, coordDecimalPlacesV3, 0)
+
+def AddCoordDecimalPlacesV3(builder, coordDecimalPlacesV3):
+    AppStateAddCoordDecimalPlacesV3(builder, coordDecimalPlacesV3)
 
 def AppStateEnd(builder):
     return builder.EndObject()

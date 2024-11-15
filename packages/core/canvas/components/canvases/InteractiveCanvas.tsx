@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { isShallowEqual, sceneCoordsToViewportCoords } from "../../utils";
-import { CURSOR_TYPE } from "../../constants";
+import { CURSOR_TYPE, THEME } from "../../constants";
 import { t } from "../../i18n";
 import type { DOMAttributes } from "react";
 import type { AppState, Device, InteractiveCanvasAppState } from "../../types";
@@ -114,12 +114,7 @@ const InteractiveCanvas = (props: InteractiveCanvasProps) => {
       remotePointerButton.set(socketId, user.button);
     });
 
-    const selectionColor =
-      (props.containerRef?.current &&
-        getComputedStyle(props.containerRef.current).getPropertyValue(
-          "--color-selection",
-        )) ||
-      "#6965db";
+    const selectionColor = props.appState.theme === THEME.LIGHT ? "#0033FF" : "#3A6AFF";
 
     const adjustedVisibleElements = props.visibleElements.map((element) =>
       adjustElementToCurrentScope(element, props.appState.scope),
@@ -232,6 +227,7 @@ const getRelevantAppStateProps = (
   editingTextElement: appState.editingTextElement,
   elementHovered: appState.elementHovered,
   selectionDirection: appState.selectionDirection,
+  activeTool: appState.activeTool,
 });
 
 const areEqual = (

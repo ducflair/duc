@@ -7,6 +7,7 @@ import * as flatbuffers from 'flatbuffers';
 import { BoundElement } from '../duc/bound-element';
 import { Point } from '../duc/point';
 import { PointBinding } from '../duc/point-binding';
+import { SimplePoint } from '../duc/simple-point';
 
 
 export class DucElement {
@@ -41,34 +42,20 @@ type(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-x():number {
+xV2():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : null;
 }
 
-y():number {
+yV2():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 10);
-  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
-}
-
-index():string|null
-index(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-index(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : null;
 }
 
 scope():string|null
 scope(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 scope(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 14);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-writingLayer():string|null
-writingLayer(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-writingLayer(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 16);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
@@ -82,18 +69,6 @@ label(optionalEncoding?:any):string|Uint8Array|null {
 isVisible():boolean {
   const offset = this.bb!.__offset(this.bb_pos, 20);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
-}
-
-roundnessType():string|null
-roundnessType(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-roundnessType(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 22);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-roundnessValue():number {
-  const offset = this.bb!.__offset(this.bb_pos, 24);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
 backgroundColor():string|null
@@ -110,28 +85,14 @@ strokeColor(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-strokeWidth():number {
+strokeWidthV2():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 30);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
-strokeStyle():string|null
-strokeStyle(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-strokeStyle(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 32);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-fillStyle():string|null
-fillStyle(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-fillStyle(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 34);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : null;
 }
 
 strokePlacement():number {
   const offset = this.bb!.__offset(this.bb_pos, 36);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
 }
 
 opacity():number {
@@ -139,19 +100,19 @@ opacity():number {
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
-width():number {
+widthV2():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 40);
-  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : null;
 }
 
-height():number {
+heightV2():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 42);
-  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : null;
 }
 
-angle():number {
+angleV2():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 44);
-  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : null;
 }
 
 isDeleted():boolean {
@@ -200,13 +161,6 @@ locked():boolean {
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
-customData():string|null
-customData(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-customData(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 58);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
 isStrokeDisabled():boolean {
   const offset = this.bb!.__offset(this.bb_pos, 60);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
@@ -217,9 +171,9 @@ isBackgroundDisabled():boolean {
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
-fontSize():number {
+fontSizeV2():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 64);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : null;
 }
 
 fontFamily():string|null
@@ -236,20 +190,6 @@ text(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-textAlign():string|null
-textAlign(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-textAlign(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 70);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-verticalAlign():string|null
-verticalAlign(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-verticalAlign(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 72);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
 containerId():string|null
 containerId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 containerId(optionalEncoding?:any):string|Uint8Array|null {
@@ -257,21 +197,14 @@ containerId(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-originalText():string|null
-originalText(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-originalText(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 76);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-lineHeight():number {
+lineHeightV2():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 78);
-  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : null;
 }
 
-autoResize():boolean {
+autoResize():boolean|null {
   const offset = this.bb!.__offset(this.bb_pos, 80);
-  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : null;
 }
 
 points(index: number, obj?:Point):Point|null {
@@ -313,29 +246,14 @@ endArrowhead(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-elbowed():boolean {
+elbowed():boolean|null {
   const offset = this.bb!.__offset(this.bb_pos, 94);
-  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : null;
 }
 
-pressures(index: number):number|null {
-  const offset = this.bb!.__offset(this.bb_pos, 96);
-  return offset ? this.bb!.readFloat32(this.bb!.__vector(this.bb_pos + offset) + index * 4) : 0;
-}
-
-pressuresLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 96);
-  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-}
-
-pressuresArray():Float32Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 96);
-  return offset ? new Float32Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
-}
-
-simulatePressure():boolean {
+simulatePressure():boolean|null {
   const offset = this.bb!.__offset(this.bb_pos, 98);
-  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : null;
 }
 
 fileId():string|null
@@ -352,14 +270,9 @@ status(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-scale(obj?:Point):Point|null {
-  const offset = this.bb!.__offset(this.bb_pos, 104);
-  return offset ? (obj || new Point()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
-isCollapsed():boolean {
+isCollapsed():boolean|null {
   const offset = this.bb!.__offset(this.bb_pos, 106);
-  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : null;
 }
 
 name():string|null
@@ -376,8 +289,93 @@ groupIdRef(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
+strokeStyleV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 112);
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
+}
+
+fillStyleV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 114);
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
+}
+
+textAlignV3():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 116);
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : null;
+}
+
+verticalAlignV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 118);
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
+}
+
+xV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 120);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+}
+
+yV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 122);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+}
+
+scaleV3(obj?:SimplePoint):SimplePoint|null {
+  const offset = this.bb!.__offset(this.bb_pos, 124);
+  return offset ? (obj || new SimplePoint()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+pressuresV3(index: number):number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 126);
+  return offset ? this.bb!.readFloat64(this.bb!.__vector(this.bb_pos + offset) + index * 8) : 0;
+}
+
+pressuresV3Length():number {
+  const offset = this.bb!.__offset(this.bb_pos, 126);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+pressuresV3Array():Float64Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 126);
+  return offset ? new Float64Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
+}
+
+strokeWidthV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 128);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+}
+
+angleV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 130);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+}
+
+borderRadius():number {
+  const offset = this.bb!.__offset(this.bb_pos, 132);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+}
+
+widthV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 134);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+}
+
+heightV3():number {
+  const offset = this.bb!.__offset(this.bb_pos, 136);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+}
+
+fontSizeV3():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 138);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+}
+
+lineHeightV3():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 140);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+}
+
 static startDucElement(builder:flatbuffers.Builder) {
-  builder.startObject(54);
+  builder.startObject(69);
 }
 
 static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
@@ -388,24 +386,16 @@ static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
   builder.addFieldOffset(1, typeOffset, 0);
 }
 
-static addX(builder:flatbuffers.Builder, x:number) {
-  builder.addFieldFloat32(2, x, 0.0);
+static addXV2(builder:flatbuffers.Builder, xV2:number) {
+  builder.addFieldFloat32(2, xV2, null);
 }
 
-static addY(builder:flatbuffers.Builder, y:number) {
-  builder.addFieldFloat32(3, y, 0.0);
-}
-
-static addIndex(builder:flatbuffers.Builder, indexOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, indexOffset, 0);
+static addYV2(builder:flatbuffers.Builder, yV2:number) {
+  builder.addFieldFloat32(3, yV2, null);
 }
 
 static addScope(builder:flatbuffers.Builder, scopeOffset:flatbuffers.Offset) {
   builder.addFieldOffset(5, scopeOffset, 0);
-}
-
-static addWritingLayer(builder:flatbuffers.Builder, writingLayerOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(6, writingLayerOffset, 0);
 }
 
 static addLabel(builder:flatbuffers.Builder, labelOffset:flatbuffers.Offset) {
@@ -416,14 +406,6 @@ static addIsVisible(builder:flatbuffers.Builder, isVisible:boolean) {
   builder.addFieldInt8(8, +isVisible, +false);
 }
 
-static addRoundnessType(builder:flatbuffers.Builder, roundnessTypeOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(9, roundnessTypeOffset, 0);
-}
-
-static addRoundnessValue(builder:flatbuffers.Builder, roundnessValue:number) {
-  builder.addFieldInt32(10, roundnessValue, 0);
-}
-
 static addBackgroundColor(builder:flatbuffers.Builder, backgroundColorOffset:flatbuffers.Offset) {
   builder.addFieldOffset(11, backgroundColorOffset, 0);
 }
@@ -432,36 +414,28 @@ static addStrokeColor(builder:flatbuffers.Builder, strokeColorOffset:flatbuffers
   builder.addFieldOffset(12, strokeColorOffset, 0);
 }
 
-static addStrokeWidth(builder:flatbuffers.Builder, strokeWidth:number) {
-  builder.addFieldInt32(13, strokeWidth, 0);
-}
-
-static addStrokeStyle(builder:flatbuffers.Builder, strokeStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(14, strokeStyleOffset, 0);
-}
-
-static addFillStyle(builder:flatbuffers.Builder, fillStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(15, fillStyleOffset, 0);
+static addStrokeWidthV2(builder:flatbuffers.Builder, strokeWidthV2:number) {
+  builder.addFieldInt32(13, strokeWidthV2, null);
 }
 
 static addStrokePlacement(builder:flatbuffers.Builder, strokePlacement:number) {
-  builder.addFieldInt32(16, strokePlacement, 0);
+  builder.addFieldInt8(16, strokePlacement, 0);
 }
 
 static addOpacity(builder:flatbuffers.Builder, opacity:number) {
   builder.addFieldFloat32(17, opacity, 0.0);
 }
 
-static addWidth(builder:flatbuffers.Builder, width:number) {
-  builder.addFieldFloat32(18, width, 0.0);
+static addWidthV2(builder:flatbuffers.Builder, widthV2:number) {
+  builder.addFieldFloat32(18, widthV2, null);
 }
 
-static addHeight(builder:flatbuffers.Builder, height:number) {
-  builder.addFieldFloat32(19, height, 0.0);
+static addHeightV2(builder:flatbuffers.Builder, heightV2:number) {
+  builder.addFieldFloat32(19, heightV2, null);
 }
 
-static addAngle(builder:flatbuffers.Builder, angle:number) {
-  builder.addFieldFloat32(20, angle, 0.0);
+static addAngleV2(builder:flatbuffers.Builder, angleV2:number) {
+  builder.addFieldFloat32(20, angleV2, null);
 }
 
 static addIsDeleted(builder:flatbuffers.Builder, isDeleted:boolean) {
@@ -512,10 +486,6 @@ static addLocked(builder:flatbuffers.Builder, locked:boolean) {
   builder.addFieldInt8(26, +locked, +false);
 }
 
-static addCustomData(builder:flatbuffers.Builder, customDataOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(27, customDataOffset, 0);
-}
-
 static addIsStrokeDisabled(builder:flatbuffers.Builder, isStrokeDisabled:boolean) {
   builder.addFieldInt8(28, +isStrokeDisabled, +false);
 }
@@ -524,8 +494,8 @@ static addIsBackgroundDisabled(builder:flatbuffers.Builder, isBackgroundDisabled
   builder.addFieldInt8(29, +isBackgroundDisabled, +false);
 }
 
-static addFontSize(builder:flatbuffers.Builder, fontSize:number) {
-  builder.addFieldInt32(30, fontSize, 0);
+static addFontSizeV2(builder:flatbuffers.Builder, fontSizeV2:number) {
+  builder.addFieldInt32(30, fontSizeV2, null);
 }
 
 static addFontFamily(builder:flatbuffers.Builder, fontFamilyOffset:flatbuffers.Offset) {
@@ -536,28 +506,16 @@ static addText(builder:flatbuffers.Builder, textOffset:flatbuffers.Offset) {
   builder.addFieldOffset(32, textOffset, 0);
 }
 
-static addTextAlign(builder:flatbuffers.Builder, textAlignOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(33, textAlignOffset, 0);
-}
-
-static addVerticalAlign(builder:flatbuffers.Builder, verticalAlignOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(34, verticalAlignOffset, 0);
-}
-
 static addContainerId(builder:flatbuffers.Builder, containerIdOffset:flatbuffers.Offset) {
   builder.addFieldOffset(35, containerIdOffset, 0);
 }
 
-static addOriginalText(builder:flatbuffers.Builder, originalTextOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(36, originalTextOffset, 0);
-}
-
-static addLineHeight(builder:flatbuffers.Builder, lineHeight:number) {
-  builder.addFieldFloat32(37, lineHeight, 0.0);
+static addLineHeightV2(builder:flatbuffers.Builder, lineHeightV2:number) {
+  builder.addFieldFloat32(37, lineHeightV2, null);
 }
 
 static addAutoResize(builder:flatbuffers.Builder, autoResize:boolean) {
-  builder.addFieldInt8(38, +autoResize, +false);
+  builder.addFieldInt8(38, +autoResize, null);
 }
 
 static addPoints(builder:flatbuffers.Builder, pointsOffset:flatbuffers.Offset) {
@@ -597,32 +555,11 @@ static addEndArrowhead(builder:flatbuffers.Builder, endArrowheadOffset:flatbuffe
 }
 
 static addElbowed(builder:flatbuffers.Builder, elbowed:boolean) {
-  builder.addFieldInt8(45, +elbowed, +false);
-}
-
-static addPressures(builder:flatbuffers.Builder, pressuresOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(46, pressuresOffset, 0);
-}
-
-static createPressuresVector(builder:flatbuffers.Builder, data:number[]|Float32Array):flatbuffers.Offset;
-/**
- * @deprecated This Uint8Array overload will be removed in the future.
- */
-static createPressuresVector(builder:flatbuffers.Builder, data:number[]|Uint8Array):flatbuffers.Offset;
-static createPressuresVector(builder:flatbuffers.Builder, data:number[]|Float32Array|Uint8Array):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
-  for (let i = data.length - 1; i >= 0; i--) {
-    builder.addFloat32(data[i]!);
-  }
-  return builder.endVector();
-}
-
-static startPressuresVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(4, numElems, 4);
+  builder.addFieldInt8(45, +elbowed, null);
 }
 
 static addSimulatePressure(builder:flatbuffers.Builder, simulatePressure:boolean) {
-  builder.addFieldInt8(47, +simulatePressure, +false);
+  builder.addFieldInt8(47, +simulatePressure, null);
 }
 
 static addFileId(builder:flatbuffers.Builder, fileIdOffset:flatbuffers.Offset) {
@@ -633,12 +570,8 @@ static addStatus(builder:flatbuffers.Builder, statusOffset:flatbuffers.Offset) {
   builder.addFieldOffset(49, statusOffset, 0);
 }
 
-static addScale(builder:flatbuffers.Builder, scaleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(50, scaleOffset, 0);
-}
-
 static addIsCollapsed(builder:flatbuffers.Builder, isCollapsed:boolean) {
-  builder.addFieldInt8(51, +isCollapsed, +false);
+  builder.addFieldInt8(51, +isCollapsed, null);
 }
 
 static addName(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset) {
@@ -647,6 +580,83 @@ static addName(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset) {
 
 static addGroupIdRef(builder:flatbuffers.Builder, groupIdRefOffset:flatbuffers.Offset) {
   builder.addFieldOffset(53, groupIdRefOffset, 0);
+}
+
+static addStrokeStyleV3(builder:flatbuffers.Builder, strokeStyleV3:number) {
+  builder.addFieldInt8(54, strokeStyleV3, 0);
+}
+
+static addFillStyleV3(builder:flatbuffers.Builder, fillStyleV3:number) {
+  builder.addFieldInt8(55, fillStyleV3, 0);
+}
+
+static addTextAlignV3(builder:flatbuffers.Builder, textAlignV3:number) {
+  builder.addFieldInt8(56, textAlignV3, null);
+}
+
+static addVerticalAlignV3(builder:flatbuffers.Builder, verticalAlignV3:number) {
+  builder.addFieldInt8(57, verticalAlignV3, 0);
+}
+
+static addXV3(builder:flatbuffers.Builder, xV3:number) {
+  builder.addFieldFloat64(58, xV3, 0.0);
+}
+
+static addYV3(builder:flatbuffers.Builder, yV3:number) {
+  builder.addFieldFloat64(59, yV3, 0.0);
+}
+
+static addScaleV3(builder:flatbuffers.Builder, scaleV3Offset:flatbuffers.Offset) {
+  builder.addFieldOffset(60, scaleV3Offset, 0);
+}
+
+static addPressuresV3(builder:flatbuffers.Builder, pressuresV3Offset:flatbuffers.Offset) {
+  builder.addFieldOffset(61, pressuresV3Offset, 0);
+}
+
+static createPressuresV3Vector(builder:flatbuffers.Builder, data:number[]|Float64Array):flatbuffers.Offset;
+/**
+ * @deprecated This Uint8Array overload will be removed in the future.
+ */
+static createPressuresV3Vector(builder:flatbuffers.Builder, data:number[]|Uint8Array):flatbuffers.Offset;
+static createPressuresV3Vector(builder:flatbuffers.Builder, data:number[]|Float64Array|Uint8Array):flatbuffers.Offset {
+  builder.startVector(8, data.length, 8);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addFloat64(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startPressuresV3Vector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(8, numElems, 8);
+}
+
+static addStrokeWidthV3(builder:flatbuffers.Builder, strokeWidthV3:number) {
+  builder.addFieldFloat64(62, strokeWidthV3, 0.0);
+}
+
+static addAngleV3(builder:flatbuffers.Builder, angleV3:number) {
+  builder.addFieldFloat64(63, angleV3, 0.0);
+}
+
+static addBorderRadius(builder:flatbuffers.Builder, borderRadius:number) {
+  builder.addFieldFloat64(64, borderRadius, 0.0);
+}
+
+static addWidthV3(builder:flatbuffers.Builder, widthV3:number) {
+  builder.addFieldFloat64(65, widthV3, 0.0);
+}
+
+static addHeightV3(builder:flatbuffers.Builder, heightV3:number) {
+  builder.addFieldFloat64(66, heightV3, 0.0);
+}
+
+static addFontSizeV3(builder:flatbuffers.Builder, fontSizeV3:number) {
+  builder.addFieldFloat64(67, fontSizeV3, null);
+}
+
+static addLineHeightV3(builder:flatbuffers.Builder, lineHeightV3:number) {
+  builder.addFieldFloat64(68, lineHeightV3, null);
 }
 
 static endDucElement(builder:flatbuffers.Builder):flatbuffers.Offset {

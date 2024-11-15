@@ -281,18 +281,8 @@ export {
   PointerDownState,
   Collaborator,
   OnUserFollowedPayload,
+  BezierMirroring,
 } from "./types";
-
-export {
-  TOOL_TYPE,
-  IDLE_THRESHOLD,
-  STROKE_PLACEMENT,
-  ACTIVE_THRESHOLD,
-  DEFAULT_ELEMENT_PROPS,
-  ENV,
-  toolsNsStrokeSet,
-  toolNsBackgroundSet,
-} from "./constants";
 
 export {
   CODES
@@ -345,6 +335,15 @@ export {
   EVENT,
   TITLE_TIMEOUT,
   VERSION_TIMEOUT,
+  BEZIER_MIRRORING,
+  STROKE_PLACEMENT,
+  TOOL_TYPE,
+  IDLE_THRESHOLD,
+  ACTIVE_THRESHOLD,
+  DEFAULT_ELEMENT_PROPS,
+  ENV,
+  toolsNsStrokeSet,
+  toolNsBackgroundSet,
 } from "./constants";
 
 export {

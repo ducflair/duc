@@ -39,36 +39,22 @@ class DucElement(object):
         return None
 
     # DucElement
-    def X(self):
+    def XV2(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
-        return 0.0
+        return None
 
     # DucElement
-    def Y(self):
+    def YV2(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
-        return 0.0
-
-    # DucElement
-    def Index(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
         return None
 
     # DucElement
     def Scope(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # DucElement
-    def WritingLayer(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
@@ -88,20 +74,6 @@ class DucElement(object):
         return False
 
     # DucElement
-    def RoundnessType(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # DucElement
-    def RoundnessValue(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # DucElement
     def BackgroundColor(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
         if o != 0:
@@ -116,31 +88,17 @@ class DucElement(object):
         return None
 
     # DucElement
-    def StrokeWidth(self):
+    def StrokeWidthV2(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # DucElement
-    def StrokeStyle(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # DucElement
-    def FillStyle(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
         return None
 
     # DucElement
     def StrokePlacement(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(36))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
         return 0
 
     # DucElement
@@ -151,25 +109,25 @@ class DucElement(object):
         return 0.0
 
     # DucElement
-    def Width(self):
+    def WidthV2(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(40))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
-        return 0.0
+        return None
 
     # DucElement
-    def Height(self):
+    def HeightV2(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(42))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
-        return 0.0
+        return None
 
     # DucElement
-    def Angle(self):
+    def AngleV2(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(44))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
-        return 0.0
+        return None
 
     # DucElement
     def IsDeleted(self):
@@ -245,13 +203,6 @@ class DucElement(object):
         return False
 
     # DucElement
-    def CustomData(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(58))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # DucElement
     def IsStrokeDisabled(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(60))
         if o != 0:
@@ -266,11 +217,11 @@ class DucElement(object):
         return False
 
     # DucElement
-    def FontSize(self):
+    def FontSizeV2(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(64))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
+        return None
 
     # DucElement
     def FontFamily(self):
@@ -287,20 +238,6 @@ class DucElement(object):
         return None
 
     # DucElement
-    def TextAlign(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(70))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # DucElement
-    def VerticalAlign(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(72))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # DucElement
     def ContainerId(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(74))
         if o != 0:
@@ -308,25 +245,18 @@ class DucElement(object):
         return None
 
     # DucElement
-    def OriginalText(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(76))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # DucElement
-    def LineHeight(self):
+    def LineHeightV2(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(78))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
-        return 0.0
+        return None
 
     # DucElement
     def AutoResize(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(80))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
-        return False
+        return None
 
     # DucElement
     def Points(self, j):
@@ -405,41 +335,14 @@ class DucElement(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(94))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
-        return False
-
-    # DucElement
-    def Pressures(self, j):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(96))
-        if o != 0:
-            a = self._tab.Vector(o)
-            return self._tab.Get(flatbuffers.number_types.Float32Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
-        return 0
-
-    # DucElement
-    def PressuresAsNumpy(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(96))
-        if o != 0:
-            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Float32Flags, o)
-        return 0
-
-    # DucElement
-    def PressuresLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(96))
-        if o != 0:
-            return self._tab.VectorLen(o)
-        return 0
-
-    # DucElement
-    def PressuresIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(96))
-        return o == 0
+        return None
 
     # DucElement
     def SimulatePressure(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(98))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
-        return False
+        return None
 
     # DucElement
     def FileId(self):
@@ -456,22 +359,11 @@ class DucElement(object):
         return None
 
     # DucElement
-    def Scale(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(104))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.Point import Point
-            obj = Point()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # DucElement
     def IsCollapsed(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(106))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
-        return False
+        return None
 
     # DucElement
     def Name(self):
@@ -487,8 +379,137 @@ class DucElement(object):
             return self._tab.String(o + self._tab.Pos)
         return None
 
+    # DucElement
+    def StrokeStyleV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(112))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+        return 0
+
+    # DucElement
+    def FillStyleV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(114))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+        return 0
+
+    # DucElement
+    def TextAlignV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(116))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def VerticalAlignV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(118))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+        return 0
+
+    # DucElement
+    def XV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(120))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # DucElement
+    def YV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(122))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # DucElement
+    def ScaleV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(124))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.SimplePoint import SimplePoint
+            obj = SimplePoint()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucElement
+    def PressuresV3(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(126))
+        if o != 0:
+            a = self._tab.Vector(o)
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 8))
+        return 0
+
+    # DucElement
+    def PressuresV3AsNumpy(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(126))
+        if o != 0:
+            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Float64Flags, o)
+        return 0
+
+    # DucElement
+    def PressuresV3Length(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(126))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # DucElement
+    def PressuresV3IsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(126))
+        return o == 0
+
+    # DucElement
+    def StrokeWidthV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(128))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # DucElement
+    def AngleV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(130))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # DucElement
+    def BorderRadius(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(132))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # DucElement
+    def WidthV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(134))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # DucElement
+    def HeightV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(136))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
+    # DucElement
+    def FontSizeV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(138))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def LineHeightV3(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(140))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return None
+
 def DucElementStart(builder):
-    builder.StartObject(54)
+    builder.StartObject(69)
 
 def Start(builder):
     DucElementStart(builder)
@@ -505,35 +526,23 @@ def DucElementAddType(builder, type):
 def AddType(builder, type):
     DucElementAddType(builder, type)
 
-def DucElementAddX(builder, x):
-    builder.PrependFloat32Slot(2, x, 0.0)
+def DucElementAddXV2(builder, xV2):
+    builder.PrependFloat32Slot(2, xV2, None)
 
-def AddX(builder, x):
-    DucElementAddX(builder, x)
+def AddXV2(builder, xV2):
+    DucElementAddXV2(builder, xV2)
 
-def DucElementAddY(builder, y):
-    builder.PrependFloat32Slot(3, y, 0.0)
+def DucElementAddYV2(builder, yV2):
+    builder.PrependFloat32Slot(3, yV2, None)
 
-def AddY(builder, y):
-    DucElementAddY(builder, y)
-
-def DucElementAddIndex(builder, index):
-    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(index), 0)
-
-def AddIndex(builder, index):
-    DucElementAddIndex(builder, index)
+def AddYV2(builder, yV2):
+    DucElementAddYV2(builder, yV2)
 
 def DucElementAddScope(builder, scope):
     builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(scope), 0)
 
 def AddScope(builder, scope):
     DucElementAddScope(builder, scope)
-
-def DucElementAddWritingLayer(builder, writingLayer):
-    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(writingLayer), 0)
-
-def AddWritingLayer(builder, writingLayer):
-    DucElementAddWritingLayer(builder, writingLayer)
 
 def DucElementAddLabel(builder, label):
     builder.PrependUOffsetTRelativeSlot(7, flatbuffers.number_types.UOffsetTFlags.py_type(label), 0)
@@ -547,18 +556,6 @@ def DucElementAddIsVisible(builder, isVisible):
 def AddIsVisible(builder, isVisible):
     DucElementAddIsVisible(builder, isVisible)
 
-def DucElementAddRoundnessType(builder, roundnessType):
-    builder.PrependUOffsetTRelativeSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(roundnessType), 0)
-
-def AddRoundnessType(builder, roundnessType):
-    DucElementAddRoundnessType(builder, roundnessType)
-
-def DucElementAddRoundnessValue(builder, roundnessValue):
-    builder.PrependInt32Slot(10, roundnessValue, 0)
-
-def AddRoundnessValue(builder, roundnessValue):
-    DucElementAddRoundnessValue(builder, roundnessValue)
-
 def DucElementAddBackgroundColor(builder, backgroundColor):
     builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(backgroundColor), 0)
 
@@ -571,26 +568,14 @@ def DucElementAddStrokeColor(builder, strokeColor):
 def AddStrokeColor(builder, strokeColor):
     DucElementAddStrokeColor(builder, strokeColor)
 
-def DucElementAddStrokeWidth(builder, strokeWidth):
-    builder.PrependInt32Slot(13, strokeWidth, 0)
+def DucElementAddStrokeWidthV2(builder, strokeWidthV2):
+    builder.PrependInt32Slot(13, strokeWidthV2, None)
 
-def AddStrokeWidth(builder, strokeWidth):
-    DucElementAddStrokeWidth(builder, strokeWidth)
-
-def DucElementAddStrokeStyle(builder, strokeStyle):
-    builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(strokeStyle), 0)
-
-def AddStrokeStyle(builder, strokeStyle):
-    DucElementAddStrokeStyle(builder, strokeStyle)
-
-def DucElementAddFillStyle(builder, fillStyle):
-    builder.PrependUOffsetTRelativeSlot(15, flatbuffers.number_types.UOffsetTFlags.py_type(fillStyle), 0)
-
-def AddFillStyle(builder, fillStyle):
-    DucElementAddFillStyle(builder, fillStyle)
+def AddStrokeWidthV2(builder, strokeWidthV2):
+    DucElementAddStrokeWidthV2(builder, strokeWidthV2)
 
 def DucElementAddStrokePlacement(builder, strokePlacement):
-    builder.PrependInt32Slot(16, strokePlacement, 0)
+    builder.PrependInt8Slot(16, strokePlacement, 0)
 
 def AddStrokePlacement(builder, strokePlacement):
     DucElementAddStrokePlacement(builder, strokePlacement)
@@ -601,23 +586,23 @@ def DucElementAddOpacity(builder, opacity):
 def AddOpacity(builder, opacity):
     DucElementAddOpacity(builder, opacity)
 
-def DucElementAddWidth(builder, width):
-    builder.PrependFloat32Slot(18, width, 0.0)
+def DucElementAddWidthV2(builder, widthV2):
+    builder.PrependFloat32Slot(18, widthV2, None)
 
-def AddWidth(builder, width):
-    DucElementAddWidth(builder, width)
+def AddWidthV2(builder, widthV2):
+    DucElementAddWidthV2(builder, widthV2)
 
-def DucElementAddHeight(builder, height):
-    builder.PrependFloat32Slot(19, height, 0.0)
+def DucElementAddHeightV2(builder, heightV2):
+    builder.PrependFloat32Slot(19, heightV2, None)
 
-def AddHeight(builder, height):
-    DucElementAddHeight(builder, height)
+def AddHeightV2(builder, heightV2):
+    DucElementAddHeightV2(builder, heightV2)
 
-def DucElementAddAngle(builder, angle):
-    builder.PrependFloat32Slot(20, angle, 0.0)
+def DucElementAddAngleV2(builder, angleV2):
+    builder.PrependFloat32Slot(20, angleV2, None)
 
-def AddAngle(builder, angle):
-    DucElementAddAngle(builder, angle)
+def AddAngleV2(builder, angleV2):
+    DucElementAddAngleV2(builder, angleV2)
 
 def DucElementAddIsDeleted(builder, isDeleted):
     builder.PrependBoolSlot(21, isDeleted, 0)
@@ -667,12 +652,6 @@ def DucElementAddLocked(builder, locked):
 def AddLocked(builder, locked):
     DucElementAddLocked(builder, locked)
 
-def DucElementAddCustomData(builder, customData):
-    builder.PrependUOffsetTRelativeSlot(27, flatbuffers.number_types.UOffsetTFlags.py_type(customData), 0)
-
-def AddCustomData(builder, customData):
-    DucElementAddCustomData(builder, customData)
-
 def DucElementAddIsStrokeDisabled(builder, isStrokeDisabled):
     builder.PrependBoolSlot(28, isStrokeDisabled, 0)
 
@@ -685,11 +664,11 @@ def DucElementAddIsBackgroundDisabled(builder, isBackgroundDisabled):
 def AddIsBackgroundDisabled(builder, isBackgroundDisabled):
     DucElementAddIsBackgroundDisabled(builder, isBackgroundDisabled)
 
-def DucElementAddFontSize(builder, fontSize):
-    builder.PrependInt32Slot(30, fontSize, 0)
+def DucElementAddFontSizeV2(builder, fontSizeV2):
+    builder.PrependInt32Slot(30, fontSizeV2, None)
 
-def AddFontSize(builder, fontSize):
-    DucElementAddFontSize(builder, fontSize)
+def AddFontSizeV2(builder, fontSizeV2):
+    DucElementAddFontSizeV2(builder, fontSizeV2)
 
 def DucElementAddFontFamily(builder, fontFamily):
     builder.PrependUOffsetTRelativeSlot(31, flatbuffers.number_types.UOffsetTFlags.py_type(fontFamily), 0)
@@ -703,38 +682,20 @@ def DucElementAddText(builder, text):
 def AddText(builder, text):
     DucElementAddText(builder, text)
 
-def DucElementAddTextAlign(builder, textAlign):
-    builder.PrependUOffsetTRelativeSlot(33, flatbuffers.number_types.UOffsetTFlags.py_type(textAlign), 0)
-
-def AddTextAlign(builder, textAlign):
-    DucElementAddTextAlign(builder, textAlign)
-
-def DucElementAddVerticalAlign(builder, verticalAlign):
-    builder.PrependUOffsetTRelativeSlot(34, flatbuffers.number_types.UOffsetTFlags.py_type(verticalAlign), 0)
-
-def AddVerticalAlign(builder, verticalAlign):
-    DucElementAddVerticalAlign(builder, verticalAlign)
-
 def DucElementAddContainerId(builder, containerId):
     builder.PrependUOffsetTRelativeSlot(35, flatbuffers.number_types.UOffsetTFlags.py_type(containerId), 0)
 
 def AddContainerId(builder, containerId):
     DucElementAddContainerId(builder, containerId)
 
-def DucElementAddOriginalText(builder, originalText):
-    builder.PrependUOffsetTRelativeSlot(36, flatbuffers.number_types.UOffsetTFlags.py_type(originalText), 0)
+def DucElementAddLineHeightV2(builder, lineHeightV2):
+    builder.PrependFloat32Slot(37, lineHeightV2, None)
 
-def AddOriginalText(builder, originalText):
-    DucElementAddOriginalText(builder, originalText)
-
-def DucElementAddLineHeight(builder, lineHeight):
-    builder.PrependFloat32Slot(37, lineHeight, 0.0)
-
-def AddLineHeight(builder, lineHeight):
-    DucElementAddLineHeight(builder, lineHeight)
+def AddLineHeightV2(builder, lineHeightV2):
+    DucElementAddLineHeightV2(builder, lineHeightV2)
 
 def DucElementAddAutoResize(builder, autoResize):
-    builder.PrependBoolSlot(38, autoResize, 0)
+    builder.PrependBoolSlot(38, autoResize, None)
 
 def AddAutoResize(builder, autoResize):
     DucElementAddAutoResize(builder, autoResize)
@@ -782,25 +743,13 @@ def AddEndArrowhead(builder, endArrowhead):
     DucElementAddEndArrowhead(builder, endArrowhead)
 
 def DucElementAddElbowed(builder, elbowed):
-    builder.PrependBoolSlot(45, elbowed, 0)
+    builder.PrependBoolSlot(45, elbowed, None)
 
 def AddElbowed(builder, elbowed):
     DucElementAddElbowed(builder, elbowed)
 
-def DucElementAddPressures(builder, pressures):
-    builder.PrependUOffsetTRelativeSlot(46, flatbuffers.number_types.UOffsetTFlags.py_type(pressures), 0)
-
-def AddPressures(builder, pressures):
-    DucElementAddPressures(builder, pressures)
-
-def DucElementStartPressuresVector(builder, numElems):
-    return builder.StartVector(4, numElems, 4)
-
-def StartPressuresVector(builder, numElems):
-    return DucElementStartPressuresVector(builder, numElems)
-
 def DucElementAddSimulatePressure(builder, simulatePressure):
-    builder.PrependBoolSlot(47, simulatePressure, 0)
+    builder.PrependBoolSlot(47, simulatePressure, None)
 
 def AddSimulatePressure(builder, simulatePressure):
     DucElementAddSimulatePressure(builder, simulatePressure)
@@ -817,14 +766,8 @@ def DucElementAddStatus(builder, status):
 def AddStatus(builder, status):
     DucElementAddStatus(builder, status)
 
-def DucElementAddScale(builder, scale):
-    builder.PrependUOffsetTRelativeSlot(50, flatbuffers.number_types.UOffsetTFlags.py_type(scale), 0)
-
-def AddScale(builder, scale):
-    DucElementAddScale(builder, scale)
-
 def DucElementAddIsCollapsed(builder, isCollapsed):
-    builder.PrependBoolSlot(51, isCollapsed, 0)
+    builder.PrependBoolSlot(51, isCollapsed, None)
 
 def AddIsCollapsed(builder, isCollapsed):
     DucElementAddIsCollapsed(builder, isCollapsed)
@@ -840,6 +783,102 @@ def DucElementAddGroupIdRef(builder, groupIdRef):
 
 def AddGroupIdRef(builder, groupIdRef):
     DucElementAddGroupIdRef(builder, groupIdRef)
+
+def DucElementAddStrokeStyleV3(builder, strokeStyleV3):
+    builder.PrependInt8Slot(54, strokeStyleV3, 0)
+
+def AddStrokeStyleV3(builder, strokeStyleV3):
+    DucElementAddStrokeStyleV3(builder, strokeStyleV3)
+
+def DucElementAddFillStyleV3(builder, fillStyleV3):
+    builder.PrependInt8Slot(55, fillStyleV3, 0)
+
+def AddFillStyleV3(builder, fillStyleV3):
+    DucElementAddFillStyleV3(builder, fillStyleV3)
+
+def DucElementAddTextAlignV3(builder, textAlignV3):
+    builder.PrependInt8Slot(56, textAlignV3, None)
+
+def AddTextAlignV3(builder, textAlignV3):
+    DucElementAddTextAlignV3(builder, textAlignV3)
+
+def DucElementAddVerticalAlignV3(builder, verticalAlignV3):
+    builder.PrependInt8Slot(57, verticalAlignV3, 0)
+
+def AddVerticalAlignV3(builder, verticalAlignV3):
+    DucElementAddVerticalAlignV3(builder, verticalAlignV3)
+
+def DucElementAddXV3(builder, xV3):
+    builder.PrependFloat64Slot(58, xV3, 0.0)
+
+def AddXV3(builder, xV3):
+    DucElementAddXV3(builder, xV3)
+
+def DucElementAddYV3(builder, yV3):
+    builder.PrependFloat64Slot(59, yV3, 0.0)
+
+def AddYV3(builder, yV3):
+    DucElementAddYV3(builder, yV3)
+
+def DucElementAddScaleV3(builder, scaleV3):
+    builder.PrependUOffsetTRelativeSlot(60, flatbuffers.number_types.UOffsetTFlags.py_type(scaleV3), 0)
+
+def AddScaleV3(builder, scaleV3):
+    DucElementAddScaleV3(builder, scaleV3)
+
+def DucElementAddPressuresV3(builder, pressuresV3):
+    builder.PrependUOffsetTRelativeSlot(61, flatbuffers.number_types.UOffsetTFlags.py_type(pressuresV3), 0)
+
+def AddPressuresV3(builder, pressuresV3):
+    DucElementAddPressuresV3(builder, pressuresV3)
+
+def DucElementStartPressuresV3Vector(builder, numElems):
+    return builder.StartVector(8, numElems, 8)
+
+def StartPressuresV3Vector(builder, numElems):
+    return DucElementStartPressuresV3Vector(builder, numElems)
+
+def DucElementAddStrokeWidthV3(builder, strokeWidthV3):
+    builder.PrependFloat64Slot(62, strokeWidthV3, 0.0)
+
+def AddStrokeWidthV3(builder, strokeWidthV3):
+    DucElementAddStrokeWidthV3(builder, strokeWidthV3)
+
+def DucElementAddAngleV3(builder, angleV3):
+    builder.PrependFloat64Slot(63, angleV3, 0.0)
+
+def AddAngleV3(builder, angleV3):
+    DucElementAddAngleV3(builder, angleV3)
+
+def DucElementAddBorderRadius(builder, borderRadius):
+    builder.PrependFloat64Slot(64, borderRadius, 0.0)
+
+def AddBorderRadius(builder, borderRadius):
+    DucElementAddBorderRadius(builder, borderRadius)
+
+def DucElementAddWidthV3(builder, widthV3):
+    builder.PrependFloat64Slot(65, widthV3, 0.0)
+
+def AddWidthV3(builder, widthV3):
+    DucElementAddWidthV3(builder, widthV3)
+
+def DucElementAddHeightV3(builder, heightV3):
+    builder.PrependFloat64Slot(66, heightV3, 0.0)
+
+def AddHeightV3(builder, heightV3):
+    DucElementAddHeightV3(builder, heightV3)
+
+def DucElementAddFontSizeV3(builder, fontSizeV3):
+    builder.PrependFloat64Slot(67, fontSizeV3, None)
+
+def AddFontSizeV3(builder, fontSizeV3):
+    DucElementAddFontSizeV3(builder, fontSizeV3)
+
+def DucElementAddLineHeightV3(builder, lineHeightV3):
+    builder.PrependFloat64Slot(68, lineHeightV3, None)
+
+def AddLineHeightV3(builder, lineHeightV3):
+    DucElementAddLineHeightV3(builder, lineHeightV3)
 
 def DucElementEnd(builder):
     return builder.EndObject()

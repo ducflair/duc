@@ -1,20 +1,24 @@
+import { Point as RoughPoint } from "roughjs/bin/geometry";
 import { COLOR_PALETTE } from "./colors";
 import {
   DEFAULT_VERSION,
   EVENT,
+  FILL_STYLE,
   FONT_FAMILY,
   isDarwin,
   WINDOWS_EMOJI_FALLBACK_FONT,
 } from "./constants";
-import { FontFamilyValues, FontString } from "./element/types";
+import { FillStyle, FontFamilyValues, FontString, TextAlign } from "./element/types";
 import {
   ActiveTool,
   AppState,
+  Point,
   ToolType,
   UnsubscribeCallback,
   Zoom,
 } from "./types";
 import { MaybePromise, ResolutionType } from "./utility-types";
+import { TEXT_ALIGN } from "./constants";
 
 let mockDateTime: string | null = null;
 
@@ -1140,3 +1144,48 @@ export const safelyParseJSON = (json: string): Record<string, any> | null => {
     return null;
   }
 };
+
+// Converts a tuple to the new Point structure
+export type OldPoint = Readonly<RoughPoint>;
+export type TuplePoint = [number, number];
+
+export function convertPointToTuple(point: Point): [number, number] {
+  return [point.x, point.y];
+}
+
+// Helper function to migrate legacy tuple points to new Point objects
+export const migratePoints = (points: any[]): Point[] => {
+  return points.map(point => {
+    if (Array.isArray(point)) {
+      const [x, y] = point;
+      return { x, y };
+    }
+    return point as Point; // Assume already migrated
+  });
+};
+
+// TODO: deprecate when we move off of roughjs
+export const getFillStyleToString = (fillStyle: FillStyle) => {
+  if(fillStyle === FILL_STYLE.solid) {
+    return "solid";
+  }
+  if(fillStyle === FILL_STYLE.hachure) {
+    return "hachure";
+  }
+  if(fillStyle === FILL_STYLE["cross-hatch"]) {
+    return "cross-hatch";
+  }
+  if(fillStyle === FILL_STYLE.zigzag) {
+    return "zigzag";
+  }
+}
+
+export const getTextAlignToString = (textAlign: TextAlign) => {
+  if(textAlign === TEXT_ALIGN.CENTER) {
+    return "center";
+  }
+  if(textAlign === TEXT_ALIGN.RIGHT) {
+    return "right";
+  }
+  return "left";
+}

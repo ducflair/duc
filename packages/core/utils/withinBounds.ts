@@ -22,7 +22,7 @@ type Elements = readonly NonDeletedDucElement[];
 
 type Points = readonly Point[];
 
-/** @returns vertices relative to element's top-left [0,0] position  */
+/** @returns vertices relative to element's top-left {x: 0, y: 0} position  */
 const getNonLinearElementRelativePoints = (
   element: Exclude<
     Element,
@@ -31,21 +31,21 @@ const getNonLinearElementRelativePoints = (
 ): [TopLeft: Point, TopRight: Point, BottomRight: Point, BottomLeft: Point] => {
   if (element.type === "diamond") {
     return [
-      [element.width / 2, 0],
-      [element.width, element.height / 2],
-      [element.width / 2, element.height],
-      [0, element.height / 2],
+      {x: element.width / 2, y: 0},
+      {x: element.width, y: element.height / 2},
+      {x: element.width / 2, y: element.height},
+      {x: 0, y: element.height / 2},
     ];
   }
   return [
-    [0, 0],
-    [0 + element.width, 0],
-    [0 + element.width, element.height],
-    [0, element.height],
+    {x: 0, y: 0},
+    {x: 0 + element.width, y: 0},
+    {x: 0 + element.width, y: element.height},
+    {x: 0, y: element.height},
   ];
 };
 
-/** @returns vertices relative to element's top-left [0,0] position  */
+/** @returns vertices relative to element's top-left {x: 0, y: 0} position  */
 const getElementRelativePoints = (element: DucElement): Points => {
   if (isLinearElement(element) || isFreeDrawElement(element)) {
     return element.points;
@@ -55,7 +55,7 @@ const getElementRelativePoints = (element: DucElement): Points => {
 
 const getMinMaxPoints = (points: Points) => {
   const ret = points.reduce(
-    (limits, [x, y]) => {
+    (limits, {x, y}) => {
       limits.minY = Math.min(limits.minY, y);
       limits.minX = Math.min(limits.minX, x);
 
@@ -84,10 +84,10 @@ const getRotatedBBox = (element: Element): Bounds => {
   const points = getElementRelativePoints(element);
 
   const { cx, cy } = getMinMaxPoints(points);
-  const centerPoint: Point = [cx, cy];
+  const centerPoint: Point = {x: cx, y: cy};
 
   const rotatedPoints = points.map((point) =>
-    rotatePoint([point[0], point[1]], centerPoint, element.angle),
+    rotatePoint({x: point.x, y: point.y}, centerPoint, element.angle),
   );
   const { minX, minY, maxX, maxY } = getMinMaxPoints(rotatedPoints);
 

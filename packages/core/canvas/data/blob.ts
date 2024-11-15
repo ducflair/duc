@@ -128,40 +128,33 @@ export const loadSceneOrLibraryFromBlob = async (
   const mime = getMimeType(blob);
 
   if(mime === MIME_TYPES.duc) {
-    const { elements, appState, files } = await parseDucFlatBuffers(blob);
-
-    if (!Array.isArray(elements)) {
-      throw new Error("Parsed elements are not an array");
+    try {
+      const data = await parseDucFlatBuffers(blob, fileHandle);
+      return {
+        type: MIME_TYPES.duc,
+        data
+        // data: restore(
+        //   {
+        //     elements: elements as DucElement[],
+        //     appState: {
+        //       fileHandle: fileHandle || blob.handle || null,
+        //       ...appState,
+        //       // ...cleanAppStateForExport(appState),
+        //       // ...(localAppState
+        //       //   ? calculateScrollCenter(elements as DucElement[], localAppState)
+        //       //   : {}),
+        //     },
+        //     files: files,
+        //   },
+        //   undefined,
+        //   undefined,
+        //   { repairBindings: true, refreshDimensions: false },
+        // ),
+      };
+    } catch (error) {
+      console.error(error);
+      throw new Error("Failed to read duc file");
     }
-
-    elements.forEach(element => {
-      if (!element || typeof element !== 'object') {
-        throw new Error("Invalid element found");
-      }
-    });
-
-    
-    return {
-      type: MIME_TYPES.duc,
-      data: restore(
-        {
-          elements: clearElementsForExport(elements),
-          appState: {
-            theme: localAppState?.theme,
-            fileHandle: fileHandle || blob.handle || null,
-            ...cleanAppStateForExport(appState),
-            ...(localAppState
-              ? calculateScrollCenter(elements, localAppState)
-              : {}),
-          },
-          files: files,
-        },
-        localAppState,
-        localElements,
-        { repairBindings: true, refreshDimensions: false },
-      ),
-    };
-    
   } else {
     const contents = await parseFileContents(blob);
     let data;

@@ -414,40 +414,40 @@ const bindLinearElementToElement = (
   const endPointIndex = linearElement.points.length - 1;
   const delta = 0.5;
 
-  const newPoints = cloneJSON(linearElement.points) as [number, number][];
+  const newPoints = linearElement.points;
   // left to right so shift the arrow towards right
   if (
-    linearElement.points[endPointIndex][0] >
-    linearElement.points[endPointIndex - 1][0]
+    linearElement.points[endPointIndex].x >
+    linearElement.points[endPointIndex - 1].x
   ) {
-    newPoints[0][0] = delta;
-    newPoints[endPointIndex][0] -= delta;
+    newPoints[0].x = delta;
+    newPoints[endPointIndex].x -= delta;
   }
 
   // right to left so shift the arrow towards left
   if (
-    linearElement.points[endPointIndex][0] <
-    linearElement.points[endPointIndex - 1][0]
+    linearElement.points[endPointIndex].x <
+    linearElement.points[endPointIndex - 1].x
   ) {
-    newPoints[0][0] = -delta;
-    newPoints[endPointIndex][0] += delta;
+    newPoints[0].x = -delta;
+    newPoints[endPointIndex].x += delta;
   }
   // top to bottom so shift the arrow towards top
   if (
-    linearElement.points[endPointIndex][1] >
-    linearElement.points[endPointIndex - 1][1]
+    linearElement.points[endPointIndex].y >
+    linearElement.points[endPointIndex - 1].y
   ) {
-    newPoints[0][1] = delta;
-    newPoints[endPointIndex][1] -= delta;
+    newPoints[0].y = delta;
+    newPoints[endPointIndex].y -= delta;
   }
 
   // bottom to top so shift the arrow towards bottom
   if (
-    linearElement.points[endPointIndex][1] <
-    linearElement.points[endPointIndex - 1][1]
+    linearElement.points[endPointIndex].y <
+    linearElement.points[endPointIndex - 1].y
   ) {
-    newPoints[0][1] = -delta;
-    newPoints[endPointIndex][1] += delta;
+    newPoints[0].y = -delta;
+    newPoints[endPointIndex].y += delta;
   }
 
   Object.assign(linearElement, { points: newPoints });
@@ -532,8 +532,8 @@ export const convertToExcalidrawElements = (
           width,
           height,
           points: [
-            [0, 0],
-            [width, height],
+            {x: 0, y: 0},
+            {x: width, y: height},
           ],
           ...element,
         });
@@ -548,8 +548,8 @@ export const convertToExcalidrawElements = (
           height,
           endArrowhead: "arrow",
           points: [
-            [0, 0],
-            [width, height],
+            {x: 0, y: 0},
+            {x: width, y: height},
           ],
           ...element,
           type: "arrow",

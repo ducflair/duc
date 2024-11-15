@@ -55,13 +55,6 @@ scope(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-writingLayer():string|null
-writingLayer(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-writingLayer(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
 static startDucGroup(builder:flatbuffers.Builder) {
   builder.startObject(6);
 }
@@ -86,23 +79,18 @@ static addScope(builder:flatbuffers.Builder, scopeOffset:flatbuffers.Offset) {
   builder.addFieldOffset(4, scopeOffset, 0);
 }
 
-static addWritingLayer(builder:flatbuffers.Builder, writingLayerOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, writingLayerOffset, 0);
-}
-
 static endDucGroup(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   return offset;
 }
 
-static createDucGroup(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, typeOffset:flatbuffers.Offset, isCollapsed:boolean, labelOffset:flatbuffers.Offset, scopeOffset:flatbuffers.Offset, writingLayerOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createDucGroup(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, typeOffset:flatbuffers.Offset, isCollapsed:boolean, labelOffset:flatbuffers.Offset, scopeOffset:flatbuffers.Offset):flatbuffers.Offset {
   DucGroup.startDucGroup(builder);
   DucGroup.addId(builder, idOffset);
   DucGroup.addType(builder, typeOffset);
   DucGroup.addIsCollapsed(builder, isCollapsed);
   DucGroup.addLabel(builder, labelOffset);
   DucGroup.addScope(builder, scopeOffset);
-  DucGroup.addWritingLayer(builder, writingLayerOffset);
   return DucGroup.endDucGroup(builder);
 }
 }

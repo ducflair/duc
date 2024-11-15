@@ -25,7 +25,6 @@ import {
   OrderedDucElement,
 } from "./element/types";
 import { Action } from "./actions/types";
-import { Point as RoughPoint } from "roughjs/bin/geometry";
 import { LinearElementEditor } from "./element/linearElementEditor";
 import { SuggestedBinding } from "./element/binding";
 import { ImportedDataState } from "./data/types";
@@ -38,7 +37,7 @@ import { isOverScrollBars } from "./scene/scrollbars";
 import { MaybeTransformHandleType } from "./element/transformHandles";
 import Library from "./data/library";
 import type { FileSystemHandle } from "./data/filesystem";
-import type { IMAGE_MIME_TYPES, MIME_TYPES } from "./constants";
+import type { BEZIER_MIRRORING, IMAGE_MIME_TYPES, MIME_TYPES } from "./constants";
 import { SnapLine } from "./snapping";
 import { Merge, MaybePromise, ValueOf, MakeBrand, Mutable } from "./utility-types";
 import { SupportedMeasures } from "./duc/utils/measurements";
@@ -46,7 +45,22 @@ import { WritingLayers } from "./duc/utils/writingLayers";
 import { StoreActionType } from "./store";
 import { ElementUpdate } from "./element/mutateElement";
 
-export type Point = Readonly<RoughPoint>;
+
+export interface BezierHandle {
+  x: number;
+  y: number;
+}
+
+export type BezierMirroring = ValueOf<typeof BEZIER_MIRRORING>;
+export interface Point {
+  x: number;
+  y: number;
+  isCurve?: boolean; // defaults to false
+  mirroring?: BezierMirroring;
+  borderRadius?: number; // Defaults to the Element's borderRadius
+  handleIn?: BezierHandle;
+  handleOut?: BezierHandle;
+}
 
 export type SocketId = string & { _brand: "SocketId" };
 
@@ -198,7 +212,6 @@ export type StaticCanvasAppState = Readonly<
     /** null indicates transparent bg */
     viewBackgroundColor: AppState["viewBackgroundColor"] | null;
     scope: AppState["scope"];
-    writingLayer: AppState["writingLayer"];
     groups: AppState["groups"];
     exportScale: AppState["exportScale"];
     selectedElementsAreBeingDragged: AppState["selectedElementsAreBeingDragged"];
@@ -238,6 +251,7 @@ export type InteractiveCanvasAppState = Readonly<
     editingTextElement: AppState["editingTextElement"];
     elementHovered: AppState["elementHovered"];
     selectionDirection: AppState["selectionDirection"];
+    activeTool: AppState["activeTool"];
   }
 >;
 
@@ -320,7 +334,6 @@ export interface AppState extends Ducfig {
   editingLinearElement: LinearElementEditor | null;
   viewBackgroundColor: string;
   scope: SupportedMeasures,
-  writingLayer: WritingLayers,
   groups: DucGroup[];
   scrollX: number;
   scrollY: number;
@@ -421,16 +434,12 @@ export interface AppState extends Ducfig {
   displayDistanceOnDrawing: boolean;
   displayAllPointCoordinates: boolean;
   displayAllPointInfoSelected: boolean;
-  enableLineBendingOnEdit: boolean;
-
-  // if false the curve handles are parallel, if true the curve handles are independent 
-  // (this only takes place if the point as other points associated with it, making it a curve)
-  allowIndependentCurveHandles: boolean; 
-  
+    
   coordDecimalPlaces: number;
 
   displayRootAxis: boolean;
   selectionDirection: 'left' | 'right' | null;
+  lineBendingMode: boolean;
 }
 
 export type UIAppState = Omit<
@@ -691,6 +700,8 @@ export type AppClassProperties = {
   closeEyeDropper: App["closeEyeDropper"];
   openEyeDropper: App["openEyeDropper"];
   getEyeDropper: App["getEyeDropper"];
+  rerenderCanvas: App["rerenderCanvas"];
+  setAppState: App["setAppState"];
   // setPlugins: App["setPlugins"];
   // plugins: App["plugins"];
 };
@@ -931,5 +942,6 @@ export type NullableGridSize =
 
 
 export type PendingDucElements = DucElement[];
+
 
 

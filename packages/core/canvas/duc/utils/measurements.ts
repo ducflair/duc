@@ -41,7 +41,7 @@ export type ImperialMeasure =
 
 export type CombinedMeasure = SupportedMeasures;
 
-const ScaleFactors: { [key in CombinedMeasure]: number } = {
+export const ScaleFactors: { [key in CombinedMeasure]: number } = {
   // Metric scales
   ym: 1e-24,
   zm: 1e-21,
@@ -118,10 +118,19 @@ export function adjustElementToCurrentScope<T extends DucElement>(
   ) {
     adjustedElement = {
       ...adjustedElement,
-      points: element.points.map(([px, py]) => [
-        px * translationFactor,
-        py * translationFactor,
-      ]),
+      points: element.points.map(({x:px, y:py, handleIn, handleOut, ...rest}) => ({
+        ...rest,
+        x: px * translationFactor,
+        y: py * translationFactor,
+        handleIn: handleIn && {
+          x: handleIn.x * translationFactor,
+          y: handleIn.y * translationFactor,
+        },
+        handleOut: handleOut && {
+          x: handleOut.x * translationFactor,
+          y: handleOut.y * translationFactor,
+        },
+      })),
     } as T;
   }
 
