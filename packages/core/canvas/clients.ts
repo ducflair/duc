@@ -29,17 +29,19 @@ export const getClientColor = (
   socketId: SocketId,
   collaborator: Collaborator | undefined,
 ) => {
-  // to get more even distribution in case `id` is not uniformly distributed to
-  // begin with, we hash it
+  // Hash to distribute the selection more uniformly
   const hash = Math.abs(hashToInteger(collaborator?.id || socketId));
-  // we want to get a multiple of 10 number in the range of 0-360 (in other
-  // words a hue value of step size 10). There are 37 such values including 0.
+  
+  // Compute a hue step (0-360 in increments of 10)
   const hue = (hash % 37) * 10;
-  const saturation = 100;
-  const lightness = 83;
+
+  const saturation = 83;
+
+  const lightness = 40;
 
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };
+
 
 /**
  * returns first char, capitalized
@@ -51,6 +53,8 @@ export const getNameInitial = (name?: string | null) => {
     firstCodePoint ? String.fromCodePoint(firstCodePoint) : "?"
   ).toUpperCase();
 };
+
+
 
 export const renderRemoteCursors = ({
   context,
@@ -89,6 +93,8 @@ export const renderRemoteCursors = ({
     y = Math.min(y, normalizedHeight - height);
 
     const background = getClientColor(socketId, collaborator);
+    const primaryTextColor = COLOR_WHITE;
+    const secondaryStrokeColor = COLOR_CHARCOAL_BLACK;
 
     context.save();
     context.strokeStyle = background;
@@ -142,9 +148,24 @@ export const renderRemoteCursors = ({
       context.fill();
     }
 
-    // Background (white outline) for arrow
-    context.fillStyle = COLOR_WHITE;
-    context.strokeStyle = COLOR_WHITE;
+    // Double stroke effect for arrow
+    // Outer contrasting stroke
+    context.fillStyle = secondaryStrokeColor;
+    context.strokeStyle = secondaryStrokeColor;
+    context.lineWidth = 8;
+    context.lineJoin = "round";
+    context.beginPath();
+    context.moveTo(x, y);
+    context.lineTo(x + 0, y + 14);
+    context.lineTo(x + 4, y + 9);
+    context.lineTo(x + 11, y + 8);
+    context.closePath();
+    context.stroke();
+    context.fill();
+
+    // Inner contrasting stroke
+    context.fillStyle = primaryTextColor;
+    context.strokeStyle = primaryTextColor;
     context.lineWidth = 6;
     context.lineJoin = "round";
     context.beginPath();
@@ -156,7 +177,7 @@ export const renderRemoteCursors = ({
     context.stroke();
     context.fill();
 
-    // Arrow
+    // Arrow fill
     context.fillStyle = background;
     context.strokeStyle = background;
     context.lineWidth = 2;
@@ -182,7 +203,7 @@ export const renderRemoteCursors = ({
     const username = renderConfig.remotePointerUsernames.get(socketId) || "";
 
     if (!isOutOfBounds && username) {
-      context.font = "600 12px sans-serif"; // font has to be set before context.measureText()
+      context.font = "600 12px sans-serif";
 
       const offsetX = (isSpeaking ? x + 0 : x) + width / 2;
       const offsetY = (isSpeaking ? y + 0 : y) + height + 2;
@@ -197,25 +218,38 @@ export const renderRemoteCursors = ({
       const boxY = offsetY - 1;
       const boxWidth = measure.width + 2 + paddingHorizontal * 2 + 2;
       const boxHeight = finalHeight + 2 + paddingVertical * 2 + 2;
+
       if (context.roundRect) {
+        // Thin contrasting outer stroke
         context.beginPath();
-        context.roundRect(boxX, boxY, boxWidth, boxHeight, 8);
+        context.roundRect(boxX - 2, boxY - 2, boxWidth + 4, boxHeight + 4, 8);
         context.fillStyle = background;
         context.fill();
-        context.strokeStyle = COLOR_WHITE;
+        context.strokeStyle = secondaryStrokeColor;
+        context.lineWidth = 1;
+        context.stroke();
+
+        // Main border
+        context.beginPath();
+        context.roundRect(boxX - 1, boxY - 1, boxWidth + 2, boxHeight + 2, 8);
+        context.fillStyle = background;
+        context.fill();
+        context.strokeStyle = primaryTextColor;
+        context.lineWidth = 2;
         context.stroke();
 
         if (isSpeaking) {
           context.beginPath();
-          context.roundRect(boxX - 2, boxY - 2, boxWidth + 4, boxHeight + 4, 8);
+          context.roundRect(boxX - 3, boxY - 3, boxWidth + 6, boxHeight + 6, 8);
           context.strokeStyle = IS_SPEAKING_COLOR;
           context.stroke();
         }
       } else {
-        roundRect(context, boxX, boxY, boxWidth, boxHeight, 8, COLOR_WHITE);
+        roundRect(context, boxX, boxY, boxWidth, boxHeight, 8, primaryTextColor);
       }
-      context.fillStyle = COLOR_CHARCOAL_BLACK;
 
+      // Text color matches primary color (same as main border)
+      context.fillStyle = primaryTextColor;
       context.fillText(
         username,
         offsetX + paddingHorizontal + 1,

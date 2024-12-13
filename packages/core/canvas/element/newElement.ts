@@ -22,6 +22,7 @@ import {
 } from "./types";
 import {
   arrayToMap,
+  generateNumberedLabel,
   getFontString,
   getUpdatedTimestamp,
   isTestEnv,
@@ -604,6 +605,7 @@ export const duplicateElement = <TElement extends DucElement>(
   editingGroupId: AppState["editingGroupId"],
   groupIdMapForOperation: Map<GroupId, GroupId>,
   element: TElement,
+  elements: readonly DucElement[],
   overrides?: Partial<TElement>,
 ): Readonly<TElement> => {
   let copy = deepCopyElement(element);
@@ -612,6 +614,12 @@ export const duplicateElement = <TElement extends DucElement>(
   copy.boundElements = null;
   copy.updated = getUpdatedTimestamp();
   copy.seed = randomInteger();
+  
+  // Handle label duplication
+  if (copy.label) {
+    copy.label = generateNumberedLabel(copy.label, elements);
+  }
+  
   copy.groupIds = getNewGroupIdsForDuplication(
     copy.groupIds,
     editingGroupId,
@@ -622,6 +630,7 @@ export const duplicateElement = <TElement extends DucElement>(
       return groupIdMapForOperation.get(groupId)!;
     },
   );
+  
   if (overrides) {
     copy = Object.assign(copy, overrides);
   }
@@ -677,6 +686,10 @@ export const duplicateElements = (
     const clonedElement: Mutable<DucElement> = _deepCopyElement(element);
 
     clonedElement.id = maybeGetNewId(element.id)!;
+
+    if (clonedElement.label) {
+      clonedElement.label = generateNumberedLabel(clonedElement.label, elements);
+    }
 
     if (opts?.randomizeSeed) {
       clonedElement.seed = randomInteger();

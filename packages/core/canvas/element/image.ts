@@ -94,31 +94,28 @@ export const isHTMLSVGElement = (node: Node | null): node is SVGElement => {
   return node?.nodeName.toLowerCase() === "svg";
 };
 
-export const normalizeSVG = async (SVGString: string) => {
-  const doc = new DOMParser().parseFromString(SVGString, MIME_TYPES.svg);
-  const svg = doc.querySelector("svg");
-  const errorNode = doc.querySelector("parsererror");
-  if (errorNode || !isHTMLSVGElement(svg)) {
-    throw new Error("Invalid SVG");
-  } else {
-    if (!svg.hasAttribute("xmlns")) {
-      svg.setAttribute("xmlns", SVG_NS);
+export async function normalizeSVG(svgString: string): Promise<string> {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgString, 'image/svg+xml');
+    const svg = doc.querySelector('svg');
+
+    if (!svg) {
+      throw new Error('Invalid SVG: No SVG element found');
     }
 
-    if (!svg.hasAttribute("width") || !svg.hasAttribute("height")) {
-      const viewBox = svg.getAttribute("viewBox");
-      let width = svg.getAttribute("width") || "50";
-      let height = svg.getAttribute("height") || "50";
-      if (viewBox) {
-        const match = viewBox.match(/\d+ +\d+ +(\d+) +(\d+)/);
-        if (match) {
-          [, width, height] = match;
-        }
-      }
-      svg.setAttribute("width", width);
-      svg.setAttribute("height", height);
+    // Ensure width and height are set
+    if (!svg.hasAttribute('width')) {
+      svg.setAttribute('width', '100%');
+    }
+    if (!svg.hasAttribute('height')) {
+      svg.setAttribute('height', '100%');
     }
 
-    return svg.outerHTML;
+    // Convert back to string
+    return new XMLSerializer().serializeToString(svg);
+  } catch (error) {
+    console.error('Error normalizing SVG:', error);
+    return svgString; // Return original if normalization fails
   }
-};
+}

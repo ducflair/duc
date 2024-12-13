@@ -41,9 +41,9 @@ import type { BEZIER_MIRRORING, IMAGE_MIME_TYPES, MIME_TYPES } from "./constants
 import { SnapLine } from "./snapping";
 import { Merge, MaybePromise, ValueOf, MakeBrand, Mutable } from "./utility-types";
 import { SupportedMeasures } from "./duc/utils/measurements";
-import { WritingLayers } from "./duc/utils/writingLayers";
 import { StoreActionType } from "./store";
 import { ElementUpdate } from "./element/mutateElement";
+import Scene from "./scene/Scene";
 
 
 export interface BezierHandle {
@@ -146,6 +146,11 @@ export type BinaryFileData = {
    * Epoch timestamp in milliseconds.
    */
   lastRetrieved?: number;
+  /**
+   * indicates the version of the file. This can be used to determine whether
+   * the file dataURL has changed e.g. as part of restore due to schema update.
+   */
+  version?: number;
 };
 
 export type BinaryFileMetadata = Omit<BinaryFileData, "dataURL">;
@@ -784,12 +789,12 @@ export interface DucImperativeAPI {
   canvas: {
     resetScene: InstanceType<typeof App>["resetScene"];
     rerender: InstanceType<typeof App>["rerenderCanvas"];
+    rerenderImages: InstanceType<typeof App>["rerenderImages"];
     updateScene: InstanceType<typeof App>["updateScene"];
     scrollToContent: InstanceType<typeof App>["scrollToContent"];
     scrollToRoot: InstanceType<typeof App>["scrollToRoot"];
     toggleSnapMode: InstanceType<typeof App>["toggleSnapMode"];
     setCurrentScope: InstanceType<typeof App>["setCurrentScope"];
-    setWritingLayer: InstanceType<typeof App>["setWritingLayer"];
     updateGroups: InstanceType<typeof App>["updateGroups"];
     mutateGroup: InstanceType<typeof App>["mutateGroup"];
     setActiveTool: InstanceType<typeof App>["setActiveTool"];
@@ -798,6 +803,7 @@ export interface DucImperativeAPI {
     closeEyeDropper: InstanceType<typeof App>["closeEyeDropper"];
     getEyeDropper: InstanceType<typeof App>["getEyeDropper"];
     handleCanvasContextMenu: InstanceType<typeof App>["handleCanvasContextMenu"];
+    maybeUnfollowRemoteUser: InstanceType<typeof App>["maybeUnfollowRemoteUser"];
   };
   state: () => AppClassProperties
   elements: {
@@ -810,10 +816,12 @@ export interface DucImperativeAPI {
     getSceneElementsMap: InstanceType<typeof App>["getSceneElementsMap"];
     getSceneElementsIncludingDeleted: InstanceType<typeof App>["getSceneElementsIncludingDeleted"];
     mutateElementWithValues: InstanceType<typeof App>["mutateElementWithValues"];
+    replaceAllElements: InstanceType<typeof Scene>["replaceAllElements"];
     sendBackwardElements: InstanceType<typeof App>["sendBackwardElements"];
     mutateSelectedElementsWithValues: InstanceType<typeof App>["mutateSelectedElementsWithValues"];
     // mutateSelectedElementsWithValues: <TElement extends Mutable<DucElement>> ( values: ElementUpdate<TElement> ) => void;
     bringForwardElements: InstanceType<typeof App>["bringForwardElements"];
+    sendToBackElements: InstanceType<typeof App>["sendToBackElements"];
     toggleCollapseFrame: InstanceType<typeof App>["toggleCollapseFrame"];
     toggleLockElement: InstanceType<typeof App>["toggleLockElement"];
     bringToFrontElement: () => void;
