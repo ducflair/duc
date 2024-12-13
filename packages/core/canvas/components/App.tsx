@@ -321,7 +321,9 @@ import { Toast } from "./Toast";
 import { actionToggleViewMode } from "../actions/actionToggleViewMode";
 import {
   dataURLToFile,
+  dataURLToString,
   generateIdFromFile,
+  getDataURL_sync,
   getDataURL,
   getFileFromEvent,
   ImageURLToFile,
@@ -449,7 +451,6 @@ import {
   isPointHittingLinkIcon,
 } from "./hyperlink/helpers";
 import { adjustElementsMapToCurrentScope, adjustElementsToCurrentScope, adjustElementToCurrentScope, CombinedMeasure, coordinateToRealMeasure, realMeasureToCoordinate, SupportedMeasures } from "../duc/utils/measurements";
-import { WritingLayers } from "../duc/utils/writingLayers";
 import { actionChangeBackgroundColor, actionChangeFontFamily, actionChangeFontSize, actionChangeOpacity, actionChangeSloppiness, actionChangeStrokeColor, actionChangeStrokeWidth, actionChangeTextAlign, actionChangeVerticalAlign, changeProperty } from "../actions/actionProperties";
 import { saveAsFlatBuffers } from "../duc/duc-ts/src/serializeDuc";
 import transformHexColor from "../scene/hexDarkModeFilter";
@@ -734,11 +735,11 @@ class App extends React.Component<AppProps, AppState> {
           updateScene: this.updateScene,
           resetScene: this.resetScene,
           rerender: this.rerenderCanvas,
+          rerenderImages: this.rerenderImages,
           scrollToContent: this.scrollToContent,
           scrollToRoot: this.scrollToRoot,
           toggleSnapMode: this.toggleSnapMode,
           setCurrentScope: this.setCurrentScope,
-          setWritingLayer: this.setWritingLayer,
           updateGroups: this.updateGroups,
           openEyeDropper: this.openEyeDropper,
           closeEyeDropper: this.closeEyeDropper,
@@ -749,6 +750,7 @@ class App extends React.Component<AppProps, AppState> {
           setBackgroundColor: (color: string) => this.setState({
             viewBackgroundColor: color,
           }),
+          maybeUnfollowRemoteUser: this.maybeUnfollowRemoteUser,
         },
         files: {
           exportToDucJSON: this.exportToDucJSON,
@@ -766,14 +768,16 @@ class App extends React.Component<AppProps, AppState> {
           getSelectedElementsType: this.getSelectedElementsType,
           getElementById: this.getElementById,
           getVisibleElements: this.getVisibleElements,
-          sendBackwardElements: this.sendBackwardElements,
-          bringForwardElements: this.bringForwardElements,
           toggleLockElement: this.toggleLockElement,
           toggleCollapseFrame: this.toggleCollapseFrame,
           getSceneElementsMap: this.getSceneElementsMap,
           mutateElementWithValues: this.mutateElementWithValues,
           mutateSelectedElementsWithValues: this.mutateSelectedElementsWithValues,
           selectElements: this.selectElements,
+          replaceAllElements: this.scene.replaceAllElements,
+          sendBackwardElements: this.sendBackwardElements,
+          bringForwardElements: this.bringForwardElements,
+          sendToBackElements: this.sendToBackElements,
           bringToFrontElement: () => {this.actionManager.executeAction(actionBringToFront);},
           setZLayerIndexAfterElement: this.setZLayerIndexAfterElement,
           setElementFrameId: this.setElementFrameId,
@@ -1833,14 +1837,6 @@ class App extends React.Component<AppProps, AppState> {
                           onPointerDown={this.handleCanvasPointerDown}
                           onDoubleClick={this.handleCanvasDoubleClick}
                         />
-                        {this.state.userToFollow && (
-                          <FollowMode
-                            width={this.state.width}
-                            height={this.state.height}
-                            userToFollow={this.state.userToFollow}
-                            onDisconnect={this.maybeUnfollowRemoteUser}
-                          />
-                        )}
                         {this.renderFrameNames()}
                       </ExcalidrawActionManagerContext.Provider>
                       {this.renderEmbeddables()}
@@ -2288,9 +2284,7 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     if (actionResult.files) {
-      this.files = actionResult.replaceFiles
-        ? actionResult.files
-        : { ...this.files, ...actionResult.files };
+      this.addMissingFiles(actionResult.files, actionResult.replaceFiles);
       this.addNewImagesToImageCache();
     }
 
@@ -2483,6 +2477,10 @@ class App extends React.Component<AppProps, AppState> {
       ...scene,
       storeAction: StoreAction.UPDATE,
     });
+
+    // clear the shape and image cache so that any images in initialData
+    // can be loaded fresh
+    this.clearImageShapeCache();
 
     // FontFaceSet loadingdone event we listen on may not always
     // fire (looking at you Safari), so on init we manually load all
@@ -3352,7 +3350,7 @@ class App extends React.Component<AppProps, AppState> {
     });
 
     if (opts.files) {
-      this.files = { ...this.files, ...opts.files };
+      this.addMissingFiles(opts.files);
     }
 
     this.store.shouldCaptureIncrement();
@@ -3883,28 +3881,74 @@ class App extends React.Component<AppProps, AppState> {
 
   /** adds supplied files to existing files in the appState */
   public addFiles: DucImperativeAPI["addFiles"] = withBatchedUpdates(
-    (files) => {
+    async (files) => {
       const filesMap = files.reduce((acc, fileData) => {
         acc.set(fileData.id, fileData);
         return acc;
       }, new Map<FileId, BinaryFileData>());
 
-      this.files = { ...this.files, ...Object.fromEntries(filesMap) };
+      const { addedFiles } = await this.addMissingFiles(files);
 
-      this.scene.getNonDeletedElements().forEach((element) => {
-        if (
-          isInitializedImageElement(element) &&
-          filesMap.has(element.fileId)
-        ) {
-          this.imageCache.delete(element.fileId);
-          ShapeCache.delete(element);
-        }
-      });
+      this.clearImageShapeCache(addedFiles);
       this.scene.triggerUpdate();
 
       this.addNewImagesToImageCache();
     },
   );
+
+  private addMissingFiles = async (
+    files: BinaryFiles | BinaryFileData[],
+    replace = false,
+  ) => {
+    const nextFiles = replace ? {} : { ...this.files };
+    const addedFiles: BinaryFiles = {};
+  
+    const _files = Array.isArray(files) ? files : Object.values(files);
+  
+    for (const fileData of _files) {
+      if (nextFiles[fileData.id]) {
+        continue;
+      }
+  
+      addedFiles[fileData.id] = fileData;
+      nextFiles[fileData.id] = fileData;
+  
+      if (fileData.mimeType === MIME_TYPES.svg) {
+        try {
+          // First normalize the SVG
+          const normalizedSVG = await normalizeSVG(dataURLToString(fileData.dataURL));
+          
+          // Then get the data URL
+          const restoredDataURL = await getDataURL_sync(
+            normalizedSVG,
+            MIME_TYPES.svg,
+          );
+  
+          if (fileData.dataURL !== restoredDataURL) {
+            // bump version so persistence layer can update the store
+            fileData.version = (fileData.version ?? 1) + 1;
+            fileData.dataURL = restoredDataURL as DataURL;
+          }
+        } catch (error) {
+          console.error('Error processing SVG:', error);
+        }
+      }
+    }
+  
+    this.files = nextFiles;
+  
+    return { addedFiles };
+  };
+
+  private clearImageShapeCache(filesMap?: BinaryFiles) {
+    const files = filesMap ?? this.files;
+    this.scene.getNonDeletedElements().forEach((element) => {
+      if (isInitializedImageElement(element) && files[element.fileId]) {
+        this.imageCache.delete(element.fileId);
+        ShapeCache.delete(element);
+      }
+    });
+  }
 
   public updateScene = withBatchedUpdates(
     <K extends keyof AppState>(sceneData: {
@@ -4443,7 +4487,6 @@ class App extends React.Component<AppProps, AppState> {
         // }
       }
 
-
       if (event.key === KEYS.SPACE && gesture.pointers.size === 0) {
         isHoldingSpace = true;
         setCursor(this.interactiveCanvas, CURSOR_TYPE.GRAB);
@@ -4748,6 +4791,11 @@ class App extends React.Component<AppProps, AppState> {
     return this.actionManager.executeAction(actionSendBackward);
   };
 
+  sendToBackElements = (
+  ) => {
+    return this.actionManager.executeAction(actionSendToBack);
+  };
+
   bringForwardElements = (
   ) => {
     return this.actionManager.executeAction(actionBringForward);
@@ -4843,24 +4891,6 @@ class App extends React.Component<AppProps, AppState> {
     ) as InitializedDucImageElement[];
 
     this.addNewImagesToImageCache(imageElements, files);
-  };
-
-  setWritingLayer = (
-    layer:WritingLayers,
-  ) => {
-    this.setState((prevState) => {
-      const commonResets = {
-        snapLines: prevState.snapLines.length ? [] : prevState.snapLines,
-        originSnapOffset: null,
-        activeEmbeddable: null,
-      } as const;
-
-      return {
-        ...prevState,
-        writingLayer: layer,
-        ...commonResets,
-      };
-    });
   };
 
   public flipHorizontal = () => {
@@ -7916,13 +7946,14 @@ class App extends React.Component<AppProps, AppState> {
               strokeStyle: this.state.currentItemStrokeStyle,
               roughness: this.state.currentItemRoughness,
               opacity: this.state.currentItemOpacity,
+              label: `Path ${this.getNumLastElementOfType(elementType)}`,
               roundness:
                 this.state.currentItemRoundness === "round"
                   ? { type: ROUNDNESS.PROPORTIONAL_RADIUS }
                   : null,
               locked: false,
               frameId: topLayerFrame ? topLayerFrame.id : null,
-      });
+            });
       this.setState((prevState) => {
         const nextSelectedElementIds = {
           ...prevState.selectedElementIds,
@@ -8511,6 +8542,7 @@ class App extends React.Component<AppProps, AppState> {
                   this.state.editingGroupId,
                   groupIdMap,
                   element,
+                  elements,
                 );
                 const origElement = pointerDownState.originalElements.get(
                   element.id,
@@ -9690,8 +9722,11 @@ class App extends React.Component<AppProps, AppState> {
 
     if (mimeType === MIME_TYPES.svg) {
       try {
+        // Read the text content once and store it
+        const svgText = await imageFile.text();
+        // Create new file with normalized SVG
         imageFile = SVGStringToFile(
-          await normalizeSVG(await imageFile.text()),
+          await normalizeSVG(svgText),
           imageFile.name,
         );
       } catch (error: any) {
@@ -9756,19 +9791,18 @@ class App extends React.Component<AppProps, AppState> {
       false,
     ) as NonDeleted<InitializedDucImageElement>;
 
-    return new Promise<NonDeleted<InitializedDucImageElement> | null>(
+    return new Promise<NonDeleted<InitializedDucImageElement>>(
       async (resolve, reject) => {
         try {
-          this.files = {
-            ...this.files,
-            [fileId]: {
+          this.addMissingFiles([
+            {
               mimeType,
               id: fileId,
               dataURL,
               created: Date.now(),
               lastRetrieved: Date.now(),
             },
-          };
+          ]);
           const cachedImageData = this.imageCache.get(fileId);
           if (!cachedImageData) {
             this.addNewImagesToImageCache();
@@ -9790,7 +9824,7 @@ class App extends React.Component<AppProps, AppState> {
           reject(new Error(t("errors.imageInsertError")));
         } finally {
           if (!showCursorImagePreview) {
-            this.resetCursor();
+            resetCursor(this.interactiveCanvas);
           }
         }
       },
@@ -9800,35 +9834,26 @@ class App extends React.Component<AppProps, AppState> {
   /**
    * inserts image into elements array and rerenders
    */
-  private insertImageElement = async (
+  insertImageElement = async (
     imageElement: DucImageElement,
     imageFile: File,
     showCursorImagePreview?: boolean,
   ) => {
+    // we should be handling all cases upstream, but in case we forget to handle
+    // a future case, let's throw here
     if (!this.isToolSupported("image")) {
       this.setState({ errorMessage: t("errors.imageToolNotSupported") });
       return;
     }
-  
+
     this.scene.insertElement(imageElement);
-  
+
     try {
-      const initializedElement = await this.initializeImage({
+      return await this.initializeImage({
         imageFile,
         imageElement,
         showCursorImagePreview,
       });
-  
-      if (initializedElement) {
-        this.scene.replaceAllElements(
-          this.scene.getElementsIncludingDeleted().map((el) =>
-            el.id === initializedElement.id ? initializedElement : el
-          )
-        );
-        this.setState({ selectedElementIds: { [initializedElement.id]: true } });
-      }
-  
-      return initializedElement;
     } catch (error: any) {
       mutateElement(imageElement, {
         isDeleted: true,
@@ -9837,8 +9862,6 @@ class App extends React.Component<AppProps, AppState> {
       this.setState({
         errorMessage: error.message || t("errors.imageInsertError"),
       });
-      this.updateGroups();
-  
       return null;
     }
   };
@@ -9964,28 +9987,27 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  private initializeImageDimensions = async (
+  initializeImageDimensions = (
     imageElement: DucImageElement,
-    // image: HTMLImageElement,
     forceNaturalSize = false,
   ) => {
     const image =
-    isInitializedImageElement(imageElement) &&
-    this.imageCache.get(imageElement.fileId)?.image;
+      isInitializedImageElement(imageElement) &&
+      this.imageCache.get(imageElement.fileId)?.image;
 
     if (!image || image instanceof Promise) {
-      const placeholderSize = 100 / this.state.zoom.value;
-      mutateElement(imageElement, {
-        x: imageElement.x - placeholderSize / 2,
-        y: imageElement.y - placeholderSize / 2,
-        width: placeholderSize,
-        height: placeholderSize,
-      });
-      this.updateGroups();
-
-      if (image instanceof Promise) {
-        const loadedImage = await image;
-        this.updateImageElementWithLoadedImage(imageElement, loadedImage, forceNaturalSize);
+      if (
+        imageElement.width < DRAGGING_THRESHOLD / this.state.zoom.value &&
+        imageElement.height < DRAGGING_THRESHOLD / this.state.zoom.value
+      ) {
+        const placeholderSize = 100 / this.state.zoom.value;
+        mutateElement(imageElement, {
+          x: imageElement.x - placeholderSize / 2,
+          y: imageElement.y - placeholderSize / 2,
+          width: placeholderSize,
+          height: placeholderSize,
+        });
+        
       }
 
       return;
@@ -10014,12 +10036,17 @@ class App extends React.Component<AppProps, AppState> {
       const x = imageElement.x + imageElement.width / 2 - width / 2;
       const y = imageElement.y + imageElement.height / 2 - height / 2;
 
-      mutateElement(imageElement, { x, y, width, height });
-      this.updateGroups();
-
+      mutateElement(imageElement, {
+        x,
+        y,
+        width,
+        height,
+        // crop: null,
+      });
     }
     this.updateImageElementWithLoadedImage(imageElement, image, forceNaturalSize);
   };
+
 
   private updateImageElementWithLoadedImage = (
     imageElement: DucImageElement,

@@ -706,7 +706,7 @@ const generateLinearElementShape = (
   return generator[method](element.points.map(({x, y}) => [x, y]) as Mutable<OldPoint>[], options);
 };
 
-function getQuadraticBezierBoundingBox(
+export function getQuadraticBezierBoundingBox(
   p0: { x: number; y: number },
   p1: { x: number; y: number },
   p2: { x: number; y: number },

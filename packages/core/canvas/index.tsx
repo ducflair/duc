@@ -242,15 +242,29 @@ export {
 export {
   encryptData,
   decryptData,
-  generateEncryptionKey,
   IV_LENGTH_BYTES,
 } from "./data/encryption";
+
+export {
+  splitBuffers,
+  concatBuffers,
+  compressData,
+  _decryptAndDecompress,
+} from "./data/encode";
 
 export {
   SupportedMeasures, MetricMeasure, ImperialMeasure,
   coordinateToRealMeasure, adjustElementToCurrentScope, adjustElementsMapToCurrentScope, 
   realMeasureToCoordinate
 } from "./duc/utils/measurements";
+
+export {
+  getQuadraticBezierBoundingBox
+} from "./element/bounds";
+
+export {
+  getSvgPathFromStroke
+} from "./utils";
 
 export {
   ImportedDataState,
@@ -265,8 +279,10 @@ export {
   NonDeletedDucElement,
   InitializedDucImageElement,
   OrderedDucElement,
+  DucFrameLikeElement,
   Theme,
-  DucGroup
+  DucGroup,
+  DucImageElement,
 } from "./element/types"
 
 export {
@@ -284,7 +300,12 @@ export {
   Collaborator,
   OnUserFollowedPayload,
   BezierMirroring,
+  BinaryFileMetadata
 } from "./types";
+
+export {
+  getClientColor
+} from './clients';
 
 export {
   CODES
@@ -321,7 +342,8 @@ export {
 
 export {
   Mutable, 
-  ValueOf
+  ValueOf,
+  ResolutionType
 } from './utility-types'
 
 export {
@@ -413,7 +435,7 @@ export {
 
 export { parseAppStateFromBinary } from "./duc/duc-ts/src/parse/parseAppStateFromBinary";
 export { parseElementFromBinary } from "./duc/duc-ts/src/parse/parseElementFromBinary";
-export { parseBinaryFilesFromBinary } from "./duc/duc-ts/src/parse/parseBinaryFilesFromBinary";
+export { parseBinaryFilesFromBinary, uint8ArrayToDataURL } from "./duc/duc-ts/src/parse/parseBinaryFilesFromBinary";
 
 export { parseDucFlatBuffers } from "./duc/duc-ts/src/parseDuc";
 

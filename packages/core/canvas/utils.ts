@@ -8,7 +8,7 @@ import {
   isDarwin,
   WINDOWS_EMOJI_FALLBACK_FONT,
 } from "./constants";
-import { FillStyle, FontFamilyValues, FontString, TextAlign } from "./element/types";
+import { DucElement, FillStyle, FontFamilyValues, FontString, TextAlign } from "./element/types";
 import {
   ActiveTool,
   AppState,
@@ -1189,3 +1189,33 @@ export const getTextAlignToString = (textAlign: TextAlign) => {
   }
   return "left";
 }
+
+export const generateNumberedLabel = (
+  label: string,
+  existingElements: readonly DucElement[],
+): string => {
+  if (!label) {
+    return label;
+  }
+
+  // First strip any existing numbering from the label
+  const baseLabel = label.replace(/\s*\(\d+\)$/, '');
+
+  // Find all elements with labels that match our base pattern
+  const regex = new RegExp(`^${baseLabel}\\s*\\((\\d+)\\)$`);
+  const numbers = existingElements
+    .map((el) => {
+      const match = el.label?.match(regex);
+      return match ? parseInt(match[1]) : 0;
+    })
+    .filter((num) => !isNaN(num));
+
+  // If no numbered duplicates exist yet, add (1)
+  if (numbers.length === 0) {
+    return `${baseLabel} (1)`;
+  }
+
+  // Otherwise, use the next number in sequence
+  const nextNumber = Math.max(...numbers) + 1;
+  return `${baseLabel} (${nextNumber})`;
+};

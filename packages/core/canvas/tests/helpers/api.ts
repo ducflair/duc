@@ -37,7 +37,6 @@ import type App from "../../components/App";
 import { createTestHook } from "../../components/App";
 import type { Action } from "../../actions/types";
 import { mutateElement } from "../../element/mutateElement";
-import { WritingLayers } from "../../duc/utils/writingLayers";
 import { SupportedMeasures } from "../../duc/utils/measurements";
 
 const readFile = util.promisify(fs.readFile);
@@ -124,7 +123,6 @@ export class API {
     frameId?: DucElement["id"] | null;
     groupIds?: string[];
     scope?: SupportedMeasures;
-    writingLayer?: WritingLayers;
     label?: string;
     ratioLocked?: boolean;
     isVisible?: boolean;

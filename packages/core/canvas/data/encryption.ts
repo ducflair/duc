@@ -8,26 +8,6 @@ export const createIV = () => {
   return window.crypto.getRandomValues(arr);
 };
 
-export const generateEncryptionKey = async <
-  T extends "string" | "cryptoKey" = "string",
->(
-  returnAs?: T,
-): Promise<T extends "cryptoKey" ? CryptoKey : string> => {
-  const key = await window.crypto.subtle.generateKey(
-    {
-      name: "AES-GCM",
-      length: ENCRYPTION_KEY_BITS,
-    },
-    true, // extractable
-    ["encrypt", "decrypt"],
-  );
-  return (
-    returnAs === "cryptoKey"
-      ? key
-      : (await window.crypto.subtle.exportKey("jwk", key)).k
-  ) as T extends "cryptoKey" ? CryptoKey : string;
-};
-
 export const getCryptoKey = (key: string, usage: KeyUsage) =>
   window.crypto.subtle.importKey(
     "jwk",
