@@ -98,6 +98,7 @@ const duplicateElements = (
       appState.editingGroupId,
       groupIdMap,
       element,
+      elements,
       {
         x: element.x + DEFAULT_GRID_SIZE / 2,
         y: element.y + DEFAULT_GRID_SIZE / 2,

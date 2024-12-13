@@ -2,7 +2,6 @@ import * as flatbuffers from 'flatbuffers';
 import { AppState as BinAppState, BinaryFiles as BinBinaryFiles, ExportedDataState, BinaryFilesEntry, BinaryFileData, DucElement as BinDucElement } from '../duc';
 import { fileSave } from '../../../data/filesystem';
 import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, EXPORT_SOURCE, MIME_TYPES, VERSIONS } from '../../../constants';
-import { cleanAppStateForExport } from '../../../appState';
 import { DucElement } from '../../../element/types';
 import { AppState, BinaryFiles } from '../../../types';
 import { serializeDucElement } from './serialize/serializeElementFromDuc';
@@ -14,7 +13,6 @@ export const serializeAsFlatBuffers = async (
   elements: readonly DucElement[],
   appState: Partial<AppState>,
   files: BinaryFiles,
-  type: "local" | "database",
 ): Promise<Uint8Array> => {
   const builder = new flatbuffers.Builder(1024);
 
@@ -66,7 +64,7 @@ export const saveAsFlatBuffers = async (
   name: string = DEFAULT_FILENAME,
 ) => {
   try {
-    const serialized = await serializeAsFlatBuffers(elements, appState, files, "local");
+    const serialized = await serializeAsFlatBuffers(elements, appState, files);
     const blob = new Blob([serialized], {
       type: MIME_TYPES.duc,
     });
