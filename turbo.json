@@ -22,6 +22,20 @@
       "dependsOn": ["build"],
       "outputs": []
     },
+
+
+    "@duc/docs#build": {
+      "env": [
+        "NEXT_PUBLIC_*",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_REGION"
+      ],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local", ".env.production.local"]
+    },
+    
+
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "src/index.js", "target/**", "*.egg-info/**"]
@@ -34,7 +48,8 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": ["NEXT_PUBLIC_*"]
     }
   }
 }
