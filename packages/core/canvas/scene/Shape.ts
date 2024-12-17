@@ -8,12 +8,13 @@ import type {
   DucSelectionElement,
   DucLinearElement,
   Arrowhead,
+  FillStyle,
 } from "../element/types";
 import { isPathALoop, getCornerRadius, distanceSq2d } from "../math";
 import { generateFreeDrawShape } from "../renderer/renderElement";
-import { isTransparent, assertNever } from "../utils";
+import { isTransparent, assertNever, TuplePoint, getFillStyleToString } from "../utils";
 import { simplify } from "points-on-curve";
-import { ROUGHNESS, toolNsBackgroundSet, toolsNsStrokeSet } from "../constants";
+import { FILL_STYLE, STROKE_STYLE, ROUGHNESS, toolNsBackgroundSet, toolsNsStrokeSet } from "../constants";
 import {
   isElbowArrow,
   isEmbeddableElement,
@@ -22,7 +23,8 @@ import {
   isLinearElement,
 } from "../element/typeChecks";
 import { canChangeRoundness } from "./comparisons";
-import type { EmbedsValidationStatus } from "../types";
+import type { EmbedsValidationStatus, Point } from "../types";
+import { renderStaticLinearPath } from "../element/linearElementEditor";
 
 const getDashArrayDashed = (strokeWidth: number) => [8, 8 + strokeWidth];
 
@@ -51,6 +53,7 @@ function adjustRoughness(element: DucElement): number {
   return Math.min(roughness / (maxSize < 10 ? 3 : 2), 2.5);
 }
 
+
 export const generateRoughOptions = (
   element: DucElement,
   continuousPath = false,
@@ -59,18 +62,18 @@ export const generateRoughOptions = (
   const options: Options = {
     seed: element.seed,
     strokeLineDash:
-      element.strokeStyle === "dashed"
+      element.strokeStyle === STROKE_STYLE.dashed
         ? getDashArrayDashed(element.strokeWidth)
-        : element.strokeStyle === "dotted"
+        : element.strokeStyle === STROKE_STYLE.dotted
         ? getDashArrayDotted(element.strokeWidth)
         : undefined,
     // for non-solid strokes, disable multiStroke because it tends to make
     // dashes/dots overlay each other
-    disableMultiStroke: element.strokeStyle !== "solid",
+    disableMultiStroke: element.strokeStyle !== STROKE_STYLE.solid,
     // for non-solid strokes, increase the width a bit to make it visually
     // similar to solid strokes, because we're also disabling multiStroke
     strokeWidth: 
-      element.strokeStyle !== "solid"
+      element.strokeStyle !== STROKE_STYLE.solid
         ? element.strokeWidth + 0.5
         : element.strokeWidth,
     // when increasing strokeWidth, we must explicitly set fillWeight and
@@ -91,7 +94,7 @@ export const generateRoughOptions = (
     case "embeddable":
     case "diamond":
     case "ellipse": {
-      options.fillStyle = element.fillStyle;
+      options.fillStyle = getFillStyleToString(element.fillStyle);
       options.fill = element.isBackgroundDisabled ? "transparent" : 
         isTransparent(element.backgroundColor)
           ? undefined
@@ -104,7 +107,7 @@ export const generateRoughOptions = (
     case "line":
     case "freedraw": {
       if (isPathALoop(element.points)) {
-        options.fillStyle = element.fillStyle;
+        options.fillStyle = getFillStyleToString(element.fillStyle);
         options.fill = element.isBackgroundDisabled ? "transparent" : 
           element.backgroundColor === "transparent"
             ? undefined
@@ -137,7 +140,7 @@ const modifyIframeLikeForRoughOptions = (
       ...element,
       roughness: 0,
       backgroundColor: "#d3d3d3",
-      fillStyle: "solid",
+      fillStyle: FILL_STYLE.solid,
     } as const;
   } else if (isIframeElement(element)) {
     return {
@@ -174,9 +177,7 @@ const getArrowheadShapes = (
   }
 
   switch (arrowhead) {
-    case "dot":
-    case "circle":
-    case "circle_outline": {
+    case "circle": {
       const [x, y, diameter] = arrowheadPoints;
 
       // always use solid stroke for arrowhead
@@ -185,19 +186,14 @@ const getArrowheadShapes = (
       return [
         generator.circle(x, y, diameter, {
           ...options,
-          fill:
-            arrowhead === "circle_outline"
-              ? canvasBackgroundColor
-              : element.strokeColor,
-
+          fill: element.strokeColor,
           fillStyle: "solid",
           stroke: element.strokeColor,
           roughness: Math.min(0.5, options.roughness || 0),
         }),
       ];
     }
-    case "triangle":
-    case "triangle_outline": {
+    case "triangle": {
       const [x, y, x2, y2, x3, y3] = arrowheadPoints;
 
       // always use solid stroke for arrowhead
@@ -213,18 +209,14 @@ const getArrowheadShapes = (
           ],
           {
             ...options,
-            fill:
-              arrowhead === "triangle_outline"
-                ? canvasBackgroundColor
-                : element.strokeColor,
+            fill: element.strokeColor,
             fillStyle: "solid",
             roughness: Math.min(1, options.roughness || 0),
           },
         ),
       ];
     }
-    case "diamond":
-    case "diamond_outline": {
+    case "diamond": {
       const [x, y, x2, y2, x3, y3, x4, y4] = arrowheadPoints;
 
       // always use solid stroke for arrowhead
@@ -241,10 +233,7 @@ const getArrowheadShapes = (
           ],
           {
             ...options,
-            fill:
-              arrowhead === "diamond_outline"
-                ? canvasBackgroundColor
-                : element.strokeColor,
+            fill: element.strokeColor,
             fillStyle: "solid",
             roughness: Math.min(1, options.roughness || 0),
           },
@@ -256,7 +245,7 @@ const getArrowheadShapes = (
     default: {
       const [x2, y2, x3, y3, x4, y4] = arrowheadPoints;
 
-      if (element.strokeStyle === "dotted") {
+      if (element.strokeStyle === STROKE_STYLE.dotted) {
         // for dotted arrows caps, reduce gap to make it more legible
         const dash = getDashArrayDotted(element.strokeWidth - 1);
         options.strokeLineDash = [dash[0], dash[1] - 1];
@@ -293,6 +282,7 @@ export const _generateElementShape = (
     embedsValidationStatus: EmbedsValidationStatus | null;
   },
 ): Drawable | Drawable[] | null => {
+
   switch (element.type) {
     case "rectangle":
     case "iframe":
@@ -395,34 +385,35 @@ export const _generateElementShape = (
       );
       return shape;
     }
-    case "line":
+    case "line": {
+      return renderStaticLinearPath(element, generator);
+    }
     case "arrow": {
       let shape: ElementShapes[typeof element.type];
       const options = generateRoughOptions(element);
 
-      // points array can be empty in the beginning, so it is important to add
-      // initial position to it
-      const points = element.points.length ? element.points : [[0, 0]];
+      const points = element.points.length ? element.points : [{x: 0, y: 0}];
+
+      // Convert Point objects to tuples for RoughJS
+      const roughPoints = points.map((p) => [p.x, p.y] as [number, number]);
 
       if (isElbowArrow(element)) {
         shape = [
           generator.path(
-            generateElbowArrowShape(points as [number, number][], 16),
+            generateElbowArrowShape(points as Point[], 16),
             generateRoughOptions(element, true),
           ),
         ];
       } else if (!element.roundness) {
-        // curve is always the first element
-        // this simplifies finding the curve for an element
         if (options.fill) {
-          shape = [generator.polygon(points as [number, number][], options)];
+          shape = [generator.polygon(roughPoints, options)];
         } else {
-          shape = [generator.linearPath(points as [number, number][], options)];
+          shape = [generator.linearPath(roughPoints, options)];
         }
       } else {
-        shape = [generator.curve(points as [number, number][], options)];
+        shape = [generator.curve(roughPoints, options)];
       }
-
+      
       // add lines only in arrow
       if (element.type === "arrow") {
         const { startArrowhead = null, endArrowhead = "arrow" } = element;
@@ -465,8 +456,8 @@ export const _generateElementShape = (
 
       if (isPathALoop(element.points)) {
         // generate rough polygon to fill freedraw shape
-        const simplifiedPoints = simplify(element.points, 0.75);
-        shape = generator.curve(simplifiedPoints as [number, number][], {
+        const simplifiedPoints = simplify(element.points.map(({x, y}) => [x, y]) as TuplePoint[], 0.75);
+        shape = generator.curve(simplifiedPoints.map(([x, y]) => [x, y]) as TuplePoint[], {
           ...generateRoughOptions(element),
           stroke: "none",
         });
@@ -498,10 +489,10 @@ export const _generateElementShape = (
 };
 
 const generateElbowArrowShape = (
-  points: [number, number][],
+  points: Point[],
   radius: number,
 ) => {
-  const subpoints = [] as [number, number][];
+  const subpoints: Point[] = [];
   for (let i = 1; i < points.length - 1; i += 1) {
     const prev = points[i - 1];
     const next = points[i + 1];
@@ -511,45 +502,45 @@ const generateElbowArrowShape = (
       Math.sqrt(distanceSq2d(points[i], prev)) / 2,
     );
 
-    if (prev[0] < points[i][0] && prev[1] === points[i][1]) {
+    if (prev.x < points[i].x && prev.y === points[i].y) {
       // LEFT
-      subpoints.push([points[i][0] - corner, points[i][1]]);
-    } else if (prev[0] === points[i][0] && prev[1] < points[i][1]) {
+      subpoints.push({x: points[i].x - corner, y: points[i].y});
+    } else if (prev.x === points[i].x && prev.y < points[i].y) {
       // UP
-      subpoints.push([points[i][0], points[i][1] - corner]);
-    } else if (prev[0] > points[i][0] && prev[1] === points[i][1]) {
+      subpoints.push({ x: points[i].x, y: points[i].y - corner });
+    } else if (prev.x > points[i].x && prev.y === points[i].y) {
       // RIGHT
-      subpoints.push([points[i][0] + corner, points[i][1]]);
+      subpoints.push({x: points[i].x + corner, y: points[i].y});
     } else {
-      subpoints.push([points[i][0], points[i][1] + corner]);
+      subpoints.push({ x: points[i].x, y: points[i].y + corner });
     }
 
-    subpoints.push(points[i] as [number, number]);
+    subpoints.push(points[i] as Point);
 
-    if (next[0] < points[i][0] && next[1] === points[i][1]) {
+    if (next.x < points[i].x && next.y === points[i].y) {
       // LEFT
-      subpoints.push([points[i][0] - corner, points[i][1]]);
-    } else if (next[0] === points[i][0] && next[1] < points[i][1]) {
+      subpoints.push({x: points[i].x - corner, y: points[i].y});
+    } else if (next.x === points[i].x && next.y < points[i].y) {
       // UP
-      subpoints.push([points[i][0], points[i][1] - corner]);
-    } else if (next[0] > points[i][0] && next[1] === points[i][1]) {
+      subpoints.push({ x: points[i].x, y: points[i].y - corner });
+    } else if (next.x > points[i].x && next.y === points[i].y) {
       // RIGHT
-      subpoints.push([points[i][0] + corner, points[i][1]]);
+      subpoints.push({x: points[i].x + corner, y: points[i].y});
     } else {
-      subpoints.push([points[i][0], points[i][1] + corner]);
+      subpoints.push({ x: points[i].x, y: points[i].y + corner });
     }
   }
 
-  const d = [`M ${points[0][0]} ${points[0][1]}`];
+  const d = [`M ${points[0].x} ${points[0].y}`];
   for (let i = 0; i < subpoints.length; i += 3) {
-    d.push(`L ${subpoints[i][0]} ${subpoints[i][1]}`);
+    d.push(`L ${subpoints[i].x} ${subpoints[i].y}`);
     d.push(
-      `Q ${subpoints[i + 1][0]} ${subpoints[i + 1][1]}, ${
-        subpoints[i + 2][0]
-      } ${subpoints[i + 2][1]}`,
+      `Q ${subpoints[i + 1].x} ${subpoints[i + 1].y}, ${
+        subpoints[i + 2].x
+      } ${subpoints[i + 2].y}`,
     );
   }
-  d.push(`L ${points[points.length - 1][0]} ${points[points.length - 1][1]}`);
+  d.push(`L ${points[points.length - 1].x} ${points[points.length - 1].y}`);
 
   return d.join(" ");
 };

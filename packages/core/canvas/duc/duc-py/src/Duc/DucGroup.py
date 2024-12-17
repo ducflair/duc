@@ -59,13 +59,6 @@ class DucGroup(object):
             return self._tab.String(o + self._tab.Pos)
         return None
 
-    # DucGroup
-    def WritingLayer(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
 def DucGroupStart(builder):
     builder.StartObject(6)
 
@@ -101,12 +94,6 @@ def DucGroupAddScope(builder, scope):
 
 def AddScope(builder, scope):
     DucGroupAddScope(builder, scope)
-
-def DucGroupAddWritingLayer(builder, writingLayer):
-    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(writingLayer), 0)
-
-def AddWritingLayer(builder, writingLayer):
-    DucGroupAddWritingLayer(builder, writingLayer)
 
 def DucGroupEnd(builder):
     return builder.EndObject()

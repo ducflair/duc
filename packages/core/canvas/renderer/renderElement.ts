@@ -28,7 +28,7 @@ import type {
   RenderableElementsMap,
   InteractiveCanvasRenderConfig,
 } from "../scene/types";
-import { distance, getFontString, isRTL } from "../utils";
+import { distance, getFontString, getTextAlignToString, isRTL } from "../utils";
 import { distance2d, getCornerRadius, isRightAngle } from "../math";
 import rough from "roughjs/bin/rough";
 import type {
@@ -38,18 +38,16 @@ import type {
   InteractiveCanvasAppState,
   ElementsPendingErasure,
   PendingDucElements,
+  Point,
 } from "../types";
 import { getDefaultAppState } from "../appState";
 import {
   BOUND_TEXT_PADDING,
   ELEMENT_READY_TO_ERASE_OPACITY,
-  FILL_INTERSECT_SELECTION_COLOR,
-  FILL_SELECTION_COLOR,
   FONT_FAMILY,
   FRAME_STYLE,
   MIME_TYPES,
-  STROKE_INTERSECT_SELECTION_COLOR,
-  STROKE_SELECTION_COLOR,
+  TEXT_ALIGN,
   THEME,
 } from "../constants";
 import type { StrokeOptions } from "perfect-freehand";
@@ -172,6 +170,7 @@ export const cappedElementCanvasSize = (
   const padding = getCanvasPadding(element);
 
   const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
+
   const elementWidth =
     isLinearElement(element) || isFreeDrawElement(element)
       ? distance(x1, x2)
@@ -180,6 +179,7 @@ export const cappedElementCanvasSize = (
     isLinearElement(element) || isFreeDrawElement(element)
       ? distance(y1, y2)
       : element.height;
+    
 
   let width = elementWidth * window.devicePixelRatio + padding * 2;
   let height = elementHeight * window.devicePixelRatio + padding * 2;
@@ -258,9 +258,9 @@ const generateElementCanvas = (
   const rc = rough.canvas(canvas);
 
   // in dark theme, revert the image color filter
-  if (shouldResetImageFilter(element, renderConfig, appState)) {
-    context.filter = IMAGE_INVERT_FILTER;
-  }
+  // if (shouldResetImageFilter(element, renderConfig, appState)) {
+  //   context.filter = IMAGE_INVERT_FILTER;
+  // }
 
   drawElementOnCanvas(element, rc, context, renderConfig, appState);
 
@@ -470,15 +470,15 @@ const drawElementOnCanvas = (
         context.save();
         context.font = getFontString(element);
         context.fillStyle = element.isStrokeDisabled ? "transparent" : element.strokeColor;
-        context.textAlign = element.textAlign as CanvasTextAlign;
+        context.textAlign = getTextAlignToString(element.textAlign) as CanvasTextAlign;
 
         // Canvas does not support multiline text by default
         const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
 
         const horizontalOffset =
-          element.textAlign === "center"
+          element.textAlign === TEXT_ALIGN.CENTER
             ? element.width / 2
-            : element.textAlign === "right"
+            : element.textAlign === TEXT_ALIGN.RIGHT
             ? element.width
             : 0;
 
@@ -658,44 +658,6 @@ export const drawElementFromCanvas = (
   // Clear the nested element we appended to the DOM
 };
 
-export const renderSelectionElement = (
-  element: NonDeleted<DucElement>,
-  context: CanvasRenderingContext2D,
-  appState: InteractiveCanvasAppState,
-  selectionDirection: AppState["selectionDirection"] = "right",
-) => {
-  context.save();
-  context.translate(element.x + appState.scrollX, element.y + appState.scrollY);
-
-  // render from 0.5px offset  to get 1px wide line
-  // https://stackoverflow.com/questions/7530593/html5-canvas-and-line-width/7531540#7531540
-  // TODO can be be improved by offseting to the negative when user selects
-  // from right to left
-  const offset = 0.5 / appState.zoom.value;
-  context.lineWidth = 1 / appState.zoom.value;
-
-  if (selectionDirection === "right") {
-    // Normal selection to the right (solid blue)
-    context.fillStyle = FILL_SELECTION_COLOR;
-    context.strokeStyle = STROKE_SELECTION_COLOR;
-    context.setLineDash([]); // Solid stroke
-
-  } else if (selectionDirection === "left") {
-    // Selection to the left (dashed green)
-    context.fillStyle = FILL_INTERSECT_SELECTION_COLOR;
-    context.strokeStyle = STROKE_INTERSECT_SELECTION_COLOR;
-    context.setLineDash([5 / appState.zoom.value, 5 / appState.zoom.value]); // Dashed line
-  }
-
-  // Draw the filled rectangle
-  context.fillRect(offset, offset, element.width, element.height);
-
-  // Draw the border (either solid or dashed based on the direction)
-  context.strokeRect(offset, offset, element.width, element.height);
-
-  context.restore();
-};
-
 
 export const renderElement = (
   element: NonDeletedDucElement,
@@ -814,6 +776,7 @@ export const renderElement = (
       // beforehand because math helpers (such as getElementAbsoluteCoords)
       // rely on existing shapes
       ShapeCache.generateElementShape(element, renderConfig);
+
       if (renderConfig.isExporting) {
         const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
         const cx = (x1 + x2) / 2 + appState.scrollX;
@@ -922,6 +885,7 @@ export const renderElement = (
         // not exporting → optimized rendering (cache & render from element
         // canvases)
       } else {
+        
         const elementWithCanvas = generateElementWithCanvas(
           element,
           allElementsMap,
@@ -932,7 +896,7 @@ export const renderElement = (
         if (!elementWithCanvas) {
           return;
         }
-
+        
         const currentImageSmoothingStatus = context.imageSmoothingEnabled;
 
         if (
@@ -1036,7 +1000,7 @@ export function getFreeDrawSvgPath(element: DucFreeDrawElement) {
   const inputPoints = element.simulatePressure
     ? element.points
     : element.points.length
-    ? element.points.map(([x, y], i) => [x, y, element.pressures[i]])
+    ? element.points.map(({x, y}, i) => [x, y, element.pressures[i]])
     : [[0, 0, 0.5]];
 
   // Consider changing the options for simulated pressure vs real pressure

@@ -1,21 +1,33 @@
 import { lineAngle } from "../../utils/geometry/geometry";
-import type { Point, Vector } from "../../utils/geometry/shape";
+import type { Vector } from "../../utils/geometry/shape";
 import {
   getCenterForBounds,
   PointInTriangle,
   rotatePoint,
   scalePointFromOrigin,
 } from "../math";
+import { Point } from "../types";
 import type { Bounds } from "./bounds";
 import type { DucBindableElement } from "./types";
 
-export const HEADING_RIGHT = [1, 0] as Heading;
-export const HEADING_DOWN = [0, 1] as Heading;
-export const HEADING_LEFT = [-1, 0] as Heading;
-export const HEADING_UP = [0, -1] as Heading;
-export type Heading = [1, 0] | [0, 1] | [-1, 0] | [0, -1];
+/**
+ * Defines the possible headings using the new Point interface.
+ */
+export type Heading =
+  | { x: 1; y: 0 }
+  | { x: 0; y: 1 }
+  | { x: -1; y: 0 }
+  | { x: 0; y: -1 };
 
-export const headingForDiamond = (a: Point, b: Point) => {
+export const HEADING_RIGHT: Heading = { x: 1, y: 0 };
+export const HEADING_DOWN: Heading = { x: 0, y: 1 };
+export const HEADING_LEFT: Heading = { x: -1, y: 0 };
+export const HEADING_UP: Heading = { x: 0, y: -1 };
+
+/**
+ * Determines the heading direction for a diamond shape based on two points.
+ */
+export const headingForDiamond = (a: Point, b: Point): Heading => {
   const angle = lineAngle([a, b]);
   if (angle >= 315 || angle < 45) {
     return HEADING_UP;
@@ -27,8 +39,11 @@ export const headingForDiamond = (a: Point, b: Point) => {
   return HEADING_LEFT;
 };
 
+/**
+ * Converts a vector to a heading direction.
+ */
 export const vectorToHeading = (vec: Vector): Heading => {
-  const [x, y] = vec;
+  const {x, y} = vec;
   const absX = Math.abs(x);
   const absY = Math.abs(y);
   if (x > absY) {
@@ -41,8 +56,11 @@ export const vectorToHeading = (vec: Vector): Heading => {
   return HEADING_UP;
 };
 
-export const compareHeading = (a: Heading, b: Heading) =>
-  a[0] === b[0] && a[1] === b[1];
+/**
+ * Compares two headings for equality.
+ */
+export const compareHeading = (a: Heading, b: Heading): boolean =>
+  a.x === b.x && a.y === b.y;
 
 // Gets the heading for the point by creating a bounding box around the rotated
 // close fitting bounding box, then creating 4 search cones around the center of
@@ -57,19 +75,19 @@ export const headingForPointFromElement = (
   const midPoint = getCenterForBounds(aabb);
 
   if (element.type === "diamond") {
-    if (point[0] < element.x) {
+    if (point.x < element.x) {
       return HEADING_LEFT;
-    } else if (point[1] < element.y) {
+    } else if (point.y < element.y) {
       return HEADING_UP;
-    } else if (point[0] > element.x + element.width) {
+    } else if (point.x > element.x + element.width) {
       return HEADING_RIGHT;
-    } else if (point[1] > element.y + element.height) {
+    } else if (point.y > element.y + element.height) {
       return HEADING_DOWN;
     }
 
     const top = rotatePoint(
       scalePointFromOrigin(
-        [element.x + element.width / 2, element.y],
+        { x: element.x + element.width / 2, y: element.y },
         midPoint,
         SEARCH_CONE_MULTIPLIER,
       ),
@@ -78,7 +96,7 @@ export const headingForPointFromElement = (
     );
     const right = rotatePoint(
       scalePointFromOrigin(
-        [element.x + element.width, element.y + element.height / 2],
+        { x: element.x + element.width, y: element.y + element.height / 2 },
         midPoint,
         SEARCH_CONE_MULTIPLIER,
       ),
@@ -87,7 +105,7 @@ export const headingForPointFromElement = (
     );
     const bottom = rotatePoint(
       scalePointFromOrigin(
-        [element.x + element.width / 2, element.y + element.height],
+        { x: element.x + element.width / 2, y: element.y + element.height },
         midPoint,
         SEARCH_CONE_MULTIPLIER,
       ),
@@ -96,7 +114,7 @@ export const headingForPointFromElement = (
     );
     const left = rotatePoint(
       scalePointFromOrigin(
-        [element.x, element.y + element.height / 2],
+        { x: element.x, y: element.y + element.height / 2 },
         midPoint,
         SEARCH_CONE_MULTIPLIER,
       ),
@@ -116,22 +134,22 @@ export const headingForPointFromElement = (
   }
 
   const topLeft = scalePointFromOrigin(
-    [aabb[0], aabb[1]],
+    { x: aabb[0], y: aabb[1] },
     midPoint,
     SEARCH_CONE_MULTIPLIER,
   );
   const topRight = scalePointFromOrigin(
-    [aabb[2], aabb[1]],
+    { x: aabb[2], y: aabb[1] },
     midPoint,
     SEARCH_CONE_MULTIPLIER,
   );
   const bottomLeft = scalePointFromOrigin(
-    [aabb[0], aabb[3]],
+    { x: aabb[0], y: aabb[3] },
     midPoint,
     SEARCH_CONE_MULTIPLIER,
   );
   const bottomRight = scalePointFromOrigin(
-    [aabb[2], aabb[3]],
+    { x: aabb[2], y: aabb[3] },
     midPoint,
     SEARCH_CONE_MULTIPLIER,
   );

@@ -86,7 +86,7 @@ const drawPointerSnapLine = (
 };
 
 const drawCross = (
-  [x, y]: Point,
+  {x, y}: Point,
   appState: InteractiveCanvasAppState,
   context: CanvasRenderingContext2D,
 ) => {
@@ -112,8 +112,8 @@ const drawLine = (
   context: CanvasRenderingContext2D,
 ) => {
   context.beginPath();
-  context.lineTo(...from);
-  context.lineTo(...to);
+  context.lineTo(from.x, from.y);
+  context.lineTo(to.x, to.y);
   context.stroke();
 };
 
@@ -135,53 +135,53 @@ const drawGapLine = (
   const QUARTER = FULL / 4;
 
   if (direction === "horizontal") {
-    const halfPoint = [(from[0] + to[0]) / 2, from[1]];
+    const halfPoint = {x: (from.x + to.x) / 2, y: from.y};
     // (1)
     if (!appState.zenModeEnabled) {
-      drawLine([from[0], from[1] - FULL], [from[0], from[1] + FULL], context);
+      drawLine({x: from.x, y: from.y - FULL}, {x: from.x, y: from.y + FULL}, context);
     }
 
     // (3)
     drawLine(
-      [halfPoint[0] - QUARTER, halfPoint[1] - HALF],
-      [halfPoint[0] - QUARTER, halfPoint[1] + HALF],
+      {x: halfPoint.x - QUARTER, y: halfPoint.y - HALF},
+      {x: halfPoint.x - QUARTER, y: halfPoint.y + HALF},
       context,
     );
     drawLine(
-      [halfPoint[0] + QUARTER, halfPoint[1] - HALF],
-      [halfPoint[0] + QUARTER, halfPoint[1] + HALF],
+      {x: halfPoint.x + QUARTER, y: halfPoint.y - HALF},
+      {x: halfPoint.x + QUARTER, y: halfPoint.y + HALF},
       context,
     );
 
     if (!appState.zenModeEnabled) {
       // (4)
-      drawLine([to[0], to[1] - FULL], [to[0], to[1] + FULL], context);
+      drawLine({x: to.x, y: to.y - FULL}, {x: to.x, y: to.y + FULL}, context);
 
       // (2)
       drawLine(from, to, context);
     }
   } else {
-    const halfPoint = [from[0], (from[1] + to[1]) / 2];
+    const halfPoint = {x: from.x, y:(from.y + to.y) / 2};
     // (1)
     if (!appState.zenModeEnabled) {
-      drawLine([from[0] - FULL, from[1]], [from[0] + FULL, from[1]], context);
+      drawLine({x: from.x - FULL, y: from.y}, {x: from.x + FULL, y: from.y}, context);
     }
 
     // (3)
     drawLine(
-      [halfPoint[0] - HALF, halfPoint[1] - QUARTER],
-      [halfPoint[0] + HALF, halfPoint[1] - QUARTER],
+      {x: halfPoint.x - HALF, y: halfPoint.y - QUARTER},
+      {x: halfPoint.x + HALF, y: halfPoint.y - QUARTER},
       context,
     );
     drawLine(
-      [halfPoint[0] - HALF, halfPoint[1] + QUARTER],
-      [halfPoint[0] + HALF, halfPoint[1] + QUARTER],
+      {x: halfPoint.x - HALF, y: halfPoint.y + QUARTER},
+      {x: halfPoint.x + HALF, y: halfPoint.y + QUARTER},
       context,
     );
 
     if (!appState.zenModeEnabled) {
       // (4)
-      drawLine([to[0] - FULL, to[1]], [to[0] + FULL, to[1]], context);
+      drawLine({x: to.x - FULL, y: to.y}, {x: to.x + FULL, y: to.y}, context);
 
       // (2)
       drawLine(from, to, context);

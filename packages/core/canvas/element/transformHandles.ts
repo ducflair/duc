@@ -93,7 +93,7 @@ const generateTransformHandle = (
   cy: number,
   angle: number,
 ): TransformHandle => {
-  const [xx, yy] = rotate(x + width / 2, y + height / 2, cx, cy, angle);
+  const {x: xx, y: yy} = rotate(x + width / 2, y + height / 2, cx, cy, angle);
   return [xx - width / 2, yy - height / 2, width, height];
 };
 
@@ -278,15 +278,15 @@ export const getTransformHandles = (
     if (element.points.length === 2) {
       // only check the last point because starting point is always (0,0)
       const [, p1] = element.points;
-      if (p1[0] === 0 || p1[1] === 0) {
+      if (p1.x === 0 || p1.y === 0) {
         omitSides = OMIT_SIDES_FOR_LINE_BACKSLASH;
-      } else if (p1[0] > 0 && p1[1] < 0) {
+      } else if (p1.x > 0 && p1.y < 0) {
         omitSides = OMIT_SIDES_FOR_LINE_SLASH;
-      } else if (p1[0] > 0 && p1[1] > 0) {
+      } else if (p1.x > 0 && p1.y > 0) {
         omitSides = OMIT_SIDES_FOR_LINE_BACKSLASH;
-      } else if (p1[0] < 0 && p1[1] > 0) {
+      } else if (p1.x < 0 && p1.y > 0) {
         omitSides = OMIT_SIDES_FOR_LINE_SLASH;
-      } else if (p1[0] < 0 && p1[1] < 0) {
+      } else if (p1.x < 0 && p1.y < 0) {
         omitSides = OMIT_SIDES_FOR_LINE_BACKSLASH;
       }
     }

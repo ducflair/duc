@@ -109,6 +109,8 @@ import {
   DEFAULT_COLLISION_THRESHOLD,
   DEFAULT_TEXT_ALIGN,
   ARROW_TYPE,
+  TEXT_ALIGN,
+  BEZIER_MIRRORING,
 } from "../constants";
 import { ExportedElements, exportCanvas, loadFromBlob, loadFromJSON, prepareElementsForExport, saveAsJSON } from "../data";
 import Library, { distributeLibraryItemsOnSquareGrid } from "../data/library";
@@ -279,6 +281,7 @@ import {
   EmbedsValidationStatus,
   ElementsPendingErasure,
   NullableGridSize,
+  Point,
 } from "../types";
 import {
   debounce,
@@ -318,7 +321,9 @@ import { Toast } from "./Toast";
 import { actionToggleViewMode } from "../actions/actionToggleViewMode";
 import {
   dataURLToFile,
+  dataURLToString,
   generateIdFromFile,
+  getDataURL_sync,
   getDataURL,
   getFileFromEvent,
   ImageURLToFile,
@@ -446,7 +451,6 @@ import {
   isPointHittingLinkIcon,
 } from "./hyperlink/helpers";
 import { adjustElementsMapToCurrentScope, adjustElementsToCurrentScope, adjustElementToCurrentScope, CombinedMeasure, coordinateToRealMeasure, realMeasureToCoordinate, SupportedMeasures } from "../duc/utils/measurements";
-import { WritingLayers } from "../duc/utils/writingLayers";
 import { actionChangeBackgroundColor, actionChangeFontFamily, actionChangeFontSize, actionChangeOpacity, actionChangeSloppiness, actionChangeStrokeColor, actionChangeStrokeWidth, actionChangeTextAlign, actionChangeVerticalAlign, changeProperty } from "../actions/actionProperties";
 import { saveAsFlatBuffers } from "../duc/duc-ts/src/serializeDuc";
 import transformHexColor from "../scene/hexDarkModeFilter";
@@ -731,11 +735,11 @@ class App extends React.Component<AppProps, AppState> {
           updateScene: this.updateScene,
           resetScene: this.resetScene,
           rerender: this.rerenderCanvas,
+          rerenderImages: this.rerenderImages,
           scrollToContent: this.scrollToContent,
           scrollToRoot: this.scrollToRoot,
           toggleSnapMode: this.toggleSnapMode,
           setCurrentScope: this.setCurrentScope,
-          setWritingLayer: this.setWritingLayer,
           updateGroups: this.updateGroups,
           openEyeDropper: this.openEyeDropper,
           closeEyeDropper: this.closeEyeDropper,
@@ -746,6 +750,7 @@ class App extends React.Component<AppProps, AppState> {
           setBackgroundColor: (color: string) => this.setState({
             viewBackgroundColor: color,
           }),
+          maybeUnfollowRemoteUser: this.maybeUnfollowRemoteUser,
         },
         files: {
           exportToDucJSON: this.exportToDucJSON,
@@ -763,14 +768,16 @@ class App extends React.Component<AppProps, AppState> {
           getSelectedElementsType: this.getSelectedElementsType,
           getElementById: this.getElementById,
           getVisibleElements: this.getVisibleElements,
-          sendBackwardElements: this.sendBackwardElements,
-          bringForwardElements: this.bringForwardElements,
           toggleLockElement: this.toggleLockElement,
           toggleCollapseFrame: this.toggleCollapseFrame,
           getSceneElementsMap: this.getSceneElementsMap,
           mutateElementWithValues: this.mutateElementWithValues,
           mutateSelectedElementsWithValues: this.mutateSelectedElementsWithValues,
           selectElements: this.selectElements,
+          replaceAllElements: this.scene.replaceAllElements,
+          sendBackwardElements: this.sendBackwardElements,
+          bringForwardElements: this.bringForwardElements,
+          sendToBackElements: this.sendToBackElements,
           bringToFrontElement: () => {this.actionManager.executeAction(actionBringToFront);},
           setZLayerIndexAfterElement: this.setZLayerIndexAfterElement,
           setElementFrameId: this.setElementFrameId,
@@ -1737,14 +1744,14 @@ class App extends React.Component<AppProps, AppState> {
                               />
                             </ElementCanvasButtons>
                           )}
-                        {this.state.toast !== null && (
+                        {/* {this.state.toast !== null && (
                           <Toast
                             message={this.state.toast.message}
                             onClose={() => this.setToast(null)}
                             duration={this.state.toast.duration}
                             closable={this.state.toast.closable}
                           />
-                        )}
+                        )} */}
                         {/* {this.state.contextMenu && (
                           <ContextMenu
                             items={this.state.contextMenu.items}
@@ -1830,14 +1837,6 @@ class App extends React.Component<AppProps, AppState> {
                           onPointerDown={this.handleCanvasPointerDown}
                           onDoubleClick={this.handleCanvasDoubleClick}
                         />
-                        {this.state.userToFollow && (
-                          <FollowMode
-                            width={this.state.width}
-                            height={this.state.height}
-                            userToFollow={this.state.userToFollow}
-                            onDisconnect={this.maybeUnfollowRemoteUser}
-                          />
-                        )}
                         {this.renderFrameNames()}
                       </ExcalidrawActionManagerContext.Provider>
                       {this.renderEmbeddables()}
@@ -1929,7 +1928,6 @@ class App extends React.Component<AppProps, AppState> {
 
       label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
       scope: this.state.scope,
-      writingLayer: this.state.writingLayer,
       opacity: this.state.currentItemOpacity,
       locked: false,
     } as const;
@@ -2188,7 +2186,6 @@ class App extends React.Component<AppProps, AppState> {
           locked: false,
           label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
           scope: this.state.scope,
-          writingLayer: this.state.writingLayer,
         });
 
         this.scene.insertElement(frame);
@@ -2287,9 +2284,7 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     if (actionResult.files) {
-      this.files = actionResult.replaceFiles
-        ? actionResult.files
-        : { ...this.files, ...actionResult.files };
+      this.addMissingFiles(actionResult.files, actionResult.replaceFiles);
       this.addNewImagesToImageCache();
     }
 
@@ -2482,6 +2477,10 @@ class App extends React.Component<AppProps, AppState> {
       ...scene,
       storeAction: StoreAction.UPDATE,
     });
+
+    // clear the shape and image cache so that any images in initialData
+    // can be loaded fresh
+    this.clearImageShapeCache();
 
     // FontFaceSet loadingdone event we listen on may not always
     // fire (looking at you Safari), so on init we manually load all
@@ -2949,12 +2948,10 @@ class App extends React.Component<AppProps, AppState> {
       maybeBindLinearElement(
         multiElement,
         this.state,
-        tupleToCoors(
-          LinearElementEditor.getPointAtIndexGlobalCoordinates(
-            multiElement,
-            -1,
-            nonDeletedElementsMap,
-          ),
+        LinearElementEditor.getPointAtIndexGlobalCoordinates(
+          multiElement,
+          -1,
+          nonDeletedElementsMap,
         ),
         this.scene.getNonDeletedElementsMap(),
         this.scene.getNonDeletedElements(),
@@ -3307,7 +3304,7 @@ class App extends React.Component<AppProps, AppState> {
     const dx = x - elementsCenterX;
     const dy = y - elementsCenterY;
 
-    const [gridX, gridY] = getGridPoint(dx, dy, this.getEffectiveGridSize());
+    const {x:gridX, y:gridY} = getGridPoint(dx, dy, this.getEffectiveGridSize());
 
     const newElements = duplicateElements(
       elements.map((element) => {
@@ -3353,7 +3350,7 @@ class App extends React.Component<AppProps, AppState> {
     });
 
     if (opts.files) {
-      this.files = { ...this.files, ...opts.files };
+      this.addMissingFiles(opts.files);
     }
 
     this.store.shouldCaptureIncrement();
@@ -3524,7 +3521,6 @@ class App extends React.Component<AppProps, AppState> {
       verticalAlign: DEFAULT_VERTICAL_ALIGN,
       label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
       scope: this.state.scope,
-      writingLayer: this.state.writingLayer,
       locked: false,
     };
     const fontString = getFontString({
@@ -3571,9 +3567,7 @@ class App extends React.Component<AppProps, AppState> {
             lineHeight,
             autoResize: !isTextUnwrapped,
             frameId: topLayerFrame ? topLayerFrame.id : null,
-            scope: this.state.scope,
-
-            writingLayer: this.state.writingLayer,
+            scope: this.state.scope
           });
           acc.push(element);
           currentY += element.height + LINE_GAP;
@@ -3887,28 +3881,74 @@ class App extends React.Component<AppProps, AppState> {
 
   /** adds supplied files to existing files in the appState */
   public addFiles: DucImperativeAPI["addFiles"] = withBatchedUpdates(
-    (files) => {
+    async (files) => {
       const filesMap = files.reduce((acc, fileData) => {
         acc.set(fileData.id, fileData);
         return acc;
       }, new Map<FileId, BinaryFileData>());
 
-      this.files = { ...this.files, ...Object.fromEntries(filesMap) };
+      const { addedFiles } = await this.addMissingFiles(files);
 
-      this.scene.getNonDeletedElements().forEach((element) => {
-        if (
-          isInitializedImageElement(element) &&
-          filesMap.has(element.fileId)
-        ) {
-          this.imageCache.delete(element.fileId);
-          ShapeCache.delete(element);
-        }
-      });
+      this.clearImageShapeCache(addedFiles);
       this.scene.triggerUpdate();
 
       this.addNewImagesToImageCache();
     },
   );
+
+  private addMissingFiles = async (
+    files: BinaryFiles | BinaryFileData[],
+    replace = false,
+  ) => {
+    const nextFiles = replace ? {} : { ...this.files };
+    const addedFiles: BinaryFiles = {};
+  
+    const _files = Array.isArray(files) ? files : Object.values(files);
+  
+    for (const fileData of _files) {
+      if (nextFiles[fileData.id]) {
+        continue;
+      }
+  
+      addedFiles[fileData.id] = fileData;
+      nextFiles[fileData.id] = fileData;
+  
+      if (fileData.mimeType === MIME_TYPES.svg) {
+        try {
+          // First normalize the SVG
+          const normalizedSVG = await normalizeSVG(dataURLToString(fileData.dataURL));
+          
+          // Then get the data URL
+          const restoredDataURL = await getDataURL_sync(
+            normalizedSVG,
+            MIME_TYPES.svg,
+          );
+  
+          if (fileData.dataURL !== restoredDataURL) {
+            // bump version so persistence layer can update the store
+            fileData.version = (fileData.version ?? 1) + 1;
+            fileData.dataURL = restoredDataURL as DataURL;
+          }
+        } catch (error) {
+          console.error('Error processing SVG:', error);
+        }
+      }
+    }
+  
+    this.files = nextFiles;
+  
+    return { addedFiles };
+  };
+
+  private clearImageShapeCache(filesMap?: BinaryFiles) {
+    const files = filesMap ?? this.files;
+    this.scene.getNonDeletedElements().forEach((element) => {
+      if (isInitializedImageElement(element) && files[element.fileId]) {
+        this.imageCache.delete(element.fileId);
+        ShapeCache.delete(element);
+      }
+    });
+  }
 
   public updateScene = withBatchedUpdates(
     <K extends keyof AppState>(sceneData: {
@@ -4198,6 +4238,45 @@ class App extends React.Component<AppProps, AppState> {
         }, 100);
       }
 
+      if (this.state.editingLinearElement && event.key.toLowerCase() === KEYS.M) {
+      // Cycle through mirroring modes for selected points
+        this.setState((prevState) => {
+          const { editingLinearElement } = prevState;
+          if (!editingLinearElement || !editingLinearElement.selectedPointsIndices) {
+            return null;
+          }
+    
+          const { elementId, selectedPointsIndices } = editingLinearElement;
+          const element = LinearElementEditor.getElement(
+            elementId,
+            this.scene.getNonDeletedElementsMap(),
+          );
+    
+          if (!element) {
+            return null;
+          }
+    
+          for (const idx of selectedPointsIndices) {
+            const point = element.points[idx];
+            if (point.isCurve) {
+              if (point.mirroring === BEZIER_MIRRORING.NONE) {
+                point.mirroring = BEZIER_MIRRORING.ANGLE;
+              } else if (point.mirroring === BEZIER_MIRRORING.ANGLE) {
+                point.mirroring = BEZIER_MIRRORING.ANGLE_LENGTH;
+              } else {
+                point.mirroring = BEZIER_MIRRORING.NONE;
+              }
+            }
+          }
+    
+          return { editingLinearElement };
+        });
+      }
+
+      if (event[KEYS.CTRL_OR_CMD] && this.state.editingLinearElement && !this.state.lineBendingMode) {
+        this.setAppState({ lineBendingMode: true });
+      }
+
       // prevent browser zoom in input fields
       // if (event[KEYS.CTRL_OR_CMD] && isWritableElement(event.target)) {
         // if (event.code === CODES.MINUS || event.code === CODES.EQUAL) {
@@ -4408,7 +4487,6 @@ class App extends React.Component<AppProps, AppState> {
         // }
       }
 
-
       if (event.key === KEYS.SPACE && gesture.pointers.size === 0) {
         isHoldingSpace = true;
         setCursor(this.interactiveCanvas, CURSOR_TYPE.GRAB);
@@ -4457,6 +4535,9 @@ class App extends React.Component<AppProps, AppState> {
       this.setState({ suggestedBindings: [] });
     }
 
+    if (!event[KEYS.CTRL_OR_CMD] && this.state.editingLinearElement && this.state.lineBendingMode) {
+      this.setAppState({ lineBendingMode: false });
+    }
 
     if (!event.altKey) {
       if (this.flowChartNavigator.isExploring) {
@@ -4623,8 +4704,9 @@ class App extends React.Component<AppProps, AppState> {
   };
   
 
-  mutateElementWithValues = <TElement extends Mutable<DucElement>> (
-      element: NonDeletedDucElement, values: ElementUpdate<TElement>,
+  mutateElementWithValues = <T extends NonDeletedDucElement>(
+    element: T,
+    values: ElementUpdate<T>
   ) => {
     mutateElement(element, values);
     this.rerenderCanvas();
@@ -4707,6 +4789,11 @@ class App extends React.Component<AppProps, AppState> {
   sendBackwardElements = (
   ) => {
     return this.actionManager.executeAction(actionSendBackward);
+  };
+
+  sendToBackElements = (
+  ) => {
+    return this.actionManager.executeAction(actionSendToBack);
   };
 
   bringForwardElements = (
@@ -4806,24 +4893,6 @@ class App extends React.Component<AppProps, AppState> {
     this.addNewImagesToImageCache(imageElements, files);
   };
 
-  setWritingLayer = (
-    layer:WritingLayers,
-  ) => {
-    this.setState((prevState) => {
-      const commonResets = {
-        snapLines: prevState.snapLines.length ? [] : prevState.snapLines,
-        originSnapOffset: null,
-        activeEmbeddable: null,
-      } as const;
-
-      return {
-        ...prevState,
-        writingLayer: layer,
-        ...commonResets,
-      };
-    });
-  };
-
   public flipHorizontal = () => {
     this.actionManager.executeAction(actionFlipHorizontal);
   }
@@ -4847,7 +4916,6 @@ class App extends React.Component<AppProps, AppState> {
             label: `Group ${this.state.groups.length + newGroupMap.size + 1}`,
             isCollapsed: false,
             scope: this.state.scope,
-            writingLayer: this.state.writingLayer,
             type: "group",
           });
         }
@@ -5223,6 +5291,7 @@ class App extends React.Component<AppProps, AppState> {
         x,
         y,
         element: elementWithHighestZIndex,
+        elementsMap: adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope),
         shape: getElementShape(
           elementWithHighestZIndex,
           this.scene.getNonDeletedElementsMap(),
@@ -5319,7 +5388,7 @@ class App extends React.Component<AppProps, AppState> {
         this.getElementHitThreshold(),
       );
 
-      return isPointInShape([x, y], selectionShape);
+      return isPointInShape({x, y}, selectionShape);
     }
 
     // take bound text element into consideration for hit collision as well
@@ -5336,6 +5405,7 @@ class App extends React.Component<AppProps, AppState> {
       x,
       y,
       element,
+      elementsMap: adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope),
       shape: getElementShape(element, this.scene.getNonDeletedElementsMap()),
       threshold: this.getElementHitThreshold(),
       frameNameBound: isFrameLikeElement(element)
@@ -5352,6 +5422,7 @@ class App extends React.Component<AppProps, AppState> {
         ? selectedElements[0]
         : null;
     }
+    const elementsMap = adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope);
     let hitElement = null;
     // We need to do hit testing from front (end of the array) to back (beginning of the array)
     for (let index = elements.length - 1; index >= 0; --index) {
@@ -5360,7 +5431,7 @@ class App extends React.Component<AppProps, AppState> {
       }
       const [x1, y1, x2, y2] = getElementAbsoluteCoords(
         elements[index],
-        this.scene.getNonDeletedElementsMap(),
+        elementsMap,
       );
       if (
         isArrowElement(elements[index]) &&
@@ -5368,9 +5439,10 @@ class App extends React.Component<AppProps, AppState> {
           x,
           y,
           element: elements[index],
+          elementsMap,
           shape: getElementShape(
             elements[index],
-            this.scene.getNonDeletedElementsMap(),
+            elementsMap,
           ),
           threshold: this.getElementHitThreshold(),
         })
@@ -5503,12 +5575,11 @@ class App extends React.Component<AppProps, AppState> {
           opacity: this.state.currentItemOpacity,
           label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
           scope: this.state.scope,
-          writingLayer: this.state.writingLayer,
           text: "",
           fontSize,
           fontFamily,
           textAlign: parentCenterPosition
-            ? "center"
+            ? TEXT_ALIGN.CENTER
             : this.state.currentItemTextAlign,
           verticalAlign: parentCenterPosition
             ? VERTICAL_ALIGN.MIDDLE
@@ -5645,6 +5716,7 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
+      const elementsMap = adjustElementsMapToCurrentScope(this.scene.getNonDeletedElementsMap(), this.state.scope);
       const container = this.getTextBindableContainerAtPosition(sceneX, sceneY);
 
       if (container) {
@@ -5655,9 +5727,10 @@ class App extends React.Component<AppProps, AppState> {
             x: sceneX,
             y: sceneY,
             element: container,
+            elementsMap,
             shape: getElementShape(
               container,
-              this.scene.getNonDeletedElementsMap(),
+              elementsMap              
             ),
             threshold: this.getElementHitThreshold(),
           })
@@ -5702,7 +5775,7 @@ class App extends React.Component<AppProps, AppState> {
           element,
           this.scene.getNonDeletedElementsMap(),
           this.state,
-          [scenePointer.x, scenePointer.y],
+          {x: scenePointer.x, y: scenePointer.y},
           this.device.editor.isMobile,
         )
       );
@@ -5736,7 +5809,7 @@ class App extends React.Component<AppProps, AppState> {
       this.hitLinkElement,
       elementsMap,
       this.state,
-      [lastPointerDownCoords.x, lastPointerDownCoords.y],
+      {x: lastPointerDownCoords.x, y: lastPointerDownCoords.y},
       this.device.editor.isMobile,
     );
     const lastPointerUpCoords = viewportCoordsToSceneCoords(
@@ -5747,7 +5820,7 @@ class App extends React.Component<AppProps, AppState> {
       this.hitLinkElement,
       elementsMap,
       this.state,
-      [lastPointerUpCoords.x, lastPointerUpCoords.y],
+      {x: lastPointerUpCoords.x, y: lastPointerUpCoords.y},
       this.device.editor.isMobile,
     );
     if (lastPointerDownHittingLinkIcon && lastPointerUpHittingLinkIcon) {
@@ -5999,14 +6072,18 @@ class App extends React.Component<AppProps, AppState> {
           distance2d(
             scenePointerX - rx,
             scenePointerY - ry,
-            lastPoint[0],
-            lastPoint[1],
+            lastPoint.x,
+            lastPoint.y,
           ) >= LINE_CONFIRM_THRESHOLD
         ) {
           mutateElement(
             multiElement,
             {
-            points: [...points, [scenePointerX - rx, scenePointerY - ry]],
+              points: [...points, {
+                x: scenePointerX - rx,
+                y: scenePointerY - ry,
+                isCurve: this.state.lineBendingMode
+              }],
             },
             false,
           );
@@ -6021,20 +6098,20 @@ class App extends React.Component<AppProps, AppState> {
         distance2d(
           scenePointerX - rx,
           scenePointerY - ry,
-          lastCommittedPoint[0],
-          lastCommittedPoint[1],
+          lastCommittedPoint.x,
+          lastCommittedPoint.y,
         ) < LINE_CONFIRM_THRESHOLD
       ) {
         // setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
         mutateElement(
           multiElement,
           {
-          points: points.slice(0, -1),
+            points: points.slice(0, -1),
           },
           false,
         );
       } else {
-        const [gridX, gridY] = getGridPoint(
+        const {x:gridX, y:gridY} = getGridPoint(
           scenePointerX,
           scenePointerY,
           event[KEYS.CTRL_OR_CMD] || isElbowArrow(multiElement)
@@ -6042,8 +6119,8 @@ class App extends React.Component<AppProps, AppState> {
             : this.getEffectiveGridSize(),
         );
 
-        const [lastCommittedX, lastCommittedY] =
-          multiElement?.lastCommittedPoint ?? [0, 0];
+        const {x: lastCommittedX, y: lastCommittedY} =
+          multiElement?.lastCommittedPoint ?? {x: 0, y: 0};
 
         let dxFromLastCommitted = gridX - rx - lastCommittedX;
         let dyFromLastCommitted = gridY - ry - lastCommittedY;
@@ -6069,10 +6146,10 @@ class App extends React.Component<AppProps, AppState> {
             this.scene.getNonDeletedElementsMap(),
             [
               ...points.slice(0, -1),
-              [
-                lastCommittedX + dxFromLastCommitted,
-                lastCommittedY + dyFromLastCommitted,
-              ],
+              {
+                x: lastCommittedX + dxFromLastCommitted,
+                y: lastCommittedY + dyFromLastCommitted,
+              }
             ],
             undefined,
             undefined,
@@ -6086,13 +6163,14 @@ class App extends React.Component<AppProps, AppState> {
           mutateElement(
             multiElement,
             {
-          points: [
-            ...points.slice(0, -1),
-            [
-              lastCommittedX + dxFromLastCommitted,
-              lastCommittedY + dyFromLastCommitted,
-            ],
-          ],
+              points: [
+                ...points.slice(0, -1),
+                {
+                  x: lastCommittedX + dxFromLastCommitted,
+                  y: lastCommittedY + dyFromLastCommitted,
+                  isCurve: this.state.lineBendingMode
+                },
+              ],
             },
             false,
           );
@@ -6421,19 +6499,39 @@ class App extends React.Component<AppProps, AppState> {
           x: scenePointerX,
           y: scenePointerY,
           element,
+          elementsMap,
           shape: getElementShape(
             element,
             elementsMap,
           ),
         })
       ) {
-        hoverPointIndex = LinearElementEditor.getPointIndexUnderCursor(
+        const hitPoint = LinearElementEditor.getPointIndexUnderCursor(
           element,
           elementsMap,
           this.state.zoom,
           scenePointerX,
           scenePointerY,
+          this.state
         );
+        
+        hoverPointIndex = hitPoint ? hitPoint[0] : -1;
+        const handleType = hitPoint ? hitPoint[1] : null;
+
+        // Update pointerDownState with handle information if needed
+        if (hitPoint && handleType !== 'point') {
+          this.setState(prevState => ({
+            selectedLinearElement: {
+              ...prevState.selectedLinearElement!,
+              pointerDownState: {
+                ...prevState.selectedLinearElement!.pointerDownState,
+                lastClickedPoint: hitPoint[0],
+                handleType: handleType as 'handleIn' | 'handleOut'
+              }
+            }
+          }));
+        }
+
         segmentMidPointHoveredCoords =
           LinearElementEditor.getSegmentMidpointHitCoords(
             linearElementEditor,
@@ -6472,17 +6570,17 @@ class App extends React.Component<AppProps, AppState> {
         });
       }
 
-      if (Array.isArray(segmentMidPointHoveredCoords)) {
+      if (!(typeof segmentMidPointHoveredCoords === 'boolean')) {
         if (
           !LinearElementEditor.arePointsEqual(
             this.state.selectedLinearElement.segmentMidPointHoveredCoords,
-            segmentMidPointHoveredCoords as readonly [number, number] | null,
+            segmentMidPointHoveredCoords,
           )
         ) {
           this.setState({
             selectedLinearElement: {
               ...this.state.selectedLinearElement,
-              segmentMidPointHoveredCoords: segmentMidPointHoveredCoords as readonly [number, number] | null,
+              segmentMidPointHoveredCoords: segmentMidPointHoveredCoords,
             },
           });
         }
@@ -6861,7 +6959,7 @@ class App extends React.Component<AppProps, AppState> {
           this.hitLinkElement,
           this.scene.getNonDeletedElementsMap(),
           this.state,
-          [scenePointer.x, scenePointer.y],
+          {x: scenePointer.x, y: scenePointer.y},
         )
       ) {
         this.handleEmbeddableCenterClick(this.hitLinkElement);
@@ -7024,15 +7122,13 @@ class App extends React.Component<AppProps, AppState> {
     return {
       origin,
       withCmdOrCtrl: event[KEYS.CTRL_OR_CMD],
-      originInGrid: tupleToCoors(
-        getGridPoint(
-          origin.x,
-          origin.y,
-          event[KEYS.CTRL_OR_CMD] || isElbowArrowOnly
-            ? null
-            : this.getEffectiveGridSize(),
-        ),
-      ),
+      originInGrid: getGridPoint(
+        origin.x,
+        origin.y,
+        event[KEYS.CTRL_OR_CMD] || isElbowArrowOnly
+          ? null
+          : this.getEffectiveGridSize(),
+      ) as {x: number; y: number},
       scrollbars: isOverScrollBars(
         currentScrollBars,
         event.clientX - this.state.offsetLeft,
@@ -7182,15 +7278,13 @@ class App extends React.Component<AppProps, AppState> {
       }
       if (pointerDownState.resize.handleType) {
         pointerDownState.resize.isResizing = true;
-        pointerDownState.resize.offset = tupleToCoors(
-          getResizeOffsetXY(
+        pointerDownState.resize.offset = getResizeOffsetXY(
             pointerDownState.resize.handleType,
             selectedElements,
             elementsMap,
             pointerDownState.origin.x,
             pointerDownState.origin.y,
-          ),
-        );
+          ) as {x: number; y: number};
         if (
           selectedElements.length === 1 &&
           isLinearElement(selectedElements[0]) &&
@@ -7268,6 +7362,7 @@ class App extends React.Component<AppProps, AppState> {
         ) {
           this.clearSelection(hitElement);
         }
+
 
         if (this.state.editingLinearElement) {
           this.setState({
@@ -7491,7 +7586,7 @@ class App extends React.Component<AppProps, AppState> {
     pointerDownState: PointerDownState,
   ) => {
     // Begin a mark capture. This does not have to update state yet.
-    const [gridX, gridY] = getGridPoint(
+    const {x: gridX, y: gridY} = getGridPoint(
       pointerDownState.origin.x,
       pointerDownState.origin.y,
       null,
@@ -7519,10 +7614,14 @@ class App extends React.Component<AppProps, AppState> {
       simulatePressure,
       label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
       scope: this.state.scope,
-      writingLayer: this.state.writingLayer,
       locked: false,
       frameId: topLayerFrame ? topLayerFrame.id : null,
-      points: [[0, 0]],
+      points: [
+        {
+          x:0, 
+          y:0
+        }
+      ],
       pressures: simulatePressure ? [] : [event.pressure],
     });
 
@@ -7565,7 +7664,7 @@ class App extends React.Component<AppProps, AppState> {
     width: number;
     height: number;
   }) => {
-    const [gridX, gridY] = getGridPoint(
+    const {x:gridX, y:gridY} = getGridPoint(
       sceneX,
       sceneY,
       this.lastPointerDownEvent?.[KEYS.CTRL_OR_CMD]
@@ -7589,7 +7688,6 @@ class App extends React.Component<AppProps, AppState> {
       opacity: this.state.currentItemOpacity,
       label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
       scope: this.state.scope,
-      writingLayer: this.state.writingLayer,
       locked: false,
       width,
       height,
@@ -7611,7 +7709,7 @@ class App extends React.Component<AppProps, AppState> {
     sceneY: number;
     link: string;
   }) => {
-    const [gridX, gridY] = getGridPoint(
+    const {x: gridX, y: gridY} = getGridPoint(
       sceneX,
       sceneY,
       this.lastPointerDownEvent?.[KEYS.CTRL_OR_CMD]
@@ -7648,7 +7746,6 @@ class App extends React.Component<AppProps, AppState> {
       opacity: this.state.currentItemOpacity,
       label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
       scope: this.state.scope,
-      writingLayer: this.state.writingLayer,
       locked: false,
       width: embedLink.intrinsicSize.w,
       height: embedLink.intrinsicSize.h,
@@ -7669,7 +7766,7 @@ class App extends React.Component<AppProps, AppState> {
     sceneY: number;
     addToFrameUnderCursor?: boolean;
   }) => {
-    const [gridX, gridY] = getGridPoint(
+    const {x: gridX, y: gridY} = getGridPoint(
       sceneX,
       sceneY,
       this.lastPointerDownEvent?.[KEYS.CTRL_OR_CMD]
@@ -7700,7 +7797,6 @@ class App extends React.Component<AppProps, AppState> {
       opacity: this.state.currentItemOpacity,
       label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
       scope: this.state.scope,
-      writingLayer: this.state.writingLayer,
       locked: false,
       frameId: topLayerFrame ? topLayerFrame.id : null,
     });
@@ -7713,6 +7809,14 @@ class App extends React.Component<AppProps, AppState> {
     elementType: DucLinearElement["type"],
     pointerDownState: PointerDownState,
   ): void => {
+
+    // Detect if the user is starting a drag action
+    const isDragging = event.pointerType === "mouse" && event.buttons === 1;
+    const { lineBendingMode } = this.state;
+
+    // Detect if Alt key is held during drag
+    const isAltKeyPressed = event.altKey;
+
     if (this.state.multiElement) {
       const { multiElement } = this.state;
 
@@ -7750,8 +7854,8 @@ class App extends React.Component<AppProps, AppState> {
         distance2d(
           pointerDownState.origin.x - rx,
           pointerDownState.origin.y - ry,
-          lastCommittedPoint[0],
-          lastCommittedPoint[1],
+          lastCommittedPoint.x,
+          lastCommittedPoint.y,
         ) < LINE_CONFIRM_THRESHOLD
       ) {
         this.actionManager.executeAction(actionFinalize);
@@ -7775,7 +7879,7 @@ class App extends React.Component<AppProps, AppState> {
       this.updateGroups();
       // setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
     } else {
-      const [gridX, gridY] = getGridPoint(
+      const {x: gridX, y: gridY} = getGridPoint(
         pointerDownState.origin.x,
         pointerDownState.origin.y,
         event[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),
@@ -7785,6 +7889,12 @@ class App extends React.Component<AppProps, AppState> {
         x: gridX,
         y: gridY,
       });
+
+      // Determine if new point should be a curve point
+      const isCurve = lineBendingMode;
+
+      // Determine mirroring mode
+      const mirroring = lineBendingMode ? BEZIER_MIRRORING.ANGLE : undefined; // default to angle-only mirroring when in lineBendingMode
 
       /* If arrow is pre-arrowheads, it will have undefined for both start and end arrowheads.
       If so, we want it to be null for start and "arrow" for end. If the linear item is not
@@ -7821,7 +7931,6 @@ class App extends React.Component<AppProps, AppState> {
               locked: false,
               label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
               scope: this.state.scope,
-              writingLayer: this.state.writingLayer,
               frameId: topLayerFrame ? topLayerFrame.id : null,
               elbowed: this.state.currentItemArrowType === ARROW_TYPE.elbow,
             })
@@ -7830,7 +7939,6 @@ class App extends React.Component<AppProps, AppState> {
               x: gridX,
               y: gridY,
               scope: this.state.scope,
-              writingLayer: this.state.writingLayer,
               strokeColor: this.state.currentItemStrokeColor,
               backgroundColor: this.state.currentItemBackgroundColor,
               fillStyle: this.state.currentItemFillStyle,
@@ -7838,13 +7946,14 @@ class App extends React.Component<AppProps, AppState> {
               strokeStyle: this.state.currentItemStrokeStyle,
               roughness: this.state.currentItemRoughness,
               opacity: this.state.currentItemOpacity,
+              label: `Path ${this.getNumLastElementOfType(elementType)}`,
               roundness:
                 this.state.currentItemRoundness === "round"
                   ? { type: ROUNDNESS.PROPORTIONAL_RADIUS }
                   : null,
               locked: false,
               frameId: topLayerFrame ? topLayerFrame.id : null,
-      });
+            });
       this.setState((prevState) => {
         const nextSelectedElementIds = {
           ...prevState.selectedElementIds,
@@ -7857,9 +7966,20 @@ class App extends React.Component<AppProps, AppState> {
           ),
         };
       });
+
+      // Create the first point
+      const firstPoint: Point = {
+        x: 0,
+        y: 0,
+        isCurve,
+        mirroring,
+      };
+
+      // Add the new point to the element's points array
       mutateElement(element, {
-        points: [...element.points, [0, 0]],
+        points: [...element.points, firstPoint],
       });
+
       const boundElement = getHoveredElementForBinding(
         pointerDownState.origin,
         this.scene.getNonDeletedElements(),
@@ -7912,7 +8032,7 @@ class App extends React.Component<AppProps, AppState> {
     elementType: DucGenericElement["type"] | "embeddable",
     pointerDownState: PointerDownState,
   ): void => {
-    const [gridX, gridY] = getGridPoint(
+    const {x: gridX, y: gridY} = getGridPoint(
       pointerDownState.origin.x,
       pointerDownState.origin.y,
       this.lastPointerDownEvent?.[KEYS.CTRL_OR_CMD]
@@ -7936,7 +8056,6 @@ class App extends React.Component<AppProps, AppState> {
       roughness: this.state.currentItemRoughness,
       label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
       scope: this.state.scope,
-      writingLayer: this.state.writingLayer,
       opacity: this.state.currentItemOpacity,
       roundness: this.getCurrentItemRoundness(elementType),
       locked: false,
@@ -7973,7 +8092,7 @@ class App extends React.Component<AppProps, AppState> {
     pointerDownState: PointerDownState,
     type: Extract<ToolType, "frame" | "magicframe">,
   ): void => {
-    const [gridX, gridY] = getGridPoint(
+    const {x: gridX, y: gridY} = getGridPoint(
       pointerDownState.origin.x,
       pointerDownState.origin.y,
       this.lastPointerDownEvent?.[KEYS.CTRL_OR_CMD]
@@ -7989,7 +8108,6 @@ class App extends React.Component<AppProps, AppState> {
 
       label: `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} ${this.getNumLastElementOfType(elementType)}`,
       scope: this.state.scope,
-      writingLayer: this.state.writingLayer,
       opacity: this.state.currentItemOpacity,
       locked: false,
       ...FRAME_STYLE,
@@ -8117,7 +8235,7 @@ class App extends React.Component<AppProps, AppState> {
         this.laserTrails.addPointToPath(pointerCoords.x, pointerCoords.y);
       }
 
-      const [gridX, gridY] = getGridPoint(
+      const {x: gridX, y: gridY} = getGridPoint(
         pointerCoords.x,
         pointerCoords.y,
         event[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),
@@ -8155,6 +8273,27 @@ class App extends React.Component<AppProps, AppState> {
       if (this.state.selectedLinearElement) {
         const linearElementEditor =
           this.state.editingLinearElement || this.state.selectedLinearElement;
+
+        if (
+          linearElementEditor.pointerDownState.lastClickedPoint !== null &&
+          linearElementEditor.pointerDownState.handleType
+        ) {
+          // Handle bezier control point dragging
+          const element = this.scene.getElement(
+            linearElementEditor.elementId,
+          ) as NonDeleted<DucLinearElement>;
+          
+          if (element) {            
+            // Force re-render to update handle positions
+            this.setState({
+              selectedLinearElement: {
+                ...this.state.selectedLinearElement,
+                isDragging: true,
+              },
+            });
+            this.rerenderCanvas();
+          }
+        }
 
         if (
           LinearElementEditor.shouldAddMidpoint(
@@ -8403,6 +8542,7 @@ class App extends React.Component<AppProps, AppState> {
                   this.state.editingGroupId,
                   groupIdMap,
                   element,
+                  elements,
                 );
                 const origElement = pointerDownState.originalElements.get(
                   element.id,
@@ -8486,7 +8626,7 @@ class App extends React.Component<AppProps, AppState> {
 
           const lastPoint = points.length > 0 && points[points.length - 1];
           const discardPoint =
-            lastPoint && lastPoint[0] === dx && lastPoint[1] === dy;
+            lastPoint && lastPoint.x === dx && lastPoint.y === dy;
 
           if (!discardPoint) {
             const pressures = newElement.simulatePressure
@@ -8496,7 +8636,7 @@ class App extends React.Component<AppProps, AppState> {
             mutateElement(
               newElement,
               {
-                points: [...points, [dx, dy]],
+                points: [...points, {x:dx, y:dy}],
                 pressures,
               },
               false,
@@ -8525,7 +8665,11 @@ class App extends React.Component<AppProps, AppState> {
             mutateElement(
               newElement,
               {
-                points: [...points, [dx, dy]],
+                points: [...points, {
+                  x:dx, 
+                  y:dy,
+                  isCurve: this.state.lineBendingMode
+                }],
               },
               false,
             );
@@ -8533,8 +8677,8 @@ class App extends React.Component<AppProps, AppState> {
             mutateElbowArrow(
               newElement,
               elementsMap,
-              [...points.slice(0, -1), [dx, dy]],
-              [0, 0],
+              [...points.slice(0, -1), {x:dx, y:dy}],
+              {x:0, y:0},
               undefined,
               {
                 isDragging: true,
@@ -8545,7 +8689,7 @@ class App extends React.Component<AppProps, AppState> {
             mutateElement(
               newElement,
               {
-                points: [...points.slice(0, -1), [dx, dy]],
+                points: [...points.slice(0, -1), {x:dx, y:dy}],
               },
               false,
             );
@@ -8847,7 +8991,7 @@ class App extends React.Component<AppProps, AppState> {
         let dy = pointerCoords.y - newElement.y;
 
         // Allows dots to avoid being flagged as infinitely small
-        if (dx === points[0][0] && dy === points[0][1]) {
+        if (dx === points[0].x && dy === points[0].y) {
           dy += 0.0001;
           dx += 0.0001;
         }
@@ -8857,9 +9001,9 @@ class App extends React.Component<AppProps, AppState> {
           : [...newElement.pressures, childEvent.pressure];
 
         mutateElement(newElement, {
-          points: [...points, [dx, dy]],
+          points: [...points, { x: dx, y: dy }],
           pressures,
-          lastCommittedPoint: [dx, dy],
+          lastCommittedPoint: { x: dx, y: dy },
         });
 
         this.actionManager.executeAction(actionFinalize);
@@ -8906,7 +9050,11 @@ class App extends React.Component<AppProps, AppState> {
           mutateElement(newElement, {
             points: [
               ...newElement.points,
-              [pointerCoords.x - newElement.x, pointerCoords.y - newElement.y],
+              {
+                x: pointerCoords.x - newElement.x, 
+                y: pointerCoords.y - newElement.y,
+                isCurve: this.state.lineBendingMode
+              },
             ],
           });
           this.setState({
@@ -9410,9 +9558,10 @@ class App extends React.Component<AppProps, AppState> {
               x: pointerDownState.origin.x,
               y: pointerDownState.origin.y,
               element: hitElement,
+              elementsMap,
               shape: getElementShape(
                 hitElement,
-                this.scene.getNonDeletedElementsMap(),
+                elementsMap,
               ),
               threshold: this.getElementHitThreshold(),
               frameNameBound: isFrameLikeElement(hitElement)
@@ -9573,8 +9722,11 @@ class App extends React.Component<AppProps, AppState> {
 
     if (mimeType === MIME_TYPES.svg) {
       try {
+        // Read the text content once and store it
+        const svgText = await imageFile.text();
+        // Create new file with normalized SVG
         imageFile = SVGStringToFile(
-          await normalizeSVG(await imageFile.text()),
+          await normalizeSVG(svgText),
           imageFile.name,
         );
       } catch (error: any) {
@@ -9639,19 +9791,18 @@ class App extends React.Component<AppProps, AppState> {
       false,
     ) as NonDeleted<InitializedDucImageElement>;
 
-    return new Promise<NonDeleted<InitializedDucImageElement> | null>(
+    return new Promise<NonDeleted<InitializedDucImageElement>>(
       async (resolve, reject) => {
         try {
-          this.files = {
-            ...this.files,
-            [fileId]: {
+          this.addMissingFiles([
+            {
               mimeType,
               id: fileId,
               dataURL,
               created: Date.now(),
               lastRetrieved: Date.now(),
             },
-          };
+          ]);
           const cachedImageData = this.imageCache.get(fileId);
           if (!cachedImageData) {
             this.addNewImagesToImageCache();
@@ -9673,7 +9824,7 @@ class App extends React.Component<AppProps, AppState> {
           reject(new Error(t("errors.imageInsertError")));
         } finally {
           if (!showCursorImagePreview) {
-            this.resetCursor();
+            resetCursor(this.interactiveCanvas);
           }
         }
       },
@@ -9683,35 +9834,26 @@ class App extends React.Component<AppProps, AppState> {
   /**
    * inserts image into elements array and rerenders
    */
-  private insertImageElement = async (
+  insertImageElement = async (
     imageElement: DucImageElement,
     imageFile: File,
     showCursorImagePreview?: boolean,
   ) => {
+    // we should be handling all cases upstream, but in case we forget to handle
+    // a future case, let's throw here
     if (!this.isToolSupported("image")) {
       this.setState({ errorMessage: t("errors.imageToolNotSupported") });
       return;
     }
-  
+
     this.scene.insertElement(imageElement);
-  
+
     try {
-      const initializedElement = await this.initializeImage({
+      return await this.initializeImage({
         imageFile,
         imageElement,
         showCursorImagePreview,
       });
-  
-      if (initializedElement) {
-        this.scene.replaceAllElements(
-          this.scene.getElementsIncludingDeleted().map((el) =>
-            el.id === initializedElement.id ? initializedElement : el
-          )
-        );
-        this.setState({ selectedElementIds: { [initializedElement.id]: true } });
-      }
-  
-      return initializedElement;
     } catch (error: any) {
       mutateElement(imageElement, {
         isDeleted: true,
@@ -9720,8 +9862,6 @@ class App extends React.Component<AppProps, AppState> {
       this.setState({
         errorMessage: error.message || t("errors.imageInsertError"),
       });
-      this.updateGroups();
-  
       return null;
     }
   };
@@ -9847,28 +9987,27 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  private initializeImageDimensions = async (
+  initializeImageDimensions = (
     imageElement: DucImageElement,
-    // image: HTMLImageElement,
     forceNaturalSize = false,
   ) => {
     const image =
-    isInitializedImageElement(imageElement) &&
-    this.imageCache.get(imageElement.fileId)?.image;
+      isInitializedImageElement(imageElement) &&
+      this.imageCache.get(imageElement.fileId)?.image;
 
     if (!image || image instanceof Promise) {
-      const placeholderSize = 100 / this.state.zoom.value;
-      mutateElement(imageElement, {
-        x: imageElement.x - placeholderSize / 2,
-        y: imageElement.y - placeholderSize / 2,
-        width: placeholderSize,
-        height: placeholderSize,
-      });
-      this.updateGroups();
-
-      if (image instanceof Promise) {
-        const loadedImage = await image;
-        this.updateImageElementWithLoadedImage(imageElement, loadedImage, forceNaturalSize);
+      if (
+        imageElement.width < DRAGGING_THRESHOLD / this.state.zoom.value &&
+        imageElement.height < DRAGGING_THRESHOLD / this.state.zoom.value
+      ) {
+        const placeholderSize = 100 / this.state.zoom.value;
+        mutateElement(imageElement, {
+          x: imageElement.x - placeholderSize / 2,
+          y: imageElement.y - placeholderSize / 2,
+          width: placeholderSize,
+          height: placeholderSize,
+        });
+        
       }
 
       return;
@@ -9897,12 +10036,17 @@ class App extends React.Component<AppProps, AppState> {
       const x = imageElement.x + imageElement.width / 2 - width / 2;
       const y = imageElement.y + imageElement.height / 2 - height / 2;
 
-      mutateElement(imageElement, { x, y, width, height });
-      this.updateGroups();
-
+      mutateElement(imageElement, {
+        x,
+        y,
+        width,
+        height,
+        // crop: null,
+      });
     }
     this.updateImageElementWithLoadedImage(imageElement, image, forceNaturalSize);
   };
+
 
   private updateImageElementWithLoadedImage = (
     imageElement: DucImageElement,
@@ -10151,6 +10295,7 @@ class App extends React.Component<AppProps, AppState> {
               ...scene,
               appState: {
                 ...(scene.appState || this.state),
+                theme: this.state.theme,
                 isLoading: false,
               },
               replaceFiles: true,
@@ -10280,6 +10425,7 @@ class App extends React.Component<AppProps, AppState> {
           ...ret.data,
           appState: {
             ...(ret.data.appState || this.state),
+            theme: this.state.theme,
             isLoading: false,
           },
           replaceFiles: true,
@@ -10397,10 +10543,10 @@ class App extends React.Component<AppProps, AppState> {
       return;
     }
 
-      let [gridX, gridY] = getGridPoint(
+      let {x: gridX, y: gridY} = getGridPoint(
         pointerCoords.x,
         pointerCoords.y,
-      event[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),
+        event[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),
       );
 
       const image =
@@ -10504,7 +10650,7 @@ class App extends React.Component<AppProps, AppState> {
       activeEmbeddable: null,
     });
     const pointerCoords = pointerDownState.lastCoords;
-    let [resizeX, resizeY] = getGridPoint(
+    let {x:resizeX, y:resizeY} = getGridPoint(
       pointerCoords.x - pointerDownState.resize.offset.x,
       pointerCoords.y - pointerDownState.resize.offset.y,
       event[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),
@@ -10535,7 +10681,7 @@ class App extends React.Component<AppProps, AppState> {
     // check needed for avoiding flickering when a key gets pressed
     // during dragging
     if (!this.state.selectedElementsAreBeingDragged) {
-      const [gridX, gridY] = getGridPoint(
+      const {x: gridX, y: gridY} = getGridPoint(
         pointerCoords.x,
         pointerCoords.y,
         event[KEYS.CTRL_OR_CMD] ? null : this.getEffectiveGridSize(),

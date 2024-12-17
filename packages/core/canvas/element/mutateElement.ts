@@ -22,7 +22,6 @@ export const mutateElement = <TElement extends Mutable<DucElement>>(
   informMutation = true,
 ): TElement => {
   let didChange = false;
-
   // casting to any because can't use `in` operator
   // (see https://github.com/microsoft/TypeScript/issues/21732)
   const { points, fileId } = updates as any;
@@ -58,13 +57,8 @@ export const mutateElement = <TElement extends Mutable<DucElement>>(
         if (prevPoints.length === nextPoints.length) {
           let didChangePoints = false;
           let index = prevPoints.length;
-          while (--index) {
-            const prevPoint: Point = prevPoints[index];
-            const nextPoint: Point = nextPoints[index];
-            if (
-              prevPoint[0] !== nextPoint[0] ||
-              prevPoint[1] !== nextPoint[1]
-            ) {
+          while (--index >= 0) {
+            if (!comparePoints(prevPoints[index], nextPoints[index])) {
               didChangePoints = true;
               break;
             }
@@ -151,4 +145,44 @@ export const bumpVersion = <T extends Mutable<DucElement>>(
   element.versionNonce = randomInteger();
   element.updated = getUpdatedTimestamp();
   return element;
+};
+
+
+const comparePoints = (prevPoint: Point, nextPoint: Point): boolean => {
+  if (prevPoint.x !== nextPoint.x || prevPoint.y !== nextPoint.y) {
+    return false;
+  }
+  
+  if (prevPoint.mirroring !== nextPoint.mirroring) {
+    return false;
+  }
+
+  if (prevPoint.isCurve !== nextPoint.isCurve) {
+    return false;
+  }
+
+  if (prevPoint.borderRadius !== nextPoint.borderRadius) {
+    return false;
+  }
+
+  // Compare handles if they exist
+  if (prevPoint.handleIn && nextPoint.handleIn) {
+    if (prevPoint.handleIn.x !== nextPoint.handleIn.x || 
+        prevPoint.handleIn.y !== nextPoint.handleIn.y) {
+      return false;
+    }
+  } else if (prevPoint.handleIn !== nextPoint.handleIn) {
+    return false;
+  }
+
+  if (prevPoint.handleOut && nextPoint.handleOut) {
+    if (prevPoint.handleOut.x !== nextPoint.handleOut.x || 
+        prevPoint.handleOut.y !== nextPoint.handleOut.y) {
+      return false;
+    }
+  } else if (prevPoint.handleOut !== nextPoint.handleOut) {
+    return false;
+  }
+
+  return true;
 };

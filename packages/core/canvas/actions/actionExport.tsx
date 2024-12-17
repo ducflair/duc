@@ -61,7 +61,7 @@ export const actionChangeExportScale = register({
     return (
       <>
         {EXPORT_SCALES.map((s) => {
-          const [width, height] = getExportSize(
+          const {x: width, y: height} = getExportSize(
             exportedElements,
             DEFAULT_EXPORT_PADDING,
             s,
@@ -258,7 +258,7 @@ export const actionLoadScene = register({
       } = await loadFromJSON(appState, elements);
       return {
         elements: loadedElements,
-        appState: loadedAppState,
+        appState: { ...loadedAppState, theme: appState.theme },
         files,
         storeAction: StoreAction.CAPTURE,
       };

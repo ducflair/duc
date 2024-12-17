@@ -82,12 +82,12 @@ const getNodeRelatives = (
         );
 
         const edgePoint: Point =
-          type === "predecessors" ? el.points[el.points.length - 1] : [0, 0];
+          type === "predecessors" ? el.points[el.points.length - 1] : {x:0, y:0};
 
-        const heading = headingForPointFromElement(node, aabbForElement(node), [
-          edgePoint[0] + el.x,
-          edgePoint[1] + el.y,
-        ]);
+        const heading = headingForPointFromElement(node, aabbForElement(node), {
+          x: edgePoint.x + el.x,
+          y: edgePoint.y + el.y,
+        });
 
         acc.push({
           relative,
@@ -247,7 +247,6 @@ const addNewNode = (
     // TODO: extract this to a util
     width: element.width,
     scope: element.scope,
-    writingLayer: element.writingLayer,
     height: element.height,
     roundness: element.roundness,
     roughness: element.roughness,
@@ -325,7 +324,6 @@ export const addNewNodes = (
       width: startNode.width,
       height: startNode.height,
       scope: startNode.scope,
-      writingLayer: startNode.writingLayer,
       roundness: startNode.roundness,
       roughness: startNode.roughness,
       backgroundColor: startNode.backgroundColor,
@@ -420,14 +418,13 @@ const createBindingArrow = (
     y: startY,
     startArrowhead: appState.currentItemStartArrowhead,
     scope: startBindingElement.scope,
-    writingLayer: startBindingElement.writingLayer,
     endArrowhead: appState.currentItemEndArrowhead,
     strokeColor: appState.currentItemStrokeColor,
     strokeStyle: appState.currentItemStrokeStyle,
     strokeWidth: appState.currentItemStrokeWidth,
     points: [
-      [0, 0],
-      [endX, endY],
+      {x: 0, y: 0},
+      {x: endX, y: endY},
     ],
     elbowed: true,
   });

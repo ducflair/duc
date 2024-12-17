@@ -91,15 +91,15 @@ export const resizeTest = (
     if (!(isLinearElement(element) && element.points.length <= 2)) {
       const SPACING = SIDE_RESIZING_THRESHOLD / zoom.value;
       const sides = getSelectionBorders(
-        [x1 - SPACING, y1 - SPACING],
-        [x2 + SPACING, y2 + SPACING],
-        [cx, cy],
+        {x: x1 - SPACING, y: y1 - SPACING},
+        {x: x2 + SPACING, y: y2 + SPACING},
+        {x: cx, y: cy},
         angleToDegrees(element.angle),
       );
 
       for (const [dir, side] of Object.entries(sides)) {
         // test to see if x, y are on the line segment
-        if (pointOnLine([x, y], side as Line, SPACING)) {
+        if (pointOnLine({x, y}, side as Line, SPACING)) {
           return dir as TransformHandleType;
         }
       }
@@ -173,15 +173,15 @@ export const getTransformHandleTypeFromCoords = (
     const SPACING = SIDE_RESIZING_THRESHOLD / zoom.value;
 
     const sides = getSelectionBorders(
-      [x1 - SPACING, y1 - SPACING],
-      [x2 + SPACING, y2 + SPACING],
-      [cx, cy],
+      {x: x1 - SPACING, y: y1 - SPACING},
+      {x: x2 + SPACING, y: y2 + SPACING},
+      {x: cx, y: cy},
       angleToDegrees(0),
     );
 
     for (const [dir, side] of Object.entries(sides)) {
       // test to see if x, y are on the line segment
-      if (pointOnLine([scenePointerX, scenePointerY], side as Line, SPACING)) {
+      if (pointOnLine({x: scenePointerX, y: scenePointerY}, side as Line, SPACING)) {
         return dir as TransformHandleType;
       }
     }
@@ -249,15 +249,15 @@ export const getCursorForResizingElement = (resizingElement: {
 };
 
 const getSelectionBorders = (
-  [x1, y1]: Point,
-  [x2, y2]: Point,
+  {x: x1, y: y1}: Point,
+  {x: x2, y: y2}: Point,
   center: Point,
   angleInDegrees: number,
 ) => {
-  const topLeft = pointRotate([x1, y1], angleInDegrees, center);
-  const topRight = pointRotate([x2, y1], angleInDegrees, center);
-  const bottomLeft = pointRotate([x1, y2], angleInDegrees, center);
-  const bottomRight = pointRotate([x2, y2], angleInDegrees, center);
+  const topLeft = pointRotate({x: x1, y: y1}, angleInDegrees, center);
+  const topRight = pointRotate({x: x2, y: y1}, angleInDegrees, center);
+  const bottomLeft = pointRotate({x: x1, y: y2}, angleInDegrees, center);
+  const bottomRight = pointRotate({x: x2, y: y2}, angleInDegrees, center);
 
   return {
     n: [topLeft, topRight],

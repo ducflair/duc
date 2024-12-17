@@ -242,9 +242,15 @@ export {
 export {
   encryptData,
   decryptData,
-  generateEncryptionKey,
   IV_LENGTH_BYTES,
 } from "./data/encryption";
+
+export {
+  splitBuffers,
+  concatBuffers,
+  compressData,
+  _decryptAndDecompress,
+} from "./data/encode";
 
 export {
   SupportedMeasures, MetricMeasure, ImperialMeasure,
@@ -253,18 +259,30 @@ export {
 } from "./duc/utils/measurements";
 
 export {
+  getQuadraticBezierBoundingBox
+} from "./element/bounds";
+
+export {
+  getSvgPathFromStroke
+} from "./utils";
+
+export {
   ImportedDataState,
 } from "./data/types";
 
 export {
   DucElement,
+  DucLinearElement,
+  DucFreeDrawElement,
   StrokePlacement,
   FileId,
   NonDeletedDucElement,
   InitializedDucImageElement,
   OrderedDucElement,
+  DucFrameLikeElement,
   Theme,
-  DucGroup
+  DucGroup,
+  DucImageElement,
 } from "./element/types"
 
 export {
@@ -281,18 +299,13 @@ export {
   PointerDownState,
   Collaborator,
   OnUserFollowedPayload,
+  BezierMirroring,
+  BinaryFileMetadata
 } from "./types";
 
 export {
-  TOOL_TYPE,
-  IDLE_THRESHOLD,
-  STROKE_PLACEMENT,
-  ACTIVE_THRESHOLD,
-  DEFAULT_ELEMENT_PROPS,
-  ENV,
-  toolsNsStrokeSet,
-  toolNsBackgroundSet,
-} from "./constants";
+  getClientColor
+} from './clients';
 
 export {
   CODES
@@ -329,7 +342,8 @@ export {
 
 export {
   Mutable, 
-  ValueOf
+  ValueOf,
+  ResolutionType
 } from './utility-types'
 
 export {
@@ -345,6 +359,15 @@ export {
   EVENT,
   TITLE_TIMEOUT,
   VERSION_TIMEOUT,
+  BEZIER_MIRRORING,
+  STROKE_PLACEMENT,
+  TOOL_TYPE,
+  IDLE_THRESHOLD,
+  ACTIVE_THRESHOLD,
+  DEFAULT_ELEMENT_PROPS,
+  ENV,
+  toolsNsStrokeSet,
+  toolNsBackgroundSet,
 } from "./constants";
 
 export {
@@ -412,7 +435,7 @@ export {
 
 export { parseAppStateFromBinary } from "./duc/duc-ts/src/parse/parseAppStateFromBinary";
 export { parseElementFromBinary } from "./duc/duc-ts/src/parse/parseElementFromBinary";
-export { parseBinaryFilesFromBinary } from "./duc/duc-ts/src/parse/parseBinaryFilesFromBinary";
+export { parseBinaryFilesFromBinary, uint8ArrayToDataURL } from "./duc/duc-ts/src/parse/parseBinaryFilesFromBinary";
 
 export { parseDucFlatBuffers } from "./duc/duc-ts/src/parseDuc";
 
