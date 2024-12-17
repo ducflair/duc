@@ -1,0 +1,2 @@
+export const HOMEPAGE_IMG = "https://github.com/ducflair/duc/blob/main/assets/Documentation%20Thumbnail.png?raw=true"
+export const BASE_OG_IMG = "https://github.com/ducflair/duc/blob/main/assets/ducOgImage.jpeg?raw=true"
