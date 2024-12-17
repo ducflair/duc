@@ -35,7 +35,7 @@ export default async function Page() {
 
   return (
     <div>
-      <div className="container col">
+      <div className="container col min-h-screen">
         <div className="py-16 flex items-center gap-4">
           <h1 className="text-center ml-16 text-7xl font-bold">Blog</h1>
         </div>

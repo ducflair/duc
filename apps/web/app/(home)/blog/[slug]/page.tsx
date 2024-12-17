@@ -23,8 +23,8 @@ export default async function Page(props: {
   const { body: MDX, toc } = await page.data.load();
 
   return (
-    <>
-      <div className="container max-w-[900px] py-12 md:px-8">
+    <div className='min-h-screen max-w-[900px] flex flex-col items-center mx-auto'>
+      <div className="container  py-12 md:px-8">
         <h1 className="mb-4 text-4xl font-bold text-foreground sm:text-5xl">
           {page.data.title}
         </h1>
@@ -40,15 +40,16 @@ export default async function Page(props: {
           </div>
         )}
       </div>
-      <article className="container max-w-[900px] px-0 pb-12 pt-8 lg:px-4">
+      <article className="container px-0 pb-12 pt-8 lg:px-4">
         <div className="prose min-w-0 flex-1 p-4">
-          {/* <page.data.body components={defaultMdxComponents} /> */}
-          <InlineTOC items={toc} />
           <MDX components={{ ...mdxComponents }} />
         </div>
       </article>
+
+      {/* <InlineTOC items={toc} /> */}
       
-      <div className="container max-w-[900px] border-t border-border">
+      <div className='grow' />
+      <div className="container border-t border-border">
         <div className="flex flex-col sm:flex-row justify-between items-center py-6 px-4 lg:px-8">
           <div className="flex items-center gap-4 mb-4 sm:mb-0">
             {authors?.map((author, index) => (
@@ -76,7 +77,7 @@ export default async function Page(props: {
           )}
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
