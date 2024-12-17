@@ -58,9 +58,11 @@ import {
   ARROW_TYPE,
   DEFAULT_FONT_FAMILY,
   DEFAULT_FONT_SIZE,
+  FILL_STYLE,
   FONT_FAMILY,
   ROUNDNESS,
   STROKE_WIDTH,
+  TEXT_ALIGN,
   VERTICAL_ALIGN,
 } from "../constants";
 import {
@@ -141,45 +143,6 @@ export const changeProperty = (
   });
 };
 
-export const getFormValue = function <T extends Primitive>(
-  elements: readonly DucElement[],
-  appState: AppState,
-  getAttribute: (element: DucElement) => T,
-  isRelevantElement: true | ((element: DucElement) => boolean),
-  defaultValue: T | ((isSomeElementSelected: boolean) => T),
-): T {
-  const editingTextElement = appState.editingTextElement;
-  const nonDeletedElements = getNonDeletedElements(elements);
-
-  let ret: T | null = null;
-
-  if (editingTextElement) {
-    ret = getAttribute(editingTextElement);
-  }
-
-  if (!ret) {
-    const hasSelection = isSomeElementSelected(nonDeletedElements, appState);
-
-    if (hasSelection) {
-      ret =
-        getCommonAttributeOfSelectedElements(
-          isRelevantElement === true
-            ? nonDeletedElements
-            : nonDeletedElements.filter((el) => isRelevantElement(el)),
-          appState,
-          getAttribute,
-        ) ??
-        (typeof defaultValue === "function"
-          ? defaultValue(true)
-          : defaultValue);
-    } else {
-      ret =
-        typeof defaultValue === "function" ? defaultValue(false) : defaultValue;
-    }
-  }
-
-  return ret;
-};
 
 const offsetElementAfterFontResize = (
   prevElement: DucTextElement,
@@ -192,11 +155,11 @@ const offsetElementAfterFontResize = (
     nextElement,
     {
       x:
-        prevElement.textAlign === "left"
+        prevElement.textAlign === TEXT_ALIGN.LEFT
           ? prevElement.x
           : prevElement.x +
             (prevElement.width - nextElement.width) /
-              (prevElement.textAlign === "center" ? 2 : 1),
+              (prevElement.textAlign === TEXT_ALIGN.CENTER ? 2 : 1),
       // centering vertically is non-standard, but for Duc I think
       // it makes sense
       y: prevElement.y + (prevElement.height - nextElement.height) / 2,
@@ -284,29 +247,7 @@ export const actionChangeStrokeColor = register({
         ? StoreAction.CAPTURE
         : StoreAction.NONE,
     };
-  },
-  PanelComponent: ({ elements, appState, updateData, appProps }) => (
-    <>
-      <h3 aria-hidden="true">{t("labels.stroke")}</h3>
-      <ColorPicker
-        topPicks={DEFAULT_ELEMENT_STROKE_PICKS}
-        palette={DEFAULT_ELEMENT_STROKE_COLOR_PALETTE}
-        type="elementStroke"
-        label={t("labels.stroke")}
-        color={getFormValue(
-          elements,
-          appState,
-          (element) => element.strokeColor,
-          true,
-          appState.currentItemStrokeColor,
-        )}
-        onChange={(color) => updateData({ currentItemStrokeColor: color })}
-        elements={elements}
-        appState={appState}
-        updateData={updateData}
-      />
-    </>
-  ),
+  }
 });
 
 export const actionChangeBackgroundColor = register({
@@ -330,29 +271,7 @@ export const actionChangeBackgroundColor = register({
         ? StoreAction.CAPTURE
         : StoreAction.NONE,
     };
-  },
-  PanelComponent: ({ elements, appState, updateData, appProps }) => (
-    <>
-      <h3 aria-hidden="true">{t("labels.background")}</h3>
-      <ColorPicker
-        topPicks={DEFAULT_ELEMENT_BACKGROUND_PICKS}
-        palette={DEFAULT_ELEMENT_BACKGROUND_COLOR_PALETTE}
-        type="elementBackground"
-        label={t("labels.background")}
-        color={getFormValue(
-          elements,
-          appState,
-          (element) => element.backgroundColor,
-          true,
-          appState.currentItemBackgroundColor,
-        )}
-        onChange={(color) => updateData({ currentItemBackgroundColor: color })}
-        elements={elements}
-        appState={appState}
-        updateData={updateData}
-      />
-    </>
-  ),
+  }
 });
 
 export const actionChangeFillStyle = register({
@@ -374,63 +293,7 @@ export const actionChangeFillStyle = register({
       appState: { ...appState, currentItemFillStyle: value },
       storeAction: StoreAction.CAPTURE,
     };
-  },
-  PanelComponent: ({ elements, appState, updateData }) => {
-    const selectedElements = getSelectedElements(elements, appState);
-    const allElementsZigZag =
-      selectedElements.length > 0 &&
-      selectedElements.every((el) => el.fillStyle === "zigzag");
-
-    return (
-      <fieldset>
-        <legend>{t("labels.fill")}</legend>
-        <ButtonIconSelect
-          type="button"
-          options={[
-            {
-              value: "hachure",
-              text: `${
-                allElementsZigZag ? t("labels.zigzag") : t("labels.hachure")
-              } (${getShortcutKey("Alt-Click")})`,
-              icon: allElementsZigZag ? FillZigZagIcon : FillHachureIcon,
-              active: allElementsZigZag ? true : undefined,
-              testId: `fill-hachure`,
-            },
-            {
-              value: "cross-hatch",
-              text: t("labels.crossHatch"),
-              icon: FillCrossHatchIcon,
-              testId: `fill-cross-hatch`,
-            },
-            {
-              value: "solid",
-              text: t("labels.solid"),
-              icon: FillSolidIcon,
-              testId: `fill-solid`,
-            },
-          ]}
-          value={getFormValue(
-            elements,
-            appState,
-            (element) => element.fillStyle,
-            (element) => element.hasOwnProperty("fillStyle"),
-            (hasSelection) =>
-              hasSelection ? null : appState.currentItemFillStyle,
-          )}
-          onClick={(value, event) => {
-            const nextValue =
-              event.altKey &&
-              value === "hachure" &&
-              selectedElements.every((el) => el.fillStyle === "hachure")
-                ? "zigzag"
-                : value;
-
-            updateData(nextValue);
-          }}
-        />
-      </fieldset>
-    );
-  },
+  }
 });
 
 export const actionChangeStrokeWidth = register({
@@ -447,44 +310,7 @@ export const actionChangeStrokeWidth = register({
       appState: { ...appState, currentItemStrokeWidth: value },
       storeAction: StoreAction.CAPTURE,
     };
-  },
-  PanelComponent: ({ elements, appState, updateData }) => (
-    <fieldset>
-      <legend>{t("labels.strokeWidth")}</legend>
-      <ButtonIconSelect
-        group="stroke-width"
-        options={[
-          {
-            value: STROKE_WIDTH.thin,
-            text: t("labels.thin"),
-            icon: StrokeWidthBaseIcon,
-            testId: "strokeWidth-thin",
-          },
-          {
-            value: STROKE_WIDTH.bold,
-            text: t("labels.bold"),
-            icon: StrokeWidthBoldIcon,
-            testId: "strokeWidth-bold",
-          },
-          {
-            value: STROKE_WIDTH.extraBold,
-            text: t("labels.extraBold"),
-            icon: StrokeWidthExtraBoldIcon,
-            testId: "strokeWidth-extraBold",
-          },
-        ]}
-        value={getFormValue(
-          elements,
-          appState,
-          (element) => element.strokeWidth,
-          (element) => element.hasOwnProperty("strokeWidth"),
-          (hasSelection) =>
-            hasSelection ? null : appState.currentItemStrokeWidth,
-        )}
-        onChange={(value) => updateData(value)}
-      />
-    </fieldset>
-  ),
+  }
 });
 
 export const actionChangeSloppiness = register({
@@ -502,41 +328,7 @@ export const actionChangeSloppiness = register({
       appState: { ...appState, currentItemRoughness: value },
       storeAction: StoreAction.CAPTURE,
     };
-  },
-  PanelComponent: ({ elements, appState, updateData }) => (
-    <fieldset>
-      <legend>{t("labels.sloppiness")}</legend>
-      <ButtonIconSelect
-        group="sloppiness"
-        options={[
-          {
-            value: 0,
-            text: t("labels.architect"),
-            icon: SloppinessArchitectIcon,
-          },
-          {
-            value: 1,
-            text: t("labels.artist"),
-            icon: SloppinessArtistIcon,
-          },
-          {
-            value: 2,
-            text: t("labels.cartoonist"),
-            icon: SloppinessCartoonistIcon,
-          },
-        ]}
-        value={getFormValue(
-          elements,
-          appState,
-          (element) => element.roughness,
-          (element) => element.hasOwnProperty("roughness"),
-          (hasSelection) =>
-            hasSelection ? null : appState.currentItemRoughness,
-        )}
-        onChange={(value) => updateData(value)}
-      />
-    </fieldset>
-  ),
+  }
 });
 
 export const actionChangeStrokeStyle = register({
@@ -553,41 +345,7 @@ export const actionChangeStrokeStyle = register({
       appState: { ...appState, currentItemStrokeStyle: value },
       storeAction: StoreAction.CAPTURE,
     };
-  },
-  PanelComponent: ({ elements, appState, updateData }) => (
-    <fieldset>
-      <legend>{t("labels.strokeStyle")}</legend>
-      <ButtonIconSelect
-        group="strokeStyle"
-        options={[
-          {
-            value: "solid",
-            text: t("labels.strokeStyle_solid"),
-            icon: StrokeWidthBaseIcon,
-          },
-          {
-            value: "dashed",
-            text: t("labels.strokeStyle_dashed"),
-            icon: StrokeStyleDashedIcon,
-          },
-          {
-            value: "dotted",
-            text: t("labels.strokeStyle_dotted"),
-            icon: StrokeStyleDottedIcon,
-          },
-        ]}
-        value={getFormValue(
-          elements,
-          appState,
-          (element) => element.strokeStyle,
-          (element) => element.hasOwnProperty("strokeStyle"),
-          (hasSelection) =>
-            hasSelection ? null : appState.currentItemStrokeStyle,
-        )}
-        onChange={(value) => updateData(value)}
-      />
-    </fieldset>
-  ),
+  }
 });
 
 export const actionChangeOpacity = register({
@@ -608,28 +366,7 @@ export const actionChangeOpacity = register({
       appState: { ...appState, currentItemOpacity: value },
       storeAction: StoreAction.CAPTURE,
     };
-  },
-  PanelComponent: ({ elements, appState, updateData }) => (
-    <label className="control-label">
-      {t("labels.opacity")}
-      <input
-        type="range"
-        min="0"
-        max="100"
-        step="10"
-        onChange={(event) => updateData(+event.target.value)}
-        value={
-          getFormValue(
-            elements,
-            appState,
-            (element) => element.opacity,
-            true,
-            appState.currentItemOpacity,
-          ) ?? undefined
-        }
-      />
-    </label>
-  ),
+  }
 });
 
 export const actionChangeFontSize = register({
@@ -638,69 +375,7 @@ export const actionChangeFontSize = register({
   trackEvent: false,
   perform: (elements, appState, value, app) => {
     return changeFontSize(elements, appState, app, () => value, value);
-  },
-  PanelComponent: ({ elements, appState, updateData, app }) => (
-    <fieldset>
-      <legend>{t("labels.fontSize")}</legend>
-      <ButtonIconSelect
-        group="font-size"
-        options={[
-          {
-            value: 16,
-            text: t("labels.small"),
-            icon: FontSizeSmallIcon,
-            testId: "fontSize-small",
-          },
-          {
-            value: 20,
-            text: t("labels.medium"),
-            icon: FontSizeMediumIcon,
-            testId: "fontSize-medium",
-          },
-          {
-            value: 28,
-            text: t("labels.large"),
-            icon: FontSizeLargeIcon,
-            testId: "fontSize-large",
-          },
-          {
-            value: 36,
-            text: t("labels.veryLarge"),
-            icon: FontSizeExtraLargeIcon,
-            testId: "fontSize-veryLarge",
-          },
-        ]}
-        value={getFormValue(
-          elements,
-          appState,
-          (element) => {
-            if (isTextElement(element)) {
-              return element.fontSize;
-            }
-            const boundTextElement = getBoundTextElement(
-              element,
-              app.scene.getNonDeletedElementsMap(),
-            );
-            if (boundTextElement) {
-              return boundTextElement.fontSize;
-            }
-            return null;
-          },
-          (element) =>
-            isTextElement(element) ||
-            getBoundTextElement(
-              element,
-              app.scene.getNonDeletedElementsMap(),
-            ) !== null,
-          (hasSelection) =>
-            hasSelection
-              ? null
-              : appState.currentItemFontSize || DEFAULT_FONT_SIZE,
-        )}
-        onChange={(value) => updateData(value)}
-      />
-    </fieldset>
-  ),
+  }
 });
 
 export const actionDecreaseFontSize = register({
@@ -1173,61 +848,7 @@ export const actionChangeTextAlign = register({
       },
       storeAction: StoreAction.CAPTURE,
     };
-  },
-  PanelComponent: ({ elements, appState, updateData, app }) => {
-    const elementsMap = app.scene.getNonDeletedElementsMap();
-    return (
-      <fieldset>
-        <legend>{t("labels.textAlign")}</legend>
-        <ButtonIconSelect<TextAlign | false>
-          group="text-align"
-          options={[
-            {
-              value: "left",
-              text: t("labels.left"),
-              icon: TextAlignLeftIcon,
-              testId: "align-left",
-            },
-            {
-              value: "center",
-              text: t("labels.center"),
-              icon: TextAlignCenterIcon,
-              testId: "align-horizontal-center",
-            },
-            {
-              value: "right",
-              text: t("labels.right"),
-              icon: TextAlignRightIcon,
-              testId: "align-right",
-            },
-          ]}
-          value={getFormValue(
-            elements,
-            appState,
-            (element) => {
-              if (isTextElement(element)) {
-                return element.textAlign;
-              }
-              const boundTextElement = getBoundTextElement(
-                element,
-                elementsMap,
-              );
-              if (boundTextElement) {
-                return boundTextElement.textAlign;
-              }
-              return null;
-            },
-            (element) =>
-              isTextElement(element) ||
-              getBoundTextElement(element, elementsMap) !== null,
-            (hasSelection) =>
-              hasSelection ? null : appState.currentItemTextAlign,
-          )}
-          onChange={(value) => updateData(value)}
-        />
-      </fieldset>
-    );
-  },
+  }
 });
 
 export const actionChangeVerticalAlign = register({
@@ -1264,60 +885,6 @@ export const actionChangeVerticalAlign = register({
       storeAction: StoreAction.CAPTURE,
     };
   },
-  PanelComponent: ({ elements, appState, updateData, app }) => {
-    return (
-      <fieldset>
-        <ButtonIconSelect<VerticalAlign | false>
-          group="text-align"
-          options={[
-            {
-              value: VERTICAL_ALIGN.TOP,
-              text: t("labels.alignTop"),
-              icon: <TextAlignTopIcon theme={appState.theme} />,
-              testId: "align-top",
-            },
-            {
-              value: VERTICAL_ALIGN.MIDDLE,
-              text: t("labels.centerVertically"),
-              icon: <TextAlignMiddleIcon theme={appState.theme} />,
-              testId: "align-middle",
-            },
-            {
-              value: VERTICAL_ALIGN.BOTTOM,
-              text: t("labels.alignBottom"),
-              icon: <TextAlignBottomIcon theme={appState.theme} />,
-              testId: "align-bottom",
-            },
-          ]}
-          value={getFormValue(
-            elements,
-            appState,
-            (element) => {
-              if (isTextElement(element) && element.containerId) {
-                return element.verticalAlign;
-              }
-              const boundTextElement = getBoundTextElement(
-                element,
-                app.scene.getNonDeletedElementsMap(),
-              );
-              if (boundTextElement) {
-                return boundTextElement.verticalAlign;
-              }
-              return null;
-            },
-            (element) =>
-              isTextElement(element) ||
-              getBoundTextElement(
-                element,
-                app.scene.getNonDeletedElementsMap(),
-              ) !== null,
-            (hasSelection) => (hasSelection ? null : VERTICAL_ALIGN.MIDDLE),
-          )}
-          onChange={(value) => updateData(value)}
-        />
-      </fieldset>
-    );
-  },
 });
 
 export const actionChangeRoundness = register({
@@ -1348,49 +915,7 @@ export const actionChangeRoundness = register({
       },
       storeAction: StoreAction.CAPTURE,
     };
-  },
-  PanelComponent: ({ elements, appState, updateData }) => {
-    const targetElements = getTargetElements(
-      getNonDeletedElements(elements),
-      appState,
-    );
-
-    const hasLegacyRoundness = targetElements.some(
-      (el) => el.roundness?.type === ROUNDNESS.LEGACY,
-    );
-
-    return (
-      <fieldset>
-        <legend>{t("labels.edges")}</legend>
-        <ButtonIconSelect
-          group="edges"
-          options={[
-            {
-              value: "sharp",
-              text: t("labels.sharp"),
-              icon: EdgeSharpIcon,
-            },
-            {
-              value: "round",
-              text: t("labels.round"),
-              icon: EdgeRoundIcon,
-            },
-          ]}
-          value={getFormValue(
-            elements,
-            appState,
-            (element) =>
-              hasLegacyRoundness ? null : element.roundness ? "round" : "sharp",
-            (element) =>
-              !isArrowElement(element) && element.hasOwnProperty("roundness"),
-            (hasSelection) =>
-              hasSelection ? null : appState.currentItemRoundness,
-          )}
-          onChange={(value) => updateData(value)}
-        />
-      </fieldset>
-    );
-  },
+  }
 });
 
 const getArrowheadOptions = (flip: boolean) => {
@@ -1501,49 +1026,7 @@ export const actionChangeArrowhead = register({
       },
       storeAction: StoreAction.CAPTURE,
     };
-  },
-  PanelComponent: ({ elements, appState, updateData }) => {
-    const isRTL = getLanguage().rtl;
-
-    return (
-      <fieldset>
-        <legend>{t("labels.arrowheads")}</legend>
-        <div className="iconSelectList buttonList">
-          <IconPicker
-            label="arrowhead_start"
-            options={getArrowheadOptions(!isRTL)}
-            value={getFormValue<Arrowhead | null>(
-              elements,
-              appState,
-              (element) =>
-                isLinearElement(element) && canHaveArrowheads(element.type)
-                  ? element.startArrowhead
-                  : appState.currentItemStartArrowhead,
-              true,
-              appState.currentItemStartArrowhead,
-            )}
-            onChange={(value) => updateData({ position: "start", type: value })}
-          />
-          <IconPicker
-            label="arrowhead_end"
-            group="arrowheads"
-            options={getArrowheadOptions(!!isRTL)}
-            value={getFormValue<Arrowhead | null>(
-              elements,
-              appState,
-              (element) =>
-                isLinearElement(element) && canHaveArrowheads(element.type)
-                  ? element.endArrowhead
-                  : appState.currentItemEndArrowhead,
-              true,
-              appState.currentItemEndArrowhead,
-            )}
-            onChange={(value) => updateData({ position: "end", type: value })}
-          />
-        </div>
-      </fieldset>
-    );
-  },
+  }
 });
 
 export const actionChangeArrowType = register({
@@ -1590,7 +1073,7 @@ export const actionChangeArrowType = register({
           const startHoveredElement =
             !newElement.startBinding &&
             getHoveredElementForBinding(
-              tupleToCoors(startGlobalPoint),
+              startGlobalPoint,
               elements,
               elementsMap,
               true,
@@ -1598,7 +1081,7 @@ export const actionChangeArrowType = register({
           const endHoveredElement =
             !newElement.endBinding &&
             getHoveredElementForBinding(
-              tupleToCoors(endGlobalPoint),
+              endGlobalPoint,
               elements,
               elementsMap,
               true,
@@ -1653,9 +1136,9 @@ export const actionChangeArrowType = register({
             elementsMap,
             [finalStartPoint, finalEndPoint].map(
               (point) =>
-                [point[0] - newElement.x, point[1] - newElement.y] as Point,
+                ({x: point.x - newElement.x, y: point.y - newElement.y} as Point),
             ),
-            [0, 0],
+            {x: 0, y: 0},
             {
               ...(startElement && newElement.startBinding
                 ? {

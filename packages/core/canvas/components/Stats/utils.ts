@@ -229,7 +229,7 @@ export const moveElement = (
     originalElement.x + originalElement.width / 2,
     originalElement.y + originalElement.height / 2,
   ];
-  const [topLeftX, topLeftY] = rotate(
+  const {x: topLeftX, y: topLeftY} = rotate(
     originalElement.x,
     originalElement.y,
     cx,
@@ -240,7 +240,7 @@ export const moveElement = (
   const changeInX = newTopLeftX - topLeftX;
   const changeInY = newTopLeftY - topLeftY;
 
-  const [x, y] = rotate(
+  const {x: x, y: y} = rotate(
     newTopLeftX,
     newTopLeftY,
     cx + changeInX,

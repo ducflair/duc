@@ -1,6 +1,6 @@
 import cssVariables from "./css/variables.module.scss";
 import { AppProps, AppState } from "./types";
-import { DucElement, FontFamilyValues } from "./element/types";
+import { DucElement, DucTextElement, FontFamilyValues, ImageStatus } from "./element/types";
 import { COLOR_PALETTE } from "./colors";
 import { getDefaultAppState } from "./appState";
 export const isDarwin = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
@@ -96,84 +96,6 @@ export enum EVENT {
   MESSAGE = "message",
   FULLSCREENCHANGE = "fullscreenchange",
 }
-
-export const YOUTUBE_STATES = {
-  UNSTARTED: -1,
-  ENDED: 0,
-  PLAYING: 1,
-  PAUSED: 2,
-  BUFFERING: 3,
-  CUED: 5,
-} as const;
-
-export const ENV = {
-  TEST: "test",
-  DEVELOPMENT: "development",
-};
-
-export const CLASSES = {
-  SHAPE_ACTIONS_MENU: "App-menu__left",
-  ZOOM_ACTIONS: "zoom-actions",
-};
-
-/**
- * // TODO: shouldn't be really `const`, likely neither have integers as values, due to value for the custom fonts, which should likely be some hash.
- *
- * Let's think this through and consider:
- * - https://developer.mozilla.org/en-US/docs/Web/CSS/generic-family
- * - https://drafts.csswg.org/css-fonts-4/#font-family-prop
- * - https://learn.microsoft.com/en-us/typography/opentype/spec/ibmfc
- */
-export const FONT_FAMILY = {
-  Virgil: 1,
-  Helvetica: 2,
-  Cascadia: 3,
-  // leave 4 unused as it was historically used for Assistant (which we don't use anymore) or custom font (Obsidian)
-  Excalifont: 5,
-  Nunito: 6,
-  "Lilita One": 7,
-  "Comic Shanns": 8,
-  "Liberation Sans": 9,
-  "Roboto Mono": 10,
-};
-
-export const THEME = {
-  LIGHT: "light",
-  DARK: "dark",
-} as const;
-
-export const FRAME_STYLE = {
-  strokeColor: "#80808080" as DucElement["strokeColor"],
-  strokeWidth: 2 as DucElement["strokeWidth"],
-  strokeStyle: "solid" as DucElement["strokeStyle"],
-  fillStyle: "solid" as DucElement["fillStyle"],
-  roughness: 0 as DucElement["roughness"],
-  roundness: null as DucElement["roundness"],
-  backgroundColor: "#80808008" as DucElement["backgroundColor"],
-  radius: 8,
-  nameOffsetY: 3,
-  nameColorLightTheme: "#80808080",
-  nameColorDarkTheme: "#80808080",
-  nameFontSize: 14,
-  nameLineHeight: 1.25,
-};
-
-export const WINDOWS_EMOJI_FALLBACK_FONT = "Segoe UI Emoji";
-
-export const MIN_FONT_SIZE = 1;
-export const DEFAULT_FONT_SIZE = 20;
-export const DEFAULT_FONT_FAMILY: FontFamilyValues = FONT_FAMILY["Roboto Mono"];
-export const DEFAULT_TEXT_ALIGN = "left";
-export const DEFAULT_VERTICAL_ALIGN = "top";
-export const DEFAULT_VERSION = "{version}";
-export const DEFAULT_TRANSFORM_HANDLE_SPACING = 2;
-
-export const SIDE_RESIZING_THRESHOLD = 2 * DEFAULT_TRANSFORM_HANDLE_SPACING;
-// a small epsilon to make side resizing always take precedence
-// (avoids an increase in renders and changes to tests)
-const EPSILON = 0.00001;
-export const DEFAULT_COLLISION_THRESHOLD =
-  2 * SIDE_RESIZING_THRESHOLD - EPSILON;
 
 export const COLOR_WHITE = "#ffffff";
 export const COLOR_CHARCOAL_BLACK = "#1e1e1e";
@@ -305,6 +227,7 @@ export const SVG_NS = "http://www.w3.org/2000/svg";
 export const ENCRYPTION_KEY_BITS = 128;
 
 export const VERSIONS = {
+  duc: 3,
   excalidraw: 2,
   excalidrawLibrary: 2,
 } as const;
@@ -313,17 +236,7 @@ export const BOUND_TEXT_PADDING = 5;
 export const ARROW_LABEL_WIDTH_FRACTION = 0.7;
 export const ARROW_LABEL_FONT_SIZE_TO_MIN_WIDTH_RATIO = 11;
 
-export const VERTICAL_ALIGN = {
-  TOP: "top",
-  MIDDLE: "middle",
-  BOTTOM: "bottom",
-};
 
-export const TEXT_ALIGN = {
-  LEFT: "left",
-  CENTER: "center",
-  RIGHT: "right",
-};
 
 export const ELEMENT_READY_TO_ERASE_OPACITY = 20;
 
@@ -353,6 +266,18 @@ export const ROUNDNESS = {
   ADAPTIVE_RADIUS: 3,
 } as const;
 
+export const VERTICAL_ALIGN = {
+  TOP: 0,
+  MIDDLE: 1,
+  BOTTOM: 2,
+} as const;
+
+export const TEXT_ALIGN = {
+  LEFT: 0,
+  CENTER: 1,
+  RIGHT: 2,
+} as const;
+
 export const ROUGHNESS = {
   architect: 0,
   artist: 1,
@@ -371,6 +296,100 @@ export const STROKE_WIDTH = {
   extraBold: 4,
 } as const;
 
+export const FILL_STYLE = {
+  hachure: 0,
+  "cross-hatch": 1,
+  solid: 2,
+  zigzag: 3,
+} as const;
+
+export const STROKE_STYLE = {
+  solid: 0,
+  dashed: 1,
+  dotted: 2,
+} as const;
+
+export const ARROW_HEAD = {
+  arrow: "arrow",
+  bar: "bar",
+  circle: "circle",
+  triangle: "triangle",
+  diamond: "diamond",
+} as const;
+
+export const BEZIER_MIRRORING = {
+  NONE: 0,
+  ANGLE: 1,
+  ANGLE_LENGTH: 2,
+} as const;
+
+export const YOUTUBE_STATES = {
+  UNSTARTED: -1,
+  ENDED: 0,
+  PLAYING: 1,
+  PAUSED: 2,
+  BUFFERING: 3,
+  CUED: 5,
+} as const;
+
+export const IMAGE_STATUS = {
+  pending: "pending",
+  saved: "saved",
+  error: "error",
+} as const;
+
+export const ENV = {
+  TEST: "test",
+  DEVELOPMENT: "development",
+};
+
+export const CLASSES = {
+  SHAPE_ACTIONS_MENU: "App-menu__left",
+  ZOOM_ACTIONS: "zoom-actions",
+};
+
+/**
+ * // TODO: shouldn't be really `const`, likely neither have integers as values, due to value for the custom fonts, which should likely be some hash.
+ *
+ * Let's think this through and consider:
+ * - https://developer.mozilla.org/en-US/docs/Web/CSS/generic-family
+ * - https://drafts.csswg.org/css-fonts-4/#font-family-prop
+ * - https://learn.microsoft.com/en-us/typography/opentype/spec/ibmfc
+ */
+export const FONT_FAMILY = {
+  Virgil: 1,
+  Helvetica: 2,
+  Cascadia: 3,
+  // leave 4 unused as it was historically used for Assistant (which we don't use anymore) or custom font (Obsidian)
+  Excalifont: 5,
+  Nunito: 6,
+  "Lilita One": 7,
+  "Comic Shanns": 8,
+  "Liberation Sans": 9,
+  "Roboto Mono": 10,
+};
+
+export const THEME = {
+  LIGHT: "light",
+  DARK: "dark",
+} as const;
+
+export const FRAME_STYLE = {
+  strokeColor: "#80808080" as DucElement["strokeColor"],
+  strokeWidth: 2 as DucElement["strokeWidth"],
+  strokeStyle: STROKE_STYLE.solid as DucElement["strokeStyle"],
+  fillStyle: FILL_STYLE.solid as DucElement["fillStyle"],
+  roughness: 0 as DucElement["roughness"],
+  roundness: null as DucElement["roundness"],
+  backgroundColor: "#80808008" as DucElement["backgroundColor"],
+  radius: 8,
+  nameOffsetY: 3,
+  nameColorLightTheme: "#80808080",
+  nameColorDarkTheme: "#80808080",
+  nameFontSize: 14,
+  nameLineHeight: 1.25,
+};
+
 export const DEFAULT_ELEMENT_PROPS: {
   strokeColor: DucElement["strokeColor"];
   backgroundColor: DucElement["backgroundColor"];
@@ -383,7 +402,6 @@ export const DEFAULT_ELEMENT_PROPS: {
   roughness: DucElement["roughness"];
   opacity: DucElement["opacity"];
   locked: DucElement["locked"];
-  writingLayer: DucElement["writingLayer"];
   scope: DucElement["scope"];
   label: DucElement["label"];
   index: DucElement["index"];
@@ -400,15 +418,14 @@ export const DEFAULT_ELEMENT_PROPS: {
   strokeColor: COLOR_PALETTE.midGray,
   backgroundColor: `${COLOR_PALETTE.midGray}15`,
   isVisible: true,
-  fillStyle: "solid",
+  fillStyle: FILL_STYLE.solid,
   strokePlacement: STROKE_PLACEMENT.center,
   strokeWidth: 2,
-  strokeStyle: "solid",
+  strokeStyle: STROKE_STYLE.solid,
   roundness: null,
   roughness: ROUGHNESS.architect,
   opacity: 100,
   locked: false,
-  writingLayer: 'notes',
   scope: 'mm',
   index: null,
   label: `Lost Element`,
@@ -423,6 +440,26 @@ export const DEFAULT_ELEMENT_PROPS: {
   isBackgroundDisabled: false,
 };
 
+
+export const WINDOWS_EMOJI_FALLBACK_FONT = "Segoe UI Emoji";
+
+export const DEFAULT_VERSION = "{version}";
+export const MIN_FONT_SIZE = 1;
+export const DEFAULT_FONT_SIZE = 20;
+export const DEFAULT_FONT_FAMILY: FontFamilyValues = FONT_FAMILY["Roboto Mono"];
+export const DEFAULT_TEXT_ALIGN: DucTextElement["textAlign"] = TEXT_ALIGN.LEFT;
+export const DEFAULT_VERTICAL_ALIGN: DucTextElement["verticalAlign"] = VERTICAL_ALIGN.TOP;
+export const DEFAULT_TRANSFORM_HANDLE_SPACING = 2;
+export const DEFAULT_LINE_HEIGHT = 1;
+
+export const SIDE_RESIZING_THRESHOLD = 2 * DEFAULT_TRANSFORM_HANDLE_SPACING;
+// a small epsilon to make side resizing always take precedence
+// (avoids an increase in renders and changes to tests)
+const EPSILON = 0.00001;
+export const DEFAULT_COLLISION_THRESHOLD =
+  2 * SIDE_RESIZING_THRESHOLD - EPSILON;
+
+
 export const LIBRARY_SIDEBAR_TAB = "library";
 
 export const DEFAULT_SIDEBAR = {
@@ -436,9 +473,10 @@ export const LIBRARY_DISABLED_TYPES = new Set([
   "image",
 ] as const);
 
-export const STROKE_SELECTION_COLOR = "#6965db";
 export const FILL_SELECTION_COLOR = "rgba(0, 0, 200, 0.04)";
-export const STROKE_SELECTION_CONTRAST_COLOR = "#7B77FF";
+
+export const STROKE_LINEAR_EDITOR_COLOR = "#B6C5FF";
+export const POINT_SELECTION_COLOR = "#7787FF";
 
 export const STROKE_INTERSECT_SELECTION_COLOR = "#009100";
 export const FILL_INTERSECT_SELECTION_COLOR = "rgba(0, 200, 0, 0.04)";

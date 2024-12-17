@@ -10,7 +10,7 @@ import type { Bounds } from "../element/bounds";
 import { getCommonBounds, getElementAbsoluteCoords } from "../element/bounds";
 import { renderSceneToSvg } from "../renderer/staticSvgScene";
 import { arrayToMap, distance, getFontString, toBrandedType } from "../utils";
-import type { AppState, BinaryFiles } from "../types";
+import type { AppState, BinaryFiles, Point } from "../types";
 import {
   DEFAULT_EXPORT_PADDING,
   FRAME_STYLE,
@@ -462,10 +462,10 @@ export const getExportSize = (
   elements: readonly NonDeletedDucElement[],
   exportPadding: number,
   scale: number,
-): [number, number] => {
+): Point => {
   const [, , width, height] = getCanvasSize(elements, exportPadding).map(
     (dimension) => Math.trunc(dimension * scale),
   );
 
-  return [width, height];
+  return {x: width, y: height};
 };

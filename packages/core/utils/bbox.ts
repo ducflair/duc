@@ -5,15 +5,15 @@ export type LineSegment = [Point, Point];
 
 export function getBBox(line: LineSegment): Bounds {
   return [
-    Math.min(line[0][0], line[1][0]),
-    Math.min(line[0][1], line[1][1]),
-    Math.max(line[0][0], line[1][0]),
-    Math.max(line[0][1], line[1][1]),
+    Math.min(line[0].x, line[1].x),
+    Math.min(line[0].y, line[1].y),
+    Math.max(line[0].x, line[1].x),
+    Math.max(line[0].y, line[1].y),
   ];
 }
 
 export function crossProduct(a: Point, b: Point) {
-  return a[0] * b[1] - b[0] * a[1];
+  return a.x * b.y - b.x * a.y;
 }
 
 export function doBBoxesIntersect(a: Bounds, b: Bounds) {
@@ -21,7 +21,7 @@ export function doBBoxesIntersect(a: Bounds, b: Bounds) {
 }
 
 export function translate(a: Point, b: Point): Point {
-  return [a[0] - b[0], a[1] - b[1]];
+  return {x: a.x - b.x, y: a.y - b.y};
 }
 
 const EPSILON = 0.000001;

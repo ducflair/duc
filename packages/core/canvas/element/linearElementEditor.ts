@@ -38,6 +38,8 @@ import type {
   InteractiveCanvasAppState,
   AppClassProperties,
   NullableGridSize,
+  BezierHandle,
+  BezierMirroring,
 } from "../types";
 import { mutateElement } from "./mutateElement";
 
@@ -54,19 +56,25 @@ import {
 } from "./typeChecks";
 import { KEYS, shouldRotateWithDiscreteAngle } from "../keys";
 import { getBoundTextElement, handleBindTextResize } from "./textElement";
-import { DRAGGING_THRESHOLD } from "../constants";
+import { BEZIER_MIRRORING, DRAGGING_THRESHOLD } from "../constants";
 import type { Mutable } from "../utility-types";
 import { ShapeCache } from "../scene/ShapeCache";
 import type { Store } from "../store";
 import { mutateElbowArrow } from "./routing";
 import type Scene from "../scene/Scene";
 import { adjustElementsMapToCurrentScope, adjustElementToCurrentScope } from "../duc/utils/measurements";
+import { RoughGenerator } from "roughjs/bin/generator";
+import { generateRoughOptions } from "../scene/Shape";
+import { ElementShapes } from "../scene/types";
 
 const editorMidPointsCache: {
   version: number | null;
   points: (Point | null)[];
   zoom: number | null;
 } = { version: null, points: [], zoom: null };
+
+export type PointIndex = [number, 'point' | 'handleIn' | 'handleOut'];
+
 export class LinearElementEditor {
   public readonly elementId: DucElement["id"] & {
     _brand: "excalidrawLinearElementId";
@@ -85,6 +93,7 @@ export class LinearElementEditor {
       index: number | null;
       added: boolean;
     };
+    handleType: "handleIn" | "handleOut" | null;
   }>;
 
   /** whether you're dragging a point */
@@ -98,15 +107,20 @@ export class LinearElementEditor {
   public readonly endBindingElement: DucBindableElement | null | "keep";
   public readonly hoverPointIndex: number;
   public readonly segmentMidPointHoveredCoords: Point | null;
+  public _dragCache: {
+    elementsMap: ElementsMap;
+    elements?: NonDeleted<DucElement>[];
+  } | null;
 
   constructor(element: NonDeleted<DucLinearElement>) {
     this.elementId = element.id as string & {
       _brand: "excalidrawLinearElementId";
     };
-    if (!arePointsEqual(element.points[0], [0, 0])) {
+    if (!arePointsEqual(element.points[0], { x: 0, y: 0 })) {
       console.error("Linear element is not normalized", Error().stack);
     }
 
+    this._dragCache = null;
     this.selectedPointsIndices = null;
     this.lastUncommittedPoint = null;
     this.isDragging = false;
@@ -124,6 +138,7 @@ export class LinearElementEditor {
         index: null,
         added: false,
       },
+      handleType: null,
     };
     this.hoverPointIndex = -1;
     this.segmentMidPointHoveredCoords = null;
@@ -177,10 +192,10 @@ export class LinearElementEditor {
     const nextSelectedPoints = pointsSceneCoords
       .reduce((acc: number[], point, index) => {
         if (
-          (point[0] >= selectionX1 &&
-            point[0] <= selectionX2 &&
-            point[1] >= selectionY1 &&
-            point[1] <= selectionY2) ||
+          (point.x >= selectionX1 &&
+            point.x <= selectionX2 &&
+            point.y >= selectionY1 &&
+            point.y <= selectionY2) ||
           (event.shiftKey && selectedPointsIndices?.includes(index))
         ) {
           acc.push(index);
@@ -226,18 +241,79 @@ export class LinearElementEditor {
       return false;
     }
     const { elementId } = linearElementEditor;
-    // const elementsMap = scene.getNonDeletedElementsMap();
-    const elementsMap = adjustElementsMapToCurrentScope(
-      scene.getNonDeletedElementsMap(),
-      app.state.scope,
-    )
 
-    // const element = LinearElementEditor.getElement(elementId, elementsMap);
+    if (!linearElementEditor._dragCache) {
+      linearElementEditor._dragCache = {
+        elementsMap: adjustElementsMapToCurrentScope(
+          scene.getNonDeletedElementsMap(),
+          app.state.scope,
+        ),
+      };
+    }
+    const { elementsMap } = linearElementEditor._dragCache
+  
     const linearElement = LinearElementEditor.getElement(elementId, elementsMap);
     if (!linearElement) {
       return false;
     }
-    const element = adjustElementToCurrentScope(linearElement, app.state.scope)
+    const element = adjustElementToCurrentScope(linearElement, app.state.scope);
+  
+    const { pointerDownState } = linearElementEditor;
+  
+    if (pointerDownState.handleType) {
+      // We are dragging a handle
+      const handleType = pointerDownState.handleType;
+      const pointIndex = pointerDownState.lastClickedPoint;
+      const point = element.points[pointIndex];
+  
+      // Update the handle position
+      const newHandlePos = LinearElementEditor.createPointAt(
+        element,
+        elementsMap,
+        scenePointerX - linearElementEditor.pointerOffset.x,
+        scenePointerY - linearElementEditor.pointerOffset.y,
+        null, // Do not snap handles to grid
+      );
+  
+      // Apply mirroring if needed
+      const mirroring = point.mirroring;
+      if (mirroring !== undefined && !event.altKey) {
+        const oppositeHandleType =
+          handleType === 'handleIn' ? 'handleOut' : 'handleIn';
+  
+        const dx = newHandlePos.x - point.x;
+        const dy = newHandlePos.y - point.y;
+  
+        if (!point[oppositeHandleType]) {
+          point[oppositeHandleType] = { x: point.x, y: point.y };
+        }
+  
+        if (mirroring === BEZIER_MIRRORING.ANGLE_LENGTH) {
+          // Mirror angle and length
+          point[oppositeHandleType]!.x = point.x - dx;
+          point[oppositeHandleType]!.y = point.y - dy;
+        } else if (mirroring === BEZIER_MIRRORING.ANGLE) {
+          // Mirror angle only
+          const oppositeLength = Math.hypot(
+            point[oppositeHandleType]!.x - point.x,
+            point[oppositeHandleType]!.y - point.y,
+          );
+          const angle = Math.atan2(dy, dx);
+          point[oppositeHandleType]!.x =
+            point.x - Math.cos(angle) * oppositeLength;
+          point[oppositeHandleType]!.y =
+            point.y - Math.sin(angle) * oppositeLength;
+        }
+      }
+  
+      // Update the handle being dragged
+      point[handleType] = newHandlePos;
+  
+      // Update the element to reflect changes
+      mutateElement(element, { points: element.points });
+  
+      return true; // Indicate that a handle was dragged
+    }  
 
     if (
       isElbowArrow(element) &&
@@ -246,6 +322,68 @@ export class LinearElementEditor {
     ) {
       return false;
     }
+
+    // Check if a handle is being dragged
+    const handleUnderCursor = LinearElementEditor.getHandleUnderCursor(
+      element,
+      elementsMap,
+      app.state.zoom,
+      scenePointerX,
+      scenePointerY,
+    );
+    if (handleUnderCursor) {
+      const { pointIndex, handleType } = handleUnderCursor;
+      const point = element.points[pointIndex];
+
+      // Update the handle position
+      const newHandlePos = LinearElementEditor.createPointAt(
+        element,
+        elementsMap,
+        scenePointerX - linearElementEditor.pointerOffset.x,
+        scenePointerY - linearElementEditor.pointerOffset.y,
+        null, // Do not snap handles to grid
+      );
+
+      // Apply mirroring if needed
+      const mirroring = point.mirroring;
+      if (mirroring !== undefined && !event.altKey) {
+        const oppositeHandleType =
+          handleType === 'handleIn' ? 'handleOut' : 'handleIn';
+
+        const dx = newHandlePos.x - point.x;
+        const dy = newHandlePos.y - point.y;
+        const length = Math.hypot(dx, dy);
+        const angle = Math.atan2(dy, dx);
+
+        if (!point[oppositeHandleType]) {
+          point[oppositeHandleType] = { x: point.x, y: point.y };
+        }
+
+        if (mirroring === BEZIER_MIRRORING.ANGLE_LENGTH) {
+          // Mirror angle and length
+          point[oppositeHandleType]!.x = point.x - dx;
+          point[oppositeHandleType]!.y = point.y - dy;
+        } else if (mirroring === BEZIER_MIRRORING.ANGLE) {
+          // Mirror angle only
+          const oppositeLength = Math.hypot(
+            point[oppositeHandleType]!.x - point.x,
+            point[oppositeHandleType]!.y - point.y,
+          );
+          point[oppositeHandleType]!.x =
+            point.x - Math.cos(angle) * oppositeLength;
+          point[oppositeHandleType]!.y =
+            point.y - Math.sin(angle) * oppositeLength;
+        }
+      }
+      // Update the handle being dragged
+      point[handleType] = newHandlePos;
+
+      // Update the element to reflect changes
+      mutateElement(element, { points: element.points });
+
+      return true; // Indicate that a handle was dragged
+    }
+
 
     const selectedPointsIndices = isElbowArrow(element)
       ? linearElementEditor.selectedPointsIndices
@@ -271,7 +409,7 @@ export class LinearElementEditor {
 
     // point that's being dragged (out of all selected points)
     const draggingPoint = element.points[lastClickedPoint] as
-      | [number, number]
+      | Point
       | undefined;
 
     if (selectedPointsIndices && draggingPoint) {
@@ -284,11 +422,11 @@ export class LinearElementEditor {
         const referencePoint =
           element.points[selectedIndex === 0 ? 1 : selectedIndex - 1];
 
-        const [width, height] = LinearElementEditor._getShiftLockedDelta(
+        const {x: width, y: height} = LinearElementEditor._getShiftLockedDelta(
           element,
           elementsMap,
           referencePoint,
-          [scenePointerX, scenePointerY],
+          {x: scenePointerX, y: scenePointerY},
           event[KEYS.CTRL_OR_CMD] ? null : app.getEffectiveGridSize(),
         );
 
@@ -297,7 +435,14 @@ export class LinearElementEditor {
           [
             {
               index: selectedIndex,
-              point: [width + referencePoint[0], height + referencePoint[1]],
+              point: {
+                x: width + referencePoint.x, 
+                y: height + referencePoint.y,
+                isCurve: referencePoint.isCurve,
+                borderRadius: referencePoint.borderRadius,
+                handleIn: referencePoint.handleIn && {x: width + referencePoint.handleIn.x, y: height + referencePoint.handleIn.y},
+                handleOut: referencePoint.handleOut && {x: width + referencePoint.handleOut.x, y: height + referencePoint.handleOut.y},
+              } as Point,
               isDragging: selectedIndex === lastClickedPoint,
             },
           ],
@@ -312,12 +457,14 @@ export class LinearElementEditor {
           event[KEYS.CTRL_OR_CMD] ? null : app.getEffectiveGridSize(),
         );
 
-        const deltaX = newDraggingPointPosition[0] - draggingPoint[0];
-        const deltaY = newDraggingPointPosition[1] - draggingPoint[1];
+        const deltaX = newDraggingPointPosition.x - draggingPoint.x;
+        const deltaY = newDraggingPointPosition.y - draggingPoint.y;
 
         LinearElementEditor.movePoints(
           element,
           selectedPointsIndices.map((pointIndex) => {
+            const handleIn = element.points[pointIndex]?.handleIn;
+            const handleOut = element.points[pointIndex]?.handleOut;
             const newPointPosition =
               pointIndex === lastClickedPoint
                 ? LinearElementEditor.createPointAt(
@@ -327,10 +474,26 @@ export class LinearElementEditor {
                     scenePointerY - linearElementEditor.pointerOffset.y,
                     event[KEYS.CTRL_OR_CMD] ? null : app.getEffectiveGridSize(),
                   )
-                : ([
-                    element.points[pointIndex][0] + deltaX,
-                    element.points[pointIndex][1] + deltaY,
-                  ] as const);
+                : ({
+                    x: element.points[pointIndex].x + deltaX,
+                    y: element.points[pointIndex].y + deltaY,
+                    isCurve: element.points[pointIndex].isCurve,
+                    mirroring: element.points[pointIndex].mirroring,
+                    borderRadius: element.points[pointIndex].borderRadius,
+                    handleIn: handleIn && handleIn.x !== undefined && handleIn.y !== undefined 
+                      ? {
+                          x: handleIn.x + deltaX,
+                          y: handleIn.y + deltaY,
+                        }
+                      : undefined,
+
+                    handleOut: handleOut && handleOut.x !== undefined && handleOut.y !== undefined 
+                      ? {
+                          x: handleOut.x + deltaX,
+                          y: handleOut.y + deltaY,
+                        }
+                      : undefined,
+                  } as const);
             return {
               index: pointIndex,
               point: newPointPosition,
@@ -353,13 +516,11 @@ export class LinearElementEditor {
         const firstSelectedIndex = selectedPointsIndices[0];
         if (firstSelectedIndex === 0) {
           coords.push(
-            tupleToCoors(
-              LinearElementEditor.getPointGlobalCoordinates(
-                element,
-                element.points[0],
-                elementsMap,
-              ),
-            ),
+            LinearElementEditor.getPointGlobalCoordinates(
+              element,
+              element.points[0],
+              elementsMap,
+            ) as { x: number; y: number },
           );
         }
 
@@ -367,13 +528,11 @@ export class LinearElementEditor {
           selectedPointsIndices[selectedPointsIndices.length - 1];
         if (lastSelectedIndex === element.points.length - 1) {
           coords.push(
-            tupleToCoors(
-              LinearElementEditor.getPointGlobalCoordinates(
-                element,
-                element.points[lastSelectedIndex],
-                elementsMap,
-              ),
-            ),
+            LinearElementEditor.getPointGlobalCoordinates(
+              element,
+              element.points[lastSelectedIndex],
+              elementsMap,
+            ) as { x: number; y: number },
           );
         }
 
@@ -382,6 +541,8 @@ export class LinearElementEditor {
         }
       }
 
+      
+      
       return true;
     }
 
@@ -394,13 +555,19 @@ export class LinearElementEditor {
     appState: AppState,
     scene: Scene,
   ): LinearElementEditor {
-    // const elementsMap = scene.getNonDeletedElementsMap();
-    // const elements = scene.getNonDeletedElements();
-    const elementsMap = adjustElementsMapToCurrentScope(
-      scene.getNonDeletedElementsMap(),
-      appState.scope,
-    )
-    const elements = scene.getNonDeletedElements().map(element => adjustElementToCurrentScope(element, appState.scope))
+    if (!editingLinearElement._dragCache || !editingLinearElement._dragCache.elements) {
+      editingLinearElement._dragCache = {
+        elementsMap: adjustElementsMapToCurrentScope(
+          scene.getNonDeletedElementsMap(),
+          appState.scope,
+        ),
+        elements: scene.getNonDeletedElements().map(element => adjustElementToCurrentScope(element, appState.scope))
+      };
+    }
+    
+    const { elementsMap } = editingLinearElement._dragCache
+    const elements = editingLinearElement._dragCache.elements 
+      ?? scene.getNonDeletedElements().map(element => adjustElementToCurrentScope(element, appState.scope))
 
     const { elementId, selectedPointsIndices, isDragging, pointerDownState } =
       editingLinearElement;
@@ -410,6 +577,25 @@ export class LinearElementEditor {
       return editingLinearElement;
     }
     const element = adjustElementToCurrentScope(linearElement, appState.scope)
+    // Add this check to prevent point movement when clicking outside
+    const hitPoint = LinearElementEditor.getPointIndexUnderCursor(
+      linearElement,
+      elementsMap,
+      appState.zoom,
+      event.clientX,
+      event.clientY,
+      appState,
+    );
+
+    // If we're not dragging and clicked outside (no hit point), just clean up and return
+    if (!isDragging && !hitPoint) {
+      editingLinearElement._dragCache = null;
+      return {
+        ...editingLinearElement,
+        isDragging: false,
+        pointerOffset: { x: 0, y: 0 },
+      };
+    }
 
     const bindings: Mutable<
       Partial<
@@ -444,13 +630,11 @@ export class LinearElementEditor {
 
           const bindingElement = isBindingEnabled(appState)
             ? getHoveredElementForBinding(
-                tupleToCoors(
-                  LinearElementEditor.getPointAtIndexGlobalCoordinates(
-                    element,
-                    selectedPoint!,
-                    elementsMap,
-                  ),
-                ),
+                LinearElementEditor.getPointAtIndexGlobalCoordinates(
+                  element,
+                  selectedPoint!,
+                  elementsMap,
+                ) as { x: number; y: number },
                 elements,
                 elementsMap as NonDeletedSceneElementsMap,
               )
@@ -463,6 +647,7 @@ export class LinearElementEditor {
       }
     }
 
+    editingLinearElement._dragCache = null;
     return {
       ...editingLinearElement,
       ...bindings,
@@ -489,6 +674,54 @@ export class LinearElementEditor {
       pointerOffset: { x: 0, y: 0 },
     };
   }
+
+  static getHandleUnderCursor(
+    element: NonDeleted<DucLinearElement>,
+    elementsMap: ElementsMap,
+    zoom: AppState["zoom"],
+    x: number,
+    y: number,
+  ): { pointIndex: number; handleType: 'handleIn' | 'handleOut' } | null {
+    const pointHandles = LinearElementEditor.getPointsGlobalCoordinates(
+      element,
+      elementsMap,
+    );
+  
+    for (let idx = 0; idx < pointHandles.length; idx++) {
+      const point = pointHandles[idx];
+      if (point.isCurve) {
+        const handleSize = LinearElementEditor.POINT_HANDLE_SIZE / zoom.value;
+  
+        // Check handleIn
+        if (point.handleIn) {
+          const handleInGlobal = {
+            x: point.handleIn.x + element.x,
+            y: point.handleIn.y + element.y,
+          };
+          const distance = distance2d(x, y, handleInGlobal.x, handleInGlobal.y);
+          if (distance <= handleSize) {
+            return { pointIndex: idx, handleType: 'handleIn' };
+          }
+        }
+  
+        // Check handleOut
+        if (point.handleOut) {
+          const handleOutGlobal = {
+            x: point.handleOut.x + element.x,
+            y: point.handleOut.y + element.y,
+          };
+          const distance = distance2d(x, y, handleOutGlobal.x, handleOutGlobal.y);
+          if (distance <= handleSize) {
+            return { pointIndex: idx, handleType: 'handleOut' };
+          }
+        }
+      }
+    }
+  
+    return null;
+  }
+  
+  
 
   static getEditorMidPoints = (
     element: NonDeleted<DucLinearElement>,
@@ -528,11 +761,14 @@ export class LinearElementEditor {
       element,
       elementsMap,
     );
-
+  
     let index = 0;
     const midpoints: (Point | null)[] = [];
     while (index < points.length - 1) {
+      // Skip midpoint creation if either current point or next point is a curve point
       if (
+        element.points[index].isCurve || 
+        element.points[index + 1].isCurve ||
         LinearElementEditor.isSegmentTooShort(
           element,
           element.points[index],
@@ -544,6 +780,7 @@ export class LinearElementEditor {
         index++;
         continue;
       }
+  
       const segmentMidPoint = LinearElementEditor.getSegmentMidPoint(
         element,
         points[index],
@@ -572,14 +809,15 @@ export class LinearElementEditor {
     }
     const element = adjustElementToCurrentScope(linearElement, appState.scope)
 
-    const clickedPointIndex = LinearElementEditor.getPointIndexUnderCursor(
+    const hitPoint = LinearElementEditor.getPointIndexUnderCursor(
       element,
       elementsMap,
       appState.zoom,
       scenePointer.x,
       scenePointer.y,
+      appState
     );
-    if (clickedPointIndex >= 0) {
+    if (hitPoint === null) {
       return null;
     }
     const points = LinearElementEditor.getPointsGlobalCoordinates(
@@ -597,8 +835,8 @@ export class LinearElementEditor {
       linearElementEditor.segmentMidPointHoveredCoords;
     if (existingSegmentMidpointHitCoords) {
       const distance = distance2d(
-        existingSegmentMidpointHitCoords[0],
-        existingSegmentMidpointHitCoords[1],
+        existingSegmentMidpointHitCoords.x,
+        existingSegmentMidpointHitCoords.y,
         scenePointer.x,
         scenePointer.y,
       );
@@ -612,8 +850,8 @@ export class LinearElementEditor {
     while (index < midPoints.length) {
       if (midPoints[index] !== null) {
         const distance = distance2d(
-          midPoints[index]![0],
-          midPoints[index]![1],
+          midPoints[index]!.x,
+          midPoints[index]!.y,
           scenePointer.x,
           scenePointer.y,
         );
@@ -634,10 +872,10 @@ export class LinearElementEditor {
     zoom: AppState["zoom"],
   ) {
     let distance = distance2d(
-      startPoint[0],
-      startPoint[1],
-      endPoint[0],
-      endPoint[1],
+      startPoint.x,
+      startPoint.y,
+      endPoint.x,
+      endPoint.y,
     );
     if (element.points.length > 2 && element.roundness) {
       distance = getBezierCurveLength(element, endPoint);
@@ -666,7 +904,7 @@ export class LinearElementEditor {
           0.5,
         );
 
-        const [tx, ty] = getBezierXY(
+        const { x: tx, y: ty } = getBezierXY(
           controlPoints[0],
           controlPoints[1],
           controlPoints[2],
@@ -675,7 +913,7 @@ export class LinearElementEditor {
         );
         segmentMidPoint = LinearElementEditor.getPointGlobalCoordinates(
           element,
-          [tx, ty],
+          { x: tx, y: ty },
           elementsMap,
         );
       }
@@ -725,14 +963,13 @@ export class LinearElementEditor {
     linearElementEditor: LinearElementEditor | null;
   } {
     const appState = app.state;
-    // const elementsMap = scene.getNonDeletedElementsMap();
-    // const elements = scene.getNonDeletedElements();
     const elementsMap = adjustElementsMapToCurrentScope(
       scene.getNonDeletedElementsMap(),
       appState.scope,
     )
-    const elements = scene.getNonDeletedElements().map(element => adjustElementToCurrentScope(element, appState.scope))
-
+    const elements = scene.getNonDeletedElements().map(element => 
+      adjustElementToCurrentScope(element, appState.scope)
+    )
 
     const ret: ReturnType<typeof LinearElementEditor["handlePointerDown"]> = {
       didAddPoint: false,
@@ -750,12 +987,70 @@ export class LinearElementEditor {
     if (!element) {
       return ret;
     }
+
+    // Get hit point information using the new tuple return type
+    const hitPoint = LinearElementEditor.getPointIndexUnderCursor(
+      element,
+      elementsMap,
+      appState.zoom,
+      scenePointer.x,
+      scenePointer.y,
+      appState,
+    );
+
+    if (hitPoint) {
+      const [pointIndex, handleType] = hitPoint;
+      ret.hitElement = element;
+
+      // Handle bezier control points
+      if (handleType !== 'point') {
+        ret.linearElementEditor = {
+          ...linearElementEditor,
+          pointerDownState: {
+            prevSelectedPointsIndices: linearElementEditor.selectedPointsIndices,
+            lastClickedPoint: pointIndex,
+            lastClickedIsEndPoint: false,
+            origin: { x: scenePointer.x, y: scenePointer.y },
+            segmentMidpoint: {
+              value: null,
+              index: null,
+              added: false,
+            },
+            handleType, // Store which handle is being dragged
+          },
+          selectedPointsIndices: [pointIndex],
+          pointerOffset: { x: 0, y: 0 },
+        };
+
+        return ret;
+      }
+
+      // Handle main point click in bend mode
+      if (appState.editingLinearElement && appState.lineBendingMode) {
+        const updatedPoint = initializeCurvePoint(element, pointIndex);
+        const updatedPoints = [...element.points];
+        updatedPoints[pointIndex] = updatedPoint;
+    
+        mutateElement(element, { points: updatedPoints });
+        
+        ret.linearElementEditor = {
+            ...linearElementEditor,
+            selectedPointsIndices: [pointIndex],
+        };
+        
+        app.rerenderCanvas();
+        return ret;
+      }
+    }
+
+    // Handle segment midpoint
     const segmentMidpoint = LinearElementEditor.getSegmentMidpointHitCoords(
       linearElementEditor,
       scenePointer,
       appState,
       elementsMap,
     );
+    
     let segmentMidpointIndex = null;
     if (segmentMidpoint) {
       segmentMidpointIndex = LinearElementEditor.getSegmentMidPointIndex(
@@ -765,25 +1060,28 @@ export class LinearElementEditor {
         elementsMap,
       );
     }
+
+    // Handle alt key for adding new points
     if (event.altKey && appState.editingLinearElement) {
       if (
         linearElementEditor.lastUncommittedPoint == null &&
         !isElbowArrow(element)
       ) {
+        const newPoint = LinearElementEditor.createPointAt(
+          element,
+          elementsMap,
+          scenePointer.x,
+          scenePointer.y,
+          event[KEYS.CTRL_OR_CMD] ? null : app.getEffectiveGridSize(),
+          appState.lineBendingMode, // Pass bend mode to create curved point if needed
+        );
+        
         mutateElement(element, {
-          points: [
-            ...element.points,
-            LinearElementEditor.createPointAt(
-              element,
-              elementsMap,
-              scenePointer.x,
-              scenePointer.y,
-              event[KEYS.CTRL_OR_CMD] ? null : app.getEffectiveGridSize(),
-            ),
-          ],
+          points: [...element.points, newPoint],
         });
         ret.didAddPoint = true;
       }
+
       store.shouldCaptureIncrement();
       ret.linearElementEditor = {
         ...linearElementEditor,
@@ -797,6 +1095,7 @@ export class LinearElementEditor {
             index: segmentMidpointIndex,
             added: false,
           },
+          handleType: null,
         },
         selectedPointsIndices: [element.points.length - 1],
         lastUncommittedPoint: null,
@@ -807,83 +1106,66 @@ export class LinearElementEditor {
         ),
       };
 
-      ret.didAddPoint = true;
       return ret;
     }
 
-    const clickedPointIndex = LinearElementEditor.getPointIndexUnderCursor(
-      element,
-      elementsMap,
-      appState.zoom,
-      scenePointer.x,
-      scenePointer.y,
-    );
-    // if we clicked on a point, set the element as hitElement otherwise
-    // it would get deselected if the point is outside the hitbox area
-    if (clickedPointIndex >= 0 || segmentMidpoint) {
+    // Handle regular point selection
+    if (hitPoint) {
+      const [pointIndex] = hitPoint;
       ret.hitElement = element;
-    } else {
-      // You might be wandering why we are storing the binding elements on
-      // LinearElementEditor and passing them in, instead of calculating them
-      // from the end points of the `linearElement` - this is to allow disabling
-      // binding (which needs to happen at the point the user finishes moving
-      // the point).
-      const { startBindingElement, endBindingElement } = linearElementEditor;
-      if (isBindingEnabled(appState) && isBindingElement(element)) {
-        bindOrUnbindLinearElement(
-          element,
-          startBindingElement,
-          endBindingElement,
-          elementsMap as NonDeletedSceneElementsMap,
-          scene,
-        );
-      }
-    }
 
-    const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
-    const cx = (x1 + x2) / 2;
-    const cy = (y1 + y2) / 2;
-    const targetPoint =
-      clickedPointIndex > -1 &&
-      rotate(
-        element.x + element.points[clickedPointIndex][0],
-        element.y + element.points[clickedPointIndex][1],
+      const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
+      const cx = (x1 + x2) / 2;
+      const cy = (y1 + y2) / 2;
+      const targetPoint = rotate(
+        element.x + element.points[pointIndex].x,
+        element.y + element.points[pointIndex].y,
         cx,
         cy,
         element.angle,
       );
 
-    const nextSelectedPointsIndices =
-      clickedPointIndex > -1 || event.shiftKey
-        ? event.shiftKey ||
-          linearElementEditor.selectedPointsIndices?.includes(clickedPointIndex)
-          ? normalizeSelectedPoints([
-              ...(linearElementEditor.selectedPointsIndices || []),
-              clickedPointIndex,
-            ])
-          : [clickedPointIndex]
-        : null;
-    ret.linearElementEditor = {
-      ...linearElementEditor,
-      pointerDownState: {
-        prevSelectedPointsIndices: linearElementEditor.selectedPointsIndices,
-        lastClickedPoint: clickedPointIndex,
-        lastClickedIsEndPoint: clickedPointIndex === element.points.length - 1,
-        origin: { x: scenePointer.x, y: scenePointer.y },
-        segmentMidpoint: {
-          value: segmentMidpoint === false ? null : segmentMidpoint,
-          index: segmentMidpointIndex,
-          added: false,
+      const nextSelectedPointsIndices = event.shiftKey
+        ? normalizeSelectedPoints([
+            ...(linearElementEditor.selectedPointsIndices || []),
+            pointIndex,
+          ])
+        : [pointIndex];
+
+      ret.linearElementEditor = {
+        ...linearElementEditor,
+        pointerDownState: {
+          prevSelectedPointsIndices: linearElementEditor.selectedPointsIndices,
+          lastClickedPoint: pointIndex,
+          lastClickedIsEndPoint: pointIndex === element.points.length - 1,
+          origin: { x: scenePointer.x, y: scenePointer.y },
+          segmentMidpoint: {
+            value: null,
+            index: null,
+            added: false,
+          },
+          handleType: null,
         },
-      },
-      selectedPointsIndices: nextSelectedPointsIndices,
-      pointerOffset: targetPoint
-        ? {
-            x: scenePointer.x - targetPoint[0],
-            y: scenePointer.y - targetPoint[1],
-          }
-        : { x: 0, y: 0 },
-    };
+        selectedPointsIndices: nextSelectedPointsIndices,
+        pointerOffset: targetPoint
+          ? {
+              x: scenePointer.x - targetPoint.x,
+              y: scenePointer.y - targetPoint.y,
+            }
+          : { x: 0, y: 0 },
+      };
+    } else if (segmentMidpoint) {
+      ret.hitElement = element;
+    } else if (isBindingEnabled(appState) && isBindingElement(element)) {
+      const { startBindingElement, endBindingElement } = linearElementEditor;
+      bindOrUnbindLinearElement(
+        element,
+        startBindingElement,
+        endBindingElement,
+        elementsMap as NonDeletedSceneElementsMap,
+        scene,
+      );
+    }
 
     return ret;
   }
@@ -937,18 +1219,23 @@ export class LinearElementEditor {
     if (shouldRotateWithDiscreteAngle(event) && points.length >= 2) {
       const lastCommittedPoint = points[points.length - 2];
 
-      const [width, height] = LinearElementEditor._getShiftLockedDelta(
+      const {x: width, y: height} = LinearElementEditor._getShiftLockedDelta(
         element,
         elementsMap,
         lastCommittedPoint,
-        [scenePointerX, scenePointerY],
+        { x: scenePointerX, y: scenePointerY },
         event[KEYS.CTRL_OR_CMD] ? null : app.getEffectiveGridSize(),
       );
 
-      newPoint = [
-        width + lastCommittedPoint[0],
-        height + lastCommittedPoint[1],
-      ];
+      newPoint = {
+        x: width + lastCommittedPoint.x,
+        y: height + lastCommittedPoint.y,
+        isCurve: lastCommittedPoint.isCurve,
+        mirroring: lastCommittedPoint.mirroring,
+        borderRadius: lastCommittedPoint.borderRadius,
+        handleIn: lastCommittedPoint.handleIn && {x: lastCommittedPoint.handleIn.x + width, y: lastCommittedPoint.handleIn.y + height},
+        handleOut: lastCommittedPoint.handleOut && {x: lastCommittedPoint.handleOut.x + width, y: lastCommittedPoint.handleOut.y + height},
+      };
     } else {
       newPoint = LinearElementEditor.createPointAt(
         element,
@@ -996,8 +1283,10 @@ export class LinearElementEditor {
     const cy = (y1 + y2) / 2;
 
     let { x, y } = element;
-    [x, y] = rotate(x + point[0], y + point[1], cx, cy, element.angle);
-    return [x, y] as const;
+    const rotatePoint = rotate(x + point.x, y + point.y, cx, cy, element.angle);
+    x = rotatePoint.x;
+    y = rotatePoint.y;
+    return {x, y} as const;
   }
 
   /** scene coords */
@@ -1010,8 +1299,18 @@ export class LinearElementEditor {
     const cy = (y1 + y2) / 2;
     return element.points.map((point) => {
       let { x, y } = element;
-      [x, y] = rotate(x + point[0], y + point[1], cx, cy, element.angle);
-      return [x, y] as const;
+      let handleIn = point.handleIn
+      let handleOut = point.handleOut
+      const rotatePoint = rotate(x + point.x, y + point.y, cx, cy, element.angle);
+      if (point.isCurve) {
+        if(handleIn)
+          handleIn = rotate(x + handleIn.x, y + handleIn.y, cx, cy, element.angle);
+        if(handleOut)
+          handleOut = rotate(x + handleOut.x, y + handleOut.y, cx, cy, element.angle);
+      }
+      x = rotatePoint.x;
+      y = rotatePoint.y;
+      return {...point, x, y, handleIn, handleOut} as const;
     });
   }
 
@@ -1032,7 +1331,7 @@ export class LinearElementEditor {
     const point = element.points[index];
     const { x, y } = element;
     return point
-      ? rotate(x + point[0], y + point[1], cx, cy, element.angle)
+      ? rotate(x + point.x, y + point.y, cx, cy, element.angle)
       : rotate(x, y, cx, cy, element.angle);
   }
 
@@ -1043,20 +1342,20 @@ export class LinearElementEditor {
   ): Point {
     if (isElbowArrow(element)) {
       // No rotation for elbow arrows
-      return [absoluteCoords[0] - element.x, absoluteCoords[1] - element.y];
+      return {x: absoluteCoords.x - element.x, y: absoluteCoords.y - element.y};
     }
 
     const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
     const cx = (x1 + x2) / 2;
     const cy = (y1 + y2) / 2;
-    const [x, y] = rotate(
-      absoluteCoords[0],
-      absoluteCoords[1],
+    const {x, y} = rotate(
+      absoluteCoords.x,
+      absoluteCoords.y,
       cx,
       cy,
       -element.angle,
     );
-    return [x - element.x, y - element.y];
+    return {x: x - element.x, y: y - element.y};
   }
 
   static getPointIndexUnderCursor(
@@ -1065,26 +1364,52 @@ export class LinearElementEditor {
     zoom: AppState["zoom"],
     x: number,
     y: number,
-  ) {
+    appState: AppState,
+  ): PointIndex | null {
     const pointHandles = LinearElementEditor.getPointsGlobalCoordinates(
       element,
       elementsMap,
     );
     let idx = pointHandles.length;
+    
     // loop from right to left because points on the right are rendered over
-    // points on the left, thus should take precedence when clicking, if they
-    // overlap
+    // points on the left, thus should take precedence when clicking
     while (--idx > -1) {
       const point = pointHandles[idx];
+      const isSelected = appState?.editingLinearElement?.selectedPointsIndices?.includes(idx);
+      
+      if (isSelected && point.isCurve) {
+        // Check handleIn if it exists
+        if (point.handleIn) {
+          if (
+            distance2d(x, y, point.handleIn.x, point.handleIn.y) * zoom.value <
+            LinearElementEditor.POINT_HANDLE_SIZE + 1
+          ) {
+            return [idx, 'handleIn'];
+          }
+        }
+        
+        // Check handleOut if it exists
+        if (point.handleOut) {
+          if (
+            distance2d(x, y, point.handleOut.x, point.handleOut.y) * zoom.value <
+            LinearElementEditor.POINT_HANDLE_SIZE + 1
+          ) {
+            return [idx, 'handleOut'];
+          }
+        }
+      }
+
+      // Check the main point
       if (
-        distance2d(x, y, point[0], point[1]) * zoom.value <
-        // +1px to account for outline stroke
+        distance2d(x, y, point.x, point.y) * zoom.value <
         LinearElementEditor.POINT_HANDLE_SIZE + 1
       ) {
-        return idx;
+        return [idx, 'point'];
       }
     }
-    return -1;
+    
+    return null;
   }
 
   static createPointAt(
@@ -1093,39 +1418,68 @@ export class LinearElementEditor {
     scenePointerX: number,
     scenePointerY: number,
     gridSize: NullableGridSize,
+    isCurve: boolean = false,
+    mirroring: BezierMirroring | undefined = undefined,
   ): Point {
     const pointerOnGrid = getGridPoint(scenePointerX, scenePointerY, gridSize);
     const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
     const cx = (x1 + x2) / 2;
     const cy = (y1 + y2) / 2;
-    const [rotatedX, rotatedY] = rotate(
-      pointerOnGrid[0],
-      pointerOnGrid[1],
+    const { x: rotatedX, y: rotatedY } = rotate(
+      pointerOnGrid.x,
+      pointerOnGrid.y,
       cx,
       cy,
       -element.angle,
     );
-
-    return [rotatedX - element.x, rotatedY - element.y];
+  
+    const point: Point = {
+      x: rotatedX - element.x,
+      y: rotatedY - element.y,
+      isCurve,
+      mirroring: mirroring,
+    };
+  
+    if (isCurve) {
+      // Initialize handles for the curve point
+      const defaultHandleLength = 50;
+      point.handleIn = {
+        x: point.x - defaultHandleLength,
+        y: point.y,
+      };
+      point.handleOut = {
+        x: point.x + defaultHandleLength,
+        y: point.y,
+      };
+    }
+  
+    return point;
   }
+  
 
   /**
    * Normalizes line points so that the start point is at [0,0]. This is
    * expected in various parts of the codebase. Also returns new x/y to account
    * for the potential normalization.
    */
-  static getNormalizedPoints(element: DucLinearElement) {
-    const { points } = element;
+  static getNormalizedPoints(element: DucLinearElement | { points: Point[], x: number, y: number }) {
+    const { points, x, y } = element;
 
-    const offsetX = points[0][0];
-    const offsetY = points[0][1];
+    const offsetX = points[0].x;
+    const offsetY = points[0].y;
 
     return {
       points: points.map((point) => {
-        return [point[0] - offsetX, point[1] - offsetY] as const;
+        return {
+          ...point,
+          x: point.x - offsetX, 
+          y: point.y - offsetY,
+          handleIn: point.handleIn && {x: point.handleIn.x - offsetX, y: point.handleIn.y - offsetY},
+          handleOut: point.handleOut && {x: point.handleOut.x - offsetX, y: point.handleOut.y - offsetY},
+        } as const;
       }),
-      x: element.x + offsetX,
-      y: element.y + offsetY,
+      x: x + offsetX,
+      y: y + offsetY,
     };
   }
 
@@ -1170,8 +1524,8 @@ export class LinearElementEditor {
         }
         acc.push(
           nextPoint
-            ? [(point[0] + nextPoint[0]) / 2, (point[1] + nextPoint[1]) / 2]
-            : [point[0], point[1]],
+            ? {x:(point.x + nextPoint.x) / 2, y:(point.y + nextPoint.y) / 2}
+            : {x:point.x, y:point.y},
         );
 
         nextSelectedIndices.push(indexCursor + 1);
@@ -1192,7 +1546,15 @@ export class LinearElementEditor {
         [
           {
             index: element.points.length - 1,
-            point: [lastPoint[0] + 30, lastPoint[1] + 30],
+            point: {
+              x: lastPoint.x + 30, 
+              y: lastPoint.y + 30,
+              isCurve: lastPoint.isCurve,
+              mirroring: lastPoint.mirroring,
+              borderRadius: lastPoint.borderRadius,
+              handleIn: lastPoint.handleIn && {x: lastPoint.handleIn.x + 30, y: lastPoint.handleIn.y + 30},
+              handleOut: lastPoint.handleOut && {x: lastPoint.handleOut.x + 30, y: lastPoint.handleOut.y + 30},
+            } as Point,
           },
         ],
         elementsMap,
@@ -1227,15 +1589,15 @@ export class LinearElementEditor {
         return !pointIndices.includes(idx);
       });
       if (firstNonDeletedPoint) {
-        offsetX = firstNonDeletedPoint[0];
-        offsetY = firstNonDeletedPoint[1];
+        offsetX = firstNonDeletedPoint.x;
+        offsetY = firstNonDeletedPoint.y;
       }
     }
 
     const nextPoints = element.points.reduce((acc: Point[], point, idx) => {
       if (!pointIndices.includes(idx)) {
         acc.push(
-          !acc.length ? [0, 0] : [point[0] - offsetX, point[1] - offsetY],
+          !acc.length ? {x:0, y:0} : {x: point.x - offsetX, y: point.y - offsetY},
         );
       }
       return acc;
@@ -1295,9 +1657,9 @@ export class LinearElementEditor {
 
     if (selectedOriginPoint) {
       offsetX =
-        selectedOriginPoint.point[0] + points[selectedOriginPoint.index][0];
+        selectedOriginPoint.point.x + points[selectedOriginPoint.index].x;
       offsetY =
-        selectedOriginPoint.point[1] + points[selectedOriginPoint.index][1];
+        selectedOriginPoint.point.y + points[selectedOriginPoint.index].y;
     }
 
     const nextPoints = points.map((point, idx) => {
@@ -1308,17 +1670,22 @@ export class LinearElementEditor {
         }
 
         const deltaX =
-          selectedPointData.point[0] - points[selectedPointData.index][0];
+          selectedPointData.point.x - points[selectedPointData.index].x;
         const deltaY =
-          selectedPointData.point[1] - points[selectedPointData.index][1];
+          selectedPointData.point.y - points[selectedPointData.index].y;
 
-        return [
-          point[0] + deltaX - offsetX,
-          point[1] + deltaY - offsetY,
-        ] as const;
+        return {
+          x: point.x + deltaX - offsetX,
+          y: point.y + deltaY - offsetY,
+          isCurve: point.isCurve,
+          borderRadius: point.borderRadius,
+          mirroring: point.mirroring,
+          handleIn: point.handleIn && {x: point.handleIn.x + deltaX - offsetX, y: point.handleIn.y + deltaY - offsetY},
+          handleOut: point.handleOut && {x: point.handleOut.x + deltaX - offsetX, y: point.handleOut.y + deltaY - offsetY},
+        } as const;
       }
       return offsetX || offsetY
-        ? ([point[0] - offsetX, point[1] - offsetY] as const)
+        ? ({x: point.x - offsetX, y: point.y - offsetY} as const)
         : point;
     });
 
@@ -1484,7 +1851,7 @@ export class LinearElementEditor {
         element,
         mergedElementsMap,
         nextPoints,
-        [offsetX, offsetY],
+        {x: offsetX, y: offsetY},
         bindings,
         options,
       );
@@ -1501,8 +1868,8 @@ export class LinearElementEditor {
       mutateElement(element, {
         ...otherUpdates,
         points: nextPoints,
-        x: element.x + rotated[0],
-        y: element.y + rotated[1],
+        x: element.x + rotated.x,
+        y: element.y + rotated.y,
       });
     }
   }
@@ -1521,26 +1888,26 @@ export class LinearElementEditor {
     );
 
     if (isElbowArrow(element)) {
-      return [
-        scenePointer[0] - referencePointCoords[0],
-        scenePointer[1] - referencePointCoords[1],
-      ];
+      return {
+        x: scenePointer.x - referencePointCoords.x,
+        y: scenePointer.y - referencePointCoords.y,
+      }
     }
 
-    const [gridX, gridY] = getGridPoint(
-      scenePointer[0],
-      scenePointer[1],
+    const {x: gridX, y: gridY} = getGridPoint(
+      scenePointer.x,
+      scenePointer.y,
       gridSize,
     );
 
     const { width, height } = getLockedLinearCursorAlignSize(
-      referencePointCoords[0],
-      referencePointCoords[1],
+      referencePointCoords.x,
+      referencePointCoords.y,
       gridX,
       gridY,
     );
 
-    return rotatePoint([width, height], [0, 0], -element.angle);
+    return rotatePoint({x:width, y:height}, {x:0, y:0}, -element.angle);
   }
 
   static getBoundTextElementPosition = (
@@ -1564,8 +1931,8 @@ export class LinearElementEditor {
         element.points[index],
         elementsMap,
       );
-      x = midPoint[0] - boundTextElement.width / 2;
-      y = midPoint[1] - boundTextElement.height / 2;
+      x = midPoint.x - boundTextElement.width / 2;
+      y = midPoint.y - boundTextElement.height / 2;
     } else {
       const index = element.points.length / 2 - 1;
 
@@ -1585,8 +1952,8 @@ export class LinearElementEditor {
           elementsMap,
         );
       }
-      x = midSegmentMidpoint[0] - boundTextElement.width / 2;
-      y = midSegmentMidpoint[1] - boundTextElement.height / 2;
+      x = midSegmentMidpoint.x - boundTextElement.width / 2;
+      y = midSegmentMidpoint.y - boundTextElement.height / 2;
     }
     return { x, y };
   };
@@ -1609,90 +1976,126 @@ export class LinearElementEditor {
     const boundTextX2 = boundTextX1 + boundTextElement.width;
     const boundTextY2 = boundTextY1 + boundTextElement.height;
 
-    const topLeftRotatedPoint = rotatePoint([x1, y1], [cx, cy], element.angle);
-    const topRightRotatedPoint = rotatePoint([x2, y1], [cx, cy], element.angle);
+    const topLeftRotatedPoint = rotatePoint({x:x1, y:y1}, {x:cx, y:cy}, element.angle);
+    const topRightRotatedPoint = rotatePoint({x:x2, y:y1}, {x:cx, y:cy}, element.angle);
 
     const counterRotateBoundTextTopLeft = rotatePoint(
-      [boundTextX1, boundTextY1],
-
-      [cx, cy],
-
+      {x:boundTextX1, y:boundTextY1},
+      {x:cx, y:cy},
       -element.angle,
     );
     const counterRotateBoundTextTopRight = rotatePoint(
-      [boundTextX2, boundTextY1],
-
-      [cx, cy],
-
+      {x:boundTextX2, y:boundTextY1},
+      {x:cx, y:cy},
       -element.angle,
     );
     const counterRotateBoundTextBottomLeft = rotatePoint(
-      [boundTextX1, boundTextY2],
-
-      [cx, cy],
-
+      {x:boundTextX1, y:boundTextY2},
+      {x:cx, y:cy},
       -element.angle,
     );
     const counterRotateBoundTextBottomRight = rotatePoint(
-      [boundTextX2, boundTextY2],
-
-      [cx, cy],
-
+      {x:boundTextX2, y:boundTextY2},
+      {x:cx, y:cy},
       -element.angle,
     );
 
     if (
-      topLeftRotatedPoint[0] < topRightRotatedPoint[0] &&
-      topLeftRotatedPoint[1] >= topRightRotatedPoint[1]
+      topLeftRotatedPoint.x < topRightRotatedPoint.x &&
+      topLeftRotatedPoint.y >= topRightRotatedPoint.y
     ) {
-      x1 = Math.min(x1, counterRotateBoundTextBottomLeft[0]);
+      x1 = Math.min(x1, counterRotateBoundTextBottomLeft.x);
       x2 = Math.max(
         x2,
         Math.max(
-          counterRotateBoundTextTopRight[0],
-          counterRotateBoundTextBottomRight[0],
+          counterRotateBoundTextTopRight.x,
+          counterRotateBoundTextBottomRight.x,
         ),
       );
-      y1 = Math.min(y1, counterRotateBoundTextTopLeft[1]);
+      y1 = Math.min(y1, counterRotateBoundTextTopLeft.y);
 
-      y2 = Math.max(y2, counterRotateBoundTextBottomRight[1]);
+      y2 = Math.max(y2, counterRotateBoundTextBottomRight.y);
     } else if (
-      topLeftRotatedPoint[0] >= topRightRotatedPoint[0] &&
-      topLeftRotatedPoint[1] > topRightRotatedPoint[1]
+      topLeftRotatedPoint.x >= topRightRotatedPoint.x &&
+      topLeftRotatedPoint.y > topRightRotatedPoint.y
     ) {
-      x1 = Math.min(x1, counterRotateBoundTextBottomRight[0]);
+      x1 = Math.min(x1, counterRotateBoundTextBottomRight.x);
       x2 = Math.max(
         x2,
         Math.max(
-          counterRotateBoundTextTopLeft[0],
-          counterRotateBoundTextTopRight[0],
+          counterRotateBoundTextTopLeft.x,
+          counterRotateBoundTextTopRight.x,
         ),
       );
-      y1 = Math.min(y1, counterRotateBoundTextBottomLeft[1]);
+      y1 = Math.min(y1, counterRotateBoundTextBottomLeft.y);
 
-      y2 = Math.max(y2, counterRotateBoundTextTopRight[1]);
-    } else if (topLeftRotatedPoint[0] >= topRightRotatedPoint[0]) {
-      x1 = Math.min(x1, counterRotateBoundTextTopRight[0]);
-      x2 = Math.max(x2, counterRotateBoundTextBottomLeft[0]);
-      y1 = Math.min(y1, counterRotateBoundTextBottomRight[1]);
+      y2 = Math.max(y2, counterRotateBoundTextTopRight.y);
+    } else if (topLeftRotatedPoint.x >= topRightRotatedPoint.x) {
+      x1 = Math.min(x1, counterRotateBoundTextTopRight.x);
+      x2 = Math.max(x2, counterRotateBoundTextBottomLeft.x);
+      y1 = Math.min(y1, counterRotateBoundTextBottomRight.y);
 
-      y2 = Math.max(y2, counterRotateBoundTextTopLeft[1]);
-    } else if (topLeftRotatedPoint[1] <= topRightRotatedPoint[1]) {
+      y2 = Math.max(y2, counterRotateBoundTextTopLeft.y);
+    } else if (topLeftRotatedPoint.y <= topRightRotatedPoint.y) {
       x1 = Math.min(
         x1,
         Math.min(
-          counterRotateBoundTextTopRight[0],
-          counterRotateBoundTextTopLeft[0],
+          counterRotateBoundTextTopRight.x,
+          counterRotateBoundTextTopLeft.x,
         ),
       );
 
-      x2 = Math.max(x2, counterRotateBoundTextBottomRight[0]);
-      y1 = Math.min(y1, counterRotateBoundTextTopRight[1]);
-      y2 = Math.max(y2, counterRotateBoundTextBottomLeft[1]);
+      x2 = Math.max(x2, counterRotateBoundTextBottomRight.x);
+      y1 = Math.min(y1, counterRotateBoundTextTopRight.y);
+      y2 = Math.max(y2, counterRotateBoundTextBottomLeft.y);
     }
 
     return [x1, y1, x2, y2, cx, cy];
   };
+
+  static handleBezierControlPointDrag(
+    element: NonDeleted<DucLinearElement>,
+    pointIndex: number,
+    handleType: 'handleIn' | 'handleOut',
+    newPosition: { x: number; y: number },
+    event: PointerEvent,
+  ) {
+    const point = element.points[pointIndex];
+    if (!point.isCurve) return;
+  
+    // Update the handle being dragged
+    point[handleType] = newPosition;
+  
+    // Apply mirroring if needed
+    const mirroring = point.mirroring;
+    if (mirroring !== undefined && !event.altKey) {
+      const oppositeHandleType = handleType === 'handleIn' ? 'handleOut' : 'handleIn';
+  
+      const dx = newPosition.x - point.x;
+      const dy = newPosition.y - point.y;
+  
+      if (!point[oppositeHandleType]) {
+        point[oppositeHandleType] = { x: point.x, y: point.y };
+      }
+  
+      if (mirroring === BEZIER_MIRRORING.ANGLE_LENGTH) {
+        // Mirror angle and length
+        point[oppositeHandleType]!.x = point.x - dx;
+        point[oppositeHandleType]!.y = point.y - dy;
+      } else if (mirroring === BEZIER_MIRRORING.ANGLE) {
+        // Mirror angle only
+        const oppositeLength = Math.hypot(
+          point[oppositeHandleType]!.x - point.x,
+          point[oppositeHandleType]!.y - point.y,
+        );
+        const angle = Math.atan2(dy, dx);
+        point[oppositeHandleType]!.x = point.x - Math.cos(angle) * oppositeLength;
+        point[oppositeHandleType]!.y = point.y - Math.sin(angle) * oppositeLength;
+      }
+    }
+  
+    return point;
+  }
 
   static getElementAbsoluteCoords = (
     element: DucLinearElement,
@@ -1700,20 +2103,20 @@ export class LinearElementEditor {
     includeBoundText: boolean = false,
   ): [number, number, number, number, number, number] => {
     let coords: [number, number, number, number, number, number];
-    let x1;
-    let y1;
-    let x2;
-    let y2;
+    let x1: number;
+    let y1: number;
+    let x2: number;
+    let y2: number;
+  
     if (element.points.length < 2 || !ShapeCache.get(element)) {
-      // XXX this is just a poor estimate and not very useful
+      // When points are insufficient, calculate rough bounds
       const { minX, minY, maxX, maxY } = element.points.reduce(
-        (limits, [x, y]) => {
+        (limits, { x, y }) => {
           limits.minY = Math.min(limits.minY, y);
           limits.minX = Math.min(limits.minX, x);
-
           limits.maxX = Math.max(limits.maxX, x);
           limits.maxY = Math.max(limits.maxY, y);
-
+  
           return limits;
         },
         { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity },
@@ -1722,25 +2125,25 @@ export class LinearElementEditor {
       y1 = minY + element.y;
       x2 = maxX + element.x;
       y2 = maxY + element.y;
+
     } else {
       const shape = ShapeCache.generateElementShape(element, null);
-
-      // first element is always the curve
-      const ops = getCurvePathOps(shape[0]);
-
+      const ops = getCurvePathOps(shape[0]); // first element is always the curve
       const [minX, minY, maxX, maxY] = getMinMaxXYFromCurvePathOps(ops);
       x1 = minX + element.x;
       y1 = minY + element.y;
       x2 = maxX + element.x;
       y2 = maxY + element.y;
     }
+  
     const cx = (x1 + x2) / 2;
     const cy = (y1 + y2) / 2;
     coords = [x1, y1, x2, y2, cx, cy];
-
+  
     if (!includeBoundText) {
       return coords;
     }
+  
     const boundTextElement = getBoundTextElement(element, elementsMap);
     if (boundTextElement) {
       coords = LinearElementEditor.getMinMaxXYWithBoundText(
@@ -1750,9 +2153,9 @@ export class LinearElementEditor {
         boundTextElement,
       );
     }
-
+  
     return coords;
-  };
+  };  
 }
 
 const normalizeSelectedPoints = (
@@ -1763,4 +2166,343 @@ const normalizeSelectedPoints = (
   ] as number[];
   nextPoints = nextPoints.sort((a, b) => a - b);
   return nextPoints.length ? nextPoints : null;
+};
+
+
+// Logic to render the linear path for the Line Element on Vanilla Canvas
+export const renderLinearPath = (
+  points: Point[],
+  context: CanvasRenderingContext2D,
+) => {
+  context.moveTo(points[0].x, points[0].y);
+          
+  for (let i = 0; i < points.length - 1; i++) {
+    const current = points[i];
+    const next = points[i + 1];
+
+    if (current.isCurve && current.handleOut && next.handleIn) {
+      context.bezierCurveTo(
+        current.handleOut.x,
+        current.handleOut.y,
+        next.handleIn.x,
+        next.handleIn.y,
+        next.x,
+        next.y,
+      );
+    } else if (current.isCurve && current.handleOut) {
+      context.quadraticCurveTo(
+        current.handleOut.x,
+        current.handleOut.y,
+        next.x,
+        next.y,
+      );
+    } else if (next.isCurve && next.handleIn) {
+      context.quadraticCurveTo(
+        next.handleIn.x,
+        next.handleIn.y,
+        next.x,
+        next.y,
+      );
+    } else {
+      // Handle border radius for non-curve points
+      const currentRadius = (!current.isCurve && current.borderRadius) || 0;
+      const nextRadius = (!next.isCurve && next.borderRadius) || 0;
+
+      if (currentRadius === 0 && nextRadius === 0) {
+        context.lineTo(next.x, next.y);
+      } else {
+        // Calculate direction vector
+        const dx = next.x - current.x;
+        const dy = next.y - current.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Normalize direction vector
+        const nx = dx / distance;
+        const ny = dy / distance;
+
+        // Calculate start and end points considering radius
+        const startRadius = Math.min(currentRadius, distance / 2);
+        const endRadius = Math.min(nextRadius, distance / 2);
+
+        // Calculate control points
+        const startX = current.x + nx * startRadius;
+        const startY = current.y + ny * startRadius;
+        const endX = next.x - nx * endRadius;
+        const endY = next.y - ny * endRadius;
+
+        if (currentRadius === 0) {
+          context.lineTo(startX, startY);
+        }
+
+        // Draw the rounded segment
+        context.lineTo(startX, startY);
+        if (endRadius > 0) {
+          context.quadraticCurveTo(
+            next.x,
+            next.y,
+            endX,
+            endY
+          );
+        }
+        if (nextRadius === 0) {
+          context.lineTo(next.x, next.y);
+        }
+      }
+    }
+  }
+};
+
+
+// Logic to render the static linear path for Line Element on Static Canvas
+export const renderStaticLinearPath = (
+  element: DucLinearElement,
+  generator: RoughGenerator,
+) => {
+  let shape: ElementShapes[typeof element.type];
+  const options = generateRoughOptions(element);
+
+  const points = element.points.length ? element.points : [{x: 0, y: 0}];
+  
+  if (points.some(p => p.handleIn || p.handleOut)) {
+    // Generate SVG path for bezier curves
+    const d = [`M ${points[0].x} ${points[0].y}`];
+    
+    for (let i = 0; i < points.length - 1; i++) {
+      const current = points[i];
+      const next = points[i + 1];
+      
+      if (current.handleOut && next.handleIn) {
+        // Cubic bezier curve
+        d.push(`C ${current.handleOut.x} ${current.handleOut.y}, ${next.handleIn.x} ${next.handleIn.y}, ${next.x} ${next.y}`);
+      } else if (current.handleOut) {
+        // Quadratic bezier curve with only handleOut
+        d.push(`Q ${current.handleOut.x} ${current.handleOut.y}, ${next.x} ${next.y}`);
+      } else if (next.handleIn) {
+        // Quadratic bezier curve with only handleIn
+        d.push(`Q ${next.handleIn.x} ${next.handleIn.y}, ${next.x} ${next.y}`);
+      } else {
+        // Linear line segment
+        d.push(`L ${next.x} ${next.y}`);
+      }
+    }
+
+    const pathString = d.join(" ");
+    shape = [generator.path(pathString, { ...options, preserveVertices: true })];
+  } else {
+    // Generate path for lines with border radius
+    const d: string[] = [`M ${points[0].x} ${points[0].y}`];
+    
+    for (let i = 0; i < points.length - 1; i++) {
+      const current = points[i];
+      const next = points[i + 1];
+
+      if (!current.isCurve && !next.isCurve && 
+          (current.borderRadius || next.borderRadius)) {
+        // Calculate direction vector
+        const dx = next.x - current.x;
+        const dy = next.y - current.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Normalize direction vector
+        const nx = dx / distance;
+        const ny = dy / distance;
+
+        // Calculate radii
+        const startRadius = Math.min(current.borderRadius || 0, distance / 2);
+        const endRadius = Math.min(next.borderRadius || 0, distance / 2);
+
+        // Calculate control points
+        const startX = current.x + nx * startRadius;
+        const startY = current.y + ny * startRadius;
+        const endX = next.x - nx * endRadius;
+        const endY = next.y - ny * endRadius;
+
+        if (startRadius === 0) {
+          d.push(`L ${startX} ${startY}`);
+        }
+        d.push(`L ${startX} ${startY}`);
+        
+        if (endRadius > 0) {
+          d.push(`Q ${next.x} ${next.y} ${endX} ${endY}`);
+        }
+        
+        if (endRadius === 0) {
+          d.push(`L ${next.x} ${next.y}`);
+        }
+      } else {
+        d.push(`L ${next.x} ${next.y}`);
+      }
+    }
+
+    shape = [generator.path(d.join(" "), { ...options, preserveVertices: true })];
+  }
+
+  return shape;
+}
+
+
+// Utility functions for vector operations
+const vectorLength = (x: number, y: number): number => {
+  return Math.sqrt(x * x + y * y);
+};
+
+const normalizeVector = (x: number, y: number): [number, number] => {
+  const length = vectorLength(x, y);
+  return length === 0 ? [0, 0] : [x / length, y / length];
+};
+
+// Calculate handle positions based on surrounding points
+const calculateHandlePositions = (
+  points: Point[],
+  pointIndex: number,
+  isClosed: boolean = false
+): { handleIn?: BezierHandle; handleOut?: BezierHandle; mirroring?: BezierMirroring } => {
+  const point = points[pointIndex];
+  let prevPoint = points[pointIndex - 1];
+  let nextPoint = points[pointIndex + 1];
+
+  // Handle closed paths
+  if (isClosed) {
+    if (!prevPoint) {
+      prevPoint = points[points.length - 2];
+    }
+    if (!nextPoint) {
+      nextPoint = points[1];
+    }
+  }
+
+  // Initialize result object
+  const result: { 
+    handleIn?: BezierHandle; 
+    handleOut?: BezierHandle;
+    mirroring?: BezierMirroring 
+  } = {};
+
+  // Calculate vectors to previous and next points
+  let prevVector: [number, number] | null = null;
+  let nextVector: [number, number] | null = null;
+
+  // If we have a previous point, calculate the vector from it
+  if (prevPoint) {
+    prevVector = normalizeVector(
+      point.x - prevPoint.x,
+      point.y - prevPoint.y
+    );
+  }
+
+  // If we have a next point, calculate the vector to it
+  if (nextPoint) {
+    nextVector = normalizeVector(
+      nextPoint.x - point.x,
+      nextPoint.y - point.y
+    );
+  }
+
+  // If both vectors are available, calculate the average direction
+  if (prevVector && nextVector) {
+    const avgVector = normalizeVector(
+      (prevVector[0] + nextVector[0]) / 2,
+      (prevVector[1] + nextVector[1]) / 2
+    );
+
+    // Calculate handle length based on distances to neighbors
+    const prevDistance = vectorLength(
+      prevPoint.x - point.x,
+      prevPoint.y - point.y
+    );
+    const nextDistance = vectorLength(
+      nextPoint.x - point.x,
+      nextPoint.y - point.y
+    );
+    const handleLength = Math.min(prevDistance, nextDistance) / 3;
+
+    // Assign both handles
+    result.handleIn = {
+      x: point.x - avgVector[0] * handleLength,
+      y: point.y - avgVector[1] * handleLength
+    };
+    result.handleOut = {
+      x: point.x + avgVector[0] * handleLength,
+      y: point.y + avgVector[1] * handleLength
+    };
+    result.mirroring = BEZIER_MIRRORING.ANGLE_LENGTH;
+  } else if (prevVector) {
+    // Only previous point exists
+    const handleLength = vectorLength(
+      prevPoint.x - point.x,
+      prevPoint.y - point.y
+    ) / 3;
+
+    // Create a tilted vector by rotating the prevVector by ~15 degrees
+    const angle = -Math.PI / 12; // -15 degrees
+    const tiltedVector: [number, number] = [
+      prevVector[0] * Math.cos(angle) - prevVector[1] * Math.sin(angle),
+      prevVector[0] * Math.sin(angle) + prevVector[1] * Math.cos(angle)
+    ];
+
+    result.handleIn = {
+      x: point.x - tiltedVector[0] * handleLength,
+      y: point.y - tiltedVector[1] * handleLength
+    };
+    result.mirroring = BEZIER_MIRRORING.NONE;
+  } else if (nextVector) {
+    // Only next point exists
+    const handleLength = vectorLength(
+      nextPoint.x - point.x,
+      nextPoint.y - point.y
+    ) / 3;
+
+    // Create a tilted vector by rotating the nextVector by ~15 degrees
+    const angle = Math.PI / 12; // 15 degrees
+    const tiltedVector: [number, number] = [
+      nextVector[0] * Math.cos(angle) - nextVector[1] * Math.sin(angle),
+      nextVector[0] * Math.sin(angle) + nextVector[1] * Math.cos(angle)
+    ];
+
+    result.handleOut = {
+      x: point.x + tiltedVector[0] * handleLength,
+      y: point.y + tiltedVector[1] * handleLength
+    };
+    result.mirroring = BEZIER_MIRRORING.NONE;
+  }
+
+  return result;
+};
+
+// Updated point initialization logic
+const initializeCurvePoint = (
+  element: DucLinearElement,
+  pointIndex: number,
+): Point => {
+  const point = element.points[pointIndex];
+  const isClosed = element.points.length > 2 && arePointsEqual(
+    element.points[0],
+    element.points[element.points.length - 1]
+  );
+
+  if (!point.isCurve) {
+    // Calculate intelligent handle positions
+    const { handleIn, handleOut, mirroring } = calculateHandlePositions(
+      element.points as Point[],
+      pointIndex,
+      isClosed
+    );
+
+    return {
+      ...point,
+      isCurve: true,
+      mirroring,
+      handleIn,
+      handleOut
+    };
+  } else {
+    // Reset point to linear
+    return {
+      ...point,
+      isCurve: false,
+      mirroring: undefined,
+      handleIn: undefined,
+      handleOut: undefined
+    };
+  }
 };

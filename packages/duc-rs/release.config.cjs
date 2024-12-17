@@ -1,4 +1,5 @@
 //  Follow up on this https://github.com/rust-lang/cargo/issues/9398
+
 module.exports = {
   branches: ["main", { name: "next", prerelease: true }],
   plugins: [
@@ -7,19 +8,24 @@ module.exports = {
     [
       "@semantic-release/exec",
       {
+        // Prepare step: Set the version, replace the local dependency path, and build the project
         prepareCmd:
-          "cargo install cargo-edit && cargo set-version ${nextRelease.version} && cargo build --release",
+          "cargo install cargo-edit && cargo set-version ${nextRelease.version} && sed -i 's|path = \"../core/canvas/duc/duc-rs\"|version = \"0.1.0\"|' Cargo.toml && cargo build --release",
+        
+        // Publish step: Publish the crate to crates.io
         publishCmd:
           "cargo publish --allow-dirty --token ${process.env.CARGO_REGISTRY_TOKEN}",
-        // After publishing, reset Cargo.toml to the development version without committing
+        
+        // Success step: After publishing, reset the version and restore the local dependency path
         successCmd:
-          "cargo set-version 0.0.0-development"
+          "cargo set-version 0.0.0-development && sed -i 's|version = \"0.1.0\"|path = \"../core/canvas/duc/duc-rs\"|' Cargo.toml"
       }
     ],
     "@semantic-release/github",
   ],
   tagFormat: "@ducflair/duc-rs@${version}"
 };
+
 
 // module.exports = {
 //   branches: ["main", { name: "next", prerelease: true }],

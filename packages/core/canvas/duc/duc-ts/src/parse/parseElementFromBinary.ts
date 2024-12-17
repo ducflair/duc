@@ -23,15 +23,16 @@ import {
   DucRectangleElement,
   DucDiamondElement,
   DucEllipseElement,
-  FractionalIndex
+  FractionalIndex,
+  BoundElement
 } from '../../../../element/types';
 import { SupportedMeasures } from '../../../utils/measurements';
-import { WritingLayers } from '../../../utils/writingLayers';
-import { nanoid } from 'nanoid';
-import { DEFAULT_ELEMENT_PROPS } from '../../../../constants';
+import { BezierMirroring, Point } from '../../../../types';
 
-export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
+export const parseElementFromBinary = (e: BinDucElement, v: number): Partial<DucElement> | null => {
   if (!e) return null;
+  const elType = e.type();
+  if(!elType) return null;
 
   // Populate groupIds array
   let groupIds: string[] = [];
@@ -40,108 +41,89 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
   }
 
   // Populate boundElements array
-  let boundElements: {
-    id: string;
-    type: "arrow" | "text";
-  }[] | null = [];
-  for (let j = 0; j < e.boundElementsLength(); j++) {
-    if (e.boundElements(j)) {
-      boundElements.push({
-        id: e.boundElements(j)?.id() || '',
-        type: e.boundElements(j)?.type() as "arrow" | "text",
-      });
-    }
-  }
+  const boundElements = Array.from({ length: e.boundElementsLength() })
+    .map((_, j) => e.boundElements(j))
+    .filter((element): element is NonNullable<typeof element> => !!element)
+    .map(boundElement => ({
+      id: boundElement.id(),
+      type: boundElement.type()
+    }))
+  .filter((element): element is BoundElement => 
+    !!element.id && !!element.type
+  );
 
-  let points: [number, number][] = [];
-  if(e.type() === 'freedraw' || e.type() === 'line' || e.type() === 'arrow') {
-    for (let j = 0; j < e.pointsLength(); j++) {
-      const point = e.points(j);
-      if (point) {
-        points.push([point.x(), point.y()]);
-      }
-    }
-  }
+  const points: Point[] = ['freedraw', 'line', 'arrow'].includes(elType)
+    ? Array.from({ length: e.pointsLength() })
+        .map((_, j) => e.points(j))
+        .filter((point): point is NonNullable<typeof point> => !!point)
+        .map(point => ({
+          x: v>2 ? point.xV3() : point.xV2() || 0,
+          y: v>2 ? point.yV3() : point.yV2() || 0,
+          isCurve: point.isCurve() || undefined,
+          mirroring: point.mirroring() as BezierMirroring | undefined,
+          borderRadius: point.borderRadius() || undefined,
+          handleIn: point.handleIn() ? { x: point.handleIn()!.x(), y: point.handleIn()!.y() } : undefined,
+          handleOut: point.handleOut() ? { x: point.handleOut()!.x(), y: point.handleOut()!.y() } : undefined
+        }))
+    : [];
 
-  let pressures: number[] = [];
-  if(e.type() === 'freedraw') {
-    for (let j = 0; j < e.pressuresLength(); j++) {
-      const pressure = e.pressures(j);
-      if (pressure) {
-        pressures.push(pressure);
-      }
-    }
-  }
-
-  const elementType = e.type() as DucElementTypes;
+  const pressures = elType === 'freedraw'
+    ? Array.from({ length: e.pressuresV3Length() })
+        .map((_, j) => e.pressuresV3(j))
+        .filter((pressure): pressure is number => pressure !== null && pressure !== undefined)
+    : [];
 
   const baseElement: Partial<DucElement> = {
-    id: e.id() || nanoid(),
-    x: e.x(),
-    y: e.y(),
-    index: e.index() as FractionalIndex,
-    strokeColor: e.strokeColor() || DEFAULT_ELEMENT_PROPS.strokeColor,
-    backgroundColor: e.backgroundColor() || DEFAULT_ELEMENT_PROPS.backgroundColor,
-    strokeWidth: e.strokeWidth(),
+    id: e.id() || undefined,
+    x: v>2 ? e.xV3() : e.xV2() || undefined,
+    y: v>2 ? e.yV3() : e.yV2() || undefined,
+    strokeColor: e.strokeColor() || undefined,
+    backgroundColor: e.backgroundColor() || undefined,
+    strokeWidth: v>2 ? e.strokeWidthV3() : e.strokeWidthV2() || undefined,
     isVisible: e.isVisible(),
     roundness: null,
-    // roundness: {
-    //   type: (Number(e.roundnessType() || '1')) as RoundnessType,
-    //   value: e.roundnessValue(),
-    // },
     isStrokeDisabled: e.isStrokeDisabled(),
     isBackgroundDisabled: e.isBackgroundDisabled(),
     opacity: e.opacity(),
-    width: e.width(),
-    height: e.height(),
-    angle: e.angle(),
+    width: v>2 ? e.widthV3() : e.widthV2() || undefined,
+    height: v>2 ? e.heightV3() : e.heightV2() || undefined,
+    angle: v>2 ? e.angleV3() : e.angleV2() || undefined,
     isDeleted: e.isDeleted(),
-    frameId: e.frameId() || DEFAULT_ELEMENT_PROPS.frameId,
-    link: e.link() || DEFAULT_ELEMENT_PROPS.link,
+    frameId: e.frameId(),
+    link: e.link() || undefined,
     locked: e.locked(),
-    customData: e.customData()?.length ? JSON.parse(e.customData()!) : '',
     groupIds: groupIds,
-    scope: (e.scope() || DEFAULT_ELEMENT_PROPS.scope) as SupportedMeasures,
-    writingLayer: (e.writingLayer() || DEFAULT_ELEMENT_PROPS.writingLayer) as WritingLayers,
-    label: e.label() || DEFAULT_ELEMENT_PROPS.label,
-    strokeStyle: (e.strokeStyle() || DEFAULT_ELEMENT_PROPS.strokeStyle) as StrokeStyle,
+    scope: (e.scope() || undefined) as SupportedMeasures,
+    label: e.label() || undefined,
+    strokeStyle: (e.strokeStyleV3() || undefined) as StrokeStyle,
+    fillStyle: (e.fillStyleV3() || undefined) as FillStyle,
     boundElements: boundElements,
-    strokePlacement: (e.strokePlacement() || DEFAULT_ELEMENT_PROPS.strokePlacement) as StrokePlacement,
+    strokePlacement: (e.strokePlacement() || undefined) as StrokePlacement,
   };
 
-  switch (elementType) {
+  switch (elType) {
     case "text":
       return {
         ...baseElement,
-        type: elementType,
-        fontSize: e.fontSize(),
+        type: elType,
+        fontSize: v>2 ? e.fontSizeV3() : e.fontSizeV2() || undefined,
         fontFamily: Number(e.fontFamily()) as FontFamilyValues,
         text: e.text(),
-        textAlign: e.textAlign() as TextAlign,
-        verticalAlign: e.verticalAlign() as VerticalAlign,
+        textAlign: e.textAlignV3() as TextAlign,
+        verticalAlign: e.verticalAlignV3() as VerticalAlign,
         containerId: e.containerId(),
-        originalText: e.originalText(),
-        lineHeight: e.lineHeight() as number & { _brand: "unitlessLineHeight" },
+        originalText: e.text(),
+        lineHeight: v>2 ? e.lineHeightV3() : e.lineHeightV2() || undefined,
         autoResize: e.autoResize(),
       } as DucTextElement;
     case "arrow":
       return {
         ...baseElement,
-        type: elementType,
+        type: elType,
         points: points,
-        lastCommittedPoint: [e.lastCommittedPoint()?.x(), e.lastCommittedPoint()?.y()],
-        startBinding: {
-          elementId: e.startBinding()?.elementId(),
-          focus: e.startBinding()?.focus(),
-          gap: e.startBinding()?.gap(),
-          fixedPoint: e.startBinding()?.fixedPoint()
-        },
-        endBinding: {
-          elementId: e.endBinding()?.elementId(),
-          focus: e.endBinding()?.focus(),
-          gap: e.endBinding()?.gap(),
-          fixedPoint: e.endBinding()?.fixedPoint()
-        },
+        lastCommittedPoint: e.lastCommittedPoint(),
+        startBinding: e.startBinding(),
+        endBinding: e.endBinding(),
         startArrowhead: e.startArrowhead() as Arrowhead,
         endArrowhead: e.endArrowhead() as Arrowhead,
         elbowed: e.elbowed()
@@ -149,28 +131,18 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
     case "line":
       return {
         ...baseElement,
-        type: elementType,
+        type: elType,
         points: points,
-        lastCommittedPoint: [e.lastCommittedPoint()?.x(), e.lastCommittedPoint()?.y()],
-        startBinding: {
-          elementId: e.startBinding()?.elementId(),
-          focus: e.startBinding()?.focus(),
-          gap: e.startBinding()?.gap(),
-          fixedPoint: e.startBinding()?.fixedPoint()
-        },
-        endBinding: {
-          elementId: e.endBinding()?.elementId(),
-          focus: e.endBinding()?.focus(),
-          gap: e.endBinding()?.gap(),
-          fixedPoint: e.endBinding()?.fixedPoint()
-        },
+        lastCommittedPoint: e.lastCommittedPoint(),
+        startBinding: e.startBinding(),
+        endBinding: e.endBinding(),
         startArrowhead: e.startArrowhead() as Arrowhead,
         endArrowhead: e.endArrowhead() as Arrowhead,
       } as DucLinearElement;
     case "freedraw":
       return {
         ...baseElement,
-        type: elementType,
+        type: elType,
         points: points,
         pressures: pressures,
         simulatePressure: e.simulatePressure(),
@@ -179,51 +151,51 @@ export const parseElementFromBinary = (e: BinDucElement): DucElement | null => {
     case "image":
       return {
         ...baseElement,
-        type: elementType,
+        type: elType,
         fileId: e.fileId() as FileId | null,
-        status: e.status() as "pending" | "saved" | "error",
-        scale: [e.scale()?.x(), e.scale()?.y()],
+        status: e.status(),
+        scale: (()=>{const s = e.scaleV3(); return s ? [s.x(), s.y()] : undefined; })(),
       } as DucImageElement;
     case "frame":
       return {
         ...baseElement,
-        type: elementType,
+        type: elType,
         isCollapsed: e.isCollapsed(),
         name: e.name(),
       } as DucFrameElement;
     case "group":
       return {
         ...baseElement,
-        type: elementType,
+        type: elType,
         isCollapsed: e.isCollapsed(),
         groupIdRef: e.groupIdRef(),
       } as DucGroupElement;
     case "magicframe":
       return {
         ...baseElement,
-        type: elementType,
+        type: elType,
         isCollapsed: e.isCollapsed(),
         name: e.name(),
       } as DucMagicFrameElement;
     case "selection":
       return {
         ...baseElement,
-        type: elementType,
+        type: elType,
       } as DucSelectionElement;
     case "rectangle":
       return {
         ...baseElement,
-        type: elementType,
+        type: elType,
       } as DucRectangleElement;
     case "diamond":
       return {
         ...baseElement,
-        type: elementType,
+        type: elType,
       } as DucDiamondElement;
     case "ellipse":
       return {
         ...baseElement,
-        type: elementType,
+        type: elType,
       } as DucEllipseElement;
     default:
       return null;

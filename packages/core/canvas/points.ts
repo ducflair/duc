@@ -1,8 +1,8 @@
 import type { Point } from "./types";
 
 export const getSizeFromPoints = (points: readonly Point[]) => {
-  const xs = points.map((point) => point[0]);
-  const ys = points.map((point) => point[1]);
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
   return {
     width: Math.max(...xs) - Math.min(...xs),
     height: Math.max(...ys) - Math.min(...ys),
@@ -11,7 +11,7 @@ export const getSizeFromPoints = (points: readonly Point[]) => {
 
 /** @arg dimension, 0 for rescaling only x, 1 for y */
 export const rescalePoints = (
-  dimension: 0 | 1,
+  dimension: 'x' | 'y',
   newSize: number,
   points: readonly Point[],
   normalize: boolean,
@@ -25,13 +25,24 @@ export const rescalePoints = (
   let nextMinCoordinate = Infinity;
 
   const scaledPoints = points.map((point): Point => {
-    const newCoordinate = point[dimension] * scale;
-    const newPoint = [...point];
-    newPoint[dimension] = newCoordinate;
-    if (newCoordinate < nextMinCoordinate) {
-      nextMinCoordinate = newCoordinate;
+    const newPoint = { ...point };
+    newPoint[dimension] = point[dimension] * scale;
+    if (point.handleIn) {
+      newPoint.handleIn = {
+        ...point.handleIn,
+        [dimension]: point.handleIn[dimension] * scale,
+      };
     }
-    return newPoint as unknown as Point;
+    if (point.handleOut) {
+      newPoint.handleOut = {
+        ...point.handleOut,
+        [dimension]: point.handleOut[dimension] * scale,
+      };
+    }
+    if (newPoint[dimension] < nextMinCoordinate) {
+      nextMinCoordinate = newPoint[dimension];
+    }
+    return newPoint;
   });
 
   if (!normalize) {
@@ -39,17 +50,31 @@ export const rescalePoints = (
   }
 
   if (scaledPoints.length === 2) {
-    // we don't translate two-point lines
+    // We don't translate two-point lines
     return scaledPoints;
   }
 
   const translation = minCoordinate - nextMinCoordinate;
 
-  const nextPoints = scaledPoints.map(
-    (scaledPoint) =>
-      scaledPoint.map((value, currentDimension) => {
-        return currentDimension === dimension ? value + translation : value;
-      }) as [number, number],
-  );
+  const nextPoints = scaledPoints.map((scaledPoint) => {
+    const translatedPoint = {
+      ...scaledPoint,
+      [dimension]: scaledPoint[dimension] + translation,
+    };
+    if (scaledPoint.handleIn) {
+      translatedPoint.handleIn = {
+        ...scaledPoint.handleIn,
+        [dimension]: scaledPoint.handleIn[dimension] + translation,
+      };
+    }
+    if (scaledPoint.handleOut) {
+      translatedPoint.handleOut = {
+        ...scaledPoint.handleOut,
+        [dimension]: scaledPoint.handleOut[dimension] + translation,
+      };
+    }
+    return translatedPoint;
+  });
+  
   return nextPoints;
 };

@@ -125,8 +125,8 @@ const resizeGroup = (
     const latestElement = latestElements[i];
 
     resizeElementInGroup(
-      anchor[0],
-      anchor[1],
+      anchor.x,
+      anchor.y,
       property,
       scale,
       latestElement,
@@ -181,7 +181,7 @@ const handleDimensionChange: DragInputCallbackType<
           nextHeight,
           initialHeight,
           aspectRatio,
-          [x1, y1],
+          {x: x1, y: y1},
           property,
           latestElements,
           originalElements,
@@ -286,7 +286,7 @@ const handleDimensionChange: DragInputCallbackType<
         nextHeight,
         initialHeight,
         aspectRatio,
-        [x1, y1],
+        {x: x1, y: y1},
         property,
         latestElements,
         originalElements,

@@ -4,7 +4,7 @@ pub mod duc_rs {
 }
 
 pub fn hello() -> String {
-  "Hello from ducflair-duc Rust package!".to_string()
+  "Hello from ducflair-duc Rust package! Add this to any file: use ducflair_duc::duc::*;".to_string()
 }
 
 #[cfg(test)]

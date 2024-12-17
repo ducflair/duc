@@ -2,32 +2,41 @@ import * as flatbuffers from 'flatbuffers';
 import { AppState as BinAppState, BinaryFiles as BinBinaryFiles, ExportedDataState, BinaryFilesEntry, BinaryFileData, DucElement as BinDucElement } from '../duc';
 import { fileSave } from '../../../data/filesystem';
 import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, EXPORT_SOURCE, MIME_TYPES, VERSIONS } from '../../../constants';
-import { cleanAppStateForExport } from '../../../appState';
 import { DucElement } from '../../../element/types';
 import { AppState, BinaryFiles } from '../../../types';
 import { serializeDucElement } from './serialize/serializeElementFromDuc';
 import { serializeAppState } from './serialize/serializeAppStateFromDuc';
 import { serializeBinaryFiles } from './serialize/serializeBinaryFilesFromDuc';
+import { restore } from '../../../data/restore';
 
-export const serializeAsFlatBuffers = (
+export const serializeAsFlatBuffers = async (
   elements: readonly DucElement[],
   appState: Partial<AppState>,
   files: BinaryFiles,
-  type: "local" | "database",
-): Uint8Array => {
+): Promise<Uint8Array> => {
   const builder = new flatbuffers.Builder(1024);
 
+  const sanitized = restore(
+    {
+      elements,
+      appState,
+      files,
+    }, null, null, {
+      refreshDimensions: false,
+    }
+  );
+
   // Serialize elements
-  const elementOffsets = elements.map((element) => {
+  const elementOffsets = sanitized.elements.map((element) => {
     return serializeDucElement(builder, element);
   });
   const elementsOffset = ExportedDataState.createElementsVector(builder, elementOffsets);
 
   // Serialize appState
-  const appStateOffset = serializeAppState(builder, appState);
+  const appStateOffset = serializeAppState(builder, sanitized.appState);
 
   // Serialize files
-  const binaryFilesOffset = serializeBinaryFiles(builder, files);
+  const binaryFilesOffset = serializeBinaryFiles(builder, sanitized.files);
 
   // Serialize ExportedDataState
   const typeOffset = builder.createString(EXPORT_DATA_TYPES.duc);
@@ -35,7 +44,7 @@ export const serializeAsFlatBuffers = (
 
   ExportedDataState.startExportedDataState(builder);
   ExportedDataState.addType(builder, typeOffset);
-  ExportedDataState.addVersion(builder, VERSIONS.excalidraw);
+  ExportedDataState.addVersion(builder, VERSIONS.duc);
   ExportedDataState.addSource(builder, sourceOffset);
   ExportedDataState.addElements(builder, elementsOffset);
   ExportedDataState.addAppState(builder, appStateOffset);
@@ -54,15 +63,20 @@ export const saveAsFlatBuffers = async (
   files: BinaryFiles,
   name: string = DEFAULT_FILENAME,
 ) => {
-  const serialized = serializeAsFlatBuffers(elements, appState, files, "local");
-  const blob = new Blob([serialized], {
-    type: MIME_TYPES.duc,
-  });
-
-  const fileHandle = await fileSave(blob, {
-    name,
-    extension: "duc",
-    description: "Duc file",
-  });
-  return { fileHandle };
+  try {
+    const serialized = await serializeAsFlatBuffers(elements, appState, files);
+    const blob = new Blob([serialized], {
+      type: MIME_TYPES.duc,
+    });
+  
+    const fileHandle = await fileSave(blob, {
+      name,
+      extension: "duc",
+      description: "Duc file",
+    });
+    return { fileHandle };
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to save file");
+  }
 };
