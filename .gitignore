@@ -1,7 +1,28 @@
+# deps
 node_modules
-dist
+
+# generated content
+.contentlayer
+.content-collections
+.source
+
+# test & build
+/coverage
+/.next/
+/out/
+/build
+*.tsbuildinfo
 .turbo
+dist
+
+# misc
 .DS_Store
+*.pem
+/.pnp
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # sst
 .sst

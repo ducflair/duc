@@ -8,9 +8,6 @@ const config = {
   devIndicators: {
     appIsrStatus: false,
   },
-  experimental: {
-    turbo: false,
-  }
 };
 
 export default withMDX(config);
