@@ -7,7 +7,7 @@ import Link from 'next/link';
 export const siteName = 'Duc';
 export const baseUrl = 'https://duc.ducflair.com';
 export const description = 'Duc is a binary file format conceived for a new era of CAD design.';
-export const githubDocsPath = 'apps/docs/content/docs';
+export const githubDocsPath = 'apps/web/content/docs';
 /**
  * Shared layout configurations
  *
