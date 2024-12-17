@@ -1,13 +1,6 @@
 {
     "typescript.preferences.importModuleSpecifier": "non-relative",
     "svg.preview.background": "dark-transparent",
-    "i18n-ally.autoDetection": false,
-    "i18n-ally.dirStructure": "file",
-    "i18n-ally.extract.keyMaxLength": 300,
-    "i18n-ally.namespace": true,
-    "i18n-ally.keystyle": "nested",
-    "i18n-ally.localesPaths": "packages/locales/messages/",
-    "i18n-ally.pathMatcher": "{namespaces}/{locale}.json",
     "cSpell.words": [
         "presigner"
     ],
