@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: Website Production
     timeout-minutes: 22
+    outputs:
+      deployment_status: ${{ steps.deploy.outputs.status }}
+      
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -55,3 +58,7 @@ jobs:
           duration=$((end_time - start_time))
           echo "status=$status" >> $GITHUB_OUTPUT
           echo "duration=$((duration / 60))m $((duration % 60))s" >> $GITHUB_OUTPUT
+
+      - name: Fail the job if deployment failed
+        if: steps.deploy.outputs.status == 'failure'
+        run: exit 1
