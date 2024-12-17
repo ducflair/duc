@@ -1,5 +1,5 @@
 import { register } from "../actions/register";
-import { FONT_FAMILY, VERTICAL_ALIGN } from "../constants";
+import { FONT_FAMILY, TEXT_ALIGN, VERTICAL_ALIGN } from "../constants";
 import type { ExcalidrawProps } from "../types";
 import { getFontString, updateActiveTool } from "../utils";
 import { setCursorForShape } from "../cursor";
@@ -286,7 +286,7 @@ export const createPlaceholderEmbeddableLabel = (
     fontFamily,
     fontSize,
     text: wrapText(text, fontString, element.width - 20),
-    textAlign: "center",
+    textAlign: TEXT_ALIGN.CENTER,
     verticalAlign: VERTICAL_ALIGN.MIDDLE,
     angle: element.angle ?? 0,
   });

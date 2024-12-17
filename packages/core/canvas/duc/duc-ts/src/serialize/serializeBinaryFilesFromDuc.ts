@@ -28,7 +28,7 @@ const serializeBinaryFiles = (builder: flatbuffers.Builder, files: BinaryFilesTy
       mimeTypeOffset,
       idOffset,
       dataOffset,
-      BigInt(file.created),
+      BigInt(file.created || 0),
       BigInt(file.lastRetrieved || 0)
     );
 

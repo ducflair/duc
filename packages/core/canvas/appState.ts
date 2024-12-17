@@ -22,14 +22,13 @@ export const getDefaultAppState = (): Omit<
 > => {
   return {
     scope: "mm",
-    writingLayer: "notes",
     groups: [],
     showWelcomeScreen: false,
     theme: THEME.LIGHT,
     collaborators: new Map(),
     currentChartType: "bar",
     currentItemBackgroundColor: DEFAULT_ELEMENT_PROPS.backgroundColor,
-    currentItemEndArrowhead: "arrow",
+    currentItemEndArrowhead: "triangle",
     currentItemFillStyle: DEFAULT_ELEMENT_PROPS.fillStyle,
     currentItemFontFamily: DEFAULT_FONT_FAMILY,
     currentItemFontSize: DEFAULT_FONT_SIZE,
@@ -124,15 +123,14 @@ export const getDefaultAppState = (): Omit<
     scaleRatioLocked: false,
     displayAllPointDistances: false,
     displayDistanceOnDrawing: true,
+    displayAllPointInfoSelected: false,
     displayAllPointCoordinates: false,
-    displayAllPointInfoSelected: true,
     
-    enableLineBendingOnEdit: false,
-    allowIndependentCurveHandles: false,
     coordDecimalPlaces: 2,
 
     displayRootAxis: false,
     selectionDirection: null,
+    lineBendingMode: false,
   };
 };
 
@@ -153,10 +151,9 @@ const APP_STATE_STORAGE_CONF = (<
 >(config: { [K in keyof T]: K extends keyof AppState ? T[K] : never }) =>
   config)({
   scope: { browser: true, export: true, server: true },
-  writingLayer: { browser: true, export: true, server: true },
   groups: { browser: true, export: true, server: true },
   showWelcomeScreen: { browser: true, export: false, server: false },
-  theme: { browser: true, export: false, server: false },
+  theme: { browser: false, export: false, server: false },
   collaborators: { browser: false, export: false, server: false },
   currentChartType: { browser: true, export: false, server: false },
   currentItemBackgroundColor: { browser: true, export: false, server: false },
@@ -266,11 +263,10 @@ const APP_STATE_STORAGE_CONF = (<
   displayDistanceOnDrawing: { browser: false, export: true, server: true },
   displayAllPointCoordinates: { browser: false, export: true, server: true },
   displayAllPointInfoSelected: { browser: false, export: true, server: true },
-  enableLineBendingOnEdit: { browser: false, export: true, server: true },
-  allowIndependentCurveHandles: { browser: false, export: true, server: true },
   coordDecimalPlaces: { browser: false, export: true, server: true },
   displayRootAxis: { browser: false, export: false, server: false },
   selectionDirection: { browser: false, export: false, server: false },
+  lineBendingMode: { browser: false, export: false, server: false },
 });
 
 const _clearAppStateForStorage = <
@@ -322,3 +318,4 @@ export const isHandToolActive = ({
 }) => {
   return activeTool.type === "hand";
 };
+

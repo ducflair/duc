@@ -6,10 +6,13 @@ import {
 import {
   DEFAULT_FONT_FAMILY,
   DEFAULT_FONT_SIZE,
+  FILL_STYLE,
+  STROKE_STYLE,
+  TEXT_ALIGN,
   VERTICAL_ALIGN,
 } from "./constants";
 import { newElement, newLinearElement, newTextElement } from "./element";
-import { NonDeletedDucElement } from "./element/types";
+import { FractionalIndex, NonDeletedDucElement } from "./element/types";
 import { randomId } from "./random";
 
 export type ChartElements = readonly NonDeletedDucElement[];
@@ -166,14 +169,14 @@ const bgColors = getAllColorsSpecificShade(DEFAULT_CHART_COLOR_INDEX);
 // Put all the common properties here so when the whole chart is selected
 // the properties dialog shows the correct selected values
 const commonProps = {
-  fillStyle: "hachure",
+  fillStyle: FILL_STYLE.hachure,
   fontFamily: DEFAULT_FONT_FAMILY,
   fontSize: DEFAULT_FONT_SIZE,
   opacity: 100,
   roughness: 1,
   strokeColor: COLOR_PALETTE.black,
   roundness: null,
-  strokeStyle: "solid",
+  strokeStyle: STROKE_STYLE.solid,
   strokeWidth: 1,
   verticalAlign: VERTICAL_ALIGN.MIDDLE,
   locked: false,
@@ -206,8 +209,8 @@ const chartXLabels = (
         
         angle: 5.87,
         fontSize: 16,
-        textAlign: "center",
-        verticalAlign: "top",
+        textAlign: TEXT_ALIGN.CENTER,
+        verticalAlign: VERTICAL_ALIGN.TOP,
       });
     }) || []
   );
@@ -227,7 +230,7 @@ const chartYLabels = (
     x: x - BAR_GAP,
     y: y - BAR_GAP,
     text: "0",
-    textAlign: "right",
+    textAlign: TEXT_ALIGN.RIGHT,
   });
 
   const maxYLabel = newTextElement({
@@ -237,7 +240,7 @@ const chartYLabels = (
     x: x - BAR_GAP,
     y: y - BAR_HEIGHT - minYLabel.height / 2,
     text: Math.max(...spreadsheet.values).toLocaleString(),
-    textAlign: "right",
+    textAlign: TEXT_ALIGN.RIGHT,
   });
 
   return [minYLabel, maxYLabel];
@@ -262,8 +265,8 @@ const chartLines = (
     // endArrowhead: null,
     width: chartWidth,
     points: [
-      [0, 0],
-      [chartWidth, 0],
+      {x: 0, y: 0},
+      {x: chartWidth, y: 0},
     ],
   });
 
@@ -278,8 +281,8 @@ const chartLines = (
     // endArrowhead: null,
     height: chartHeight,
     points: [
-      [0, 0],
-      [0, -chartHeight],
+      {x: 0, y: 0},
+      {x: 0, y: -chartHeight},
     ],
   });
 
@@ -292,12 +295,12 @@ const chartLines = (
     y: y - BAR_HEIGHT - BAR_GAP,
     // startArrowhead: null,
     // endArrowhead: null,
-    strokeStyle: "dotted",
+    strokeStyle: STROKE_STYLE.dotted,
     width: chartWidth,
     opacity: GRID_OPACITY,
     points: [
-      [0, 0],
-      [chartWidth, 0],
+      {x: 0, y: 0},
+      {x: chartWidth, y: 0},
     ],
   });
 
@@ -324,7 +327,7 @@ const chartBaseElements = (
         x: x + chartWidth / 2,
         y: y - BAR_HEIGHT - BAR_GAP * 2 - DEFAULT_FONT_SIZE,
         roundness: null,
-        textAlign: "center",
+        textAlign: TEXT_ALIGN.CENTER,
       })
     : null;
 
@@ -339,7 +342,7 @@ const chartBaseElements = (
         width: chartWidth,
         height: chartHeight,
         strokeColor: COLOR_PALETTE.black,
-        fillStyle: "solid",
+        fillStyle: FILL_STYLE.solid,
         opacity: 6,
       })
     : null;
@@ -403,14 +406,14 @@ const chartTypeLine = (
   for (const value of spreadsheet.values) {
     const cx = index * (BAR_WIDTH + BAR_GAP);
     const cy = -(value / max) * BAR_HEIGHT;
-    points.push([cx, cy]);
+    points.push({x: cx, y: cy});
     index++;
   }
 
-  const maxX = Math.max(...points.map((element) => element[0]));
-  const maxY = Math.max(...points.map((element) => element[1]));
-  const minX = Math.min(...points.map((element) => element[0]));
-  const minY = Math.min(...points.map((element) => element[1]));
+  const maxX = Math.max(...points.map((element) => element.x));
+  const maxY = Math.max(...points.map((element) => element.y));
+  const minX = Math.min(...points.map((element) => element.x));
+  const minY = Math.min(...points.map((element) => element.y));
 
   const line = newLinearElement({
     backgroundColor,
@@ -424,7 +427,7 @@ const chartTypeLine = (
     height: maxY - minY,
     width: maxX - minX,
     strokeWidth: 2,
-    points: points as any,
+    points: points,
   });
 
   const dots = spreadsheet.values.map((value, index) => {
@@ -434,7 +437,7 @@ const chartTypeLine = (
       backgroundColor,
       groupIds: [groupId],
       ...commonProps,
-      fillStyle: "solid",
+      fillStyle: FILL_STYLE.solid,
       strokeWidth: 2,
       type: "ellipse",
       x: x + cx + BAR_WIDTH / 2,
@@ -457,11 +460,11 @@ const chartTypeLine = (
       // startArrowhead: null,
       // endArrowhead: null,
       height: cy,
-      strokeStyle: "dotted",
+      strokeStyle: STROKE_STYLE.dotted,
       opacity: GRID_OPACITY,
       points: [
-        [0, 0],
-        [0, cy],
+        {x: 0, y: 0},
+        {x: 0, y: cy},
       ],
     });
   });

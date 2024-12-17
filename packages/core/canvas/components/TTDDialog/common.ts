@@ -1,13 +1,9 @@
-import { MermaidOptions } from "@excalidraw/mermaid-to-excalidraw";
-import { MermaidToExcalidrawResult } from "@excalidraw/mermaid-to-excalidraw/dist/interfaces";
-import {
-  DEFAULT_EXPORT_PADDING,
-  DEFAULT_FONT_SIZE,
-  EDITOR_LS_KEYS,
-} from "../../constants";
+import type { MermaidConfig } from "@excalidraw/mermaid-to-excalidraw";
+import type { MermaidToExcalidrawResult } from "@excalidraw/mermaid-to-excalidraw/dist/interfaces";
+import { DEFAULT_EXPORT_PADDING, EDITOR_LS_KEYS } from "../../constants";
 import { convertToExcalidrawElements, exportToCanvas } from "../../index";
-import { NonDeletedDucElement } from "../../element/types";
-import { AppClassProperties, BinaryFiles } from "../../types";
+import type { NonDeletedDucElement } from "../../element/types";
+import type { AppClassProperties, BinaryFiles } from "../../types";
 import { canvasToBlob } from "../../data/blob";
 import { EditorLocalStorage } from "../../data/EditorLocalStorage";
 import { t } from "../../i18n";
@@ -38,7 +34,7 @@ export interface MermaidToExcalidrawLibProps {
   api: Promise<{
     parseMermaidToExcalidraw: (
       definition: string,
-      options: MermaidOptions,
+      config?: MermaidConfig,
     ) => Promise<MermaidToExcalidrawResult>;
   }>;
 }
@@ -78,30 +74,21 @@ export const convertMermaidToExcalidraw = async ({
 
     let ret;
     try {
-      ret = await api.parseMermaidToExcalidraw(mermaidDefinition, {
-        fontSize: DEFAULT_FONT_SIZE,
-      });
+      ret = await api.parseMermaidToExcalidraw(mermaidDefinition);
     } catch (err: any) {
       ret = await api.parseMermaidToExcalidraw(
         mermaidDefinition.replace(/"/g, "'"),
-        {
-          fontSize: DEFAULT_FONT_SIZE,
-        },
       );
     }
     const { elements, files } = ret;
     setError(null);
 
-    if (files) {
-
-      // FIXME: Mermaid disabled for now because it imports from a lib a wrong type
-      // data.current = {
-      //   elements: convertToExcalidrawElements(elements, {
-      //     regenerateIds: true,
-      //   }),
-      //   files,
-      // };
-    }
+    data.current = {
+      elements: convertToExcalidrawElements(elements, {
+        regenerateIds: true,
+      }),
+      files,
+    };
 
     const canvas = await exportToCanvas({
       elements: data.current.elements,

@@ -25,7 +25,6 @@ import {
   OrderedDucElement,
 } from "./element/types";
 import { Action } from "./actions/types";
-import { Point as RoughPoint } from "roughjs/bin/geometry";
 import { LinearElementEditor } from "./element/linearElementEditor";
 import { SuggestedBinding } from "./element/binding";
 import { ImportedDataState } from "./data/types";
@@ -38,15 +37,30 @@ import { isOverScrollBars } from "./scene/scrollbars";
 import { MaybeTransformHandleType } from "./element/transformHandles";
 import Library from "./data/library";
 import type { FileSystemHandle } from "./data/filesystem";
-import type { IMAGE_MIME_TYPES, MIME_TYPES } from "./constants";
+import type { BEZIER_MIRRORING, IMAGE_MIME_TYPES, MIME_TYPES } from "./constants";
 import { SnapLine } from "./snapping";
 import { Merge, MaybePromise, ValueOf, MakeBrand, Mutable } from "./utility-types";
 import { SupportedMeasures } from "./duc/utils/measurements";
-import { WritingLayers } from "./duc/utils/writingLayers";
 import { StoreActionType } from "./store";
 import { ElementUpdate } from "./element/mutateElement";
+import Scene from "./scene/Scene";
 
-export type Point = Readonly<RoughPoint>;
+
+export interface BezierHandle {
+  x: number;
+  y: number;
+}
+
+export type BezierMirroring = ValueOf<typeof BEZIER_MIRRORING>;
+export interface Point {
+  x: number;
+  y: number;
+  isCurve?: boolean; // defaults to false
+  mirroring?: BezierMirroring;
+  borderRadius?: number; // Defaults to the Element's borderRadius
+  handleIn?: BezierHandle;
+  handleOut?: BezierHandle;
+}
 
 export type SocketId = string & { _brand: "SocketId" };
 
@@ -132,6 +146,11 @@ export type BinaryFileData = {
    * Epoch timestamp in milliseconds.
    */
   lastRetrieved?: number;
+  /**
+   * indicates the version of the file. This can be used to determine whether
+   * the file dataURL has changed e.g. as part of restore due to schema update.
+   */
+  version?: number;
 };
 
 export type BinaryFileMetadata = Omit<BinaryFileData, "dataURL">;
@@ -198,7 +217,6 @@ export type StaticCanvasAppState = Readonly<
     /** null indicates transparent bg */
     viewBackgroundColor: AppState["viewBackgroundColor"] | null;
     scope: AppState["scope"];
-    writingLayer: AppState["writingLayer"];
     groups: AppState["groups"];
     exportScale: AppState["exportScale"];
     selectedElementsAreBeingDragged: AppState["selectedElementsAreBeingDragged"];
@@ -238,6 +256,7 @@ export type InteractiveCanvasAppState = Readonly<
     editingTextElement: AppState["editingTextElement"];
     elementHovered: AppState["elementHovered"];
     selectionDirection: AppState["selectionDirection"];
+    activeTool: AppState["activeTool"];
   }
 >;
 
@@ -320,7 +339,6 @@ export interface AppState extends Ducfig {
   editingLinearElement: LinearElementEditor | null;
   viewBackgroundColor: string;
   scope: SupportedMeasures,
-  writingLayer: WritingLayers,
   groups: DucGroup[];
   scrollX: number;
   scrollY: number;
@@ -421,16 +439,12 @@ export interface AppState extends Ducfig {
   displayDistanceOnDrawing: boolean;
   displayAllPointCoordinates: boolean;
   displayAllPointInfoSelected: boolean;
-  enableLineBendingOnEdit: boolean;
-
-  // if false the curve handles are parallel, if true the curve handles are independent 
-  // (this only takes place if the point as other points associated with it, making it a curve)
-  allowIndependentCurveHandles: boolean; 
-  
+    
   coordDecimalPlaces: number;
 
   displayRootAxis: boolean;
   selectionDirection: 'left' | 'right' | null;
+  lineBendingMode: boolean;
 }
 
 export type UIAppState = Omit<
@@ -691,6 +705,8 @@ export type AppClassProperties = {
   closeEyeDropper: App["closeEyeDropper"];
   openEyeDropper: App["openEyeDropper"];
   getEyeDropper: App["getEyeDropper"];
+  rerenderCanvas: App["rerenderCanvas"];
+  setAppState: App["setAppState"];
   // setPlugins: App["setPlugins"];
   // plugins: App["plugins"];
 };
@@ -773,12 +789,12 @@ export interface DucImperativeAPI {
   canvas: {
     resetScene: InstanceType<typeof App>["resetScene"];
     rerender: InstanceType<typeof App>["rerenderCanvas"];
+    rerenderImages: InstanceType<typeof App>["rerenderImages"];
     updateScene: InstanceType<typeof App>["updateScene"];
     scrollToContent: InstanceType<typeof App>["scrollToContent"];
     scrollToRoot: InstanceType<typeof App>["scrollToRoot"];
     toggleSnapMode: InstanceType<typeof App>["toggleSnapMode"];
     setCurrentScope: InstanceType<typeof App>["setCurrentScope"];
-    setWritingLayer: InstanceType<typeof App>["setWritingLayer"];
     updateGroups: InstanceType<typeof App>["updateGroups"];
     mutateGroup: InstanceType<typeof App>["mutateGroup"];
     setActiveTool: InstanceType<typeof App>["setActiveTool"];
@@ -787,6 +803,7 @@ export interface DucImperativeAPI {
     closeEyeDropper: InstanceType<typeof App>["closeEyeDropper"];
     getEyeDropper: InstanceType<typeof App>["getEyeDropper"];
     handleCanvasContextMenu: InstanceType<typeof App>["handleCanvasContextMenu"];
+    maybeUnfollowRemoteUser: InstanceType<typeof App>["maybeUnfollowRemoteUser"];
   };
   state: () => AppClassProperties
   elements: {
@@ -799,10 +816,12 @@ export interface DucImperativeAPI {
     getSceneElementsMap: InstanceType<typeof App>["getSceneElementsMap"];
     getSceneElementsIncludingDeleted: InstanceType<typeof App>["getSceneElementsIncludingDeleted"];
     mutateElementWithValues: InstanceType<typeof App>["mutateElementWithValues"];
+    replaceAllElements: InstanceType<typeof Scene>["replaceAllElements"];
     sendBackwardElements: InstanceType<typeof App>["sendBackwardElements"];
     mutateSelectedElementsWithValues: InstanceType<typeof App>["mutateSelectedElementsWithValues"];
     // mutateSelectedElementsWithValues: <TElement extends Mutable<DucElement>> ( values: ElementUpdate<TElement> ) => void;
     bringForwardElements: InstanceType<typeof App>["bringForwardElements"];
+    sendToBackElements: InstanceType<typeof App>["sendToBackElements"];
     toggleCollapseFrame: InstanceType<typeof App>["toggleCollapseFrame"];
     toggleLockElement: InstanceType<typeof App>["toggleLockElement"];
     bringToFrontElement: () => void;
@@ -931,5 +950,6 @@ export type NullableGridSize =
 
 
 export type PendingDucElements = DucElement[];
+
 
 

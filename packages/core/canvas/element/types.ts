@@ -1,8 +1,11 @@
-import { Point } from "../types";
 import {
+  ARROW_HEAD,
+  FILL_STYLE,
   FONT_FAMILY,
+  IMAGE_STATUS,
   ROUNDNESS,
   STROKE_PLACEMENT,
+  STROKE_STYLE,
   TEXT_ALIGN,
   THEME,
   VERTICAL_ALIGN,
@@ -10,21 +13,23 @@ import {
 import { MakeBrand, MarkNonNullable, Merge, ValueOf } from "../utility-types";
 import { MagicCacheData } from "../data/magic";
 import { SupportedMeasures  } from "../duc/utils/measurements";
-import { WritingLayers } from "../duc/utils/writingLayers";
+import { Point } from "../types";
 
 export type ChartType = "bar" | "line";
-export type FillStyle = "hachure" | "cross-hatch" | "solid" | "zigzag";
 export type FontFamilyKeys = keyof typeof FONT_FAMILY;
 export type FontFamilyValues = typeof FONT_FAMILY[FontFamilyKeys];
 export type Theme = typeof THEME[keyof typeof THEME];
 export type FontString = string & { _brand: "fontString" };
 export type GroupId = string;
 export type PointerType = "mouse" | "pen" | "touch";
-export type StrokeRoundness = "round" | "sharp";
+export type StrokeRoundness = "round" | "sharp"; // TODO: Remove this once we migrate to new roundness system
 export type RoundnessType = ValueOf<typeof ROUNDNESS>;
-export type StrokeStyle = "solid" | "dashed" | "dotted";
+export type FillStyle = ValueOf<typeof FILL_STYLE>;
+export type StrokeStyle = ValueOf<typeof STROKE_STYLE>;
 export type StrokePlacement = ValueOf<typeof STROKE_PLACEMENT>;
 export type TextAlign = typeof TEXT_ALIGN[keyof typeof TEXT_ALIGN];
+export type ImageStatus = ValueOf<typeof IMAGE_STATUS>;
+export type Arrowhead = ValueOf<typeof ARROW_HEAD>;
 
 type VerticalAlignKeys = keyof typeof VERTICAL_ALIGN;
 export type VerticalAlign = typeof VERTICAL_ALIGN[VerticalAlignKeys];
@@ -37,6 +42,12 @@ export type Ordered<TElement extends DucElement> = TElement & {
   index: FractionalIndex;
 };
 export type OrderedDucElement = Ordered<DucElement>;
+
+// export const MIRRORING_MODE = {
+//   NONE: 0,
+//   ANGLE: 1,
+//   ANGLE_AND_LENGTH: 2,
+// } as const;
 
 export type DucNonSelectionElement = Exclude<
   DucElement,
@@ -52,10 +63,14 @@ export type DucElbowArrowElement = Merge<
   }
 >;
 
-export type FixedPoint = [number, number];
+export type FixedPoint = Point;
 
 
 export type FixedPointBinding = Merge<PointBinding, { fixedPoint: FixedPoint }>;
+export type BoundElement = {
+  id: DucLinearElement["id"];
+  type: "arrow" | "text";
+}
 
 type _DucElementBase = Readonly<{
   id: string;
@@ -63,7 +78,6 @@ type _DucElementBase = Readonly<{
   y: number;
 
   scope: SupportedMeasures;
-  writingLayer: WritingLayers;
   
   label: string;
   isVisible: boolean;
@@ -103,12 +117,7 @@ type _DucElementBase = Readonly<{
   groupIds: readonly GroupId[];
   frameId: string | null;
   /** other elements that are bound to this element */
-  boundElements:
-    | readonly Readonly<{
-        id: DucLinearElement["id"];
-        type: "arrow" | "text";
-      }>[]
-    | null;
+  boundElements: readonly Readonly<BoundElement>[] | null;
   /** epoch (ms) timestamp of last element update */
   updated: number;
   /** String in a fractional form defined by https://github.com/rocicorp/fractional-indexing.
@@ -169,7 +178,7 @@ export type DucImageElement = _DucElementBase &
     type: "image";
     fileId: FileId | null;
     /** whether respective file is persisted */
-    status: "pending" | "saved" | "error";
+    status: ImageStatus;
     /** X and Y scale factors <-1, 1>, used for image axis flipping */
     scale: [number, number];
   }>;
@@ -197,7 +206,6 @@ export type DucGroup = {
   isCollapsed: boolean;
   label: string; // FIXME: In the future we have to support history control for group Label
   scope: SupportedMeasures;
-  writingLayer: WritingLayers;
 };
 
 export type DucMagicFrameElement = _DucElementBase & {
@@ -235,6 +243,7 @@ export type DucElement =
   | DucMagicFrameElement
   | DucIframeElement
   | DucEmbeddableElement;
+
 
 
 export type DucElementTypes = DucElement["type"];
@@ -308,16 +317,7 @@ export type PointBinding = {
   fixedPoint: FixedPoint | null;
 };
 
-export type Arrowhead =
-  | "arrow"
-  | "bar"
-  | "dot" // legacy. Do not use for new elements.
-  | "circle"
-  | "circle_outline"
-  | "triangle"
-  | "triangle_outline"
-  | "diamond"
-  | "diamond_outline";
+
 
 export type DucLinearElement = _DucElementBase &
   Readonly<{

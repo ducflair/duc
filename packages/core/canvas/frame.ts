@@ -156,9 +156,9 @@ export const isCursorInFrame = (
   const [fx1, fy1, fx2, fy2] = getElementAbsoluteCoords(frame, elementsMap);
 
   return isPointWithinBounds(
-    [fx1, fy1],
-    [cursorCoords.x, cursorCoords.y],
-    [fx2, fy2],
+    {x: fx1, y: fy1},
+    {x: cursorCoords.x, y: cursorCoords.y},
+    {x: fx2, y: fy2},
   );
 };
 

@@ -6,58 +6,58 @@ import flatbuffers
 from flatbuffers.compat import import_numpy
 np = import_numpy()
 
-class Point(object):
+class SimplePoint(object):
     __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset=0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
-        x = Point()
+        x = SimplePoint()
         x.Init(buf, n + offset)
         return x
 
     @classmethod
-    def GetRootAsPoint(cls, buf, offset=0):
+    def GetRootAsSimplePoint(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-    # Point
+    # SimplePoint
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
 
-    # Point
+    # SimplePoint
     def X(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
-    # Point
+    # SimplePoint
     def Y(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
-def PointStart(builder):
+def SimplePointStart(builder):
     builder.StartObject(2)
 
 def Start(builder):
-    PointStart(builder)
+    SimplePointStart(builder)
 
-def PointAddX(builder, x):
-    builder.PrependFloat32Slot(0, x, 0.0)
+def SimplePointAddX(builder, x):
+    builder.PrependFloat64Slot(0, x, 0.0)
 
 def AddX(builder, x):
-    PointAddX(builder, x)
+    SimplePointAddX(builder, x)
 
-def PointAddY(builder, y):
-    builder.PrependFloat32Slot(1, y, 0.0)
+def SimplePointAddY(builder, y):
+    builder.PrependFloat64Slot(1, y, 0.0)
 
 def AddY(builder, y):
-    PointAddY(builder, y)
+    SimplePointAddY(builder, y)
 
-def PointEnd(builder):
+def SimplePointEnd(builder):
     return builder.EndObject()
 
 def End(builder):
-    return PointEnd(builder)
+    return SimplePointEnd(builder)

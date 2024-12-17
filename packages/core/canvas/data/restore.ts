@@ -1,16 +1,24 @@
 import type {
+  Arrowhead,
   DucArrowElement,
   DucElement,
   DucElementType,
+  DucFreeDrawElement,
   DucLinearElement,
   DucSelectionElement,
   DucTextElement,
+  FillStyle,
   FontFamilyValues,
+  ImageStatus,
   OrderedDucElement,
   PointBinding,
+  StrokePlacement,
   StrokeRoundness,
+  StrokeStyle,
+  TextAlign,
+  VerticalAlign,
 } from "../element/types";
-import type { AppState, BinaryFiles, LibraryItem } from "../types";
+import type { AppState, BezierMirroring, BinaryFiles, LibraryItem, Point } from "../types";
 import type { ImportedDataState, LegacyAppState } from "./types";
 import {
   getNonDeletedElements,
@@ -36,6 +44,16 @@ import {
   DEFAULT_ELEMENT_PROPS,
   DEFAULT_GRID_SIZE,
   DEFAULT_GRID_STEP,
+  STROKE_PLACEMENT,
+  FILL_STYLE,
+  ROUGHNESS,
+  STROKE_STYLE,
+  STROKE_WIDTH,
+  TEXT_ALIGN,
+  VERTICAL_ALIGN,
+  ARROW_HEAD,
+  IMAGE_STATUS,
+  BEZIER_MIRRORING,
 } from "../constants";
 import { getDefaultAppState } from "../appState";
 import { LinearElementEditor } from "../element/linearElementEditor";
@@ -43,10 +61,11 @@ import { bumpVersion } from "../element/mutateElement";
 import {
   getUpdatedTimestamp,
   isFiniteNumber,
+  migratePoints,
   updateActiveTool,
 } from "../utils";
 import { arrayToMap } from "../utils";
-import type { MarkOptional, Mutable } from "../utility-types";
+import type { MarkOptional, Mutable, ValueOf } from "../utility-types";
 import { detectLineHeight, getContainerElement } from "../element/textElement";
 import { normalizeLink } from "./url";
 import { syncInvalidIndices } from "../fractionalIndex";
@@ -58,6 +77,7 @@ import {
   getNormalizedGridStep,
   getNormalizedZoom,
 } from "../scene";
+import { ScaleFactors, SupportedMeasures } from "../duc/utils/measurements";
 
 type RestoredAppState = Omit<
   AppState,
@@ -114,7 +134,7 @@ const repairBinding = (
     ...binding,
     focus: binding.focus || 0,
     fixedPoint: isElbowArrow(element)
-      ? normalizeFixedPoint(binding.fixedPoint ?? [0, 0])
+      ? normalizeFixedPoint(binding.fixedPoint ?? { x: 0, y: 0 })
       : null,
   };
 };
@@ -147,41 +167,28 @@ const restoreElementWithProperties = <
     index: element.index ?? null,
     isDeleted: element.isDeleted ?? false,
     id: element.id || randomId(),
-    fillStyle: element.fillStyle || DEFAULT_ELEMENT_PROPS.fillStyle,
     strokeWidth: element.strokeWidth || DEFAULT_ELEMENT_PROPS.strokeWidth,
-    strokeStyle: element.strokeStyle ?? DEFAULT_ELEMENT_PROPS.strokeStyle,
-    strokePlacement: element.strokePlacement ?? DEFAULT_ELEMENT_PROPS.strokePlacement,
-    roughness: element.roughness ?? DEFAULT_ELEMENT_PROPS.roughness,
-    opacity:
-      element.opacity == null ? DEFAULT_ELEMENT_PROPS.opacity : element.opacity,
-    angle: element.angle || 0,
+    fillStyle: isValidFillStyleValue(element.fillStyle),
+    strokeStyle: isValidStrokeStyleValue(element.strokeStyle),
+    strokePlacement: isValidStrokePlacementValue(element.strokePlacement),
+    opacity: isValidOpacityValue(element.opacity),
+    angle: isValidAngleValue(element.angle),
     x: extra.x ?? element.x ?? 0,
     y: extra.y ?? element.y ?? 0,
     strokeColor: element.strokeColor || DEFAULT_ELEMENT_PROPS.strokeColor,
-    backgroundColor:
-      element.backgroundColor || DEFAULT_ELEMENT_PROPS.backgroundColor,
-    scope: element.scope || "lost",
+    backgroundColor: element.backgroundColor || DEFAULT_ELEMENT_PROPS.backgroundColor,
+    scope: isValidScopeValue(element.scope),
     isStrokeDisabled: element.isStrokeDisabled ?? false,
     isBackgroundDisabled: element.isBackgroundDisabled ?? false,
-    writingLayer: element.writingLayer || "notes",
-    label: element.label || "Lost Element Label",
+    label: element.label || DEFAULT_ELEMENT_PROPS.label,
     isVisible: element.isVisible ?? DEFAULT_ELEMENT_PROPS.isVisible,
     width: element.width || 0,
     height: element.height || 0,
     seed: element.seed ?? 1,
     groupIds: element.groupIds ?? [],
     frameId: element.frameId ?? null,
-    roundness: element.roundness
-      ? element.roundness
-      : element.strokeSharpness === "round"
-      ? {
-          // for old elements that would now use adaptive radius algo,
-          // use legacy algo instead
-          type: isUsingAdaptiveRadius(element.type)
-            ? ROUNDNESS.LEGACY
-            : ROUNDNESS.PROPORTIONAL_RADIUS,
-        }
-      : null,
+    roughness: element.roughness ?? DEFAULT_ELEMENT_PROPS.roughness, // TODO: This is a legacy property that we should remove
+    roundness: null, // TODO: This is a legacy property that we should remove
     boundElements: element.boundElementIds
       ? element.boundElementIds.map((id) => ({ type: "arrow", id }))
       : element.boundElements ?? [],
@@ -235,8 +242,8 @@ const restoreElement = (
         fontSize,
         fontFamily,
         text,
-        textAlign: element.textAlign || DEFAULT_TEXT_ALIGN,
-        verticalAlign: element.verticalAlign || DEFAULT_VERTICAL_ALIGN,
+        textAlign: isValidTextAlignValue(element.textAlign),
+        verticalAlign: isValidVerticalAlignValue(element.verticalAlign),
         containerId: element.containerId ?? null,
         originalText: element.originalText || text,
         autoResize: element.autoResize ?? true,
@@ -252,8 +259,11 @@ const restoreElement = (
 
       return element;
     case "freedraw": {
+
+      const points = restoreElementPoints({points: element.points as Point[], x: element.x, y: element.y, width: element.width, height: element.height});
+
       return restoreElementWithProperties(element, {
-        points: element.points,
+        points,
         lastCommittedPoint: null,
         simulatePressure: element.simulatePressure,
         pressures: element.pressures,
@@ -261,68 +271,49 @@ const restoreElement = (
     }
     case "image":
       return restoreElementWithProperties(element, {
-        status: element.status || "pending",
+        status: isValidImageStatusValue(element.status),
         fileId: element.fileId,
-        scale: element.scale || [1, 1],
+        scale: isValidImageScaleValue(element.scale),
       });
+
     case "line":
     // @ts-ignore LEGACY type
     // eslint-disable-next-line no-fallthrough
-    case "draw":
-      const { startArrowhead = null, endArrowhead = null } = element;
+    case "draw": {
+      const { startArrowhead, endArrowhead } = element;
       let x = element.x;
       let y = element.y;
-      let points = // migrate old arrow model to new one
-        !Array.isArray(element.points) || element.points.length < 2
-          ? [
-              [0, 0],
-              [element.width, element.height],
-            ]
-          : element.points;
 
-      if (points[0][0] !== 0 || points[0][1] !== 0) {
-        ({ points, x, y } = LinearElementEditor.getNormalizedPoints(element));
-      }
+      const points = restoreElementPoints({points: element.points as Point[], x, y, width: element.width, height: element.height});
 
       return restoreElementWithProperties(element, {
-        type:
-          (element.type as DucElementType | "draw") === "draw"
-            ? "line"
-            : element.type,
+        type: (element.type as DucElementType | "draw") === "draw" ? "line" : element.type,
         startBinding: repairBinding(element, element.startBinding),
         endBinding: repairBinding(element, element.endBinding),
         lastCommittedPoint: null,
-        startArrowhead,
-        endArrowhead,
+        startArrowhead: isValidArrowheadValue(startArrowhead), 
+        endArrowhead: isValidArrowheadValue(endArrowhead),
         points,
         x,
         y,
         ...getSizeFromPoints(points),
       });
+    }
+
     case "arrow": {
       const { startArrowhead = null, endArrowhead = "arrow" } = element;
       let x = element.x;
       let y = element.y;
-      let points = // migrate old arrow model to new one
-        !Array.isArray(element.points) || element.points.length < 2
-          ? [
-              [0, 0],
-              [element.width, element.height],
-            ]
-          : element.points;
 
-      if (points[0][0] !== 0 || points[0][1] !== 0) {
-        ({ points, x, y } = LinearElementEditor.getNormalizedPoints(element));
-      }
+      const points = restoreElementPoints({points: element.points as Point[], x, y, width: element.width, height: element.height});
 
-      // TODO: Separate arrow from linear element
       return restoreElementWithProperties(element as DucArrowElement, {
         type: element.type,
         startBinding: repairBinding(element, element.startBinding),
         endBinding: repairBinding(element, element.endBinding),
         lastCommittedPoint: null,
-        startArrowhead,
-        endArrowhead,
+        startArrowhead: isValidArrowheadValue(startArrowhead),
+        endArrowhead: isValidArrowheadValue(endArrowhead),
         points,
         x,
         y,
@@ -330,6 +321,7 @@ const restoreElement = (
         ...getSizeFromPoints(points),
       });
     }
+
 
     // generic elements
     case "ellipse":
@@ -351,6 +343,28 @@ const restoreElement = (
   }
   return null;
 };
+
+
+const restoreElementPoints = ({points: oldPoints, x, y, width, height}: {points: Point[], x: number, y: number, width: number, height: number}) => {
+
+  // Migrate old arrow model or ensure a minimum of two points
+  let points: Point[] = (typeof oldPoints === "object" && Array.isArray(oldPoints) && oldPoints.length >= 2)
+    ? migratePoints(oldPoints)
+    : [
+        { x: 0, y: 0 },
+        { x: width, y: height },
+      ];
+
+  // Normalize if points don’t start from the origin
+  if (points[0].x !== 0 || points[0].y !== 0) {
+    ({ points, x, y } = LinearElementEditor.getNormalizedPoints({points, x, y}));
+  }
+
+  return points.map((point) => ({
+    ...point,
+    mirroring: isValidBezierMirroringValue(point.mirroring),
+  }));
+}
 
 /**
  * Repairs container element's boundElements array by removing duplicates and
@@ -464,6 +478,7 @@ export const restoreElements = (
   // used to detect duplicate top-level element ids
   const existingIds = new Set<string>();
   const localElementsMap = localElements ? arrayToMap(localElements) : null;
+
   const restoredElements = syncInvalidIndices(
     (elements || []).reduce((elements, element) => {
       // filtering out selection, which is legacy, no longer kept in elements,
@@ -489,6 +504,8 @@ export const restoreElements = (
       return elements;
     }, [] as DucElement[]),
   );
+
+  // console.log("restoredElements", restoredElements);
 
   if (!opts?.repairBindings) {
     return restoredElements;
@@ -647,6 +664,14 @@ export const restoreAppState = (
     gridStep: getNormalizedGridStep(
       isFiniteNumber(appState.gridStep) ? appState.gridStep : DEFAULT_GRID_STEP,
     ),
+    currentItemFillStyle: isValidFillStyleValue(appState.currentItemFillStyle),
+    currentItemStrokeStyle: isValidStrokeStyleValue(appState.currentItemStrokeStyle),
+    currentItemStrokePlacement: isValidStrokePlacementValue(appState.currentItemStrokePlacement),
+    currentItemOpacity: isValidOpacityValue(appState.currentItemOpacity),
+    currentItemEndArrowhead: isValidArrowheadValue(appState.currentItemEndArrowhead),
+    currentItemStartArrowhead: isValidArrowheadValue(appState.currentItemStartArrowhead),
+    currentItemTextAlign: isValidTextAlignValue(appState.currentItemTextAlign),
+    scope: isValidScopeValue(appState.scope),
   };
 };
 
@@ -711,4 +736,85 @@ export const restoreLibraryItems = (
     }
   }
   return restoredItems;
+};
+
+
+
+export const isValidStrokePlacementValue = (value: number | undefined): StrokePlacement => {
+  if (value === undefined || !Object.values(STROKE_PLACEMENT).includes(value as ValueOf<typeof STROKE_PLACEMENT>)) 
+    return DEFAULT_ELEMENT_PROPS.strokePlacement;
+  else
+    return value as StrokePlacement;
+};
+
+export const isValidFillStyleValue = (value: number | undefined): FillStyle => {
+  if (value === undefined || !Object.values(FILL_STYLE).includes(value as ValueOf<typeof FILL_STYLE>)) 
+    return DEFAULT_ELEMENT_PROPS.fillStyle;
+  else
+    return value as FillStyle;
+};
+
+export const isValidStrokeStyleValue = (value: number | undefined): StrokeStyle => {
+  if (value === undefined || !Object.values(STROKE_STYLE).includes(value as ValueOf<typeof STROKE_STYLE>)) 
+    return DEFAULT_ELEMENT_PROPS.strokeStyle;
+  else
+    return value as StrokeStyle;
+};
+
+export const isValidOpacityValue = (value: number | undefined) => {
+  if (value === undefined || value < 0 || value > Math.round(100)) return DEFAULT_ELEMENT_PROPS.opacity;
+  else return value;
+};
+
+export const isValidAngleValue = (value: number | undefined) => {
+  if (value === undefined || value < -2 * Math.PI || value > 2 * Math.PI) return DEFAULT_ELEMENT_PROPS.angle;
+  else return value;
+};
+
+export const isValidVerticalAlignValue = (value: number | undefined): VerticalAlign => {
+  if (value === undefined || !Object.values(VERTICAL_ALIGN).includes(value as ValueOf<typeof VERTICAL_ALIGN>)) 
+    return DEFAULT_VERTICAL_ALIGN;
+  else
+    return value as VerticalAlign;
+};
+
+export const isValidTextAlignValue = (value: number | undefined): TextAlign => {
+  if (value === undefined || !Object.values(TEXT_ALIGN).includes(value as ValueOf<typeof TEXT_ALIGN>)) 
+    return DEFAULT_TEXT_ALIGN;
+  else
+    return value as TextAlign;
+};
+
+// Validation function
+export const isValidScopeValue = (value: string | undefined): SupportedMeasures => {
+  if (value === undefined || !Object.keys(ScaleFactors).includes(value)) {
+    return DEFAULT_ELEMENT_PROPS.scope;
+  }
+  return value as SupportedMeasures;
+};
+
+export const isValidImageStatusValue = (value: ImageStatus | undefined): ImageStatus => {
+  if (value === undefined || !Object.values(IMAGE_STATUS).includes(value as ValueOf<typeof IMAGE_STATUS>)) 
+    return IMAGE_STATUS.pending;
+  else
+    return value;
+};
+
+export const isValidArrowheadValue = (value: Arrowhead | null | undefined): Arrowhead | null => {
+  if (value === undefined || value === null || !Object.values(ARROW_HEAD).includes(value as ValueOf<typeof ARROW_HEAD>)) 
+    return null;
+  else
+    return value;
+};
+
+export const isValidImageScaleValue = (value: [number, number] | undefined): [number, number] => {
+  if (value === undefined || value[0] === 0 || value[1] === 0) return [1, 1];
+  else return value;
+};
+
+export const isValidBezierMirroringValue = (value: BezierMirroring | undefined): BezierMirroring | undefined => {
+  if (value === undefined || !Object.values(BEZIER_MIRRORING).includes(value as ValueOf<typeof BEZIER_MIRRORING>)) 
+    return undefined;
+  else
+    return value;
 };

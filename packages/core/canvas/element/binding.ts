@@ -48,7 +48,7 @@ import type { ElementUpdate } from "./mutateElement";
 import { mutateElement } from "./mutateElement";
 import type Scene from "../scene/Scene";
 import { LinearElementEditor } from "./linearElementEditor";
-import { arrayToMap, tupleToCoors } from "../utils";
+import { arrayToMap, convertPointToTuple, tupleToCoors } from "../utils";
 import { KEYS } from "../keys";
 import { getBoundTextElement, handleBindTextResize } from "./textElement";
 import { getElementShape } from "../shapes";
@@ -758,15 +758,15 @@ export const bindPointToSnapToElementOutline = (
     const intersections = [
       ...intersectElementWithLine(
         bindableElement,
-        [point[0], point[1] - 2 * bindableElement.height],
-        [point[0], point[1] + 2 * bindableElement.height],
+        {x: point.x, y: point.y - 2 * bindableElement.height},
+        {x: point.x, y: point.y + 2 * bindableElement.height},
         FIXED_BINDING_DISTANCE,
         elementsMap,
       ),
       ...intersectElementWithLine(
         bindableElement,
-        [point[0] - 2 * bindableElement.width, point[1]],
-        [point[0] + 2 * bindableElement.width, point[1]],
+        {x: point.x - 2 * bindableElement.width, y: point.y},
+        {x: point.x + 2 * bindableElement.width, y: point.y},
         FIXED_BINDING_DISTANCE,
         elementsMap,
       ),
@@ -790,8 +790,8 @@ export const bindPointToSnapToElementOutline = (
       ? headingToMidBindPoint(otherPoint, bindableElement, aabb)
       : intersections.filter((i) =>
           isVertical
-            ? Math.abs(point[1] - i[1]) < 0.1
-            : Math.abs(point[0] - i[0]) < 0.1,
+            ? Math.abs(point.y - i.y) < 0.1
+            : Math.abs(point.x - i.x) < 0.1,
         )[0] ?? point;
   }
 
@@ -809,25 +809,25 @@ const headingToMidBindPoint = (
   switch (true) {
     case compareHeading(heading, HEADING_UP):
       return rotatePoint(
-        [(aabb[0] + aabb[2]) / 2 + 0.1, aabb[1]],
+        {x: (aabb[0] + aabb[2]) / 2 + 0.1, y: aabb[1]},
         center,
         bindableElement.angle,
       );
     case compareHeading(heading, HEADING_RIGHT):
       return rotatePoint(
-        [aabb[2], (aabb[1] + aabb[3]) / 2 + 0.1],
+        {x: aabb[2], y:(aabb[1] + aabb[3]) / 2 + 0.1},
         center,
         bindableElement.angle,
       );
     case compareHeading(heading, HEADING_DOWN):
       return rotatePoint(
-        [(aabb[0] + aabb[2]) / 2 - 0.1, aabb[3]],
+        {x: (aabb[0] + aabb[2]) / 2 - 0.1, y: aabb[3]},
         center,
         bindableElement.angle,
       );
     default:
       return rotatePoint(
-        [aabb[0], (aabb[1] + aabb[3]) / 2 - 0.1],
+        {x: aabb[0], y:(aabb[1] + aabb[3]) / 2 - 0.1},
         center,
         bindableElement.angle,
       );
@@ -841,80 +841,80 @@ export const avoidRectangularCorner = (
   const center = getCenterForElement(element);
   const nonRotatedPoint = rotatePoint(p, center, -element.angle);
 
-  if (nonRotatedPoint[0] < element.x && nonRotatedPoint[1] < element.y) {
+  if (nonRotatedPoint.x < element.x && nonRotatedPoint.y < element.y) {
     // Top left
-    if (nonRotatedPoint[1] - element.y > -FIXED_BINDING_DISTANCE) {
+    if (nonRotatedPoint.y - element.y > -FIXED_BINDING_DISTANCE) {
       return rotatePoint(
-        [element.x - FIXED_BINDING_DISTANCE, element.y],
+        {x: element.x - FIXED_BINDING_DISTANCE, y: element.y},
         center,
         element.angle,
       );
     }
     return rotatePoint(
-      [element.x, element.y - FIXED_BINDING_DISTANCE],
+      {x:element.x, y:element.y - FIXED_BINDING_DISTANCE},
       center,
       element.angle,
     );
   } else if (
-    nonRotatedPoint[0] < element.x &&
-    nonRotatedPoint[1] > element.y + element.height
+    nonRotatedPoint.x < element.x &&
+    nonRotatedPoint.y > element.y + element.height
   ) {
     // Bottom left
-    if (nonRotatedPoint[0] - element.x > -FIXED_BINDING_DISTANCE) {
+    if (nonRotatedPoint.x - element.x > -FIXED_BINDING_DISTANCE) {
       return rotatePoint(
-        [element.x, element.y + element.height + FIXED_BINDING_DISTANCE],
+        {x: element.x, y: element.y + element.height + FIXED_BINDING_DISTANCE},
         center,
         element.angle,
       );
     }
     return rotatePoint(
-      [element.x - FIXED_BINDING_DISTANCE, element.y + element.height],
+      {x: element.x - FIXED_BINDING_DISTANCE, y: element.y + element.height},
       center,
       element.angle,
     );
   } else if (
-    nonRotatedPoint[0] > element.x + element.width &&
-    nonRotatedPoint[1] > element.y + element.height
+    nonRotatedPoint.x > element.x + element.width &&
+    nonRotatedPoint.y > element.y + element.height
   ) {
     // Bottom right
     if (
-      nonRotatedPoint[0] - element.x <
+      nonRotatedPoint.x - element.x <
       element.width + FIXED_BINDING_DISTANCE
     ) {
       return rotatePoint(
-        [
-          element.x + element.width,
-          element.y + element.height + FIXED_BINDING_DISTANCE,
-        ],
+        {
+          x:element.x + element.width,
+          y:element.y + element.height + FIXED_BINDING_DISTANCE,
+        },
         center,
         element.angle,
       );
     }
     return rotatePoint(
-      [
-        element.x + element.width + FIXED_BINDING_DISTANCE,
-        element.y + element.height,
-      ],
+      {
+        x:element.x + element.width + FIXED_BINDING_DISTANCE,
+        y:element.y + element.height,
+      },
       center,
       element.angle,
     );
   } else if (
-    nonRotatedPoint[0] > element.x + element.width &&
-    nonRotatedPoint[1] < element.y
+    nonRotatedPoint.x > element.x + element.width &&
+    nonRotatedPoint.y < element.y
   ) {
     // Top right
     if (
-      nonRotatedPoint[0] - element.x <
+      nonRotatedPoint.x - element.x <
       element.width + FIXED_BINDING_DISTANCE
     ) {
       return rotatePoint(
-        [element.x + element.width, element.y - FIXED_BINDING_DISTANCE],
+        {x:element.x + element.width, y:element.y - FIXED_BINDING_DISTANCE},
         center,
         element.angle,
       );
     }
     return rotatePoint(
-      [element.x + element.width + FIXED_BINDING_DISTANCE, element.y],
+      {x:element.x + element.width + FIXED_BINDING_DISTANCE, y:element.y},
       center,
       element.angle,
     );
@@ -929,7 +929,7 @@ export const snapToMid = (
   tolerance: number = 0.05,
 ): Point => {
   const { x, y, width, height, angle } = element;
-  const center = [x + width / 2 - 0.1, y + height / 2 - 0.1] as Point;
+  const center = {x: x + width / 2 - 0.1, y: y + height / 2 - 0.1} as Point;
   const nonRotated = rotatePoint(p, center, -angle);
 
   // snap-to-center point is adaptive to element size, but we don't want to go
@@ -938,38 +938,38 @@ export const snapToMid = (
   const horizontalThrehsold = clamp(tolerance * width, 5, 80);
 
   if (
-    nonRotated[0] <= x + width / 2 &&
-    nonRotated[1] > center[1] - verticalThrehsold &&
-    nonRotated[1] < center[1] + verticalThrehsold
+    nonRotated.x <= x + width / 2 &&
+    nonRotated.y > center.y - verticalThrehsold &&
+    nonRotated.y < center.y + verticalThrehsold
   ) {
     // LEFT
-    return rotatePoint([x - FIXED_BINDING_DISTANCE, center[1]], center, angle);
+    return rotatePoint({x:x - FIXED_BINDING_DISTANCE, y:center.y}, center, angle);
   } else if (
-    nonRotated[1] <= y + height / 2 &&
-    nonRotated[0] > center[0] - horizontalThrehsold &&
-    nonRotated[0] < center[0] + horizontalThrehsold
+    nonRotated.y <= y + height / 2 &&
+    nonRotated.x > center.x - horizontalThrehsold &&
+    nonRotated.x < center.x + horizontalThrehsold
   ) {
     // TOP
-    return rotatePoint([center[0], y - FIXED_BINDING_DISTANCE], center, angle);
+    return rotatePoint({x:center.x, y:y - FIXED_BINDING_DISTANCE}, center, angle);
   } else if (
-    nonRotated[0] >= x + width / 2 &&
-    nonRotated[1] > center[1] - verticalThrehsold &&
-    nonRotated[1] < center[1] + verticalThrehsold
+    nonRotated.x >= x + width / 2 &&
+    nonRotated.y > center.y - verticalThrehsold &&
+    nonRotated.y < center.y + verticalThrehsold
   ) {
     // RIGHT
     return rotatePoint(
-      [x + width + FIXED_BINDING_DISTANCE, center[1]],
+      {x:x + width + FIXED_BINDING_DISTANCE, y:center.y},
       center,
       angle,
     );
   } else if (
-    nonRotated[1] >= y + height / 2 &&
-    nonRotated[0] > center[0] - horizontalThrehsold &&
-    nonRotated[0] < center[0] + horizontalThrehsold
+    nonRotated.y >= y + height / 2 &&
+    nonRotated.x > center.x - horizontalThrehsold &&
+    nonRotated.x < center.x + horizontalThrehsold
   ) {
     // DOWN
     return rotatePoint(
-      [center[0], y + height + FIXED_BINDING_DISTANCE],
+      {x: center.x, y: y + height + FIXED_BINDING_DISTANCE},
       center,
       angle,
     );
@@ -1006,14 +1006,14 @@ const updateBoundPoint = (
         startOrEnd === "startBinding" ? "start" : "end",
         elementsMap,
       ).fixedPoint;
-    const globalMidPoint = [
-      bindableElement.x + bindableElement.width / 2,
-      bindableElement.y + bindableElement.height / 2,
-    ] as Point;
-    const global = [
-      bindableElement.x + fixedPoint[0] * bindableElement.width,
-      bindableElement.y + fixedPoint[1] * bindableElement.height,
-    ] as Point;
+    const globalMidPoint = {
+      x: bindableElement.x + bindableElement.width / 2,
+      y: bindableElement.y + bindableElement.height / 2,
+    } as Point;
+    const global = {
+      x: bindableElement.x + fixedPoint.x * bindableElement.width,
+      y: bindableElement.y + fixedPoint.y * bindableElement.height,
+     } as Point;
     const rotatedGlobal = rotatePoint(
       global,
       globalMidPoint,
@@ -1101,10 +1101,10 @@ export const calculateFixedPointForElbowArrowBinding = (
     hoveredElement,
     elementsMap,
   );
-  const globalMidPoint = [
-    bounds[0] + (bounds[2] - bounds[0]) / 2,
-    bounds[1] + (bounds[3] - bounds[1]) / 2,
-  ] as Point;
+  const globalMidPoint = {
+    x: bounds[0] + (bounds[2] - bounds[0]) / 2,
+    y: bounds[1] + (bounds[3] - bounds[1]) / 2,
+   } as Point;
   const nonRotatedSnappedGlobalPoint = rotatePoint(
     snappedPoint,
     globalMidPoint,
@@ -1112,13 +1112,13 @@ export const calculateFixedPointForElbowArrowBinding = (
   ) as Point;
 
   return {
-    fixedPoint: normalizeFixedPoint([
-      (nonRotatedSnappedGlobalPoint[0] - hoveredElement.x) /
+    fixedPoint: normalizeFixedPoint({
+      x: (nonRotatedSnappedGlobalPoint.x - hoveredElement.x) /
         hoveredElement.width,
-      (nonRotatedSnappedGlobalPoint[1] - hoveredElement.y) /
+      y: (nonRotatedSnappedGlobalPoint.y - hoveredElement.y) /
         hoveredElement.height,
-    ]),
-  };
+    }),
+  }
 };
 
 const maybeCalculateNewGapWhenScaling = (
@@ -1162,13 +1162,11 @@ const getLinearElementEdgeCoors = (
   elementsMap: NonDeletedSceneElementsMap,
 ): { x: number; y: number } => {
   const index = startOrEnd === "start" ? 0 : -1;
-  return tupleToCoors(
-    LinearElementEditor.getPointAtIndexGlobalCoordinates(
-      linearElement,
-      index,
-      elementsMap,
-    ),
-  );
+  return LinearElementEditor.getPointAtIndexGlobalCoordinates(
+    linearElement,
+    index,
+    elementsMap,
+  ) as { x: number; y: number };
 };
 
 // We need to:
@@ -1320,8 +1318,8 @@ export const bindingBorderTest = (
   const threshold = maxBindingGap(element, element.width, element.height);
   const shape = getElementShape(element, elementsMap);
   return (
-    isPointOnShape([x, y], shape, threshold) ||
-    (fullShape === true && pointInsideBounds([x, y], aabbForElement(element)))
+    isPointOnShape({x, y}, shape, threshold) ||
+    (fullShape === true && pointInsideBounds({x, y}, aabbForElement(element)))
   );
 };
 
@@ -1470,7 +1468,7 @@ const pointRelativeToElement = (
   pointTuple: Point,
   elementsMap: ElementsMap,
 ): [GA.Point, GA.Point, number, number] => {
-  const point = GAPoint.from(pointTuple);
+  const point = GAPoint.from([pointTuple.x, pointTuple.y]);
   const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
   const center = coordsCenter(x1, y1, x2, y2);
   // GA has angle orientation opposite to `rotate`
@@ -1522,8 +1520,8 @@ const determineFocusDistance = (
   elementsMap: ElementsMap,
 ): number => {
   const relateToCenter = relativizationToElementCenter(element, elementsMap);
-  const aRel = GATransform.apply(relateToCenter, GAPoint.from(a));
-  const bRel = GATransform.apply(relateToCenter, GAPoint.from(b));
+  const aRel = GATransform.apply(relateToCenter, GAPoint.from([a.x, a.y]));
+  const bRel = GATransform.apply(relateToCenter, GAPoint.from([b.x, b.y]));
   const line = GALine.through(aRel, bRel);
   const q = element.height / element.width;
   const hwidth = element.width / 2;
@@ -1565,12 +1563,13 @@ const determineFocusPoint = (
   if (focus === 0) {
     const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
     const center = coordsCenter(x1, y1, x2, y2);
-    return GAPoint.toTuple(center);
+    const point = GAPoint.toTuple(center);
+    return {x: point[0], y: point[1]};
   }
   const relateToCenter = relativizationToElementCenter(element, elementsMap);
   const adjecentPointRel = GATransform.apply(
     relateToCenter,
-    GAPoint.from(adjecentPoint),
+    GAPoint.from([adjecentPoint.x, adjecentPoint.y]),
   );
   const reverseRelateToCenter = GA.reverse(relateToCenter);
   let point;
@@ -1589,7 +1588,8 @@ const determineFocusPoint = (
       point = findFocusPointForEllipse(element, focus, adjecentPointRel);
       break;
   }
-  return GAPoint.toTuple(GATransform.apply(reverseRelateToCenter, point));
+  const [x, y] = GAPoint.toTuple(GATransform.apply(reverseRelateToCenter, point));
+  return {x, y};
 };
 
 // Returns 2 or 0 intersection points between line going through `a` and `b`
@@ -1609,8 +1609,8 @@ const intersectElementWithLine = (
   }
 
   const relateToCenter = relativizationToElementCenter(element, elementsMap);
-  const aRel = GATransform.apply(relateToCenter, GAPoint.from(a));
-  const bRel = GATransform.apply(relateToCenter, GAPoint.from(b));
+  const aRel = GATransform.apply(relateToCenter, GAPoint.from(convertPointToTuple(a)));
+  const bRel = GATransform.apply(relateToCenter, GAPoint.from(convertPointToTuple(b)));
   const line = GALine.through(aRel, bRel);
   const reverseRelateToCenter = GA.reverse(relateToCenter);
   const intersections = getSortedElementLineIntersections(
@@ -1619,9 +1619,10 @@ const intersectElementWithLine = (
     aRel,
     gap,
   );
-  return intersections.map((point) =>
-    GAPoint.toTuple(GATransform.apply(reverseRelateToCenter, point)),
-  );
+  return intersections.map((point) => {
+    const [x, y] = GAPoint.toTuple(GATransform.apply(reverseRelateToCenter, point))
+    return {x, y};
+  });
 };
 
 const getSortedElementLineIntersections = (
@@ -2171,13 +2172,13 @@ export class BindableElement {
 }
 
 export const getGlobalFixedPointForBindableElement = (
-  fixedPointRatio: [number, number],
+  fixedPointRatio: Point,
   element: DucBindableElement,
 ) => {
-  const [fixedX, fixedY] = normalizeFixedPoint(fixedPointRatio);
+  const {x: fixedX, y: fixedY} = normalizeFixedPoint(fixedPointRatio);
 
   return rotatePoint(
-    [element.x + element.width * fixedX, element.y + element.height * fixedY],
+    {x: element.x + element.width * fixedX, y: element.y + element.height * fixedY},
     getCenterForElement(element),
     element.angle,
   );
@@ -2203,17 +2204,17 @@ const getGlobalFixedPoints = (
           arrow.startBinding.fixedPoint,
           startElement as DucBindableElement,
         )
-      : [arrow.x + arrow.points[0][0], arrow.y + arrow.points[0][1]];
+      : {x: arrow.x + arrow.points[0].x, y: arrow.y + arrow.points[0].y};
   const endPoint: Point =
     endElement && arrow.endBinding
       ? getGlobalFixedPointForBindableElement(
           arrow.endBinding.fixedPoint,
           endElement as DucBindableElement,
         )
-      : [
-          arrow.x + arrow.points[arrow.points.length - 1][0],
-          arrow.y + arrow.points[arrow.points.length - 1][1],
-        ];
+      : {
+          x: arrow.x + arrow.points[arrow.points.length - 1].x,
+          y: arrow.y + arrow.points[arrow.points.length - 1].y,
+        };
 
   return [startPoint, endPoint];
 };
@@ -2235,10 +2236,12 @@ export const normalizeFixedPoint = <T extends FixedPoint | null>(
 ): T extends null ? null : FixedPoint => {
   // Do not allow a precise 0.5 for fixed point ratio
   // to avoid jumping arrow heading due to floating point imprecision
-  if (fixedPoint && (fixedPoint[0] === 0.5 || fixedPoint[1] === 0.5)) {
-    return fixedPoint.map((ratio) =>
-      ratio === 0.5 ? 0.5001 : ratio,
-    ) as T extends null ? null : FixedPoint;
+  if (fixedPoint && (fixedPoint.x === 0.5 || fixedPoint.y === 0.5)) {
+    return {
+      x: fixedPoint.x === 0.5 ? 0.5001 : fixedPoint.x,
+      y: fixedPoint.y === 0.5 ? 0.5001 : fixedPoint.y,
+    } as T extends null ? null : FixedPoint;
   }
   return fixedPoint as any as T extends null ? null : FixedPoint;
 };
+

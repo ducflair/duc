@@ -1,20 +1,24 @@
+import { Point as RoughPoint } from "roughjs/bin/geometry";
 import { COLOR_PALETTE } from "./colors";
 import {
   DEFAULT_VERSION,
   EVENT,
+  FILL_STYLE,
   FONT_FAMILY,
   isDarwin,
   WINDOWS_EMOJI_FALLBACK_FONT,
 } from "./constants";
-import { FontFamilyValues, FontString } from "./element/types";
+import { DucElement, FillStyle, FontFamilyValues, FontString, TextAlign } from "./element/types";
 import {
   ActiveTool,
   AppState,
+  Point,
   ToolType,
   UnsubscribeCallback,
   Zoom,
 } from "./types";
 import { MaybePromise, ResolutionType } from "./utility-types";
+import { TEXT_ALIGN } from "./constants";
 
 let mockDateTime: string | null = null;
 
@@ -1139,4 +1143,79 @@ export const safelyParseJSON = (json: string): Record<string, any> | null => {
   } catch {
     return null;
   }
+};
+
+// Converts a tuple to the new Point structure
+export type OldPoint = Readonly<RoughPoint>;
+export type TuplePoint = [number, number];
+
+export function convertPointToTuple(point: Point): [number, number] {
+  return [point.x, point.y];
+}
+
+// Helper function to migrate legacy tuple points to new Point objects
+export const migratePoints = (points: any[]): Point[] => {
+  return points.map(point => {
+    if (Array.isArray(point)) {
+      const [x, y] = point;
+      return { x, y };
+    }
+    return point as Point; // Assume already migrated
+  });
+};
+
+// TODO: deprecate when we move off of roughjs
+export const getFillStyleToString = (fillStyle: FillStyle) => {
+  if(fillStyle === FILL_STYLE.solid) {
+    return "solid";
+  }
+  if(fillStyle === FILL_STYLE.hachure) {
+    return "hachure";
+  }
+  if(fillStyle === FILL_STYLE["cross-hatch"]) {
+    return "cross-hatch";
+  }
+  if(fillStyle === FILL_STYLE.zigzag) {
+    return "zigzag";
+  }
+}
+
+export const getTextAlignToString = (textAlign: TextAlign) => {
+  if(textAlign === TEXT_ALIGN.CENTER) {
+    return "center";
+  }
+  if(textAlign === TEXT_ALIGN.RIGHT) {
+    return "right";
+  }
+  return "left";
+}
+
+export const generateNumberedLabel = (
+  label: string,
+  existingElements: readonly DucElement[],
+): string => {
+  if (!label) {
+    return label;
+  }
+
+  // First strip any existing numbering from the label
+  const baseLabel = label.replace(/\s*\(\d+\)$/, '');
+
+  // Find all elements with labels that match our base pattern
+  const regex = new RegExp(`^${baseLabel}\\s*\\((\\d+)\\)$`);
+  const numbers = existingElements
+    .map((el) => {
+      const match = el.label?.match(regex);
+      return match ? parseInt(match[1]) : 0;
+    })
+    .filter((num) => !isNaN(num));
+
+  // If no numbered duplicates exist yet, add (1)
+  if (numbers.length === 0) {
+    return `${baseLabel} (1)`;
+  }
+
+  // Otherwise, use the next number in sequence
+  const nextNumber = Math.max(...numbers) + 1;
+  return `${baseLabel} (${nextNumber})`;
 };

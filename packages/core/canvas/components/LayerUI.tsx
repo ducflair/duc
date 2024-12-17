@@ -377,6 +377,8 @@ const LayerUI = ({
 
   const isSidebarDocked = useAtomValue(isSidebarDockedAtom, jotaiScope);
 
+
+  
   const layerUIJSX = (
     <>
       {/* ------------------------- tunneled UI ---------------------------- */}
@@ -387,7 +389,7 @@ const LayerUI = ({
       {/* render component fallbacks. Can be rendered anywhere as they'll be
           tunneled away. We only render tunneled components that actually
         have defaults when host do not render anything. */}
-      <DefaultMainMenu UIOptions={UIOptions} />
+      {/* <DefaultMainMenu UIOptions={UIOptions} />
       <DefaultSidebar.Trigger
         __fallback
         icon={LibraryIcon}
@@ -404,17 +406,17 @@ const LayerUI = ({
         tab={DEFAULT_SIDEBAR.defaultTab}
       >
         {t("toolBar.library")}
-      </DefaultSidebar.Trigger>
-      <DefaultOverwriteConfirmDialog />
-      {appState.openDialog?.name === "ttd" && <TTDDialog __fallback />}
+      </DefaultSidebar.Trigger> */}
+      {/* <DefaultOverwriteConfirmDialog /> */}
+      {/* {appState.openDialog?.name === "ttd" && <TTDDialog __fallback />} */}
       {/* ------------------------------------------------------------------ */}
 
       {appState.isLoading && <LoadingMessage delay={250} />}
-      {appState.errorMessage && (
+      {/* {appState.errorMessage && (
         <ErrorDialog onClose={() => setAppState({ errorMessage: null })}>
           {appState.errorMessage}
         </ErrorDialog>
-      )}
+      )} */}
       {eyeDropperState && !device.editor.isMobile && (
         <EyeDropper
           colorPickerType={eyeDropperState.colorPickerType}
@@ -463,18 +465,19 @@ const LayerUI = ({
           }}
         />
       )}
-      {appState.openDialog?.name === "help" && (
+      {/* TODO: Perhaps in the future we can add this back in */}
+      {/* {appState.openDialog?.name === "help" && (
         <HelpDialog
           onClose={() => {
             setAppState({ openDialog: null });
           }}
         />
-      )}
-      <ActiveConfirmDialog />
-      <tunnels.OverwriteConfirmDialogTunnel.Out />
-      {renderImageExportDialog()}
-      {renderJSONExportDialog()}
-      {appState.pasteDialog.shown && (
+      )} */}
+      {/* <ActiveConfirmDialog /> */}
+      {/* <tunnels.OverwriteConfirmDialogTunnel.Out /> */}
+      {/* {renderImageExportDialog()} */}
+      {/* {renderJSONExportDialog()} */}
+      {/* {appState.pasteDialog.shown && (
         <PasteChartDialog
           setAppState={setAppState}
           appState={appState}
@@ -484,7 +487,7 @@ const LayerUI = ({
             })
           }
         />
-      )}
+      )} */}
       {/* {renderFixedSideContainer()} */}
 
       {/* {device.editor.isMobile && (
@@ -507,7 +510,7 @@ const LayerUI = ({
           UIOptions={UIOptions}
         />
       )} */}
-      {!device.editor.isMobile && (
+      {/* {!device.editor.isMobile && (
         <>
           <div
             className="layer-ui__wrapper"
@@ -519,15 +522,15 @@ const LayerUI = ({
                 : {}
             }
           >
-            {/* {renderWelcomeScreen && <tunnels.WelcomeScreenCenterTunnel.Out />}
+            {renderWelcomeScreen && <tunnels.WelcomeScreenCenterTunnel.Out />}
             {renderFixedSideContainer()}
             <Footer
               appState={appState}
               actionManager={actionManager}
               showExitZenModeBtn={showExitZenModeBtn}
               renderWelcomeScreen={renderWelcomeScreen}
-            /> */}
-            {/* {appState.scrolledOutside && (
+            /> 
+            {appState.scrolledOutside && (
               <button
                 type="button"
                 className="scroll-back-to-content"
@@ -539,11 +542,11 @@ const LayerUI = ({
               >
                 {t("buttons.scrollBackToContent")}
               </button>
-            )} */}
+            )}
           </div>
-          {/* {renderSidebars()} */}
+          {renderSidebars()}
         </>
-      )}
+      )} */}
     </>
   );
 

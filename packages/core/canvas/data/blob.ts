@@ -13,6 +13,7 @@ import { isValidExcalidrawData, isValidLibrary } from "./json";
 import { restore, restoreLibraryItems } from "./restore";
 import { ImportedLibraryData } from "./types";
 import { parseDucFlatBuffers } from "../duc/duc-ts/src/parseDuc";
+import { base64ToString, stringToBase64, toByteString } from "./encode";
 
 const parseFileContents = async (blob: Blob | File) => {
   let contents: string;
@@ -128,40 +129,33 @@ export const loadSceneOrLibraryFromBlob = async (
   const mime = getMimeType(blob);
 
   if(mime === MIME_TYPES.duc) {
-    const { elements, appState, files } = await parseDucFlatBuffers(blob);
-
-    if (!Array.isArray(elements)) {
-      throw new Error("Parsed elements are not an array");
+    try {
+      const data = await parseDucFlatBuffers(blob, fileHandle);
+      return {
+        type: MIME_TYPES.duc,
+        data
+        // data: restore(
+        //   {
+        //     elements: elements as DucElement[],
+        //     appState: {
+        //       fileHandle: fileHandle || blob.handle || null,
+        //       ...appState,
+        //       // ...cleanAppStateForExport(appState),
+        //       // ...(localAppState
+        //       //   ? calculateScrollCenter(elements as DucElement[], localAppState)
+        //       //   : {}),
+        //     },
+        //     files: files,
+        //   },
+        //   undefined,
+        //   undefined,
+        //   { repairBindings: true, refreshDimensions: false },
+        // ),
+      };
+    } catch (error) {
+      console.error(error);
+      throw new Error("Failed to read duc file");
     }
-
-    elements.forEach(element => {
-      if (!element || typeof element !== 'object') {
-        throw new Error("Invalid element found");
-      }
-    });
-
-    
-    return {
-      type: MIME_TYPES.duc,
-      data: restore(
-        {
-          elements: clearElementsForExport(elements),
-          appState: {
-            theme: localAppState?.theme,
-            fileHandle: fileHandle || blob.handle || null,
-            ...cleanAppStateForExport(appState),
-            ...(localAppState
-              ? calculateScrollCenter(elements, localAppState)
-              : {}),
-          },
-          files: files,
-        },
-        localAppState,
-        localElements,
-        { repairBindings: true, refreshDimensions: false },
-      ),
-    };
-    
   } else {
     const contents = await parseFileContents(blob);
     let data;
@@ -518,3 +512,64 @@ export const blobToArrayBuffer = (blob: Blob): Promise<ArrayBuffer> => {
     reader.readAsArrayBuffer(blob);
   });
 };
+
+export async function getDataURL_sync(
+  data: string | Uint8Array | ArrayBuffer,
+  mimeType: string = 'image/svg+xml'
+): Promise<string> {
+  try {
+    // If data is already a data URL, return it
+    if (typeof data === 'string' && data.startsWith('data:')) {
+      return data;
+    }
+
+    // Convert to base64
+    let base64String: string;
+    if (typeof data === 'string') {
+      base64String = btoa(unescape(encodeURIComponent(data)));
+    } else {
+      const bytes = new Uint8Array(data instanceof ArrayBuffer ? data : data.buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      base64String = btoa(binary);
+    }
+
+    return `data:${mimeType};base64,${base64String}`;
+  } catch (error) {
+    console.error('Error generating data URL:', error);
+    throw error;
+  }
+}
+
+export const dataURLToString = (dataURL: DataURL) => {
+  return base64ToString(dataURL.slice(dataURL.indexOf(",") + 1));
+};
+
+export async function dataURLToUint8Array(dataURL: string): Promise<Uint8Array> {
+  try {
+    // Handle promises if dataURL is a promise
+    const resolvedDataURL = await Promise.resolve(dataURL);
+    
+    // Extract the base64 part
+    const matches = resolvedDataURL.match(/^data:([^;]+);base64,(.+)$/);
+    if (!matches) {
+      throw new Error('Invalid data URL format');
+    }
+
+    const base64String = matches[2];
+    const binaryString = atob(base64String);
+    const length = binaryString.length;
+    const bytes = new Uint8Array(length);
+
+    for (let i = 0; i < length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    return bytes;
+  } catch (error) {
+    console.error('Error converting data URL to Uint8Array:', error);
+    throw error;
+  }
+}

@@ -5,24 +5,23 @@ import { encryptData, decryptData } from "./encryption";
 // byte (binary) strings
 // -----------------------------------------------------------------------------
 
-// fast, Buffer-compatible implem
-export const toByteString = (
-  data: string | Uint8Array | ArrayBuffer,
-): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const blob =
-      typeof data === "string"
-        ? new Blob([new TextEncoder().encode(data)])
-        : new Blob([data instanceof Uint8Array ? data : new Uint8Array(data)]);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (!event.target || typeof event.target.result !== "string") {
-        return reject(new Error("couldn't convert to byte string"));
-      }
-      resolve(event.target.result);
-    };
-    reader.readAsBinaryString(blob);
-  });
+// Buffer-compatible implem.
+//
+// Note that in V8, spreading the uint8array (by chunks) into
+// `String.fromCharCode(...uint8array)` tends to be faster for large
+// strings/buffers, in case perf is needed in the future.
+export const toByteString = (data: string | Uint8Array | ArrayBuffer) => {
+  const bytes =
+    typeof data === "string"
+      ? new TextEncoder().encode(data)
+      : data instanceof Uint8Array
+      ? data
+      : new Uint8Array(data);
+  let bstring = "";
+  for (const byte of bytes) {
+    bstring += String.fromCharCode(byte);
+  }
+  return bstring;
 };
 
 const byteStringToArrayBuffer = (byteString: string) => {
@@ -51,12 +50,11 @@ export const stringToBase64 = async (str: string, isByteString = false) => {
 };
 
 // async to align with stringToBase64
-export const base64ToString = async (base64: string, isByteString = false) => {
+export const base64ToString = (base64: string, isByteString = false) => {
   return isByteString
     ? window.atob(base64)
     : byteStringToString(window.atob(base64));
 };
-
 // -----------------------------------------------------------------------------
 // text encoding
 // -----------------------------------------------------------------------------
@@ -199,7 +197,7 @@ function dataView(
  *
  * @param buffers each buffer (chunk) must be at most 2^32 bits large (~4GB)
  */
-const concatBuffers = (...buffers: Uint8Array[]) => {
+export const concatBuffers = (...buffers: Uint8Array[]) => {
   const bufferView = new Uint8Array(
     VERSION_DATAVIEW_BYTES +
       NEXT_CHUNK_SIZE_DATAVIEW_BYTES * buffers.length +
@@ -229,7 +227,7 @@ const concatBuffers = (...buffers: Uint8Array[]) => {
 };
 
 /** can only be used on buffers created via `concatBuffers()` */
-const splitBuffers = (concatenatedBuffer: Uint8Array) => {
+export const splitBuffers = (concatenatedBuffer: Uint8Array) => {
   const buffers = [];
 
   let cursor = 0;
@@ -331,7 +329,7 @@ export const compressData = async <T extends Record<string, any> = never>(
 };
 
 /** @private */
-const _decryptAndDecompress = async (
+export const _decryptAndDecompress = async (
   iv: Uint8Array,
   decryptedBuffer: Uint8Array,
   decryptionKey: string,

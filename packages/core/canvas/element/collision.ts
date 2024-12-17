@@ -6,8 +6,8 @@ import type {
   DucRectangleElement,
 } from "./types";
 
-import { getElementBounds } from "./bounds";
-import type { FrameNameBounds } from "../types";
+import { getElementBounds, getElementLineSegments } from "./bounds";
+import type { FrameNameBounds, Point } from "../types";
 import type { Polygon, GeometricShape } from "../../utils/geometry/shape";
 import { getPolygonShape } from "../../utils/geometry/shape";
 import { isPointInShape, isPointOnShape } from "../../utils/collision";
@@ -16,6 +16,7 @@ import {
   hasBoundTextElement,
   isIframeLikeElement,
   isImageElement,
+  isLinearElement,
   isTextElement,
 } from "./typeChecks";
 import { getBoundTextShape } from "../shapes";
@@ -47,6 +48,7 @@ export type HitTestArgs = {
   y: number;
   element: DucElement;
   shape: GeometricShape;
+  elementsMap: ElementsMap;
   threshold?: number;
   frameNameBound?: FrameNameBounds | null;
 };
@@ -56,18 +58,41 @@ export const hitElementItself = ({
   y,
   element,
   shape,
+  elementsMap,
   threshold = 10,
   frameNameBound = null,
 }: HitTestArgs) => {
-  let hit = shouldTestInside(element)
-    ? // Since `inShape` tests STRICTLY againt the insides of a shape
-      // we would need `onShape` as well to include the "borders"
-      isPointInShape([x, y], shape) || isPointOnShape([x, y], shape, threshold)
-    : isPointOnShape([x, y], shape, threshold);
+  let hit = false;
+  
+  if (isLinearElement(element) && element.points.some(p => p.handleIn || p.handleOut)) {
+    // For curved elements, we need to handle both the stroke and potential fill
+    const segments = getElementLineSegments(element, elementsMap);
+    
+    // First check if we hit the stroke
+    hit = segments.some(([p1, p2]) => 
+      distanceToLineSegment({x, y}, p1, p2) <= threshold
+    );
 
-  // hit test against a frame's name
+    // If we didn't hit the stroke and the path is a loop, check if we're inside
+    if (!hit && shouldTestInside(element)) {
+      // Convert segments to a polygon shape for inside testing
+      const polygonPoints = segments.map(([p]) => p);
+      // Add the last point to close the polygon
+      polygonPoints.push(segments[segments.length - 1][1]);
+      
+      hit = isPointInShape({x, y}, {
+        type: "polygon",
+        data: polygonPoints,
+      });
+    }
+  } else {
+    hit = shouldTestInside(element)
+      ? isPointInShape({x, y}, shape) || isPointOnShape({x, y}, shape, threshold)
+      : isPointOnShape({x, y}, shape, threshold);
+  }
+
   if (!hit && frameNameBound) {
-    hit = isPointInShape([x, y], {
+    hit = isPointInShape({x, y}, {
       type: "polygon",
       data: getPolygonShape(frameNameBound as DucRectangleElement)
         .data as Polygon,
@@ -76,6 +101,39 @@ export const hitElementItself = ({
 
   return hit;
 };
+
+function distanceToLineSegment(point: Point, start: Point, end: Point): number {
+  const A = point.x - start.x;
+  const B = point.y - start.y;
+  const C = end.x - start.x;
+  const D = end.y - start.y;
+
+  const dot = A * C + B * D;
+  const lenSq = C * C + D * D;
+  let param = -1;
+
+  if (lenSq !== 0) {
+    param = dot / lenSq;
+  }
+
+  let xx, yy;
+
+  if (param < 0) {
+    xx = start.x;
+    yy = start.y;
+  } else if (param > 1) {
+    xx = end.x;
+    yy = end.y;
+  } else {
+    xx = start.x + param * C;
+    yy = start.y + param * D;
+  }
+
+  const dx = point.x - xx;
+  const dy = point.y - yy;
+
+  return Math.sqrt(dx * dx + dy * dy);
+}
 
 export const hitElementBoundingBox = (
   x: number,
@@ -89,7 +147,7 @@ export const hitElementBoundingBox = (
   y1 -= tolerance;
   x2 += tolerance;
   y2 += tolerance;
-  return isPointWithinBounds([x1, y1], [x, y], [x2, y2]);
+  return isPointWithinBounds({x:x1, y:y1}, {x, y}, {x:x2, y:y2});
 };
 
 export const hitElementBoundingBoxOnly = (
@@ -113,5 +171,5 @@ export const hitElementBoundText = (
   y: number,
   textShape: GeometricShape | null,
 ): boolean => {
-  return !!textShape && isPointInShape([x, y], textShape);
+  return !!textShape && isPointInShape({x, y}, textShape);
 };
