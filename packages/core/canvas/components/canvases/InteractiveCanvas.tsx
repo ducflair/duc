@@ -18,7 +18,7 @@ import { renderInteractiveScene } from "../../renderer/interactiveScene";
 import { adjustElementToCurrentScope } from "../../duc/utils/measurements";
 
 type InteractiveCanvasProps = {
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   canvas: HTMLCanvasElement | null;
   elementsMap: RenderableElementsMap;
   visibleElements: readonly NonDeletedDucElement[];

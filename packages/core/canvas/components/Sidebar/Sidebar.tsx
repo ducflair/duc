@@ -105,7 +105,7 @@ export const SidebarInner = forwardRef(
     }, [setAppState]);
 
     useOutsideClick(
-      islandRef,
+      islandRef as React.RefObject<HTMLElement>,
       useCallback(
         (event) => {
           // If click on the library icon, do nothing so that LibraryButton

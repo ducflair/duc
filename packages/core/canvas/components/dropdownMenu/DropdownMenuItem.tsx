@@ -14,7 +14,7 @@ const DropdownMenuItem = ({
   selected,
   ...rest
 }: {
-  icon?: JSX.Element;
+  icon?: React.ReactElement;
   onSelect: (event: Event) => void;
   children: React.ReactNode;
   shortcut?: string;

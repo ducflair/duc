@@ -1,3 +1,4 @@
+import React from "react";
 import clsx from "clsx";
 
 export const ButtonIconCycle = <T extends any>({
@@ -6,7 +7,7 @@ export const ButtonIconCycle = <T extends any>({
   onChange,
   group,
 }: {
-  options: { value: T; text: string; icon: JSX.Element }[];
+  options: { value: T; text: string; icon: React.ReactElement }[];
   value: T | null;
   onChange: (value: T) => void;
   group: string;
