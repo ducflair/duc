@@ -30,7 +30,7 @@ const MenuContent = ({
 
   const callbacksRef = useStable({ onClickOutside });
 
-  useOutsideClick(menuRef, () => {
+  useOutsideClick(menuRef as React.RefObject<HTMLElement>, () => {
     callbacksRef.onClickOutside?.();
   });
 

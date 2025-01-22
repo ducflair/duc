@@ -7,6 +7,7 @@ import type { AppClassProperties, BinaryFiles } from "../../types";
 import { canvasToBlob } from "../../data/blob";
 import { EditorLocalStorage } from "../../data/EditorLocalStorage";
 import { t } from "../../i18n";
+import React from "react";
 
 const resetPreview = ({
   canvasRef,

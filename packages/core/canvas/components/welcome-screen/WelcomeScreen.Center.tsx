@@ -1,3 +1,4 @@
+import React from "react";
 import { actionLoadScene, actionShortcuts } from "../../actions";
 import { getShortcutFromShortcutName } from "../../actions/shortcuts";
 import { t, useI18n } from "../../i18n";
@@ -12,7 +13,7 @@ const WelcomeScreenMenuItemContent = ({
   shortcut,
   children,
 }: {
-  icon?: JSX.Element;
+  icon?: React.ReactElement;
   shortcut?: string | null;
   children: React.ReactNode;
 }) => {
@@ -39,7 +40,7 @@ const WelcomeScreenMenuItem = ({
 }: {
   onSelect: () => void;
   children: React.ReactNode;
-  icon?: JSX.Element;
+  icon?: React.ReactElement;
   shortcut?: string | null;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) => {
   return (
@@ -67,7 +68,7 @@ const WelcomeScreenMenuItemLink = ({
 }: {
   children: React.ReactNode;
   href: string;
-  icon?: JSX.Element;
+  icon?: React.ReactElement;
   shortcut?: string | null;
 } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
   return (

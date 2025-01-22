@@ -27,7 +27,7 @@ export const TTDDialogOutput = ({
       {error && <ErrorComp error={error.message} />}
       {loaded ? (
         <div
-          ref={canvasRef}
+          ref={canvasRef as React.RefObject<HTMLDivElement>}
           style={{ opacity: error ? "0.15" : 1 }}
           className="ttd-dialog-output-canvas-container"
         />

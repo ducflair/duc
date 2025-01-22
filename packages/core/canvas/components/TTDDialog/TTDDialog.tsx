@@ -167,7 +167,7 @@ export const TTDDialogBase = withInternalFallback(
 
         try {
           await convertMermaidToExcalidraw({
-            canvasRef: someRandomDivRef,
+            canvasRef: someRandomDivRef as React.RefObject<HTMLDivElement>,
             data,
             mermaidToExcalidrawLib,
             setError,
@@ -378,7 +378,7 @@ export const TTDDialogBase = withInternalFallback(
                   }}
                 >
                   <TTDDialogOutput
-                    canvasRef={someRandomDivRef}
+                    canvasRef={someRandomDivRef as React.RefObject<HTMLDivElement>}
                     error={error}
                     loaded={mermaidToExcalidrawLib.loaded}
                   />

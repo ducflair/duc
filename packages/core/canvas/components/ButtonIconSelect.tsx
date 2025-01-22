@@ -1,3 +1,4 @@
+import React from "react";
 import clsx from "clsx";
 
 // TODO: It might be "clever" to add option.icon to the existing component <ButtonSelect />
@@ -6,7 +7,7 @@ export const ButtonIconSelect = <T extends Object>(
     options: {
       value: T;
       text: string;
-      icon: JSX.Element;
+      icon: React.ReactElement;
       testId?: string;
       /** if not supplied, defaults to value identity check */
       active?: boolean;

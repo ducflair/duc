@@ -49,7 +49,7 @@ const MermaidToExcalidraw = ({
 
   useEffect(() => {
     convertMermaidToExcalidraw({
-      canvasRef,
+      canvasRef: canvasRef as React.RefObject<HTMLDivElement>,
       data,
       mermaidToExcalidrawLib,
       setError,
@@ -116,7 +116,7 @@ const MermaidToExcalidraw = ({
           renderSubmitShortcut={() => <TTDDialogSubmitShortcut />}
         >
           <TTDDialogOutput
-            canvasRef={canvasRef}
+            canvasRef={canvasRef as React.RefObject<HTMLDivElement>}
             loaded={mermaidToExcalidrawLib.loaded}
             error={error}
           />

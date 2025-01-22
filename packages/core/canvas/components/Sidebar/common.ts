@@ -4,7 +4,7 @@ import { AppState, SidebarName, SidebarTabName } from "../../types";
 export type SidebarTriggerProps = {
   name: SidebarName;
   tab?: SidebarTabName;
-  icon?: JSX.Element;
+  icon?: React.ReactElement;
   children?: React.ReactNode;
   title?: string;
   className?: string;

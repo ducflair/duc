@@ -365,7 +365,7 @@ import {
 } from "./hyperlink/Hyperlink";
 import { isLocalLink, normalizeLink, toValidURL } from "../data/url";
 import { shouldShowBoundingBox } from "../element/transformHandles";
-import { actionUnlockAllElements } from "../actions/actionElementLock";
+import { actionToggleElementVisibility, actionUnlockAllElements } from "../actions/actionElementLock";
 import { Fonts } from "../fonts";
 import {
   getFrameChildren,
@@ -769,6 +769,7 @@ class App extends React.Component<AppProps, AppState> {
           getElementById: this.getElementById,
           getVisibleElements: this.getVisibleElements,
           toggleLockElement: this.toggleLockElement,
+          toggleElementVisibility: this.toggleElementVisibility,
           toggleCollapseFrame: this.toggleCollapseFrame,
           getSceneElementsMap: this.getSceneElementsMap,
           mutateElementWithValues: this.mutateElementWithValues,
@@ -4325,11 +4326,7 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       if (isArrowKey(event.key)) {
-        let selectedElements = this.scene.getSelectedElements({
-          selectedElementIds: this.state.selectedElementIds,
-          includeBoundTextElement: true,
-          includeElementsInFrames: true,
-        });
+        let selectedElements = this.scene.getSelectedElements(this.state);
 
         const elbowArrow = selectedElements.find(isElbowArrow) as
           | DucArrowElement
@@ -4804,6 +4801,11 @@ class App extends React.Component<AppProps, AppState> {
   toggleLockElement = (
   ) => {
     return this.actionManager.executeAction(actionToggleElementLock);
+  };
+
+  toggleElementVisibility = (
+  ) => {
+    return this.actionManager.executeAction(actionToggleElementVisibility);
   };
 
   exportToDucJSON = async () => {

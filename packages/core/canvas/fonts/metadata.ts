@@ -1,3 +1,4 @@
+import React from "react";
 import {
   FontFamilyCodeIcon,
   // FontFamilyHeadingIcon,
@@ -22,7 +23,7 @@ export interface FontMetadata {
     lineHeight: number;
   };
   /** element to be displayed as an icon  */
-  icon: JSX.Element;
+  icon: React.ReactElement;
   /** flag to indicate a deprecated font */
   deprecated?: true;
   /** flag to indicate a server-side only font */
@@ -66,7 +67,6 @@ export const FONT_METADATA: Record<number, FontMetadata> = {
       descender: -220,
       lineHeight: 1.15,
     },
-    local: true,
     icon: FontFamilyNormalIcon,
   },
   [FONT_FAMILY["Comic Shanns"]]: {

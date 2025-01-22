@@ -207,7 +207,7 @@ export const EyeDropper: React.FC<{
   const ref = useRef<HTMLDivElement>(null);
 
   useOutsideClick(
-    ref,
+    ref as React.RefObject<HTMLElement>,
     () => {
       onCancel();
     },

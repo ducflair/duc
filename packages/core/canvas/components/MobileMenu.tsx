@@ -41,9 +41,9 @@ type MobileMenuProps = {
   renderTopRightUI?: (
     isMobile: boolean,
     appState: UIAppState,
-  ) => JSX.Element | null;
+  ) => React.ReactElement | null;
   renderCustomStats?: ExcalidrawProps["renderCustomStats"];
-  renderSidebars: () => JSX.Element | null;
+  renderSidebars: () => React.ReactElement | null;
   device: Device;
   renderWelcomeScreen: boolean;
   UIOptions: AppProps["UIOptions"];

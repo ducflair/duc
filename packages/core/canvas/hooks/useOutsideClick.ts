@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { EVENT } from "../constants";
 
 export function useOutsideClick<T extends HTMLElement>(
-  ref: React.RefObject<T>,
+  ref: React.RefObject<T> ,
   /** if performance is of concern, memoize the callback */
   callback: (event: Event) => void,
   /**
@@ -30,7 +30,7 @@ export function useOutsideClick<T extends HTMLElement>(
         return;
       }
 
-      const isInsideOverride = isInside?.(_event, ref.current);
+      const isInsideOverride = isInside?.(_event as Event & { target: HTMLElement }, ref.current);
 
       if (isInsideOverride === true) {
         return;

@@ -53,18 +53,25 @@ type ToolButtonProps =
       onPointerDown?(data: { pointerType: PointerType }): void;
     });
 
-export const ToolButton = React.forwardRef((props: ToolButtonProps, ref) => {
+export const ToolButton: React.FC<ToolButtonProps> = React.forwardRef((props, ref) => {
+  const {
+    visible = true,
+    className = "",
+    size = "medium",
+    ...rest
+  } = props;
+
   const { id: excalId } = useExcalidrawContainer();
   const innerRef = React.useRef(null);
   React.useImperativeHandle(ref, () => innerRef.current);
-  const sizeCn = `ToolIcon_size_${props.size}`;
+  const sizeCn = `ToolIcon_size_${size}`;
 
   const [isLoading, setIsLoading] = useState(false);
 
   const isMountedRef = useRef(true);
 
   const onClick = async (event: React.MouseEvent) => {
-    const ret = "onClick" in props && props.onClick?.(event);
+    const ret = "onClick" in rest && rest.onClick?.(event);
 
     if (isPromiseLike(ret)) {
       try {
@@ -94,11 +101,11 @@ export const ToolButton = React.forwardRef((props: ToolButtonProps, ref) => {
   const lastPointerTypeRef = useRef<PointerType | null>(null);
 
   if (
-    props.type === "button" ||
-    props.type === "icon" ||
-    props.type === "submit"
+    rest.type === "button" ||
+    rest.type === "icon" ||
+    rest.type === "submit"
   ) {
-    const type = (props.type === "icon" ? "button" : props.type) as
+    const type = (rest.type === "icon" ? "button" : rest.type) as
       | "button"
       | "submit";
     return (
@@ -106,54 +113,54 @@ export const ToolButton = React.forwardRef((props: ToolButtonProps, ref) => {
         className={clsx(
           "ToolIcon_type_button",
           sizeCn,
-          props.className,
-          props.visible && !props.hidden
+          className,
+          visible && !rest.hidden
             ? "ToolIcon_type_button--show"
             : "ToolIcon_type_button--hide",
           {
-            ToolIcon: !props.hidden,
-            "ToolIcon--selected": props.selected,
-            "ToolIcon--plain": props.type === "icon",
+            ToolIcon: !rest.hidden,
+            "ToolIcon--selected": rest.selected,
+            "ToolIcon--plain": rest.type === "icon",
           },
         )}
-        style={props.style}
-        data-testid={props["data-testid"]}
-        hidden={props.hidden}
-        title={props.title}
-        aria-label={props["aria-label"]}
+        style={rest.style}
+        data-testid={rest["data-testid"]}
+        hidden={rest.hidden}
+        title={rest.title}
+        aria-label={rest["aria-label"]}
         type={type}
         onClick={onClick}
         ref={innerRef}
-        disabled={isLoading || props.isLoading}
+        disabled={isLoading || rest.isLoading}
       >
-        {(props.icon || props.label) && (
+        {(rest.icon || rest.label) && (
           <div className="ToolIcon__icon" aria-hidden="true">
-            {props.icon || props.label}
-            {props.keyBindingLabel && (
+            {rest.icon || rest.label}
+            {rest.keyBindingLabel && (
               <span className="ToolIcon__keybinding">
-                {props.keyBindingLabel}
+                {rest.keyBindingLabel}
               </span>
             )}
-            {props.isLoading && <Spinner />}
+            {rest.isLoading && <Spinner />}
           </div>
         )}
-        {props.showAriaLabel && (
+        {rest.showAriaLabel && (
           <div className="ToolIcon__label">
-            {props["aria-label"]} {isLoading && <Spinner />}
+            {rest["aria-label"]} {isLoading && <Spinner />}
           </div>
         )}
-        {props.children}
+        {rest.children}
       </button>
     );
   }
 
   return (
     <label
-      className={clsx("ToolIcon", props.className)}
-      title={props.title}
+      className={clsx("ToolIcon", className)}
+      title={rest.title}
       onPointerDown={(event) => {
         lastPointerTypeRef.current = event.pointerType || null;
-        props.onPointerDown?.({ pointerType: event.pointerType || null });
+        rest.onPointerDown?.({ pointerType: event.pointerType || null });
       }}
       onPointerUp={() => {
         requestAnimationFrame(() => {
@@ -164,31 +171,24 @@ export const ToolButton = React.forwardRef((props: ToolButtonProps, ref) => {
       <input
         className={`ToolIcon_type_radio ${sizeCn}`}
         type="radio"
-        name={props.name}
-        aria-label={props["aria-label"]}
-        aria-keyshortcuts={props["aria-keyshortcuts"]}
-        data-testid={props["data-testid"]}
-        id={`${excalId}-${props.id}`}
+        name={rest.name}
+        aria-label={rest["aria-label"]}
+        aria-keyshortcuts={rest["aria-keyshortcuts"]}
+        data-testid={rest["data-testid"]}
+        id={`${excalId}-${rest.id}`}
         onChange={() => {
-          props.onChange?.({ pointerType: lastPointerTypeRef.current });
+          rest.onChange?.({ pointerType: lastPointerTypeRef.current });
         }}
-        checked={props.checked}
+        checked={rest.checked}
         ref={innerRef}
       />
       <div className="ToolIcon__icon">
-        {props.icon}
-        {props.keyBindingLabel && (
-          <span className="ToolIcon__keybinding">{props.keyBindingLabel}</span>
+        {rest.icon}
+        {rest.keyBindingLabel && (
+          <span className="ToolIcon__keybinding">{rest.keyBindingLabel}</span>
         )}
       </div>
     </label>
   );
 });
-
-ToolButton.defaultProps = {
-  visible: true,
-  className: "",
-  size: "medium",
-};
-
-ToolButton.displayName = "ToolButton";
+    

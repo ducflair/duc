@@ -25,7 +25,7 @@ import Excalifont from "./assets/Excalifont-Regular.woff2";
 import Cascadia from "./assets/CascadiaCode-Regular.woff2";
 import ComicShanns from "./assets/ComicShanns-Regular.woff2";
 import LiberationSans from "./assets/LiberationSans-Regular.woff2";
-import RobotoMono from "./assets/RobotoMono-Regular.woff2";
+const RobotoMono = "https://fonts.gstatic.com/s/robotomono/v23/L0xTDF4xlVMF-BfR8bXMIhJHg45mwgGEFl0_3vrtSM1J-gEPT5Ese6hmHSh0me8iUI0.woff2";
 
 
 // How to find Fonts ? -> Follow the README
@@ -217,7 +217,10 @@ export class Fonts {
 
     _register(
       "Roboto Mono", FONT_METADATA[FONT_FAMILY["Roboto Mono"]],
-      { uri: RobotoMono, }
+      {
+        uri: RobotoMono,
+        descriptors: { unicodeRange: RANGES.LATIN, weight: "500" },
+      },
     );
 
     // keeping for backwards compatibility reasons, uses system font (Helvetica on MacOS, Arial on Win)

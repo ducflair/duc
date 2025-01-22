@@ -253,7 +253,7 @@ export {
 } from "./data/encode";
 
 export {
-  SupportedMeasures, MetricMeasure, ImperialMeasure,
+  SupportedMeasures, MetricMeasure, ImperialMeasure, CombinedMeasure,
   coordinateToRealMeasure, adjustElementToCurrentScope, adjustElementsMapToCurrentScope, 
   realMeasureToCoordinate
 } from "./duc/utils/measurements";

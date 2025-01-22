@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import React from "react";
 import { useTunnels } from "../../context/tunnels";
 import DropdownMenu from "../dropdownMenu/DropdownMenu";
 import { useExcalidrawSetAppState } from "../App";
@@ -10,8 +10,8 @@ export const TTDDialogTrigger = ({
   children,
   icon,
 }: {
-  children?: ReactNode;
-  icon?: JSX.Element;
+  children?: React.ReactNode;
+  icon?: React.ReactElement;
 }) => {
   const { TTDDialogTriggerTunnel } = useTunnels();
   const setAppState = useExcalidrawSetAppState();

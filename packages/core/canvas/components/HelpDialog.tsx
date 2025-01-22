@@ -58,7 +58,7 @@ const ShortcutIsland = (props: {
   </div>
 );
 
-function* intersperse(as: JSX.Element[][], delim: string | null) {
+function* intersperse(as: React.ReactElement[][], delim: string | null) {
   let first = true;
   for (const x of as) {
     if (!first) {

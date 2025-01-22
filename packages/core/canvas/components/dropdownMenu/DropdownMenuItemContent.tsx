@@ -1,3 +1,4 @@
+import React from "react";
 import { useDevice } from "../App";
 
 const MenuItemContent = ({
@@ -5,7 +6,7 @@ const MenuItemContent = ({
   shortcut,
   children,
 }: {
-  icon?: JSX.Element;
+  icon?: React.ReactElement;
   shortcut?: string;
   children: React.ReactNode;
 }) => {
