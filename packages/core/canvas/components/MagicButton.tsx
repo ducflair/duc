@@ -1,3 +1,4 @@
+import React from "react";
 import "./ToolIcon.scss";
 
 import clsx from "clsx";
@@ -7,7 +8,7 @@ const DEFAULT_SIZE: ToolButtonSize = "small";
 
 export const ElementCanvasButton = (props: {
   title?: string;
-  icon: JSX.Element;
+  icon: React.ReactElement;
   name?: string;
   checked: boolean;
   onChange?(): void;

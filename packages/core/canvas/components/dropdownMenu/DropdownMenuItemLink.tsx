@@ -16,7 +16,7 @@ const DropdownMenuItemLink = ({
   ...rest
 }: {
   href: string;
-  icon?: JSX.Element;
+  icon?: React.ReactElement;
   children: React.ReactNode;
   shortcut?: string;
   className?: string;

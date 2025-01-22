@@ -18,14 +18,14 @@ function Picker<T>({
   options: {
     value: T;
     text: string;
-    icon: JSX.Element;
+    icon: React.ReactElement;
     keyBinding: string | null;
   }[];
   onChange: (value: T) => void;
   onClose: () => void;
 }) {
-  const rFirstItem = React.useRef<HTMLButtonElement>();
-  const rActiveItem = React.useRef<HTMLButtonElement>();
+  const rFirstItem = React.useRef<HTMLButtonElement>(null);
+  const rActiveItem = React.useRef<HTMLButtonElement>(null);
   const rGallery = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -156,7 +156,7 @@ export function IconPicker<T>({
   options: readonly {
     value: T;
     text: string;
-    icon: JSX.Element;
+    icon: React.ReactElement;
     keyBinding: string | null;
     showInPicker?: boolean;
   }[];

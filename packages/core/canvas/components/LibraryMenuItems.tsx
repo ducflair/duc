@@ -59,7 +59,7 @@ export default function LibraryMenuItems({
   selectedItems: LibraryItem["id"][];
   onSelectItems: (id: LibraryItem["id"][]) => void;
 }) {
-  const libraryContainerRef = useRef<HTMLDivElement>(null);
+  const libraryContainerRef = useRef<HTMLDivElement>(null!);
   const scrollPosition = useScrollPosition<HTMLDivElement>(libraryContainerRef);
 
   // This effect has to be called only on first render, therefore  `scrollPosition` isn't in the dependency array

@@ -1,4 +1,6 @@
-export const InlineIcon = ({ icon }: { icon: JSX.Element }) => {
+import React from 'react';
+
+export const InlineIcon = ({ icon }: { icon: React.ReactElement }) => {
   return (
     <span
       style={{

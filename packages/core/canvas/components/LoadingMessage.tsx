@@ -32,9 +32,9 @@ export const LoadingMessage: React.FC<{ delay?: number; theme?: Theme }> = ({
       })}
     >
       <div>
-        {/* <Spinner /> */}
+        <Spinner />
       </div>
-      {/* <div className="LoadingMessage-text">{t("labels.loadingScene")}</div> */}
+      <div className="LoadingMessage-text">Please refresh if this problem persists</div>
     </div>
   );
 };

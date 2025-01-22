@@ -541,7 +541,7 @@ export interface ExcalidrawProps {
   renderTopRightUI?: (
     isMobile: boolean,
     appState: UIAppState,
-  ) => JSX.Element | null;
+  ) => React.ReactElement | null;
   langCode?: Language["code"];
   viewModeEnabled?: boolean;
   zenModeEnabled?: boolean;
@@ -554,7 +554,7 @@ export interface ExcalidrawProps {
   renderCustomStats?: (
     elements: readonly NonDeletedDucElement[],
     appState: UIAppState,
-  ) => JSX.Element;
+  ) => React.ReactElement;
   UIOptions?: Partial<UIOptions>;
   detectScroll?: boolean;
   handleKeyboardGlobally?: boolean;
@@ -587,7 +587,7 @@ export interface ExcalidrawProps {
   renderEmbeddable?: (
     element: NonDeleted<DucEmbeddableElement>,
     appState: AppState,
-  ) => JSX.Element | null;
+  ) => React.ReactElement | null;
   aiEnabled?: boolean;
   showDeprecatedFonts?: boolean;
 }
@@ -617,7 +617,7 @@ export type ExportOpts = {
     appState: UIAppState,
     files: BinaryFiles,
     canvas: HTMLCanvasElement,
-  ) => JSX.Element;
+  ) => React.ReactElement;
 };
 
 // NOTE at the moment, if action name corresponds to canvasAction prop, its
@@ -824,6 +824,7 @@ export interface DucImperativeAPI {
     sendToBackElements: InstanceType<typeof App>["sendToBackElements"];
     toggleCollapseFrame: InstanceType<typeof App>["toggleCollapseFrame"];
     toggleLockElement: InstanceType<typeof App>["toggleLockElement"];
+    toggleElementVisibility: InstanceType<typeof App>["toggleElementVisibility"];
     bringToFrontElement: () => void;
     setZLayerIndexAfterElement: InstanceType<typeof App>["setZLayerIndexAfterElement"];
     setElementFrameId: InstanceType<typeof App>["setElementFrameId"];
