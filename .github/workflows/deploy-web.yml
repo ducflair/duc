@@ -1,12 +1,16 @@
-name: Manual Deploy Website
+name: Deploy Website
 
 concurrency: Website Production
 
-on: 
-  workflow_dispatch: # This allows manual triggering only
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/web/**'
 
 jobs:
-  run-manual-job:
+  run-deploy-job:
     runs-on: ubuntu-latest
     environment: Website Production
     timeout-minutes: 22
