@@ -1,8 +1,0 @@
-[package]
-name = "duc-rs"
-edition = "2021"
-license = "MIT"
-readme = "README.md"
-
-[dependencies]
-flatbuffers = "24.3.25"
