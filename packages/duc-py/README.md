@@ -1,4 +1,4 @@
-# ducflair-duc (Python)
+# ducpy (Python)
 
 <p align="center">
   <br/>
@@ -13,11 +13,11 @@
 </p>
 
 
-The `ducflair-duc` package provides a robust Python implementation for the `duc` 2D CAD file format, a cornerstone of our advanced design system. Designed for professionals seeking precision and efficiency, this package ensures seamless integration and manipulation of `duc` files within your Python projects.
+The `ducpy` package provides a robust Python implementation for the `duc` 2D CAD file format, a cornerstone of our advanced design system. Designed for professionals seeking precision and efficiency, this package ensures seamless integration and manipulation of `duc` files within your Python projects.
 
 ## Introduction
 
-The `ducflair-duc` package offers comprehensive Python types and helper functions to work effortlessly with the `duc` CAD file format. Built with efficiency and performance in mind, this package enables you to parse, validate, and manipulate `duc` files with ease.
+The `ducpy` package offers comprehensive Python types and helper functions to work effortlessly with the `duc` CAD file format. Built with efficiency and performance in mind, this package enables you to parse, validate, and manipulate `duc` files with ease.
 
 ## Features
 
@@ -31,13 +31,13 @@ The `ducflair-duc` package offers comprehensive Python types and helper function
 Install the package using pip:
 
 ```bash
-pip install ducflair-duc
+pip install ducpy
 ```
 
 ## Usage
 
 ```python
-from ducflair_duc import Duc # imports the raw `duc` class
+from ducpy import Duc # imports the raw `duc` class
 ```
 
 ## Documentation

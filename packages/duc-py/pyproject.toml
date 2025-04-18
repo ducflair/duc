@@ -1,15 +1,11 @@
-[build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
-build-backend = "setuptools.build_meta"
-
 [project]
-name = "ducflair-duc"
-version = "0.1.0"
-requires-python = ">=3.7"
-dependencies = ["flatbuffers"]
+name = "ducpy"
+version = "0.0.0"
+description = "The SDK for the Duc 2D CAD file format"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
 
-description = "The duc 2D CAD file format Python implementation"
-readme = { file = "README.md", content-type = "text/markdown" }
 license = { text = "MIT" }
 
 authors = [
@@ -17,19 +13,13 @@ authors = [
 ]
 
 classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
 ]
 
 [project.urls]
 "Homepage" = "https://duc.ducflair.com"
-"Source" = "https://github.com/ducflair/duc"
+"Source" = "https://github.com/ducflair/duc/tree/main/packages/duc-py"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["ducflair_duc*"]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
