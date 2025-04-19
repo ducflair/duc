@@ -19,7 +19,7 @@ export const baseOptions: BaseLayoutProps = {
   nav: {
     title: (
       <div className='flex items-center gap-1.5'>
-        <Icons.duc className='!size-5' />
+        <Icons.duc className='size-5!' />
         <span className="text-xl font-bold">{siteName}</span>
       </div>
     ),

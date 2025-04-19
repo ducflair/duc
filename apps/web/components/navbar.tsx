@@ -10,7 +10,7 @@ function Navbar() {
     <div className='fixed top-4 left-1/2 -translate-x-1/2 px-4 py-1 flex items-center gap-1 rounded-full bg-background/10 backdrop-blur-xl w-screen max-w-4xl'>
       <Link href={HOME}>
         <Button variant='ghost' className='flex items-center gap-1.5'>
-          <Icons.duc className='!size-5' />
+          <Icons.duc className='size-5!' />
           <span className="text-2xl font-bold">{siteName}</span>
         </Button>
       </Link>
@@ -26,12 +26,12 @@ function Navbar() {
       <div>
         <Link href={GITHUB_URL}>
           <Button variant='ghost' size='sm'>
-            <Icons.gitHub className='!size-5' />
+            <Icons.gitHub className='size-5!' />
           </Button>
         </Link>
         <Link href={REDDIT_URL}>
           <Button variant='ghost' size='sm'>
-            <Icons.reddit className='!size-5' />
+            <Icons.reddit className='size-5!' />
           </Button>
         </Link>
       </div>
