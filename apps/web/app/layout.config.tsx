@@ -50,8 +50,8 @@ export const url = (path: string) => `${baseUrl}${path}`;
 interface Author {
   username: string;
   name: string;
-  url: string;
-  image: string;
+  url?: string;
+  image?: string;
 }
 
 export const authorsMeta: Author[] = [
@@ -61,6 +61,11 @@ export const authorsMeta: Author[] = [
     url: 'https://twitter.com/jorgedanics',
     image: 'https://pbs.twimg.com/profile_images/1767695365845716993/OEDtg3U4_400x400.jpg',
   },
+  {
+    username: 'generated',
+    name: 'Generated',
+  },
+
 ];
 
 export const getAuthors = (authors?: string[]) => {

@@ -232,7 +232,8 @@ def parse_duc_element(element: DucElementBin) -> DucElement:
         "background": backgrounds if backgrounds else None,
         "blending": element.Blending() if element.Blending else None,
         "roundness": element.Roundness() if element.Roundness else DEFAULT_ELEMENT_PROPS["roundness"],
-        "subset": element.Subset() if element.Subset else None
+        "subset": element.Subset() if element.Subset else None,
+        "z_index": element.ZIndex() if element.ZIndex() else None
     }
 
     if element_type == ElementType.TEXT:

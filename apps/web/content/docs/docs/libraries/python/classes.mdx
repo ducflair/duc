@@ -1,0 +1,136 @@
+---
+title: "Classes - Python"
+date: 2024-04-22
+authors: [jorgedanisc]
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="info" icon="ℹ️">
+  This page documents the class structures in Python.
+</Callout>
+
+## Overview
+
+The classes module in `ducpy` provides Python class definitions that represent the various components of a duc file. These classes define the structure and properties of elements, application state, and binary files in a duc document.
+
+## Main Classes
+
+### DucElement
+
+The `DucElement` class is the base class for all elements in a duc file:
+
+```python
+from ducpy.classes import DucElementClass
+
+# Access the DucElement class
+element = DucElementClass.DucElement()
+
+# Set properties
+element.id = "unique_id"
+element.type = "text"
+element.x_v3 = 100.0
+element.y_v3 = 200.0
+element.width_v3 = 300.0
+element.height_v3 = 150.0
+```
+
+The `DucElementUnion` is a type union that can represent any specific element type (text, line, image, etc.).
+
+### AppState
+
+The `AppState` class represents the state of the application when the duc file was saved:
+
+```python
+from ducpy.classes import AppStateClass
+
+# Create an AppState object
+app_state = AppStateClass.AppState()
+
+# Set properties
+app_state.zoom = 1.0
+app_state.scroll_x = 0.0
+app_state.scroll_y = 0.0
+app_state.view_background_color = "#ffffff"
+```
+
+### BinaryFiles
+
+The `BinaryFiles` class stores binary data (such as images) embedded in the duc file:
+
+```python
+from ducpy.classes import BinaryFilesClass
+
+# Create a BinaryFiles object
+files = BinaryFilesClass.BinaryFiles()
+
+# Add a binary file
+file_data = BinaryFilesClass.BinaryFileData()
+file_data.id = "file_id"
+file_data.mime_type = "image/png"
+file_data.data = b'...'  # Binary data
+files.entries[file_data.id] = file_data
+```
+
+## Element Types
+
+The duc format supports several element types, each represented by specific classes:
+
+### Text Element
+
+Text elements represent text objects in the duc document:
+
+```python
+# Create a text element
+text_element = DucElementClass.DucElement()
+text_element.id = "text1"
+text_element.type = "text"
+text_element.text = "Hello, World!"
+text_element.font_family = "Arial"
+text_element.font_size_v3 = 16.0
+```
+
+### Line Element
+
+Line elements represent vector lines:
+
+```python
+# Create a line element
+line_element = DucElementClass.DucElement()
+line_element.id = "line1"
+line_element.type = "line"
+
+# Add points to the line
+point1 = DucElementClass.Point()
+point1.x_v3 = 100.0
+point1.y_v3 = 100.0
+
+point2 = DucElementClass.Point()
+point2.x_v3 = 200.0
+point2.y_v3 = 200.0
+
+line_element.points = [point1, point2]
+```
+
+### Image Element
+
+Image elements represent embedded images:
+
+```python
+# Create an image element
+image_element = DucElementClass.DucElement()
+image_element.id = "image1"
+image_element.type = "image"
+image_element.file_id = "file_id"  # Reference to a binary file
+```
+
+## Relationships Between Classes
+
+The duc file structure has hierarchical relationships between its components:
+
+- A duc file contains elements, app state, and binary files
+- Elements can be grouped and have parent-child relationships
+- Elements can reference binary files for content
+- App state contains information about the view and selected elements
+
+Understanding these relationships is crucial for effective manipulation of duc files. 

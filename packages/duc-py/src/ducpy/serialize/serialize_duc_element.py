@@ -581,6 +581,8 @@ def serialize_duc_element(builder: flatbuffers.Builder, element: DucElementUnion
             AddScope(builder, scope_offset)
         if element.is_deleted is not None:
             AddIsDeleted(builder, element.is_deleted)
+        if element.z_index is not None:
+            AddZIndex(builder, element.z_index)
         
         # Add type-specific properties
         if element.type == ElementType.TEXT:
