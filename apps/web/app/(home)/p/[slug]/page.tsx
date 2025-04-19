@@ -29,7 +29,7 @@ export default async function Page(props: {
         <Description>{page.data.description}</Description>
         
         {page.data.cover && (
-          <div className="mt-8 relative w-full aspect-[16/9] rounded-lg overflow-hidden">
+          <div className="mt-8 relative w-full aspect-16/9 rounded-lg overflow-hidden">
             <img
               src={page.data.cover}
               alt={`Cover image for ${page.data.title}`}
