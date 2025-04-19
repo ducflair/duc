@@ -38,6 +38,7 @@ class DucElement:
     link: Optional[str] = field(default=DEFAULT_ELEMENT_PROPS["link"])
     locked: bool = field(default=DEFAULT_ELEMENT_PROPS["locked"])
     custom_data: Optional[Dict] = None
+    z_index: int = 0
 
 @dataclass
 class DucLinearElement(DucElement):

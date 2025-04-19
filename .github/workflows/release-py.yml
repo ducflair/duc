@@ -48,18 +48,18 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Update npm
-        run: npm install -g npm@latest
       - run: bun install
-      - name: Install Python dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install build twine
-      - name: Build
-        run: bun duc-py:build
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync
+
+        
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: npx semantic-release --ci
+        run: bunx semantic-release --ci
         working-directory: ./packages/duc-py 

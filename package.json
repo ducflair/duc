@@ -51,7 +51,7 @@
     "gen": "cd schema && bash flatc-generate-all.sh",
     "clean": "bunx rimraf dist node_modules **/package-lock.json **/tsconfig.tsbuildinfo",
     "docs:dev": "turbo dev --filter=@duc/docs",
-    "duc-py:build": "turbo build --filter=@ducflair/duc-py",
+    "duc-py:build": "bun turbo run build --filter=@ducflair/duc-py -- ${1}",
     "duc-rs:build": "turbo build --filter=@ducflair/duc-rs",
     "duc-ts:build": "turbo build --filter=@ducflair/duc",
     "semantic-release": "turbo run semantic-release",

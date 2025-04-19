@@ -15,3 +15,42 @@ import { Callout } from 'fumadocs-ui/components/callout';
 ## Installation
 
 ```bash
+pip install ducpy
+```
+or 
+```bash
+uv add ducpy
+```
+
+## Basic Usage
+
+The `ducpy` package provides Python types and utility functions to work with the `duc` CAD file format. Here's a quick overview of how to use it:
+
+```python
+# Import the ducpy package
+import ducpy as duc
+
+# Parse a duc file
+with open('example.duc', 'rb') as f:
+    duc_data = duc.parse.parse_duc_flatbuffers(f)
+
+# Access elements, app state, and files
+elements = duc_data['elements']
+app_state = duc_data['appState']
+files = duc_data['files']
+
+# Serialize a duc file
+with open('output.duc', 'wb') as f:
+    duc.serialize.serialize_to_flatbuffers(elements, app_state, files, f)
+```
+
+## Package Structure
+
+The `ducpy` package is organized into the following main modules:
+
+- **parse**: Functions for parsing duc files and converting to Python objects
+- **serialize**: Functions for serializing Python objects back to duc format
+- **classes**: Python class definitions for duc entities
+- **utils**: Utility functions for working with duc files
+
+Each module provides specific functionality for working with different aspects of the duc file format.
