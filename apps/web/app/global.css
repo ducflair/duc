@@ -46,6 +46,23 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
+  --color-fd-popover: var(--popover);
+  --color-fd-popover-foreground: var(--popover-foreground);
+  --color-fd-secondary-foreground: var(--secondary-foreground);
+  --color-fd-border: var(--border);
+  --color-fd-primary: var(--primary);
+  --color-fd-primary-foreground: var(--primary-foreground);
+  --color-fd-muted: var(--muted);
+  --color-fd-card: var(--card);
+  --color-fd-accent: var(--accent);
+  --color-fd-accent-foreground: var(--accent-foreground);
+  --color-fd-card-foreground: var(--card-foreground);
+  --color-fd-muted-foreground: var(--muted-foreground);
+  --color-fd-foreground: var(--foreground);
+  --color-fd-secondary: var(--secondary);
+  --color-fd-background: var(--background);
+  --color-fd-ring: var(--ring);
+
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
 
@@ -145,5 +162,9 @@
 @layer base {
   #nd-nav {
     @apply lg:border-none;
+  }
+  #nd-sidebar {
+    --color-fd-secondary: var(--secondary);
+    --color-fd-muted: var(--muted);
   }
 }

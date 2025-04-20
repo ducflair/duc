@@ -42,7 +42,9 @@ export const baseOptions: BaseLayoutProps = {
     }
   ],
   githubUrl: GITHUB_URL,
-  disableThemeSwitch: true,
+  themeSwitch: {
+    component: <></>,
+  }
 };
 
 export const url = (path: string) => `${baseUrl}${path}`;
