@@ -58,7 +58,7 @@ export default $config({
     new sst.aws.StaticSite("MyPythonDocs", {
       build: {
         command: "bun duc-py:docs:build",
-        output: "packages/duc-py/docs/_build",
+        output: "packages/duc-py/docs/_build/html",
       },
       domain: domainName && {
         name: `python.${domainName}`,
