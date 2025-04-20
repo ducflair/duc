@@ -9,10 +9,42 @@ on:
     paths:
       - 'apps/web/**'
   repository_dispatch:
-    types: [trigger-docs-deployment]
+    types: [trigger-web-deployment]
 
 jobs:
+  check-deploy-conditions:
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+    steps:
+      - name: Check deployment conditions
+        id: check
+        run: |
+          # Default to deploy
+          SHOULD_DEPLOY="true"
+          
+          # If triggered by repository dispatch, check conditions
+          if [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
+            # Parse client payload
+            SOURCE="${{ github.event.client_payload.source }}"
+            SUCCESS="${{ github.event.client_payload.success }}"
+            WEB_CHANGED="${{ github.event.client_payload.web_changed }}"
+            
+            # Skip deployment if:
+            # - Release was unsuccessful AND
+            # - No web files were changed
+            if [[ "$SUCCESS" == "failure" && "$WEB_CHANGED" != "true" ]]; then
+              SHOULD_DEPLOY="false"
+              echo "Skipping deployment: Release failed and no web changes detected"
+            fi
+          fi
+          
+          echo "should_deploy=$SHOULD_DEPLOY" >> $GITHUB_OUTPUT
+          echo "Deployment decision: $SHOULD_DEPLOY"
+
   run-deploy-job:
+    needs: check-deploy-conditions
+    if: needs.check-deploy-conditions.outputs.should_deploy != 'false'
     runs-on: ubuntu-latest
     environment: Website Production
     timeout-minutes: 22

@@ -1,17 +1,22 @@
 name: Release Rust
 
+# Workflow temporarily disabled
+run-name: "DISABLED: Release Rust"
+
 on:
-  push:
-    branches:
-      - main
-      - next
-    paths:
-      - 'packages/core/**'
-      - 'packages/duc-rs/**'
-      - 'turbo.json'
-      - 'package.json'
-  repository_dispatch:
-    types: [trigger-rs-release]
+  workflow_dispatch:
+    # Keeping only manual trigger option
+  # Removed automatic triggers to disable workflow
+  # push:
+  #   branches:
+  #     - main
+  #     - next
+  #   paths:
+  #     - 'packages/duc-rs/**'
+  #     - 'turbo.json'
+  #     - 'package.json'
+  # repository_dispatch:
+  #   types: [trigger-rs-release]
 
 permissions:
   contents: write
