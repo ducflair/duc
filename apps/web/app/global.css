@@ -1,66 +1,170 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import "tw-animate-css";
+@import 'fumadocs-ui/css/preset.css';
+
+/* path of `fumadocs-ui` relative to the CSS file */
+@source '../../../../node_modules/fumadocs-ui/dist/**/*.js';
+
+@custom-variant dark (&:is(class *));
+
+@theme {
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-fd-popover: var(--popover);
+  --color-fd-popover-foreground: var(--popover-foreground);
+  --color-fd-secondary-foreground: var(--secondary-foreground);
+  --color-fd-border: var(--border);
+  --color-fd-primary: var(--primary);
+  --color-fd-primary-foreground: var(--primary-foreground);
+  --color-fd-muted: var(--muted);
+  --color-fd-card: var(--card);
+  --color-fd-accent: var(--accent);
+  --color-fd-accent-foreground: var(--accent-foreground);
+  --color-fd-card-foreground: var(--card-foreground);
+  --color-fd-muted-foreground: var(--muted-foreground);
+  --color-fd-foreground: var(--foreground);
+  --color-fd-secondary: var(--secondary);
+  --color-fd-background: var(--background);
+  --color-fd-ring: var(--ring);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border, currentcolor);
+  }
+}
 
 @layer base {
     :root {
-      --background: 0 0% 97.65%;
-      --foreground: 0 0% 12.55%;
-      --muted: 0 0% 93.73%;
-      --muted-foreground: 0 0% 39.22%;
-      --popover: 0 0% 98.82%;
-      --popover-foreground: 0 0% 12.55%;
-      --card: 0 0% 98.82%;
-      --card-foreground: 0 0% 12.55%;
-      --border: 0 0% 84.71%;
-      --input: 0 0% 94.12%;
-      --primary: 4.18 98.75% 68.63%;
-      --primary-foreground: 5.06 0% 100%;
-      --secondary: 4 12% 87%;
-      --secondary-foreground: 4 11% 12%;
-      --accent: 0 0% 90.98%;
-      --accent-foreground: 0 0% 12.55%;
-      --destructive: 10.16 77.87% 53.92%;
-      --destructive-foreground: 0 0% 100%;
-      --ring: 247.92 100% 59.76%;
-      --chart-1: 4.18 98.75% 68.63%;
-      --chart-2: 34.05 100% 85.49%;
-      --chart-3: 0 0% 90.98%;
-      --chart-4: 34.05 100% 88.49%;
-      --chart-5: 4.18 101.75% 68.63%;
+      --background: oklch(98% 0 73);
+      --foreground: oklch(24% 0 73);
+      --muted: oklch(95% 0 72);
+      --muted-foreground: oklch(50% 0 72);
+      --popover: oklch(99% 0 73);
+      --popover-foreground: oklch(24% 0 73);
+      --card: oklch(99% 0 73);
+      --card-foreground: oklch(24% 0 73);
+      --border: oklch(88% 0 72);
+      --input: oklch(96% 0 72);
+      --primary: oklch(71% 0.18 27);
+      --primary-foreground: oklch(100% 0 73);
+      --secondary: oklch(89% 0.01 25);
+      --secondary-foreground: oklch(23% 0.01 18);
+      --accent: oklch(93% 0 73);
+      --accent-foreground: oklch(24% 0 73);
+      --destructive: oklch(62% 0.19 33);
+      --destructive-foreground: oklch(100% 0 73);
+      --ring: oklch(51% 0.28 276);
+      --chart-1: oklch(71% 0.18 27);
+      --chart-2: oklch(92% 0.07 77);
+      --chart-3: oklch(93% 0 73);
+      --chart-4: oklch(93% 0.05 75);
+      --chart-5: oklch(75% 0 73);
       --radius: 0.5rem;
     }
   
     .dark {
-      --background: 0 0% 6.67%;
-      --foreground: 0 0% 93.33%;
-      --muted: 0 0% 13.33%;
-      --muted-foreground: 0 0% 70.59%;
-      --popover: 0 0% 9.8%;
-      --popover-foreground: 0 0% 93.33%;
-      --card: 0 0% 9.8%;
-      --card-foreground: 0 0% 93.33%;
-      --border: 44 14% 11%;
-      --input: 0 0% 28.24%;
-      --primary: 4.18 98.75% 68.63%;
-      --primary-foreground: 5 47% 24%;
-      --secondary: 4 11% 12%;
-      --secondary-foreground: 4 12% 87%;
-      --accent: 0 0% 16.47%;
-      --accent-foreground: 0 0% 93.33%;
-      --destructive: 10.16 77.87% 53.92%;
-      --destructive-foreground: 0 0% 100%;
-      --ring: 227.34 100% 57.25%;
-      --chart-1: 4.18 98.75% 68.63%;
-      --chart-2: 28.5 64.52% 12.16%;
-      --chart-3: 0 0% 16.47%;
-      --chart-4: 28.5 64.52% 15.16%;
-      --chart-5: 4.18 101.75% 68.63%;
+      --background: oklch(18% 0 72);
+      --foreground: oklch(95% 0 72);
+      --muted: oklch(25% 0 73);
+      --muted-foreground: oklch(77% 0 73);
+      --popover: oklch(21% 0 73);
+      --popover-foreground: oklch(95% 0 72);
+      --card: oklch(21% 0 73);
+      --card-foreground: oklch(95% 0 72);
+      --border: oklch(23% 0.01 89);
+      --input: oklch(40% 0 73);
+      --primary: oklch(71% 0.18 27);
+      --primary-foreground: oklch(34% 0.08 27);
+      --secondary: oklch(23% 0.01 18);
+      --secondary-foreground: oklch(89% 0.01 25);
+      --accent: oklch(28% 0 72);
+      --accent-foreground: oklch(95% 0 72);
+      --destructive: oklch(62% 0.19 33);
+      --destructive-foreground: oklch(100% 0 73);
+      --ring: oklch(52.999996% 0.26 266);
+      --chart-1: oklch(71% 0.18 27);
+      --chart-2: oklch(26% 0.04 60);
+      --chart-3: oklch(28% 0 72);
+      --chart-4: oklch(29% 0.05 61);
+      --chart-5: oklch(75% 0 73);
     }
 }
   
 @layer base {
   #nd-nav {
     @apply lg:border-none;
+  }
+  #nd-sidebar {
+    --color-fd-secondary: var(--secondary);
+    --color-fd-muted: var(--muted);
   }
 }

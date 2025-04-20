@@ -34,7 +34,7 @@ export default defineConfig({
   }
 })
 
-export const { docs, meta } = defineDocs({
+export const { docs: docsCollection, meta: docsMeta } = defineDocs({
   docs: {
     async: true,
   },

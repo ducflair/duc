@@ -19,7 +19,7 @@ export const baseOptions: BaseLayoutProps = {
   nav: {
     title: (
       <div className='flex items-center gap-1.5'>
-        <Icons.duc className='!size-5' />
+        <Icons.duc className='size-5!' />
         <span className="text-xl font-bold">{siteName}</span>
       </div>
     ),
@@ -42,7 +42,9 @@ export const baseOptions: BaseLayoutProps = {
     }
   ],
   githubUrl: GITHUB_URL,
-  disableThemeSwitch: true,
+  themeSwitch: {
+    component: <></>,
+  }
 };
 
 export const url = (path: string) => `${baseUrl}${path}`;
@@ -50,8 +52,8 @@ export const url = (path: string) => `${baseUrl}${path}`;
 interface Author {
   username: string;
   name: string;
-  url: string;
-  image: string;
+  url?: string;
+  image?: string;
 }
 
 export const authorsMeta: Author[] = [
@@ -61,6 +63,11 @@ export const authorsMeta: Author[] = [
     url: 'https://twitter.com/jorgedanics',
     image: 'https://pbs.twimg.com/profile_images/1767695365845716993/OEDtg3U4_400x400.jpg',
   },
+  {
+    username: 'generated',
+    name: 'Generated',
+  },
+
 ];
 
 export const getAuthors = (authors?: string[]) => {

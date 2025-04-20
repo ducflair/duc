@@ -1,4 +1,4 @@
-name: Release
+name: Release Coordinator
 
 on:
   push:
@@ -40,140 +40,38 @@ jobs:
             duc_rs:
               - 'packages/duc-rs/**'
 
-  # Release job for duc-ts package
-  release_duc_ts:
-    runs-on: ubuntu-latest
+  # Trigger TypeScript release workflow
+  trigger_ts_release:
     needs: paths
-    concurrency:
-      group: release-ts
-      cancel-in-progress: false
+    runs-on: ubuntu-latest
     if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_ts_changed == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - name: Trigger TypeScript Release
+        uses: peter-evans/repository-dispatch@v3
         with:
-          fetch-depth: 0
-          ref: main
-          persist-credentials: true
-      - name: Set Git User
-        run: |
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
-      - name: Pull latest changes from origin/main
-        run: git pull --rebase origin main
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "latest"
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "lts/*"
-      - name: Update npm
-        run: npm install -g npm@latest
-      - run: bun install
-      - name: Replace workspace dependencies
-        run: |
-          sed -i 's/"workspace:\*"/"*"/g' packages/duc-ts/package.json
-      - name: Build
-        run: bun duc-ts:build
-      - name: Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_LEGACY_PEER_DEPS: "true"
-        run: npx semantic-release --ci
-        working-directory: ./packages/duc-ts
+          event-type: trigger-ts-release
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-
-  # Release job for duc-py package
-  release_duc_py:
-    runs-on: ubuntu-latest
+  # Trigger Python release workflow
+  trigger_py_release:
     needs: paths
-    concurrency:
-      group: release-py
-      cancel-in-progress: false
+    runs-on: ubuntu-latest
     if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_py_changed == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - name: Trigger Python Release
+        uses: peter-evans/repository-dispatch@v3
         with:
-          fetch-depth: 0
-          ref: main
-          persist-credentials: true
-      - name: Set Git User
-        run: |
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
-      - name: Pull latest changes from origin/main
-        run: git pull --rebase origin main
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "latest"
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "lts/*"
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-      - name: Update npm
-        run: npm install -g npm@latest
-      - run: bun install
-      - name: Install Python dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install build twine
-      - name: Build
-        run: bun duc-py:build
-      - name: Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: npx semantic-release --ci
-        working-directory: ./packages/duc-py
+          event-type: trigger-py-release
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-
-  # Release job for duc-rs package
-  release_duc_rs:
-    runs-on: ubuntu-latest
+  # Trigger Rust release workflow
+  trigger_rs_release:
     needs: paths
-    concurrency:
-      group: release-rs
-      cancel-in-progress: false
+    runs-on: ubuntu-latest
     if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_rs_changed == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - name: Trigger Rust Release
+        uses: peter-evans/repository-dispatch@v3
         with:
-          fetch-depth: 0
-          ref: main
-          persist-credentials: true
-      - name: Set Git User
-        run: |
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
-      - name: Pull latest changes from origin/main
-        run: git pull --rebase origin main
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "latest"
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "lts/*"
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Update Rust toolchain
-        run: rustup update stable
-      - name: Update npm
-        run: npm install -g npm@latest
-      - run: bun install
-      - name: Build
-        run: bun duc-rs:build
-      - name: Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: npx semantic-release --ci
-        working-directory: ./packages/duc-rs
+          event-type: trigger-rs-release
+          token: ${{ secrets.GITHUB_TOKEN }}

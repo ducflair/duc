@@ -10,9 +10,6 @@
   },
   "author": "Ducflair",
   "license": "MIT",
-  "dependencies": {
-    "@ducflair/canvas": "*"
-  },
   "devDependencies": {
     "@types/bun": "latest",
     "semantic-release": "^24.1.2",
