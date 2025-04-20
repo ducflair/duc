@@ -16,10 +16,10 @@ jobs:
   paths:
     runs-on: ubuntu-latest
     outputs:
-      core_changed: ${{ steps.filter.outputs.core }}
       duc_ts_changed: ${{ steps.filter.outputs.duc_ts }}
       duc_py_changed: ${{ steps.filter.outputs.duc_py }}
       duc_rs_changed: ${{ steps.filter.outputs.duc_rs }}
+      web_changed: ${{ steps.filter.outputs.web }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,22 +29,20 @@ jobs:
         uses: dorny/paths-filter@v3
         with:
           filters: |
-            core:
-              - 'packages/core/**'
-              - 'turbo.json'
-              - 'package.json'
             duc_ts:
               - 'packages/duc-ts/**'
             duc_py:
               - 'packages/duc-py/**'
             duc_rs:
               - 'packages/duc-rs/**'
+            web:
+              - 'apps/web/**'
 
   # Trigger TypeScript release workflow
   trigger_ts_release:
     needs: paths
     runs-on: ubuntu-latest
-    if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_ts_changed == 'true'
+    if: needs.paths.outputs.duc_ts_changed == 'true'
     steps:
       - name: Trigger TypeScript Release
         uses: peter-evans/repository-dispatch@v3
@@ -56,22 +54,46 @@ jobs:
   trigger_py_release:
     needs: paths
     runs-on: ubuntu-latest
-    if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_py_changed == 'true'
+    if: needs.paths.outputs.duc_py_changed == 'true'
+    outputs:
+      status: ${{ steps.status.outputs.result }}
     steps:
       - name: Trigger Python Release
+        id: py_release
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: trigger-py-release
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set status
+        id: status
+        run: echo "result=success" >> $GITHUB_OUTPUT
 
   # Trigger Rust release workflow
   trigger_rs_release:
     needs: paths
     runs-on: ubuntu-latest
-    if: needs.paths.outputs.core_changed == 'true' || needs.paths.outputs.duc_rs_changed == 'true'
+    if: needs.paths.outputs.duc_rs_changed == 'true'
     steps:
       - name: Trigger Rust Release
         uses: peter-evans/repository-dispatch@v3
         with:
           event-type: trigger-rs-release
           token: ${{ secrets.GITHUB_TOKEN }}
+          
+  # Trigger web deployment after releases
+  trigger_web_deploy:
+    needs: [paths, trigger_py_release]
+    runs-on: ubuntu-latest
+    if: |
+      always() && 
+      (
+        needs.paths.outputs.web_changed == 'true' || 
+        (needs.trigger_py_release.result == 'success' && needs.trigger_py_release.outputs.status == 'success')
+      )
+    steps:
+      - name: Trigger Web Deployment
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-web-deployment
+          token: ${{ secrets.GITHUB_TOKEN }}
+          client-payload: '{"source": "release-coordinator", "web_changed": "${{ needs.paths.outputs.web_changed }}", "release_success": "true"}'
