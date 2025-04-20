@@ -17,8 +17,6 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
-  pages: write
-  id-token: write
 
 jobs:
   release_duc_py:
@@ -59,47 +57,17 @@ jobs:
         run: uv sync
         
       - name: Release
+        id: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: bunx semantic-release --ci
         working-directory: ./packages/duc-py
       
-  build_and_deploy_docs:
-    needs: release_duc_py
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Trigger docs deployment
+        if: steps.release.outcome == 'success'
+        uses: peter-evans/repository-dispatch@v3
         with:
-          python-version: '3.x'
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "latest"
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-      - name: Install dependencies
-        run: |
-          bun install
-          cd packages/duc-py
-          uv sync
-      - name: Build documentation
-        run: |
-          cd packages/duc-py
-          bun gen:docs
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'packages/duc-py/docs/_build'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4 
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: trigger-docs-deployment
+          client-payload: '{"source": "release-py", "success": true}' 
