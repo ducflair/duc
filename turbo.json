@@ -23,6 +23,11 @@
       "outputs": []
     },
 
+    "@ducflair/duc-py#gen:docs": {
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+
 
     "@duc/docs#build": {
       "env": [

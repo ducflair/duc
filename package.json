@@ -16,6 +16,7 @@
     "@types/react-dom": "^19.1.2",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",
+    "rimraf": "^6.0.1",
     "semantic-release": "^24.2.3",
     "tailwindcss": "^4.1.4",
     "turbo": "^2.5.0",
@@ -49,13 +50,16 @@
   "private": true,
   "scripts": {
     "gen": "cd schema && bash flatc-generate-all.sh",
-    "clean": "bunx rimraf dist node_modules **/package-lock.json **/tsconfig.tsbuildinfo",
+    "clean": "bun rimraf dist node_modules **/package-lock.json **/tsconfig.tsbuildinfo",
     "docs:dev": "turbo dev --filter=@duc/docs",
+    "docs:build": "turbo build --filter=@duc/docs",
+    "duc-py:docs:build": "turbo run gen:docs --filter=@ducflair/duc-py",
     "duc-py:build": "bun turbo run build --filter=@ducflair/duc-py -- ${1}",
     "duc-rs:build": "turbo build --filter=@ducflair/duc-rs",
     "duc-ts:build": "turbo build --filter=@ducflair/duc",
     "semantic-release": "turbo run semantic-release",
-    "sst:build": "bun run sst deploy",
+    "sst:build": "bash -c 'bun run sst:clean && sst unlock ${1:+--stage $1} && sst refresh ${1:+--stage $1} && sst deploy ${1:+--stage $1}' --",
+    "sst:clean": "bun rimraf .sst **/sst-env.d.ts **/sst.pyi",
     "sst:dev": "bun run sst dev"
   },
   "workspaces": [
