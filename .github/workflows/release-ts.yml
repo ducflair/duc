@@ -1,17 +1,22 @@
 name: Release TypeScript
 
+# Workflow temporarily disabled
+run-name: "DISABLED: Release TypeScript"
+
 on:
-  push:
-    branches:
-      - main
-      - next
-    paths:
-      - 'packages/core/**'
-      - 'packages/duc-ts/**'
-      - 'turbo.json'
-      - 'package.json'
-  repository_dispatch:
-    types: [trigger-ts-release]
+  workflow_dispatch:
+    # Keeping only manual trigger option
+  # Removed automatic triggers to disable workflow
+  # push:
+  #   branches:
+  #     - main
+  #     - next
+  #   paths:
+  #     - 'packages/duc-ts/**'
+  #     - 'turbo.json'
+  #     - 'package.json'
+  # repository_dispatch:
+  #   types: [trigger-ts-release]
 
 permissions:
   contents: write
