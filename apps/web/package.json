@@ -1,6 +1,7 @@
 {
-  "name": "@duc/web",
+  "name": "@duc/docs",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "build": "next build",

@@ -1,10 +1,10 @@
-import { docs, meta, pageCollection, blogCollection, pageMeta, blogMeta } from '@/.source'
+import { docsCollection, docsMeta, pageCollection, blogCollection, pageMeta, blogMeta } from '@/.source'
 import { createMDXSource } from 'fumadocs-mdx';
 import { loader } from 'fumadocs-core/source';
 
 export const source = loader({
   baseUrl: '/docs',
-  source: createMDXSource(docs, meta),
+  source: createMDXSource(docsCollection, docsMeta),
 });
 
 export const blogSource = loader({

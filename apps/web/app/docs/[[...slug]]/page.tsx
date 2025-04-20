@@ -10,7 +10,7 @@ import { InlineTOC } from 'fumadocs-ui/components/inline-toc';
 import mdxComponents from '@/components/mdxComponents';
 import { getGithubLastEdit } from 'fumadocs-core/server';
 import { githubDocsPath } from '@/app/layout.config';
- 
+
 
 export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
@@ -19,21 +19,27 @@ export default async function Page(props: {
   const page = source.getPage(params.slug);
   if (!page) notFound();
   
+  const path = `${githubDocsPath}/${page.file.path}`
   const time = await getGithubLastEdit({
     owner: 'ducflair',
     repo: 'duc',
-    path: `${githubDocsPath}/${page.file.path}`,
+    path,
   });
   const { body: MDX, toc } = await page.data.load();
 
   return (
     <DocsPage
+      toc={toc}
       full
       editOnGithub={{
         owner: 'ducflair',
         repo: 'duc',
         sha: 'main',
-        path: `${githubDocsPath}/${page.file.path}`,
+        path,
+      }}
+      tableOfContent={{
+        style: 'clerk',
+        single: false,
       }}
       lastUpdate={time ? new Date(time) : undefined}
     >

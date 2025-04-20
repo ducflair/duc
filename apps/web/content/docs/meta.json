@@ -2,7 +2,11 @@
   "pages": [
     "index",
     "get_started",
-    "docs",
+    "concepts",
+    "--- ---",
+    "typescript",
+    "python",
+    "rust",
     "--- ---",
     "roadmap",
     "updates",

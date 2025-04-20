@@ -15,7 +15,7 @@ export default $config({
       protect: ["production"].includes(input?.stage),
       home: "aws",
       aws: {
-        region,
+        region: "us-east-2",
       },
       cloudflare: "5.41.0",
     };
@@ -51,6 +51,18 @@ export default $config({
         NEXT_PUBLIC_SERVER_URL: isProduction
         ? server_url 
         : $dev ? dev_server_url : `https://${stageHostname}`,
+      },
+    });
+
+    // Host the Python generated docs
+    new sst.aws.StaticSite("MyPythonDocs", {
+      build: {
+        command: "bun duc-py:docs:build",
+        output: "packages/duc-py/docs/_build",
+      },
+      domain: domainName && {
+        name: `python.${domainName}`,
+        dns: sst.cloudflare.dns(),
       },
     });
   },
