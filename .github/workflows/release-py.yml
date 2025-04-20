@@ -6,7 +6,6 @@ on:
       - main
       - next
     paths:
-      - 'packages/core/**'
       - 'packages/duc-py/**'
       - 'turbo.json'
       - 'package.json'
@@ -24,6 +23,8 @@ jobs:
     concurrency:
       group: release-py
       cancel-in-progress: false
+    outputs:
+      release_status: ${{ steps.release.outputs.status }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,13 +60,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: bunx semantic-release --ci
-        working-directory: ./packages/duc-py
-      
-      - name: Trigger docs deployment
-        if: steps.release.outcome == 'success'
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: trigger-docs-deployment
-          client-payload: '{"source": "release-py", "success": true}' 
+        run: |
+          if bunx semantic-release --ci; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+          fi
+        working-directory: ./packages/duc-py 
