@@ -1,0 +1,270 @@
+---
+title: "Examples"
+date: 2024-04-22
+authors: [jorgedanisc]
+---
+
+
+## Common Use Cases
+
+This page demonstrates common use cases for the `ducpy` library with complete examples.
+
+### Create a New Duc File from Scratch
+
+```python
+import ducpy as duc
+from ducpy.classes import DucElementClass, AppStateClass, BinaryFilesClass
+
+# Create app state
+app_state = AppStateClass.AppState()
+app_state.zoom = 1.0
+app_state.scroll_x = 0
+app_state.scroll_y = 0
+app_state.view_background_color = "#ffffff"
+
+# Create elements
+elements = []
+
+# Add a text element
+text = DucElementClass.DucElement()
+text.id = "text1"
+text.type = "text"
+text.text = "Hello, Duc File Format!"
+text.font_family = "Arial"
+text.font_size_v3 = 24.0
+text.x_v3 = 100
+text.y_v3 = 100
+text.width_v3 = 300
+text.height_v3 = 50
+elements.append(text)
+
+# Add a rectangle
+rect = DucElementClass.DucElement()
+rect.id = "rect1"
+rect.type = "line"
+rect.x_v3 = 100
+rect.y_v3 = 200
+rect.width_v3 = 200
+rect.height_v3 = 100
+
+# Create points for rectangle
+p1 = DucElementClass.Point()
+p1.x_v3, p1.y_v3 = 100, 200
+p2 = DucElementClass.Point()
+p2.x_v3, p2.y_v3 = 300, 200
+p3 = DucElementClass.Point()
+p3.x_v3, p3.y_v3 = 300, 300
+p4 = DucElementClass.Point()
+p4.x_v3, p4.y_v3 = 100, 300
+p5 = DucElementClass.Point()
+p5.x_v3, p5.y_v3 = 100, 200
+rect.points = [p1, p2, p3, p4, p5]
+elements.append(rect)
+
+# Create binary files container
+files = BinaryFilesClass.BinaryFiles()
+
+# Save to file
+with open("new_drawing.duc", "wb") as f:
+    duc.serialize.serialize_to_flatbuffers(elements, app_state, files, f)
+```
+
+### Read and Modify an Existing Duc File
+
+```python
+import ducpy as duc
+
+# Open and parse an existing duc file
+with open("example.duc", "rb") as f:
+    duc_data = duc.parse.parse_duc_flatbuffers(f)
+
+elements = duc_data["elements"]
+app_state = duc_data["appState"]
+files = duc_data["files"]
+
+# Find all text elements
+text_elements = [elem for elem in elements if elem.type == "text"]
+
+# Modify text elements
+for text_elem in text_elements:
+    # Make all text uppercase
+    text_elem.text = text_elem.text.upper()
+    # Increase font size by 2
+    if hasattr(text_elem, "font_size_v3") and text_elem.font_size_v3:
+        text_elem.font_size_v3 += 2.0
+
+# Save modified file
+with open("modified_example.duc", "wb") as f:
+    duc.serialize.serialize_to_flatbuffers(elements, app_state, files, f)
+```
+
+### Extract and Process Images
+
+```python
+import ducpy as duc
+import os
+from PIL import Image
+import io
+
+# Open a duc file
+with open("with_images.duc", "rb") as f:
+    duc_data = duc.parse.parse_duc_flatbuffers(f)
+
+elements = duc_data["elements"]
+files = duc_data["files"]
+
+# Create output directory
+os.makedirs("extracted_images", exist_ok=True)
+
+# Find all image elements
+image_elements = [elem for elem in elements if elem.type == "image"]
+
+# Extract and process images
+for img_elem in image_elements:
+    if hasattr(img_elem, "file_id") and img_elem.file_id in files.entries:
+        file_data = files.entries[img_elem.file_id]
+        
+        # Create a PIL image from binary data
+        img = Image.open(io.BytesIO(file_data.data))
+        
+        # Apply some processing (e.g., grayscale conversion)
+        img_gray = img.convert('L')
+        
+        # Save processed image
+        img_gray.save(f"extracted_images/{img_elem.id}_gray.png")
+        
+        # Re-save to binary data
+        output = io.BytesIO()
+        img_gray.save(output, format='PNG')
+        
+        # Update binary data in the files storage
+        file_data.data = output.getvalue()
+
+# Save modified file with processed images
+with open("processed_images.duc", "wb") as f:
+    duc.serialize.serialize_to_flatbuffers(elements, duc_data["appState"], files, f)
+```
+
+### Creating an Animation
+
+```python
+import ducpy as duc
+import copy
+import math
+
+# Create a new duc file with animation frames
+app_state = duc.classes.AppStateClass.AppState()
+app_state.zoom = 1.0
+files = duc.classes.BinaryFilesClass.BinaryFiles()
+
+# Create a circle element
+def create_circle(x, y, radius):
+    circle = duc.classes.DucElementClass.DucElement()
+    circle.id = f"circle_{x}_{y}"
+    circle.type = "line"
+    circle.x_v3 = x
+    circle.y_v3 = y
+    
+    # Create points for a circle approximation
+    points = []
+    for i in range(36):
+        angle = math.radians(i * 10)
+        point = duc.classes.DucElementClass.Point()
+        point.x_v3 = x + radius * math.cos(angle)
+        point.y_v3 = y + radius * math.sin(angle)
+        points.append(point)
+    
+    # Add closing point
+    closing_point = copy.deepcopy(points[0])
+    points.append(closing_point)
+    
+    circle.points = points
+    return circle
+
+# Generate 10 animation frames
+for frame in range(10):
+    elements = []
+    
+    # Create a circle with increasing radius
+    radius = 50 + frame * 10
+    circle = create_circle(300, 300, radius)
+    elements.append(circle)
+    
+    # Save each frame as a separate file
+    with open(f"animation_frame_{frame}.duc", "wb") as f:
+        duc.serialize.serialize_to_flatbuffers(elements, app_state, files, f)
+```
+
+## Integration with Other Libraries
+
+### Using ducpy with NumPy for Data Visualization
+
+```python
+import ducpy as duc
+import numpy as np
+
+# Create sample data
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
+
+# Scale data to fit in the drawing
+scale_x = 50
+scale_y = 50
+offset_x = 100
+offset_y = 200
+
+# Create app state and files
+app_state = duc.classes.AppStateClass.AppState()
+app_state.zoom = 1.0
+files = duc.classes.BinaryFilesClass.BinaryFiles()
+
+# Create elements list
+elements = []
+
+# Create a line chart from NumPy data
+line = duc.classes.DucElementClass.DucElement()
+line.id = "sin_curve"
+line.type = "line"
+
+# Convert NumPy data to points
+points = []
+for i in range(len(x)):
+    point = duc.classes.DucElementClass.Point()
+    point.x_v3 = offset_x + x[i] * scale_x
+    point.y_v3 = offset_y - y[i] * scale_y  # Negative to flip Y axis
+    points.append(point)
+
+line.points = points
+elements.append(line)
+
+# Add axes
+x_axis = duc.classes.DucElementClass.DucElement()
+x_axis.id = "x_axis"
+x_axis.type = "line"
+x_axis_p1 = duc.classes.DucElementClass.Point()
+x_axis_p1.x_v3 = offset_x
+x_axis_p1.y_v3 = offset_y
+x_axis_p2 = duc.classes.DucElementClass.Point()
+x_axis_p2.x_v3 = offset_x + 10 * scale_x
+x_axis_p2.y_v3 = offset_y
+x_axis.points = [x_axis_p1, x_axis_p2]
+elements.append(x_axis)
+
+y_axis = duc.classes.DucElementClass.DucElement()
+y_axis.id = "y_axis"
+y_axis.type = "line"
+y_axis_p1 = duc.classes.DucElementClass.Point()
+y_axis_p1.x_v3 = offset_x
+y_axis_p1.y_v3 = offset_y + scale_y
+y_axis_p2 = duc.classes.DucElementClass.Point()
+y_axis_p2.x_v3 = offset_x
+y_axis_p2.y_v3 = offset_y - scale_y
+y_axis.points = [y_axis_p1, y_axis_p2]
+elements.append(y_axis)
+
+# Save the visualization
+with open("numpy_visualization.duc", "wb") as f:
+    duc.serialize.serialize_to_flatbuffers(elements, app_state, files, f)
+```
+
+These examples demonstrate some of the common use cases and integration possibilities for the `ducpy` library. You can adapt and extend these examples to fit your specific needs. 

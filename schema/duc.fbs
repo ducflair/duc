@@ -1,0 +1,366 @@
+// Official FlatBuffers Compiler: https://flatbuffers.ar.je/ 
+// Official FlatBuffers Documentation: https://flatbuffers.dev/tutorial/
+
+// To maintain backward compatibility when evolving FlatBuffers schemas, follow these guidelines:
+
+// - **Should be fine to rename fields**
+// - **Add new fields at the END of tables**: This ensures older code can still read the data without issues.
+// - **DONT REMOVE FIELDS**: Instead of deleting unused fields, mark them as deprecated to prevent their use in new code while maintaining compatibility with existing data.
+// - **DONT CHANGE FIELD TYPES**: Modifying a field's type can lead to incompatibilities. If necessary, add a new field with the desired type and deprecate the old one.
+// - **BE CAREFUL WITH DEFAULT VALUES**: Changing default values can cause inconsistencies when reading older data. It's best to set appropriate defaults initially and avoid altering them. 
+
+namespace Duc;
+
+
+
+
+// /////////////////////
+
+// Point type
+table Point {
+  x_v2: float = null;
+  y_v2: float = null;
+  is_curve: bool = null;
+  mirroring: byte = null;
+  border_radius: double = null;
+  handle_in: SimplePoint;
+  handle_out: SimplePoint;
+  x_v3: double;
+  y_v3: double;
+  peer: int; // Since version 5
+}
+
+table PointBinding {
+  element_id: string;
+  focus: float;
+  gap: float;
+  fixed_point: Point;
+  point: BindingPoint;  // Optional point binding info
+  head: byte;  // LINE_HEAD values
+}
+
+table BindingPoint {
+  index: int;
+  offset: float;  // -1 to 1 range
+}
+
+table SimplePoint {
+  x: double;
+  y: double;  
+}
+
+table TilingProperties {
+  size_in_percent: double;
+  angle: double;
+  spacing: double = null;
+  offset_x: double = null;
+  offset_y: double = null;
+}
+
+table ElementContentBase {
+  preference: byte;  // ELEMENT_CONTENT_PREFERENCE values
+  src: string;
+  visible: bool;
+  opacity: double;
+  tiling: TilingProperties;
+}
+
+table StrokeStyle {
+  preference: byte;  // STROKE_PREFERENCE values
+  cap: byte = null;  // STROKE_CAP values
+  join: byte = null;  // STROKE_JOIN values
+  dash: [double];
+  dash_cap: byte = null;  // STROKE_CAP values
+  miter_limit: double = null;
+}
+
+table StrokeSides {
+  preference: byte;  // STROKE_SIDE_PREFERENCE values
+  values: [double];
+}
+
+table ElementStroke {
+  content: ElementContentBase;
+  width: double;
+  style: StrokeStyle;
+  placement: byte;  // 10: inside, 11: center, 12: outside
+  stroke_sides: StrokeSides;
+}
+
+table ElementBackground {
+  content: ElementContentBase;
+}
+
+table ImageCrop {
+  x: double;
+  y: double;
+  width: double;
+  height: double;
+  natural_width: double;
+  natural_height: double;
+}
+
+// Base table for DucElement with common fields
+table DucElement {
+  id: string;
+  type: string;  // "text", "line", "freedraw", "image", "frame", "group", "magicframe", "iframe"
+  x_v2: float = null;
+  y_v2: float = null;
+  index: string (deprecated);
+  scope: string;
+  writing_layer: string (deprecated);
+  label: string;
+  is_visible: bool;
+  roundness_type_v2: string (deprecated);
+  roundness_value_v2: int (deprecated);
+  background_color_v3: string;
+  stroke_color_v3: string;
+  stroke_width_v2: int (deprecated);
+  stroke_style_v2: string (deprecated);
+  fill_style_v2: string (deprecated);
+  stroke_placement: byte (deprecated);
+  opacity: float;
+  width_v2: float = null;
+  height_v2: float = null;
+  angle_v2: float = null;
+  is_deleted: bool;
+  group_ids: [string];
+  frame_id: string;
+  bound_elements: [BoundElement];
+  link: string;
+  locked: bool;
+  
+  // MagicFrameElement specific fields
+  custom_data: string (deprecated);
+  
+  is_stroke_disabled: bool (deprecated);
+  is_background_disabled: bool (deprecated);
+  
+  // TextElement specific fields
+  font_size_v2: int = null;
+  font_family: string;
+  text: string;
+  text_align_v2: string (deprecated);
+  vertical_align_v2: string (deprecated);
+  container_id: string;
+  original_text: string (deprecated);
+  line_height_v2: float = null;
+  auto_resize: bool = null;
+  
+  // LinearElement specific fields
+  points: [Point];
+  last_committed_point: Point;
+  start_binding: PointBinding;
+  end_binding: PointBinding;
+  start_arrowhead: string (deprecated);
+  end_arrowhead: string (deprecated);
+  elbowed: bool = null;
+  
+  // FreeDrawElement specific fields
+  pressures_v2: [float] (deprecated);
+  simulate_pressure: bool = null;
+  
+  // ImageElement specific fields
+  file_id: string;
+  status: string;
+  scale_v2: Point (deprecated);
+  
+  // FrameElement specific fields
+  is_collapsed: bool = null;
+  name: string; // FIXME: Perhaps will be deprecated because of field "label"
+  
+  // GroupElement specific fields
+  group_id_ref: string;
+
+  stroke_style_v3: byte;
+  fill_style_v3: byte;
+  text_align_v3: byte = null;
+  vertical_align_v3: byte;
+  x_v3: double;
+  y_v3: double;
+  scale_v3: SimplePoint;
+  pressures_v3: [double];
+  stroke_width_v3: double;
+  angle_v3: double;
+  roundness: double;
+  width_v3: double;
+  height_v3: double;
+  font_size_v3: double = null;
+  line_height_v3: double = null;
+
+  blending: byte = null;
+  background: [ElementBackground];
+  stroke: [ElementStroke];
+  crop: ImageCrop;  // For image elements
+  clip: bool = null;  // For frame based elements
+  
+  subset: byte = null;  // ELEMENT_SUBSET values
+  z_index: int;
+}
+
+// Define a table for BoundElement used in DucElement
+table BoundElement {
+  id: string;
+  type: string;  // Any valid DucElementTypes
+}
+
+// LinearElementEditor
+table SegmentMidpointState {
+  value: Point;
+  index: int;
+  added: bool;
+}
+
+table PointerDownState {
+  prev_selected_points_indices: [int];
+  last_clicked_point: int;
+  last_clicked_is_end_point: bool;
+  origin: SimplePoint;
+  segment_midpoint: SegmentMidpointState;
+  handle_type: byte = null;
+}
+
+table LinearElementEditor {
+  element_id: string;
+  selected_points_indices: [int];
+  pointer_down_state: PointerDownState;
+  is_dragging: bool;
+  last_uncommitted_point: Point;
+  pointer_offset: SimplePoint;
+  start_binding_element: string;
+  end_binding_element: string;
+  hover_point_index: int;
+  segment_mid_point_hovered_coords: Point;
+}
+// 
+
+
+table DucGroup {
+  id: string;
+  type: string;
+  is_collapsed: bool;
+  label: string;
+  scope: string;
+  writing_layer: string (deprecated);
+}
+
+table AppState {
+  active_embeddable_element: DucElement (deprecated);
+  active_embeddable_state: string (deprecated);
+  dragging_element: DucElement (deprecated);
+  resizing_element: DucElement (deprecated);
+  multi_element: DucElement (deprecated);
+  selection_element: DucElement (deprecated);
+  frame_to_highlight: DucElement (deprecated);
+  frame_rendering_enabled: bool;
+  frame_rendering_name: bool;
+  frame_rendering_outline: bool;
+  frame_rendering_clip: bool;
+  editing_frame: string (deprecated);
+  elements_to_highlight: [DucElement] (deprecated);
+  editing_element: DucElement (deprecated);
+  current_item_stroke_color: string (deprecated);
+  current_item_stroke_placement_v2: int (deprecated);
+  current_item_background_color: string (deprecated);
+  current_item_fill_style: string (deprecated);
+  current_item_stroke_width_v2: int (deprecated);
+  current_item_stroke_style: string (deprecated);
+  current_item_roughness: int (deprecated);
+  current_item_opacity: float;
+  current_item_font_family: int (deprecated);
+  current_item_font_size_v2: int (deprecated);
+  current_item_text_align: string (deprecated);
+  current_item_start_arrowhead: string (deprecated);
+  current_item_end_arrowhead: string (deprecated);
+  current_item_roundness: string (deprecated);
+  view_background_color: string;
+  scope: string;
+  writing_layer: string (deprecated);
+  groups: [DucGroup];
+  scroll_x: float;
+  scroll_y: float;
+  cursor_button: string;
+  scrolled_outside: bool;
+  name: string;
+  zoom: float;
+  last_pointer_down_with: string;
+  selected_element_ids: [string];
+  previous_selected_element_ids: [string] (deprecated);
+  selected_elements_are_being_dragged: bool (deprecated);
+  should_cache_ignore_zoom: bool (deprecated);
+  grid_size: int;
+  selected_group_ids: [string] (deprecated);
+  editing_group_id: string (deprecated);
+  paste_dialog_shown: bool (deprecated);
+  paste_dialog_data: string (deprecated);
+  scale_ratio_locked: bool;
+  display_all_point_distances: bool;
+  display_distance_on_drawing: bool;
+  display_all_point_coordinates: bool;
+  display_all_point_info_selected: bool;
+  display_root_axis: bool;
+
+  enable_line_bending_on_edit: bool (deprecated);
+  allow_independent_curve_handles: bool (deprecated); 
+  coord_decimal_places: int (deprecated);
+
+  current_item_fill_style_v3: byte (deprecated);
+  current_item_stroke_style_v3: byte (deprecated);
+  current_item_text_align_v3: byte;
+  line_bending_mode: bool;
+
+  current_item_stroke_width_v3: double (deprecated);
+  current_item_stroke_placement_v3: byte (deprecated);
+  current_item_font_size_v3: double;
+  coord_decimal_places_v3: byte;
+  current_item_stroke: ElementStroke;
+  current_item_background: ElementBackground;
+  
+  main_scope: string;  // The preferred scope for the design
+  standard: byte;  // DESIGN_STANDARD values
+  current_item_start_line_head: byte = null;  // LINE_HEAD values
+  current_item_end_line_head: byte = null;  // LINE_HEAD values
+  current_item_roundness_v3: double;
+
+  anti_aliasing: byte;
+  v_sync: bool;
+
+  current_item_font_family_v2: string;
+  debug_rendering: bool;
+
+  current_item_subset: byte = null;  // ELEMENT_SUBSET values
+  editing_linear_element: LinearElementEditor;
+  grid_mode_enabled: bool;
+  grid_step: int;
+}
+
+// Define the BinaryFileData table
+table BinaryFileData {
+  mime_type: string;
+  id: string;
+  data: [ubyte];
+  created: long;
+  last_retrieved: long;
+}
+
+// Define a table to hold the BinaryFiles mapping
+table BinaryFilesEntry {
+  key: string;
+  value: BinaryFileData;
+}
+
+table BinaryFiles {
+  entries: [BinaryFilesEntry];
+}
+
+// Finally, define the ExportedDataState table
+table ExportedDataState {
+  type: string;
+  version: int;
+  source: string;
+  elements: [DucElement];
+  app_state: AppState;
+  files: BinaryFiles;
+}
+
+root_type ExportedDataState;
