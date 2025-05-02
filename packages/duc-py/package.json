@@ -3,12 +3,12 @@
   "version": "0.0.0-development",
   "private": true,
   "scripts": {
-    "install-deps": "python3 -m pip install -r requirements.txt",
     "build": "bash -c 'SETUPTOOLS_SCM_PRETEND_VERSION=${1} uv build' --",
     "gen:docs": "bun clean:docs && cd docs && uv run make html",
     "clean:docs": "cd docs && uv run make clean",
-    "test": "python3 -m unittest discover tests",
-    "prepublish": "python3 setup.py sdist bdist_wheel",
+    "test": "uv run pytest",
+    "test:verbose": "uv run pytest -v",
+    "prerelease": "uv sync && npm run test",
     "semantic-release": "semantic-release"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 from ..Duc.BinaryFiles import BinaryFiles as FlatBuffersBinaryFiles
 import base64
-from typing import Dict
+from typing import Dict, Optional
 from ..classes.BinaryFilesClass import BinaryFiles
 
 def uint8array_to_data_url(data: bytes, mime_type: str) -> str:
@@ -27,18 +27,28 @@ def parse_binary_files(binary_files: FlatBuffersBinaryFiles) -> Dict[str, Binary
 
         # Get binary file data
         mime_type = value.MimeType().decode('utf-8') if value.MimeType() else 'application/octet-stream'
-        file_id = value.Id().decode('utf-8') if value.Id() else None
+        file_id = value.Id().decode('utf-8') if value.Id() else key.decode('utf-8')
         
         # Get data as bytes
-        data = bytes(value.DataAsNumpy()) if value.DataAsNumpy() is not None else None
+        data: Optional[bytes] = bytes(value.DataAsNumpy()) if value.DataAsNumpy() is not None else None
         
-        # Create BinaryFiles object
-        files[key.decode('utf-8')] = BinaryFiles(
-            mime_type=mime_type,
+        # Create data URL from binary data
+        data_url = uint8array_to_data_url(data, mime_type) if data else None
+        
+        # Get timestamps
+        created = value.Created() or 0
+        last_retrieved = value.LastRetrieved() or created
+        
+        # Create BinaryFiles object with correct parameters
+        binary_file = BinaryFiles(
+            mimeType=mime_type,
             id=file_id,
-            data=data,
-            created=value.Created(),
-            last_retrieved=value.LastRetrieved()
+            created=created,
+            dataURL=data_url,
+            lastRetrieved=last_retrieved,
+            status="saved" if data else "pending"
         )
+        
+        files[key.decode('utf-8')] = binary_file
 
     return files
