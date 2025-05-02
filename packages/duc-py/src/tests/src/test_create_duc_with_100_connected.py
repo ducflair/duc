@@ -1,20 +1,25 @@
-import argparse
+"""
+Test creating a DUC file with 100 randomly connected elements.
+"""
 import random
 import uuid
+import os
 from typing import List, Dict
 
-from ..ducpy.classes.DucElementClass import DucElementUnion, DucLinearElement, DucRectangleElement
-from ..ducpy.classes.AppStateClass import AppState
-from ..ducpy.classes.BinaryFilesClass import BinaryFiles
-from ..ducpy.utils.ElementTypes import (
+import pytest
+
+from ducpy.classes.DucElementClass import DucElementUnion, DucLinearElement, DucRectangleElement
+from ducpy.classes.AppStateClass import AppState
+from ducpy.classes.BinaryFilesClass import BinaryFiles
+from ducpy.utils.ElementTypes import (
     BoundElement, BindingPoint, ElementBackground, Point, PointBinding,
     ElementStroke, ElementContentBase, StrokeStyle, StrokeSides
 )
-from ..ducpy.utils.enums import (
+from ducpy.utils.enums import (
     ElementType, ElementContentPreference, StrokePreference,
     StrokePlacement, StrokeJoin, StrokeCap
 )
-from ..ducpy.serialize.serialize_duc import save_as_flatbuffers
+from ducpy.serialize.serialize_duc import save_as_flatbuffers
 
 scope = "mm"
 
@@ -150,7 +155,6 @@ def create_connected_elements(num_elements: int = 100) -> List[DucElementUnion]:
         parent_y = parent_element.y
         
         # Calculate random position for new element
-        angle = random.uniform(0, 2 * 3.14159)
         distance = random.uniform(100, 300)
         new_x = parent_x + distance * random.uniform(-1, 1)
         new_y = parent_y + distance * random.uniform(-1, 1)
@@ -183,14 +187,14 @@ def create_connected_elements(num_elements: int = 100) -> List[DucElementUnion]:
     
     return elements
 
-def main():
-    parser = argparse.ArgumentParser(description='Create a DUC file with 100 connected elements')
-    parser.add_argument('-o', '--output', required=True, help='Output DUC file path')
-    
-    args = parser.parse_args()
-    
+
+def test_create_connected_duc(test_output_dir):
+    """Test creating a DUC file with 100 connected elements."""
+    num_elements = 100
+    output_file = os.path.join(test_output_dir, "test_100_connected.duc")
+
     # Create elements
-    elements = create_connected_elements()
+    elements = create_connected_elements(num_elements)
     
     # Create minimal app state
     app_state = AppState()
@@ -201,13 +205,12 @@ def main():
     # Serialize and save
     duc_bytes = save_as_flatbuffers(elements, app_state, files)
     
-    with open(args.output, 'wb') as f:
+    with open(output_file, 'wb') as f:
         f.write(duc_bytes)
     
-    print(f"Created DUC file with {len(elements)} connected elements at {args.output}")
-
-if __name__ == '__main__':
-    main()
+    print(f"Created DUC file with {len(elements)} connected elements at {output_file}")
+    assert os.path.exists(output_file), f"Output file was not created: {output_file}"
+    assert os.path.getsize(output_file) > 0, "Output file is empty"
 
 # This test should:
 # 1. Create 100 random elements that are all connected via BoundElement / BindingPoint / PointBinding, consisting of linear elements and rectangles.
