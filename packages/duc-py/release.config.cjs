@@ -7,7 +7,7 @@ module.exports = {
       "@semantic-release/exec",
       {
         prepareCmd:
-          'uv sync && bun run build ${nextRelease.version}',
+          'bun prerelease && bun run build ${nextRelease.version}',
         publishCmd:
           "uv publish --token ${process.env.PYPI_TOKEN}"
       }
