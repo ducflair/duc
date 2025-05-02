@@ -1,22 +1,22 @@
-# ducflair-duc (Rust)
+# duc (Rust)
 
 <p align="center">
   <br/>
-  <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://ducflair-public.s3.eu-west-2.amazonaws.com/duc/duc-extended.png" /></a>
+  <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://raw.githubusercontent.com/ducflair/assets/refs/heads/main/src/duc/duc-extended.png" /></a>
   <p align="center">2D CAD File Format</p>
   <p align="center" style="align: center;">
-    <a href="https://crates.io/crates/ducflair-duc/"><img src="https://shields.io/badge/Crates-FFC933?logo=Rust&logoColor=646464&style=round-square" alt="Crates" /></a>
-    <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/crates/v/ducflair-duc?style=round-square&label=latest%20stable" alt="Crates.io ducflair-duc@latest release" /></a>
-    <a href="https://crates.io/crates/ducflair-duc"><img src="https://img.shields.io/crates/d/ducflair-duc?style=round-square&color=salmon" alt="Downloads" /></a>
+    <a href="https://crates.io/crates/duc/"><img src="https://shields.io/badge/Crates-FFC933?logo=Rust&logoColor=646464&style=round-square" alt="Crates" /></a>
+    <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/crates/v/duc?style=round-square&label=latest%20stable" alt="Crates.io duc@latest release" /></a>
+    <a href="https://crates.io/crates/duc"><img src="https://img.shields.io/crates/d/duc?style=round-square&color=salmon" alt="Downloads" /></a>
     <img src="https://shields.io/badge/Rust-CE412B?logo=Rust&logoColor=fff&style=round-square" alt="Rust" />
   </p>
 </p>
 
-The `ducflair-duc` crate provides a robust Rust implementation for the `duc` 2D CAD file format, a cornerstone of our advanced design system. Designed for professionals seeking precision and efficiency, this crate ensures seamless integration and manipulation of `duc` files within your Rust projects.
+The `duc` crate provides a robust Rust implementation for the `duc` 2D CAD file format, a cornerstone of our advanced design system. Designed for professionals seeking precision and efficiency, this crate ensures seamless integration and manipulation of `duc` files within your Rust projects.
 
 ## Introduction
 
-The `ducflair-duc` crate offers comprehensive Rust types and helper functions to work effortlessly with the `duc` CAD file format. Built with efficiency and performance in mind, this crate enables you to parse, validate, and manipulate `duc` files with ease.
+The `duc` crate offers comprehensive Rust types and helper functions to work effortlessly with the `duc` CAD file format. Built with efficiency and performance in mind, this crate enables you to parse, validate, and manipulate `duc` files with ease.
 
 ## Features
 
@@ -30,12 +30,12 @@ The `ducflair-duc` crate offers comprehensive Rust types and helper functions to
 Install the crate using Cargo:
 
 ```bash
-cargo add ducflair-duc
+cargo add duc
 ```
 
 ## Usage
 ```rust
-use ducflair_duc::duc::*;
+use duc::*;
 ```
 
 

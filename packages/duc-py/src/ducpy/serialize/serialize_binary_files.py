@@ -1,5 +1,5 @@
 import flatbuffers
-from typing import Dict
+from typing import Dict, Union, Any
 from ..Duc.BinaryFiles import (
     Start as BinaryFilesStart,
     End as BinaryFilesEnd,
@@ -18,7 +18,13 @@ from ..Duc.BinaryFileData import (
 )
 from ..classes.BinaryFilesClass import BinaryFiles
 
-def serialize_binary_files(builder: flatbuffers.Builder, binary_files: Dict[str, BinaryFiles]) -> int:
+def get_attribute(obj: Union[Dict, Any], attr: str, alt_attr: str = None):
+    """Safely get an attribute from an object or dictionary."""
+    if isinstance(obj, dict):
+        return obj.get(attr, obj.get(alt_attr) if alt_attr else None)
+    return getattr(obj, attr, getattr(obj, alt_attr, None) if alt_attr else None)
+
+def serialize_binary_files(builder: flatbuffers.Builder, binary_files: Dict[str, Union[Dict, BinaryFiles]]) -> int:
     if not binary_files:
         return 0
 
@@ -30,12 +36,16 @@ def serialize_binary_files(builder: flatbuffers.Builder, binary_files: Dict[str,
         key_offset = builder.CreateString(file_id)
         
         # Create BinaryFileData
-        mime_type_offset = builder.CreateString(binary_file.mime_type) if binary_file.mime_type else None
-        id_offset = builder.CreateString(binary_file.id) if binary_file.id else None
+        mime_type = get_attribute(binary_file, "mimeType", "mime_type")
+        mime_type_offset = builder.CreateString(mime_type) if mime_type else None
+        
+        file_id = get_attribute(binary_file, "id")
+        id_offset = builder.CreateString(file_id) if file_id else None
         
         # Create data vector if exists
-        if binary_file.data:
-            data_bytes = binary_file.data.encode('utf-8') if isinstance(binary_file.data, str) else binary_file.data
+        data = get_attribute(binary_file, "data")
+        if data:
+            data_bytes = data.encode('utf-8') if isinstance(data, str) else data
             StartDataVector(builder, len(data_bytes))
             for byte in reversed(data_bytes):
                 builder.PrependUint8(byte)
@@ -51,10 +61,15 @@ def serialize_binary_files(builder: flatbuffers.Builder, binary_files: Dict[str,
             AddId(builder, id_offset)
         if data_vector:
             AddData(builder, data_vector)
-        if binary_file.created:
-            AddCreated(builder, binary_file.created)
-        if binary_file.last_retrieved:
-            AddLastRetrieved(builder, binary_file.last_retrieved)
+        
+        created = get_attribute(binary_file, "created")
+        if created:
+            AddCreated(builder, created)
+        
+        last_retrieved = get_attribute(binary_file, "last_retrieved", "lastRetrieved")
+        if last_retrieved:
+            AddLastRetrieved(builder, last_retrieved)
+            
         value_offset = BinaryFileDataEnd(builder)
         
         # Create BinaryFilesEntry

@@ -1,5 +1,5 @@
 [package]
-name = "ducflair-duc"
+name = "duc"
 version = "0.0.0-development"
 edition = "2021"
 description = "The duc 2D CAD file format Rust implementation."
@@ -10,6 +10,5 @@ readme = "README.md"
 
 [dependencies]
 flatbuffers = "24.3.25"
-duc-rs = { path = "../core/canvas/duc/duc-rs" }
 
 [dev-dependencies]
