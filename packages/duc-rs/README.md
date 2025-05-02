@@ -35,7 +35,7 @@ cargo add duc
 
 ## Usage
 ```rust
-use ducflair_duc::duc::*;
+use duc::*;
 ```
 
 
