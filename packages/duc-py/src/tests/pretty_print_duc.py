@@ -5,7 +5,7 @@
 import argparse
 from typing import Dict, Any
 
-from ..ducpy.parse.parse_duc import parse_duc_flatbuffers
+from ducpy.parse.parse_duc import parse_duc_flatbuffers
 from rich.pretty import pprint as rich_pprint
 
 def print_duc_file(input_path: str):
