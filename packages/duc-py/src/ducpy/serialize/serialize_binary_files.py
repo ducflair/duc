@@ -1,5 +1,5 @@
 import flatbuffers
-from typing import Dict, Union, Any
+from typing import Dict, Union, Any, List
 from ..Duc.BinaryFiles import (
     Start as BinaryFilesStart,
     End as BinaryFilesEnd,
@@ -17,6 +17,38 @@ from ..Duc.BinaryFileData import (
     AddCreated, AddLastRetrieved, AddData
 )
 from ..classes.BinaryFilesClass import BinaryFiles
+
+def create_binary_file_data_dict(mime_type: str, image_id: str, image_bytes: bytes, timestamp_ms: int) -> Dict[str, BinaryFiles]:
+    """
+    Creates a dictionary representing the data for a single binary file.
+    This dictionary is suitable for use as a value in the main binary_files dictionary
+    passed to serialize_binary_files.
+    """
+    return {
+        "id": image_id,
+        "mimeType": mime_type,
+        "created": timestamp_ms,
+        "last_retrieved": timestamp_ms,
+        "data": image_bytes
+    }
+
+def create_binary_files_dict_from_list(files_data: List[Dict[str, BinaryFiles]]) -> Dict[str, Dict[str, BinaryFiles]]:
+    """
+    Creates the main binary_files dictionary from a list of file data dictionaries.
+    Each item in the list should be a dictionary with keys:
+    'image_id', 'mime_type', 'image_bytes', 'timestamp_ms'.
+    The 'image_id' will be used as the key in the output dictionary and for the 'id' field.
+    """
+    binary_files_dict = {}
+    for file_info in files_data:
+        image_id = file_info['image_id']
+        binary_files_dict[image_id] = create_binary_file_data_dict(
+            mime_type=file_info['mime_type'],
+            image_id=image_id,
+            image_bytes=file_info['image_bytes'],
+            timestamp_ms=file_info['timestamp_ms']
+        )
+    return binary_files_dict
 
 def get_attribute(obj: Union[Dict, Any], attr: str, alt_attr: str = None):
     """Safely get an attribute from an object or dictionary."""

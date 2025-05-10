@@ -5068,16 +5068,28 @@ pub unsafe fn root_as_exported_data_state_unchecked(buf: &[u8]) -> ExportedDataS
 pub unsafe fn size_prefixed_root_as_exported_data_state_unchecked(buf: &[u8]) -> ExportedDataState {
   flatbuffers::size_prefixed_root_unchecked::<ExportedDataState>(buf)
 }
+pub const EXPORTED_DATA_STATE_IDENTIFIER: &str = "DUC_";
+
+#[inline]
+pub fn exported_data_state_buffer_has_identifier(buf: &[u8]) -> bool {
+  flatbuffers::buffer_has_identifier(buf, EXPORTED_DATA_STATE_IDENTIFIER, false)
+}
+
+#[inline]
+pub fn exported_data_state_size_prefixed_buffer_has_identifier(buf: &[u8]) -> bool {
+  flatbuffers::buffer_has_identifier(buf, EXPORTED_DATA_STATE_IDENTIFIER, true)
+}
+
 #[inline]
 pub fn finish_exported_data_state_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(
     fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
     root: flatbuffers::WIPOffset<ExportedDataState<'a>>) {
-  fbb.finish(root, None);
+  fbb.finish(root, Some(EXPORTED_DATA_STATE_IDENTIFIER));
 }
 
 #[inline]
 pub fn finish_size_prefixed_exported_data_state_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<ExportedDataState<'a>>) {
-  fbb.finish_size_prefixed(root, None);
+  fbb.finish_size_prefixed(root, Some(EXPORTED_DATA_STATE_IDENTIFIER));
 }
 }  // pub mod Duc
 
