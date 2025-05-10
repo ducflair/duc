@@ -80,11 +80,11 @@ def serialize_app_state(builder: flatbuffers.Builder, app_state: AppState) -> in
     # Create stroke and background vectors
     current_item_stroke_vector = None
     if app_state.current_item_stroke:
-        current_item_stroke_vector = serialize_element_stroke(builder, app_state.current_item_stroke)
+        current_item_stroke_vector = serialize_element_stroke(builder, [app_state.current_item_stroke])
 
     current_item_background_vector = None
     if app_state.current_item_background:
-        current_item_background_vector = serialize_element_background(builder, app_state.current_item_background)
+        current_item_background_vector = serialize_element_background(builder, [app_state.current_item_background])
 
     # Now start building the AppState table
     AppStateStart(builder)

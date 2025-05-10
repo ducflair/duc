@@ -11,8 +11,7 @@
 
 namespace Duc;
 
-
-
+file_identifier "DUC_";
 
 // /////////////////////
 

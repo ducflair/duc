@@ -71,13 +71,13 @@ def serialize_as_flatbuffers(elements: List[DucElementUnion], app_state: AppStat
         
         # Finish building
         exported_data = ExportedDataStateEnd(builder)
-        builder.Finish(exported_data)
+        builder.Finish(exported_data, b"DUC_")
         
         return builder.Output()
         
     except Exception as e:
         logger.error(f"Serialization failed with error: {str(e)}")
-        raise
+        return None
 
 def save_as_flatbuffers(elements: List[DucElementUnion], app_state: AppState, files: Dict[str, BinaryFiles], name: str = "Untitled") -> bytes:
     try:
