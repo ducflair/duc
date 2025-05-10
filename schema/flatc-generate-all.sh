@@ -4,8 +4,8 @@
 set -eo pipefail
 
 # Configure logging
-LOG_DIR="build_logs"
-TARGET_DIR="packages"
+LOG_DIR="../build_logs"
+TARGET_DIR="../packages"
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 mkdir -p "$LOG_DIR"
 
@@ -26,6 +26,7 @@ fi
 TS_SUCCESS=false
 PY_SUCCESS=false
 RUST_SUCCESS=false
+
 
 # Create output directories
 mkdir -p $TARGET_DIR/duc-ts $TARGET_DIR/duc-py/src/ducpy $TARGET_DIR/duc-rs/src

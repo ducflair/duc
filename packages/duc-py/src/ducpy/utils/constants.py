@@ -21,7 +21,7 @@ EXPORT_DATA_TYPES = {
     "excalidrawClipboardWithAPI": "excalidraw-api/clipboard",
 }
 
-EXPORT_SOURCE = "pdf-to-duc"
+EXPORT_SOURCE = "ducpy"
 
 VERSIONS = {
     "duc": 5,

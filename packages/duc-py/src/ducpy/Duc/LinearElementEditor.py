@@ -20,6 +20,10 @@ class LinearElementEditor(object):
     def GetRootAsLinearElementEditor(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
+    @classmethod
+    def LinearElementEditorBufferHasIdentifier(cls, buf, offset, size_prefixed=False):
+        return flatbuffers.util.BufferHasIdentifier(buf, offset, b"\x44\x55\x43\x5F", size_prefixed=size_prefixed)
+
     # LinearElementEditor
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)

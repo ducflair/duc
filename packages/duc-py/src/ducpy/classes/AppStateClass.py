@@ -40,8 +40,8 @@ class AppState:
     editing_frame: Optional[str] = None
     elements_to_highlight: List[DucElement] = field(default_factory=list)
     editing_element: Optional[DucElement] = None
-    current_item_stroke: ElementStroke = field(default_factory=lambda: DEFAULT_APP_STATE["currentItemStroke"])
-    current_item_background: ElementBackground = field(default_factory=lambda: DEFAULT_APP_STATE["currentItemBackground"])
+    current_item_stroke: ElementStroke = field(default_factory=lambda: ElementStroke(**DEFAULT_APP_STATE["currentItemStroke"][0]) if DEFAULT_APP_STATE["currentItemStroke"] and isinstance(DEFAULT_APP_STATE["currentItemStroke"], list) and len(DEFAULT_APP_STATE["currentItemStroke"]) > 0 and isinstance(DEFAULT_APP_STATE["currentItemStroke"][0], dict) else (ElementStroke(**DEFAULT_APP_STATE["currentItemStroke"]) if isinstance(DEFAULT_APP_STATE["currentItemStroke"], dict) else None))
+    current_item_background: ElementBackground = field(default_factory=lambda: ElementBackground(**DEFAULT_APP_STATE["currentItemBackground"][0]) if DEFAULT_APP_STATE["currentItemBackground"] and isinstance(DEFAULT_APP_STATE["currentItemBackground"], list) and len(DEFAULT_APP_STATE["currentItemBackground"]) > 0 and isinstance(DEFAULT_APP_STATE["currentItemBackground"][0], dict) else (ElementBackground(**DEFAULT_APP_STATE["currentItemBackground"]) if isinstance(DEFAULT_APP_STATE["currentItemBackground"], dict) else None))
     current_item_opacity: float = field(default=DEFAULT_APP_STATE["currentItemOpacity"])
     current_item_font_family: FontFamily = field(default=DEFAULT_APP_STATE["currentItemFontFamily"])
     current_item_font_size: float = field(default=DEFAULT_APP_STATE["currentItemFontSize"])
