@@ -18,6 +18,7 @@ from ducpy.utils.enums import (
     StrokePlacement, StrokeJoin, StrokeCap
 )
 from ducpy.serialize.serialize_duc import save_as_flatbuffers
+from ducpy.serialize.serialize_binary_files import create_binary_files_dict_from_list
 
 scope = "mm"
 
@@ -71,71 +72,82 @@ def read_image_file(file_path: str) -> bytes:
     with open(file_path, 'rb') as f:
         return f.read()
 
-def create_binary_files_dict(mime_type: str, image_id: str, image_bytes: bytes, timestamp_ms: int) -> Dict[str, Dict]:
-    """
-    Creates a dictionary that will be correctly serialized by the serialize_binary_files function.
-    This approach avoids modifying the BinaryFiles class.
-    """
-    # Create a dictionary with the exact structure expected by the serialization function
-    return {
-        image_id: {
-            "id": image_id,
-            "mimeType": mime_type,
-            "created": timestamp_ms,
-            "last_retrieved": timestamp_ms,
-            "data": image_bytes
-        }
-    }
-
 def test_create_duc_with_image(test_assets_dir, test_output_dir):
-    """Test creating a DUC file with an embedded image."""
-    image_filename = "infinite-zoom-math.png"
+    """Test creating a DUC file with two embedded images."""
+    # Image 1 details
+    image_filename1 = "infinite-zoom-math.png"
+    image_id1 = "image1_zoom"
+    mime_type1 = "image/png"
+    image_path1 = os.path.join(test_assets_dir, image_filename1)
+
+    # Image 2 details
+    image_filename2 = "rect.png" # Second image
+    image_id2 = "image2_rect"
+    mime_type2 = "image/png"
+    image_path2 = os.path.join(test_assets_dir, image_filename2)
+    
     output_filename = "test_with_image.duc"
-    image_path = os.path.join(test_assets_dir, image_filename)
     output_path = os.path.join(test_output_dir, output_filename)
     
-    # Validate image path
-    assert os.path.exists(image_path), f"Image file not found: {image_path}"
+    # Validate image paths
+    assert os.path.exists(image_path1), f"Image file not found: {image_path1}"
+    assert os.path.exists(image_path2), f"Image file not found: {image_path2}"
     
-    # Read image file
-    image_bytes = read_image_file(image_path)
+    # Read image files
+    image_bytes1 = read_image_file(image_path1)
+    image_bytes2 = read_image_file(image_path2)
     
-    # Get current timestamp in milliseconds
-    current_time_ms = int(os.path.getmtime(image_path) * 1000)  # Convert to milliseconds
+    # Get current timestamps in milliseconds
+    current_time_ms1 = int(os.path.getmtime(image_path1) * 1000)
+    current_time_ms2 = int(os.path.getmtime(image_path2) * 1000)
     
-    # Create binary file entry
-    mime_type = "image/png"
-    image_id = "image1"
+    # Create the binary_files dictionary using the new list-based helper
+    binary_files = create_binary_files_dict_from_list([
+        {
+            "image_id": image_id1, # This will be the key in binary_files and the 'id' in data
+            "mime_type": mime_type1,
+            "image_bytes": image_bytes1,
+            "timestamp_ms": current_time_ms1
+        },
+        {
+            "image_id": image_id2, # This will be the key in binary_files and the 'id' in data
+            "mime_type": mime_type2,
+            "image_bytes": image_bytes2,
+            "timestamp_ms": current_time_ms2
+        }
+    ])
     
-    # Create a custom dict instead of using BinaryFiles directly
-    binary_files = create_binary_files_dict(
-        mime_type=mime_type,
-        image_id=image_id,
-        image_bytes=image_bytes,
-        timestamp_ms=current_time_ms
+    # Create image elements that reference the binary files
+    element1 = create_image_element(
+        x=50,
+        y=50,
+        width=300,
+        height=200,
+        image_id=image_id1 # Reference to the key in binary_files
     )
-    
-    # Create image element that references the binary file
-    element = create_image_element(
-        x=100,
+    element2 = create_image_element(
+        x=400,
         y=100,
-        width=400,
-        height=300,
-        image_id=image_id
+        width=250,
+        height=150,
+        image_id=image_id2 # Reference to the key in binary_files
     )
     
     # Create minimal app state
     app_state = AppState()
+    # app_state = None
     
     # Serialize and save
-    duc_bytes = save_as_flatbuffers([element], app_state, binary_files)
+    duc_bytes = save_as_flatbuffers([element1, element2], app_state, binary_files) # Pass both elements
     
     with open(output_path, 'wb') as f:
         f.write(duc_bytes)
     
-    print(f"Created DUC file with an image element at {output_path}")
-    print(f"Image size: {len(image_bytes)} bytes")
+    print(f"Created DUC file with two image elements at {output_path}")
+    print(f"Image 1 ('{image_filename1}') size: {len(image_bytes1)} bytes")
+    print(f"Image 2 ('{image_filename2}') size: {len(image_bytes2)} bytes")
+    print(f"Total image data size: {len(image_bytes1) + len(image_bytes2)} bytes")
     print(f"DUC file size: {len(duc_bytes)} bytes")
     
     assert os.path.exists(output_path), f"Output file was not created: {output_path}"
-    assert os.path.getsize(output_path) > len(image_bytes), "DUC file should be larger than the image" 
+    assert os.path.getsize(output_path) > (len(image_bytes1) + len(image_bytes2)), "DUC file should be larger than the sum of the image sizes" 
