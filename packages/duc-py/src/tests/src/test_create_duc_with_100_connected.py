@@ -26,30 +26,30 @@ scope = "mm"
 def create_rectangle(x: float, y: float, width: float = 100, height: float = 100) -> DucElementUnion:
     """Create a rectangle element."""
     # Create stroke and background
-    # stroke = ElementStroke(
-    #     content=ElementContentBase(
-    #         preference=int(ElementContentPreference.SOLID),
-    #         src="#000000",
-    #         visible=True,
-    #         opacity=1.0
-    #     ),
-    #     width=2.0,
-    #     style=StrokeStyle(
-    #         preference=int(StrokePreference.SOLID),
-    #         join=int(StrokeJoin.MITER),
-    #         cap=int(StrokeCap.BUTT)
-    #     ),
-    #     placement=int(StrokePlacement.INSIDE)
-    # )
+    stroke = ElementStroke(
+        content=ElementContentBase(
+            preference=int(ElementContentPreference.SOLID),
+            src="#000000",
+            visible=True,
+            opacity=1.0
+        ),
+        width=2.0,
+        style=StrokeStyle(
+            preference=int(StrokePreference.SOLID),
+            join=int(StrokeJoin.MITER),
+            cap=int(StrokeCap.BUTT)
+        ),
+        placement=int(StrokePlacement.INSIDE)
+    )
 
-    # background = ElementBackground(
-    #     content=ElementContentBase(
-    #         preference=int(ElementContentPreference.SOLID),
-    #         src="transparent",
-    #         visible=False,
-    #         opacity=1.0
-    #     )
-    # )
+    background = ElementBackground(
+        content=ElementContentBase(
+            preference=int(ElementContentPreference.SOLID),
+            src="transparent",
+            visible=False,
+            opacity=1.0
+        )
+    )
     
     return DucRectangleElement(
         id=str(uuid.uuid4()),
@@ -64,10 +64,8 @@ def create_rectangle(x: float, y: float, width: float = 100, height: float = 100
         opacity=1,
         bound_elements=[],
         group_ids=[],
-        # stroke=[stroke],
-        # background=[background]
-        stroke=[],
-        background=[]
+        stroke=[stroke],
+        background=[background]
     )
 
 def create_line(start_x: float, start_y: float, end_x: float, end_y: float, with_arrow: bool = False) -> DucElementUnion:
@@ -221,23 +219,23 @@ def create_connected_elements(num_elements: int = 100) -> List[DucElementUnion]:
                 width=random.uniform(50, 150),
                 height=random.uniform(50, 150)
             )
-        # elif rand_choice < 0.8: # 40% chance for line/arrow (from 0.4 to 0.8)
-        #     is_arrow = random.random() < 0.5
-        #     new_element = create_line(parent_x, parent_y, new_x, new_y, with_arrow=is_arrow)
-        #     # Explicitly check if it's a DucLinearElement or DucArrowElement (which inherits start_binding)
-        #     if isinstance(new_element, (DucLinearElement, DucArrowElement)):
-        #         start_binding = create_point_binding(parent_element.id, Point(x=parent_x, y=parent_y))
-        #         new_element.start_binding = start_binding
-        # else: # 20% chance for text element
-            # new_element = create_text_element(new_x, new_y, text=f"Connected Text {i}")
+        elif rand_choice < 0.8: # 40% chance for line/arrow (from 0.4 to 0.8)
+            is_arrow = random.random() < 0.5
+            new_element = create_line(parent_x, parent_y, new_x, new_y, with_arrow=is_arrow)
+            # Explicitly check if it's a DucLinearElement or DucArrowElement (which inherits start_binding)
+            if isinstance(new_element, (DucLinearElement, DucArrowElement)):
+                start_binding = create_point_binding(parent_element.id, Point(x=parent_x, y=parent_y))
+                new_element.start_binding = start_binding
+        else: # 20% chance for text element
+            new_element = create_text_element(new_x, new_y, text=f"Connected Text {i}")
             # Text elements don't have start_binding in the same way lines do.
             # They can be bound to other elements via their general bound_elements list.
 
         # Create bound element references
         if new_element is None: # Should not happen with current logic, but as a safeguard
             continue
-        # parent_element.bound_elements.append(create_bound_element(new_element.id, new_element.type))
-        # new_element.bound_elements.append(create_bound_element(parent_element.id, parent_element.type))
+        parent_element.bound_elements.append(create_bound_element(new_element.id, new_element.type))
+        new_element.bound_elements.append(create_bound_element(parent_element.id, parent_element.type))
         
         elements.append(new_element)
     
@@ -245,7 +243,7 @@ def create_connected_elements(num_elements: int = 100) -> List[DucElementUnion]:
 
 def test_create_connected_duc(test_output_dir):
     """Test creating a DUC file with 100 connected elements, including text."""
-    num_elements = 0
+    num_elements = 100
     output_file = os.path.join(test_output_dir, "test_100_connected.duc")
 
     # Create elements
