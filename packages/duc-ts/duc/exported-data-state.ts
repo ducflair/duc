@@ -27,6 +27,10 @@ static getSizePrefixedRootAsExportedDataState(bb:flatbuffers.ByteBuffer, obj?:Ex
   return (obj || new ExportedDataState()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
+static bufferHasIdentifier(bb:flatbuffers.ByteBuffer):boolean {
+  return bb.__has_identifier('DUC_');
+}
+
 type():string|null
 type(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 type(optionalEncoding?:any):string|Uint8Array|null {
@@ -112,11 +116,11 @@ static endExportedDataState(builder:flatbuffers.Builder):flatbuffers.Offset {
 }
 
 static finishExportedDataStateBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset);
+  builder.finish(offset, 'DUC_');
 }
 
 static finishSizePrefixedExportedDataStateBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset, undefined, true);
+  builder.finish(offset, 'DUC_', true);
 }
 
 }
