@@ -148,7 +148,7 @@ def serialize_binding_point(builder: flatbuffers.Builder, binding: BindingPoint)
 
 def serialize_point_binding(builder: flatbuffers.Builder, binding: PointBinding):
     id_offset = builder.CreateString(binding.element_id)
-    fixed_point_offset = serialize_point(builder, binding.fixed_point)
+    fixed_point_offset = serialize_simple_point(builder, binding.fixed_point.x, binding.fixed_point.y)
     
     BindingElementStart(builder)
     AddBindingElementId(builder, id_offset)

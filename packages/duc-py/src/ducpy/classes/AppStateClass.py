@@ -78,6 +78,8 @@ class AppState:
     display_root_axis: bool = field(default=DEFAULT_APP_STATE["displayRootAxis"])
     coord_decimal_places: int = field(default=DEFAULT_APP_STATE["coordDecimalPlaces"])
     line_bending_mode: bool = field(default=DEFAULT_APP_STATE["lineBendingMode"])
+    scope_exponent_threshold: int = field(default=DEFAULT_APP_STATE["scopeExponentThreshold"])
+    zoom_step: float = field(default=DEFAULT_APP_STATE["zoomStep"])
 
 @dataclass
 class DucGroup:
