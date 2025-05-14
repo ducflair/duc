@@ -365,8 +365,22 @@ class AppState(object):
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
+    # AppState
+    def ScopeExponentThreshold(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(164))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+        return 0
+
+    # AppState
+    def ZoomStep(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(166))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
 def AppStateStart(builder):
-    builder.StartObject(80)
+    builder.StartObject(82)
 
 def Start(builder):
     AppStateStart(builder)
@@ -634,6 +648,18 @@ def AppStateAddGridStep(builder, gridStep):
 
 def AddGridStep(builder, gridStep):
     AppStateAddGridStep(builder, gridStep)
+
+def AppStateAddScopeExponentThreshold(builder, scopeExponentThreshold):
+    builder.PrependInt8Slot(80, scopeExponentThreshold, 0)
+
+def AddScopeExponentThreshold(builder, scopeExponentThreshold):
+    AppStateAddScopeExponentThreshold(builder, scopeExponentThreshold)
+
+def AppStateAddZoomStep(builder, zoomStep):
+    builder.PrependFloat32Slot(81, zoomStep, 0.0)
+
+def AddZoomStep(builder, zoomStep):
+    AppStateAddZoomStep(builder, zoomStep)
 
 def AppStateEnd(builder):
     return builder.EndObject()

@@ -88,7 +88,7 @@ class PointBinding:
     element_id: str
     focus: float
     gap: float
-    fixed_point: Optional[Point] = None
+    fixed_point: Optional[SimplePoint] = None
     point: Optional[BindingPoint] = None
     head: Optional[LineHead] = None
 
