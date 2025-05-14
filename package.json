@@ -57,6 +57,7 @@
     "duc-py:test": "turbo run test --filter=@ducflair/duc-py",
     "duc-py:build": "bun turbo run build --filter=@ducflair/duc-py -- ${1}",
     "duc-rs:build": "turbo build --filter=@ducflair/duc-rs",
+    "duc-rs:test": "turbo run test --filter=@ducflair/duc-rs",
     "duc-ts:build": "turbo build --filter=@ducflair/duc",
     "semantic-release": "turbo run semantic-release",
     "sst:build": "bash -c 'bun run sst:clean && sst unlock ${1:+--stage $1} && sst refresh ${1:+--stage $1} && sst deploy ${1:+--stage $1}' --",

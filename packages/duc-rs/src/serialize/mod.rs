@@ -6,6 +6,7 @@ use flatbuffers::{self, FlatBufferBuilder};
 use crate::types::DucFile;
 use std::error::Error;
 use std::fmt;
+// Removed file system and regex related imports for runtime parsing
 
 // Use explicit imports instead of glob imports to avoid ambiguity
 use crate::generated::duc::ExportedDataStateBuilder;
@@ -33,8 +34,16 @@ impl fmt::Display for SerializationError {
 
 impl Error for SerializationError {}
 
+// Define a default schema version (non-const approach to avoid parse in const)
+fn get_schema_version() -> i32 {
+    match std::env::var("DUC_SCHEMA_VERSION") {
+        Ok(val) => val.parse::<i32>().unwrap_or(0),
+        Err(_) => 0,
+    }
+}
+
 /// Serialize a Rust DucFile into a FlatBuffer binary
-pub fn serialize_duc_file(file: &DucFile) -> Vec<u8> {
+pub fn serialize_duc_file(file: &DucFile) -> Result<Vec<u8>, Box<dyn Error>> {
     // Create a new FlatBufferBuilder with a reasonable initial size
     let mut builder = FlatBufferBuilder::with_capacity(1024 * 1024);
     
@@ -68,7 +77,7 @@ pub fn serialize_duc_file(file: &DucFile) -> Vec<u8> {
     
     let mut exported_data_builder = ExportedDataStateBuilder::new(&mut builder);
     exported_data_builder.add_type_(file_type);
-    exported_data_builder.add_version(1); // Use appropriate version
+    exported_data_builder.add_version(get_schema_version()); // Use the function instead of a const
     exported_data_builder.add_source(source);
     
     if let Some(elements) = elements_vec {
@@ -87,5 +96,5 @@ pub fn serialize_duc_file(file: &DucFile) -> Vec<u8> {
     builder.finish(exported_data, None);
     let buffer = builder.finished_data().to_vec();
     
-    buffer
+    Ok(buffer)
 }

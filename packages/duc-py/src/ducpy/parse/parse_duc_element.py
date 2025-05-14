@@ -1,3 +1,4 @@
+from ducpy.utils.ElementTypes import SimplePoint
 from ..Duc.DucElement import DucElement as DucElementBin
 from ..Duc.ImageCrop import ImageCrop as ImageCropBin
 from ..Duc.Point import Point as PointBin
@@ -8,7 +9,7 @@ from ..Duc.ElementBackground import ElementBackground as ElementBackgroundBin
 from ..Duc.ElementStroke import ElementStroke as ElementStrokeBin
 from ..Duc.TilingProperties import TilingProperties as TilingPropertiesBin
 from ..Duc.StrokeSides import StrokeSides as StrokeSidesBin
-
+from ..Duc.SimplePoint import SimplePoint as SimplePointBin
 from ..classes.DucElementClass import (
     DucElement,
     DucTextElement, DucArrowElement, DucLinearElement,
@@ -26,6 +27,15 @@ from ..utils.enums import (
 )
 from ..utils.constants import DEFAULT_ELEMENT_PROPS
 
+def parse_simple_point(point: SimplePointBin) -> SimplePoint | None:
+    if not point:
+        return None
+    
+    return SimplePoint(
+        x=point.X(),
+        y=point.Y()
+    )
+    
 def parse_point(point: PointBin) -> Point | None:
     if not point:
         return None
@@ -58,7 +68,7 @@ def parse_point_binding(binding: PointBindingBin) -> PointBinding | None:
         element_id=binding.ElementId().decode('utf-8'),
         focus=binding.Focus(),
         gap=binding.Gap(),
-        fixed_point=parse_point(binding.FixedPoint()),
+        fixed_point=parse_simple_point(binding.FixedPoint()),
         point=parse_binding_point(binding.Point()),
         head=binding.Head() if binding.Head() else None
     )

@@ -1,6 +1,7 @@
 import flatbuffers
 import logging
 import sys
+# Removed os and re imports for runtime parsing
 
 logger = logging.getLogger(__name__)
 
@@ -8,11 +9,14 @@ from ..Duc.ExportedDataState import *
 from .serialize_duc_element import serialize_duc_element
 from .serialize_app_state import serialize_app_state
 from .serialize_binary_files import serialize_binary_files
-from ..utils.constants import EXPORT_DATA_TYPES, EXPORT_SOURCE, VERSIONS
+from ..utils.constants import EXPORT_DATA_TYPES, EXPORT_SOURCE
 from ..classes.AppStateClass import AppState
 from ..classes.DucElementClass import DucElementUnion
 from ..classes.BinaryFilesClass import BinaryFiles
 from typing import List, Dict
+from .._version import DUC_SCHEMA_VERSION # Import from auto-generated _version.py
+
+# Removed runtime get_schema_version_from_fbs function and path logic
 
 def serialize_as_flatbuffers(elements: List[DucElementUnion], app_state: AppState, files: Dict[str, BinaryFiles], source: str) -> bytes:
     try:
@@ -52,7 +56,7 @@ def serialize_as_flatbuffers(elements: List[DucElementUnion], app_state: AppStat
         
         # Add type and version
         ExportedDataStateAddType(builder, type_offset)
-        ExportedDataStateAddVersion(builder, VERSIONS["duc"])
+        ExportedDataStateAddVersion(builder, DUC_SCHEMA_VERSION) # Use DUC_SCHEMA_VERSION from _version.py
         
         # Add elements vector
         ExportedDataStateAddElements(builder, elements_vector)

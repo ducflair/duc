@@ -50,17 +50,6 @@ class PointBinding(object):
         return 0.0
 
     # PointBinding
-    def FixedPoint(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.Point import Point
-            obj = Point()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # PointBinding
     def Point(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
@@ -78,8 +67,19 @@ class PointBinding(object):
             return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
         return 0
 
+    # PointBinding
+    def FixedPoint(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.SimplePoint import SimplePoint
+            obj = SimplePoint()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def PointBindingStart(builder):
-    builder.StartObject(6)
+    builder.StartObject(7)
 
 def Start(builder):
     PointBindingStart(builder)
@@ -102,12 +102,6 @@ def PointBindingAddGap(builder, gap):
 def AddGap(builder, gap):
     PointBindingAddGap(builder, gap)
 
-def PointBindingAddFixedPoint(builder, fixedPoint):
-    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(fixedPoint), 0)
-
-def AddFixedPoint(builder, fixedPoint):
-    PointBindingAddFixedPoint(builder, fixedPoint)
-
 def PointBindingAddPoint(builder, point):
     builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(point), 0)
 
@@ -119,6 +113,12 @@ def PointBindingAddHead(builder, head):
 
 def AddHead(builder, head):
     PointBindingAddHead(builder, head)
+
+def PointBindingAddFixedPoint(builder, fixedPoint):
+    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(fixedPoint), 0)
+
+def AddFixedPoint(builder, fixedPoint):
+    PointBindingAddFixedPoint(builder, fixedPoint)
 
 def PointBindingEnd(builder):
     return builder.EndObject()
