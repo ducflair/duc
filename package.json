@@ -54,7 +54,7 @@
     "docs:dev": "turbo dev --filter=@duc/docs",
     "docs:build": "turbo build --filter=@duc/docs",
     "duc-py:docs:build": "turbo run gen:docs --filter=@ducflair/duc-py",
-    "duc-py:test": "turbo run test --filter=@ducflair/duc-py",
+    "duc-py:test": "turbo run test --filter=@ducflair/duc-py --force",
     "duc-py:build": "bun turbo run build --filter=@ducflair/duc-py -- ${1}",
     "duc-rs:build": "turbo build --filter=@ducflair/duc-rs",
     "duc-rs:test": "turbo run test --filter=@ducflair/duc-rs",

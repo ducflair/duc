@@ -22,7 +22,7 @@ class DucElement:
     blending: Optional[Blending] = None
     stroke: List[ElementStroke] = field(default_factory=lambda: [DEFAULT_ELEMENT_PROPS["stroke"]])
     background: List[ElementBackground] = field(default_factory=lambda: [DEFAULT_ELEMENT_PROPS["background"]])
-    opacity: float = field(default=DEFAULT_ELEMENT_PROPS["opacity"])
+    opacity: Optional[float] = field(default=DEFAULT_ELEMENT_PROPS["opacity"])
     width: float = field(default=DEFAULT_ELEMENT_PROPS["width"])
     height: float = field(default=DEFAULT_ELEMENT_PROPS["height"])
     angle: float = field(default=DEFAULT_ELEMENT_PROPS["angle"])

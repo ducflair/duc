@@ -49,7 +49,7 @@ from ..Duc.BindingPoint import (
 from ..Duc.ElementContentBase import (
     Start as ElementContentBaseStart,
     End as ElementContentBaseEnd,
-    AddPreference, AddSrc, AddVisible, AddOpacity, AddTiling
+    AddPreference, AddSrc, AddVisible, AddOpacity as AddElementContentOpacity, AddTiling
 )
 from ..Duc.TilingProperties import (
     Start as TilingPropertiesStart,
@@ -203,8 +203,7 @@ def serialize_element_content_base(builder: flatbuffers.Builder, content: Elemen
             AddSrc(builder, src_offset)
         # Visible is required
         AddVisible(builder, bool(content.get('visible', True)))  # Default to True
-        # Opacity is required
-        AddOpacity(builder, float(content.get('opacity', 1.0)))  # Default to 1.0
+        AddElementContentOpacity(builder, content.get('opacity'))
         if tiling_offset is not None:
             AddTiling(builder, tiling_offset)
     else:
@@ -225,7 +224,7 @@ def serialize_element_content_base(builder: flatbuffers.Builder, content: Elemen
         # Visible is required
         AddVisible(builder, bool(getattr(content, 'visible', True)))  # Default to True
         # Opacity is required
-        AddOpacity(builder, float(getattr(content, 'opacity', 1.0)))  # Default to 1.0
+        AddElementContentOpacity(builder, float(getattr(content, 'opacity')))
         if tiling_offset is not None:
             AddTiling(builder, tiling_offset)
     
