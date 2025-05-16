@@ -1,5 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, List, Tuple
+
 from ..utils.enums import (
     ElementContentPreference, StrokePreference, StrokeSidePreference,
     StrokePlacement, StrokeCap, StrokeJoin, BezierMirroring, LineHead
@@ -40,7 +41,7 @@ class ElementContentBase:
     preference: ElementContentPreference
     src: str  # Can be a color, gradient, image (fileId or url), frame element's content `@el/${elementId}`
     visible: bool
-    opacity: float
+    opacity: Optional[float] = 100.0
     tiling: Optional[TilingProperties] = None
 
 @dataclass

@@ -30,7 +30,6 @@ def create_random_rectangle(x: float, y: float) -> DucElementUnion:
             preference=int(ElementContentPreference.SOLID),
             src="#000000",
             visible=True,
-            opacity=1.0
         ),
         width=2.0,
         style=StrokeStyle(
@@ -45,7 +44,6 @@ def create_random_rectangle(x: float, y: float) -> DucElementUnion:
             preference=int(ElementContentPreference.SOLID),
             src="transparent",
             visible=False,
-            opacity=1.0
         )
     )
     return DucRectangleElement(
@@ -58,7 +56,6 @@ def create_random_rectangle(x: float, y: float) -> DucElementUnion:
         height=random.uniform(50, 150),
         angle=random.uniform(0, 360),
         is_deleted=False,
-        opacity=1,
         bound_elements=[],
         group_ids=[],
         stroke=[stroke],
@@ -80,7 +77,6 @@ def create_random_line(x: float, y: float) -> DucElementUnion:
             preference=int(ElementContentPreference.SOLID),
             src="#000000",
             visible=True,
-            opacity=1.0
         ),
         width=2.0,
         style=StrokeStyle(
@@ -95,7 +91,6 @@ def create_random_line(x: float, y: float) -> DucElementUnion:
             preference=int(ElementContentPreference.SOLID),
             src="transparent",
             visible=False,
-            opacity=1.0
         )
     )
     
@@ -108,7 +103,6 @@ def create_random_line(x: float, y: float) -> DucElementUnion:
         points=points,
         angle=random.uniform(0, 360),
         is_deleted=False,
-        opacity=1,
         bound_elements=[],
         group_ids=[],
         stroke=[stroke],
