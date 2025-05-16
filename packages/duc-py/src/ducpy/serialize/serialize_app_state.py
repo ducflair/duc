@@ -19,6 +19,7 @@ from ..Duc.AppState import (
     AddLineBendingMode, AddStandard, AddCurrentItemStartLineHead,
     AddCurrentItemEndLineHead, StartSelectedElementIdsVector,
     StartGroupsVector, AddCurrentItemRoundnessV3,
+    AddScopeExponentThreshold, AddZoomStep
 )
 from ..Duc.DucGroup import (
     Start as DucGroupStart,
@@ -160,6 +161,10 @@ def serialize_app_state(builder: flatbuffers.Builder, app_state: AppState) -> in
         AddCurrentItemEndLineHead(builder, app_state.current_item_end_line_head)
     if app_state.current_item_roundness is not None:
         AddCurrentItemRoundnessV3(builder, app_state.current_item_roundness)
+    if app_state.scope_exponent_threshold is not None:
+        AddScopeExponentThreshold(builder, app_state.scope_exponent_threshold)
+    if app_state.zoom_step is not None:
+        AddZoomStep(builder, app_state.zoom_step)
 
     # Return the table offset
     return AppStateEnd(builder)
