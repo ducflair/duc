@@ -84,4 +84,6 @@ def parse_app_state(app_state: FlatBuffersAppState) -> AppState:
         display_root_axis=app_state.DisplayRootAxis(),
         coord_decimal_places=app_state.CoordDecimalPlacesV3() or DEFAULT_APP_STATE["coordDecimalPlaces"],
         line_bending_mode=app_state.LineBendingMode(),
+        scope_exponent_threshold=app_state.ScopeExponentThreshold() or DEFAULT_APP_STATE["scopeExponentThreshold"],
+        zoom_step=app_state.ZoomStep() or DEFAULT_APP_STATE["zoomStep"],
     )

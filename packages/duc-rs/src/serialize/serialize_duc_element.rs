@@ -732,18 +732,18 @@ pub fn serialize_point_binding<'a, 'b, A: flatbuffers::Allocator + 'a>(
     builder: &'b mut FlatBufferBuilder<'a, A>,
     binding: &PointBinding,
 ) -> WIPOffset<FbPointBinding<'a>> {
-    // Create the element_id string first
+    // Create all string/object offsets first to avoid borrowing conflicts
     let element_id = builder.create_string(&binding.element_id);
     
-    // Create fixed point if needed
+    // Create the fixed_point if it exists - serialize as SimplePoint
     let fixed_point_offset = if let Some(point) = &binding.fixed_point {
-        Some(serialize_point(builder, point))
+        Some(serialize_simple_point(builder, point))
     } else {
         None
     };
     
-    // Create binding point builder separately if needed
-    let binding_point_offset = if let Some(point) = &binding.point {
+    // Create bound point if needed
+    let bound_point_offset = if let Some(point) = &binding.point {
         let mut bp_builder = BindingPointBuilder::new(builder);
         bp_builder.add_index(point.index);
         bp_builder.add_offset(point.offset);
@@ -758,19 +758,21 @@ pub fn serialize_point_binding<'a, 'b, A: flatbuffers::Allocator + 'a>(
     binding_builder.add_focus(binding.focus);
     binding_builder.add_gap(binding.gap);
     
+    // Add head enum value as i8
+    if let Some(head) = binding.head {
+        binding_builder.add_head(head as i8);
+    } else {
+        binding_builder.add_head(0);
+    }
+    
     // Add fixed point if we prepared it
     if let Some(point_offset) = fixed_point_offset {
         binding_builder.add_fixed_point(point_offset);
     }
     
-    // Add binding point if we prepared it
-    if let Some(bp_offset) = binding_point_offset {
-        binding_builder.add_point(bp_offset);
-    }
-    
-    // Add head if present
-    if let Some(head) = binding.head {
-        binding_builder.add_head(head as i8);
+    // Add bound point if we prepared it
+    if let Some(point) = bound_point_offset {
+        binding_builder.add_point(point);
     }
     
     binding_builder.finish()
