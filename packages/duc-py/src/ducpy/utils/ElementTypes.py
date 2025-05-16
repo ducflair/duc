@@ -1,5 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, List, Tuple
+
 from ..utils.enums import (
     ElementContentPreference, StrokePreference, StrokeSidePreference,
     StrokePlacement, StrokeCap, StrokeJoin, BezierMirroring, LineHead
@@ -40,7 +41,7 @@ class ElementContentBase:
     preference: ElementContentPreference
     src: str  # Can be a color, gradient, image (fileId or url), frame element's content `@el/${elementId}`
     visible: bool
-    opacity: float
+    opacity: Optional[float] = 100.0
     tiling: Optional[TilingProperties] = None
 
 @dataclass
@@ -88,7 +89,7 @@ class PointBinding:
     element_id: str
     focus: float
     gap: float
-    fixed_point: Optional[Point] = None
+    fixed_point: Optional[SimplePoint] = None
     point: Optional[BindingPoint] = None
     head: Optional[LineHead] = None
 

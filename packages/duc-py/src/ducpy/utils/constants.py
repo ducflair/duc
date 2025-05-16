@@ -178,6 +178,8 @@ DEFAULT_APP_STATE = {
     "coordDecimalPlaces": 2,
     "displayRootAxis": False,
     "lineBendingMode": False,
+    "scopeExponentThreshold": 2,
+    "zoomStep": 0.1,
 }
 
 # Tool sets that don't support certain features

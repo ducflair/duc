@@ -264,8 +264,18 @@ gridStep():number {
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
+scopeExponentThreshold():number {
+  const offset = this.bb!.__offset(this.bb_pos, 164);
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
+}
+
+zoomStep():number {
+  const offset = this.bb!.__offset(this.bb_pos, 166);
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
+}
+
 static startAppState(builder:flatbuffers.Builder) {
-  builder.startObject(80);
+  builder.startObject(82);
 }
 
 static addFrameRenderingEnabled(builder:flatbuffers.Builder, frameRenderingEnabled:boolean) {
@@ -458,6 +468,14 @@ static addGridModeEnabled(builder:flatbuffers.Builder, gridModeEnabled:boolean) 
 
 static addGridStep(builder:flatbuffers.Builder, gridStep:number) {
   builder.addFieldInt32(79, gridStep, 0);
+}
+
+static addScopeExponentThreshold(builder:flatbuffers.Builder, scopeExponentThreshold:number) {
+  builder.addFieldInt8(80, scopeExponentThreshold, 0);
+}
+
+static addZoomStep(builder:flatbuffers.Builder, zoomStep:number) {
+  builder.addFieldFloat32(81, zoomStep, 0.0);
 }
 
 static endAppState(builder:flatbuffers.Builder):flatbuffers.Offset {

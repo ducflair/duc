@@ -1,3 +1,5 @@
+// SCHEMA_VERSION=6
+
 // Official FlatBuffers Compiler: https://flatbuffers.ar.je/ 
 // Official FlatBuffers Documentation: https://flatbuffers.dev/tutorial/
 
@@ -33,9 +35,10 @@ table PointBinding {
   element_id: string;
   focus: float;
   gap: float;
-  fixed_point: Point;
+  fixed_point_v3: Point (deprecated);
   point: BindingPoint;  // Optional point binding info
   head: byte;  // LINE_HEAD values
+  fixed_point: SimplePoint;
 }
 
 table BindingPoint {
@@ -331,6 +334,8 @@ table AppState {
   editing_linear_element: LinearElementEditor;
   grid_mode_enabled: bool;
   grid_step: int;
+  scope_exponent_threshold: byte;
+  zoom_step: float;
 }
 
 // Define the BinaryFileData table

@@ -287,9 +287,9 @@ impl<'a> PointBinding<'a> {
   pub const VT_ELEMENT_ID: flatbuffers::VOffsetT = 4;
   pub const VT_FOCUS: flatbuffers::VOffsetT = 6;
   pub const VT_GAP: flatbuffers::VOffsetT = 8;
-  pub const VT_FIXED_POINT: flatbuffers::VOffsetT = 10;
   pub const VT_POINT: flatbuffers::VOffsetT = 12;
   pub const VT_HEAD: flatbuffers::VOffsetT = 14;
+  pub const VT_FIXED_POINT: flatbuffers::VOffsetT = 16;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -301,8 +301,8 @@ impl<'a> PointBinding<'a> {
     args: &'args PointBindingArgs<'args>
   ) -> flatbuffers::WIPOffset<PointBinding<'bldr>> {
     let mut builder = PointBindingBuilder::new(_fbb);
-    if let Some(x) = args.point { builder.add_point(x); }
     if let Some(x) = args.fixed_point { builder.add_fixed_point(x); }
+    if let Some(x) = args.point { builder.add_point(x); }
     builder.add_gap(args.gap);
     builder.add_focus(args.focus);
     if let Some(x) = args.element_id { builder.add_element_id(x); }
@@ -333,13 +333,6 @@ impl<'a> PointBinding<'a> {
     unsafe { self._tab.get::<f32>(PointBinding::VT_GAP, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn fixed_point(&self) -> Option<Point<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Point>>(PointBinding::VT_FIXED_POINT, None)}
-  }
-  #[inline]
   pub fn point(&self) -> Option<BindingPoint<'a>> {
     // Safety:
     // Created from valid Table for this object
@@ -353,6 +346,13 @@ impl<'a> PointBinding<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i8>(PointBinding::VT_HEAD, Some(0)).unwrap()}
   }
+  #[inline]
+  pub fn fixed_point(&self) -> Option<SimplePoint<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<SimplePoint>>(PointBinding::VT_FIXED_POINT, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for PointBinding<'_> {
@@ -365,9 +365,9 @@ impl flatbuffers::Verifiable for PointBinding<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("element_id", Self::VT_ELEMENT_ID, false)?
      .visit_field::<f32>("focus", Self::VT_FOCUS, false)?
      .visit_field::<f32>("gap", Self::VT_GAP, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<Point>>("fixed_point", Self::VT_FIXED_POINT, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<BindingPoint>>("point", Self::VT_POINT, false)?
      .visit_field::<i8>("head", Self::VT_HEAD, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<SimplePoint>>("fixed_point", Self::VT_FIXED_POINT, false)?
      .finish();
     Ok(())
   }
@@ -376,9 +376,9 @@ pub struct PointBindingArgs<'a> {
     pub element_id: Option<flatbuffers::WIPOffset<&'a str>>,
     pub focus: f32,
     pub gap: f32,
-    pub fixed_point: Option<flatbuffers::WIPOffset<Point<'a>>>,
     pub point: Option<flatbuffers::WIPOffset<BindingPoint<'a>>>,
     pub head: i8,
+    pub fixed_point: Option<flatbuffers::WIPOffset<SimplePoint<'a>>>,
 }
 impl<'a> Default for PointBindingArgs<'a> {
   #[inline]
@@ -387,9 +387,9 @@ impl<'a> Default for PointBindingArgs<'a> {
       element_id: None,
       focus: 0.0,
       gap: 0.0,
-      fixed_point: None,
       point: None,
       head: 0,
+      fixed_point: None,
     }
   }
 }
@@ -412,16 +412,16 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PointBindingBuilder<'a, 'b, A> 
     self.fbb_.push_slot::<f32>(PointBinding::VT_GAP, gap, 0.0);
   }
   #[inline]
-  pub fn add_fixed_point(&mut self, fixed_point: flatbuffers::WIPOffset<Point<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Point>>(PointBinding::VT_FIXED_POINT, fixed_point);
-  }
-  #[inline]
   pub fn add_point(&mut self, point: flatbuffers::WIPOffset<BindingPoint<'b >>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<BindingPoint>>(PointBinding::VT_POINT, point);
   }
   #[inline]
   pub fn add_head(&mut self, head: i8) {
     self.fbb_.push_slot::<i8>(PointBinding::VT_HEAD, head, 0);
+  }
+  #[inline]
+  pub fn add_fixed_point(&mut self, fixed_point: flatbuffers::WIPOffset<SimplePoint<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<SimplePoint>>(PointBinding::VT_FIXED_POINT, fixed_point);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> PointBindingBuilder<'a, 'b, A> {
@@ -444,9 +444,9 @@ impl core::fmt::Debug for PointBinding<'_> {
       ds.field("element_id", &self.element_id());
       ds.field("focus", &self.focus());
       ds.field("gap", &self.gap());
-      ds.field("fixed_point", &self.fixed_point());
       ds.field("point", &self.point());
       ds.field("head", &self.head());
+      ds.field("fixed_point", &self.fixed_point());
       ds.finish()
   }
 }
@@ -3714,6 +3714,8 @@ impl<'a> AppState<'a> {
   pub const VT_EDITING_LINEAR_ELEMENT: flatbuffers::VOffsetT = 158;
   pub const VT_GRID_MODE_ENABLED: flatbuffers::VOffsetT = 160;
   pub const VT_GRID_STEP: flatbuffers::VOffsetT = 162;
+  pub const VT_SCOPE_EXPONENT_THRESHOLD: flatbuffers::VOffsetT = 164;
+  pub const VT_ZOOM_STEP: flatbuffers::VOffsetT = 166;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -3727,6 +3729,7 @@ impl<'a> AppState<'a> {
     let mut builder = AppStateBuilder::new(_fbb);
     builder.add_current_item_roundness_v3(args.current_item_roundness_v3);
     builder.add_current_item_font_size_v3(args.current_item_font_size_v3);
+    builder.add_zoom_step(args.zoom_step);
     builder.add_grid_step(args.grid_step);
     if let Some(x) = args.editing_linear_element { builder.add_editing_linear_element(x); }
     if let Some(x) = args.current_item_font_family_v2 { builder.add_current_item_font_family_v2(x); }
@@ -3745,6 +3748,7 @@ impl<'a> AppState<'a> {
     if let Some(x) = args.scope { builder.add_scope(x); }
     if let Some(x) = args.view_background_color { builder.add_view_background_color(x); }
     builder.add_current_item_opacity(args.current_item_opacity);
+    builder.add_scope_exponent_threshold(args.scope_exponent_threshold);
     builder.add_grid_mode_enabled(args.grid_mode_enabled);
     if let Some(x) = args.current_item_subset { builder.add_current_item_subset(x); }
     builder.add_debug_rendering(args.debug_rendering);
@@ -4065,6 +4069,20 @@ impl<'a> AppState<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i32>(AppState::VT_GRID_STEP, Some(0)).unwrap()}
   }
+  #[inline]
+  pub fn scope_exponent_threshold(&self) -> i8 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i8>(AppState::VT_SCOPE_EXPONENT_THRESHOLD, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn zoom_step(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(AppState::VT_ZOOM_STEP, Some(0.0)).unwrap()}
+  }
 }
 
 impl flatbuffers::Verifiable for AppState<'_> {
@@ -4116,6 +4134,8 @@ impl flatbuffers::Verifiable for AppState<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<LinearElementEditor>>("editing_linear_element", Self::VT_EDITING_LINEAR_ELEMENT, false)?
      .visit_field::<bool>("grid_mode_enabled", Self::VT_GRID_MODE_ENABLED, false)?
      .visit_field::<i32>("grid_step", Self::VT_GRID_STEP, false)?
+     .visit_field::<i8>("scope_exponent_threshold", Self::VT_SCOPE_EXPONENT_THRESHOLD, false)?
+     .visit_field::<f32>("zoom_step", Self::VT_ZOOM_STEP, false)?
      .finish();
     Ok(())
   }
@@ -4163,6 +4183,8 @@ pub struct AppStateArgs<'a> {
     pub editing_linear_element: Option<flatbuffers::WIPOffset<LinearElementEditor<'a>>>,
     pub grid_mode_enabled: bool,
     pub grid_step: i32,
+    pub scope_exponent_threshold: i8,
+    pub zoom_step: f32,
 }
 impl<'a> Default for AppStateArgs<'a> {
   #[inline]
@@ -4210,6 +4232,8 @@ impl<'a> Default for AppStateArgs<'a> {
       editing_linear_element: None,
       grid_mode_enabled: false,
       grid_step: 0,
+      scope_exponent_threshold: 0,
+      zoom_step: 0.0,
     }
   }
 }
@@ -4388,6 +4412,14 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<i32>(AppState::VT_GRID_STEP, grid_step, 0);
   }
   #[inline]
+  pub fn add_scope_exponent_threshold(&mut self, scope_exponent_threshold: i8) {
+    self.fbb_.push_slot::<i8>(AppState::VT_SCOPE_EXPONENT_THRESHOLD, scope_exponent_threshold, 0);
+  }
+  #[inline]
+  pub fn add_zoom_step(&mut self, zoom_step: f32) {
+    self.fbb_.push_slot::<f32>(AppState::VT_ZOOM_STEP, zoom_step, 0.0);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AppStateBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     AppStateBuilder {
@@ -4447,6 +4479,8 @@ impl core::fmt::Debug for AppState<'_> {
       ds.field("editing_linear_element", &self.editing_linear_element());
       ds.field("grid_mode_enabled", &self.grid_mode_enabled());
       ds.field("grid_step", &self.grid_step());
+      ds.field("scope_exponent_threshold", &self.scope_exponent_threshold());
+      ds.field("zoom_step", &self.zoom_step());
       ds.finish()
   }
 }
