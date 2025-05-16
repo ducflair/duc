@@ -8,6 +8,7 @@ from ducpy.classes.AppStateClass import AppState
 # from ducpy.classes.AppStateClass import AppState # Not strictly needed if passing None
 # from ducpy.classes.BinaryFilesClass import BinaryFiles # Not strictly needed if passing {}
 
+
 def test_serialize_two_rectangles():
     """
     Tests the serialization of two simple rectangle elements.

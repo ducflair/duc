@@ -11,7 +11,6 @@ from .ElementTypes import (
     ElementContentBase, StrokeStyle
 )
 
-# Export-related constants
 EXPORT_DATA_TYPES = {
     "duc": "application/vnd.duc-cad",
     "ducfig": "application/vnd.duc-config",
