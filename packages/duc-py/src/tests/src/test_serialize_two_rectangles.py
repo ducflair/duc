@@ -23,7 +23,7 @@ def test_serialize_two_rectangles():
         y=20.0,
         width=100.0,
         height=50.0,
-        angle=0.0,
+        angle=2.0,
         z_index=1,
         opacity=100.0,
         locked=False,
