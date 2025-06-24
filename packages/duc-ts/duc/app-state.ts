@@ -274,8 +274,39 @@ zoomStep():number {
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
+hoveredElementId():string|null
+hoveredElementId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+hoveredElementId(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 168);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+elementsPendingErasure(index: number):string
+elementsPendingErasure(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
+elementsPendingErasure(index: number,optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 170);
+  return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
+}
+
+elementsPendingErasureLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 170);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+suggestedBindingElementId():string|null
+suggestedBindingElementId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+suggestedBindingElementId(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 172);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+isBindingEnabled():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 174);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
 static startAppState(builder:flatbuffers.Builder) {
-  builder.startObject(82);
+  builder.startObject(86);
 }
 
 static addFrameRenderingEnabled(builder:flatbuffers.Builder, frameRenderingEnabled:boolean) {
@@ -476,6 +507,34 @@ static addScopeExponentThreshold(builder:flatbuffers.Builder, scopeExponentThres
 
 static addZoomStep(builder:flatbuffers.Builder, zoomStep:number) {
   builder.addFieldFloat32(81, zoomStep, 0.0);
+}
+
+static addHoveredElementId(builder:flatbuffers.Builder, hoveredElementIdOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(82, hoveredElementIdOffset, 0);
+}
+
+static addElementsPendingErasure(builder:flatbuffers.Builder, elementsPendingErasureOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(83, elementsPendingErasureOffset, 0);
+}
+
+static createElementsPendingErasureVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startElementsPendingErasureVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addSuggestedBindingElementId(builder:flatbuffers.Builder, suggestedBindingElementIdOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(84, suggestedBindingElementIdOffset, 0);
+}
+
+static addIsBindingEnabled(builder:flatbuffers.Builder, isBindingEnabled:boolean) {
+  builder.addFieldInt8(85, +isBindingEnabled, +false);
 }
 
 static endAppState(builder:flatbuffers.Builder):flatbuffers.Offset {
