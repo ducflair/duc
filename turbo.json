@@ -1,15 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
-    "@ducflair/canvas#build": {
-      "cache": false,
-      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
-    },
-    "@ducflair/duc#build": {
-      "dependsOn": ["@ducflair/canvas#build"],
-      "cache": false,
-      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
-    },
     "@ducflair/duc-py#build": {
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
@@ -37,13 +28,19 @@
         "AWS_REGION"
       ],
       "outputs": [".next/**", "!.next/cache/**"],
-      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local", ".env.production.local"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env.*",
+        ".env.local",
+        ".env.production.local"
+      ]
     },
     
 
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "src/index.js", "target/**", "*.egg-info/**"]
+      "outputs": ["dist/**", "src/index.js", "target/**", "*.egg-info/**"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
     "test": {
       "dependsOn": ["build"]
