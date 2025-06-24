@@ -179,6 +179,11 @@ DEFAULT_APP_STATE = {
     "lineBendingMode": False,
     "scopeExponentThreshold": 2,
     "zoomStep": 0.1,
+    "antiAliasing": 1,
+    "vSync": False,
+    "debugRendering": False,
+    "gridModeEnabled": False,
+    "isBindingEnabled": False,
 }
 
 # Tool sets that don't support certain features

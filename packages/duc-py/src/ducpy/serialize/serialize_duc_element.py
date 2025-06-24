@@ -15,7 +15,14 @@ from ..Duc.DucElement import (
     AddScaleV3, AddCrop, AddIsCollapsed, AddClip, AddGroupIdRef,
     AddStartBinding, AddEndBinding, AddElbowed,
     StartGroupIdsVector, StartBoundElementsVector, StartPointsVector,
-    StartPressuresV3Vector, StartStrokeVector, StartBackgroundVector
+    StartPressuresV3Vector, StartStrokeVector, StartBackgroundVector,
+    AddPolygonSides, AddDocContent, AddLines, AddEllipseRatio, AddEllipseStartAngle,
+    AddEllipseEndAngle, AddEllipseShowAuxCrosshair, AddFreeDrawThinning,
+    AddFreeDrawSmoothing, AddFreeDrawStreamline, AddFreeDrawEasing,
+    AddFreeDrawStartCap, AddFreeDrawStartTaper, AddFreeDrawStartEasing,
+    AddFreeDrawEndCap, AddFreeDrawEndTaper, AddFreeDrawEndEasing,
+    AddFreeDrawSvgPath, AddFreeDrawSize, AddLinearElementPathOverrides,
+    StartLinesVector, StartLinearElementPathOverridesVector
 )
 from ..Duc.DucElement import *
 from ..Duc.Point import (
@@ -23,12 +30,7 @@ from ..Duc.Point import (
     End as PointEnd,
     AddXV3 as AddPointX,
     AddYV3 as AddPointY,
-    AddIsCurve as AddPointIsCurve,
     AddMirroring as AddPointMirroring,
-    AddBorderRadius as AddPointBorderRadius,
-    AddHandleIn as AddPointHandleIn,
-    AddHandleOut as AddPointHandleOut,
-    AddPeer as AddPointPeer
 )
 from ..Duc.PointBinding import (
     Start as BindingElementStart,
@@ -87,7 +89,19 @@ from ..Duc.SimplePoint import (
     AddY as AddBezierHandleY
 )
 from ..utils.enums import ElementType
-from ..classes.DucElementClass import BoundElement, DucElement, DucElementUnion, ImageCrop, Point, BezierHandle, PointBinding, BindingPoint, ElementStroke, ElementBackground, ElementContentBase, StrokeStyle, StrokeSides, TilingProperties
+from ..classes.DucElementClass import (
+    DucElementUnion, DucElementBase, ImageCrop, Point, BezierHandle,
+    SimplePoint, ElementStroke, ElementBackground, ElementContentBase, 
+    StrokeStyleProps, StrokeSides, TilingProperties, BindingPoint, PointBinding,
+    BoundElement, DucLine, DucLineReference, DucPath, DucTableStyleProps, 
+    DucTableColumn, DucTableRow, DucTableCell, DucTableStyle,
+    # All element types
+    DucSelectionElement, DucRectangleElement, DucPolygonElement, DucEllipseElement,
+    DucImageElement, DucFrameElement, DucGroupElement, DucMagicFrameElement,
+    DucEmbeddableElement, DucIframeElement, DucTableElement, DucDocElement,
+    DucTextElement, DucLinearElement, DucArrowElement, DucFreeDrawElement,
+    DucFreeDrawEnds
+)
 from ..Duc.BoundElement import (
     Start as BoundElementStart,
     End as BoundElementEnd,
@@ -110,8 +124,162 @@ from ..Duc.SimplePoint import (
     AddX as AddSimplePointX,
     AddY as AddSimplePointY,
 )
+from ..Duc.DucLine import (
+    Start as DucLineStart,
+    End as DucLineEnd,
+    AddStart, AddEnd
+)
+from ..Duc.DucLineReference import (
+    Start as DucLineReferenceStart,
+    End as DucLineReferenceEnd,
+    AddIndex, AddHandle
+)
+from ..Duc.DucPath import (
+    Start as DucPathStart,
+    End as DucPathEnd,
+    AddLineIndices, AddBackground as AddPathBackground, AddStroke as AddPathStroke,
+    StartLineIndicesVector
+)
+from ..Duc.DucTableStyleProps import (
+    Start as DucTableStylePropsStart,
+    End as DucTableStylePropsEnd,
+    AddBackgroundColor, AddBorderWidth, AddBorderDashes, AddBorderColor,
+    AddTextColor, AddTextSize, AddTextFont, AddTextAlign,
+    StartBorderDashesVector
+)
+from ..Duc.DucTableColumn import (
+    Start as DucTableColumnStart,
+    End as DucTableColumnEnd,
+    AddId as AddColumnId, AddWidth as AddColumnWidth, AddStyle as AddColumnStyle
+)
+from ..Duc.DucTableRow import (
+    Start as DucTableRowStart,
+    End as DucTableRowEnd,
+    AddId as AddRowId, AddHeight as AddRowHeight, AddStyle as AddRowStyle
+)
+from ..Duc.DucTableCell import (
+    Start as DucTableCellStart,
+    End as DucTableCellEnd,
+    AddRowId as AddCellRowId, AddColumnId as AddCellColumnId, AddData, AddStyle as AddCellStyle
+)
+from ..Duc.DucTableStyle import (
+    Start as DucTableStyleStart,
+    End as DucTableStyleEnd,
+    AddDefaultProps
+)
 
 logger = logging.getLogger(__name__)
+
+def serialize_duc_line_reference(builder: flatbuffers.Builder, ref: DucLineReference):
+    handle_offset = serialize_simple_point(builder, ref.handle.x, ref.handle.y) if ref.handle else 0
+    DucLineReferenceStart(builder)
+    AddIndex(builder, ref.index)
+    if handle_offset:
+        AddHandle(builder, handle_offset)
+    return DucLineReferenceEnd(builder)
+
+def serialize_duc_line(builder: flatbuffers.Builder, line: DucLine):
+    start_offset = serialize_duc_line_reference(builder, line.start)
+    end_offset = serialize_duc_line_reference(builder, line.end)
+    DucLineStart(builder)
+    AddStart(builder, start_offset)
+    AddEnd(builder, end_offset)
+    return DucLineEnd(builder)
+
+def serialize_duc_path(builder: flatbuffers.Builder, path: DucPath):
+    # Create all nested objects first
+    background_offset = serialize_element_background(builder, [path.background]) if path.background else None
+    stroke_offset = serialize_element_stroke(builder, [path.stroke]) if path.stroke else None
+    
+    # Create vector
+    StartLineIndicesVector(builder, len(path.line_indices))
+    for index in reversed(path.line_indices):
+        builder.PrependInt32(index)
+    line_indices_vector = builder.EndVector()
+
+    # Now create the main object
+    DucPathStart(builder)
+    AddLineIndices(builder, line_indices_vector)
+    if background_offset:
+        AddPathBackground(builder, background_offset)
+    if stroke_offset:
+        AddPathStroke(builder, stroke_offset)
+    return DucPathEnd(builder)
+
+def serialize_duc_table_style_props(builder: flatbuffers.Builder, props: DucTableStyleProps):
+    background_color_offset = builder.CreateString(props.background_color) if props.background_color else 0
+    border_color_offset = builder.CreateString(props.border_color) if props.border_color else 0
+    text_color_offset = builder.CreateString(props.text_color) if props.text_color else 0
+    text_font_offset = builder.CreateString(props.text_font) if props.text_font else 0
+    
+    StartBorderDashesVector(builder, len(props.border_dashes))
+    for dash in reversed(props.border_dashes):
+        builder.PrependFloat64(dash)
+    border_dashes_vector = builder.EndVector()
+
+    DucTableStylePropsStart(builder)
+    if background_color_offset:
+        AddBackgroundColor(builder, background_color_offset)
+    if props.border_width is not None:
+        AddBorderWidth(builder, props.border_width)
+    if border_dashes_vector:
+        AddBorderDashes(builder, border_dashes_vector)
+    if border_color_offset:
+        AddBorderColor(builder, border_color_offset)
+    if text_color_offset:
+        AddTextColor(builder, text_color_offset)
+    if props.text_size is not None:
+        AddTextSize(builder, props.text_size)
+    if text_font_offset:
+        AddTextFont(builder, text_font_offset)
+    if props.text_align is not None:
+        AddTextAlign(builder, props.text_align)
+    return DucTableStylePropsEnd(builder)
+
+def serialize_duc_table_column(builder: flatbuffers.Builder, column: DucTableColumn):
+    id_offset = builder.CreateString(column.id)
+    style_offset = serialize_duc_table_style_props(builder, column.style) if column.style else 0
+    
+    DucTableColumnStart(builder)
+    AddColumnId(builder, id_offset)
+    AddColumnWidth(builder, column.width)
+    if style_offset:
+        AddColumnStyle(builder, style_offset)
+    return DucTableColumnEnd(builder)
+
+def serialize_duc_table_row(builder: flatbuffers.Builder, row: DucTableRow):
+    id_offset = builder.CreateString(row.id)
+    style_offset = serialize_duc_table_style_props(builder, row.style) if row.style else 0
+
+    DucTableRowStart(builder)
+    AddRowId(builder, id_offset)
+    AddRowHeight(builder, row.height)
+    if style_offset:
+        AddRowStyle(builder, style_offset)
+    return DucTableRowEnd(builder)
+
+def serialize_duc_table_cell(builder: flatbuffers.Builder, cell: DucTableCell):
+    row_id_offset = builder.CreateString(cell.row_id)
+    column_id_offset = builder.CreateString(cell.column_id)
+    data_offset = builder.CreateString(cell.data) if cell.data else 0
+    style_offset = serialize_duc_table_style_props(builder, cell.style) if cell.style else 0
+    
+    DucTableCellStart(builder)
+    AddCellRowId(builder, row_id_offset)
+    AddCellColumnId(builder, column_id_offset)
+    if data_offset:
+        AddData(builder, data_offset)
+    if style_offset:
+        AddCellStyle(builder, style_offset)
+    return DucTableCellEnd(builder)
+
+def serialize_duc_table_style(builder: flatbuffers.Builder, style: DucTableStyle):
+    default_props_offset = serialize_duc_table_style_props(builder, style.default_props) if style.default_props else 0
+    
+    DucTableStyleStart(builder)
+    if default_props_offset:
+        AddDefaultProps(builder, default_props_offset)
+    return DucTableStyleEnd(builder)
 
 def serialize_bezier_handle(builder: flatbuffers.Builder, handle: BezierHandle):
     BezierHandleStart(builder)
@@ -122,22 +290,12 @@ def serialize_bezier_handle(builder: flatbuffers.Builder, handle: BezierHandle):
 def serialize_point(builder: flatbuffers.Builder, point: Point):
     if not point:
         return None
-      
-    handle_in_offset = serialize_bezier_handle(builder, point.handle_in) if point.handle_in else None  # Added null check
-    handle_out_offset = serialize_bezier_handle(builder, point.handle_out) if point.handle_out else None  # Added null check
   
     PointStart(builder)
     AddPointX(builder, point.x)
     AddPointY(builder, point.y)
-    AddPointIsCurve(builder, point.is_curve)
-    AddPointMirroring(builder, point.mirroring)
-    AddPointBorderRadius(builder, point.border_radius)
-    if handle_in_offset:
-        AddPointHandleIn(builder, handle_in_offset)
-    if handle_out_offset:
-        AddPointHandleOut(builder, handle_out_offset)
-    if point.peer:
-        AddPointPeer(builder, point.peer)
+    if point.mirroring is not None:
+        AddPointMirroring(builder, point.mirroring)
     return PointEnd(builder)
 
 def serialize_binding_point(builder: flatbuffers.Builder, binding: BindingPoint):
@@ -147,17 +305,19 @@ def serialize_binding_point(builder: flatbuffers.Builder, binding: BindingPoint)
     return BindingPointEnd(builder)
 
 def serialize_point_binding(builder: flatbuffers.Builder, binding: PointBinding):
+    # Create all nested objects first
     id_offset = builder.CreateString(binding.element_id)
     fixed_point_offset = serialize_simple_point(builder, binding.fixed_point.x, binding.fixed_point.y)
+    point_offset = serialize_binding_point(builder, binding.point) if binding.point else None
     
+    # Now create the main object
     BindingElementStart(builder)
     AddBindingElementId(builder, id_offset)
     AddBindingFocus(builder, binding.focus)
     AddBindingGap(builder, binding.gap)
     if fixed_point_offset:
         AddBindingFixedPoint(builder, fixed_point_offset)
-    if binding.point:
-        point_offset = serialize_binding_point(builder, binding.point)
+    if point_offset:
         AddBindingPoint(builder, point_offset)
     AddBindingHead(builder, binding.head)
     return BindingElementEnd(builder)
@@ -231,7 +391,7 @@ def serialize_element_content_base(builder: flatbuffers.Builder, content: Elemen
     # Return the table offset
     return ElementContentBaseEnd(builder)
 
-def serialize_stroke_style(builder: flatbuffers.Builder, style: StrokeStyle):
+def serialize_stroke_style(builder: flatbuffers.Builder, style: StrokeStyleProps):
     if not style:
         return 0
 
@@ -457,193 +617,208 @@ def serialize_simple_point(builder: flatbuffers.Builder, x: float, y: float):
 
 def serialize_duc_element(builder: flatbuffers.Builder, element: DucElementUnion):
     try:
-        # Create ALL string offsets first
-        id_offset = builder.CreateString(element.id)  # ID is required
-        type_offset = builder.CreateString(element.type)  # Type is required
-        link_offset = builder.CreateString(element.link) if element.link else None
-        label_offset = builder.CreateString(element.label) if element.label else None
-        scope_offset = builder.CreateString(element.scope) if element.scope else None
-        frame_id_offset = builder.CreateString(element.frame_id) if element.frame_id else None
-        text_offset = builder.CreateString(element.text) if hasattr(element, 'text') and element.text else None
-        container_id_offset = builder.CreateString(element.container_id) if hasattr(element, 'container_id') and element.container_id else None
-        file_id_offset = builder.CreateString(element.file_id) if hasattr(element, 'file_id') and element.file_id else None
-        status_offset = builder.CreateString(element.status) if hasattr(element, 'status') and element.status else None
-        group_id_ref_offset = builder.CreateString(element.group_id_ref) if hasattr(element, 'group_id_ref') and element.group_id_ref else None
-        font_family_offset = builder.CreateString(str(element.font_family)) if hasattr(element, 'font_family') and element.font_family is not None else None
-        
-        # Create ALL vectors first
-        group_ids_vector = None
-        if element.group_ids and len(element.group_ids) > 0:
-            group_ids = [builder.CreateString(id) for id in element.group_ids]
+        # Create all string offsets
+        strings = {
+            'id': builder.CreateString(element.id),
+            'type': builder.CreateString(element.type),
+            'link': builder.CreateString(element.link) if hasattr(element, 'link') and element.link else None,
+            'label': builder.CreateString(element.label) if hasattr(element, 'label') and element.label else None,
+            'scope': builder.CreateString(element.scope) if hasattr(element, 'scope') and element.scope else None,
+            'frame_id': builder.CreateString(element.frame_id) if hasattr(element, 'frame_id') and element.frame_id else None,
+            'text': builder.CreateString(element.text) if hasattr(element, 'text') and element.text else None,
+            'container_id': builder.CreateString(element.container_id) if hasattr(element, 'container_id') and element.container_id else None,
+            'file_id': builder.CreateString(element.file_id) if hasattr(element, 'file_id') and element.file_id else None,
+            'status': builder.CreateString(element.status) if hasattr(element, 'status') and element.status else None,
+            'group_id_ref': builder.CreateString(element.group_id_ref) if hasattr(element, 'group_id_ref') and element.group_id_ref else None,
+            'font_family': builder.CreateString(str(element.font_family)) if hasattr(element, 'font_family') and element.font_family is not None else None,
+            'doc_content': builder.CreateString(element.content) if hasattr(element, 'content') and element.content else None,
+            'free_draw_easing': builder.CreateString(element.easing) if hasattr(element, 'easing') and element.easing else None,
+            'free_draw_start_easing': builder.CreateString(element.start.easing) if hasattr(element, 'start') and element.start and hasattr(element.start, 'easing') and element.start.easing else None,
+            'free_draw_end_easing': builder.CreateString(element.end.easing) if hasattr(element, 'end') and element.end and hasattr(element.end, 'easing') and element.end.easing else None,
+            'free_draw_svg_path': builder.CreateString(element.svg_path) if hasattr(element, 'svg_path') and element.svg_path else None,
+        }
+
+        # Create all vectors
+        vectors = {}
+        if hasattr(element, 'group_ids') and element.group_ids:
+            group_ids = [builder.CreateString(gid) for gid in element.group_ids]
             StartGroupIdsVector(builder, len(group_ids))
-            for offset in reversed(group_ids):
-                builder.PrependUOffsetTRelative(offset)
-            group_ids_vector = builder.EndVector()
+            for offset in reversed(group_ids): builder.PrependUOffsetTRelative(offset)
+            vectors['group_ids'] = builder.EndVector()
 
-        bound_elements_vector = None
-        if element.bound_elements and len(element.bound_elements) > 0:
-            bound_elements = [serialize_bound_element(builder, binding) for binding in element.bound_elements]
+        if hasattr(element, 'bound_elements') and element.bound_elements:
+            bound_elements = [serialize_bound_element(builder, be) for be in element.bound_elements]
             StartBoundElementsVector(builder, len(bound_elements))
-            for offset in reversed(bound_elements):
-                builder.PrependUOffsetTRelative(offset)
-            bound_elements_vector = builder.EndVector()
+            for offset in reversed(bound_elements): builder.PrependUOffsetTRelative(offset)
+            vectors['bound_elements'] = builder.EndVector()
         
-        stroke_vector = None
-        if element.stroke:
-            strokes = element.stroke if isinstance(element.stroke, list) else [element.stroke]
-            stroke_vector = serialize_element_stroke(builder, strokes)
+        if hasattr(element, 'lines') and element.lines:
+            line_offsets = [serialize_duc_line(builder, line) for line in element.lines]
+            StartLinesVector(builder, len(line_offsets))
+            for offset in reversed(line_offsets): builder.PrependUOffsetTRelative(offset)
+            vectors['lines'] = builder.EndVector()
+            
+        if hasattr(element, 'path_overrides') and element.path_overrides:
+            path_offsets = [serialize_duc_path(builder, path) for path in element.path_overrides]
+            StartLinearElementPathOverridesVector(builder, len(path_offsets))
+            for offset in reversed(path_offsets): builder.PrependUOffsetTRelative(offset)
+            vectors['linear_element_path_overrides'] = builder.EndVector()
+        
+        if hasattr(element, 'points') and element.points:
+            vectors['points'] = serialize_points(builder, element.points)
+        
+        if hasattr(element, 'pressures') and element.pressures:
+            vectors['pressures'] = serialize_pressures(builder, element.pressures)
 
-        background_vector = None
-        if element.background:
-            backgrounds = element.background if isinstance(element.background, list) else [element.background]
-            background_vector = serialize_element_background(builder, backgrounds)
-        
-        # Create ALL type-specific vectors and offsets
-        points_vector = None
-        pressures_vector = None
-        last_committed_point_offset = None
-        start_binding_offset = None
-        end_binding_offset = None
-        scale_offset = None
-        crop_offset = None
-        
-        if element.type == ElementType.LINE or element.type == ElementType.ARROW:
-            if element.points:
-                points_vector = serialize_points(builder, element.points)
-            if element.last_committed_point:
-                last_committed_point_offset = serialize_point(builder, element.last_committed_point)
-            if hasattr(element, 'start_binding') and element.start_binding:
-                start_binding_offset = serialize_point_binding(builder, element.start_binding)
-            if hasattr(element, 'end_binding') and element.end_binding:
-                end_binding_offset = serialize_point_binding(builder, element.end_binding)
-        
-        elif element.type == ElementType.FREEDRAW:
-            if element.points:
-                points_vector = serialize_points(builder, element.points)
-            if element.pressures:
-                pressures_vector = serialize_pressures(builder, element.pressures)
-            if element.last_committed_point:
-                last_committed_point_offset = serialize_point(builder, element.last_committed_point)
-        
-        elif element.type == ElementType.IMAGE:
-            if hasattr(element, 'scale') and element.scale:
-                scale_offset = serialize_simple_point(builder, element.scale[0], element.scale[1])
-            if hasattr(element, 'crop') and element.crop:
-                crop_offset = serialize_image_crop(builder, element.crop)
-        
-        # NOW start building the DucElement table
+        if element.type == ElementType.TABLE:
+            if hasattr(element, 'column_order') and element.column_order:
+                column_order_offsets = [builder.CreateString(col) for col in element.column_order]
+                StartColumnOrderVector(builder, len(column_order_offsets))
+                for offset in reversed(column_order_offsets): builder.PrependUOffsetTRelative(offset)
+                vectors['column_order'] = builder.EndVector()
+            if hasattr(element, 'row_order') and element.row_order:
+                row_order_offsets = [builder.CreateString(row) for row in element.row_order]
+                StartRowOrderVector(builder, len(row_order_offsets))
+                for offset in reversed(row_order_offsets): builder.PrependUOffsetTRelative(offset)
+                vectors['row_order'] = builder.EndVector()
+            if hasattr(element, 'columns') and element.columns:
+                column_offsets = [serialize_duc_table_column(builder, col) for col in element.columns]
+                StartColumnsVector(builder, len(column_offsets))
+                for offset in reversed(column_offsets): builder.PrependUOffsetTRelative(offset)
+                vectors['columns'] = builder.EndVector()
+            if hasattr(element, 'rows') and element.rows:
+                row_offsets = [serialize_duc_table_row(builder, row) for row in element.rows]
+                StartRowsVector(builder, len(row_offsets))
+                for offset in reversed(row_offsets): builder.PrependUOffsetTRelative(offset)
+                vectors['rows'] = builder.EndVector()
+            if hasattr(element, 'cells') and element.cells:
+                cell_offsets = [serialize_duc_table_cell(builder, cell) for cell in element.cells]
+                StartCellsVector(builder, len(cell_offsets))
+                for offset in reversed(cell_offsets): builder.PrependUOffsetTRelative(offset)
+                vectors['cells'] = builder.EndVector()
+
+        # Create other offsets
+        offsets = {
+            'stroke': serialize_element_stroke(builder, element.stroke) if hasattr(element, 'stroke') and element.stroke else None,
+            'background': serialize_element_background(builder, element.background) if hasattr(element, 'background') and element.background else None,
+            'last_committed_point': serialize_point(builder, element.last_committed_point) if hasattr(element, 'last_committed_point') and element.last_committed_point else None,
+            'start_binding': serialize_point_binding(builder, element.start_binding) if hasattr(element, 'start_binding') and element.start_binding else None,
+            'end_binding': serialize_point_binding(builder, element.end_binding) if hasattr(element, 'end_binding') and element.end_binding else None,
+            'scale': serialize_simple_point(builder, element.scale[0], element.scale[1]) if hasattr(element, 'scale') and element.scale else None,
+            'crop': serialize_image_crop(builder, element.crop) if hasattr(element, 'crop') and element.crop else None,
+            'table_style': serialize_duc_table_style(builder, element.table_style) if hasattr(element, 'table_style') and element.table_style else None,
+        }
+
+        # Start building the element
         DucElementStart(builder)
         
-        # Add required fields first - these must always be present
-        AddId(builder, id_offset)  # ID is required
-        AddType(builder, type_offset)  # Type is required
+        # Add all properties
+        props = {
+            'id': (AddId, strings['id']),
+            'type': (AddType, strings['type']),
+            'x': (AddXV3, element.x) if hasattr(element, 'x') else None,
+            'y': (AddYV3, element.y) if hasattr(element, 'y') else None,
+            'width': (AddWidthV3, element.width) if hasattr(element, 'width') else None,
+            'height': (AddHeightV3, element.height) if hasattr(element, 'height') else None,
+            'angle': (AddAngleV3, element.angle) if hasattr(element, 'angle') else None,
+            'frame_id': (AddFrameId, strings['frame_id']) if strings['frame_id'] else None,
+            'stroke': (AddStroke, offsets['stroke']) if offsets['stroke'] else None,
+            'background': (AddBackground, offsets['background']) if offsets['background'] else None,
+            'opacity': (AddOpacity, element.opacity) if hasattr(element, 'opacity') else None,
+            'group_ids': (AddGroupIds, vectors.get('group_ids')) if vectors.get('group_ids') else None,
+            'bound_elements': (AddBoundElements, vectors.get('bound_elements')) if vectors.get('bound_elements') else None,
+            'roundness': (AddRoundness, element.roundness) if hasattr(element, 'roundness') else None,
+            'locked': (AddLocked, element.locked) if hasattr(element, 'locked') else None,
+            'link': (AddLink, strings['link']) if strings['link'] else None,
+            'label': (AddLabel, strings['label']) if strings['label'] else None,
+            'is_visible': (AddIsVisible, element.is_visible) if hasattr(element, 'is_visible') else None,
+            'blending': (AddBlending, element.blending) if hasattr(element, 'blending') else None,
+            'subset': (AddSubset, element.subset) if hasattr(element, 'subset') else None,
+            'scope': (AddScope, strings['scope']) if strings['scope'] else None,
+            'is_deleted': (AddIsDeleted, element.is_deleted) if hasattr(element, 'is_deleted') else None,
+            'z_index': (AddZIndex, element.z_index) if hasattr(element, 'z_index') else None,
+            'polygon_sides': (AddPolygonSides, element.sides) if hasattr(element, 'sides') and element.sides is not None else None,
+            'doc_content': (AddDocContent, strings['doc_content']) if strings['doc_content'] else None,
+            'lines': (AddLines, vectors.get('lines')) if vectors.get('lines') else None,
+            'linear_element_path_overrides': (AddLinearElementPathOverrides, vectors.get('linear_element_path_overrides')) if vectors.get('linear_element_path_overrides') else None,
+        }
         
-        # Add base properties - these should be added if they exist
-        # Note: We're using v3 fields only, v2 fields should remain null
-        if element.x is not None:
-            AddXV3(builder, element.x)
-        if element.y is not None:
-            AddYV3(builder, element.y) 
-        if element.width is not None:
-            AddWidthV3(builder, element.width)
-        if element.height is not None:
-            AddHeightV3(builder, element.height)
-        if element.angle is not None:
-            AddAngleV3(builder, element.angle)
-        if frame_id_offset:
-            AddFrameId(builder, frame_id_offset)
-        if stroke_vector is not None:
-            AddStroke(builder, stroke_vector)
-        if background_vector is not None:
-            AddBackground(builder, background_vector)
-        if element.opacity is not None:
-            AddOpacity(builder, element.opacity)
-        if group_ids_vector:
-            AddGroupIds(builder, group_ids_vector)
-        if bound_elements_vector:
-            AddBoundElements(builder, bound_elements_vector)
-        if element.roundness is not None:
-            AddRoundness(builder, element.roundness)
-        if element.locked is not None:
-            AddLocked(builder, element.locked)
-        if link_offset:
-            AddLink(builder, link_offset)
-        if label_offset:
-            AddLabel(builder, label_offset)
-        if element.is_visible is not None:
-            AddIsVisible(builder, element.is_visible)
-        if element.blending is not None:
-            AddBlending(builder, element.blending)
-        if element.subset is not None:
-            AddSubset(builder, element.subset)
-        if scope_offset:
-            AddScope(builder, scope_offset)
-        if element.is_deleted is not None:
-            AddIsDeleted(builder, element.is_deleted)
-        if element.z_index is not None:
-            AddZIndex(builder, element.z_index)
-        
-        # Add type-specific properties
+        # Type-specific properties
         if element.type == ElementType.TEXT:
-            if text_offset:
-                AddText(builder, text_offset)
-            if element.font_size is not None:
-                AddFontSizeV3(builder, element.font_size)
-            if font_family_offset:
-                AddFontFamily(builder, font_family_offset)
-            if element.text_align:
-                AddTextAlignV3(builder, element.text_align)
-            if element.vertical_align is not None:
-                AddVerticalAlignV3(builder, element.vertical_align)
-            if element.line_height is not None:
-                AddLineHeightV3(builder, element.line_height)
-            if element.auto_resize is not None:
-                AddAutoResize(builder, element.auto_resize)
-            if container_id_offset:
-                AddContainerId(builder, container_id_offset)
-        
-        elif element.type == ElementType.LINE or element.type == ElementType.ARROW:
-            if points_vector:
-                AddPoints(builder, points_vector)
-            if last_committed_point_offset:
-                AddLastCommittedPoint(builder, last_committed_point_offset)
-            if start_binding_offset:
-                AddStartBinding(builder, start_binding_offset)
-            if end_binding_offset:
-                AddEndBinding(builder, end_binding_offset)
-            if element.type == ElementType.ARROW and hasattr(element, 'elbowed'):
-                AddElbowed(builder, element.elbowed)
-        
+            props.update({
+                'text': (AddText, strings['text']) if strings['text'] else None,
+                'font_size': (AddFontSizeV3, element.font_size) if hasattr(element, 'font_size') else None,
+                'font_family': (AddFontFamily, strings['font_family']) if strings['font_family'] else None,
+                'text_align': (AddTextAlignV3, element.text_align) if hasattr(element, 'text_align') else None,
+                'vertical_align': (AddVerticalAlignV3, element.vertical_align) if hasattr(element, 'vertical_align') else None,
+                'line_height': (AddLineHeightV3, element.line_height) if hasattr(element, 'line_height') else None,
+                'auto_resize': (AddAutoResize, element.auto_resize) if hasattr(element, 'auto_resize') else None,
+                'container_id': (AddContainerId, strings['container_id']) if strings['container_id'] else None,
+            })
+        elif element.type in [ElementType.LINE, ElementType.ARROW]:
+            props.update({
+                'points': (AddPoints, vectors.get('points')) if vectors.get('points') else None,
+                'last_committed_point': (AddLastCommittedPoint, offsets['last_committed_point']) if offsets['last_committed_point'] else None,
+                'start_binding': (AddStartBinding, offsets['start_binding']) if offsets['start_binding'] else None,
+                'end_binding': (AddEndBinding, offsets['end_binding']) if offsets['end_binding'] else None,
+                'elbowed': (AddElbowed, element.elbowed) if element.type == ElementType.ARROW and hasattr(element, 'elbowed') else None,
+            })
         elif element.type == ElementType.FREEDRAW:
-            if points_vector:
-                AddPoints(builder, points_vector)
-            if pressures_vector:
-                AddPressuresV3(builder, pressures_vector)
-            if last_committed_point_offset:
-                AddLastCommittedPoint(builder, last_committed_point_offset)
-            if element.simulate_pressure is not None:
-                AddSimulatePressure(builder, element.simulate_pressure)
-        
+            props.update({
+                'points': (AddPoints, vectors.get('points')) if vectors.get('points') else None,
+                'pressures': (AddPressuresV3, vectors.get('pressures')) if vectors.get('pressures') else None,
+                'last_committed_point': (AddLastCommittedPoint, offsets['last_committed_point']) if offsets['last_committed_point'] else None,
+                'simulate_pressure': (AddSimulatePressure, element.simulate_pressure) if hasattr(element, 'simulate_pressure') else None,
+                'free_draw_thinning': (AddFreeDrawThinning, element.thinning) if hasattr(element, 'thinning') else None,
+                'free_draw_smoothing': (AddFreeDrawSmoothing, element.smoothing) if hasattr(element, 'smoothing') else None,
+                'free_draw_streamline': (AddFreeDrawStreamline, element.streamline) if hasattr(element, 'streamline') else None,
+                'free_draw_easing': (AddFreeDrawEasing, strings['free_draw_easing']) if strings['free_draw_easing'] else None,
+                'free_draw_start_cap': (AddFreeDrawStartCap, element.start.cap) if hasattr(element, 'start') and element.start and hasattr(element.start, 'cap') else None,
+                'free_draw_start_taper': (AddFreeDrawStartTaper, element.start.taper) if hasattr(element, 'start') and element.start and hasattr(element.start, 'taper') else None,
+                'free_draw_start_easing': (AddFreeDrawStartEasing, strings['free_draw_start_easing']) if strings['free_draw_start_easing'] else None,
+                'free_draw_end_cap': (AddFreeDrawEndCap, element.end.cap) if hasattr(element, 'end') and element.end and hasattr(element.end, 'cap') else None,
+                'free_draw_end_taper': (AddFreeDrawEndTaper, element.end.taper) if hasattr(element, 'end') and element.end and hasattr(element.end, 'taper') else None,
+                'free_draw_end_easing': (AddFreeDrawEndEasing, strings['free_draw_end_easing']) if strings['free_draw_end_easing'] else None,
+                'free_draw_svg_path': (AddFreeDrawSvgPath, strings['free_draw_svg_path']) if strings['free_draw_svg_path'] else None,
+                'free_draw_size': (AddFreeDrawSize, element.size) if hasattr(element, 'size') else None,
+            })
         elif element.type == ElementType.IMAGE:
-            if file_id_offset:
-                AddFileId(builder, file_id_offset)
-            if status_offset:
-                AddStatus(builder, status_offset)
-            if scale_offset:
-                AddScaleV3(builder, scale_offset)
-            if crop_offset:
-                AddCrop(builder, crop_offset)
-        
-        elif element.type == ElementType.FRAME or element.type == ElementType.GROUP or element.type == ElementType.MAGIC_FRAME:
-            if element.is_collapsed is not None:
-                AddIsCollapsed(builder, element.is_collapsed)
-            if hasattr(element, 'clip'):
-                AddClip(builder, element.clip)
-            if element.type == ElementType.GROUP and group_id_ref_offset:
-                AddGroupIdRef(builder, group_id_ref_offset)
-        
-        # Return the table offset
+            props.update({
+                'file_id': (AddFileId, strings['file_id']) if strings['file_id'] else None,
+                'status': (AddStatus, strings['status']) if strings['status'] else None,
+                'scale': (AddScaleV3, offsets['scale']) if offsets['scale'] else None,
+                'crop': (AddCrop, offsets['crop']) if offsets['crop'] else None,
+            })
+        elif element.type == ElementType.ELLIPSE:
+            props.update({
+                'ellipse_ratio': (AddEllipseRatio, element.ratio) if hasattr(element, 'ratio') else None,
+                'ellipse_start_angle': (AddEllipseStartAngle, element.start_angle) if hasattr(element, 'start_angle') else None,
+                'ellipse_end_angle': (AddEllipseEndAngle, element.end_angle) if hasattr(element, 'end_angle') else None,
+                'ellipse_show_aux_crosshair': (AddEllipseShowAuxCrosshair, element.show_aux_crosshair) if hasattr(element, 'show_aux_crosshair') else None,
+            })
+        elif element.type == ElementType.TABLE:
+            props.update({
+                'column_order': (AddColumnOrder, vectors.get('column_order')) if vectors.get('column_order') else None,
+                'row_order': (AddRowOrder, vectors.get('row_order')) if vectors.get('row_order') else None,
+                'columns': (AddColumns, vectors.get('columns')) if vectors.get('columns') else None,
+                'rows': (AddRows, vectors.get('rows')) if vectors.get('rows') else None,
+                'cells': (AddCells, vectors.get('cells')) if vectors.get('cells') else None,
+                'table_style': (AddTableStyle, offsets['table_style']) if offsets['table_style'] else None,
+            })
+        elif element.type in [ElementType.FRAME, ElementType.GROUP, ElementType.MAGIC_FRAME]:
+            props.update({
+                'is_collapsed': (AddIsCollapsed, element.is_collapsed) if hasattr(element, 'is_collapsed') else None,
+                'clip': (AddClip, element.clip) if hasattr(element, 'clip') else None,
+                'group_id_ref': (AddGroupIdRef, strings['group_id_ref']) if element.type == ElementType.GROUP and strings['group_id_ref'] else None,
+            })
+
+        for prop in props.values():
+            if prop:
+                func, val = prop
+                if val is not None:
+                    func(builder, val)
+
         return DucElementEnd(builder)
     except Exception as e:
-        logger.error(f"Failed to serialize element {element.id}: {str(e)}")
-        raise
+        logger.error(f"Failed to serialize element {getattr(element, 'id', 'unknown')}: {e}", exc_info=True)
+        return None

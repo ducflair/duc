@@ -36,14 +36,9 @@ impl<'a> flatbuffers::Follow<'a> for Point<'a> {
 impl<'a> Point<'a> {
   pub const VT_X_V2: flatbuffers::VOffsetT = 4;
   pub const VT_Y_V2: flatbuffers::VOffsetT = 6;
-  pub const VT_IS_CURVE: flatbuffers::VOffsetT = 8;
   pub const VT_MIRRORING: flatbuffers::VOffsetT = 10;
-  pub const VT_BORDER_RADIUS: flatbuffers::VOffsetT = 12;
-  pub const VT_HANDLE_IN: flatbuffers::VOffsetT = 14;
-  pub const VT_HANDLE_OUT: flatbuffers::VOffsetT = 16;
   pub const VT_X_V3: flatbuffers::VOffsetT = 18;
   pub const VT_Y_V3: flatbuffers::VOffsetT = 20;
-  pub const VT_PEER: flatbuffers::VOffsetT = 22;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -52,19 +47,14 @@ impl<'a> Point<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PointArgs<'args>
+    args: &'args PointArgs
   ) -> flatbuffers::WIPOffset<Point<'bldr>> {
     let mut builder = PointBuilder::new(_fbb);
     builder.add_y_v3(args.y_v3);
     builder.add_x_v3(args.x_v3);
-    if let Some(x) = args.border_radius { builder.add_border_radius(x); }
-    builder.add_peer(args.peer);
-    if let Some(x) = args.handle_out { builder.add_handle_out(x); }
-    if let Some(x) = args.handle_in { builder.add_handle_in(x); }
     if let Some(x) = args.y_v2 { builder.add_y_v2(x); }
     if let Some(x) = args.x_v2 { builder.add_x_v2(x); }
     if let Some(x) = args.mirroring { builder.add_mirroring(x); }
-    if let Some(x) = args.is_curve { builder.add_is_curve(x); }
     builder.finish()
   }
 
@@ -84,39 +74,11 @@ impl<'a> Point<'a> {
     unsafe { self._tab.get::<f32>(Point::VT_Y_V2, None)}
   }
   #[inline]
-  pub fn is_curve(&self) -> Option<bool> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(Point::VT_IS_CURVE, None)}
-  }
-  #[inline]
   pub fn mirroring(&self) -> Option<i8> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i8>(Point::VT_MIRRORING, None)}
-  }
-  #[inline]
-  pub fn border_radius(&self) -> Option<f64> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f64>(Point::VT_BORDER_RADIUS, None)}
-  }
-  #[inline]
-  pub fn handle_in(&self) -> Option<SimplePoint<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<SimplePoint>>(Point::VT_HANDLE_IN, None)}
-  }
-  #[inline]
-  pub fn handle_out(&self) -> Option<SimplePoint<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<SimplePoint>>(Point::VT_HANDLE_OUT, None)}
   }
   #[inline]
   pub fn x_v3(&self) -> f64 {
@@ -132,13 +94,6 @@ impl<'a> Point<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<f64>(Point::VT_Y_V3, Some(0.0)).unwrap()}
   }
-  #[inline]
-  pub fn peer(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(Point::VT_PEER, Some(0)).unwrap()}
-  }
 }
 
 impl flatbuffers::Verifiable for Point<'_> {
@@ -150,44 +105,29 @@ impl flatbuffers::Verifiable for Point<'_> {
     v.visit_table(pos)?
      .visit_field::<f32>("x_v2", Self::VT_X_V2, false)?
      .visit_field::<f32>("y_v2", Self::VT_Y_V2, false)?
-     .visit_field::<bool>("is_curve", Self::VT_IS_CURVE, false)?
      .visit_field::<i8>("mirroring", Self::VT_MIRRORING, false)?
-     .visit_field::<f64>("border_radius", Self::VT_BORDER_RADIUS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<SimplePoint>>("handle_in", Self::VT_HANDLE_IN, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<SimplePoint>>("handle_out", Self::VT_HANDLE_OUT, false)?
      .visit_field::<f64>("x_v3", Self::VT_X_V3, false)?
      .visit_field::<f64>("y_v3", Self::VT_Y_V3, false)?
-     .visit_field::<i32>("peer", Self::VT_PEER, false)?
      .finish();
     Ok(())
   }
 }
-pub struct PointArgs<'a> {
+pub struct PointArgs {
     pub x_v2: Option<f32>,
     pub y_v2: Option<f32>,
-    pub is_curve: Option<bool>,
     pub mirroring: Option<i8>,
-    pub border_radius: Option<f64>,
-    pub handle_in: Option<flatbuffers::WIPOffset<SimplePoint<'a>>>,
-    pub handle_out: Option<flatbuffers::WIPOffset<SimplePoint<'a>>>,
     pub x_v3: f64,
     pub y_v3: f64,
-    pub peer: i32,
 }
-impl<'a> Default for PointArgs<'a> {
+impl<'a> Default for PointArgs {
   #[inline]
   fn default() -> Self {
     PointArgs {
       x_v2: None,
       y_v2: None,
-      is_curve: None,
       mirroring: None,
-      border_radius: None,
-      handle_in: None,
-      handle_out: None,
       x_v3: 0.0,
       y_v3: 0.0,
-      peer: 0,
     }
   }
 }
@@ -206,24 +146,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PointBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<f32>(Point::VT_Y_V2, y_v2);
   }
   #[inline]
-  pub fn add_is_curve(&mut self, is_curve: bool) {
-    self.fbb_.push_slot_always::<bool>(Point::VT_IS_CURVE, is_curve);
-  }
-  #[inline]
   pub fn add_mirroring(&mut self, mirroring: i8) {
     self.fbb_.push_slot_always::<i8>(Point::VT_MIRRORING, mirroring);
-  }
-  #[inline]
-  pub fn add_border_radius(&mut self, border_radius: f64) {
-    self.fbb_.push_slot_always::<f64>(Point::VT_BORDER_RADIUS, border_radius);
-  }
-  #[inline]
-  pub fn add_handle_in(&mut self, handle_in: flatbuffers::WIPOffset<SimplePoint<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<SimplePoint>>(Point::VT_HANDLE_IN, handle_in);
-  }
-  #[inline]
-  pub fn add_handle_out(&mut self, handle_out: flatbuffers::WIPOffset<SimplePoint<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<SimplePoint>>(Point::VT_HANDLE_OUT, handle_out);
   }
   #[inline]
   pub fn add_x_v3(&mut self, x_v3: f64) {
@@ -232,10 +156,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PointBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_y_v3(&mut self, y_v3: f64) {
     self.fbb_.push_slot::<f64>(Point::VT_Y_V3, y_v3, 0.0);
-  }
-  #[inline]
-  pub fn add_peer(&mut self, peer: i32) {
-    self.fbb_.push_slot::<i32>(Point::VT_PEER, peer, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> PointBuilder<'a, 'b, A> {
@@ -257,14 +177,237 @@ impl core::fmt::Debug for Point<'_> {
     let mut ds = f.debug_struct("Point");
       ds.field("x_v2", &self.x_v2());
       ds.field("y_v2", &self.y_v2());
-      ds.field("is_curve", &self.is_curve());
       ds.field("mirroring", &self.mirroring());
-      ds.field("border_radius", &self.border_radius());
-      ds.field("handle_in", &self.handle_in());
-      ds.field("handle_out", &self.handle_out());
       ds.field("x_v3", &self.x_v3());
       ds.field("y_v3", &self.y_v3());
-      ds.field("peer", &self.peer());
+      ds.finish()
+  }
+}
+pub enum DucLineReferenceOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucLineReference<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucLineReference<'a> {
+  type Inner = DucLineReference<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucLineReference<'a> {
+  pub const VT_INDEX: flatbuffers::VOffsetT = 4;
+  pub const VT_HANDLE: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucLineReference { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucLineReferenceArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucLineReference<'bldr>> {
+    let mut builder = DucLineReferenceBuilder::new(_fbb);
+    if let Some(x) = args.handle { builder.add_handle(x); }
+    builder.add_index(args.index);
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn index(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(DucLineReference::VT_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn handle(&self) -> Option<SimplePoint<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<SimplePoint>>(DucLineReference::VT_HANDLE, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucLineReference<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<i32>("index", Self::VT_INDEX, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<SimplePoint>>("handle", Self::VT_HANDLE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucLineReferenceArgs<'a> {
+    pub index: i32,
+    pub handle: Option<flatbuffers::WIPOffset<SimplePoint<'a>>>,
+}
+impl<'a> Default for DucLineReferenceArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucLineReferenceArgs {
+      index: 0,
+      handle: None,
+    }
+  }
+}
+
+pub struct DucLineReferenceBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucLineReferenceBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_index(&mut self, index: i32) {
+    self.fbb_.push_slot::<i32>(DucLineReference::VT_INDEX, index, 0);
+  }
+  #[inline]
+  pub fn add_handle(&mut self, handle: flatbuffers::WIPOffset<SimplePoint<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<SimplePoint>>(DucLineReference::VT_HANDLE, handle);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucLineReferenceBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucLineReferenceBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucLineReference<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucLineReference<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucLineReference");
+      ds.field("index", &self.index());
+      ds.field("handle", &self.handle());
+      ds.finish()
+  }
+}
+pub enum DucLineOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucLine<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucLine<'a> {
+  type Inner = DucLine<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucLine<'a> {
+  pub const VT_START: flatbuffers::VOffsetT = 4;
+  pub const VT_END: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucLine { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucLineArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucLine<'bldr>> {
+    let mut builder = DucLineBuilder::new(_fbb);
+    if let Some(x) = args.end { builder.add_end(x); }
+    if let Some(x) = args.start { builder.add_start(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn start(&self) -> Option<DucLineReference<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucLineReference>>(DucLine::VT_START, None)}
+  }
+  #[inline]
+  pub fn end(&self) -> Option<DucLineReference<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucLineReference>>(DucLine::VT_END, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucLine<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DucLineReference>>("start", Self::VT_START, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DucLineReference>>("end", Self::VT_END, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucLineArgs<'a> {
+    pub start: Option<flatbuffers::WIPOffset<DucLineReference<'a>>>,
+    pub end: Option<flatbuffers::WIPOffset<DucLineReference<'a>>>,
+}
+impl<'a> Default for DucLineArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucLineArgs {
+      start: None,
+      end: None,
+    }
+  }
+}
+
+pub struct DucLineBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucLineBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_start(&mut self, start: flatbuffers::WIPOffset<DucLineReference<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucLineReference>>(DucLine::VT_START, start);
+  }
+  #[inline]
+  pub fn add_end(&mut self, end: flatbuffers::WIPOffset<DucLineReference<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucLineReference>>(DucLine::VT_END, end);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucLineBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucLineBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucLine<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucLine<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucLine");
+      ds.field("start", &self.start());
+      ds.field("end", &self.end());
       ds.finish()
   }
 }
@@ -1566,6 +1709,137 @@ impl core::fmt::Debug for ElementBackground<'_> {
       ds.finish()
   }
 }
+pub enum DucPathOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucPath<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucPath<'a> {
+  type Inner = DucPath<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucPath<'a> {
+  pub const VT_LINE_INDICES: flatbuffers::VOffsetT = 4;
+  pub const VT_BACKGROUND: flatbuffers::VOffsetT = 6;
+  pub const VT_STROKE: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucPath { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucPathArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucPath<'bldr>> {
+    let mut builder = DucPathBuilder::new(_fbb);
+    if let Some(x) = args.stroke { builder.add_stroke(x); }
+    if let Some(x) = args.background { builder.add_background(x); }
+    if let Some(x) = args.line_indices { builder.add_line_indices(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn line_indices(&self) -> Option<flatbuffers::Vector<'a, i32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i32>>>(DucPath::VT_LINE_INDICES, None)}
+  }
+  #[inline]
+  pub fn background(&self) -> Option<ElementBackground<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<ElementBackground>>(DucPath::VT_BACKGROUND, None)}
+  }
+  #[inline]
+  pub fn stroke(&self) -> Option<ElementStroke<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<ElementStroke>>(DucPath::VT_STROKE, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucPath<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, i32>>>("line_indices", Self::VT_LINE_INDICES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<ElementBackground>>("background", Self::VT_BACKGROUND, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<ElementStroke>>("stroke", Self::VT_STROKE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucPathArgs<'a> {
+    pub line_indices: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, i32>>>,
+    pub background: Option<flatbuffers::WIPOffset<ElementBackground<'a>>>,
+    pub stroke: Option<flatbuffers::WIPOffset<ElementStroke<'a>>>,
+}
+impl<'a> Default for DucPathArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucPathArgs {
+      line_indices: None,
+      background: None,
+      stroke: None,
+    }
+  }
+}
+
+pub struct DucPathBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucPathBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_line_indices(&mut self, line_indices: flatbuffers::WIPOffset<flatbuffers::Vector<'b , i32>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucPath::VT_LINE_INDICES, line_indices);
+  }
+  #[inline]
+  pub fn add_background(&mut self, background: flatbuffers::WIPOffset<ElementBackground<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ElementBackground>>(DucPath::VT_BACKGROUND, background);
+  }
+  #[inline]
+  pub fn add_stroke(&mut self, stroke: flatbuffers::WIPOffset<ElementStroke<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ElementStroke>>(DucPath::VT_STROKE, stroke);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucPathBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucPathBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucPath<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucPath<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucPath");
+      ds.field("line_indices", &self.line_indices());
+      ds.field("background", &self.background());
+      ds.field("stroke", &self.stroke());
+      ds.finish()
+  }
+}
 pub enum ImageCropOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -1748,6 +2022,729 @@ impl core::fmt::Debug for ImageCrop<'_> {
       ds.finish()
   }
 }
+pub enum DucTableStylePropsOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucTableStyleProps<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucTableStyleProps<'a> {
+  type Inner = DucTableStyleProps<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucTableStyleProps<'a> {
+  pub const VT_BACKGROUND_COLOR: flatbuffers::VOffsetT = 4;
+  pub const VT_BORDER_WIDTH: flatbuffers::VOffsetT = 6;
+  pub const VT_BORDER_DASHES: flatbuffers::VOffsetT = 8;
+  pub const VT_BORDER_COLOR: flatbuffers::VOffsetT = 10;
+  pub const VT_TEXT_COLOR: flatbuffers::VOffsetT = 12;
+  pub const VT_TEXT_SIZE: flatbuffers::VOffsetT = 14;
+  pub const VT_TEXT_FONT: flatbuffers::VOffsetT = 16;
+  pub const VT_TEXT_ALIGN: flatbuffers::VOffsetT = 18;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucTableStyleProps { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucTableStylePropsArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucTableStyleProps<'bldr>> {
+    let mut builder = DucTableStylePropsBuilder::new(_fbb);
+    builder.add_text_size(args.text_size);
+    builder.add_border_width(args.border_width);
+    if let Some(x) = args.text_font { builder.add_text_font(x); }
+    if let Some(x) = args.text_color { builder.add_text_color(x); }
+    if let Some(x) = args.border_color { builder.add_border_color(x); }
+    if let Some(x) = args.border_dashes { builder.add_border_dashes(x); }
+    if let Some(x) = args.background_color { builder.add_background_color(x); }
+    builder.add_text_align(args.text_align);
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn background_color(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTableStyleProps::VT_BACKGROUND_COLOR, None)}
+  }
+  #[inline]
+  pub fn border_width(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucTableStyleProps::VT_BORDER_WIDTH, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn border_dashes(&self) -> Option<flatbuffers::Vector<'a, f64>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(DucTableStyleProps::VT_BORDER_DASHES, None)}
+  }
+  #[inline]
+  pub fn border_color(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTableStyleProps::VT_BORDER_COLOR, None)}
+  }
+  #[inline]
+  pub fn text_color(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTableStyleProps::VT_TEXT_COLOR, None)}
+  }
+  #[inline]
+  pub fn text_size(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucTableStyleProps::VT_TEXT_SIZE, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn text_font(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTableStyleProps::VT_TEXT_FONT, None)}
+  }
+  #[inline]
+  pub fn text_align(&self) -> i8 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i8>(DucTableStyleProps::VT_TEXT_ALIGN, Some(0)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for DucTableStyleProps<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("background_color", Self::VT_BACKGROUND_COLOR, false)?
+     .visit_field::<f64>("border_width", Self::VT_BORDER_WIDTH, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("border_dashes", Self::VT_BORDER_DASHES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("border_color", Self::VT_BORDER_COLOR, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text_color", Self::VT_TEXT_COLOR, false)?
+     .visit_field::<f64>("text_size", Self::VT_TEXT_SIZE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text_font", Self::VT_TEXT_FONT, false)?
+     .visit_field::<i8>("text_align", Self::VT_TEXT_ALIGN, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucTableStylePropsArgs<'a> {
+    pub background_color: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub border_width: f64,
+    pub border_dashes: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
+    pub border_color: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub text_color: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub text_size: f64,
+    pub text_font: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub text_align: i8,
+}
+impl<'a> Default for DucTableStylePropsArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucTableStylePropsArgs {
+      background_color: None,
+      border_width: 0.0,
+      border_dashes: None,
+      border_color: None,
+      text_color: None,
+      text_size: 0.0,
+      text_font: None,
+      text_align: 0,
+    }
+  }
+}
+
+pub struct DucTableStylePropsBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTableStylePropsBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_background_color(&mut self, background_color: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTableStyleProps::VT_BACKGROUND_COLOR, background_color);
+  }
+  #[inline]
+  pub fn add_border_width(&mut self, border_width: f64) {
+    self.fbb_.push_slot::<f64>(DucTableStyleProps::VT_BORDER_WIDTH, border_width, 0.0);
+  }
+  #[inline]
+  pub fn add_border_dashes(&mut self, border_dashes: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f64>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTableStyleProps::VT_BORDER_DASHES, border_dashes);
+  }
+  #[inline]
+  pub fn add_border_color(&mut self, border_color: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTableStyleProps::VT_BORDER_COLOR, border_color);
+  }
+  #[inline]
+  pub fn add_text_color(&mut self, text_color: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTableStyleProps::VT_TEXT_COLOR, text_color);
+  }
+  #[inline]
+  pub fn add_text_size(&mut self, text_size: f64) {
+    self.fbb_.push_slot::<f64>(DucTableStyleProps::VT_TEXT_SIZE, text_size, 0.0);
+  }
+  #[inline]
+  pub fn add_text_font(&mut self, text_font: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTableStyleProps::VT_TEXT_FONT, text_font);
+  }
+  #[inline]
+  pub fn add_text_align(&mut self, text_align: i8) {
+    self.fbb_.push_slot::<i8>(DucTableStyleProps::VT_TEXT_ALIGN, text_align, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucTableStylePropsBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucTableStylePropsBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucTableStyleProps<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucTableStyleProps<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucTableStyleProps");
+      ds.field("background_color", &self.background_color());
+      ds.field("border_width", &self.border_width());
+      ds.field("border_dashes", &self.border_dashes());
+      ds.field("border_color", &self.border_color());
+      ds.field("text_color", &self.text_color());
+      ds.field("text_size", &self.text_size());
+      ds.field("text_font", &self.text_font());
+      ds.field("text_align", &self.text_align());
+      ds.finish()
+  }
+}
+pub enum DucTableColumnOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucTableColumn<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucTableColumn<'a> {
+  type Inner = DucTableColumn<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucTableColumn<'a> {
+  pub const VT_ID: flatbuffers::VOffsetT = 4;
+  pub const VT_WIDTH: flatbuffers::VOffsetT = 6;
+  pub const VT_STYLE: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucTableColumn { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucTableColumnArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucTableColumn<'bldr>> {
+    let mut builder = DucTableColumnBuilder::new(_fbb);
+    builder.add_width(args.width);
+    if let Some(x) = args.style { builder.add_style(x); }
+    if let Some(x) = args.id { builder.add_id(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTableColumn::VT_ID, None)}
+  }
+  #[inline]
+  pub fn width(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucTableColumn::VT_WIDTH, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn style(&self) -> Option<DucTableStyleProps<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucTableStyleProps>>(DucTableColumn::VT_STYLE, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucTableColumn<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, false)?
+     .visit_field::<f64>("width", Self::VT_WIDTH, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DucTableStyleProps>>("style", Self::VT_STYLE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucTableColumnArgs<'a> {
+    pub id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub width: f64,
+    pub style: Option<flatbuffers::WIPOffset<DucTableStyleProps<'a>>>,
+}
+impl<'a> Default for DucTableColumnArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucTableColumnArgs {
+      id: None,
+      width: 0.0,
+      style: None,
+    }
+  }
+}
+
+pub struct DucTableColumnBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTableColumnBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_id(&mut self, id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTableColumn::VT_ID, id);
+  }
+  #[inline]
+  pub fn add_width(&mut self, width: f64) {
+    self.fbb_.push_slot::<f64>(DucTableColumn::VT_WIDTH, width, 0.0);
+  }
+  #[inline]
+  pub fn add_style(&mut self, style: flatbuffers::WIPOffset<DucTableStyleProps<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucTableStyleProps>>(DucTableColumn::VT_STYLE, style);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucTableColumnBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucTableColumnBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucTableColumn<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucTableColumn<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucTableColumn");
+      ds.field("id", &self.id());
+      ds.field("width", &self.width());
+      ds.field("style", &self.style());
+      ds.finish()
+  }
+}
+pub enum DucTableRowOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucTableRow<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucTableRow<'a> {
+  type Inner = DucTableRow<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucTableRow<'a> {
+  pub const VT_ID: flatbuffers::VOffsetT = 4;
+  pub const VT_HEIGHT: flatbuffers::VOffsetT = 6;
+  pub const VT_STYLE: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucTableRow { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucTableRowArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucTableRow<'bldr>> {
+    let mut builder = DucTableRowBuilder::new(_fbb);
+    builder.add_height(args.height);
+    if let Some(x) = args.style { builder.add_style(x); }
+    if let Some(x) = args.id { builder.add_id(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTableRow::VT_ID, None)}
+  }
+  #[inline]
+  pub fn height(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucTableRow::VT_HEIGHT, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn style(&self) -> Option<DucTableStyleProps<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucTableStyleProps>>(DucTableRow::VT_STYLE, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucTableRow<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, false)?
+     .visit_field::<f64>("height", Self::VT_HEIGHT, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DucTableStyleProps>>("style", Self::VT_STYLE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucTableRowArgs<'a> {
+    pub id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub height: f64,
+    pub style: Option<flatbuffers::WIPOffset<DucTableStyleProps<'a>>>,
+}
+impl<'a> Default for DucTableRowArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucTableRowArgs {
+      id: None,
+      height: 0.0,
+      style: None,
+    }
+  }
+}
+
+pub struct DucTableRowBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTableRowBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_id(&mut self, id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTableRow::VT_ID, id);
+  }
+  #[inline]
+  pub fn add_height(&mut self, height: f64) {
+    self.fbb_.push_slot::<f64>(DucTableRow::VT_HEIGHT, height, 0.0);
+  }
+  #[inline]
+  pub fn add_style(&mut self, style: flatbuffers::WIPOffset<DucTableStyleProps<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucTableStyleProps>>(DucTableRow::VT_STYLE, style);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucTableRowBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucTableRowBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucTableRow<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucTableRow<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucTableRow");
+      ds.field("id", &self.id());
+      ds.field("height", &self.height());
+      ds.field("style", &self.style());
+      ds.finish()
+  }
+}
+pub enum DucTableCellOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucTableCell<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucTableCell<'a> {
+  type Inner = DucTableCell<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucTableCell<'a> {
+  pub const VT_ROW_ID: flatbuffers::VOffsetT = 4;
+  pub const VT_COLUMN_ID: flatbuffers::VOffsetT = 6;
+  pub const VT_DATA: flatbuffers::VOffsetT = 8;
+  pub const VT_STYLE: flatbuffers::VOffsetT = 10;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucTableCell { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucTableCellArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucTableCell<'bldr>> {
+    let mut builder = DucTableCellBuilder::new(_fbb);
+    if let Some(x) = args.style { builder.add_style(x); }
+    if let Some(x) = args.data { builder.add_data(x); }
+    if let Some(x) = args.column_id { builder.add_column_id(x); }
+    if let Some(x) = args.row_id { builder.add_row_id(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn row_id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTableCell::VT_ROW_ID, None)}
+  }
+  #[inline]
+  pub fn column_id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTableCell::VT_COLUMN_ID, None)}
+  }
+  #[inline]
+  pub fn data(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTableCell::VT_DATA, None)}
+  }
+  #[inline]
+  pub fn style(&self) -> Option<DucTableStyleProps<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucTableStyleProps>>(DucTableCell::VT_STYLE, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucTableCell<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("row_id", Self::VT_ROW_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("column_id", Self::VT_COLUMN_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("data", Self::VT_DATA, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DucTableStyleProps>>("style", Self::VT_STYLE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucTableCellArgs<'a> {
+    pub row_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub column_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub data: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub style: Option<flatbuffers::WIPOffset<DucTableStyleProps<'a>>>,
+}
+impl<'a> Default for DucTableCellArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucTableCellArgs {
+      row_id: None,
+      column_id: None,
+      data: None,
+      style: None,
+    }
+  }
+}
+
+pub struct DucTableCellBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTableCellBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_row_id(&mut self, row_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTableCell::VT_ROW_ID, row_id);
+  }
+  #[inline]
+  pub fn add_column_id(&mut self, column_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTableCell::VT_COLUMN_ID, column_id);
+  }
+  #[inline]
+  pub fn add_data(&mut self, data: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTableCell::VT_DATA, data);
+  }
+  #[inline]
+  pub fn add_style(&mut self, style: flatbuffers::WIPOffset<DucTableStyleProps<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucTableStyleProps>>(DucTableCell::VT_STYLE, style);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucTableCellBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucTableCellBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucTableCell<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucTableCell<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucTableCell");
+      ds.field("row_id", &self.row_id());
+      ds.field("column_id", &self.column_id());
+      ds.field("data", &self.data());
+      ds.field("style", &self.style());
+      ds.finish()
+  }
+}
+pub enum DucTableStyleOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucTableStyle<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucTableStyle<'a> {
+  type Inner = DucTableStyle<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucTableStyle<'a> {
+  pub const VT_DEFAULT_PROPS: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucTableStyle { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucTableStyleArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucTableStyle<'bldr>> {
+    let mut builder = DucTableStyleBuilder::new(_fbb);
+    if let Some(x) = args.default_props { builder.add_default_props(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn default_props(&self) -> Option<DucTableStyleProps<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucTableStyleProps>>(DucTableStyle::VT_DEFAULT_PROPS, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucTableStyle<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DucTableStyleProps>>("default_props", Self::VT_DEFAULT_PROPS, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucTableStyleArgs<'a> {
+    pub default_props: Option<flatbuffers::WIPOffset<DucTableStyleProps<'a>>>,
+}
+impl<'a> Default for DucTableStyleArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucTableStyleArgs {
+      default_props: None,
+    }
+  }
+}
+
+pub struct DucTableStyleBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTableStyleBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_default_props(&mut self, default_props: flatbuffers::WIPOffset<DucTableStyleProps<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucTableStyleProps>>(DucTableStyle::VT_DEFAULT_PROPS, default_props);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucTableStyleBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucTableStyleBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucTableStyle<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucTableStyle<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucTableStyle");
+      ds.field("default_props", &self.default_props());
+      ds.finish()
+  }
+}
 pub enum DucElementOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -1822,6 +2819,32 @@ impl<'a> DucElement<'a> {
   pub const VT_CLIP: flatbuffers::VOffsetT = 150;
   pub const VT_SUBSET: flatbuffers::VOffsetT = 152;
   pub const VT_Z_INDEX: flatbuffers::VOffsetT = 154;
+  pub const VT_POLYGON_SIDES: flatbuffers::VOffsetT = 156;
+  pub const VT_COLUMN_ORDER: flatbuffers::VOffsetT = 158;
+  pub const VT_ROW_ORDER: flatbuffers::VOffsetT = 160;
+  pub const VT_COLUMNS: flatbuffers::VOffsetT = 162;
+  pub const VT_ROWS: flatbuffers::VOffsetT = 164;
+  pub const VT_CELLS: flatbuffers::VOffsetT = 166;
+  pub const VT_TABLE_STYLE: flatbuffers::VOffsetT = 168;
+  pub const VT_DOC_CONTENT: flatbuffers::VOffsetT = 170;
+  pub const VT_LINES: flatbuffers::VOffsetT = 172;
+  pub const VT_ELLIPSE_RATIO: flatbuffers::VOffsetT = 174;
+  pub const VT_ELLIPSE_START_ANGLE: flatbuffers::VOffsetT = 176;
+  pub const VT_ELLIPSE_END_ANGLE: flatbuffers::VOffsetT = 178;
+  pub const VT_ELLIPSE_SHOW_AUX_CROSSHAIR: flatbuffers::VOffsetT = 180;
+  pub const VT_FREE_DRAW_THINNING: flatbuffers::VOffsetT = 182;
+  pub const VT_FREE_DRAW_SMOOTHING: flatbuffers::VOffsetT = 184;
+  pub const VT_FREE_DRAW_STREAMLINE: flatbuffers::VOffsetT = 186;
+  pub const VT_FREE_DRAW_EASING: flatbuffers::VOffsetT = 188;
+  pub const VT_FREE_DRAW_START_CAP: flatbuffers::VOffsetT = 190;
+  pub const VT_FREE_DRAW_START_TAPER: flatbuffers::VOffsetT = 192;
+  pub const VT_FREE_DRAW_START_EASING: flatbuffers::VOffsetT = 194;
+  pub const VT_FREE_DRAW_END_CAP: flatbuffers::VOffsetT = 196;
+  pub const VT_FREE_DRAW_END_TAPER: flatbuffers::VOffsetT = 198;
+  pub const VT_FREE_DRAW_END_EASING: flatbuffers::VOffsetT = 200;
+  pub const VT_FREE_DRAW_SVG_PATH: flatbuffers::VOffsetT = 202;
+  pub const VT_FREE_DRAW_SIZE: flatbuffers::VOffsetT = 204;
+  pub const VT_LINEAR_ELEMENT_PATH_OVERRIDES: flatbuffers::VOffsetT = 206;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -1833,6 +2856,15 @@ impl<'a> DucElement<'a> {
     args: &'args DucElementArgs<'args>
   ) -> flatbuffers::WIPOffset<DucElement<'bldr>> {
     let mut builder = DucElementBuilder::new(_fbb);
+    if let Some(x) = args.free_draw_size { builder.add_free_draw_size(x); }
+    if let Some(x) = args.free_draw_end_taper { builder.add_free_draw_end_taper(x); }
+    if let Some(x) = args.free_draw_start_taper { builder.add_free_draw_start_taper(x); }
+    if let Some(x) = args.free_draw_streamline { builder.add_free_draw_streamline(x); }
+    if let Some(x) = args.free_draw_smoothing { builder.add_free_draw_smoothing(x); }
+    if let Some(x) = args.free_draw_thinning { builder.add_free_draw_thinning(x); }
+    if let Some(x) = args.ellipse_end_angle { builder.add_ellipse_end_angle(x); }
+    if let Some(x) = args.ellipse_start_angle { builder.add_ellipse_start_angle(x); }
+    if let Some(x) = args.ellipse_ratio { builder.add_ellipse_ratio(x); }
     if let Some(x) = args.line_height_v3 { builder.add_line_height_v3(x); }
     if let Some(x) = args.font_size_v3 { builder.add_font_size_v3(x); }
     builder.add_height_v3(args.height_v3);
@@ -1842,6 +2874,20 @@ impl<'a> DucElement<'a> {
     builder.add_stroke_width_v3(args.stroke_width_v3);
     builder.add_y_v3(args.y_v3);
     builder.add_x_v3(args.x_v3);
+    if let Some(x) = args.linear_element_path_overrides { builder.add_linear_element_path_overrides(x); }
+    if let Some(x) = args.free_draw_svg_path { builder.add_free_draw_svg_path(x); }
+    if let Some(x) = args.free_draw_end_easing { builder.add_free_draw_end_easing(x); }
+    if let Some(x) = args.free_draw_start_easing { builder.add_free_draw_start_easing(x); }
+    if let Some(x) = args.free_draw_easing { builder.add_free_draw_easing(x); }
+    if let Some(x) = args.lines { builder.add_lines(x); }
+    if let Some(x) = args.doc_content { builder.add_doc_content(x); }
+    if let Some(x) = args.table_style { builder.add_table_style(x); }
+    if let Some(x) = args.cells { builder.add_cells(x); }
+    if let Some(x) = args.rows { builder.add_rows(x); }
+    if let Some(x) = args.columns { builder.add_columns(x); }
+    if let Some(x) = args.row_order { builder.add_row_order(x); }
+    if let Some(x) = args.column_order { builder.add_column_order(x); }
+    if let Some(x) = args.polygon_sides { builder.add_polygon_sides(x); }
     builder.add_z_index(args.z_index);
     if let Some(x) = args.crop { builder.add_crop(x); }
     if let Some(x) = args.stroke { builder.add_stroke(x); }
@@ -1877,6 +2923,9 @@ impl<'a> DucElement<'a> {
     if let Some(x) = args.x_v2 { builder.add_x_v2(x); }
     if let Some(x) = args.type_ { builder.add_type_(x); }
     if let Some(x) = args.id { builder.add_id(x); }
+    if let Some(x) = args.free_draw_end_cap { builder.add_free_draw_end_cap(x); }
+    if let Some(x) = args.free_draw_start_cap { builder.add_free_draw_start_cap(x); }
+    if let Some(x) = args.ellipse_show_aux_crosshair { builder.add_ellipse_show_aux_crosshair(x); }
     if let Some(x) = args.subset { builder.add_subset(x); }
     if let Some(x) = args.clip { builder.add_clip(x); }
     if let Some(x) = args.blending { builder.add_blending(x); }
@@ -2301,6 +3350,188 @@ impl<'a> DucElement<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i32>(DucElement::VT_Z_INDEX, Some(0)).unwrap()}
   }
+  #[inline]
+  pub fn polygon_sides(&self) -> Option<i32> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(DucElement::VT_POLYGON_SIDES, None)}
+  }
+  #[inline]
+  pub fn column_order(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(DucElement::VT_COLUMN_ORDER, None)}
+  }
+  #[inline]
+  pub fn row_order(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(DucElement::VT_ROW_ORDER, None)}
+  }
+  #[inline]
+  pub fn columns(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableColumn<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableColumn>>>>(DucElement::VT_COLUMNS, None)}
+  }
+  #[inline]
+  pub fn rows(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableRow<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableRow>>>>(DucElement::VT_ROWS, None)}
+  }
+  #[inline]
+  pub fn cells(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableCell<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableCell>>>>(DucElement::VT_CELLS, None)}
+  }
+  #[inline]
+  pub fn table_style(&self) -> Option<DucTableStyle<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucTableStyle>>(DucElement::VT_TABLE_STYLE, None)}
+  }
+  #[inline]
+  pub fn doc_content(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_DOC_CONTENT, None)}
+  }
+  #[inline]
+  pub fn lines(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucLine<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucLine>>>>(DucElement::VT_LINES, None)}
+  }
+  #[inline]
+  pub fn ellipse_ratio(&self) -> Option<f64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_ELLIPSE_RATIO, None)}
+  }
+  #[inline]
+  pub fn ellipse_start_angle(&self) -> Option<f64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_ELLIPSE_START_ANGLE, None)}
+  }
+  #[inline]
+  pub fn ellipse_end_angle(&self) -> Option<f64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_ELLIPSE_END_ANGLE, None)}
+  }
+  #[inline]
+  pub fn ellipse_show_aux_crosshair(&self) -> Option<bool> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(DucElement::VT_ELLIPSE_SHOW_AUX_CROSSHAIR, None)}
+  }
+  #[inline]
+  pub fn free_draw_thinning(&self) -> Option<f64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_FREE_DRAW_THINNING, None)}
+  }
+  #[inline]
+  pub fn free_draw_smoothing(&self) -> Option<f64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_FREE_DRAW_SMOOTHING, None)}
+  }
+  #[inline]
+  pub fn free_draw_streamline(&self) -> Option<f64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_FREE_DRAW_STREAMLINE, None)}
+  }
+  #[inline]
+  pub fn free_draw_easing(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_FREE_DRAW_EASING, None)}
+  }
+  #[inline]
+  pub fn free_draw_start_cap(&self) -> Option<bool> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(DucElement::VT_FREE_DRAW_START_CAP, None)}
+  }
+  #[inline]
+  pub fn free_draw_start_taper(&self) -> Option<f64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_FREE_DRAW_START_TAPER, None)}
+  }
+  #[inline]
+  pub fn free_draw_start_easing(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_FREE_DRAW_START_EASING, None)}
+  }
+  #[inline]
+  pub fn free_draw_end_cap(&self) -> Option<bool> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(DucElement::VT_FREE_DRAW_END_CAP, None)}
+  }
+  #[inline]
+  pub fn free_draw_end_taper(&self) -> Option<f64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_FREE_DRAW_END_TAPER, None)}
+  }
+  #[inline]
+  pub fn free_draw_end_easing(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_FREE_DRAW_END_EASING, None)}
+  }
+  #[inline]
+  pub fn free_draw_svg_path(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_FREE_DRAW_SVG_PATH, None)}
+  }
+  #[inline]
+  pub fn free_draw_size(&self) -> Option<f64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DucElement::VT_FREE_DRAW_SIZE, None)}
+  }
+  #[inline]
+  pub fn linear_element_path_overrides(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucPath<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucPath>>>>(DucElement::VT_LINEAR_ELEMENT_PATH_OVERRIDES, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for DucElement<'_> {
@@ -2368,6 +3599,32 @@ impl flatbuffers::Verifiable for DucElement<'_> {
      .visit_field::<bool>("clip", Self::VT_CLIP, false)?
      .visit_field::<i8>("subset", Self::VT_SUBSET, false)?
      .visit_field::<i32>("z_index", Self::VT_Z_INDEX, false)?
+     .visit_field::<i32>("polygon_sides", Self::VT_POLYGON_SIDES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("column_order", Self::VT_COLUMN_ORDER, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("row_order", Self::VT_ROW_ORDER, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucTableColumn>>>>("columns", Self::VT_COLUMNS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucTableRow>>>>("rows", Self::VT_ROWS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucTableCell>>>>("cells", Self::VT_CELLS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DucTableStyle>>("table_style", Self::VT_TABLE_STYLE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("doc_content", Self::VT_DOC_CONTENT, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucLine>>>>("lines", Self::VT_LINES, false)?
+     .visit_field::<f64>("ellipse_ratio", Self::VT_ELLIPSE_RATIO, false)?
+     .visit_field::<f64>("ellipse_start_angle", Self::VT_ELLIPSE_START_ANGLE, false)?
+     .visit_field::<f64>("ellipse_end_angle", Self::VT_ELLIPSE_END_ANGLE, false)?
+     .visit_field::<bool>("ellipse_show_aux_crosshair", Self::VT_ELLIPSE_SHOW_AUX_CROSSHAIR, false)?
+     .visit_field::<f64>("free_draw_thinning", Self::VT_FREE_DRAW_THINNING, false)?
+     .visit_field::<f64>("free_draw_smoothing", Self::VT_FREE_DRAW_SMOOTHING, false)?
+     .visit_field::<f64>("free_draw_streamline", Self::VT_FREE_DRAW_STREAMLINE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("free_draw_easing", Self::VT_FREE_DRAW_EASING, false)?
+     .visit_field::<bool>("free_draw_start_cap", Self::VT_FREE_DRAW_START_CAP, false)?
+     .visit_field::<f64>("free_draw_start_taper", Self::VT_FREE_DRAW_START_TAPER, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("free_draw_start_easing", Self::VT_FREE_DRAW_START_EASING, false)?
+     .visit_field::<bool>("free_draw_end_cap", Self::VT_FREE_DRAW_END_CAP, false)?
+     .visit_field::<f64>("free_draw_end_taper", Self::VT_FREE_DRAW_END_TAPER, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("free_draw_end_easing", Self::VT_FREE_DRAW_END_EASING, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("free_draw_svg_path", Self::VT_FREE_DRAW_SVG_PATH, false)?
+     .visit_field::<f64>("free_draw_size", Self::VT_FREE_DRAW_SIZE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucPath>>>>("linear_element_path_overrides", Self::VT_LINEAR_ELEMENT_PATH_OVERRIDES, false)?
      .finish();
     Ok(())
   }
@@ -2431,6 +3688,32 @@ pub struct DucElementArgs<'a> {
     pub clip: Option<bool>,
     pub subset: Option<i8>,
     pub z_index: i32,
+    pub polygon_sides: Option<i32>,
+    pub column_order: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub row_order: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub columns: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableColumn<'a>>>>>,
+    pub rows: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableRow<'a>>>>>,
+    pub cells: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableCell<'a>>>>>,
+    pub table_style: Option<flatbuffers::WIPOffset<DucTableStyle<'a>>>,
+    pub doc_content: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub lines: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucLine<'a>>>>>,
+    pub ellipse_ratio: Option<f64>,
+    pub ellipse_start_angle: Option<f64>,
+    pub ellipse_end_angle: Option<f64>,
+    pub ellipse_show_aux_crosshair: Option<bool>,
+    pub free_draw_thinning: Option<f64>,
+    pub free_draw_smoothing: Option<f64>,
+    pub free_draw_streamline: Option<f64>,
+    pub free_draw_easing: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub free_draw_start_cap: Option<bool>,
+    pub free_draw_start_taper: Option<f64>,
+    pub free_draw_start_easing: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub free_draw_end_cap: Option<bool>,
+    pub free_draw_end_taper: Option<f64>,
+    pub free_draw_end_easing: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub free_draw_svg_path: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub free_draw_size: Option<f64>,
+    pub linear_element_path_overrides: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucPath<'a>>>>>,
 }
 impl<'a> Default for DucElementArgs<'a> {
   #[inline]
@@ -2494,6 +3777,32 @@ impl<'a> Default for DucElementArgs<'a> {
       clip: None,
       subset: None,
       z_index: 0,
+      polygon_sides: None,
+      column_order: None,
+      row_order: None,
+      columns: None,
+      rows: None,
+      cells: None,
+      table_style: None,
+      doc_content: None,
+      lines: None,
+      ellipse_ratio: None,
+      ellipse_start_angle: None,
+      ellipse_end_angle: None,
+      ellipse_show_aux_crosshair: None,
+      free_draw_thinning: None,
+      free_draw_smoothing: None,
+      free_draw_streamline: None,
+      free_draw_easing: None,
+      free_draw_start_cap: None,
+      free_draw_start_taper: None,
+      free_draw_start_easing: None,
+      free_draw_end_cap: None,
+      free_draw_end_taper: None,
+      free_draw_end_easing: None,
+      free_draw_svg_path: None,
+      free_draw_size: None,
+      linear_element_path_overrides: None,
     }
   }
 }
@@ -2736,6 +4045,110 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<i32>(DucElement::VT_Z_INDEX, z_index, 0);
   }
   #[inline]
+  pub fn add_polygon_sides(&mut self, polygon_sides: i32) {
+    self.fbb_.push_slot_always::<i32>(DucElement::VT_POLYGON_SIDES, polygon_sides);
+  }
+  #[inline]
+  pub fn add_column_order(&mut self, column_order: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_COLUMN_ORDER, column_order);
+  }
+  #[inline]
+  pub fn add_row_order(&mut self, row_order: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_ROW_ORDER, row_order);
+  }
+  #[inline]
+  pub fn add_columns(&mut self, columns: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucTableColumn<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_COLUMNS, columns);
+  }
+  #[inline]
+  pub fn add_rows(&mut self, rows: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucTableRow<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_ROWS, rows);
+  }
+  #[inline]
+  pub fn add_cells(&mut self, cells: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucTableCell<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_CELLS, cells);
+  }
+  #[inline]
+  pub fn add_table_style(&mut self, table_style: flatbuffers::WIPOffset<DucTableStyle<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucTableStyle>>(DucElement::VT_TABLE_STYLE, table_style);
+  }
+  #[inline]
+  pub fn add_doc_content(&mut self, doc_content: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_DOC_CONTENT, doc_content);
+  }
+  #[inline]
+  pub fn add_lines(&mut self, lines: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucLine<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_LINES, lines);
+  }
+  #[inline]
+  pub fn add_ellipse_ratio(&mut self, ellipse_ratio: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_ELLIPSE_RATIO, ellipse_ratio);
+  }
+  #[inline]
+  pub fn add_ellipse_start_angle(&mut self, ellipse_start_angle: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_ELLIPSE_START_ANGLE, ellipse_start_angle);
+  }
+  #[inline]
+  pub fn add_ellipse_end_angle(&mut self, ellipse_end_angle: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_ELLIPSE_END_ANGLE, ellipse_end_angle);
+  }
+  #[inline]
+  pub fn add_ellipse_show_aux_crosshair(&mut self, ellipse_show_aux_crosshair: bool) {
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_ELLIPSE_SHOW_AUX_CROSSHAIR, ellipse_show_aux_crosshair);
+  }
+  #[inline]
+  pub fn add_free_draw_thinning(&mut self, free_draw_thinning: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_FREE_DRAW_THINNING, free_draw_thinning);
+  }
+  #[inline]
+  pub fn add_free_draw_smoothing(&mut self, free_draw_smoothing: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_FREE_DRAW_SMOOTHING, free_draw_smoothing);
+  }
+  #[inline]
+  pub fn add_free_draw_streamline(&mut self, free_draw_streamline: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_FREE_DRAW_STREAMLINE, free_draw_streamline);
+  }
+  #[inline]
+  pub fn add_free_draw_easing(&mut self, free_draw_easing: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_FREE_DRAW_EASING, free_draw_easing);
+  }
+  #[inline]
+  pub fn add_free_draw_start_cap(&mut self, free_draw_start_cap: bool) {
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_FREE_DRAW_START_CAP, free_draw_start_cap);
+  }
+  #[inline]
+  pub fn add_free_draw_start_taper(&mut self, free_draw_start_taper: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_FREE_DRAW_START_TAPER, free_draw_start_taper);
+  }
+  #[inline]
+  pub fn add_free_draw_start_easing(&mut self, free_draw_start_easing: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_FREE_DRAW_START_EASING, free_draw_start_easing);
+  }
+  #[inline]
+  pub fn add_free_draw_end_cap(&mut self, free_draw_end_cap: bool) {
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_FREE_DRAW_END_CAP, free_draw_end_cap);
+  }
+  #[inline]
+  pub fn add_free_draw_end_taper(&mut self, free_draw_end_taper: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_FREE_DRAW_END_TAPER, free_draw_end_taper);
+  }
+  #[inline]
+  pub fn add_free_draw_end_easing(&mut self, free_draw_end_easing: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_FREE_DRAW_END_EASING, free_draw_end_easing);
+  }
+  #[inline]
+  pub fn add_free_draw_svg_path(&mut self, free_draw_svg_path: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_FREE_DRAW_SVG_PATH, free_draw_svg_path);
+  }
+  #[inline]
+  pub fn add_free_draw_size(&mut self, free_draw_size: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_FREE_DRAW_SIZE, free_draw_size);
+  }
+  #[inline]
+  pub fn add_linear_element_path_overrides(&mut self, linear_element_path_overrides: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucPath<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_LINEAR_ELEMENT_PATH_OVERRIDES, linear_element_path_overrides);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucElementBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     DucElementBuilder {
@@ -2811,6 +4224,32 @@ impl core::fmt::Debug for DucElement<'_> {
       ds.field("clip", &self.clip());
       ds.field("subset", &self.subset());
       ds.field("z_index", &self.z_index());
+      ds.field("polygon_sides", &self.polygon_sides());
+      ds.field("column_order", &self.column_order());
+      ds.field("row_order", &self.row_order());
+      ds.field("columns", &self.columns());
+      ds.field("rows", &self.rows());
+      ds.field("cells", &self.cells());
+      ds.field("table_style", &self.table_style());
+      ds.field("doc_content", &self.doc_content());
+      ds.field("lines", &self.lines());
+      ds.field("ellipse_ratio", &self.ellipse_ratio());
+      ds.field("ellipse_start_angle", &self.ellipse_start_angle());
+      ds.field("ellipse_end_angle", &self.ellipse_end_angle());
+      ds.field("ellipse_show_aux_crosshair", &self.ellipse_show_aux_crosshair());
+      ds.field("free_draw_thinning", &self.free_draw_thinning());
+      ds.field("free_draw_smoothing", &self.free_draw_smoothing());
+      ds.field("free_draw_streamline", &self.free_draw_streamline());
+      ds.field("free_draw_easing", &self.free_draw_easing());
+      ds.field("free_draw_start_cap", &self.free_draw_start_cap());
+      ds.field("free_draw_start_taper", &self.free_draw_start_taper());
+      ds.field("free_draw_start_easing", &self.free_draw_start_easing());
+      ds.field("free_draw_end_cap", &self.free_draw_end_cap());
+      ds.field("free_draw_end_taper", &self.free_draw_end_taper());
+      ds.field("free_draw_end_easing", &self.free_draw_end_easing());
+      ds.field("free_draw_svg_path", &self.free_draw_svg_path());
+      ds.field("free_draw_size", &self.free_draw_size());
+      ds.field("linear_element_path_overrides", &self.linear_element_path_overrides());
       ds.finish()
   }
 }
@@ -3716,6 +5155,10 @@ impl<'a> AppState<'a> {
   pub const VT_GRID_STEP: flatbuffers::VOffsetT = 162;
   pub const VT_SCOPE_EXPONENT_THRESHOLD: flatbuffers::VOffsetT = 164;
   pub const VT_ZOOM_STEP: flatbuffers::VOffsetT = 166;
+  pub const VT_HOVERED_ELEMENT_ID: flatbuffers::VOffsetT = 168;
+  pub const VT_ELEMENTS_PENDING_ERASURE: flatbuffers::VOffsetT = 170;
+  pub const VT_SUGGESTED_BINDING_ELEMENT_ID: flatbuffers::VOffsetT = 172;
+  pub const VT_IS_BINDING_ENABLED: flatbuffers::VOffsetT = 174;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -3729,6 +5172,9 @@ impl<'a> AppState<'a> {
     let mut builder = AppStateBuilder::new(_fbb);
     builder.add_current_item_roundness_v3(args.current_item_roundness_v3);
     builder.add_current_item_font_size_v3(args.current_item_font_size_v3);
+    if let Some(x) = args.suggested_binding_element_id { builder.add_suggested_binding_element_id(x); }
+    if let Some(x) = args.elements_pending_erasure { builder.add_elements_pending_erasure(x); }
+    if let Some(x) = args.hovered_element_id { builder.add_hovered_element_id(x); }
     builder.add_zoom_step(args.zoom_step);
     builder.add_grid_step(args.grid_step);
     if let Some(x) = args.editing_linear_element { builder.add_editing_linear_element(x); }
@@ -3748,6 +5194,7 @@ impl<'a> AppState<'a> {
     if let Some(x) = args.scope { builder.add_scope(x); }
     if let Some(x) = args.view_background_color { builder.add_view_background_color(x); }
     builder.add_current_item_opacity(args.current_item_opacity);
+    builder.add_is_binding_enabled(args.is_binding_enabled);
     builder.add_scope_exponent_threshold(args.scope_exponent_threshold);
     builder.add_grid_mode_enabled(args.grid_mode_enabled);
     if let Some(x) = args.current_item_subset { builder.add_current_item_subset(x); }
@@ -4083,6 +5530,34 @@ impl<'a> AppState<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<f32>(AppState::VT_ZOOM_STEP, Some(0.0)).unwrap()}
   }
+  #[inline]
+  pub fn hovered_element_id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_HOVERED_ELEMENT_ID, None)}
+  }
+  #[inline]
+  pub fn elements_pending_erasure(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(AppState::VT_ELEMENTS_PENDING_ERASURE, None)}
+  }
+  #[inline]
+  pub fn suggested_binding_element_id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_SUGGESTED_BINDING_ELEMENT_ID, None)}
+  }
+  #[inline]
+  pub fn is_binding_enabled(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(AppState::VT_IS_BINDING_ENABLED, Some(false)).unwrap()}
+  }
 }
 
 impl flatbuffers::Verifiable for AppState<'_> {
@@ -4136,6 +5611,10 @@ impl flatbuffers::Verifiable for AppState<'_> {
      .visit_field::<i32>("grid_step", Self::VT_GRID_STEP, false)?
      .visit_field::<i8>("scope_exponent_threshold", Self::VT_SCOPE_EXPONENT_THRESHOLD, false)?
      .visit_field::<f32>("zoom_step", Self::VT_ZOOM_STEP, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("hovered_element_id", Self::VT_HOVERED_ELEMENT_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("elements_pending_erasure", Self::VT_ELEMENTS_PENDING_ERASURE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("suggested_binding_element_id", Self::VT_SUGGESTED_BINDING_ELEMENT_ID, false)?
+     .visit_field::<bool>("is_binding_enabled", Self::VT_IS_BINDING_ENABLED, false)?
      .finish();
     Ok(())
   }
@@ -4185,6 +5664,10 @@ pub struct AppStateArgs<'a> {
     pub grid_step: i32,
     pub scope_exponent_threshold: i8,
     pub zoom_step: f32,
+    pub hovered_element_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub elements_pending_erasure: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub suggested_binding_element_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub is_binding_enabled: bool,
 }
 impl<'a> Default for AppStateArgs<'a> {
   #[inline]
@@ -4234,6 +5717,10 @@ impl<'a> Default for AppStateArgs<'a> {
       grid_step: 0,
       scope_exponent_threshold: 0,
       zoom_step: 0.0,
+      hovered_element_id: None,
+      elements_pending_erasure: None,
+      suggested_binding_element_id: None,
+      is_binding_enabled: false,
     }
   }
 }
@@ -4420,6 +5907,22 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<f32>(AppState::VT_ZOOM_STEP, zoom_step, 0.0);
   }
   #[inline]
+  pub fn add_hovered_element_id(&mut self, hovered_element_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_HOVERED_ELEMENT_ID, hovered_element_id);
+  }
+  #[inline]
+  pub fn add_elements_pending_erasure(&mut self, elements_pending_erasure: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_ELEMENTS_PENDING_ERASURE, elements_pending_erasure);
+  }
+  #[inline]
+  pub fn add_suggested_binding_element_id(&mut self, suggested_binding_element_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_SUGGESTED_BINDING_ELEMENT_ID, suggested_binding_element_id);
+  }
+  #[inline]
+  pub fn add_is_binding_enabled(&mut self, is_binding_enabled: bool) {
+    self.fbb_.push_slot::<bool>(AppState::VT_IS_BINDING_ENABLED, is_binding_enabled, false);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AppStateBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     AppStateBuilder {
@@ -4481,6 +5984,10 @@ impl core::fmt::Debug for AppState<'_> {
       ds.field("grid_step", &self.grid_step());
       ds.field("scope_exponent_threshold", &self.scope_exponent_threshold());
       ds.field("zoom_step", &self.zoom_step());
+      ds.field("hovered_element_id", &self.hovered_element_id());
+      ds.field("elements_pending_erasure", &self.elements_pending_erasure());
+      ds.field("suggested_binding_element_id", &self.suggested_binding_element_id());
+      ds.field("is_binding_enabled", &self.is_binding_enabled());
       ds.finish()
   }
 }

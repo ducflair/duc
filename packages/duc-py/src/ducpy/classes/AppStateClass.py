@@ -1,11 +1,8 @@
 from typing import Any, Dict, List, Optional, Union, Set
 from dataclasses import dataclass, field
 
-from ..utils.enums import DesignStandard, PointerType
-from .DucElementClass import (
-    DucElement, ElementStroke, ElementBackground, LineHead,
-    TextAlign, StrokePlacement, StrokePreference, FontFamily
-)
+from ..utils.enums import DesignStandard, PointerType, TextAlign, LineHead, FontFamily
+from .DucElementClass import DucElement, ElementStroke, ElementBackground
 from ..utils.constants import (
     DEFAULT_APP_STATE,
     DEFAULT_GRID_SIZE,
@@ -43,12 +40,12 @@ class AppState:
     current_item_stroke: ElementStroke = field(default_factory=lambda: ElementStroke(**DEFAULT_APP_STATE["currentItemStroke"][0]) if DEFAULT_APP_STATE["currentItemStroke"] and isinstance(DEFAULT_APP_STATE["currentItemStroke"], list) and len(DEFAULT_APP_STATE["currentItemStroke"]) > 0 and isinstance(DEFAULT_APP_STATE["currentItemStroke"][0], dict) else (ElementStroke(**DEFAULT_APP_STATE["currentItemStroke"]) if isinstance(DEFAULT_APP_STATE["currentItemStroke"], dict) else None))
     current_item_background: ElementBackground = field(default_factory=lambda: ElementBackground(**DEFAULT_APP_STATE["currentItemBackground"][0]) if DEFAULT_APP_STATE["currentItemBackground"] and isinstance(DEFAULT_APP_STATE["currentItemBackground"], list) and len(DEFAULT_APP_STATE["currentItemBackground"]) > 0 and isinstance(DEFAULT_APP_STATE["currentItemBackground"][0], dict) else (ElementBackground(**DEFAULT_APP_STATE["currentItemBackground"]) if isinstance(DEFAULT_APP_STATE["currentItemBackground"], dict) else None))
     current_item_opacity: float = field(default=DEFAULT_APP_STATE["currentItemOpacity"])
-    current_item_font_family: FontFamily = field(default=DEFAULT_APP_STATE["currentItemFontFamily"])
-    current_item_font_size: float = field(default=DEFAULT_APP_STATE["currentItemFontSize"])
-    current_item_text_align: TextAlign = field(default=DEFAULT_APP_STATE["currentItemTextAlign"])
+    current_item_font_family_v2: str = field(default=DEFAULT_APP_STATE["currentItemFontFamily"])
+    current_item_font_size_v3: float = field(default=DEFAULT_APP_STATE["currentItemFontSize"])
+    current_item_text_align_v3: TextAlign = field(default=DEFAULT_APP_STATE["currentItemTextAlign"])
     current_item_start_line_head: Optional[LineHead] = field(default=DEFAULT_APP_STATE["currentItemStartLineHead"])
     current_item_end_line_head: Optional[LineHead] = field(default=DEFAULT_APP_STATE["currentItemEndLineHead"])
-    current_item_roundness: float = field(default=DEFAULT_APP_STATE["currentItemRoundness"])
+    current_item_roundness_v3: float = field(default=DEFAULT_APP_STATE["currentItemRoundness"])
     view_background_color: str = field(default=DEFAULT_APP_STATE["viewBackgroundColor"])
     scope: str = field(default=DEFAULT_APP_STATE["scope"])
     main_scope: str = field(default=DEFAULT_APP_STATE["mainScope"])
@@ -59,27 +56,31 @@ class AppState:
     cursor_button: Optional[str] = field(default=DEFAULT_APP_STATE["cursorButton"])
     scrolled_outside: bool = field(default=DEFAULT_APP_STATE["scrolledOutside"])
     name: Optional[str] = field(default=DEFAULT_APP_STATE["name"])
-    zoom: Zoom = field(default_factory=Zoom)
+    zoom: float = field(default=DEFAULT_APP_STATE["zoom"]["value"])
     last_pointer_down_with: Optional[PointerType] = field(default=DEFAULT_APP_STATE["lastPointerDownWith"])
-    selected_element_ids: Dict[str, bool] = field(default_factory=dict)
-    previous_selected_element_ids: List[str] = field(default_factory=list)
-    selected_elements_are_being_dragged: bool = False
-    should_cache_ignore_zoom: bool = field(default=DEFAULT_APP_STATE["shouldCacheIgnoreZoom"])
+    selected_element_ids: List[str] = field(default_factory=list)
     grid_size: int = field(default=DEFAULT_APP_STATE["gridSize"])
-    selected_group_ids: List[str] = field(default_factory=list)
-    editing_group_id: Optional[str] = None
-    paste_dialog_shown: bool = False
-    paste_dialog_data: Optional[str] = None
     scale_ratio_locked: bool = field(default=DEFAULT_APP_STATE["scaleRatioLocked"])
     display_all_point_distances: bool = field(default=DEFAULT_APP_STATE["displayAllPointDistances"])
     display_distance_on_drawing: bool = field(default=DEFAULT_APP_STATE["displayDistanceOnDrawing"])
     display_all_point_coordinates: bool = field(default=DEFAULT_APP_STATE["displayAllPointCoordinates"])
     display_all_point_info_selected: bool = field(default=DEFAULT_APP_STATE["displayAllPointInfoSelected"])
     display_root_axis: bool = field(default=DEFAULT_APP_STATE["displayRootAxis"])
-    coord_decimal_places: int = field(default=DEFAULT_APP_STATE["coordDecimalPlaces"])
     line_bending_mode: bool = field(default=DEFAULT_APP_STATE["lineBendingMode"])
+    coord_decimal_places_v3: int = field(default=DEFAULT_APP_STATE["coordDecimalPlaces"])
+    anti_aliasing: int = field(default=DEFAULT_APP_STATE["antiAliasing"])
+    v_sync: bool = field(default=DEFAULT_APP_STATE["vSync"])
+    debug_rendering: bool = field(default=DEFAULT_APP_STATE["debugRendering"])
+    current_item_subset: Optional[int] = None
+    editing_linear_element: Optional[Any] = None # LinearElementEditor
+    grid_mode_enabled: bool = field(default=DEFAULT_APP_STATE["gridModeEnabled"])
+    grid_step: int = field(default=DEFAULT_APP_STATE["gridStep"])
     scope_exponent_threshold: int = field(default=DEFAULT_APP_STATE["scopeExponentThreshold"])
     zoom_step: float = field(default=DEFAULT_APP_STATE["zoomStep"])
+    hovered_element_id: Optional[str] = None
+    elements_pending_erasure: List[str] = field(default_factory=list)
+    suggested_binding_element_id: Optional[str] = None
+    is_binding_enabled: bool = field(default=DEFAULT_APP_STATE["isBindingEnabled"])
 
 @dataclass
 class DucGroup:
