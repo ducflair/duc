@@ -14,7 +14,6 @@
     "@types/react-dom": "^19.1.6",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.5",
-    "rimraf": "^6.0.1",
     "semantic-release": "^24.2.5",
     "tailwindcss": "^4.1.10",
     "turbo": "^2.5.4",
@@ -49,7 +48,7 @@
   "private": true,
   "scripts": {
     "gen": "cd schema && bash flatc-generate-all.sh",
-    "clean": "bun rimraf dist node_modules **/package-lock.json **/tsconfig.tsbuildinfo",
+    "clean": "bun run rm -rf **/dist node_modules **/package-lock.json **/tsconfig.tsbuildinfo",
     "docs:dev": "turbo dev --filter=@duc/docs",
     "docs:build": "turbo build --filter=@duc/docs",
     "duc-py:docs:build": "turbo run gen:docs --filter=@ducflair/duc-py",
@@ -60,7 +59,7 @@
     "duc-ts:build": "turbo build --filter=@ducflair/duc",
     "semantic-release": "turbo run semantic-release",
     "sst:build": "bash -c 'bun run sst:clean && sst unlock ${1:+--stage $1} && sst refresh ${1:+--stage $1} && sst deploy ${1:+--stage $1}' --",
-    "sst:clean": "bun rimraf .sst **/sst-env.d.ts **/sst.pyi",
+    "sst:clean": "bun run rm -rf .sst **/sst-env.d.ts **/sst.pyi",
     "sst:dev": "bun run sst dev",
     "knip:deps": "bash -c 'bun run sst unlock ${1:+--stage $1} && bun sst shell ${1:+--stage $1} -- bunx knip --dependencies' --",
     "knip": "bash -c 'bun run sst unlock ${1:+--stage $1} && bun sst shell ${1:+--stage $1} -- bunx knip' --"
