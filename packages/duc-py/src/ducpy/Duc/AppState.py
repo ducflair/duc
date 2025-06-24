@@ -379,8 +379,49 @@ class AppState(object):
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
+    # AppState
+    def HoveredElementId(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(168))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # AppState
+    def ElementsPendingErasure(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(170))
+        if o != 0:
+            a = self._tab.Vector(o)
+            return self._tab.String(a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
+        return ""
+
+    # AppState
+    def ElementsPendingErasureLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(170))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # AppState
+    def ElementsPendingErasureIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(170))
+        return o == 0
+
+    # AppState
+    def SuggestedBindingElementId(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(172))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # AppState
+    def IsBindingEnabled(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(174))
+        if o != 0:
+            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
+        return False
+
 def AppStateStart(builder):
-    builder.StartObject(82)
+    builder.StartObject(86)
 
 def Start(builder):
     AppStateStart(builder)
@@ -660,6 +701,36 @@ def AppStateAddZoomStep(builder, zoomStep):
 
 def AddZoomStep(builder, zoomStep):
     AppStateAddZoomStep(builder, zoomStep)
+
+def AppStateAddHoveredElementId(builder, hoveredElementId):
+    builder.PrependUOffsetTRelativeSlot(82, flatbuffers.number_types.UOffsetTFlags.py_type(hoveredElementId), 0)
+
+def AddHoveredElementId(builder, hoveredElementId):
+    AppStateAddHoveredElementId(builder, hoveredElementId)
+
+def AppStateAddElementsPendingErasure(builder, elementsPendingErasure):
+    builder.PrependUOffsetTRelativeSlot(83, flatbuffers.number_types.UOffsetTFlags.py_type(elementsPendingErasure), 0)
+
+def AddElementsPendingErasure(builder, elementsPendingErasure):
+    AppStateAddElementsPendingErasure(builder, elementsPendingErasure)
+
+def AppStateStartElementsPendingErasureVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartElementsPendingErasureVector(builder, numElems):
+    return AppStateStartElementsPendingErasureVector(builder, numElems)
+
+def AppStateAddSuggestedBindingElementId(builder, suggestedBindingElementId):
+    builder.PrependUOffsetTRelativeSlot(84, flatbuffers.number_types.UOffsetTFlags.py_type(suggestedBindingElementId), 0)
+
+def AddSuggestedBindingElementId(builder, suggestedBindingElementId):
+    AppStateAddSuggestedBindingElementId(builder, suggestedBindingElementId)
+
+def AppStateAddIsBindingEnabled(builder, isBindingEnabled):
+    builder.PrependBoolSlot(85, isBindingEnabled, 0)
+
+def AddIsBindingEnabled(builder, isBindingEnabled):
+    AppStateAddIsBindingEnabled(builder, isBindingEnabled)
 
 def AppStateEnd(builder):
     return builder.EndObject()
