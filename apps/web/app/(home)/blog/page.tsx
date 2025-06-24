@@ -54,9 +54,9 @@ export default async function Page() {
                 className="w-full"
               />}
               <span className="col flex-1 px-3 py-1">
-                {item.data.tag && (
+                {item.data.tags && item.data.tags.length > 0 && (
                   <span className="font-mono text-xs mb-2">
-                    {item.data.tag}
+                    {item.data.tags[0]}
                   </span>
                 )}
                 <span className="flex-1 mb-6">

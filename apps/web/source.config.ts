@@ -2,29 +2,27 @@ import { rehypeCode } from 'fumadocs-core/mdx-plugins'
 import {
   defineCollections,
   defineConfig,
-  defineDocs,
-  frontmatterSchema
+  defineDocs
 } from 'fumadocs-mdx/config'
 import remarkSmartypants from 'remark-smartypants'
 import { z } from 'zod'
 
-const baseSchema = frontmatterSchema.extend({
+const baseSchema = z.object({
   title: z.string().min(1),
-  description: z.string(),
-  tag: z.string().optional(),
+  description: z.string().optional(),
+  tags: z.array(z.string()).optional(),
   authors: z.array(z.string()).optional(),
   date: z.string().date().or(z.date()).optional(),
   cover: z.string().optional(),
 });
 
-const docsMetaSchema = baseSchema.extend({
-});
-const blogMetaSchema = baseSchema.extend({
-});
-const pageMetaSchema = baseSchema.extend({
-});
+export type BaseDocSchemaType = z.infer<typeof baseSchema>;
 
-
+const docsMetaSchema = baseSchema.extend({});
+const updatesMetaSchema = baseSchema.extend({
+  date: z.string().date().or(z.date()),
+});
+const pageMetaSchema = baseSchema.extend({});
 
 export default defineConfig({
   lastModifiedTime: 'git',
@@ -37,24 +35,37 @@ export default defineConfig({
 export const { docs: docsCollection, meta: docsMeta } = defineDocs({
   docs: {
     async: true,
+    schema: docsMetaSchema,
   },
   meta: {
     schema: docsMetaSchema,
   }
 })
 
-
 const blogDir = 'content/blog'
 export const blogCollection = defineCollections({
   type: 'doc',
   dir: blogDir,
   async: true,
-  schema: blogMetaSchema,
+  schema: baseSchema,
 });
 export const blogMeta = defineCollections({
   type: 'meta',
   dir: blogDir,
-  schema: blogMetaSchema,
+  schema: baseSchema,
+});
+
+const updatesDir = 'content/updates'
+export const updatesCollection = defineCollections({
+  type: 'doc',
+  dir: updatesDir,
+  async: true,
+  schema: updatesMetaSchema,
+});
+export const updatesMeta = defineCollections({
+  type: 'meta',
+  dir: updatesDir,
+  schema: updatesMetaSchema,
 });
 
 const pageDir = 'content/pages'
