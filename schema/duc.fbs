@@ -10,6 +10,7 @@
 // - **DONT REMOVE FIELDS**: Instead of deleting unused fields, mark them as deprecated to prevent their use in new code while maintaining compatibility with existing data.
 // - **DONT CHANGE FIELD TYPES**: Modifying a field's type can lead to incompatibilities. If necessary, add a new field with the desired type and deprecate the old one.
 // - **BE CAREFUL WITH DEFAULT VALUES**: Changing default values can cause inconsistencies when reading older data. It's best to set appropriate defaults initially and avoid altering them. 
+// - **STRING or TABLE CANNOT FALLBACK TO NULL**: these fields cannot be null. They already have a default null value.
 
 namespace Duc;
 
@@ -21,14 +22,27 @@ file_identifier "DUC_";
 table Point {
   x_v2: float = null;
   y_v2: float = null;
-  is_curve: bool = null;
+  is_curve: bool = null (deprecated); // Deprecated in favor of mirroring
   mirroring: byte = null;
-  border_radius: double = null;
-  handle_in: SimplePoint;
-  handle_out: SimplePoint;
+  border_radius: double = null (deprecated); // Moved to lines system
+  handle_in: SimplePoint (deprecated); // Moved to lines system
+  handle_out: SimplePoint (deprecated); // Moved to lines system
   x_v3: double;
   y_v3: double;
-  peer: int; // Since version 5
+  peer: int (deprecated); // Since version 5
+  peers: [int] (deprecated); // Deprecated in favor of lines system
+}
+
+// Line reference for the new lines-based system
+table DucLineReference {
+  index: int; // Point index
+  handle: SimplePoint; // Bezier handle position (null for linear)
+}
+
+// Line connection between two points
+table DucLine {
+  start: DucLineReference;
+  end: DucLineReference;
 }
 
 table PointBinding {
@@ -93,6 +107,12 @@ table ElementBackground {
   content: ElementContentBase;
 }
 
+table DucPath {
+  line_indices: [int];
+  background: ElementBackground;
+  stroke: ElementStroke;
+}
+
 table ImageCrop {
   x: double;
   y: double;
@@ -102,10 +122,46 @@ table ImageCrop {
   natural_height: double;
 }
 
+// Table related definitions
+table DucTableStyleProps {
+  background_color: string;
+  border_width: double;
+  border_dashes: [double];
+  border_color: string;
+  text_color: string;
+  text_size: double;
+  text_font: string;
+  text_align: byte; // TextAlign enum
+}
+
+table DucTableColumn {
+  id: string;
+  width: double;
+  style: DucTableStyleProps;
+}
+
+table DucTableRow {
+  id: string;
+  height: double;
+  style: DucTableStyleProps;
+}
+
+table DucTableCell {
+  row_id: string;
+  column_id: string;
+  data: string;
+  style: DucTableStyleProps;
+}
+
+table DucTableStyle {
+  default_props: DucTableStyleProps;
+}
+
+
 // Base table for DucElement with common fields
 table DucElement {
   id: string;
-  type: string;  // "text", "line", "freedraw", "image", "frame", "group", "magicframe", "iframe"
+  type: string;
   x_v2: float = null;
   y_v2: float = null;
   index: string (deprecated);
@@ -198,6 +254,43 @@ table DucElement {
   
   subset: byte = null;  // ELEMENT_SUBSET values
   z_index: int;
+  polygon_sides: int = null;
+
+  // TableElement specific fields
+  column_order: [string];
+  row_order: [string];
+  columns: [DucTableColumn];
+  rows: [DucTableRow];
+  cells: [DucTableCell];
+  table_style: DucTableStyle;
+
+  // DocElement specific fields
+  doc_content: string;
+  
+  // Lines-based system for linear elements
+  lines: [DucLine];
+
+  // EllipseElement specific fields
+  ellipse_ratio: double = null;
+  ellipse_start_angle: double = null;
+  ellipse_end_angle: double = null;
+  ellipse_show_aux_crosshair: bool = null;
+
+  // FreeDrawElement specific fields
+  free_draw_thinning: double = null;
+  free_draw_smoothing: double = null;
+  free_draw_streamline: double = null;
+  free_draw_easing: string;
+  free_draw_start_cap: bool = null;
+  free_draw_start_taper: double = null;
+  free_draw_start_easing: string;
+  free_draw_end_cap: bool = null;
+  free_draw_end_taper: double = null;
+  free_draw_end_easing: string;
+  free_draw_svg_path: string;
+  free_draw_size: double = null;
+
+  linear_element_path_overrides: [DucPath];
 }
 
 // Define a table for BoundElement used in DucElement
@@ -336,6 +429,10 @@ table AppState {
   grid_step: int;
   scope_exponent_threshold: byte;
   zoom_step: float;
+  hovered_element_id: string;
+  elements_pending_erasure: [string];
+  suggested_binding_element_id: string;
+  is_binding_enabled: bool;
 }
 
 // Define the BinaryFileData table
