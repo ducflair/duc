@@ -4,9 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { SimplePoint } from '../duc/simple-point';
-
-
 export class Point {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -35,29 +32,9 @@ yV2():number|null {
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : null;
 }
 
-isCurve():boolean|null {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : null;
-}
-
 mirroring():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? this.bb!.readInt8(this.bb_pos + offset) : null;
-}
-
-borderRadius():number|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
-}
-
-handleIn(obj?:SimplePoint):SimplePoint|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
-  return offset ? (obj || new SimplePoint()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
-handleOut(obj?:SimplePoint):SimplePoint|null {
-  const offset = this.bb!.__offset(this.bb_pos, 16);
-  return offset ? (obj || new SimplePoint()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 xV3():number {
@@ -70,13 +47,8 @@ yV3():number {
   return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
-peer():number {
-  const offset = this.bb!.__offset(this.bb_pos, 22);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
 static startPoint(builder:flatbuffers.Builder) {
-  builder.startObject(10);
+  builder.startObject(11);
 }
 
 static addXV2(builder:flatbuffers.Builder, xV2:number) {
@@ -87,24 +59,8 @@ static addYV2(builder:flatbuffers.Builder, yV2:number) {
   builder.addFieldFloat32(1, yV2, null);
 }
 
-static addIsCurve(builder:flatbuffers.Builder, isCurve:boolean) {
-  builder.addFieldInt8(2, +isCurve, null);
-}
-
 static addMirroring(builder:flatbuffers.Builder, mirroring:number) {
   builder.addFieldInt8(3, mirroring, null);
-}
-
-static addBorderRadius(builder:flatbuffers.Builder, borderRadius:number) {
-  builder.addFieldFloat64(4, borderRadius, null);
-}
-
-static addHandleIn(builder:flatbuffers.Builder, handleInOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, handleInOffset, 0);
-}
-
-static addHandleOut(builder:flatbuffers.Builder, handleOutOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(6, handleOutOffset, 0);
 }
 
 static addXV3(builder:flatbuffers.Builder, xV3:number) {
@@ -113,10 +69,6 @@ static addXV3(builder:flatbuffers.Builder, xV3:number) {
 
 static addYV3(builder:flatbuffers.Builder, yV3:number) {
   builder.addFieldFloat64(8, yV3, 0.0);
-}
-
-static addPeer(builder:flatbuffers.Builder, peer:number) {
-  builder.addFieldInt32(9, peer, 0);
 }
 
 static endPoint(builder:flatbuffers.Builder):flatbuffers.Offset {

@@ -12,7 +12,7 @@ from ducpy.serialize.serialize_duc import save_as_flatbuffers
 from ducpy.classes.AppStateClass import AppState
 from ducpy.classes.DucElementClass import (
     DucElementUnion, DucRectangleElement, DucLinearElement, Point,
-    ElementStroke, ElementBackground, ElementContentBase, StrokeStyle
+    ElementStroke, ElementBackground, ElementContentBase, StrokeStyleProps
 )
 from ducpy.utils.enums import ElementContentPreference, StrokePreference, StrokeJoin, StrokeCap, StrokePlacement
 
@@ -43,7 +43,7 @@ def get_default_stroke() -> ElementStroke:
             opacity=1.0
         ),
         width=1.0, # Default width
-        style=StrokeStyle(
+        style=StrokeStyleProps(
             preference=int(StrokePreference.SOLID),
             join=int(StrokeJoin.MITER),
             cap=int(StrokeCap.BUTT)
@@ -76,12 +76,12 @@ def test_move_elements_randomly(test_assets_dir, test_output_dir):
     
     elements_to_move: list[DucElementUnion] = [
         DucRectangleElement(
-            id="rect1", type="rectangle", x=100, y=100, width=50, height=50, scope="mm",
+            id="rect1", x=100, y=100, width=50, height=50, scope="mm",
             stroke=[default_stroke],
             background=[default_background]
         ),
         DucLinearElement(
-            id="line1", type="line", x=200, y=200, points=[Point(x=200, y=200), Point(x=250, y=250)], scope="mm",
+            id="line1", x=200, y=200, points=[Point(x=200, y=200), Point(x=250, y=250)], scope="mm",
             stroke=[default_stroke],
             background=[default_background]
         )

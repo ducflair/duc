@@ -11,8 +11,8 @@ import pytest
 from ducpy.classes.DucElementClass import DucElementUnion, DucRectangleElement, DucLinearElement
 from ducpy.classes.AppStateClass import AppState
 from ducpy.classes.BinaryFilesClass import BinaryFiles
-from ducpy.utils.ElementTypes import (
-    ElementBackground, ElementStroke, ElementContentBase, Point, StrokeStyle, StrokeSides
+from ducpy.classes.DucElementClass import (
+    ElementBackground, ElementStroke, ElementContentBase, Point, StrokeStyleProps, StrokeSides
 )
 from ducpy.utils.enums import (
     ElementType, ElementContentPreference, StrokePreference,
@@ -30,9 +30,10 @@ def create_random_rectangle(x: float, y: float) -> DucElementUnion:
             preference=int(ElementContentPreference.SOLID),
             src="#000000",
             visible=True,
+            opacity=1.0,
         ),
         width=2.0,
-        style=StrokeStyle(
+        style=StrokeStyleProps(
             preference=int(StrokePreference.SOLID),
             join=int(StrokeJoin.MITER),
             cap=int(StrokeCap.BUTT)
@@ -44,11 +45,11 @@ def create_random_rectangle(x: float, y: float) -> DucElementUnion:
             preference=int(ElementContentPreference.SOLID),
             src="transparent",
             visible=False,
+            opacity=0.0,
         )
     )
     return DucRectangleElement(
         id=str(uuid.uuid4()),
-        type=ElementType.RECTANGLE,
         scope=scope,
         x=x,
         y=y,
@@ -77,9 +78,10 @@ def create_random_line(x: float, y: float) -> DucElementUnion:
             preference=int(ElementContentPreference.SOLID),
             src="#000000",
             visible=True,
+            opacity=1.0,
         ),
         width=2.0,
-        style=StrokeStyle(
+        style=StrokeStyleProps(
             preference=int(StrokePreference.SOLID),
             join=int(StrokeJoin.MITER),
             cap=int(StrokeCap.BUTT)
@@ -91,12 +93,12 @@ def create_random_line(x: float, y: float) -> DucElementUnion:
             preference=int(ElementContentPreference.SOLID),
             src="transparent",
             visible=False,
+            opacity=0.0,
         )
     )
     
     return DucLinearElement(
         id=str(uuid.uuid4()),
-        type=ElementType.LINE,
         scope=scope,
         x=x,
         y=y,

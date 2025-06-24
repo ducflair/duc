@@ -559,8 +559,310 @@ class DucElement(object):
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
+    # DucElement
+    def PolygonSides(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(156))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def ColumnOrder(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(158))
+        if o != 0:
+            a = self._tab.Vector(o)
+            return self._tab.String(a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
+        return ""
+
+    # DucElement
+    def ColumnOrderLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(158))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # DucElement
+    def ColumnOrderIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(158))
+        return o == 0
+
+    # DucElement
+    def RowOrder(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(160))
+        if o != 0:
+            a = self._tab.Vector(o)
+            return self._tab.String(a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
+        return ""
+
+    # DucElement
+    def RowOrderLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(160))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # DucElement
+    def RowOrderIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(160))
+        return o == 0
+
+    # DucElement
+    def Columns(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(162))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.DucTableColumn import DucTableColumn
+            obj = DucTableColumn()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucElement
+    def ColumnsLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(162))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # DucElement
+    def ColumnsIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(162))
+        return o == 0
+
+    # DucElement
+    def Rows(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(164))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.DucTableRow import DucTableRow
+            obj = DucTableRow()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucElement
+    def RowsLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(164))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # DucElement
+    def RowsIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(164))
+        return o == 0
+
+    # DucElement
+    def Cells(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(166))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.DucTableCell import DucTableCell
+            obj = DucTableCell()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucElement
+    def CellsLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(166))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # DucElement
+    def CellsIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(166))
+        return o == 0
+
+    # DucElement
+    def TableStyle(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(168))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.DucTableStyle import DucTableStyle
+            obj = DucTableStyle()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucElement
+    def DocContent(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(170))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def Lines(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(172))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.DucLine import DucLine
+            obj = DucLine()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucElement
+    def LinesLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(172))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # DucElement
+    def LinesIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(172))
+        return o == 0
+
+    # DucElement
+    def EllipseRatio(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(174))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def EllipseStartAngle(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(176))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def EllipseEndAngle(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(178))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def EllipseShowAuxCrosshair(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(180))
+        if o != 0:
+            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
+        return None
+
+    # DucElement
+    def FreeDrawThinning(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(182))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def FreeDrawSmoothing(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(184))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def FreeDrawStreamline(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(186))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def FreeDrawEasing(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(188))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def FreeDrawStartCap(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(190))
+        if o != 0:
+            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
+        return None
+
+    # DucElement
+    def FreeDrawStartTaper(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(192))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def FreeDrawStartEasing(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(194))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def FreeDrawEndCap(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(196))
+        if o != 0:
+            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
+        return None
+
+    # DucElement
+    def FreeDrawEndTaper(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(198))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def FreeDrawEndEasing(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(200))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def FreeDrawSvgPath(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(202))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def FreeDrawSize(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(204))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return None
+
+    # DucElement
+    def LinearElementPathOverrides(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(206))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.DucPath import DucPath
+            obj = DucPath()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucElement
+    def LinearElementPathOverridesLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(206))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # DucElement
+    def LinearElementPathOverridesIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(206))
+        return o == 0
+
 def DucElementStart(builder):
-    builder.StartObject(76)
+    builder.StartObject(102)
 
 def Start(builder):
     DucElementStart(builder)
@@ -948,6 +1250,204 @@ def DucElementAddZIndex(builder, zIndex):
 
 def AddZIndex(builder, zIndex):
     DucElementAddZIndex(builder, zIndex)
+
+def DucElementAddPolygonSides(builder, polygonSides):
+    builder.PrependInt32Slot(76, polygonSides, None)
+
+def AddPolygonSides(builder, polygonSides):
+    DucElementAddPolygonSides(builder, polygonSides)
+
+def DucElementAddColumnOrder(builder, columnOrder):
+    builder.PrependUOffsetTRelativeSlot(77, flatbuffers.number_types.UOffsetTFlags.py_type(columnOrder), 0)
+
+def AddColumnOrder(builder, columnOrder):
+    DucElementAddColumnOrder(builder, columnOrder)
+
+def DucElementStartColumnOrderVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartColumnOrderVector(builder, numElems):
+    return DucElementStartColumnOrderVector(builder, numElems)
+
+def DucElementAddRowOrder(builder, rowOrder):
+    builder.PrependUOffsetTRelativeSlot(78, flatbuffers.number_types.UOffsetTFlags.py_type(rowOrder), 0)
+
+def AddRowOrder(builder, rowOrder):
+    DucElementAddRowOrder(builder, rowOrder)
+
+def DucElementStartRowOrderVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartRowOrderVector(builder, numElems):
+    return DucElementStartRowOrderVector(builder, numElems)
+
+def DucElementAddColumns(builder, columns):
+    builder.PrependUOffsetTRelativeSlot(79, flatbuffers.number_types.UOffsetTFlags.py_type(columns), 0)
+
+def AddColumns(builder, columns):
+    DucElementAddColumns(builder, columns)
+
+def DucElementStartColumnsVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartColumnsVector(builder, numElems):
+    return DucElementStartColumnsVector(builder, numElems)
+
+def DucElementAddRows(builder, rows):
+    builder.PrependUOffsetTRelativeSlot(80, flatbuffers.number_types.UOffsetTFlags.py_type(rows), 0)
+
+def AddRows(builder, rows):
+    DucElementAddRows(builder, rows)
+
+def DucElementStartRowsVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartRowsVector(builder, numElems):
+    return DucElementStartRowsVector(builder, numElems)
+
+def DucElementAddCells(builder, cells):
+    builder.PrependUOffsetTRelativeSlot(81, flatbuffers.number_types.UOffsetTFlags.py_type(cells), 0)
+
+def AddCells(builder, cells):
+    DucElementAddCells(builder, cells)
+
+def DucElementStartCellsVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartCellsVector(builder, numElems):
+    return DucElementStartCellsVector(builder, numElems)
+
+def DucElementAddTableStyle(builder, tableStyle):
+    builder.PrependUOffsetTRelativeSlot(82, flatbuffers.number_types.UOffsetTFlags.py_type(tableStyle), 0)
+
+def AddTableStyle(builder, tableStyle):
+    DucElementAddTableStyle(builder, tableStyle)
+
+def DucElementAddDocContent(builder, docContent):
+    builder.PrependUOffsetTRelativeSlot(83, flatbuffers.number_types.UOffsetTFlags.py_type(docContent), 0)
+
+def AddDocContent(builder, docContent):
+    DucElementAddDocContent(builder, docContent)
+
+def DucElementAddLines(builder, lines):
+    builder.PrependUOffsetTRelativeSlot(84, flatbuffers.number_types.UOffsetTFlags.py_type(lines), 0)
+
+def AddLines(builder, lines):
+    DucElementAddLines(builder, lines)
+
+def DucElementStartLinesVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartLinesVector(builder, numElems):
+    return DucElementStartLinesVector(builder, numElems)
+
+def DucElementAddEllipseRatio(builder, ellipseRatio):
+    builder.PrependFloat64Slot(85, ellipseRatio, None)
+
+def AddEllipseRatio(builder, ellipseRatio):
+    DucElementAddEllipseRatio(builder, ellipseRatio)
+
+def DucElementAddEllipseStartAngle(builder, ellipseStartAngle):
+    builder.PrependFloat64Slot(86, ellipseStartAngle, None)
+
+def AddEllipseStartAngle(builder, ellipseStartAngle):
+    DucElementAddEllipseStartAngle(builder, ellipseStartAngle)
+
+def DucElementAddEllipseEndAngle(builder, ellipseEndAngle):
+    builder.PrependFloat64Slot(87, ellipseEndAngle, None)
+
+def AddEllipseEndAngle(builder, ellipseEndAngle):
+    DucElementAddEllipseEndAngle(builder, ellipseEndAngle)
+
+def DucElementAddEllipseShowAuxCrosshair(builder, ellipseShowAuxCrosshair):
+    builder.PrependBoolSlot(88, ellipseShowAuxCrosshair, None)
+
+def AddEllipseShowAuxCrosshair(builder, ellipseShowAuxCrosshair):
+    DucElementAddEllipseShowAuxCrosshair(builder, ellipseShowAuxCrosshair)
+
+def DucElementAddFreeDrawThinning(builder, freeDrawThinning):
+    builder.PrependFloat64Slot(89, freeDrawThinning, None)
+
+def AddFreeDrawThinning(builder, freeDrawThinning):
+    DucElementAddFreeDrawThinning(builder, freeDrawThinning)
+
+def DucElementAddFreeDrawSmoothing(builder, freeDrawSmoothing):
+    builder.PrependFloat64Slot(90, freeDrawSmoothing, None)
+
+def AddFreeDrawSmoothing(builder, freeDrawSmoothing):
+    DucElementAddFreeDrawSmoothing(builder, freeDrawSmoothing)
+
+def DucElementAddFreeDrawStreamline(builder, freeDrawStreamline):
+    builder.PrependFloat64Slot(91, freeDrawStreamline, None)
+
+def AddFreeDrawStreamline(builder, freeDrawStreamline):
+    DucElementAddFreeDrawStreamline(builder, freeDrawStreamline)
+
+def DucElementAddFreeDrawEasing(builder, freeDrawEasing):
+    builder.PrependUOffsetTRelativeSlot(92, flatbuffers.number_types.UOffsetTFlags.py_type(freeDrawEasing), 0)
+
+def AddFreeDrawEasing(builder, freeDrawEasing):
+    DucElementAddFreeDrawEasing(builder, freeDrawEasing)
+
+def DucElementAddFreeDrawStartCap(builder, freeDrawStartCap):
+    builder.PrependBoolSlot(93, freeDrawStartCap, None)
+
+def AddFreeDrawStartCap(builder, freeDrawStartCap):
+    DucElementAddFreeDrawStartCap(builder, freeDrawStartCap)
+
+def DucElementAddFreeDrawStartTaper(builder, freeDrawStartTaper):
+    builder.PrependFloat64Slot(94, freeDrawStartTaper, None)
+
+def AddFreeDrawStartTaper(builder, freeDrawStartTaper):
+    DucElementAddFreeDrawStartTaper(builder, freeDrawStartTaper)
+
+def DucElementAddFreeDrawStartEasing(builder, freeDrawStartEasing):
+    builder.PrependUOffsetTRelativeSlot(95, flatbuffers.number_types.UOffsetTFlags.py_type(freeDrawStartEasing), 0)
+
+def AddFreeDrawStartEasing(builder, freeDrawStartEasing):
+    DucElementAddFreeDrawStartEasing(builder, freeDrawStartEasing)
+
+def DucElementAddFreeDrawEndCap(builder, freeDrawEndCap):
+    builder.PrependBoolSlot(96, freeDrawEndCap, None)
+
+def AddFreeDrawEndCap(builder, freeDrawEndCap):
+    DucElementAddFreeDrawEndCap(builder, freeDrawEndCap)
+
+def DucElementAddFreeDrawEndTaper(builder, freeDrawEndTaper):
+    builder.PrependFloat64Slot(97, freeDrawEndTaper, None)
+
+def AddFreeDrawEndTaper(builder, freeDrawEndTaper):
+    DucElementAddFreeDrawEndTaper(builder, freeDrawEndTaper)
+
+def DucElementAddFreeDrawEndEasing(builder, freeDrawEndEasing):
+    builder.PrependUOffsetTRelativeSlot(98, flatbuffers.number_types.UOffsetTFlags.py_type(freeDrawEndEasing), 0)
+
+def AddFreeDrawEndEasing(builder, freeDrawEndEasing):
+    DucElementAddFreeDrawEndEasing(builder, freeDrawEndEasing)
+
+def DucElementAddFreeDrawSvgPath(builder, freeDrawSvgPath):
+    builder.PrependUOffsetTRelativeSlot(99, flatbuffers.number_types.UOffsetTFlags.py_type(freeDrawSvgPath), 0)
+
+def AddFreeDrawSvgPath(builder, freeDrawSvgPath):
+    DucElementAddFreeDrawSvgPath(builder, freeDrawSvgPath)
+
+def DucElementAddFreeDrawSize(builder, freeDrawSize):
+    builder.PrependFloat64Slot(100, freeDrawSize, None)
+
+def AddFreeDrawSize(builder, freeDrawSize):
+    DucElementAddFreeDrawSize(builder, freeDrawSize)
+
+def DucElementAddLinearElementPathOverrides(builder, linearElementPathOverrides):
+    builder.PrependUOffsetTRelativeSlot(101, flatbuffers.number_types.UOffsetTFlags.py_type(linearElementPathOverrides), 0)
+
+def AddLinearElementPathOverrides(builder, linearElementPathOverrides):
+    DucElementAddLinearElementPathOverrides(builder, linearElementPathOverrides)
+
+def DucElementStartLinearElementPathOverridesVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartLinearElementPathOverridesVector(builder, numElems):
+    return DucElementStartLinearElementPathOverridesVector(builder, numElems)
 
 def DucElementEnd(builder):
     return builder.EndObject()

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreDependencies": [
+    "tw-animate-css",
+    "@semantic-release/changelog",
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/exec",
+    "@semantic-release/git",
+    "@semantic-release/github",
+    "@semantic-release/npm",
+    "@semantic-release/release-notes-generator",
+    "semantic-release",
+    "autoprefixer",
+    "turbo"
+  ],
+  "ignoreBinaries": [
+    "uv"
+  ]
+}

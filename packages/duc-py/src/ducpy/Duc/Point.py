@@ -43,46 +43,10 @@ class Point(object):
         return None
 
     # Point
-    def IsCurve(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
-        if o != 0:
-            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
-        return None
-
-    # Point
     def Mirroring(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
-        return None
-
-    # Point
-    def BorderRadius(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return None
-
-    # Point
-    def HandleIn(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.SimplePoint import SimplePoint
-            obj = SimplePoint()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # Point
-    def HandleOut(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.SimplePoint import SimplePoint
-            obj = SimplePoint()
-            obj.Init(self._tab.Bytes, x)
-            return obj
         return None
 
     # Point
@@ -99,15 +63,8 @@ class Point(object):
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
         return 0.0
 
-    # Point
-    def Peer(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
 def PointStart(builder):
-    builder.StartObject(10)
+    builder.StartObject(11)
 
 def Start(builder):
     PointStart(builder)
@@ -124,35 +81,11 @@ def PointAddYV2(builder, yV2):
 def AddYV2(builder, yV2):
     PointAddYV2(builder, yV2)
 
-def PointAddIsCurve(builder, isCurve):
-    builder.PrependBoolSlot(2, isCurve, None)
-
-def AddIsCurve(builder, isCurve):
-    PointAddIsCurve(builder, isCurve)
-
 def PointAddMirroring(builder, mirroring):
     builder.PrependInt8Slot(3, mirroring, None)
 
 def AddMirroring(builder, mirroring):
     PointAddMirroring(builder, mirroring)
-
-def PointAddBorderRadius(builder, borderRadius):
-    builder.PrependFloat64Slot(4, borderRadius, None)
-
-def AddBorderRadius(builder, borderRadius):
-    PointAddBorderRadius(builder, borderRadius)
-
-def PointAddHandleIn(builder, handleIn):
-    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(handleIn), 0)
-
-def AddHandleIn(builder, handleIn):
-    PointAddHandleIn(builder, handleIn)
-
-def PointAddHandleOut(builder, handleOut):
-    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(handleOut), 0)
-
-def AddHandleOut(builder, handleOut):
-    PointAddHandleOut(builder, handleOut)
 
 def PointAddXV3(builder, xV3):
     builder.PrependFloat64Slot(7, xV3, 0.0)
@@ -165,12 +98,6 @@ def PointAddYV3(builder, yV3):
 
 def AddYV3(builder, yV3):
     PointAddYV3(builder, yV3)
-
-def PointAddPeer(builder, peer):
-    builder.PrependInt32Slot(9, peer, 0)
-
-def AddPeer(builder, peer):
-    PointAddPeer(builder, peer)
 
 def PointEnd(builder):
     return builder.EndObject()

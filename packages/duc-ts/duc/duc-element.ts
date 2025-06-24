@@ -5,6 +5,12 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { BoundElement } from '../duc/bound-element';
+import { DucLine } from '../duc/duc-line';
+import { DucPath } from '../duc/duc-path';
+import { DucTableCell } from '../duc/duc-table-cell';
+import { DucTableColumn } from '../duc/duc-table-column';
+import { DucTableRow } from '../duc/duc-table-row';
+import { DucTableStyle } from '../duc/duc-table-style';
 import { ElementBackground } from '../duc/element-background';
 import { ElementStroke } from '../duc/element-stroke';
 import { ImageCrop } from '../duc/image-crop';
@@ -388,8 +394,187 @@ zIndex():number {
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
+polygonSides():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 156);
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : null;
+}
+
+columnOrder(index: number):string
+columnOrder(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
+columnOrder(index: number,optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 158);
+  return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
+}
+
+columnOrderLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 158);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+rowOrder(index: number):string
+rowOrder(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
+rowOrder(index: number,optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 160);
+  return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
+}
+
+rowOrderLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 160);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+columns(index: number, obj?:DucTableColumn):DucTableColumn|null {
+  const offset = this.bb!.__offset(this.bb_pos, 162);
+  return offset ? (obj || new DucTableColumn()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+columnsLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 162);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+rows(index: number, obj?:DucTableRow):DucTableRow|null {
+  const offset = this.bb!.__offset(this.bb_pos, 164);
+  return offset ? (obj || new DucTableRow()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+rowsLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 164);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+cells(index: number, obj?:DucTableCell):DucTableCell|null {
+  const offset = this.bb!.__offset(this.bb_pos, 166);
+  return offset ? (obj || new DucTableCell()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+cellsLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 166);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+tableStyle(obj?:DucTableStyle):DucTableStyle|null {
+  const offset = this.bb!.__offset(this.bb_pos, 168);
+  return offset ? (obj || new DucTableStyle()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+docContent():string|null
+docContent(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+docContent(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 170);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+lines(index: number, obj?:DucLine):DucLine|null {
+  const offset = this.bb!.__offset(this.bb_pos, 172);
+  return offset ? (obj || new DucLine()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+linesLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 172);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+ellipseRatio():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 174);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+}
+
+ellipseStartAngle():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 176);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+}
+
+ellipseEndAngle():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 178);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+}
+
+ellipseShowAuxCrosshair():boolean|null {
+  const offset = this.bb!.__offset(this.bb_pos, 180);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : null;
+}
+
+freeDrawThinning():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 182);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+}
+
+freeDrawSmoothing():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 184);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+}
+
+freeDrawStreamline():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 186);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+}
+
+freeDrawEasing():string|null
+freeDrawEasing(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+freeDrawEasing(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 188);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+freeDrawStartCap():boolean|null {
+  const offset = this.bb!.__offset(this.bb_pos, 190);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : null;
+}
+
+freeDrawStartTaper():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 192);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+}
+
+freeDrawStartEasing():string|null
+freeDrawStartEasing(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+freeDrawStartEasing(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 194);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+freeDrawEndCap():boolean|null {
+  const offset = this.bb!.__offset(this.bb_pos, 196);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : null;
+}
+
+freeDrawEndTaper():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 198);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+}
+
+freeDrawEndEasing():string|null
+freeDrawEndEasing(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+freeDrawEndEasing(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 200);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+freeDrawSvgPath():string|null
+freeDrawSvgPath(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+freeDrawSvgPath(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 202);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+freeDrawSize():number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 204);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+}
+
+linearElementPathOverrides(index: number, obj?:DucPath):DucPath|null {
+  const offset = this.bb!.__offset(this.bb_pos, 206);
+  return offset ? (obj || new DucPath()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+linearElementPathOverridesLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 206);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
 static startDucElement(builder:flatbuffers.Builder) {
-  builder.startObject(76);
+  builder.startObject(102);
 }
 
 static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
@@ -699,6 +884,194 @@ static addSubset(builder:flatbuffers.Builder, subset:number) {
 
 static addZIndex(builder:flatbuffers.Builder, zIndex:number) {
   builder.addFieldInt32(75, zIndex, 0);
+}
+
+static addPolygonSides(builder:flatbuffers.Builder, polygonSides:number) {
+  builder.addFieldInt32(76, polygonSides, null);
+}
+
+static addColumnOrder(builder:flatbuffers.Builder, columnOrderOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(77, columnOrderOffset, 0);
+}
+
+static createColumnOrderVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startColumnOrderVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addRowOrder(builder:flatbuffers.Builder, rowOrderOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(78, rowOrderOffset, 0);
+}
+
+static createRowOrderVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startRowOrderVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addColumns(builder:flatbuffers.Builder, columnsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(79, columnsOffset, 0);
+}
+
+static createColumnsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startColumnsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addRows(builder:flatbuffers.Builder, rowsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(80, rowsOffset, 0);
+}
+
+static createRowsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startRowsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addCells(builder:flatbuffers.Builder, cellsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(81, cellsOffset, 0);
+}
+
+static createCellsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startCellsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addTableStyle(builder:flatbuffers.Builder, tableStyleOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(82, tableStyleOffset, 0);
+}
+
+static addDocContent(builder:flatbuffers.Builder, docContentOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(83, docContentOffset, 0);
+}
+
+static addLines(builder:flatbuffers.Builder, linesOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(84, linesOffset, 0);
+}
+
+static createLinesVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startLinesVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addEllipseRatio(builder:flatbuffers.Builder, ellipseRatio:number) {
+  builder.addFieldFloat64(85, ellipseRatio, null);
+}
+
+static addEllipseStartAngle(builder:flatbuffers.Builder, ellipseStartAngle:number) {
+  builder.addFieldFloat64(86, ellipseStartAngle, null);
+}
+
+static addEllipseEndAngle(builder:flatbuffers.Builder, ellipseEndAngle:number) {
+  builder.addFieldFloat64(87, ellipseEndAngle, null);
+}
+
+static addEllipseShowAuxCrosshair(builder:flatbuffers.Builder, ellipseShowAuxCrosshair:boolean) {
+  builder.addFieldInt8(88, +ellipseShowAuxCrosshair, null);
+}
+
+static addFreeDrawThinning(builder:flatbuffers.Builder, freeDrawThinning:number) {
+  builder.addFieldFloat64(89, freeDrawThinning, null);
+}
+
+static addFreeDrawSmoothing(builder:flatbuffers.Builder, freeDrawSmoothing:number) {
+  builder.addFieldFloat64(90, freeDrawSmoothing, null);
+}
+
+static addFreeDrawStreamline(builder:flatbuffers.Builder, freeDrawStreamline:number) {
+  builder.addFieldFloat64(91, freeDrawStreamline, null);
+}
+
+static addFreeDrawEasing(builder:flatbuffers.Builder, freeDrawEasingOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(92, freeDrawEasingOffset, 0);
+}
+
+static addFreeDrawStartCap(builder:flatbuffers.Builder, freeDrawStartCap:boolean) {
+  builder.addFieldInt8(93, +freeDrawStartCap, null);
+}
+
+static addFreeDrawStartTaper(builder:flatbuffers.Builder, freeDrawStartTaper:number) {
+  builder.addFieldFloat64(94, freeDrawStartTaper, null);
+}
+
+static addFreeDrawStartEasing(builder:flatbuffers.Builder, freeDrawStartEasingOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(95, freeDrawStartEasingOffset, 0);
+}
+
+static addFreeDrawEndCap(builder:flatbuffers.Builder, freeDrawEndCap:boolean) {
+  builder.addFieldInt8(96, +freeDrawEndCap, null);
+}
+
+static addFreeDrawEndTaper(builder:flatbuffers.Builder, freeDrawEndTaper:number) {
+  builder.addFieldFloat64(97, freeDrawEndTaper, null);
+}
+
+static addFreeDrawEndEasing(builder:flatbuffers.Builder, freeDrawEndEasingOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(98, freeDrawEndEasingOffset, 0);
+}
+
+static addFreeDrawSvgPath(builder:flatbuffers.Builder, freeDrawSvgPathOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(99, freeDrawSvgPathOffset, 0);
+}
+
+static addFreeDrawSize(builder:flatbuffers.Builder, freeDrawSize:number) {
+  builder.addFieldFloat64(100, freeDrawSize, null);
+}
+
+static addLinearElementPathOverrides(builder:flatbuffers.Builder, linearElementPathOverridesOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(101, linearElementPathOverridesOffset, 0);
+}
+
+static createLinearElementPathOverridesVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startLinearElementPathOverridesVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
 }
 
 static endDucElement(builder:flatbuffers.Builder):flatbuffers.Offset {

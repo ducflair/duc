@@ -8,11 +8,11 @@ from typing import Dict
 
 import pytest
 
-from ducpy.classes.DucElementClass import DucElementUnion, DucRectangleElement
-from ducpy.classes.AppStateClass import AppState
-from ducpy.utils.ElementTypes import (
-    ElementBackground, ElementStroke, ElementContentBase, StrokeStyle, StrokeSides
+from ducpy.classes.DucElementClass import (
+    DucElementUnion, DucRectangleElement, ElementBackground, ElementStroke, 
+    ElementContentBase, StrokeStyleProps, StrokeSides
 )
+from ducpy.classes.AppStateClass import AppState
 from ducpy.utils.enums import (
     ElementType, ElementContentPreference, StrokePreference,
     StrokePlacement, StrokeJoin, StrokeCap
@@ -33,11 +33,11 @@ def create_image_element(x: float, y: float, width: float, height: float, image_
             opacity=1.0
         ),
         width=0.0,  # No stroke for image
-        style=StrokeStyle(
-            preference=int(StrokePreference.SOLID),
-            join=int(StrokeJoin.MITER),
-            cap=int(StrokeCap.BUTT)
-        ),
+                    style=StrokeStyleProps(
+                preference=int(StrokePreference.SOLID),
+                join=int(StrokeJoin.MITER),
+                cap=int(StrokeCap.BUTT)
+            ),
         placement=int(StrokePlacement.INSIDE)
     )
 
@@ -52,7 +52,6 @@ def create_image_element(x: float, y: float, width: float, height: float, image_
     
     return DucRectangleElement(
         id=str(uuid.uuid4()),
-        type=ElementType.RECTANGLE,
         scope=scope,
         x=x,
         y=y,
