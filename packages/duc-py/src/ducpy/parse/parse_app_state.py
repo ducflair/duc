@@ -40,11 +40,11 @@ def parse_app_state(app_state: FlatBuffersAppState) -> AppState:
             ))
 
     # Parse selected element IDs
-    selected_element_ids = {}
+    selected_element_ids = []
     for i in range(app_state.SelectedElementIdsLength()):
         element_id = app_state.SelectedElementIds(i)
         if element_id:
-            selected_element_ids[element_id.decode('utf-8')] = True
+            selected_element_ids.append(element_id.decode('utf-8'))
 
     try:
         font_family = FontFamily(int(app_state.CurrentItemFontFamilyV2())) if app_state.CurrentItemFontFamilyV2() else DEFAULT_APP_STATE["currentItemFontFamily"]
@@ -55,7 +55,7 @@ def parse_app_state(app_state: FlatBuffersAppState) -> AppState:
     # Create AppState with all parsed values
     return AppState(
         frame_rendering=frame_rendering,
-        zoom=zoom,
+        zoom=zoom.value,
         groups=groups,
         selected_element_ids=selected_element_ids,
         name=app_state.Name().decode('utf-8') if app_state.Name() else None,
@@ -69,12 +69,12 @@ def parse_app_state(app_state: FlatBuffersAppState) -> AppState:
         current_item_stroke=app_state.CurrentItemStroke() or DEFAULT_APP_STATE["currentItemStroke"],
         current_item_background=app_state.CurrentItemBackground() or DEFAULT_APP_STATE["currentItemBackground"],
         current_item_opacity=app_state.CurrentItemOpacity() or DEFAULT_APP_STATE["currentItemOpacity"],
-        current_item_font_family=font_family,
-        current_item_font_size=app_state.CurrentItemFontSizeV3() or DEFAULT_APP_STATE["currentItemFontSize"],
-        current_item_text_align=TextAlign(app_state.CurrentItemTextAlignV3()) if app_state.CurrentItemTextAlignV3() else DEFAULT_APP_STATE["currentItemTextAlign"],
+        current_item_font_family_v2=font_family,
+        current_item_font_size_v3=app_state.CurrentItemFontSizeV3() or DEFAULT_APP_STATE["currentItemFontSize"],
+        current_item_text_align_v3=TextAlign(app_state.CurrentItemTextAlignV3()) if app_state.CurrentItemTextAlignV3() else DEFAULT_APP_STATE["currentItemTextAlign"],
         current_item_start_line_head=app_state.CurrentItemStartLineHead() or DEFAULT_APP_STATE["currentItemStartLineHead"],
         current_item_end_line_head=app_state.CurrentItemEndLineHead() or DEFAULT_APP_STATE["currentItemEndLineHead"],
-        current_item_roundness=app_state.CurrentItemRoundnessV3() or DEFAULT_APP_STATE["currentItemRoundness"],
+        current_item_roundness_v3=app_state.CurrentItemRoundnessV3() or DEFAULT_APP_STATE["currentItemRoundness"],
         view_background_color=app_state.ViewBackgroundColor().decode('utf-8') if app_state.ViewBackgroundColor() else DEFAULT_APP_STATE["viewBackgroundColor"],
         scale_ratio_locked=app_state.ScaleRatioLocked(),
         display_all_point_distances=app_state.DisplayAllPointDistances(),
@@ -82,7 +82,7 @@ def parse_app_state(app_state: FlatBuffersAppState) -> AppState:
         display_all_point_coordinates=app_state.DisplayAllPointCoordinates(),
         display_all_point_info_selected=app_state.DisplayAllPointInfoSelected(),
         display_root_axis=app_state.DisplayRootAxis(),
-        coord_decimal_places=app_state.CoordDecimalPlacesV3() or DEFAULT_APP_STATE["coordDecimalPlaces"],
+        coord_decimal_places_v3=app_state.CoordDecimalPlacesV3() or DEFAULT_APP_STATE["coordDecimalPlaces"],
         line_bending_mode=app_state.LineBendingMode(),
         scope_exponent_threshold=app_state.ScopeExponentThreshold() or DEFAULT_APP_STATE["scopeExponentThreshold"],
         zoom_step=app_state.ZoomStep() or DEFAULT_APP_STATE["zoomStep"],

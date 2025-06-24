@@ -38,12 +38,12 @@ def serialize_app_state(builder: flatbuffers.Builder, app_state: AppState) -> in
     scope_offset = builder.CreateString(app_state.scope) if app_state.scope else None
     main_scope_offset = builder.CreateString(app_state.main_scope) if app_state.main_scope else None
     view_background_color_offset = builder.CreateString(app_state.view_background_color) if app_state.view_background_color else None
-    current_item_font_family_offset = builder.CreateString(str(app_state.current_item_font_family)) if app_state.current_item_font_family else None
+    current_item_font_family_offset = builder.CreateString(str(app_state.current_item_font_family_v2)) if app_state.current_item_font_family_v2 else None
 
     # Create ALL vectors first
     selected_element_ids_vector = None
     if app_state.selected_element_ids:
-        selected_element_ids_offsets = [builder.CreateString(id) for id in app_state.selected_element_ids.keys()]
+        selected_element_ids_offsets = [builder.CreateString(id) for id in app_state.selected_element_ids]
         if selected_element_ids_offsets:
             StartSelectedElementIdsVector(builder, len(selected_element_ids_offsets))
             for offset in reversed(selected_element_ids_offsets):
@@ -93,7 +93,7 @@ def serialize_app_state(builder: flatbuffers.Builder, app_state: AppState) -> in
     if name_offset:
         AddName(builder, name_offset)
     if app_state.zoom:
-        AddZoom(builder, app_state.zoom.value)
+        AddZoom(builder, app_state.zoom)
     if last_pointer_down_with_offset:
         AddLastPointerDownWith(builder, last_pointer_down_with_offset)
     if selected_element_ids_vector:
@@ -133,10 +133,10 @@ def serialize_app_state(builder: flatbuffers.Builder, app_state: AppState) -> in
             AddFrameRenderingClip(builder, app_state.frame_rendering.clip)
     if app_state.current_item_opacity is not None:
         AddCurrentItemOpacity(builder, app_state.current_item_opacity)
-    if app_state.current_item_font_size is not None:
-        AddCurrentItemFontSizeV3(builder, app_state.current_item_font_size)
-    if app_state.current_item_text_align is not None:
-        AddCurrentItemTextAlignV3(builder, app_state.current_item_text_align)
+    if app_state.current_item_font_size_v3 is not None:
+        AddCurrentItemFontSizeV3(builder, app_state.current_item_font_size_v3)
+    if app_state.current_item_text_align_v3 is not None:
+        AddCurrentItemTextAlignV3(builder, app_state.current_item_text_align_v3)
     if app_state.scale_ratio_locked is not None:
         AddScaleRatioLocked(builder, app_state.scale_ratio_locked)
     if app_state.display_all_point_distances is not None:
@@ -145,8 +145,8 @@ def serialize_app_state(builder: flatbuffers.Builder, app_state: AppState) -> in
         AddDisplayDistanceOnDrawing(builder, app_state.display_distance_on_drawing)
     if app_state.display_all_point_coordinates is not None:
         AddDisplayAllPointCoordinates(builder, app_state.display_all_point_coordinates)
-    if app_state.coord_decimal_places is not None:
-        AddCoordDecimalPlacesV3(builder, app_state.coord_decimal_places)
+    if app_state.coord_decimal_places_v3 is not None:
+        AddCoordDecimalPlacesV3(builder, app_state.coord_decimal_places_v3)
     if app_state.display_all_point_info_selected is not None:
         AddDisplayAllPointInfoSelected(builder, app_state.display_all_point_info_selected)
     if app_state.display_root_axis is not None:
@@ -159,8 +159,8 @@ def serialize_app_state(builder: flatbuffers.Builder, app_state: AppState) -> in
         AddCurrentItemStartLineHead(builder, app_state.current_item_start_line_head)
     if app_state.current_item_end_line_head is not None:
         AddCurrentItemEndLineHead(builder, app_state.current_item_end_line_head)
-    if app_state.current_item_roundness is not None:
-        AddCurrentItemRoundnessV3(builder, app_state.current_item_roundness)
+    if app_state.current_item_roundness_v3 is not None:
+        AddCurrentItemRoundnessV3(builder, app_state.current_item_roundness_v3)
     if app_state.scope_exponent_threshold is not None:
         AddScopeExponentThreshold(builder, app_state.scope_exponent_threshold)
     if app_state.zoom_step is not None:
