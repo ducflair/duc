@@ -12,7 +12,7 @@
 
 </p>
 
-The `duc` 2D CAD file format is a cornerstone of our advanced design system, conceived to cater to professionals seeking precision and efficiency in their design work. It integrates seamlessly with [Ducflair's CAD Application](https://ducflair.com), leveraging the power of modern computing and graphical rendering technologies. 
+The `duc` 2D CAD file format is a cornerstone of our advanced design system, conceived to cater to professionals seeking precision and efficiency in their design work. It integrates seamlessly with [Scopture](https://scopture.com), leveraging the power of modern computing and graphical rendering technologies. 
 
 
 ## Introduction
@@ -20,7 +20,7 @@ The `duc` 2D CAD file format is a cornerstone of our advanced design system, con
 This documentation aims to provide a comprehensive guide to the format's structure, capabilities, and integration with various applications.
 
 ## Tools
-[Documentation](https://duc.ducflair.com) | [Playground](https://ducflair.com/core)
+[Documentation](https://duc.ducflair.com) | [Playground](https://scopture.com)
 
 
 ## Market Insights
@@ -38,11 +38,11 @@ The project is licensed under the MIT License. See the [LICENSE](./LICENSE) file
 
 ## Community and Support
 
-Join our growing community to discuss, collaborate, and share insights about the duc format. Connect with us on [Ducflair Community](https://www.ducflair/community) or follow our [Social Media](https://www.ducflair.com/socials) for the latest updates. For support, feel free to open an issue or contact us at [Feedback](https://www.ducflair.com/feedback).
+Join our growing community to discuss, collaborate, and share insights about the duc format. Connect with us on [Scopture Community](https://site.scopture.com/community) or follow our [Social Media](https://site.scopture.com/socials) for the latest updates. For support, feel free to open an issue or contact us at [Support](https://ducflair.com/support).
 
 ## Commit Message Guidelines
 To assure semantic release works, follow [these guidelines](https://semantic-release.gitbook.io/semantic-release#how-does-it-work).
 
 ---
 
-*The duc format and libraries are constantly evolving, with the aim to set new standards in the 2D CAD industry. Be a part of this change and help shape the future of design technology!*
+> The duc format and libraries are constantly evolving, with the aim to set new standards in the 2D CAD industry. Be a part of this change and help shape the future of design technology!

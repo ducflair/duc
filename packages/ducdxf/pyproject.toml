@@ -1,0 +1,58 @@
+[project]
+name = "ducdxf"
+dynamic = ["version"]
+description = "The library for converting DUC <-> DXF"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "ezdxf>=1.4.1",
+    "ducpy @ file://../ducpy"
+]
+
+license = { text = "MIT" }
+
+authors = [
+    { name = "Ducflair", email = "support@ducflair.com" },
+    { name = "Carlos Filipe" },
+    { name = "Jorge Soares" },
+]
+
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+"Homepage" = "https://duc.ducflair.com"
+"Source" = "https://github.com/ducflair/duc/tree/main/packages/ducdxf"
+"Documentation" = "https://dxf.duc.ducflair.com"
+
+[build-system]
+requires = ["setuptools>=63.0", "setuptools-scm>=8.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Tells setuptools to find packages in the 'src' directory.
+# This replaces find_packages(where='src') and package_dir={'': 'src'} from setup.py.
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+version_scheme = "guess-next-dev"
+local_scheme = "node-and-date"
+fallback_version = "0.1.0"
+
+
+[dependency-groups]
+dev = [
+    "furo>=2024.8.6",
+    "sphinx>=8.1.3",
+    "sphinx-autoapi>=3.6.0",
+    "pytest>=8.3.5",
+    "numpy>=1.20.0",
+]
+
+
+[tool.pytest.ini_options]
+testpaths = ["src/tests"]
+python_files = "test_*.py"
+addopts = "-vv"

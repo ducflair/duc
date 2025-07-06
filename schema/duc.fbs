@@ -1,4 +1,4 @@
-// SCHEMA_VERSION=6
+// SCHEMA_VERSION=2.0.0
 
 // Official FlatBuffers Compiler: https://flatbuffers.ar.je/ 
 // Official FlatBuffers Documentation: https://flatbuffers.dev/tutorial/
@@ -53,6 +53,7 @@ table PointBinding {
   point: BindingPoint;  // Optional point binding info
   head: byte;  // LINE_HEAD values
   fixed_point: SimplePoint;
+  head_size: double; // size is PrecisionValue and measured for the length of the head
 }
 
 table BindingPoint {
@@ -157,6 +158,17 @@ table DucTableStyle {
   default_props: DucTableStyleProps;
 }
 
+table DucBlockDuplicationArray {
+  rows: int;
+  cols: int;
+  row_spacing: double;
+  col_spacing: double;
+}
+
+table DucBlockInstanceElementOverride {
+  element_id:string;
+  overrides: string; // JSON stringified object
+}
 
 // Base table for DucElement with common fields
 table DucElement {
@@ -188,89 +200,83 @@ table DucElement {
   link: string;
   locked: bool;
   
-  // MagicFrameElement specific fields
   custom_data: string (deprecated);
   
   is_stroke_disabled: bool (deprecated);
   is_background_disabled: bool (deprecated);
   
   // TextElement specific fields
-  font_size_v2: int = null;
-  font_family: string;
-  text: string;
+  text_font_size_v2: int = null;
+  text_font_family: string;
+  text_text: string;
   text_align_v2: string (deprecated);
-  vertical_align_v2: string (deprecated);
-  container_id: string;
-  original_text: string (deprecated);
-  line_height_v2: float = null;
-  auto_resize: bool = null;
+  text_vertical_align_v2: string (deprecated);
+  text_container_id: string;
+  text_original_text: string (deprecated);
+  text_line_height_v2: float = null;
+  text_auto_resize: bool = null;
   
   // LinearElement specific fields
-  points: [Point];
-  last_committed_point: Point;
-  start_binding: PointBinding;
-  end_binding: PointBinding;
-  start_arrowhead: string (deprecated);
-  end_arrowhead: string (deprecated);
-  elbowed: bool = null;
+  linear_element_points: [Point];
+  linear_element_last_committed_point: Point;
+  linear_element_start_binding: PointBinding;
+  linear_element_end_binding: PointBinding;
+  arrow_start_arrowhead: string (deprecated);
+  arrow_end_arrowhead: string (deprecated);
+  arrow_elbowed: bool = null;
   
   // FreeDrawElement specific fields
-  pressures_v2: [float] (deprecated);
-  simulate_pressure: bool = null;
+  free_draw_pressures_v2: [float] (deprecated);
+  free_draw_simulate_pressure: bool = null;
   
-  // ImageElement specific fields
   file_id: string;
-  status: string;
-  scale_v2: Point (deprecated);
+  image_status: string;
+  image_scale_v2: Point (deprecated);
   
-  // FrameElement specific fields
-  is_collapsed: bool = null;
-  name: string; // FIXME: Perhaps will be deprecated because of field "label"
+  stack_like_is_collapsed: bool = null;
+  name: string (deprecated);
   
-  // GroupElement specific fields
-  group_id_ref: string;
+  group_id_ref: string (deprecated);
 
   stroke_style_v3: byte;
   fill_style_v3: byte;
-  text_align_v3: byte = null;
-  vertical_align_v3: byte;
-  x_v3: double;
-  y_v3: double;
-  scale_v3: SimplePoint;
-  pressures_v3: [double];
+  text_text_align: byte = null;
+  text_vertical_align: byte;
+  
+  x: double;
+  y: double;
+  image_scale: SimplePoint;
+  free_draw_pressures: [double];
   stroke_width_v3: double;
-  angle_v3: double;
+  angle: double;
   roundness: double;
-  width_v3: double;
-  height_v3: double;
-  font_size_v3: double = null;
-  line_height_v3: double = null;
+  width: double;
+  height: double;
+  text_font_size: double = null;
+  text_line_height: double = null;
 
   blending: byte = null;
   background: [ElementBackground];
   stroke: [ElementStroke];
-  crop: ImageCrop;  // For image elements
-  clip: bool = null;  // For frame based elements
+  image_crop: ImageCrop;
+  stack_like_clip: bool = null;  
   
   subset: byte = null;  // ELEMENT_SUBSET values
   z_index: int;
   polygon_sides: int = null;
 
   // TableElement specific fields
-  column_order: [string];
-  row_order: [string];
-  columns: [DucTableColumn];
-  rows: [DucTableRow];
-  cells: [DucTableCell];
+  table_column_order: [string];
+  table_row_order: [string];
+  table_columns: [DucTableColumn];
+  table_rows: [DucTableRow];
+  table_cells: [DucTableCell];
   table_style: DucTableStyle;
 
-  // DocElement specific fields
   doc_content: string;
-  
-  // Lines-based system for linear elements
-  lines: [DucLine];
 
-  // EllipseElement specific fields
+  linear_element_lines: [DucLine];
+
   ellipse_ratio: double = null;
   ellipse_start_angle: double = null;
   ellipse_end_angle: double = null;
@@ -291,6 +297,23 @@ table DucElement {
   free_draw_size: double = null;
 
   linear_element_path_overrides: [DucPath];
+  
+  description: string;
+  no_plot: bool = null;
+
+  stack_like_labeling_color: string;
+  stack_like_stroke_override: ElementStroke;
+  stack_like_background_override: ElementBackground;
+  
+  block_instance_block_id: string;
+  block_instance_element_overrides: [DucBlockInstanceElementOverride];
+  block_instance_duplication_array: DucBlockDuplicationArray;
+  
+  text_oblique_angle: double;
+  text_big_font_family: string;
+  text_width_char_scale: double;
+
+  linear_element_wipeout_below: bool; 
 }
 
 // Define a table for BoundElement used in DucElement
@@ -332,11 +355,42 @@ table LinearElementEditor {
 
 table DucGroup {
   id: string;
-  type: string;
+  type: string (deprecated);
   is_collapsed: bool;
   label: string;
-  scope: string;
+  scope: string (deprecated);
   writing_layer: string (deprecated);
+  description: string;
+  no_plot: bool = null;
+  locked: bool;
+  is_visible: bool;
+  opacity: float;
+  labeling_color: string;
+  stroke_override: ElementStroke;
+  background_override: ElementBackground;
+  clip: bool = null;
+}
+
+table DucBlock {
+  id: string;
+  label: string;
+  description: string;
+  readonly: bool;
+  version: int;
+  elements: [DucElement];
+  attributes: [DucBlockAttribute];
+}
+
+table DucBlockAttributeDetails {
+  tag: string;
+  default_value: string;
+  prompt: string;
+  field_length: int;
+}
+
+table DucBlockAttribute {
+  name: string;
+  details: DucBlockAttributeDetails;
 }
 
 table AppState {
@@ -371,7 +425,7 @@ table AppState {
   view_background_color: string;
   scope: string;
   writing_layer: string (deprecated);
-  groups: [DucGroup];
+  groups: [DucGroup] (deprecated);
   scroll_x: float;
   scroll_y: float;
   cursor_button: string;
@@ -454,14 +508,30 @@ table BinaryFiles {
   entries: [BinaryFilesEntry];
 }
 
+table RendererState {
+  deleted_element_ids: [string];
+}
+
+table DictionaryEntry {
+  key: string;
+  value: string;
+}
+
 // Finally, define the ExportedDataState table
 table ExportedDataState {
   type: string;
-  version: int;
+  version: int (deprecated);
   source: string;
   elements: [DucElement];
   app_state: AppState;
   files: BinaryFiles;
+  renderer_state: RendererState;
+  blocks: [DucBlock];
+  groups: [DucGroup];
+  dictionary: [DictionaryEntry];
+  views: [DucView];
+  thumbnail: [ubyte];
+  version: string;
 }
 
 root_type ExportedDataState;
