@@ -1,0 +1,22 @@
+{
+  "name": "ducpdf",
+  "version": "0.1.0",
+  "description": "Library for converting between PDF and DUC formats.",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "bun run build:rs && bun run build:ts",
+    "build:rs": "cd rust && wasm-pack build --target web --out-dir ../pkg",
+    "build:ts": "tsc"
+  },
+  "dependencies": {
+    "ducjs": "workspace:*",
+    "pdfjs-dist": "^4.4.178"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "wasm-pack": "^0.12.1",
+    "@types/node": "^20.12.2"
+  }
+} 

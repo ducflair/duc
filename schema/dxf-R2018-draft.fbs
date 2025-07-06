@@ -1,0 +1,799 @@
+// DXF R2018+ FlatBuffers Schema
+// This schema defines structures for serializing AutoCAD DXF (Drawing Exchange Format)
+// files into FlatBuffers format for efficient storage and processing.
+// The schema may not be complete, and may not be up to date with the latest DXF R2018 specification.
+// It serves purely as guidance for the DXF format.
+namespace ezdxf;
+
+// -----------------------------------------------------------------------------
+// Basic Geometric Types (must be defined first)
+// -----------------------------------------------------------------------------
+
+// 3D point/vector structure
+table Vec3 { x: double; y: double; z: double; }
+
+// 2D point/vector structure  
+table Vec2 { x: double; y: double; }
+
+// -----------------------------------------------------------------------------
+// Core Entity Structures
+// -----------------------------------------------------------------------------
+// Hyperlink data that can be attached to any DXF entity
+table Hyperlink {
+  url: string;          // Target URL for the hyperlink
+  description: string;  // User-friendly description text
+  location: string;     // Named view or location within the drawing
+}
+
+// Common properties shared by all DXF graphical entities
+// Maps to DXFGraphic base class properties in ezdxf
+table CommonEntity {
+  layer: string;        // Layer name (DXF group 8)
+  linetype: string;     // Linetype name (DXF group 6, default "BYLAYER")
+  color: int;           // Color index 0-256 (DXF group 62, 256=BYLAYER)
+  lineweight: int;      // Lineweight value (DXF group 370, -1=BYLAYER)
+  ltscale: double;      // Linetype scale factor (DXF group 48, default 1.0)
+  invisible: bool;      // Entity visibility flag (DXF group 60)
+  paperspace: bool;     // Model space (false) or paper space (true) flag (DXF group 67)
+  extrusion: Vec3;      // Extrusion direction vector for 2D entities (DXF group 210,220,230)
+  thickness: double;    // Entity thickness for 2D entities (DXF group 39)
+  trueColor: int;       // 24-bit RGB color value (DXF group 420)
+  colorName: string;    // Color book color name (DXF group 430)
+  transparency: int;    // Transparency value 0-255 (DXF group 440, 0=opaque)
+  shadowMode: int;      // Shadow mode flags (DXF group 284)
+  hyperlink: Hyperlink; // Attached hyperlink data (optional)
+}
+
+// -----------------------------------------------------------------------------
+// HATCH Entity Boundary Definitions
+// -----------------------------------------------------------------------------
+
+// Line segment boundary edge
+table BoundaryLineEdge {
+  start: Vec2; // Start point coordinates
+  end: Vec2;   // End point coordinates
+}
+
+// Circular arc boundary edge
+table BoundaryArcEdge {
+  center: Vec2;
+  radius: double;
+  start_angle: double;  // Start angle in radians
+  end_angle: double;    // End angle in radians
+  is_ccw: bool;         // Counter-clockwise direction flag
+}
+
+// Elliptical arc boundary edge
+table BoundaryEllipseEdge {
+  center: Vec2;
+  major_axis_end: Vec2; // Major axis endpoint relative to center
+  ratio: double;        // Minor to major axis ratio (0.0 to 1.0)
+  start_angle: double;  // Start parameter in radians
+  end_angle: double;    // End parameter in radians
+  is_ccw: bool;         // Counter-clockwise direction flag
+}
+
+// NURBS spline boundary edge
+table BoundarySplineEdge {
+  degree: int;
+  control_points: [Vec2];
+  knots: [double];      // Knot vector
+  weights: [double];    // Control point weights for rational splines (optional)
+}
+
+// Polyline boundary path for HATCH entities
+table PolylinePath {
+  vertices: [Vec2];     // 2D vertex coordinates
+  bulges: [double];     // Bulge values for arc segments (one per vertex)
+  is_closed: bool;      // Whether the polyline forms a closed boundary
+}
+
+// Edge-based boundary path containing connected geometric primitives
+// Note: Uses separate vectors instead of union vector for cross-language compatibility
+table EdgePath {
+  line_edges: [BoundaryLineEdge];       // Line segment edges
+  arc_edges: [BoundaryArcEdge];         // Circular arc edges  
+  ellipse_edges: [BoundaryEllipseEdge]; // Elliptical arc edges
+  spline_edges: [BoundarySplineEdge];   // NURBS spline edges
+}
+
+// Union of boundary path representations
+union BoundaryPathUnion { PolylinePath, EdgePath }
+
+// Complete boundary path definition for HATCH entities
+table HatchBoundaryPath {
+  path_type_flags: uint; // Boundary type flags: 1=External, 2=Outermost, 16=Polyline
+  path: BoundaryPathUnion;
+  // Note: Entity associativity data omitted for simplicity
+}
+
+// -----------------------------------------------------------------------------
+// HATCH Entity Definition
+// -----------------------------------------------------------------------------
+
+// HATCH entity for filled regions with patterns or solid fills
+table Hatch {
+  common: CommonEntity;
+  patternName: string;      // Hatch pattern name (DXF group 2)
+  solidFill: bool;          // True for solid fill, false for pattern fill
+  scale: double;            // Pattern scale factor (DXF group 41)
+  angle: double;            // Pattern rotation angle in degrees (DXF group 50)
+  boundary_paths: [HatchBoundaryPath]; // All boundary paths defining the hatch area
+  gradient: GradientFill;   // Gradient fill properties (optional)
+}
+
+// Gradient fill properties for HATCH entities
+table GradientFill {
+  name: string;   // Gradient definition name
+  color1: int;    // First color as 24-bit RGB value
+  color2: int;    // Second color as 24-bit RGB value
+  angle: double;  // Gradient angle in degrees
+  centered: bool; // Whether gradient is centered
+  tint: double;   // Tint value for gradient transitions
+}
+
+// -----------------------------------------------------------------------------
+// DIMENSION Entity Definition  
+// -----------------------------------------------------------------------------
+
+// DIMENSION entity for dimensional annotations
+// Represents all dimension types: linear, angular, radial, diameter, ordinate
+table Dimension {
+  common: CommonEntity;
+  dimstyle: string;         // Dimension style name reference (DXF group 3)
+  dimtype: int;             // Dimension type and flags (DXF group 70)
+  text: string;             // Override text, "<>" shows measured value (DXF group 1)
+  def_point: Vec3;          // Definition point for dimension line (DXF group 10)
+  text_midpoint: Vec3;      // Text middle point (DXF group 11)
+  def_point2: Vec3;         // First extension line start point (DXF group 13)
+  def_point3: Vec3;         // Second extension line start point (DXF group 14)
+  def_point4: Vec3;         // Arc definition point for angular dimensions (DXF group 15)
+  def_point5: Vec3;         // Leader endpoint for radial/diameter dimensions (DXF group 16)
+  rotation: double;         // Text rotation angle in degrees (DXF group 50)
+  oblique_angle: double;    // Extension line oblique angle in degrees (DXF group 52)
+}
+
+// -----------------------------------------------------------------------------
+// ACIS-Based Entity Support
+// -----------------------------------------------------------------------------
+
+// Raw ACIS geometric modeling data container
+// ACIS data can be stored as SAT (ASCII) or SAB (binary) format
+table AcisData {
+  sat_data: [string]; // ACIS ASCII text data lines (DXF groups 1,3)
+  sab_data: [ubyte];  // ACIS binary data (DXF group 310)
+}
+
+// 3D solid entity using ACIS modeling kernel
+table Solid3D {
+  common: CommonEntity;
+  acis: AcisData;
+}
+
+// Planar region entity with ACIS boundary representation  
+table Region {
+  common: CommonEntity;
+  acis: AcisData;
+}
+
+// NURBS or procedural surface entity using ACIS representation
+table Surface {
+  common: CommonEntity;
+  acis: AcisData;
+}
+
+
+// -----------------------------------------------------------------------------
+// Extended Entity Types
+// -----------------------------------------------------------------------------
+
+// Dynamic text field entity for parametric text content
+table Field {
+  base: DXFObjectBase;
+  evaluator_id: string;   // Field evaluator identifier (e.g., "AcVar", "AcObjProp")
+  field_code: string;     // Field expression or formula
+  formatted_code: string; // Evaluated and formatted result text
+}
+
+// OLE object frame for embedded Windows objects
+table Ole2Frame {
+  common: CommonEntity;
+  ole_type: int;      // Object type: 1=Link, 2=Embedded, 3=Static
+  upper_left: Vec3;   // Upper-left corner of frame
+  lower_right: Vec3;  // Lower-right corner of frame
+}
+
+// Proxy entity for unsupported or application-specific entities
+table AcadProxyEntity {
+  common: CommonEntity;
+  proxy_dxf_type: string;       // Original DXF entity type name
+  proxy_data: [ubyte];          // Raw entity data
+  object_drawing_format: uint;  // Drawing format version flags
+}
+
+// ACIS solid body entity (similar to 3DSOLID but distinct type)
+table Body {
+  common: CommonEntity;
+  acis: AcisData;
+}
+
+// Raster image reference entity
+table Image {
+  common: CommonEntity;
+  insert: Vec3;             // Insertion point for image placement
+  u_pixel: Vec2;            // U-axis pixel direction vector  
+  v_pixel: Vec2;            // V-axis pixel direction vector
+  image_size: Vec2;         // Image dimensions in pixels
+  image_def_handle: string; // Handle reference to IMAGEDEF object
+  flags: int;               // Display flags
+  clipping: bool;           // Whether image uses clipping boundary
+  brightness: int;          // Brightness adjustment (0-100)
+  contrast: int;            // Contrast adjustment (0-100)  
+  fade: int;                // Fade amount (0-100)
+}
+
+// Multi-line entity with parallel line segments
+table MLine {
+  common: CommonEntity;
+  style_name: string;   // MLINESTYLE name reference
+  scale: double;        // Scale factor for line spacing
+  justification: int;   // Justification mode: 0=Top, 1=Middle, 2=Bottom
+  flags: uint;          // Various MLine flags
+  vertices: [Vec3];     // Path vertices defining the centerline
+}
+
+// External file underlay reference (PDF, DWF, DGN)
+table Underlay {
+  common: CommonEntity;
+  def_handle: string;   // Handle reference to underlay definition object
+  insert: Vec3;         // Insertion point
+  scale: Vec3;          // Scale factors (X, Y, Z)
+  rotation: double;     // Rotation angle in degrees
+  flags: int;           // Display flags: 1=clipping, 2=on, 4=monochrome
+}
+
+// -----------------------------------------------------------------------------
+// Basic Entity Definitions
+// -----------------------------------------------------------------------------
+
+// Point entity
+table Point {
+  common: CommonEntity;
+  position: Vec3;      // Point coordinates (DXF groups 10,20,30)
+}
+
+// Line entity
+table Line {
+  common: CommonEntity;
+  start: Vec3;         // Start point (DXF groups 10,20,30)
+  end: Vec3;           // End point (DXF groups 11,21,31)
+}
+
+// Ray entity (semi-infinite line)
+table Ray {
+  common: CommonEntity;
+  start: Vec3;         // Start point (DXF groups 10,20,30)
+  direction: Vec3;     // Direction vector (DXF groups 11,21,31)
+}
+
+// Construction line entity (infinite line)
+table XLine {
+  common: CommonEntity;
+  basePoint: Vec3;     // Point on line (DXF groups 10,20,30)
+  secondPoint: Vec3;   // Second point defining direction (DXF groups 11,21,31)
+}
+
+// Circle entity
+table Circle {
+  common: CommonEntity;
+  center: Vec3;        // Center point (DXF groups 10,20,30)
+  radius: double;      // Radius value (DXF group 40)
+}
+
+// Arc entity
+table Arc {
+  common: CommonEntity;
+  center: Vec3;        // Center point (DXF groups 10,20,30)
+  radius: double;      // Radius value (DXF group 40)
+  startAngle: double;  // Start angle in degrees (DXF group 50)
+  endAngle: double;    // End angle in degrees (DXF group 51)
+}
+
+// Ellipse entity
+table Ellipse {
+  common: CommonEntity;
+  center: Vec3;        // Center point (DXF groups 10,20,30)
+  majorAxis: Vec3;     // Major axis endpoint vector (DXF groups 11,21,31)
+  ratio: double;       // Minor to major axis ratio (DXF group 40)
+  startParam: double;  // Start parameter (DXF group 41)
+  endParam: double;    // End parameter (DXF group 42)
+}
+
+// Legacy polyline entity with 3D vertices
+table Polyline {
+  common: CommonEntity;
+  flags: uint;         // Polyline flags (DXF group 70)
+  vertices: [Vec3];    // Vertex coordinates
+}
+
+// Lightweight 2D polyline entity
+table LWPolyline {
+  common: CommonEntity;
+  flags: uint;         // Polyline flags (DXF group 70)
+  vertexCount: int;    // Number of vertices (DXF group 90)
+  vertices: [Vec2];    // 2D vertex coordinates with implicit bulge values
+}
+
+// NURBS spline entity
+table Spline {
+  common: CommonEntity;
+  degree: int;         // Spline degree (DXF group 71)
+  controlPoints: [Vec3]; // Control point coordinates
+  knots: [double];     // Knot vector values (DXF group 40)
+}
+
+// Solid trace entity (filled quadrilateral)
+table Trace {
+  common: CommonEntity;
+  corner1: Vec3;       // First corner (DXF groups 10,20,30)
+  corner2: Vec3;       // Second corner (DXF groups 11,21,31)
+  corner3: Vec3;       // Third corner (DXF groups 12,22,32)
+  corner4: Vec3;       // Fourth corner (DXF groups 13,23,33)
+}
+
+// 3D face entity
+table Face3d {
+  common: CommonEntity;
+  vertices: [Vec3];    // Face vertices (up to 4 corners)
+}
+
+// 2D solid entity (filled quadrilateral)
+table Solid {
+  common: CommonEntity;
+  corner1: Vec3;       // First corner (DXF groups 10,20,30)
+  corner2: Vec3;       // Second corner (DXF groups 11,21,31)
+  corner3: Vec3;       // Third corner (DXF groups 12,22,32)
+  corner4: Vec3;       // Fourth corner (DXF groups 13,23,33)
+}
+
+// Helix entity (3D spiral curve)
+table Helix {
+  common: CommonEntity;
+  center: Vec3;        // Base center point (DXF groups 10,20,30)
+  axisDir: Vec3;       // Helix axis direction (DXF groups 210,220,230)
+  radius: double;      // Base radius (DXF group 40)
+  topRadius: double;   // Top radius (DXF group 41)
+  turns: double;       // Number of turns (DXF group 42)
+  height: double;      // Total height (DXF group 43)
+}
+
+// Block reference entity
+table Insert {
+  common: CommonEntity;
+  name: string;        // Block name reference (DXF group 2)
+  insert: Vec3;        // Insertion point (DXF groups 10,20,30)
+  scaleX: double;      // X scale factor (DXF group 41)
+  scaleY: double;      // Y scale factor (DXF group 42)
+  scaleZ: double;      // Z scale factor (DXF group 43)
+  rotation: double;    // Rotation angle in degrees (DXF group 50)
+  colCount: int;       // Array column count (DXF group 70)
+  rowCount: int;       // Array row count (DXF group 71)
+  colSpacing: double;  // Column spacing distance (DXF group 44)
+  rowSpacing: double;  // Row spacing distance (DXF group 45)
+}
+
+// Attribute entity (attached to INSERT)
+table Attrib {
+  common: CommonEntity;
+  tag: string;         // Attribute tag name (DXF group 2)
+  value: string;       // Attribute text value (DXF group 1)
+  insert: Vec3;        // Text insertion point (DXF groups 10,20,30)
+}
+
+// Attribute definition entity (in block definition)
+table AttDef {
+  common: CommonEntity;
+  tag: string;         // Attribute tag name (DXF group 2)
+  default: string;     // Default text value (DXF group 1)
+  insert: Vec3;        // Text insertion point (DXF groups 10,20,30)
+}
+
+// Leader entity
+table Leader {
+  common: CommonEntity;
+  vertices: [Vec3];    // Leader path vertices
+  hasArrow: bool;      // Arrowhead flag (DXF group 71)
+}
+
+// Multi-line text entity
+table MText {
+  common: CommonEntity;
+  insert: Vec3;        // Insertion point (DXF groups 10,20,30)
+  height: double;      // Text height (DXF group 40)
+  width: double;       // Reference rectangle width (DXF group 41)
+  text: string;        // Text content with formatting codes (DXF group 1)
+}
+
+// Single-line text entity
+table Text {
+  common: CommonEntity;
+  insert: Vec3;        // Insertion point (DXF groups 10,20,30)
+  height: double;      // Text height (DXF group 40)
+  rotation: double;    // Text rotation angle in degrees (DXF group 50)
+  text: string;        // Text content (DXF group 1)
+}
+
+// Multi-leader entity (advanced leader with content)
+table MultiLeader {
+  common: CommonEntity;
+  // Note: Full MLEADER structure is complex, simplified here
+}
+
+// Polygon mesh entity
+table Mesh {
+  common: CommonEntity;
+  columns: int;        // Mesh M direction count (DXF group 71)
+  rows: int;           // Mesh N direction count (DXF group 72)
+  vertices: [Vec3];    // Mesh vertex coordinates
+}
+
+// Multi-polygon entity with holes
+table MPolygon {
+  common: CommonEntity;
+  // Note: Full MPOLYGON boundary structure omitted for brevity
+}
+
+// Shape entity (reference to compiled shape)
+table Shape {
+  common: CommonEntity;
+  insert: Vec3;        // Insertion point (DXF groups 10,20,30)
+  height: double;      // Shape size (DXF group 40)
+  rotation: double;    // Rotation angle in degrees (DXF group 50)
+  name: string;        // Shape name (DXF group 2)
+}
+
+// Viewport entity (paper space viewport)
+table Viewport {
+  common: CommonEntity;
+  center: Vec3;        // Center point (DXF groups 10,20,30)
+  width: double;       // Viewport width (DXF group 40)
+  height: double;      // Viewport height (DXF group 41)
+  viewCenter: Vec2;    // View center in model coordinates (DXF groups 12,22)
+  viewHeight: double;  // View height in model units (DXF group 45)
+  lensLength: double;  // Lens length for perspective (DXF group 42)
+  frontClip: double;   // Front clipping plane distance (DXF group 43)
+  backClip: double;    // Back clipping plane distance (DXF group 44)
+  snapAngle: double;   // Snap rotation angle (DXF group 51)
+  flags: uint;         // Viewport status flags (DXF group 90)
+}
+
+// Wipeout entity (area mask)
+table Wipeout {
+  common: CommonEntity;
+  vertices: [Vec2];    // Boundary vertices defining masked area
+}
+
+
+// -----------------------------------------------------------------------------
+// Entity and Object Wrapper Types (for cross-language compatibility)
+// -----------------------------------------------------------------------------
+
+// Wrapper for entity types (avoids vector of unions limitation)
+table EntityWrapper {
+  point: Point;
+  line: Line;
+  ray: Ray;
+  xline: XLine;
+  circle: Circle;
+  arc: Arc;
+  ellipse: Ellipse;
+  polyline: Polyline;
+  lwpolyline: LWPolyline;
+  spline: Spline;
+  trace: Trace;
+  face3d: Face3d;
+  solid: Solid;
+  helix: Helix;
+  hatch: Hatch;
+  insert: Insert;
+  attrib: Attrib;
+  attdef: AttDef;
+  leader: Leader;
+  mtext: MText;
+  text: Text;
+  multileader: MultiLeader;
+  mesh: Mesh;
+  mpolygon: MPolygon;
+  shape: Shape;
+  viewport: Viewport;
+  wipeout: Wipeout;
+  dimension: Dimension;
+  solid3d: Solid3D;
+  region: Region;
+  surface: Surface;
+  ole2frame: Ole2Frame;
+  acadproxyentity: AcadProxyEntity;
+  body: Body;
+  image: Image;
+  mline: MLine;
+  underlay: Underlay;
+}
+
+// Wrapper for object types (avoids vector of unions limitation)
+table ObjectWrapper {
+  dictionary: Dictionary;
+  dictionarywithdefault: DictionaryWithDefault;
+  dictionaryvar: DictionaryVar;
+  xrecord: XRecord;
+  imagedef: ImageDef;
+  imagedefreactor: ImageDefReactor;
+  mleaderstyle: MLeaderStyle;
+  sun: Sun;
+  geodata: GeoData;
+  underlaydefinition: UnderlayDefinition;
+  pdfdefinition: PdfDefinition;
+  dwfdefinition: DwfDefinition;
+  dgndefinition: DgnDefinition;
+  field: Field;
+}
+
+// -----------------------------------------------------------------------------
+// DXF File Structure
+// -----------------------------------------------------------------------------
+
+// Complete DXF file representation with all standard sections
+table DXFFile {
+  header: HeaderSection;        // Drawing settings and system variables
+  classes: [ClassDefinition];   // Application-defined class definitions
+  tables: TablesSection;        // Named resource tables (layers, styles, etc.)
+  blocks: [BlockDefinition];    // Block definitions and layouts
+  entities: [EntityWrapper];    // Graphical entities (model space + active paper space)
+  objects: [ObjectWrapper];     // Non-graphical objects (dictionaries, etc.)
+  thumbnail: [ubyte];           // Optional preview image data
+  acdsdata: [ubyte];            // AcDs data section (R2013+)
+}
+
+// -----------------------------------------------------------------------------
+// Header Section Structures
+// -----------------------------------------------------------------------------
+
+// Header variable value containers for different data types
+table HeaderVarValueInt    { value: int; }
+table HeaderVarValueDouble { value: double; }
+table HeaderVarValueString { value: string; }
+
+// Union of header variable value types
+union HeaderVarValue { HeaderVarValueInt, HeaderVarValueDouble, HeaderVarValueString }
+
+// Individual header variable (system variable)
+table HeaderVar {
+  name: string;             // Variable name with '$' prefix (e.g., "$ACADVER")
+  value: HeaderVarValue;    // Variable value (type depends on variable)
+}
+
+// Complete header section containing all drawing settings
+table HeaderSection {
+  vars: [HeaderVar];        // All header variables in the drawing
+}
+
+// -----------------------------------------------------------------------------
+// Classes Section Structures  
+// -----------------------------------------------------------------------------
+
+// Application-defined class definition (DXF R13+)
+table ClassDefinition {
+  dxfName: string;      // DXF entity/object name (DXF group 1)
+  cppName: string;      // C++ class name (DXF group 2)
+  application: string;  // Defining application name (DXF group 3)
+  proxyFlags: uint;     // Proxy capability flags (DXF group 90)
+  instanceCount: uint;  // Number of instances in drawing (DXF group 91)
+  wasAProxy: bool;      // Was-a-proxy flag (DXF group 280)
+  isAnEntity: bool;     // Is-an-entity flag (DXF group 281)
+}
+
+// -----------------------------------------------------------------------------
+// TABLES Section: resource tables (APPID, BLOCK_RECORD, DIMSTYLE, LAYER, LTYPE, STYLE, UCS, VIEW, VPORT).
+// Define one table entry structure for each (simplified fields).
+table AppIDTableEntry {
+  name: string;        // Application name (DXF group 2)
+  flags: uint;         // Standard flags (DXF group 70)
+}
+
+table BlockRecordTableEntry {
+  name: string;        // Block record name (DXF group 2)
+  flags: uint;         // Standard flags (DXF group 70)
+}
+
+table DimStyleTableEntry {
+  name: string;        // Dimension style name (DXF group 2)
+  flags: uint;         // Standard flags (DXF group 70)
+  // Note: Full dimension style properties omitted for brevity
+}
+
+table LayerTableEntry {
+  name: string;         // Layer name (DXF group 2)
+  flags: uint;          // Layer state flags (DXF group 70)
+  color: int;           // Layer color index (DXF group 62) (OLD, same as trueColor, but 0-255)
+  trueColor: int;       // 24-bit RGB color (DXF group 420) (NEW, same as color, but supports way more colors)
+  linetype: string;     // Linetype name (DXF group 6)
+  plotFlag: bool;       // Plot/no-plot flag (DXF group 290) (Takes precedence over flags[isNoPlot] which is older)
+  lineweight: int;      // Lineweight value (DXF group 370)
+  plotStyleName: string; // Plot style object handle (DXF group 390)
+  materialName: string;  // Material object handle (DXF group 347) (3D only)
+  description: string;   // Layer description
+  transparency: uint;    // Layer transparency (0-255)
+}
+
+table LinetypeTableEntry {
+  name: string;        // Linetype name (DXF group 2)
+  flags: uint;         // Standard flags (DXF group 70)
+  description: string; // Descriptive text (DXF group 3)
+  pattern: [double];   // Dash/dot pattern elements (DXF group 49)
+}
+
+table StyleTableEntry {
+  name: string;        // Text style name (DXF group 2)
+  font: string;        // Primary font file name (DXF group 3)
+  bigFont: string;     // Big font file name (DXF group 4)
+  width: double;       // Width factor (DXF group 40)
+  oblique: double;     // Oblique angle in degrees (DXF group 50)
+}
+
+table UCSTableEntry {
+  name: string;        // UCS name (DXF group 2)
+  origin: Vec3;        // Origin point (DXF groups 10,20,30)
+  xAxis: Vec3;         // X-axis direction (DXF groups 11,21,31)
+  yAxis: Vec3;         // Y-axis direction (DXF groups 12,22,32)
+}
+
+table ViewTableEntry {
+  name: string;        // View name (DXF group 2)
+  center: Vec2;        // View center point (DXF groups 10,20)
+  height: double;      // View height (DXF group 40)
+  twist: double;       // View twist angle (DXF group 50)
+}
+
+table VPortTableEntry {
+  name: string;         // Viewport configuration name (DXF group 2)
+  lowerLeft: Vec2;      // Lower-left corner (DXF groups 10,20)
+  upperRight: Vec2;     // Upper-right corner (DXF groups 11,21)
+  center: Vec2;         // View center point (DXF groups 12,22)
+  snapBase: Vec2;       // Snap base point (DXF groups 13,23)
+  snapSpacing: Vec2;    // Snap spacing (DXF groups 14,24)
+  gridSpacing: Vec2;    // Grid spacing (DXF groups 15,25)
+  twist: double;        // View twist angle (DXF group 50)
+  snapAngle: double;    // Snap rotation angle (DXF group 51)
+  snapEnabled: bool;    // Snap mode on/off (DXF group 72)
+  gridEnabled: bool;    // Grid mode on/off (DXF group 73)
+  isUCSIconVisible: bool; // UCS icon visibility (DXF group 74)
+  ucsOrigin: Vec3;      // UCS origin (DXF groups 110,120,130)
+}
+
+// Complete tables section
+table TablesSection {
+  appIDs: [AppIDTableEntry];
+  blockRecords: [BlockRecordTableEntry];
+  dimStyles: [DimStyleTableEntry];
+  layers: [LayerTableEntry];
+  linetypes: [LinetypeTableEntry];
+  styles: [StyleTableEntry];
+  ucs: [UCSTableEntry];
+  views: [ViewTableEntry];
+  viewports: [VPortTableEntry];
+}
+
+// -----------------------------------------------------------------------------
+// Blocks Section Structures
+// -----------------------------------------------------------------------------
+
+// Block definition containing entities
+table BlockDefinition {
+  name: string;         // Block name (case-insensitive)
+  basePoint: Vec3;      // Block insertion base point (DXF groups 10,20,30)
+  layer: string;        // Layer for BLOCK entity (DXF group 8)
+  flags: uint;          // Block type flags (DXF group 70)
+  xrefPath: string;     // External reference file path
+  entities: [EntityWrapper]; // All entities within this block
+}
+
+// -----------------------------------------------------------------------------
+// Objects Section Structures  
+// -----------------------------------------------------------------------------
+
+// Base structure for all DXF objects
+table DXFObjectBase {
+  handle: string;      // Unique object handle (hex string)
+  ownerHandle: string; // Handle of owning object
+}
+
+// Dictionary object for named collections
+table Dictionary {
+  base: DXFObjectBase;
+  hardOwner: bool;     // Hard ownership flag (DXF group 280)
+  cloning: uint;       // Cloning behavior flags (DXF group 281)
+}
+
+// Dictionary with default entry
+table DictionaryWithDefault {
+  base: DXFObjectBase;
+  default: string;     // Default entry handle (DXF group 340)
+  hardOwner: bool;     // Hard ownership flag (DXF group 280)
+  cloning: uint;       // Cloning behavior flags (DXF group 281)
+}
+
+// Dictionary variable object
+table DictionaryVar {
+  base: DXFObjectBase;
+  value: string;       // String value (DXF group 1)
+}
+
+// Extended data record object
+table XRecord {
+  base: DXFObjectBase;
+  version: uint;       // Data version (DXF group 90)
+  contents: [string];  // Data content strings (DXF groups 1,3)
+}
+
+// Image definition object
+table ImageDef {
+  base: DXFObjectBase;
+  filename: string;    // Image file path
+  width: int;          // Image width in pixels
+  height: int;         // Image height in pixels
+  resolutionX: double; // Horizontal resolution (pixels per unit)
+  resolutionY: double; // Vertical resolution (pixels per unit)
+}
+
+// Image definition reactor object
+table ImageDefReactor {
+  base: DXFObjectBase;
+  // Maintains reference count for IMAGEDEF objects
+}
+
+// Multi-leader style definition object
+table MLeaderStyle {
+  base: DXFObjectBase;
+  name: string;       // Style name
+  // Note: Full style properties omitted for brevity
+}
+
+// Sun lighting object
+table Sun {
+  base: DXFObjectBase;
+  attMode: uint;      // Attenuation mode
+  intensity: double;  // Light intensity value
+  // Note: Additional lighting properties omitted for brevity
+}
+
+// Geographic data object (R2010+)
+table GeoData {
+  base: DXFObjectBase;
+  version: uint;      // Geo data version
+  xrefType: uint;     // Coordinate system type
+  worldOffset: Vec3;  // World coordinate offset
+  // Note: Full geographic coordinate system data omitted for brevity
+}
+
+// Base underlay definition for external file references
+table UnderlayDefinition {
+  base: DXFObjectBase;
+  filename: string;   // External file path
+  name: string;       // Page/sheet identifier
+}
+
+// PDF underlay definition
+table PdfDefinition { 
+  underlay: UnderlayDefinition; 
+}
+
+// DWF underlay definition  
+table DwfDefinition { 
+  underlay: UnderlayDefinition; 
+}
+
+// DGN underlay definition
+table DgnDefinition { 
+  underlay: UnderlayDefinition; 
+}
+
+root_type DXFFile;
