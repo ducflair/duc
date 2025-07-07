@@ -1,16 +1,24 @@
 {
-    "exclude": [
-        "node_modules",
-        "dist",
-    ],
-    "compilerOptions": {
-        "target": "esnext",
-        "module": "esnext",
-        "outDir": "dist",
-        "rootDir": ".",
-        "lib": ["ESNext"],
-        "strict": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-    }
-}
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "ducjs": ["packages/ducjs/*"],
+      "ducsvg": ["packages/ducsvg/*"],
+      "ducpdf": ["packages/ducpdf/*"],
+    },
+  },
+  "files": [],
+  "references": [
+    { "path": "packages/ducjs" },
+    { "path": "packages/ducsvg" },
+    { "path": "packages/ducpdf" },
+  ]
+} 

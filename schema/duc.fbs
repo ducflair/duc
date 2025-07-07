@@ -1,4 +1,4 @@
-// SCHEMA_VERSION=2.0.0
+// SCHEMA_VERSION=6
 
 // Official FlatBuffers Compiler: https://flatbuffers.ar.je/ 
 // Official FlatBuffers Documentation: https://flatbuffers.dev/tutorial/
@@ -53,7 +53,6 @@ table PointBinding {
   point: BindingPoint;  // Optional point binding info
   head: byte;  // LINE_HEAD values
   fixed_point: SimplePoint;
-  head_size: double; // size is PrecisionValue and measured for the length of the head
 }
 
 table BindingPoint {
@@ -156,13 +155,6 @@ table DucTableCell {
 
 table DucTableStyle {
   default_props: DucTableStyleProps;
-}
-
-table DucBlockDuplicationArray {
-  rows: int;
-  cols: int;
-  row_spacing: double;
-  col_spacing: double;
 }
 
 table DucBlockInstanceElementOverride {
@@ -307,13 +299,6 @@ table DucElement {
   
   block_instance_block_id: string;
   block_instance_element_overrides: [DucBlockInstanceElementOverride];
-  block_instance_duplication_array: DucBlockDuplicationArray;
-  
-  text_oblique_angle: double;
-  text_big_font_family: string;
-  text_width_char_scale: double;
-
-  linear_element_wipeout_below: bool; 
 }
 
 // Define a table for BoundElement used in DucElement
@@ -375,7 +360,6 @@ table DucBlock {
   id: string;
   label: string;
   description: string;
-  readonly: bool;
   version: int;
   elements: [DucElement];
   attributes: [DucBlockAttribute];
@@ -385,7 +369,7 @@ table DucBlockAttributeDetails {
   tag: string;
   default_value: string;
   prompt: string;
-  field_length: int;
+  position: SimplePoint;
 }
 
 table DucBlockAttribute {
@@ -512,15 +496,10 @@ table RendererState {
   deleted_element_ids: [string];
 }
 
-table DictionaryEntry {
-  key: string;
-  value: string;
-}
-
 // Finally, define the ExportedDataState table
 table ExportedDataState {
   type: string;
-  version: int (deprecated);
+  version: int;
   source: string;
   elements: [DucElement];
   app_state: AppState;
@@ -528,10 +507,6 @@ table ExportedDataState {
   renderer_state: RendererState;
   blocks: [DucBlock];
   groups: [DucGroup];
-  dictionary: [DictionaryEntry];
-  views: [DucView];
-  thumbnail: [ubyte];
-  version: string;
 }
 
 root_type ExportedDataState;

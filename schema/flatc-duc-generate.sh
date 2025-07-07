@@ -6,6 +6,11 @@ set -eo pipefail
 # Configure logging
 LOG_DIR="../build_logs"
 TARGET_DIR="../packages"
+
+TS_DIR="ducjs/src"
+PY_DIR="ducpy/src/ducpy"
+RUST_DIR="ducrs/src"
+
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 mkdir -p "$LOG_DIR"
 
@@ -29,7 +34,7 @@ RUST_SUCCESS=false
 
 
 # Create output directories
-mkdir -p $TARGET_DIR/duc-ts $TARGET_DIR/duc-py/src/ducpy $TARGET_DIR/duc-rs/src
+mkdir -p $TARGET_DIR/$TS_DIR $TARGET_DIR/$PY_DIR $TARGET_DIR/$RUST_DIR
 
 # Run builds and capture status
 echo "Starting code generation..."
@@ -37,19 +42,19 @@ echo "==========================="
 
 # TypeScript generation
 echo "⚙️  Generating TypeScript bindings..."
-if flatc --ts --ts-no-import-ext -o $TARGET_DIR/duc-ts duc.fbs 2>"$LOG_DIR/ts_$TIMESTAMP.log"; then
+if flatc --ts --ts-no-import-ext -o $TARGET_DIR/$TS_DIR duc.fbs 2>"$LOG_DIR/ts_$TIMESTAMP.log"; then
     TS_SUCCESS=true
 fi
 
 # Python generation
 echo "⚙️  Generating Python bindings..."
-if flatc --python -o $TARGET_DIR/duc-py/src/ducpy duc.fbs 2>"$LOG_DIR/py_$TIMESTAMP.log"; then
+if flatc --python -o $TARGET_DIR/$PY_DIR duc.fbs 2>"$LOG_DIR/py_$TIMESTAMP.log"; then
     PY_SUCCESS=true
 fi
 
 # Rust generation
 echo "⚙️  Generating Rust bindings..."
-if flatc --rust -o $TARGET_DIR/duc-rs/src duc.fbs 2>"$LOG_DIR/rust_$TIMESTAMP.log"; then
+if flatc --rust -o $TARGET_DIR/$RUST_DIR duc.fbs 2>"$LOG_DIR/rust_$TIMESTAMP.log"; then
     RUST_SUCCESS=true
 fi
 

@@ -2,10 +2,10 @@ import {
   DucBlock as BinDucBlock,
   DucBlockAttribute as BinDucBlockAttribute,
   DucBlockAttributeDetails as BinDucBlockAttributeDetails,
-} from '@duc/canvas/duc/duc-ts/duc';
-import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from '@duc/canvas/duc/utils/scopes';
-import { DucBlock, DucBlockAttributeDetailsType, DucElement } from '@duc/canvas/element/types';
-import { RawValue } from '@duc/canvas/types';
+} from 'ducjs/duc';
+import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/utils/scopes';
+import { DucBlock, DucBlockAttributeDetailsType, DucElement } from 'ducjs/types/elements';
+import { RawValue } from 'ducjs/types';
 import { parseElementFromBinary } from './parseElementFromBinary';
 
 export const parseBlockFromBinary = (

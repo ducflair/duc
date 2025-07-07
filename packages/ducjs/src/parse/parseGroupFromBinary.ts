@@ -1,10 +1,10 @@
 import {
   DucGroup as BinDucGroup,
-} from '@duc/canvas/duc/duc-ts/duc';
-import { DucGroup } from '@duc/canvas/element/types';
-import { Scope } from '@duc/canvas/types';
-import { Percentage } from '@duc/canvas/utils/geometry/shape';
+} from 'ducjs/duc';
+import { DucGroup } from 'ducjs/types/elements';
+import { Scope } from 'ducjs/types';
 import { parseElementBinBackground, parseElementBinStroke } from './parseElementFromBinary';
+import { Percentage } from 'ducjs/types/geometryTypes';
 
 export const parseGroupFromBinary = (
   group: BinDucGroup,

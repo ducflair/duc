@@ -1,21 +1,16 @@
 import * as flatbuffers from 'flatbuffers';
-import { SuggestedPointBinding } from '@duc/canvas/element/binding';
-import { DucBindableElement, NonDeleted } from '@duc/canvas/element/types';
-import { AppState, PrecisionValue as CorePrecisionValue } from '@duc/canvas/types';
-import { HANDLE_TYPE } from '@duc/canvas/utils/constants';
-import { AppState as BinAppState, LinearElementEditor, PointerDownState, SegmentMidpointState, SimplePoint } from '@duc/canvas/duc/duc-ts/duc';
-import { ensureFiniteNumber, getPrecisionValueField } from '@duc/canvas/duc/duc-ts/src/serialize/serializationUtils';
-import { serializeDucPoint, serializeElementBackground, serializeElementStroke } from '@duc/canvas/duc/duc-ts/src/serialize/serializeElementFromDuc';
+import { DucBindableElement, NonDeleted } from 'ducjs/types/elements';
+import { HANDLE_TYPE } from 'ducjs/utils/constants';
+import { AppState as BinAppState, LinearElementEditor, PointerDownState, SegmentMidpointState, SimplePoint } from 'ducjs/duc';
+import { ensureFiniteNumber, getPrecisionValueField } from 'ducjs/src/serialize/serializationUtils';
+import { serializeDucPoint, serializeElementBackground, serializeElementStroke } from 'ducjs/src/serialize/serializeElementFromDuc';
+import { DucState, PrecisionValue, SuggestedPointBinding } from 'ducjs/types';
 
-const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppState>, forRenderer: boolean): flatbuffers.Offset => {
+const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<DucState>, forRenderer: boolean): flatbuffers.Offset => {
   const nameOffset = appState.name ? builder.createString(appState.name) : undefined;
-  const lastPointerDownWithOffset = appState.lastPointerDownWith ? builder.createString(appState.lastPointerDownWith) : undefined;
 
   const selectedElementIdsOffsets = appState.selectedElementIds ? Object.keys(appState.selectedElementIds).map(id => builder.createString(id)) : [];
   const selectedElementIdsVector = selectedElementIdsOffsets.length > 0 ? BinAppState.createSelectedElementIdsVector(builder, selectedElementIdsOffsets) : undefined;
-
-  const editingGroupIdOffset = appState.editingGroupId ? builder.createString(appState.editingGroupId) : undefined;
-  const cursorButtonOffset = appState.cursorButton ? builder.createString(appState.cursorButton) : undefined;
 
   const scopeOffset = appState.scope ? builder.createString(appState.scope) : undefined;
   const mainScopeOffset = appState.mainScope ? builder.createString(appState.mainScope) : undefined;
@@ -122,10 +117,7 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   BinAppState.startAppState(builder);
 
   nameOffset && BinAppState.addName(builder, nameOffset);
-  lastPointerDownWithOffset && BinAppState.addLastPointerDownWith(builder, lastPointerDownWithOffset);
   selectedElementIdsVector && BinAppState.addSelectedElementIds(builder, selectedElementIdsVector);
-  editingGroupIdOffset && (BinAppState as any).addEditingGroupId(builder, editingGroupIdOffset);
-  cursorButtonOffset && BinAppState.addCursorButton(builder, cursorButtonOffset);
   elementsPendingErasureVector && BinAppState.addElementsPendingErasure(builder, elementsPendingErasureVector);
   scopeOffset && BinAppState.addScope(builder, scopeOffset);
   mainScopeOffset && BinAppState.addMainScope(builder, mainScopeOffset);
@@ -146,14 +138,13 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   appState.zoomStep !== undefined && BinAppState.addZoomStep(builder, appState.zoomStep);
   appState.gridSize !== undefined && BinAppState.addGridSize(builder, appState.gridSize);
   appState.gridStep !== undefined && BinAppState.addGridStep(builder, appState.gridStep);
-  appState.gridModeEnabled !== undefined && BinAppState.addGridModeEnabled(builder, appState.gridModeEnabled);
   appState.isBindingEnabled !== undefined && BinAppState.addIsBindingEnabled(builder, appState.isBindingEnabled);
   
   if (appState.scrollX) {
-    BinAppState.addScrollX(builder, getPrecisionValueField(appState.scrollX as CorePrecisionValue, forRenderer));
+    BinAppState.addScrollX(builder, getPrecisionValueField(appState.scrollX as PrecisionValue, forRenderer));
   }
   if (appState.scrollY) {
-    BinAppState.addScrollY(builder, getPrecisionValueField(appState.scrollY as CorePrecisionValue, forRenderer));
+    BinAppState.addScrollY(builder, getPrecisionValueField(appState.scrollY as PrecisionValue, forRenderer));
   }
   
   appState.scrolledOutside !== undefined && BinAppState.addScrolledOutside(builder, appState.scrolledOutside);
@@ -173,15 +164,7 @@ const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<AppSt
   appState.standard && BinAppState.addStandard(builder, appState.standard);
   appState.currentItemStartLineHead && BinAppState.addCurrentItemStartLineHead(builder, appState.currentItemStartLineHead);
   appState.currentItemEndLineHead && BinAppState.addCurrentItemEndLineHead(builder, appState.currentItemEndLineHead);
-  appState.currentItemSubset && BinAppState.addCurrentItemSubset(builder, appState.currentItemSubset);
   
-  if (appState.frameRendering) {
-    const fr = appState.frameRendering;
-    fr.enabled !== undefined && BinAppState.addFrameRenderingEnabled(builder, fr.enabled);
-    fr.name && BinAppState.addFrameRenderingName(builder, fr.name);
-    fr.outline !== undefined && BinAppState.addFrameRenderingOutline(builder, fr.outline);
-    fr.clip !== undefined && BinAppState.addFrameRenderingClip(builder, fr.clip);
-  }
   appState.antiAliasing !== undefined && BinAppState.addAntiAliasing(builder, appState.antiAliasing);
   appState.vSync !== undefined && BinAppState.addVSync(builder, appState.vSync);
   appState.debugRendering !== undefined && BinAppState.addDebugRendering(builder, appState.debugRendering);

@@ -96,8 +96,69 @@ class ExportedDataState(object):
             return obj
         return None
 
+    # ExportedDataState
+    def RendererState(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.RendererState import RendererState
+            obj = RendererState()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # ExportedDataState
+    def Blocks(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.DucBlock import DucBlock
+            obj = DucBlock()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # ExportedDataState
+    def BlocksLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # ExportedDataState
+    def BlocksIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
+        return o == 0
+
+    # ExportedDataState
+    def Groups(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.DucGroup import DucGroup
+            obj = DucGroup()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # ExportedDataState
+    def GroupsLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # ExportedDataState
+    def GroupsIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
+        return o == 0
+
 def ExportedDataStateStart(builder):
-    builder.StartObject(6)
+    builder.StartObject(9)
 
 def Start(builder):
     ExportedDataStateStart(builder)
@@ -143,6 +204,36 @@ def ExportedDataStateAddFiles(builder, files):
 
 def AddFiles(builder, files):
     ExportedDataStateAddFiles(builder, files)
+
+def ExportedDataStateAddRendererState(builder, rendererState):
+    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(rendererState), 0)
+
+def AddRendererState(builder, rendererState):
+    ExportedDataStateAddRendererState(builder, rendererState)
+
+def ExportedDataStateAddBlocks(builder, blocks):
+    builder.PrependUOffsetTRelativeSlot(7, flatbuffers.number_types.UOffsetTFlags.py_type(blocks), 0)
+
+def AddBlocks(builder, blocks):
+    ExportedDataStateAddBlocks(builder, blocks)
+
+def ExportedDataStateStartBlocksVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartBlocksVector(builder, numElems):
+    return ExportedDataStateStartBlocksVector(builder, numElems)
+
+def ExportedDataStateAddGroups(builder, groups):
+    builder.PrependUOffsetTRelativeSlot(8, flatbuffers.number_types.UOffsetTFlags.py_type(groups), 0)
+
+def AddGroups(builder, groups):
+    ExportedDataStateAddGroups(builder, groups)
+
+def ExportedDataStateStartGroupsVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartGroupsVector(builder, numElems):
+    return ExportedDataStateStartGroupsVector(builder, numElems)
 
 def ExportedDataStateEnd(builder):
     return builder.EndObject()
