@@ -36,10 +36,8 @@ impl Error for SerializationError {}
 
 // Define a default schema version (non-const approach to avoid parse in const)
 fn get_schema_version() -> String {
-    match std::env::var("DUC_SCHEMA_VERSION") {
-        Ok(val) => val,
-        Err(_) => "0.0.0".to_string(),
-    }
+    // Get the schema version from the environment variable set at build time
+    env!("DUC_SCHEMA_VERSION").to_string()
 }
 
 /// Serialize a Rust DucFile into a FlatBuffer binary
@@ -75,9 +73,11 @@ pub fn serialize_duc_file(file: &DucFile) -> Result<Vec<u8>, Box<dyn Error>> {
     let file_type = builder.create_string(mime_types::DUC);
     let source = builder.create_string("duc-rs");
     
+    let version_string = builder.create_string(&get_schema_version());
+    
     let mut exported_data_builder = ExportedDataStateBuilder::new(&mut builder);
     exported_data_builder.add_type_(file_type);
-    exported_data_builder.add_version(get_schema_version()); // Use the function instead of a const
+    exported_data_builder.add_version(version_string);
     exported_data_builder.add_source(source);
     
     if let Some(elements) = elements_vec {

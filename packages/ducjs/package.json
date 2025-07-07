@@ -4,7 +4,7 @@
   "description": "The duc 2D CAD file format is a cornerstone of our advanced design system, conceived to cater to professionals seeking precision and efficiency in their design work.",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "node scripts/build.js",
     "check-types": "tsc --noEmit",
     "semantic-release": "semantic-release"
   },

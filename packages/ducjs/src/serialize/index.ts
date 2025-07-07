@@ -5,15 +5,15 @@ import {
 import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, MIME_TYPES } from 'ducjs/utils/constants';
 import { DucBlock, DucElement, DucGroup, OrderedDucElement } from 'ducjs/types/elements';
 import { BinaryFiles, RendererState, DucState } from 'ducjs/types';
-import { serializeDucElement } from 'ducjs/src/serialize/serializeElementFromDuc';
-import { serializeAppState } from 'ducjs/src/serialize/serializeAppStateFromDuc';
-import { serializeBinaryFiles } from 'ducjs/src/serialize/serializeBinaryFilesFromDuc';
+import { serializeDucElement } from 'ducjs/serialize/serializeElementFromDuc';
+import { serializeAppState } from 'ducjs/serialize/serializeAppStateFromDuc';
+import { serializeBinaryFiles } from 'ducjs/serialize/serializeBinaryFilesFromDuc';
 import { restore, ExtendedAppStateRestorer, noopExtendedAppStateRestorer } from 'ducjs/utils/restore';
-import { serializeRendererState } from 'ducjs/src/serialize/serializeRendererStateFromDuc';
-import { serializeDucBlock } from 'ducjs/src/serialize/serializeBlockFromDuc';
-import { serializeDucGroup } from 'ducjs/src/serialize/serializeGroupFromDuc';
+import { serializeRendererState } from 'ducjs/serialize/serializeRendererStateFromDuc';
+import { serializeDucBlock } from 'ducjs/serialize/serializeBlockFromDuc';
+import { serializeDucGroup } from 'ducjs/serialize/serializeGroupFromDuc';
 
-export const DUC_SCHEMA_VERSION = process.env.DUC_SCHEMA_VERSION ? parseInt(process.env.DUC_SCHEMA_VERSION, 10) : 0;
+export const DUC_SCHEMA_VERSION = process.env.DUC_SCHEMA_VERSION || "0.0.0";
 
 export const serializeAsFlatBuffers = async (
   elements: readonly DucElement[],
@@ -46,6 +46,7 @@ export const serializeAsFlatBuffers = async (
 
   const typeOffset = builder.createString(EXPORT_DATA_TYPES.duc);
   const sourceOffset = builder.createString(window.location.origin ?? "Unknown");
+  const versionOffset = builder.createString(DUC_SCHEMA_VERSION);
   
   // Serialize elements
   const elementOffsets = sanitized.elements.map((element) => {
@@ -76,7 +77,7 @@ export const serializeAsFlatBuffers = async (
 
   ExportedDataState.startExportedDataState(builder);
   ExportedDataState.addType(builder, typeOffset);
-  ExportedDataState.addVersion(builder, DUC_SCHEMA_VERSION);
+  ExportedDataState.addVersion(builder, versionOffset);
   ExportedDataState.addSource(builder, sourceOffset);
   ExportedDataState.addElements(builder, elementsOffset);
   ExportedDataState.addAppState(builder, appStateOffset);

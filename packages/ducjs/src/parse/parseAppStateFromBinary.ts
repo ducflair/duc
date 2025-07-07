@@ -1,5 +1,5 @@
 import { AppState as BinAppState } from 'ducjs/duc';
-import { parseElementBinBackground, parseElementBinStroke, parsePoint } from 'ducjs/src/parse/parseElementFromBinary';
+import { parseElementBinBackground, parseElementBinStroke, parsePoint } from 'ducjs/parse/parseElementFromBinary';
 import { SupportedMeasures } from 'ducjs/utils/measurements';
 import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/utils/scopes';
 import { DesignStandard } from 'ducjs/utils/standards';
@@ -13,10 +13,10 @@ import { LinearElementEditor } from 'ducjs/utils/elements/linearElement';
 import { AntiAliasing, DucState, NormalizedZoomValue, PrecisionValue, RawValue, Zoom } from 'ducjs/types';
 import { HANDLE_TYPE } from 'ducjs/utils/constants';
 
-export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: number): Partial<DucState> => {
+export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: string): Partial<DucState> => {
   if (!appStateBin) return {};
 
-  const forceNeutralScope = v <= 5;
+  const forceNeutralScope = v <= '5';
 
   let readScope = appStateBin.scope() as SupportedMeasures | null;
   const scope = forceNeutralScope ? NEUTRAL_SCOPE : (readScope || NEUTRAL_SCOPE);
@@ -159,6 +159,6 @@ export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: numb
     // hoveredElementId: appStateBin.hoveredElementId() || undefined,
     // suggestedBindingElementId: appStateBin.suggestedBindingElementId() || undefined,
     isBindingEnabled: appStateBin.isBindingEnabled(),
-    editingLinearElement: v <= 5 ? undefined : editingLinearElement,
+    editingLinearElement: v <= '5' ? undefined : editingLinearElement,
   };
 };

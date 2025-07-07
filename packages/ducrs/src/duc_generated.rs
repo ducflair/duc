@@ -7226,7 +7226,7 @@ impl<'a> flatbuffers::Follow<'a> for ExportedDataState<'a> {
 
 impl<'a> ExportedDataState<'a> {
   pub const VT_TYPE_: flatbuffers::VOffsetT = 4;
-  pub const VT_VERSION: flatbuffers::VOffsetT = 6;
+  pub const VT_VERSION_LEGACY: flatbuffers::VOffsetT = 6;
   pub const VT_SOURCE: flatbuffers::VOffsetT = 8;
   pub const VT_ELEMENTS: flatbuffers::VOffsetT = 10;
   pub const VT_APP_STATE: flatbuffers::VOffsetT = 12;
@@ -7234,6 +7234,7 @@ impl<'a> ExportedDataState<'a> {
   pub const VT_RENDERER_STATE: flatbuffers::VOffsetT = 16;
   pub const VT_BLOCKS: flatbuffers::VOffsetT = 18;
   pub const VT_GROUPS: flatbuffers::VOffsetT = 20;
+  pub const VT_VERSION: flatbuffers::VOffsetT = 22;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -7245,6 +7246,7 @@ impl<'a> ExportedDataState<'a> {
     args: &'args ExportedDataStateArgs<'args>
   ) -> flatbuffers::WIPOffset<ExportedDataState<'bldr>> {
     let mut builder = ExportedDataStateBuilder::new(_fbb);
+    if let Some(x) = args.version { builder.add_version(x); }
     if let Some(x) = args.groups { builder.add_groups(x); }
     if let Some(x) = args.blocks { builder.add_blocks(x); }
     if let Some(x) = args.renderer_state { builder.add_renderer_state(x); }
@@ -7252,7 +7254,7 @@ impl<'a> ExportedDataState<'a> {
     if let Some(x) = args.app_state { builder.add_app_state(x); }
     if let Some(x) = args.elements { builder.add_elements(x); }
     if let Some(x) = args.source { builder.add_source(x); }
-    builder.add_version(args.version);
+    builder.add_version_legacy(args.version_legacy);
     if let Some(x) = args.type_ { builder.add_type_(x); }
     builder.finish()
   }
@@ -7266,11 +7268,11 @@ impl<'a> ExportedDataState<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(ExportedDataState::VT_TYPE_, None)}
   }
   #[inline]
-  pub fn version(&self) -> i32 {
+  pub fn version_legacy(&self) -> i32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(ExportedDataState::VT_VERSION, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i32>(ExportedDataState::VT_VERSION_LEGACY, Some(0)).unwrap()}
   }
   #[inline]
   pub fn source(&self) -> Option<&'a str> {
@@ -7321,6 +7323,13 @@ impl<'a> ExportedDataState<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucGroup>>>>(ExportedDataState::VT_GROUPS, None)}
   }
+  #[inline]
+  pub fn version(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(ExportedDataState::VT_VERSION, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for ExportedDataState<'_> {
@@ -7331,7 +7340,7 @@ impl flatbuffers::Verifiable for ExportedDataState<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("type_", Self::VT_TYPE_, false)?
-     .visit_field::<i32>("version", Self::VT_VERSION, false)?
+     .visit_field::<i32>("version_legacy", Self::VT_VERSION_LEGACY, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("source", Self::VT_SOURCE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucElement>>>>("elements", Self::VT_ELEMENTS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<AppState>>("app_state", Self::VT_APP_STATE, false)?
@@ -7339,13 +7348,14 @@ impl flatbuffers::Verifiable for ExportedDataState<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<RendererState>>("renderer_state", Self::VT_RENDERER_STATE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucBlock>>>>("blocks", Self::VT_BLOCKS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucGroup>>>>("groups", Self::VT_GROUPS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("version", Self::VT_VERSION, false)?
      .finish();
     Ok(())
   }
 }
 pub struct ExportedDataStateArgs<'a> {
     pub type_: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub version: i32,
+    pub version_legacy: i32,
     pub source: Option<flatbuffers::WIPOffset<&'a str>>,
     pub elements: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucElement<'a>>>>>,
     pub app_state: Option<flatbuffers::WIPOffset<AppState<'a>>>,
@@ -7353,13 +7363,14 @@ pub struct ExportedDataStateArgs<'a> {
     pub renderer_state: Option<flatbuffers::WIPOffset<RendererState<'a>>>,
     pub blocks: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlock<'a>>>>>,
     pub groups: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucGroup<'a>>>>>,
+    pub version: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for ExportedDataStateArgs<'a> {
   #[inline]
   fn default() -> Self {
     ExportedDataStateArgs {
       type_: None,
-      version: 0,
+      version_legacy: 0,
       source: None,
       elements: None,
       app_state: None,
@@ -7367,6 +7378,7 @@ impl<'a> Default for ExportedDataStateArgs<'a> {
       renderer_state: None,
       blocks: None,
       groups: None,
+      version: None,
     }
   }
 }
@@ -7381,8 +7393,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ExportedDataStateBuilder<'a, 'b
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_TYPE_, type_);
   }
   #[inline]
-  pub fn add_version(&mut self, version: i32) {
-    self.fbb_.push_slot::<i32>(ExportedDataState::VT_VERSION, version, 0);
+  pub fn add_version_legacy(&mut self, version_legacy: i32) {
+    self.fbb_.push_slot::<i32>(ExportedDataState::VT_VERSION_LEGACY, version_legacy, 0);
   }
   #[inline]
   pub fn add_source(&mut self, source: flatbuffers::WIPOffset<&'b  str>) {
@@ -7413,6 +7425,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ExportedDataStateBuilder<'a, 'b
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_GROUPS, groups);
   }
   #[inline]
+  pub fn add_version(&mut self, version: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_VERSION, version);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> ExportedDataStateBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     ExportedDataStateBuilder {
@@ -7431,7 +7447,7 @@ impl core::fmt::Debug for ExportedDataState<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("ExportedDataState");
       ds.field("type_", &self.type_());
-      ds.field("version", &self.version());
+      ds.field("version_legacy", &self.version_legacy());
       ds.field("source", &self.source());
       ds.field("elements", &self.elements());
       ds.field("app_state", &self.app_state());
@@ -7439,6 +7455,7 @@ impl core::fmt::Debug for ExportedDataState<'_> {
       ds.field("renderer_state", &self.renderer_state());
       ds.field("blocks", &self.blocks());
       ds.field("groups", &self.groups());
+      ds.field("version", &self.version());
       ds.finish()
   }
 }

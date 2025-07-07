@@ -6,12 +6,13 @@ import { BinaryFiles, DucState } from 'ducjs/types';
 import {
   ExportedDataState
 } from 'ducjs/duc';
-import { parseAppStateFromBinary } from 'ducjs/src/parse/parseAppStateFromBinary';
-import { parseBinaryFilesFromBinary } from 'ducjs/src/parse/parseBinaryFilesFromBinary';
-import { parseElementFromBinary } from 'ducjs/src/parse/parseElementFromBinary';
-import { parseRendererStateFromBinary } from 'ducjs/src/parse/parseRendererStateFromBinary';
-import { parseBlockFromBinary } from 'ducjs/src/parse/parseBlockFromBinary';
-import { parseGroupFromBinary } from 'ducjs/src/parse/parseGroupFromBinary';
+import { parseAppStateFromBinary } from 'ducjs/parse/parseAppStateFromBinary';
+import { parseBinaryFilesFromBinary } from 'ducjs/parse/parseBinaryFilesFromBinary';
+import { parseElementFromBinary } from 'ducjs/parse/parseElementFromBinary';
+import { parseRendererStateFromBinary } from 'ducjs/parse/parseRendererStateFromBinary';
+import { parseBlockFromBinary } from 'ducjs/parse/parseBlockFromBinary';
+import { parseGroupFromBinary } from 'ducjs/parse/parseGroupFromBinary';
+import { parseDucFlatBuffers as parseDucFlatBuffersV1 } from 'ducjs/legacy/v1/parse';
 
 export const parseDucFlatBuffers = async (
   blob: Blob | File, 
@@ -21,6 +22,13 @@ export const parseDucFlatBuffers = async (
   const byteBuffer = new flatbuffers.ByteBuffer(new Uint8Array(arrayBuffer));
 
   const data = ExportedDataState.getRootAsExportedDataState(byteBuffer);
+  
+  // TODO: Remove on a late duc v2 version
+  const legacyVersion = data.versionLegacy();
+  if(legacyVersion) {
+    return parseDucFlatBuffersV1(blob, fileHandle);
+  }
+
   const version = data.version();
 
   // Parse elements

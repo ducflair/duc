@@ -523,21 +523,21 @@ table DictionaryEntry {
   value: string;
 }
 
-// Finally, define the ExportedDataState table
+// PRESERVE THIS TABLE FOR BACKWARDS COMPATIBILITY
 table ExportedDataState {
   type: string;
-  version_v1: int;
+  version_legacy: int;
   source: string;
-  elements: [DucElement];
+  elements: [DucElement] (deprecated);
   app_state: AppState;
   files: BinaryFiles;
   renderer_state: RendererState;
   blocks: [DucBlock];
   groups: [DucGroup];
-  dictionary: [DictionaryEntry];
-  // views: [DucView];
-  thumbnail: [ubyte];
   version: string;
+  dictionary: [DictionaryEntry];
+  views: [DucView];
+  thumbnail: [ubyte];
 }
 
 root_type ExportedDataState;

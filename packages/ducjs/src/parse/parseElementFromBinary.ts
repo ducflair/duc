@@ -147,13 +147,14 @@ const parsePointBinding = (binding: BinPointBinding | null, elementScope: Suppor
   };
 };
 
-export const parseElementFromBinary = (e: BinDucElement, v: number): Partial<DucElement> | null => {
+export const parseElementFromBinary = (e: BinDucElement, v: string): Partial<DucElement> | null => {
   if (!e) return null;
 
   const elType = e.type();
   if (!elType) return null;
 
-  const forceNeutralScope = v <= 5;
+  // Will be removed since we don't need to support legacy v1 migration on v2
+  const forceNeutralScope = v <= '5';
 
   let readScope = e.scope() as SupportedMeasures | null;
   const elementScope = forceNeutralScope ? NEUTRAL_SCOPE : (readScope || NEUTRAL_SCOPE);
@@ -261,10 +262,10 @@ export const parseElementFromBinary = (e: BinDucElement, v: number): Partial<Duc
       .filter((pressure): pressure is number => pressure !== null && pressure !== undefined)
     : [];
 
-  const xValue = v > 2 ? e.x() : e.xV2() || undefined
-  const yValue = v > 2 ? e.y() : e.yV2() || undefined
-  const widthValue = v > 2 ? e.width() : e.widthV2() || undefined
-  const heightValue = v > 2 ? e.height() : e.heightV2() || undefined
+  const xValue = v >= '2' ? e.x() : e.xV2() || undefined
+  const yValue = v >= '2' ? e.y() : e.yV2() || undefined
+  const widthValue = v >= '2' ? e.width() : e.widthV2() || undefined
+  const heightValue = v >= '2' ? e.height() : e.heightV2() || undefined
   const roundnessValue = e.roundness()
 
   const baseElement: Partial<DucElement> = {
@@ -275,7 +276,7 @@ export const parseElementFromBinary = (e: BinDucElement, v: number): Partial<Duc
     opacity: e.opacity() as Percentage,
     width: widthValue ? getPrecisionValueFromRaw(widthValue as RawValue, elementScope, elementScope) : undefined,
     height: heightValue ? getPrecisionValueFromRaw(heightValue as RawValue, elementScope, elementScope) : undefined,
-    angle: (v > 2 ? e.angle() : e.angleV2()) as Radian || undefined,
+    angle: (v >= '2' ? e.angle() : e.angleV2()) as Radian || undefined,
     isDeleted: e.isDeleted(),
     frameId: e.frameId(),
     link: e.link() || undefined,
@@ -296,7 +297,7 @@ export const parseElementFromBinary = (e: BinDucElement, v: number): Partial<Duc
 
   switch (elType) {
     case "text":
-      const fontSizeValue = v > 2 ? e.textFontSize() : e.textFontSizeV2() || undefined
+      const fontSizeValue = v >= '2' ? e.textFontSize() : e.textFontSizeV2() || undefined
       return {
         ...baseElement,
         type: elType,
@@ -307,7 +308,7 @@ export const parseElementFromBinary = (e: BinDucElement, v: number): Partial<Duc
         verticalAlign: e.textVerticalAlign() as VerticalAlign,
         containerId: e.textContainerId(),
         originalText: e.textText(),
-        lineHeight: v > 2 ? e.textLineHeight() : e.textLineHeightV2() || undefined,
+        lineHeight: v >= '2' ? e.textLineHeight() : e.textLineHeightV2() || undefined,
         autoResize: e.textAutoResize(),
       } as DucTextElement;
     case "arrow":
