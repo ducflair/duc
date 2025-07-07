@@ -1,5 +1,5 @@
-import { BinaryFiles as BinBinaryFiles, BinaryFilesEntry, BinaryFileData } from '@duc/canvas/duc/duc-ts/duc';
-import { BinaryFiles, BinaryFileData as AppBinaryFileData } from '@duc/canvas/types';
+import { BinaryFiles as BinBinaryFiles } from 'ducjs/duc';
+import { BinaryFiles, BinaryFileData as AppBinaryFileData } from 'ducjs/types';
 
 // Helper function to convert Uint8Array to DataURL
 export const uint8ArrayToDataURL = (uint8Array: Uint8Array, mimeType: string): string => {

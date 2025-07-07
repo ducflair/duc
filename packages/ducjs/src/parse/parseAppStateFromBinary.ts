@@ -1,18 +1,19 @@
-import { AppState as BinAppState } from '@duc/canvas/duc/duc-ts/duc';
-import { parseElementBinBackground, parseElementBinStroke, parsePoint } from '@duc/canvas/duc/duc-ts/src/parse/parseElementFromBinary';
-import { SupportedMeasures } from '@duc/canvas/duc/utils/measurements';
-import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from '@duc/canvas/duc/utils/scopes';
-import { DesignStandard } from '@duc/canvas/duc/utils/standards';
+import { AppState as BinAppState } from 'ducjs/duc';
+import { parseElementBinBackground, parseElementBinStroke, parsePoint } from 'ducjs/src/parse/parseElementFromBinary';
+import { SupportedMeasures } from 'ducjs/utils/measurements';
+import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/utils/scopes';
+import { DesignStandard } from 'ducjs/utils/standards';
 import {
   ElementSubset,
   LineHead,
   PointerType,
   TextAlign
-} from '@duc/canvas/element/types';
-import { LinearElementEditor } from '@duc/canvas/linearElement/linearElementEditor';
-import { AntiAliasing, AppState, NormalizedZoomValue, PrecisionValue, RawValue, Zoom } from '@duc/canvas/types';
+} from 'ducjs/types/elements';
+import { LinearElementEditor } from 'ducjs/utils/elements/linearElement';
+import { AntiAliasing, DucState, NormalizedZoomValue, PrecisionValue, RawValue, Zoom } from 'ducjs/types';
+import { HANDLE_TYPE } from 'ducjs/utils/constants';
 
-export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: number): Partial<AppState> => {
+export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: number): Partial<DucState> => {
   if (!appStateBin) return {};
 
   const forceNeutralScope = v <= 5;
@@ -22,6 +23,7 @@ export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: numb
 
   let readMainScope = appStateBin.mainScope() as SupportedMeasures | null;
   const mainScope = forceNeutralScope ? NEUTRAL_SCOPE : (readMainScope || NEUTRAL_SCOPE);
+
   
   // Parse LinearElementEditor 
   let editingLinearElement = null;
@@ -36,6 +38,7 @@ export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: numb
     let pointerDownState = undefined;
     if (editor.pointerDownState()) {
       const pds = editor.pointerDownState()!;
+      const handleType = pds.handleType();
       pointerDownState = {
         prevSelectedPointsIndices: Array.from({ length: pds.prevSelectedPointsIndicesLength() })
           .map((_, i) => pds.prevSelectedPointsIndices(i)),
@@ -55,7 +58,7 @@ export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: numb
           index: pds.segmentMidpoint()!.index(),
           added: pds.segmentMidpoint()!.added(),
         } : undefined,
-        handleType: pds.handleType() as LinearElementEditor["pointerDownState"]["handleType"],
+        handleType: HANDLE_TYPE.HANDLE_IN === handleType ? "handleIn" : "handleOut" as LinearElementEditor["pointerDownState"]["handleType"],
         handleInfo: null,
       };
     }
@@ -108,7 +111,6 @@ export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: numb
     zoom: {
       value: appStateBin.zoom() as NormalizedZoomValue,
     } as unknown as Zoom, // So that we don't have to parse the stateless values, this is handled on restore.ts
-    lastPointerDownWith: (appStateBin.lastPointerDownWith() as PointerType | null) ?? undefined,
     selectedElementIds: Object.fromEntries(
       Array.from({ length: appStateBin.selectedElementIdsLength() }, (_, i) => [
         appStateBin.selectedElementIds(i),
@@ -122,14 +124,12 @@ export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: numb
     ),
     gridSize: appStateBin.gridSize(),
     gridStep: appStateBin.gridStep(),
-    gridModeEnabled: appStateBin.gridModeEnabled(),
     scrollX: {
       value: appStateBin.scrollX(),
     } as unknown as PrecisionValue, // So that we don't have to parse the stateless values, this is handled on restore.ts
     scrollY: {
       value: appStateBin.scrollY(),
     } as unknown as PrecisionValue, // So that we don't have to parse the stateless values, this is handled on restore.ts
-    cursorButton: (appStateBin.cursorButton() as "up" | "down" | null) ?? undefined,
     scrolledOutside: appStateBin.scrolledOutside(),
     scope,
     mainScope,
@@ -142,14 +142,7 @@ export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: numb
     currentItemTextAlign: appStateBin.currentItemTextAlignV3() as TextAlign,
     currentItemStartLineHead: appStateBin.currentItemStartLineHead() as LineHead | null,
     currentItemEndLineHead: appStateBin.currentItemEndLineHead() as LineHead | null,
-    currentItemSubset: appStateBin.currentItemSubset() as ElementSubset | null,
     viewBackgroundColor: appStateBin.viewBackgroundColor() || undefined,
-    frameRendering: {
-      enabled: appStateBin.frameRenderingEnabled(),
-      name: appStateBin.frameRenderingName(),
-      outline: appStateBin.frameRenderingOutline(),
-      clip: appStateBin.frameRenderingClip(),
-    },
     scaleRatioLocked: appStateBin.scaleRatioLocked(),
     displayAllPointDistances: appStateBin.displayAllPointDistances(),
     displayDistanceOnDrawing: appStateBin.displayDistanceOnDrawing(),

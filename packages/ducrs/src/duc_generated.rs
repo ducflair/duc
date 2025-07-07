@@ -2745,6 +2745,120 @@ impl core::fmt::Debug for DucTableStyle<'_> {
       ds.finish()
   }
 }
+pub enum DucBlockInstanceElementOverrideOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucBlockInstanceElementOverride<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucBlockInstanceElementOverride<'a> {
+  type Inner = DucBlockInstanceElementOverride<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucBlockInstanceElementOverride<'a> {
+  pub const VT_ELEMENT_ID: flatbuffers::VOffsetT = 4;
+  pub const VT_OVERRIDES: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucBlockInstanceElementOverride { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucBlockInstanceElementOverrideArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucBlockInstanceElementOverride<'bldr>> {
+    let mut builder = DucBlockInstanceElementOverrideBuilder::new(_fbb);
+    if let Some(x) = args.overrides { builder.add_overrides(x); }
+    if let Some(x) = args.element_id { builder.add_element_id(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn element_id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlockInstanceElementOverride::VT_ELEMENT_ID, None)}
+  }
+  #[inline]
+  pub fn overrides(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlockInstanceElementOverride::VT_OVERRIDES, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucBlockInstanceElementOverride<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("element_id", Self::VT_ELEMENT_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("overrides", Self::VT_OVERRIDES, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucBlockInstanceElementOverrideArgs<'a> {
+    pub element_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub overrides: Option<flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for DucBlockInstanceElementOverrideArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucBlockInstanceElementOverrideArgs {
+      element_id: None,
+      overrides: None,
+    }
+  }
+}
+
+pub struct DucBlockInstanceElementOverrideBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucBlockInstanceElementOverrideBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_element_id(&mut self, element_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlockInstanceElementOverride::VT_ELEMENT_ID, element_id);
+  }
+  #[inline]
+  pub fn add_overrides(&mut self, overrides: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlockInstanceElementOverride::VT_OVERRIDES, overrides);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucBlockInstanceElementOverrideBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucBlockInstanceElementOverrideBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucBlockInstanceElementOverride<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucBlockInstanceElementOverride<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucBlockInstanceElementOverride");
+      ds.field("element_id", &self.element_id());
+      ds.field("overrides", &self.overrides());
+      ds.finish()
+  }
+}
 pub enum DucElementOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -2780,54 +2894,52 @@ impl<'a> DucElement<'a> {
   pub const VT_BOUND_ELEMENTS: flatbuffers::VOffsetT = 52;
   pub const VT_LINK: flatbuffers::VOffsetT = 54;
   pub const VT_LOCKED: flatbuffers::VOffsetT = 56;
-  pub const VT_FONT_SIZE_V2: flatbuffers::VOffsetT = 64;
-  pub const VT_FONT_FAMILY: flatbuffers::VOffsetT = 66;
-  pub const VT_TEXT: flatbuffers::VOffsetT = 68;
-  pub const VT_CONTAINER_ID: flatbuffers::VOffsetT = 74;
-  pub const VT_LINE_HEIGHT_V2: flatbuffers::VOffsetT = 78;
-  pub const VT_AUTO_RESIZE: flatbuffers::VOffsetT = 80;
-  pub const VT_POINTS: flatbuffers::VOffsetT = 82;
-  pub const VT_LAST_COMMITTED_POINT: flatbuffers::VOffsetT = 84;
-  pub const VT_START_BINDING: flatbuffers::VOffsetT = 86;
-  pub const VT_END_BINDING: flatbuffers::VOffsetT = 88;
-  pub const VT_ELBOWED: flatbuffers::VOffsetT = 94;
-  pub const VT_SIMULATE_PRESSURE: flatbuffers::VOffsetT = 98;
+  pub const VT_TEXT_FONT_SIZE_V2: flatbuffers::VOffsetT = 64;
+  pub const VT_TEXT_FONT_FAMILY: flatbuffers::VOffsetT = 66;
+  pub const VT_TEXT_TEXT: flatbuffers::VOffsetT = 68;
+  pub const VT_TEXT_CONTAINER_ID: flatbuffers::VOffsetT = 74;
+  pub const VT_TEXT_LINE_HEIGHT_V2: flatbuffers::VOffsetT = 78;
+  pub const VT_TEXT_AUTO_RESIZE: flatbuffers::VOffsetT = 80;
+  pub const VT_LINEAR_ELEMENT_POINTS: flatbuffers::VOffsetT = 82;
+  pub const VT_LINEAR_ELEMENT_LAST_COMMITTED_POINT: flatbuffers::VOffsetT = 84;
+  pub const VT_LINEAR_ELEMENT_START_BINDING: flatbuffers::VOffsetT = 86;
+  pub const VT_LINEAR_ELEMENT_END_BINDING: flatbuffers::VOffsetT = 88;
+  pub const VT_ARROW_ELBOWED: flatbuffers::VOffsetT = 94;
+  pub const VT_FREE_DRAW_SIMULATE_PRESSURE: flatbuffers::VOffsetT = 98;
   pub const VT_FILE_ID: flatbuffers::VOffsetT = 100;
-  pub const VT_STATUS: flatbuffers::VOffsetT = 102;
-  pub const VT_IS_COLLAPSED: flatbuffers::VOffsetT = 106;
-  pub const VT_NAME: flatbuffers::VOffsetT = 108;
-  pub const VT_GROUP_ID_REF: flatbuffers::VOffsetT = 110;
+  pub const VT_IMAGE_STATUS: flatbuffers::VOffsetT = 102;
+  pub const VT_STACK_LIKE_IS_COLLAPSED: flatbuffers::VOffsetT = 106;
   pub const VT_STROKE_STYLE_V3: flatbuffers::VOffsetT = 112;
   pub const VT_FILL_STYLE_V3: flatbuffers::VOffsetT = 114;
-  pub const VT_TEXT_ALIGN_V3: flatbuffers::VOffsetT = 116;
-  pub const VT_VERTICAL_ALIGN_V3: flatbuffers::VOffsetT = 118;
-  pub const VT_X_V3: flatbuffers::VOffsetT = 120;
-  pub const VT_Y_V3: flatbuffers::VOffsetT = 122;
-  pub const VT_SCALE_V3: flatbuffers::VOffsetT = 124;
-  pub const VT_PRESSURES_V3: flatbuffers::VOffsetT = 126;
+  pub const VT_TEXT_TEXT_ALIGN: flatbuffers::VOffsetT = 116;
+  pub const VT_TEXT_VERTICAL_ALIGN: flatbuffers::VOffsetT = 118;
+  pub const VT_X: flatbuffers::VOffsetT = 120;
+  pub const VT_Y: flatbuffers::VOffsetT = 122;
+  pub const VT_IMAGE_SCALE: flatbuffers::VOffsetT = 124;
+  pub const VT_FREE_DRAW_PRESSURES: flatbuffers::VOffsetT = 126;
   pub const VT_STROKE_WIDTH_V3: flatbuffers::VOffsetT = 128;
-  pub const VT_ANGLE_V3: flatbuffers::VOffsetT = 130;
+  pub const VT_ANGLE: flatbuffers::VOffsetT = 130;
   pub const VT_ROUNDNESS: flatbuffers::VOffsetT = 132;
-  pub const VT_WIDTH_V3: flatbuffers::VOffsetT = 134;
-  pub const VT_HEIGHT_V3: flatbuffers::VOffsetT = 136;
-  pub const VT_FONT_SIZE_V3: flatbuffers::VOffsetT = 138;
-  pub const VT_LINE_HEIGHT_V3: flatbuffers::VOffsetT = 140;
+  pub const VT_WIDTH: flatbuffers::VOffsetT = 134;
+  pub const VT_HEIGHT: flatbuffers::VOffsetT = 136;
+  pub const VT_TEXT_FONT_SIZE: flatbuffers::VOffsetT = 138;
+  pub const VT_TEXT_LINE_HEIGHT: flatbuffers::VOffsetT = 140;
   pub const VT_BLENDING: flatbuffers::VOffsetT = 142;
   pub const VT_BACKGROUND: flatbuffers::VOffsetT = 144;
   pub const VT_STROKE: flatbuffers::VOffsetT = 146;
-  pub const VT_CROP: flatbuffers::VOffsetT = 148;
-  pub const VT_CLIP: flatbuffers::VOffsetT = 150;
+  pub const VT_IMAGE_CROP: flatbuffers::VOffsetT = 148;
+  pub const VT_STACK_LIKE_CLIP: flatbuffers::VOffsetT = 150;
   pub const VT_SUBSET: flatbuffers::VOffsetT = 152;
   pub const VT_Z_INDEX: flatbuffers::VOffsetT = 154;
   pub const VT_POLYGON_SIDES: flatbuffers::VOffsetT = 156;
-  pub const VT_COLUMN_ORDER: flatbuffers::VOffsetT = 158;
-  pub const VT_ROW_ORDER: flatbuffers::VOffsetT = 160;
-  pub const VT_COLUMNS: flatbuffers::VOffsetT = 162;
-  pub const VT_ROWS: flatbuffers::VOffsetT = 164;
-  pub const VT_CELLS: flatbuffers::VOffsetT = 166;
+  pub const VT_TABLE_COLUMN_ORDER: flatbuffers::VOffsetT = 158;
+  pub const VT_TABLE_ROW_ORDER: flatbuffers::VOffsetT = 160;
+  pub const VT_TABLE_COLUMNS: flatbuffers::VOffsetT = 162;
+  pub const VT_TABLE_ROWS: flatbuffers::VOffsetT = 164;
+  pub const VT_TABLE_CELLS: flatbuffers::VOffsetT = 166;
   pub const VT_TABLE_STYLE: flatbuffers::VOffsetT = 168;
   pub const VT_DOC_CONTENT: flatbuffers::VOffsetT = 170;
-  pub const VT_LINES: flatbuffers::VOffsetT = 172;
+  pub const VT_LINEAR_ELEMENT_LINES: flatbuffers::VOffsetT = 172;
   pub const VT_ELLIPSE_RATIO: flatbuffers::VOffsetT = 174;
   pub const VT_ELLIPSE_START_ANGLE: flatbuffers::VOffsetT = 176;
   pub const VT_ELLIPSE_END_ANGLE: flatbuffers::VOffsetT = 178;
@@ -2845,6 +2957,13 @@ impl<'a> DucElement<'a> {
   pub const VT_FREE_DRAW_SVG_PATH: flatbuffers::VOffsetT = 202;
   pub const VT_FREE_DRAW_SIZE: flatbuffers::VOffsetT = 204;
   pub const VT_LINEAR_ELEMENT_PATH_OVERRIDES: flatbuffers::VOffsetT = 206;
+  pub const VT_DESCRIPTION: flatbuffers::VOffsetT = 208;
+  pub const VT_NO_PLOT: flatbuffers::VOffsetT = 210;
+  pub const VT_STACK_LIKE_LABELING_COLOR: flatbuffers::VOffsetT = 212;
+  pub const VT_STACK_LIKE_STROKE_OVERRIDE: flatbuffers::VOffsetT = 214;
+  pub const VT_STACK_LIKE_BACKGROUND_OVERRIDE: flatbuffers::VOffsetT = 216;
+  pub const VT_BLOCK_INSTANCE_BLOCK_ID: flatbuffers::VOffsetT = 218;
+  pub const VT_BLOCK_INSTANCE_ELEMENT_OVERRIDES: flatbuffers::VOffsetT = 220;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -2865,48 +2984,52 @@ impl<'a> DucElement<'a> {
     if let Some(x) = args.ellipse_end_angle { builder.add_ellipse_end_angle(x); }
     if let Some(x) = args.ellipse_start_angle { builder.add_ellipse_start_angle(x); }
     if let Some(x) = args.ellipse_ratio { builder.add_ellipse_ratio(x); }
-    if let Some(x) = args.line_height_v3 { builder.add_line_height_v3(x); }
-    if let Some(x) = args.font_size_v3 { builder.add_font_size_v3(x); }
-    builder.add_height_v3(args.height_v3);
-    builder.add_width_v3(args.width_v3);
+    if let Some(x) = args.text_line_height { builder.add_text_line_height(x); }
+    if let Some(x) = args.text_font_size { builder.add_text_font_size(x); }
+    builder.add_height(args.height);
+    builder.add_width(args.width);
     builder.add_roundness(args.roundness);
-    builder.add_angle_v3(args.angle_v3);
+    builder.add_angle(args.angle);
     builder.add_stroke_width_v3(args.stroke_width_v3);
-    builder.add_y_v3(args.y_v3);
-    builder.add_x_v3(args.x_v3);
+    builder.add_y(args.y);
+    builder.add_x(args.x);
+    if let Some(x) = args.block_instance_element_overrides { builder.add_block_instance_element_overrides(x); }
+    if let Some(x) = args.block_instance_block_id { builder.add_block_instance_block_id(x); }
+    if let Some(x) = args.stack_like_background_override { builder.add_stack_like_background_override(x); }
+    if let Some(x) = args.stack_like_stroke_override { builder.add_stack_like_stroke_override(x); }
+    if let Some(x) = args.stack_like_labeling_color { builder.add_stack_like_labeling_color(x); }
+    if let Some(x) = args.description { builder.add_description(x); }
     if let Some(x) = args.linear_element_path_overrides { builder.add_linear_element_path_overrides(x); }
     if let Some(x) = args.free_draw_svg_path { builder.add_free_draw_svg_path(x); }
     if let Some(x) = args.free_draw_end_easing { builder.add_free_draw_end_easing(x); }
     if let Some(x) = args.free_draw_start_easing { builder.add_free_draw_start_easing(x); }
     if let Some(x) = args.free_draw_easing { builder.add_free_draw_easing(x); }
-    if let Some(x) = args.lines { builder.add_lines(x); }
+    if let Some(x) = args.linear_element_lines { builder.add_linear_element_lines(x); }
     if let Some(x) = args.doc_content { builder.add_doc_content(x); }
     if let Some(x) = args.table_style { builder.add_table_style(x); }
-    if let Some(x) = args.cells { builder.add_cells(x); }
-    if let Some(x) = args.rows { builder.add_rows(x); }
-    if let Some(x) = args.columns { builder.add_columns(x); }
-    if let Some(x) = args.row_order { builder.add_row_order(x); }
-    if let Some(x) = args.column_order { builder.add_column_order(x); }
+    if let Some(x) = args.table_cells { builder.add_table_cells(x); }
+    if let Some(x) = args.table_rows { builder.add_table_rows(x); }
+    if let Some(x) = args.table_columns { builder.add_table_columns(x); }
+    if let Some(x) = args.table_row_order { builder.add_table_row_order(x); }
+    if let Some(x) = args.table_column_order { builder.add_table_column_order(x); }
     if let Some(x) = args.polygon_sides { builder.add_polygon_sides(x); }
     builder.add_z_index(args.z_index);
-    if let Some(x) = args.crop { builder.add_crop(x); }
+    if let Some(x) = args.image_crop { builder.add_image_crop(x); }
     if let Some(x) = args.stroke { builder.add_stroke(x); }
     if let Some(x) = args.background { builder.add_background(x); }
-    if let Some(x) = args.pressures_v3 { builder.add_pressures_v3(x); }
-    if let Some(x) = args.scale_v3 { builder.add_scale_v3(x); }
-    if let Some(x) = args.group_id_ref { builder.add_group_id_ref(x); }
-    if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.status { builder.add_status(x); }
+    if let Some(x) = args.free_draw_pressures { builder.add_free_draw_pressures(x); }
+    if let Some(x) = args.image_scale { builder.add_image_scale(x); }
+    if let Some(x) = args.image_status { builder.add_image_status(x); }
     if let Some(x) = args.file_id { builder.add_file_id(x); }
-    if let Some(x) = args.end_binding { builder.add_end_binding(x); }
-    if let Some(x) = args.start_binding { builder.add_start_binding(x); }
-    if let Some(x) = args.last_committed_point { builder.add_last_committed_point(x); }
-    if let Some(x) = args.points { builder.add_points(x); }
-    if let Some(x) = args.line_height_v2 { builder.add_line_height_v2(x); }
-    if let Some(x) = args.container_id { builder.add_container_id(x); }
-    if let Some(x) = args.text { builder.add_text(x); }
-    if let Some(x) = args.font_family { builder.add_font_family(x); }
-    if let Some(x) = args.font_size_v2 { builder.add_font_size_v2(x); }
+    if let Some(x) = args.linear_element_end_binding { builder.add_linear_element_end_binding(x); }
+    if let Some(x) = args.linear_element_start_binding { builder.add_linear_element_start_binding(x); }
+    if let Some(x) = args.linear_element_last_committed_point { builder.add_linear_element_last_committed_point(x); }
+    if let Some(x) = args.linear_element_points { builder.add_linear_element_points(x); }
+    if let Some(x) = args.text_line_height_v2 { builder.add_text_line_height_v2(x); }
+    if let Some(x) = args.text_container_id { builder.add_text_container_id(x); }
+    if let Some(x) = args.text_text { builder.add_text_text(x); }
+    if let Some(x) = args.text_font_family { builder.add_text_font_family(x); }
+    if let Some(x) = args.text_font_size_v2 { builder.add_text_font_size_v2(x); }
     if let Some(x) = args.link { builder.add_link(x); }
     if let Some(x) = args.bound_elements { builder.add_bound_elements(x); }
     if let Some(x) = args.frame_id { builder.add_frame_id(x); }
@@ -2923,20 +3046,21 @@ impl<'a> DucElement<'a> {
     if let Some(x) = args.x_v2 { builder.add_x_v2(x); }
     if let Some(x) = args.type_ { builder.add_type_(x); }
     if let Some(x) = args.id { builder.add_id(x); }
+    if let Some(x) = args.no_plot { builder.add_no_plot(x); }
     if let Some(x) = args.free_draw_end_cap { builder.add_free_draw_end_cap(x); }
     if let Some(x) = args.free_draw_start_cap { builder.add_free_draw_start_cap(x); }
     if let Some(x) = args.ellipse_show_aux_crosshair { builder.add_ellipse_show_aux_crosshair(x); }
     if let Some(x) = args.subset { builder.add_subset(x); }
-    if let Some(x) = args.clip { builder.add_clip(x); }
+    if let Some(x) = args.stack_like_clip { builder.add_stack_like_clip(x); }
     if let Some(x) = args.blending { builder.add_blending(x); }
-    builder.add_vertical_align_v3(args.vertical_align_v3);
-    if let Some(x) = args.text_align_v3 { builder.add_text_align_v3(x); }
+    builder.add_text_vertical_align(args.text_vertical_align);
+    if let Some(x) = args.text_text_align { builder.add_text_text_align(x); }
     builder.add_fill_style_v3(args.fill_style_v3);
     builder.add_stroke_style_v3(args.stroke_style_v3);
-    if let Some(x) = args.is_collapsed { builder.add_is_collapsed(x); }
-    if let Some(x) = args.simulate_pressure { builder.add_simulate_pressure(x); }
-    if let Some(x) = args.elbowed { builder.add_elbowed(x); }
-    if let Some(x) = args.auto_resize { builder.add_auto_resize(x); }
+    if let Some(x) = args.stack_like_is_collapsed { builder.add_stack_like_is_collapsed(x); }
+    if let Some(x) = args.free_draw_simulate_pressure { builder.add_free_draw_simulate_pressure(x); }
+    if let Some(x) = args.arrow_elbowed { builder.add_arrow_elbowed(x); }
+    if let Some(x) = args.text_auto_resize { builder.add_text_auto_resize(x); }
     builder.add_locked(args.locked);
     builder.add_is_deleted(args.is_deleted);
     builder.add_is_visible(args.is_visible);
@@ -3078,88 +3202,88 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<bool>(DucElement::VT_LOCKED, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn font_size_v2(&self) -> Option<i32> {
+  pub fn text_font_size_v2(&self) -> Option<i32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(DucElement::VT_FONT_SIZE_V2, None)}
+    unsafe { self._tab.get::<i32>(DucElement::VT_TEXT_FONT_SIZE_V2, None)}
   }
   #[inline]
-  pub fn font_family(&self) -> Option<&'a str> {
+  pub fn text_font_family(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_FONT_FAMILY, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_TEXT_FONT_FAMILY, None)}
   }
   #[inline]
-  pub fn text(&self) -> Option<&'a str> {
+  pub fn text_text(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_TEXT, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_TEXT_TEXT, None)}
   }
   #[inline]
-  pub fn container_id(&self) -> Option<&'a str> {
+  pub fn text_container_id(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_CONTAINER_ID, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_TEXT_CONTAINER_ID, None)}
   }
   #[inline]
-  pub fn line_height_v2(&self) -> Option<f32> {
+  pub fn text_line_height_v2(&self) -> Option<f32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(DucElement::VT_LINE_HEIGHT_V2, None)}
+    unsafe { self._tab.get::<f32>(DucElement::VT_TEXT_LINE_HEIGHT_V2, None)}
   }
   #[inline]
-  pub fn auto_resize(&self) -> Option<bool> {
+  pub fn text_auto_resize(&self) -> Option<bool> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(DucElement::VT_AUTO_RESIZE, None)}
+    unsafe { self._tab.get::<bool>(DucElement::VT_TEXT_AUTO_RESIZE, None)}
   }
   #[inline]
-  pub fn points(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Point<'a>>>> {
+  pub fn linear_element_points(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Point<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Point>>>>(DucElement::VT_POINTS, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Point>>>>(DucElement::VT_LINEAR_ELEMENT_POINTS, None)}
   }
   #[inline]
-  pub fn last_committed_point(&self) -> Option<Point<'a>> {
+  pub fn linear_element_last_committed_point(&self) -> Option<Point<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Point>>(DucElement::VT_LAST_COMMITTED_POINT, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Point>>(DucElement::VT_LINEAR_ELEMENT_LAST_COMMITTED_POINT, None)}
   }
   #[inline]
-  pub fn start_binding(&self) -> Option<PointBinding<'a>> {
+  pub fn linear_element_start_binding(&self) -> Option<PointBinding<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<PointBinding>>(DucElement::VT_START_BINDING, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<PointBinding>>(DucElement::VT_LINEAR_ELEMENT_START_BINDING, None)}
   }
   #[inline]
-  pub fn end_binding(&self) -> Option<PointBinding<'a>> {
+  pub fn linear_element_end_binding(&self) -> Option<PointBinding<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<PointBinding>>(DucElement::VT_END_BINDING, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<PointBinding>>(DucElement::VT_LINEAR_ELEMENT_END_BINDING, None)}
   }
   #[inline]
-  pub fn elbowed(&self) -> Option<bool> {
+  pub fn arrow_elbowed(&self) -> Option<bool> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(DucElement::VT_ELBOWED, None)}
+    unsafe { self._tab.get::<bool>(DucElement::VT_ARROW_ELBOWED, None)}
   }
   #[inline]
-  pub fn simulate_pressure(&self) -> Option<bool> {
+  pub fn free_draw_simulate_pressure(&self) -> Option<bool> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(DucElement::VT_SIMULATE_PRESSURE, None)}
+    unsafe { self._tab.get::<bool>(DucElement::VT_FREE_DRAW_SIMULATE_PRESSURE, None)}
   }
   #[inline]
   pub fn file_id(&self) -> Option<&'a str> {
@@ -3169,32 +3293,18 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_FILE_ID, None)}
   }
   #[inline]
-  pub fn status(&self) -> Option<&'a str> {
+  pub fn image_status(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_STATUS, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_IMAGE_STATUS, None)}
   }
   #[inline]
-  pub fn is_collapsed(&self) -> Option<bool> {
+  pub fn stack_like_is_collapsed(&self) -> Option<bool> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(DucElement::VT_IS_COLLAPSED, None)}
-  }
-  #[inline]
-  pub fn name(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_NAME, None)}
-  }
-  #[inline]
-  pub fn group_id_ref(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_GROUP_ID_REF, None)}
+    unsafe { self._tab.get::<bool>(DucElement::VT_STACK_LIKE_IS_COLLAPSED, None)}
   }
   #[inline]
   pub fn stroke_style_v3(&self) -> i8 {
@@ -3211,46 +3321,46 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<i8>(DucElement::VT_FILL_STYLE_V3, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn text_align_v3(&self) -> Option<i8> {
+  pub fn text_text_align(&self) -> Option<i8> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i8>(DucElement::VT_TEXT_ALIGN_V3, None)}
+    unsafe { self._tab.get::<i8>(DucElement::VT_TEXT_TEXT_ALIGN, None)}
   }
   #[inline]
-  pub fn vertical_align_v3(&self) -> i8 {
+  pub fn text_vertical_align(&self) -> i8 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i8>(DucElement::VT_VERTICAL_ALIGN_V3, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i8>(DucElement::VT_TEXT_VERTICAL_ALIGN, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn x_v3(&self) -> f64 {
+  pub fn x(&self) -> f64 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f64>(DucElement::VT_X_V3, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f64>(DucElement::VT_X, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn y_v3(&self) -> f64 {
+  pub fn y(&self) -> f64 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f64>(DucElement::VT_Y_V3, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f64>(DucElement::VT_Y, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn scale_v3(&self) -> Option<SimplePoint<'a>> {
+  pub fn image_scale(&self) -> Option<SimplePoint<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<SimplePoint>>(DucElement::VT_SCALE_V3, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<SimplePoint>>(DucElement::VT_IMAGE_SCALE, None)}
   }
   #[inline]
-  pub fn pressures_v3(&self) -> Option<flatbuffers::Vector<'a, f64>> {
+  pub fn free_draw_pressures(&self) -> Option<flatbuffers::Vector<'a, f64>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(DucElement::VT_PRESSURES_V3, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f64>>>(DucElement::VT_FREE_DRAW_PRESSURES, None)}
   }
   #[inline]
   pub fn stroke_width_v3(&self) -> f64 {
@@ -3260,11 +3370,11 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<f64>(DucElement::VT_STROKE_WIDTH_V3, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn angle_v3(&self) -> f64 {
+  pub fn angle(&self) -> f64 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f64>(DucElement::VT_ANGLE_V3, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f64>(DucElement::VT_ANGLE, Some(0.0)).unwrap()}
   }
   #[inline]
   pub fn roundness(&self) -> f64 {
@@ -3274,32 +3384,32 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<f64>(DucElement::VT_ROUNDNESS, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn width_v3(&self) -> f64 {
+  pub fn width(&self) -> f64 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f64>(DucElement::VT_WIDTH_V3, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f64>(DucElement::VT_WIDTH, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn height_v3(&self) -> f64 {
+  pub fn height(&self) -> f64 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f64>(DucElement::VT_HEIGHT_V3, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f64>(DucElement::VT_HEIGHT, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn font_size_v3(&self) -> Option<f64> {
+  pub fn text_font_size(&self) -> Option<f64> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f64>(DucElement::VT_FONT_SIZE_V3, None)}
+    unsafe { self._tab.get::<f64>(DucElement::VT_TEXT_FONT_SIZE, None)}
   }
   #[inline]
-  pub fn line_height_v3(&self) -> Option<f64> {
+  pub fn text_line_height(&self) -> Option<f64> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f64>(DucElement::VT_LINE_HEIGHT_V3, None)}
+    unsafe { self._tab.get::<f64>(DucElement::VT_TEXT_LINE_HEIGHT, None)}
   }
   #[inline]
   pub fn blending(&self) -> Option<i8> {
@@ -3323,18 +3433,18 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ElementStroke>>>>(DucElement::VT_STROKE, None)}
   }
   #[inline]
-  pub fn crop(&self) -> Option<ImageCrop<'a>> {
+  pub fn image_crop(&self) -> Option<ImageCrop<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<ImageCrop>>(DucElement::VT_CROP, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<ImageCrop>>(DucElement::VT_IMAGE_CROP, None)}
   }
   #[inline]
-  pub fn clip(&self) -> Option<bool> {
+  pub fn stack_like_clip(&self) -> Option<bool> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(DucElement::VT_CLIP, None)}
+    unsafe { self._tab.get::<bool>(DucElement::VT_STACK_LIKE_CLIP, None)}
   }
   #[inline]
   pub fn subset(&self) -> Option<i8> {
@@ -3358,39 +3468,39 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<i32>(DucElement::VT_POLYGON_SIDES, None)}
   }
   #[inline]
-  pub fn column_order(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
+  pub fn table_column_order(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(DucElement::VT_COLUMN_ORDER, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(DucElement::VT_TABLE_COLUMN_ORDER, None)}
   }
   #[inline]
-  pub fn row_order(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
+  pub fn table_row_order(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(DucElement::VT_ROW_ORDER, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(DucElement::VT_TABLE_ROW_ORDER, None)}
   }
   #[inline]
-  pub fn columns(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableColumn<'a>>>> {
+  pub fn table_columns(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableColumn<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableColumn>>>>(DucElement::VT_COLUMNS, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableColumn>>>>(DucElement::VT_TABLE_COLUMNS, None)}
   }
   #[inline]
-  pub fn rows(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableRow<'a>>>> {
+  pub fn table_rows(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableRow<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableRow>>>>(DucElement::VT_ROWS, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableRow>>>>(DucElement::VT_TABLE_ROWS, None)}
   }
   #[inline]
-  pub fn cells(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableCell<'a>>>> {
+  pub fn table_cells(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableCell<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableCell>>>>(DucElement::VT_CELLS, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableCell>>>>(DucElement::VT_TABLE_CELLS, None)}
   }
   #[inline]
   pub fn table_style(&self) -> Option<DucTableStyle<'a>> {
@@ -3407,11 +3517,11 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_DOC_CONTENT, None)}
   }
   #[inline]
-  pub fn lines(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucLine<'a>>>> {
+  pub fn linear_element_lines(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucLine<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucLine>>>>(DucElement::VT_LINES, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucLine>>>>(DucElement::VT_LINEAR_ELEMENT_LINES, None)}
   }
   #[inline]
   pub fn ellipse_ratio(&self) -> Option<f64> {
@@ -3532,6 +3642,55 @@ impl<'a> DucElement<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucPath>>>>(DucElement::VT_LINEAR_ELEMENT_PATH_OVERRIDES, None)}
   }
+  #[inline]
+  pub fn description(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_DESCRIPTION, None)}
+  }
+  #[inline]
+  pub fn no_plot(&self) -> Option<bool> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(DucElement::VT_NO_PLOT, None)}
+  }
+  #[inline]
+  pub fn stack_like_labeling_color(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_STACK_LIKE_LABELING_COLOR, None)}
+  }
+  #[inline]
+  pub fn stack_like_stroke_override(&self) -> Option<ElementStroke<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<ElementStroke>>(DucElement::VT_STACK_LIKE_STROKE_OVERRIDE, None)}
+  }
+  #[inline]
+  pub fn stack_like_background_override(&self) -> Option<ElementBackground<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<ElementBackground>>(DucElement::VT_STACK_LIKE_BACKGROUND_OVERRIDE, None)}
+  }
+  #[inline]
+  pub fn block_instance_block_id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_BLOCK_INSTANCE_BLOCK_ID, None)}
+  }
+  #[inline]
+  pub fn block_instance_element_overrides(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlockInstanceElementOverride<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlockInstanceElementOverride>>>>(DucElement::VT_BLOCK_INSTANCE_ELEMENT_OVERRIDES, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for DucElement<'_> {
@@ -3560,54 +3719,52 @@ impl flatbuffers::Verifiable for DucElement<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<BoundElement>>>>("bound_elements", Self::VT_BOUND_ELEMENTS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("link", Self::VT_LINK, false)?
      .visit_field::<bool>("locked", Self::VT_LOCKED, false)?
-     .visit_field::<i32>("font_size_v2", Self::VT_FONT_SIZE_V2, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("font_family", Self::VT_FONT_FAMILY, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text", Self::VT_TEXT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("container_id", Self::VT_CONTAINER_ID, false)?
-     .visit_field::<f32>("line_height_v2", Self::VT_LINE_HEIGHT_V2, false)?
-     .visit_field::<bool>("auto_resize", Self::VT_AUTO_RESIZE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Point>>>>("points", Self::VT_POINTS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<Point>>("last_committed_point", Self::VT_LAST_COMMITTED_POINT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<PointBinding>>("start_binding", Self::VT_START_BINDING, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<PointBinding>>("end_binding", Self::VT_END_BINDING, false)?
-     .visit_field::<bool>("elbowed", Self::VT_ELBOWED, false)?
-     .visit_field::<bool>("simulate_pressure", Self::VT_SIMULATE_PRESSURE, false)?
+     .visit_field::<i32>("text_font_size_v2", Self::VT_TEXT_FONT_SIZE_V2, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text_font_family", Self::VT_TEXT_FONT_FAMILY, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text_text", Self::VT_TEXT_TEXT, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text_container_id", Self::VT_TEXT_CONTAINER_ID, false)?
+     .visit_field::<f32>("text_line_height_v2", Self::VT_TEXT_LINE_HEIGHT_V2, false)?
+     .visit_field::<bool>("text_auto_resize", Self::VT_TEXT_AUTO_RESIZE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Point>>>>("linear_element_points", Self::VT_LINEAR_ELEMENT_POINTS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<Point>>("linear_element_last_committed_point", Self::VT_LINEAR_ELEMENT_LAST_COMMITTED_POINT, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<PointBinding>>("linear_element_start_binding", Self::VT_LINEAR_ELEMENT_START_BINDING, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<PointBinding>>("linear_element_end_binding", Self::VT_LINEAR_ELEMENT_END_BINDING, false)?
+     .visit_field::<bool>("arrow_elbowed", Self::VT_ARROW_ELBOWED, false)?
+     .visit_field::<bool>("free_draw_simulate_pressure", Self::VT_FREE_DRAW_SIMULATE_PRESSURE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("file_id", Self::VT_FILE_ID, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("status", Self::VT_STATUS, false)?
-     .visit_field::<bool>("is_collapsed", Self::VT_IS_COLLAPSED, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("group_id_ref", Self::VT_GROUP_ID_REF, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("image_status", Self::VT_IMAGE_STATUS, false)?
+     .visit_field::<bool>("stack_like_is_collapsed", Self::VT_STACK_LIKE_IS_COLLAPSED, false)?
      .visit_field::<i8>("stroke_style_v3", Self::VT_STROKE_STYLE_V3, false)?
      .visit_field::<i8>("fill_style_v3", Self::VT_FILL_STYLE_V3, false)?
-     .visit_field::<i8>("text_align_v3", Self::VT_TEXT_ALIGN_V3, false)?
-     .visit_field::<i8>("vertical_align_v3", Self::VT_VERTICAL_ALIGN_V3, false)?
-     .visit_field::<f64>("x_v3", Self::VT_X_V3, false)?
-     .visit_field::<f64>("y_v3", Self::VT_Y_V3, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<SimplePoint>>("scale_v3", Self::VT_SCALE_V3, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("pressures_v3", Self::VT_PRESSURES_V3, false)?
+     .visit_field::<i8>("text_text_align", Self::VT_TEXT_TEXT_ALIGN, false)?
+     .visit_field::<i8>("text_vertical_align", Self::VT_TEXT_VERTICAL_ALIGN, false)?
+     .visit_field::<f64>("x", Self::VT_X, false)?
+     .visit_field::<f64>("y", Self::VT_Y, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<SimplePoint>>("image_scale", Self::VT_IMAGE_SCALE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("free_draw_pressures", Self::VT_FREE_DRAW_PRESSURES, false)?
      .visit_field::<f64>("stroke_width_v3", Self::VT_STROKE_WIDTH_V3, false)?
-     .visit_field::<f64>("angle_v3", Self::VT_ANGLE_V3, false)?
+     .visit_field::<f64>("angle", Self::VT_ANGLE, false)?
      .visit_field::<f64>("roundness", Self::VT_ROUNDNESS, false)?
-     .visit_field::<f64>("width_v3", Self::VT_WIDTH_V3, false)?
-     .visit_field::<f64>("height_v3", Self::VT_HEIGHT_V3, false)?
-     .visit_field::<f64>("font_size_v3", Self::VT_FONT_SIZE_V3, false)?
-     .visit_field::<f64>("line_height_v3", Self::VT_LINE_HEIGHT_V3, false)?
+     .visit_field::<f64>("width", Self::VT_WIDTH, false)?
+     .visit_field::<f64>("height", Self::VT_HEIGHT, false)?
+     .visit_field::<f64>("text_font_size", Self::VT_TEXT_FONT_SIZE, false)?
+     .visit_field::<f64>("text_line_height", Self::VT_TEXT_LINE_HEIGHT, false)?
      .visit_field::<i8>("blending", Self::VT_BLENDING, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ElementBackground>>>>("background", Self::VT_BACKGROUND, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ElementStroke>>>>("stroke", Self::VT_STROKE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<ImageCrop>>("crop", Self::VT_CROP, false)?
-     .visit_field::<bool>("clip", Self::VT_CLIP, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<ImageCrop>>("image_crop", Self::VT_IMAGE_CROP, false)?
+     .visit_field::<bool>("stack_like_clip", Self::VT_STACK_LIKE_CLIP, false)?
      .visit_field::<i8>("subset", Self::VT_SUBSET, false)?
      .visit_field::<i32>("z_index", Self::VT_Z_INDEX, false)?
      .visit_field::<i32>("polygon_sides", Self::VT_POLYGON_SIDES, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("column_order", Self::VT_COLUMN_ORDER, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("row_order", Self::VT_ROW_ORDER, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucTableColumn>>>>("columns", Self::VT_COLUMNS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucTableRow>>>>("rows", Self::VT_ROWS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucTableCell>>>>("cells", Self::VT_CELLS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("table_column_order", Self::VT_TABLE_COLUMN_ORDER, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("table_row_order", Self::VT_TABLE_ROW_ORDER, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucTableColumn>>>>("table_columns", Self::VT_TABLE_COLUMNS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucTableRow>>>>("table_rows", Self::VT_TABLE_ROWS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucTableCell>>>>("table_cells", Self::VT_TABLE_CELLS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucTableStyle>>("table_style", Self::VT_TABLE_STYLE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("doc_content", Self::VT_DOC_CONTENT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucLine>>>>("lines", Self::VT_LINES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucLine>>>>("linear_element_lines", Self::VT_LINEAR_ELEMENT_LINES, false)?
      .visit_field::<f64>("ellipse_ratio", Self::VT_ELLIPSE_RATIO, false)?
      .visit_field::<f64>("ellipse_start_angle", Self::VT_ELLIPSE_START_ANGLE, false)?
      .visit_field::<f64>("ellipse_end_angle", Self::VT_ELLIPSE_END_ANGLE, false)?
@@ -3625,6 +3782,13 @@ impl flatbuffers::Verifiable for DucElement<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("free_draw_svg_path", Self::VT_FREE_DRAW_SVG_PATH, false)?
      .visit_field::<f64>("free_draw_size", Self::VT_FREE_DRAW_SIZE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucPath>>>>("linear_element_path_overrides", Self::VT_LINEAR_ELEMENT_PATH_OVERRIDES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("description", Self::VT_DESCRIPTION, false)?
+     .visit_field::<bool>("no_plot", Self::VT_NO_PLOT, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("stack_like_labeling_color", Self::VT_STACK_LIKE_LABELING_COLOR, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<ElementStroke>>("stack_like_stroke_override", Self::VT_STACK_LIKE_STROKE_OVERRIDE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<ElementBackground>>("stack_like_background_override", Self::VT_STACK_LIKE_BACKGROUND_OVERRIDE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("block_instance_block_id", Self::VT_BLOCK_INSTANCE_BLOCK_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucBlockInstanceElementOverride>>>>("block_instance_element_overrides", Self::VT_BLOCK_INSTANCE_ELEMENT_OVERRIDES, false)?
      .finish();
     Ok(())
   }
@@ -3649,54 +3813,52 @@ pub struct DucElementArgs<'a> {
     pub bound_elements: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<BoundElement<'a>>>>>,
     pub link: Option<flatbuffers::WIPOffset<&'a str>>,
     pub locked: bool,
-    pub font_size_v2: Option<i32>,
-    pub font_family: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub text: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub container_id: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub line_height_v2: Option<f32>,
-    pub auto_resize: Option<bool>,
-    pub points: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Point<'a>>>>>,
-    pub last_committed_point: Option<flatbuffers::WIPOffset<Point<'a>>>,
-    pub start_binding: Option<flatbuffers::WIPOffset<PointBinding<'a>>>,
-    pub end_binding: Option<flatbuffers::WIPOffset<PointBinding<'a>>>,
-    pub elbowed: Option<bool>,
-    pub simulate_pressure: Option<bool>,
+    pub text_font_size_v2: Option<i32>,
+    pub text_font_family: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub text_text: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub text_container_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub text_line_height_v2: Option<f32>,
+    pub text_auto_resize: Option<bool>,
+    pub linear_element_points: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Point<'a>>>>>,
+    pub linear_element_last_committed_point: Option<flatbuffers::WIPOffset<Point<'a>>>,
+    pub linear_element_start_binding: Option<flatbuffers::WIPOffset<PointBinding<'a>>>,
+    pub linear_element_end_binding: Option<flatbuffers::WIPOffset<PointBinding<'a>>>,
+    pub arrow_elbowed: Option<bool>,
+    pub free_draw_simulate_pressure: Option<bool>,
     pub file_id: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub status: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub is_collapsed: Option<bool>,
-    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub group_id_ref: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub image_status: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub stack_like_is_collapsed: Option<bool>,
     pub stroke_style_v3: i8,
     pub fill_style_v3: i8,
-    pub text_align_v3: Option<i8>,
-    pub vertical_align_v3: i8,
-    pub x_v3: f64,
-    pub y_v3: f64,
-    pub scale_v3: Option<flatbuffers::WIPOffset<SimplePoint<'a>>>,
-    pub pressures_v3: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
+    pub text_text_align: Option<i8>,
+    pub text_vertical_align: i8,
+    pub x: f64,
+    pub y: f64,
+    pub image_scale: Option<flatbuffers::WIPOffset<SimplePoint<'a>>>,
+    pub free_draw_pressures: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
     pub stroke_width_v3: f64,
-    pub angle_v3: f64,
+    pub angle: f64,
     pub roundness: f64,
-    pub width_v3: f64,
-    pub height_v3: f64,
-    pub font_size_v3: Option<f64>,
-    pub line_height_v3: Option<f64>,
+    pub width: f64,
+    pub height: f64,
+    pub text_font_size: Option<f64>,
+    pub text_line_height: Option<f64>,
     pub blending: Option<i8>,
     pub background: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ElementBackground<'a>>>>>,
     pub stroke: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ElementStroke<'a>>>>>,
-    pub crop: Option<flatbuffers::WIPOffset<ImageCrop<'a>>>,
-    pub clip: Option<bool>,
+    pub image_crop: Option<flatbuffers::WIPOffset<ImageCrop<'a>>>,
+    pub stack_like_clip: Option<bool>,
     pub subset: Option<i8>,
     pub z_index: i32,
     pub polygon_sides: Option<i32>,
-    pub column_order: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
-    pub row_order: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
-    pub columns: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableColumn<'a>>>>>,
-    pub rows: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableRow<'a>>>>>,
-    pub cells: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableCell<'a>>>>>,
+    pub table_column_order: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub table_row_order: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub table_columns: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableColumn<'a>>>>>,
+    pub table_rows: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableRow<'a>>>>>,
+    pub table_cells: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTableCell<'a>>>>>,
     pub table_style: Option<flatbuffers::WIPOffset<DucTableStyle<'a>>>,
     pub doc_content: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub lines: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucLine<'a>>>>>,
+    pub linear_element_lines: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucLine<'a>>>>>,
     pub ellipse_ratio: Option<f64>,
     pub ellipse_start_angle: Option<f64>,
     pub ellipse_end_angle: Option<f64>,
@@ -3714,6 +3876,13 @@ pub struct DucElementArgs<'a> {
     pub free_draw_svg_path: Option<flatbuffers::WIPOffset<&'a str>>,
     pub free_draw_size: Option<f64>,
     pub linear_element_path_overrides: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucPath<'a>>>>>,
+    pub description: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub no_plot: Option<bool>,
+    pub stack_like_labeling_color: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub stack_like_stroke_override: Option<flatbuffers::WIPOffset<ElementStroke<'a>>>,
+    pub stack_like_background_override: Option<flatbuffers::WIPOffset<ElementBackground<'a>>>,
+    pub block_instance_block_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub block_instance_element_overrides: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlockInstanceElementOverride<'a>>>>>,
 }
 impl<'a> Default for DucElementArgs<'a> {
   #[inline]
@@ -3738,54 +3907,52 @@ impl<'a> Default for DucElementArgs<'a> {
       bound_elements: None,
       link: None,
       locked: false,
-      font_size_v2: None,
-      font_family: None,
-      text: None,
-      container_id: None,
-      line_height_v2: None,
-      auto_resize: None,
-      points: None,
-      last_committed_point: None,
-      start_binding: None,
-      end_binding: None,
-      elbowed: None,
-      simulate_pressure: None,
+      text_font_size_v2: None,
+      text_font_family: None,
+      text_text: None,
+      text_container_id: None,
+      text_line_height_v2: None,
+      text_auto_resize: None,
+      linear_element_points: None,
+      linear_element_last_committed_point: None,
+      linear_element_start_binding: None,
+      linear_element_end_binding: None,
+      arrow_elbowed: None,
+      free_draw_simulate_pressure: None,
       file_id: None,
-      status: None,
-      is_collapsed: None,
-      name: None,
-      group_id_ref: None,
+      image_status: None,
+      stack_like_is_collapsed: None,
       stroke_style_v3: 0,
       fill_style_v3: 0,
-      text_align_v3: None,
-      vertical_align_v3: 0,
-      x_v3: 0.0,
-      y_v3: 0.0,
-      scale_v3: None,
-      pressures_v3: None,
+      text_text_align: None,
+      text_vertical_align: 0,
+      x: 0.0,
+      y: 0.0,
+      image_scale: None,
+      free_draw_pressures: None,
       stroke_width_v3: 0.0,
-      angle_v3: 0.0,
+      angle: 0.0,
       roundness: 0.0,
-      width_v3: 0.0,
-      height_v3: 0.0,
-      font_size_v3: None,
-      line_height_v3: None,
+      width: 0.0,
+      height: 0.0,
+      text_font_size: None,
+      text_line_height: None,
       blending: None,
       background: None,
       stroke: None,
-      crop: None,
-      clip: None,
+      image_crop: None,
+      stack_like_clip: None,
       subset: None,
       z_index: 0,
       polygon_sides: None,
-      column_order: None,
-      row_order: None,
-      columns: None,
-      rows: None,
-      cells: None,
+      table_column_order: None,
+      table_row_order: None,
+      table_columns: None,
+      table_rows: None,
+      table_cells: None,
       table_style: None,
       doc_content: None,
-      lines: None,
+      linear_element_lines: None,
       ellipse_ratio: None,
       ellipse_start_angle: None,
       ellipse_end_angle: None,
@@ -3803,6 +3970,13 @@ impl<'a> Default for DucElementArgs<'a> {
       free_draw_svg_path: None,
       free_draw_size: None,
       linear_element_path_overrides: None,
+      description: None,
+      no_plot: None,
+      stack_like_labeling_color: None,
+      stack_like_stroke_override: None,
+      stack_like_background_override: None,
+      block_instance_block_id: None,
+      block_instance_element_overrides: None,
     }
   }
 }
@@ -3889,72 +4063,64 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<bool>(DucElement::VT_LOCKED, locked, false);
   }
   #[inline]
-  pub fn add_font_size_v2(&mut self, font_size_v2: i32) {
-    self.fbb_.push_slot_always::<i32>(DucElement::VT_FONT_SIZE_V2, font_size_v2);
+  pub fn add_text_font_size_v2(&mut self, text_font_size_v2: i32) {
+    self.fbb_.push_slot_always::<i32>(DucElement::VT_TEXT_FONT_SIZE_V2, text_font_size_v2);
   }
   #[inline]
-  pub fn add_font_family(&mut self, font_family: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_FONT_FAMILY, font_family);
+  pub fn add_text_font_family(&mut self, text_font_family: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_TEXT_FONT_FAMILY, text_font_family);
   }
   #[inline]
-  pub fn add_text(&mut self, text: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_TEXT, text);
+  pub fn add_text_text(&mut self, text_text: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_TEXT_TEXT, text_text);
   }
   #[inline]
-  pub fn add_container_id(&mut self, container_id: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_CONTAINER_ID, container_id);
+  pub fn add_text_container_id(&mut self, text_container_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_TEXT_CONTAINER_ID, text_container_id);
   }
   #[inline]
-  pub fn add_line_height_v2(&mut self, line_height_v2: f32) {
-    self.fbb_.push_slot_always::<f32>(DucElement::VT_LINE_HEIGHT_V2, line_height_v2);
+  pub fn add_text_line_height_v2(&mut self, text_line_height_v2: f32) {
+    self.fbb_.push_slot_always::<f32>(DucElement::VT_TEXT_LINE_HEIGHT_V2, text_line_height_v2);
   }
   #[inline]
-  pub fn add_auto_resize(&mut self, auto_resize: bool) {
-    self.fbb_.push_slot_always::<bool>(DucElement::VT_AUTO_RESIZE, auto_resize);
+  pub fn add_text_auto_resize(&mut self, text_auto_resize: bool) {
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_TEXT_AUTO_RESIZE, text_auto_resize);
   }
   #[inline]
-  pub fn add_points(&mut self, points: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Point<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_POINTS, points);
+  pub fn add_linear_element_points(&mut self, linear_element_points: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Point<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_LINEAR_ELEMENT_POINTS, linear_element_points);
   }
   #[inline]
-  pub fn add_last_committed_point(&mut self, last_committed_point: flatbuffers::WIPOffset<Point<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Point>>(DucElement::VT_LAST_COMMITTED_POINT, last_committed_point);
+  pub fn add_linear_element_last_committed_point(&mut self, linear_element_last_committed_point: flatbuffers::WIPOffset<Point<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Point>>(DucElement::VT_LINEAR_ELEMENT_LAST_COMMITTED_POINT, linear_element_last_committed_point);
   }
   #[inline]
-  pub fn add_start_binding(&mut self, start_binding: flatbuffers::WIPOffset<PointBinding<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<PointBinding>>(DucElement::VT_START_BINDING, start_binding);
+  pub fn add_linear_element_start_binding(&mut self, linear_element_start_binding: flatbuffers::WIPOffset<PointBinding<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<PointBinding>>(DucElement::VT_LINEAR_ELEMENT_START_BINDING, linear_element_start_binding);
   }
   #[inline]
-  pub fn add_end_binding(&mut self, end_binding: flatbuffers::WIPOffset<PointBinding<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<PointBinding>>(DucElement::VT_END_BINDING, end_binding);
+  pub fn add_linear_element_end_binding(&mut self, linear_element_end_binding: flatbuffers::WIPOffset<PointBinding<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<PointBinding>>(DucElement::VT_LINEAR_ELEMENT_END_BINDING, linear_element_end_binding);
   }
   #[inline]
-  pub fn add_elbowed(&mut self, elbowed: bool) {
-    self.fbb_.push_slot_always::<bool>(DucElement::VT_ELBOWED, elbowed);
+  pub fn add_arrow_elbowed(&mut self, arrow_elbowed: bool) {
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_ARROW_ELBOWED, arrow_elbowed);
   }
   #[inline]
-  pub fn add_simulate_pressure(&mut self, simulate_pressure: bool) {
-    self.fbb_.push_slot_always::<bool>(DucElement::VT_SIMULATE_PRESSURE, simulate_pressure);
+  pub fn add_free_draw_simulate_pressure(&mut self, free_draw_simulate_pressure: bool) {
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_FREE_DRAW_SIMULATE_PRESSURE, free_draw_simulate_pressure);
   }
   #[inline]
   pub fn add_file_id(&mut self, file_id: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_FILE_ID, file_id);
   }
   #[inline]
-  pub fn add_status(&mut self, status: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_STATUS, status);
+  pub fn add_image_status(&mut self, image_status: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_IMAGE_STATUS, image_status);
   }
   #[inline]
-  pub fn add_is_collapsed(&mut self, is_collapsed: bool) {
-    self.fbb_.push_slot_always::<bool>(DucElement::VT_IS_COLLAPSED, is_collapsed);
-  }
-  #[inline]
-  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_NAME, name);
-  }
-  #[inline]
-  pub fn add_group_id_ref(&mut self, group_id_ref: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_GROUP_ID_REF, group_id_ref);
+  pub fn add_stack_like_is_collapsed(&mut self, stack_like_is_collapsed: bool) {
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_STACK_LIKE_IS_COLLAPSED, stack_like_is_collapsed);
   }
   #[inline]
   pub fn add_stroke_style_v3(&mut self, stroke_style_v3: i8) {
@@ -3965,56 +4131,56 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<i8>(DucElement::VT_FILL_STYLE_V3, fill_style_v3, 0);
   }
   #[inline]
-  pub fn add_text_align_v3(&mut self, text_align_v3: i8) {
-    self.fbb_.push_slot_always::<i8>(DucElement::VT_TEXT_ALIGN_V3, text_align_v3);
+  pub fn add_text_text_align(&mut self, text_text_align: i8) {
+    self.fbb_.push_slot_always::<i8>(DucElement::VT_TEXT_TEXT_ALIGN, text_text_align);
   }
   #[inline]
-  pub fn add_vertical_align_v3(&mut self, vertical_align_v3: i8) {
-    self.fbb_.push_slot::<i8>(DucElement::VT_VERTICAL_ALIGN_V3, vertical_align_v3, 0);
+  pub fn add_text_vertical_align(&mut self, text_vertical_align: i8) {
+    self.fbb_.push_slot::<i8>(DucElement::VT_TEXT_VERTICAL_ALIGN, text_vertical_align, 0);
   }
   #[inline]
-  pub fn add_x_v3(&mut self, x_v3: f64) {
-    self.fbb_.push_slot::<f64>(DucElement::VT_X_V3, x_v3, 0.0);
+  pub fn add_x(&mut self, x: f64) {
+    self.fbb_.push_slot::<f64>(DucElement::VT_X, x, 0.0);
   }
   #[inline]
-  pub fn add_y_v3(&mut self, y_v3: f64) {
-    self.fbb_.push_slot::<f64>(DucElement::VT_Y_V3, y_v3, 0.0);
+  pub fn add_y(&mut self, y: f64) {
+    self.fbb_.push_slot::<f64>(DucElement::VT_Y, y, 0.0);
   }
   #[inline]
-  pub fn add_scale_v3(&mut self, scale_v3: flatbuffers::WIPOffset<SimplePoint<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<SimplePoint>>(DucElement::VT_SCALE_V3, scale_v3);
+  pub fn add_image_scale(&mut self, image_scale: flatbuffers::WIPOffset<SimplePoint<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<SimplePoint>>(DucElement::VT_IMAGE_SCALE, image_scale);
   }
   #[inline]
-  pub fn add_pressures_v3(&mut self, pressures_v3: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f64>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_PRESSURES_V3, pressures_v3);
+  pub fn add_free_draw_pressures(&mut self, free_draw_pressures: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f64>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_FREE_DRAW_PRESSURES, free_draw_pressures);
   }
   #[inline]
   pub fn add_stroke_width_v3(&mut self, stroke_width_v3: f64) {
     self.fbb_.push_slot::<f64>(DucElement::VT_STROKE_WIDTH_V3, stroke_width_v3, 0.0);
   }
   #[inline]
-  pub fn add_angle_v3(&mut self, angle_v3: f64) {
-    self.fbb_.push_slot::<f64>(DucElement::VT_ANGLE_V3, angle_v3, 0.0);
+  pub fn add_angle(&mut self, angle: f64) {
+    self.fbb_.push_slot::<f64>(DucElement::VT_ANGLE, angle, 0.0);
   }
   #[inline]
   pub fn add_roundness(&mut self, roundness: f64) {
     self.fbb_.push_slot::<f64>(DucElement::VT_ROUNDNESS, roundness, 0.0);
   }
   #[inline]
-  pub fn add_width_v3(&mut self, width_v3: f64) {
-    self.fbb_.push_slot::<f64>(DucElement::VT_WIDTH_V3, width_v3, 0.0);
+  pub fn add_width(&mut self, width: f64) {
+    self.fbb_.push_slot::<f64>(DucElement::VT_WIDTH, width, 0.0);
   }
   #[inline]
-  pub fn add_height_v3(&mut self, height_v3: f64) {
-    self.fbb_.push_slot::<f64>(DucElement::VT_HEIGHT_V3, height_v3, 0.0);
+  pub fn add_height(&mut self, height: f64) {
+    self.fbb_.push_slot::<f64>(DucElement::VT_HEIGHT, height, 0.0);
   }
   #[inline]
-  pub fn add_font_size_v3(&mut self, font_size_v3: f64) {
-    self.fbb_.push_slot_always::<f64>(DucElement::VT_FONT_SIZE_V3, font_size_v3);
+  pub fn add_text_font_size(&mut self, text_font_size: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_TEXT_FONT_SIZE, text_font_size);
   }
   #[inline]
-  pub fn add_line_height_v3(&mut self, line_height_v3: f64) {
-    self.fbb_.push_slot_always::<f64>(DucElement::VT_LINE_HEIGHT_V3, line_height_v3);
+  pub fn add_text_line_height(&mut self, text_line_height: f64) {
+    self.fbb_.push_slot_always::<f64>(DucElement::VT_TEXT_LINE_HEIGHT, text_line_height);
   }
   #[inline]
   pub fn add_blending(&mut self, blending: i8) {
@@ -4029,12 +4195,12 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_STROKE, stroke);
   }
   #[inline]
-  pub fn add_crop(&mut self, crop: flatbuffers::WIPOffset<ImageCrop<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ImageCrop>>(DucElement::VT_CROP, crop);
+  pub fn add_image_crop(&mut self, image_crop: flatbuffers::WIPOffset<ImageCrop<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ImageCrop>>(DucElement::VT_IMAGE_CROP, image_crop);
   }
   #[inline]
-  pub fn add_clip(&mut self, clip: bool) {
-    self.fbb_.push_slot_always::<bool>(DucElement::VT_CLIP, clip);
+  pub fn add_stack_like_clip(&mut self, stack_like_clip: bool) {
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_STACK_LIKE_CLIP, stack_like_clip);
   }
   #[inline]
   pub fn add_subset(&mut self, subset: i8) {
@@ -4049,24 +4215,24 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<i32>(DucElement::VT_POLYGON_SIDES, polygon_sides);
   }
   #[inline]
-  pub fn add_column_order(&mut self, column_order: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_COLUMN_ORDER, column_order);
+  pub fn add_table_column_order(&mut self, table_column_order: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_TABLE_COLUMN_ORDER, table_column_order);
   }
   #[inline]
-  pub fn add_row_order(&mut self, row_order: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_ROW_ORDER, row_order);
+  pub fn add_table_row_order(&mut self, table_row_order: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_TABLE_ROW_ORDER, table_row_order);
   }
   #[inline]
-  pub fn add_columns(&mut self, columns: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucTableColumn<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_COLUMNS, columns);
+  pub fn add_table_columns(&mut self, table_columns: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucTableColumn<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_TABLE_COLUMNS, table_columns);
   }
   #[inline]
-  pub fn add_rows(&mut self, rows: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucTableRow<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_ROWS, rows);
+  pub fn add_table_rows(&mut self, table_rows: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucTableRow<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_TABLE_ROWS, table_rows);
   }
   #[inline]
-  pub fn add_cells(&mut self, cells: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucTableCell<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_CELLS, cells);
+  pub fn add_table_cells(&mut self, table_cells: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucTableCell<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_TABLE_CELLS, table_cells);
   }
   #[inline]
   pub fn add_table_style(&mut self, table_style: flatbuffers::WIPOffset<DucTableStyle<'b >>) {
@@ -4077,8 +4243,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_DOC_CONTENT, doc_content);
   }
   #[inline]
-  pub fn add_lines(&mut self, lines: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucLine<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_LINES, lines);
+  pub fn add_linear_element_lines(&mut self, linear_element_lines: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucLine<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_LINEAR_ELEMENT_LINES, linear_element_lines);
   }
   #[inline]
   pub fn add_ellipse_ratio(&mut self, ellipse_ratio: f64) {
@@ -4149,6 +4315,34 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_LINEAR_ELEMENT_PATH_OVERRIDES, linear_element_path_overrides);
   }
   #[inline]
+  pub fn add_description(&mut self, description: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_DESCRIPTION, description);
+  }
+  #[inline]
+  pub fn add_no_plot(&mut self, no_plot: bool) {
+    self.fbb_.push_slot_always::<bool>(DucElement::VT_NO_PLOT, no_plot);
+  }
+  #[inline]
+  pub fn add_stack_like_labeling_color(&mut self, stack_like_labeling_color: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_STACK_LIKE_LABELING_COLOR, stack_like_labeling_color);
+  }
+  #[inline]
+  pub fn add_stack_like_stroke_override(&mut self, stack_like_stroke_override: flatbuffers::WIPOffset<ElementStroke<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ElementStroke>>(DucElement::VT_STACK_LIKE_STROKE_OVERRIDE, stack_like_stroke_override);
+  }
+  #[inline]
+  pub fn add_stack_like_background_override(&mut self, stack_like_background_override: flatbuffers::WIPOffset<ElementBackground<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ElementBackground>>(DucElement::VT_STACK_LIKE_BACKGROUND_OVERRIDE, stack_like_background_override);
+  }
+  #[inline]
+  pub fn add_block_instance_block_id(&mut self, block_instance_block_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_BLOCK_INSTANCE_BLOCK_ID, block_instance_block_id);
+  }
+  #[inline]
+  pub fn add_block_instance_element_overrides(&mut self, block_instance_element_overrides: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucBlockInstanceElementOverride<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_BLOCK_INSTANCE_ELEMENT_OVERRIDES, block_instance_element_overrides);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucElementBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     DucElementBuilder {
@@ -4185,54 +4379,52 @@ impl core::fmt::Debug for DucElement<'_> {
       ds.field("bound_elements", &self.bound_elements());
       ds.field("link", &self.link());
       ds.field("locked", &self.locked());
-      ds.field("font_size_v2", &self.font_size_v2());
-      ds.field("font_family", &self.font_family());
-      ds.field("text", &self.text());
-      ds.field("container_id", &self.container_id());
-      ds.field("line_height_v2", &self.line_height_v2());
-      ds.field("auto_resize", &self.auto_resize());
-      ds.field("points", &self.points());
-      ds.field("last_committed_point", &self.last_committed_point());
-      ds.field("start_binding", &self.start_binding());
-      ds.field("end_binding", &self.end_binding());
-      ds.field("elbowed", &self.elbowed());
-      ds.field("simulate_pressure", &self.simulate_pressure());
+      ds.field("text_font_size_v2", &self.text_font_size_v2());
+      ds.field("text_font_family", &self.text_font_family());
+      ds.field("text_text", &self.text_text());
+      ds.field("text_container_id", &self.text_container_id());
+      ds.field("text_line_height_v2", &self.text_line_height_v2());
+      ds.field("text_auto_resize", &self.text_auto_resize());
+      ds.field("linear_element_points", &self.linear_element_points());
+      ds.field("linear_element_last_committed_point", &self.linear_element_last_committed_point());
+      ds.field("linear_element_start_binding", &self.linear_element_start_binding());
+      ds.field("linear_element_end_binding", &self.linear_element_end_binding());
+      ds.field("arrow_elbowed", &self.arrow_elbowed());
+      ds.field("free_draw_simulate_pressure", &self.free_draw_simulate_pressure());
       ds.field("file_id", &self.file_id());
-      ds.field("status", &self.status());
-      ds.field("is_collapsed", &self.is_collapsed());
-      ds.field("name", &self.name());
-      ds.field("group_id_ref", &self.group_id_ref());
+      ds.field("image_status", &self.image_status());
+      ds.field("stack_like_is_collapsed", &self.stack_like_is_collapsed());
       ds.field("stroke_style_v3", &self.stroke_style_v3());
       ds.field("fill_style_v3", &self.fill_style_v3());
-      ds.field("text_align_v3", &self.text_align_v3());
-      ds.field("vertical_align_v3", &self.vertical_align_v3());
-      ds.field("x_v3", &self.x_v3());
-      ds.field("y_v3", &self.y_v3());
-      ds.field("scale_v3", &self.scale_v3());
-      ds.field("pressures_v3", &self.pressures_v3());
+      ds.field("text_text_align", &self.text_text_align());
+      ds.field("text_vertical_align", &self.text_vertical_align());
+      ds.field("x", &self.x());
+      ds.field("y", &self.y());
+      ds.field("image_scale", &self.image_scale());
+      ds.field("free_draw_pressures", &self.free_draw_pressures());
       ds.field("stroke_width_v3", &self.stroke_width_v3());
-      ds.field("angle_v3", &self.angle_v3());
+      ds.field("angle", &self.angle());
       ds.field("roundness", &self.roundness());
-      ds.field("width_v3", &self.width_v3());
-      ds.field("height_v3", &self.height_v3());
-      ds.field("font_size_v3", &self.font_size_v3());
-      ds.field("line_height_v3", &self.line_height_v3());
+      ds.field("width", &self.width());
+      ds.field("height", &self.height());
+      ds.field("text_font_size", &self.text_font_size());
+      ds.field("text_line_height", &self.text_line_height());
       ds.field("blending", &self.blending());
       ds.field("background", &self.background());
       ds.field("stroke", &self.stroke());
-      ds.field("crop", &self.crop());
-      ds.field("clip", &self.clip());
+      ds.field("image_crop", &self.image_crop());
+      ds.field("stack_like_clip", &self.stack_like_clip());
       ds.field("subset", &self.subset());
       ds.field("z_index", &self.z_index());
       ds.field("polygon_sides", &self.polygon_sides());
-      ds.field("column_order", &self.column_order());
-      ds.field("row_order", &self.row_order());
-      ds.field("columns", &self.columns());
-      ds.field("rows", &self.rows());
-      ds.field("cells", &self.cells());
+      ds.field("table_column_order", &self.table_column_order());
+      ds.field("table_row_order", &self.table_row_order());
+      ds.field("table_columns", &self.table_columns());
+      ds.field("table_rows", &self.table_rows());
+      ds.field("table_cells", &self.table_cells());
       ds.field("table_style", &self.table_style());
       ds.field("doc_content", &self.doc_content());
-      ds.field("lines", &self.lines());
+      ds.field("linear_element_lines", &self.linear_element_lines());
       ds.field("ellipse_ratio", &self.ellipse_ratio());
       ds.field("ellipse_start_angle", &self.ellipse_start_angle());
       ds.field("ellipse_end_angle", &self.ellipse_end_angle());
@@ -4250,6 +4442,13 @@ impl core::fmt::Debug for DucElement<'_> {
       ds.field("free_draw_svg_path", &self.free_draw_svg_path());
       ds.field("free_draw_size", &self.free_draw_size());
       ds.field("linear_element_path_overrides", &self.linear_element_path_overrides());
+      ds.field("description", &self.description());
+      ds.field("no_plot", &self.no_plot());
+      ds.field("stack_like_labeling_color", &self.stack_like_labeling_color());
+      ds.field("stack_like_stroke_override", &self.stack_like_stroke_override());
+      ds.field("stack_like_background_override", &self.stack_like_background_override());
+      ds.field("block_instance_block_id", &self.block_instance_block_id());
+      ds.field("block_instance_element_overrides", &self.block_instance_element_overrides());
       ds.finish()
   }
 }
@@ -4947,10 +5146,17 @@ impl<'a> flatbuffers::Follow<'a> for DucGroup<'a> {
 
 impl<'a> DucGroup<'a> {
   pub const VT_ID: flatbuffers::VOffsetT = 4;
-  pub const VT_TYPE_: flatbuffers::VOffsetT = 6;
   pub const VT_IS_COLLAPSED: flatbuffers::VOffsetT = 8;
   pub const VT_LABEL: flatbuffers::VOffsetT = 10;
-  pub const VT_SCOPE: flatbuffers::VOffsetT = 12;
+  pub const VT_DESCRIPTION: flatbuffers::VOffsetT = 16;
+  pub const VT_NO_PLOT: flatbuffers::VOffsetT = 18;
+  pub const VT_LOCKED: flatbuffers::VOffsetT = 20;
+  pub const VT_IS_VISIBLE: flatbuffers::VOffsetT = 22;
+  pub const VT_OPACITY: flatbuffers::VOffsetT = 24;
+  pub const VT_LABELING_COLOR: flatbuffers::VOffsetT = 26;
+  pub const VT_STROKE_OVERRIDE: flatbuffers::VOffsetT = 28;
+  pub const VT_BACKGROUND_OVERRIDE: flatbuffers::VOffsetT = 30;
+  pub const VT_CLIP: flatbuffers::VOffsetT = 32;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -4962,10 +5168,17 @@ impl<'a> DucGroup<'a> {
     args: &'args DucGroupArgs<'args>
   ) -> flatbuffers::WIPOffset<DucGroup<'bldr>> {
     let mut builder = DucGroupBuilder::new(_fbb);
-    if let Some(x) = args.scope { builder.add_scope(x); }
+    if let Some(x) = args.background_override { builder.add_background_override(x); }
+    if let Some(x) = args.stroke_override { builder.add_stroke_override(x); }
+    if let Some(x) = args.labeling_color { builder.add_labeling_color(x); }
+    builder.add_opacity(args.opacity);
+    if let Some(x) = args.description { builder.add_description(x); }
     if let Some(x) = args.label { builder.add_label(x); }
-    if let Some(x) = args.type_ { builder.add_type_(x); }
     if let Some(x) = args.id { builder.add_id(x); }
+    if let Some(x) = args.clip { builder.add_clip(x); }
+    builder.add_is_visible(args.is_visible);
+    builder.add_locked(args.locked);
+    if let Some(x) = args.no_plot { builder.add_no_plot(x); }
     builder.add_is_collapsed(args.is_collapsed);
     builder.finish()
   }
@@ -4977,13 +5190,6 @@ impl<'a> DucGroup<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucGroup::VT_ID, None)}
-  }
-  #[inline]
-  pub fn type_(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucGroup::VT_TYPE_, None)}
   }
   #[inline]
   pub fn is_collapsed(&self) -> bool {
@@ -5000,11 +5206,67 @@ impl<'a> DucGroup<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucGroup::VT_LABEL, None)}
   }
   #[inline]
-  pub fn scope(&self) -> Option<&'a str> {
+  pub fn description(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucGroup::VT_SCOPE, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucGroup::VT_DESCRIPTION, None)}
+  }
+  #[inline]
+  pub fn no_plot(&self) -> Option<bool> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(DucGroup::VT_NO_PLOT, None)}
+  }
+  #[inline]
+  pub fn locked(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(DucGroup::VT_LOCKED, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn is_visible(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(DucGroup::VT_IS_VISIBLE, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn opacity(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(DucGroup::VT_OPACITY, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn labeling_color(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucGroup::VT_LABELING_COLOR, None)}
+  }
+  #[inline]
+  pub fn stroke_override(&self) -> Option<ElementStroke<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<ElementStroke>>(DucGroup::VT_STROKE_OVERRIDE, None)}
+  }
+  #[inline]
+  pub fn background_override(&self) -> Option<ElementBackground<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<ElementBackground>>(DucGroup::VT_BACKGROUND_OVERRIDE, None)}
+  }
+  #[inline]
+  pub fn clip(&self) -> Option<bool> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(DucGroup::VT_CLIP, None)}
   }
 }
 
@@ -5016,30 +5278,51 @@ impl flatbuffers::Verifiable for DucGroup<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("type_", Self::VT_TYPE_, false)?
      .visit_field::<bool>("is_collapsed", Self::VT_IS_COLLAPSED, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("label", Self::VT_LABEL, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("scope", Self::VT_SCOPE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("description", Self::VT_DESCRIPTION, false)?
+     .visit_field::<bool>("no_plot", Self::VT_NO_PLOT, false)?
+     .visit_field::<bool>("locked", Self::VT_LOCKED, false)?
+     .visit_field::<bool>("is_visible", Self::VT_IS_VISIBLE, false)?
+     .visit_field::<f32>("opacity", Self::VT_OPACITY, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("labeling_color", Self::VT_LABELING_COLOR, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<ElementStroke>>("stroke_override", Self::VT_STROKE_OVERRIDE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<ElementBackground>>("background_override", Self::VT_BACKGROUND_OVERRIDE, false)?
+     .visit_field::<bool>("clip", Self::VT_CLIP, false)?
      .finish();
     Ok(())
   }
 }
 pub struct DucGroupArgs<'a> {
     pub id: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub type_: Option<flatbuffers::WIPOffset<&'a str>>,
     pub is_collapsed: bool,
     pub label: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub scope: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub description: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub no_plot: Option<bool>,
+    pub locked: bool,
+    pub is_visible: bool,
+    pub opacity: f32,
+    pub labeling_color: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub stroke_override: Option<flatbuffers::WIPOffset<ElementStroke<'a>>>,
+    pub background_override: Option<flatbuffers::WIPOffset<ElementBackground<'a>>>,
+    pub clip: Option<bool>,
 }
 impl<'a> Default for DucGroupArgs<'a> {
   #[inline]
   fn default() -> Self {
     DucGroupArgs {
       id: None,
-      type_: None,
       is_collapsed: false,
       label: None,
-      scope: None,
+      description: None,
+      no_plot: None,
+      locked: false,
+      is_visible: false,
+      opacity: 0.0,
+      labeling_color: None,
+      stroke_override: None,
+      background_override: None,
+      clip: None,
     }
   }
 }
@@ -5054,10 +5337,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucGroupBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucGroup::VT_ID, id);
   }
   #[inline]
-  pub fn add_type_(&mut self, type_: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucGroup::VT_TYPE_, type_);
-  }
-  #[inline]
   pub fn add_is_collapsed(&mut self, is_collapsed: bool) {
     self.fbb_.push_slot::<bool>(DucGroup::VT_IS_COLLAPSED, is_collapsed, false);
   }
@@ -5066,8 +5345,40 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucGroupBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucGroup::VT_LABEL, label);
   }
   #[inline]
-  pub fn add_scope(&mut self, scope: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucGroup::VT_SCOPE, scope);
+  pub fn add_description(&mut self, description: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucGroup::VT_DESCRIPTION, description);
+  }
+  #[inline]
+  pub fn add_no_plot(&mut self, no_plot: bool) {
+    self.fbb_.push_slot_always::<bool>(DucGroup::VT_NO_PLOT, no_plot);
+  }
+  #[inline]
+  pub fn add_locked(&mut self, locked: bool) {
+    self.fbb_.push_slot::<bool>(DucGroup::VT_LOCKED, locked, false);
+  }
+  #[inline]
+  pub fn add_is_visible(&mut self, is_visible: bool) {
+    self.fbb_.push_slot::<bool>(DucGroup::VT_IS_VISIBLE, is_visible, false);
+  }
+  #[inline]
+  pub fn add_opacity(&mut self, opacity: f32) {
+    self.fbb_.push_slot::<f32>(DucGroup::VT_OPACITY, opacity, 0.0);
+  }
+  #[inline]
+  pub fn add_labeling_color(&mut self, labeling_color: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucGroup::VT_LABELING_COLOR, labeling_color);
+  }
+  #[inline]
+  pub fn add_stroke_override(&mut self, stroke_override: flatbuffers::WIPOffset<ElementStroke<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ElementStroke>>(DucGroup::VT_STROKE_OVERRIDE, stroke_override);
+  }
+  #[inline]
+  pub fn add_background_override(&mut self, background_override: flatbuffers::WIPOffset<ElementBackground<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ElementBackground>>(DucGroup::VT_BACKGROUND_OVERRIDE, background_override);
+  }
+  #[inline]
+  pub fn add_clip(&mut self, clip: bool) {
+    self.fbb_.push_slot_always::<bool>(DucGroup::VT_CLIP, clip);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucGroupBuilder<'a, 'b, A> {
@@ -5088,10 +5399,461 @@ impl core::fmt::Debug for DucGroup<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("DucGroup");
       ds.field("id", &self.id());
-      ds.field("type_", &self.type_());
       ds.field("is_collapsed", &self.is_collapsed());
       ds.field("label", &self.label());
-      ds.field("scope", &self.scope());
+      ds.field("description", &self.description());
+      ds.field("no_plot", &self.no_plot());
+      ds.field("locked", &self.locked());
+      ds.field("is_visible", &self.is_visible());
+      ds.field("opacity", &self.opacity());
+      ds.field("labeling_color", &self.labeling_color());
+      ds.field("stroke_override", &self.stroke_override());
+      ds.field("background_override", &self.background_override());
+      ds.field("clip", &self.clip());
+      ds.finish()
+  }
+}
+pub enum DucBlockOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucBlock<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucBlock<'a> {
+  type Inner = DucBlock<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucBlock<'a> {
+  pub const VT_ID: flatbuffers::VOffsetT = 4;
+  pub const VT_LABEL: flatbuffers::VOffsetT = 6;
+  pub const VT_DESCRIPTION: flatbuffers::VOffsetT = 8;
+  pub const VT_VERSION: flatbuffers::VOffsetT = 10;
+  pub const VT_ELEMENTS: flatbuffers::VOffsetT = 12;
+  pub const VT_ATTRIBUTES: flatbuffers::VOffsetT = 14;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucBlock { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucBlockArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucBlock<'bldr>> {
+    let mut builder = DucBlockBuilder::new(_fbb);
+    if let Some(x) = args.attributes { builder.add_attributes(x); }
+    if let Some(x) = args.elements { builder.add_elements(x); }
+    builder.add_version(args.version);
+    if let Some(x) = args.description { builder.add_description(x); }
+    if let Some(x) = args.label { builder.add_label(x); }
+    if let Some(x) = args.id { builder.add_id(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlock::VT_ID, None)}
+  }
+  #[inline]
+  pub fn label(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlock::VT_LABEL, None)}
+  }
+  #[inline]
+  pub fn description(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlock::VT_DESCRIPTION, None)}
+  }
+  #[inline]
+  pub fn version(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(DucBlock::VT_VERSION, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn elements(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucElement<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucElement>>>>(DucBlock::VT_ELEMENTS, None)}
+  }
+  #[inline]
+  pub fn attributes(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlockAttribute<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlockAttribute>>>>(DucBlock::VT_ATTRIBUTES, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucBlock<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("label", Self::VT_LABEL, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("description", Self::VT_DESCRIPTION, false)?
+     .visit_field::<i32>("version", Self::VT_VERSION, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucElement>>>>("elements", Self::VT_ELEMENTS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucBlockAttribute>>>>("attributes", Self::VT_ATTRIBUTES, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucBlockArgs<'a> {
+    pub id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub label: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub description: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub version: i32,
+    pub elements: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucElement<'a>>>>>,
+    pub attributes: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlockAttribute<'a>>>>>,
+}
+impl<'a> Default for DucBlockArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucBlockArgs {
+      id: None,
+      label: None,
+      description: None,
+      version: 0,
+      elements: None,
+      attributes: None,
+    }
+  }
+}
+
+pub struct DucBlockBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucBlockBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_id(&mut self, id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlock::VT_ID, id);
+  }
+  #[inline]
+  pub fn add_label(&mut self, label: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlock::VT_LABEL, label);
+  }
+  #[inline]
+  pub fn add_description(&mut self, description: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlock::VT_DESCRIPTION, description);
+  }
+  #[inline]
+  pub fn add_version(&mut self, version: i32) {
+    self.fbb_.push_slot::<i32>(DucBlock::VT_VERSION, version, 0);
+  }
+  #[inline]
+  pub fn add_elements(&mut self, elements: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucElement<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlock::VT_ELEMENTS, elements);
+  }
+  #[inline]
+  pub fn add_attributes(&mut self, attributes: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucBlockAttribute<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlock::VT_ATTRIBUTES, attributes);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucBlockBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucBlockBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucBlock<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucBlock<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucBlock");
+      ds.field("id", &self.id());
+      ds.field("label", &self.label());
+      ds.field("description", &self.description());
+      ds.field("version", &self.version());
+      ds.field("elements", &self.elements());
+      ds.field("attributes", &self.attributes());
+      ds.finish()
+  }
+}
+pub enum DucBlockAttributeDetailsOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucBlockAttributeDetails<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucBlockAttributeDetails<'a> {
+  type Inner = DucBlockAttributeDetails<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucBlockAttributeDetails<'a> {
+  pub const VT_TAG: flatbuffers::VOffsetT = 4;
+  pub const VT_DEFAULT_VALUE: flatbuffers::VOffsetT = 6;
+  pub const VT_PROMPT: flatbuffers::VOffsetT = 8;
+  pub const VT_POSITION: flatbuffers::VOffsetT = 10;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucBlockAttributeDetails { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucBlockAttributeDetailsArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucBlockAttributeDetails<'bldr>> {
+    let mut builder = DucBlockAttributeDetailsBuilder::new(_fbb);
+    if let Some(x) = args.position { builder.add_position(x); }
+    if let Some(x) = args.prompt { builder.add_prompt(x); }
+    if let Some(x) = args.default_value { builder.add_default_value(x); }
+    if let Some(x) = args.tag { builder.add_tag(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn tag(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlockAttributeDetails::VT_TAG, None)}
+  }
+  #[inline]
+  pub fn default_value(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlockAttributeDetails::VT_DEFAULT_VALUE, None)}
+  }
+  #[inline]
+  pub fn prompt(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlockAttributeDetails::VT_PROMPT, None)}
+  }
+  #[inline]
+  pub fn position(&self) -> Option<SimplePoint<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<SimplePoint>>(DucBlockAttributeDetails::VT_POSITION, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucBlockAttributeDetails<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("tag", Self::VT_TAG, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("default_value", Self::VT_DEFAULT_VALUE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("prompt", Self::VT_PROMPT, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<SimplePoint>>("position", Self::VT_POSITION, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucBlockAttributeDetailsArgs<'a> {
+    pub tag: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub default_value: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub prompt: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub position: Option<flatbuffers::WIPOffset<SimplePoint<'a>>>,
+}
+impl<'a> Default for DucBlockAttributeDetailsArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucBlockAttributeDetailsArgs {
+      tag: None,
+      default_value: None,
+      prompt: None,
+      position: None,
+    }
+  }
+}
+
+pub struct DucBlockAttributeDetailsBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucBlockAttributeDetailsBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_tag(&mut self, tag: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlockAttributeDetails::VT_TAG, tag);
+  }
+  #[inline]
+  pub fn add_default_value(&mut self, default_value: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlockAttributeDetails::VT_DEFAULT_VALUE, default_value);
+  }
+  #[inline]
+  pub fn add_prompt(&mut self, prompt: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlockAttributeDetails::VT_PROMPT, prompt);
+  }
+  #[inline]
+  pub fn add_position(&mut self, position: flatbuffers::WIPOffset<SimplePoint<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<SimplePoint>>(DucBlockAttributeDetails::VT_POSITION, position);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucBlockAttributeDetailsBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucBlockAttributeDetailsBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucBlockAttributeDetails<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucBlockAttributeDetails<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucBlockAttributeDetails");
+      ds.field("tag", &self.tag());
+      ds.field("default_value", &self.default_value());
+      ds.field("prompt", &self.prompt());
+      ds.field("position", &self.position());
+      ds.finish()
+  }
+}
+pub enum DucBlockAttributeOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucBlockAttribute<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucBlockAttribute<'a> {
+  type Inner = DucBlockAttribute<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucBlockAttribute<'a> {
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_DETAILS: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucBlockAttribute { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucBlockAttributeArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucBlockAttribute<'bldr>> {
+    let mut builder = DucBlockAttributeBuilder::new(_fbb);
+    if let Some(x) = args.details { builder.add_details(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlockAttribute::VT_NAME, None)}
+  }
+  #[inline]
+  pub fn details(&self) -> Option<DucBlockAttributeDetails<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucBlockAttributeDetails>>(DucBlockAttribute::VT_DETAILS, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucBlockAttribute<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DucBlockAttributeDetails>>("details", Self::VT_DETAILS, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucBlockAttributeArgs<'a> {
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub details: Option<flatbuffers::WIPOffset<DucBlockAttributeDetails<'a>>>,
+}
+impl<'a> Default for DucBlockAttributeArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucBlockAttributeArgs {
+      name: None,
+      details: None,
+    }
+  }
+}
+
+pub struct DucBlockAttributeBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucBlockAttributeBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlockAttribute::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_details(&mut self, details: flatbuffers::WIPOffset<DucBlockAttributeDetails<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucBlockAttributeDetails>>(DucBlockAttribute::VT_DETAILS, details);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucBlockAttributeBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucBlockAttributeBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucBlockAttribute<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucBlockAttribute<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucBlockAttribute");
+      ds.field("name", &self.name());
+      ds.field("details", &self.details());
       ds.finish()
   }
 }
@@ -5118,7 +5880,6 @@ impl<'a> AppState<'a> {
   pub const VT_CURRENT_ITEM_OPACITY: flatbuffers::VOffsetT = 46;
   pub const VT_VIEW_BACKGROUND_COLOR: flatbuffers::VOffsetT = 60;
   pub const VT_SCOPE: flatbuffers::VOffsetT = 62;
-  pub const VT_GROUPS: flatbuffers::VOffsetT = 66;
   pub const VT_SCROLL_X: flatbuffers::VOffsetT = 68;
   pub const VT_SCROLL_Y: flatbuffers::VOffsetT = 70;
   pub const VT_CURSOR_BUTTON: flatbuffers::VOffsetT = 72;
@@ -5190,7 +5951,6 @@ impl<'a> AppState<'a> {
     if let Some(x) = args.cursor_button { builder.add_cursor_button(x); }
     builder.add_scroll_y(args.scroll_y);
     builder.add_scroll_x(args.scroll_x);
-    if let Some(x) = args.groups { builder.add_groups(x); }
     if let Some(x) = args.scope { builder.add_scope(x); }
     if let Some(x) = args.view_background_color { builder.add_view_background_color(x); }
     builder.add_current_item_opacity(args.current_item_opacity);
@@ -5270,13 +6030,6 @@ impl<'a> AppState<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AppState::VT_SCOPE, None)}
-  }
-  #[inline]
-  pub fn groups(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucGroup<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucGroup>>>>(AppState::VT_GROUPS, None)}
   }
   #[inline]
   pub fn scroll_x(&self) -> f32 {
@@ -5574,7 +6327,6 @@ impl flatbuffers::Verifiable for AppState<'_> {
      .visit_field::<f32>("current_item_opacity", Self::VT_CURRENT_ITEM_OPACITY, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("view_background_color", Self::VT_VIEW_BACKGROUND_COLOR, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("scope", Self::VT_SCOPE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucGroup>>>>("groups", Self::VT_GROUPS, false)?
      .visit_field::<f32>("scroll_x", Self::VT_SCROLL_X, false)?
      .visit_field::<f32>("scroll_y", Self::VT_SCROLL_Y, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("cursor_button", Self::VT_CURSOR_BUTTON, false)?
@@ -5627,7 +6379,6 @@ pub struct AppStateArgs<'a> {
     pub current_item_opacity: f32,
     pub view_background_color: Option<flatbuffers::WIPOffset<&'a str>>,
     pub scope: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub groups: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucGroup<'a>>>>>,
     pub scroll_x: f32,
     pub scroll_y: f32,
     pub cursor_button: Option<flatbuffers::WIPOffset<&'a str>>,
@@ -5680,7 +6431,6 @@ impl<'a> Default for AppStateArgs<'a> {
       current_item_opacity: 0.0,
       view_background_color: None,
       scope: None,
-      groups: None,
       scroll_x: 0.0,
       scroll_y: 0.0,
       cursor_button: None,
@@ -5757,10 +6507,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AppStateBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_scope(&mut self, scope: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_SCOPE, scope);
-  }
-  #[inline]
-  pub fn add_groups(&mut self, groups: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucGroup<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AppState::VT_GROUPS, groups);
   }
   #[inline]
   pub fn add_scroll_x(&mut self, scroll_x: f32) {
@@ -5947,7 +6693,6 @@ impl core::fmt::Debug for AppState<'_> {
       ds.field("current_item_opacity", &self.current_item_opacity());
       ds.field("view_background_color", &self.view_background_color());
       ds.field("scope", &self.scope());
-      ds.field("groups", &self.groups());
       ds.field("scroll_x", &self.scroll_x());
       ds.field("scroll_y", &self.scroll_y());
       ds.field("cursor_button", &self.cursor_button());
@@ -6367,6 +7112,103 @@ impl core::fmt::Debug for BinaryFiles<'_> {
       ds.finish()
   }
 }
+pub enum RendererStateOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct RendererState<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for RendererState<'a> {
+  type Inner = RendererState<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> RendererState<'a> {
+  pub const VT_DELETED_ELEMENT_IDS: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    RendererState { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args RendererStateArgs<'args>
+  ) -> flatbuffers::WIPOffset<RendererState<'bldr>> {
+    let mut builder = RendererStateBuilder::new(_fbb);
+    if let Some(x) = args.deleted_element_ids { builder.add_deleted_element_ids(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn deleted_element_ids(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(RendererState::VT_DELETED_ELEMENT_IDS, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for RendererState<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("deleted_element_ids", Self::VT_DELETED_ELEMENT_IDS, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct RendererStateArgs<'a> {
+    pub deleted_element_ids: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
+}
+impl<'a> Default for RendererStateArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    RendererStateArgs {
+      deleted_element_ids: None,
+    }
+  }
+}
+
+pub struct RendererStateBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> RendererStateBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_deleted_element_ids(&mut self, deleted_element_ids: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(RendererState::VT_DELETED_ELEMENT_IDS, deleted_element_ids);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> RendererStateBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    RendererStateBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<RendererState<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for RendererState<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("RendererState");
+      ds.field("deleted_element_ids", &self.deleted_element_ids());
+      ds.finish()
+  }
+}
 pub enum ExportedDataStateOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -6389,6 +7231,9 @@ impl<'a> ExportedDataState<'a> {
   pub const VT_ELEMENTS: flatbuffers::VOffsetT = 10;
   pub const VT_APP_STATE: flatbuffers::VOffsetT = 12;
   pub const VT_FILES: flatbuffers::VOffsetT = 14;
+  pub const VT_RENDERER_STATE: flatbuffers::VOffsetT = 16;
+  pub const VT_BLOCKS: flatbuffers::VOffsetT = 18;
+  pub const VT_GROUPS: flatbuffers::VOffsetT = 20;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -6400,6 +7245,9 @@ impl<'a> ExportedDataState<'a> {
     args: &'args ExportedDataStateArgs<'args>
   ) -> flatbuffers::WIPOffset<ExportedDataState<'bldr>> {
     let mut builder = ExportedDataStateBuilder::new(_fbb);
+    if let Some(x) = args.groups { builder.add_groups(x); }
+    if let Some(x) = args.blocks { builder.add_blocks(x); }
+    if let Some(x) = args.renderer_state { builder.add_renderer_state(x); }
     if let Some(x) = args.files { builder.add_files(x); }
     if let Some(x) = args.app_state { builder.add_app_state(x); }
     if let Some(x) = args.elements { builder.add_elements(x); }
@@ -6452,6 +7300,27 @@ impl<'a> ExportedDataState<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<BinaryFiles>>(ExportedDataState::VT_FILES, None)}
   }
+  #[inline]
+  pub fn renderer_state(&self) -> Option<RendererState<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<RendererState>>(ExportedDataState::VT_RENDERER_STATE, None)}
+  }
+  #[inline]
+  pub fn blocks(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlock<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlock>>>>(ExportedDataState::VT_BLOCKS, None)}
+  }
+  #[inline]
+  pub fn groups(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucGroup<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucGroup>>>>(ExportedDataState::VT_GROUPS, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for ExportedDataState<'_> {
@@ -6467,6 +7336,9 @@ impl flatbuffers::Verifiable for ExportedDataState<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucElement>>>>("elements", Self::VT_ELEMENTS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<AppState>>("app_state", Self::VT_APP_STATE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<BinaryFiles>>("files", Self::VT_FILES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<RendererState>>("renderer_state", Self::VT_RENDERER_STATE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucBlock>>>>("blocks", Self::VT_BLOCKS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucGroup>>>>("groups", Self::VT_GROUPS, false)?
      .finish();
     Ok(())
   }
@@ -6478,6 +7350,9 @@ pub struct ExportedDataStateArgs<'a> {
     pub elements: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucElement<'a>>>>>,
     pub app_state: Option<flatbuffers::WIPOffset<AppState<'a>>>,
     pub files: Option<flatbuffers::WIPOffset<BinaryFiles<'a>>>,
+    pub renderer_state: Option<flatbuffers::WIPOffset<RendererState<'a>>>,
+    pub blocks: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlock<'a>>>>>,
+    pub groups: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucGroup<'a>>>>>,
 }
 impl<'a> Default for ExportedDataStateArgs<'a> {
   #[inline]
@@ -6489,6 +7364,9 @@ impl<'a> Default for ExportedDataStateArgs<'a> {
       elements: None,
       app_state: None,
       files: None,
+      renderer_state: None,
+      blocks: None,
+      groups: None,
     }
   }
 }
@@ -6523,6 +7401,18 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ExportedDataStateBuilder<'a, 'b
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<BinaryFiles>>(ExportedDataState::VT_FILES, files);
   }
   #[inline]
+  pub fn add_renderer_state(&mut self, renderer_state: flatbuffers::WIPOffset<RendererState<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<RendererState>>(ExportedDataState::VT_RENDERER_STATE, renderer_state);
+  }
+  #[inline]
+  pub fn add_blocks(&mut self, blocks: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucBlock<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_BLOCKS, blocks);
+  }
+  #[inline]
+  pub fn add_groups(&mut self, groups: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucGroup<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_GROUPS, groups);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> ExportedDataStateBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     ExportedDataStateBuilder {
@@ -6546,6 +7436,9 @@ impl core::fmt::Debug for ExportedDataState<'_> {
       ds.field("elements", &self.elements());
       ds.field("app_state", &self.app_state());
       ds.field("files", &self.files());
+      ds.field("renderer_state", &self.renderer_state());
+      ds.field("blocks", &self.blocks());
+      ds.field("groups", &self.groups());
       ds.finish()
   }
 }

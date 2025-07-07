@@ -21,16 +21,14 @@ import {
   StrokeSides as BinStrokeSides,
   StrokeStyle as BinStrokeStyle,
   TilingProperties as BinTilingProperties
-} from '@duc/canvas/duc/duc-ts/duc';
-import { ensureFiniteNumber, getPrecisionValueField } from '@duc/canvas/duc/duc-ts/src/serialize/serializationUtils';
-import { isLinearElement } from '@duc/canvas/element/typeChecks';
-import type { DucBlockInstanceElement, DucLine, DucLineReference, DucPath, DucPoint } from '@duc/canvas/element/types';
+} from 'ducjs/duc';
+import { isLinearElement } from 'ducjs/types/elements/typeChecks';
+import type { DucLine, DucLineReference, DucPath, DucPoint } from 'ducjs/types/elements';
 import {
   DucArrowElement,
   DucDocElement,
   DucElement,
   DucFrameElement,
-  DucMagicFrameElement,
   DucPointBinding,
   DucTableCell,
   DucTableColumn,
@@ -44,7 +42,8 @@ import {
   StrokeSides,
   StrokeStyle,
   TilingProperties
-} from '@duc/canvas/element/types';
+} from 'ducjs/types/elements';
+import { ensureFiniteNumber, getPrecisionValueField } from 'ducjs/src/serialize/serializationUtils';
 import * as flatbuffers from 'flatbuffers';
 
 export const serializeDucElement = (
@@ -94,8 +93,8 @@ export const serializeDucElement = (
 
   // Pre-create frame/magicframe strings
   let labelingColorOffset: flatbuffers.Offset | undefined;
-  if (element.type === 'frame' || element.type === 'magicframe') {
-    const frameLikeElement = element as DucFrameElement | DucMagicFrameElement;
+  if (element.type === 'frame') {
+    const frameLikeElement = element as DucFrameElement;
     if (frameLikeElement.labelingColor) {
       labelingColorOffset = builder.createString(frameLikeElement.labelingColor);
     }
@@ -218,8 +217,8 @@ export const serializeDucElement = (
   // Pre-create frame/magicframe override objects
   let strokeOverrideOffset: flatbuffers.Offset | undefined;
   let backgroundOverrideOffset: flatbuffers.Offset | undefined;
-  if (element.type === 'frame' || element.type === 'magicframe') {
-    const frameLikeElement = element as DucFrameElement | DucMagicFrameElement;
+  if (element.type === 'frame') {
+    const frameLikeElement = element as DucFrameElement;
     if (frameLikeElement.strokeOverride) {
       strokeOverrideOffset = serializeElementStroke(builder, frameLikeElement.strokeOverride, forRenderer);
     }
@@ -308,8 +307,8 @@ export const serializeDucElement = (
     imageCropOffset && BinDucElement.addImageCrop(builder, imageCropOffset);
   }
 
-  if (element.type === 'frame' || element.type === 'magicframe') { 
-    const frameLikeElement = element as DucFrameElement | DucMagicFrameElement;
+  if (element.type === 'frame') { 
+    const frameLikeElement = element as DucFrameElement;
     frameLikeElement.isCollapsed !== undefined && BinDucElement.addStackLikeIsCollapsed(builder, frameLikeElement.isCollapsed);
     frameLikeElement.clip !== undefined && BinDucElement.addStackLikeClip(builder, frameLikeElement.clip);
     

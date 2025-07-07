@@ -78,31 +78,6 @@ class AppState(object):
         return None
 
     # AppState
-    def Groups(self, j):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(66))
-        if o != 0:
-            x = self._tab.Vector(o)
-            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
-            x = self._tab.Indirect(x)
-            from Duc.DucGroup import DucGroup
-            obj = DucGroup()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # AppState
-    def GroupsLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(66))
-        if o != 0:
-            return self._tab.VectorLen(o)
-        return 0
-
-    # AppState
-    def GroupsIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(66))
-        return o == 0
-
-    # AppState
     def ScrollX(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(68))
         if o != 0:
@@ -467,18 +442,6 @@ def AppStateAddScope(builder, scope):
 
 def AddScope(builder, scope):
     AppStateAddScope(builder, scope)
-
-def AppStateAddGroups(builder, groups):
-    builder.PrependUOffsetTRelativeSlot(31, flatbuffers.number_types.UOffsetTFlags.py_type(groups), 0)
-
-def AddGroups(builder, groups):
-    AppStateAddGroups(builder, groups)
-
-def AppStateStartGroupsVector(builder, numElems):
-    return builder.StartVector(4, numElems, 4)
-
-def StartGroupsVector(builder, numElems):
-    return AppStateStartGroupsVector(builder, numElems)
 
 def AppStateAddScrollX(builder, scrollX):
     builder.PrependFloat32Slot(32, scrollX, 0.0)

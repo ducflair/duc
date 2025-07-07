@@ -5,12 +5,12 @@ import {
   DucLinearElement,
   DucPoint,
   ElementBackground,
-} from "@duc/canvas/element/types";
-import { AppState, Scope } from "@duc/canvas/types";
-import { LINE_HEAD, STROKE_PLACEMENT, SVG_NS } from "@duc/canvas/utils/constants";
+} from "ducjs/element/types";
+import { AppState, Scope } from "ducjs/types";
+import { LINE_HEAD, STROKE_PLACEMENT, SVG_NS } from "ducjs/utils/constants";
 import { applyStyles } from "./ducToSvg";
-import { RestoredDataState } from "@duc/canvas/data/restore";
-import { isArrowElement } from "@duc/canvas/element/typeChecks";
+import { RestoredDataState } from "ducjs/data/restore";
+import { isArrowElement } from "ducjs/element/typeChecks";
 
 // This file will contain the new, robust SVG rendering logic for linear elements,
 // ported from the Rust implementation.
