@@ -1,29 +1,12 @@
 {
-  "exclude": [
-    "node_modules",
-    "dist",
-  ],
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
+    "baseUrl": ".",
     "outDir": "dist",
-    "rootDir": "src",
-    "lib": ["ESNext"],
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "moduleResolution": "node",
     "paths": {
-      "@ducflair/canvas/*": ["../../packages/core/canvas/dist/canvas/*"],
+      "ducjs/*": ["src/*"],
     },
-    "jsx": "react-jsx"
+    "skipLibCheck": true,
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/**/*.ts",
-    "**/**/*.tsx",
-    "**/*.jsx",
-    "**/*.d.ts"
-  ],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -4,8 +4,8 @@ import {
   DucBlockAttribute as BinDucBlockAttribute,
   DucBlockAttributeDetails as BinDucBlockAttributeDetails,
   SimplePoint,
-} from '@duc/canvas/duc/duc-ts/duc';
-import { DucBlock, DucBlockAttributeDetailsType } from '@duc/canvas/element/types';
+} from 'ducjs/duc';
+import { DucBlock, DucBlockAttributeDetailsType } from 'ducjs/types/elements';
 import { serializeDucElement } from './serializeElementFromDuc';
 import { getPrecisionValueField } from './serializationUtils';
 

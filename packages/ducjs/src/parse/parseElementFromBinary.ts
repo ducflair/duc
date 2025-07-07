@@ -16,9 +16,9 @@ import {
   PointBinding as BinPointBinding,
   StrokeSides as BinStrokeSides,
   TilingProperties as BinTilingProperties
-} from '@duc/canvas/duc/duc-ts/duc';
-import { SupportedMeasures } from '@duc/canvas/duc/utils/measurements';
-import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from '@duc/canvas/duc/utils/scopes';
+} from 'ducjs/duc';
+import { SupportedMeasures } from 'ducjs/utils/measurements';
+import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/utils/scopes';
 import {
   BezierMirroring,
   Blending,
@@ -34,7 +34,6 @@ import {
   DucLine,
   DucLinearElement,
   DucLineReference,
-  DucMagicFrameElement,
   DucPath,
   DucPoint,
   DucPointBinding,
@@ -65,10 +64,10 @@ import {
   TextAlign,
   TilingProperties,
   VerticalAlign
-} from '@duc/canvas/element/types';
-import { RawValue } from '@duc/canvas/types';
-import { DEFAULT_ELEMENT_PROPS, FREEDRAW_EASINGS } from '@duc/canvas/utils/constants';
-import { Percentage, Radian } from '@duc/canvas/utils/geometry/shape';
+} from 'ducjs/types/elements';
+import { RawValue } from 'ducjs/types';
+import { DEFAULT_ELEMENT_PROPS, FREEDRAW_EASINGS } from 'ducjs/utils/constants';
+import { Percentage, Radian } from 'ducjs/types/geometryTypes';
 import tinycolor from 'tinycolor2';
 
 export const parsePoint = (point: BinPoint | null, elementScope: SupportedMeasures): DucPoint | null => {
@@ -378,16 +377,6 @@ export const parseElementFromBinary = (e: BinDucElement, v: number): Partial<Duc
         strokeOverride: e.stackLikeStrokeOverride() ? parseElementBinStroke(e.stackLikeStrokeOverride(), elementScope) : null,
         backgroundOverride: e.stackLikeBackgroundOverride() ? parseElementBinBackground(e.stackLikeBackgroundOverride()) : null,
       } as DucFrameElement;
-    case "magicframe":
-      return {
-        ...baseElement,
-        type: elType,
-        isCollapsed: e.stackLikeIsCollapsed(),
-        clip: e.stackLikeClip() || undefined,
-        labelingColor: e.stackLikeLabelingColor() || undefined,
-        strokeOverride: e.stackLikeStrokeOverride() ? parseElementBinStroke(e.stackLikeStrokeOverride(), elementScope) : null,
-        backgroundOverride: e.stackLikeBackgroundOverride() ? parseElementBinBackground(e.stackLikeBackgroundOverride()) : null,
-      } as DucMagicFrameElement;
     case "selection":
       return {
         ...baseElement,

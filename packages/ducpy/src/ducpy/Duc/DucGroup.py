@@ -36,13 +36,6 @@ class DucGroup(object):
         return None
 
     # DucGroup
-    def Type(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # DucGroup
     def IsCollapsed(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
@@ -57,14 +50,78 @@ class DucGroup(object):
         return None
 
     # DucGroup
-    def Scope(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+    def Description(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
+    # DucGroup
+    def NoPlot(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
+        if o != 0:
+            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
+        return None
+
+    # DucGroup
+    def Locked(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
+        if o != 0:
+            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
+        return False
+
+    # DucGroup
+    def IsVisible(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        if o != 0:
+            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
+        return False
+
+    # DucGroup
+    def Opacity(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # DucGroup
+    def LabelingColor(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # DucGroup
+    def StrokeOverride(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.ElementStroke import ElementStroke
+            obj = ElementStroke()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucGroup
+    def BackgroundOverride(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.ElementBackground import ElementBackground
+            obj = ElementBackground()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucGroup
+    def Clip(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
+        if o != 0:
+            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
+        return None
+
 def DucGroupStart(builder):
-    builder.StartObject(6)
+    builder.StartObject(15)
 
 def Start(builder):
     DucGroupStart(builder)
@@ -74,12 +131,6 @@ def DucGroupAddId(builder, id):
 
 def AddId(builder, id):
     DucGroupAddId(builder, id)
-
-def DucGroupAddType(builder, type):
-    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(type), 0)
-
-def AddType(builder, type):
-    DucGroupAddType(builder, type)
 
 def DucGroupAddIsCollapsed(builder, isCollapsed):
     builder.PrependBoolSlot(2, isCollapsed, 0)
@@ -93,11 +144,59 @@ def DucGroupAddLabel(builder, label):
 def AddLabel(builder, label):
     DucGroupAddLabel(builder, label)
 
-def DucGroupAddScope(builder, scope):
-    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(scope), 0)
+def DucGroupAddDescription(builder, description):
+    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(description), 0)
 
-def AddScope(builder, scope):
-    DucGroupAddScope(builder, scope)
+def AddDescription(builder, description):
+    DucGroupAddDescription(builder, description)
+
+def DucGroupAddNoPlot(builder, noPlot):
+    builder.PrependBoolSlot(7, noPlot, None)
+
+def AddNoPlot(builder, noPlot):
+    DucGroupAddNoPlot(builder, noPlot)
+
+def DucGroupAddLocked(builder, locked):
+    builder.PrependBoolSlot(8, locked, 0)
+
+def AddLocked(builder, locked):
+    DucGroupAddLocked(builder, locked)
+
+def DucGroupAddIsVisible(builder, isVisible):
+    builder.PrependBoolSlot(9, isVisible, 0)
+
+def AddIsVisible(builder, isVisible):
+    DucGroupAddIsVisible(builder, isVisible)
+
+def DucGroupAddOpacity(builder, opacity):
+    builder.PrependFloat32Slot(10, opacity, 0.0)
+
+def AddOpacity(builder, opacity):
+    DucGroupAddOpacity(builder, opacity)
+
+def DucGroupAddLabelingColor(builder, labelingColor):
+    builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(labelingColor), 0)
+
+def AddLabelingColor(builder, labelingColor):
+    DucGroupAddLabelingColor(builder, labelingColor)
+
+def DucGroupAddStrokeOverride(builder, strokeOverride):
+    builder.PrependUOffsetTRelativeSlot(12, flatbuffers.number_types.UOffsetTFlags.py_type(strokeOverride), 0)
+
+def AddStrokeOverride(builder, strokeOverride):
+    DucGroupAddStrokeOverride(builder, strokeOverride)
+
+def DucGroupAddBackgroundOverride(builder, backgroundOverride):
+    builder.PrependUOffsetTRelativeSlot(13, flatbuffers.number_types.UOffsetTFlags.py_type(backgroundOverride), 0)
+
+def AddBackgroundOverride(builder, backgroundOverride):
+    DucGroupAddBackgroundOverride(builder, backgroundOverride)
+
+def DucGroupAddClip(builder, clip):
+    builder.PrependBoolSlot(14, clip, None)
+
+def AddClip(builder, clip):
+    DucGroupAddClip(builder, clip)
 
 def DucGroupEnd(builder):
     return builder.EndObject()

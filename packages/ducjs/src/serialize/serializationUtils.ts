@@ -1,4 +1,4 @@
-import { PrecisionValue } from '@duc/canvas/types';
+import { PrecisionValue } from 'ducjs/types';
 
 /**
  * Ensures that a given number is finite. If not, returns a default value.

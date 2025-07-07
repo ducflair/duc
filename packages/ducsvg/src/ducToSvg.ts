@@ -1,9 +1,9 @@
-import { RestoredDataState } from "@duc/canvas/data/restore";
+import { RestoredDataState } from "ducjs/data/restore";
 import {
   getBoundTextElement,
   getContainerElement,
   getLineHeightInPx,
-} from "@duc/canvas/element/textElement";
+} from "ducjs/element/textElement";
 import {
   isArrowElement,
   isEllipseElement,
@@ -13,7 +13,7 @@ import {
   isLinearElement,
   isTableElement,
   isTextElement
-} from "@duc/canvas/element/typeChecks";
+} from "ducjs/element/typeChecks";
 import {
   DucArrowElement,
   DucDocElement,
@@ -34,21 +34,22 @@ import {
   ElementStroke,
   ElementSubset,
   NonDeletedDucElement
-} from "@duc/canvas/element/types";
-import { getElementAbsoluteCoords } from "@duc/canvas/element/bounds";
-import { getContainingFrame, getFrameLikeElements, getFrameLikeTitle } from "@duc/canvas/element/frame";
-import { Fonts, getVerticalOffset } from "@duc/canvas/fonts";
-import { LinearElementEditor } from "@duc/canvas/linearElement/linearElementEditor";
-import { getFreeDrawSvgPath } from "@duc/canvas/renderer/renderElement";
-import { getDefaultAppState } from "@duc/canvas/state/appState";
-import { AppState, BinaryFiles, RawValue, Scope, ScopedValue } from "@duc/canvas/types";
-import { DEFAULT_FRAME_STYLE, ELEMENT_SUBSET, LINE_HEAD, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, SVG_NS, TEXT_ALIGN } from "@duc/canvas/utils/constants";
-import { arrayToMap, getFontFamilyString, isRTL, isTestEnv } from "@duc/canvas/utils/utils";
-import { convertShapeToLinearElement, Percentage } from "@duc/canvas/utils/geometry/shape";
-import { DESIGN_STANDARD, DesignStandard } from "@duc/canvas/duc/utils/standards";
-import { getPrecisionValueFromRaw } from "@duc/canvas/duc/utils/scopes";
-import { SpatialIndex } from "@duc/canvas/scene/SpatialIndex";
-import { renderLinearElementToSvg } from "@duc/canvas/duc/duc-svg/src/linearElementToSvg";
+} from "ducjs/element/types";
+import { getElementAbsoluteCoords } from "ducjs/element/bounds";
+import { getContainingFrame, getFrameLikeElements, getFrameLikeTitle } from "ducjs/element/frame";
+import { Fonts, getVerticalOffset } from "ducjs/fonts";
+import { LinearElementEditor } from "ducjs/linearElement/linearElementEditor";
+import { getFreeDrawSvgPath } from "ducjs/renderer/renderElement";
+import { getDefaultAppState } from "ducjs/state/appState";
+import { AppState, BinaryFiles, RawValue, Scope, ScopedValue } from "ducjs/types";
+import { DEFAULT_FRAME_STYLE, ELEMENT_SUBSET, LINE_HEAD, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, SVG_NS, TEXT_ALIGN } from "ducjs/utils/constants";
+import { arrayToMap, getFontFamilyString, isRTL, isTestEnv } from "ducjs/utils/utils";
+import { convertShapeToLinearElement, Percentage } from "ducjs/utils/geometry/shape";
+import { DESIGN_STANDARD, DesignStandard } from "ducjs/duc/utils/standards";
+import { getPrecisionValueFromRaw } from "ducjs/duc/utils/scopes";
+import { SpatialIndex } from "ducjs/scene/SpatialIndex";
+import { renderLinearElementToSvg } from "ducjs/duc/duc-svg/src/linearElementToSvg";
+import { getBoundTextElementPosition } from "ducjs/types/elements/linearElementEditor";
 
 const DUC_STANDARD_PRIMARY_COLOR = "#7878dd";
 const BACKGROUND_OPACITY: Percentage = 0.1 as Percentage;
@@ -692,12 +693,15 @@ export const renderElementToSvg = (
     if (isArrowElement(container)) {
       const [x1, y1, x2, y2] = getElementAbsoluteCoords(container, elementsMap, currentScope);
 
-      const boundTextCoords = LinearElementEditor.getBoundTextElementPosition(
+      const boundTextCoords = getBoundTextElementPosition(
         container,
         element as DucTextElementWithContainer,
         elementsMap,
         currentScope,
       );
+      if (!boundTextCoords) {
+        return null;
+      }
       cx = (x2 - x1) / 2 - (boundTextCoords.x - x1);
       cy = (y2 - y1) / 2 - (boundTextCoords.y - y1);
       offsetX = offsetX + boundTextCoords.x - element.x.scoped;
