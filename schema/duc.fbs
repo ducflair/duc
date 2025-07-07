@@ -496,10 +496,9 @@ table RendererState {
   deleted_element_ids: [string];
 }
 
-// Finally, define the ExportedDataState table
 table ExportedDataState {
   type: string;
-  version: int;
+  version_legacy: int;
   source: string;
   elements: [DucElement];
   app_state: AppState;
@@ -507,6 +506,7 @@ table ExportedDataState {
   renderer_state: RendererState;
   blocks: [DucBlock];
   groups: [DucGroup];
+  version: string;
 }
 
 root_type ExportedDataState;

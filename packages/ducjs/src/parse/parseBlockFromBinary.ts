@@ -10,7 +10,7 @@ import { parseElementFromBinary } from './parseElementFromBinary';
 
 export const parseBlockFromBinary = (
   block: BinDucBlock,
-  version: number
+  version: string
 ): Partial<DucBlock> | null => {
   if (!block) return null;
 

@@ -1,0 +1,1 @@
+export * as DucBin from "ducjs/legacy/v1/duc";

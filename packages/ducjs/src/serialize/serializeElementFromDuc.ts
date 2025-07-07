@@ -43,7 +43,7 @@ import {
   StrokeStyle,
   TilingProperties
 } from 'ducjs/types/elements';
-import { ensureFiniteNumber, getPrecisionValueField } from 'ducjs/src/serialize/serializationUtils';
+import { ensureFiniteNumber, getPrecisionValueField } from 'ducjs/serialize/serializationUtils';
 import * as flatbuffers from 'flatbuffers';
 
 export const serializeDucElement = (

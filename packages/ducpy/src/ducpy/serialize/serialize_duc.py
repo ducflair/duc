@@ -51,12 +51,15 @@ def serialize_as_flatbuffers(elements: List[DucElementUnion], app_state: AppStat
         # Create type string offset
         type_offset = builder.CreateString(EXPORT_DATA_TYPES["duc"])
         
+        # Create version string offset
+        version_offset = builder.CreateString(DUC_SCHEMA_VERSION)
+        
         # Start building ExportedDataState
         ExportedDataStateStart(builder)
         
         # Add type and version
         ExportedDataStateAddType(builder, type_offset)
-        ExportedDataStateAddVersion(builder, DUC_SCHEMA_VERSION) # Use DUC_SCHEMA_VERSION from _version.py
+        ExportedDataStateAddVersion(builder, version_offset) # Use DUC_SCHEMA_VERSION from _version.py
         
         # Add elements vector
         ExportedDataStateAddElements(builder, elements_vector)
