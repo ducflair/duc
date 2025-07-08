@@ -1,11 +1,13 @@
 {
+  "extends": "@duc/tsconfig/base.json",
   "compilerOptions": {
     "baseUrl": ".",
     "outDir": "dist",
+    "declaration": true,
+    "declarationDir": "dist",
     "paths": {
-      "ducjs/*": ["src/*"],
+      "ducjs/*": ["src/*"]
     },
-    "skipLibCheck": true,
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

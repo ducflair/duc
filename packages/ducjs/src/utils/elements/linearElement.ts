@@ -765,13 +765,18 @@ export const getMinMaxXYWithBoundText = (
   let [x1, y1, x2, y2] = elementBounds;
   const cx = (x1 + x2) / 2 as SV;
   const cy = (y1 + y2) / 2 as SV;
-  const { x: boundTextX1, y: boundTextY1 } =
-    getBoundTextElementPosition(
-      element,
-      boundTextElement,
-      elementsMap,
-      currentScope,
-    );
+  const boundTextCoords = getBoundTextElementPosition(
+    element,
+    boundTextElement,
+    elementsMap,
+    currentScope,
+  );
+
+  if (boundTextCoords === null) {
+    return [x1, y1, x2, y2, cx, cy];
+  }
+
+  const { x: boundTextX1, y: boundTextY1 } = boundTextCoords;
   const boundTextX2 = boundTextX1 + boundTextElement.width.scoped;
   const boundTextY2 = boundTextY1 + boundTextElement.height.scoped;
 

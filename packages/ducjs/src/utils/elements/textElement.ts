@@ -1,5 +1,5 @@
 import { DucState, RawValue, Scope, ScopedValue } from "ducjs/types";
-import { DucElement, DucElementType, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap, FontFamilyValues, FontString, NonDeletedDucElement } from "ducjs/types/elements";
+import { DucElement, DucElementType, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap, FontFamilyValues, FontString, NonDeletedDucElement } from "ducjs/types/elements";
 import { isArrowElement, isBoundToContainer, isTextElement } from "ducjs/types/elements/typeChecks";
 import { GeometricPoint } from "ducjs/types/geometryTypes";
 import { ExtractSetType } from "ducjs/types/utility-types";
@@ -17,13 +17,19 @@ export const computeBoundTextPosition = (
   currentScope: SupportedMeasures,
 ): { x: ScopedValue; y: ScopedValue } => {
   if (isArrowElement(container)) {
-    const { x, y } = getBoundTextElementPosition(
+    const coords = getBoundTextElementPosition(
       container,
       boundTextElement,
       elementsMap,
       currentScope,
     );
-    return { x: x as ScopedValue, y: y as ScopedValue };
+    if (coords === null) {
+      return {
+        x: getPrecisionValueFromRaw(0 as RawValue, boundTextElement.scope, currentScope).scoped,
+        y: getPrecisionValueFromRaw(0 as RawValue, boundTextElement.scope, currentScope).scoped,
+      };
+    }
+    return { x: coords.x as ScopedValue, y: coords.y as ScopedValue };
   }
   const containerCoords = getContainerCoords(container);
   const maxContainerHeight = getBoundTextMaxHeight(container, boundTextElement);
@@ -432,8 +438,9 @@ export const getContainerCenter = (
   //   elementsMap,
   //   DucState,
   // )[index];
-  const initialMidSegmentMidpoint = undefined; // FIXME: provide a better implementation for mid points handling
+  let initialMidSegmentMidpoint: DucPoint | undefined; // FIXME: provide a better implementation for mid points handling
   const initMidPoints = initialMidSegmentMidpoint && getScopedBezierPointFromDucPoint(initialMidSegmentMidpoint);
+  // Remove casting in the future
   let midSegmentMidpoint = initMidPoints && { x: initMidPoints.x, y: initMidPoints.y };
   if (!midSegmentMidpoint) {
     midSegmentMidpoint = getSegmentMidPoint(
