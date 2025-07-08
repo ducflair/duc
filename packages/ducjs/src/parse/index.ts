@@ -29,7 +29,7 @@ export const parseDucFlatBuffers = async (
     return parseDucFlatBuffersV1(blob, fileHandle);
   }
 
-  const version = data.version();
+  const version = data.version() || "0.0.0";
 
   // Parse elements
   const elements: Partial<DucElement>[] = [];

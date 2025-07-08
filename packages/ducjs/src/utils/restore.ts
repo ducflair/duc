@@ -1237,13 +1237,12 @@ export const restoreDucState = (
     activeTool: {
       ...updateActiveTool(
         defaultDucState,
-        ducState.activeTool.type &&
-          AllowedDucActiveTools[ducState.activeTool.type]
+        ducState.activeTool?.type && AllowedDucActiveTools[ducState.activeTool.type]
           ? ducState.activeTool
           : { type: "selection" }
       ),
       lastActiveTool: null,
-      locked: isValidBoolean(ducState.activeTool.locked, false),
+      locked: isValidBoolean(ducState.activeTool?.locked, false),
     },
 
     currentItemBackground: validateBackground(ducState.currentItemBackground),
