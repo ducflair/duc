@@ -61,6 +61,16 @@ export const getElementAbsoluteCoords = (
         elementsMap,
         currentScope,
       );
+      if (coords === null) {
+        return [
+          element.x.scoped as SV,
+          element.y.scoped as SV,
+          element.x.scoped + element.width.scoped as SV,
+          element.y.scoped + element.height.scoped as SV,
+          element.x.scoped + element.width.scoped / 2 as SV,
+          element.y.scoped + element.height.scoped / 2 as SV,
+        ];
+      }
       return [
         coords.x as SV,
         coords.y as SV,
