@@ -26,7 +26,7 @@ import {
   PointerType,
   TextAlign,
   Theme
-} from "@duc/canvas/element/types";
+} from "ducjs/types/elements";
 import type { FileSystemHandle } from "browser-fs-access";
 import { TFunction } from 'i18next';
 import React from "react";
@@ -45,7 +45,7 @@ import { isOverScrollBars } from "@duc/canvas/scene/scrollbars";
 import { StoreActionType } from "@duc/canvas/state/store";
 import type { ANTI_ALIASING, IMAGE_MIME_TYPES, MIME_TYPES } from "@duc/canvas/utils/constants";
 import { ClipboardData } from "@duc/canvas/utils/events/clipboard";
-import { MakeBrand, MaybePromise, Merge, ValueOf } from "@duc/canvas/utils/utility-types";
+import { MakeBrand, MaybePromise, Merge, ValueOf } from "ducjs/types/utility-types";
 import type { throttleRAF } from "@duc/canvas/utils/utils";
 import { Percentage } from "@duc/canvas/utils/geometry/shape";
 import {
@@ -66,7 +66,7 @@ import {
   BEZIER_MIRRORING,
   FREEDRAW_EASINGS,
 } from "@duc/canvas/utils/constants";
-import { MakeBrand, MarkNonNullable, Merge, ValueOf } from "@duc/canvas/utils/utility-types";
+import { MakeBrand, MarkNonNullable, Merge, ValueOf } from "ducjs/types/utility-types";
 import { MagicCacheData } from "@duc/canvas/data/magic";
 import { SupportedMeasures } from "@duc/canvas/duc/utils/measurements";
 import { PrecisionValue, Scope } from "@duc/canvas/types";

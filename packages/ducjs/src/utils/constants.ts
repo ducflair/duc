@@ -29,6 +29,8 @@ export const SHIFT_LOCKING_ANGLE = Math.PI / 12;
 export const DEFAULT_GRID_SIZE = 1;
 export const DEFAULT_GRID_STEP = 20;
 
+export const SVG_NS = "http://www.w3.org/2000/svg";
+
 export const IMAGE_MIME_TYPES = {
   svg: "image/svg+xml",
   png: "image/png",
@@ -118,11 +120,6 @@ export const FONT_FAMILY = {
   "Liberation Sans": 9,
   "Roboto Mono": 10,
 };
-
-export const THEME = {
-  LIGHT: "light",
-  DARK: "dark",
-} as const;
 
 export const WINDOWS_EMOJI_FALLBACK_FONT = "Segoe UI Emoji";
 

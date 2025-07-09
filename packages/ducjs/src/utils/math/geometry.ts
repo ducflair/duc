@@ -47,7 +47,7 @@ export const cross = (
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 };
 
-export const dot = (
+export const geometryDot = (
   a: Readonly<GeometricPoint>,
   b: Readonly<GeometricPoint>,
   o: Readonly<GeometricPoint>,
@@ -1105,3 +1105,4 @@ export const segmentIntersectRectangleElement = (
 export function pointFrom<T extends GeometricPoint>(x: number, y: number): T {
   return { x, y } as T;
 }
+

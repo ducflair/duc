@@ -2,5 +2,11 @@
   "name": "ducsvg",
   "private": true,
   "version": "0.0.0-development",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "ducjs": "link:ducjs"
+  },
+  "scripts": {
+    "build": "tsc"
+  }
 }
