@@ -1,5 +1,6 @@
+import { ANTI_ALIASING, TEXT_ALIGN } from "ducjs/duc";
 import { DucState, RawValue } from "ducjs/types";
-import { ANTI_ALIASING, COLOR_PALETTE, DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_GRID_SIZE, DEFAULT_GRID_STEP, TEXT_ALIGN } from "ducjs/utils/constants";
+import { COLOR_PALETTE, DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_GRID_SIZE, DEFAULT_GRID_STEP } from "ducjs/utils/constants";
 import { getNormalizedZoom } from "ducjs/utils/normalize";
 import { getPrecisionValueFromRaw, getScaledZoomValueForScope, getScopedZoomValue, NEUTRAL_SCOPE } from "ducjs/utils/scopes";
 import { DESIGN_STANDARD } from "ducjs/utils/standards";

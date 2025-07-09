@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 
+use crate::generated::duc::IMAGE_STATUS;
+
 // =============== ENUMS ===============
 
-pub const NO_PEER_POINT: i32 = -1;
+pub const NO_PEER_POINTS: Vec<i32> = vec![];
 
 pub mod mime_types {
   pub const DUC: &str = "application/vnd.duc-cad";
@@ -108,16 +110,19 @@ pub enum TextAlign {
 pub enum ElementType {
     Rectangle,
     Ellipse,
-    Diamond,
+    Polygon,
     Text,
     Line,
     Arrow,
     FreeDraw,
     Image,
     Frame,
-    Group,
     MagicFrame,
     Selection,
+    Table,
+    Doc,
+    Embeddable,
+    BlockInstance,
 }
 
 impl ElementType {
@@ -125,21 +130,24 @@ impl ElementType {
         match self {
             ElementType::Rectangle => "rectangle",
             ElementType::Ellipse => "ellipse",
-            ElementType::Diamond => "diamond",
+            ElementType::Polygon => "polygon",
             ElementType::Text => "text",
             ElementType::Line => "line",
             ElementType::Arrow => "arrow",
             ElementType::FreeDraw => "freedraw",
             ElementType::Image => "image",
             ElementType::Frame => "frame",
-            ElementType::Group => "group",
             ElementType::MagicFrame => "magicframe",
             ElementType::Selection => "selection",
+            ElementType::Table => "table",
+            ElementType::Doc => "doc",
+            ElementType::Embeddable => "embeddable",
+            ElementType::BlockInstance => "blockinstance",
         }
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DucElementVariant {
     Base(DucElement),
     Linear(DucLinearElement),
@@ -148,12 +156,15 @@ pub enum DucElementVariant {
     Text(DucTextElement),
     Image(DucImageElement),
     Frame(DucFrameElement),
-    Group(DucGroupElement),
     MagicFrame(DucMagicFrameElement),
     Selection(DucSelectionElement),
     Rectangle(DucRectangleElement),
-    Diamond(DucDiamondElement),
+    Polygon(DucPolygonElement),
     Ellipse(DucEllipseElement),
+    Table(DucTableElement),
+    Doc(DucDocElement),
+    Embeddable(DucEmbeddableElement),
+    BlockInstance(DucBlockInstanceElement),
 }
 
 impl DucElementVariant {
@@ -161,7 +172,9 @@ impl DucElementVariant {
         match element.element_type.as_str() {
             "line" => DucElementVariant::Linear(DucLinearElement {
                 base: element,
-                points: Vec::new(), // This will be populated from the state
+                points: Vec::new(),
+                lines: Vec::new(),
+                path_overrides: Vec::new(),
                 last_committed_point: None,
                 start_binding: None,
                 end_binding: None,
@@ -170,6 +183,8 @@ impl DucElementVariant {
                 base: DucLinearElement {
                     base: element,
                     points: Vec::new(),
+                    lines: Vec::new(),
+                    path_overrides: Vec::new(),
                     last_committed_point: None,
                     start_binding: None,
                     end_binding: None,
@@ -181,38 +196,55 @@ impl DucElementVariant {
             }),
             "ellipse" => DucElementVariant::Ellipse(DucEllipseElement {
                 base: element,
+                ratio: None,
+                start_angle: None,
+                end_angle: None,
+                show_aux_crosshair: None,
             }),
-            "diamond" => DucElementVariant::Diamond(DucDiamondElement {
+            "polygon" => DucElementVariant::Polygon(DucPolygonElement {
                 base: element,
+                sides: 5,
             }),
             "freedraw" => DucElementVariant::FreeDraw(DucFreeDrawElement {
                 base: element,
                 points: Vec::new(),
                 pressures: Vec::new(),
+                size: 1.0,
                 simulate_pressure: false,
                 last_committed_point: None,
+                svg_path: None,
+                thinning: None,
+                smoothing: None,
+                streamline: None,
+                easing: None,
+                start_cap: None,
+                start_taper: None,
+                start_easing: None,
+                end_cap: None,
+                end_taper: None,
+                end_easing: None,
             }),
             "image" => DucElementVariant::Image(DucImageElement {
                 base: element,
                 file_id: None,
-                status: ImageStatus::Pending,
+                status: IMAGE_STATUS::PENDING,
                 scale: (1.0, 1.0),
                 crop: None,
             }),
             "frame" => DucElementVariant::Frame(DucFrameElement {
                 base: element,
                 is_collapsed: false,
+                labeling_color: "transparent".to_string(),
+                stroke_override: None,
+                background_override: None,
                 clip: false,
-            }),
-            "group" => DucElementVariant::Group(DucGroupElement {
-                base: element,
-                is_collapsed: false,
-                clip: false,
-                group_id_ref: "".to_string(),
             }),
             "magicframe" => DucElementVariant::MagicFrame(DucMagicFrameElement {
                 base: element,
                 is_collapsed: false,
+                labeling_color: "transparent".to_string(),
+                stroke_override: None,
+                background_override: None,
                 clip: false,
             }),
             "text" => DucElementVariant::Text(DucTextElement {
@@ -227,8 +259,27 @@ impl DucElementVariant {
                 line_height: 1.0,
                 auto_resize: false,
             }),
-            
-
+            "table" => DucElementVariant::Table(DucTableElement {
+                base: element,
+                column_order: Vec::new(),
+                row_order: Vec::new(),
+                columns: HashMap::new(),
+                rows: HashMap::new(),
+                cells: HashMap::new(),
+                style: None,
+            }),
+            "doc" => DucElementVariant::Doc(DucDocElement {
+                base: element,
+                content: "".to_string(),
+            }),
+            "embeddable" => DucElementVariant::Embeddable(DucEmbeddableElement {
+                base: element,
+            }),
+            "blockinstance" => DucElementVariant::BlockInstance(DucBlockInstanceElement {
+                base: element,
+                block_id: "".to_string(),
+                block_element_overrides: None,
+            }),
             _ => DucElementVariant::Base(element),
         }
     }
@@ -242,12 +293,15 @@ impl DucElementVariant {
             DucElementVariant::Image(e) => &e.base,
             DucElementVariant::Frame(e) => &e.base,
             DucElementVariant::FreeDraw(e) => &e.base,
-            DucElementVariant::Group(e) => &e.base,
             DucElementVariant::MagicFrame(e) => &e.base,
             DucElementVariant::Selection(e) => &e.base,
             DucElementVariant::Rectangle(e) => &e.base,
-            DucElementVariant::Diamond(e) => &e.base,
+            DucElementVariant::Polygon(e) => &e.base,
             DucElementVariant::Ellipse(e) => &e.base,
+            DucElementVariant::Table(e) => &e.base,
+            DucElementVariant::Doc(e) => &e.base,
+            DucElementVariant::Embeddable(e) => &e.base,
+            DucElementVariant::BlockInstance(e) => &e.base,
         }
     }
 
@@ -260,12 +314,15 @@ impl DucElementVariant {
             DucElementVariant::Image(e) => e.base = new_element,
             DucElementVariant::Frame(e) => e.base = new_element,
             DucElementVariant::FreeDraw(e) => e.base = new_element,
-            DucElementVariant::Group(e) => e.base = new_element,
             DucElementVariant::MagicFrame(e) => e.base = new_element,
             DucElementVariant::Selection(e) => e.base = new_element,
             DucElementVariant::Rectangle(e) => e.base = new_element,
-            DucElementVariant::Diamond(e) => e.base = new_element,
+            DucElementVariant::Polygon(e) => e.base = new_element,
             DucElementVariant::Ellipse(e) => e.base = new_element,
+            DucElementVariant::Table(e) => e.base = new_element,
+            DucElementVariant::Doc(e) => e.base = new_element,
+            DucElementVariant::Embeddable(e) => e.base = new_element,
+            DucElementVariant::BlockInstance(e) => e.base = new_element,
         }
     }
 }
@@ -355,12 +412,26 @@ pub struct SimplePoint {
 pub struct Point {
     pub x: f64,
     pub y: f64,
-    pub is_curve: Option<bool>,
     pub mirroring: Option<BezierMirroring>,
-    pub border_radius: Option<f64>,
-    pub handle_in: Option<SimplePoint>,
-    pub handle_out: Option<SimplePoint>,
-    pub peer: i32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LineReference {
+    pub index: i32,
+    pub handle: Option<SimplePoint>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Line {
+    pub start: LineReference,
+    pub end: LineReference,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Path {
+    pub line_indices: Vec<i32>,
+    pub background: Option<ElementBackground>,
+    pub stroke: Option<ElementStroke>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -450,6 +521,14 @@ pub struct BoundElement {
     pub element_type: String,  // Using element_type instead of type as type is a reserved keyword in Rust
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct HandleInfo {
+    pub point_index: i32,
+    pub handle_type: HandleType,
+    pub line_index: i32,
+    pub handle: Point,
+}
+
 
 // =============== LINEAR ELEMENT EDITOR ===============
 #[derive(Debug, Clone, PartialEq)]
@@ -462,11 +541,13 @@ pub struct SegmentMidpointState {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PointerDownState {
     pub prev_selected_points_indices: Vec<i32>,
+    pub prev_selected_handles: Option<Vec<HandleInfo>>,
     pub last_clicked_point: i32,
     pub last_clicked_is_end_point: bool,
     pub origin: Option<SimplePoint>,
     pub segment_midpoint: SegmentMidpointState,
     pub handle_type: Option<HandleType>,
+    pub handle_info: Option<HandleInfo>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -517,12 +598,16 @@ pub struct DucElement {
     pub locked: bool,
     pub z_index: i32,
     pub custom_data: Option<HashMap<String, String>>,
+    pub description: Option<String>,
+    pub no_plot: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucLinearElement {
     pub base: DucElement,
     pub points: Vec<Point>,
+    pub lines: Vec<Line>,
+    pub path_overrides: Vec<Path>,
     pub last_committed_point: Option<Point>,
     pub start_binding: Option<PointBinding>,
     pub end_binding: Option<PointBinding>,
@@ -537,10 +622,22 @@ pub struct DucArrowElement {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucFreeDrawElement {
     pub base: DucElement,
+    pub size: f64,
     pub points: Vec<Point>,
     pub pressures: Vec<f64>,
     pub simulate_pressure: bool,
     pub last_committed_point: Option<Point>,
+    pub svg_path: Option<String>,
+    pub thinning: Option<f64>,
+    pub smoothing: Option<f64>,
+    pub streamline: Option<f64>,
+    pub easing: Option<String>,
+    pub start_cap: Option<bool>,
+    pub start_taper: Option<f64>,
+    pub start_easing: Option<String>,
+    pub end_cap: Option<bool>,
+    pub end_taper: Option<f64>,
+    pub end_easing: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -561,7 +658,7 @@ pub struct DucTextElement {
 pub struct DucImageElement {
     pub base: DucElement,
     pub file_id: Option<String>,
-    pub status: ImageStatus,
+    pub status: IMAGE_STATUS,
     pub scale: (f64, f64),
     pub crop: Option<ImageCrop>,
 }
@@ -570,21 +667,19 @@ pub struct DucImageElement {
 pub struct DucFrameElement {
     pub base: DucElement,
     pub is_collapsed: bool,
+    pub labeling_color: String,
+    pub stroke_override: Option<ElementStroke>,
+    pub background_override: Option<ElementBackground>,
     pub clip: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucGroupElement {
-    pub base: DucElement,
-    pub is_collapsed: bool,
-    pub clip: bool,
-    pub group_id_ref: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucMagicFrameElement {
     pub base: DucElement,
     pub is_collapsed: bool,
+    pub labeling_color: String,
+    pub stroke_override: Option<ElementStroke>,
+    pub background_override: Option<ElementBackground>,
     pub clip: bool,
 }
 
@@ -599,13 +694,107 @@ pub struct DucRectangleElement {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct DucDiamondElement {
+pub struct DucPolygonElement {
     pub base: DucElement,
+    pub sides: i32,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucEllipseElement {
     pub base: DucElement,
+    pub ratio: Option<f64>,
+    pub start_angle: Option<f64>,
+    pub end_angle: Option<f64>,
+    pub show_aux_crosshair: Option<bool>,
+}
+
+// Table related structs
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucTableStyleProps {
+    pub background_color: Option<String>,
+    pub border_width: Option<f64>,
+    pub border_dashes: Option<Vec<f64>>,
+    pub border_color: Option<String>,
+    pub text_color: Option<String>,
+    pub text_size: Option<f64>,
+    pub text_font: Option<String>,
+    pub text_align: Option<TextAlign>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucTableColumn {
+    pub id: String,
+    pub width: Option<f64>,
+    pub style: Option<DucTableStyleProps>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucTableRow {
+    pub id: String,
+    pub height: Option<f64>,
+    pub style: Option<DucTableStyleProps>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucTableCell {
+    pub row_id: String,
+    pub column_id: String,
+    pub data: String,
+    pub style: Option<DucTableStyleProps>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucTableElement {
+    pub base: DucElement,
+    pub column_order: Vec<String>,
+    pub row_order: Vec<String>,
+    pub columns: HashMap<String, DucTableColumn>,
+    pub rows: HashMap<String, DucTableRow>,
+    pub cells: HashMap<String, DucTableCell>,
+    pub style: Option<DucTableStyleProps>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucDocElement {
+    pub base: DucElement,
+    pub content: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucEmbeddableElement {
+    pub base: DucElement,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucBlockInstanceElement {
+    pub base: DucElement,
+    pub block_id: String,
+    pub block_element_overrides: Option<HashMap<String, String>>,
+}
+
+// Table related structs
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucBlock {
+    pub id: String,
+    pub label: String,
+    pub description: String,
+    pub version: i32,
+    pub elements: Vec<DucElementVariant>,
+    pub attributes: Vec<DucBlockAttribute>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucBlockAttribute {
+    pub name: String,
+    pub details: DucBlockAttributeDetails,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucBlockAttributeDetails {
+    pub tag: String,
+    pub default_value: String,
+    pub prompt: String,
+    pub position: SimplePoint,
 }
 
 // =============== APP STATE ===============
@@ -626,10 +815,17 @@ pub struct FrameRendering {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucGroup {
     pub id: String,
-    pub group_type: String,  // Using group_type instead of type as type is a reserved keyword in Rust
-    pub is_collapsed: bool,
     pub label: String,
-    pub scope: String,
+    pub description: Option<String>,
+    pub is_collapsed: bool,
+    pub no_plot: bool,
+    pub locked: bool,
+    pub is_visible: bool,
+    pub opacity: f32,
+    pub labeling_color: String,
+    pub stroke_override: Option<ElementStroke>,
+    pub background_override: Option<ElementBackground>,
+    pub clip: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -659,7 +855,6 @@ pub struct AppState {
     pub scope: String,
     pub main_scope: String,
     pub standard: DesignStandard,
-    pub groups: Vec<DucGroup>,
     pub scroll_x: f64,
     pub scroll_y: f64,
     pub cursor_button: Option<String>,
@@ -692,6 +887,10 @@ pub struct AppState {
     pub v_sync: bool,
     pub debug_rendering: bool,
     pub zoom_step: f32,
+    pub hovered_element_id: Option<String>,
+    pub elements_pending_erasure: Option<Vec<String>>,
+    pub suggested_binding_element_id: Option<String>,
+    pub is_binding_enabled: bool,
 }
 
 // =============== BINARY FILES ===============
@@ -711,6 +910,13 @@ pub struct BinaryFileData {
     pub binary_data: Option<Vec<u8>>, // Actual binary content
 }
 
+// =============== RENDERER STATE ===============
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RendererState {
+    pub deleted_element_ids: Vec<String>,
+}
+
 // =============== DUC ===============
 
 /// A struct representing the parsed contents of a Duc file
@@ -718,5 +924,9 @@ pub struct BinaryFileData {
 pub struct DucFile {
     pub elements: Vec<DucElementVariant>,
     pub app_state: Option<AppState>,
-    pub binary_files: HashMap<String, BinaryFileData>, // Changed from Vec<BinaryFiles> to match TypeScript
+    pub binary_files: HashMap<String, BinaryFileData>,
+    pub renderer_state: Option<RendererState>,
+    pub blocks: Vec<DucBlock>,
+    pub groups: Vec<DucGroup>,
+    pub version: String,
 }

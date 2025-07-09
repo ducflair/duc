@@ -1,42 +1,8 @@
 import { ElementBackground } from "./types";
 
-export const STANDARD_TYPE = {
-  ISO: "ISO",
-  ANSI: "ANSI",
-  DIN: "DIN",
-  JIS: "JIS",
-  BS: "BS", // British Standard
-  ASME: "ASME",
-  CUSTOM: "CUSTOM",
-} as const;
-
-
-export const DIMENSION_UNITS_FORMAT = {
-  DECIMAL: 10,
-  ENGINEERING: 11, // Feet and decimal inches
-  ARCHITECTURAL: 12, // Feet and fractional inches
-  FRACTIONAL: 13, // Fractional inches
-  SCIENTIFIC: 14,
-} as const;
-
-export const ANGULAR_UNITS_FORMAT = {
-  DECIMAL_DEGREES: 10,
-  DEGREES_MINUTES_SECONDS: 11,
-  GRADS: 12,
-  RADIANS: 13,
-  SURVEYOR: 14,
-} as const;
-
-export const DECIMAL_SEPARATOR = {
-  DOT: ".",
-  COMMA: ",",
-} as const;
-
-
 export type DimensionUnitsFormat = ValueOf<typeof DIMENSION_UNITS_FORMAT>;
 export type AngularUnitsFormat = ValueOf<typeof ANGULAR_UNITS_FORMAT>;
 export type DecimalSeparator = ValueOf<typeof DECIMAL_SEPARATOR>;
-export type StandardType = ValueOf<typeof STANDARD_TYPE>;
 
 export type DucCommonStyle = {
   id: string;
@@ -53,9 +19,6 @@ export type _DucCommonStyleProps = Exclude<DucCommonStyle, "id" | "name" | "desc
 export type DucStandard = {
   /** Unique identifier for this standard */
   id: string;
-
-  /** Standard type */
-  type: StandardType;
 
   /** Human-readable name */
   name: string;
@@ -211,12 +174,3 @@ export type DucStandardsLibrary = {
   /** Recently used standards */
   recentStandardIds: string[];
 };
-
-// Example of predefined standards
-export const PREDEFINED_STANDARDS = {
-  ISO_25300: "iso-25300-2013",
-  ANSI_Y14_5: "ansi-y14.5-2018",
-  DIN_406: "din-406-2017",
-  JIS_B0001: "jis-b0001-2019",
-  BS_8888: "bs-8888-2020",
-} as const;

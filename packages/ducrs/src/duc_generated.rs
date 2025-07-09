@@ -18,6 +18,4047 @@ pub mod duc {
   extern crate flatbuffers;
   use self::flatbuffers::{EndianScalar, Follow};
 
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_VERTICAL_ALIGN: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_VERTICAL_ALIGN: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_VERTICAL_ALIGN: [VERTICAL_ALIGN; 3] = [
+  VERTICAL_ALIGN::TOP,
+  VERTICAL_ALIGN::MIDDLE,
+  VERTICAL_ALIGN::BOTTOM,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct VERTICAL_ALIGN(pub u8);
+#[allow(non_upper_case_globals)]
+impl VERTICAL_ALIGN {
+  pub const TOP: Self = Self(10);
+  pub const MIDDLE: Self = Self(11);
+  pub const BOTTOM: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::TOP,
+    Self::MIDDLE,
+    Self::BOTTOM,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::TOP => Some("TOP"),
+      Self::MIDDLE => Some("MIDDLE"),
+      Self::BOTTOM => Some("BOTTOM"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for VERTICAL_ALIGN {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for VERTICAL_ALIGN {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for VERTICAL_ALIGN {
+    type Output = VERTICAL_ALIGN;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for VERTICAL_ALIGN {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for VERTICAL_ALIGN {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for VERTICAL_ALIGN {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_TEXT_ALIGN: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_TEXT_ALIGN: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_TEXT_ALIGN: [TEXT_ALIGN; 3] = [
+  TEXT_ALIGN::LEFT,
+  TEXT_ALIGN::CENTER,
+  TEXT_ALIGN::RIGHT,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct TEXT_ALIGN(pub u8);
+#[allow(non_upper_case_globals)]
+impl TEXT_ALIGN {
+  pub const LEFT: Self = Self(10);
+  pub const CENTER: Self = Self(11);
+  pub const RIGHT: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::LEFT,
+    Self::CENTER,
+    Self::RIGHT,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::LEFT => Some("LEFT"),
+      Self::CENTER => Some("CENTER"),
+      Self::RIGHT => Some("RIGHT"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for TEXT_ALIGN {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for TEXT_ALIGN {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for TEXT_ALIGN {
+    type Output = TEXT_ALIGN;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for TEXT_ALIGN {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for TEXT_ALIGN {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for TEXT_ALIGN {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_STROKE_PLACEMENT: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_STROKE_PLACEMENT: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_STROKE_PLACEMENT: [STROKE_PLACEMENT; 3] = [
+  STROKE_PLACEMENT::INSIDE,
+  STROKE_PLACEMENT::CENTER,
+  STROKE_PLACEMENT::OUTSIDE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct STROKE_PLACEMENT(pub u8);
+#[allow(non_upper_case_globals)]
+impl STROKE_PLACEMENT {
+  pub const INSIDE: Self = Self(10);
+  pub const CENTER: Self = Self(11);
+  pub const OUTSIDE: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::INSIDE,
+    Self::CENTER,
+    Self::OUTSIDE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::INSIDE => Some("INSIDE"),
+      Self::CENTER => Some("CENTER"),
+      Self::OUTSIDE => Some("OUTSIDE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for STROKE_PLACEMENT {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for STROKE_PLACEMENT {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for STROKE_PLACEMENT {
+    type Output = STROKE_PLACEMENT;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for STROKE_PLACEMENT {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for STROKE_PLACEMENT {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for STROKE_PLACEMENT {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_STROKE_WIDTH: u8 = 1;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_STROKE_WIDTH: u8 = 4;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_STROKE_WIDTH: [STROKE_WIDTH; 3] = [
+  STROKE_WIDTH::THIN,
+  STROKE_WIDTH::BOLD,
+  STROKE_WIDTH::EXTRA_BOLD,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct STROKE_WIDTH(pub u8);
+#[allow(non_upper_case_globals)]
+impl STROKE_WIDTH {
+  pub const THIN: Self = Self(1);
+  pub const BOLD: Self = Self(2);
+  pub const EXTRA_BOLD: Self = Self(4);
+
+  pub const ENUM_MIN: u8 = 1;
+  pub const ENUM_MAX: u8 = 4;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::THIN,
+    Self::BOLD,
+    Self::EXTRA_BOLD,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::THIN => Some("THIN"),
+      Self::BOLD => Some("BOLD"),
+      Self::EXTRA_BOLD => Some("EXTRA_BOLD"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for STROKE_WIDTH {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for STROKE_WIDTH {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for STROKE_WIDTH {
+    type Output = STROKE_WIDTH;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for STROKE_WIDTH {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for STROKE_WIDTH {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for STROKE_WIDTH {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_ELEMENT_CONTENT_PREFERENCE: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_ELEMENT_CONTENT_PREFERENCE: u8 = 18;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_ELEMENT_CONTENT_PREFERENCE: [ELEMENT_CONTENT_PREFERENCE; 6] = [
+  ELEMENT_CONTENT_PREFERENCE::SOLID,
+  ELEMENT_CONTENT_PREFERENCE::FILL,
+  ELEMENT_CONTENT_PREFERENCE::FIT,
+  ELEMENT_CONTENT_PREFERENCE::TILE,
+  ELEMENT_CONTENT_PREFERENCE::STRETCH,
+  ELEMENT_CONTENT_PREFERENCE::HATCH,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct ELEMENT_CONTENT_PREFERENCE(pub u8);
+#[allow(non_upper_case_globals)]
+impl ELEMENT_CONTENT_PREFERENCE {
+  pub const SOLID: Self = Self(12);
+  pub const FILL: Self = Self(14);
+  pub const FIT: Self = Self(15);
+  pub const TILE: Self = Self(16);
+  pub const STRETCH: Self = Self(17);
+  pub const HATCH: Self = Self(18);
+
+  pub const ENUM_MIN: u8 = 12;
+  pub const ENUM_MAX: u8 = 18;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::SOLID,
+    Self::FILL,
+    Self::FIT,
+    Self::TILE,
+    Self::STRETCH,
+    Self::HATCH,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::SOLID => Some("SOLID"),
+      Self::FILL => Some("FILL"),
+      Self::FIT => Some("FIT"),
+      Self::TILE => Some("TILE"),
+      Self::STRETCH => Some("STRETCH"),
+      Self::HATCH => Some("HATCH"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for ELEMENT_CONTENT_PREFERENCE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for ELEMENT_CONTENT_PREFERENCE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for ELEMENT_CONTENT_PREFERENCE {
+    type Output = ELEMENT_CONTENT_PREFERENCE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for ELEMENT_CONTENT_PREFERENCE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for ELEMENT_CONTENT_PREFERENCE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for ELEMENT_CONTENT_PREFERENCE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_STROKE_PREFERENCE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_STROKE_PREFERENCE: u8 = 13;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_STROKE_PREFERENCE: [STROKE_PREFERENCE; 4] = [
+  STROKE_PREFERENCE::SOLID,
+  STROKE_PREFERENCE::DASHED,
+  STROKE_PREFERENCE::DOTTED,
+  STROKE_PREFERENCE::CUSTOM,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct STROKE_PREFERENCE(pub u8);
+#[allow(non_upper_case_globals)]
+impl STROKE_PREFERENCE {
+  pub const SOLID: Self = Self(10);
+  pub const DASHED: Self = Self(11);
+  pub const DOTTED: Self = Self(12);
+  pub const CUSTOM: Self = Self(13);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 13;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::SOLID,
+    Self::DASHED,
+    Self::DOTTED,
+    Self::CUSTOM,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::SOLID => Some("SOLID"),
+      Self::DASHED => Some("DASHED"),
+      Self::DOTTED => Some("DOTTED"),
+      Self::CUSTOM => Some("CUSTOM"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for STROKE_PREFERENCE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for STROKE_PREFERENCE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for STROKE_PREFERENCE {
+    type Output = STROKE_PREFERENCE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for STROKE_PREFERENCE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for STROKE_PREFERENCE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for STROKE_PREFERENCE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_STROKE_SIDE_PREFERENCE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_STROKE_SIDE_PREFERENCE: u8 = 15;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_STROKE_SIDE_PREFERENCE: [STROKE_SIDE_PREFERENCE; 6] = [
+  STROKE_SIDE_PREFERENCE::TOP,
+  STROKE_SIDE_PREFERENCE::BOTTOM,
+  STROKE_SIDE_PREFERENCE::LEFT,
+  STROKE_SIDE_PREFERENCE::RIGHT,
+  STROKE_SIDE_PREFERENCE::CUSTOM,
+  STROKE_SIDE_PREFERENCE::ALL,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct STROKE_SIDE_PREFERENCE(pub u8);
+#[allow(non_upper_case_globals)]
+impl STROKE_SIDE_PREFERENCE {
+  pub const TOP: Self = Self(10);
+  pub const BOTTOM: Self = Self(11);
+  pub const LEFT: Self = Self(12);
+  pub const RIGHT: Self = Self(13);
+  pub const CUSTOM: Self = Self(14);
+  pub const ALL: Self = Self(15);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 15;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::TOP,
+    Self::BOTTOM,
+    Self::LEFT,
+    Self::RIGHT,
+    Self::CUSTOM,
+    Self::ALL,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::TOP => Some("TOP"),
+      Self::BOTTOM => Some("BOTTOM"),
+      Self::LEFT => Some("LEFT"),
+      Self::RIGHT => Some("RIGHT"),
+      Self::CUSTOM => Some("CUSTOM"),
+      Self::ALL => Some("ALL"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for STROKE_SIDE_PREFERENCE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for STROKE_SIDE_PREFERENCE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for STROKE_SIDE_PREFERENCE {
+    type Output = STROKE_SIDE_PREFERENCE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for STROKE_SIDE_PREFERENCE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for STROKE_SIDE_PREFERENCE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for STROKE_SIDE_PREFERENCE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_STROKE_CAP: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_STROKE_CAP: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_STROKE_CAP: [STROKE_CAP; 3] = [
+  STROKE_CAP::BUTT,
+  STROKE_CAP::ROUND,
+  STROKE_CAP::SQUARE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct STROKE_CAP(pub u8);
+#[allow(non_upper_case_globals)]
+impl STROKE_CAP {
+  pub const BUTT: Self = Self(10);
+  pub const ROUND: Self = Self(11);
+  pub const SQUARE: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::BUTT,
+    Self::ROUND,
+    Self::SQUARE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::BUTT => Some("BUTT"),
+      Self::ROUND => Some("ROUND"),
+      Self::SQUARE => Some("SQUARE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for STROKE_CAP {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for STROKE_CAP {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for STROKE_CAP {
+    type Output = STROKE_CAP;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for STROKE_CAP {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for STROKE_CAP {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for STROKE_CAP {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_STROKE_JOIN: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_STROKE_JOIN: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_STROKE_JOIN: [STROKE_JOIN; 3] = [
+  STROKE_JOIN::MITER,
+  STROKE_JOIN::ROUND,
+  STROKE_JOIN::BEVEL,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct STROKE_JOIN(pub u8);
+#[allow(non_upper_case_globals)]
+impl STROKE_JOIN {
+  pub const MITER: Self = Self(10);
+  pub const ROUND: Self = Self(11);
+  pub const BEVEL: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::MITER,
+    Self::ROUND,
+    Self::BEVEL,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::MITER => Some("MITER"),
+      Self::ROUND => Some("ROUND"),
+      Self::BEVEL => Some("BEVEL"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for STROKE_JOIN {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for STROKE_JOIN {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for STROKE_JOIN {
+    type Output = STROKE_JOIN;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for STROKE_JOIN {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for STROKE_JOIN {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for STROKE_JOIN {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_LINE_HEAD: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_LINE_HEAD: u8 = 24;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_LINE_HEAD: [LINE_HEAD; 15] = [
+  LINE_HEAD::ARROW,
+  LINE_HEAD::BAR,
+  LINE_HEAD::CIRCLE,
+  LINE_HEAD::CIRCLE_OUTLINED,
+  LINE_HEAD::TRIANGLE,
+  LINE_HEAD::TRIANGLE_OUTLINED,
+  LINE_HEAD::DIAMOND,
+  LINE_HEAD::DIAMOND_OUTLINED,
+  LINE_HEAD::CROSS,
+  LINE_HEAD::OPEN_ARROW,
+  LINE_HEAD::REVERSED_ARROW,
+  LINE_HEAD::REVERSED_TRIANGLE,
+  LINE_HEAD::REVERSED_TRIANGLE_OUTLINED,
+  LINE_HEAD::CONE,
+  LINE_HEAD::HALF_CONE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct LINE_HEAD(pub u8);
+#[allow(non_upper_case_globals)]
+impl LINE_HEAD {
+  pub const ARROW: Self = Self(10);
+  pub const BAR: Self = Self(11);
+  pub const CIRCLE: Self = Self(12);
+  pub const CIRCLE_OUTLINED: Self = Self(13);
+  pub const TRIANGLE: Self = Self(14);
+  pub const TRIANGLE_OUTLINED: Self = Self(15);
+  pub const DIAMOND: Self = Self(16);
+  pub const DIAMOND_OUTLINED: Self = Self(17);
+  pub const CROSS: Self = Self(18);
+  pub const OPEN_ARROW: Self = Self(19);
+  pub const REVERSED_ARROW: Self = Self(20);
+  pub const REVERSED_TRIANGLE: Self = Self(21);
+  pub const REVERSED_TRIANGLE_OUTLINED: Self = Self(22);
+  pub const CONE: Self = Self(23);
+  pub const HALF_CONE: Self = Self(24);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 24;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::ARROW,
+    Self::BAR,
+    Self::CIRCLE,
+    Self::CIRCLE_OUTLINED,
+    Self::TRIANGLE,
+    Self::TRIANGLE_OUTLINED,
+    Self::DIAMOND,
+    Self::DIAMOND_OUTLINED,
+    Self::CROSS,
+    Self::OPEN_ARROW,
+    Self::REVERSED_ARROW,
+    Self::REVERSED_TRIANGLE,
+    Self::REVERSED_TRIANGLE_OUTLINED,
+    Self::CONE,
+    Self::HALF_CONE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::ARROW => Some("ARROW"),
+      Self::BAR => Some("BAR"),
+      Self::CIRCLE => Some("CIRCLE"),
+      Self::CIRCLE_OUTLINED => Some("CIRCLE_OUTLINED"),
+      Self::TRIANGLE => Some("TRIANGLE"),
+      Self::TRIANGLE_OUTLINED => Some("TRIANGLE_OUTLINED"),
+      Self::DIAMOND => Some("DIAMOND"),
+      Self::DIAMOND_OUTLINED => Some("DIAMOND_OUTLINED"),
+      Self::CROSS => Some("CROSS"),
+      Self::OPEN_ARROW => Some("OPEN_ARROW"),
+      Self::REVERSED_ARROW => Some("REVERSED_ARROW"),
+      Self::REVERSED_TRIANGLE => Some("REVERSED_TRIANGLE"),
+      Self::REVERSED_TRIANGLE_OUTLINED => Some("REVERSED_TRIANGLE_OUTLINED"),
+      Self::CONE => Some("CONE"),
+      Self::HALF_CONE => Some("HALF_CONE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for LINE_HEAD {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for LINE_HEAD {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for LINE_HEAD {
+    type Output = LINE_HEAD;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for LINE_HEAD {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for LINE_HEAD {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for LINE_HEAD {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_BEZIER_MIRRORING: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_BEZIER_MIRRORING: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_BEZIER_MIRRORING: [BEZIER_MIRRORING; 3] = [
+  BEZIER_MIRRORING::NONE,
+  BEZIER_MIRRORING::ANGLE,
+  BEZIER_MIRRORING::ANGLE_LENGTH,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct BEZIER_MIRRORING(pub u8);
+#[allow(non_upper_case_globals)]
+impl BEZIER_MIRRORING {
+  pub const NONE: Self = Self(10);
+  pub const ANGLE: Self = Self(11);
+  pub const ANGLE_LENGTH: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::NONE,
+    Self::ANGLE,
+    Self::ANGLE_LENGTH,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::NONE => Some("NONE"),
+      Self::ANGLE => Some("ANGLE"),
+      Self::ANGLE_LENGTH => Some("ANGLE_LENGTH"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for BEZIER_MIRRORING {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for BEZIER_MIRRORING {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for BEZIER_MIRRORING {
+    type Output = BEZIER_MIRRORING;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for BEZIER_MIRRORING {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for BEZIER_MIRRORING {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for BEZIER_MIRRORING {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_HANDLE_TYPE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_HANDLE_TYPE: u8 = 11;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_HANDLE_TYPE: [HANDLE_TYPE; 2] = [
+  HANDLE_TYPE::HANDLE_IN,
+  HANDLE_TYPE::HANDLE_OUT,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct HANDLE_TYPE(pub u8);
+#[allow(non_upper_case_globals)]
+impl HANDLE_TYPE {
+  pub const HANDLE_IN: Self = Self(10);
+  pub const HANDLE_OUT: Self = Self(11);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 11;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::HANDLE_IN,
+    Self::HANDLE_OUT,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::HANDLE_IN => Some("HANDLE_IN"),
+      Self::HANDLE_OUT => Some("HANDLE_OUT"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for HANDLE_TYPE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for HANDLE_TYPE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for HANDLE_TYPE {
+    type Output = HANDLE_TYPE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for HANDLE_TYPE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for HANDLE_TYPE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for HANDLE_TYPE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_ANTI_ALIASING: u8 = 8;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_ANTI_ALIASING: u8 = 16;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_ANTI_ALIASING: [ANTI_ALIASING; 4] = [
+  ANTI_ALIASING::MSAA_8,
+  ANTI_ALIASING::NONE,
+  ANTI_ALIASING::ANALYTIC,
+  ANTI_ALIASING::MSAA_16,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct ANTI_ALIASING(pub u8);
+#[allow(non_upper_case_globals)]
+impl ANTI_ALIASING {
+  pub const MSAA_8: Self = Self(8);
+  pub const NONE: Self = Self(10);
+  pub const ANALYTIC: Self = Self(11);
+  pub const MSAA_16: Self = Self(16);
+
+  pub const ENUM_MIN: u8 = 8;
+  pub const ENUM_MAX: u8 = 16;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::MSAA_8,
+    Self::NONE,
+    Self::ANALYTIC,
+    Self::MSAA_16,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::MSAA_8 => Some("MSAA_8"),
+      Self::NONE => Some("NONE"),
+      Self::ANALYTIC => Some("ANALYTIC"),
+      Self::MSAA_16 => Some("MSAA_16"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for ANTI_ALIASING {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for ANTI_ALIASING {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for ANTI_ALIASING {
+    type Output = ANTI_ALIASING;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for ANTI_ALIASING {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for ANTI_ALIASING {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for ANTI_ALIASING {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_YOUTUBE_STATES: i8 = -1;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_YOUTUBE_STATES: i8 = 5;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_YOUTUBE_STATES: [YOUTUBE_STATES; 6] = [
+  YOUTUBE_STATES::UNSTARTED,
+  YOUTUBE_STATES::ENDED,
+  YOUTUBE_STATES::PLAYING,
+  YOUTUBE_STATES::PAUSED,
+  YOUTUBE_STATES::BUFFERING,
+  YOUTUBE_STATES::CUED,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct YOUTUBE_STATES(pub i8);
+#[allow(non_upper_case_globals)]
+impl YOUTUBE_STATES {
+  pub const UNSTARTED: Self = Self(-1);
+  pub const ENDED: Self = Self(0);
+  pub const PLAYING: Self = Self(1);
+  pub const PAUSED: Self = Self(2);
+  pub const BUFFERING: Self = Self(3);
+  pub const CUED: Self = Self(5);
+
+  pub const ENUM_MIN: i8 = -1;
+  pub const ENUM_MAX: i8 = 5;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::UNSTARTED,
+    Self::ENDED,
+    Self::PLAYING,
+    Self::PAUSED,
+    Self::BUFFERING,
+    Self::CUED,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::UNSTARTED => Some("UNSTARTED"),
+      Self::ENDED => Some("ENDED"),
+      Self::PLAYING => Some("PLAYING"),
+      Self::PAUSED => Some("PAUSED"),
+      Self::BUFFERING => Some("BUFFERING"),
+      Self::CUED => Some("CUED"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for YOUTUBE_STATES {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for YOUTUBE_STATES {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<i8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for YOUTUBE_STATES {
+    type Output = YOUTUBE_STATES;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<i8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for YOUTUBE_STATES {
+  type Scalar = i8;
+  #[inline]
+  fn to_little_endian(self) -> i8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: i8) -> Self {
+    let b = i8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for YOUTUBE_STATES {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    i8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for YOUTUBE_STATES {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_BLENDING: u8 = 11;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_BLENDING: u8 = 17;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_BLENDING: [BLENDING; 7] = [
+  BLENDING::MULTIPLY,
+  BLENDING::SCREEN,
+  BLENDING::OVERLAY,
+  BLENDING::DARKEN,
+  BLENDING::LIGHTEN,
+  BLENDING::DIFFERENCE,
+  BLENDING::EXCLUSION,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct BLENDING(pub u8);
+#[allow(non_upper_case_globals)]
+impl BLENDING {
+  pub const MULTIPLY: Self = Self(11);
+  pub const SCREEN: Self = Self(12);
+  pub const OVERLAY: Self = Self(13);
+  pub const DARKEN: Self = Self(14);
+  pub const LIGHTEN: Self = Self(15);
+  pub const DIFFERENCE: Self = Self(16);
+  pub const EXCLUSION: Self = Self(17);
+
+  pub const ENUM_MIN: u8 = 11;
+  pub const ENUM_MAX: u8 = 17;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::MULTIPLY,
+    Self::SCREEN,
+    Self::OVERLAY,
+    Self::DARKEN,
+    Self::LIGHTEN,
+    Self::DIFFERENCE,
+    Self::EXCLUSION,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::MULTIPLY => Some("MULTIPLY"),
+      Self::SCREEN => Some("SCREEN"),
+      Self::OVERLAY => Some("OVERLAY"),
+      Self::DARKEN => Some("DARKEN"),
+      Self::LIGHTEN => Some("LIGHTEN"),
+      Self::DIFFERENCE => Some("DIFFERENCE"),
+      Self::EXCLUSION => Some("EXCLUSION"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for BLENDING {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for BLENDING {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for BLENDING {
+    type Output = BLENDING;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for BLENDING {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for BLENDING {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for BLENDING {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_GRID_DISPLAY_TYPE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_GRID_DISPLAY_TYPE: u8 = 13;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_GRID_DISPLAY_TYPE: [GRID_DISPLAY_TYPE; 4] = [
+  GRID_DISPLAY_TYPE::LINES,
+  GRID_DISPLAY_TYPE::DOTS,
+  GRID_DISPLAY_TYPE::CROSSES,
+  GRID_DISPLAY_TYPE::ADAPTIVE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct GRID_DISPLAY_TYPE(pub u8);
+#[allow(non_upper_case_globals)]
+impl GRID_DISPLAY_TYPE {
+  pub const LINES: Self = Self(10);
+  pub const DOTS: Self = Self(11);
+  pub const CROSSES: Self = Self(12);
+  pub const ADAPTIVE: Self = Self(13);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 13;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::LINES,
+    Self::DOTS,
+    Self::CROSSES,
+    Self::ADAPTIVE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::LINES => Some("LINES"),
+      Self::DOTS => Some("DOTS"),
+      Self::CROSSES => Some("CROSSES"),
+      Self::ADAPTIVE => Some("ADAPTIVE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for GRID_DISPLAY_TYPE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for GRID_DISPLAY_TYPE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for GRID_DISPLAY_TYPE {
+    type Output = GRID_DISPLAY_TYPE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for GRID_DISPLAY_TYPE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for GRID_DISPLAY_TYPE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for GRID_DISPLAY_TYPE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_GRID_TYPE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_GRID_TYPE: u8 = 14;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_GRID_TYPE: [GRID_TYPE; 5] = [
+  GRID_TYPE::RECTANGULAR,
+  GRID_TYPE::ISOMETRIC,
+  GRID_TYPE::POLAR,
+  GRID_TYPE::TRIANGULAR,
+  GRID_TYPE::CUSTOM,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct GRID_TYPE(pub u8);
+#[allow(non_upper_case_globals)]
+impl GRID_TYPE {
+  pub const RECTANGULAR: Self = Self(10);
+  pub const ISOMETRIC: Self = Self(11);
+  pub const POLAR: Self = Self(12);
+  pub const TRIANGULAR: Self = Self(13);
+  pub const CUSTOM: Self = Self(14);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 14;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::RECTANGULAR,
+    Self::ISOMETRIC,
+    Self::POLAR,
+    Self::TRIANGULAR,
+    Self::CUSTOM,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::RECTANGULAR => Some("RECTANGULAR"),
+      Self::ISOMETRIC => Some("ISOMETRIC"),
+      Self::POLAR => Some("POLAR"),
+      Self::TRIANGULAR => Some("TRIANGULAR"),
+      Self::CUSTOM => Some("CUSTOM"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for GRID_TYPE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for GRID_TYPE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for GRID_TYPE {
+    type Output = GRID_TYPE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for GRID_TYPE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for GRID_TYPE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for GRID_TYPE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_OBJECT_SNAP_MODE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_OBJECT_SNAP_MODE: u8 = 28;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_OBJECT_SNAP_MODE: [OBJECT_SNAP_MODE; 19] = [
+  OBJECT_SNAP_MODE::ENDPOINT,
+  OBJECT_SNAP_MODE::MIDPOINT,
+  OBJECT_SNAP_MODE::CENTER,
+  OBJECT_SNAP_MODE::QUADRANT,
+  OBJECT_SNAP_MODE::INTERSECTION,
+  OBJECT_SNAP_MODE::EXTENSION,
+  OBJECT_SNAP_MODE::PERPENDICULAR,
+  OBJECT_SNAP_MODE::TANGENT,
+  OBJECT_SNAP_MODE::NEAREST,
+  OBJECT_SNAP_MODE::NODE,
+  OBJECT_SNAP_MODE::INSERT,
+  OBJECT_SNAP_MODE::PARALLEL,
+  OBJECT_SNAP_MODE::APPARENT,
+  OBJECT_SNAP_MODE::FROM,
+  OBJECT_SNAP_MODE::POINT_FILTER,
+  OBJECT_SNAP_MODE::TEMPORARY,
+  OBJECT_SNAP_MODE::BETWEEN_TWO_POINTS,
+  OBJECT_SNAP_MODE::POINT_ON_CURVE,
+  OBJECT_SNAP_MODE::GEOMETRIC,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct OBJECT_SNAP_MODE(pub u8);
+#[allow(non_upper_case_globals)]
+impl OBJECT_SNAP_MODE {
+  pub const ENDPOINT: Self = Self(10);
+  pub const MIDPOINT: Self = Self(11);
+  pub const CENTER: Self = Self(12);
+  pub const QUADRANT: Self = Self(13);
+  pub const INTERSECTION: Self = Self(14);
+  pub const EXTENSION: Self = Self(15);
+  pub const PERPENDICULAR: Self = Self(16);
+  pub const TANGENT: Self = Self(17);
+  pub const NEAREST: Self = Self(18);
+  pub const NODE: Self = Self(19);
+  pub const INSERT: Self = Self(20);
+  pub const PARALLEL: Self = Self(21);
+  pub const APPARENT: Self = Self(22);
+  pub const FROM: Self = Self(23);
+  pub const POINT_FILTER: Self = Self(24);
+  pub const TEMPORARY: Self = Self(25);
+  pub const BETWEEN_TWO_POINTS: Self = Self(26);
+  pub const POINT_ON_CURVE: Self = Self(27);
+  pub const GEOMETRIC: Self = Self(28);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 28;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::ENDPOINT,
+    Self::MIDPOINT,
+    Self::CENTER,
+    Self::QUADRANT,
+    Self::INTERSECTION,
+    Self::EXTENSION,
+    Self::PERPENDICULAR,
+    Self::TANGENT,
+    Self::NEAREST,
+    Self::NODE,
+    Self::INSERT,
+    Self::PARALLEL,
+    Self::APPARENT,
+    Self::FROM,
+    Self::POINT_FILTER,
+    Self::TEMPORARY,
+    Self::BETWEEN_TWO_POINTS,
+    Self::POINT_ON_CURVE,
+    Self::GEOMETRIC,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::ENDPOINT => Some("ENDPOINT"),
+      Self::MIDPOINT => Some("MIDPOINT"),
+      Self::CENTER => Some("CENTER"),
+      Self::QUADRANT => Some("QUADRANT"),
+      Self::INTERSECTION => Some("INTERSECTION"),
+      Self::EXTENSION => Some("EXTENSION"),
+      Self::PERPENDICULAR => Some("PERPENDICULAR"),
+      Self::TANGENT => Some("TANGENT"),
+      Self::NEAREST => Some("NEAREST"),
+      Self::NODE => Some("NODE"),
+      Self::INSERT => Some("INSERT"),
+      Self::PARALLEL => Some("PARALLEL"),
+      Self::APPARENT => Some("APPARENT"),
+      Self::FROM => Some("FROM"),
+      Self::POINT_FILTER => Some("POINT_FILTER"),
+      Self::TEMPORARY => Some("TEMPORARY"),
+      Self::BETWEEN_TWO_POINTS => Some("BETWEEN_TWO_POINTS"),
+      Self::POINT_ON_CURVE => Some("POINT_ON_CURVE"),
+      Self::GEOMETRIC => Some("GEOMETRIC"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for OBJECT_SNAP_MODE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for OBJECT_SNAP_MODE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for OBJECT_SNAP_MODE {
+    type Output = OBJECT_SNAP_MODE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for OBJECT_SNAP_MODE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for OBJECT_SNAP_MODE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for OBJECT_SNAP_MODE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_SNAP_MODE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_SNAP_MODE: u8 = 11;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_SNAP_MODE: [SNAP_MODE; 2] = [
+  SNAP_MODE::RUNNING,
+  SNAP_MODE::SINGLE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct SNAP_MODE(pub u8);
+#[allow(non_upper_case_globals)]
+impl SNAP_MODE {
+  pub const RUNNING: Self = Self(10);
+  pub const SINGLE: Self = Self(11);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 11;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::RUNNING,
+    Self::SINGLE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::RUNNING => Some("RUNNING"),
+      Self::SINGLE => Some("SINGLE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for SNAP_MODE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for SNAP_MODE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for SNAP_MODE {
+    type Output = SNAP_MODE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for SNAP_MODE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for SNAP_MODE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for SNAP_MODE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_SNAP_OVERRIDE_BEHAVIOR: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_SNAP_OVERRIDE_BEHAVIOR: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_SNAP_OVERRIDE_BEHAVIOR: [SNAP_OVERRIDE_BEHAVIOR; 3] = [
+  SNAP_OVERRIDE_BEHAVIOR::DISABLE,
+  SNAP_OVERRIDE_BEHAVIOR::FORCE_GRID,
+  SNAP_OVERRIDE_BEHAVIOR::FORCE_OBJECT,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct SNAP_OVERRIDE_BEHAVIOR(pub u8);
+#[allow(non_upper_case_globals)]
+impl SNAP_OVERRIDE_BEHAVIOR {
+  pub const DISABLE: Self = Self(10);
+  pub const FORCE_GRID: Self = Self(11);
+  pub const FORCE_OBJECT: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::DISABLE,
+    Self::FORCE_GRID,
+    Self::FORCE_OBJECT,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::DISABLE => Some("DISABLE"),
+      Self::FORCE_GRID => Some("FORCE_GRID"),
+      Self::FORCE_OBJECT => Some("FORCE_OBJECT"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for SNAP_OVERRIDE_BEHAVIOR {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for SNAP_OVERRIDE_BEHAVIOR {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for SNAP_OVERRIDE_BEHAVIOR {
+    type Output = SNAP_OVERRIDE_BEHAVIOR;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for SNAP_OVERRIDE_BEHAVIOR {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for SNAP_OVERRIDE_BEHAVIOR {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for SNAP_OVERRIDE_BEHAVIOR {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_SNAP_MARKER_SHAPE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_SNAP_MARKER_SHAPE: u8 = 13;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_SNAP_MARKER_SHAPE: [SNAP_MARKER_SHAPE; 4] = [
+  SNAP_MARKER_SHAPE::SQUARE,
+  SNAP_MARKER_SHAPE::CIRCLE,
+  SNAP_MARKER_SHAPE::TRIANGLE,
+  SNAP_MARKER_SHAPE::X,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct SNAP_MARKER_SHAPE(pub u8);
+#[allow(non_upper_case_globals)]
+impl SNAP_MARKER_SHAPE {
+  pub const SQUARE: Self = Self(10);
+  pub const CIRCLE: Self = Self(11);
+  pub const TRIANGLE: Self = Self(12);
+  pub const X: Self = Self(13);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 13;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::SQUARE,
+    Self::CIRCLE,
+    Self::TRIANGLE,
+    Self::X,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::SQUARE => Some("SQUARE"),
+      Self::CIRCLE => Some("CIRCLE"),
+      Self::TRIANGLE => Some("TRIANGLE"),
+      Self::X => Some("X"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for SNAP_MARKER_SHAPE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for SNAP_MARKER_SHAPE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for SNAP_MARKER_SHAPE {
+    type Output = SNAP_MARKER_SHAPE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for SNAP_MARKER_SHAPE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for SNAP_MARKER_SHAPE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for SNAP_MARKER_SHAPE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_TABLE_CELL_ALIGNMENT: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_TABLE_CELL_ALIGNMENT: u8 = 18;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_TABLE_CELL_ALIGNMENT: [TABLE_CELL_ALIGNMENT; 9] = [
+  TABLE_CELL_ALIGNMENT::TOP_LEFT,
+  TABLE_CELL_ALIGNMENT::TOP_CENTER,
+  TABLE_CELL_ALIGNMENT::TOP_RIGHT,
+  TABLE_CELL_ALIGNMENT::MIDDLE_LEFT,
+  TABLE_CELL_ALIGNMENT::MIDDLE_CENTER,
+  TABLE_CELL_ALIGNMENT::MIDDLE_RIGHT,
+  TABLE_CELL_ALIGNMENT::BOTTOM_LEFT,
+  TABLE_CELL_ALIGNMENT::BOTTOM_CENTER,
+  TABLE_CELL_ALIGNMENT::BOTTOM_RIGHT,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct TABLE_CELL_ALIGNMENT(pub u8);
+#[allow(non_upper_case_globals)]
+impl TABLE_CELL_ALIGNMENT {
+  pub const TOP_LEFT: Self = Self(10);
+  pub const TOP_CENTER: Self = Self(11);
+  pub const TOP_RIGHT: Self = Self(12);
+  pub const MIDDLE_LEFT: Self = Self(13);
+  pub const MIDDLE_CENTER: Self = Self(14);
+  pub const MIDDLE_RIGHT: Self = Self(15);
+  pub const BOTTOM_LEFT: Self = Self(16);
+  pub const BOTTOM_CENTER: Self = Self(17);
+  pub const BOTTOM_RIGHT: Self = Self(18);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 18;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::TOP_LEFT,
+    Self::TOP_CENTER,
+    Self::TOP_RIGHT,
+    Self::MIDDLE_LEFT,
+    Self::MIDDLE_CENTER,
+    Self::MIDDLE_RIGHT,
+    Self::BOTTOM_LEFT,
+    Self::BOTTOM_CENTER,
+    Self::BOTTOM_RIGHT,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::TOP_LEFT => Some("TOP_LEFT"),
+      Self::TOP_CENTER => Some("TOP_CENTER"),
+      Self::TOP_RIGHT => Some("TOP_RIGHT"),
+      Self::MIDDLE_LEFT => Some("MIDDLE_LEFT"),
+      Self::MIDDLE_CENTER => Some("MIDDLE_CENTER"),
+      Self::MIDDLE_RIGHT => Some("MIDDLE_RIGHT"),
+      Self::BOTTOM_LEFT => Some("BOTTOM_LEFT"),
+      Self::BOTTOM_CENTER => Some("BOTTOM_CENTER"),
+      Self::BOTTOM_RIGHT => Some("BOTTOM_RIGHT"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for TABLE_CELL_ALIGNMENT {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for TABLE_CELL_ALIGNMENT {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for TABLE_CELL_ALIGNMENT {
+    type Output = TABLE_CELL_ALIGNMENT;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for TABLE_CELL_ALIGNMENT {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for TABLE_CELL_ALIGNMENT {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for TABLE_CELL_ALIGNMENT {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_TABLE_FLOW_DIRECTION: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_TABLE_FLOW_DIRECTION: u8 = 11;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_TABLE_FLOW_DIRECTION: [TABLE_FLOW_DIRECTION; 2] = [
+  TABLE_FLOW_DIRECTION::DOWN,
+  TABLE_FLOW_DIRECTION::UP,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct TABLE_FLOW_DIRECTION(pub u8);
+#[allow(non_upper_case_globals)]
+impl TABLE_FLOW_DIRECTION {
+  pub const DOWN: Self = Self(10);
+  pub const UP: Self = Self(11);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 11;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::DOWN,
+    Self::UP,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::DOWN => Some("DOWN"),
+      Self::UP => Some("UP"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for TABLE_FLOW_DIRECTION {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for TABLE_FLOW_DIRECTION {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for TABLE_FLOW_DIRECTION {
+    type Output = TABLE_FLOW_DIRECTION;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for TABLE_FLOW_DIRECTION {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for TABLE_FLOW_DIRECTION {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for TABLE_FLOW_DIRECTION {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_TOLERANCE_DISPLAY: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_TOLERANCE_DISPLAY: u8 = 14;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_TOLERANCE_DISPLAY: [TOLERANCE_DISPLAY; 5] = [
+  TOLERANCE_DISPLAY::NONE,
+  TOLERANCE_DISPLAY::SYMMETRICAL,
+  TOLERANCE_DISPLAY::DEVIATION,
+  TOLERANCE_DISPLAY::LIMITS,
+  TOLERANCE_DISPLAY::BASIC,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct TOLERANCE_DISPLAY(pub u8);
+#[allow(non_upper_case_globals)]
+impl TOLERANCE_DISPLAY {
+  pub const NONE: Self = Self(10);
+  pub const SYMMETRICAL: Self = Self(11);
+  pub const DEVIATION: Self = Self(12);
+  pub const LIMITS: Self = Self(13);
+  pub const BASIC: Self = Self(14);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 14;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::NONE,
+    Self::SYMMETRICAL,
+    Self::DEVIATION,
+    Self::LIMITS,
+    Self::BASIC,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::NONE => Some("NONE"),
+      Self::SYMMETRICAL => Some("SYMMETRICAL"),
+      Self::DEVIATION => Some("DEVIATION"),
+      Self::LIMITS => Some("LIMITS"),
+      Self::BASIC => Some("BASIC"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for TOLERANCE_DISPLAY {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for TOLERANCE_DISPLAY {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for TOLERANCE_DISPLAY {
+    type Output = TOLERANCE_DISPLAY;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for TOLERANCE_DISPLAY {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for TOLERANCE_DISPLAY {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for TOLERANCE_DISPLAY {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_DIMENSION_TYPE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_DIMENSION_TYPE: u8 = 22;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_DIMENSION_TYPE: [DIMENSION_TYPE; 13] = [
+  DIMENSION_TYPE::LINEAR,
+  DIMENSION_TYPE::ALIGNED,
+  DIMENSION_TYPE::ANGULAR,
+  DIMENSION_TYPE::ARC_LENGTH,
+  DIMENSION_TYPE::RADIUS,
+  DIMENSION_TYPE::DIAMETER,
+  DIMENSION_TYPE::CENTER_MARK,
+  DIMENSION_TYPE::ROTATED,
+  DIMENSION_TYPE::SPACING,
+  DIMENSION_TYPE::CONTINUE,
+  DIMENSION_TYPE::BASELINE,
+  DIMENSION_TYPE::JOGGED_LINEAR,
+  DIMENSION_TYPE::ORDINATE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct DIMENSION_TYPE(pub u8);
+#[allow(non_upper_case_globals)]
+impl DIMENSION_TYPE {
+  pub const LINEAR: Self = Self(10);
+  pub const ALIGNED: Self = Self(11);
+  pub const ANGULAR: Self = Self(12);
+  pub const ARC_LENGTH: Self = Self(13);
+  pub const RADIUS: Self = Self(14);
+  pub const DIAMETER: Self = Self(15);
+  pub const CENTER_MARK: Self = Self(16);
+  pub const ROTATED: Self = Self(17);
+  pub const SPACING: Self = Self(18);
+  pub const CONTINUE: Self = Self(19);
+  pub const BASELINE: Self = Self(20);
+  pub const JOGGED_LINEAR: Self = Self(21);
+  pub const ORDINATE: Self = Self(22);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 22;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::LINEAR,
+    Self::ALIGNED,
+    Self::ANGULAR,
+    Self::ARC_LENGTH,
+    Self::RADIUS,
+    Self::DIAMETER,
+    Self::CENTER_MARK,
+    Self::ROTATED,
+    Self::SPACING,
+    Self::CONTINUE,
+    Self::BASELINE,
+    Self::JOGGED_LINEAR,
+    Self::ORDINATE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::LINEAR => Some("LINEAR"),
+      Self::ALIGNED => Some("ALIGNED"),
+      Self::ANGULAR => Some("ANGULAR"),
+      Self::ARC_LENGTH => Some("ARC_LENGTH"),
+      Self::RADIUS => Some("RADIUS"),
+      Self::DIAMETER => Some("DIAMETER"),
+      Self::CENTER_MARK => Some("CENTER_MARK"),
+      Self::ROTATED => Some("ROTATED"),
+      Self::SPACING => Some("SPACING"),
+      Self::CONTINUE => Some("CONTINUE"),
+      Self::BASELINE => Some("BASELINE"),
+      Self::JOGGED_LINEAR => Some("JOGGED_LINEAR"),
+      Self::ORDINATE => Some("ORDINATE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for DIMENSION_TYPE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for DIMENSION_TYPE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for DIMENSION_TYPE {
+    type Output = DIMENSION_TYPE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for DIMENSION_TYPE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for DIMENSION_TYPE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for DIMENSION_TYPE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_MARK_ELLIPSE_CENTER: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_MARK_ELLIPSE_CENTER: u8 = 11;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_MARK_ELLIPSE_CENTER: [MARK_ELLIPSE_CENTER; 2] = [
+  MARK_ELLIPSE_CENTER::MARK,
+  MARK_ELLIPSE_CENTER::LINE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct MARK_ELLIPSE_CENTER(pub u8);
+#[allow(non_upper_case_globals)]
+impl MARK_ELLIPSE_CENTER {
+  pub const MARK: Self = Self(10);
+  pub const LINE: Self = Self(11);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 11;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::MARK,
+    Self::LINE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::MARK => Some("MARK"),
+      Self::LINE => Some("LINE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for MARK_ELLIPSE_CENTER {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for MARK_ELLIPSE_CENTER {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for MARK_ELLIPSE_CENTER {
+    type Output = MARK_ELLIPSE_CENTER;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for MARK_ELLIPSE_CENTER {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for MARK_ELLIPSE_CENTER {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for MARK_ELLIPSE_CENTER {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_TEXT_FLOW_DIRECTION: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_TEXT_FLOW_DIRECTION: u8 = 13;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_TEXT_FLOW_DIRECTION: [TEXT_FLOW_DIRECTION; 4] = [
+  TEXT_FLOW_DIRECTION::LEFT_TO_RIGHT,
+  TEXT_FLOW_DIRECTION::RIGHT_TO_LEFT,
+  TEXT_FLOW_DIRECTION::TOP_TO_BOTTOM,
+  TEXT_FLOW_DIRECTION::BOTTOM_TO_TOP,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct TEXT_FLOW_DIRECTION(pub u8);
+#[allow(non_upper_case_globals)]
+impl TEXT_FLOW_DIRECTION {
+  pub const LEFT_TO_RIGHT: Self = Self(10);
+  pub const RIGHT_TO_LEFT: Self = Self(11);
+  pub const TOP_TO_BOTTOM: Self = Self(12);
+  pub const BOTTOM_TO_TOP: Self = Self(13);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 13;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::LEFT_TO_RIGHT,
+    Self::RIGHT_TO_LEFT,
+    Self::TOP_TO_BOTTOM,
+    Self::BOTTOM_TO_TOP,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::LEFT_TO_RIGHT => Some("LEFT_TO_RIGHT"),
+      Self::RIGHT_TO_LEFT => Some("RIGHT_TO_LEFT"),
+      Self::TOP_TO_BOTTOM => Some("TOP_TO_BOTTOM"),
+      Self::BOTTOM_TO_TOP => Some("BOTTOM_TO_TOP"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for TEXT_FLOW_DIRECTION {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for TEXT_FLOW_DIRECTION {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for TEXT_FLOW_DIRECTION {
+    type Output = TEXT_FLOW_DIRECTION;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for TEXT_FLOW_DIRECTION {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for TEXT_FLOW_DIRECTION {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for TEXT_FLOW_DIRECTION {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_COLUMN_TYPE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_COLUMN_TYPE: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_COLUMN_TYPE: [COLUMN_TYPE; 3] = [
+  COLUMN_TYPE::NO_COLUMNS,
+  COLUMN_TYPE::STATIC_COLUMNS,
+  COLUMN_TYPE::DYNAMIC_COLUMNS,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct COLUMN_TYPE(pub u8);
+#[allow(non_upper_case_globals)]
+impl COLUMN_TYPE {
+  pub const NO_COLUMNS: Self = Self(10);
+  pub const STATIC_COLUMNS: Self = Self(11);
+  pub const DYNAMIC_COLUMNS: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::NO_COLUMNS,
+    Self::STATIC_COLUMNS,
+    Self::DYNAMIC_COLUMNS,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::NO_COLUMNS => Some("NO_COLUMNS"),
+      Self::STATIC_COLUMNS => Some("STATIC_COLUMNS"),
+      Self::DYNAMIC_COLUMNS => Some("DYNAMIC_COLUMNS"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for COLUMN_TYPE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for COLUMN_TYPE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for COLUMN_TYPE {
+    type Output = COLUMN_TYPE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for COLUMN_TYPE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for COLUMN_TYPE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for COLUMN_TYPE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_GDT_SYMBOL: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_GDT_SYMBOL: u8 = 29;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_GDT_SYMBOL: [GDT_SYMBOL; 20] = [
+  GDT_SYMBOL::STRAIGHTNESS,
+  GDT_SYMBOL::FLATNESS,
+  GDT_SYMBOL::CIRCULARITY,
+  GDT_SYMBOL::CYLINDRICITY,
+  GDT_SYMBOL::PERPENDICULARITY,
+  GDT_SYMBOL::ANGULARITY,
+  GDT_SYMBOL::PARALLELISM,
+  GDT_SYMBOL::POSITION,
+  GDT_SYMBOL::TRUE_POSITION,
+  GDT_SYMBOL::CONCENTRICITY,
+  GDT_SYMBOL::COAXIALITY,
+  GDT_SYMBOL::SYMMETRY,
+  GDT_SYMBOL::CIRCULAR_RUNOUT,
+  GDT_SYMBOL::TOTAL_RUNOUT,
+  GDT_SYMBOL::PROFILE_OF_LINE,
+  GDT_SYMBOL::PROFILE_OF_SURFACE,
+  GDT_SYMBOL::STATISTICAL,
+  GDT_SYMBOL::ALL_AROUND,
+  GDT_SYMBOL::ALL_OVER,
+  GDT_SYMBOL::BETWEEN,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct GDT_SYMBOL(pub u8);
+#[allow(non_upper_case_globals)]
+impl GDT_SYMBOL {
+  pub const STRAIGHTNESS: Self = Self(10);
+  pub const FLATNESS: Self = Self(11);
+  pub const CIRCULARITY: Self = Self(12);
+  pub const CYLINDRICITY: Self = Self(13);
+  pub const PERPENDICULARITY: Self = Self(14);
+  pub const ANGULARITY: Self = Self(15);
+  pub const PARALLELISM: Self = Self(16);
+  pub const POSITION: Self = Self(17);
+  pub const TRUE_POSITION: Self = Self(18);
+  pub const CONCENTRICITY: Self = Self(19);
+  pub const COAXIALITY: Self = Self(20);
+  pub const SYMMETRY: Self = Self(21);
+  pub const CIRCULAR_RUNOUT: Self = Self(22);
+  pub const TOTAL_RUNOUT: Self = Self(23);
+  pub const PROFILE_OF_LINE: Self = Self(24);
+  pub const PROFILE_OF_SURFACE: Self = Self(25);
+  pub const STATISTICAL: Self = Self(26);
+  pub const ALL_AROUND: Self = Self(27);
+  pub const ALL_OVER: Self = Self(28);
+  pub const BETWEEN: Self = Self(29);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 29;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::STRAIGHTNESS,
+    Self::FLATNESS,
+    Self::CIRCULARITY,
+    Self::CYLINDRICITY,
+    Self::PERPENDICULARITY,
+    Self::ANGULARITY,
+    Self::PARALLELISM,
+    Self::POSITION,
+    Self::TRUE_POSITION,
+    Self::CONCENTRICITY,
+    Self::COAXIALITY,
+    Self::SYMMETRY,
+    Self::CIRCULAR_RUNOUT,
+    Self::TOTAL_RUNOUT,
+    Self::PROFILE_OF_LINE,
+    Self::PROFILE_OF_SURFACE,
+    Self::STATISTICAL,
+    Self::ALL_AROUND,
+    Self::ALL_OVER,
+    Self::BETWEEN,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::STRAIGHTNESS => Some("STRAIGHTNESS"),
+      Self::FLATNESS => Some("FLATNESS"),
+      Self::CIRCULARITY => Some("CIRCULARITY"),
+      Self::CYLINDRICITY => Some("CYLINDRICITY"),
+      Self::PERPENDICULARITY => Some("PERPENDICULARITY"),
+      Self::ANGULARITY => Some("ANGULARITY"),
+      Self::PARALLELISM => Some("PARALLELISM"),
+      Self::POSITION => Some("POSITION"),
+      Self::TRUE_POSITION => Some("TRUE_POSITION"),
+      Self::CONCENTRICITY => Some("CONCENTRICITY"),
+      Self::COAXIALITY => Some("COAXIALITY"),
+      Self::SYMMETRY => Some("SYMMETRY"),
+      Self::CIRCULAR_RUNOUT => Some("CIRCULAR_RUNOUT"),
+      Self::TOTAL_RUNOUT => Some("TOTAL_RUNOUT"),
+      Self::PROFILE_OF_LINE => Some("PROFILE_OF_LINE"),
+      Self::PROFILE_OF_SURFACE => Some("PROFILE_OF_SURFACE"),
+      Self::STATISTICAL => Some("STATISTICAL"),
+      Self::ALL_AROUND => Some("ALL_AROUND"),
+      Self::ALL_OVER => Some("ALL_OVER"),
+      Self::BETWEEN => Some("BETWEEN"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for GDT_SYMBOL {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for GDT_SYMBOL {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for GDT_SYMBOL {
+    type Output = GDT_SYMBOL;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for GDT_SYMBOL {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for GDT_SYMBOL {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for GDT_SYMBOL {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_MATERIAL_CONDITION: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_MATERIAL_CONDITION: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_MATERIAL_CONDITION: [MATERIAL_CONDITION; 3] = [
+  MATERIAL_CONDITION::MAXIMUM,
+  MATERIAL_CONDITION::LEAST,
+  MATERIAL_CONDITION::REGARDLESS,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct MATERIAL_CONDITION(pub u8);
+#[allow(non_upper_case_globals)]
+impl MATERIAL_CONDITION {
+  pub const MAXIMUM: Self = Self(10);
+  pub const LEAST: Self = Self(11);
+  pub const REGARDLESS: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::MAXIMUM,
+    Self::LEAST,
+    Self::REGARDLESS,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::MAXIMUM => Some("MAXIMUM"),
+      Self::LEAST => Some("LEAST"),
+      Self::REGARDLESS => Some("REGARDLESS"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for MATERIAL_CONDITION {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for MATERIAL_CONDITION {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for MATERIAL_CONDITION {
+    type Output = MATERIAL_CONDITION;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for MATERIAL_CONDITION {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for MATERIAL_CONDITION {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for MATERIAL_CONDITION {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_FEATURE_MODIFIER: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_FEATURE_MODIFIER: u8 = 24;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_FEATURE_MODIFIER: [FEATURE_MODIFIER; 15] = [
+  FEATURE_MODIFIER::FREE_STATE,
+  FEATURE_MODIFIER::TANGENT_PLANE,
+  FEATURE_MODIFIER::PROJECTED_TOLERANCE_ZONE,
+  FEATURE_MODIFIER::DIAMETER,
+  FEATURE_MODIFIER::SPHERICAL_DIAMETER,
+  FEATURE_MODIFIER::RADIUS,
+  FEATURE_MODIFIER::SPHERICAL_RADIUS,
+  FEATURE_MODIFIER::CONTROLLED_RADIUS,
+  FEATURE_MODIFIER::SQUARE,
+  FEATURE_MODIFIER::TRANSLATION,
+  FEATURE_MODIFIER::ALL_AROUND,
+  FEATURE_MODIFIER::ALL_OVER,
+  FEATURE_MODIFIER::STATISTICAL,
+  FEATURE_MODIFIER::CONTINUOUS_FEATURE,
+  FEATURE_MODIFIER::UNEQUALLY_DISPOSED,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct FEATURE_MODIFIER(pub u8);
+#[allow(non_upper_case_globals)]
+impl FEATURE_MODIFIER {
+  pub const FREE_STATE: Self = Self(10);
+  pub const TANGENT_PLANE: Self = Self(11);
+  pub const PROJECTED_TOLERANCE_ZONE: Self = Self(12);
+  pub const DIAMETER: Self = Self(13);
+  pub const SPHERICAL_DIAMETER: Self = Self(14);
+  pub const RADIUS: Self = Self(15);
+  pub const SPHERICAL_RADIUS: Self = Self(16);
+  pub const CONTROLLED_RADIUS: Self = Self(17);
+  pub const SQUARE: Self = Self(18);
+  pub const TRANSLATION: Self = Self(19);
+  pub const ALL_AROUND: Self = Self(20);
+  pub const ALL_OVER: Self = Self(21);
+  pub const STATISTICAL: Self = Self(22);
+  pub const CONTINUOUS_FEATURE: Self = Self(23);
+  pub const UNEQUALLY_DISPOSED: Self = Self(24);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 24;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::FREE_STATE,
+    Self::TANGENT_PLANE,
+    Self::PROJECTED_TOLERANCE_ZONE,
+    Self::DIAMETER,
+    Self::SPHERICAL_DIAMETER,
+    Self::RADIUS,
+    Self::SPHERICAL_RADIUS,
+    Self::CONTROLLED_RADIUS,
+    Self::SQUARE,
+    Self::TRANSLATION,
+    Self::ALL_AROUND,
+    Self::ALL_OVER,
+    Self::STATISTICAL,
+    Self::CONTINUOUS_FEATURE,
+    Self::UNEQUALLY_DISPOSED,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::FREE_STATE => Some("FREE_STATE"),
+      Self::TANGENT_PLANE => Some("TANGENT_PLANE"),
+      Self::PROJECTED_TOLERANCE_ZONE => Some("PROJECTED_TOLERANCE_ZONE"),
+      Self::DIAMETER => Some("DIAMETER"),
+      Self::SPHERICAL_DIAMETER => Some("SPHERICAL_DIAMETER"),
+      Self::RADIUS => Some("RADIUS"),
+      Self::SPHERICAL_RADIUS => Some("SPHERICAL_RADIUS"),
+      Self::CONTROLLED_RADIUS => Some("CONTROLLED_RADIUS"),
+      Self::SQUARE => Some("SQUARE"),
+      Self::TRANSLATION => Some("TRANSLATION"),
+      Self::ALL_AROUND => Some("ALL_AROUND"),
+      Self::ALL_OVER => Some("ALL_OVER"),
+      Self::STATISTICAL => Some("STATISTICAL"),
+      Self::CONTINUOUS_FEATURE => Some("CONTINUOUS_FEATURE"),
+      Self::UNEQUALLY_DISPOSED => Some("UNEQUALLY_DISPOSED"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for FEATURE_MODIFIER {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for FEATURE_MODIFIER {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for FEATURE_MODIFIER {
+    type Output = FEATURE_MODIFIER;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for FEATURE_MODIFIER {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for FEATURE_MODIFIER {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for FEATURE_MODIFIER {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_TOLERANCE_ZONE_TYPE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_TOLERANCE_ZONE_TYPE: u8 = 14;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_TOLERANCE_ZONE_TYPE: [TOLERANCE_ZONE_TYPE; 5] = [
+  TOLERANCE_ZONE_TYPE::CYLINDRICAL,
+  TOLERANCE_ZONE_TYPE::SPHERICAL,
+  TOLERANCE_ZONE_TYPE::RECTANGULAR,
+  TOLERANCE_ZONE_TYPE::LINEAR,
+  TOLERANCE_ZONE_TYPE::CIRCULAR,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct TOLERANCE_ZONE_TYPE(pub u8);
+#[allow(non_upper_case_globals)]
+impl TOLERANCE_ZONE_TYPE {
+  pub const CYLINDRICAL: Self = Self(10);
+  pub const SPHERICAL: Self = Self(11);
+  pub const RECTANGULAR: Self = Self(12);
+  pub const LINEAR: Self = Self(13);
+  pub const CIRCULAR: Self = Self(14);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 14;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::CYLINDRICAL,
+    Self::SPHERICAL,
+    Self::RECTANGULAR,
+    Self::LINEAR,
+    Self::CIRCULAR,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::CYLINDRICAL => Some("CYLINDRICAL"),
+      Self::SPHERICAL => Some("SPHERICAL"),
+      Self::RECTANGULAR => Some("RECTANGULAR"),
+      Self::LINEAR => Some("LINEAR"),
+      Self::CIRCULAR => Some("CIRCULAR"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for TOLERANCE_ZONE_TYPE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for TOLERANCE_ZONE_TYPE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for TOLERANCE_ZONE_TYPE {
+    type Output = TOLERANCE_ZONE_TYPE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for TOLERANCE_ZONE_TYPE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for TOLERANCE_ZONE_TYPE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for TOLERANCE_ZONE_TYPE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_DATUM_TARGET_TYPE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_DATUM_TARGET_TYPE: u8 = 13;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_DATUM_TARGET_TYPE: [DATUM_TARGET_TYPE; 4] = [
+  DATUM_TARGET_TYPE::POINT,
+  DATUM_TARGET_TYPE::LINE,
+  DATUM_TARGET_TYPE::AREA,
+  DATUM_TARGET_TYPE::MOVABLE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct DATUM_TARGET_TYPE(pub u8);
+#[allow(non_upper_case_globals)]
+impl DATUM_TARGET_TYPE {
+  pub const POINT: Self = Self(10);
+  pub const LINE: Self = Self(11);
+  pub const AREA: Self = Self(12);
+  pub const MOVABLE: Self = Self(13);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 13;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::POINT,
+    Self::LINE,
+    Self::AREA,
+    Self::MOVABLE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::POINT => Some("POINT"),
+      Self::LINE => Some("LINE"),
+      Self::AREA => Some("AREA"),
+      Self::MOVABLE => Some("MOVABLE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for DATUM_TARGET_TYPE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for DATUM_TARGET_TYPE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for DATUM_TARGET_TYPE {
+    type Output = DATUM_TARGET_TYPE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for DATUM_TARGET_TYPE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for DATUM_TARGET_TYPE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for DATUM_TARGET_TYPE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_TOLERANCE_TYPE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_TOLERANCE_TYPE: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_TOLERANCE_TYPE: [TOLERANCE_TYPE; 3] = [
+  TOLERANCE_TYPE::SINGLE,
+  TOLERANCE_TYPE::COMPOSITE,
+  TOLERANCE_TYPE::MULTIPLE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct TOLERANCE_TYPE(pub u8);
+#[allow(non_upper_case_globals)]
+impl TOLERANCE_TYPE {
+  pub const SINGLE: Self = Self(10);
+  pub const COMPOSITE: Self = Self(11);
+  pub const MULTIPLE: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::SINGLE,
+    Self::COMPOSITE,
+    Self::MULTIPLE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::SINGLE => Some("SINGLE"),
+      Self::COMPOSITE => Some("COMPOSITE"),
+      Self::MULTIPLE => Some("MULTIPLE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for TOLERANCE_TYPE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for TOLERANCE_TYPE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for TOLERANCE_TYPE {
+    type Output = TOLERANCE_TYPE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for TOLERANCE_TYPE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for TOLERANCE_TYPE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for TOLERANCE_TYPE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_DATUM_BRACKET_STYLE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_DATUM_BRACKET_STYLE: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_DATUM_BRACKET_STYLE: [DATUM_BRACKET_STYLE; 3] = [
+  DATUM_BRACKET_STYLE::SQUARE,
+  DATUM_BRACKET_STYLE::ROUND,
+  DATUM_BRACKET_STYLE::NONE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct DATUM_BRACKET_STYLE(pub u8);
+#[allow(non_upper_case_globals)]
+impl DATUM_BRACKET_STYLE {
+  pub const SQUARE: Self = Self(10);
+  pub const ROUND: Self = Self(11);
+  pub const NONE: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::SQUARE,
+    Self::ROUND,
+    Self::NONE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::SQUARE => Some("SQUARE"),
+      Self::ROUND => Some("ROUND"),
+      Self::NONE => Some("NONE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for DATUM_BRACKET_STYLE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for DATUM_BRACKET_STYLE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for DATUM_BRACKET_STYLE {
+    type Output = DATUM_BRACKET_STYLE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for DATUM_BRACKET_STYLE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for DATUM_BRACKET_STYLE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for DATUM_BRACKET_STYLE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_DIMENSION_UNITS_FORMAT: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_DIMENSION_UNITS_FORMAT: u8 = 14;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_DIMENSION_UNITS_FORMAT: [DIMENSION_UNITS_FORMAT; 5] = [
+  DIMENSION_UNITS_FORMAT::DECIMAL,
+  DIMENSION_UNITS_FORMAT::ENGINEERING,
+  DIMENSION_UNITS_FORMAT::ARCHITECTURAL,
+  DIMENSION_UNITS_FORMAT::FRACTIONAL,
+  DIMENSION_UNITS_FORMAT::SCIENTIFIC,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct DIMENSION_UNITS_FORMAT(pub u8);
+#[allow(non_upper_case_globals)]
+impl DIMENSION_UNITS_FORMAT {
+  pub const DECIMAL: Self = Self(10);
+  pub const ENGINEERING: Self = Self(11);
+  pub const ARCHITECTURAL: Self = Self(12);
+  pub const FRACTIONAL: Self = Self(13);
+  pub const SCIENTIFIC: Self = Self(14);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 14;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::DECIMAL,
+    Self::ENGINEERING,
+    Self::ARCHITECTURAL,
+    Self::FRACTIONAL,
+    Self::SCIENTIFIC,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::DECIMAL => Some("DECIMAL"),
+      Self::ENGINEERING => Some("ENGINEERING"),
+      Self::ARCHITECTURAL => Some("ARCHITECTURAL"),
+      Self::FRACTIONAL => Some("FRACTIONAL"),
+      Self::SCIENTIFIC => Some("SCIENTIFIC"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for DIMENSION_UNITS_FORMAT {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for DIMENSION_UNITS_FORMAT {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for DIMENSION_UNITS_FORMAT {
+    type Output = DIMENSION_UNITS_FORMAT;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for DIMENSION_UNITS_FORMAT {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for DIMENSION_UNITS_FORMAT {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for DIMENSION_UNITS_FORMAT {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_ANGULAR_UNITS_FORMAT: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_ANGULAR_UNITS_FORMAT: u8 = 14;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_ANGULAR_UNITS_FORMAT: [ANGULAR_UNITS_FORMAT; 5] = [
+  ANGULAR_UNITS_FORMAT::DECIMAL_DEGREES,
+  ANGULAR_UNITS_FORMAT::DEGREES_MINUTES_SECONDS,
+  ANGULAR_UNITS_FORMAT::GRADS,
+  ANGULAR_UNITS_FORMAT::RADIANS,
+  ANGULAR_UNITS_FORMAT::SURVEYOR,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct ANGULAR_UNITS_FORMAT(pub u8);
+#[allow(non_upper_case_globals)]
+impl ANGULAR_UNITS_FORMAT {
+  pub const DECIMAL_DEGREES: Self = Self(10);
+  pub const DEGREES_MINUTES_SECONDS: Self = Self(11);
+  pub const GRADS: Self = Self(12);
+  pub const RADIANS: Self = Self(13);
+  pub const SURVEYOR: Self = Self(14);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 14;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::DECIMAL_DEGREES,
+    Self::DEGREES_MINUTES_SECONDS,
+    Self::GRADS,
+    Self::RADIANS,
+    Self::SURVEYOR,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::DECIMAL_DEGREES => Some("DECIMAL_DEGREES"),
+      Self::DEGREES_MINUTES_SECONDS => Some("DEGREES_MINUTES_SECONDS"),
+      Self::GRADS => Some("GRADS"),
+      Self::RADIANS => Some("RADIANS"),
+      Self::SURVEYOR => Some("SURVEYOR"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for ANGULAR_UNITS_FORMAT {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for ANGULAR_UNITS_FORMAT {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for ANGULAR_UNITS_FORMAT {
+    type Output = ANGULAR_UNITS_FORMAT;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for ANGULAR_UNITS_FORMAT {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for ANGULAR_UNITS_FORMAT {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for ANGULAR_UNITS_FORMAT {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_DECIMAL_SEPARATOR: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_DECIMAL_SEPARATOR: u8 = 11;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_DECIMAL_SEPARATOR: [DECIMAL_SEPARATOR; 2] = [
+  DECIMAL_SEPARATOR::DOT,
+  DECIMAL_SEPARATOR::COMMA,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct DECIMAL_SEPARATOR(pub u8);
+#[allow(non_upper_case_globals)]
+impl DECIMAL_SEPARATOR {
+  pub const DOT: Self = Self(10);
+  pub const COMMA: Self = Self(11);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 11;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::DOT,
+    Self::COMMA,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::DOT => Some("DOT"),
+      Self::COMMA => Some("COMMA"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for DECIMAL_SEPARATOR {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for DECIMAL_SEPARATOR {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for DECIMAL_SEPARATOR {
+    type Output = DECIMAL_SEPARATOR;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for DECIMAL_SEPARATOR {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for DECIMAL_SEPARATOR {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for DECIMAL_SEPARATOR {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_VIEWPORT_SHADE_PLOT: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_VIEWPORT_SHADE_PLOT: u8 = 13;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_VIEWPORT_SHADE_PLOT: [VIEWPORT_SHADE_PLOT; 4] = [
+  VIEWPORT_SHADE_PLOT::AS_DISPLAYED,
+  VIEWPORT_SHADE_PLOT::WIREFRAME,
+  VIEWPORT_SHADE_PLOT::HIDDEN,
+  VIEWPORT_SHADE_PLOT::RENDERED,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct VIEWPORT_SHADE_PLOT(pub u8);
+#[allow(non_upper_case_globals)]
+impl VIEWPORT_SHADE_PLOT {
+  pub const AS_DISPLAYED: Self = Self(10);
+  pub const WIREFRAME: Self = Self(11);
+  pub const HIDDEN: Self = Self(12);
+  pub const RENDERED: Self = Self(13);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 13;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::AS_DISPLAYED,
+    Self::WIREFRAME,
+    Self::HIDDEN,
+    Self::RENDERED,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::AS_DISPLAYED => Some("AS_DISPLAYED"),
+      Self::WIREFRAME => Some("WIREFRAME"),
+      Self::HIDDEN => Some("HIDDEN"),
+      Self::RENDERED => Some("RENDERED"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for VIEWPORT_SHADE_PLOT {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for VIEWPORT_SHADE_PLOT {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for VIEWPORT_SHADE_PLOT {
+    type Output = VIEWPORT_SHADE_PLOT;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for VIEWPORT_SHADE_PLOT {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for VIEWPORT_SHADE_PLOT {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for VIEWPORT_SHADE_PLOT {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_HATCH_STYLE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_HATCH_STYLE: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_HATCH_STYLE: [HATCH_STYLE; 3] = [
+  HATCH_STYLE::NORMAL,
+  HATCH_STYLE::OUTER,
+  HATCH_STYLE::IGNORE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct HATCH_STYLE(pub u8);
+#[allow(non_upper_case_globals)]
+impl HATCH_STYLE {
+  pub const NORMAL: Self = Self(10);
+  pub const OUTER: Self = Self(11);
+  pub const IGNORE: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::NORMAL,
+    Self::OUTER,
+    Self::IGNORE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::NORMAL => Some("NORMAL"),
+      Self::OUTER => Some("OUTER"),
+      Self::IGNORE => Some("IGNORE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for HATCH_STYLE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for HATCH_STYLE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for HATCH_STYLE {
+    type Output = HATCH_STYLE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for HATCH_STYLE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for HATCH_STYLE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for HATCH_STYLE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_IMAGE_STATUS: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_IMAGE_STATUS: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_IMAGE_STATUS: [IMAGE_STATUS; 3] = [
+  IMAGE_STATUS::PENDING,
+  IMAGE_STATUS::SAVED,
+  IMAGE_STATUS::ERROR,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct IMAGE_STATUS(pub u8);
+#[allow(non_upper_case_globals)]
+impl IMAGE_STATUS {
+  pub const PENDING: Self = Self(10);
+  pub const SAVED: Self = Self(11);
+  pub const ERROR: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::PENDING,
+    Self::SAVED,
+    Self::ERROR,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::PENDING => Some("PENDING"),
+      Self::SAVED => Some("SAVED"),
+      Self::ERROR => Some("ERROR"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for IMAGE_STATUS {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for IMAGE_STATUS {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for IMAGE_STATUS {
+    type Output = IMAGE_STATUS;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for IMAGE_STATUS {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for IMAGE_STATUS {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for IMAGE_STATUS {}
 pub enum PointOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -3019,7 +7060,6 @@ impl<'a> DucElement<'a> {
     if let Some(x) = args.background { builder.add_background(x); }
     if let Some(x) = args.free_draw_pressures { builder.add_free_draw_pressures(x); }
     if let Some(x) = args.image_scale { builder.add_image_scale(x); }
-    if let Some(x) = args.image_status { builder.add_image_status(x); }
     if let Some(x) = args.file_id { builder.add_file_id(x); }
     if let Some(x) = args.linear_element_end_binding { builder.add_linear_element_end_binding(x); }
     if let Some(x) = args.linear_element_start_binding { builder.add_linear_element_start_binding(x); }
@@ -3058,6 +7098,7 @@ impl<'a> DucElement<'a> {
     builder.add_fill_style_v3(args.fill_style_v3);
     builder.add_stroke_style_v3(args.stroke_style_v3);
     if let Some(x) = args.stack_like_is_collapsed { builder.add_stack_like_is_collapsed(x); }
+    if let Some(x) = args.image_status { builder.add_image_status(x); }
     if let Some(x) = args.free_draw_simulate_pressure { builder.add_free_draw_simulate_pressure(x); }
     if let Some(x) = args.arrow_elbowed { builder.add_arrow_elbowed(x); }
     if let Some(x) = args.text_auto_resize { builder.add_text_auto_resize(x); }
@@ -3293,11 +7334,11 @@ impl<'a> DucElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_FILE_ID, None)}
   }
   #[inline]
-  pub fn image_status(&self) -> Option<&'a str> {
+  pub fn image_status(&self) -> Option<IMAGE_STATUS> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucElement::VT_IMAGE_STATUS, None)}
+    unsafe { self._tab.get::<IMAGE_STATUS>(DucElement::VT_IMAGE_STATUS, None)}
   }
   #[inline]
   pub fn stack_like_is_collapsed(&self) -> Option<bool> {
@@ -3732,7 +7773,7 @@ impl flatbuffers::Verifiable for DucElement<'_> {
      .visit_field::<bool>("arrow_elbowed", Self::VT_ARROW_ELBOWED, false)?
      .visit_field::<bool>("free_draw_simulate_pressure", Self::VT_FREE_DRAW_SIMULATE_PRESSURE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("file_id", Self::VT_FILE_ID, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("image_status", Self::VT_IMAGE_STATUS, false)?
+     .visit_field::<IMAGE_STATUS>("image_status", Self::VT_IMAGE_STATUS, false)?
      .visit_field::<bool>("stack_like_is_collapsed", Self::VT_STACK_LIKE_IS_COLLAPSED, false)?
      .visit_field::<i8>("stroke_style_v3", Self::VT_STROKE_STYLE_V3, false)?
      .visit_field::<i8>("fill_style_v3", Self::VT_FILL_STYLE_V3, false)?
@@ -3826,7 +7867,7 @@ pub struct DucElementArgs<'a> {
     pub arrow_elbowed: Option<bool>,
     pub free_draw_simulate_pressure: Option<bool>,
     pub file_id: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub image_status: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub image_status: Option<IMAGE_STATUS>,
     pub stack_like_is_collapsed: Option<bool>,
     pub stroke_style_v3: i8,
     pub fill_style_v3: i8,
@@ -4115,8 +8156,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucElementBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_FILE_ID, file_id);
   }
   #[inline]
-  pub fn add_image_status(&mut self, image_status: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucElement::VT_IMAGE_STATUS, image_status);
+  pub fn add_image_status(&mut self, image_status: IMAGE_STATUS) {
+    self.fbb_.push_slot_always::<IMAGE_STATUS>(DucElement::VT_IMAGE_STATUS, image_status);
   }
   #[inline]
   pub fn add_stack_like_is_collapsed(&mut self, stack_like_is_collapsed: bool) {

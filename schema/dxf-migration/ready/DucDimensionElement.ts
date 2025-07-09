@@ -1,65 +1,8 @@
 
 
-export const TOLERANCE_DISPLAY = {
-  NONE: 10,
-  SYMMETRICAL: 11, // ±
-  DEVIATION: 12, // +upper/-lower
-  LIMITS: 13, // Upper/lower limits
-  BASIC: 14, // Boxed dimension
-} as const;
-
-export const TEXT_PLACEMENT = {
-  ABOVE_LINE: 10,
-  CENTER_LINE: 11,
-  BELOW_LINE: 12,
-} as const;
-
-export const TEXT_ALIGNMENT = {
-  HORIZONTAL: 10,
-  ALIGNED_WITH_DIMENSION: 11,
-  ISO_STANDARD: 12,
-} as const;
-
-export const DIMENSION_TYPE = {
-  LINEAR: 10,
-  ALIGNED: 11,
-  ANGULAR: 12,
-  ARC_LENGTH: 13,
-  RADIUS: 14,
-  DIAMETER: 15,
-  CENTER_MARK: 16,
-  ROTATED: 17,
-  SPACING: 18,
-  CONTINUE: 19,
-  BASELINE: 20,
-  JOGGED_LINEAR: 21,
-  ORDINATE: 22,
-} as const;
-
-export const DIMENSION_TEXT_POSITION = {
-  ABOVE: 10,
-  CENTERED: 11,
-  BELOW: 12,
-} as const;
-
-export const DIMENSION_TEXT_ALIGNMENT = {
-  HORIZONTAL: 10,
-  ALIGNED: 11,
-  ISO_STANDARD: 12,
-} as const;
-
-export const MARK_ELLIPSE_CENTER = {
-  MARK: 10,
-  LINE: 11,
-} as const;
-
 export type DimensionType = ValueOf<typeof DIMENSION_TYPE>;
-export type DimensionTextPosition = ValueOf<typeof DIMENSION_TEXT_POSITION>;
-export type DimensionTextAlignment = ValueOf<typeof DIMENSION_TEXT_ALIGNMENT>;
 export type MarkEllipseCenter = ValueOf<typeof MARK_ELLIPSE_CENTER>;
 export type ToleranceDisplay = ValueOf<typeof TOLERANCE_DISPLAY>;
-export type TextPlacement = ValueOf<typeof TEXT_PLACEMENT>;
-export type TextAlignment = ValueOf<typeof TEXT_ALIGNMENT>;
 
 /**
  * Definition points vary by dimension type:

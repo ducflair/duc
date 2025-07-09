@@ -3,7 +3,6 @@ use flatbuffers::{self, FlatBufferBuilder, WIPOffset};
 use crate::types::*;
 use crate::generated::duc::{
     AppState as FbAppState, AppStateBuilder,
-    DucGroup as FbDucGroup, DucGroupBuilder,
     LinearElementEditor as FbLinearElementEditor, LinearElementEditorBuilder,
     PointerDownState as FbPointerDownState, PointerDownStateBuilder,
     SegmentMidpointState as FbSegmentMidpointState, SegmentMidpointStateBuilder,
@@ -39,17 +38,6 @@ pub fn serialize_app_state<'a>(
     let scope_offset = builder.create_string(&app_state.scope);
     let main_scope_offset = builder.create_string(&app_state.main_scope);
     
-    // Groups
-    let groups_offset = if !app_state.groups.is_empty() {
-        let mut groups_vec = Vec::with_capacity(app_state.groups.len());
-        for group in &app_state.groups {
-            groups_vec.push(serialize_duc_group(builder, group));
-        }
-        Some(builder.create_vector(&groups_vec))
-    } else {
-        None
-    };
-    
     // Cursor
     let cursor_button_offset = if let Some(cursor_button) = &app_state.cursor_button {
         Some(builder.create_string(cursor_button))
@@ -70,6 +58,19 @@ pub fn serialize_app_state<'a>(
     } else {
         None
     };
+
+    // Hovered element ID
+    let hovered_element_id_offset = if let Some(hovered_element_id) = &app_state.hovered_element_id {
+        Some(builder.create_string(hovered_element_id))
+    } else {
+        None
+    };
+
+    let suggested_binding_element_id_offset = if let Some(suggested_binding_element_id) = &app_state.suggested_binding_element_id {
+        Some(builder.create_string(suggested_binding_element_id))
+    } else {
+        None
+    };
     
     // Selected element IDs
     let selected_ids_offset = if !app_state.selected_element_ids.is_empty() {
@@ -87,7 +88,22 @@ pub fn serialize_app_state<'a>(
     } else {
         None
     };
-    
+
+
+    let elements_pending_erasure_offset = if let Some(elements) = &app_state.elements_pending_erasure {
+        if !elements.is_empty() {
+            let mut ids = Vec::with_capacity(elements.len());
+            for id in elements {
+                ids.push(builder.create_string(id));
+            }
+            Some(builder.create_vector(&ids))
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     // Linear element editor
     let editor_offset = if let Some(editor) = &app_state.editing_linear_element {
         Some(serialize_linear_element_editor(builder, editor))
@@ -141,11 +157,6 @@ pub fn serialize_app_state<'a>(
     app_state_builder.add_main_scope(main_scope_offset);
     app_state_builder.add_standard(app_state.standard as i8);
     
-    // Groups
-    if let Some(groups) = groups_offset {
-        app_state_builder.add_groups(groups);
-    }
-    
     // Scroll position
     app_state_builder.add_scroll_x(app_state.scroll_x as f32);
     app_state_builder.add_scroll_y(app_state.scroll_y as f32);
@@ -170,9 +181,24 @@ pub fn serialize_app_state<'a>(
         app_state_builder.add_last_pointer_down_with(pointer);
     }
     
+    // Hovered element ID
+    if let Some(hovered_element_id) = hovered_element_id_offset {
+        app_state_builder.add_hovered_element_id(hovered_element_id);
+    }
+    
+    // Suggested binding element ID
+    if let Some(suggested_binding_element_id) = suggested_binding_element_id_offset {
+        app_state_builder.add_suggested_binding_element_id(suggested_binding_element_id);
+    }
+    
     // Selected element IDs
     if let Some(ids) = selected_ids_offset {
         app_state_builder.add_selected_element_ids(ids);
+    }
+    
+    // Elements pending erasure
+    if let Some(ids) = elements_pending_erasure_offset {
+        app_state_builder.add_elements_pending_erasure(ids);
     }
     
     // Grid and other settings
@@ -180,6 +206,7 @@ pub fn serialize_app_state<'a>(
     app_state_builder.add_grid_mode_enabled(app_state.grid_mode_enabled);
     app_state_builder.add_grid_step(app_state.grid_step);
     app_state_builder.add_scale_ratio_locked(app_state.scale_ratio_locked);
+    app_state_builder.add_is_binding_enabled(app_state.is_binding_enabled);
     
     // Display settings
     app_state_builder.add_display_all_point_distances(app_state.display_all_point_distances);
@@ -206,27 +233,6 @@ pub fn serialize_app_state<'a>(
     app_state_builder.finish()
 }
 
-/// Helper function to serialize a DucGroup
-fn serialize_duc_group<'a>(
-    builder: &mut FlatBufferBuilder<'a>,
-    group: &DucGroup,
-) -> WIPOffset<FbDucGroup<'a>> {
-    // Create all string offsets first
-    let id_offset = builder.create_string(&group.id);
-    let group_type_offset = builder.create_string(&group.group_type);
-    let label_offset = builder.create_string(&group.label);
-    let scope_offset = builder.create_string(&group.scope);
-    
-    // Build the group with prepared offsets
-    let mut group_builder = DucGroupBuilder::new(builder);
-    group_builder.add_id(id_offset);
-    group_builder.add_type_(group_type_offset);
-    group_builder.add_is_collapsed(group.is_collapsed);
-    group_builder.add_label(label_offset);
-    group_builder.add_scope(scope_offset);
-    
-    group_builder.finish()
-}
 
 /// Helper function to serialize a LinearElementEditor
 fn serialize_linear_element_editor<'a>(

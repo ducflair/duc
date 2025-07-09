@@ -1,11 +1,15 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
-    "@ducflair/duc-py#build": {
+    "ducjs#build": {
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
-    "@ducflair/duc-rs#build": {
+    "ducpy#build": {
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    "ducrs#build": {
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
@@ -14,11 +18,10 @@
       "outputs": []
     },
 
-    "@ducflair/duc-py#gen:docs": {
+    "ducpy#gen:docs": {
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
-
 
     "@duc/docs#build": {
       "env": [
