@@ -3,24 +3,6 @@ import { ElementStroke } from "./types";
 
 
 
-export const TABLE_CELL_ALIGNMENT = {
-  TOP_LEFT: 10,
-  TOP_CENTER: 11,
-  TOP_RIGHT: 12,
-  MIDDLE_LEFT: 13,
-  MIDDLE_CENTER: 14,
-  MIDDLE_RIGHT: 15,
-  BOTTOM_LEFT: 16,
-  BOTTOM_CENTER: 17,
-  BOTTOM_RIGHT: 18,
-} as const;
-
-export const TABLE_FLOW_DIRECTION = {
-  DOWN: 10,
-  UP: 11,
-} as const;
-
-
 export type TableCellAlignment = ValueOf<typeof TABLE_CELL_ALIGNMENT>;
 export type TableFlowDirection = ValueOf<typeof TABLE_FLOW_DIRECTION>;
 export type CellMargins = {

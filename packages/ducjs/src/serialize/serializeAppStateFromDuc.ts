@@ -1,7 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
 import { DucBindableElement, NonDeleted } from 'ducjs/types/elements';
-import { HANDLE_TYPE } from 'ducjs/utils/constants';
-import { AppState as BinAppState, LinearElementEditor, PointerDownState, SegmentMidpointState, SimplePoint } from 'ducjs/duc';
+import { AppState as BinAppState, HANDLE_TYPE, LinearElementEditor, PointerDownState, SegmentMidpointState, SimplePoint } from 'ducjs/duc';
 import { ensureFiniteNumber, getPrecisionValueField } from 'ducjs/serialize/serializationUtils';
 import { serializeDucPoint, serializeElementBackground, serializeElementStroke } from 'ducjs/serialize/serializeElementFromDuc';
 import { DucState, PrecisionValue, SuggestedPointBinding } from 'ducjs/types';

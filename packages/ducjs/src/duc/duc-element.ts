@@ -14,6 +14,7 @@ import { DucTableRow } from '../duc/duc-table-row';
 import { DucTableStyle } from '../duc/duc-table-style';
 import { ElementBackground } from '../duc/element-background';
 import { ElementStroke } from '../duc/element-stroke';
+import { IMAGE_STATUS } from '../duc/image-status';
 import { ImageCrop } from '../duc/image-crop';
 import { Point } from '../duc/point';
 import { PointBinding } from '../duc/point-binding';
@@ -239,11 +240,9 @@ fileId(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-imageStatus():string|null
-imageStatus(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-imageStatus(optionalEncoding?:any):string|Uint8Array|null {
+imageStatus():IMAGE_STATUS|null {
   const offset = this.bb!.__offset(this.bb_pos, 102);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
 }
 
 stackLikeIsCollapsed():boolean|null {
@@ -774,8 +773,8 @@ static addFileId(builder:flatbuffers.Builder, fileIdOffset:flatbuffers.Offset) {
   builder.addFieldOffset(48, fileIdOffset, 0);
 }
 
-static addImageStatus(builder:flatbuffers.Builder, imageStatusOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(49, imageStatusOffset, 0);
+static addImageStatus(builder:flatbuffers.Builder, imageStatus:IMAGE_STATUS) {
+  builder.addFieldInt8(49, imageStatus, null);
 }
 
 static addStackLikeIsCollapsed(builder:flatbuffers.Builder, stackLikeIsCollapsed:boolean) {

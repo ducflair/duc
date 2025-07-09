@@ -6,7 +6,7 @@ on:
       - main
       - next
     paths:
-      - 'packages/duc-rs/**'
+      - 'packages/ducrs/**'
       - 'turbo.json'
       - 'package.json'
   repository_dispatch:
@@ -54,4 +54,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: npx semantic-release --ci
-        working-directory: ./packages/duc-rs
+        working-directory: ./packages/ducrs

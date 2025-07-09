@@ -1,9 +1,10 @@
+import { HANDLE_TYPE } from "ducjs/duc";
 import type { PrecisionValue, RawValue, Scope, ScopedValue } from "ducjs/types";
 import type { DucBindableElement, DucElement, DucLine, DucLinearElement, DucPoint, DucTextElementWithContainer, ElementsMap, NonDeleted } from "ducjs/types/elements";
 import { Bounds, GeometricPoint } from "ducjs/types/geometryTypes";
 import type { ValueOf } from "ducjs/types/utility-types";
 import { ElementAbsoluteCoords, getBoundTextElement, getElementAbsoluteCoords, getElementPointsCoords } from "ducjs/utils/bounds";
-import { HANDLE_TYPE, LINE_CONFIRM_THRESHOLD } from "ducjs/utils/constants";
+import { LINE_CONFIRM_THRESHOLD } from "ducjs/utils/constants";
 import { centerPoint, getBezierXY, getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, rotate, rotatePoint, getControlPointsForBezierCurve, mapIntervalToBezierT } from "ducjs/utils/math";
 import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint } from "ducjs/utils/scopes";
 

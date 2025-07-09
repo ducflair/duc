@@ -69,10 +69,8 @@ export const serializeDucElement = (
   }
 
   let fileIdOffset: flatbuffers.Offset | undefined;
-  let statusOffset: flatbuffers.Offset | undefined;
   if (element.type === 'image') {
     fileIdOffset = element.fileId ? builder.createString(element.fileId) : undefined;
-    statusOffset = element.status ? builder.createString(element.status) : undefined;
   }
 
   let docContentOffset: flatbuffers.Offset | undefined;
@@ -250,7 +248,7 @@ export const serializeDucElement = (
   element.blending !== undefined && BinDucElement.addBlending(builder, element.blending);
   element.zIndex !== undefined && BinDucElement.addZIndex(builder, element.zIndex);
   element.roundness && BinDucElement.addRoundness(builder, getPrecisionValueField(element.roundness, forRenderer));
-  element.subset !== undefined && element.subset !== null && BinDucElement.addSubset(builder, element.subset);
+
   descriptionOffset && BinDucElement.addDescription(builder, descriptionOffset);
   element.noPlot !== undefined && BinDucElement.addNoPlot(builder, element.noPlot);
 
@@ -302,7 +300,7 @@ export const serializeDucElement = (
 
   if (element.type === 'image') {
     fileIdOffset && BinDucElement.addFileId(builder, fileIdOffset);
-    statusOffset && BinDucElement.addImageStatus(builder, statusOffset);
+    BinDucElement.addImageStatus(builder, element.status);
     imageScaleOffset && BinDucElement.addImageScale(builder, imageScaleOffset);
     imageCropOffset && BinDucElement.addImageCrop(builder, imageCropOffset);
   }

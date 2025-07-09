@@ -1,6 +1,9 @@
 pub mod parse_duc_element;
 pub mod parse_app_state;
 pub mod parse_binary_files;
+pub mod parse_renderer_state;
+pub mod parse_duc_group;
+pub mod parse_duc_block;
 
 use flatbuffers::{self};
 use std::collections::HashMap;
@@ -68,9 +71,47 @@ pub fn parse_duc_file(data: &[u8]) -> Result<DucFile, &'static str> {
         (HashMap::new(), HashMap::new())
     };
     
+    // Parse renderer state
+    let renderer_state = if let Some(renderer_state_fb) = exported_data.renderer_state() {
+        Some(parse_renderer_state::parse_renderer_state(&renderer_state_fb))
+    } else {
+        None
+    };
+    
+    // Parse blocks
+    let blocks = if let Some(blocks_fb) = exported_data.blocks() {
+        let mut result = Vec::with_capacity(blocks_fb.len());
+        for i in 0..blocks_fb.len() {
+            let block = blocks_fb.get(i);
+            result.push(parse_duc_block::parse_duc_block(&block));
+        }
+        result
+    } else {
+        Vec::new()
+    };
+
+    // Parse groups
+    let groups = if let Some(groups_fb) = exported_data.groups() {
+        let mut result = Vec::with_capacity(groups_fb.len());
+        for i in 0..groups_fb.len() {
+            let group = groups_fb.get(i);
+            result.push(parse_duc_group::parse_duc_group(group));
+        }
+        result
+    } else {
+        Vec::new()
+    };
+
+    // Get the version directly from exported_data
+    let version = exported_data.version().unwrap_or("0.0.0").to_string();
+
     Ok(DucFile {
         elements,
         app_state,
         binary_files,
+        renderer_state,
+        blocks,
+        groups,
+        version,
     })
 }

@@ -1,3 +1,4 @@
+import { BEZIER_MIRRORING, BLENDING, ELEMENT_CONTENT_PREFERENCE, IMAGE_STATUS, LINE_HEAD, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/duc";
 import type { BinaryFiles, LibraryItem, LibraryItems, LibraryItems_anyVersion, PrecisionValue, RawValue, RendererState, Scope, ScopedValue } from "ducjs/types";
 import { DucState } from "ducjs/types";
 import type {
@@ -24,7 +25,6 @@ import type {
   ElementBackground,
   ElementContentBase,
   ElementStroke,
-  ElementSubset,
   FillStyle,
   FontFamilyValues,
   ImageStatus,
@@ -55,8 +55,6 @@ import {
 } from "ducjs/utils";
 import { getContainerElement } from "ducjs/utils/bounds";
 import {
-  BEZIER_MIRRORING,
-  BLENDING,
   DEFAULT_ELEMENT_PROPS,
   DEFAULT_ELLIPSE_ELEMENT,
   DEFAULT_FONT_FAMILY,
@@ -66,22 +64,11 @@ import {
   DEFAULT_TEXT_ALIGN,
   DEFAULT_VERTICAL_ALIGN,
   DEFAULT_ZOOM_STEP,
-  ELEMENT_CONTENT_PREFERENCE,
-  ELEMENT_SUBSET,
   FONT_FAMILY,
-  IMAGE_STATUS,
   LINE_CONFIRM_THRESHOLD,
-  LINE_HEAD,
   MAX_ZOOM_STEP,
   MIN_ZOOM_STEP,
-  STROKE_CAP,
-  STROKE_JOIN,
-  STROKE_PLACEMENT,
-  STROKE_PREFERENCE,
-  STROKE_SIDE_PREFERENCE,
-  TEXT_ALIGN,
   VERSIONS,
-  VERTICAL_ALIGN
 } from "ducjs/utils/constants";
 import {
   bumpVersion, getDefaultStackProperties, getNonDeletedElements,
@@ -314,7 +301,6 @@ const restoreElementWithProperties = <
     x: restorePrecisionValue(_element.x, elementScope, currentScope, 0),
     y: restorePrecisionValue(_element.y, elementScope, currentScope, 0),
     scope: elementScope,
-    subset: isValidSubsetValue(_element.subset),
     label: _element.label ?? "Lost Element Label",
     isVisible: isValidBoolean(_element.isVisible, DEFAULT_ELEMENT_PROPS.isVisible),
     width: restorePrecisionValue(_element.width, elementScope, currentScope, 0),
@@ -1413,13 +1399,13 @@ export const restoreLibraryItems = (
 
 export const isValidFillStyleValue = (value: FillStyle | undefined): FillStyle => {
   if (value === undefined || !Object.values(ELEMENT_CONTENT_PREFERENCE).includes(value))
-    return ELEMENT_CONTENT_PREFERENCE.solid;
+    return ELEMENT_CONTENT_PREFERENCE.SOLID;
   return value;
 };
 
 export const isValidStrokePreferenceValue = (value: StrokePreference | undefined): StrokePreference => {
   if (value === undefined || !Object.values(STROKE_PREFERENCE).includes(value))
-    return STROKE_PREFERENCE.solid;
+    return STROKE_PREFERENCE.SOLID;
   return value;
 };
 
@@ -1457,7 +1443,7 @@ export const isValidScopeValue = (value: string | undefined, appState?: Readonly
 
 export const isValidImageStatusValue = (value: ImageStatus | undefined): ImageStatus => {
   if (value === undefined || !Object.values(IMAGE_STATUS).includes(value))
-    return IMAGE_STATUS.pending;
+    return IMAGE_STATUS.PENDING;
   return value;
 };
 
@@ -1484,27 +1470,21 @@ export const isValidBezierMirroringValue = (value: BezierMirroring | undefined):
   return value;
 };
 
-export const isValidSubsetValue = (value: ElementSubset | null | undefined): ElementSubset | null => {
-  if (value === undefined || value === null || !Object.values(ELEMENT_SUBSET).includes(value))
-    return null;
-  return value;
-};
-
 export const isValidStrokeSidePreferenceValue = (value: StrokeSidePreference | undefined): StrokeSidePreference => {
   if (value === undefined || !Object.values(STROKE_SIDE_PREFERENCE).includes(value))
-    return STROKE_SIDE_PREFERENCE.top;
+    return STROKE_SIDE_PREFERENCE.TOP;
   return value;
 };
 
 export const isValidStrokeCapValue = (value: StrokeCap | undefined): StrokeCap => {
   if (value === undefined || !Object.values(STROKE_CAP).includes(value))
-    return STROKE_CAP.butt;
+    return STROKE_CAP.BUTT;
   return value;
 };
 
 export const isValidStrokeJoinValue = (value: StrokeJoin | undefined): StrokeJoin => {
   if (value === undefined || !Object.values(STROKE_JOIN).includes(value))
-    return STROKE_JOIN.miter;
+    return STROKE_JOIN.MITER;
   return value;
 };
 
@@ -1603,9 +1583,9 @@ const validateDeprecatedElementContent = (color: string, defaultContent: Element
 const validateStrokeStyle = (style: Partial<StrokeStyle> | undefined): StrokeStyle => {
   if (!style) {
     return {
-      preference: STROKE_PREFERENCE.solid,
-      cap: STROKE_CAP.butt,
-      join: STROKE_JOIN.miter,
+      preference: STROKE_PREFERENCE.SOLID,
+      cap: STROKE_CAP.BUTT,
+      join: STROKE_JOIN.MITER,
       dash: [],
       miterLimit: 4,
     };
@@ -1634,7 +1614,7 @@ const validateStroke = (stroke: ElementStroke | undefined, elementScope: Support
       content: stroke?.content,
       defaultContent: DEFAULT_ELEMENT_PROPS.stroke.content,
     }),
-    placement: stroke?.placement ?? STROKE_PLACEMENT.center,
+    placement: stroke?.placement ?? STROKE_PLACEMENT.CENTER,
     width: restorePrecisionValue(stroke?.width, elementScope, currentScope, DEFAULT_ELEMENT_PROPS.stroke.width.value),
     style: validateStrokeStyle(stroke?.style),
     strokeSides: validateStrokeSides(stroke?.strokeSides),

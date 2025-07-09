@@ -1,3 +1,4 @@
+import { ANTI_ALIASING, OBJECT_SNAP_MODE } from "ducjs/duc";
 import {
   DucBindableElement,
   DucElement,
@@ -15,7 +16,7 @@ import {
 } from "ducjs/types/elements";
 import { GeometricPoint, Percentage, Radian } from "ducjs/types/geometryTypes";
 import { MakeBrand, MaybePromise, ValueOf } from "ducjs/types/utility-types";
-import type { ANTI_ALIASING, GRID_DISPLAY_TYPE, GRID_TYPE, IMAGE_MIME_TYPES, MIME_TYPES, OBJECT_SNAP_MODE, SNAP_MARKER_SHAPE, SNAP_MODE, SNAP_OVERRIDE_BEHAVIOR } from "ducjs/utils/constants";
+import type { GRID_DISPLAY_TYPE, GRID_TYPE, IMAGE_MIME_TYPES, MIME_TYPES, SNAP_MARKER_SHAPE, SNAP_MODE, SNAP_OVERRIDE_BEHAVIOR } from "ducjs/utils/constants";
 import { LinearElementEditor } from "ducjs/utils/elements/linearElement";
 import { SupportedMeasures } from "ducjs/utils/measurements";
 import { DesignStandard } from "ducjs/utils/standards";

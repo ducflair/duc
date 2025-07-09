@@ -1,17 +1,15 @@
-import { AppState as BinAppState } from 'ducjs/duc';
+import { AppState as BinAppState, HANDLE_TYPE } from 'ducjs/duc';
 import { parseElementBinBackground, parseElementBinStroke, parsePoint } from 'ducjs/parse/parseElementFromBinary';
 import { SupportedMeasures } from 'ducjs/utils/measurements';
 import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/utils/scopes';
 import { DesignStandard } from 'ducjs/utils/standards';
 import {
-  ElementSubset,
   LineHead,
   PointerType,
   TextAlign
 } from 'ducjs/types/elements';
 import { LinearElementEditor } from 'ducjs/utils/elements/linearElement';
 import { AntiAliasing, DucState, NormalizedZoomValue, PrecisionValue, RawValue, Zoom } from 'ducjs/types';
-import { HANDLE_TYPE } from 'ducjs/utils/constants';
 
 export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: string): Partial<DucState> => {
   if (!appStateBin) return {};

@@ -317,7 +317,7 @@ class DucElement(object):
     def ImageStatus(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(102))
         if o != 0:
-            return self._tab.String(o + self._tab.Pos)
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return None
 
     # DucElement
@@ -1139,7 +1139,7 @@ def AddFileId(builder, fileId):
     DucElementAddFileId(builder, fileId)
 
 def DucElementAddImageStatus(builder, imageStatus):
-    builder.PrependUOffsetTRelativeSlot(49, flatbuffers.number_types.UOffsetTFlags.py_type(imageStatus), 0)
+    builder.PrependUint8Slot(49, imageStatus, None)
 
 def AddImageStatus(builder, imageStatus):
     DucElementAddImageStatus(builder, imageStatus)
