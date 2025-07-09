@@ -12,5 +12,5 @@ module.exports = {
     ],
     "@semantic-release/github",
   ],
-  tagFormat: "ducjs@${version}"
+  tagFormat: "ducsvg@${version}"
 };

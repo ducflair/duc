@@ -36,7 +36,8 @@
     "nanoid": "5.1.5",
     "tinycolor2": "1.6.0",
     "@braintree/sanitize-url": "6.0.2",
-    "browser-fs-access": "0.35.0"
+    "browser-fs-access": "0.35.0",
+    "perfect-freehand": "1.2.2"
   },
   "files": [
     "dist",

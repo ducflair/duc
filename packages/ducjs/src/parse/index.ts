@@ -1,3 +1,11 @@
+export * from "./parseElementFromBinary";
+export * from "./parseAppStateFromBinary";
+export * from "./parseRendererStateFromBinary";
+export * from "./parseBlockFromBinary";
+export * from "./parseGroupFromBinary";
+export * from "./parseBinaryFilesFromBinary";
+
+
 import { FileSystemHandle } from 'browser-fs-access';
 import * as flatbuffers from 'flatbuffers';
 import { restore, ExtendedAppStateRestorer } from 'ducjs/utils/restore';

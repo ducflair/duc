@@ -5,12 +5,13 @@ import {
   DucLinearElement,
   DucPoint,
   ElementBackground,
-} from "ducjs/element/types";
-import { AppState, Scope } from "ducjs/types";
-import { LINE_HEAD, STROKE_PLACEMENT, SVG_NS } from "ducjs/utils/constants";
-import { applyStyles } from "./ducToSvg";
-import { RestoredDataState } from "ducjs/data/restore";
-import { isArrowElement } from "ducjs/element/typeChecks";
+} from "ducjs/types/elements";
+import { Scope } from "ducjs/types";
+import { LINE_HEAD, STROKE_PLACEMENT } from "ducjs/duc";
+import { applyStyles, FrameRendering } from "ducsvg/ducToSvg";
+import { isArrowElement } from "ducjs/types/elements/typeChecks";
+import { SVG_NS } from "ducjs/utils/constants";
+import { RestoredDataState } from "ducjs/utils/restore";
 
 // This file will contain the new, robust SVG rendering logic for linear elements,
 // ported from the Rust implementation.
@@ -267,21 +268,21 @@ const renderLineHead = (
   };
 
   switch (binding.head) {
-    case LINE_HEAD.arrow:
-    case LINE_HEAD.open_arrow:
+    case LINE_HEAD.ARROW:
+    case LINE_HEAD.OPEN_ARROW:
       headShape = createPath(`M 0 0 L ${-3.5 * scale} ${1.5 * scale} M 0 0 L ${-3.5 * scale} ${-1.5 * scale}`);
       headShape.setAttribute("fill", "none");
       headShape.setAttribute("stroke-linecap", "round");
       break;
 
-    case LINE_HEAD.bar:
+    case LINE_HEAD.BAR:
       headShape = createPath(`M 0 ${2 * scale} L 0 ${-2 * scale}`);
       break;
 
-    case LINE_HEAD.circle_outlined:
+    case LINE_HEAD.CIRCLE_OUTLINED:
       isOutlined = true;
     // fall-through
-    case LINE_HEAD.circle: {
+    case LINE_HEAD.CIRCLE: {
       const circle = document.createElementNS(SVG_NS, "circle");
       circle.setAttribute("cx", `${-1.7 * scale}`);
       circle.setAttribute("cy", `0`);
@@ -290,24 +291,24 @@ const renderLineHead = (
       break;
     }
 
-    case LINE_HEAD.triangle_outlined:
+    case LINE_HEAD.TRIANGLE_OUTLINED:
       isOutlined = true;
     // fall-through
-    case LINE_HEAD.triangle:
+    case LINE_HEAD.TRIANGLE:
       headShape = createPath(`M 0 0 L ${-2.4 * scale} ${0.9 * scale} L ${-2.4 * scale} ${-0.9 * scale} Z`, "round");
       break;
 
-    case LINE_HEAD.diamond_outlined:
+    case LINE_HEAD.DIAMOND_OUTLINED:
       isOutlined = true;
     // fall-through
-    case LINE_HEAD.diamond:
+    case LINE_HEAD.DIAMOND:
       headShape = createPath(
         `M 0 0 L ${-1.5 * scale} ${1.5 * scale} L ${-3 * scale} 0 L ${-1.5 * scale} ${-1.5 * scale} Z`,
         "round",
       );
       break;
 
-    case LINE_HEAD.cross:
+    case LINE_HEAD.CROSS:
       headShape = createPath(
         `M ${-2.5 * scale} ${-2.5 * scale} L ${2.5 * scale} ${2.5 * scale} M ${-2.5 * scale} ${2.5 * scale
         } L ${2.5 * scale} ${-2.5 * scale}`,
@@ -316,25 +317,25 @@ const renderLineHead = (
       headShape.setAttribute("stroke-linecap", "round");
       break;
 
-    case LINE_HEAD.reversed_arrow:
+    case LINE_HEAD.REVERSED_ARROW:
       headShape = createPath(`M 0 0 L ${3.5 * scale} ${1.5 * scale} M 0 0 L ${3.5 * scale} ${-1.5 * scale}`);
       headShape.setAttribute("fill", "none");
       headShape.setAttribute("stroke-linecap", "round");
       break;
 
-    case LINE_HEAD.reversed_triangle_outlined:
+    case LINE_HEAD.REVERSED_TRIANGLE_OUTLINED:
       isOutlined = true;
     // fall-through
-    case LINE_HEAD.reversed_triangle:
+    case LINE_HEAD.REVERSED_TRIANGLE:
       headShape = createPath(`M 0 0 L ${2.4 * scale} ${0.9 * scale} L ${2.4 * scale} ${-0.9 * scale} Z`, "round");
       break;
 
-    case LINE_HEAD.cone:
+    case LINE_HEAD.CONE:
       headShape = createPath(`M 0 ${3 * scale} L ${-6 * scale} 0 L 0 ${-3 * scale} L 0 ${3 * scale}`);
       headShape.setAttribute("fill", "none");
       break;
 
-    case LINE_HEAD.half_cone:
+    case LINE_HEAD.HALF_CONE:
       headShape = createPath(`M 0 0 L 0 ${-3 * scale} L ${-6 * scale} 0 Z`);
       headShape.setAttribute("fill", "none");
       break;
@@ -694,7 +695,7 @@ export const renderLinearElementToSvg = (
   appState: RestoredDataState["appState"],
   files: RestoredDataState["files"],
   defs: SVGDefsElement,
-  frameRendering: AppState["frameRendering"],
+  frameRendering: FrameRendering,
   currentScope: Scope,
   offsetX: number,
   offsetY: number,
@@ -750,7 +751,7 @@ export const renderLinearElementToSvg = (
 
     let finalPathData = strokePathDataString;
 
-    if (stroke.placement !== STROKE_PLACEMENT.center) {
+    if (stroke.placement !== STROKE_PLACEMENT.CENTER) {
       const subPathSegments = stringToPathData(strokePathDataString);
       const moveTos = subPathSegments.filter(s => s.type.toUpperCase() === 'M');
 
@@ -758,8 +759,8 @@ export const renderLinearElementToSvg = (
       let offset = stroke.width.scoped / 2;
 
       if (
-        (stroke.placement === STROKE_PLACEMENT.inside && pathArea < 0) ||
-        (stroke.placement === STROKE_PLACEMENT.outside && pathArea > 0)
+        (stroke.placement === STROKE_PLACEMENT.INSIDE && pathArea < 0) ||
+        (stroke.placement === STROKE_PLACEMENT.OUTSIDE && pathArea > 0)
       ) {
         offset = -offset;
       }
@@ -782,9 +783,9 @@ export const renderLinearElementToSvg = (
 
       const pathArea = getPathArea(subPaths, { x: element.points[0].x.scoped, y: element.points[0].y.scoped });
       let offsetValue = 0;
-      if (firstStroke.placement === STROKE_PLACEMENT.outside) {
+      if (firstStroke.placement === STROKE_PLACEMENT.OUTSIDE) {
         offsetValue = pathArea > 0 ? -firstStroke.width.scoped / 2 : firstStroke.width.scoped / 2;
-      } else if (firstStroke.placement === STROKE_PLACEMENT.inside) {
+      } else if (firstStroke.placement === STROKE_PLACEMENT.INSIDE) {
         offsetValue = pathArea > 0 ? firstStroke.width.scoped / 2 : -firstStroke.width.scoped / 2;
       }
 

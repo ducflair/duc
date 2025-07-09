@@ -1,4 +1,15 @@
-import { ActiveTool, DucState, ToolType } from "ducjs/types";
+export * from "./elements";
+export * from "./math";
+export * from "./state";
+export * from "./constants";
+export * from "./shape";
+export * from "./restore";
+export * from "./bounds";
+export * from "./standards";
+export * from "./scopes";
+export * from "./measurements";
+export * from "./normalize";
+export * from "./url";
 
 /**
  * supply `null` as message if non-never value is valid, you just need to
@@ -44,36 +55,16 @@ export const arrayToMap = <T extends { id: string } | string>(
   }, new Map());
 };
 
-export const updateActiveTool = (
-  appState: Pick<DucState, "activeTool">,
-  data: ((
-    | {
-        type: ToolType;
-      }
-    | { type: "custom"; customType: string }
-  ) & { locked?: boolean; fromSelection?: boolean }) & {
-    lastActiveToolBeforeEraser?: ActiveTool | null;
-  },
-): DucState["activeTool"] => {
-  if (data.type === "custom") {
-    return {
-      ...appState.activeTool,
-      type: "custom",
-      customType: data.customType,
-      locked: data.locked ?? appState.activeTool.locked,
-    };
-  }
 
-  
-  return {
-    ...appState.activeTool,
-    lastActiveTool:
-      data.lastActiveToolBeforeEraser === undefined
-        ? appState.activeTool.lastActiveTool
-        : data.lastActiveToolBeforeEraser,
-    type: data.type,
-    customType: null,
-    locked: data.locked ?? appState.activeTool.locked,
-    fromSelection: data.fromSelection ?? false,
-  };
-};
+const RS_LTR_CHARS =
+  "A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02B8\u0300-\u0590\u0800-\u1FFF" +
+  "\u2C00-\uFB1C\uFDFE-\uFE6F\uFEFD-\uFFFF";
+const RS_RTL_CHARS = "\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC";
+const RE_RTL_CHECK = new RegExp(`^[^${RS_LTR_CHARS}]*[${RS_RTL_CHARS}]`);
+/**
+ * Checks whether first directional character is RTL. Meaning whether it starts
+ *  with RTL characters, or indeterminate (numbers etc.) characters followed by
+ *  RTL.
+ * See https://github.com/excalidraw/excalidraw/pull/1722#discussion_r436340171
+ */
+export const isRTL = (text: string) => RE_RTL_CHECK.test(text);

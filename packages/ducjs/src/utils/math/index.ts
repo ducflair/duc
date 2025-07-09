@@ -1,3 +1,8 @@
+export * from "./geometry";
+export * from "./bbox";
+export * from "./algebra";
+export * from "./random";
+
 import type {
   NullableGridSize,
   RawValue,
@@ -6,7 +11,7 @@ import type {
 } from "ducjs/types";
 import { Scope, ScopedValue } from "ducjs/types";
 import type { DucElement, DucLine, DucLinearElement, DucLineReference, DucPoint, NonDeleted } from "ducjs/types/elements";
-import type { Bounds, GeometricPoint, GeometricVector } from "ducjs/types/geometryTypes";
+import type { Bounds, GeometricPoint, GeometricVector, Percentage, Radian } from "ducjs/types/geometryTypes";
 import { Heading } from "ducjs/types/geometryTypes";
 import { Mutable } from "ducjs/types/utility-types";
 import {
@@ -16,6 +21,28 @@ import { pointFrom } from "ducjs/utils/math/geometry";
 import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint, SupportedMeasures } from "ducjs/utils/scopes";
 
 type SV = ScopedValue;
+
+
+
+export const getRadianFromDegrees = (degrees: number): Radian => {
+  return degrees * (Math.PI / 180) as Radian;
+};
+
+export const getDegreesFromRadian = (radian: Radian): number => {
+  return radian * (180 / Math.PI);
+};
+
+export const getPercentageValueFromPercentage = (value: number): Percentage => {
+  return value/100 as Percentage;
+};
+
+export const getPercentageFromPercentage = (percentage: Percentage): number => {
+  return percentage * 100;
+};
+
+export const med = (A: number[], B: number[]): number[] => {
+  return [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2];
+}
 
 /**
  * Rotates a point (x, y) around another point (cx, cy) by a given angle.
@@ -1577,4 +1604,41 @@ export const mapIntervalToBezierT = (
         (arcLengths[index + 1] - arcLengths[index])) /
       pointsCount
   );
+};
+
+// Helper function to sample a point on a cubic Bézier curve
+export const sampleCubicBezier = (
+  p0: GeometricPoint,
+  p1: GeometricPoint,
+  p2: GeometricPoint,
+  p3: GeometricPoint,
+  t: number
+): GeometricPoint => {
+  const u = 1 - t;
+  const tt = t * t;
+  const uu = u * u;
+  const uuu = uu * u;
+  const ttt = tt * t;
+
+  return {
+    x: uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x,
+    y: uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y,
+  };
+};
+
+// Helper function to sample a point on a quadratic Bézier curve
+export const sampleQuadraticBezier = (
+  p0: GeometricPoint,
+  p1: GeometricPoint,
+  p2: GeometricPoint,
+  t: number
+): GeometricPoint => {
+  const u = 1 - t;
+  const uu = u * u;
+  const tt = t * t;
+
+  return {
+    x: uu * p0.x + 2 * u * t * p1.x + tt * p2.x,
+    y: uu * p0.y + 2 * u * t * p1.y + tt * p2.y,
+  };
 };

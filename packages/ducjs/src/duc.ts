@@ -71,6 +71,7 @@ export { TABLE_CELL_ALIGNMENT } from './duc/table-cell-alignment';
 export { TABLE_FLOW_DIRECTION } from './duc/table-flow-direction';
 export { TEXT_ALIGN } from './duc/text-align';
 export { TEXT_FLOW_DIRECTION } from './duc/text-flow-direction';
+export { THEME } from './duc/theme';
 export { TOLERANCE_DISPLAY } from './duc/tolerance-display';
 export { TOLERANCE_TYPE } from './duc/tolerance-type';
 export { TOLERANCE_ZONE_TYPE } from './duc/tolerance-zone-type';

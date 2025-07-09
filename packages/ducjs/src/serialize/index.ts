@@ -1,3 +1,11 @@
+export * from "./serializeAppStateFromDuc";
+export * from "./serializeElementFromDuc";
+export * from "./serializeBinaryFilesFromDuc";
+export * from "./serializeRendererStateFromDuc";
+export * from "./serializeGroupFromDuc";
+export * from "./serializeBlockFromDuc";
+export * from "./serializationUtils";
+
 import * as flatbuffers from 'flatbuffers';
 import {
   ExportedDataState,

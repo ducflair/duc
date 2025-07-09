@@ -51,7 +51,6 @@ import {
   arrayToMap,
   getUpdatedTimestamp,
   isFiniteNumber,
-  updateActiveTool,
 } from "ducjs/utils";
 import { getContainerElement } from "ducjs/utils/bounds";
 import {
@@ -88,7 +87,7 @@ import {
 } from "ducjs/utils/normalize";
 import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScaledZoomValueForScope, getScopedBezierPointFromDucPoint, getScopedZoomValue, NEUTRAL_SCOPE } from "ducjs/utils/scopes";
 import { DESIGN_STANDARD, DesignStandard } from "ducjs/utils/standards";
-import { getDefaultDucState } from "ducjs/utils/state";
+import { getDefaultDucState, updateActiveTool } from "ducjs/utils/state";
 import { normalizeLink } from "ducjs/utils/url";
 import tinycolor from "tinycolor2";
 
