@@ -1,4 +1,4 @@
-// This is an integration test for duc-rs serialization.
+// This is an integration test for ducrs serialization.
 
 use duc::serialize::serialize_duc_file; 
 use duc::{
@@ -10,7 +10,7 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::PathBuf;
 
-// Helper function to get the root of the duc-rs package for test output
+// Helper function to get the root of the ducrs package for test output
 fn get_crate_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }

@@ -1,25 +1,13 @@
 import {
-  LINE_HEAD,
-  BLENDING,
-  ELEMENT_CONTENT_PREFERENCE,
   FONT_FAMILY,
-  IMAGE_STATUS,
-  STROKE_CAP,
-  STROKE_JOIN,
-  STROKE_PLACEMENT,
-  STROKE_PREFERENCE,
-  STROKE_SIDE_PREFERENCE,
-  TEXT_ALIGN,
   THEME,
-  VERTICAL_ALIGN,
-  ELEMENT_SUBSET,
-  BEZIER_MIRRORING,
   FREEDRAW_EASINGS,
 } from "ducjs/utils/constants";
 import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "ducjs/types/utility-types";
 import { SupportedMeasures } from "ducjs/utils/measurements";
 import { PrecisionValue } from "ducjs/types";
 import { Percentage, Radian, GeometricPoint } from "ducjs/types/geometryTypes";
+import { BEZIER_MIRRORING, BLENDING, ELEMENT_CONTENT_PREFERENCE, IMAGE_STATUS, LINE_HEAD, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/duc";
 
 export type ChartType = "bar" | "line";
 export type FontFamilyKeys = keyof typeof FONT_FAMILY;
@@ -34,7 +22,6 @@ export type TextAlign = typeof TEXT_ALIGN[keyof typeof TEXT_ALIGN];
 export type ImageStatus = ValueOf<typeof IMAGE_STATUS>;
 export type LineHead = ValueOf<typeof LINE_HEAD>;
 export type Blending = ValueOf<typeof BLENDING>;
-export type ElementSubset = ValueOf<typeof ELEMENT_SUBSET>;
 
 type VerticalAlignKeys = keyof typeof VERTICAL_ALIGN;
 export type VerticalAlign = typeof VERTICAL_ALIGN[VerticalAlignKeys];
@@ -70,7 +57,6 @@ export type ElementConstructorOpts = MarkOptional<
   | "noPlot"
   | "description"
   | "scope"
-  | "subset"
   | "blending"
 >;
 
@@ -236,12 +222,6 @@ type _DucElementBase = Readonly<{
    * mm, cm, m, in, ft, yd, mi, etc...
    */
   scope: SupportedMeasures;
-
-  /**
-   * Represents a certain category in which the element belongs to
-   * e.g. AUX, COTA, etc.
-   */
-  subset: ElementSubset | null;
 
   label: string;
   isVisible: boolean;

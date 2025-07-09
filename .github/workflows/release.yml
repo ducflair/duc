@@ -34,7 +34,7 @@ jobs:
             duc_py:
               - 'packages/duc-py/**'
             duc_rs:
-              - 'packages/duc-rs/**'
+              - 'packages/ducrs/**'
             web:
               - 'apps/web/**'
 

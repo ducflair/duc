@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::types::*;
-use crate::parse::parse_duc_element::{parse_element_background, parse_element_stroke, parse_point};
+use crate::parse::parse_duc_element::{parse_element_background, parse_element_stroke, parse_point, parse_line_head_option};
 
 /// Parses a FlatBuffers AppState into our Rust AppState type
 pub fn parse_app_state(app_state: &crate::generated::duc::AppState) -> crate::types::AppState {
@@ -40,30 +40,14 @@ pub fn parse_app_state(app_state: &crate::generated::duc::AppState) -> crate::ty
     let current_item_font_size = app_state.current_item_font_size_v3();
     let current_item_text_align = unsafe { std::mem::transmute(app_state.current_item_text_align_v3()) };
     let current_item_subset = app_state.current_item_subset().map(|s| unsafe { std::mem::transmute::<i8, ElementSubset>(s) });
-    let current_item_start_line_head = app_state.current_item_start_line_head().map(|s| unsafe { std::mem::transmute::<i8, LineHead>(s) });
-    let current_item_end_line_head = app_state.current_item_end_line_head().map(|s| unsafe { std::mem::transmute::<i8, LineHead>(s) });    
+    let current_item_start_line_head = app_state.current_item_start_line_head().and_then(|s| parse_line_head_option(s));
+    let current_item_end_line_head = app_state.current_item_end_line_head().and_then(|s| parse_line_head_option(s));    
     let current_item_roundness = app_state.current_item_roundness_v3();
     let view_background_color = app_state.view_background_color().unwrap_or("#ffffff").to_string();
     let scope = app_state.scope().unwrap_or("mm").to_string();
     let main_scope = app_state.main_scope().unwrap_or("mm").to_string();
     let standard = unsafe { std::mem::transmute(app_state.standard()) };
     
-    let groups = if let Some(groups_vec) = app_state.groups() {
-        let mut result = Vec::with_capacity(groups_vec.len());
-        for i in 0..groups_vec.len() {
-            let group = groups_vec.get(i);
-            result.push(crate::types::DucGroup {
-                id: group.id().unwrap_or("").to_string(),
-                label: group.label().unwrap_or("").to_string(),
-                group_type: group.type_().unwrap_or("group").to_string(),
-                scope: group.scope().unwrap_or("mm").to_string(),
-                is_collapsed: group.is_collapsed(),
-            });
-        }
-        result
-    } else {
-        Vec::new()
-    };
     
     let scroll_x = app_state.scroll_x() as f64;
     let scroll_y = app_state.scroll_y() as f64;
@@ -75,7 +59,9 @@ pub fn parse_app_state(app_state: &crate::generated::duc::AppState) -> crate::ty
         value: app_state.zoom() as f64,
     };
 
+    let suggested_binding_element_id = app_state.suggested_binding_element_id().map(|s| s.to_string());
     let last_pointer_down_with = app_state.last_pointer_down_with().map(|s| s.to_string());
+    let hovered_element_id = app_state.hovered_element_id().map(|s| s.to_string());
     
     let selected_element_ids = if let Some(ids) = app_state.selected_element_ids() {
         let mut map = HashMap::with_capacity(ids.len());
@@ -87,11 +73,15 @@ pub fn parse_app_state(app_state: &crate::generated::duc::AppState) -> crate::ty
     } else {
         HashMap::new()
     };
-    
+
+    let elements_pending_erasure = app_state.elements_pending_erasure()
+    .map(|ids| ids.iter().map(|id| id.to_string()).collect());
+
     let grid_size = app_state.grid_size();
     let grid_step = app_state.grid_step();
     let grid_mode_enabled = app_state.grid_mode_enabled();
     let scale_ratio_locked = app_state.scale_ratio_locked();
+    let is_binding_enabled = app_state.is_binding_enabled();
     
     let display_all_point_distances = app_state.display_all_point_distances();
     let display_distance_on_drawing = app_state.display_distance_on_drawing();
@@ -173,11 +163,13 @@ pub fn parse_app_state(app_state: &crate::generated::duc::AppState) -> crate::ty
             
             PointerDownState {
                 prev_selected_points_indices,
+                prev_selected_handles: None,
                 last_clicked_point,
                 last_clicked_is_end_point,
                 origin,
                 segment_midpoint,
                 handle_type,
+                handle_info: None,
             }
         };
         
@@ -237,7 +229,6 @@ pub fn parse_app_state(app_state: &crate::generated::duc::AppState) -> crate::ty
         scope,
         main_scope,
         standard,
-        groups,
         scroll_x,
         scroll_y,
         cursor_button,
@@ -245,6 +236,7 @@ pub fn parse_app_state(app_state: &crate::generated::duc::AppState) -> crate::ty
         name,
         zoom,
         selected_element_ids,
+        elements_pending_erasure,
         grid_size,
         grid_step,
         grid_mode_enabled,
@@ -261,13 +253,16 @@ pub fn parse_app_state(app_state: &crate::generated::duc::AppState) -> crate::ty
         v_sync,
         debug_rendering,
         zoom_step,
+        hovered_element_id,
+        suggested_binding_element_id,
+        is_binding_enabled,
         last_pointer_down_with,
         editing_linear_element,
         editing_frame: None,
+        selected_group_ids: None,
         previous_selected_element_ids: None,
         selected_elements_are_being_dragged: None,
         should_cache_ignore_zoom: None,
-        selected_group_ids: None,
         editing_group_id: None,
         paste_dialog_shown: None,
         paste_dialog_data: None,

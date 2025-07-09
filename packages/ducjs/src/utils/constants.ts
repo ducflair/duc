@@ -1,3 +1,4 @@
+import { ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, OBJECT_SNAP_MODE, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/duc";
 import { GridSettings, RawValue, ScopedValue, SnapSettings } from "ducjs/types";
 import { DucElement, DucEllipseElement, DucFreeDrawElement, DucTextElement, ElementBackground, ElementStroke, FontFamilyValues } from "ducjs/types/elements";
 import { Percentage, Radian } from "ducjs/types/geometryTypes";
@@ -96,157 +97,6 @@ export const HIDE_FRAME_NAME_ZOOM_THRESHOLD = 0.18;
 export const DEFAULT_PROPORTIONAL_RADIUS = 0.25;
 // Fixed radius for the ADAPTIVE_RADIUS algorithm. In pixels.
 export const DEFAULT_ADAPTIVE_RADIUS = 32;
-
-export const VERTICAL_ALIGN = {
-  TOP: 10,
-  MIDDLE: 11,
-  BOTTOM: 12,
-} as const;
-
-export const TEXT_ALIGN = {
-  LEFT: 10,
-  CENTER: 11,
-  RIGHT: 12,
-} as const;
-
-// FIXME: Eventually deprecate this
-export const ROUGHNESS = {
-  architect: 0,
-  artist: 1,
-  cartoonist: 2,
-} as const;
-
-export const STROKE_PLACEMENT = {
-  outside: 12,
-  center: 11,
-  inside: 10,
-} as const;
-
-// FIXME: Eventually deprecate this
-export const STROKE_WIDTH = {
-  thin: 1,
-  bold: 2,
-  extraBold: 4,
-} as const;
-
-export const ELEMENT_CONTENT_PREFERENCE = {
-  hachure: 10,
-  "cross-hatch": 11,
-  solid: 12,
-  zigzag: 13,
-  fill: 14,
-  fit: 15,
-  tile: 16,
-  stretch: 17,
-  hatch: 18,
-} as const;
-
-export const STROKE_PREFERENCE = {
-  solid: 10,
-  dashed: 11,
-  dotted: 12,
-  custom: 13,
-} as const;
-
-export const STROKE_SIDE_PREFERENCE = {
-  top: 10,
-  bottom: 11,
-  left: 12,
-  right: 13,
-  custom: 14,
-  all: 15
-} as const;
-
-
-export const STROKE_CAP = {
-  butt: 10,
-  round: 11,
-  square: 12,
-} as const;
-
-export const STROKE_JOIN = {
-  miter: 10,
-  round: 11,
-  bevel: 12,
-} as const;
-
-
-export const LINE_HEAD = {
-  arrow: 10,
-  bar: 11,
-  circle: 12,
-  circle_outlined: 13,
-  triangle: 14,
-  triangle_outlined: 15,
-  diamond: 16,
-  diamond_outlined: 17,
-  cross: 18,
-  open_arrow: 19,
-  reversed_arrow: 20,
-  reversed_triangle: 21,
-  reversed_triangle_outlined: 22,
-  cone: 23,
-  half_cone: 24
-} as const;
-
-export const BEZIER_MIRRORING = {
-  NONE: 10,
-  ANGLE: 11,
-  ANGLE_LENGTH: 12,
-} as const;
-
-export const HANDLE_TYPE = {
-  HANDLE_IN: 10,
-  HANDLE_OUT: 11,
-} as const;
-
-export const ANTI_ALIASING = {
-  NONE: 10,
-  ANALYTIC: 11,
-  MSAA_8: 8,
-  MSAA_16: 16,
-} as const;
-
-export const YOUTUBE_STATES = {
-  UNSTARTED: -1,
-  ENDED: 0,
-  PLAYING: 1,
-  PAUSED: 2,
-  BUFFERING: 3,
-  CUED: 5,
-} as const;
-
-export const BLENDING = {
-  MULTIPLY: 11,  // For shadows/print-safe darkening (e.g., material overlaps)
-  SCREEN: 12,  // Lighting effects, translucent materials
-  OVERLAY: 13,  // Enhancing contrast in hatches/textures
-  DARKEN: 14,  // Highlight deprecated components or markups
-  LIGHTEN: 15,  // Annotations without obscuring geometry
-  DIFFERENCE: 16,  // Detect misalignments between layers
-  EXCLUSION: 17   // Subtler version of Difference for CAD comparisons
-} as const;
-
-
-export const ELEMENT_SUBSET = {
-  AUX: 14,
-  COTA: 15,
-} as const;
-
-export const IMAGE_STATUS = {
-  pending: "pending",
-  saved: "saved",
-  error: "error",
-} as const;
-
-export const ENV = {
-  TEST: "test",
-  DEVELOPMENT: "development",
-};
-
-export const CLASSES = {
-  SHAPE_ACTIONS_MENU: "App-menu__left",
-  ZOOM_ACTIONS: "zoom-actions",
-};
 
 /**
  * // TODO: shouldn't be really `const`, likely neither have integers as values, due to value for the custom fonts, which should likely be some hash.
@@ -371,21 +221,21 @@ export const DEFAULT_FRAME_STYLE: {
 } = ({
   stroke: [{
     content: {
-      preference: ELEMENT_CONTENT_PREFERENCE.solid,
+      preference: ELEMENT_CONTENT_PREFERENCE.SOLID,
       src: COLOR_PALETTE.midGray,
       visible: true,
       opacity: 1 as Percentage,
     },
     width: { value: 2 as RawValue, scoped: 2 as ScopedValue },
     style: {
-      preference: STROKE_PREFERENCE.solid,
-      join: STROKE_JOIN.miter,
+      preference: STROKE_PREFERENCE.SOLID,
+      join: STROKE_JOIN.MITER,
     },
-    placement: STROKE_PLACEMENT.inside,
+    placement: STROKE_PLACEMENT.INSIDE,
   }],
   background: [{
     content: {
-      preference: ELEMENT_CONTENT_PREFERENCE.solid,
+      preference: ELEMENT_CONTENT_PREFERENCE.SOLID,
       src: COLOR_PALETTE.midGray,
       visible: false,
       opacity: 0.1 as Percentage,
@@ -416,27 +266,26 @@ export const DEFAULT_ELEMENT_PROPS: {
   boundElements: DucElement["boundElements"];
   link: DucElement["link"];
   frameId: DucElement["frameId"];
-  subset: DucElement["subset"];
   noPlot: DucElement["noPlot"];
   description: DucElement["description"];
 } = {
   stroke: {
     content: {
-      preference: ELEMENT_CONTENT_PREFERENCE.solid,
+      preference: ELEMENT_CONTENT_PREFERENCE.SOLID,
       src: COLOR_PALETTE.midGray,
       visible: true,
       opacity: 1 as Percentage,
     },
     width: { value: 2 as RawValue, scoped: 2 as ScopedValue },
     style: {
-      preference: STROKE_PREFERENCE.solid,
-      join: STROKE_JOIN.miter,
+      preference: STROKE_PREFERENCE.SOLID,
+      join: STROKE_JOIN.MITER,
     },
-    placement: STROKE_PLACEMENT.inside,
+    placement: STROKE_PLACEMENT.INSIDE,
   },
   background: {
     content: {
-      preference: ELEMENT_CONTENT_PREFERENCE.solid,
+      preference: ELEMENT_CONTENT_PREFERENCE.SOLID,
       src: COLOR_PALETTE.midGray,
       visible: true,
       opacity: 0.1 as Percentage,
@@ -455,7 +304,6 @@ export const DEFAULT_ELEMENT_PROPS: {
   frameId: null,
   boundElements: null,
   link: null,
-  subset: null,
   noPlot: false,
   description: null,
 };
@@ -482,7 +330,7 @@ export const DEFAULT_IFRAME_LIKE_NO_STYLE: {
 
 export const DEFAULT_LINEAR_ELEMENT_STROKE: ElementStroke = {
   ...DEFAULT_ELEMENT_PROPS.stroke,
-  placement: STROKE_PLACEMENT.center,
+  placement: STROKE_PLACEMENT.CENTER,
 };
 
 export const DEFAULT_FREEDRAW_ELEMENT: {
@@ -586,30 +434,6 @@ export const PREDEFINED_GRIDS = {
   ISOMETRIC_30: "iso-30",
   POLAR_DEGREES: "polar-deg",
   FINE_DETAIL: "fine-detail",
-} as const;
-
-
-
-export const OBJECT_SNAP_MODE = {
-  ENDPOINT: 10,
-  MIDPOINT: 11,
-  CENTER: 12,
-  QUADRANT: 13,
-  INTERSECTION: 14,
-  EXTENSION: 15,
-  PERPENDICULAR: 16,
-  TANGENT: 17,
-  NEAREST: 18,
-  NODE: 19, // For points
-  INSERT: 20, // For block insertion points
-  PARALLEL: 21,
-  APPARENT: 22,
-  FROM: 23, // Reference point snap
-  POINT_FILTER: 24, // X,Y,Z filtering
-  TEMPORARY: 25, // Temporary tracking points
-  BETWEEN_TWO_POINTS: 26,
-  POINT_ON_CURVE: 27,
-  GEOMETRIC: 28, // vs bounding box center
 } as const;
 
 /**
@@ -730,3 +554,129 @@ export const DEFAULT_SNAP_SETTINGS: SnapSettings = {
   constructionSnapEnabled: true,
   snapToGridIntersections: false,
 };
+
+
+export const PAPER_SIZE = {
+  // ISO A Series
+  A0: "A0",
+  A1: "A1", 
+  A2: "A2",
+  A3: "A3",
+  A4: "A4",
+  A5: "A5",
+  
+  // ANSI Series
+  ANSI_A: "ANSI_A", // 8.5 x 11
+  ANSI_B: "ANSI_B", // 11 x 17
+  ANSI_C: "ANSI_C", // 17 x 22
+  ANSI_D: "ANSI_D", // 22 x 34
+  ANSI_E: "ANSI_E", // 34 x 44
+  
+  // Architectural
+  ARCH_A: "ARCH_A", // 9 x 12
+  ARCH_B: "ARCH_B", // 12 x 18
+  ARCH_C: "ARCH_C", // 18 x 24
+  ARCH_D: "ARCH_D", // 24 x 36
+  ARCH_E: "ARCH_E", // 36 x 48
+  
+  CUSTOM: "CUSTOM",
+} as const;
+
+export const PREDEFINED_STANDARDS = {
+  ISO_25300: "iso-25300-2013",
+  ANSI_Y14_5: "ansi-y14.5-2018",
+  DIN_406: "din-406-2017",
+  JIS_B0001: "jis-b0001-2019",
+  BS_8888: "bs-8888-2020",
+  DUC: "duc-2-2025",
+} as const;
+
+export const PREDEFINED_HATCH_PATTERNS = {
+  // Solid Fill
+  SOLID: "SOLID",
+
+  // ANSI Patterns
+  ANSI31: "ANSI31", // General crosshatch
+  ANSI32: "ANSI32", // Steel
+  ANSI33: "ANSI33", // Bronze, brass, copper
+  ANSI34: "ANSI34", // Plastic, rubber
+  ANSI35: "ANSI35", // Thermal insulation
+  ANSI36: "ANSI36", // Steel, cast iron
+  ANSI37: "ANSI37", // Aluminum
+  ANSI38: "ANSI38", // Lead, zinc, magnesium
+
+  // Architectural Patterns
+  AR_B816: "AR-B816",   // Brick
+  AR_B816C: "AR-B816C", // Brick common
+  AR_CONC: "AR-CONC",   // Concrete
+  AR_HBONE: "AR-HBONE", // Herringbone
+  AR_SAND: "AR-SAND",   // Sand
+  AR_RSHKE: "AR-RSHKE", // Roof shingles
+
+  // ISO Patterns
+  ACAD_ISO02W100: "ACAD_ISO02W100", // Insulation
+  ACAD_ISO03W100: "ACAD_ISO03W100", // General crosshatch
+  ACAD_ISO04W100: "ACAD_ISO04W100", // Concrete
+  ACAD_ISO06W100: "ACAD_ISO06W100", // Cast iron
+  ACAD_ISO08W100: "ACAD_ISO08W100", // Copper/brass
+  ACAD_ISO11W100: "ACAD_ISO11W100", // Steel
+  ACAD_ISO13W100: "ACAD_ISO13W100", // Plastic
+
+  // Common Patterns
+  BOX: "BOX",
+  BRICK: "BRICK",
+  CROSS: "CROSS",
+  DASH: "DASH",
+  DOTS: "DOTS",
+  EARTH: "EARTH",
+  GRASS: "GRASS",
+  GRAVEL: "GRAVEL",
+  HEX: "HEX",
+  HONEY: "HONEY",
+  INSUL: "INSUL",
+  LINE: "LINE",
+  NET: "NET",
+  SQUARE: "SQUARE",
+  STEEL: "STEEL",
+  TRIANG: "TRIANG",
+  ZIGZAG: "ZIGZAG",
+} as const;
+
+
+// /**
+//  * Default hatch styles
+//  */
+// export const DEFAULT_HATCH_STYLE: DucHatchStyle = {
+//   id: "default-hatch",
+//   name: "Default Hatch",
+//   background: {
+//     content: {
+//       preference: "color",
+//       src: "#000000",
+//       visible: true,
+//       opacity: 1,
+//     }
+//   },
+//   stroke: {
+//     content: {
+//       preference: "color", 
+//       src: "#000000",
+//       visible: true,
+//       opacity: 1,
+//     },
+//     width: { value: 1, scoped: 1 },
+//     style: {
+//       preference: "solid",
+//       scale: 1,
+//     },
+//     placement: "center",
+//   },
+//   hatchStyle: HATCH_STYLE.NORMAL,
+//   pattern: {
+//     name: "ANSI31",
+//     scale: 1,
+//     angle: 0,
+//     origin: { x: 0, y: 0 },
+//     double: false,
+//   },
+// };

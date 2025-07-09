@@ -1,3 +1,4 @@
+import { TEXT_ALIGN } from "ducjs/duc";
 import { Scope, RawValue } from "ducjs/types";
 import { _DucStackBase, DucElement, DucTableElement, DucTextContainer, DucTextElement, ElementsMap, NonDeleted } from "ducjs/types/elements";
 import { isFreeDrawElement, isLinearElement } from "ducjs/types/elements/typeChecks";
@@ -5,7 +6,7 @@ import { GeometricPoint, Percentage, TuplePoint } from "ducjs/types/geometryType
 import { Mutable } from "ducjs/types/utility-types";
 import { getUpdatedTimestamp } from "ducjs/utils";
 import { getElementAbsoluteCoords, getResizedElementAbsoluteCoords } from "ducjs/utils/bounds";
-import { DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_SIZE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/utils/constants";
+import { DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_SIZE } from "ducjs/utils/constants";
 import { getBoundTextMaxWidth, getFontString, getTextElementPositionOffsets, measureText, wrapText } from "ducjs/utils/elements/textElement";
 import { adjustXYWithRotation } from "ducjs/utils/math";
 import { randomInteger } from "ducjs/utils/math/random";

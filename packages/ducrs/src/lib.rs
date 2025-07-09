@@ -4,15 +4,11 @@ pub mod generated {
 }
 
 #[allow(unused_imports)]
+#[allow(non_camel_case_types)]
 pub mod duc_generated;
 pub mod types;
 pub mod parse;
 pub mod serialize;
-
-// Re-exports for easy access
-pub use types::*;
-pub use parse::{parse_duc_file};
-pub use serialize::{serialize_duc_file};
 
 // Serde support if the feature is enabled
 #[cfg(feature = "serde_support")]

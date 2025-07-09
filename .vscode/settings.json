@@ -7,7 +7,7 @@
     "editor.tabSize": 2,
     "editor.detectIndentation": false,
     "rust-analyzer.linkedProjects": [
-      "packages/duc-rs/Cargo.toml"
+      "packages/ducrs/Cargo.toml"
     ],
     "python.analysis.extraPaths": [
       "./packages/duc-py"

@@ -1,16 +1,3 @@
-export const TEXT_FLOW_DIRECTION = {
-  LEFT_TO_RIGHT: 10,
-  RIGHT_TO_LEFT: 11,
-  TOP_TO_BOTTOM: 12,
-  BOTTOM_TO_TOP: 13,
-} as const;
-
-export const COLUMN_TYPE = {
-  NO_COLUMNS: 10,
-  STATIC_COLUMNS: 11,
-  DYNAMIC_COLUMNS: 12,
-} as const;
-
 export type TextFlowDirection = ValueOf<typeof TEXT_FLOW_DIRECTION>;
 export type ColumnType = ValueOf<typeof COLUMN_TYPE>;
 

@@ -1,29 +1,33 @@
 use std::i8;
 
-use crate::types::*;
+use crate::generated::duc::{DucElement as BinDucElement, IMAGE_STATUS};
 use crate::types::DucElement as RustDucElement;
-use crate::generated::duc::DucElement as BinDucElement;
+use crate::types::*;
 
 /// Parses a FlatBuffers DucElement into our Rust DucElement type
 pub fn parse_base_duc_element(element: &BinDucElement) -> RustDucElement {
     let id = element.id().unwrap_or("").to_string();
     let element_type = element.type_().unwrap_or("").to_string();
-    
-    let x = element.x_v3();
-    let y = element.y_v3();
+
+    let x = element.x();
+    let y = element.y();
     let z_index = element.z_index();
     let scope = element.scope().unwrap_or("").to_string();
-    
-    let subset = element.subset().map(|val| unsafe { std::mem::transmute::<i8, crate::types::ElementSubset>(val) });
+
+    let subset = element
+        .subset()
+        .map(|val| unsafe { std::mem::transmute::<i8, crate::types::ElementSubset>(val) });
 
     let label = element.label().unwrap_or("").to_string();
     let is_visible = element.is_visible();
-    
-    let roundness = element.roundness(); 
-    
+
+    let roundness = element.roundness();
+
     // Parse blending mode with proper handling of Option
-    let blending = element.blending().map(|val| unsafe { std::mem::transmute::<i8, crate::types::Blending>(val) });
-    
+    let blending = element
+        .blending()
+        .map(|val| unsafe { std::mem::transmute::<i8, crate::types::Blending>(val) });
+
     // Parse stroke data
     let strokes = if let Some(strokes_vec) = element.stroke() {
         let mut result = Vec::with_capacity(strokes_vec.len());
@@ -38,7 +42,7 @@ pub fn parse_base_duc_element(element: &BinDucElement) -> RustDucElement {
     } else {
         Vec::new()
     };
-    
+
     // Parse background data
     let backgrounds = if let Some(backgrounds_vec) = element.background() {
         let mut result = Vec::with_capacity(backgrounds_vec.len());
@@ -53,15 +57,15 @@ pub fn parse_base_duc_element(element: &BinDucElement) -> RustDucElement {
     } else {
         Vec::new()
     };
-    
+
     let opacity = element.opacity();
-    
-    let width = element.width_v3();
-    let height = element.height_v3();
-    let angle = element.angle_v3();
-    
+
+    let width = element.width();
+    let height = element.height();
+    let angle = element.angle();
+
     let is_deleted = element.is_deleted();
-    
+
     // Parse group IDs
     let group_ids = if let Some(ids) = element.group_ids() {
         let mut result = Vec::with_capacity(ids.len());
@@ -73,9 +77,9 @@ pub fn parse_base_duc_element(element: &BinDucElement) -> RustDucElement {
     } else {
         Vec::new()
     };
-    
+
     let frame_id = element.frame_id().map(|s| s.to_string());
-    
+
     // Parse bound elements
     let bound_elements = if let Some(elements) = element.bound_elements() {
         let mut result = Vec::with_capacity(elements.len());
@@ -86,14 +90,18 @@ pub fn parse_base_duc_element(element: &BinDucElement) -> RustDucElement {
                 element_type: bound.type_().unwrap_or("").to_string(),
             });
         }
-        if result.is_empty() { None } else { Some(result) }
+        if result.is_empty() {
+            None
+        } else {
+            Some(result)
+        }
     } else {
         None
     };
-    
+
     let link = element.link().map(|s| s.to_string());
     let locked = element.locked();
-    
+
     crate::types::DucElement {
         id,
         element_type,
@@ -124,6 +132,8 @@ pub fn parse_base_duc_element(element: &BinDucElement) -> RustDucElement {
         updated: None,
         index: None,
         custom_data: None,
+        description: element.description().map(|s| s.to_string()),
+        no_plot: element.no_plot().unwrap_or(false),
     }
 }
 
@@ -131,73 +141,95 @@ pub fn parse_base_duc_element(element: &BinDucElement) -> RustDucElement {
 pub fn parse_duc_element(element: &BinDucElement) -> Option<DucElementVariant> {
     let base = parse_base_duc_element(element);
     let element_type = base.element_type.clone();
-    
+
     match element_type.as_str() {
         val if val == ElementType::Text.as_str() => {
             let text_element = parse_text_element(element, base);
             Some(DucElementVariant::Text(text_element))
-        },
+        }
         val if val == ElementType::Line.as_str() => {
             let line_element = parse_linear_element(element, base);
             Some(DucElementVariant::Linear(line_element))
-        },
+        }
         val if val == ElementType::Arrow.as_str() => {
             let linear = parse_linear_element(element, base);
             let arrow = DucArrowElement {
                 base: linear,
-                elbowed: element.elbowed().unwrap_or(false),
+                elbowed: element.arrow_elbowed().unwrap_or(false),
             };
             Some(DucElementVariant::Arrow(arrow))
-        },
+        }
         val if val == ElementType::FreeDraw.as_str() => {
             let freedraw = parse_freedraw_element(element, base);
             Some(DucElementVariant::FreeDraw(freedraw))
-        },
+        }
         val if val == ElementType::Image.as_str() => {
             let image = parse_image_element(element, base);
             Some(DucElementVariant::Image(image))
-        },
+        }
         val if val == ElementType::Frame.as_str() => {
             let frame = DucFrameElement {
                 base,
-                is_collapsed: element.is_collapsed().unwrap_or(false),
-                clip: element.clip().unwrap_or(false),
+                is_collapsed: element.stack_like_is_collapsed().unwrap_or(false),
+                clip: element.stack_like_clip().unwrap_or(false),
+                labeling_color: element.stack_like_labeling_color().unwrap_or("transparent").to_string(),
+                stroke_override: element.stack_like_stroke_override().and_then(|s| parse_element_stroke(&s)),
+                background_override: element.stack_like_background_override().and_then(|bg| parse_element_background(&bg)),
             };
             Some(DucElementVariant::Frame(frame))
-        },
-        val if val == ElementType::Group.as_str() => {
-            let group = DucGroupElement {
-                base,
-                is_collapsed: element.is_collapsed().unwrap_or(false),
-                clip: element.clip().unwrap_or(false),
-                group_id_ref: element.group_id_ref().unwrap_or("").to_string(),
-            };
-            Some(DucElementVariant::Group(group))
-        },
+        }
         val if val == ElementType::MagicFrame.as_str() => {
             let magic_frame = DucMagicFrameElement {
                 base,
-                is_collapsed: element.is_collapsed().unwrap_or(false),
-                clip: element.clip().unwrap_or(false),
+                is_collapsed: element.stack_like_is_collapsed().unwrap_or(false),
+                clip: element.stack_like_clip().unwrap_or(false),
+                labeling_color: element.stack_like_labeling_color().unwrap_or("transparent").to_string(),
+                stroke_override: element.stack_like_stroke_override().and_then(|s| parse_element_stroke(&s)),
+                background_override: element.stack_like_background_override().and_then(|bg| parse_element_background(&bg)),
             };
             Some(DucElementVariant::MagicFrame(magic_frame))
-        },
+        }
         val if val == ElementType::Rectangle.as_str() => {
             let rectangle = DucRectangleElement { base };
             Some(DucElementVariant::Rectangle(rectangle))
-        },
+        }
         val if val == ElementType::Ellipse.as_str() => {
-            let ellipse = DucEllipseElement { base };
+            let ellipse = DucEllipseElement {
+                base,
+                ratio: element.ellipse_ratio(),
+                start_angle: element.ellipse_start_angle(),
+                end_angle: element.ellipse_end_angle(),
+                show_aux_crosshair: element.ellipse_show_aux_crosshair(),
+            };
             Some(DucElementVariant::Ellipse(ellipse))
-        },
-        val if val == ElementType::Diamond.as_str() => {
-            let diamond = DucDiamondElement { base };
-            Some(DucElementVariant::Diamond(diamond))
-        },
+        }
+        val if val == ElementType::Polygon.as_str() => {
+            let polygon = DucPolygonElement {
+                base,
+                sides: element.polygon_sides().unwrap_or(5),
+            };
+            Some(DucElementVariant::Polygon(polygon))
+        }
         val if val == ElementType::Selection.as_str() => {
             let selection = DucSelectionElement { base };
             Some(DucElementVariant::Selection(selection))
-        },
+        }
+        val if val == ElementType::Table.as_str() => {
+            let table_element = parse_table_element(element, base);
+            Some(DucElementVariant::Table(table_element))
+        }
+        val if val == ElementType::Doc.as_str() => {
+            let doc_element = parse_doc_element(element, base);
+            Some(DucElementVariant::Doc(doc_element))
+        }
+        val if val == ElementType::Embeddable.as_str() => {
+            let embeddable = parse_embeddable_element(element, base);
+            Some(DucElementVariant::Embeddable(embeddable))
+        }
+        val if val == ElementType::BlockInstance.as_str() => {
+            let block_instance = parse_block_instance_element(element, base);
+            Some(DucElementVariant::BlockInstance(block_instance))
+        }
         _ => Some(DucElementVariant::Base(base)),
     }
 }
@@ -205,29 +237,33 @@ pub fn parse_duc_element(element: &BinDucElement) -> Option<DucElementVariant> {
 // Helper functions for parsing sub-elements
 
 fn parse_text_element(element: &BinDucElement, base: RustDucElement) -> DucTextElement {
-    let font_size = element.font_size_v3().unwrap_or_else(|| 
-        element.font_size_v2().unwrap_or(16) as f64);
-    
-    let font_family: i8 = element.font_family()
-        .and_then(|s| s.parse::<i8>().ok()) 
-        .unwrap_or(FontFamily::Virgil as i8); 
+    let font_size = element
+        .text_font_size()
+        .unwrap_or_else(|| element.text_font_size().unwrap_or(16.0));
+
+    let font_family: i8 = element
+        .text_font_family()
+        .and_then(|s| s.parse::<i8>().ok())
+        .unwrap_or(FontFamily::Virgil as i8);
     let font_family = unsafe { std::mem::transmute(font_family) };
-    
-    let text = element.text().unwrap_or("").to_string();
-    
-    let text_align = element.text_align_v3()
-    .map(|v| unsafe { std::mem::transmute::<i8, TextAlign>(v) })
-    .unwrap_or(TextAlign::Left); // Fallback value
-    
-    let vertical_align = unsafe { std::mem::transmute(element.vertical_align_v3()) };
 
-    let container_id = element.container_id().map(|s| s.to_string());    
+    let text = element.text_text().unwrap_or("").to_string();
 
-    let line_height = element.line_height_v3().unwrap_or_else(|| 
-        element.line_height_v2().unwrap_or(1.25) as f64);
+    let text_align = element
+        .text_text_align()
+        .map(|v| unsafe { std::mem::transmute::<i8, TextAlign>(v) })
+        .unwrap_or(TextAlign::Left); // Fallback value
 
-    let auto_resize = element.auto_resize().unwrap_or(true);
-    
+    let vertical_align = unsafe { std::mem::transmute(element.text_vertical_align()) };
+
+    let container_id = element.text_container_id().map(|s| s.to_string());
+
+    let line_height = element
+        .text_line_height()
+        .unwrap_or_else(|| element.text_line_height_v2().unwrap_or(1.25) as f64);
+
+    let auto_resize = element.text_auto_resize().unwrap_or(true);
+
     DucTextElement {
         base,
         font_size,
@@ -244,28 +280,54 @@ fn parse_text_element(element: &BinDucElement, base: RustDucElement) -> DucTextE
 
 fn parse_linear_element(element: &BinDucElement, base: RustDucElement) -> DucLinearElement {
     let points = parse_points(element);
-    
-    let last_committed_point = if let Some(point) = element.last_committed_point() {
+
+    let lines = if let Some(lines_vec) = element.linear_element_lines() {
+        let mut result = Vec::with_capacity(lines_vec.len());
+        for i in 0..lines_vec.len() {
+            let fb_line = lines_vec.get(i);
+            result.push(parse_duc_line(&fb_line));
+        }
+        result
+    } else {
+        Vec::new()
+    };
+
+    let path_overrides = if let Some(paths_vec) = element.linear_element_path_overrides() {
+        let mut result = Vec::with_capacity(paths_vec.len());
+        for i in 0..paths_vec.len() {
+            let fb_path = paths_vec.get(i);
+            if let Some(path) = parse_duc_path(&fb_path) {
+                result.push(path);
+            }
+        }
+        result
+    } else {
+        Vec::new()
+    };
+
+    let last_committed_point = if let Some(point) = element.linear_element_last_committed_point() {
         Some(parse_point(&point))
     } else {
         None
     };
-    
-    let start_binding = if let Some(binding) = element.start_binding() {
+
+    let start_binding = if let Some(binding) = element.linear_element_start_binding() {
         Some(parse_point_binding(&binding))
     } else {
         None
     };
-    
-    let end_binding = if let Some(binding) = element.end_binding() {
+
+    let end_binding = if let Some(binding) = element.linear_element_end_binding() {
         Some(parse_point_binding(&binding))
     } else {
         None
     };
-    
+
     DucLinearElement {
         base,
         points,
+        lines,
+        path_overrides,
         last_committed_point,
         start_binding,
         end_binding,
@@ -274,49 +336,57 @@ fn parse_linear_element(element: &BinDucElement, base: RustDucElement) -> DucLin
 
 fn parse_freedraw_element(element: &BinDucElement, base: RustDucElement) -> DucFreeDrawElement {
     let points = parse_points(element);
-    
-    let pressures = if let Some(pressures_vec) = element.pressures_v3() {
+
+    let pressures = if let Some(pressures_vec) = element.free_draw_pressures() {
         (0..pressures_vec.len())
             .map(|i| pressures_vec.get(i))
             .collect()
     } else {
         Vec::new()
     };
-    
-    let simulate_pressure = element.simulate_pressure().unwrap_or(false);
-    
-    let last_committed_point = if let Some(point) = element.last_committed_point() {
+
+    let simulate_pressure = element.free_draw_simulate_pressure().unwrap_or(false);
+
+    let last_committed_point = if let Some(point) = element.linear_element_last_committed_point() {
         Some(parse_point(&point))
     } else {
         None
     };
-    
+
     DucFreeDrawElement {
         base,
         points,
         pressures,
         simulate_pressure,
         last_committed_point,
+        size: element.free_draw_size().unwrap_or(1.0),
+        svg_path: element.free_draw_svg_path().map(|s| s.to_string()),
+        thinning: element.free_draw_thinning(),
+        smoothing: element.free_draw_smoothing(),
+        streamline: element.free_draw_streamline(),
+        easing: element.free_draw_easing().map(|s| s.to_string()),
+        start_cap: element.free_draw_start_cap(),
+        start_taper: element.free_draw_start_taper(),
+        start_easing: element.free_draw_start_easing().map(|s| s.to_string()),
+        end_cap: element.free_draw_end_cap(),
+        end_taper: element.free_draw_end_taper(),
+        end_easing: element.free_draw_end_easing().map(|s| s.to_string()),
     }
 }
 
 fn parse_image_element(element: &BinDucElement, base: RustDucElement) -> DucImageElement {
     let file_id = element.file_id().map(|s| s.to_string());
-    
-    let status = match element.status().unwrap_or("pending") {
-        "loaded" => ImageStatus::Loaded,
-        "error" => ImageStatus::Error,
-        _ => ImageStatus::Pending,
-    };
-    
+
+    let status = element.image_status().unwrap_or(IMAGE_STATUS::PENDING);
+
     // Create scale from either v3 or default
-    let scale = if let Some(scale_point) = element.scale_v3() {
+    let scale = if let Some(scale_point) = element.image_scale() {
         (scale_point.x(), scale_point.y())
     } else {
         (1.0, 1.0)
     };
-    
-    let crop = if let Some(fb_crop) = element.crop() {
+
+    let crop = if let Some(fb_crop) = element.image_crop() {
         Some(crate::types::ImageCrop {
             x: fb_crop.x(),
             y: fb_crop.y(),
@@ -328,7 +398,7 @@ fn parse_image_element(element: &BinDucElement, base: RustDucElement) -> DucImag
     } else {
         None
     };
-    
+
     DucImageElement {
         base,
         file_id,
@@ -341,7 +411,7 @@ fn parse_image_element(element: &BinDucElement, base: RustDucElement) -> DucImag
 // Helper functions for parsing common types
 
 fn parse_points(element: &BinDucElement) -> Vec<crate::types::Point> {
-    if let Some(points_vec) = element.points() {
+    if let Some(points_vec) = element.linear_element_points() {
         let mut result = Vec::with_capacity(points_vec.len());
         for i in 0..points_vec.len() {
             let point = points_vec.get(i);
@@ -354,54 +424,25 @@ fn parse_points(element: &BinDucElement) -> Vec<crate::types::Point> {
 }
 
 pub fn parse_point(point: &crate::generated::duc::Point) -> crate::types::Point {
-    // Parse x, y with v3 taking precedence over v2
     let x = point.x_v3();
     let y = point.y_v3();
-    
-    let is_curve = point.is_curve();
-    let peer = point.peer();
-    
-    let mirroring = point.mirroring()
-        .map(|m| unsafe { std::mem::transmute(m) });
-    
-    let border_radius = point.border_radius();
-    
-    let handle_in = if let Some(handle) = point.handle_in() {
-        Some(SimplePoint {
-            x: handle.x(),
-            y: handle.y(),
-        })
-    } else {
-        None
-    };
-    
-    let handle_out = if let Some(handle) = point.handle_out() {
-        Some(SimplePoint {
-            x: handle.x(),
-            y: handle.y(),
-        })
-    } else {
-        None
-    };
 
-    
+    let mirroring = point.mirroring().map(|m| unsafe { std::mem::transmute(m) });
+
     crate::types::Point {
         x,
         y,
-        is_curve,
         mirroring,
-        border_radius,
-        handle_in,
-        handle_out,
-        peer,
     }
 }
 
-fn parse_point_binding(binding: &crate::generated::duc::PointBinding) -> crate::types::PointBinding {
+fn parse_point_binding(
+    binding: &crate::generated::duc::PointBinding,
+) -> crate::types::PointBinding {
     let element_id = binding.element_id().unwrap_or("").to_string();
     let focus = binding.focus();
     let gap = binding.gap();
-    
+
     let fixed_point = if let Some(point) = binding.fixed_point() {
         Some(SimplePoint {
             x: point.x(),
@@ -410,7 +451,7 @@ fn parse_point_binding(binding: &crate::generated::duc::PointBinding) -> crate::
     } else {
         None
     };
-    
+
     let bound_point = if let Some(bp) = binding.point() {
         Some(crate::types::BindingPoint {
             index: bp.index(),
@@ -419,9 +460,10 @@ fn parse_point_binding(binding: &crate::generated::duc::PointBinding) -> crate::
     } else {
         None
     };
-    
-    let head = unsafe { std::mem::transmute(binding.head()) };
-    
+
+    // Handle head field properly - 0 means no head, valid enum values (10-24) mean Some(LineHead)
+    let head = parse_line_head_option(binding.head());
+
     crate::types::PointBinding {
         element_id,
         focus,
@@ -432,25 +474,28 @@ fn parse_point_binding(binding: &crate::generated::duc::PointBinding) -> crate::
     }
 }
 
-pub fn parse_element_stroke(stroke: &crate::generated::duc::ElementStroke) -> Option<crate::types::ElementStroke> {
-
-    let content: crate::types::ElementContentBase  = if let Some(fb_content) = stroke.content() {
+pub fn parse_element_stroke(
+    stroke: &crate::generated::duc::ElementStroke,
+) -> Option<crate::types::ElementStroke> {
+    let content: crate::types::ElementContentBase = if let Some(fb_content) = stroke.content() {
         parse_element_content_base(&fb_content)
     } else {
         return None;
     };
-    
+
     let width = stroke.width();
-    
+
     let style = if let Some(fb_style) = stroke.style() {
         parse_stroke_style(&fb_style)
     } else {
         return None;
     };
-    
+
     let placement = unsafe { std::mem::transmute(stroke.placement()) };
-    let stroke_sides = stroke.stroke_sides().map(|fb_sides| parse_stroke_sides(&fb_sides));
-    
+    let stroke_sides = stroke
+        .stroke_sides()
+        .map(|fb_sides| parse_stroke_sides(&fb_sides));
+
     Some(crate::types::ElementStroke {
         content,
         width,
@@ -460,13 +505,15 @@ pub fn parse_element_stroke(stroke: &crate::generated::duc::ElementStroke) -> Op
     })
 }
 
-fn parse_element_content_base(content: &crate::generated::duc::ElementContentBase) -> crate::types::ElementContentBase {
+fn parse_element_content_base(
+    content: &crate::generated::duc::ElementContentBase,
+) -> crate::types::ElementContentBase {
     let preference = unsafe { std::mem::transmute(content.preference()) };
-    
+
     let src = content.src().unwrap_or("#000000").to_string();
     let visible = content.visible();
     let opacity = content.opacity();
-    
+
     let tiling = if let Some(fb_tiling) = content.tiling() {
         Some(crate::types::TilingProperties {
             size_in_percent: fb_tiling.size_in_percent(),
@@ -478,7 +525,7 @@ fn parse_element_content_base(content: &crate::generated::duc::ElementContentBas
     } else {
         None
     };
-    
+
     crate::types::ElementContentBase {
         preference,
         src,
@@ -490,23 +537,27 @@ fn parse_element_content_base(content: &crate::generated::duc::ElementContentBas
 
 fn parse_stroke_style(style: &crate::generated::duc::StrokeStyle) -> crate::types::StrokeStyle {
     let preference = unsafe { std::mem::transmute(style.preference()) };
-    
+
     let cap = style.cap().map(|c| unsafe { std::mem::transmute(c) });
     let join = style.join().map(|j| unsafe { std::mem::transmute(j) });
-    
+
     let dash = if let Some(dash_vec) = style.dash() {
         let mut result = Vec::with_capacity(dash_vec.len());
         for i in 0..dash_vec.len() {
             result.push(dash_vec.get(i));
         }
-        if result.is_empty() { None } else { Some(result) }
+        if result.is_empty() {
+            None
+        } else {
+            Some(result)
+        }
     } else {
         None
     };
-    
+
     let dash_cap = style.dash_cap().map(|c| unsafe { std::mem::transmute(c) });
     let miter_limit = style.miter_limit();
-    
+
     crate::types::StrokeStyle {
         preference,
         cap,
@@ -524,25 +575,263 @@ fn parse_stroke_sides(sides: &crate::generated::duc::StrokeSides) -> crate::type
         for i in 0..values_vec.len() {
             result.push(values_vec.get(i));
         }
-        if result.is_empty() { None } else { Some(result) }
+        if result.is_empty() {
+            None
+        } else {
+            Some(result)
+        }
     } else {
         None
     };
-    
-    crate::types::StrokeSides {
-        preference,
-        values,
-    }
+
+    crate::types::StrokeSides { preference, values }
 }
 
-pub fn parse_element_background(background: &crate::generated::duc::ElementBackground) -> Option<crate::types::ElementBackground> {
+pub fn parse_element_background(
+    background: &crate::generated::duc::ElementBackground,
+) -> Option<crate::types::ElementBackground> {
     let content = if let Some(fb_content) = background.content() {
         parse_element_content_base(&fb_content)
     } else {
         return None;
     };
+
+    Some(crate::types::ElementBackground { content })
+}
+
+fn parse_table_element(element: &BinDucElement, base: RustDucElement) -> DucTableElement {
+    let column_order = if let Some(co_vec) = element.table_column_order() {
+        (0..co_vec.len())
+            .map(|i| co_vec.get(i).to_string())
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    let row_order = if let Some(ro_vec) = element.table_row_order() {
+        (0..ro_vec.len())
+            .map(|i| ro_vec.get(i).to_string())
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    let columns = if let Some(cols_vec) = element.table_columns() {
+        (0..cols_vec.len())
+            .map(|i| {
+                let fb_col = cols_vec.get(i);
+                let col = parse_duc_table_column(&fb_col);
+                (col.id.clone(), col)
+            })
+            .collect::<std::collections::HashMap<_, _>>()
+    } else {
+        std::collections::HashMap::new()
+    };
+
+    let rows = if let Some(rows_vec) = element.table_rows() {
+        (0..rows_vec.len())
+            .map(|i| {
+                let fb_row = rows_vec.get(i);
+                let row = parse_duc_table_row(&fb_row);
+                (row.id.clone(), row)
+            })
+            .collect::<std::collections::HashMap<_, _>>()
+    } else {
+        std::collections::HashMap::new()
+    };
+
+    let cells = if let Some(cells_vec) = element.table_cells() {
+        (0..cells_vec.len())
+            .map(|i| {
+                let fb_cell = cells_vec.get(i);
+                let cell = parse_duc_table_cell(&fb_cell);
+                (format!("{}:{}", cell.row_id, cell.column_id), cell) // Use rowId:colId as key
+            })
+            .collect::<std::collections::HashMap<_, _>>()
+    } else {
+        std::collections::HashMap::new()
+    };
+
+    let style = element
+        .table_style()
+        .map(|ts| parse_duc_table_style_props(&ts.default_props().unwrap()));
+
+    DucTableElement {
+        base,
+        column_order,
+        row_order,
+        columns,
+        rows,
+        cells,
+        style,
+    }
+}
+
+fn parse_doc_element(element: &BinDucElement, base: RustDucElement) -> DucDocElement {
+    let content = element.doc_content().unwrap_or("").to_string();
+    DucDocElement { base, content }
+}
+
+fn parse_embeddable_element(
+    _element: &BinDucElement,
+    base: RustDucElement,
+) -> DucEmbeddableElement {
+    DucEmbeddableElement { base }
+}
+
+// Helper functions for parsing table components
+fn parse_duc_table_style_props(
+    style_props: &crate::generated::duc::DucTableStyleProps,
+) -> crate::types::DucTableStyleProps {
+    let text_align_val = style_props.text_align();
+    let text_align_opt = if text_align_val == 0 {
+        None
+    } else {
+        Some(unsafe { std::mem::transmute::<i8, TextAlign>(text_align_val) })
+    };
+
+    crate::types::DucTableStyleProps {
+        background_color: style_props.background_color().map(|s| s.to_string()),
+        border_width: Some(style_props.border_width()),
+        border_dashes: style_props
+            .border_dashes()
+            .map(|v| (0..v.len()).map(|i| v.get(i)).collect())
+            .filter(|v: &Vec<f64>| !v.is_empty()),
+        border_color: style_props.border_color().map(|s| s.to_string()),
+        text_color: style_props.text_color().map(|s| s.to_string()),
+        text_size: Some(style_props.text_size()),
+        text_font: style_props.text_font().map(|s| s.to_string()),
+        text_align: text_align_opt,
+    }
+}
+
+fn parse_duc_table_column(
+    column: &crate::generated::duc::DucTableColumn,
+) -> crate::types::DucTableColumn {
+    crate::types::DucTableColumn {
+        id: column.id().unwrap_or("").to_string(),
+        width: Some(column.width()),
+        style: column.style().map(|s| parse_duc_table_style_props(&s)),
+    }
+}
+
+fn parse_duc_table_row(row: &crate::generated::duc::DucTableRow) -> crate::types::DucTableRow {
+    crate::types::DucTableRow {
+        id: row.id().unwrap_or("").to_string(),
+        height: Some(row.height()),
+        style: row.style().map(|s| parse_duc_table_style_props(&s)),
+    }
+}
+
+fn parse_duc_table_cell(cell: &crate::generated::duc::DucTableCell) -> crate::types::DucTableCell {
+    crate::types::DucTableCell {
+        row_id: cell.row_id().unwrap_or("").to_string(),
+        column_id: cell.column_id().unwrap_or("").to_string(),
+        data: cell.data().unwrap_or("").to_string(),
+        style: cell.style().map(|s| parse_duc_table_style_props(&s)),
+    }
+}
+
+// Helper function to safely convert LineHead values
+pub fn parse_line_head_option(head_value: i8) -> Option<LineHead> {
+    if head_value == 0 {
+        None // No head when value is 0
+    } else {
+        // Try to convert to LineHead enum for valid values
+        match head_value {
+            10 => Some(LineHead::Arrow),
+            11 => Some(LineHead::Bar),
+            12 => Some(LineHead::Circle),
+            13 => Some(LineHead::CircleOutlined),
+            14 => Some(LineHead::Triangle),
+            15 => Some(LineHead::TriangleOutlined),
+            16 => Some(LineHead::Diamond),
+            17 => Some(LineHead::DiamondOutlined),
+            18 => Some(LineHead::Cross),
+            19 => Some(LineHead::OpenArrow),
+            20 => Some(LineHead::ReversedArrow),
+            21 => Some(LineHead::ReversedTriangle),
+            22 => Some(LineHead::ReversedTriangleOutlined),
+            23 => Some(LineHead::Cone),
+            24 => Some(LineHead::HalfCone),
+            _ => {
+                // Invalid head value, log warning and default to None
+                log::warn!("Invalid LineHead value: {}, defaulting to None", head_value);
+                None
+            }
+        }
+    }
+}
+
+fn parse_duc_line_reference(
+    line_ref: &crate::generated::duc::DucLineReference,
+) -> crate::types::LineReference {
+    let index = line_ref.index();
     
-    Some(crate::types::ElementBackground {
-        content,
+    let handle = if let Some(handle_point) = line_ref.handle() {
+        Some(crate::types::SimplePoint {
+            x: handle_point.x(),
+            y: handle_point.y(),
+        })
+    } else {
+        None
+    };
+
+    crate::types::LineReference { index, handle }
+}
+
+fn parse_duc_line(line: &crate::generated::duc::DucLine) -> crate::types::Line {
+    let start = parse_duc_line_reference(&line.start().unwrap());
+    let end = parse_duc_line_reference(&line.end().unwrap());
+
+    crate::types::Line { start, end }
+}
+
+fn parse_duc_path(path: &crate::generated::duc::DucPath) -> Option<crate::types::Path> {
+    let line_indices = if let Some(indices_vec) = path.line_indices() {
+        (0..indices_vec.len())
+            .map(|i| indices_vec.get(i))
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    let background = path.background()
+        .and_then(|bg| parse_element_background(&bg));
+
+    let stroke = path.stroke()
+        .and_then(|st| parse_element_stroke(&st));
+
+    Some(crate::types::Path {
+        line_indices,
+        background,
+        stroke,
     })
+}
+
+fn parse_block_instance_element(element: &BinDucElement, base: RustDucElement) -> DucBlockInstanceElement {
+    let block_id = element.block_instance_block_id().unwrap_or("").to_string();
+    
+    let block_element_overrides = if let Some(overrides_vec) = element.block_instance_element_overrides() {
+        if overrides_vec.len() > 0 {
+            let mut overrides_map = std::collections::HashMap::new();
+            for i in 0..overrides_vec.len() {
+                let override_item = overrides_vec.get(i);
+                let element_id = override_item.element_id().unwrap_or("").to_string();
+                let overrides_json = override_item.overrides().unwrap_or("").to_string();
+                overrides_map.insert(element_id, overrides_json);
+            }
+            Some(overrides_map)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    DucBlockInstanceElement {
+        base,
+        block_id,
+        block_element_overrides,
+    }
 }

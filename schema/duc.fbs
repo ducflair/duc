@@ -16,6 +16,363 @@ namespace Duc;
 
 file_identifier "DUC_";
 
+// ENUMS
+
+enum VERTICAL_ALIGN:ubyte {
+  TOP = 10,
+  MIDDLE = 11,
+  BOTTOM = 12
+}
+
+enum TEXT_ALIGN:ubyte {
+  LEFT = 10,
+  CENTER = 11,
+  RIGHT = 12
+}
+
+enum STROKE_PLACEMENT:ubyte {
+  INSIDE = 10,
+  CENTER = 11,
+  OUTSIDE = 12
+}
+
+enum STROKE_WIDTH:ubyte {
+  THIN = 1,
+  BOLD = 2,
+  EXTRA_BOLD = 4
+}
+
+enum ELEMENT_CONTENT_PREFERENCE:ubyte {
+  SOLID = 12,
+  FILL = 14,
+  FIT = 15,
+  TILE = 16,
+  STRETCH = 17,
+  HATCH = 18
+}
+
+enum STROKE_PREFERENCE:ubyte {
+  SOLID = 10,
+  DASHED = 11,
+  DOTTED = 12,
+  CUSTOM = 13
+}
+
+enum STROKE_SIDE_PREFERENCE:ubyte {
+  TOP = 10,
+  BOTTOM = 11,
+  LEFT = 12,
+  RIGHT = 13,
+  CUSTOM = 14,
+  ALL = 15
+}
+
+enum STROKE_CAP:ubyte {
+  BUTT = 10,
+  ROUND = 11,
+  SQUARE = 12
+}
+
+enum STROKE_JOIN:ubyte {
+  MITER = 10,
+  ROUND = 11,
+  BEVEL = 12
+}
+
+enum LINE_HEAD:ubyte {
+  ARROW = 10,
+  BAR = 11,
+  CIRCLE = 12,
+  CIRCLE_OUTLINED = 13,
+  TRIANGLE = 14,
+  TRIANGLE_OUTLINED = 15,
+  DIAMOND = 16,
+  DIAMOND_OUTLINED = 17,
+  CROSS = 18,
+  OPEN_ARROW = 19,
+  REVERSED_ARROW = 20,
+  REVERSED_TRIANGLE = 21,
+  REVERSED_TRIANGLE_OUTLINED = 22,
+  CONE = 23,
+  HALF_CONE = 24
+}
+
+enum BEZIER_MIRRORING:ubyte {
+  NONE = 10,
+  ANGLE = 11,
+  ANGLE_LENGTH = 12
+}
+
+enum HANDLE_TYPE:ubyte {
+  HANDLE_IN = 10,
+  HANDLE_OUT = 11
+}
+
+enum ANTI_ALIASING:ubyte {
+  NONE = 10,
+  ANALYTIC = 11,
+  MSAA_8 = 8,
+  MSAA_16 = 16
+}
+
+enum YOUTUBE_STATES:byte {
+  UNSTARTED = -1,
+  ENDED = 0,
+  PLAYING = 1,
+  PAUSED = 2,
+  BUFFERING = 3,
+  CUED = 5
+}
+
+enum BLENDING:ubyte {
+  MULTIPLY = 11,
+  SCREEN = 12,
+  OVERLAY = 13,
+  DARKEN = 14,
+  LIGHTEN = 15,
+  DIFFERENCE = 16,
+  EXCLUSION = 17
+}
+
+enum GRID_DISPLAY_TYPE:ubyte {
+  LINES = 10,
+  DOTS = 11,
+  CROSSES = 12,
+  ADAPTIVE = 13
+}
+
+enum GRID_TYPE:ubyte {
+  RECTANGULAR = 10,
+  ISOMETRIC = 11,
+  POLAR = 12,
+  TRIANGULAR = 13,
+  CUSTOM = 14
+}
+
+enum OBJECT_SNAP_MODE:ubyte {
+  ENDPOINT = 10,
+  MIDPOINT = 11,
+  CENTER = 12,
+  QUADRANT = 13,
+  INTERSECTION = 14,
+  EXTENSION = 15,
+  PERPENDICULAR = 16,
+  TANGENT = 17,
+  NEAREST = 18,
+  NODE = 19, // For points
+  INSERT = 20, // For block insertion points
+  PARALLEL = 21,
+  APPARENT = 22,
+  FROM = 23, // Reference point snap
+  POINT_FILTER = 24, // X,Y,Z filtering
+  TEMPORARY = 25, // Temporary tracking points
+  BETWEEN_TWO_POINTS = 26,
+  POINT_ON_CURVE = 27,
+  GEOMETRIC = 28 // vs bounding box center
+}
+
+enum SNAP_MODE:ubyte {
+  RUNNING = 10,
+  SINGLE = 11
+}
+
+enum SNAP_OVERRIDE_BEHAVIOR:ubyte {
+  DISABLE = 10,
+  FORCE_GRID = 11,
+  FORCE_OBJECT = 12
+}
+
+enum SNAP_MARKER_SHAPE:ubyte {
+  SQUARE = 10,
+  CIRCLE = 11,
+  TRIANGLE = 12,
+  X = 13
+}
+
+enum TABLE_CELL_ALIGNMENT:ubyte {
+  TOP_LEFT = 10,
+  TOP_CENTER = 11,
+  TOP_RIGHT = 12,
+  MIDDLE_LEFT = 13,
+  MIDDLE_CENTER = 14,
+  MIDDLE_RIGHT = 15,
+  BOTTOM_LEFT = 16,
+  BOTTOM_CENTER = 17,
+  BOTTOM_RIGHT = 18
+}
+
+enum TABLE_FLOW_DIRECTION:ubyte {
+  DOWN = 10,
+  UP = 11
+}
+
+enum TOLERANCE_DISPLAY:ubyte {
+  NONE = 10,
+  SYMMETRICAL = 11, // ±
+  DEVIATION = 12, // +upper/-lower
+  LIMITS = 13, // Upper/lower limits
+  BASIC = 14 // Boxed dimension
+}
+
+enum DIMENSION_TYPE:ubyte {
+  LINEAR = 10,
+  ALIGNED = 11,
+  ANGULAR = 12,
+  ARC_LENGTH = 13,
+  RADIUS = 14,
+  DIAMETER = 15,
+  CENTER_MARK = 16,
+  ROTATED = 17,
+  SPACING = 18,
+  CONTINUE = 19,
+  BASELINE = 20,
+  JOGGED_LINEAR = 21,
+  ORDINATE = 22
+}
+
+enum MARK_ELLIPSE_CENTER:ubyte {
+  MARK = 10,
+  LINE = 11
+}
+
+enum TEXT_FLOW_DIRECTION:ubyte {
+  LEFT_TO_RIGHT = 10,
+  RIGHT_TO_LEFT = 11,
+  TOP_TO_BOTTOM = 12,
+  BOTTOM_TO_TOP = 13
+}
+
+enum COLUMN_TYPE:ubyte {
+  NO_COLUMNS = 10,
+  STATIC_COLUMNS = 11,
+  DYNAMIC_COLUMNS = 12
+}
+
+enum GDT_SYMBOL:ubyte {
+  // Form tolerances
+  STRAIGHTNESS = 10, // "⏤"
+  FLATNESS = 11, // "⏥"
+  CIRCULARITY = 12, // "○"
+  CYLINDRICITY = 13, // "⌭"
+  
+  // Orientation tolerances  
+  PERPENDICULARITY = 14, // "⊥"
+  ANGULARITY = 15, // "∠"
+  PARALLELISM = 16, // "∥"
+  
+  // Location tolerances
+  POSITION = 17, // "⌖"
+  TRUE_POSITION = 18, // "⌖" // Alternative name
+  CONCENTRICITY = 19, // "◎"
+  COAXIALITY = 20, // "◯" // Different from concentricity in some standards
+  SYMMETRY = 21, // "⌯"
+  
+  // Runout tolerances
+  CIRCULAR_RUNOUT = 22, // "↗"
+  TOTAL_RUNOUT = 23, // "↗↗"
+  
+  // Profile tolerances
+  PROFILE_OF_LINE = 24, // "⌒"
+  PROFILE_OF_SURFACE = 25, // "⌓"
+  
+  // Special symbols
+  STATISTICAL = 26, // "◊"
+  ALL_AROUND = 27, // "⭕"
+  ALL_OVER = 28, // "🔄"
+  BETWEEN = 29 // "↔"
+}
+
+enum MATERIAL_CONDITION:ubyte {
+  MAXIMUM = 10, // "Ⓜ" // MMC - Maximum Material Condition
+  LEAST = 11, // "Ⓛ" // LMC - Least Material Condition
+  REGARDLESS = 12 // "Ⓢ" // RFS - Regardless of Feature Size (often omitted)
+}
+
+enum FEATURE_MODIFIER:ubyte {
+  FREE_STATE = 10, // "Ⓕ"
+  TANGENT_PLANE = 11, // "Ⓣ"
+  PROJECTED_TOLERANCE_ZONE = 12, // "Ⓟ"
+  DIAMETER = 13, // "⌀"
+  SPHERICAL_DIAMETER = 14, // "S⌀"
+  RADIUS = 15, // "R"
+  SPHERICAL_RADIUS = 16, // "SR"
+  CONTROLLED_RADIUS = 17, // "CR"
+  SQUARE = 18, // "□"
+  TRANSLATION = 19, // "⧗" // Translation modifier for position
+  ALL_AROUND = 20, // "⭕" // Can be used as modifier too
+  ALL_OVER = 21, // "🔄" // Can be used as modifier too
+  STATISTICAL = 22, // "◊" // Can be used as modifier
+  CONTINUOUS_FEATURE = 23, // "CF" // Continuous feature
+  UNEQUALLY_DISPOSED = 24 // "UEQ" // Unequally disposed tolerance
+}
+
+enum TOLERANCE_ZONE_TYPE:ubyte {
+  CYLINDRICAL = 10,
+  SPHERICAL = 11, 
+  RECTANGULAR = 12,
+  LINEAR = 13,
+  CIRCULAR = 14
+}
+
+enum DATUM_TARGET_TYPE:ubyte {
+  POINT = 10,
+  LINE = 11, 
+  AREA = 12,
+  MOVABLE = 13
+}
+
+enum TOLERANCE_TYPE:ubyte {
+  SINGLE = 10, // Single tolerance specification
+  COMPOSITE = 11, // Composite tolerance (multiple rows, related)
+  MULTIPLE = 12 // Multiple single-segment tolerances (independent)
+}
+
+enum DATUM_BRACKET_STYLE:ubyte {
+  SQUARE = 10,
+  ROUND = 11,
+  NONE = 12
+}
+
+enum DIMENSION_UNITS_FORMAT:ubyte {
+  DECIMAL = 10,
+  ENGINEERING = 11, // Feet and decimal inches
+  ARCHITECTURAL = 12, // Feet and fractional inches
+  FRACTIONAL = 13, // Fractional inches
+  SCIENTIFIC = 14
+}
+
+enum ANGULAR_UNITS_FORMAT:ubyte {
+  DECIMAL_DEGREES = 10,
+  DEGREES_MINUTES_SECONDS = 11,
+  GRADS = 12,
+  RADIANS = 13,
+  SURVEYOR = 14
+}
+
+enum DECIMAL_SEPARATOR:ubyte {
+  DOT = 10, // "."
+  COMMA = 11 // ","
+}
+
+enum VIEWPORT_SHADE_PLOT:ubyte {
+  AS_DISPLAYED = 10,
+  WIREFRAME = 11,
+  HIDDEN = 12,
+  RENDERED = 13
+}
+
+enum HATCH_STYLE:ubyte {
+  NORMAL = 10,    // Normal hatch
+  OUTER = 11,     // Outermost boundary only
+  IGNORE = 12     // Ignore internal structures
+}
+
+enum IMAGE_STATUS:ubyte {
+  PENDING = 10,
+  SAVED = 11,
+  ERROR = 12
+}
+
 // /////////////////////
 
 // Point type
@@ -99,7 +456,7 @@ table ElementStroke {
   content: ElementContentBase;
   width: double;
   style: StrokeStyle;
-  placement: byte;  // 10: inside, 11: center, 12: outside
+  placement: byte;  // StrokePlacement values
   stroke_sides: StrokeSides;
 }
 
@@ -222,7 +579,7 @@ table DucElement {
   free_draw_simulate_pressure: bool = null;
   
   file_id: string;
-  image_status: string;
+  image_status: IMAGE_STATUS = null;
   image_scale_v2: Point (deprecated);
   
   stack_like_is_collapsed: bool = null;

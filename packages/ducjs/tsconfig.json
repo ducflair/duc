@@ -5,6 +5,7 @@
     "outDir": "dist",
     "declaration": true,
     "declarationDir": "dist",
+    "rootDir": "src",
     "paths": {
       "ducjs/*": ["src/*"]
     },

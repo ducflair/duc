@@ -1,23 +1,4 @@
 
-export const LINE_HEAD = {
-  block: 5,
-  arrow: 10,
-  bar: 11,
-  circle: 12,
-  circle_outlined: 13,
-  triangle: 14,
-  triangle_outlined: 15,
-  diamond: 16,
-  diamond_outlined: 17,
-  cross: 18,
-  open_arrow: 19,
-  reversed_arrow: 20,
-  reversed_triangle: 21,
-  reversed_triangle_outlined: 22,
-  cone: 23,
-  half_cone: 24,
-} as const;
-
 export type DucPointBinding = {
   elementId: DucBindableElement["id"];
 
