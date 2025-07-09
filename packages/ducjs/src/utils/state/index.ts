@@ -1,5 +1,5 @@
-import { ANTI_ALIASING, TEXT_ALIGN } from "ducjs/duc";
-import { DucState, RawValue } from "ducjs/types";
+import { ANTI_ALIASING, TEXT_ALIGN, THEME } from "ducjs/duc";
+import { ActiveTool, DucState, RawValue, ToolType } from "ducjs/types";
 import { COLOR_PALETTE, DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_GRID_SIZE, DEFAULT_GRID_STEP } from "ducjs/utils/constants";
 import { getNormalizedZoom } from "ducjs/utils/normalize";
 import { getPrecisionValueFromRaw, getScaledZoomValueForScope, getScopedZoomValue, NEUTRAL_SCOPE } from "ducjs/utils/scopes";
@@ -85,5 +85,41 @@ export const getDefaultDucState = (): Omit<
     zoomStep: 0,
     scaleRatioLocked: false,
 
+    theme: THEME.LIGHT,
+  };
+};
+
+
+export const updateActiveTool = (
+  appState: Pick<DucState, "activeTool">,
+  data: ((
+    | {
+      type: ToolType;
+    }
+    | { type: "custom"; customType: string }
+  ) & { locked?: boolean; fromSelection?: boolean }) & {
+    lastActiveToolBeforeEraser?: ActiveTool | null;
+  },
+): DucState["activeTool"] => {
+  if (data.type === "custom") {
+    return {
+      ...appState.activeTool,
+      type: "custom",
+      customType: data.customType,
+      locked: data.locked ?? appState.activeTool.locked,
+    };
+  }
+
+
+  return {
+    ...appState.activeTool,
+    lastActiveTool:
+      data.lastActiveToolBeforeEraser === undefined
+        ? appState.activeTool.lastActiveTool
+        : data.lastActiveToolBeforeEraser,
+    type: data.type,
+    customType: null,
+    locked: data.locked ?? appState.activeTool.locked,
+    fromSelection: data.fromSelection ?? false,
   };
 };

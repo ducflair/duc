@@ -1,13 +1,14 @@
+export * from "./typeChecks";
+
 import {
   FONT_FAMILY,
-  THEME,
   FREEDRAW_EASINGS,
 } from "ducjs/utils/constants";
 import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "ducjs/types/utility-types";
 import { SupportedMeasures } from "ducjs/utils/measurements";
 import { PrecisionValue } from "ducjs/types";
 import { Percentage, Radian, GeometricPoint } from "ducjs/types/geometryTypes";
-import { BEZIER_MIRRORING, BLENDING, ELEMENT_CONTENT_PREFERENCE, IMAGE_STATUS, LINE_HEAD, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/duc";
+import { BEZIER_MIRRORING, BLENDING, ELEMENT_CONTENT_PREFERENCE, IMAGE_STATUS, LINE_HEAD, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TEXT_ALIGN, THEME, VERTICAL_ALIGN } from "ducjs/duc";
 
 export type ChartType = "bar" | "line";
 export type FontFamilyKeys = keyof typeof FONT_FAMILY;
@@ -60,6 +61,14 @@ export type ElementConstructorOpts = MarkOptional<
   | "blending"
 >;
 
+export type ElementUpdate<TElement extends DucElement> = Omit<
+  Partial<TElement>,
+  "id" | "version" | "versionNonce" | "updated"
+>;
+
+// ideally this would be a branded type but it'd be insanely hard to work with
+// in our codebase
+export type DucElementsIncludingDeleted = readonly DucElement[];
 
 /**
  * Map of non-deleted elements.

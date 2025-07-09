@@ -373,6 +373,11 @@ enum IMAGE_STATUS:ubyte {
   ERROR = 12
 }
 
+enum THEME:ubyte {
+  LIGHT = 10,
+  DARK = 11
+}
+
 // /////////////////////
 
 // Point type

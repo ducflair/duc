@@ -1,4 +1,8 @@
-import { ANTI_ALIASING, OBJECT_SNAP_MODE } from "ducjs/duc";
+export * from "./elements";
+export * from "./geometryTypes";
+export * from "./utility-types";
+
+import { ANTI_ALIASING, OBJECT_SNAP_MODE, THEME } from "ducjs/duc";
 import {
   DucBindableElement,
   DucElement,
@@ -190,6 +194,7 @@ export interface Ducfig { // User's Config of AppState
   } & ActiveTool;
 
   penMode: boolean;
+  theme: THEME;
 
   // exportBackground: boolean;
   // exportEmbedScene: boolean;

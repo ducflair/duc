@@ -1,5 +1,6 @@
 import { _DucElementBase } from "./types";
 
+// TODO: Careful because STEP, STL and STP files are external and need references through filesIds and BinaryFiles
 export type Duc3dParametricElement = _DucElementBase & {
   type: "3dParametric";
 

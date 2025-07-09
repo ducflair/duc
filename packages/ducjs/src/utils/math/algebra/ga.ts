@@ -17,21 +17,21 @@
  * operations.
  */
 
-export type Point = NVector;
-export type Direction = NVector;
-export type Line = NVector;
-export type Transform = NVector;
+export type GAPoint = NVector;
+export type GADirection = NVector;
+export type GALine = NVector;
+export type GATransform = NVector;
 
-export const point = (x: number, y: number): Point => [0, 0, 0, 0, y, x, 1, 0];
+export const point = (x: number, y: number): GAPoint => [0, 0, 0, 0, y, x, 1, 0];
 
-export const origin = (): Point => [0, 0, 0, 0, 0, 0, 1, 0];
+export const origin = (): GAPoint => [0, 0, 0, 0, 0, 0, 1, 0];
 
-export const direction = (x: number, y: number): Direction => {
+export const direction = (x: number, y: number): GADirection => {
   const norm = Math.hypot(x, y); // same as `inorm(direction(x, y))`
   return [0, 0, 0, 0, y / norm, x / norm, 0, 0];
 };
 
-export const offset = (x: number, y: number): Direction => [
+export const offset = (x: number, y: number): GADirection => [
   0,
   0,
   0,

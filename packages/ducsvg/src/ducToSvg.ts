@@ -1,19 +1,14 @@
-import { RestoredDataState } from "ducjs/data/restore";
-import {
-  getBoundTextElement,
-  getContainerElement,
-  getLineHeightInPx,
-} from "ducjs/element/textElement";
+import { RestoredDataState } from "ducjs/utils/restore";
 import {
   isArrowElement,
   isEllipseElement,
+  isEmbeddableElement,
   isFrameLikeElement,
   isFreeDrawElement,
-  isIframeElement,
   isLinearElement,
   isTableElement,
   isTextElement
-} from "ducjs/element/typeChecks";
+} from "ducjs/types/elements/typeChecks";
 import {
   DucArrowElement,
   DucDocElement,
@@ -21,7 +16,7 @@ import {
   DucEllipseElement,
   DucFrameLikeElement,
   DucFreeDrawElement,
-  DucIframeElement,
+  DucIframeLikeElement,
   DucImageElement,
   DucLinearElement,
   DucPointBinding,
@@ -32,102 +27,113 @@ import {
   DucTextElementWithContainer,
   ElementBackground,
   ElementStroke,
-  ElementSubset,
   NonDeletedDucElement
-} from "ducjs/element/types";
-import { getElementAbsoluteCoords } from "ducjs/element/bounds";
-import { getContainingFrame, getFrameLikeElements, getFrameLikeTitle } from "ducjs/element/frame";
-import { Fonts, getVerticalOffset } from "ducjs/fonts";
-import { LinearElementEditor } from "ducjs/linearElement/linearElementEditor";
-import { getFreeDrawSvgPath } from "ducjs/renderer/renderElement";
-import { getDefaultAppState } from "ducjs/state/appState";
-import { AppState, BinaryFiles, RawValue, Scope, ScopedValue } from "ducjs/types";
-import { DEFAULT_FRAME_STYLE, ELEMENT_SUBSET, LINE_HEAD, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, SVG_NS, TEXT_ALIGN } from "ducjs/utils/constants";
-import { arrayToMap, getFontFamilyString, isRTL, isTestEnv } from "ducjs/utils/utils";
-import { convertShapeToLinearElement, Percentage } from "ducjs/utils/geometry/shape";
-import { DESIGN_STANDARD, DesignStandard } from "ducjs/duc/utils/standards";
-import { getPrecisionValueFromRaw } from "ducjs/duc/utils/scopes";
-import { SpatialIndex } from "ducjs/scene/SpatialIndex";
-import { renderLinearElementToSvg } from "ducjs/duc/duc-svg/src/linearElementToSvg";
-import { getBoundTextElementPosition } from "ducjs/types/elements/linearElementEditor";
+} from "ducjs/types/elements";
+import { getPrecisionValueFromRaw } from "ducjs/utils/scopes";
+import { getBoundTextElement, getContainerElement, getElementAbsoluteCoords } from "ducjs/utils/bounds";
+import { DucState, BinaryFiles, RawValue, Scope, ScopedValue } from "ducjs/types";
+import { DESIGN_STANDARD, DesignStandard } from "ducjs/utils/standards";
+import { DEFAULT_FRAME_STYLE, SVG_NS } from "ducjs/utils/constants";
+import { getContainingFrame, getFrameLikeElements, getFrameLikeTitle } from "ducjs/utils/elements/frameElement";
+import { Percentage } from "ducjs/types/geometryTypes";
+import {
+  getFontFamilyString,
+  getLineHeightInPx,
+} from "ducjs/utils/elements/textElement";
+import { renderLinearElementToSvg } from "ducsvg/utils/linearElementToSvg";
+import { getElementsSortedByZIndex } from "ducjs/utils/elements";
+import { getBoundTextElementPosition } from "ducjs/utils/elements/linearElement";
+import { arrayToMap, isRTL } from "ducjs/utils";
+import { getFreeDrawSvgPath } from "ducjs/utils/elements/freedrawElement";
+
+import { convertShapeToLinearElement } from "ducjs/utils/shape";
+import { getDefaultDucState } from "ducjs/utils/state";
+import { TEXT_ALIGN, THEME } from "ducjs/duc";
 
 const DUC_STANDARD_PRIMARY_COLOR = "#7878dd";
 const BACKGROUND_OPACITY: Percentage = 0.1 as Percentage;
 const AUX_STROKE_WIDTH_FACTOR = 0.2;
 const COTA_STROKE_WIDTH_FACTOR = 0.4;
 
-const applyCadStandardStyling = (
-  element: DucElement,
-  appState: Partial<AppState>,
-  currentScope: Scope,
-): DucElement => {
-  const standard = appState.standard;
-  const subset = element.subset;
-
-  if (!subset || !standard) {
-    return element;
-  }
-
-  const shouldApply = (standard: DesignStandard, subset?: ElementSubset): boolean => {
-    if (!subset) {
-      return false;
-    }
-    return standard === DESIGN_STANDARD.DUC;
-  };
-
-  if (!shouldApply(standard, subset)) {
-    return element;
-  }
-
-  const newElement = element;
-
-  if (standard === DESIGN_STANDARD.DUC) {
-    if (newElement.stroke) {
-      newElement.stroke.forEach((stroke) => {
-        if (subset === ELEMENT_SUBSET.AUX) {
-          stroke.content.src = DUC_STANDARD_PRIMARY_COLOR;
-          if (stroke.width) {
-            stroke.width = getPrecisionValueFromRaw((stroke.width.value * AUX_STROKE_WIDTH_FACTOR) as RawValue, element.scope, currentScope);
-          }
-          stroke.style.join = STROKE_JOIN.round;
-          stroke.style.cap = STROKE_CAP.round;
-        } else if (subset === ELEMENT_SUBSET.COTA) {
-          stroke.content.src = DUC_STANDARD_PRIMARY_COLOR;
-          if (stroke.width) {
-            stroke.width = getPrecisionValueFromRaw((stroke.width.value * COTA_STROKE_WIDTH_FACTOR) as RawValue, element.scope, currentScope);
-          }
-          stroke.style.join = STROKE_JOIN.round;
-          stroke.style.cap = STROKE_CAP.round;
-        }
-      });
-    }
-
-    if (newElement.background) {
-      newElement.background.forEach((background) => {
-        if (subset === ELEMENT_SUBSET.AUX || subset === ELEMENT_SUBSET.COTA) {
-          background.content.src = DUC_STANDARD_PRIMARY_COLOR;
-          background.content.opacity = BACKGROUND_OPACITY;
-        }
-      });
-    }
-  }
-
-  return newElement;
+export type FrameRendering = {
+  enabled: boolean;
+  outline: boolean;
+  name: boolean;
+  clip: boolean;
 };
+
+// const applyCadStandardStyling = (
+//   element: DucElement,
+//   appState: Partial<AppState>,
+//   currentScope: Scope,
+// ): DucElement => {
+//   const standard = appState.standard;
+//   const subset = element.subset;
+
+//   if (!subset || !standard) {
+//     return element;
+//   }
+
+//   const shouldApply = (standard: DesignStandard, subset?: ElementSubset): boolean => {
+//     if (!subset) {
+//       return false;
+//     }
+//     return standard === DESIGN_STANDARD.DUC;
+//   };
+
+//   if (!shouldApply(standard, subset)) {
+//     return element;
+//   }
+
+//   const newElement = element;
+
+//   if (standard === DESIGN_STANDARD.DUC) {
+//     if (newElement.stroke) {
+//       newElement.stroke.forEach((stroke) => {
+//         if (subset === ELEMENT_SUBSET.AUX) {
+//           stroke.content.src = DUC_STANDARD_PRIMARY_COLOR;
+//           if (stroke.width) {
+//             stroke.width = getPrecisionValueFromRaw((stroke.width.value * AUX_STROKE_WIDTH_FACTOR) as RawValue, element.scope, currentScope);
+//           }
+//           stroke.style.join = STROKE_JOIN.round;
+//           stroke.style.cap = STROKE_CAP.round;
+//         } else if (subset === ELEMENT_SUBSET.COTA) {
+//           stroke.content.src = DUC_STANDARD_PRIMARY_COLOR;
+//           if (stroke.width) {
+//             stroke.width = getPrecisionValueFromRaw((stroke.width.value * COTA_STROKE_WIDTH_FACTOR) as RawValue, element.scope, currentScope);
+//           }
+//           stroke.style.join = STROKE_JOIN.round;
+//           stroke.style.cap = STROKE_CAP.round;
+//         }
+//       });
+//     }
+
+//     if (newElement.background) {
+//       newElement.background.forEach((background) => {
+//         if (subset === ELEMENT_SUBSET.AUX || subset === ELEMENT_SUBSET.COTA) {
+//           background.content.src = DUC_STANDARD_PRIMARY_COLOR;
+//           background.content.opacity = BACKGROUND_OPACITY;
+//         }
+//       });
+//     }
+//   }
+
+//   return newElement;
+// };
 
 // Helper function to get frame rendering configuration
-const getFrameRenderingConfig = (
-  exportingFrame: DucFrameLikeElement | null,
-  frameRendering: AppState["frameRendering"] | null,
-): AppState["frameRendering"] => {
-  frameRendering = frameRendering || getDefaultAppState().frameRendering;
-  return {
-    enabled: exportingFrame ? true : frameRendering.enabled,
-    outline: exportingFrame ? false : frameRendering.outline,
-    name: exportingFrame ? false : frameRendering.name,
-    clip: exportingFrame ? true : frameRendering.clip,
-  };
-};
+// const getFrameRenderingConfig = (
+//   exportingFrame: DucFrameLikeElement | null,
+//   frameRendering: AppState["frameRendering"] | null,
+// ): AppState["frameRendering"] => {
+//   frameRendering = frameRendering || getDefaultAppState().frameRendering;
+//   return {
+//     enabled: exportingFrame ? true : frameRendering.enabled,
+//     outline: exportingFrame ? false : frameRendering.outline,
+//     name: exportingFrame ? false : frameRendering.name,
+//     clip: exportingFrame ? true : frameRendering.clip,
+//   };
+// };
 
 // Main export function to convert DUC data to SVG string
 export const ducToSvg = async (
@@ -135,7 +141,7 @@ export const ducToSvg = async (
   appState: RestoredDataState["appState"],
   files: RestoredDataState["files"],
   opts?: {
-    frameRendering?: AppState["frameRendering"];
+    // frameRendering?: AppState["frameRendering"];
     exportingFrame?: DucFrameLikeElement | null;
     exportWithDarkMode?: boolean;
     skipInliningFonts?: boolean;
@@ -144,10 +150,16 @@ export const ducToSvg = async (
   const currentScope = appState.scope;
   
   // Get frame rendering configuration
-  const frameRendering = getFrameRenderingConfig(
-    opts?.exportingFrame ?? null,
-    opts?.frameRendering ?? appState?.frameRendering ?? null,
-  );
+  // const frameRendering = getFrameRenderingConfig(
+  //   opts?.exportingFrame ?? null,
+  //   opts?.frameRendering ?? appState?.frameRendering ?? null,
+  // );
+  const frameRendering = {
+    enabled: true,
+    outline: false,
+    name: false,
+    clip: true,
+  };
   
   // Filter out deleted elements
   const elementsForRender = elements.filter(el => !el.isDeleted) as readonly NonDeletedDucElement[];
@@ -168,7 +180,7 @@ export const ducToSvg = async (
   addMetadata(svgDocument, appState, elementsForRender.length);
   
   // Sort elements by z-index
-  const sortedElements = SpatialIndex.sortElementsByZIndex(elementsForRender);
+  const sortedElements = getElementsSortedByZIndex(elementsForRender);
   
   // Create a map of elements for reference
   const elementsMap = arrayToMap(elementsForRender);
@@ -207,50 +219,51 @@ export const ducToSvg = async (
     }
   }
 
-  const fontFamilies = elements.reduce((acc, element) => {
-    if (isTextElement(element)) {
-      acc.add(element.fontFamily);
-    }
-    return acc;
-  }, new Set<number>());
+  // TODO: in the future, we will need to inline the fonts with a proper Font manager system
+  // const fontFamilies = elements.reduce((acc, element) => {
+  //   if (isTextElement(element)) {
+  //     acc.add(element.fontFamily);
+  //   }
+  //   return acc;
+  // }, new Set<number>());
 
-  const fontFaces = opts?.skipInliningFonts
-    ? []
-    : await Promise.all(
-        Array.from(fontFamilies).map(async (x) => {
-          const fontData = Fonts.registered.get(x);
-          if (!fontData || !Array.isArray(fontData.fonts)) {
-            console.error(
-              `Couldn't find registered fonts for font-family "${x}"`,
-              Fonts.registered,
-            );
-            return;
-          }
+  // const fontFaces = opts?.skipInliningFonts
+  //   ? []
+  //   : await Promise.all(
+  //       Array.from(fontFamilies).map(async (x) => {
+  //         const fontData = Fonts.registered.get(x);
+  //         if (!fontData || !Array.isArray(fontData.fonts)) {
+  //           console.error(
+  //             `Couldn't find registered fonts for font-family "${x}"`,
+  //             Fonts.registered,
+  //           );
+  //           return;
+  //         }
 
-          if (fontData.metadata?.local) {
-            // don't inline local fonts
-            return;
-          }
+  //         if (fontData.metadata?.local) {
+  //           // don't inline local fonts
+  //           return;
+  //         }
 
-          return Promise.all(
-            fontData.fonts.map(
-              async (font) => `@font-face {
-        font-family: "${font.fontFace.family}";
-        src: url(${await font.getContent()});
-        font-style: ${font.fontFace.style};
-        font-weight: ${font.fontFace.weight};
-        font-display: swap;
-      }`,
-            ),
-          );
-        }),
-      );
+  //         return Promise.all(
+  //           fontData.fonts.map(
+  //             async (font) => `@font-face {
+  //       font-family: "${font.fontFace.family}";
+  //       src: url(${await font.getContent()});
+  //       font-style: ${font.fontFace.style};
+  //       font-weight: ${font.fontFace.weight};
+  //       font-display: swap;
+  //     }`,
+  //           ),
+  //         );
+  //       }),
+  //     );
 
-  if (fontFaces.length > 0) {
-    const style = document.createElementNS(SVG_NS, "style");
-    style.textContent = fontFaces.flat().filter(Boolean).join("\n");
-    defs.appendChild(style);
-  }
+  // if (fontFaces.length > 0) {
+  //   const style = document.createElementNS(SVG_NS, "style");
+  //   style.textContent = fontFaces.flat().filter(Boolean).join("\n");
+  //   defs.appendChild(style);
+  // }
   
   // Group elements by frame for proper clipping
   const elementsByFrame = new Map<string | null, NonDeletedDucElement[]>();
@@ -297,7 +310,7 @@ export const ducToSvg = async (
       
       // Render frame children
       elements
-        .filter((el) => !isIframeElement(el) && !el.type?.includes("embeddable"))
+        .filter((el) => !isEmbeddableElement(el))
         .forEach(element => {
           if (element.isVisible) {
             const elementNode = renderElementToSvg(
@@ -337,7 +350,7 @@ export const ducToSvg = async (
       
       // Render iframe-like elements for this frame on top
       elements
-        .filter((el) => isIframeElement(el) || el.type?.includes("embeddable"))
+        .filter((el) => isEmbeddableElement(el))
         .forEach(element => {
           if (element.isVisible) {
             const elementNode = renderElementToSvg(
@@ -358,7 +371,7 @@ export const ducToSvg = async (
     } else {
       // Render elements without frame clipping
       elements
-        .filter((el) => !isIframeElement(el) && !el.type?.includes("embeddable"))
+        .filter((el) => !isEmbeddableElement(el))
         .forEach(element => {
           if (element.isVisible) {
             const elementNode = renderElementToSvg(
@@ -396,7 +409,7 @@ export const ducToSvg = async (
 
       // Render iframe-like elements on top
       elements
-        .filter((el) => isIframeElement(el) || el.type?.includes("embeddable"))
+        .filter((el) => isEmbeddableElement(el))
         .forEach(element => {
           if (element.isVisible) {
             const elementNode = renderElementToSvg(
@@ -527,9 +540,9 @@ const getRotatedElementCorners = (
   });
 };
 
-// Add metadata from appState
-const addMetadata = (svgRoot: SVGElement, appState: Partial<AppState>, elementCount: number) => {
-  const defaultState = getDefaultAppState();
+// FIXME: This does not seem complete
+const addMetadata = (svgRoot: SVGElement, appState: Partial<DucState>, elementCount: number) => {
+  const defaultState = getDefaultDucState();
   const state = { ...defaultState, ...appState };
   
   // Add metadata
@@ -555,10 +568,10 @@ const addMetadata = (svgRoot: SVGElement, appState: Partial<AppState>, elementCo
   metadataElement.setAttribute("id", "duc-metadata");
   
   // Add relevant app state properties as metadata
-  const relevantStateProps = [
+  const relevantStateProps: (keyof DucState)[] = [
     "gridSize",
     "gridStep",
-    "gridModeEnabled",
+    // "gridModeEnabled",
     "viewBackgroundColor",
     "scope",
     "mainScope",
@@ -666,7 +679,7 @@ export const renderElementToSvg = (
   appState: RestoredDataState["appState"],
   files: RestoredDataState["files"],
   defs: SVGDefsElement,
-  frameRendering: AppState["frameRendering"],
+  frameRendering: FrameRendering, // FIXME: use Standards in the future
   currentScope: Scope,
 ): SVGElement | null => {
   let element = _element;
@@ -678,7 +691,7 @@ export const renderElementToSvg = (
     }
   }
 
-  element = applyCadStandardStyling(element, appState, currentScope);
+  // element = applyCadStandardStyling(element, appState, currentScope);
 
 
   const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap, currentScope);
@@ -726,9 +739,9 @@ export const renderElementToSvg = (
   }
 
   const addToRoot = (node: SVGElement, element: DucElement, originalElement: DucElement) => {
-    if (isTestEnv()) {
-      node.setAttribute("data-id", element.id);
-    }
+    // if (isTestEnv()) {
+    //   node.setAttribute("data-id", element.id);
+    // }
     root.appendChild(node);
     if (isEllipseElement(originalElement) && originalElement.showAuxCrosshair) {
       const crosshair = renderCrosshair(
@@ -805,41 +818,8 @@ export const renderElementToSvg = (
       break;
     }
     case "frame":
-    case "magicframe": {
-      // frames are not rendered and only acts as a container (copied from staticSvgScene.ts)
-      if (frameRendering.enabled && frameRendering.outline) {
-        const rect = document.createElementNS(SVG_NS, "rect");
-
-        rect.setAttribute("width", `${element.width.scoped}`);
-        rect.setAttribute("height", `${element.height.scoped}`);
-        
-        // Apply rounded corners from element's roundness property
-        if (element.roundness && element.roundness.scoped > 0) {
-          rect.setAttribute("rx", element.roundness.scoped.toString());
-          rect.setAttribute("ry", element.roundness.scoped.toString());
-        }
-
-        // Apply element's background and stroke using the standard applyStyles function
-        applyStyles(rect, element.stroke, element.background);
-
-        addToRoot(rect, element, _element);
-        
-        // Add frame name/label if enabled
-        if (frameRendering.name) {
-          const frameNameElement = renderFrameName(element as DucFrameLikeElement, appState);
-          if (frameNameElement) {
-            addToRoot(frameNameElement, element, _element);
-          }
-        }
-      } else {
-        // Frames are containers and don't render when outline is disabled
-        return null;
-      }
-      break;
-    }
-    case "iframe":
     case "embeddable": {
-      const iframeEl = renderIframe(element as DucIframeElement);
+      const iframeEl = renderIframe(element);
       addToRoot(iframeEl, element, _element);
       break;
     }
@@ -999,11 +979,13 @@ const renderText = (element: DucTextElement, currentScope: Scope): SVGElement =>
       ? (element.width.value) as RawValue
       : 0 as RawValue;
 
-  const verticalOffset = getVerticalOffset(
-    element.fontFamily,
-    element.fontSize,
-    lineHeightPx,
-  );
+  // const verticalOffset = getVerticalOffset(
+  //   element.fontFamily,
+  //   element.fontSize,
+  //   lineHeightPx,
+  // );
+  // TODO: in the future, we will need to calculate the vertical offset for text elements with the right font metrics
+  const verticalOffset = 0 as RawValue;
 
   const verticalOffsetScoped = getPrecisionValueFromRaw(verticalOffset, element.scope, currentScope).scoped;
   const horizontalOffsetScoped = getPrecisionValueFromRaw(horizontalOffset, element.scope, currentScope).scoped;
@@ -1120,7 +1102,7 @@ const renderFreeDraw = (element: DucFreeDrawElement): SVGElement => {
 };
 
 // Render iframe element
-const renderIframe = (element: DucIframeElement): SVGElement => {
+const renderIframe = (element: DucIframeLikeElement | DucFrameLikeElement): SVGElement => {
   // For SVG export, we represent iframes as rectangles with a label
   const rect = document.createElementNS(SVG_NS, "rect");
   
@@ -1257,7 +1239,7 @@ const renderFrameName = (element: DucFrameLikeElement, appState?: RestoredDataSt
   text.setAttribute("font-size", DEFAULT_FRAME_STYLE.nameFontSize.toString());
   
   // Use appropriate color based on theme, fallback to light theme color
-  const isDarkTheme = appState?.theme === "dark";
+  const isDarkTheme = appState?.theme === THEME.DARK;
   const textColor = isDarkTheme ? DEFAULT_FRAME_STYLE.nameColorDarkTheme : DEFAULT_FRAME_STYLE.nameColorLightTheme;
   text.setAttribute("fill", textColor);
   

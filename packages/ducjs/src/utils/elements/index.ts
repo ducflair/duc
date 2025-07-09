@@ -1,6 +1,12 @@
+export * from "./newElement";
+export * from "./freedrawElement";
+export * from "./frameElement";
+export * from "./linearElement";
+export * from "./textElement";
+
 import { TEXT_ALIGN } from "ducjs/duc";
 import { Scope, RawValue } from "ducjs/types";
-import { _DucStackBase, DucElement, DucTableElement, DucTextContainer, DucTextElement, ElementsMap, NonDeleted } from "ducjs/types/elements";
+import { _DucStackBase, DucElement, DucNonSelectionElement, DucTableElement, DucTextContainer, DucTextElement, ElementConstructorOpts, ElementsMap, NonDeleted } from "ducjs/types/elements";
 import { isFreeDrawElement, isLinearElement } from "ducjs/types/elements/typeChecks";
 import { GeometricPoint, Percentage, TuplePoint } from "ducjs/types/geometryTypes";
 import { Mutable } from "ducjs/types/utility-types";
@@ -45,8 +51,6 @@ export const getDefaultStackProperties = (): _DucStackBase => {
     description: null,
   };
 };
-
-
 
 /**
  * Create a new table with default configuration
@@ -117,6 +121,31 @@ export const getDefaultTable = (currentScope: Scope): {
   };
 };
 
+export const getBaseElementProps = (element: DucNonSelectionElement): ElementConstructorOpts => {
+  return {
+    x: element.x,
+    y: element.y,
+    scope: element.scope,
+    label: element.label,
+    isVisible: element.isVisible,
+    roundness: element.roundness,
+    blending: element.blending,
+    background: element.background,
+    stroke: element.stroke,
+    opacity: element.opacity,
+    width: element.width,
+    height: element.height,
+    angle: element.angle,
+    groupIds: element.groupIds,
+    frameId: element.frameId,
+    boundElements: element.boundElements,
+    link: element.link,
+    locked: element.locked,
+    customData: element.customData,
+    zIndex: element.zIndex,
+  };
+};
+
 export function convertPointToTuple(point: GeometricPoint): TuplePoint {
   return [point.x, point.y];
 }
@@ -144,4 +173,16 @@ export const isInvisiblySmallElement = (
     return element.points.length < 2;
   }
   return element.width.scoped === 0 && element.height.scoped === 0;
+};
+
+
+
+/**
+ * Sorts a list of DucElements by their z-index (lowest first).
+ *
+ * @param elements The list of elements to sort.
+ * @returns A new array with elements sorted by z-index.
+ */
+export const getElementsSortedByZIndex = (elements: readonly DucElement[]): DucElement[] => {
+  return [...elements].sort((a, b) => a.zIndex - b.zIndex);
 };

@@ -1,9 +1,9 @@
 import * as GA from "ducjs/utils/math/algebra/ga";
-import * as GALine from "ducjs/utils/math/algebra/galines";
-import type { Point, Line } from "ducjs/utils/math/algebra/ga";
+import * as GALines from "ducjs/utils/math/algebra/galines";
+import type { GAPoint, GALine } from "ducjs/utils/math/algebra/ga";
 import { join } from "ducjs/utils/math/algebra/ga";
 
-export const from = ([x, y]: readonly [number, number]): Point => [
+export const fromPoint = ([x, y]: readonly [number, number]): GAPoint => [
   0,
   0,
   0,
@@ -14,9 +14,9 @@ export const from = ([x, y]: readonly [number, number]): Point => [
   0,
 ];
 
-export const toTuple = (point: Point): [number, number] => [point[5], point[4]];
+export const toTuple = (point: GAPoint): [number, number] => [point[5], point[4]];
 
-export const abs = (point: Point): Point => [
+export const abs = (point: GAPoint): GAPoint => [
   0,
   0,
   0,
@@ -27,16 +27,16 @@ export const abs = (point: Point): Point => [
   0,
 ];
 
-export const intersect = (line1: Line, line2: Line): Point =>
+export const intersect = (line1: GALine, line2: GALine): GAPoint =>
   GA.normalized(GA.meet(line1, line2));
 
 // Projects `point` onto the `line`.
 // The returned point is the closest point on the `line` to the `point`.
-export const project = (point: Point, line: Line): Point =>
-  intersect(GALine.orthogonal(line, point), line);
+export const project = (point: GAPoint, line: GALine): GAPoint =>
+  intersect(GALines.orthogonal(line, point), line);
 
-export const distance = (point1: Point, point2: Point): number =>
+export const fromDistance = (point1: GAPoint, point2: GAPoint): number =>
   GA.norm(join(point1, point2));
 
-export const distanceToLine = (point: Point, line: Line): number =>
+export const distanceToLine = (point: GAPoint, line: GALine): number =>
   GA.joinScalar(point, line);

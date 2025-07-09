@@ -33,6 +33,7 @@ export type DucStandard = {
   readonly: boolean;
 
   commonStyles: DucCommonStyle[];
+  frameStyles: DucFrameStyle[];
   textStyles: DucTextStyle[];
   dimensionStyles: DucDimensionStyles[];
   leaderStyles: DucLeaderStyle[];
