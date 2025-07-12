@@ -32,7 +32,6 @@ export const serializeDucGroup = (
     BinDucGroup.addDescription(builder, descriptionOffset);
   }
   BinDucGroup.addIsCollapsed(builder, group.isCollapsed);
-  BinDucGroup.addNoPlot(builder, group.noPlot);
   BinDucGroup.addLocked(builder, group.locked);
   BinDucGroup.addIsVisible(builder, group.isVisible);
   BinDucGroup.addOpacity(builder, group.opacity);

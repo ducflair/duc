@@ -250,7 +250,6 @@ export const serializeDucElement = (
   element.roundness && BinDucElement.addRoundness(builder, getPrecisionValueField(element.roundness, forRenderer));
 
   descriptionOffset && BinDucElement.addDescription(builder, descriptionOffset);
-  element.noPlot !== undefined && BinDucElement.addNoPlot(builder, element.noPlot);
 
   if (element.type === 'polygon') {
     element.sides && BinDucElement.addPolygonSides(builder, element.sides);

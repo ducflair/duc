@@ -103,7 +103,6 @@ const _newElementBase = <T extends DucElement>(
     boundElements = DEFAULT_ELEMENT_PROPS.boundElements,
     link = DEFAULT_ELEMENT_PROPS.link,
     locked = DEFAULT_ELEMENT_PROPS.locked,
-    noPlot = DEFAULT_ELEMENT_PROPS.noPlot,
     description = DEFAULT_ELEMENT_PROPS.description,
     ...rest
   }: ElementConstructorOpts & Omit<Partial<DucGenericElement>, "type">,
@@ -136,7 +135,6 @@ const _newElementBase = <T extends DucElement>(
     link,
     locked,
     zIndex,
-    noPlot,
     description,
     customData: rest.customData,
   };

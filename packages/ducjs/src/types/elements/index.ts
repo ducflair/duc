@@ -7,7 +7,7 @@ import {
 import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "ducjs/types/utility-types";
 import { SupportedMeasures } from "ducjs/utils/measurements";
 import { PrecisionValue } from "ducjs/types";
-import { Percentage, Radian, GeometricPoint } from "ducjs/types/geometryTypes";
+import { Percentage, Radian, GeometricPoint, ScaleFactor } from "ducjs/types/geometryTypes";
 import { BEZIER_MIRRORING, BLENDING, ELEMENT_CONTENT_PREFERENCE, IMAGE_STATUS, LINE_HEAD, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TEXT_ALIGN, THEME, VERTICAL_ALIGN } from "ducjs/duc";
 
 export type ChartType = "bar" | "line";
@@ -55,7 +55,6 @@ export type ElementConstructorOpts = MarkOptional<
   | "opacity"
   | "customData"
   | "isVisible"
-  | "noPlot"
   | "description"
   | "scope"
   | "blending"
@@ -142,11 +141,12 @@ export type TilingProperties = {
 };
 export type ElementContentBase = {
   preference: FillStyle;
-  src: string; // Can be a color, gradient, image (fileId or url), frame element's content `@el/${elementId}`
+  src: string; // Can be a color, gradient, image, DucBlock, (fileId or url), frame element's content `@el/${elementId}`
   visible: boolean;
   opacity: Percentage;
   tiling?: TilingProperties;
-  // imageProperties?: ImageProperties;
+  // hatch?: DucHatchProperties;
+  // imageFilter?: ImageFilter;
 }
 
 export type StrokePreference = ValueOf<typeof STROKE_PREFERENCE>;
@@ -154,10 +154,29 @@ export type StrokeCap = ValueOf<typeof STROKE_CAP>;
 export type StrokeJoin = ValueOf<typeof STROKE_JOIN>;
 export type StrokeStyle = {
   preference: StrokePreference;
-  cap?: StrokeCap; // default: butt
-  join?: StrokeJoin; // default: miter
-  dash?: number[]; // [2, 4, 6, 8] for custom or [2, 2] for dashed or dotted
-  dashCap?: StrokeCap; // default: butt
+  /**
+   * The cap of the stroke
+   * @default butt
+   */
+  cap?: StrokeCap;
+  /**
+   * The join of the stroke
+   * @default miter
+   */
+  join?: StrokeJoin;
+  /**
+   * The dash of the stroke
+   * @default [ 2, 2 ]
+   */
+  dash?: number[];
+  /**
+   * The cap of the dash
+   * @default butt
+   */
+  dashCap?: StrokeCap;
+  /**
+   * The miter limit of the stroke
+   */
   miterLimit?: number;
 }
 
@@ -262,9 +281,14 @@ type _DucElementBase = Readonly<{
       elements during collaboration or when saving to server. */
   version: number;
   /** Random integer that is regenerated on each change.
-      Used for deterministic reconciliation of updates during collaboration,
-      in case the versions (see above) are identical. */
+   Used for deterministic reconciliation of updates during collaboration,
+   in case the versions (see above) are identical. */
   versionNonce: number;
+  // /** Whether the element is a plot (i.e. visible on plotting) */
+  // isPlot: boolean;
+  // /** Whether the element is annotative (scales with DucViewport) */
+  // isAnnotative: boolean;
+  /** Whether the element is deleted */
   isDeleted: boolean;
   /** List of groups the element belongs to.
       Ordered from deepest to shallowest. */
@@ -289,7 +313,6 @@ type _DucElementBase = Readonly<{
   link: string | null;
   locked: boolean;
   description: string | null;
-  noPlot: boolean;
   customData?: Record<string, any>;
 }>;
 
@@ -317,6 +340,7 @@ export type DucEllipseElement = _DucElementBase & {
   showAuxCrosshair: boolean;
 };
 
+
 export type ImageCrop = {
   x: number;
   y: number;
@@ -325,6 +349,11 @@ export type ImageCrop = {
   naturalWidth: number;
   naturalHeight: number;
 };
+
+export type DucImageFilter = {
+  brightness: Percentage;
+  contrast: Percentage;
+}
 
 export type DucImageElement = _DucElementBase &
   Readonly<{
@@ -336,6 +365,9 @@ export type DucImageElement = _DucElementBase &
     scale: [number, number];
     /** whether an element is cropped */
     crop: ImageCrop | null;
+    // /** clipping boundary for the image */
+    // clippingBoundary: DucLinearElement | null;
+    // filter: DucImageFilter | null;
   }>;
 
 export type InitializedDucImageElement = MarkNonNullable<
@@ -347,7 +379,7 @@ export type _DucStackBase = {
   label: string
   description: string | null;
 
-  noPlot: boolean;
+  // isPlot: boolean;
   isCollapsed: boolean;
   locked: boolean;
   isVisible: boolean;
@@ -355,6 +387,7 @@ export type _DucStackBase = {
   opacity: Percentage;
   labelingColor: string;
 
+  /** Override for all elements in the stack */
   strokeOverride: ElementStroke | null;
   backgroundOverride: ElementBackground | null;
 
@@ -372,6 +405,8 @@ export type DucFrameElement = _DucStackElementBase & {
 };
 
 export type DucFrameLikeElement =
+  // | DucViewportElement
+  // | DucPlotElement
   | DucFrameElement;
 
 
@@ -466,25 +501,53 @@ export type NonDeletedDucElement = NonDeleted<DucElement> & {
 export type DucTextElement = _DucElementBase &
   Readonly<{
     type: "text";
-    fontSize: PrecisionValue;
-    fontFamily: FontFamilyValues;
     text: string;
     textAlign: TextAlign;
     verticalAlign: VerticalAlign;
     containerId: DucGenericElement["id"] | null;
     originalText: string;
     /**
-     * If `true` the width will fit the text. If `false`, the text will
-     * wrap to fit the width.
-     *
+     * Text sizing behavior:
+     * - `true`: Width adjusts to fit text content (single line or natural wrapping)
+     * - `false`: Text wraps to fit within the element's fixed width
+     * 
      * @default true
      */
     autoResize: boolean;
     /**
-     * Unitless line height (aligned to W3C). To get line height in px, multiply
-     *  with font size (using `getLineHeightInPx` helper).
+     * The primary font family to use for the text
+     */
+    fontFamily: FontFamilyValues;
+    // /**
+    //  * Fallback font family for broader compatibility across all systems and languages
+    //  * Useful for emojis, non-latin characters, etc.
+    //  */
+    // bigFontFamily: string;
+    /**
+     * Unitless line height multiplier (follows W3C standard).
+     * Actual line height in drawing units = fontSize × lineHeight
+     * Use `getLineHeightInPx` helper for pixel calculations.
+     * 
+     * @example 1.2 means 20% extra space between lines
      */
     lineHeight: number & { _brand: "unitlessLineHeight" };
+    /**
+     * Text height in drawing units (primary size parameter)
+     * This determines the height of capital letters
+     */
+    fontSize: PrecisionValue;
+    // /**
+    //  * Character width as a ratio of text height
+    //  * Controls horizontal spacing and character proportions
+    //  * 
+    //  * @example 0.7 means each character is 70% as wide as the text is tall
+    //  */
+    // widthCharScale: ScaleFactor;
+    // /**
+    //  * Italic angle in radians for oblique text rendering
+    //  * Positive values slant right, negative values slant left
+    //  */
+    // obliqueAngle: Radian;
   }>;
 
 export type DucBindableElement =
@@ -603,6 +666,11 @@ export type DucLinearElement = _DucElementBase &
     lastCommittedPoint: DucPoint | null;
     startBinding: DucPointBinding | null;
     endBinding: DucPointBinding | null;
+    // /**
+    //  * If true, the element's shape will wipe out the content below the element
+    //  * @default false
+    //  */
+    // wipeoutBelow: boolean;
   }>;
 
 export type DucArrowElement = DucLinearElement &
@@ -640,7 +708,6 @@ export type DucBlockAttributeDetailsType = {
   tag: string;
   defaultValue: string;
   prompt?: string;
-  position?: { x: PrecisionValue; y: PrecisionValue };
 };
 
 export type DucBlock = {

@@ -1,7 +1,3 @@
-
-
-export type PaperSize = ValueOf<typeof PAPER_SIZE>;
-
 export type PlotMargins = {
   /** Left margin */
   left: PrecisionValue;
@@ -19,6 +15,9 @@ export type DucPlotStyle = {
   id: string;
   name: string;
   description?: string;
+
+  /** Everything inside the plot will use this standard */
+  standardOverride: Standard;
   
   unit: Scope;
   margins: PlotMargins;
@@ -31,4 +30,5 @@ export type DucPlotElement = _DucStackElementBase & _DucPlotStyleProps & {
 
   /** Plot margins */
   margins: PlotMargins;
+
 };

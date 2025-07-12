@@ -3,9 +3,7 @@ import {
   DucBlockAttribute as BinDucBlockAttribute,
   DucBlockAttributeDetails as BinDucBlockAttributeDetails,
 } from 'ducjs/duc';
-import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/utils/scopes';
 import { DucBlock, DucBlockAttributeDetailsType, DucElement } from 'ducjs/types/elements';
-import { RawValue } from 'ducjs/types';
 import { parseElementFromBinary } from './parseElementFromBinary';
 
 export const parseBlockFromBinary = (
@@ -78,16 +76,9 @@ const parseBlockAttributeDetailsFromBinary = (
   const defaultValue = details.defaultValue() || '';
   const prompt = details.prompt() || undefined;
 
-  const position = details.position();
-  const positionParsed = position ? {
-    x: getPrecisionValueFromRaw(position.x() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
-    y: getPrecisionValueFromRaw(position.y() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
-  } : undefined;
-
   return {
     tag,
     defaultValue,
     prompt,
-    position: positionParsed,
   };
 }; 

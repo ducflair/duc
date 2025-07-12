@@ -1,13 +1,11 @@
-import * as flatbuffers from 'flatbuffers';
 import {
   DucBlock as BinDucBlock,
   DucBlockAttribute as BinDucBlockAttribute,
-  DucBlockAttributeDetails as BinDucBlockAttributeDetails,
-  SimplePoint,
+  DucBlockAttributeDetails as BinDucBlockAttributeDetails
 } from 'ducjs/duc';
 import { DucBlock, DucBlockAttributeDetailsType } from 'ducjs/types/elements';
+import * as flatbuffers from 'flatbuffers';
 import { serializeDucElement } from './serializeElementFromDuc';
-import { getPrecisionValueField } from './serializationUtils';
 
 export const serializeDucBlock = (
   builder: flatbuffers.Builder,
@@ -75,24 +73,11 @@ const serializeDucBlockAttributeDetails = (
   const defaultValueOffset = builder.createString(details.defaultValue);
   const promptOffset = details.prompt ? builder.createString(details.prompt) : null;
 
-  // Serialize position if present
-  let positionOffset = null;
-  if (details.position) {
-    positionOffset = SimplePoint.createSimplePoint(
-      builder,
-      getPrecisionValueField(details.position.x, forRenderer),
-      getPrecisionValueField(details.position.y, forRenderer)
-    );
-  }
-
   BinDucBlockAttributeDetails.startDucBlockAttributeDetails(builder);
   BinDucBlockAttributeDetails.addTag(builder, tagOffset);
   BinDucBlockAttributeDetails.addDefaultValue(builder, defaultValueOffset);
   if (promptOffset) {
     BinDucBlockAttributeDetails.addPrompt(builder, promptOffset);
-  }
-  if (positionOffset) {
-    BinDucBlockAttributeDetails.addPosition(builder, positionOffset);
   }
 
   return BinDucBlockAttributeDetails.endDucBlockAttributeDetails(builder);

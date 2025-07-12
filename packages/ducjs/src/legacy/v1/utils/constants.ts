@@ -238,16 +238,6 @@ export const IMAGE_STATUS = {
   error: "error",
 } as const;
 
-export const ENV = {
-  TEST: "test",
-  DEVELOPMENT: "development",
-};
-
-export const CLASSES = {
-  SHAPE_ACTIONS_MENU: "App-menu__left",
-  ZOOM_ACTIONS: "zoom-actions",
-};
-
 /**
  * // TODO: shouldn't be really `const`, likely neither have integers as values, due to value for the custom fonts, which should likely be some hash.
  *
