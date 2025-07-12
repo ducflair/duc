@@ -11,6 +11,12 @@ export type Bounds = readonly [
 ];
 
 /**
+ * Scale factor is a multiplier to a given value
+ * @default 1
+ */
+export type ScaleFactor = number & { __brand: "ScaleFactor" };
+
+/**
  * Angle in Radian
  * Ranges from 0 to 2π: 0 - 360°
  */

@@ -44,6 +44,8 @@ export const annotationToViewportScale = (annotationScale: AnnotationScale): Vie
 
 export type ViewportShadePlot = ValueOf<typeof VIEWPORT_SHADE_PLOT>;
 
+
+
 export type DucViewportStyle = {
   id: string;
   name: string;
@@ -66,9 +68,9 @@ export type DucViewportStyle = {
   /** Snap settings for this viewport */
   snapId?: string;
   snap: DucSnap | null;
+  
+  scaleIndicatorVisible: boolean;
 
-  /** Viewport annotation scale indicator */
-  scaleIndicator: DucTextElement | null;
 };
 
 export type _DucViewportStyleProps = Exclude<DucViewportStyle, "id" | "name" | "description">;  

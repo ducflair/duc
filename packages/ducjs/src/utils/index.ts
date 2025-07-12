@@ -1,3 +1,6 @@
+import { THEME } from "ducjs/duc";
+import { Theme } from "ducjs/types/elements";
+
 export * from "./elements";
 export * from "./math";
 export * from "./state";
@@ -10,6 +13,7 @@ export * from "./scopes";
 export * from "./measurements";
 export * from "./normalize";
 export * from "./url";
+export * from "./version";
 
 /**
  * supply `null` as message if non-never value is valid, you just need to
@@ -68,3 +72,8 @@ const RE_RTL_CHECK = new RegExp(`^[^${RS_LTR_CHARS}]*[${RS_RTL_CHARS}]`);
  * See https://github.com/excalidraw/excalidraw/pull/1722#discussion_r436340171
  */
 export const isRTL = (text: string) => RE_RTL_CHECK.test(text);
+
+
+export const themeToString = (theme: Theme) => {
+  return theme === THEME.DARK ? "dark" : "light";
+};

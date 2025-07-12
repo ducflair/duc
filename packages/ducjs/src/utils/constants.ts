@@ -263,7 +263,6 @@ export const DEFAULT_ELEMENT_PROPS: {
   boundElements: DucElement["boundElements"];
   link: DucElement["link"];
   frameId: DucElement["frameId"];
-  noPlot: DucElement["noPlot"];
   description: DucElement["description"];
 } = {
   stroke: {
@@ -301,7 +300,6 @@ export const DEFAULT_ELEMENT_PROPS: {
   frameId: null,
   boundElements: null,
   link: null,
-  noPlot: false,
   description: null,
 };
 

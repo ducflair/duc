@@ -1559,6 +1559,18 @@ export const getBezierCurveArcLengths = (
 };
 
 /**
+ * Calculates the total length of a Bezier curve.
+ */
+export const getBezierCurveLength = (
+  element: NonDeleted<DucLinearElement>,
+  endPoint: GeometricPoint,
+): number => {
+  const arcLengths = getBezierCurveArcLengths(element, endPoint);
+  return arcLengths.at(-1) as number;
+};
+
+
+/**
  * Maps an interval to the corresponding t parameter on the Bezier curve based on length.
  */
 export const mapIntervalToBezierT = (

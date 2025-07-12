@@ -290,7 +290,6 @@ export const parseElementFromBinary = (e: BinDucElement, v: string): Partial<Duc
     roundness: roundnessValue ? getPrecisionValueFromRaw(roundnessValue as RawValue, elementScope, elementScope) : undefined,
     zIndex: e.zIndex(),
     description: e.description() || undefined,
-    noPlot: e.noPlot() || undefined,
   };
 
   switch (elType) {

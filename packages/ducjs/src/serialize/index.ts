@@ -23,7 +23,7 @@ import { serializeDucGroup } from 'ducjs/serialize/serializeGroupFromDuc';
 
 export const DUC_SCHEMA_VERSION = process.env.DUC_SCHEMA_VERSION || "0.0.0";
 
-export const serializeAsFlatBuffers = async (
+export const serializeDuc = async (
   elements: readonly DucElement[],
   ducState: Partial<DucState>,
   files: BinaryFiles,

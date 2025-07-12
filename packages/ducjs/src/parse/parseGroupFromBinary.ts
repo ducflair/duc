@@ -16,7 +16,6 @@ export const parseGroupFromBinary = (
   const label = group.label() || undefined;
   const description = group.description() || null;
   const isCollapsed = group.isCollapsed();
-  const noPlot = group.noPlot() || undefined;
   const locked = group.locked();
   const isVisible = group.isVisible();
   const opacity = (group.opacity() as Percentage) || undefined;
@@ -36,7 +35,6 @@ export const parseGroupFromBinary = (
     label,
     description,
     isCollapsed,
-    noPlot,
     locked,
     isVisible,
     opacity,

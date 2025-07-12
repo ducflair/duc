@@ -86,6 +86,10 @@ export const getDefaultDucState = (): Omit<
     scaleRatioLocked: false,
 
     theme: THEME.LIGHT,
+
+    viewModeEnabled: false,
+    objectsSnapModeEnabled: true,
+    gridModeEnabled: false,
   };
 };
 

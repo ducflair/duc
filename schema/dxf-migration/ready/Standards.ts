@@ -32,8 +32,14 @@ export type DucStandard = {
   /** Whether this is a built-in standard (read-only) */
   readonly: boolean;
 
+  dashSpacingScale: ScaleFactor;
+  isDashSpacingAffectedByViewportScale: boolean;
+
+  /** Override stroke width for all elements projected to this standard */
+  elementsStrokeWidthOverride: PrecisionValue;
+
   commonStyles: DucCommonStyle[];
-  frameStyles: DucFrameStyle[];
+  stackLikeStyles: DucStackLikeStyle[];
   textStyles: DucTextStyle[];
   dimensionStyles: DucDimensionStyles[];
   leaderStyles: DucLeaderStyle[];

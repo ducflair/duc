@@ -41,7 +41,6 @@ export const getDefaultStackProperties = (): _DucStackBase => {
     label: "",
     isCollapsed: false,
     clip: true,
-    noPlot: false,
     locked: false,
     isVisible: true,
     opacity: 1 as Percentage,
