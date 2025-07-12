@@ -43,7 +43,6 @@ export type ToolType =
   | "eraser"
   | "hand"
   | "frame"
-  | "magicframe"
   | "embeddable"
   | "ruler"
   | "lasso"
@@ -179,6 +178,15 @@ export type DucState = Ducfig & {
   elementsPendingErasure: ElementsPendingErasure;
   suggestedBindings: SuggestedBinding[];
   isBindingEnabled: boolean;
+
+  /**
+   * In view mode the user is not allowed to edit the canvas.
+   */
+  viewModeEnabled: boolean;
+  /** @deprecated in favor of the new snapping configurations from the Standards */
+  objectsSnapModeEnabled: boolean;
+  /** @deprecated in favor of the new grid configurations from the Standards */
+  gridModeEnabled: boolean;
 };
 
 
@@ -200,12 +208,6 @@ export interface Ducfig { // User's Config of AppState
   // exportEmbedScene: boolean;
   // exportWithDarkMode: boolean;
   // exportScale: number;
-
-  // gridModeEnabled: boolean;
-  // viewModeEnabled: boolean; // Don't Save
-  // zenModeEnabled: boolean; // Don't Save
-  // showStats: boolean; // Don't Save
-  // objectsSnapModeEnabled: boolean;
 
   showHyperlinkPopup: false | "info" | "editor";
 

@@ -10,7 +10,7 @@ import { FileSystemHandle } from 'browser-fs-access';
 import * as flatbuffers from 'flatbuffers';
 import { restore, ExtendedAppStateRestorer } from 'ducjs/utils/restore';
 import { DucElement, DucBlock, DucGroup, OrderedDucElement } from 'ducjs/types/elements';
-import { BinaryFiles, DucState } from 'ducjs/types';
+import { BinaryFiles, DucState, RendererState } from 'ducjs/types';
 import {
   ExportedDataState
 } from 'ducjs/duc';
@@ -22,10 +22,19 @@ import { parseBlockFromBinary } from 'ducjs/parse/parseBlockFromBinary';
 import { parseGroupFromBinary } from 'ducjs/parse/parseGroupFromBinary';
 import { parseDucFlatBuffers as parseDucFlatBuffersV1 } from 'ducjs/legacy/v1/parse';
 
-export const parseDucFlatBuffers = async (
+export type ParseDucResult = {
+  elements: DucElement[];
+  appState: Partial<DucState>;
+  files: BinaryFiles;
+  blocks: DucBlock[];
+  groups: DucGroup[];
+  rendererState: RendererState;
+};
+
+export const parseDuc = async (
   blob: Blob | File, 
   fileHandle: FileSystemHandle | null = null
-) => {
+): Promise<ParseDucResult> => {
   const arrayBuffer = await blob.arrayBuffer();
   const byteBuffer = new flatbuffers.ByteBuffer(new Uint8Array(arrayBuffer));
 
@@ -34,7 +43,7 @@ export const parseDucFlatBuffers = async (
   // TODO: Remove on a late duc v2 version
   const legacyVersion = data.versionLegacy();
   if(legacyVersion) {
-    return parseDucFlatBuffersV1(blob, fileHandle);
+    return parseDucFlatBuffersV1(blob, fileHandle) as unknown as ParseDucResult;
   }
 
   const version = data.version() || "0.0.0";

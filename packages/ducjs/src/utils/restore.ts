@@ -91,7 +91,7 @@ import { getDefaultDucState, updateActiveTool } from "ducjs/utils/state";
 import { normalizeLink } from "ducjs/utils/url";
 import tinycolor from "tinycolor2";
 
-type RestoredDucState = Omit<
+export type RestoredDucState = Omit<
   DucState,
   "offsetTop" | "offsetLeft" | "width" | "height"
 >;
@@ -99,7 +99,7 @@ type RestoredDucState = Omit<
 
 export interface ExportedDataState {
   type: string;
-  version: number;
+  version: string;
   source: string;
   elements: readonly DucElement[];
   appState: DucState;
@@ -108,7 +108,7 @@ export interface ExportedDataState {
 
 export interface ImportedDataState {
   type?: string;
-  version?: number;
+  version?: string;
   source?: string;
   elements?: readonly DucElement[] | null;
   appState?: Readonly<Partial<DucState>> | null;
@@ -202,7 +202,6 @@ export const AllowedDucActiveTools: Record<
   hand: true,
   laser: false,
   ruler: false,
-  magicframe: false,
   lasso: true,
   table: true,
 };
@@ -1767,7 +1766,6 @@ export const restoreDucStackProperties = (
     label: typeof stack.label === "string" ? stack.label : "",
     description: typeof stack.description === "string" ? stack.description : null,
     isCollapsed: isValidBoolean(stack.isCollapsed, defaultStackProperties.isCollapsed),
-    noPlot: isValidBoolean(stack.noPlot, defaultStackProperties.noPlot),
     locked: isValidBoolean(stack.locked, defaultStackProperties.locked),
     isVisible: isValidBoolean(stack.isVisible, defaultStackProperties.isVisible),
     opacity: isValidPercentageValue(stack.opacity, defaultStackProperties.opacity),
