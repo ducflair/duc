@@ -9,7 +9,7 @@ import { ARROW_LABEL_FONT_SIZE_TO_MIN_WIDTH_RATIO, ARROW_LABEL_WIDTH_FRACTION, B
 import { getBoundTextElementPosition, getPointGlobalCoordinates, getPointsGlobalCoordinates, getSegmentMidPoint } from "ducjs/utils/elements/linearElement";
 import { adjustXYWithRotation } from "ducjs/utils/math";
 import { normalizeText } from "ducjs/utils/normalize";
-import { SupportedMeasures, getPrecisionValueFromRaw, getScopedBezierPointFromDucPoint } from "ducjs/utils/scopes";
+import { SupportedMeasures, getPrecisionValueFromRaw, getScopedBezierPointFromDucPoint } from "ducjs/technical/scopes";
 
 export const computeBoundTextPosition = (
   container: DucElement,

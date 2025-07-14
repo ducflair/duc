@@ -1,8 +1,9 @@
-import { PrecisionValue, RawValue, ScaledZoom, Scope, ScopedValue, ScopedZoomValue } from "ducjs/types";
+import { UNIT_SYSTEM } from "ducjs/duc";
+import { PrecisionValue, RawValue, ScaledZoom, Scope, ScopedValue, ScopedZoomValue, ValueOf } from "ducjs/types";
 import { DucPoint } from "ducjs/types/elements";
 import { GeometricPoint } from "ducjs/types/geometryTypes";
 
-export type UnitSystem = 'metric' | 'imperial';
+export type UnitSystem = ValueOf<typeof UNIT_SYSTEM>;
 export type ZoomDirection = 'up' | 'down' | 'neutral';
 
 // Constants
@@ -170,7 +171,7 @@ export function isMetricMeasure(measure: SupportedMeasures): boolean {
  * @returns The unit system the measure belongs to.
  */
 export function getUnitSystemForMeasure(measure: SupportedMeasures): UnitSystem {
-  return isMetricMeasure(measure) ? 'metric' : 'imperial';
+  return isMetricMeasure(measure) ? UNIT_SYSTEM.METRIC : UNIT_SYSTEM.IMPERIAL;
 }
 
 /**
@@ -198,7 +199,7 @@ export function getZoomDirectionChange(prevZoom: number, currentZoom: number): Z
  * @returns An array of unit definitions.
  */
 export function getUnitDefinitions(unitSystem: UnitSystem): UnitDefinition[] {
-  return unitSystem === 'metric' ? metricUnits : imperialUnits;
+  return unitSystem === UNIT_SYSTEM.METRIC ? metricUnits : imperialUnits;
 }
 
 /**

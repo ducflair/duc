@@ -1,4 +1,10 @@
-import { ScopedValue } from "ducjs/types";
+import { AXIS } from "ducjs/duc";
+import { ScopedValue, ValueOf } from "ducjs/types";
+
+/**
+ * Axis such as X, Y, Z
+ */
+export type Axis = ValueOf<typeof AXIS>;
 
 /**
  * x and y position of top left corner, x and y position of bottom right corner

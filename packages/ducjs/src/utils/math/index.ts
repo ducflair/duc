@@ -18,7 +18,7 @@ import {
   LINE_CONFIRM_THRESHOLD
 } from "ducjs/utils/constants";
 import { pointFrom } from "ducjs/utils/math/geometry";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint, SupportedMeasures } from "ducjs/utils/scopes";
+import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint, SupportedMeasures } from "ducjs/technical/scopes";
 
 type SV = ScopedValue;
 

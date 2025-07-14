@@ -3,16 +3,10 @@ import {
   calculateScope,
   CombinedMeasure,
   getTranslationFactor,
-  ImperialMeasure,
-  imperialMeasures,
-  MetricMeasure,
-  metricMeasures,
-  ScaleFactors,
   SupportedMeasures
-} from "ducjs/utils/scopes";
+} from "ducjs/technical/scopes";
 
-export { imperialMeasures, metricMeasures, ScaleFactors };
-export type { CombinedMeasure, ImperialMeasure, MetricMeasure, SupportedMeasures };
+
 
 /**
  * Gets translation factor between current scope and element scope

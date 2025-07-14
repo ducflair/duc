@@ -1,8 +1,8 @@
 import { AppState as BinAppState, HANDLE_TYPE } from 'ducjs/duc';
 import { parseElementBinBackground, parseElementBinStroke, parsePoint } from 'ducjs/parse/parseElementFromBinary';
-import { SupportedMeasures } from 'ducjs/utils/measurements';
-import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/utils/scopes';
-import { DesignStandard } from 'ducjs/utils/standards';
+import { SupportedMeasures } from 'ducjs/technical/measurements';
+import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/technical/scopes';
+import { DesignStandard } from 'ducjs/technical/standards';
 import {
   LineHead,
   PointerType,

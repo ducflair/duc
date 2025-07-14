@@ -6,7 +6,7 @@ import type { ValueOf } from "ducjs/types/utility-types";
 import { ElementAbsoluteCoords, getBoundTextElement, getElementAbsoluteCoords, getElementPointsCoords } from "ducjs/utils/bounds";
 import { LINE_CONFIRM_THRESHOLD } from "ducjs/utils/constants";
 import { centerPoint, getBezierXY, getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, rotate, rotatePoint, getControlPointsForBezierCurve, mapIntervalToBezierT } from "ducjs/utils/math";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint } from "ducjs/utils/scopes";
+import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint } from "ducjs/technical/scopes";
 
 type SV = ScopedValue;
 
