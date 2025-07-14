@@ -5,10 +5,15 @@ export * from "./utility-types";
 import { ANTI_ALIASING, OBJECT_SNAP_MODE, THEME } from "ducjs/duc";
 import {
   DucBindableElement,
+  DucBlock,
   DucElement,
   DucElementType,
+  DucGroup,
   DucIframeLikeElement,
+  DucLayer,
   DucLinearElement,
+  DucPlotElement,
+  DucPoint,
   DucTextElement,
   ElementBackground,
   ElementStroke,
@@ -18,17 +23,96 @@ import {
   NonDeleted,
   TextAlign
 } from "ducjs/types/elements";
-import { GeometricPoint, Percentage, Radian } from "ducjs/types/geometryTypes";
+import { GeometricPoint, Percentage, Radian, ScaleFactor } from "ducjs/types/geometryTypes";
 import { MakeBrand, MaybePromise, ValueOf } from "ducjs/types/utility-types";
+import { Standard } from "ducjs/technical/standards";
 import type { GRID_DISPLAY_TYPE, GRID_TYPE, IMAGE_MIME_TYPES, MIME_TYPES, SNAP_MARKER_SHAPE, SNAP_MODE, SNAP_OVERRIDE_BEHAVIOR } from "ducjs/utils/constants";
 import { LinearElementEditor } from "ducjs/utils/elements/linearElement";
-import { SupportedMeasures } from "ducjs/utils/measurements";
-import { DesignStandard } from "ducjs/utils/standards";
+import { SupportedMeasures } from "ducjs/technical/scopes";
 
+
+
+/**
+ * Root data structure for the stored data state
+ */
+export interface ExportedDataState {
+  type: string;
+  version: string;
+  source: string;
+  thumbnail: Uint8Array;
+  dictionary: Dictionary;
+
+  elements: readonly DucElement[];
+  
+  ducState: DucState;
+  ducGlobalSettings: DucGlobalSettings;
+
+  files: BinaryFiles | undefined;
+  
+  blocks: DucBlock[];
+  groups: DucGroup[];
+  layers: DucLayer[];
+
+  standards: Standard[];
+
+
+  /** In case it is needed to embed the version control into the file format */
+  versionControl?: {
+    checkpoints: Checkpoint[];
+  }
+}
+
+
+export type Identifier = {
+  /** Unique identifier for this standard */
+  id: string;
+  /** Human-readable name */
+  name: string;
+  /** Description of the standard */
+  description?: string;
+}
+
+
+export type Dictionary = {
+  [key: string]: string;
+}
+
+export type DucView = {
+  scrollX: PrecisionValue;
+  scrollY: PrecisionValue;
+  zoom: Zoom;
+  twistAngle: Radian;
+
+  /** The specific spot on that plane that you want to be in the middle of your screen when this view is active */
+  centerPoint: DucPoint;
+
+  scope: Scope;
+};
+
+/**
+ * Defines a 2D User Coordinate System (UCS), a movable coordinate system
+ * that establishes a local origin and rotation for drawing. All coordinates
+ * within this UCS are relative to its origin and angle.
+ */
+export type DucUcs = {
+  /**
+   * The origin point of the UCS in World Coordinate System (WCS) coordinates.
+   * This defines the (0,0) point of the new local system.
+   */
+  origin: GeometricPoint;
+
+  /**
+   * The rotation angle of the UCS's X-axis, measured in radians,
+   * relative to the World Coordinate System's X-axis.
+   * An angle of 0 means the UCS is aligned with the WCS.
+   */
+  angle: Radian;
+};
 
 export type Scope = SupportedMeasures;
 
 export type DataURL = string & { _brand: "DataURL" };
+export type Theme = typeof THEME[keyof typeof THEME];
 
 export type ToolType =
   | "selection"
@@ -102,21 +186,83 @@ export type SuggestedPointBinding = [
   NonDeleted<DucBindableElement>
 ];
 
+/**
+ * Defines the global, persistent settings for the drawing. These are fundamental
+ * properties of the document itself and are independent of any active Standard.
+ * They travel with the file and are consistent for all users.
+ */
+export type DucGlobalSettings = {
+  /**
+   * The master unit system for the entire drawing, used for block/file insertion scaling.
+   * @maps DXF $INSUNITS and $MEASUREMENT
+   */
+  mainScope: Scope;
 
-export type DucState = Ducfig & {
+  /**
+   * The global linetype scale for the entire drawing.
+   * @maps DXF $LTSCALE
+   */
+  dashSpacingScale: ScaleFactor;
+
+  /**
+   * Governs if linetype scale is affected by paper space viewport scale.
+   * @maps DXF $PSLTSCALE
+   */
+  isDashSpacingAffectedByViewportScale: boolean;
+
+  /**
+   * Exponent threshold for determining when to change measurement scope (up or down).
+   * This value defines a +/- tolerance range around the exponent of the current scope.
+   * A scope change is triggered if the exponent of *either* the calculated real viewport width
+   * or the calculated real viewport height falls outside this tolerance range relative to the current scope's exponent.
+   *
+   * Example scenario:
+   *   appState.scopeExponentThreshold = 2
+   *   appState.scope = "mm" // (approximately 1e-3 relative to reference unit (meter))
+   *   appState.zoom = dynamic value representing the current zoom level
+   *
+   * The real viewport size is calculated as: viewportSize * zoom
+   *
+   * This system ensures measurements remain representable with appropriate precision
+   * as users zoom in and out, automatically adjusting between units like mm, μm, nm, etc.
+   */
+  scopeExponentThreshold: number;
+
+  /**
+   * A rule for whether newly created dimensions should be associative by default.
+   */
+  dimensionsAssociativeByDefault: boolean;
+  
+  /**
+   * A fundamental choice for the drawing's scaling architecture.
+   */
+  useAnnotativeScaling: boolean;
+
+  /**
+   * The defined order of plots (paper space layouts) for export.
+   * This is part of the document's output structure.
+   */
+  plotsExportOrder: DucPlotElement["id"][];
+
+  /**
+   * Default display precision for various unit types. The user can override
+   * this temporarily in their session state (DucState).
+   */
+  displayPrecision: {
+    linear: number;
+    angular: number;
+  };
+};
+
+export type DucState = {
   viewBackgroundColor: string;
   /**
    * The current scope of the design
    * mm, cm, m, in, ft, yd, mi, etc...
    */
   scope: Scope;
-  /** The preferred scope for the design */
-  mainScope: Scope;
-  /**
-   * The Standard for the given technical design
-   * https://en.wikipedia.org/wiki/List_of_technical_standard_organizations
-   */
-  standard: DesignStandard;
+  /** The active standard for the design */
+  activeStandardId: Standard["id"];
 
   scrollX: PrecisionValue;
   scrollY: PrecisionValue;
@@ -127,15 +273,6 @@ export type DucState = Ducfig & {
   selectedElementIds: Readonly<{ [id: string]: true }>;
   /** top-most selected groups (i.e. does not include nested groups) */
   selectedGroupIds: { [groupId: string]: boolean };
-  displayAllPointDistances: boolean;
-  displayDistanceOnDrawing: boolean;
-  displayAllPointCoordinates: boolean;
-  displayAllPointInfoSelected: boolean;
-  displayRootAxis: boolean;
-
-  lineBendingMode: boolean;
-  coordDecimalPlaces: number;
-
   /**
    * list of active grids ordered by z index, most on top is first
    * */
@@ -155,23 +292,6 @@ export type DucState = Ducfig & {
   debugRendering: boolean;
 
   editingLinearElement: LinearElementEditor | null;
-  /**
-   * Exponent threshold for determining when to change measurement scope (up or down).
-   * This value defines a +/- tolerance range around the exponent of the current scope.
-   * A scope change is triggered if the exponent of *either* the calculated real viewport width
-   * or the calculated real viewport height falls outside this tolerance range relative to the current scope's exponent.
-   *
-   * Example scenario:
-   *   appState.scopeExponentThreshold = 2
-   *   appState.scope = "mm" // (approximately 1e-3 relative to reference unit (meter))
-   *   appState.zoom = dynamic value representing the current zoom level
-   *
-   * The real viewport size is calculated as: viewportSize * zoom
-   *
-   * This system ensures measurements remain representable with appropriate precision
-   * as users zoom in and out, automatically adjusting between units like mm, μm, nm, etc.
-   */
-  scopeExponentThreshold: number;
   // element being edited, but not necessarily added to elements array yet
   // (e.g. text element when typing into the input)
   elementHovered: NonDeleted<DucElement> | null;
@@ -179,14 +299,37 @@ export type DucState = Ducfig & {
   suggestedBindings: SuggestedBinding[];
   isBindingEnabled: boolean;
 
+  currentItemStroke: ElementStroke;
+  currentItemBackground: ElementBackground;
+  currentItemOpacity: Percentage;
+  currentItemFontFamily: FontFamilyValues;
+  currentItemFontSize: DucTextElement["fontSize"];
+  currentItemTextAlign: TextAlign;
+  currentItemStartLineHead: LineHead | null;
+  currentItemEndLineHead: LineHead | null;
+  currentItemRoundness: DucElement["roundness"];
+
+  /**
+   * Line bending mode is enabled, helps user bend straight lines
+   */
+  lineBendingMode: boolean;
   /**
    * In view mode the user is not allowed to edit the canvas.
    */
   viewModeEnabled: boolean;
-  /** @deprecated in favor of the new snapping configurations from the Standards */
+  /**
+   * Object snapping on the environment is enabled
+   */
   objectsSnapModeEnabled: boolean;
-  /** @deprecated in favor of the new grid configurations from the Standards */
+  /**
+   * Available grids are visible
+   */
   gridModeEnabled: boolean;
+  /**
+   * Wether to disable the fill on all shapes
+   * @maps DXF $FILLMODE (Fill Display Mode) in reverse
+   */
+  outlineModeEnabled: boolean;
 };
 
 
@@ -204,37 +347,19 @@ export interface Ducfig { // User's Config of AppState
   penMode: boolean;
   theme: THEME;
 
-  // exportBackground: boolean;
-  // exportEmbedScene: boolean;
-  // exportWithDarkMode: boolean;
-  // exportScale: number;
-
   showHyperlinkPopup: false | "info" | "editor";
 
   antiAliasing: AntiAliasing;
   vSync: boolean;
   zoomStep: number;
 
-  
+
   scaleRatioLocked: boolean;
   displayAllPointDistances: boolean;
   displayDistanceOnDrawing: boolean;
   displayAllPointCoordinates: boolean;
   displayAllPointInfoSelected: boolean;
   displayRootAxis: boolean;
-  
-  coordDecimalPlaces: number;
-  lineBendingMode: boolean;
-
-  currentItemStroke: ElementStroke;
-  currentItemBackground: ElementBackground;
-  currentItemOpacity: Percentage;
-  currentItemFontFamily: FontFamilyValues;
-  currentItemFontSize: DucTextElement["fontSize"];
-  currentItemTextAlign: TextAlign;
-  currentItemStartLineHead: LineHead | null;
-  currentItemEndLineHead: LineHead | null;
-  currentItemRoundness: DucElement["roundness"];
 }
 
 

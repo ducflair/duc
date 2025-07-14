@@ -197,6 +197,184 @@ impl<'a> flatbuffers::Verifiable for TEXT_ALIGN {
 
 impl flatbuffers::SimpleToVerifyInSlice for TEXT_ALIGN {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_LINE_SPACING_TYPE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_LINE_SPACING_TYPE: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_LINE_SPACING_TYPE: [LINE_SPACING_TYPE; 3] = [
+  LINE_SPACING_TYPE::AT_LEAST,
+  LINE_SPACING_TYPE::EXACTLY,
+  LINE_SPACING_TYPE::MULTIPLE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct LINE_SPACING_TYPE(pub u8);
+#[allow(non_upper_case_globals)]
+impl LINE_SPACING_TYPE {
+  pub const AT_LEAST: Self = Self(10);
+  pub const EXACTLY: Self = Self(11);
+  pub const MULTIPLE: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::AT_LEAST,
+    Self::EXACTLY,
+    Self::MULTIPLE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::AT_LEAST => Some("AT_LEAST"),
+      Self::EXACTLY => Some("EXACTLY"),
+      Self::MULTIPLE => Some("MULTIPLE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for LINE_SPACING_TYPE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for LINE_SPACING_TYPE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for LINE_SPACING_TYPE {
+    type Output = LINE_SPACING_TYPE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for LINE_SPACING_TYPE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for LINE_SPACING_TYPE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for LINE_SPACING_TYPE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_STACKED_TEXT_ALIGN: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_STACKED_TEXT_ALIGN: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_STACKED_TEXT_ALIGN: [STACKED_TEXT_ALIGN; 3] = [
+  STACKED_TEXT_ALIGN::CENTER,
+  STACKED_TEXT_ALIGN::DECIMAL,
+  STACKED_TEXT_ALIGN::SLASH,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct STACKED_TEXT_ALIGN(pub u8);
+#[allow(non_upper_case_globals)]
+impl STACKED_TEXT_ALIGN {
+  pub const CENTER: Self = Self(10);
+  pub const DECIMAL: Self = Self(11);
+  pub const SLASH: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::CENTER,
+    Self::DECIMAL,
+    Self::SLASH,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::CENTER => Some("CENTER"),
+      Self::DECIMAL => Some("DECIMAL"),
+      Self::SLASH => Some("SLASH"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for STACKED_TEXT_ALIGN {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for STACKED_TEXT_ALIGN {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for STACKED_TEXT_ALIGN {
+    type Output = STACKED_TEXT_ALIGN;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for STACKED_TEXT_ALIGN {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for STACKED_TEXT_ALIGN {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for STACKED_TEXT_ALIGN {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_STROKE_PLACEMENT: u8 = 10;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_STROKE_PLACEMENT: u8 = 12;
@@ -3607,6 +3785,188 @@ impl<'a> flatbuffers::Verifiable for DIMENSION_UNITS_FORMAT {
 
 impl flatbuffers::SimpleToVerifyInSlice for DIMENSION_UNITS_FORMAT {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_DIMENSION_FIT_RULE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_DIMENSION_FIT_RULE: u8 = 13;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_DIMENSION_FIT_RULE: [DIMENSION_FIT_RULE; 4] = [
+  DIMENSION_FIT_RULE::TEXT_AND_ARROWS,
+  DIMENSION_FIT_RULE::ARROWS_ONLY,
+  DIMENSION_FIT_RULE::TEXT_ONLY,
+  DIMENSION_FIT_RULE::BEST_FIT,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct DIMENSION_FIT_RULE(pub u8);
+#[allow(non_upper_case_globals)]
+impl DIMENSION_FIT_RULE {
+  pub const TEXT_AND_ARROWS: Self = Self(10);
+  pub const ARROWS_ONLY: Self = Self(11);
+  pub const TEXT_ONLY: Self = Self(12);
+  pub const BEST_FIT: Self = Self(13);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 13;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::TEXT_AND_ARROWS,
+    Self::ARROWS_ONLY,
+    Self::TEXT_ONLY,
+    Self::BEST_FIT,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::TEXT_AND_ARROWS => Some("TEXT_AND_ARROWS"),
+      Self::ARROWS_ONLY => Some("ARROWS_ONLY"),
+      Self::TEXT_ONLY => Some("TEXT_ONLY"),
+      Self::BEST_FIT => Some("BEST_FIT"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for DIMENSION_FIT_RULE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for DIMENSION_FIT_RULE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for DIMENSION_FIT_RULE {
+    type Output = DIMENSION_FIT_RULE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for DIMENSION_FIT_RULE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for DIMENSION_FIT_RULE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for DIMENSION_FIT_RULE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_DIMENSION_TEXT_PLACEMENT: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_DIMENSION_TEXT_PLACEMENT: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_DIMENSION_TEXT_PLACEMENT: [DIMENSION_TEXT_PLACEMENT; 3] = [
+  DIMENSION_TEXT_PLACEMENT::BESIDE_LINE,
+  DIMENSION_TEXT_PLACEMENT::OVER_LINE,
+  DIMENSION_TEXT_PLACEMENT::OVER_LINE_WITH_LEADER,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct DIMENSION_TEXT_PLACEMENT(pub u8);
+#[allow(non_upper_case_globals)]
+impl DIMENSION_TEXT_PLACEMENT {
+  pub const BESIDE_LINE: Self = Self(10);
+  pub const OVER_LINE: Self = Self(11);
+  pub const OVER_LINE_WITH_LEADER: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::BESIDE_LINE,
+    Self::OVER_LINE,
+    Self::OVER_LINE_WITH_LEADER,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::BESIDE_LINE => Some("BESIDE_LINE"),
+      Self::OVER_LINE => Some("OVER_LINE"),
+      Self::OVER_LINE_WITH_LEADER => Some("OVER_LINE_WITH_LEADER"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for DIMENSION_TEXT_PLACEMENT {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for DIMENSION_TEXT_PLACEMENT {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for DIMENSION_TEXT_PLACEMENT {
+    type Output = DIMENSION_TEXT_PLACEMENT;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for DIMENSION_TEXT_PLACEMENT {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for DIMENSION_TEXT_PLACEMENT {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for DIMENSION_TEXT_PLACEMENT {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_ANGULAR_UNITS_FORMAT: u8 = 10;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_ANGULAR_UNITS_FORMAT: u8 = 14;
@@ -3703,6 +4063,91 @@ impl<'a> flatbuffers::Verifiable for ANGULAR_UNITS_FORMAT {
 }
 
 impl flatbuffers::SimpleToVerifyInSlice for ANGULAR_UNITS_FORMAT {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_UNIT_SYSTEM: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_UNIT_SYSTEM: u8 = 11;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_UNIT_SYSTEM: [UNIT_SYSTEM; 2] = [
+  UNIT_SYSTEM::METRIC,
+  UNIT_SYSTEM::IMPERIAL,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct UNIT_SYSTEM(pub u8);
+#[allow(non_upper_case_globals)]
+impl UNIT_SYSTEM {
+  pub const METRIC: Self = Self(10);
+  pub const IMPERIAL: Self = Self(11);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 11;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::METRIC,
+    Self::IMPERIAL,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::METRIC => Some("METRIC"),
+      Self::IMPERIAL => Some("IMPERIAL"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for UNIT_SYSTEM {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for UNIT_SYSTEM {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for UNIT_SYSTEM {
+    type Output = UNIT_SYSTEM;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for UNIT_SYSTEM {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for UNIT_SYSTEM {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for UNIT_SYSTEM {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_DECIMAL_SEPARATOR: u8 = 10;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
@@ -4060,6 +4505,91 @@ impl<'a> flatbuffers::Verifiable for IMAGE_STATUS {
 
 impl flatbuffers::SimpleToVerifyInSlice for IMAGE_STATUS {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_BLOCK_ATTACHMENT: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_BLOCK_ATTACHMENT: u8 = 11;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_BLOCK_ATTACHMENT: [BLOCK_ATTACHMENT; 2] = [
+  BLOCK_ATTACHMENT::CENTER_EXTENTS,
+  BLOCK_ATTACHMENT::INSERTION_POINT,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct BLOCK_ATTACHMENT(pub u8);
+#[allow(non_upper_case_globals)]
+impl BLOCK_ATTACHMENT {
+  pub const CENTER_EXTENTS: Self = Self(10);
+  pub const INSERTION_POINT: Self = Self(11);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 11;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::CENTER_EXTENTS,
+    Self::INSERTION_POINT,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::CENTER_EXTENTS => Some("CENTER_EXTENTS"),
+      Self::INSERTION_POINT => Some("INSERTION_POINT"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for BLOCK_ATTACHMENT {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for BLOCK_ATTACHMENT {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for BLOCK_ATTACHMENT {
+    type Output = BLOCK_ATTACHMENT;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for BLOCK_ATTACHMENT {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for BLOCK_ATTACHMENT {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for BLOCK_ATTACHMENT {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_THEME: u8 = 10;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_THEME: u8 = 11;
@@ -4144,6 +4674,95 @@ impl<'a> flatbuffers::Verifiable for THEME {
 }
 
 impl flatbuffers::SimpleToVerifyInSlice for THEME {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_AXIS: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_AXIS: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_AXIS: [AXIS; 3] = [
+  AXIS::X,
+  AXIS::Y,
+  AXIS::Z,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct AXIS(pub u8);
+#[allow(non_upper_case_globals)]
+impl AXIS {
+  pub const X: Self = Self(10);
+  pub const Y: Self = Self(11);
+  pub const Z: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::X,
+    Self::Y,
+    Self::Z,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::X => Some("X"),
+      Self::Y => Some("Y"),
+      Self::Z => Some("Z"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for AXIS {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for AXIS {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for AXIS {
+    type Output = AXIS;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for AXIS {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for AXIS {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for AXIS {}
 pub enum PointOffset {}
 #[derive(Copy, Clone, PartialEq)]
 

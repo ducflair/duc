@@ -7,7 +7,7 @@ import { getBaseElementProps } from "ducjs/utils/elements";
 import { getNormalizedPoints, mergeOverlappingPoints } from "ducjs/utils/elements/linearElement";
 import { newLinearElement } from "ducjs/utils/elements/newElement";
 import { rotatePoint } from "ducjs/utils/math";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped } from "ducjs/utils/scopes";
+import { getPrecisionValueFromRaw, getPrecisionValueFromScoped } from "ducjs/technical/scopes";
 
 /**
  * Converts a shape (rectangle, polygon, ellipse) to a linear element

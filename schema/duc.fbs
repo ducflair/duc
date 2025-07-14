@@ -1,4 +1,4 @@
-// SCHEMA_VERSION=6
+// SCHEMA_VERSION=2.0.0
 
 // Official FlatBuffers Compiler: https://flatbuffers.ar.je/ 
 // Official FlatBuffers Documentation: https://flatbuffers.dev/tutorial/
@@ -17,6 +17,7 @@ namespace Duc;
 file_identifier "DUC_";
 
 // ENUMS
+// // Usually we start from the value 10 on enums because on some languages, 0 is treated as false and 1 is treated as true on if statements
 
 enum VERTICAL_ALIGN:ubyte {
   TOP = 10,
@@ -28,6 +29,18 @@ enum TEXT_ALIGN:ubyte {
   LEFT = 10,
   CENTER = 11,
   RIGHT = 12
+}
+
+enum LINE_SPACING_TYPE:ubyte {
+  AT_LEAST = 10,
+  EXACTLY = 11,
+  MULTIPLE = 12
+}
+
+enum STACKED_TEXT_ALIGN:ubyte {
+  CENTER = 10,
+  DECIMAL = 11,
+  SLASH = 12
 }
 
 enum STROKE_PLACEMENT:ubyte {
@@ -341,12 +354,30 @@ enum DIMENSION_UNITS_FORMAT:ubyte {
   SCIENTIFIC = 14
 }
 
+enum DIMENSION_FIT_RULE:ubyte {
+  TEXT_AND_ARROWS = 10,
+  ARROWS_ONLY = 11,
+  TEXT_ONLY = 12,
+  BEST_FIT = 13
+}
+
+enum DIMENSION_TEXT_PLACEMENT:ubyte {
+  BESIDE_LINE = 10,
+  OVER_LINE = 11,
+  OVER_LINE_WITH_LEADER = 12
+}
+
 enum ANGULAR_UNITS_FORMAT:ubyte {
   DECIMAL_DEGREES = 10,
   DEGREES_MINUTES_SECONDS = 11,
   GRADS = 12,
   RADIANS = 13,
   SURVEYOR = 14
+}
+
+enum UNIT_SYSTEM:ubyte {
+  METRIC = 10,
+  IMPERIAL = 11
 }
 
 enum DECIMAL_SEPARATOR:ubyte {
@@ -373,9 +404,20 @@ enum IMAGE_STATUS:ubyte {
   ERROR = 12
 }
 
+enum BLOCK_ATTACHMENT:ubyte {
+  CENTER_EXTENTS = 10,
+  INSERTION_POINT = 11
+}
+
 enum THEME:ubyte {
   LIGHT = 10,
   DARK = 11
+}
+
+enum AXIS:ubyte {
+  X = 10,
+  Y = 11,
+  Z = 12
 }
 
 // /////////////////////
@@ -858,17 +900,29 @@ table RendererState {
   deleted_element_ids: [string];
 }
 
+table DictionaryEntry {
+  key: string;
+  value: string;
+}
+
+// ALWAYS PRESERVE THIS TABLE FOR BACKWARDS COMPATIBILITY ACROSS ANY MAJOR VERSIONS
 table ExportedDataState {
   type: string;
   version_legacy: int;
   source: string;
-  elements: [DucElement];
-  app_state: AppState;
-  files: BinaryFiles;
+  elements: [DucElement] (deprecated);
+  app_state: AppState (deprecated);
+  files: BinaryFiles (deprecated);
   renderer_state: RendererState;
   blocks: [DucBlock];
   groups: [DucGroup];
   version: string;
+  layers: [DucLayer];
+  standards: [Standard];
+  dictionary: [DictionaryEntry];
+  duc_state: DucState;
+  duc_global_settings: DucGlobalSettings;
+  thumbnail: [ubyte];
 }
 
 root_type ExportedDataState;

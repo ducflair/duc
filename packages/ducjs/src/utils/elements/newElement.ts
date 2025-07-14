@@ -43,7 +43,7 @@ import {
 } from "ducjs/utils/elements/textElement";
 import { randomId, randomInteger } from "ducjs/utils/math/random";
 import { normalizeText } from "ducjs/utils/normalize";
-import { getPrecisionValueFromRaw } from "ducjs/utils/scopes";
+import { getPrecisionValueFromRaw } from "ducjs/technical/scopes";
 
 
 export const newElementWith = <TElement extends DucElement>(

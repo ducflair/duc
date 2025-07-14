@@ -29,10 +29,10 @@ import {
   ElementStroke,
   NonDeletedDucElement
 } from "ducjs/types/elements";
-import { getPrecisionValueFromRaw } from "ducjs/utils/scopes";
+import { getPrecisionValueFromRaw } from "ducjs/technical/scopes";
 import { getBoundTextElement, getContainerElement, getElementAbsoluteCoords } from "ducjs/utils/bounds";
 import { DucState, BinaryFiles, RawValue, Scope, ScopedValue } from "ducjs/types";
-import { DESIGN_STANDARD, DesignStandard } from "ducjs/utils/standards";
+import { DESIGN_STANDARD, DesignStandard } from "ducjs/technical/standards";
 import { DEFAULT_FRAME_STYLE, SVG_NS } from "ducjs/utils/constants";
 import { getContainingFrame, getFrameLikeElements, getFrameLikeTitle } from "ducjs/utils/elements/frameElement";
 import { Percentage } from "ducjs/types/geometryTypes";

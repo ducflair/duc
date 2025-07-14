@@ -2,7 +2,7 @@ import { ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, OBJECT_SNAP_MODE, STROKE_JOIN,
 import { GridSettings, RawValue, ScopedValue, SnapSettings } from "ducjs/types";
 import { DucElement, DucEllipseElement, DucFreeDrawElement, DucTextElement, ElementBackground, ElementStroke, FontFamilyValues } from "ducjs/types/elements";
 import { Percentage, Radian } from "ducjs/types/geometryTypes";
-import { MAX_ZOOM, MIN_ZOOM, NEUTRAL_SCOPE } from "ducjs/utils/scopes";
+import { MAX_ZOOM, MIN_ZOOM, NEUTRAL_SCOPE } from "ducjs/technical/scopes";
 
 
 export const COLOR_PALETTE = {
@@ -577,14 +577,6 @@ export const PAPER_SIZE = {
   CUSTOM: "CUSTOM",
 } as const;
 
-export const PREDEFINED_STANDARDS = {
-  ISO_25300: "iso-25300-2013",
-  ANSI_Y14_5: "ansi-y14.5-2018",
-  DIN_406: "din-406-2017",
-  JIS_B0001: "jis-b0001-2019",
-  BS_8888: "bs-8888-2020",
-  DUC: "duc-2-2025",
-} as const;
 
 export const PREDEFINED_HATCH_PATTERNS = {
   // Solid Fill
