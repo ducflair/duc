@@ -17,8 +17,8 @@ import {
   StrokeSides as BinStrokeSides,
   TilingProperties as BinTilingProperties
 } from 'ducjs/duc';
-import { SupportedMeasures } from 'ducjs/utils/measurements';
-import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/utils/scopes';
+import { SupportedMeasures } from 'ducjs/technical/scopes';
+import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/technical/scopes';
 import {
   BezierMirroring,
   Blending,

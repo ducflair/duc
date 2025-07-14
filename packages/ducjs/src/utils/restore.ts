@@ -77,7 +77,7 @@ import { getNormalizedPoints, mergeOverlappingPoints, validateClosedPath } from 
 import { detectLineHeight, refreshTextDimensions } from "ducjs/utils/elements/textElement";
 import { getSizeFromPoints } from "ducjs/utils/math";
 import { randomId } from "ducjs/utils/math/random";
-import { getPrecisionScope, ScaleFactors, SupportedMeasures } from "ducjs/utils/measurements";
+import { getPrecisionScope, ScaleFactors, SupportedMeasures } from "ducjs/technical/measurements";
 import {
   getNormalizedDimensions,
   getNormalizedGridSize,
@@ -85,8 +85,8 @@ import {
   getNormalizedZoom,
   normalizeFixedPoint,
 } from "ducjs/utils/normalize";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScaledZoomValueForScope, getScopedBezierPointFromDucPoint, getScopedZoomValue, NEUTRAL_SCOPE } from "ducjs/utils/scopes";
-import { DESIGN_STANDARD, DesignStandard } from "ducjs/utils/standards";
+import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScaledZoomValueForScope, getScopedBezierPointFromDucPoint, getScopedZoomValue, NEUTRAL_SCOPE } from "ducjs/technical/scopes";
+import { DESIGN_STANDARD, DesignStandard, Standard } from "ducjs/technical/standards";
 import { getDefaultDucState, updateActiveTool } from "ducjs/utils/state";
 import { normalizeLink } from "ducjs/utils/url";
 import tinycolor from "tinycolor2";
@@ -95,16 +95,6 @@ export type RestoredDucState = Omit<
   DucState,
   "offsetTop" | "offsetLeft" | "width" | "height"
 >;
-
-
-export interface ExportedDataState {
-  type: string;
-  version: string;
-  source: string;
-  elements: readonly DucElement[];
-  appState: DucState;
-  files: BinaryFiles | undefined;
-}
 
 export interface ImportedDataState {
   type?: string;

@@ -17,7 +17,7 @@ import { getBoundTextMaxWidth, getFontString, getTextElementPositionOffsets, mea
 import { adjustXYWithRotation } from "ducjs/utils/math";
 import { randomInteger } from "ducjs/utils/math/random";
 import { normalizeText } from "ducjs/utils/normalize";
-import { getPrecisionValueFromRaw } from "ducjs/utils/scopes";
+import { getPrecisionValueFromRaw } from "ducjs/technical/scopes";
 
 /**
  * Mutates element, bumping `version`, `versionNonce`, and `updated`.
