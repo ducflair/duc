@@ -1,6 +1,6 @@
 import { BEZIER_MIRRORING, BLENDING, ELEMENT_CONTENT_PREFERENCE, IMAGE_STATUS, LINE_HEAD, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/duc";
 import type { BinaryFiles, LibraryItem, LibraryItems, LibraryItems_anyVersion, PrecisionValue, RawValue, RendererState, Scope, ScopedValue } from "ducjs/types";
-import { DucState } from "ducjs/types";
+import { DucLocalState } from "ducjs/types";
 import type {
   BezierMirroring,
   DucBlock,
@@ -92,7 +92,7 @@ import { normalizeLink } from "ducjs/utils/url";
 import tinycolor from "tinycolor2";
 
 export type RestoredDucState = Omit<
-  DucState,
+  DucLocalState,
   "offsetTop" | "offsetLeft" | "width" | "height"
 >;
 
@@ -101,7 +101,7 @@ export interface ImportedDataState {
   version?: string;
   source?: string;
   elements?: readonly DucElement[] | null;
-  appState?: Readonly<Partial<DucState>> | null;
+  appState?: Readonly<Partial<DucLocalState>> | null;
   scrollToContent?: boolean;
   libraryItems?: LibraryItems_anyVersion;
   files?: BinaryFiles;
@@ -168,12 +168,12 @@ export type ElementsConfig = {
   ) => OrderedDucElement[];
   refreshDimensions?: boolean;
   repairBindings?: boolean;
-  appState?: Readonly<Partial<DucState>> | null;
+  appState?: Readonly<Partial<DucLocalState>> | null;
 }
 
 
 export const AllowedDucActiveTools: Record<
-  DucState["activeTool"]["type"],
+  DucLocalState["activeTool"]["type"],
   boolean
 > = {
   selection: true,
@@ -196,7 +196,7 @@ export const AllowedDucActiveTools: Record<
   table: true,
 };
 
-export const isValidElementScopeValue = (value: string | undefined, appState?: Readonly<Partial<DucState>> | null): SupportedMeasures => {
+export const isValidElementScopeValue = (value: string | undefined, appState?: Readonly<Partial<DucLocalState>> | null): SupportedMeasures => {
   // Only check if the provided value is valid
   if (value !== undefined && Object.keys(ScaleFactors).includes(value)) {
     return value as SupportedMeasures;
@@ -241,7 +241,7 @@ const restoreElementWithProperties = <
 >(
   element: T,
   extra: K & Partial<Pick<DucElement, "type" | "x" | "y" | "customData">>,
-  appState?: Readonly<Partial<DucState>> | null,
+  appState?: Readonly<Partial<DucLocalState>> | null,
 ): T => {
 
   const _element = { ...element, ...extra };
@@ -325,7 +325,7 @@ const restoreElementWithProperties = <
 const restoreElement = (
   element: Exclude<DucElement, DucSelectionElement>,
   currentScope: SupportedMeasures,
-  appState?: Readonly<Partial<DucState>> | null,
+  appState?: Readonly<Partial<DucLocalState>> | null,
 ): typeof element | null => {
 
   // Migration: convert deprecated 'diamond' to 'polygon' with 4 sides
@@ -1003,7 +1003,7 @@ export const restoreElements = (
   opts?: {
     refreshDimensions?: boolean;
     repairBindings?: boolean;
-    appState?: Readonly<Partial<DucState>> | null;
+    appState?: Readonly<Partial<DucLocalState>> | null;
     syncInvalidIndices?: (
       elements: readonly DucElement[],
       currentScope: Scope,
@@ -1144,7 +1144,7 @@ export const restoreElements = (
 
 export const restoreDucState = (
   ducState: ImportedDataState["appState"],
-  localDucState: Partial<DucState> | null | undefined,
+  localDucState: Partial<DucLocalState> | null | undefined,
 ): RestoredDucState => {
   ducState = ducState || {};
   const defaultDucState = getDefaultDucState();
@@ -1239,7 +1239,7 @@ export const createExtendedAppStateRestorer = <TExtendedAppState extends Record<
     extendedAppState: Partial<TExtendedAppState> | null | undefined,
     localExtendedAppState: Partial<TExtendedAppState> | null | undefined,
     restoredDucState: RestoredDucState,
-  ) => Omit<TExtendedAppState, keyof DucState>
+  ) => Omit<TExtendedAppState, keyof DucLocalState>
 ): ExtendedAppStateRestorer<TExtendedAppState> => {
   return (
     extendedAppState: Partial<TExtendedAppState> | null | undefined,
@@ -1287,7 +1287,7 @@ export const createExtendedAppStateRestorer = <TExtendedAppState extends Record<
 //   };
 // };
 
-export const noopExtendedAppStateRestorer: ExtendedAppStateRestorer<DucState> = (
+export const noopExtendedAppStateRestorer: ExtendedAppStateRestorer<DucLocalState> = (
   extendedAppState,
   localExtendedAppState,
   restoredDucState,
@@ -1409,7 +1409,7 @@ export const isValidTextAlignValue = (value: TextAlign | undefined): TextAlign =
   return value;
 };
 
-export const isValidScopeValue = (value: string | undefined, appState?: Readonly<Partial<DucState>> | null): SupportedMeasures => {
+export const isValidScopeValue = (value: string | undefined, appState?: Readonly<Partial<DucLocalState>> | null): SupportedMeasures => {
   // First check if the provided value is valid
   if (value !== undefined && Object.keys(ScaleFactors).includes(value)) {
     return value as SupportedMeasures;

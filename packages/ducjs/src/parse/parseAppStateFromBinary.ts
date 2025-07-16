@@ -9,9 +9,9 @@ import {
   TextAlign
 } from 'ducjs/types/elements';
 import { LinearElementEditor } from 'ducjs/utils/elements/linearElement';
-import { AntiAliasing, DucState, NormalizedZoomValue, PrecisionValue, RawValue, Zoom } from 'ducjs/types';
+import { AntiAliasing, DucLocalState, NormalizedZoomValue, PrecisionValue, RawValue, Zoom } from 'ducjs/types';
 
-export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: string): Partial<DucState> => {
+export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: string): Partial<DucLocalState> => {
   if (!appStateBin) return {};
 
   const forceNeutralScope = v <= '5';

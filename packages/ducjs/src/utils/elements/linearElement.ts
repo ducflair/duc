@@ -1,106 +1,22 @@
 import { HANDLE_TYPE } from "ducjs/duc";
+import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint } from "ducjs/technical/scopes";
 import type { PrecisionValue, RawValue, Scope, ScopedValue } from "ducjs/types";
-import type { DucBindableElement, DucElement, DucLine, DucLinearElement, DucPoint, DucTextElementWithContainer, ElementsMap, NonDeleted } from "ducjs/types/elements";
+import type { DucLine, DucLinearElement, DucPoint, DucTextElementWithContainer, ElementsMap, NonDeleted } from "ducjs/types/elements";
 import { Bounds, GeometricPoint } from "ducjs/types/geometryTypes";
 import type { ValueOf } from "ducjs/types/utility-types";
 import { ElementAbsoluteCoords, getBoundTextElement, getElementAbsoluteCoords, getElementPointsCoords } from "ducjs/utils/bounds";
 import { LINE_CONFIRM_THRESHOLD } from "ducjs/utils/constants";
-import { centerPoint, getBezierXY, getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, rotate, rotatePoint, getControlPointsForBezierCurve, mapIntervalToBezierT } from "ducjs/utils/math";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint } from "ducjs/technical/scopes";
+import { centerPoint, getBezierXY, getControlPointsForBezierCurve, getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, mapIntervalToBezierT, rotate, rotatePoint } from "ducjs/utils/math";
 
 type SV = ScopedValue;
 
-export type PointIndex = [number, 'point' | 'handleIn' | 'handleOut'];
 export type HandleType = ValueOf<typeof HANDLE_TYPE> | null;
 export type HandleInfo = {
   pointIndex: number;
-  handleType: 'handleIn' | 'handleOut';
+  handleType: HandleInfo;
   lineIndex: number;
   handle: DucPoint;
 };
-export declare class LinearElementEditor {
-  readonly elementId: DucElement["id"] & {
-    _brand: "ducLinearElementId";
-  };
-  /** indices */
-  selectedPointsIndices: number[] | null;
-  /** selected handles */
-  selectedHandles: HandleInfo[] | null;
-  pointerDownState: {
-    prevSelectedPointsIndices: readonly number[] | null;
-    prevSelectedHandles: readonly HandleInfo[] | null;
-    /** index */
-    lastClickedPoint: number;
-    lastClickedIsEndPoint: boolean;
-    origin: Readonly<GeometricPoint> | null;
-    segmentMidpoint: {
-      value: DucPoint | null;
-      index: number | null;
-      added: boolean;
-    };
-    handleType: "handleIn" | "handleOut" | null;
-    handleInfo: HandleInfo | null;
-  };
-  /** whether you're dragging a point */
-  isDragging: boolean;
-  /** whether dragging actually occurred during this interaction */
-  wasDragging: boolean;
-  lastUncommittedPoint: DucPoint | null;
-  readonly pointerOffset: Readonly<GeometricPoint>;
-  readonly startBindingElement: DucBindableElement | null | "keep";
-  readonly endBindingElement: DucBindableElement | null | "keep";
-  hoverPointIndex: number;
-  /** hovered handle */
-  hoveredHandle: HandleInfo | null;
-  segmentMidPointHoveredCoords: DucPoint | null;
-  _dragCache: {
-    elementsMap: ElementsMap;
-    elements?: NonDeleted<DucElement>[];
-  } | null;
-  addingPointToExistingElement: boolean;
-  elementScope: Scope;
-  lastClosedPathPointIndex: number | null;
-  /**
-   * Tracks which points are currently coincident with existing points during drag operations.
-   * Key is the point index, value indicates if it's coincident with another point.
-   * This is used for visual feedback without actually connecting points during drag.
-   */
-  pointsCoincidentWithExisting: Map<number, boolean>;
-  static editorMidPointsCache: {
-    version: number | null;
-    points: (DucPoint | null)[];
-    zoom: number | null;
-  };
-  constructor(element: NonDeleted<DucLinearElement>, opts?: {
-    addingPointToExistingElement?: boolean;
-    selectedPointsIndices?: number[];
-    selectedHandles?: HandleInfo[];
-    lastUncommittedPoint?: DucPoint | null;
-  } | LinearElementEditor);
-  static POINT_HANDLE_SIZE: number;
-  private static findOverlappingPointGroups;
-  private static updateLineReferences;
-  private static mergeBezierProperties;
-  private static removePointsAndUpdateIndices;
-  private static createIndexMapping;
-  /**
-   * Creates new lines to preserve connectivity when points are merged
-   * This ensures that connections involving the removed points are maintained
-   */
-  /**
-   * Creates new lines to preserve connectivity when points are merged
-   * This ensures that connections involving the removed points are maintained
-   */
-  private static createNewLinesForMergedPoints;
-  /**
-   * Removes duplicate lines, keeping only the one with the lowest index
-   * Two lines are considered duplicates if they connect the same points (regardless of direction)
-   */
-  private static removeDuplicateLines;
-}
-
-
-
 
 /**
  * Merges overlapping points using the line-based system

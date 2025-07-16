@@ -1,0 +1,78 @@
+// SCHEMA_VERSION=2.0.0
+
+// Official FlatBuffers Compiler: https://flatbuffers.ar.je/ 
+// Official FlatBuffers Documentation: https://flatbuffers.dev/tutorial/
+
+// To maintain backward compatibility when evolving FlatBuffers schemas, follow these guidelines:
+
+// - **Should be fine to rename fields**
+// - **Add new fields at the END of tables**: This ensures older code can still read the data without issues.
+// - **DONT REMOVE FIELDS**: Instead of deleting unused fields, mark them as deprecated to prevent their use in new code while maintaining compatibility with existing data.
+// - **DONT CHANGE FIELD TYPES**: Modifying a field's type can lead to incompatibilities. If necessary, add a new field with the desired type and deprecate the old one.
+// - **BE CAREFUL WITH DEFAULT VALUES**: Changing default values can cause inconsistencies when reading older data. It's best to set appropriate defaults initially and avoid altering them. 
+// - **STRING or TABLE CANNOT FALLBACK TO NULL**: these fields cannot be null. They already have a default null value.
+
+namespace Duconfig;
+
+// MIME TYPE: .duconfig
+file_identifier "DCNF";
+
+// --- ENUMS ---
+// Usually we start from the value 10 on enums because on some languages, 0 is treated as false and 1 is treated as true on if statements
+
+enum THEME:ubyte {
+  LIGHT = 10,
+  DARK = 11
+}
+
+enum ANTI_ALIASING:ubyte {
+  MSAA_8 = 8,
+  MSAA_16 = 16,
+  NONE = 10,
+  ANALYTIC = 11
+}
+
+enum SHOW_HYPERLINK_POPUP:ubyte { 
+  NONE = 10, 
+  INFO = 11, 
+  EDITOR = 12 
+}
+
+// FIXME: The definition for 'PruningLevel' was not provided. A placeholder is created below.
+// Please define its values.
+enum PruningLevel:ubyte {
+  LEVEL_0 = 0,
+  LEVEL_1 = 1,
+  LEVEL_2 = 2
+}
+
+
+// --- TABLES ---
+
+/// User's personal application settings, applied across all projects
+table Duconfig {
+  // Appearance
+  theme: THEME = DARK;
+  anti_aliasing: ANTI_ALIASING = ANALYTIC;
+
+  // Interaction
+  show_hyperlink_popup: SHOW_HYPERLINK_POPUP = INFO;
+  zoom_step: float = 0.5;
+
+  // Display Options
+  v_sync: bool = true;
+  scale_ratio_locked: bool = false;
+  display_all_point_distances: bool = false;
+  display_distance_on_drawing: bool = true;
+  display_all_point_coordinates: bool = false;
+  display_all_point_info_selected: bool = true;
+  display_root_axis: bool = true;
+
+  // System & Debug
+  debug_rendering: bool = false;
+  /// Whether to disable the auto-save feature
+  manual_save_mode: bool = false;
+  default_version_graph_pruning_level: PruningLevel = LEVEL_1;
+}
+
+root_type Duconfig;

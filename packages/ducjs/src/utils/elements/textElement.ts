@@ -1,5 +1,5 @@
 import { TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/duc";
-import { DucState, RawValue, Scope, ScopedValue } from "ducjs/types";
+import { DucLocalState, RawValue, Scope, ScopedValue } from "ducjs/types";
 import { DucElement, DucElementType, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap, FontFamilyValues, FontString, NonDeletedDucElement } from "ducjs/types/elements";
 import { isArrowElement, isBoundToContainer, isTextElement } from "ducjs/types/elements/typeChecks";
 import { GeometricPoint } from "ducjs/types/geometryTypes";
@@ -409,7 +409,7 @@ export const getMaxCharWidth = (font: FontString): RawValue => {
 
 export const getContainerCenter = (
   container: DucElement,
-  DucState: DucState,
+  DucState: DucLocalState,
   elementsMap: ElementsMap,
 ): GeometricPoint => {
   if (!isArrowElement(container)) {
