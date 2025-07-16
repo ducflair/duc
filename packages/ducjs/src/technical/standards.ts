@@ -1,6 +1,6 @@
 import { ANGULAR_UNITS_FORMAT, DECIMAL_SEPARATOR, DIMENSION_UNITS_FORMAT } from "ducjs/duc";
 import { UnitSystem } from "ducjs/technical/scopes";
-import { DucCommonStyle, DucDimensionStyle, DucDocStyle, DucFeatureControlFrameStyle, DucHatchStyle, DucLeaderStyle, DucPlotElement, DucStackLikeStyles, DucTableStyle, DucTextStyle, DucUcs, DucView, DucViewportStyle, DucXRayStyle, GridSettings, Identifier, PrecisionValue, ScaleFactor, Scope, SnapSettings } from "ducjs/types";
+import { DucCommonStyle, DucDimensionStyle, DucDocStyle, DucFeatureControlFrameStyle, DucHatchStyle, DucLeaderStyle, DucPlotElement, DucStackLikeStyles, DucTableStyle, DucTextStyle, DucUcs, DucView, DucViewportStyle, DucXRayStyle, GridSettings, Identifier, PrecisionValue, ScaleFactor, Scope, SnapSettings, StrokeStyle } from "ducjs/types";
 import { ValueOf } from "ducjs/types/utility-types";
 
 
@@ -104,6 +104,7 @@ export type StandardOverrides = {
   hatchStyleId?: Identifier["id"];
   activeGridSettingsId?: Identifier["id"][];
   activeSnapSettingsId?: Identifier["id"];
+  dashLineOverride?: StrokeStyle["dashLineOverride"];
   /** Default precision for various dimension types */
   unitPrecision?: {
     linear?: number;

@@ -2,7 +2,9 @@ export * from "./elements";
 export * from "./geometryTypes";
 export * from "./utility-types";
 
-import { ANTI_ALIASING, OBJECT_SNAP_MODE, THEME } from "ducjs/duc";
+import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "ducjs/duc";
+import { SupportedMeasures } from "ducjs/technical/scopes";
+import { Standard } from "ducjs/technical/standards";
 import {
   DucBindableElement,
   DucBlock,
@@ -12,7 +14,6 @@ import {
   DucIframeLikeElement,
   DucLayer,
   DucLinearElement,
-  DucPlotElement,
   DucPoint,
   DucTextElement,
   ElementBackground,
@@ -25,10 +26,7 @@ import {
 } from "ducjs/types/elements";
 import { GeometricPoint, Percentage, Radian, ScaleFactor } from "ducjs/types/geometryTypes";
 import { MakeBrand, MaybePromise, ValueOf } from "ducjs/types/utility-types";
-import { Standard } from "ducjs/technical/standards";
 import type { GRID_DISPLAY_TYPE, GRID_TYPE, IMAGE_MIME_TYPES, MIME_TYPES, SNAP_MARKER_SHAPE, SNAP_MODE, SNAP_OVERRIDE_BEHAVIOR } from "ducjs/utils/constants";
-import { LinearElementEditor } from "ducjs/utils/elements/linearElement";
-import { SupportedMeasures } from "ducjs/technical/scopes";
 
 
 
@@ -38,28 +36,28 @@ import { SupportedMeasures } from "ducjs/technical/scopes";
 export interface ExportedDataState {
   type: string;
   version: string;
+  
   source: string;
   thumbnail: Uint8Array;
   dictionary: Dictionary;
 
   elements: readonly DucElement[];
-  
-  ducState: DucState;
-  ducGlobalSettings: DucGlobalSettings;
+
+  /** The user's current session state for a specific project */
+  ducLocalState: DucLocalState;
+  /** Project-wide settings that are saved with the document and shared by all users */
+  ducGlobalState: DucGlobalState;
+
+
+  blocks: readonly DucBlock[];
+  groups: readonly DucGroup[];
+  layers: readonly DucLayer[];
+  standards: readonly Standard[];
 
   files: BinaryFiles | undefined;
-  
-  blocks: DucBlock[];
-  groups: DucGroup[];
-  layers: DucLayer[];
-
-  standards: Standard[];
-
 
   /** In case it is needed to embed the version control into the file format */
-  versionControl?: {
-    checkpoints: Checkpoint[];
-  }
+  versionGraph: VersionGraph | undefined;
 }
 
 
@@ -112,39 +110,7 @@ export type DucUcs = {
 export type Scope = SupportedMeasures;
 
 export type DataURL = string & { _brand: "DataURL" };
-export type Theme = typeof THEME[keyof typeof THEME];
-
-export type ToolType =
-  | "selection"
-  | "rectangle"
-  | "polygon"
-  | "ellipse"
-  | "arrow"
-  | "line"
-  | "freedraw"
-  | "text"
-  | "image"
-  | "eraser"
-  | "hand"
-  | "frame"
-  | "embeddable"
-  | "ruler"
-  | "lasso"
-  | "laser"
-  | "table";
-
-
-export type ActiveTool =
-  | {
-    type: ToolType;
-    customType: null;
-  }
-  | {
-    type: "custom";
-    customType: string;
-  };
-
-export type ElementOrToolType = DucElementType | ToolType | "custom";
+export type Theme = ValueOf<typeof THEME>;
 
 export type BinaryFileData = {
   mimeType:
@@ -191,7 +157,15 @@ export type SuggestedPointBinding = [
  * properties of the document itself and are independent of any active Standard.
  * They travel with the file and are consistent for all users.
  */
-export type DucGlobalSettings = {
+export type DucGlobalState = {
+  /**
+   * The name of the drawing
+   */
+  name: string | null;
+  /**
+   * The background color of the drawing
+   */
+  viewBackgroundColor: string;
   /**
    * The master unit system for the entire drawing, used for block/file insertion scaling.
    * @maps DXF $INSUNITS and $MEASUREMENT
@@ -232,18 +206,11 @@ export type DucGlobalSettings = {
    * A rule for whether newly created dimensions should be associative by default.
    */
   dimensionsAssociativeByDefault: boolean;
-  
+
   /**
    * A fundamental choice for the drawing's scaling architecture.
    */
   useAnnotativeScaling: boolean;
-
-  /**
-   * The defined order of plots (paper space layouts) for export.
-   * This is part of the document's output structure.
-   */
-  plotsExportOrder: DucPlotElement["id"][];
-
   /**
    * Default display precision for various unit types. The user can override
    * this temporarily in their session state (DucState).
@@ -254,8 +221,7 @@ export type DucGlobalSettings = {
   };
 };
 
-export type DucState = {
-  viewBackgroundColor: string;
+export type DucLocalState = {
   /**
    * The current scope of the design
    * mm, cm, m, in, ft, yd, mi, etc...
@@ -268,37 +234,15 @@ export type DucState = {
   scrollY: PrecisionValue;
   zoom: Zoom;
 
-  name: string | null;
-  scrolledOutside: boolean;
-  selectedElementIds: Readonly<{ [id: string]: true }>;
-  /** top-most selected groups (i.e. does not include nested groups) */
-  selectedGroupIds: { [groupId: string]: boolean };
   /**
    * list of active grids ordered by z index, most on top is first
    * */
-  activeGridSettings: GridSettings["id"][] | null;
-  activeSnapSettings: SnapSettings["id"] | null;
+  activeGridSettings: Identifier["id"][] | null;
+  activeSnapSettings: Identifier["id"] | null;
 
-  /** 
-   * grid cell px size 
-   * @deprecated use activeGridSettings instead
-   * */
-  gridSize: number;
-  /**
-   * @deprecated use activeGridSettings instead
-   * */
-  gridStep: number;
-
-  debugRendering: boolean;
-
-  editingLinearElement: LinearElementEditor | null;
-  // element being edited, but not necessarily added to elements array yet
-  // (e.g. text element when typing into the input)
-  elementHovered: NonDeleted<DucElement> | null;
-  elementsPendingErasure: ElementsPendingErasure;
-  suggestedBindings: SuggestedBinding[];
   isBindingEnabled: boolean;
 
+  // Current item is usually a quick access state to apply as default to certain things when drawing
   currentItemStroke: ElementStroke;
   currentItemBackground: ElementBackground;
   currentItemOpacity: Percentage;
@@ -309,10 +253,11 @@ export type DucState = {
   currentItemEndLineHead: LineHead | null;
   currentItemRoundness: DucElement["roundness"];
 
+
   /**
-   * Line bending mode is enabled, helps user bend straight lines
+   * Pen mode is enabled, creates a better experience for drawing with a pen
    */
-  lineBendingMode: boolean;
+  penMode: boolean;
   /**
    * In view mode the user is not allowed to edit the canvas.
    */
@@ -331,39 +276,6 @@ export type DucState = {
    */
   outlineModeEnabled: boolean;
 };
-
-
-export interface Ducfig { // User's Config of AppState
-  activeTool: {
-    /**
-     * indicates a previous tool we should revert back to if we deselect the
-     * currently active tool. At the moment applies to `eraser` and `hand` tool.
-     */
-    lastActiveTool: ActiveTool | null;
-    locked: boolean;
-    fromSelection: boolean;
-  } & ActiveTool;
-
-  penMode: boolean;
-  theme: THEME;
-
-  showHyperlinkPopup: false | "info" | "editor";
-
-  antiAliasing: AntiAliasing;
-  vSync: boolean;
-  zoomStep: number;
-
-
-  scaleRatioLocked: boolean;
-  displayAllPointDistances: boolean;
-  displayDistanceOnDrawing: boolean;
-  displayAllPointCoordinates: boolean;
-  displayAllPointInfoSelected: boolean;
-  displayRootAxis: boolean;
-}
-
-
-export type AntiAliasing = ValueOf<typeof ANTI_ALIASING>;
 
 export type NormalizedZoomValue = number & { _brand: "normalizedZoom" };
 
@@ -479,12 +391,6 @@ export type RendererState = {
   deletedElementIds: string[];
 };
 
-/** Runtime gridSize value. Null indicates disabled grid. */
-export type NullableGridSize =
-  | (DucState["gridSize"] & MakeBrand<"NullableGridSize">)
-  | null;
-
-
 export type PendingDucElements = DucElement[];
 
 
@@ -520,25 +426,17 @@ export type IsometricGridSettings = {
   leftAngle: Radian;
   /** Right plane angle (typically 30 degrees) */
   rightAngle: Radian;
-  /** Active isometric plane */
-  activePlane: "top" | "left" | "right";
 };
 
 /**
  * Grid settings configuration
  */
 export type GridSettings = {
-  /** Unique identifier */
-  id: string;
-
-  /** Human-readable name */
-  name: string;
+  /** Grid coordinate system type */
+  type: GridType;
 
   /** Whether this grid is read-only */
   readonly: boolean;
-
-  /** Grid coordinate system type */
-  type: GridType;
 
   /** How the grid is displayed */
   displayType: GridDisplayType;
@@ -557,8 +455,6 @@ export type GridSettings = {
   /** Number of minor divisions between major lines */
   subdivisions: number;
 
-  // === POSITIONING ===
-
   /** Grid origin point */
   origin: GeometricPoint;
 
@@ -568,15 +464,12 @@ export type GridSettings = {
   /** Whether grid follows the active UCS */
   followUCS: boolean;
 
-  // === STYLING ===
-
   /** Major grid line/dot styling */
   majorStyle: GridStyle;
 
   /** Minor grid line/dot styling */
   minorStyle: GridStyle;
 
-  // === VISIBILITY ===
 
   /** Show minor subdivisions */
   showMinor: boolean;
@@ -590,21 +483,14 @@ export type GridSettings = {
   /** Whether to auto-hide when too dense */
   autoHide: boolean;
 
-  // === SPECIALIZED SETTINGS ===
-
   /** Polar grid settings (when type is POLAR) */
   polarSettings?: PolarGridSettings;
 
   /** Isometric grid settings (when type is ISOMETRIC) */
   isometricSettings?: IsometricGridSettings;
 
-  // === BEHAVIOR ===
-
   /** Whether this grid affects snapping */
   enableSnapping: boolean;
-
-  /** Grid render priority */
-  zIndex: number;
 };
 
 
@@ -691,12 +577,6 @@ export type SnapMarkerSettings = {
  * Defines the properties of the drawing snap mode.
  */
 export type SnapSettings = {
-  /** Unique identifier */
-  id: string;
-
-  /** Human-readable name */
-  name: string;
-
   /** Whether this snap settings is read-only */
   readonly: boolean;
 
@@ -802,3 +682,44 @@ export type SnapSettings = {
    */
   snapToGridIntersections?: boolean;
 };
+
+
+
+
+//// VERSION CONTROL
+export type VersionId = string;
+/** JSON Patch RFC6902 */
+export type JSONPatch = Array<{ op: string; path: string; value?: any }>; 
+export type PruningLevel = ValueOf<typeof PRUNING_LEVEL>;
+
+export interface VersionBase {
+  id: VersionId;
+  parentId: VersionId | null;
+  timestamp: number;
+  description?: string;
+  isManualSave: boolean;
+  userId?: string;
+}
+
+export interface Checkpoint extends VersionBase {
+  type: 'checkpoint';
+  data: Uint8Array;
+  sizeBytes: number;
+}
+
+export interface Delta extends VersionBase {
+  type: 'delta';
+  patch: JSONPatch;
+}
+
+export interface VersionGraph {
+  userCheckpointVersionId: VersionId;
+  latestVersionId: VersionId;
+  checkpoints: Checkpoint[];
+  deltas: Delta[];
+  metadata: {
+    pruningLevel: PruningLevel;
+    lastPruned: number;
+    totalSize: number;
+  };
+}

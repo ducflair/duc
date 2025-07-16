@@ -3,9 +3,9 @@ import { DucBindableElement, NonDeleted } from 'ducjs/types/elements';
 import { AppState as BinAppState, HANDLE_TYPE, LinearElementEditor, PointerDownState, SegmentMidpointState, SimplePoint } from 'ducjs/duc';
 import { ensureFiniteNumber, getPrecisionValueField } from 'ducjs/serialize/serializationUtils';
 import { serializeDucPoint, serializeElementBackground, serializeElementStroke } from 'ducjs/serialize/serializeElementFromDuc';
-import { DucState, PrecisionValue, SuggestedPointBinding } from 'ducjs/types';
+import { DucLocalState, PrecisionValue, SuggestedPointBinding } from 'ducjs/types';
 
-const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<DucState>, forRenderer: boolean): flatbuffers.Offset => {
+const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<DucLocalState>, forRenderer: boolean): flatbuffers.Offset => {
   const nameOffset = appState.name ? builder.createString(appState.name) : undefined;
 
   const selectedElementIdsOffsets = appState.selectedElementIds ? Object.keys(appState.selectedElementIds).map(id => builder.createString(id)) : [];

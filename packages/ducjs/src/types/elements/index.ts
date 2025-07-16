@@ -1,14 +1,14 @@
 export * from "./typeChecks";
 
+import { BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, COLUMN_TYPE, DATUM_BRACKET_STYLE, DATUM_TARGET_TYPE, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_TYPE, TOLERANCE_ZONE_TYPE, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT } from "ducjs/duc";
+import { Standard } from "ducjs/technical/standards";
+import { DucView, PrecisionValue, Scope, Theme } from "ducjs/types";
+import { Axis, GeometricPoint, Percentage, Radian, ScaleFactor } from "ducjs/types/geometryTypes";
+import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "ducjs/types/utility-types";
 import {
   FONT_FAMILY,
   FREEDRAW_EASINGS,
 } from "ducjs/utils/constants";
-import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "ducjs/types/utility-types";
-import { DucView, PrecisionValue, Scope, Theme } from "ducjs/types";
-import { Percentage, Radian, GeometricPoint, ScaleFactor, Axis } from "ducjs/types/geometryTypes";
-import { BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, COLUMN_TYPE, DATUM_BRACKET_STYLE, DATUM_TARGET_TYPE, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FLOW_DIRECTION, THEME, TOLERANCE_DISPLAY, TOLERANCE_TYPE, TOLERANCE_ZONE_TYPE, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT } from "ducjs/duc";
-import { Standard } from "ducjs/technical/standards";
 
 
 
@@ -154,7 +154,8 @@ export type DucElement =
   | DucDimensionElement
   | DucViewportElement
   | DucPlotElement
-  | DucXRayElement;
+  | DucXRayElement
+  | DucMermaidElement;
 
 
 export type DucElementTypes = DucElement["type"];
@@ -178,7 +179,8 @@ export type DucBindableElement =
   | DucTableElement
   | DucDocElement
   | DucFeatureControlFrameElement
-  | DucLinearElement;
+  | DucLinearElement
+  | DucMermaidElement;
 
 export type DucTextContainer =
   | DucRectangleElement
@@ -387,6 +389,10 @@ export type StrokeStyle = {
    */
   dash?: number[];
   /**
+   * Override the dash line into a custom shape
+   */
+  dashLineOverride?: DucBlockInstanceElement["id"];
+  /**
    * The cap of the dash
    * @default butt
    */
@@ -455,10 +461,19 @@ export type DucEllipseElement = _DucElementBase & {
   showAuxCrosshair: boolean;
 };
 
-export type DucEmbeddableElement = _DucElementBase &
-  Readonly<{
-    type: "embeddable";
-  }>;
+export type DucEmbeddableElement = _DucElementBase & {
+  type: "embeddable";
+};
+
+export type DucMermaidElement = _DucElementBase & {
+  type: "mermaid";
+  source: string; // Mermaid syntax
+  /** if not provided, the theme will be the same as the document's theme, or default to 'default'
+   * we decided to go with a string type because of the unpredictably of having different themes 
+   */
+  theme?: string; 
+  svgPath: string | null;// optional cached SVG string
+};
 
 
 //// === TABLE ELEMENTS ===
@@ -598,20 +613,19 @@ export type DucImageFilter = {
   contrast: Percentage;
 }
 
-export type DucImageElement = _DucElementBase &
-  Readonly<{
-    type: "image";
-    fileId: FileId | null;
-    /** whether respective file is persisted */
-    status: ImageStatus;
-    /** X and Y scale factors <-1, 1>, used for image axis flipping */
-    scale: [number, number];
-    /** whether an element is cropped */
-    crop: ImageCrop | null;
-    /** clipping boundary for the image */
-    clippingBoundary: DucLinearElement | null;
-    filter: DucImageFilter | null;
-  }>;
+export type DucImageElement = _DucElementBase & {
+  type: "image";
+  fileId: FileId | null;
+  /** whether respective file is persisted */
+  status: ImageStatus;
+  /** X and Y scale factors <-1, 1>, used for image axis flipping */
+  scale: [number, number];
+  /** whether an element is cropped */
+  crop: ImageCrop | null;
+  /** clipping boundary for the image */
+  clippingBoundary: DucLinearElement | null;
+  filter: DucImageFilter | null;
+};
 
 export type InitializedDucImageElement = MarkNonNullable<
   DucImageElement,
@@ -710,25 +724,24 @@ export type DucTextStyle = _DucElementStylesBase & {
 }
 
 
-export type DucTextElement = _DucElementBase & DucTextStyle &
-  Readonly<{
-    type: "text";
-    text: string;
+export type DucTextElement = _DucElementBase & DucTextStyle & {
+  type: "text";
+  text: string;
 
-    /**
-     * Text sizing behavior:
-     * - `true`: Width adjusts to fit text content (single line or natural wrapping)
-     * - `false`: Text wraps to fit within the element's fixed width
-     * @default true
-     */
-    autoResize: boolean;
+  /**
+   * Text sizing behavior:
+   * - `true`: Width adjusts to fit text content (single line or natural wrapping)
+   * - `false`: Text wraps to fit within the element's fixed width
+   * @default true
+   */
+  autoResize: boolean;
 
-    /** The ID of an element that this text is contained within (e.g., for labels on shapes) */
-    containerId: DucGenericElement["id"] | null;
+  /** The ID of an element that this text is contained within (e.g., for labels on shapes) */
+  containerId: DucGenericElement["id"] | null;
 
-    /** A non-rendered, original version of the text, e.g., before finishing writing the text */
-    originalText: string;
-  }>;
+  /** A non-rendered, original version of the text, e.g., before finishing writing the text */
+  originalText: string;
+};
 
 
 export type DucTextElementWithContainer = {
@@ -880,24 +893,21 @@ export type DucFreeDrawEnds = {
   taper: number;
   easing: DucFreeDrawEasing;
 }
-export type DucFreeDrawElement = _DucElementBase &
-  Readonly<{
-    type: "freedraw";
-    points: readonly DucPoint[];
-    size: PrecisionValue;
-    thinning: Percentage;
-    smoothing: Percentage;
-    streamline: Percentage;
-    easing: DucFreeDrawEasing;
-    start: DucFreeDrawEnds | null;
-    end: DucFreeDrawEnds | null;
-    pressures: readonly number[];
-    simulatePressure: boolean;
-    lastCommittedPoint: DucPoint | null;
-    svgPath: string | null;
-  }>;
-
-
+export type DucFreeDrawElement = _DucElementBase & {
+  type: "freedraw";
+  points: readonly DucPoint[];
+  size: PrecisionValue;
+  thinning: Percentage;
+  smoothing: Percentage;
+  streamline: Percentage;
+  easing: DucFreeDrawEasing;
+  start: DucFreeDrawEnds | null;
+  end: DucFreeDrawEnds | null;
+  pressures: readonly number[];
+  simulatePressure: boolean;
+  lastCommittedPoint: DucPoint | null;
+  svgPath: string | null; // optional cached SVG string
+};
 
 
 
@@ -1033,7 +1043,7 @@ export type DucLayer = _DucStackBase & {
 };
 
 
-export type DucStackLikeElement = 
+export type DucStackLikeElement =
   | DucPlotElement
   | DucViewportElement
   | DucFrameElement;
@@ -1377,12 +1387,6 @@ export type DucDimensionElement = _DucElementBase & DucDimensionStyle & {
   definitionPoints: DimensionDefinitionPoints;
 
   /**
-   * The rotation angle for a 'rotated' linear dimension.
-   * For other dimension types, this is null.
-   */
-  rotation: Radian | null;
-
-  /**
    * The oblique angle for the extension lines, used for isometric-style dimensions.
    * An angle of 0 means they are perpendicular to the dimension line.
    */
@@ -1502,7 +1506,7 @@ export type FeatureControlFrameSegment = {
 export type DucFeatureControlFrameStyle = _DucElementStylesBase & {
   /** The base text style for numbers and letters within the frame */
   textStyle: DucTextStyle;
-  
+
   /** Layout and spacing properties */
   layout: {
     /** Padding between the content and the outer frame border */
@@ -1512,13 +1516,13 @@ export type DucFeatureControlFrameStyle = _DucElementStylesBase & {
     /** Spacing between rows in a composite frame */
     rowSpacing: PrecisionValue;
   };
-  
+
   /** Configuration for GD&T symbols */
   symbols: {
     /** Scale factor for symbols relative to the text height */
     scale: number;
   };
-  
+
   /** Styling for datum references */
   datumStyle: {
     /** The style of bracket to draw around datum letters */
@@ -1532,7 +1536,7 @@ export type DucFeatureControlFrameStyle = _DucElementStylesBase & {
  */
 export type DucFeatureControlFrameElement = _DucElementBase & DucFeatureControlFrameStyle & {
   type: "featurecontrolframe";
-  
+
   /**
    * An array of rows. Most FCFs have one row. Composite frames have multiple rows.
    * Each row is an array of segments that are drawn horizontally.
@@ -1547,11 +1551,11 @@ export type DucFeatureControlFrameElement = _DucElementBase & DucFeatureControlF
     allOver?: boolean;
     continuousFeature?: boolean;
     between?: {
-        start: string; // Identifier for start point, e.g., "A"
-        end: string;   // Identifier for end point, e.g., "B"
+      start: string; // Identifier for start point, e.g., "A"
+      end: string;   // Identifier for end point, e.g., "B"
     };
     projectedToleranceZone?: {
-        value: PrecisionValue;
+      value: PrecisionValue;
     };
   };
 
@@ -1704,17 +1708,17 @@ export type DucDocElement = _DucElementBase & DucDocStyle & {
  */
 export type ParametricElementSource =
   | {
-      /** The geometry is defined by executable Replicad code. */
-      type: "code";
-      /** The JavaScript code that generates the Replicad model. */
-      code: string;
-    }
+    /** The geometry is defined by executable Replicad code. */
+    type: "code";
+    /** The JavaScript code that generates the Replicad model. */
+    code: string;
+  }
   | {
-      /** The geometry is loaded from a static 3D file. */
-      type: "file";
-      /** A reference to the imported file in the BinaryFiles collection. */
-      fileId: FileId;
-    };
+    /** The geometry is loaded from a static 3D file. */
+    type: "file";
+    /** A reference to the imported file in the BinaryFiles collection. */
+    fileId: FileId;
+  };
 /**
  * An element that embeds a 3D model on the 2D canvas, defined either by
  * parametric Replicad code or by an imported 3D file (e.g., STEP, STL).

@@ -16,9 +16,11 @@ namespace Duc;
 
 file_identifier "DUC_";
 
-// ENUMS
-// // Usually we start from the value 10 on enums because on some languages, 0 is treated as false and 1 is treated as true on if statements
+// =============================================================================
+//  ENUMS
+// =============================================================================
 
+// Usually we start from the value 10 on enums because on some languages, 0 is treated as false and 1 is treated as true on if statements
 enum VERTICAL_ALIGN:ubyte {
   TOP = 10,
   MIDDLE = 11,
@@ -121,12 +123,6 @@ enum HANDLE_TYPE:ubyte {
   HANDLE_OUT = 11
 }
 
-enum ANTI_ALIASING:ubyte {
-  NONE = 10,
-  ANALYTIC = 11,
-  MSAA_8 = 8,
-  MSAA_16 = 16
-}
 
 enum YOUTUBE_STATES:byte {
   UNSTARTED = -1,
@@ -409,101 +405,153 @@ enum BLOCK_ATTACHMENT:ubyte {
   INSERTION_POINT = 11
 }
 
-enum THEME:ubyte {
-  LIGHT = 10,
-  DARK = 11
-}
-
 enum AXIS:ubyte {
   X = 10,
-  Y = 11,
-  Z = 12
+  Y = 20,
+  Z = 30
 }
 
-// /////////////////////
-
-// Point type
-table Point {
-  x_v2: float = null;
-  y_v2: float = null;
-  is_curve: bool = null (deprecated); // Deprecated in favor of mirroring
-  mirroring: byte = null;
-  border_radius: double = null (deprecated); // Moved to lines system
-  handle_in: SimplePoint (deprecated); // Moved to lines system
-  handle_out: SimplePoint (deprecated); // Moved to lines system
-  x_v3: double;
-  y_v3: double;
-  peer: int (deprecated); // Since version 5
-  peers: [int] (deprecated); // Deprecated in favor of lines system
+enum PRUNING_LEVEL:ubyte {
+  CONSERVATIVE = 10,
+  BALANCED = 20,
+  AGGRESSIVE = 30
 }
 
-// Line reference for the new lines-based system
-table DucLineReference {
-  index: int; // Point index
-  handle: SimplePoint; // Bezier handle position (null for linear)
+enum PARAMETRIC_SOURCE_TYPE:ubyte {
+  CODE = 10,
+  FILE = 11
 }
 
-// Line connection between two points
-table DucLine {
-  start: DucLineReference;
-  end: DucLineReference;
+enum LEADER_CONTENT_TYPE:ubyte {
+  TEXT = 10,
+  BLOCK = 11
 }
 
-table PointBinding {
-  element_id: string;
-  focus: float;
-  gap: float;
-  fixed_point_v3: Point (deprecated);
-  point: BindingPoint;  // Optional point binding info
-  head: byte;  // LINE_HEAD values
-  fixed_point: SimplePoint;
+
+// =============================================================================
+//  UTILITY & GEOMETRY TYPES
+// =============================================================================
+
+/// A generic key-value pair for string dictionaries.
+table DictionaryEntry {
+  key: string (key);
+  value: string;
 }
 
-table BindingPoint {
-  index: int;
-  offset: float;  // -1 to 1 range
+/// A generic key-value pair for more complex structures like DucBlock attribute values.
+table StringValueEntry {
+  key: string (key);
+  value: string;
 }
 
-table SimplePoint {
+/// A generic identifier used across various components like Standards, Layers, etc.
+table Identifier {
+  id: string (key);
+  name: string;
+  description: string;
+}
+
+/// A high-precision 2D point in the World Coordinate System.
+struct GeometricPoint {
   x: double;
-  y: double;  
+  y: double;
 }
+
+/// Defines a User Coordinate System (UCS) with an origin and rotation.
+table DucUcs {
+  origin: GeometricPoint;
+  angle: double; // Radian
+}
+
+/// Defines a view with scroll, zoom, and center point.
+table DucView {
+  scroll_x: double;
+  scroll_y: double;
+  zoom: double;
+  twist_angle: double; // Radian
+  center_point: DucPoint;
+  scope: string; // Scope
+}
+
+/// Represents margins for layouts and cells.
+table Margins {
+  top: double;
+  right: double;
+  bottom: double;
+  left: double;
+}
+
+// =============================================================================
+//  STYLING & CONTENT
+// =============================================================================
 
 table TilingProperties {
-  size_in_percent: double;
-  angle: double;
-  spacing: double = null;
-  offset_x: double = null;
-  offset_y: double = null;
+  size_in_percent: float;
+  angle: double; // Radian
+  spacing: double;
+  offset_x: double;
+  offset_y: double;
+}
+
+table HatchPatternLine {
+  angle: double; // Radian
+  origin: DucPoint;
+  offset: [double]; // [x, y]
+  dash_pattern: [double];
+}
+
+table CustomHatchPattern {
+  name: string;
+  description: string;
+  lines: [HatchPatternLine];
+}
+
+table DucHatchStyle {
+  hatch_style: HATCH_STYLE = null;
+  pattern_name: string;
+  pattern_scale: float;
+  pattern_angle: double; // Radian
+  pattern_origin: DucPoint;
+  pattern_double: bool;
+  custom_pattern: CustomHatchPattern;
+}
+
+table DucImageFilter {
+  brightness: float; // Percentage
+  contrast: float; // Percentage
 }
 
 table ElementContentBase {
-  preference: byte;  // ELEMENT_CONTENT_PREFERENCE values
-  src: string;
+  preference: ELEMENT_CONTENT_PREFERENCE = null;
+  src: string; // Color, gradient, image URL, fileId, or block reference
   visible: bool;
   opacity: double;
+  
   tiling: TilingProperties;
+  hatch: DucHatchStyle;
+  image_filter: DucImageFilter;
 }
 
 table StrokeStyle {
-  preference: byte;  // STROKE_PREFERENCE values
-  cap: byte = null;  // STROKE_CAP values
-  join: byte = null;  // STROKE_JOIN values
+  preference: STROKE_PREFERENCE = null;
+  cap: STROKE_CAP = null;
+  join: STROKE_JOIN = null;
   dash: [double];
-  dash_cap: byte = null;  // STROKE_CAP values
-  miter_limit: double = null;
+  dash_line_override: string; // DucBlockInstance ID
+  dash_cap: STROKE_CAP = null;
+  miter_limit: double;
 }
 
 table StrokeSides {
-  preference: byte;  // STROKE_SIDE_PREFERENCE values
-  values: [double];
+  preference: STROKE_SIDE_PREFERENCE = null;
+  values: [double]; // [0,1] or [0,1,2,3]
 }
 
 table ElementStroke {
   content: ElementContentBase;
   width: double;
   style: StrokeStyle;
-  placement: byte;  // StrokePlacement values
+  placement: STROKE_PLACEMENT = null;
   stroke_sides: StrokeSides;
 }
 
@@ -511,10 +559,392 @@ table ElementBackground {
   content: ElementContentBase;
 }
 
+/// Base style properties shared by many elements.
+table _DucElementStylesBase {
+  roundness: double;
+  blending: BLENDING = null;
+  background: [ElementBackground];
+  stroke: [ElementStroke];
+  opacity: double;
+}
+
+
+// =============================================================================
+//  BASE ELEMENT & COMMON ELEMENT COMPONENTS
+// =============================================================================
+
+table BoundElement {
+  id: string;
+  type: string; // Represents DucElementType
+}
+
+/// The foundational table for all scene elements, containing common properties.
+table _DucElementBase {
+  id: string (key);
+  x: double;
+  y: double;
+  width: double;
+  height: double;
+  angle: double; // Radian
+  
+  scope: string; // Scope
+  label: string;
+  description: string;
+  is_visible: bool;
+
+  seed: int;
+  version: int;
+  version_nonce: int;
+  updated: long; // Epoch timestamp (ms)
+  index: string; // FractionalIndex
+
+  is_plot: bool;
+  is_annotative: bool;
+  is_deleted: bool;
+  
+  group_ids: [string];
+  layer_id: string;
+  frame_id: string;
+  
+  bound_elements: [BoundElement];
+  z_index: float;
+
+  link: string;
+  locked: bool;
+  
+  // Contains a JSON string of custom key-value data.
+  custom_data: string;
+  
+  styles: _DucElementStylesBase;
+}
+
+table DucPoint {
+  x: double;
+  y: double;
+  mirroring: BEZIER_MIRRORING = null;
+}
+
+table DucHead {
+  type: LINE_HEAD = null;
+  block_id: string;
+  size: double;
+}
+
+table PointBindingPoint {
+  index: int;
+  offset: double;
+}
+
+table DucPointBinding {
+  element_id: string;
+  focus: float;
+  gap: double;
+  fixed_point: GeometricPoint;
+  point: PointBindingPoint;
+  head: DucHead;
+}
+
+table DucLineReference {
+  index: int;
+  handle: GeometricPoint;
+}
+
+table DucLine {
+  start: DucLineReference;
+  end: DucLineReference;
+}
+
 table DucPath {
   line_indices: [int];
   background: ElementBackground;
   stroke: ElementStroke;
+}
+
+/// The base for linear elements like lines and arrows.
+table _DucLinearElementBase {
+  base: _DucElementBase;
+  points: [DucPoint];
+  lines: [DucLine];
+  path_overrides: [DucPath];
+  last_committed_point: DucPoint;
+  start_binding: DucPointBinding;
+  end_binding: DucPointBinding;
+}
+
+table DucStackLikeStyles {
+  opacity: double;
+  labeling_color: string;
+}
+
+table _DucStackBase {
+  label: string;
+  description: string;
+  is_collapsed: bool;
+  is_plot: bool;
+  is_visible: bool;
+  locked: bool;
+  styles: DucStackLikeStyles;
+}
+
+table _DucStackElementBase {
+  base: _DucElementBase;
+  stack_base: _DucStackBase;
+  clip: bool;
+  label_visible: bool;
+  standard_override: Standard;
+}
+
+
+// =============================================================================
+//  ELEMENT-SPECIFIC STYLES
+// =============================================================================
+
+table LineSpacing {
+  value: double; // Can also be interpreted as ScaleFactor
+  type: LINE_SPACING_TYPE = null;
+}
+
+table DucTextStyle {
+  base_style: _DucElementStylesBase;
+  is_ltr: bool;
+  font_family: string;
+  big_font_family: string;
+  
+  text_align: TEXT_ALIGN = null;
+  vertical_align: VERTICAL_ALIGN = null;
+  
+  line_height: float; // Unitless multiplier
+  line_spacing: LineSpacing;
+  
+  oblique_angle: double; // Radian
+  font_size: double;
+  paper_text_height: double;
+  width_factor: float; // ScaleFactor
+  
+  is_upside_down: bool;
+  is_backwards: bool;
+}
+
+table DucTableCellStyle {
+  base_style: _DucElementStylesBase;
+  text_style: DucTextStyle;
+  margins: Margins;
+  alignment: TABLE_CELL_ALIGNMENT = null;
+}
+
+table DucTableStyle {
+  base_style: _DucElementStylesBase;
+  flow_direction: TABLE_FLOW_DIRECTION = null;
+  header_row_style: DucTableCellStyle;
+  data_row_style: DucTableCellStyle;
+  data_column_style: DucTableCellStyle;
+}
+
+table DucLeaderStyle {
+  base_style: _DucElementStylesBase;
+  heads_override: [DucHead]; // [start, end]
+  dogleg: double;
+  text_style: DucTextStyle;
+  text_attachment: VERTICAL_ALIGN = null;
+  block_attachment: BLOCK_ATTACHMENT = null;
+}
+
+table DimensionToleranceStyle {
+  enabled: bool;
+  display_method: TOLERANCE_DISPLAY = null;
+  upper_value: double;
+  lower_value: double;
+  precision: int;
+  text_style: DucTextStyle;
+}
+
+table DimensionFitStyle {
+  rule: DIMENSION_FIT_RULE = null;
+  text_placement: DIMENSION_TEXT_PLACEMENT = null;
+  force_text_inside: bool;
+}
+
+table DimensionLineStyle {
+  stroke: ElementStroke;
+  text_gap: double;
+}
+
+table DimensionExtLineStyle {
+  stroke: ElementStroke;
+  overshoot: double;
+  offset: double;
+}
+
+table DimensionSymbolStyle {
+  heads_override: [DucHead]; // [start, end]
+  center_mark_type: MARK_ELLIPSE_CENTER = null;
+  center_mark_size: double;
+}
+
+table DucDimensionStyle {
+  dim_line: DimensionLineStyle;
+  ext_line: DimensionExtLineStyle;
+  text_style: DucTextStyle;
+  symbols: DimensionSymbolStyle;
+  tolerance: DimensionToleranceStyle;
+  fit: DimensionFitStyle;
+}
+
+table FCFLayoutStyle {
+  padding: double;
+  segment_spacing: double;
+  row_spacing: double;
+}
+
+table FCFSymbolStyle {
+  scale: float;
+}
+
+table FCFDatumStyle {
+  bracket_style: DATUM_BRACKET_STYLE = null;
+}
+
+table DucFeatureControlFrameStyle {
+  base_style: _DucElementStylesBase;
+  text_style: DucTextStyle;
+  layout: FCFLayoutStyle;
+  symbols: FCFSymbolStyle;
+  datum_style: FCFDatumStyle;
+}
+
+table ParagraphFormatting {
+  first_line_indent: double;
+  hanging_indent: double;
+  left_indent: double;
+  right_indent: double;
+  space_before: double;
+  space_after: double;
+  tab_stops: [double];
+}
+
+table StackFormatProperties {
+  upper_scale: double;
+  lower_scale: double;
+  alignment: STACKED_TEXT_ALIGN = null;
+}
+
+table StackFormat {
+  auto_stack: bool;
+  stack_chars: [string];
+  properties: StackFormatProperties;
+}
+
+table DucDocStyle {
+  text_style: DucTextStyle;
+  paragraph: ParagraphFormatting;
+  stack_format: StackFormat;
+}
+
+table DucViewportStyle {
+  base_style: _DucElementStylesBase;
+  scale_indicator_visible: bool;
+}
+
+table DucPlotStyle {
+  base_style: _DucElementStylesBase;
+}
+
+table DucXRayStyle {
+  base_style: _DucElementStylesBase;
+  color: string;
+}
+
+// =============================================================================
+//  ELEMENT DEFINITIONS
+// =============================================================================
+
+table DucRectangleElement {
+  base: _DucElementBase;
+}
+
+table DucPolygonElement {
+  base: _DucElementBase;
+  sides: int;
+}
+
+table DucEllipseElement {
+  base: _DucElementBase;
+  ratio: float; // Percentage
+  start_angle: double; // Radian
+  end_angle: double; // Radian
+  show_aux_crosshair: bool;
+}
+
+table DucEmbeddableElement {
+  base: _DucElementBase;
+}
+
+table DucMermaidElement {
+  base: _DucElementBase;
+  source: string;
+  theme: string;
+  svg_path: string;
+}
+
+table DucTableColumn {
+  id: string (key);
+  width: double;
+  style_overrides: DucTableCellStyle;
+}
+
+table DucTableRow {
+  id: string (key);
+  height: double;
+  style_overrides: DucTableCellStyle;
+}
+
+table DucTableCellSpan {
+  columns: int;
+  rows: int;
+}
+
+table DucTableCell {
+  row_id: string;
+  column_id: string;
+  data: string; // Markdown content
+  span: DucTableCellSpan;
+  locked: bool;
+  style_overrides: DucTableCellStyle;
+}
+
+table DucTableColumnEntry {
+  key: string (key);
+  value: DucTableColumn;
+}
+
+table DucTableRowEntry {
+  key: string (key);
+  value: DucTableRow;
+}
+
+table DucTableCellEntry {
+  key: string (key); // "rowId:columnId"
+  value: DucTableCell;
+}
+
+table DucTableAutoSize {
+  columns: bool;
+  rows: bool;
+}
+
+table DucTableElement {
+  base: _DucElementBase;
+  style: DucTableStyle;
+  
+  column_order: [string];
+  row_order: [string];
+  
+  columns: [DucTableColumnEntry];
+  rows: [DucTableRowEntry];
+  cells: [DucTableCellEntry];
+  
+  header_row_count: int;
+  auto_size: DucTableAutoSize;
 }
 
 table ImageCrop {
@@ -526,403 +956,711 @@ table ImageCrop {
   natural_height: double;
 }
 
-// Table related definitions
-table DucTableStyleProps {
-  background_color: string;
-  border_width: double;
-  border_dashes: [double];
-  border_color: string;
-  text_color: string;
-  text_size: double;
-  text_font: string;
-  text_align: byte; // TextAlign enum
-}
-
-table DucTableColumn {
-  id: string;
-  width: double;
-  style: DucTableStyleProps;
-}
-
-table DucTableRow {
-  id: string;
-  height: double;
-  style: DucTableStyleProps;
-}
-
-table DucTableCell {
-  row_id: string;
-  column_id: string;
-  data: string;
-  style: DucTableStyleProps;
-}
-
-table DucTableStyle {
-  default_props: DucTableStyleProps;
-}
-
-table DucBlockInstanceElementOverride {
-  element_id:string;
-  overrides: string; // JSON stringified object
-}
-
-// Base table for DucElement with common fields
-table DucElement {
-  id: string;
-  type: string;
-  x_v2: float = null;
-  y_v2: float = null;
-  index: string (deprecated);
-  scope: string;
-  writing_layer: string (deprecated);
-  label: string;
-  is_visible: bool;
-  roundness_type_v2: string (deprecated);
-  roundness_value_v2: int (deprecated);
-  background_color_v3: string;
-  stroke_color_v3: string;
-  stroke_width_v2: int (deprecated);
-  stroke_style_v2: string (deprecated);
-  fill_style_v2: string (deprecated);
-  stroke_placement: byte (deprecated);
-  opacity: float;
-  width_v2: float = null;
-  height_v2: float = null;
-  angle_v2: float = null;
-  is_deleted: bool;
-  group_ids: [string];
-  frame_id: string;
-  bound_elements: [BoundElement];
-  link: string;
-  locked: bool;
-  
-  custom_data: string (deprecated);
-  
-  is_stroke_disabled: bool (deprecated);
-  is_background_disabled: bool (deprecated);
-  
-  // TextElement specific fields
-  text_font_size_v2: int = null;
-  text_font_family: string;
-  text_text: string;
-  text_align_v2: string (deprecated);
-  text_vertical_align_v2: string (deprecated);
-  text_container_id: string;
-  text_original_text: string (deprecated);
-  text_line_height_v2: float = null;
-  text_auto_resize: bool = null;
-  
-  // LinearElement specific fields
-  linear_element_points: [Point];
-  linear_element_last_committed_point: Point;
-  linear_element_start_binding: PointBinding;
-  linear_element_end_binding: PointBinding;
-  arrow_start_arrowhead: string (deprecated);
-  arrow_end_arrowhead: string (deprecated);
-  arrow_elbowed: bool = null;
-  
-  // FreeDrawElement specific fields
-  free_draw_pressures_v2: [float] (deprecated);
-  free_draw_simulate_pressure: bool = null;
-  
+table DucImageElement {
+  base: _DucElementBase;
   file_id: string;
-  image_status: IMAGE_STATUS = null;
-  image_scale_v2: Point (deprecated);
-  
-  stack_like_is_collapsed: bool = null;
-  name: string (deprecated);
-  
-  group_id_ref: string (deprecated);
-
-  stroke_style_v3: byte;
-  fill_style_v3: byte;
-  text_text_align: byte = null;
-  text_vertical_align: byte;
-  
-  x: double;
-  y: double;
-  image_scale: SimplePoint;
-  free_draw_pressures: [double];
-  stroke_width_v3: double;
-  angle: double;
-  roundness: double;
-  width: double;
-  height: double;
-  text_font_size: double = null;
-  text_line_height: double = null;
-
-  blending: byte = null;
-  background: [ElementBackground];
-  stroke: [ElementStroke];
-  image_crop: ImageCrop;
-  stack_like_clip: bool = null;  
-  
-  subset: byte = null;  // ELEMENT_SUBSET values
-  z_index: int;
-  polygon_sides: int = null;
-
-  // TableElement specific fields
-  table_column_order: [string];
-  table_row_order: [string];
-  table_columns: [DucTableColumn];
-  table_rows: [DucTableRow];
-  table_cells: [DucTableCell];
-  table_style: DucTableStyle;
-
-  doc_content: string;
-
-  linear_element_lines: [DucLine];
-
-  ellipse_ratio: double = null;
-  ellipse_start_angle: double = null;
-  ellipse_end_angle: double = null;
-  ellipse_show_aux_crosshair: bool = null;
-
-  // FreeDrawElement specific fields
-  free_draw_thinning: double = null;
-  free_draw_smoothing: double = null;
-  free_draw_streamline: double = null;
-  free_draw_easing: string;
-  free_draw_start_cap: bool = null;
-  free_draw_start_taper: double = null;
-  free_draw_start_easing: string;
-  free_draw_end_cap: bool = null;
-  free_draw_end_taper: double = null;
-  free_draw_end_easing: string;
-  free_draw_svg_path: string;
-  free_draw_size: double = null;
-
-  linear_element_path_overrides: [DucPath];
-  
-  description: string;
-  no_plot: bool = null;
-
-  stack_like_labeling_color: string;
-  stack_like_stroke_override: ElementStroke;
-  stack_like_background_override: ElementBackground;
-  
-  block_instance_block_id: string;
-  block_instance_element_overrides: [DucBlockInstanceElementOverride];
+  status: IMAGE_STATUS = null;
+  scale: [double]; // [x, y]
+  crop: ImageCrop;
+  clipping_boundary: _DucLinearElementBase;
+  filter: DucImageFilter;
 }
 
-// Define a table for BoundElement used in DucElement
-table BoundElement {
-  id: string;
-  type: string;  // Any valid DucElementTypes
+table DucTextElement {
+  base: _DucElementBase;
+  style: DucTextStyle;
+  text: string;
+  auto_resize: bool;
+  container_id: string;
+  original_text: string;
 }
 
-// LinearElementEditor
-table SegmentMidpointState {
-  value: Point;
-  index: int;
-  added: bool;
+table DucLinearElement {
+  linear_base: _DucLinearElementBase;
+  wipeout_below: bool;
 }
 
-table PointerDownState {
-  prev_selected_points_indices: [int];
-  last_clicked_point: int;
-  last_clicked_is_end_point: bool;
-  origin: SimplePoint;
-  segment_midpoint: SegmentMidpointState;
-  handle_type: byte = null;
+table DucArrowElement {
+  linear_base: _DucLinearElementBase;
+  elbowed: bool;
 }
 
-table LinearElementEditor {
-  element_id: string;
-  selected_points_indices: [int];
-  pointer_down_state: PointerDownState;
-  is_dragging: bool;
-  last_uncommitted_point: Point;
-  pointer_offset: SimplePoint;
-  start_binding_element: string;
-  end_binding_element: string;
-  hover_point_index: int;
-  segment_mid_point_hovered_coords: Point;
+table DucFreeDrawEnds {
+  cap: bool;
+  taper: float;
+  easing: string;
 }
-// 
 
+table DucFreeDrawElement {
+  base: _DucElementBase;
+  points: [DucPoint];
+  size: double;
+  thinning: float; // Percentage
+  smoothing: float; // Percentage
+  streamline: float; // Percentage
+  easing: string; // key that maps to an easing function
+  start: DucFreeDrawEnds;
+  end: DucFreeDrawEnds;
+  pressures: [float];
+  simulate_pressure: bool;
+  last_committed_point: DucPoint;
+  svg_path: string;
+}
 
-table DucGroup {
-  id: string;
-  type: string (deprecated);
-  is_collapsed: bool;
-  label: string;
-  scope: string (deprecated);
-  writing_layer: string (deprecated);
-  description: string;
-  no_plot: bool = null;
-  locked: bool;
-  is_visible: bool;
-  opacity: float;
-  labeling_color: string;
-  stroke_override: ElementStroke;
-  background_override: ElementBackground;
-  clip: bool = null;
+table DucBlockAttributeDefinition {
+  tag: string;
+  prompt: string;
+  default_value: string;
+  is_constant: bool;
+}
+
+table DucBlockAttributeDefinitionEntry {
+  key: string (key);
+  value: DucBlockAttributeDefinition;
 }
 
 table DucBlock {
-  id: string;
+  id: string (key);
   label: string;
   description: string;
   version: int;
-  elements: [DucElement];
-  attributes: [DucBlockAttribute];
+  elements: [ElementWrapper];
+  attribute_definitions: [DucBlockAttributeDefinitionEntry];
 }
 
-table DucBlockAttributeDetails {
-  tag: string;
-  default_value: string;
-  prompt: string;
-  position: SimplePoint;
+table DucBlockDuplicationArray {
+  rows: int;
+  cols: int;
+  row_spacing: double;
+  col_spacing: double;
 }
 
-table DucBlockAttribute {
+table DucBlockInstanceElement {
+  base: _DucElementBase;
+  block_id: string;
+  element_overrides: [StringValueEntry];
+  attribute_values: [StringValueEntry];
+  duplication_array: DucBlockDuplicationArray;
+}
+
+table DucFrameElement {
+  stack_element_base: _DucStackElementBase;
+}
+
+table PlotLayout {
+  margins: Margins;
+}
+
+table DucPlotElement {
+  stack_element_base: _DucStackElementBase;
+  style: DucPlotStyle;
+  layout: PlotLayout;
+}
+
+table DucViewportElement {
+  linear_base: _DucLinearElementBase;
+  stack_base: _DucStackBase;
+  style: DucViewportStyle;
+  view: DucView;
+  scale: float; // ViewportScale
+  shade_plot: VIEWPORT_SHADE_PLOT = null;
+  frozen_group_ids: [string];
+  standard_override: Standard;
+}
+
+table DucXRayElement {
+  base: _DucElementBase;
+  style: DucXRayStyle;
+  origin: DucPoint;
+  direction: DucPoint;
+  start_from_origin: bool;
+}
+
+table LeaderTextBlockContent {
+  text: string;
+}
+
+table LeaderBlockContent {
+  block_id: string;
+  attribute_values: [StringValueEntry];
+  element_overrides: [StringValueEntry];
+}
+
+union LeaderContentData {
+  LeaderTextBlockContent,
+  LeaderBlockContent
+}
+
+table LeaderContent {
+  leader_content_type: LEADER_CONTENT_TYPE = null;
+  content: LeaderContentData;
+}
+
+table DucLeaderElement {
+  linear_base: _DucLinearElementBase;
+  style: DucLeaderStyle;
+  content: LeaderContent;
+  content_anchor: GeometricPoint;
+}
+
+table DimensionDefinitionPoints {
+  origin1: GeometricPoint;
+  origin2: GeometricPoint;
+  location: GeometricPoint;
+  center: GeometricPoint;
+  jog: GeometricPoint;
+}
+
+table DimensionBindings {
+  origin1: DucPointBinding;
+  origin2: DucPointBinding;
+  center: DucPointBinding;
+}
+
+table DimensionBaselineData {
+  base_dimension_id: string;
+}
+
+table DimensionContinueData {
+  continue_from_dimension_id: string;
+}
+
+table DucDimensionElement {
+  base: _DucElementBase;
+  style: DucDimensionStyle;
+  
+  dimension_type: DIMENSION_TYPE = null;
+  definition_points: DimensionDefinitionPoints;
+  
+  oblique_angle: float; // Radian
+  ordinate_axis: AXIS = null;
+  
+  bindings: DimensionBindings;
+  
+  text_override: string;
+  text_position: GeometricPoint;
+  
+  tolerance_override: DimensionToleranceStyle;
+  
+  baseline_data: DimensionBaselineData;
+  continue_data: DimensionContinueData;
+  
+  // calculated_value: double; // This is readonly runtime data, should not be serialized
+}
+
+table DatumReference {
+  letters: string;
+  modifier: MATERIAL_CONDITION = null;
+}
+
+table ToleranceClause {
+  value: string;
+  zone_type: TOLERANCE_ZONE_TYPE = null;
+  feature_modifiers: [FEATURE_MODIFIER];
+  material_condition: MATERIAL_CONDITION = null;
+}
+
+table FeatureControlFrameSegment {
+  symbol: GDT_SYMBOL = null;
+  tolerance: ToleranceClause;
+  datums: [DatumReference]; // [primary, secondary, tertiary]
+}
+
+table FCFBetweenModifier {
+  start: string;
+  end: string;
+}
+
+table FCFProjectedZoneModifier {
+  value: double;
+}
+
+table FCFFrameModifiers {
+  all_around: bool;
+  all_over: bool;
+  continuous_feature: bool;
+  between: FCFBetweenModifier;
+  projected_tolerance_zone: FCFProjectedZoneModifier;
+}
+
+table FCFDatumDefinition {
+  letter: string;
+  feature_binding: DucPointBinding;
+}
+
+table DucFeatureControlFrameElement {
+  base: _DucElementBase;
+  style: DucFeatureControlFrameStyle;
+  
+  rows: [FeatureControlFrameSegment];
+  frame_modifiers: FCFFrameModifiers;
+  leader_element_id: string;
+  datum_definition: FCFDatumDefinition;
+}
+
+table TextColumn {
+  width: double;
+  gutter: double;
+}
+
+table ColumnLayout {
+  type: COLUMN_TYPE = null;
+  definitions: [TextColumn];
+  auto_height: bool;
+}
+
+table DucDocElement {
+  base: _DucElementBase;
+  style: DucDocStyle;
+  content: string; // Markdown
+  flow_direction: TEXT_FLOW_DIRECTION = null;
+  columns: ColumnLayout;
+  auto_resize: bool;
+}
+
+table ParametricSource {
+  type: PARAMETRIC_SOURCE_TYPE = null;
+  code: string; // Used if type is CODE
+  file_id: string; // Used if type is FILE
+}
+
+table DucParametricElement {
+  base: _DucElementBase;
+  source: ParametricSource;
+}
+
+// =============================================================================
+//  ELEMENT UNION & WRAPPER
+// =============================================================================
+
+/// A union of all possible scene elements.
+union Element {
+  DucRectangleElement,
+  DucPolygonElement,
+  DucEllipseElement,
+  DucEmbeddableElement,
+  DucMermaidElement,
+  DucTableElement,
+  DucImageElement,
+  DucTextElement,
+  DucLinearElement,
+  DucArrowElement,
+  DucFreeDrawElement,
+  DucBlockInstanceElement,
+  DucFrameElement,
+  DucPlotElement,
+  DucViewportElement,
+  DucXRayElement,
+  DucLeaderElement,
+  DucDimensionElement,
+  DucFeatureControlFrameElement,
+  DucDocElement,
+  DucParametricElement
+}
+
+/// A wrapper to hold an element from the union.
+table ElementWrapper {
+  element: Element;
+}
+
+
+// =============================================================================
+//  APP & DOCUMENT STATE
+// =============================================================================
+
+table DucGlobalState {
   name: string;
-  details: DucBlockAttributeDetails;
-}
-
-table AppState {
-  active_embeddable_element: DucElement (deprecated);
-  active_embeddable_state: string (deprecated);
-  dragging_element: DucElement (deprecated);
-  resizing_element: DucElement (deprecated);
-  multi_element: DucElement (deprecated);
-  selection_element: DucElement (deprecated);
-  frame_to_highlight: DucElement (deprecated);
-  frame_rendering_enabled: bool;
-  frame_rendering_name: bool;
-  frame_rendering_outline: bool;
-  frame_rendering_clip: bool;
-  editing_frame: string (deprecated);
-  elements_to_highlight: [DucElement] (deprecated);
-  editing_element: DucElement (deprecated);
-  current_item_stroke_color: string (deprecated);
-  current_item_stroke_placement_v2: int (deprecated);
-  current_item_background_color: string (deprecated);
-  current_item_fill_style: string (deprecated);
-  current_item_stroke_width_v2: int (deprecated);
-  current_item_stroke_style: string (deprecated);
-  current_item_roughness: int (deprecated);
-  current_item_opacity: float;
-  current_item_font_family: int (deprecated);
-  current_item_font_size_v2: int (deprecated);
-  current_item_text_align: string (deprecated);
-  current_item_start_arrowhead: string (deprecated);
-  current_item_end_arrowhead: string (deprecated);
-  current_item_roundness: string (deprecated);
   view_background_color: string;
-  scope: string;
-  writing_layer: string (deprecated);
-  groups: [DucGroup] (deprecated);
-  scroll_x: float;
-  scroll_y: float;
-  cursor_button: string;
-  scrolled_outside: bool;
-  name: string;
-  zoom: float;
-  last_pointer_down_with: string;
-  selected_element_ids: [string];
-  previous_selected_element_ids: [string] (deprecated);
-  selected_elements_are_being_dragged: bool (deprecated);
-  should_cache_ignore_zoom: bool (deprecated);
-  grid_size: int;
-  selected_group_ids: [string] (deprecated);
-  editing_group_id: string (deprecated);
-  paste_dialog_shown: bool (deprecated);
-  paste_dialog_data: string (deprecated);
-  scale_ratio_locked: bool;
-  display_all_point_distances: bool;
-  display_distance_on_drawing: bool;
-  display_all_point_coordinates: bool;
-  display_all_point_info_selected: bool;
-  display_root_axis: bool;
+  main_scope: string; // Scope
+  dash_spacing_scale: float; // ScaleFactor
+  is_dash_spacing_affected_by_viewport_scale: bool;
+  scope_exponent_threshold: int;
+  dimensions_associative_by_default: bool;
+  use_annotative_scaling: bool;
+  display_precision_linear: int;
+  display_precision_angular: int;
+}
 
-  enable_line_bending_on_edit: bool (deprecated);
-  allow_independent_curve_handles: bool (deprecated); 
-  coord_decimal_places: int (deprecated);
-
-  current_item_fill_style_v3: byte (deprecated);
-  current_item_stroke_style_v3: byte (deprecated);
-  current_item_text_align_v3: byte;
-  line_bending_mode: bool;
-
-  current_item_stroke_width_v3: double (deprecated);
-  current_item_stroke_placement_v3: byte (deprecated);
-  current_item_font_size_v3: double;
-  coord_decimal_places_v3: byte;
+table DucLocalState {
+  scope: string; // Scope
+  active_standard_id: string;
+  
+  scroll_x: double;
+  scroll_y: double;
+  zoom: double;
+  
+  active_grid_settings: [string]; // Identifier["id"][]
+  active_snap_settings: string; // Identifier["id"]
+  
+  is_binding_enabled: bool;
+  
   current_item_stroke: ElementStroke;
   current_item_background: ElementBackground;
+  current_item_opacity: float; // Percentage
+  current_item_font_family: string; 
+  current_item_font_size: double;
+  current_item_text_align: TEXT_ALIGN = null;
+  current_item_start_line_head: DucHead;
+  current_item_end_line_head: DucHead;
+  current_item_roundness: double;
   
-  main_scope: string;  // The preferred scope for the design
-  standard: byte;  // DESIGN_STANDARD values
-  current_item_start_line_head: byte = null;  // LINE_HEAD values
-  current_item_end_line_head: byte = null;  // LINE_HEAD values
-  current_item_roundness_v3: double;
-
-  anti_aliasing: byte;
-  v_sync: bool;
-
-  current_item_font_family_v2: string;
-  debug_rendering: bool;
-
-  current_item_subset: byte = null;  // ELEMENT_SUBSET values
-  editing_linear_element: LinearElementEditor;
+  pen_mode: bool;
+  view_mode_enabled: bool;
+  objects_snap_mode_enabled: bool;
   grid_mode_enabled: bool;
-  grid_step: int;
-  scope_exponent_threshold: byte;
-  zoom_step: float;
-  hovered_element_id: string;
-  elements_pending_erasure: [string];
-  suggested_binding_element_id: string;
-  is_binding_enabled: bool;
+  outline_mode_enabled: bool;
 }
 
-// Define the BinaryFileData table
 table BinaryFileData {
   mime_type: string;
-  id: string;
-  data: [ubyte];
+  id: string (key);
+  data_url: string;
   created: long;
   last_retrieved: long;
+  version: int;
 }
 
-// Define a table to hold the BinaryFiles mapping
-table BinaryFilesEntry {
-  key: string;
+table BinaryFileEntry {
+  key: string (key);
   value: BinaryFileData;
 }
 
-table BinaryFiles {
-  entries: [BinaryFilesEntry];
+table DucGroup {
+  id: string (key);
+  stack_base: _DucStackBase;
 }
 
-table RendererState {
-  deleted_element_ids: [string];
+table DucLayerOverrides {
+  stroke: ElementStroke;
+  background: ElementBackground;
 }
 
-table DictionaryEntry {
+table DucLayer {
+  id: string (key);
+  stack_base: _DucStackBase;
+  readonly: bool;
+  overrides: DucLayerOverrides;
+}
+
+// =============================================================================
+//  STANDARDS & SETTINGS
+// =============================================================================
+
+table _UnitSystemBase {
+  system: UNIT_SYSTEM = null;
+  precision: int;
+  suppress_leading_zeros: bool;
+  suppress_trailing_zeros: bool;
+}
+
+table LinearUnitSystem {
+  base: _UnitSystemBase;
+  format: DIMENSION_UNITS_FORMAT = null;
+  decimal_separator: DECIMAL_SEPARATOR = null;
+  suppress_zero_feet: bool;
+  suppress_zero_inches: bool;
+}
+
+table AngularUnitSystem {
+  base: _UnitSystemBase;
+  format: ANGULAR_UNITS_FORMAT = null;
+}
+
+table AlternateUnits {
+  base: _UnitSystemBase;
+  format: DIMENSION_UNITS_FORMAT = null;
+  is_visible: bool;
+  multiplier: float;
+}
+
+table PrimaryUnits {
+  linear: LinearUnitSystem;
+  angular: AngularUnitSystem;
+}
+
+table StandardUnits {
+  primary_units: PrimaryUnits;
+  alternate_units: AlternateUnits;
+}
+
+table UnitPrecision {
+  linear: int;
+  angular: int;
+  area: int;
+  volume: int;
+}
+
+table StandardOverrides {
+  main_scope: string;
+  elements_stroke_width_override: double;
+  common_style_id: string;
+  stack_like_style_id: string;
+  text_style_id: string;
+  dimension_style_id: string;
+  leader_style_id: string;
+  feature_control_frame_style_id: string;
+  table_style_id: string;
+  doc_style_id: string;
+  viewport_style_id: string;
+  plot_style_id: string;
+  hatch_style_id: string;
+  active_grid_settings_id: [string];
+  active_snap_settings_id: string;
+  dash_line_override: string;
+  unit_precision: UnitPrecision;
+}
+
+table DucCommonStyle {
+  background: ElementBackground;
+  stroke: ElementStroke;
+}
+table IdentifiedCommonStyle { id: Identifier; style: DucCommonStyle; }
+table IdentifiedStackLikeStyle { id: Identifier; style: DucStackLikeStyles; }
+table IdentifiedTextStyle { id: Identifier; style: DucTextStyle; }
+table IdentifiedDimensionStyle { id: Identifier; style: DucDimensionStyle; }
+table IdentifiedLeaderStyle { id: Identifier; style: DucLeaderStyle; }
+table IdentifiedFCFStyle { id: Identifier; style: DucFeatureControlFrameStyle; }
+table IdentifiedTableStyle { id: Identifier; style: DucTableStyle; }
+table IdentifiedDocStyle { id: Identifier; style: DucDocStyle; }
+table IdentifiedViewportStyle { id: Identifier; style: DucViewportStyle; }
+table IdentifiedHatchStyle { id: Identifier; style: DucHatchStyle; }
+table IdentifiedXRayStyle { id: Identifier; style: DucXRayStyle; }
+
+table StandardStyles {
+  common_styles: [IdentifiedCommonStyle];
+  stack_like_styles: [IdentifiedStackLikeStyle];
+  text_styles: [IdentifiedTextStyle];
+  dimension_styles: [IdentifiedDimensionStyle];
+  leader_styles: [IdentifiedLeaderStyle];
+  feature_control_frame_styles: [IdentifiedFCFStyle];
+  table_styles: [IdentifiedTableStyle];
+  doc_styles: [IdentifiedDocStyle];
+  viewport_styles: [IdentifiedViewportStyle];
+  hatch_styles: [IdentifiedHatchStyle];
+  xray_styles: [IdentifiedXRayStyle];
+}
+
+table GridStyle {
+  color: string;
+  opacity: double;
+  dash_pattern: [double];
+}
+
+table PolarGridSettings {
+  radial_divisions: int;
+  radial_spacing: double;
+  show_labels: bool;
+}
+
+table IsometricGridSettings {
+  left_angle: double; // Radian
+  right_angle: double; // Radian
+}
+
+table GridSettings {
+  type: GRID_TYPE = null;
+  readonly: bool;
+  display_type: GRID_DISPLAY_TYPE = null;
+  is_adaptive: bool;
+  x_spacing: double;
+  y_spacing: double;
+  subdivisions: int;
+  origin: GeometricPoint;
+  rotation: double; // Radian
+  follow_ucs: bool;
+  major_style: GridStyle;
+  minor_style: GridStyle;
+  show_minor: bool;
+  min_zoom: double;
+  max_zoom: double;
+  auto_hide: bool;
+  polar_settings: PolarGridSettings;
+  isometric_settings: IsometricGridSettings;
+  enable_snapping: bool;
+}
+
+table SnapOverride {
   key: string;
+  behavior: SNAP_OVERRIDE_BEHAVIOR = null;
+}
+
+table DynamicSnapSettings {
+  enabled_during_drag: bool;
+  enabled_during_rotation: bool;
+  enabled_during_scale: bool;
+}
+
+table PolarTrackingSettings {
+  enabled: bool;
+  angles: [double]; // Radian
+  increment_angle: double; // Radian
+  track_from_last_point: bool;
+  show_polar_coordinates: bool;
+}
+
+table TrackingLineStyle {
+  color: string;
+  opacity: double;
+  dash_pattern: [double];
+}
+
+table LayerSnapFilters {
+  include_layers: [string];
+  exclude_layers: [string];
+}
+
+table SnapMarkerStyle {
+  shape: SNAP_MARKER_SHAPE = null;
+  color: string;
+}
+
+table SnapMarkerStyleEntry {
+  key: OBJECT_SNAP_MODE = null;
+  value: SnapMarkerStyle;
+}
+
+table SnapMarkerSettings {
+  enabled: bool;
+  size: int;
+  duration: int; // ms
+  styles: [SnapMarkerStyleEntry];
+}
+
+table SnapSettings {
+  readonly: bool;
+  twist_angle: double; // Radian;
+  snap_tolerance: int;
+  object_snap_aperture: int;
+  is_ortho_mode_on: bool;
+  polar_tracking: PolarTrackingSettings;
+  is_object_snap_on: bool;
+  active_object_snap_modes: [OBJECT_SNAP_MODE];
+  snap_priority: [OBJECT_SNAP_MODE];
+  show_tracking_lines: bool;
+  tracking_line_style: TrackingLineStyle;
+  dynamic_snap: DynamicSnapSettings;
+  temporary_overrides: [SnapOverride];
+  incremental_distance: double;
+  magnetic_strength: double;
+  layer_snap_filters: LayerSnapFilters;
+  element_type_filters: [string];
+  snap_mode: SNAP_MODE = null;
+  snap_markers: SnapMarkerSettings;
+  construction_snap_enabled: bool;
+  snap_to_grid_intersections: bool;
+}
+
+table IdentifiedGridSettings { id: Identifier; settings: GridSettings; }
+table IdentifiedSnapSettings { id: Identifier; settings: SnapSettings; }
+table IdentifiedUcs { id: Identifier; ucs: DucUcs; }
+table IdentifiedView { id: Identifier; view: DucView; }
+
+table StandardViewSettings {
+  views: [IdentifiedView];
+  ucs: [IdentifiedUcs];
+  grid_settings: [IdentifiedGridSettings];
+  snap_settings: [IdentifiedSnapSettings];
+}
+
+table DimensionValidationRules {
+  min_text_height: double;
+  max_text_height: double;
+  allowed_precisions: [int];
+}
+
+table LayerValidationRules {
+  prohibited_layer_names: [string];
+}
+
+table StandardValidation {
+  dimension_rules: DimensionValidationRules;
+  layer_rules: LayerValidationRules;
+}
+
+table Standard {
+  identifier: Identifier;
+  version: string;
+  readonly: bool;
+  overrides: StandardOverrides;
+  styles: StandardStyles;
+  view_settings: StandardViewSettings;
+  units: StandardUnits;
+  validation: StandardValidation;
+}
+
+
+// =============================================================================
+//  VERSION CONTROL
+// =============================================================================
+
+table VersionBase {
+  id: string;
+  parent_id: string;
+  timestamp: long;
+  description: string;
+  is_manual_save: bool;
+  user_id: string;
+}
+
+table Checkpoint {
+  base: VersionBase;
+  data: [ubyte];
+  size_bytes: long;
+}
+
+table JSONPatchOperation {
+  op: string;
+  path: string;
+  // Can be any JSON type. It is stored here as a serialized JSON string.
   value: string;
 }
 
-// ALWAYS PRESERVE THIS TABLE FOR BACKWARDS COMPATIBILITY ACROSS ANY MAJOR VERSIONS
+table Delta {
+  base: VersionBase;
+  patch: [JSONPatchOperation];
+}
+
+table VersionGraphMetadata {
+  pruning_level: PRUNING_LEVEL = null;
+  last_pruned: long;
+  total_size: long;
+}
+
+table VersionGraph {
+  user_checkpoint_version_id: string;
+  latest_version_id: string;
+  checkpoints: [Checkpoint];
+  deltas: [Delta];
+  metadata: VersionGraphMetadata;
+}
+
+
+// =============================================================================
+//  ROOT TYPE
+// =============================================================================
+
+/// Root data structure for the stored data state
 table ExportedDataState {
   type: string;
-  version_legacy: int;
+  version_legacy: int (deprecated);
+  version: string;
+  
   source: string;
-  elements: [DucElement] (deprecated);
-  app_state: AppState (deprecated);
-  files: BinaryFiles (deprecated);
-  renderer_state: RendererState;
+  thumbnail: [ubyte];
+  dictionary: [DictionaryEntry];
+  
+  elements: [ElementWrapper];
   blocks: [DucBlock];
   groups: [DucGroup];
-  version: string;
   layers: [DucLayer];
   standards: [Standard];
-  dictionary: [DictionaryEntry];
-  duc_state: DucState;
-  duc_global_settings: DucGlobalSettings;
-  thumbnail: [ubyte];
+
+  duc_local_state: DucLocalState;
+  duc_global_state: DucGlobalState;
+  
+  files: [BinaryFileEntry];
+  
+  version_graph: VersionGraph;
 }
 
 root_type ExportedDataState;

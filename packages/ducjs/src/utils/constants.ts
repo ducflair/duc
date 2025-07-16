@@ -383,8 +383,6 @@ export const GRID_TYPE = {
  * Default grid configurations
  */
 export const DEFAULT_GRID_SETTINGS: GridSettings = {
-  id: "default-grid",
-  name: "Default Grid",
   readonly: true,
   isAdaptive: true,
   type: GRID_TYPE.RECTANGULAR,
@@ -415,7 +413,6 @@ export const DEFAULT_GRID_SETTINGS: GridSettings = {
   autoHide: true,
 
   enableSnapping: true,
-  zIndex: 0,
 };
 
 /**
@@ -464,8 +461,6 @@ export const SNAP_MARKER_SHAPE = {
  * Default snap settings configuration
  */
 export const DEFAULT_SNAP_SETTINGS: SnapSettings = {
-  id: "default-snap-settings",
-  name: "Default Snap Settings",
   readonly: true,
   twistAngle: 0 as Radian,
   snapTolerance: 10,
