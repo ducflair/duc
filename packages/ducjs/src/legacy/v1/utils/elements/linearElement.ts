@@ -9,7 +9,6 @@ import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierP
 
 type SV = ScopedValue;
 
-export type PointIndex = [number, 'point' | 'handleIn' | 'handleOut'];
 export type HandleType = ValueOf<typeof HANDLE_TYPE> | null;
 export type HandleInfo = {
   pointIndex: number;

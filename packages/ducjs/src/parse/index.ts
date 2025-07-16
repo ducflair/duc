@@ -10,7 +10,7 @@ import { FileSystemHandle } from 'browser-fs-access';
 import * as flatbuffers from 'flatbuffers';
 import { restore, ExtendedAppStateRestorer } from 'ducjs/utils/restore';
 import { DucElement, DucBlock, DucGroup, OrderedDucElement } from 'ducjs/types/elements';
-import { BinaryFiles, DucState, RendererState } from 'ducjs/types';
+import { BinaryFiles, DucLocalState, RendererState } from 'ducjs/types';
 import {
   ExportedDataState
 } from 'ducjs/duc';
@@ -24,7 +24,7 @@ import { parseDucFlatBuffers as parseDucFlatBuffersV1 } from 'ducjs/legacy/v1/pa
 
 export type ParseDucResult = {
   elements: DucElement[];
-  appState: Partial<DucState>;
+  appState: Partial<DucLocalState>;
   files: BinaryFiles;
   blocks: DucBlock[];
   groups: DucGroup[];
@@ -62,7 +62,7 @@ export const parseDuc = async (
 
   // Parse appState
   const appState = data.appState();
-  const parsedAppState: Partial<DucState> = parseAppStateFromBinary(appState, version);
+  const parsedAppState: Partial<DucLocalState> = parseAppStateFromBinary(appState, version);
 
   // Parse files
   const binaryFiles = data.files();
@@ -96,7 +96,7 @@ export const parseDuc = async (
     }
   }
 
-  const customExtendedAppStateRestorer: ExtendedAppStateRestorer<DucState> = (
+  const customExtendedAppStateRestorer: ExtendedAppStateRestorer<DucLocalState> = (
     extendedAppState,
     localExtendedAppState,
     restoredDucState,

@@ -1,5 +1,5 @@
 import { ANTI_ALIASING, TEXT_ALIGN, THEME } from "ducjs/duc";
-import { ActiveTool, DucState, RawValue, ToolType } from "ducjs/types";
+import { ActiveTool, DucLocalState, RawValue, ToolType } from "ducjs/types";
 import { COLOR_PALETTE, DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_GRID_SIZE, DEFAULT_GRID_STEP } from "ducjs/utils/constants";
 import { getNormalizedZoom } from "ducjs/utils/normalize";
 import { getPrecisionValueFromRaw, getScaledZoomValueForScope, getScopedZoomValue, NEUTRAL_SCOPE } from "ducjs/technical/scopes";
@@ -7,7 +7,7 @@ import { DESIGN_STANDARD } from "ducjs/technical/standards";
 
 
 export const getDefaultDucState = (): Omit<
-  DucState,
+  DucLocalState,
   "offsetTop" | "offsetLeft" | "width" | "height"
 > => {
   const scrollX = window.innerWidth / 2;
@@ -95,7 +95,7 @@ export const getDefaultDucState = (): Omit<
 
 
 export const updateActiveTool = (
-  appState: Pick<DucState, "activeTool">,
+  appState: Pick<DucLocalState, "activeTool">,
   data: ((
     | {
       type: ToolType;
@@ -104,7 +104,7 @@ export const updateActiveTool = (
   ) & { locked?: boolean; fromSelection?: boolean }) & {
     lastActiveToolBeforeEraser?: ActiveTool | null;
   },
-): DucState["activeTool"] => {
+): DucLocalState["activeTool"] => {
   if (data.type === "custom") {
     return {
       ...appState.activeTool,
