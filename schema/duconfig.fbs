@@ -1,4 +1,4 @@
-// SCHEMA_VERSION=2.0.0
+// SCHEMA_VERSION=1.0.0
 
 // Official FlatBuffers Compiler: https://flatbuffers.ar.je/ 
 // Official FlatBuffers Documentation: https://flatbuffers.dev/tutorial/
@@ -15,7 +15,7 @@
 namespace Duconfig;
 
 // MIME TYPE: .duconfig
-file_identifier "DCNF";
+file_identifier "DFIG";
 
 // --- ENUMS ---
 // Usually we start from the value 10 on enums because on some languages, 0 is treated as false and 1 is treated as true on if statements
@@ -38,41 +38,33 @@ enum SHOW_HYPERLINK_POPUP:ubyte {
   EDITOR = 12 
 }
 
-// FIXME: The definition for 'PruningLevel' was not provided. A placeholder is created below.
-// Please define its values.
-enum PruningLevel:ubyte {
-  LEVEL_0 = 0,
-  LEVEL_1 = 1,
-  LEVEL_2 = 2
+enum PRUNING_LEVEL:ubyte {
+  CONSERVATIVE = 10,
+  BALANCED = 20,
+  AGGRESSIVE = 30
 }
-
 
 // --- TABLES ---
 
 /// User's personal application settings, applied across all projects
 table Duconfig {
-  // Appearance
-  theme: THEME = DARK;
+  theme: THEME = LIGHT;
   anti_aliasing: ANTI_ALIASING = ANALYTIC;
 
-  // Interaction
   show_hyperlink_popup: SHOW_HYPERLINK_POPUP = INFO;
-  zoom_step: float = 0.5;
+  zoom_step: float;
 
-  // Display Options
-  v_sync: bool = true;
-  scale_ratio_locked: bool = false;
-  display_all_point_distances: bool = false;
-  display_distance_on_drawing: bool = true;
-  display_all_point_coordinates: bool = false;
-  display_all_point_info_selected: bool = true;
-  display_root_axis: bool = true;
+  v_sync: bool;
+  scale_ratio_locked: bool;
+  display_all_point_distances: bool;
+  display_distance_on_drawing: bool;
+  display_all_point_coordinates: bool;
+  display_all_point_info_selected: bool;
+  display_root_axis: bool;
 
-  // System & Debug
-  debug_rendering: bool = false;
-  /// Whether to disable the auto-save feature
-  manual_save_mode: bool = false;
-  default_version_graph_pruning_level: PruningLevel = LEVEL_1;
+  debug_rendering: bool;
+  manual_save_mode: bool;
+  default_version_graph_pruning_level: PRUNING_LEVEL = BALANCED;
 }
 
 root_type Duconfig;
