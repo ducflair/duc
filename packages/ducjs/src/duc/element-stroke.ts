@@ -5,6 +5,7 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { ElementContentBase } from '../duc/element-content-base';
+import { STROKE_PLACEMENT } from '../duc/stroke-placement';
 import { StrokeSides } from '../duc/stroke-sides';
 import { StrokeStyle } from '../duc/stroke-style';
 
@@ -42,9 +43,9 @@ style(obj?:StrokeStyle):StrokeStyle|null {
   return offset ? (obj || new StrokeStyle()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-placement():number {
+placement():STROKE_PLACEMENT|null {
   const offset = this.bb!.__offset(this.bb_pos, 10);
-  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
 }
 
 strokeSides(obj?:StrokeSides):StrokeSides|null {
@@ -68,8 +69,8 @@ static addStyle(builder:flatbuffers.Builder, styleOffset:flatbuffers.Offset) {
   builder.addFieldOffset(2, styleOffset, 0);
 }
 
-static addPlacement(builder:flatbuffers.Builder, placement:number) {
-  builder.addFieldInt8(3, placement, 0);
+static addPlacement(builder:flatbuffers.Builder, placement:STROKE_PLACEMENT) {
+  builder.addFieldInt8(3, placement, null);
 }
 
 static addStrokeSides(builder:flatbuffers.Builder, strokeSidesOffset:flatbuffers.Offset) {

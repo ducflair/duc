@@ -4,14 +4,21 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { AppState } from '../duc/app-state';
-import { BinaryFiles } from '../duc/binary-files';
+import { BinaryFileEntry } from '../duc/binary-file-entry';
+import { DictionaryEntry } from '../duc/dictionary-entry';
 import { DucBlock } from '../duc/duc-block';
-import { DucElement } from '../duc/duc-element';
+import { DucGlobalState } from '../duc/duc-global-state';
 import { DucGroup } from '../duc/duc-group';
-import { RendererState } from '../duc/renderer-state';
+import { DucLayer } from '../duc/duc-layer';
+import { DucLocalState } from '../duc/duc-local-state';
+import { ElementWrapper } from '../duc/element-wrapper';
+import { Standard } from '../duc/standard';
+import { VersionGraph } from '../duc/version-graph';
 
 
+/**
+ * Root data structure for the stored data state
+ */
 export class ExportedDataState {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -41,41 +48,53 @@ type(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-versionLegacy():number {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+version():string|null
+version(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+version(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 8);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 source():string|null
 source(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 source(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
+  const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-elements(index: number, obj?:DucElement):DucElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
-  return offset ? (obj || new DucElement()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+thumbnail(index: number):number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 12);
+  return offset ? this.bb!.readUint8(this.bb!.__vector(this.bb_pos + offset) + index) : 0;
 }
 
-elementsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
+thumbnailLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-appState(obj?:AppState):AppState|null {
+thumbnailArray():Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? (obj || new AppState()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? new Uint8Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
 }
 
-files(obj?:BinaryFiles):BinaryFiles|null {
+dictionary(index: number, obj?:DictionaryEntry):DictionaryEntry|null {
   const offset = this.bb!.__offset(this.bb_pos, 14);
-  return offset ? (obj || new BinaryFiles()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new DictionaryEntry()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
-rendererState(obj?:RendererState):RendererState|null {
+dictionaryLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 14);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+elements(index: number, obj?:ElementWrapper):ElementWrapper|null {
   const offset = this.bb!.__offset(this.bb_pos, 16);
-  return offset ? (obj || new RendererState()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new ElementWrapper()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+elementsLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 16);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 blocks(index: number, obj?:DucBlock):DucBlock|null {
@@ -98,31 +117,101 @@ groupsLength():number {
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-version():string|null
-version(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-version(optionalEncoding?:any):string|Uint8Array|null {
+layers(index: number, obj?:DucLayer):DucLayer|null {
   const offset = this.bb!.__offset(this.bb_pos, 22);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+  return offset ? (obj || new DucLayer()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+layersLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 22);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+standards(index: number, obj?:Standard):Standard|null {
+  const offset = this.bb!.__offset(this.bb_pos, 24);
+  return offset ? (obj || new Standard()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+standardsLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 24);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+ducLocalState(obj?:DucLocalState):DucLocalState|null {
+  const offset = this.bb!.__offset(this.bb_pos, 26);
+  return offset ? (obj || new DucLocalState()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+ducGlobalState(obj?:DucGlobalState):DucGlobalState|null {
+  const offset = this.bb!.__offset(this.bb_pos, 28);
+  return offset ? (obj || new DucGlobalState()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+files(index: number, obj?:BinaryFileEntry):BinaryFileEntry|null {
+  const offset = this.bb!.__offset(this.bb_pos, 30);
+  return offset ? (obj || new BinaryFileEntry()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+filesLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 30);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+versionGraph(obj?:VersionGraph):VersionGraph|null {
+  const offset = this.bb!.__offset(this.bb_pos, 32);
+  return offset ? (obj || new VersionGraph()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 static startExportedDataState(builder:flatbuffers.Builder) {
-  builder.startObject(10);
+  builder.startObject(15);
 }
 
 static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
   builder.addFieldOffset(0, typeOffset, 0);
 }
 
-static addVersionLegacy(builder:flatbuffers.Builder, versionLegacy:number) {
-  builder.addFieldInt32(1, versionLegacy, 0);
+static addVersion(builder:flatbuffers.Builder, versionOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(2, versionOffset, 0);
 }
 
 static addSource(builder:flatbuffers.Builder, sourceOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, sourceOffset, 0);
+  builder.addFieldOffset(3, sourceOffset, 0);
+}
+
+static addThumbnail(builder:flatbuffers.Builder, thumbnailOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(4, thumbnailOffset, 0);
+}
+
+static createThumbnailVector(builder:flatbuffers.Builder, data:number[]|Uint8Array):flatbuffers.Offset {
+  builder.startVector(1, data.length, 1);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addInt8(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startThumbnailVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(1, numElems, 1);
+}
+
+static addDictionary(builder:flatbuffers.Builder, dictionaryOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(5, dictionaryOffset, 0);
+}
+
+static createDictionaryVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startDictionaryVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
 }
 
 static addElements(builder:flatbuffers.Builder, elementsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, elementsOffset, 0);
+  builder.addFieldOffset(6, elementsOffset, 0);
 }
 
 static createElementsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -135,18 +224,6 @@ static createElementsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset
 
 static startElementsVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
-}
-
-static addAppState(builder:flatbuffers.Builder, appStateOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, appStateOffset, 0);
-}
-
-static addFiles(builder:flatbuffers.Builder, filesOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, filesOffset, 0);
-}
-
-static addRendererState(builder:flatbuffers.Builder, rendererStateOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(6, rendererStateOffset, 0);
 }
 
 static addBlocks(builder:flatbuffers.Builder, blocksOffset:flatbuffers.Offset) {
@@ -181,8 +258,64 @@ static startGroupsVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
 }
 
-static addVersion(builder:flatbuffers.Builder, versionOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(9, versionOffset, 0);
+static addLayers(builder:flatbuffers.Builder, layersOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(9, layersOffset, 0);
+}
+
+static createLayersVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startLayersVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addStandards(builder:flatbuffers.Builder, standardsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(10, standardsOffset, 0);
+}
+
+static createStandardsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startStandardsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addDucLocalState(builder:flatbuffers.Builder, ducLocalStateOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(11, ducLocalStateOffset, 0);
+}
+
+static addDucGlobalState(builder:flatbuffers.Builder, ducGlobalStateOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(12, ducGlobalStateOffset, 0);
+}
+
+static addFiles(builder:flatbuffers.Builder, filesOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(13, filesOffset, 0);
+}
+
+static createFilesVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startFilesVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addVersionGraph(builder:flatbuffers.Builder, versionGraphOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(14, versionGraphOffset, 0);
 }
 
 static endExportedDataState(builder:flatbuffers.Builder):flatbuffers.Offset {

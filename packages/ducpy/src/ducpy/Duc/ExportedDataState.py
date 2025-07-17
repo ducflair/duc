@@ -6,6 +6,7 @@ import flatbuffers
 from flatbuffers.compat import import_numpy
 np = import_numpy()
 
+# Root data structure for the stored data state
 class ExportedDataState(object):
     __slots__ = ['_tab']
 
@@ -36,76 +37,95 @@ class ExportedDataState(object):
         return None
 
     # ExportedDataState
-    def VersionLegacy(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
-        return 0
-
-    # ExportedDataState
-    def Source(self):
+    def Version(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # ExportedDataState
-    def Elements(self, j):
+    def Source(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # ExportedDataState
+    def Thumbnail(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            a = self._tab.Vector(o)
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1))
+        return 0
+
+    # ExportedDataState
+    def ThumbnailAsNumpy(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Uint8Flags, o)
+        return 0
+
+    # ExportedDataState
+    def ThumbnailLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # ExportedDataState
+    def ThumbnailIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        return o == 0
+
+    # ExportedDataState
+    def Dictionary(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             x = self._tab.Vector(o)
             x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
             x = self._tab.Indirect(x)
-            from Duc.DucElement import DucElement
-            obj = DucElement()
+            from Duc.DictionaryEntry import DictionaryEntry
+            obj = DictionaryEntry()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # ExportedDataState
+    def DictionaryLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # ExportedDataState
+    def DictionaryIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        return o == 0
+
+    # ExportedDataState
+    def Elements(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.ElementWrapper import ElementWrapper
+            obj = ElementWrapper()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
 
     # ExportedDataState
     def ElementsLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # ExportedDataState
     def ElementsIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
-        return o == 0
-
-    # ExportedDataState
-    def AppState(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.AppState import AppState
-            obj = AppState()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # ExportedDataState
-    def Files(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.BinaryFiles import BinaryFiles
-            obj = BinaryFiles()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # ExportedDataState
-    def RendererState(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.RendererState import RendererState
-            obj = RendererState()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
+        return o == 0
 
     # ExportedDataState
     def Blocks(self, j):
@@ -158,14 +178,115 @@ class ExportedDataState(object):
         return o == 0
 
     # ExportedDataState
-    def Version(self):
+    def Layers(self, j):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
         if o != 0:
-            return self._tab.String(o + self._tab.Pos)
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.DucLayer import DucLayer
+            obj = DucLayer()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # ExportedDataState
+    def LayersLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # ExportedDataState
+    def LayersIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        return o == 0
+
+    # ExportedDataState
+    def Standards(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.Standard import Standard
+            obj = Standard()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # ExportedDataState
+    def StandardsLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # ExportedDataState
+    def StandardsIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        return o == 0
+
+    # ExportedDataState
+    def DucLocalState(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.DucLocalState import DucLocalState
+            obj = DucLocalState()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # ExportedDataState
+    def DucGlobalState(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.DucGlobalState import DucGlobalState
+            obj = DucGlobalState()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # ExportedDataState
+    def Files(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.BinaryFileEntry import BinaryFileEntry
+            obj = BinaryFileEntry()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # ExportedDataState
+    def FilesLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # ExportedDataState
+    def FilesIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        return o == 0
+
+    # ExportedDataState
+    def VersionGraph(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.VersionGraph import VersionGraph
+            obj = VersionGraph()
+            obj.Init(self._tab.Bytes, x)
+            return obj
         return None
 
 def ExportedDataStateStart(builder):
-    builder.StartObject(10)
+    builder.StartObject(15)
 
 def Start(builder):
     ExportedDataStateStart(builder)
@@ -176,20 +297,44 @@ def ExportedDataStateAddType(builder, type):
 def AddType(builder, type):
     ExportedDataStateAddType(builder, type)
 
-def ExportedDataStateAddVersionLegacy(builder, versionLegacy):
-    builder.PrependInt32Slot(1, versionLegacy, 0)
+def ExportedDataStateAddVersion(builder, version):
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(version), 0)
 
-def AddVersionLegacy(builder, versionLegacy):
-    ExportedDataStateAddVersionLegacy(builder, versionLegacy)
+def AddVersion(builder, version):
+    ExportedDataStateAddVersion(builder, version)
 
 def ExportedDataStateAddSource(builder, source):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(source), 0)
+    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(source), 0)
 
 def AddSource(builder, source):
     ExportedDataStateAddSource(builder, source)
 
+def ExportedDataStateAddThumbnail(builder, thumbnail):
+    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(thumbnail), 0)
+
+def AddThumbnail(builder, thumbnail):
+    ExportedDataStateAddThumbnail(builder, thumbnail)
+
+def ExportedDataStateStartThumbnailVector(builder, numElems):
+    return builder.StartVector(1, numElems, 1)
+
+def StartThumbnailVector(builder, numElems):
+    return ExportedDataStateStartThumbnailVector(builder, numElems)
+
+def ExportedDataStateAddDictionary(builder, dictionary):
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(dictionary), 0)
+
+def AddDictionary(builder, dictionary):
+    ExportedDataStateAddDictionary(builder, dictionary)
+
+def ExportedDataStateStartDictionaryVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartDictionaryVector(builder, numElems):
+    return ExportedDataStateStartDictionaryVector(builder, numElems)
+
 def ExportedDataStateAddElements(builder, elements):
-    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(elements), 0)
+    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(elements), 0)
 
 def AddElements(builder, elements):
     ExportedDataStateAddElements(builder, elements)
@@ -199,24 +344,6 @@ def ExportedDataStateStartElementsVector(builder, numElems):
 
 def StartElementsVector(builder, numElems):
     return ExportedDataStateStartElementsVector(builder, numElems)
-
-def ExportedDataStateAddAppState(builder, appState):
-    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(appState), 0)
-
-def AddAppState(builder, appState):
-    ExportedDataStateAddAppState(builder, appState)
-
-def ExportedDataStateAddFiles(builder, files):
-    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(files), 0)
-
-def AddFiles(builder, files):
-    ExportedDataStateAddFiles(builder, files)
-
-def ExportedDataStateAddRendererState(builder, rendererState):
-    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(rendererState), 0)
-
-def AddRendererState(builder, rendererState):
-    ExportedDataStateAddRendererState(builder, rendererState)
 
 def ExportedDataStateAddBlocks(builder, blocks):
     builder.PrependUOffsetTRelativeSlot(7, flatbuffers.number_types.UOffsetTFlags.py_type(blocks), 0)
@@ -242,11 +369,59 @@ def ExportedDataStateStartGroupsVector(builder, numElems):
 def StartGroupsVector(builder, numElems):
     return ExportedDataStateStartGroupsVector(builder, numElems)
 
-def ExportedDataStateAddVersion(builder, version):
-    builder.PrependUOffsetTRelativeSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(version), 0)
+def ExportedDataStateAddLayers(builder, layers):
+    builder.PrependUOffsetTRelativeSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(layers), 0)
 
-def AddVersion(builder, version):
-    ExportedDataStateAddVersion(builder, version)
+def AddLayers(builder, layers):
+    ExportedDataStateAddLayers(builder, layers)
+
+def ExportedDataStateStartLayersVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartLayersVector(builder, numElems):
+    return ExportedDataStateStartLayersVector(builder, numElems)
+
+def ExportedDataStateAddStandards(builder, standards):
+    builder.PrependUOffsetTRelativeSlot(10, flatbuffers.number_types.UOffsetTFlags.py_type(standards), 0)
+
+def AddStandards(builder, standards):
+    ExportedDataStateAddStandards(builder, standards)
+
+def ExportedDataStateStartStandardsVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartStandardsVector(builder, numElems):
+    return ExportedDataStateStartStandardsVector(builder, numElems)
+
+def ExportedDataStateAddDucLocalState(builder, ducLocalState):
+    builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(ducLocalState), 0)
+
+def AddDucLocalState(builder, ducLocalState):
+    ExportedDataStateAddDucLocalState(builder, ducLocalState)
+
+def ExportedDataStateAddDucGlobalState(builder, ducGlobalState):
+    builder.PrependUOffsetTRelativeSlot(12, flatbuffers.number_types.UOffsetTFlags.py_type(ducGlobalState), 0)
+
+def AddDucGlobalState(builder, ducGlobalState):
+    ExportedDataStateAddDucGlobalState(builder, ducGlobalState)
+
+def ExportedDataStateAddFiles(builder, files):
+    builder.PrependUOffsetTRelativeSlot(13, flatbuffers.number_types.UOffsetTFlags.py_type(files), 0)
+
+def AddFiles(builder, files):
+    ExportedDataStateAddFiles(builder, files)
+
+def ExportedDataStateStartFilesVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartFilesVector(builder, numElems):
+    return ExportedDataStateStartFilesVector(builder, numElems)
+
+def ExportedDataStateAddVersionGraph(builder, versionGraph):
+    builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(versionGraph), 0)
+
+def AddVersionGraph(builder, versionGraph):
+    ExportedDataStateAddVersionGraph(builder, versionGraph)
 
 def ExportedDataStateEnd(builder):
     return builder.EndObject()

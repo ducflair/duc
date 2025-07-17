@@ -4,7 +4,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { DucTableStyleProps } from '../duc/duc-table-style-props';
+import { DucTableCellSpan } from '../duc/duc-table-cell-span';
+import { DucTableCellStyle } from '../duc/duc-table-cell-style';
 
 
 export class DucTableCell {
@@ -46,13 +47,23 @@ data(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-style(obj?:DucTableStyleProps):DucTableStyleProps|null {
+span(obj?:DucTableCellSpan):DucTableCellSpan|null {
   const offset = this.bb!.__offset(this.bb_pos, 10);
-  return offset ? (obj || new DucTableStyleProps()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new DucTableCellSpan()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+locked():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 12);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
+styleOverrides(obj?:DucTableCellStyle):DucTableCellStyle|null {
+  const offset = this.bb!.__offset(this.bb_pos, 14);
+  return offset ? (obj || new DucTableCellStyle()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 static startDucTableCell(builder:flatbuffers.Builder) {
-  builder.startObject(4);
+  builder.startObject(6);
 }
 
 static addRowId(builder:flatbuffers.Builder, rowIdOffset:flatbuffers.Offset) {
@@ -67,8 +78,16 @@ static addData(builder:flatbuffers.Builder, dataOffset:flatbuffers.Offset) {
   builder.addFieldOffset(2, dataOffset, 0);
 }
 
-static addStyle(builder:flatbuffers.Builder, styleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, styleOffset, 0);
+static addSpan(builder:flatbuffers.Builder, spanOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(3, spanOffset, 0);
+}
+
+static addLocked(builder:flatbuffers.Builder, locked:boolean) {
+  builder.addFieldInt8(4, +locked, +false);
+}
+
+static addStyleOverrides(builder:flatbuffers.Builder, styleOverridesOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(5, styleOverridesOffset, 0);
 }
 
 static endDucTableCell(builder:flatbuffers.Builder):flatbuffers.Offset {

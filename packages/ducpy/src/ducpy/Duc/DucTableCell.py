@@ -50,18 +50,36 @@ class DucTableCell(object):
         return None
 
     # DucTableCell
-    def Style(self):
+    def Span(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.DucTableStyleProps import DucTableStyleProps
-            obj = DucTableStyleProps()
+            from Duc.DucTableCellSpan import DucTableCellSpan
+            obj = DucTableCellSpan()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucTableCell
+    def Locked(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
+        return False
+
+    # DucTableCell
+    def StyleOverrides(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.DucTableCellStyle import DucTableCellStyle
+            obj = DucTableCellStyle()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
 
 def DucTableCellStart(builder):
-    builder.StartObject(4)
+    builder.StartObject(6)
 
 def Start(builder):
     DucTableCellStart(builder)
@@ -84,11 +102,23 @@ def DucTableCellAddData(builder, data):
 def AddData(builder, data):
     DucTableCellAddData(builder, data)
 
-def DucTableCellAddStyle(builder, style):
-    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(style), 0)
+def DucTableCellAddSpan(builder, span):
+    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(span), 0)
 
-def AddStyle(builder, style):
-    DucTableCellAddStyle(builder, style)
+def AddSpan(builder, span):
+    DucTableCellAddSpan(builder, span)
+
+def DucTableCellAddLocked(builder, locked):
+    builder.PrependBoolSlot(4, locked, 0)
+
+def AddLocked(builder, locked):
+    DucTableCellAddLocked(builder, locked)
+
+def DucTableCellAddStyleOverrides(builder, styleOverrides):
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(styleOverrides), 0)
+
+def AddStyleOverrides(builder, styleOverrides):
+    DucTableCellAddStyleOverrides(builder, styleOverrides)
 
 def DucTableCellEnd(builder):
     return builder.EndObject()

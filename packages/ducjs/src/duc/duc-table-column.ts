@@ -4,7 +4,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { DucTableStyleProps } from '../duc/duc-table-style-props';
+import { DucTableCellStyle } from '../duc/duc-table-cell-style';
 
 
 export class DucTableColumn {
@@ -37,9 +37,9 @@ width():number {
   return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
-style(obj?:DucTableStyleProps):DucTableStyleProps|null {
+styleOverrides(obj?:DucTableCellStyle):DucTableCellStyle|null {
   const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? (obj || new DucTableStyleProps()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new DucTableCellStyle()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 static startDucTableColumn(builder:flatbuffers.Builder) {
@@ -54,12 +54,13 @@ static addWidth(builder:flatbuffers.Builder, width:number) {
   builder.addFieldFloat64(1, width, 0.0);
 }
 
-static addStyle(builder:flatbuffers.Builder, styleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, styleOffset, 0);
+static addStyleOverrides(builder:flatbuffers.Builder, styleOverridesOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(2, styleOverridesOffset, 0);
 }
 
 static endDucTableColumn(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
+  builder.requiredField(offset, 4) // id
   return offset;
 }
 

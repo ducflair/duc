@@ -4,6 +4,9 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { DucHatchStyle } from '../duc/duc-hatch-style';
+import { DucImageFilter } from '../duc/duc-image-filter';
+import { ELEMENT_CONTENT_PREFERENCE } from '../duc/element-content-preference';
 import { TilingProperties } from '../duc/tiling-properties';
 
 
@@ -25,9 +28,9 @@ static getSizePrefixedRootAsElementContentBase(bb:flatbuffers.ByteBuffer, obj?:E
   return (obj || new ElementContentBase()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-preference():number {
+preference():ELEMENT_CONTENT_PREFERENCE|null {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
 }
 
 src():string|null
@@ -52,12 +55,22 @@ tiling(obj?:TilingProperties):TilingProperties|null {
   return offset ? (obj || new TilingProperties()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-static startElementContentBase(builder:flatbuffers.Builder) {
-  builder.startObject(5);
+hatch(obj?:DucHatchStyle):DucHatchStyle|null {
+  const offset = this.bb!.__offset(this.bb_pos, 14);
+  return offset ? (obj || new DucHatchStyle()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-static addPreference(builder:flatbuffers.Builder, preference:number) {
-  builder.addFieldInt8(0, preference, 0);
+imageFilter(obj?:DucImageFilter):DucImageFilter|null {
+  const offset = this.bb!.__offset(this.bb_pos, 16);
+  return offset ? (obj || new DucImageFilter()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+static startElementContentBase(builder:flatbuffers.Builder) {
+  builder.startObject(7);
+}
+
+static addPreference(builder:flatbuffers.Builder, preference:ELEMENT_CONTENT_PREFERENCE) {
+  builder.addFieldInt8(0, preference, null);
 }
 
 static addSrc(builder:flatbuffers.Builder, srcOffset:flatbuffers.Offset) {
@@ -74,6 +87,14 @@ static addOpacity(builder:flatbuffers.Builder, opacity:number) {
 
 static addTiling(builder:flatbuffers.Builder, tilingOffset:flatbuffers.Offset) {
   builder.addFieldOffset(4, tilingOffset, 0);
+}
+
+static addHatch(builder:flatbuffers.Builder, hatchOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(5, hatchOffset, 0);
+}
+
+static addImageFilter(builder:flatbuffers.Builder, imageFilterOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(6, imageFilterOffset, 0);
 }
 
 static endElementContentBase(builder:flatbuffers.Builder):flatbuffers.Offset {

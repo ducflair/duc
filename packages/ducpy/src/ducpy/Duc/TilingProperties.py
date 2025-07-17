@@ -32,7 +32,7 @@ class TilingProperties(object):
     def SizeInPercent(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
     # TilingProperties
@@ -47,21 +47,21 @@ class TilingProperties(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return None
+        return 0.0
 
     # TilingProperties
     def OffsetX(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return None
+        return 0.0
 
     # TilingProperties
     def OffsetY(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return None
+        return 0.0
 
 def TilingPropertiesStart(builder):
     builder.StartObject(5)
@@ -70,7 +70,7 @@ def Start(builder):
     TilingPropertiesStart(builder)
 
 def TilingPropertiesAddSizeInPercent(builder, sizeInPercent):
-    builder.PrependFloat64Slot(0, sizeInPercent, 0.0)
+    builder.PrependFloat32Slot(0, sizeInPercent, 0.0)
 
 def AddSizeInPercent(builder, sizeInPercent):
     TilingPropertiesAddSizeInPercent(builder, sizeInPercent)
@@ -82,19 +82,19 @@ def AddAngle(builder, angle):
     TilingPropertiesAddAngle(builder, angle)
 
 def TilingPropertiesAddSpacing(builder, spacing):
-    builder.PrependFloat64Slot(2, spacing, None)
+    builder.PrependFloat64Slot(2, spacing, 0.0)
 
 def AddSpacing(builder, spacing):
     TilingPropertiesAddSpacing(builder, spacing)
 
 def TilingPropertiesAddOffsetX(builder, offsetX):
-    builder.PrependFloat64Slot(3, offsetX, None)
+    builder.PrependFloat64Slot(3, offsetX, 0.0)
 
 def AddOffsetX(builder, offsetX):
     TilingPropertiesAddOffsetX(builder, offsetX)
 
 def TilingPropertiesAddOffsetY(builder, offsetY):
-    builder.PrependFloat64Slot(4, offsetY, None)
+    builder.PrependFloat64Slot(4, offsetY, 0.0)
 
 def AddOffsetY(builder, offsetY):
     TilingPropertiesAddOffsetY(builder, offsetY)

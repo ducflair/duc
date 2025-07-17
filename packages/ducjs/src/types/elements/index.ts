@@ -2,7 +2,7 @@ export * from "./typeChecks";
 
 import { BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, COLUMN_TYPE, DATUM_BRACKET_STYLE, DATUM_TARGET_TYPE, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_TYPE, TOLERANCE_ZONE_TYPE, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT } from "ducjs/duc";
 import { Standard } from "ducjs/technical/standards";
-import { DucView, PrecisionValue, Scope, Theme } from "ducjs/types";
+import { DucView, PrecisionValue, Scope } from "ducjs/types";
 import { Axis, GeometricPoint, Percentage, Radian, ScaleFactor } from "ducjs/types/geometryTypes";
 import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "ducjs/types/utility-types";
 import {
@@ -1058,17 +1058,6 @@ export type DucIframeLikeElement =
   | DucEmbeddableElement
   | DucTableElement
   | DucDocElement;
-
-export type IframeData =
-  | {
-    intrinsicSize: { w: number; h: number };
-    error?: Error;
-    sandbox?: { allowSameOrigin?: boolean };
-  } & (
-    | { type: "video" | "generic"; link: string }
-    | { type: "document"; srcdoc: (theme: Theme) => string }
-  );
-
 
 
 
