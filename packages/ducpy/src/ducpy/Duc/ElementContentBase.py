@@ -32,8 +32,8 @@ class ElementContentBase(object):
     def Preference(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
-        return 0
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
+        return None
 
     # ElementContentBase
     def Src(self):
@@ -67,14 +67,36 @@ class ElementContentBase(object):
             return obj
         return None
 
+    # ElementContentBase
+    def Hatch(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.DucHatchStyle import DucHatchStyle
+            obj = DucHatchStyle()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # ElementContentBase
+    def ImageFilter(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.DucImageFilter import DucImageFilter
+            obj = DucImageFilter()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def ElementContentBaseStart(builder):
-    builder.StartObject(5)
+    builder.StartObject(7)
 
 def Start(builder):
     ElementContentBaseStart(builder)
 
 def ElementContentBaseAddPreference(builder, preference):
-    builder.PrependInt8Slot(0, preference, 0)
+    builder.PrependUint8Slot(0, preference, None)
 
 def AddPreference(builder, preference):
     ElementContentBaseAddPreference(builder, preference)
@@ -102,6 +124,18 @@ def ElementContentBaseAddTiling(builder, tiling):
 
 def AddTiling(builder, tiling):
     ElementContentBaseAddTiling(builder, tiling)
+
+def ElementContentBaseAddHatch(builder, hatch):
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(hatch), 0)
+
+def AddHatch(builder, hatch):
+    ElementContentBaseAddHatch(builder, hatch)
+
+def ElementContentBaseAddImageFilter(builder, imageFilter):
+    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(imageFilter), 0)
+
+def AddImageFilter(builder, imageFilter):
+    ElementContentBaseAddImageFilter(builder, imageFilter)
 
 def ElementContentBaseEnd(builder):
     return builder.EndObject()

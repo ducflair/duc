@@ -4,6 +4,6 @@
 
 export enum AXIS {
   X = 10,
-  Y = 11,
-  Z = 12
+  Y = 20,
+  Z = 30
 }

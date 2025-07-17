@@ -1314,7 +1314,7 @@ table DucLocalState {
 table BinaryFileData {
   mime_type: string;
   id: string (key);
-  data_url: string;
+  data: [ubyte];
   created: long;
   last_retrieved: long;
   version: int;

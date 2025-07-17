@@ -4,7 +4,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { SimplePoint } from '../duc/simple-point';
+import { GeometricPoint } from '../duc/geometric-point';
 
 
 export class DucLineReference {
@@ -30,9 +30,9 @@ index():number {
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-handle(obj?:SimplePoint):SimplePoint|null {
+handle(obj?:GeometricPoint):GeometricPoint|null {
   const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? (obj || new SimplePoint()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new GeometricPoint()).__init(this.bb_pos + offset, this.bb!) : null;
 }
 
 static startDucLineReference(builder:flatbuffers.Builder) {
@@ -44,7 +44,7 @@ static addIndex(builder:flatbuffers.Builder, index:number) {
 }
 
 static addHandle(builder:flatbuffers.Builder, handleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, handleOffset, 0);
+  builder.addFieldStruct(1, handleOffset, 0);
 }
 
 static endDucLineReference(builder:flatbuffers.Builder):flatbuffers.Offset {

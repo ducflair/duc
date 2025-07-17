@@ -29,27 +29,91 @@ class DucTableStyle(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # DucTableStyle
-    def DefaultProps(self):
+    def BaseStyle(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.DucTableStyleProps import DucTableStyleProps
-            obj = DucTableStyleProps()
+            from Duc._DucElementStylesBase import _DucElementStylesBase
+            obj = _DucElementStylesBase()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucTableStyle
+    def FlowDirection(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
+        return None
+
+    # DucTableStyle
+    def HeaderRowStyle(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.DucTableCellStyle import DucTableCellStyle
+            obj = DucTableCellStyle()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucTableStyle
+    def DataRowStyle(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.DucTableCellStyle import DucTableCellStyle
+            obj = DucTableCellStyle()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucTableStyle
+    def DataColumnStyle(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.DucTableCellStyle import DucTableCellStyle
+            obj = DucTableCellStyle()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
 
 def DucTableStyleStart(builder):
-    builder.StartObject(1)
+    builder.StartObject(5)
 
 def Start(builder):
     DucTableStyleStart(builder)
 
-def DucTableStyleAddDefaultProps(builder, defaultProps):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(defaultProps), 0)
+def DucTableStyleAddBaseStyle(builder, baseStyle):
+    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(baseStyle), 0)
 
-def AddDefaultProps(builder, defaultProps):
-    DucTableStyleAddDefaultProps(builder, defaultProps)
+def AddBaseStyle(builder, baseStyle):
+    DucTableStyleAddBaseStyle(builder, baseStyle)
+
+def DucTableStyleAddFlowDirection(builder, flowDirection):
+    builder.PrependUint8Slot(1, flowDirection, None)
+
+def AddFlowDirection(builder, flowDirection):
+    DucTableStyleAddFlowDirection(builder, flowDirection)
+
+def DucTableStyleAddHeaderRowStyle(builder, headerRowStyle):
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(headerRowStyle), 0)
+
+def AddHeaderRowStyle(builder, headerRowStyle):
+    DucTableStyleAddHeaderRowStyle(builder, headerRowStyle)
+
+def DucTableStyleAddDataRowStyle(builder, dataRowStyle):
+    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(dataRowStyle), 0)
+
+def AddDataRowStyle(builder, dataRowStyle):
+    DucTableStyleAddDataRowStyle(builder, dataRowStyle)
+
+def DucTableStyleAddDataColumnStyle(builder, dataColumnStyle):
+    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(dataColumnStyle), 0)
+
+def AddDataColumnStyle(builder, dataColumnStyle):
+    DucTableStyleAddDataColumnStyle(builder, dataColumnStyle)
 
 def DucTableStyleEnd(builder):
     return builder.EndObject()

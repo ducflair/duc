@@ -63,8 +63,8 @@ class DucBlock(object):
             x = self._tab.Vector(o)
             x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
             x = self._tab.Indirect(x)
-            from Duc.DucElement import DucElement
-            obj = DucElement()
+            from Duc.ElementWrapper import ElementWrapper
+            obj = ElementWrapper()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
@@ -82,27 +82,27 @@ class DucBlock(object):
         return o == 0
 
     # DucBlock
-    def Attributes(self, j):
+    def AttributeDefinitions(self, j):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             x = self._tab.Vector(o)
             x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
             x = self._tab.Indirect(x)
-            from Duc.DucBlockAttribute import DucBlockAttribute
-            obj = DucBlockAttribute()
+            from Duc.DucBlockAttributeDefinitionEntry import DucBlockAttributeDefinitionEntry
+            obj = DucBlockAttributeDefinitionEntry()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
 
     # DucBlock
-    def AttributesLength(self):
+    def AttributeDefinitionsLength(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # DucBlock
-    def AttributesIsNone(self):
+    def AttributeDefinitionsIsNone(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         return o == 0
 
@@ -148,17 +148,17 @@ def DucBlockStartElementsVector(builder, numElems):
 def StartElementsVector(builder, numElems):
     return DucBlockStartElementsVector(builder, numElems)
 
-def DucBlockAddAttributes(builder, attributes):
-    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(attributes), 0)
+def DucBlockAddAttributeDefinitions(builder, attributeDefinitions):
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(attributeDefinitions), 0)
 
-def AddAttributes(builder, attributes):
-    DucBlockAddAttributes(builder, attributes)
+def AddAttributeDefinitions(builder, attributeDefinitions):
+    DucBlockAddAttributeDefinitions(builder, attributeDefinitions)
 
-def DucBlockStartAttributesVector(builder, numElems):
+def DucBlockStartAttributeDefinitionsVector(builder, numElems):
     return builder.StartVector(4, numElems, 4)
 
-def StartAttributesVector(builder, numElems):
-    return DucBlockStartAttributesVector(builder, numElems)
+def StartAttributeDefinitionsVector(builder, numElems):
+    return DucBlockStartAttributeDefinitionsVector(builder, numElems)
 
 def DucBlockEnd(builder):
     return builder.EndObject()
