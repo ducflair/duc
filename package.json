@@ -47,7 +47,9 @@
   "packageManager": "bun@1.1.24",
   "private": true,
   "scripts": {
-    "flatc:gen": "cd schema && bash flatc-duc-generate.sh",
+    "flatc:gen": "bun flatc:gen:duconfig && bun flatc:gen:duc",
+    "flatc:gen:duconfig": "cd schema && bash flatc-duconfig-generate.sh",
+    "flatc:gen:duc": "cd schema && bash flatc-duc-generate.sh",
     "clean": "bun run rm -rf **/dist node_modules **/package-lock.json **/tsconfig.tsbuildinfo",
     "docs:dev": "turbo dev --filter=@duc/docs",
     "docs:build": "turbo build --filter=@duc/docs",

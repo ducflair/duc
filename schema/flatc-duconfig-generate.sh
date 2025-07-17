@@ -37,30 +37,30 @@ RUST_SUCCESS=false
 mkdir -p $TARGET_DIR/$TS_DIR $TARGET_DIR/$PY_DIR $TARGET_DIR/$RUST_DIR
 
 # Run builds and capture status
-echo "Starting code generation for duc..."
+echo "Starting code generation for duconfig..."
 echo "==========================="
 
 # TypeScript generation
 echo "⚙️  Generating TypeScript bindings..."
-if flatc --ts --ts-no-import-ext -o $TARGET_DIR/$TS_DIR duc.fbs 2>"$LOG_DIR/ts_$TIMESTAMP.log"; then
+if flatc --ts --ts-no-import-ext -o $TARGET_DIR/$TS_DIR duconfig.fbs 2>"$LOG_DIR/duconfig_ts_$TIMESTAMP.log"; then
     TS_SUCCESS=true
 fi
 
 # Python generation
 echo "⚙️  Generating Python bindings..."
-if flatc --python -o $TARGET_DIR/$PY_DIR duc.fbs 2>"$LOG_DIR/py_$TIMESTAMP.log"; then
+if flatc --python -o $TARGET_DIR/$PY_DIR duconfig.fbs 2>"$LOG_DIR/duconfig_py_$TIMESTAMP.log"; then
     PY_SUCCESS=true
 fi
 
 # Rust generation
 echo "⚙️  Generating Rust bindings..."
-if flatc --rust -o $TARGET_DIR/$RUST_DIR duc.fbs 2>"$LOG_DIR/rust_$TIMESTAMP.log"; then
+if flatc --rust -o $TARGET_DIR/$RUST_DIR duconfig.fbs 2>"$LOG_DIR/duconfig_rust_$TIMESTAMP.log"; then
     RUST_SUCCESS=true
 fi
 
 # Summary report with colors
 echo ""
-echo "Generation Results:"
+echo "Duconfig Generation Results:"
 echo "-------------------"
 printf "${TS_COLOR}TypeScript:${RESET} %s\n" "$([ "$TS_SUCCESS" = true ] && echo "✅ Success" || echo "❌ Failed")"
 printf "${PY_COLOR}Python:    ${RESET} %s\n" "$([ "$PY_SUCCESS" = true ] && echo "✅ Success" || echo "❌ Failed")"
@@ -69,10 +69,10 @@ printf "${RUST_COLOR}Rust:      ${RESET} %s\n" "$([ "$RUST_SUCCESS" = true ] && 
 # Exit with error if any failed
 if ! $TS_SUCCESS || ! $PY_SUCCESS || ! $RUST_SUCCESS; then
     echo ""
-    echo "Error: Some generations failed - check logs in $LOG_DIR/"
+    echo "Error: Some duconfig generations failed - check logs in $LOG_DIR/"
     exit 1
 fi
 
 echo ""
-echo "All duc generations completed successfully 🎉"
-exit 0
+echo "All duconfig generations completed successfully 🎉"
+exit 0 
