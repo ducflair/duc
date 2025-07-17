@@ -32,8 +32,8 @@ class StrokeSides(object):
     def Preference(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
-        return 0
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
+        return None
 
     # StrokeSides
     def Values(self, j):
@@ -69,7 +69,7 @@ def Start(builder):
     StrokeSidesStart(builder)
 
 def StrokeSidesAddPreference(builder, preference):
-    builder.PrependInt8Slot(0, preference, 0)
+    builder.PrependUint8Slot(0, preference, None)
 
 def AddPreference(builder, preference):
     StrokeSidesAddPreference(builder, preference)

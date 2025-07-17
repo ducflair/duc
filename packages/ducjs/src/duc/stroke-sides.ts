@@ -4,6 +4,9 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { STROKE_SIDE_PREFERENCE } from '../duc/stroke-side-preference';
+
+
 export class StrokeSides {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -22,9 +25,9 @@ static getSizePrefixedRootAsStrokeSides(bb:flatbuffers.ByteBuffer, obj?:StrokeSi
   return (obj || new StrokeSides()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-preference():number {
+preference():STROKE_SIDE_PREFERENCE|null {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
 }
 
 values(index: number):number|null {
@@ -46,8 +49,8 @@ static startStrokeSides(builder:flatbuffers.Builder) {
   builder.startObject(2);
 }
 
-static addPreference(builder:flatbuffers.Builder, preference:number) {
-  builder.addFieldInt8(0, preference, 0);
+static addPreference(builder:flatbuffers.Builder, preference:STROKE_SIDE_PREFERENCE) {
+  builder.addFieldInt8(0, preference, null);
 }
 
 static addValues(builder:flatbuffers.Builder, valuesOffset:flatbuffers.Offset) {
@@ -76,9 +79,10 @@ static endStrokeSides(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createStrokeSides(builder:flatbuffers.Builder, preference:number, valuesOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createStrokeSides(builder:flatbuffers.Builder, preference:STROKE_SIDE_PREFERENCE|null, valuesOffset:flatbuffers.Offset):flatbuffers.Offset {
   StrokeSides.startStrokeSides(builder);
-  StrokeSides.addPreference(builder, preference);
+  if (preference !== null)
+    StrokeSides.addPreference(builder, preference);
   StrokeSides.addValues(builder, valuesOffset);
   return StrokeSides.endStrokeSides(builder);
 }

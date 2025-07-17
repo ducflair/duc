@@ -43,31 +43,11 @@ class BinaryFileData(object):
         return None
 
     # BinaryFileData
-    def Data(self, j):
+    def DataUrl(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
-            a = self._tab.Vector(o)
-            return self._tab.Get(flatbuffers.number_types.Uint8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1))
-        return 0
-
-    # BinaryFileData
-    def DataAsNumpy(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
-        if o != 0:
-            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Uint8Flags, o)
-        return 0
-
-    # BinaryFileData
-    def DataLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
-        if o != 0:
-            return self._tab.VectorLen(o)
-        return 0
-
-    # BinaryFileData
-    def DataIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
-        return o == 0
+            return self._tab.String(o + self._tab.Pos)
+        return None
 
     # BinaryFileData
     def Created(self):
@@ -83,8 +63,15 @@ class BinaryFileData(object):
             return self._tab.Get(flatbuffers.number_types.Int64Flags, o + self._tab.Pos)
         return 0
 
+    # BinaryFileData
+    def Version(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+        return 0
+
 def BinaryFileDataStart(builder):
-    builder.StartObject(5)
+    builder.StartObject(6)
 
 def Start(builder):
     BinaryFileDataStart(builder)
@@ -101,17 +88,11 @@ def BinaryFileDataAddId(builder, id):
 def AddId(builder, id):
     BinaryFileDataAddId(builder, id)
 
-def BinaryFileDataAddData(builder, data):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+def BinaryFileDataAddDataUrl(builder, dataUrl):
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(dataUrl), 0)
 
-def AddData(builder, data):
-    BinaryFileDataAddData(builder, data)
-
-def BinaryFileDataStartDataVector(builder, numElems):
-    return builder.StartVector(1, numElems, 1)
-
-def StartDataVector(builder, numElems):
-    return BinaryFileDataStartDataVector(builder, numElems)
+def AddDataUrl(builder, dataUrl):
+    BinaryFileDataAddDataUrl(builder, dataUrl)
 
 def BinaryFileDataAddCreated(builder, created):
     builder.PrependInt64Slot(3, created, 0)
@@ -124,6 +105,12 @@ def BinaryFileDataAddLastRetrieved(builder, lastRetrieved):
 
 def AddLastRetrieved(builder, lastRetrieved):
     BinaryFileDataAddLastRetrieved(builder, lastRetrieved)
+
+def BinaryFileDataAddVersion(builder, version):
+    builder.PrependInt32Slot(5, version, 0)
+
+def AddVersion(builder, version):
+    BinaryFileDataAddVersion(builder, version)
 
 def BinaryFileDataEnd(builder):
     return builder.EndObject()

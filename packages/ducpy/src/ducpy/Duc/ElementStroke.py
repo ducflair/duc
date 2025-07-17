@@ -61,8 +61,8 @@ class ElementStroke(object):
     def Placement(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
-        return 0
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
+        return None
 
     # ElementStroke
     def StrokeSides(self):
@@ -100,7 +100,7 @@ def AddStyle(builder, style):
     ElementStrokeAddStyle(builder, style)
 
 def ElementStrokeAddPlacement(builder, placement):
-    builder.PrependInt8Slot(3, placement, 0)
+    builder.PrependUint8Slot(3, placement, None)
 
 def AddPlacement(builder, placement):
     ElementStrokeAddPlacement(builder, placement)

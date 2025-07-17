@@ -43,12 +43,12 @@ class DucTableColumn(object):
         return 0.0
 
     # DucTableColumn
-    def Style(self):
+    def StyleOverrides(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.DucTableStyleProps import DucTableStyleProps
-            obj = DucTableStyleProps()
+            from Duc.DucTableCellStyle import DucTableCellStyle
+            obj = DucTableCellStyle()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
@@ -71,11 +71,11 @@ def DucTableColumnAddWidth(builder, width):
 def AddWidth(builder, width):
     DucTableColumnAddWidth(builder, width)
 
-def DucTableColumnAddStyle(builder, style):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(style), 0)
+def DucTableColumnAddStyleOverrides(builder, styleOverrides):
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(styleOverrides), 0)
 
-def AddStyle(builder, style):
-    DucTableColumnAddStyle(builder, style)
+def AddStyleOverrides(builder, styleOverrides):
+    DucTableColumnAddStyleOverrides(builder, styleOverrides)
 
 def DucTableColumnEnd(builder):
     return builder.EndObject()

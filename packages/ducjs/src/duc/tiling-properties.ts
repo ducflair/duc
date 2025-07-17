@@ -24,7 +24,7 @@ static getSizePrefixedRootAsTilingProperties(bb:flatbuffers.ByteBuffer, obj?:Til
 
 sizeInPercent():number {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
 angle():number {
@@ -32,19 +32,19 @@ angle():number {
   return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
-spacing():number|null {
+spacing():number {
   const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
-offsetX():number|null {
+offsetX():number {
   const offset = this.bb!.__offset(this.bb_pos, 10);
-  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
-offsetY():number|null {
+offsetY():number {
   const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
 static startTilingProperties(builder:flatbuffers.Builder) {
@@ -52,7 +52,7 @@ static startTilingProperties(builder:flatbuffers.Builder) {
 }
 
 static addSizeInPercent(builder:flatbuffers.Builder, sizeInPercent:number) {
-  builder.addFieldFloat64(0, sizeInPercent, 0.0);
+  builder.addFieldFloat32(0, sizeInPercent, 0.0);
 }
 
 static addAngle(builder:flatbuffers.Builder, angle:number) {
@@ -60,15 +60,15 @@ static addAngle(builder:flatbuffers.Builder, angle:number) {
 }
 
 static addSpacing(builder:flatbuffers.Builder, spacing:number) {
-  builder.addFieldFloat64(2, spacing, null);
+  builder.addFieldFloat64(2, spacing, 0.0);
 }
 
 static addOffsetX(builder:flatbuffers.Builder, offsetX:number) {
-  builder.addFieldFloat64(3, offsetX, null);
+  builder.addFieldFloat64(3, offsetX, 0.0);
 }
 
 static addOffsetY(builder:flatbuffers.Builder, offsetY:number) {
-  builder.addFieldFloat64(4, offsetY, null);
+  builder.addFieldFloat64(4, offsetY, 0.0);
 }
 
 static endTilingProperties(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -76,16 +76,13 @@ static endTilingProperties(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createTilingProperties(builder:flatbuffers.Builder, sizeInPercent:number, angle:number, spacing:number|null, offsetX:number|null, offsetY:number|null):flatbuffers.Offset {
+static createTilingProperties(builder:flatbuffers.Builder, sizeInPercent:number, angle:number, spacing:number, offsetX:number, offsetY:number):flatbuffers.Offset {
   TilingProperties.startTilingProperties(builder);
   TilingProperties.addSizeInPercent(builder, sizeInPercent);
   TilingProperties.addAngle(builder, angle);
-  if (spacing !== null)
-    TilingProperties.addSpacing(builder, spacing);
-  if (offsetX !== null)
-    TilingProperties.addOffsetX(builder, offsetX);
-  if (offsetY !== null)
-    TilingProperties.addOffsetY(builder, offsetY);
+  TilingProperties.addSpacing(builder, spacing);
+  TilingProperties.addOffsetX(builder, offsetX);
+  TilingProperties.addOffsetY(builder, offsetY);
   return TilingProperties.endTilingProperties(builder);
 }
 }

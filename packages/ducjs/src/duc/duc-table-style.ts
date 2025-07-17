@@ -4,7 +4,9 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { DucTableStyleProps } from '../duc/duc-table-style-props';
+import { DucTableCellStyle } from '../duc/duc-table-cell-style';
+import { TABLE_FLOW_DIRECTION } from '../duc/table-flow-direction';
+import { _DucElementStylesBase } from '../duc/duc-element-styles-base';
 
 
 export class DucTableStyle {
@@ -25,17 +27,53 @@ static getSizePrefixedRootAsDucTableStyle(bb:flatbuffers.ByteBuffer, obj?:DucTab
   return (obj || new DucTableStyle()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-defaultProps(obj?:DucTableStyleProps):DucTableStyleProps|null {
+baseStyle(obj?:_DucElementStylesBase):_DucElementStylesBase|null {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new DucTableStyleProps()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new _DucElementStylesBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+flowDirection():TABLE_FLOW_DIRECTION|null {
+  const offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
+}
+
+headerRowStyle(obj?:DucTableCellStyle):DucTableCellStyle|null {
+  const offset = this.bb!.__offset(this.bb_pos, 8);
+  return offset ? (obj || new DucTableCellStyle()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+dataRowStyle(obj?:DucTableCellStyle):DucTableCellStyle|null {
+  const offset = this.bb!.__offset(this.bb_pos, 10);
+  return offset ? (obj || new DucTableCellStyle()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+dataColumnStyle(obj?:DucTableCellStyle):DucTableCellStyle|null {
+  const offset = this.bb!.__offset(this.bb_pos, 12);
+  return offset ? (obj || new DucTableCellStyle()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 static startDucTableStyle(builder:flatbuffers.Builder) {
-  builder.startObject(1);
+  builder.startObject(5);
 }
 
-static addDefaultProps(builder:flatbuffers.Builder, defaultPropsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(0, defaultPropsOffset, 0);
+static addBaseStyle(builder:flatbuffers.Builder, baseStyleOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(0, baseStyleOffset, 0);
+}
+
+static addFlowDirection(builder:flatbuffers.Builder, flowDirection:TABLE_FLOW_DIRECTION) {
+  builder.addFieldInt8(1, flowDirection, null);
+}
+
+static addHeaderRowStyle(builder:flatbuffers.Builder, headerRowStyleOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(2, headerRowStyleOffset, 0);
+}
+
+static addDataRowStyle(builder:flatbuffers.Builder, dataRowStyleOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(3, dataRowStyleOffset, 0);
+}
+
+static addDataColumnStyle(builder:flatbuffers.Builder, dataColumnStyleOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(4, dataColumnStyleOffset, 0);
 }
 
 static endDucTableStyle(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -43,9 +81,4 @@ static endDucTableStyle(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createDucTableStyle(builder:flatbuffers.Builder, defaultPropsOffset:flatbuffers.Offset):flatbuffers.Offset {
-  DucTableStyle.startDucTableStyle(builder);
-  DucTableStyle.addDefaultProps(builder, defaultPropsOffset);
-  return DucTableStyle.endDucTableStyle(builder);
-}
 }

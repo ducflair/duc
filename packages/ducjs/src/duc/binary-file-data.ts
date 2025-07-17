@@ -36,19 +36,11 @@ id(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-data(index: number):number|null {
+dataUrl():string|null
+dataUrl(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+dataUrl(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? this.bb!.readUint8(this.bb!.__vector(this.bb_pos + offset) + index) : 0;
-}
-
-dataLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-}
-
-dataArray():Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? new Uint8Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 created():bigint {
@@ -61,8 +53,13 @@ lastRetrieved():bigint {
   return offset ? this.bb!.readInt64(this.bb_pos + offset) : BigInt('0');
 }
 
+version():number {
+  const offset = this.bb!.__offset(this.bb_pos, 14);
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+}
+
 static startBinaryFileData(builder:flatbuffers.Builder) {
-  builder.startObject(5);
+  builder.startObject(6);
 }
 
 static addMimeType(builder:flatbuffers.Builder, mimeTypeOffset:flatbuffers.Offset) {
@@ -73,20 +70,8 @@ static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
   builder.addFieldOffset(1, idOffset, 0);
 }
 
-static addData(builder:flatbuffers.Builder, dataOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, dataOffset, 0);
-}
-
-static createDataVector(builder:flatbuffers.Builder, data:number[]|Uint8Array):flatbuffers.Offset {
-  builder.startVector(1, data.length, 1);
-  for (let i = data.length - 1; i >= 0; i--) {
-    builder.addInt8(data[i]!);
-  }
-  return builder.endVector();
-}
-
-static startDataVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(1, numElems, 1);
+static addDataUrl(builder:flatbuffers.Builder, dataUrlOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(2, dataUrlOffset, 0);
 }
 
 static addCreated(builder:flatbuffers.Builder, created:bigint) {
@@ -97,18 +82,24 @@ static addLastRetrieved(builder:flatbuffers.Builder, lastRetrieved:bigint) {
   builder.addFieldInt64(4, lastRetrieved, BigInt('0'));
 }
 
+static addVersion(builder:flatbuffers.Builder, version:number) {
+  builder.addFieldInt32(5, version, 0);
+}
+
 static endBinaryFileData(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
+  builder.requiredField(offset, 6) // id
   return offset;
 }
 
-static createBinaryFileData(builder:flatbuffers.Builder, mimeTypeOffset:flatbuffers.Offset, idOffset:flatbuffers.Offset, dataOffset:flatbuffers.Offset, created:bigint, lastRetrieved:bigint):flatbuffers.Offset {
+static createBinaryFileData(builder:flatbuffers.Builder, mimeTypeOffset:flatbuffers.Offset, idOffset:flatbuffers.Offset, dataUrlOffset:flatbuffers.Offset, created:bigint, lastRetrieved:bigint, version:number):flatbuffers.Offset {
   BinaryFileData.startBinaryFileData(builder);
   BinaryFileData.addMimeType(builder, mimeTypeOffset);
   BinaryFileData.addId(builder, idOffset);
-  BinaryFileData.addData(builder, dataOffset);
+  BinaryFileData.addDataUrl(builder, dataUrlOffset);
   BinaryFileData.addCreated(builder, created);
   BinaryFileData.addLastRetrieved(builder, lastRetrieved);
+  BinaryFileData.addVersion(builder, version);
   return BinaryFileData.endBinaryFileData(builder);
 }
 }

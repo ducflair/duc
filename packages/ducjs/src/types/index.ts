@@ -25,7 +25,7 @@ import {
   TextAlign
 } from "ducjs/types/elements";
 import { GeometricPoint, Percentage, Radian, ScaleFactor } from "ducjs/types/geometryTypes";
-import { MakeBrand, MaybePromise, ValueOf } from "ducjs/types/utility-types";
+import { MaybePromise, ValueOf } from "ducjs/types/utility-types";
 import type { GRID_DISPLAY_TYPE, GRID_TYPE, IMAGE_MIME_TYPES, MIME_TYPES, SNAP_MARKER_SHAPE, SNAP_MODE, SNAP_OVERRIDE_BEHAVIOR } from "ducjs/utils/constants";
 
 
@@ -110,7 +110,6 @@ export type DucUcs = {
 export type Scope = SupportedMeasures;
 
 export type DataURL = string & { _brand: "DataURL" };
-export type Theme = ValueOf<typeof THEME>;
 
 export type BinaryFileData = {
   mimeType:

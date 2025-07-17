@@ -39,9 +39,9 @@ class DucLineReference(object):
     def Handle(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.SimplePoint import SimplePoint
-            obj = SimplePoint()
+            x = o + self._tab.Pos
+            from Duc.GeometricPoint import GeometricPoint
+            obj = GeometricPoint()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
@@ -59,7 +59,7 @@ def AddIndex(builder, index):
     DucLineReferenceAddIndex(builder, index)
 
 def DucLineReferenceAddHandle(builder, handle):
-    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(handle), 0)
+    builder.PrependStructSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(handle), 0)
 
 def AddHandle(builder, handle):
     DucLineReferenceAddHandle(builder, handle)

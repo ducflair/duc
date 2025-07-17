@@ -43,12 +43,12 @@ class DucTableRow(object):
         return 0.0
 
     # DucTableRow
-    def Style(self):
+    def StyleOverrides(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc.DucTableStyleProps import DucTableStyleProps
-            obj = DucTableStyleProps()
+            from Duc.DucTableCellStyle import DucTableCellStyle
+            obj = DucTableCellStyle()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
@@ -71,11 +71,11 @@ def DucTableRowAddHeight(builder, height):
 def AddHeight(builder, height):
     DucTableRowAddHeight(builder, height)
 
-def DucTableRowAddStyle(builder, style):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(style), 0)
+def DucTableRowAddStyleOverrides(builder, styleOverrides):
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(styleOverrides), 0)
 
-def AddStyle(builder, style):
-    DucTableRowAddStyle(builder, style)
+def AddStyleOverrides(builder, styleOverrides):
+    DucTableRowAddStyleOverrides(builder, styleOverrides)
 
 def DucTableRowEnd(builder):
     return builder.EndObject()

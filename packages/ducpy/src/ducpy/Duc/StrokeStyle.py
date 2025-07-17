@@ -32,21 +32,21 @@ class StrokeStyle(object):
     def Preference(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
-        return 0
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
+        return None
 
     # StrokeStyle
     def Cap(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return None
 
     # StrokeStyle
     def Join(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return None
 
     # StrokeStyle
@@ -77,39 +77,46 @@ class StrokeStyle(object):
         return o == 0
 
     # StrokeStyle
-    def DashCap(self):
+    def DashLineOverride(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
+    # StrokeStyle
+    def DashCap(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return None
 
     # StrokeStyle
     def MiterLimit(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return None
+        return 0.0
 
 def StrokeStyleStart(builder):
-    builder.StartObject(6)
+    builder.StartObject(7)
 
 def Start(builder):
     StrokeStyleStart(builder)
 
 def StrokeStyleAddPreference(builder, preference):
-    builder.PrependInt8Slot(0, preference, 0)
+    builder.PrependUint8Slot(0, preference, None)
 
 def AddPreference(builder, preference):
     StrokeStyleAddPreference(builder, preference)
 
 def StrokeStyleAddCap(builder, cap):
-    builder.PrependInt8Slot(1, cap, None)
+    builder.PrependUint8Slot(1, cap, None)
 
 def AddCap(builder, cap):
     StrokeStyleAddCap(builder, cap)
 
 def StrokeStyleAddJoin(builder, join):
-    builder.PrependInt8Slot(2, join, None)
+    builder.PrependUint8Slot(2, join, None)
 
 def AddJoin(builder, join):
     StrokeStyleAddJoin(builder, join)
@@ -126,14 +133,20 @@ def StrokeStyleStartDashVector(builder, numElems):
 def StartDashVector(builder, numElems):
     return StrokeStyleStartDashVector(builder, numElems)
 
+def StrokeStyleAddDashLineOverride(builder, dashLineOverride):
+    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(dashLineOverride), 0)
+
+def AddDashLineOverride(builder, dashLineOverride):
+    StrokeStyleAddDashLineOverride(builder, dashLineOverride)
+
 def StrokeStyleAddDashCap(builder, dashCap):
-    builder.PrependInt8Slot(4, dashCap, None)
+    builder.PrependUint8Slot(5, dashCap, None)
 
 def AddDashCap(builder, dashCap):
     StrokeStyleAddDashCap(builder, dashCap)
 
 def StrokeStyleAddMiterLimit(builder, miterLimit):
-    builder.PrependFloat64Slot(5, miterLimit, None)
+    builder.PrependFloat64Slot(6, miterLimit, 0.0)
 
 def AddMiterLimit(builder, miterLimit):
     StrokeStyleAddMiterLimit(builder, miterLimit)

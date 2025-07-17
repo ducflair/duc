@@ -4,6 +4,11 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { STROKE_CAP } from '../duc/stroke-cap';
+import { STROKE_JOIN } from '../duc/stroke-join';
+import { STROKE_PREFERENCE } from '../duc/stroke-preference';
+
+
 export class StrokeStyle {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -22,19 +27,19 @@ static getSizePrefixedRootAsStrokeStyle(bb:flatbuffers.ByteBuffer, obj?:StrokeSt
   return (obj || new StrokeStyle()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-preference():number {
+preference():STROKE_PREFERENCE|null {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
 }
 
-cap():number|null {
+cap():STROKE_CAP|null {
   const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.readInt8(this.bb_pos + offset) : null;
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
 }
 
-join():number|null {
+join():STROKE_JOIN|null {
   const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? this.bb!.readInt8(this.bb_pos + offset) : null;
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
 }
 
 dash(index: number):number|null {
@@ -52,29 +57,36 @@ dashArray():Float64Array|null {
   return offset ? new Float64Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
 }
 
-dashCap():number|null {
+dashLineOverride():string|null
+dashLineOverride(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+dashLineOverride(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? this.bb!.readInt8(this.bb_pos + offset) : null;
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-miterLimit():number|null {
+dashCap():STROKE_CAP|null {
   const offset = this.bb!.__offset(this.bb_pos, 14);
-  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
+}
+
+miterLimit():number {
+  const offset = this.bb!.__offset(this.bb_pos, 16);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
 static startStrokeStyle(builder:flatbuffers.Builder) {
-  builder.startObject(6);
+  builder.startObject(7);
 }
 
-static addPreference(builder:flatbuffers.Builder, preference:number) {
-  builder.addFieldInt8(0, preference, 0);
+static addPreference(builder:flatbuffers.Builder, preference:STROKE_PREFERENCE) {
+  builder.addFieldInt8(0, preference, null);
 }
 
-static addCap(builder:flatbuffers.Builder, cap:number) {
+static addCap(builder:flatbuffers.Builder, cap:STROKE_CAP) {
   builder.addFieldInt8(1, cap, null);
 }
 
-static addJoin(builder:flatbuffers.Builder, join:number) {
+static addJoin(builder:flatbuffers.Builder, join:STROKE_JOIN) {
   builder.addFieldInt8(2, join, null);
 }
 
@@ -99,12 +111,16 @@ static startDashVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(8, numElems, 8);
 }
 
-static addDashCap(builder:flatbuffers.Builder, dashCap:number) {
-  builder.addFieldInt8(4, dashCap, null);
+static addDashLineOverride(builder:flatbuffers.Builder, dashLineOverrideOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(4, dashLineOverrideOffset, 0);
+}
+
+static addDashCap(builder:flatbuffers.Builder, dashCap:STROKE_CAP) {
+  builder.addFieldInt8(5, dashCap, null);
 }
 
 static addMiterLimit(builder:flatbuffers.Builder, miterLimit:number) {
-  builder.addFieldFloat64(5, miterLimit, null);
+  builder.addFieldFloat64(6, miterLimit, 0.0);
 }
 
 static endStrokeStyle(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -112,18 +128,19 @@ static endStrokeStyle(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createStrokeStyle(builder:flatbuffers.Builder, preference:number, cap:number|null, join:number|null, dashOffset:flatbuffers.Offset, dashCap:number|null, miterLimit:number|null):flatbuffers.Offset {
+static createStrokeStyle(builder:flatbuffers.Builder, preference:STROKE_PREFERENCE|null, cap:STROKE_CAP|null, join:STROKE_JOIN|null, dashOffset:flatbuffers.Offset, dashLineOverrideOffset:flatbuffers.Offset, dashCap:STROKE_CAP|null, miterLimit:number):flatbuffers.Offset {
   StrokeStyle.startStrokeStyle(builder);
-  StrokeStyle.addPreference(builder, preference);
+  if (preference !== null)
+    StrokeStyle.addPreference(builder, preference);
   if (cap !== null)
     StrokeStyle.addCap(builder, cap);
   if (join !== null)
     StrokeStyle.addJoin(builder, join);
   StrokeStyle.addDash(builder, dashOffset);
+  StrokeStyle.addDashLineOverride(builder, dashLineOverrideOffset);
   if (dashCap !== null)
     StrokeStyle.addDashCap(builder, dashCap);
-  if (miterLimit !== null)
-    StrokeStyle.addMiterLimit(builder, miterLimit);
+  StrokeStyle.addMiterLimit(builder, miterLimit);
   return StrokeStyle.endStrokeStyle(builder);
 }
 }
