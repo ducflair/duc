@@ -1,5 +1,5 @@
 import { BEZIER_MIRRORING, BLENDING, ELEMENT_CONTENT_PREFERENCE, IMAGE_STATUS, LINE_HEAD, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/duc";
-import type { BinaryFiles, LibraryItem, LibraryItems, LibraryItems_anyVersion, PrecisionValue, RawValue, RendererState, Scope, ScopedValue } from "ducjs/types";
+import type { DucExternalFiles, LibraryItem, LibraryItems, LibraryItems_anyVersion, PrecisionValue, RawValue, RendererState, Scope, ScopedValue } from "ducjs/types";
 import { DucLocalState } from "ducjs/types";
 import type {
   BezierMirroring,
@@ -104,7 +104,7 @@ export interface ImportedDataState {
   appState?: Readonly<Partial<DucLocalState>> | null;
   scrollToContent?: boolean;
   libraryItems?: LibraryItems_anyVersion;
-  files?: BinaryFiles;
+  files?: DucExternalFiles;
   rendererState?: RendererState;
   blocks?: readonly DucBlock[];
   groups?: readonly DucGroup[];
@@ -118,7 +118,7 @@ export interface ImportedExtendedDataState<TExtendedAppState = any> {
   appState?: Readonly<Partial<TExtendedAppState>> | null;
   scrollToContent?: boolean;
   libraryItems?: LibraryItems_anyVersion;
-  files?: BinaryFiles;
+  files?: DucExternalFiles;
   rendererState?: RendererState;
   blocks?: readonly DucBlock[];
   groups?: readonly DucGroup[];
@@ -139,7 +139,7 @@ export interface ImportedLibraryData extends Partial<ExportedLibraryData> {
 export type RestoredDataState = {
   elements: OrderedDucElement[];
   appState: RestoredDucState;
-  files: BinaryFiles;
+  files: DucExternalFiles;
   rendererState: RendererState | null;
   blocks: DucBlock[];
   groups: DucGroup[];
@@ -148,7 +148,7 @@ export type RestoredDataState = {
 export type RestoredExtendedDataState<TExtendedAppState = any> = {
   elements: OrderedDucElement[];
   appState: TExtendedAppState;
-  files: BinaryFiles;
+  files: DucExternalFiles;
   rendererState: RendererState | null;
   blocks: DucBlock[];
   groups: DucGroup[];

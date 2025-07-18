@@ -95,7 +95,7 @@ class StrokeStyle(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return 0.0
+        return None
 
 def StrokeStyleStart(builder):
     builder.StartObject(7)
@@ -146,7 +146,7 @@ def AddDashCap(builder, dashCap):
     StrokeStyleAddDashCap(builder, dashCap)
 
 def StrokeStyleAddMiterLimit(builder, miterLimit):
-    builder.PrependFloat64Slot(6, miterLimit, 0.0)
+    builder.PrependFloat64Slot(6, miterLimit, None)
 
 def AddMiterLimit(builder, miterLimit):
     StrokeStyleAddMiterLimit(builder, miterLimit)

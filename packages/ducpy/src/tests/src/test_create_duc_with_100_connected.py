@@ -15,7 +15,7 @@ from ducpy.classes.DucElementClass import (
     Point, PointBinding, BoundElement
 )
 from ducpy.classes.AppStateClass import AppState
-from ducpy.classes.BinaryFilesClass import BinaryFiles
+from ducpy.classes.BinaryFilesClass import DucExternalFiles
 from ducpy.utils.enums import (
     ElementType, ElementContentPreference, StrokePreference, StrokePlacement,
     StrokeJoin, StrokeCap, FontFamily, TextAlign, VerticalAlign

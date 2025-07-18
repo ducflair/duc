@@ -8,9 +8,6 @@ import { BoundElement } from '../duc/bound-element';
 import { _DucElementStylesBase } from '../duc/duc-element-styles-base';
 
 
-/**
- * The foundational table for all scene elements, containing common properties.
- */
 export class _DucElementBase {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -36,242 +33,258 @@ id(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-x():number {
+styles(obj?:_DucElementStylesBase):_DucElementStylesBase|null {
   const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+  return offset ? (obj || new _DucElementStylesBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-y():number {
+x():number {
   const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
-width():number {
+y():number {
   const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
-height():number {
+width():number {
   const offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
-angle():number {
+height():number {
   const offset = this.bb!.__offset(this.bb_pos, 14);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+}
+
+angle():number {
+  const offset = this.bb!.__offset(this.bb_pos, 16);
   return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
 scope():string|null
 scope(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 scope(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 16);
+  const offset = this.bb!.__offset(this.bb_pos, 18);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 label():string|null
 label(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 label(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 18);
+  const offset = this.bb!.__offset(this.bb_pos, 20);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 description():string|null
 description(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 description(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 20);
+  const offset = this.bb!.__offset(this.bb_pos, 22);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 isVisible():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 22);
+  const offset = this.bb!.__offset(this.bb_pos, 24);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 seed():number {
-  const offset = this.bb!.__offset(this.bb_pos, 24);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
-version():number {
   const offset = this.bb!.__offset(this.bb_pos, 26);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-versionNonce():number {
+version():number {
   const offset = this.bb!.__offset(this.bb_pos, 28);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-updated():bigint {
+versionNonce():number {
   const offset = this.bb!.__offset(this.bb_pos, 30);
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+}
+
+updated():bigint {
+  const offset = this.bb!.__offset(this.bb_pos, 32);
   return offset ? this.bb!.readInt64(this.bb_pos + offset) : BigInt('0');
 }
 
 index():string|null
 index(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 index(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 32);
+  const offset = this.bb!.__offset(this.bb_pos, 34);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 isPlot():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 34);
-  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
-}
-
-isAnnotative():boolean {
   const offset = this.bb!.__offset(this.bb_pos, 36);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
-isDeleted():boolean {
+isAnnotative():boolean {
   const offset = this.bb!.__offset(this.bb_pos, 38);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
+isDeleted():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 40);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 groupIds(index: number):string
 groupIds(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
 groupIds(index: number,optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 40);
+  const offset = this.bb!.__offset(this.bb_pos, 42);
   return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
 }
 
 groupIdsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 40);
+  const offset = this.bb!.__offset(this.bb_pos, 42);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+regionIds(index: number):string
+regionIds(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
+regionIds(index: number,optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 44);
+  return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
+}
+
+regionIdsLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 44);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 layerId():string|null
 layerId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 layerId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 42);
+  const offset = this.bb!.__offset(this.bb_pos, 46);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 frameId():string|null
 frameId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 frameId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 44);
+  const offset = this.bb!.__offset(this.bb_pos, 48);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 boundElements(index: number, obj?:BoundElement):BoundElement|null {
-  const offset = this.bb!.__offset(this.bb_pos, 46);
+  const offset = this.bb!.__offset(this.bb_pos, 50);
   return offset ? (obj || new BoundElement()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
 boundElementsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 46);
+  const offset = this.bb!.__offset(this.bb_pos, 50);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 zIndex():number {
-  const offset = this.bb!.__offset(this.bb_pos, 48);
+  const offset = this.bb!.__offset(this.bb_pos, 52);
   return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 }
 
 link():string|null
 link(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 link(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 50);
+  const offset = this.bb!.__offset(this.bb_pos, 54);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 locked():boolean {
-  const offset = this.bb!.__offset(this.bb_pos, 52);
+  const offset = this.bb!.__offset(this.bb_pos, 56);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 customData():string|null
 customData(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 customData(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 54);
+  const offset = this.bb!.__offset(this.bb_pos, 58);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-styles(obj?:_DucElementStylesBase):_DucElementStylesBase|null {
-  const offset = this.bb!.__offset(this.bb_pos, 56);
-  return offset ? (obj || new _DucElementStylesBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
 static start_DucElementBase(builder:flatbuffers.Builder) {
-  builder.startObject(27);
+  builder.startObject(28);
 }
 
 static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
   builder.addFieldOffset(0, idOffset, 0);
 }
 
+static addStyles(builder:flatbuffers.Builder, stylesOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(1, stylesOffset, 0);
+}
+
 static addX(builder:flatbuffers.Builder, x:number) {
-  builder.addFieldFloat64(1, x, 0.0);
+  builder.addFieldFloat64(2, x, 0.0);
 }
 
 static addY(builder:flatbuffers.Builder, y:number) {
-  builder.addFieldFloat64(2, y, 0.0);
+  builder.addFieldFloat64(3, y, 0.0);
 }
 
 static addWidth(builder:flatbuffers.Builder, width:number) {
-  builder.addFieldFloat64(3, width, 0.0);
+  builder.addFieldFloat64(4, width, 0.0);
 }
 
 static addHeight(builder:flatbuffers.Builder, height:number) {
-  builder.addFieldFloat64(4, height, 0.0);
+  builder.addFieldFloat64(5, height, 0.0);
 }
 
 static addAngle(builder:flatbuffers.Builder, angle:number) {
-  builder.addFieldFloat64(5, angle, 0.0);
+  builder.addFieldFloat64(6, angle, 0.0);
 }
 
 static addScope(builder:flatbuffers.Builder, scopeOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(6, scopeOffset, 0);
+  builder.addFieldOffset(7, scopeOffset, 0);
 }
 
 static addLabel(builder:flatbuffers.Builder, labelOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(7, labelOffset, 0);
+  builder.addFieldOffset(8, labelOffset, 0);
 }
 
 static addDescription(builder:flatbuffers.Builder, descriptionOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(8, descriptionOffset, 0);
+  builder.addFieldOffset(9, descriptionOffset, 0);
 }
 
 static addIsVisible(builder:flatbuffers.Builder, isVisible:boolean) {
-  builder.addFieldInt8(9, +isVisible, +false);
+  builder.addFieldInt8(10, +isVisible, +false);
 }
 
 static addSeed(builder:flatbuffers.Builder, seed:number) {
-  builder.addFieldInt32(10, seed, 0);
+  builder.addFieldInt32(11, seed, 0);
 }
 
 static addVersion(builder:flatbuffers.Builder, version:number) {
-  builder.addFieldInt32(11, version, 0);
+  builder.addFieldInt32(12, version, 0);
 }
 
 static addVersionNonce(builder:flatbuffers.Builder, versionNonce:number) {
-  builder.addFieldInt32(12, versionNonce, 0);
+  builder.addFieldInt32(13, versionNonce, 0);
 }
 
 static addUpdated(builder:flatbuffers.Builder, updated:bigint) {
-  builder.addFieldInt64(13, updated, BigInt('0'));
+  builder.addFieldInt64(14, updated, BigInt('0'));
 }
 
 static addIndex(builder:flatbuffers.Builder, indexOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(14, indexOffset, 0);
+  builder.addFieldOffset(15, indexOffset, 0);
 }
 
 static addIsPlot(builder:flatbuffers.Builder, isPlot:boolean) {
-  builder.addFieldInt8(15, +isPlot, +false);
+  builder.addFieldInt8(16, +isPlot, +false);
 }
 
 static addIsAnnotative(builder:flatbuffers.Builder, isAnnotative:boolean) {
-  builder.addFieldInt8(16, +isAnnotative, +false);
+  builder.addFieldInt8(17, +isAnnotative, +false);
 }
 
 static addIsDeleted(builder:flatbuffers.Builder, isDeleted:boolean) {
-  builder.addFieldInt8(17, +isDeleted, +false);
+  builder.addFieldInt8(18, +isDeleted, +false);
 }
 
 static addGroupIds(builder:flatbuffers.Builder, groupIdsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(18, groupIdsOffset, 0);
+  builder.addFieldOffset(19, groupIdsOffset, 0);
 }
 
 static createGroupIdsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -286,16 +299,32 @@ static startGroupIdsVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
 }
 
+static addRegionIds(builder:flatbuffers.Builder, regionIdsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(20, regionIdsOffset, 0);
+}
+
+static createRegionIdsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startRegionIdsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
 static addLayerId(builder:flatbuffers.Builder, layerIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(19, layerIdOffset, 0);
+  builder.addFieldOffset(21, layerIdOffset, 0);
 }
 
 static addFrameId(builder:flatbuffers.Builder, frameIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(20, frameIdOffset, 0);
+  builder.addFieldOffset(22, frameIdOffset, 0);
 }
 
 static addBoundElements(builder:flatbuffers.Builder, boundElementsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(21, boundElementsOffset, 0);
+  builder.addFieldOffset(23, boundElementsOffset, 0);
 }
 
 static createBoundElementsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -311,23 +340,19 @@ static startBoundElementsVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addZIndex(builder:flatbuffers.Builder, zIndex:number) {
-  builder.addFieldFloat32(22, zIndex, 0.0);
+  builder.addFieldFloat32(24, zIndex, 0.0);
 }
 
 static addLink(builder:flatbuffers.Builder, linkOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(23, linkOffset, 0);
+  builder.addFieldOffset(25, linkOffset, 0);
 }
 
 static addLocked(builder:flatbuffers.Builder, locked:boolean) {
-  builder.addFieldInt8(24, +locked, +false);
+  builder.addFieldInt8(26, +locked, +false);
 }
 
 static addCustomData(builder:flatbuffers.Builder, customDataOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(25, customDataOffset, 0);
-}
-
-static addStyles(builder:flatbuffers.Builder, stylesOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(26, stylesOffset, 0);
+  builder.addFieldOffset(27, customDataOffset, 0);
 }
 
 static end_DucElementBase(builder:flatbuffers.Builder):flatbuffers.Offset {

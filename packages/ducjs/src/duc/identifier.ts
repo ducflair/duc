@@ -4,9 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-/**
- * A generic identifier used across various components like Standards, Layers, etc.
- */
 export class Identifier {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;

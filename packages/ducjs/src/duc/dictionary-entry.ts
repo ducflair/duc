@@ -4,9 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-/**
- * A generic key-value pair for string dictionaries.
- */
 export class DictionaryEntry {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;

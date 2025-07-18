@@ -6,7 +6,7 @@ from .parse_app_state import parse_app_state
 from .parse_binary_files import parse_binary_files
 from ..classes.AppStateClass import AppState
 from ..classes.DucElementClass import DucElementUnion
-from ..classes.BinaryFilesClass import BinaryFiles
+from ..classes.BinaryFilesClass import DucExternalFiles
 from typing import IO, Dict
 
 def parse_duc_flatbuffers(blob: IO[bytes]) -> Dict:
@@ -18,7 +18,7 @@ def parse_duc_flatbuffers(blob: IO[bytes]) -> Dict:
 
     elements: list[DucElementUnion] = [parse_duc_element(data.Elements(i)) for i in range(data.ElementsLength())]
     app_state: AppState = parse_app_state(data.AppState())
-    files: BinaryFiles = parse_binary_files(data.Files())
+    files: DucExternalFiles = parse_binary_files(data.Files())
     
     
     

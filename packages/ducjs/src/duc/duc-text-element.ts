@@ -4,6 +4,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { DucTextDynamicPart } from '../duc/duc-text-dynamic-part';
 import { DucTextStyle } from '../duc/duc-text-style';
 import { _DucElementBase } from '../duc/duc-element-base';
 
@@ -43,27 +44,37 @@ text(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-autoResize():boolean {
+dynamic(index: number, obj?:DucTextDynamicPart):DucTextDynamicPart|null {
   const offset = this.bb!.__offset(this.bb_pos, 10);
+  return offset ? (obj || new DucTextDynamicPart()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+dynamicLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 10);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+autoResize():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
 containerId():string|null
 containerId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 containerId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
+  const offset = this.bb!.__offset(this.bb_pos, 14);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 originalText():string|null
 originalText(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 originalText(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
+  const offset = this.bb!.__offset(this.bb_pos, 16);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 static startDucTextElement(builder:flatbuffers.Builder) {
-  builder.startObject(6);
+  builder.startObject(7);
 }
 
 static addBase(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset) {
@@ -78,16 +89,32 @@ static addText(builder:flatbuffers.Builder, textOffset:flatbuffers.Offset) {
   builder.addFieldOffset(2, textOffset, 0);
 }
 
+static addDynamic(builder:flatbuffers.Builder, dynamicOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(3, dynamicOffset, 0);
+}
+
+static createDynamicVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startDynamicVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
 static addAutoResize(builder:flatbuffers.Builder, autoResize:boolean) {
-  builder.addFieldInt8(3, +autoResize, +false);
+  builder.addFieldInt8(4, +autoResize, +false);
 }
 
 static addContainerId(builder:flatbuffers.Builder, containerIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, containerIdOffset, 0);
+  builder.addFieldOffset(5, containerIdOffset, 0);
 }
 
 static addOriginalText(builder:flatbuffers.Builder, originalTextOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, originalTextOffset, 0);
+  builder.addFieldOffset(6, originalTextOffset, 0);
 }
 
 static endDucTextElement(builder:flatbuffers.Builder):flatbuffers.Offset {

@@ -375,6 +375,212 @@ impl<'a> flatbuffers::Verifiable for STACKED_TEXT_ALIGN {
 
 impl flatbuffers::SimpleToVerifyInSlice for STACKED_TEXT_ALIGN {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_TEXT_FIELD_SOURCE_TYPE: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_TEXT_FIELD_SOURCE_TYPE: u8 = 20;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_TEXT_FIELD_SOURCE_TYPE: [TEXT_FIELD_SOURCE_TYPE; 2] = [
+  TEXT_FIELD_SOURCE_TYPE::ELEMENT,
+  TEXT_FIELD_SOURCE_TYPE::DICTIONARY,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct TEXT_FIELD_SOURCE_TYPE(pub u8);
+#[allow(non_upper_case_globals)]
+impl TEXT_FIELD_SOURCE_TYPE {
+  pub const ELEMENT: Self = Self(10);
+  pub const DICTIONARY: Self = Self(20);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 20;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::ELEMENT,
+    Self::DICTIONARY,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::ELEMENT => Some("ELEMENT"),
+      Self::DICTIONARY => Some("DICTIONARY"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for TEXT_FIELD_SOURCE_TYPE {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for TEXT_FIELD_SOURCE_TYPE {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for TEXT_FIELD_SOURCE_TYPE {
+    type Output = TEXT_FIELD_SOURCE_TYPE;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for TEXT_FIELD_SOURCE_TYPE {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for TEXT_FIELD_SOURCE_TYPE {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for TEXT_FIELD_SOURCE_TYPE {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_TEXT_FIELD_SOURCE_PROPERTY: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_TEXT_FIELD_SOURCE_PROPERTY: u8 = 20;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_TEXT_FIELD_SOURCE_PROPERTY: [TEXT_FIELD_SOURCE_PROPERTY; 11] = [
+  TEXT_FIELD_SOURCE_PROPERTY::AREA,
+  TEXT_FIELD_SOURCE_PROPERTY::PERIMETER,
+  TEXT_FIELD_SOURCE_PROPERTY::VOLUME,
+  TEXT_FIELD_SOURCE_PROPERTY::LENGTH,
+  TEXT_FIELD_SOURCE_PROPERTY::WIDTH,
+  TEXT_FIELD_SOURCE_PROPERTY::HEIGHT,
+  TEXT_FIELD_SOURCE_PROPERTY::RADIUS,
+  TEXT_FIELD_SOURCE_PROPERTY::DIAMETER,
+  TEXT_FIELD_SOURCE_PROPERTY::X_COORDINATE,
+  TEXT_FIELD_SOURCE_PROPERTY::Y_COORDINATE,
+  TEXT_FIELD_SOURCE_PROPERTY::LABEL,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct TEXT_FIELD_SOURCE_PROPERTY(pub u8);
+#[allow(non_upper_case_globals)]
+impl TEXT_FIELD_SOURCE_PROPERTY {
+  pub const AREA: Self = Self(10);
+  pub const PERIMETER: Self = Self(11);
+  pub const VOLUME: Self = Self(12);
+  pub const LENGTH: Self = Self(13);
+  pub const WIDTH: Self = Self(14);
+  pub const HEIGHT: Self = Self(15);
+  pub const RADIUS: Self = Self(16);
+  pub const DIAMETER: Self = Self(17);
+  pub const X_COORDINATE: Self = Self(18);
+  pub const Y_COORDINATE: Self = Self(19);
+  pub const LABEL: Self = Self(20);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 20;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::AREA,
+    Self::PERIMETER,
+    Self::VOLUME,
+    Self::LENGTH,
+    Self::WIDTH,
+    Self::HEIGHT,
+    Self::RADIUS,
+    Self::DIAMETER,
+    Self::X_COORDINATE,
+    Self::Y_COORDINATE,
+    Self::LABEL,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::AREA => Some("AREA"),
+      Self::PERIMETER => Some("PERIMETER"),
+      Self::VOLUME => Some("VOLUME"),
+      Self::LENGTH => Some("LENGTH"),
+      Self::WIDTH => Some("WIDTH"),
+      Self::HEIGHT => Some("HEIGHT"),
+      Self::RADIUS => Some("RADIUS"),
+      Self::DIAMETER => Some("DIAMETER"),
+      Self::X_COORDINATE => Some("X_COORDINATE"),
+      Self::Y_COORDINATE => Some("Y_COORDINATE"),
+      Self::LABEL => Some("LABEL"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for TEXT_FIELD_SOURCE_PROPERTY {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for TEXT_FIELD_SOURCE_PROPERTY {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for TEXT_FIELD_SOURCE_PROPERTY {
+    type Output = TEXT_FIELD_SOURCE_PROPERTY;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for TEXT_FIELD_SOURCE_PROPERTY {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for TEXT_FIELD_SOURCE_PROPERTY {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for TEXT_FIELD_SOURCE_PROPERTY {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_STROKE_PLACEMENT: u8 = 10;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_STROKE_PLACEMENT: u8 = 12;
@@ -4845,6 +5051,190 @@ impl<'a> flatbuffers::Verifiable for LEADER_CONTENT_TYPE {
 
 impl flatbuffers::SimpleToVerifyInSlice for LEADER_CONTENT_TYPE {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_BOOLEAN_OPERATION: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_BOOLEAN_OPERATION: u8 = 13;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_BOOLEAN_OPERATION: [BOOLEAN_OPERATION; 4] = [
+  BOOLEAN_OPERATION::UNION,
+  BOOLEAN_OPERATION::SUBTRACT,
+  BOOLEAN_OPERATION::INTERSECT,
+  BOOLEAN_OPERATION::EXCLUDE,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct BOOLEAN_OPERATION(pub u8);
+#[allow(non_upper_case_globals)]
+impl BOOLEAN_OPERATION {
+  pub const UNION: Self = Self(10);
+  pub const SUBTRACT: Self = Self(11);
+  pub const INTERSECT: Self = Self(12);
+  pub const EXCLUDE: Self = Self(13);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 13;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::UNION,
+    Self::SUBTRACT,
+    Self::INTERSECT,
+    Self::EXCLUDE,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::UNION => Some("UNION"),
+      Self::SUBTRACT => Some("SUBTRACT"),
+      Self::INTERSECT => Some("INTERSECT"),
+      Self::EXCLUDE => Some("EXCLUDE"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for BOOLEAN_OPERATION {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for BOOLEAN_OPERATION {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for BOOLEAN_OPERATION {
+    type Output = BOOLEAN_OPERATION;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for BOOLEAN_OPERATION {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for BOOLEAN_OPERATION {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for BOOLEAN_OPERATION {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_DUC_TEXT_DYNAMIC_SOURCE_DATA: u8 = 0;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_DUC_TEXT_DYNAMIC_SOURCE_DATA: u8 = 2;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_DUC_TEXT_DYNAMIC_SOURCE_DATA: [DucTextDynamicSourceData; 3] = [
+  DucTextDynamicSourceData::NONE,
+  DucTextDynamicSourceData::DucTextDynamicElementSource,
+  DucTextDynamicSourceData::DucTextDynamicDictionarySource,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct DucTextDynamicSourceData(pub u8);
+#[allow(non_upper_case_globals)]
+impl DucTextDynamicSourceData {
+  pub const NONE: Self = Self(0);
+  pub const DucTextDynamicElementSource: Self = Self(1);
+  pub const DucTextDynamicDictionarySource: Self = Self(2);
+
+  pub const ENUM_MIN: u8 = 0;
+  pub const ENUM_MAX: u8 = 2;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::NONE,
+    Self::DucTextDynamicElementSource,
+    Self::DucTextDynamicDictionarySource,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::NONE => Some("NONE"),
+      Self::DucTextDynamicElementSource => Some("DucTextDynamicElementSource"),
+      Self::DucTextDynamicDictionarySource => Some("DucTextDynamicDictionarySource"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for DucTextDynamicSourceData {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for DucTextDynamicSourceData {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for DucTextDynamicSourceData {
+    type Output = DucTextDynamicSourceData;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for DucTextDynamicSourceData {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for DucTextDynamicSourceData {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for DucTextDynamicSourceData {}
+pub struct DucTextDynamicSourceDataUnionTableOffset {}
+
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_LEADER_CONTENT_DATA: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_LEADER_CONTENT_DATA: u8 = 2;
@@ -4938,15 +5328,16 @@ pub struct LeaderContentDataUnionTableOffset {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_ELEMENT: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MAX_ELEMENT: u8 = 21;
+pub const ENUM_MAX_ELEMENT: u8 = 22;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_ELEMENT: [Element; 22] = [
+pub const ENUM_VALUES_ELEMENT: [Element; 23] = [
   Element::NONE,
   Element::DucRectangleElement,
   Element::DucPolygonElement,
   Element::DucEllipseElement,
   Element::DucEmbeddableElement,
+  Element::DucPdfElement,
   Element::DucMermaidElement,
   Element::DucTableElement,
   Element::DucImageElement,
@@ -4966,7 +5357,6 @@ pub const ENUM_VALUES_ELEMENT: [Element; 22] = [
   Element::DucParametricElement,
 ];
 
-/// A union of all possible scene elements.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
 pub struct Element(pub u8);
@@ -4977,32 +5367,34 @@ impl Element {
   pub const DucPolygonElement: Self = Self(2);
   pub const DucEllipseElement: Self = Self(3);
   pub const DucEmbeddableElement: Self = Self(4);
-  pub const DucMermaidElement: Self = Self(5);
-  pub const DucTableElement: Self = Self(6);
-  pub const DucImageElement: Self = Self(7);
-  pub const DucTextElement: Self = Self(8);
-  pub const DucLinearElement: Self = Self(9);
-  pub const DucArrowElement: Self = Self(10);
-  pub const DucFreeDrawElement: Self = Self(11);
-  pub const DucBlockInstanceElement: Self = Self(12);
-  pub const DucFrameElement: Self = Self(13);
-  pub const DucPlotElement: Self = Self(14);
-  pub const DucViewportElement: Self = Self(15);
-  pub const DucXRayElement: Self = Self(16);
-  pub const DucLeaderElement: Self = Self(17);
-  pub const DucDimensionElement: Self = Self(18);
-  pub const DucFeatureControlFrameElement: Self = Self(19);
-  pub const DucDocElement: Self = Self(20);
-  pub const DucParametricElement: Self = Self(21);
+  pub const DucPdfElement: Self = Self(5);
+  pub const DucMermaidElement: Self = Self(6);
+  pub const DucTableElement: Self = Self(7);
+  pub const DucImageElement: Self = Self(8);
+  pub const DucTextElement: Self = Self(9);
+  pub const DucLinearElement: Self = Self(10);
+  pub const DucArrowElement: Self = Self(11);
+  pub const DucFreeDrawElement: Self = Self(12);
+  pub const DucBlockInstanceElement: Self = Self(13);
+  pub const DucFrameElement: Self = Self(14);
+  pub const DucPlotElement: Self = Self(15);
+  pub const DucViewportElement: Self = Self(16);
+  pub const DucXRayElement: Self = Self(17);
+  pub const DucLeaderElement: Self = Self(18);
+  pub const DucDimensionElement: Self = Self(19);
+  pub const DucFeatureControlFrameElement: Self = Self(20);
+  pub const DucDocElement: Self = Self(21);
+  pub const DucParametricElement: Self = Self(22);
 
   pub const ENUM_MIN: u8 = 0;
-  pub const ENUM_MAX: u8 = 21;
+  pub const ENUM_MAX: u8 = 22;
   pub const ENUM_VALUES: &'static [Self] = &[
     Self::NONE,
     Self::DucRectangleElement,
     Self::DucPolygonElement,
     Self::DucEllipseElement,
     Self::DucEmbeddableElement,
+    Self::DucPdfElement,
     Self::DucMermaidElement,
     Self::DucTableElement,
     Self::DucImageElement,
@@ -5029,6 +5421,7 @@ impl Element {
       Self::DucPolygonElement => Some("DucPolygonElement"),
       Self::DucEllipseElement => Some("DucEllipseElement"),
       Self::DucEmbeddableElement => Some("DucEmbeddableElement"),
+      Self::DucPdfElement => Some("DucPdfElement"),
       Self::DucMermaidElement => Some("DucMermaidElement"),
       Self::DucTableElement => Some("DucTableElement"),
       Self::DucImageElement => Some("DucImageElement"),
@@ -5103,7 +5496,6 @@ impl<'a> flatbuffers::Verifiable for Element {
 impl flatbuffers::SimpleToVerifyInSlice for Element {}
 pub struct ElementUnionTableOffset {}
 
-/// A high-precision 2D point in the World Coordinate System.
 // struct GeometricPoint, aligned to 8
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
@@ -5235,7 +5627,6 @@ impl<'a> GeometricPoint {
 pub enum DictionaryEntryOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-/// A generic key-value pair for string dictionaries.
 pub struct DictionaryEntry<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
@@ -5361,7 +5752,6 @@ impl core::fmt::Debug for DictionaryEntry<'_> {
 pub enum StringValueEntryOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-/// A generic key-value pair for more complex structures like DucBlock attribute values.
 pub struct StringValueEntry<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
@@ -5487,7 +5877,6 @@ impl core::fmt::Debug for StringValueEntry<'_> {
 pub enum IdentifierOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-/// A generic identifier used across various components like Standards, Layers, etc.
 pub struct Identifier<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
@@ -5630,7 +6019,6 @@ impl core::fmt::Debug for Identifier<'_> {
 pub enum DucUcsOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-/// Defines a User Coordinate System (UCS) with an origin and rotation.
 pub struct DucUcs<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
@@ -5745,7 +6133,6 @@ impl core::fmt::Debug for DucUcs<'_> {
 pub enum DucViewOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-/// Defines a view with scroll, zoom, and center point.
 pub struct DucView<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
@@ -5928,7 +6315,6 @@ impl core::fmt::Debug for DucView<'_> {
 pub enum MarginsOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-/// Represents margins for layouts and cells.
 pub struct Margins<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
@@ -6106,9 +6492,9 @@ impl<'a> TilingProperties<'a> {
     args: &'args TilingPropertiesArgs
   ) -> flatbuffers::WIPOffset<TilingProperties<'bldr>> {
     let mut builder = TilingPropertiesBuilder::new(_fbb);
-    builder.add_offset_y(args.offset_y);
-    builder.add_offset_x(args.offset_x);
-    builder.add_spacing(args.spacing);
+    if let Some(x) = args.offset_y { builder.add_offset_y(x); }
+    if let Some(x) = args.offset_x { builder.add_offset_x(x); }
+    if let Some(x) = args.spacing { builder.add_spacing(x); }
     builder.add_angle(args.angle);
     builder.add_size_in_percent(args.size_in_percent);
     builder.finish()
@@ -6130,25 +6516,25 @@ impl<'a> TilingProperties<'a> {
     unsafe { self._tab.get::<f64>(TilingProperties::VT_ANGLE, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn spacing(&self) -> f64 {
+  pub fn spacing(&self) -> Option<f64> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f64>(TilingProperties::VT_SPACING, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f64>(TilingProperties::VT_SPACING, None)}
   }
   #[inline]
-  pub fn offset_x(&self) -> f64 {
+  pub fn offset_x(&self) -> Option<f64> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f64>(TilingProperties::VT_OFFSET_X, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f64>(TilingProperties::VT_OFFSET_X, None)}
   }
   #[inline]
-  pub fn offset_y(&self) -> f64 {
+  pub fn offset_y(&self) -> Option<f64> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f64>(TilingProperties::VT_OFFSET_Y, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f64>(TilingProperties::VT_OFFSET_Y, None)}
   }
 }
 
@@ -6171,9 +6557,9 @@ impl flatbuffers::Verifiable for TilingProperties<'_> {
 pub struct TilingPropertiesArgs {
     pub size_in_percent: f32,
     pub angle: f64,
-    pub spacing: f64,
-    pub offset_x: f64,
-    pub offset_y: f64,
+    pub spacing: Option<f64>,
+    pub offset_x: Option<f64>,
+    pub offset_y: Option<f64>,
 }
 impl<'a> Default for TilingPropertiesArgs {
   #[inline]
@@ -6181,9 +6567,9 @@ impl<'a> Default for TilingPropertiesArgs {
     TilingPropertiesArgs {
       size_in_percent: 0.0,
       angle: 0.0,
-      spacing: 0.0,
-      offset_x: 0.0,
-      offset_y: 0.0,
+      spacing: None,
+      offset_x: None,
+      offset_y: None,
     }
   }
 }
@@ -6203,15 +6589,15 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> TilingPropertiesBuilder<'a, 'b,
   }
   #[inline]
   pub fn add_spacing(&mut self, spacing: f64) {
-    self.fbb_.push_slot::<f64>(TilingProperties::VT_SPACING, spacing, 0.0);
+    self.fbb_.push_slot_always::<f64>(TilingProperties::VT_SPACING, spacing);
   }
   #[inline]
   pub fn add_offset_x(&mut self, offset_x: f64) {
-    self.fbb_.push_slot::<f64>(TilingProperties::VT_OFFSET_X, offset_x, 0.0);
+    self.fbb_.push_slot_always::<f64>(TilingProperties::VT_OFFSET_X, offset_x);
   }
   #[inline]
   pub fn add_offset_y(&mut self, offset_y: f64) {
-    self.fbb_.push_slot::<f64>(TilingProperties::VT_OFFSET_Y, offset_y, 0.0);
+    self.fbb_.push_slot_always::<f64>(TilingProperties::VT_OFFSET_Y, offset_y);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> TilingPropertiesBuilder<'a, 'b, A> {
@@ -7064,7 +7450,7 @@ impl<'a> StrokeStyle<'a> {
     args: &'args StrokeStyleArgs<'args>
   ) -> flatbuffers::WIPOffset<StrokeStyle<'bldr>> {
     let mut builder = StrokeStyleBuilder::new(_fbb);
-    builder.add_miter_limit(args.miter_limit);
+    if let Some(x) = args.miter_limit { builder.add_miter_limit(x); }
     if let Some(x) = args.dash_line_override { builder.add_dash_line_override(x); }
     if let Some(x) = args.dash { builder.add_dash(x); }
     if let Some(x) = args.dash_cap { builder.add_dash_cap(x); }
@@ -7118,11 +7504,11 @@ impl<'a> StrokeStyle<'a> {
     unsafe { self._tab.get::<STROKE_CAP>(StrokeStyle::VT_DASH_CAP, None)}
   }
   #[inline]
-  pub fn miter_limit(&self) -> f64 {
+  pub fn miter_limit(&self) -> Option<f64> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f64>(StrokeStyle::VT_MITER_LIMIT, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f64>(StrokeStyle::VT_MITER_LIMIT, None)}
   }
 }
 
@@ -7151,7 +7537,7 @@ pub struct StrokeStyleArgs<'a> {
     pub dash: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
     pub dash_line_override: Option<flatbuffers::WIPOffset<&'a str>>,
     pub dash_cap: Option<STROKE_CAP>,
-    pub miter_limit: f64,
+    pub miter_limit: Option<f64>,
 }
 impl<'a> Default for StrokeStyleArgs<'a> {
   #[inline]
@@ -7163,7 +7549,7 @@ impl<'a> Default for StrokeStyleArgs<'a> {
       dash: None,
       dash_line_override: None,
       dash_cap: None,
-      miter_limit: 0.0,
+      miter_limit: None,
     }
   }
 }
@@ -7199,7 +7585,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> StrokeStyleBuilder<'a, 'b, A> {
   }
   #[inline]
   pub fn add_miter_limit(&mut self, miter_limit: f64) {
-    self.fbb_.push_slot::<f64>(StrokeStyle::VT_MITER_LIMIT, miter_limit, 0.0);
+    self.fbb_.push_slot_always::<f64>(StrokeStyle::VT_MITER_LIMIT, miter_limit);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> StrokeStyleBuilder<'a, 'b, A> {
@@ -7608,7 +7994,6 @@ impl core::fmt::Debug for ElementBackground<'_> {
 pub enum _DucElementStylesBaseOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-/// Base style properties shared by many elements.
 pub struct _DucElementStylesBase<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
@@ -7888,7 +8273,6 @@ impl core::fmt::Debug for BoundElement<'_> {
 pub enum _DucElementBaseOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-/// The foundational table for all scene elements, containing common properties.
 pub struct _DucElementBase<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
@@ -7903,32 +8287,33 @@ impl<'a> flatbuffers::Follow<'a> for _DucElementBase<'a> {
 
 impl<'a> _DucElementBase<'a> {
   pub const VT_ID: flatbuffers::VOffsetT = 4;
-  pub const VT_X: flatbuffers::VOffsetT = 6;
-  pub const VT_Y: flatbuffers::VOffsetT = 8;
-  pub const VT_WIDTH: flatbuffers::VOffsetT = 10;
-  pub const VT_HEIGHT: flatbuffers::VOffsetT = 12;
-  pub const VT_ANGLE: flatbuffers::VOffsetT = 14;
-  pub const VT_SCOPE: flatbuffers::VOffsetT = 16;
-  pub const VT_LABEL: flatbuffers::VOffsetT = 18;
-  pub const VT_DESCRIPTION: flatbuffers::VOffsetT = 20;
-  pub const VT_IS_VISIBLE: flatbuffers::VOffsetT = 22;
-  pub const VT_SEED: flatbuffers::VOffsetT = 24;
-  pub const VT_VERSION: flatbuffers::VOffsetT = 26;
-  pub const VT_VERSION_NONCE: flatbuffers::VOffsetT = 28;
-  pub const VT_UPDATED: flatbuffers::VOffsetT = 30;
-  pub const VT_INDEX: flatbuffers::VOffsetT = 32;
-  pub const VT_IS_PLOT: flatbuffers::VOffsetT = 34;
-  pub const VT_IS_ANNOTATIVE: flatbuffers::VOffsetT = 36;
-  pub const VT_IS_DELETED: flatbuffers::VOffsetT = 38;
-  pub const VT_GROUP_IDS: flatbuffers::VOffsetT = 40;
-  pub const VT_LAYER_ID: flatbuffers::VOffsetT = 42;
-  pub const VT_FRAME_ID: flatbuffers::VOffsetT = 44;
-  pub const VT_BOUND_ELEMENTS: flatbuffers::VOffsetT = 46;
-  pub const VT_Z_INDEX: flatbuffers::VOffsetT = 48;
-  pub const VT_LINK: flatbuffers::VOffsetT = 50;
-  pub const VT_LOCKED: flatbuffers::VOffsetT = 52;
-  pub const VT_CUSTOM_DATA: flatbuffers::VOffsetT = 54;
-  pub const VT_STYLES: flatbuffers::VOffsetT = 56;
+  pub const VT_STYLES: flatbuffers::VOffsetT = 6;
+  pub const VT_X: flatbuffers::VOffsetT = 8;
+  pub const VT_Y: flatbuffers::VOffsetT = 10;
+  pub const VT_WIDTH: flatbuffers::VOffsetT = 12;
+  pub const VT_HEIGHT: flatbuffers::VOffsetT = 14;
+  pub const VT_ANGLE: flatbuffers::VOffsetT = 16;
+  pub const VT_SCOPE: flatbuffers::VOffsetT = 18;
+  pub const VT_LABEL: flatbuffers::VOffsetT = 20;
+  pub const VT_DESCRIPTION: flatbuffers::VOffsetT = 22;
+  pub const VT_IS_VISIBLE: flatbuffers::VOffsetT = 24;
+  pub const VT_SEED: flatbuffers::VOffsetT = 26;
+  pub const VT_VERSION: flatbuffers::VOffsetT = 28;
+  pub const VT_VERSION_NONCE: flatbuffers::VOffsetT = 30;
+  pub const VT_UPDATED: flatbuffers::VOffsetT = 32;
+  pub const VT_INDEX: flatbuffers::VOffsetT = 34;
+  pub const VT_IS_PLOT: flatbuffers::VOffsetT = 36;
+  pub const VT_IS_ANNOTATIVE: flatbuffers::VOffsetT = 38;
+  pub const VT_IS_DELETED: flatbuffers::VOffsetT = 40;
+  pub const VT_GROUP_IDS: flatbuffers::VOffsetT = 42;
+  pub const VT_REGION_IDS: flatbuffers::VOffsetT = 44;
+  pub const VT_LAYER_ID: flatbuffers::VOffsetT = 46;
+  pub const VT_FRAME_ID: flatbuffers::VOffsetT = 48;
+  pub const VT_BOUND_ELEMENTS: flatbuffers::VOffsetT = 50;
+  pub const VT_Z_INDEX: flatbuffers::VOffsetT = 52;
+  pub const VT_LINK: flatbuffers::VOffsetT = 54;
+  pub const VT_LOCKED: flatbuffers::VOffsetT = 56;
+  pub const VT_CUSTOM_DATA: flatbuffers::VOffsetT = 58;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -7946,13 +8331,13 @@ impl<'a> _DucElementBase<'a> {
     builder.add_width(args.width);
     builder.add_y(args.y);
     builder.add_x(args.x);
-    if let Some(x) = args.styles { builder.add_styles(x); }
     if let Some(x) = args.custom_data { builder.add_custom_data(x); }
     if let Some(x) = args.link { builder.add_link(x); }
     builder.add_z_index(args.z_index);
     if let Some(x) = args.bound_elements { builder.add_bound_elements(x); }
     if let Some(x) = args.frame_id { builder.add_frame_id(x); }
     if let Some(x) = args.layer_id { builder.add_layer_id(x); }
+    if let Some(x) = args.region_ids { builder.add_region_ids(x); }
     if let Some(x) = args.group_ids { builder.add_group_ids(x); }
     if let Some(x) = args.index { builder.add_index(x); }
     builder.add_version_nonce(args.version_nonce);
@@ -7961,6 +8346,7 @@ impl<'a> _DucElementBase<'a> {
     if let Some(x) = args.description { builder.add_description(x); }
     if let Some(x) = args.label { builder.add_label(x); }
     if let Some(x) = args.scope { builder.add_scope(x); }
+    if let Some(x) = args.styles { builder.add_styles(x); }
     if let Some(x) = args.id { builder.add_id(x); }
     builder.add_locked(args.locked);
     builder.add_is_deleted(args.is_deleted);
@@ -7987,6 +8373,13 @@ impl<'a> _DucElementBase<'a> {
   pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
     let key = self.id();
     key.cmp(val)
+  }
+  #[inline]
+  pub fn styles(&self) -> Option<_DucElementStylesBase<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>(_DucElementBase::VT_STYLES, None)}
   }
   #[inline]
   pub fn x(&self) -> f64 {
@@ -8115,6 +8508,13 @@ impl<'a> _DucElementBase<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(_DucElementBase::VT_GROUP_IDS, None)}
   }
   #[inline]
+  pub fn region_ids(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(_DucElementBase::VT_REGION_IDS, None)}
+  }
+  #[inline]
   pub fn layer_id(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
@@ -8163,13 +8563,6 @@ impl<'a> _DucElementBase<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(_DucElementBase::VT_CUSTOM_DATA, None)}
   }
-  #[inline]
-  pub fn styles(&self) -> Option<_DucElementStylesBase<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>(_DucElementBase::VT_STYLES, None)}
-  }
 }
 
 impl flatbuffers::Verifiable for _DucElementBase<'_> {
@@ -8180,6 +8573,7 @@ impl flatbuffers::Verifiable for _DucElementBase<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, true)?
+     .visit_field::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>("styles", Self::VT_STYLES, false)?
      .visit_field::<f64>("x", Self::VT_X, false)?
      .visit_field::<f64>("y", Self::VT_Y, false)?
      .visit_field::<f64>("width", Self::VT_WIDTH, false)?
@@ -8198,6 +8592,7 @@ impl flatbuffers::Verifiable for _DucElementBase<'_> {
      .visit_field::<bool>("is_annotative", Self::VT_IS_ANNOTATIVE, false)?
      .visit_field::<bool>("is_deleted", Self::VT_IS_DELETED, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("group_ids", Self::VT_GROUP_IDS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("region_ids", Self::VT_REGION_IDS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("layer_id", Self::VT_LAYER_ID, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("frame_id", Self::VT_FRAME_ID, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<BoundElement>>>>("bound_elements", Self::VT_BOUND_ELEMENTS, false)?
@@ -8205,13 +8600,13 @@ impl flatbuffers::Verifiable for _DucElementBase<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("link", Self::VT_LINK, false)?
      .visit_field::<bool>("locked", Self::VT_LOCKED, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("custom_data", Self::VT_CUSTOM_DATA, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>("styles", Self::VT_STYLES, false)?
      .finish();
     Ok(())
   }
 }
 pub struct _DucElementBaseArgs<'a> {
     pub id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub styles: Option<flatbuffers::WIPOffset<_DucElementStylesBase<'a>>>,
     pub x: f64,
     pub y: f64,
     pub width: f64,
@@ -8230,6 +8625,7 @@ pub struct _DucElementBaseArgs<'a> {
     pub is_annotative: bool,
     pub is_deleted: bool,
     pub group_ids: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub region_ids: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
     pub layer_id: Option<flatbuffers::WIPOffset<&'a str>>,
     pub frame_id: Option<flatbuffers::WIPOffset<&'a str>>,
     pub bound_elements: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<BoundElement<'a>>>>>,
@@ -8237,13 +8633,13 @@ pub struct _DucElementBaseArgs<'a> {
     pub link: Option<flatbuffers::WIPOffset<&'a str>>,
     pub locked: bool,
     pub custom_data: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub styles: Option<flatbuffers::WIPOffset<_DucElementStylesBase<'a>>>,
 }
 impl<'a> Default for _DucElementBaseArgs<'a> {
   #[inline]
   fn default() -> Self {
     _DucElementBaseArgs {
       id: None, // required field
+      styles: None,
       x: 0.0,
       y: 0.0,
       width: 0.0,
@@ -8262,6 +8658,7 @@ impl<'a> Default for _DucElementBaseArgs<'a> {
       is_annotative: false,
       is_deleted: false,
       group_ids: None,
+      region_ids: None,
       layer_id: None,
       frame_id: None,
       bound_elements: None,
@@ -8269,7 +8666,6 @@ impl<'a> Default for _DucElementBaseArgs<'a> {
       link: None,
       locked: false,
       custom_data: None,
-      styles: None,
     }
   }
 }
@@ -8282,6 +8678,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> _DucElementBaseBuilder<'a, 'b, 
   #[inline]
   pub fn add_id(&mut self, id: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_ID, id);
+  }
+  #[inline]
+  pub fn add_styles(&mut self, styles: flatbuffers::WIPOffset<_DucElementStylesBase<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucElementStylesBase>>(_DucElementBase::VT_STYLES, styles);
   }
   #[inline]
   pub fn add_x(&mut self, x: f64) {
@@ -8356,6 +8756,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> _DucElementBaseBuilder<'a, 'b, 
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_GROUP_IDS, group_ids);
   }
   #[inline]
+  pub fn add_region_ids(&mut self, region_ids: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_REGION_IDS, region_ids);
+  }
+  #[inline]
   pub fn add_layer_id(&mut self, layer_id: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_LAYER_ID, layer_id);
   }
@@ -8384,10 +8788,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> _DucElementBaseBuilder<'a, 'b, 
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_CUSTOM_DATA, custom_data);
   }
   #[inline]
-  pub fn add_styles(&mut self, styles: flatbuffers::WIPOffset<_DucElementStylesBase<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucElementStylesBase>>(_DucElementBase::VT_STYLES, styles);
-  }
-  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> _DucElementBaseBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     _DucElementBaseBuilder {
@@ -8407,6 +8807,7 @@ impl core::fmt::Debug for _DucElementBase<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("_DucElementBase");
       ds.field("id", &self.id());
+      ds.field("styles", &self.styles());
       ds.field("x", &self.x());
       ds.field("y", &self.y());
       ds.field("width", &self.width());
@@ -8425,6 +8826,7 @@ impl core::fmt::Debug for _DucElementBase<'_> {
       ds.field("is_annotative", &self.is_annotative());
       ds.field("is_deleted", &self.is_deleted());
       ds.field("group_ids", &self.group_ids());
+      ds.field("region_ids", &self.region_ids());
       ds.field("layer_id", &self.layer_id());
       ds.field("frame_id", &self.frame_id());
       ds.field("bound_elements", &self.bound_elements());
@@ -8432,7 +8834,6 @@ impl core::fmt::Debug for _DucElementBase<'_> {
       ds.field("link", &self.link());
       ds.field("locked", &self.locked());
       ds.field("custom_data", &self.custom_data());
-      ds.field("styles", &self.styles());
       ds.finish()
   }
 }
@@ -9356,7 +9757,6 @@ impl core::fmt::Debug for DucPath<'_> {
 pub enum _DucLinearElementBaseOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-/// The base for linear elements like lines and arrows.
 pub struct _DucLinearElementBase<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
@@ -13709,6 +14109,120 @@ impl core::fmt::Debug for DucEmbeddableElement<'_> {
       ds.finish()
   }
 }
+pub enum DucPdfElementOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucPdfElement<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucPdfElement<'a> {
+  type Inner = DucPdfElement<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucPdfElement<'a> {
+  pub const VT_BASE: flatbuffers::VOffsetT = 4;
+  pub const VT_FILE_ID: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucPdfElement { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucPdfElementArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucPdfElement<'bldr>> {
+    let mut builder = DucPdfElementBuilder::new(_fbb);
+    if let Some(x) = args.file_id { builder.add_file_id(x); }
+    if let Some(x) = args.base { builder.add_base(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn base(&self) -> Option<_DucElementBase<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucElementBase>>(DucPdfElement::VT_BASE, None)}
+  }
+  #[inline]
+  pub fn file_id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucPdfElement::VT_FILE_ID, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucPdfElement<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<_DucElementBase>>("base", Self::VT_BASE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("file_id", Self::VT_FILE_ID, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucPdfElementArgs<'a> {
+    pub base: Option<flatbuffers::WIPOffset<_DucElementBase<'a>>>,
+    pub file_id: Option<flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for DucPdfElementArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucPdfElementArgs {
+      base: None,
+      file_id: None,
+    }
+  }
+}
+
+pub struct DucPdfElementBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucPdfElementBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_base(&mut self, base: flatbuffers::WIPOffset<_DucElementBase<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucElementBase>>(DucPdfElement::VT_BASE, base);
+  }
+  #[inline]
+  pub fn add_file_id(&mut self, file_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucPdfElement::VT_FILE_ID, file_id);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucPdfElementBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucPdfElementBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucPdfElement<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucPdfElement<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucPdfElement");
+      ds.field("base", &self.base());
+      ds.field("file_id", &self.file_id());
+      ds.finish()
+  }
+}
 pub enum DucMermaidElementOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -15540,6 +16054,550 @@ impl core::fmt::Debug for DucImageElement<'_> {
       ds.finish()
   }
 }
+pub enum DucTextDynamicElementSourceOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucTextDynamicElementSource<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucTextDynamicElementSource<'a> {
+  type Inner = DucTextDynamicElementSource<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucTextDynamicElementSource<'a> {
+  pub const VT_ELEMENT_ID: flatbuffers::VOffsetT = 4;
+  pub const VT_PROPERTY: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucTextDynamicElementSource { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucTextDynamicElementSourceArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucTextDynamicElementSource<'bldr>> {
+    let mut builder = DucTextDynamicElementSourceBuilder::new(_fbb);
+    if let Some(x) = args.element_id { builder.add_element_id(x); }
+    if let Some(x) = args.property { builder.add_property(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn element_id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTextDynamicElementSource::VT_ELEMENT_ID, None)}
+  }
+  #[inline]
+  pub fn property(&self) -> Option<TEXT_FIELD_SOURCE_PROPERTY> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<TEXT_FIELD_SOURCE_PROPERTY>(DucTextDynamicElementSource::VT_PROPERTY, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucTextDynamicElementSource<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("element_id", Self::VT_ELEMENT_ID, false)?
+     .visit_field::<TEXT_FIELD_SOURCE_PROPERTY>("property", Self::VT_PROPERTY, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucTextDynamicElementSourceArgs<'a> {
+    pub element_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub property: Option<TEXT_FIELD_SOURCE_PROPERTY>,
+}
+impl<'a> Default for DucTextDynamicElementSourceArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucTextDynamicElementSourceArgs {
+      element_id: None,
+      property: None,
+    }
+  }
+}
+
+pub struct DucTextDynamicElementSourceBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTextDynamicElementSourceBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_element_id(&mut self, element_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTextDynamicElementSource::VT_ELEMENT_ID, element_id);
+  }
+  #[inline]
+  pub fn add_property(&mut self, property: TEXT_FIELD_SOURCE_PROPERTY) {
+    self.fbb_.push_slot_always::<TEXT_FIELD_SOURCE_PROPERTY>(DucTextDynamicElementSource::VT_PROPERTY, property);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucTextDynamicElementSourceBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucTextDynamicElementSourceBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucTextDynamicElementSource<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucTextDynamicElementSource<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucTextDynamicElementSource");
+      ds.field("element_id", &self.element_id());
+      ds.field("property", &self.property());
+      ds.finish()
+  }
+}
+pub enum DucTextDynamicDictionarySourceOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucTextDynamicDictionarySource<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucTextDynamicDictionarySource<'a> {
+  type Inner = DucTextDynamicDictionarySource<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucTextDynamicDictionarySource<'a> {
+  pub const VT_KEY: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucTextDynamicDictionarySource { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucTextDynamicDictionarySourceArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucTextDynamicDictionarySource<'bldr>> {
+    let mut builder = DucTextDynamicDictionarySourceBuilder::new(_fbb);
+    if let Some(x) = args.key { builder.add_key(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn key(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTextDynamicDictionarySource::VT_KEY, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucTextDynamicDictionarySource<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("key", Self::VT_KEY, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucTextDynamicDictionarySourceArgs<'a> {
+    pub key: Option<flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for DucTextDynamicDictionarySourceArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucTextDynamicDictionarySourceArgs {
+      key: None,
+    }
+  }
+}
+
+pub struct DucTextDynamicDictionarySourceBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTextDynamicDictionarySourceBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_key(&mut self, key: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTextDynamicDictionarySource::VT_KEY, key);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucTextDynamicDictionarySourceBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucTextDynamicDictionarySourceBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucTextDynamicDictionarySource<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucTextDynamicDictionarySource<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucTextDynamicDictionarySource");
+      ds.field("key", &self.key());
+      ds.finish()
+  }
+}
+pub enum DucTextDynamicSourceOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucTextDynamicSource<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucTextDynamicSource<'a> {
+  type Inner = DucTextDynamicSource<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucTextDynamicSource<'a> {
+  pub const VT_TEXT_SOURCE_TYPE: flatbuffers::VOffsetT = 4;
+  pub const VT_SOURCE_TYPE: flatbuffers::VOffsetT = 6;
+  pub const VT_SOURCE: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucTextDynamicSource { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucTextDynamicSourceArgs
+  ) -> flatbuffers::WIPOffset<DucTextDynamicSource<'bldr>> {
+    let mut builder = DucTextDynamicSourceBuilder::new(_fbb);
+    if let Some(x) = args.source { builder.add_source(x); }
+    builder.add_source_type(args.source_type);
+    if let Some(x) = args.text_source_type { builder.add_text_source_type(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn text_source_type(&self) -> Option<TEXT_FIELD_SOURCE_TYPE> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<TEXT_FIELD_SOURCE_TYPE>(DucTextDynamicSource::VT_TEXT_SOURCE_TYPE, None)}
+  }
+  #[inline]
+  pub fn source_type(&self) -> DucTextDynamicSourceData {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<DucTextDynamicSourceData>(DucTextDynamicSource::VT_SOURCE_TYPE, Some(DucTextDynamicSourceData::NONE)).unwrap()}
+  }
+  #[inline]
+  pub fn source(&self) -> Option<flatbuffers::Table<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(DucTextDynamicSource::VT_SOURCE, None)}
+  }
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn source_as_duc_text_dynamic_element_source(&self) -> Option<DucTextDynamicElementSource<'a>> {
+    if self.source_type() == DucTextDynamicSourceData::DucTextDynamicElementSource {
+      self.source().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { DucTextDynamicElementSource::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn source_as_duc_text_dynamic_dictionary_source(&self) -> Option<DucTextDynamicDictionarySource<'a>> {
+    if self.source_type() == DucTextDynamicSourceData::DucTextDynamicDictionarySource {
+      self.source().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { DucTextDynamicDictionarySource::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+}
+
+impl flatbuffers::Verifiable for DucTextDynamicSource<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<TEXT_FIELD_SOURCE_TYPE>("text_source_type", Self::VT_TEXT_SOURCE_TYPE, false)?
+     .visit_union::<DucTextDynamicSourceData, _>("source_type", Self::VT_SOURCE_TYPE, "source", Self::VT_SOURCE, false, |key, v, pos| {
+        match key {
+          DucTextDynamicSourceData::DucTextDynamicElementSource => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucTextDynamicElementSource>>("DucTextDynamicSourceData::DucTextDynamicElementSource", pos),
+          DucTextDynamicSourceData::DucTextDynamicDictionarySource => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucTextDynamicDictionarySource>>("DucTextDynamicSourceData::DucTextDynamicDictionarySource", pos),
+          _ => Ok(()),
+        }
+     })?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucTextDynamicSourceArgs {
+    pub text_source_type: Option<TEXT_FIELD_SOURCE_TYPE>,
+    pub source_type: DucTextDynamicSourceData,
+    pub source: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
+}
+impl<'a> Default for DucTextDynamicSourceArgs {
+  #[inline]
+  fn default() -> Self {
+    DucTextDynamicSourceArgs {
+      text_source_type: None,
+      source_type: DucTextDynamicSourceData::NONE,
+      source: None,
+    }
+  }
+}
+
+pub struct DucTextDynamicSourceBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTextDynamicSourceBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_text_source_type(&mut self, text_source_type: TEXT_FIELD_SOURCE_TYPE) {
+    self.fbb_.push_slot_always::<TEXT_FIELD_SOURCE_TYPE>(DucTextDynamicSource::VT_TEXT_SOURCE_TYPE, text_source_type);
+  }
+  #[inline]
+  pub fn add_source_type(&mut self, source_type: DucTextDynamicSourceData) {
+    self.fbb_.push_slot::<DucTextDynamicSourceData>(DucTextDynamicSource::VT_SOURCE_TYPE, source_type, DucTextDynamicSourceData::NONE);
+  }
+  #[inline]
+  pub fn add_source(&mut self, source: flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTextDynamicSource::VT_SOURCE, source);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucTextDynamicSourceBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucTextDynamicSourceBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucTextDynamicSource<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucTextDynamicSource<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucTextDynamicSource");
+      ds.field("text_source_type", &self.text_source_type());
+      ds.field("source_type", &self.source_type());
+      match self.source_type() {
+        DucTextDynamicSourceData::DucTextDynamicElementSource => {
+          if let Some(x) = self.source_as_duc_text_dynamic_element_source() {
+            ds.field("source", &x)
+          } else {
+            ds.field("source", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        DucTextDynamicSourceData::DucTextDynamicDictionarySource => {
+          if let Some(x) = self.source_as_duc_text_dynamic_dictionary_source() {
+            ds.field("source", &x)
+          } else {
+            ds.field("source", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        _ => {
+          let x: Option<()> = None;
+          ds.field("source", &x)
+        },
+      };
+      ds.finish()
+  }
+}
+pub enum DucTextDynamicPartOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucTextDynamicPart<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucTextDynamicPart<'a> {
+  type Inner = DucTextDynamicPart<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucTextDynamicPart<'a> {
+  pub const VT_TAG: flatbuffers::VOffsetT = 4;
+  pub const VT_SOURCE: flatbuffers::VOffsetT = 6;
+  pub const VT_FORMATTING: flatbuffers::VOffsetT = 8;
+  pub const VT_CACHED_VALUE: flatbuffers::VOffsetT = 10;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucTextDynamicPart { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucTextDynamicPartArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucTextDynamicPart<'bldr>> {
+    let mut builder = DucTextDynamicPartBuilder::new(_fbb);
+    if let Some(x) = args.cached_value { builder.add_cached_value(x); }
+    if let Some(x) = args.formatting { builder.add_formatting(x); }
+    if let Some(x) = args.source { builder.add_source(x); }
+    if let Some(x) = args.tag { builder.add_tag(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn tag(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTextDynamicPart::VT_TAG, None)}
+  }
+  #[inline]
+  pub fn source(&self) -> Option<DucTextDynamicSource<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucTextDynamicSource>>(DucTextDynamicPart::VT_SOURCE, None)}
+  }
+  #[inline]
+  pub fn formatting(&self) -> Option<PrimaryUnits<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<PrimaryUnits>>(DucTextDynamicPart::VT_FORMATTING, None)}
+  }
+  #[inline]
+  pub fn cached_value(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTextDynamicPart::VT_CACHED_VALUE, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucTextDynamicPart<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("tag", Self::VT_TAG, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DucTextDynamicSource>>("source", Self::VT_SOURCE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<PrimaryUnits>>("formatting", Self::VT_FORMATTING, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("cached_value", Self::VT_CACHED_VALUE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucTextDynamicPartArgs<'a> {
+    pub tag: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub source: Option<flatbuffers::WIPOffset<DucTextDynamicSource<'a>>>,
+    pub formatting: Option<flatbuffers::WIPOffset<PrimaryUnits<'a>>>,
+    pub cached_value: Option<flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for DucTextDynamicPartArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucTextDynamicPartArgs {
+      tag: None,
+      source: None,
+      formatting: None,
+      cached_value: None,
+    }
+  }
+}
+
+pub struct DucTextDynamicPartBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTextDynamicPartBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_tag(&mut self, tag: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTextDynamicPart::VT_TAG, tag);
+  }
+  #[inline]
+  pub fn add_source(&mut self, source: flatbuffers::WIPOffset<DucTextDynamicSource<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucTextDynamicSource>>(DucTextDynamicPart::VT_SOURCE, source);
+  }
+  #[inline]
+  pub fn add_formatting(&mut self, formatting: flatbuffers::WIPOffset<PrimaryUnits<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<PrimaryUnits>>(DucTextDynamicPart::VT_FORMATTING, formatting);
+  }
+  #[inline]
+  pub fn add_cached_value(&mut self, cached_value: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTextDynamicPart::VT_CACHED_VALUE, cached_value);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucTextDynamicPartBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucTextDynamicPartBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucTextDynamicPart<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucTextDynamicPart<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucTextDynamicPart");
+      ds.field("tag", &self.tag());
+      ds.field("source", &self.source());
+      ds.field("formatting", &self.formatting());
+      ds.field("cached_value", &self.cached_value());
+      ds.finish()
+  }
+}
 pub enum DucTextElementOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -15559,9 +16617,10 @@ impl<'a> DucTextElement<'a> {
   pub const VT_BASE: flatbuffers::VOffsetT = 4;
   pub const VT_STYLE: flatbuffers::VOffsetT = 6;
   pub const VT_TEXT: flatbuffers::VOffsetT = 8;
-  pub const VT_AUTO_RESIZE: flatbuffers::VOffsetT = 10;
-  pub const VT_CONTAINER_ID: flatbuffers::VOffsetT = 12;
-  pub const VT_ORIGINAL_TEXT: flatbuffers::VOffsetT = 14;
+  pub const VT_DYNAMIC: flatbuffers::VOffsetT = 10;
+  pub const VT_AUTO_RESIZE: flatbuffers::VOffsetT = 12;
+  pub const VT_CONTAINER_ID: flatbuffers::VOffsetT = 14;
+  pub const VT_ORIGINAL_TEXT: flatbuffers::VOffsetT = 16;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -15575,6 +16634,7 @@ impl<'a> DucTextElement<'a> {
     let mut builder = DucTextElementBuilder::new(_fbb);
     if let Some(x) = args.original_text { builder.add_original_text(x); }
     if let Some(x) = args.container_id { builder.add_container_id(x); }
+    if let Some(x) = args.dynamic { builder.add_dynamic(x); }
     if let Some(x) = args.text { builder.add_text(x); }
     if let Some(x) = args.style { builder.add_style(x); }
     if let Some(x) = args.base { builder.add_base(x); }
@@ -15603,6 +16663,13 @@ impl<'a> DucTextElement<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucTextElement::VT_TEXT, None)}
+  }
+  #[inline]
+  pub fn dynamic(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTextDynamicPart<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTextDynamicPart>>>>(DucTextElement::VT_DYNAMIC, None)}
   }
   #[inline]
   pub fn auto_resize(&self) -> bool {
@@ -15637,6 +16704,7 @@ impl flatbuffers::Verifiable for DucTextElement<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<_DucElementBase>>("base", Self::VT_BASE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucTextStyle>>("style", Self::VT_STYLE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text", Self::VT_TEXT, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucTextDynamicPart>>>>("dynamic", Self::VT_DYNAMIC, false)?
      .visit_field::<bool>("auto_resize", Self::VT_AUTO_RESIZE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("container_id", Self::VT_CONTAINER_ID, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("original_text", Self::VT_ORIGINAL_TEXT, false)?
@@ -15648,6 +16716,7 @@ pub struct DucTextElementArgs<'a> {
     pub base: Option<flatbuffers::WIPOffset<_DucElementBase<'a>>>,
     pub style: Option<flatbuffers::WIPOffset<DucTextStyle<'a>>>,
     pub text: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub dynamic: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTextDynamicPart<'a>>>>>,
     pub auto_resize: bool,
     pub container_id: Option<flatbuffers::WIPOffset<&'a str>>,
     pub original_text: Option<flatbuffers::WIPOffset<&'a str>>,
@@ -15659,6 +16728,7 @@ impl<'a> Default for DucTextElementArgs<'a> {
       base: None,
       style: None,
       text: None,
+      dynamic: None,
       auto_resize: false,
       container_id: None,
       original_text: None,
@@ -15682,6 +16752,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTextElementBuilder<'a, 'b, A
   #[inline]
   pub fn add_text(&mut self, text: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTextElement::VT_TEXT, text);
+  }
+  #[inline]
+  pub fn add_dynamic(&mut self, dynamic: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucTextDynamicPart<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucTextElement::VT_DYNAMIC, dynamic);
   }
   #[inline]
   pub fn add_auto_resize(&mut self, auto_resize: bool) {
@@ -15716,6 +16790,7 @@ impl core::fmt::Debug for DucTextElement<'_> {
       ds.field("base", &self.base());
       ds.field("style", &self.style());
       ds.field("text", &self.text());
+      ds.field("dynamic", &self.dynamic());
       ds.field("auto_resize", &self.auto_resize());
       ds.field("container_id", &self.container_id());
       ds.field("original_text", &self.original_text());
@@ -20530,10 +21605,11 @@ impl<'a> flatbuffers::Follow<'a> for DucDocElement<'a> {
 impl<'a> DucDocElement<'a> {
   pub const VT_BASE: flatbuffers::VOffsetT = 4;
   pub const VT_STYLE: flatbuffers::VOffsetT = 6;
-  pub const VT_CONTENT: flatbuffers::VOffsetT = 8;
-  pub const VT_FLOW_DIRECTION: flatbuffers::VOffsetT = 10;
-  pub const VT_COLUMNS: flatbuffers::VOffsetT = 12;
-  pub const VT_AUTO_RESIZE: flatbuffers::VOffsetT = 14;
+  pub const VT_TEXT: flatbuffers::VOffsetT = 8;
+  pub const VT_DYNAMIC: flatbuffers::VOffsetT = 10;
+  pub const VT_FLOW_DIRECTION: flatbuffers::VOffsetT = 12;
+  pub const VT_COLUMNS: flatbuffers::VOffsetT = 14;
+  pub const VT_AUTO_RESIZE: flatbuffers::VOffsetT = 16;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -20546,7 +21622,8 @@ impl<'a> DucDocElement<'a> {
   ) -> flatbuffers::WIPOffset<DucDocElement<'bldr>> {
     let mut builder = DucDocElementBuilder::new(_fbb);
     if let Some(x) = args.columns { builder.add_columns(x); }
-    if let Some(x) = args.content { builder.add_content(x); }
+    if let Some(x) = args.dynamic { builder.add_dynamic(x); }
+    if let Some(x) = args.text { builder.add_text(x); }
     if let Some(x) = args.style { builder.add_style(x); }
     if let Some(x) = args.base { builder.add_base(x); }
     builder.add_auto_resize(args.auto_resize);
@@ -20570,11 +21647,18 @@ impl<'a> DucDocElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucDocStyle>>(DucDocElement::VT_STYLE, None)}
   }
   #[inline]
-  pub fn content(&self) -> Option<&'a str> {
+  pub fn text(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucDocElement::VT_CONTENT, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucDocElement::VT_TEXT, None)}
+  }
+  #[inline]
+  pub fn dynamic(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTextDynamicPart<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTextDynamicPart>>>>(DucDocElement::VT_DYNAMIC, None)}
   }
   #[inline]
   pub fn flow_direction(&self) -> Option<TEXT_FLOW_DIRECTION> {
@@ -20608,7 +21692,8 @@ impl flatbuffers::Verifiable for DucDocElement<'_> {
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<_DucElementBase>>("base", Self::VT_BASE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucDocStyle>>("style", Self::VT_STYLE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("content", Self::VT_CONTENT, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text", Self::VT_TEXT, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucTextDynamicPart>>>>("dynamic", Self::VT_DYNAMIC, false)?
      .visit_field::<TEXT_FLOW_DIRECTION>("flow_direction", Self::VT_FLOW_DIRECTION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<ColumnLayout>>("columns", Self::VT_COLUMNS, false)?
      .visit_field::<bool>("auto_resize", Self::VT_AUTO_RESIZE, false)?
@@ -20619,7 +21704,8 @@ impl flatbuffers::Verifiable for DucDocElement<'_> {
 pub struct DucDocElementArgs<'a> {
     pub base: Option<flatbuffers::WIPOffset<_DucElementBase<'a>>>,
     pub style: Option<flatbuffers::WIPOffset<DucDocStyle<'a>>>,
-    pub content: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub text: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub dynamic: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucTextDynamicPart<'a>>>>>,
     pub flow_direction: Option<TEXT_FLOW_DIRECTION>,
     pub columns: Option<flatbuffers::WIPOffset<ColumnLayout<'a>>>,
     pub auto_resize: bool,
@@ -20630,7 +21716,8 @@ impl<'a> Default for DucDocElementArgs<'a> {
     DucDocElementArgs {
       base: None,
       style: None,
-      content: None,
+      text: None,
+      dynamic: None,
       flow_direction: None,
       columns: None,
       auto_resize: false,
@@ -20652,8 +21739,12 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucDocElementBuilder<'a, 'b, A>
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucDocStyle>>(DucDocElement::VT_STYLE, style);
   }
   #[inline]
-  pub fn add_content(&mut self, content: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucDocElement::VT_CONTENT, content);
+  pub fn add_text(&mut self, text: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucDocElement::VT_TEXT, text);
+  }
+  #[inline]
+  pub fn add_dynamic(&mut self, dynamic: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucTextDynamicPart<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucDocElement::VT_DYNAMIC, dynamic);
   }
   #[inline]
   pub fn add_flow_direction(&mut self, flow_direction: TEXT_FLOW_DIRECTION) {
@@ -20687,7 +21778,8 @@ impl core::fmt::Debug for DucDocElement<'_> {
     let mut ds = f.debug_struct("DucDocElement");
       ds.field("base", &self.base());
       ds.field("style", &self.style());
-      ds.field("content", &self.content());
+      ds.field("text", &self.text());
+      ds.field("dynamic", &self.dynamic());
       ds.field("flow_direction", &self.flow_direction());
       ds.field("columns", &self.columns());
       ds.field("auto_resize", &self.auto_resize());
@@ -20942,7 +22034,6 @@ impl core::fmt::Debug for DucParametricElement<'_> {
 pub enum ElementWrapperOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-/// A wrapper to hold an element from the union.
 pub struct ElementWrapper<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
@@ -21043,6 +22134,21 @@ impl<'a> ElementWrapper<'a> {
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
        unsafe { DucEmbeddableElement::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn element_as_duc_pdf_element(&self) -> Option<DucPdfElement<'a>> {
+    if self.element_type() == Element::DucPdfElement {
+      self.element().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { DucPdfElement::init_from_table(t) }
      })
     } else {
       None
@@ -21319,6 +22425,7 @@ impl flatbuffers::Verifiable for ElementWrapper<'_> {
           Element::DucPolygonElement => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucPolygonElement>>("Element::DucPolygonElement", pos),
           Element::DucEllipseElement => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucEllipseElement>>("Element::DucEllipseElement", pos),
           Element::DucEmbeddableElement => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucEmbeddableElement>>("Element::DucEmbeddableElement", pos),
+          Element::DucPdfElement => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucPdfElement>>("Element::DucPdfElement", pos),
           Element::DucMermaidElement => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucMermaidElement>>("Element::DucMermaidElement", pos),
           Element::DucTableElement => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucTableElement>>("Element::DucTableElement", pos),
           Element::DucImageElement => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucImageElement>>("Element::DucImageElement", pos),
@@ -21413,6 +22520,13 @@ impl core::fmt::Debug for ElementWrapper<'_> {
         },
         Element::DucEmbeddableElement => {
           if let Some(x) = self.element_as_duc_embeddable_element() {
+            ds.field("element", &x)
+          } else {
+            ds.field("element", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Element::DucPdfElement => {
+          if let Some(x) = self.element_as_duc_pdf_element() {
             ds.field("element", &x)
           } else {
             ds.field("element", &"InvalidFlatbuffer: Union discriminant does not match value.")
@@ -21584,13 +22698,13 @@ impl<'a> DucGlobalState<'a> {
     let mut builder = DucGlobalStateBuilder::new(_fbb);
     builder.add_display_precision_angular(args.display_precision_angular);
     builder.add_display_precision_linear(args.display_precision_linear);
-    builder.add_scope_exponent_threshold(args.scope_exponent_threshold);
     builder.add_dash_spacing_scale(args.dash_spacing_scale);
     if let Some(x) = args.main_scope { builder.add_main_scope(x); }
     if let Some(x) = args.view_background_color { builder.add_view_background_color(x); }
     if let Some(x) = args.name { builder.add_name(x); }
     builder.add_use_annotative_scaling(args.use_annotative_scaling);
     builder.add_dimensions_associative_by_default(args.dimensions_associative_by_default);
+    builder.add_scope_exponent_threshold(args.scope_exponent_threshold);
     builder.add_is_dash_spacing_affected_by_viewport_scale(args.is_dash_spacing_affected_by_viewport_scale);
     builder.finish()
   }
@@ -21632,11 +22746,11 @@ impl<'a> DucGlobalState<'a> {
     unsafe { self._tab.get::<bool>(DucGlobalState::VT_IS_DASH_SPACING_AFFECTED_BY_VIEWPORT_SCALE, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn scope_exponent_threshold(&self) -> i32 {
+  pub fn scope_exponent_threshold(&self) -> i8 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(DucGlobalState::VT_SCOPE_EXPONENT_THRESHOLD, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i8>(DucGlobalState::VT_SCOPE_EXPONENT_THRESHOLD, Some(0)).unwrap()}
   }
   #[inline]
   pub fn dimensions_associative_by_default(&self) -> bool {
@@ -21680,7 +22794,7 @@ impl flatbuffers::Verifiable for DucGlobalState<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("main_scope", Self::VT_MAIN_SCOPE, false)?
      .visit_field::<f32>("dash_spacing_scale", Self::VT_DASH_SPACING_SCALE, false)?
      .visit_field::<bool>("is_dash_spacing_affected_by_viewport_scale", Self::VT_IS_DASH_SPACING_AFFECTED_BY_VIEWPORT_SCALE, false)?
-     .visit_field::<i32>("scope_exponent_threshold", Self::VT_SCOPE_EXPONENT_THRESHOLD, false)?
+     .visit_field::<i8>("scope_exponent_threshold", Self::VT_SCOPE_EXPONENT_THRESHOLD, false)?
      .visit_field::<bool>("dimensions_associative_by_default", Self::VT_DIMENSIONS_ASSOCIATIVE_BY_DEFAULT, false)?
      .visit_field::<bool>("use_annotative_scaling", Self::VT_USE_ANNOTATIVE_SCALING, false)?
      .visit_field::<i32>("display_precision_linear", Self::VT_DISPLAY_PRECISION_LINEAR, false)?
@@ -21695,7 +22809,7 @@ pub struct DucGlobalStateArgs<'a> {
     pub main_scope: Option<flatbuffers::WIPOffset<&'a str>>,
     pub dash_spacing_scale: f32,
     pub is_dash_spacing_affected_by_viewport_scale: bool,
-    pub scope_exponent_threshold: i32,
+    pub scope_exponent_threshold: i8,
     pub dimensions_associative_by_default: bool,
     pub use_annotative_scaling: bool,
     pub display_precision_linear: i32,
@@ -21745,8 +22859,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucGlobalStateBuilder<'a, 'b, A
     self.fbb_.push_slot::<bool>(DucGlobalState::VT_IS_DASH_SPACING_AFFECTED_BY_VIEWPORT_SCALE, is_dash_spacing_affected_by_viewport_scale, false);
   }
   #[inline]
-  pub fn add_scope_exponent_threshold(&mut self, scope_exponent_threshold: i32) {
-    self.fbb_.push_slot::<i32>(DucGlobalState::VT_SCOPE_EXPONENT_THRESHOLD, scope_exponent_threshold, 0);
+  pub fn add_scope_exponent_threshold(&mut self, scope_exponent_threshold: i8) {
+    self.fbb_.push_slot::<i8>(DucGlobalState::VT_SCOPE_EXPONENT_THRESHOLD, scope_exponent_threshold, 0);
   }
   #[inline]
   pub fn add_dimensions_associative_by_default(&mut self, dimensions_associative_by_default: bool) {
@@ -22249,324 +23363,6 @@ impl core::fmt::Debug for DucLocalState<'_> {
       ds.finish()
   }
 }
-pub enum BinaryFileDataOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct BinaryFileData<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for BinaryFileData<'a> {
-  type Inner = BinaryFileData<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
-  }
-}
-
-impl<'a> BinaryFileData<'a> {
-  pub const VT_MIME_TYPE: flatbuffers::VOffsetT = 4;
-  pub const VT_ID: flatbuffers::VOffsetT = 6;
-  pub const VT_DATA_URL: flatbuffers::VOffsetT = 8;
-  pub const VT_CREATED: flatbuffers::VOffsetT = 10;
-  pub const VT_LAST_RETRIEVED: flatbuffers::VOffsetT = 12;
-  pub const VT_VERSION: flatbuffers::VOffsetT = 14;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    BinaryFileData { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args BinaryFileDataArgs<'args>
-  ) -> flatbuffers::WIPOffset<BinaryFileData<'bldr>> {
-    let mut builder = BinaryFileDataBuilder::new(_fbb);
-    builder.add_last_retrieved(args.last_retrieved);
-    builder.add_created(args.created);
-    builder.add_version(args.version);
-    if let Some(x) = args.data_url { builder.add_data_url(x); }
-    if let Some(x) = args.id { builder.add_id(x); }
-    if let Some(x) = args.mime_type { builder.add_mime_type(x); }
-    builder.finish()
-  }
-
-
-  #[inline]
-  pub fn mime_type(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(BinaryFileData::VT_MIME_TYPE, None)}
-  }
-  #[inline]
-  pub fn id(&self) -> &'a str {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(BinaryFileData::VT_ID, None).unwrap()}
-  }
-  #[inline]
-  pub fn key_compare_less_than(&self, o: &BinaryFileData) -> bool {
-    self.id() < o.id()
-  }
-
-  #[inline]
-  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
-    let key = self.id();
-    key.cmp(val)
-  }
-  #[inline]
-  pub fn data_url(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(BinaryFileData::VT_DATA_URL, None)}
-  }
-  #[inline]
-  pub fn created(&self) -> i64 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i64>(BinaryFileData::VT_CREATED, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn last_retrieved(&self) -> i64 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i64>(BinaryFileData::VT_LAST_RETRIEVED, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn version(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(BinaryFileData::VT_VERSION, Some(0)).unwrap()}
-  }
-}
-
-impl flatbuffers::Verifiable for BinaryFileData<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("mime_type", Self::VT_MIME_TYPE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, true)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("data_url", Self::VT_DATA_URL, false)?
-     .visit_field::<i64>("created", Self::VT_CREATED, false)?
-     .visit_field::<i64>("last_retrieved", Self::VT_LAST_RETRIEVED, false)?
-     .visit_field::<i32>("version", Self::VT_VERSION, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct BinaryFileDataArgs<'a> {
-    pub mime_type: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub id: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub data_url: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub created: i64,
-    pub last_retrieved: i64,
-    pub version: i32,
-}
-impl<'a> Default for BinaryFileDataArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    BinaryFileDataArgs {
-      mime_type: None,
-      id: None, // required field
-      data_url: None,
-      created: 0,
-      last_retrieved: 0,
-      version: 0,
-    }
-  }
-}
-
-pub struct BinaryFileDataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> BinaryFileDataBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_mime_type(&mut self, mime_type: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BinaryFileData::VT_MIME_TYPE, mime_type);
-  }
-  #[inline]
-  pub fn add_id(&mut self, id: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BinaryFileData::VT_ID, id);
-  }
-  #[inline]
-  pub fn add_data_url(&mut self, data_url: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BinaryFileData::VT_DATA_URL, data_url);
-  }
-  #[inline]
-  pub fn add_created(&mut self, created: i64) {
-    self.fbb_.push_slot::<i64>(BinaryFileData::VT_CREATED, created, 0);
-  }
-  #[inline]
-  pub fn add_last_retrieved(&mut self, last_retrieved: i64) {
-    self.fbb_.push_slot::<i64>(BinaryFileData::VT_LAST_RETRIEVED, last_retrieved, 0);
-  }
-  #[inline]
-  pub fn add_version(&mut self, version: i32) {
-    self.fbb_.push_slot::<i32>(BinaryFileData::VT_VERSION, version, 0);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> BinaryFileDataBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    BinaryFileDataBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<BinaryFileData<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    self.fbb_.required(o, BinaryFileData::VT_ID,"id");
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for BinaryFileData<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("BinaryFileData");
-      ds.field("mime_type", &self.mime_type());
-      ds.field("id", &self.id());
-      ds.field("data_url", &self.data_url());
-      ds.field("created", &self.created());
-      ds.field("last_retrieved", &self.last_retrieved());
-      ds.field("version", &self.version());
-      ds.finish()
-  }
-}
-pub enum BinaryFileEntryOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct BinaryFileEntry<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for BinaryFileEntry<'a> {
-  type Inner = BinaryFileEntry<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
-  }
-}
-
-impl<'a> BinaryFileEntry<'a> {
-  pub const VT_KEY: flatbuffers::VOffsetT = 4;
-  pub const VT_VALUE: flatbuffers::VOffsetT = 6;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    BinaryFileEntry { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args BinaryFileEntryArgs<'args>
-  ) -> flatbuffers::WIPOffset<BinaryFileEntry<'bldr>> {
-    let mut builder = BinaryFileEntryBuilder::new(_fbb);
-    if let Some(x) = args.value { builder.add_value(x); }
-    if let Some(x) = args.key { builder.add_key(x); }
-    builder.finish()
-  }
-
-
-  #[inline]
-  pub fn key(&self) -> &'a str {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(BinaryFileEntry::VT_KEY, None).unwrap()}
-  }
-  #[inline]
-  pub fn key_compare_less_than(&self, o: &BinaryFileEntry) -> bool {
-    self.key() < o.key()
-  }
-
-  #[inline]
-  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
-    let key = self.key();
-    key.cmp(val)
-  }
-  #[inline]
-  pub fn value(&self) -> Option<BinaryFileData<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<BinaryFileData>>(BinaryFileEntry::VT_VALUE, None)}
-  }
-}
-
-impl flatbuffers::Verifiable for BinaryFileEntry<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("key", Self::VT_KEY, true)?
-     .visit_field::<flatbuffers::ForwardsUOffset<BinaryFileData>>("value", Self::VT_VALUE, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct BinaryFileEntryArgs<'a> {
-    pub key: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub value: Option<flatbuffers::WIPOffset<BinaryFileData<'a>>>,
-}
-impl<'a> Default for BinaryFileEntryArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    BinaryFileEntryArgs {
-      key: None, // required field
-      value: None,
-    }
-  }
-}
-
-pub struct BinaryFileEntryBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> BinaryFileEntryBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_key(&mut self, key: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(BinaryFileEntry::VT_KEY, key);
-  }
-  #[inline]
-  pub fn add_value(&mut self, value: flatbuffers::WIPOffset<BinaryFileData<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<BinaryFileData>>(BinaryFileEntry::VT_VALUE, value);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> BinaryFileEntryBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    BinaryFileEntryBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<BinaryFileEntry<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    self.fbb_.required(o, BinaryFileEntry::VT_KEY,"key");
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for BinaryFileEntry<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("BinaryFileEntry");
-      ds.field("key", &self.key());
-      ds.field("value", &self.value());
-      ds.finish()
-  }
-}
 pub enum DucGroupOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -22689,6 +23485,148 @@ impl core::fmt::Debug for DucGroup<'_> {
     let mut ds = f.debug_struct("DucGroup");
       ds.field("id", &self.id());
       ds.field("stack_base", &self.stack_base());
+      ds.finish()
+  }
+}
+pub enum DucRegionOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucRegion<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucRegion<'a> {
+  type Inner = DucRegion<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucRegion<'a> {
+  pub const VT_ID: flatbuffers::VOffsetT = 4;
+  pub const VT_STACK_BASE: flatbuffers::VOffsetT = 6;
+  pub const VT_BOOLEAN_OPERATION: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucRegion { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucRegionArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucRegion<'bldr>> {
+    let mut builder = DucRegionBuilder::new(_fbb);
+    if let Some(x) = args.stack_base { builder.add_stack_base(x); }
+    if let Some(x) = args.id { builder.add_id(x); }
+    if let Some(x) = args.boolean_operation { builder.add_boolean_operation(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn id(&self) -> &'a str {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucRegion::VT_ID, None).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &DucRegion) -> bool {
+    self.id() < o.id()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
+    let key = self.id();
+    key.cmp(val)
+  }
+  #[inline]
+  pub fn stack_base(&self) -> Option<_DucStackBase<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucStackBase>>(DucRegion::VT_STACK_BASE, None)}
+  }
+  #[inline]
+  pub fn boolean_operation(&self) -> Option<BOOLEAN_OPERATION> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<BOOLEAN_OPERATION>(DucRegion::VT_BOOLEAN_OPERATION, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucRegion<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, true)?
+     .visit_field::<flatbuffers::ForwardsUOffset<_DucStackBase>>("stack_base", Self::VT_STACK_BASE, false)?
+     .visit_field::<BOOLEAN_OPERATION>("boolean_operation", Self::VT_BOOLEAN_OPERATION, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucRegionArgs<'a> {
+    pub id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub stack_base: Option<flatbuffers::WIPOffset<_DucStackBase<'a>>>,
+    pub boolean_operation: Option<BOOLEAN_OPERATION>,
+}
+impl<'a> Default for DucRegionArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucRegionArgs {
+      id: None, // required field
+      stack_base: None,
+      boolean_operation: None,
+    }
+  }
+}
+
+pub struct DucRegionBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucRegionBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_id(&mut self, id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucRegion::VT_ID, id);
+  }
+  #[inline]
+  pub fn add_stack_base(&mut self, stack_base: flatbuffers::WIPOffset<_DucStackBase<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucStackBase>>(DucRegion::VT_STACK_BASE, stack_base);
+  }
+  #[inline]
+  pub fn add_boolean_operation(&mut self, boolean_operation: BOOLEAN_OPERATION) {
+    self.fbb_.push_slot_always::<BOOLEAN_OPERATION>(DucRegion::VT_BOOLEAN_OPERATION, boolean_operation);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucRegionBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucRegionBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucRegion<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, DucRegion::VT_ID,"id");
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucRegion<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucRegion");
+      ds.field("id", &self.id());
+      ds.field("stack_base", &self.stack_base());
+      ds.field("boolean_operation", &self.boolean_operation());
       ds.finish()
   }
 }
@@ -30183,10 +31121,310 @@ impl core::fmt::Debug for VersionGraph<'_> {
       ds.finish()
   }
 }
+pub enum DucExternalFileDataOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucExternalFileData<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucExternalFileData<'a> {
+  type Inner = DucExternalFileData<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucExternalFileData<'a> {
+  pub const VT_MIME_TYPE: flatbuffers::VOffsetT = 4;
+  pub const VT_ID: flatbuffers::VOffsetT = 6;
+  pub const VT_DATA: flatbuffers::VOffsetT = 8;
+  pub const VT_CREATED: flatbuffers::VOffsetT = 10;
+  pub const VT_LAST_RETRIEVED: flatbuffers::VOffsetT = 12;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucExternalFileData { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucExternalFileDataArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucExternalFileData<'bldr>> {
+    let mut builder = DucExternalFileDataBuilder::new(_fbb);
+    builder.add_last_retrieved(args.last_retrieved);
+    builder.add_created(args.created);
+    if let Some(x) = args.data { builder.add_data(x); }
+    if let Some(x) = args.id { builder.add_id(x); }
+    if let Some(x) = args.mime_type { builder.add_mime_type(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn mime_type(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucExternalFileData::VT_MIME_TYPE, None)}
+  }
+  #[inline]
+  pub fn id(&self) -> &'a str {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucExternalFileData::VT_ID, None).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &DucExternalFileData) -> bool {
+    self.id() < o.id()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
+    let key = self.id();
+    key.cmp(val)
+  }
+  #[inline]
+  pub fn data(&self) -> Option<flatbuffers::Vector<'a, u8>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(DucExternalFileData::VT_DATA, None)}
+  }
+  #[inline]
+  pub fn created(&self) -> i64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i64>(DucExternalFileData::VT_CREATED, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn last_retrieved(&self) -> i64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i64>(DucExternalFileData::VT_LAST_RETRIEVED, Some(0)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for DucExternalFileData<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("mime_type", Self::VT_MIME_TYPE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, true)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("data", Self::VT_DATA, false)?
+     .visit_field::<i64>("created", Self::VT_CREATED, false)?
+     .visit_field::<i64>("last_retrieved", Self::VT_LAST_RETRIEVED, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucExternalFileDataArgs<'a> {
+    pub mime_type: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
+    pub created: i64,
+    pub last_retrieved: i64,
+}
+impl<'a> Default for DucExternalFileDataArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucExternalFileDataArgs {
+      mime_type: None,
+      id: None, // required field
+      data: None,
+      created: 0,
+      last_retrieved: 0,
+    }
+  }
+}
+
+pub struct DucExternalFileDataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucExternalFileDataBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_mime_type(&mut self, mime_type: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucExternalFileData::VT_MIME_TYPE, mime_type);
+  }
+  #[inline]
+  pub fn add_id(&mut self, id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucExternalFileData::VT_ID, id);
+  }
+  #[inline]
+  pub fn add_data(&mut self, data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucExternalFileData::VT_DATA, data);
+  }
+  #[inline]
+  pub fn add_created(&mut self, created: i64) {
+    self.fbb_.push_slot::<i64>(DucExternalFileData::VT_CREATED, created, 0);
+  }
+  #[inline]
+  pub fn add_last_retrieved(&mut self, last_retrieved: i64) {
+    self.fbb_.push_slot::<i64>(DucExternalFileData::VT_LAST_RETRIEVED, last_retrieved, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucExternalFileDataBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucExternalFileDataBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucExternalFileData<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, DucExternalFileData::VT_ID,"id");
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucExternalFileData<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucExternalFileData");
+      ds.field("mime_type", &self.mime_type());
+      ds.field("id", &self.id());
+      ds.field("data", &self.data());
+      ds.field("created", &self.created());
+      ds.field("last_retrieved", &self.last_retrieved());
+      ds.finish()
+  }
+}
+pub enum DucExternalFileEntryOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucExternalFileEntry<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucExternalFileEntry<'a> {
+  type Inner = DucExternalFileEntry<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucExternalFileEntry<'a> {
+  pub const VT_KEY: flatbuffers::VOffsetT = 4;
+  pub const VT_VALUE: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucExternalFileEntry { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucExternalFileEntryArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucExternalFileEntry<'bldr>> {
+    let mut builder = DucExternalFileEntryBuilder::new(_fbb);
+    if let Some(x) = args.value { builder.add_value(x); }
+    if let Some(x) = args.key { builder.add_key(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn key(&self) -> &'a str {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucExternalFileEntry::VT_KEY, None).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &DucExternalFileEntry) -> bool {
+    self.key() < o.key()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
+    let key = self.key();
+    key.cmp(val)
+  }
+  #[inline]
+  pub fn value(&self) -> Option<DucExternalFileData<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucExternalFileData>>(DucExternalFileEntry::VT_VALUE, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucExternalFileEntry<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("key", Self::VT_KEY, true)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DucExternalFileData>>("value", Self::VT_VALUE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucExternalFileEntryArgs<'a> {
+    pub key: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub value: Option<flatbuffers::WIPOffset<DucExternalFileData<'a>>>,
+}
+impl<'a> Default for DucExternalFileEntryArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucExternalFileEntryArgs {
+      key: None, // required field
+      value: None,
+    }
+  }
+}
+
+pub struct DucExternalFileEntryBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucExternalFileEntryBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_key(&mut self, key: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucExternalFileEntry::VT_KEY, key);
+  }
+  #[inline]
+  pub fn add_value(&mut self, value: flatbuffers::WIPOffset<DucExternalFileData<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucExternalFileData>>(DucExternalFileEntry::VT_VALUE, value);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucExternalFileEntryBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucExternalFileEntryBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucExternalFileEntry<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, DucExternalFileEntry::VT_KEY,"key");
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucExternalFileEntry<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucExternalFileEntry");
+      ds.field("key", &self.key());
+      ds.field("value", &self.value());
+      ds.finish()
+  }
+}
 pub enum ExportedDataStateOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-/// Root data structure for the stored data state
 pub struct ExportedDataState<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
@@ -30201,19 +31439,20 @@ impl<'a> flatbuffers::Follow<'a> for ExportedDataState<'a> {
 
 impl<'a> ExportedDataState<'a> {
   pub const VT_TYPE_: flatbuffers::VOffsetT = 4;
-  pub const VT_VERSION: flatbuffers::VOffsetT = 8;
-  pub const VT_SOURCE: flatbuffers::VOffsetT = 10;
+  pub const VT_SOURCE: flatbuffers::VOffsetT = 8;
+  pub const VT_VERSION: flatbuffers::VOffsetT = 10;
   pub const VT_THUMBNAIL: flatbuffers::VOffsetT = 12;
   pub const VT_DICTIONARY: flatbuffers::VOffsetT = 14;
   pub const VT_ELEMENTS: flatbuffers::VOffsetT = 16;
   pub const VT_BLOCKS: flatbuffers::VOffsetT = 18;
   pub const VT_GROUPS: flatbuffers::VOffsetT = 20;
-  pub const VT_LAYERS: flatbuffers::VOffsetT = 22;
-  pub const VT_STANDARDS: flatbuffers::VOffsetT = 24;
-  pub const VT_DUC_LOCAL_STATE: flatbuffers::VOffsetT = 26;
-  pub const VT_DUC_GLOBAL_STATE: flatbuffers::VOffsetT = 28;
-  pub const VT_FILES: flatbuffers::VOffsetT = 30;
-  pub const VT_VERSION_GRAPH: flatbuffers::VOffsetT = 32;
+  pub const VT_REGIONS: flatbuffers::VOffsetT = 22;
+  pub const VT_LAYERS: flatbuffers::VOffsetT = 24;
+  pub const VT_STANDARDS: flatbuffers::VOffsetT = 26;
+  pub const VT_DUC_LOCAL_STATE: flatbuffers::VOffsetT = 28;
+  pub const VT_DUC_GLOBAL_STATE: flatbuffers::VOffsetT = 30;
+  pub const VT_FILES: flatbuffers::VOffsetT = 32;
+  pub const VT_VERSION_GRAPH: flatbuffers::VOffsetT = 34;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -30231,13 +31470,14 @@ impl<'a> ExportedDataState<'a> {
     if let Some(x) = args.duc_local_state { builder.add_duc_local_state(x); }
     if let Some(x) = args.standards { builder.add_standards(x); }
     if let Some(x) = args.layers { builder.add_layers(x); }
+    if let Some(x) = args.regions { builder.add_regions(x); }
     if let Some(x) = args.groups { builder.add_groups(x); }
     if let Some(x) = args.blocks { builder.add_blocks(x); }
     if let Some(x) = args.elements { builder.add_elements(x); }
     if let Some(x) = args.dictionary { builder.add_dictionary(x); }
     if let Some(x) = args.thumbnail { builder.add_thumbnail(x); }
-    if let Some(x) = args.source { builder.add_source(x); }
     if let Some(x) = args.version { builder.add_version(x); }
+    if let Some(x) = args.source { builder.add_source(x); }
     if let Some(x) = args.type_ { builder.add_type_(x); }
     builder.finish()
   }
@@ -30251,18 +31491,18 @@ impl<'a> ExportedDataState<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(ExportedDataState::VT_TYPE_, None)}
   }
   #[inline]
-  pub fn version(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(ExportedDataState::VT_VERSION, None)}
-  }
-  #[inline]
   pub fn source(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(ExportedDataState::VT_SOURCE, None)}
+  }
+  #[inline]
+  pub fn version(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(ExportedDataState::VT_VERSION, None)}
   }
   #[inline]
   pub fn thumbnail(&self) -> Option<flatbuffers::Vector<'a, u8>> {
@@ -30300,6 +31540,13 @@ impl<'a> ExportedDataState<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucGroup>>>>(ExportedDataState::VT_GROUPS, None)}
   }
   #[inline]
+  pub fn regions(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucRegion<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucRegion>>>>(ExportedDataState::VT_REGIONS, None)}
+  }
+  #[inline]
   pub fn layers(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucLayer<'a>>>> {
     // Safety:
     // Created from valid Table for this object
@@ -30328,11 +31575,11 @@ impl<'a> ExportedDataState<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucGlobalState>>(ExportedDataState::VT_DUC_GLOBAL_STATE, None)}
   }
   #[inline]
-  pub fn files(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<BinaryFileEntry<'a>>>> {
+  pub fn files(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucExternalFileEntry<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<BinaryFileEntry>>>>(ExportedDataState::VT_FILES, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucExternalFileEntry>>>>(ExportedDataState::VT_FILES, None)}
   }
   #[inline]
   pub fn version_graph(&self) -> Option<VersionGraph<'a>> {
@@ -30351,18 +31598,19 @@ impl flatbuffers::Verifiable for ExportedDataState<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("type_", Self::VT_TYPE_, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("source", Self::VT_SOURCE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("thumbnail", Self::VT_THUMBNAIL, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DictionaryEntry>>>>("dictionary", Self::VT_DICTIONARY, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ElementWrapper>>>>("elements", Self::VT_ELEMENTS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucBlock>>>>("blocks", Self::VT_BLOCKS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucGroup>>>>("groups", Self::VT_GROUPS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucRegion>>>>("regions", Self::VT_REGIONS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucLayer>>>>("layers", Self::VT_LAYERS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Standard>>>>("standards", Self::VT_STANDARDS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucLocalState>>("duc_local_state", Self::VT_DUC_LOCAL_STATE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucGlobalState>>("duc_global_state", Self::VT_DUC_GLOBAL_STATE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<BinaryFileEntry>>>>("files", Self::VT_FILES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucExternalFileEntry>>>>("files", Self::VT_FILES, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<VersionGraph>>("version_graph", Self::VT_VERSION_GRAPH, false)?
      .finish();
     Ok(())
@@ -30370,18 +31618,19 @@ impl flatbuffers::Verifiable for ExportedDataState<'_> {
 }
 pub struct ExportedDataStateArgs<'a> {
     pub type_: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub version: Option<flatbuffers::WIPOffset<&'a str>>,
     pub source: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub version: Option<flatbuffers::WIPOffset<&'a str>>,
     pub thumbnail: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
     pub dictionary: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DictionaryEntry<'a>>>>>,
     pub elements: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ElementWrapper<'a>>>>>,
     pub blocks: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlock<'a>>>>>,
     pub groups: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucGroup<'a>>>>>,
+    pub regions: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucRegion<'a>>>>>,
     pub layers: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucLayer<'a>>>>>,
     pub standards: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Standard<'a>>>>>,
     pub duc_local_state: Option<flatbuffers::WIPOffset<DucLocalState<'a>>>,
     pub duc_global_state: Option<flatbuffers::WIPOffset<DucGlobalState<'a>>>,
-    pub files: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<BinaryFileEntry<'a>>>>>,
+    pub files: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucExternalFileEntry<'a>>>>>,
     pub version_graph: Option<flatbuffers::WIPOffset<VersionGraph<'a>>>,
 }
 impl<'a> Default for ExportedDataStateArgs<'a> {
@@ -30389,13 +31638,14 @@ impl<'a> Default for ExportedDataStateArgs<'a> {
   fn default() -> Self {
     ExportedDataStateArgs {
       type_: None,
-      version: None,
       source: None,
+      version: None,
       thumbnail: None,
       dictionary: None,
       elements: None,
       blocks: None,
       groups: None,
+      regions: None,
       layers: None,
       standards: None,
       duc_local_state: None,
@@ -30416,12 +31666,12 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ExportedDataStateBuilder<'a, 'b
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_TYPE_, type_);
   }
   #[inline]
-  pub fn add_version(&mut self, version: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_VERSION, version);
-  }
-  #[inline]
   pub fn add_source(&mut self, source: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_SOURCE, source);
+  }
+  #[inline]
+  pub fn add_version(&mut self, version: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_VERSION, version);
   }
   #[inline]
   pub fn add_thumbnail(&mut self, thumbnail: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
@@ -30444,6 +31694,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ExportedDataStateBuilder<'a, 'b
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_GROUPS, groups);
   }
   #[inline]
+  pub fn add_regions(&mut self, regions: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucRegion<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_REGIONS, regions);
+  }
+  #[inline]
   pub fn add_layers(&mut self, layers: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucLayer<'b >>>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_LAYERS, layers);
   }
@@ -30460,7 +31714,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ExportedDataStateBuilder<'a, 'b
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucGlobalState>>(ExportedDataState::VT_DUC_GLOBAL_STATE, duc_global_state);
   }
   #[inline]
-  pub fn add_files(&mut self, files: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<BinaryFileEntry<'b >>>>) {
+  pub fn add_files(&mut self, files: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucExternalFileEntry<'b >>>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_FILES, files);
   }
   #[inline]
@@ -30486,13 +31740,14 @@ impl core::fmt::Debug for ExportedDataState<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("ExportedDataState");
       ds.field("type_", &self.type_());
-      ds.field("version", &self.version());
       ds.field("source", &self.source());
+      ds.field("version", &self.version());
       ds.field("thumbnail", &self.thumbnail());
       ds.field("dictionary", &self.dictionary());
       ds.field("elements", &self.elements());
       ds.field("blocks", &self.blocks());
       ds.field("groups", &self.groups());
+      ds.field("regions", &self.regions());
       ds.field("layers", &self.layers());
       ds.field("standards", &self.standards());
       ds.field("duc_local_state", &self.duc_local_state());

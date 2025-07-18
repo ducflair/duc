@@ -6,7 +6,6 @@ import flatbuffers
 from flatbuffers.compat import import_numpy
 np = import_numpy()
 
-# A generic key-value pair for string dictionaries.
 class DictionaryEntry(object):
     __slots__ = ['_tab']
 

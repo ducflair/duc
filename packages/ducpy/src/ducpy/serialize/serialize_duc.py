@@ -12,13 +12,13 @@ from .serialize_binary_files import serialize_binary_files
 from ..utils.constants import EXPORT_DATA_TYPES, EXPORT_SOURCE
 from ..classes.AppStateClass import AppState
 from ..classes.DucElementClass import DucElementUnion
-from ..classes.BinaryFilesClass import BinaryFiles
+from ..classes.BinaryFilesClass import DucExternalFiles
 from typing import List, Dict
 from .._version import DUC_SCHEMA_VERSION # Import from auto-generated _version.py
 
 # Removed runtime get_schema_version_from_fbs function and path logic
 
-def serialize_as_flatbuffers(elements: List[DucElementUnion], app_state: AppState, files: Dict[str, BinaryFiles], source: str) -> bytes:
+def serialize_as_flatbuffers(elements: List[DucElementUnion], app_state: AppState, files: Dict[str, DucExternalFiles], source: str) -> bytes:
     try:
         # Create a builder with initial size
         builder = flatbuffers.Builder(1024 * 1024)  # 1MB initial size
@@ -86,7 +86,7 @@ def serialize_as_flatbuffers(elements: List[DucElementUnion], app_state: AppStat
         logger.error(f"Serialization failed with error: {str(e)}")
         return None
 
-def save_as_flatbuffers(elements: List[DucElementUnion], app_state: AppState, files: Dict[str, BinaryFiles], name: str = "Untitled") -> bytes:
+def save_as_flatbuffers(elements: List[DucElementUnion], app_state: AppState, files: Dict[str, DucExternalFiles], name: str = "Untitled") -> bytes:
     try:
         return serialize_as_flatbuffers(elements, app_state, files, EXPORT_SOURCE)
     except Exception as e:

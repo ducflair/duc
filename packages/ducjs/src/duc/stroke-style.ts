@@ -69,9 +69,9 @@ dashCap():STROKE_CAP|null {
   return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
 }
 
-miterLimit():number {
+miterLimit():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 16);
-  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
 }
 
 static startStrokeStyle(builder:flatbuffers.Builder) {
@@ -120,7 +120,7 @@ static addDashCap(builder:flatbuffers.Builder, dashCap:STROKE_CAP) {
 }
 
 static addMiterLimit(builder:flatbuffers.Builder, miterLimit:number) {
-  builder.addFieldFloat64(6, miterLimit, 0.0);
+  builder.addFieldFloat64(6, miterLimit, null);
 }
 
 static endStrokeStyle(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -128,7 +128,7 @@ static endStrokeStyle(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createStrokeStyle(builder:flatbuffers.Builder, preference:STROKE_PREFERENCE|null, cap:STROKE_CAP|null, join:STROKE_JOIN|null, dashOffset:flatbuffers.Offset, dashLineOverrideOffset:flatbuffers.Offset, dashCap:STROKE_CAP|null, miterLimit:number):flatbuffers.Offset {
+static createStrokeStyle(builder:flatbuffers.Builder, preference:STROKE_PREFERENCE|null, cap:STROKE_CAP|null, join:STROKE_JOIN|null, dashOffset:flatbuffers.Offset, dashLineOverrideOffset:flatbuffers.Offset, dashCap:STROKE_CAP|null, miterLimit:number|null):flatbuffers.Offset {
   StrokeStyle.startStrokeStyle(builder);
   if (preference !== null)
     StrokeStyle.addPreference(builder, preference);
@@ -140,7 +140,8 @@ static createStrokeStyle(builder:flatbuffers.Builder, preference:STROKE_PREFEREN
   StrokeStyle.addDashLineOverride(builder, dashLineOverrideOffset);
   if (dashCap !== null)
     StrokeStyle.addDashCap(builder, dashCap);
-  StrokeStyle.addMiterLimit(builder, miterLimit);
+  if (miterLimit !== null)
+    StrokeStyle.addMiterLimit(builder, miterLimit);
   return StrokeStyle.endStrokeStyle(builder);
 }
 }

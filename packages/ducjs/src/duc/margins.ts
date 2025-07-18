@@ -4,9 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-/**
- * Represents margins for layouts and cells.
- */
 export class Margins {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
