@@ -9,9 +9,6 @@ import { ElementBackground } from '../duc/element-background';
 import { ElementStroke } from '../duc/element-stroke';
 
 
-/**
- * Base style properties shared by many elements.
- */
 export class _DucElementStylesBase {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;

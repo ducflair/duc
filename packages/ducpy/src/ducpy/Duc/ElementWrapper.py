@@ -6,7 +6,6 @@ import flatbuffers
 from flatbuffers.compat import import_numpy
 np = import_numpy()
 
-# A wrapper to hold an element from the union.
 class ElementWrapper(object):
     __slots__ = ['_tab']
 

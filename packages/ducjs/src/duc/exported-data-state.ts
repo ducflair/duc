@@ -4,21 +4,19 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { BinaryFileEntry } from '../duc/binary-file-entry';
 import { DictionaryEntry } from '../duc/dictionary-entry';
 import { DucBlock } from '../duc/duc-block';
+import { DucExternalFileEntry } from '../duc/duc-external-file-entry';
 import { DucGlobalState } from '../duc/duc-global-state';
 import { DucGroup } from '../duc/duc-group';
 import { DucLayer } from '../duc/duc-layer';
 import { DucLocalState } from '../duc/duc-local-state';
+import { DucRegion } from '../duc/duc-region';
 import { ElementWrapper } from '../duc/element-wrapper';
 import { Standard } from '../duc/standard';
 import { VersionGraph } from '../duc/version-graph';
 
 
-/**
- * Root data structure for the stored data state
- */
 export class ExportedDataState {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -48,16 +46,16 @@ type(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-version():string|null
-version(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-version(optionalEncoding?:any):string|Uint8Array|null {
+source():string|null
+source(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+source(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-source():string|null
-source(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-source(optionalEncoding?:any):string|Uint8Array|null {
+version():string|null
+version(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+version(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
@@ -117,65 +115,75 @@ groupsLength():number {
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-layers(index: number, obj?:DucLayer):DucLayer|null {
+regions(index: number, obj?:DucRegion):DucRegion|null {
   const offset = this.bb!.__offset(this.bb_pos, 22);
+  return offset ? (obj || new DucRegion()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+regionsLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 22);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+layers(index: number, obj?:DucLayer):DucLayer|null {
+  const offset = this.bb!.__offset(this.bb_pos, 24);
   return offset ? (obj || new DucLayer()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
 layersLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 22);
+  const offset = this.bb!.__offset(this.bb_pos, 24);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 standards(index: number, obj?:Standard):Standard|null {
-  const offset = this.bb!.__offset(this.bb_pos, 24);
+  const offset = this.bb!.__offset(this.bb_pos, 26);
   return offset ? (obj || new Standard()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
 standardsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 24);
+  const offset = this.bb!.__offset(this.bb_pos, 26);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 ducLocalState(obj?:DucLocalState):DucLocalState|null {
-  const offset = this.bb!.__offset(this.bb_pos, 26);
+  const offset = this.bb!.__offset(this.bb_pos, 28);
   return offset ? (obj || new DucLocalState()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 ducGlobalState(obj?:DucGlobalState):DucGlobalState|null {
-  const offset = this.bb!.__offset(this.bb_pos, 28);
+  const offset = this.bb!.__offset(this.bb_pos, 30);
   return offset ? (obj || new DucGlobalState()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-files(index: number, obj?:BinaryFileEntry):BinaryFileEntry|null {
-  const offset = this.bb!.__offset(this.bb_pos, 30);
-  return offset ? (obj || new BinaryFileEntry()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+files(index: number, obj?:DucExternalFileEntry):DucExternalFileEntry|null {
+  const offset = this.bb!.__offset(this.bb_pos, 32);
+  return offset ? (obj || new DucExternalFileEntry()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
 filesLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 30);
+  const offset = this.bb!.__offset(this.bb_pos, 32);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 versionGraph(obj?:VersionGraph):VersionGraph|null {
-  const offset = this.bb!.__offset(this.bb_pos, 32);
+  const offset = this.bb!.__offset(this.bb_pos, 34);
   return offset ? (obj || new VersionGraph()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 static startExportedDataState(builder:flatbuffers.Builder) {
-  builder.startObject(15);
+  builder.startObject(16);
 }
 
 static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
   builder.addFieldOffset(0, typeOffset, 0);
 }
 
-static addVersion(builder:flatbuffers.Builder, versionOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, versionOffset, 0);
+static addSource(builder:flatbuffers.Builder, sourceOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(2, sourceOffset, 0);
 }
 
-static addSource(builder:flatbuffers.Builder, sourceOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, sourceOffset, 0);
+static addVersion(builder:flatbuffers.Builder, versionOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(3, versionOffset, 0);
 }
 
 static addThumbnail(builder:flatbuffers.Builder, thumbnailOffset:flatbuffers.Offset) {
@@ -258,8 +266,24 @@ static startGroupsVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
 }
 
+static addRegions(builder:flatbuffers.Builder, regionsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(9, regionsOffset, 0);
+}
+
+static createRegionsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startRegionsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
 static addLayers(builder:flatbuffers.Builder, layersOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(9, layersOffset, 0);
+  builder.addFieldOffset(10, layersOffset, 0);
 }
 
 static createLayersVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -275,7 +299,7 @@ static startLayersVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addStandards(builder:flatbuffers.Builder, standardsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(10, standardsOffset, 0);
+  builder.addFieldOffset(11, standardsOffset, 0);
 }
 
 static createStandardsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -291,15 +315,15 @@ static startStandardsVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addDucLocalState(builder:flatbuffers.Builder, ducLocalStateOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(11, ducLocalStateOffset, 0);
+  builder.addFieldOffset(12, ducLocalStateOffset, 0);
 }
 
 static addDucGlobalState(builder:flatbuffers.Builder, ducGlobalStateOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(12, ducGlobalStateOffset, 0);
+  builder.addFieldOffset(13, ducGlobalStateOffset, 0);
 }
 
 static addFiles(builder:flatbuffers.Builder, filesOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(13, filesOffset, 0);
+  builder.addFieldOffset(14, filesOffset, 0);
 }
 
 static createFilesVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -315,7 +339,7 @@ static startFilesVector(builder:flatbuffers.Builder, numElems:number) {
 }
 
 static addVersionGraph(builder:flatbuffers.Builder, versionGraphOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(14, versionGraphOffset, 0);
+  builder.addFieldOffset(15, versionGraphOffset, 0);
 }
 
 static endExportedDataState(builder:flatbuffers.Builder):flatbuffers.Offset {

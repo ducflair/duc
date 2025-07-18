@@ -55,7 +55,7 @@ isDashSpacingAffectedByViewportScale():boolean {
 
 scopeExponentThreshold():number {
   const offset = this.bb!.__offset(this.bb_pos, 14);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readInt8(this.bb_pos + offset) : 0;
 }
 
 dimensionsAssociativeByDefault():boolean {
@@ -103,7 +103,7 @@ static addIsDashSpacingAffectedByViewportScale(builder:flatbuffers.Builder, isDa
 }
 
 static addScopeExponentThreshold(builder:flatbuffers.Builder, scopeExponentThreshold:number) {
-  builder.addFieldInt32(5, scopeExponentThreshold, 0);
+  builder.addFieldInt8(5, scopeExponentThreshold, 0);
 }
 
 static addDimensionsAssociativeByDefault(builder:flatbuffers.Builder, dimensionsAssociativeByDefault:boolean) {

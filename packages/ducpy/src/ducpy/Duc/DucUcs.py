@@ -6,7 +6,6 @@ import flatbuffers
 from flatbuffers.compat import import_numpy
 np = import_numpy()
 
-# Defines a User Coordinate System (UCS) with an origin and rotation.
 class DucUcs(object):
     __slots__ = ['_tab']
 

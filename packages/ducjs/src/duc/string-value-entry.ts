@@ -4,9 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-/**
- * A generic key-value pair for more complex structures like DucBlock attribute values.
- */
 export class StringValueEntry {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;

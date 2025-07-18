@@ -6,7 +6,6 @@ import flatbuffers
 from flatbuffers.compat import import_numpy
 np = import_numpy()
 
-# A generic identifier used across various components like Standards, Layers, etc.
 class Identifier(object):
     __slots__ = ['_tab']
 

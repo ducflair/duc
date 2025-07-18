@@ -1,6 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
-import { BinaryFileData, BinaryFilesEntry, BinaryFiles as BinBinaryFiles } from 'ducjs/duc';
-import { BinaryFiles as BinaryFilesType } from 'ducjs/types';
+import { DucExternalFileData, BinaryFilesEntry, DucExternalFiles as BinBinaryFiles } from 'ducjs/duc';
+import { DucExternalFiles as BinaryFilesType } from 'ducjs/types';
 import { ensureFiniteNumber } from 'ducjs/serialize/serializationUtils'; // Import shared helper
 
 // Helper function to convert a DataURL (base64 string) to Uint8Array
@@ -32,13 +32,13 @@ const serializeBinaryFiles = (builder: flatbuffers.Builder, files: BinaryFilesTy
     const mimeTypeOffset = builder.createString(file.mimeType || "application/octet-stream"); 
     const idOffset = builder.createString(file.id || key); 
     const data = dataURLToUint8Array(file.dataURL || ""); 
-    const dataOffset = BinaryFileData.createDataVector(builder, data);
+    const dataOffset = DucExternalFileData.createDataVector(builder, data);
     
     // Use imported ensureFiniteNumber for timestamps
     const createdTimestamp = ensureFiniteNumber(file.created, Date.now());
     const lastRetrievedTimestamp = ensureFiniteNumber(file.lastRetrieved, Date.now());
 
-    const binaryFileDataOffset = BinaryFileData.createBinaryFileData(
+    const binaryFileDataOffset = DucExternalFileData.createBinaryFileData(
       builder,
       mimeTypeOffset,
       idOffset,

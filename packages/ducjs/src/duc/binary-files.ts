@@ -7,22 +7,22 @@ import * as flatbuffers from 'flatbuffers';
 import { BinaryFilesEntry } from '../duc/binary-files-entry';
 
 
-export class BinaryFiles {
+export class DucExternalFiles {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
-  __init(i:number, bb:flatbuffers.ByteBuffer):BinaryFiles {
+  __init(i:number, bb:flatbuffers.ByteBuffer):DucExternalFiles {
   this.bb_pos = i;
   this.bb = bb;
   return this;
 }
 
-static getRootAsBinaryFiles(bb:flatbuffers.ByteBuffer, obj?:BinaryFiles):BinaryFiles {
-  return (obj || new BinaryFiles()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+static getRootAsBinaryFiles(bb:flatbuffers.ByteBuffer, obj?:DucExternalFiles):DucExternalFiles {
+  return (obj || new DucExternalFiles()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-static getSizePrefixedRootAsBinaryFiles(bb:flatbuffers.ByteBuffer, obj?:BinaryFiles):BinaryFiles {
+static getSizePrefixedRootAsBinaryFiles(bb:flatbuffers.ByteBuffer, obj?:DucExternalFiles):DucExternalFiles {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
-  return (obj || new BinaryFiles()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+  return (obj || new DucExternalFiles()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
 entries(index: number, obj?:BinaryFilesEntry):BinaryFilesEntry|null {
@@ -61,8 +61,8 @@ static endBinaryFiles(builder:flatbuffers.Builder):flatbuffers.Offset {
 }
 
 static createBinaryFiles(builder:flatbuffers.Builder, entriesOffset:flatbuffers.Offset):flatbuffers.Offset {
-  BinaryFiles.startBinaryFiles(builder);
-  BinaryFiles.addEntries(builder, entriesOffset);
-  return BinaryFiles.endBinaryFiles(builder);
+  DucExternalFiles.startBinaryFiles(builder);
+  DucExternalFiles.addEntries(builder, entriesOffset);
+  return DucExternalFiles.endBinaryFiles(builder);
 }
 }

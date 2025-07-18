@@ -6,7 +6,6 @@ import flatbuffers
 from flatbuffers.compat import import_numpy
 np = import_numpy()
 
-# The base for linear elements like lines and arrows.
 class _DucLinearElementBase(object):
     __slots__ = ['_tab']
 

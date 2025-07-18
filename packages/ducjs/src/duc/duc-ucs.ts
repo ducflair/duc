@@ -7,9 +7,6 @@ import * as flatbuffers from 'flatbuffers';
 import { GeometricPoint } from '../duc/geometric-point';
 
 
-/**
- * Defines a User Coordinate System (UCS) with an origin and rotation.
- */
 export class DucUcs {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;

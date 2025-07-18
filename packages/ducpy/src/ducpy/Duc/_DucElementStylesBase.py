@@ -6,7 +6,6 @@ import flatbuffers
 from flatbuffers.compat import import_numpy
 np = import_numpy()
 
-# Base style properties shared by many elements.
 class _DucElementStylesBase(object):
     __slots__ = ['_tab']
 

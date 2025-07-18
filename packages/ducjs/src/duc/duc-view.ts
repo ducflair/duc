@@ -7,9 +7,6 @@ import * as flatbuffers from 'flatbuffers';
 import { DucPoint } from '../duc/duc-point';
 
 
-/**
- * Defines a view with scroll, zoom, and center point.
- */
 export class DucView {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
