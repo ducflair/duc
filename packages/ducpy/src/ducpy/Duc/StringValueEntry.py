@@ -6,7 +6,6 @@ import flatbuffers
 from flatbuffers.compat import import_numpy
 np = import_numpy()
 
-# A generic key-value pair for more complex structures like DucBlock attribute values.
 class StringValueEntry(object):
     __slots__ = ['_tab']
 

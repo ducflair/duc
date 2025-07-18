@@ -1,18 +1,18 @@
 use flatbuffers::{self, FlatBufferBuilder, WIPOffset};
 use std::collections::HashMap;
 
-// Import the Rust BinaryFileData type
-use crate::types::BinaryFileData;
+// Import the Rust DucExternalFileData type
+use crate::types::DucExternalFileData;
 
 // Use the generated FlatBuffers code from the correct module
 use crate::duc_generated::duc::{
-    BinaryFileData as FbBinaryFileData, BinaryFileDataBuilder, 
-    BinaryFiles, BinaryFilesBuilder,
+    DucExternalFileData as FbBinaryFileData, BinaryFileDataBuilder, 
+    DucExternalFiles, BinaryFilesBuilder,
     BinaryFilesEntryBuilder
 };
 
-/// Parses a FlatBuffers BinaryFileData into our Rust BinaryFileData type
-pub fn parse_binary_file(file_data: &FbBinaryFileData) -> BinaryFileData {
+/// Parses a FlatBuffers DucExternalFileData into our Rust DucExternalFileData type
+pub fn parse_binary_file(file_data: &FbBinaryFileData) -> DucExternalFileData {
     let id = file_data.id().unwrap_or("").to_string();
     let mime_type = file_data.mime_type().unwrap_or("").to_string();
     let created = file_data.created();
@@ -25,7 +25,7 @@ pub fn parse_binary_file(file_data: &FbBinaryFileData) -> BinaryFileData {
     // Extract the binary data if it exists
     let binary_data = extract_binary_data(file_data);
     
-    BinaryFileData {
+    DucExternalFileData {
         id,
         mime_type,
         created,
@@ -40,8 +40,8 @@ pub fn parse_binary_file(file_data: &FbBinaryFileData) -> BinaryFileData {
     }
 }
 
-/// Parses a collection of BinaryFiles from a FlatBuffers BinaryFiles table
-pub fn parse_binary_files(files: &BinaryFiles) -> HashMap<String, BinaryFileData> {
+/// Parses a collection of DucExternalFiles from a FlatBuffers DucExternalFiles table
+pub fn parse_binary_files(files: &DucExternalFiles) -> HashMap<String, DucExternalFileData> {
     let mut result = HashMap::new();
     
     if let Some(entries) = files.entries() {
@@ -57,10 +57,10 @@ pub fn parse_binary_files(files: &BinaryFiles) -> HashMap<String, BinaryFileData
     result
 }
 
-/// Serialize a BinaryFileData to FlatBuffers
+/// Serialize a DucExternalFileData to FlatBuffers
 pub fn serialize_binary_file<'a>(
     builder: &mut FlatBufferBuilder<'a>,
-    file: &BinaryFileData,
+    file: &DucExternalFileData,
 ) -> WIPOffset<FbBinaryFileData<'a>> {
     let id = builder.create_string(&file.id);
     let mime_type = builder.create_string(&file.mime_type);
@@ -86,11 +86,11 @@ pub fn serialize_binary_file<'a>(
     file_builder.finish()
 }
 
-/// Serialize a collection of BinaryFileData to FlatBuffers
+/// Serialize a collection of DucExternalFileData to FlatBuffers
 pub fn serialize_binary_files<'a>(
     builder: &mut FlatBufferBuilder<'a>,
-    files: &HashMap<String, BinaryFileData>,
-) -> WIPOffset<BinaryFiles<'a>> {
+    files: &HashMap<String, DucExternalFileData>,
+) -> WIPOffset<DucExternalFiles<'a>> {
     let mut entries_vec = Vec::with_capacity(files.len());
     
     for (key, file) in files {
@@ -115,7 +115,7 @@ pub fn serialize_binary_files<'a>(
     files_builder.finish()
 }
 
-/// Extracts binary data from a FlatBuffers BinaryFileData
+/// Extracts binary data from a FlatBuffers DucExternalFileData
 pub fn extract_binary_data(file_data: &FbBinaryFileData) -> Option<Vec<u8>> {
     if let Some(data) = file_data.data() {
         let bytes = data.bytes();
@@ -136,7 +136,7 @@ pub fn create_data_url(binary_data: &[u8], mime_type: &str) -> String {
 
 /// Helper function to get a binary file by ID from a collection
 pub fn find_binary_file_by_id<'a>(
-    files: &'a BinaryFiles,
+    files: &'a DucExternalFiles,
     id: &str,
 ) -> Option<FbBinaryFileData<'a>> {
     if let Some(entries) = files.entries() {

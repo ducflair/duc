@@ -49,10 +49,7 @@ export type DecimalSeparator = ValueOf<typeof DECIMAL_SEPARATOR>;
 export type _UnitSystemBase<T extends AngularUnitsFormat | DimensionUnitsFormat> = {
   /** Unit format */
   format: T;
-  /** 
-   * Unit system
-   * @maps in DXF to $MEASUREMENT (Measurement System) 
-   */
+  /** Unit system */
   system: UnitSystem;
   /** Precision (decimal places) */
   precision: number;

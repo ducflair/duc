@@ -12,7 +12,7 @@ import {
 } from 'ducjs/duc';
 import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, MIME_TYPES } from 'ducjs/utils/constants';
 import { DucBlock, DucElement, DucGroup, OrderedDucElement } from 'ducjs/types/elements';
-import { BinaryFiles, RendererState, DucLocalState } from 'ducjs/types';
+import { DucExternalFiles, RendererState, DucLocalState } from 'ducjs/types';
 import { serializeDucElement } from 'ducjs/serialize/serializeElementFromDuc';
 import { serializeAppState } from 'ducjs/serialize/serializeAppStateFromDuc';
 import { serializeBinaryFiles } from 'ducjs/serialize/serializeBinaryFilesFromDuc';
@@ -26,7 +26,7 @@ export const DUC_SCHEMA_VERSION = process.env.DUC_SCHEMA_VERSION || "0.0.0";
 export const serializeDuc = async (
   elements: readonly DucElement[],
   ducState: Partial<DucLocalState>,
-  files: BinaryFiles,
+  files: DucExternalFiles,
   blocks: readonly DucBlock[],
   groups: readonly DucGroup[],
   rendererState?: RendererState,

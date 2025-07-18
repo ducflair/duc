@@ -51,22 +51,47 @@ class DucDocElement(object):
         return None
 
     # DucDocElement
-    def Content(self):
+    def Text(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # DucDocElement
-    def FlowDirection(self):
+    def Dynamic(self, j):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.DucTextDynamicPart import DucTextDynamicPart
+            obj = DucTextDynamicPart()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucDocElement
+    def DynamicLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # DucDocElement
+    def DynamicIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        return o == 0
+
+    # DucDocElement
+    def FlowDirection(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return None
 
     # DucDocElement
     def Columns(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from Duc.ColumnLayout import ColumnLayout
@@ -77,13 +102,13 @@ class DucDocElement(object):
 
     # DucDocElement
     def AutoResize(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
 def DucDocElementStart(builder):
-    builder.StartObject(6)
+    builder.StartObject(7)
 
 def Start(builder):
     DucDocElementStart(builder)
@@ -100,26 +125,38 @@ def DucDocElementAddStyle(builder, style):
 def AddStyle(builder, style):
     DucDocElementAddStyle(builder, style)
 
-def DucDocElementAddContent(builder, content):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(content), 0)
+def DucDocElementAddText(builder, text):
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(text), 0)
 
-def AddContent(builder, content):
-    DucDocElementAddContent(builder, content)
+def AddText(builder, text):
+    DucDocElementAddText(builder, text)
+
+def DucDocElementAddDynamic(builder, dynamic):
+    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(dynamic), 0)
+
+def AddDynamic(builder, dynamic):
+    DucDocElementAddDynamic(builder, dynamic)
+
+def DucDocElementStartDynamicVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartDynamicVector(builder, numElems):
+    return DucDocElementStartDynamicVector(builder, numElems)
 
 def DucDocElementAddFlowDirection(builder, flowDirection):
-    builder.PrependUint8Slot(3, flowDirection, None)
+    builder.PrependUint8Slot(4, flowDirection, None)
 
 def AddFlowDirection(builder, flowDirection):
     DucDocElementAddFlowDirection(builder, flowDirection)
 
 def DucDocElementAddColumns(builder, columns):
-    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(columns), 0)
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(columns), 0)
 
 def AddColumns(builder, columns):
     DucDocElementAddColumns(builder, columns)
 
 def DucDocElementAddAutoResize(builder, autoResize):
-    builder.PrependBoolSlot(5, autoResize, 0)
+    builder.PrependBoolSlot(6, autoResize, 0)
 
 def AddAutoResize(builder, autoResize):
     DucDocElementAddAutoResize(builder, autoResize)

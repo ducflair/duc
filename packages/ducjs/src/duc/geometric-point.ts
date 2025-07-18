@@ -4,9 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-/**
- * A high-precision 2D point in the World Coordinate System.
- */
 export class GeometricPoint {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;

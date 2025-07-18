@@ -2,27 +2,27 @@
 
 # namespace: Duc
 
-# A union of all possible scene elements.
 class Element(object):
     NONE = 0
     DucRectangleElement = 1
     DucPolygonElement = 2
     DucEllipseElement = 3
     DucEmbeddableElement = 4
-    DucMermaidElement = 5
-    DucTableElement = 6
-    DucImageElement = 7
-    DucTextElement = 8
-    DucLinearElement = 9
-    DucArrowElement = 10
-    DucFreeDrawElement = 11
-    DucBlockInstanceElement = 12
-    DucFrameElement = 13
-    DucPlotElement = 14
-    DucViewportElement = 15
-    DucXRayElement = 16
-    DucLeaderElement = 17
-    DucDimensionElement = 18
-    DucFeatureControlFrameElement = 19
-    DucDocElement = 20
-    DucParametricElement = 21
+    DucPdfElement = 5
+    DucMermaidElement = 6
+    DucTableElement = 7
+    DucImageElement = 8
+    DucTextElement = 9
+    DucLinearElement = 10
+    DucArrowElement = 11
+    DucFreeDrawElement = 12
+    DucBlockInstanceElement = 13
+    DucFrameElement = 14
+    DucPlotElement = 15
+    DucViewportElement = 16
+    DucXRayElement = 17
+    DucLeaderElement = 18
+    DucDimensionElement = 19
+    DucFeatureControlFrameElement = 20
+    DucDocElement = 21
+    DucParametricElement = 22

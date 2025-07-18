@@ -6,7 +6,6 @@ import flatbuffers
 from flatbuffers.compat import import_numpy
 np = import_numpy()
 
-# Root data structure for the stored data state
 class ExportedDataState(object):
     __slots__ = ['_tab']
 
@@ -37,14 +36,14 @@ class ExportedDataState(object):
         return None
 
     # ExportedDataState
-    def Version(self):
+    def Source(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # ExportedDataState
-    def Source(self):
+    def Version(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
@@ -178,8 +177,33 @@ class ExportedDataState(object):
         return o == 0
 
     # ExportedDataState
-    def Layers(self, j):
+    def Regions(self, j):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.DucRegion import DucRegion
+            obj = DucRegion()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # ExportedDataState
+    def RegionsLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # ExportedDataState
+    def RegionsIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        return o == 0
+
+    # ExportedDataState
+    def Layers(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
         if o != 0:
             x = self._tab.Vector(o)
             x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
@@ -192,19 +216,19 @@ class ExportedDataState(object):
 
     # ExportedDataState
     def LayersLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # ExportedDataState
     def LayersIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(22))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
         return o == 0
 
     # ExportedDataState
     def Standards(self, j):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
         if o != 0:
             x = self._tab.Vector(o)
             x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
@@ -217,19 +241,19 @@ class ExportedDataState(object):
 
     # ExportedDataState
     def StandardsLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # ExportedDataState
     def StandardsIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
         return o == 0
 
     # ExportedDataState
     def DucLocalState(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(26))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from Duc.DucLocalState import DucLocalState
@@ -240,7 +264,7 @@ class ExportedDataState(object):
 
     # ExportedDataState
     def DucGlobalState(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(28))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from Duc.DucGlobalState import DucGlobalState
@@ -251,32 +275,32 @@ class ExportedDataState(object):
 
     # ExportedDataState
     def Files(self, j):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
         if o != 0:
             x = self._tab.Vector(o)
             x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
             x = self._tab.Indirect(x)
-            from Duc.BinaryFileEntry import BinaryFileEntry
-            obj = BinaryFileEntry()
+            from Duc.DucExternalFileEntry import DucExternalFileEntry
+            obj = DucExternalFileEntry()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None
 
     # ExportedDataState
     def FilesLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # ExportedDataState
     def FilesIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(30))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
         return o == 0
 
     # ExportedDataState
     def VersionGraph(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(34))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from Duc.VersionGraph import VersionGraph
@@ -286,7 +310,7 @@ class ExportedDataState(object):
         return None
 
 def ExportedDataStateStart(builder):
-    builder.StartObject(15)
+    builder.StartObject(16)
 
 def Start(builder):
     ExportedDataStateStart(builder)
@@ -297,17 +321,17 @@ def ExportedDataStateAddType(builder, type):
 def AddType(builder, type):
     ExportedDataStateAddType(builder, type)
 
-def ExportedDataStateAddVersion(builder, version):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(version), 0)
-
-def AddVersion(builder, version):
-    ExportedDataStateAddVersion(builder, version)
-
 def ExportedDataStateAddSource(builder, source):
-    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(source), 0)
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(source), 0)
 
 def AddSource(builder, source):
     ExportedDataStateAddSource(builder, source)
+
+def ExportedDataStateAddVersion(builder, version):
+    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(version), 0)
+
+def AddVersion(builder, version):
+    ExportedDataStateAddVersion(builder, version)
 
 def ExportedDataStateAddThumbnail(builder, thumbnail):
     builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(thumbnail), 0)
@@ -369,8 +393,20 @@ def ExportedDataStateStartGroupsVector(builder, numElems):
 def StartGroupsVector(builder, numElems):
     return ExportedDataStateStartGroupsVector(builder, numElems)
 
+def ExportedDataStateAddRegions(builder, regions):
+    builder.PrependUOffsetTRelativeSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(regions), 0)
+
+def AddRegions(builder, regions):
+    ExportedDataStateAddRegions(builder, regions)
+
+def ExportedDataStateStartRegionsVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartRegionsVector(builder, numElems):
+    return ExportedDataStateStartRegionsVector(builder, numElems)
+
 def ExportedDataStateAddLayers(builder, layers):
-    builder.PrependUOffsetTRelativeSlot(9, flatbuffers.number_types.UOffsetTFlags.py_type(layers), 0)
+    builder.PrependUOffsetTRelativeSlot(10, flatbuffers.number_types.UOffsetTFlags.py_type(layers), 0)
 
 def AddLayers(builder, layers):
     ExportedDataStateAddLayers(builder, layers)
@@ -382,7 +418,7 @@ def StartLayersVector(builder, numElems):
     return ExportedDataStateStartLayersVector(builder, numElems)
 
 def ExportedDataStateAddStandards(builder, standards):
-    builder.PrependUOffsetTRelativeSlot(10, flatbuffers.number_types.UOffsetTFlags.py_type(standards), 0)
+    builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(standards), 0)
 
 def AddStandards(builder, standards):
     ExportedDataStateAddStandards(builder, standards)
@@ -394,19 +430,19 @@ def StartStandardsVector(builder, numElems):
     return ExportedDataStateStartStandardsVector(builder, numElems)
 
 def ExportedDataStateAddDucLocalState(builder, ducLocalState):
-    builder.PrependUOffsetTRelativeSlot(11, flatbuffers.number_types.UOffsetTFlags.py_type(ducLocalState), 0)
+    builder.PrependUOffsetTRelativeSlot(12, flatbuffers.number_types.UOffsetTFlags.py_type(ducLocalState), 0)
 
 def AddDucLocalState(builder, ducLocalState):
     ExportedDataStateAddDucLocalState(builder, ducLocalState)
 
 def ExportedDataStateAddDucGlobalState(builder, ducGlobalState):
-    builder.PrependUOffsetTRelativeSlot(12, flatbuffers.number_types.UOffsetTFlags.py_type(ducGlobalState), 0)
+    builder.PrependUOffsetTRelativeSlot(13, flatbuffers.number_types.UOffsetTFlags.py_type(ducGlobalState), 0)
 
 def AddDucGlobalState(builder, ducGlobalState):
     ExportedDataStateAddDucGlobalState(builder, ducGlobalState)
 
 def ExportedDataStateAddFiles(builder, files):
-    builder.PrependUOffsetTRelativeSlot(13, flatbuffers.number_types.UOffsetTFlags.py_type(files), 0)
+    builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(files), 0)
 
 def AddFiles(builder, files):
     ExportedDataStateAddFiles(builder, files)
@@ -418,7 +454,7 @@ def StartFilesVector(builder, numElems):
     return ExportedDataStateStartFilesVector(builder, numElems)
 
 def ExportedDataStateAddVersionGraph(builder, versionGraph):
-    builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(versionGraph), 0)
+    builder.PrependUOffsetTRelativeSlot(15, flatbuffers.number_types.UOffsetTFlags.py_type(versionGraph), 0)
 
 def AddVersionGraph(builder, versionGraph):
     ExportedDataStateAddVersionGraph(builder, versionGraph)

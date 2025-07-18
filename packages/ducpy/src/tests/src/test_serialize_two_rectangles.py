@@ -6,7 +6,7 @@ from ducpy.utils.enums import ElementType  # Assuming ElementType.RECTANGLE prov
 from ducpy.serialize.serialize_duc import save_as_flatbuffers
 from ducpy.classes.AppStateClass import AppState
 # from ducpy.classes.AppStateClass import AppState # Not strictly needed if passing None
-# from ducpy.classes.BinaryFilesClass import BinaryFiles # Not strictly needed if passing {}
+# from ducpy.classes.BinaryFilesClass import DucExternalFiles # Not strictly needed if passing {}
 
 
 def test_serialize_two_rectangles():

@@ -10,7 +10,7 @@ import pytest
 
 from ducpy.classes.DucElementClass import DucElementUnion, DucRectangleElement, DucLinearElement
 from ducpy.classes.AppStateClass import AppState
-from ducpy.classes.BinaryFilesClass import BinaryFiles
+from ducpy.classes.BinaryFilesClass import DucExternalFiles
 from ducpy.classes.DucElementClass import (
     ElementBackground, ElementStroke, ElementContentBase, Point, StrokeStyleProps, StrokeSides
 )

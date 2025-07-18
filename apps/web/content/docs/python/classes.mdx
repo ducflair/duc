@@ -49,18 +49,18 @@ app_state.scroll_y = 0.0
 app_state.view_background_color = "#ffffff"
 ```
 
-### BinaryFiles
+### DucExternalFiles
 
-The `BinaryFiles` class stores binary data (such as images) embedded in the duc file:
+The `DucExternalFiles` class stores binary data (such as images) embedded in the duc file:
 
 ```python
 from ducpy.classes import BinaryFilesClass
 
-# Create a BinaryFiles object
-files = BinaryFilesClass.BinaryFiles()
+# Create a DucExternalFiles object
+files = BinaryFilesClass.DucExternalFiles()
 
 # Add a binary file
-file_data = BinaryFilesClass.BinaryFileData()
+file_data = BinaryFilesClass.DucExternalFileData()
 file_data.id = "file_id"
 file_data.mime_type = "image/png"
 file_data.data = b'...'  # Binary data

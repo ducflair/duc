@@ -1,18 +1,18 @@
-from ..Duc.BinaryFiles import BinaryFiles as FlatBuffersBinaryFiles
+from ..Duc.DucExternalFiles import DucExternalFiles as FlatBuffersBinaryFiles
 import base64
 from typing import Dict, Optional
-from ..classes.BinaryFilesClass import BinaryFiles
+from ..classes.BinaryFilesClass import DucExternalFiles
 
 def uint8array_to_data_url(data: bytes, mime_type: str) -> str:
     """Convert bytes to a data URL."""
     base64_data = base64.b64encode(data).decode('utf-8')
     return f"data:{mime_type};base64,{base64_data}"
 
-def parse_binary_files(binary_files: FlatBuffersBinaryFiles) -> Dict[str, BinaryFiles]:
+def parse_binary_files(binary_files: FlatBuffersBinaryFiles) -> Dict[str, DucExternalFiles]:
     if not binary_files:
         return {}
 
-    files: Dict[str, BinaryFiles] = {}
+    files: Dict[str, DucExternalFiles] = {}
     
     for i in range(binary_files.EntriesLength()):
         entry = binary_files.Entries(i)
@@ -39,8 +39,8 @@ def parse_binary_files(binary_files: FlatBuffersBinaryFiles) -> Dict[str, Binary
         created = value.Created() or 0
         last_retrieved = value.LastRetrieved() or created
         
-        # Create BinaryFiles object with correct parameters
-        binary_file = BinaryFiles(
+        # Create DucExternalFiles object with correct parameters
+        binary_file = DucExternalFiles(
             mimeType=mime_type,
             id=file_id,
             created=created,

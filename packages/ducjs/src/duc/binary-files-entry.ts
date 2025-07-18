@@ -4,7 +4,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { BinaryFileData } from '../duc/binary-file-data';
+import { DucExternalFileData } from '../duc/binary-file-data';
 
 
 export class BinaryFilesEntry {
@@ -32,9 +32,9 @@ key(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-value(obj?:BinaryFileData):BinaryFileData|null {
+value(obj?:DucExternalFileData):DucExternalFileData|null {
   const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? (obj || new BinaryFileData()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new DucExternalFileData()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 static startBinaryFilesEntry(builder:flatbuffers.Builder) {

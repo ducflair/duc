@@ -15,10 +15,11 @@ import {
   DucLayer,
   DucLinearElement,
   DucPoint,
+  DucRegion,
   DucTextElement,
   ElementBackground,
   ElementStroke,
-  FileId,
+  ExternalFileId,
   FontFamilyValues,
   LineHead,
   NonDeleted,
@@ -51,10 +52,11 @@ export interface ExportedDataState {
 
   blocks: readonly DucBlock[];
   groups: readonly DucGroup[];
+  regions: readonly DucRegion[];
   layers: readonly DucLayer[];
   standards: readonly Standard[];
 
-  files: BinaryFiles | undefined;
+  files: DucExternalFiles | undefined;
 
   /** In case it is needed to embed the version control into the file format */
   versionGraph: VersionGraph | undefined;
@@ -111,12 +113,9 @@ export type Scope = SupportedMeasures;
 
 export type DataURL = string & { _brand: "DataURL" };
 
-export type BinaryFileData = {
-  mimeType:
-  | ValueOf<typeof IMAGE_MIME_TYPES>
-  // future user or unknown file type
-  | typeof MIME_TYPES.binary;
-  id: FileId;
+export type DucExternalFileData = {
+  mimeType: string;
+  id: ExternalFileId;
   dataURL: DataURL;
   /**
    * Epoch timestamp in milliseconds
@@ -137,9 +136,9 @@ export type BinaryFileData = {
   version?: number;
 };
 
-export type BinaryFileMetadata = Omit<BinaryFileData, "dataURL">;
+export type DucExternalFileMetadata = Omit<DucExternalFileData, "dataURL">;
 
-export type BinaryFiles = Record<DucElement["id"], BinaryFileData>;
+export type DucExternalFiles = Record<DucElement["id"], DucExternalFileData>;
 
 export type SuggestedBinding =
   | NonDeleted<DucBindableElement>
@@ -167,19 +166,16 @@ export type DucGlobalState = {
   viewBackgroundColor: string;
   /**
    * The master unit system for the entire drawing, used for block/file insertion scaling.
-   * @maps DXF $INSUNITS and $MEASUREMENT
    */
   mainScope: Scope;
 
   /**
    * The global linetype scale for the entire drawing.
-   * @maps DXF $LTSCALE
    */
   dashSpacingScale: ScaleFactor;
 
   /**
    * Governs if linetype scale is affected by paper space viewport scale.
-   * @maps DXF $PSLTSCALE
    */
   isDashSpacingAffectedByViewportScale: boolean;
 
@@ -271,7 +267,6 @@ export type DucLocalState = {
   gridModeEnabled: boolean;
   /**
    * Wether to disable the fill on all shapes
-   * @maps DXF $FILLMODE (Fill Display Mode) in reverse
    */
   outlineModeEnabled: boolean;
 };

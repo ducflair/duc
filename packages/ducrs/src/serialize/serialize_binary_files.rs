@@ -1,20 +1,20 @@
 use flatbuffers::{self, FlatBufferBuilder, WIPOffset};
 use std::collections::HashMap;
 
-// Import the Rust BinaryFileData type
+// Import the Rust DucExternalFileData type
 use crate::types::*;
 
 // Use the generated FlatBuffers code from the correct module
 use crate::generated::duc::{
-    BinaryFileData as FbBinaryFileData, BinaryFileDataBuilder, 
-    BinaryFiles, BinaryFilesBuilder,
+    DucExternalFileData as FbBinaryFileData, BinaryFileDataBuilder, 
+    DucExternalFiles, BinaryFilesBuilder,
     BinaryFilesEntryBuilder
 };
 
-/// Serialize a BinaryFileData to FlatBuffers
+/// Serialize a DucExternalFileData to FlatBuffers
 pub fn serialize_binary_file<'a>(
     builder: &mut FlatBufferBuilder<'a>,
-    file: &BinaryFileData,
+    file: &DucExternalFileData,
 ) -> WIPOffset<FbBinaryFileData<'a>> {
     let id = builder.create_string(&file.id);
     let mime_type = builder.create_string(&file.mime_type);
@@ -40,11 +40,11 @@ pub fn serialize_binary_file<'a>(
     file_builder.finish()
 }
 
-/// Serialize a collection of BinaryFileData to FlatBuffers
+/// Serialize a collection of DucExternalFileData to FlatBuffers
 pub fn serialize_binary_files<'a>(
     builder: &mut FlatBufferBuilder<'a>,
-    files: &HashMap<String, BinaryFileData>,
-) -> WIPOffset<BinaryFiles<'a>> {
+    files: &HashMap<String, DucExternalFileData>,
+) -> WIPOffset<DucExternalFiles<'a>> {
     let mut entries_vec = Vec::with_capacity(files.len());
     
     for (key, file) in files {

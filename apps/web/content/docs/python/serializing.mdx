@@ -20,7 +20,7 @@ from ducpy import serialize
 # Prepare your data
 elements = [...]  # List of DucElement objects
 app_state = ...   # AppState object
-files = ...       # BinaryFiles object
+files = ...       # DucExternalFiles object
 
 # Serialize to a file
 with open('output.duc', 'wb') as f:
@@ -67,7 +67,7 @@ When serializing a duc file, you need to provide:
 
 - `elements`: A list of `DucElementUnion` objects representing all elements in the file
 - `app_state`: An `AppState` object containing application state information
-- `files`: A `BinaryFiles` object containing any binary files to embed in the duc file
+- `files`: A `DucExternalFiles` object containing any binary files to embed in the duc file
 
 ## Custom Serialization
 

@@ -20,7 +20,7 @@ pub mod serde {
     pub struct SerializableDucFile {
         pub elements: Vec<super::DucElement>,
         pub app_state: super::AppState,
-        pub binary_files: Vec<super::BinaryFiles>,
+        pub binary_files: Vec<super::DucExternalFiles>,
     }
     
     impl From<&super::DucFile> for SerializableDucFile {

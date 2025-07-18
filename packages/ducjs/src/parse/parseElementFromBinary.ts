@@ -49,7 +49,7 @@ import {
   ElementBackground,
   ElementContentBase,
   ElementStroke,
-  FileId,
+  ExternalFileId,
   FillStyle,
   FontFamilyValues,
   ImageCrop,
@@ -360,7 +360,7 @@ export const parseElementFromBinary = (e: BinDucElement, v: string): Partial<Duc
       return {
         ...baseElement,
         type: elType,
-        fileId: e.fileId() as FileId | null,
+        fileId: e.fileId() as ExternalFileId | null,
         status: e.imageStatus(),
         scale: (() => { const s = e.imageScale(); return s ? [s.x(), s.y()] : undefined; })(),
         crop: parseImageCrop(e.imageCrop())

@@ -6,7 +6,6 @@ import flatbuffers
 from flatbuffers.compat import import_numpy
 np = import_numpy()
 
-# Defines a view with scroll, zoom, and center point.
 class DucView(object):
     __slots__ = ['_tab']
 

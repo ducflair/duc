@@ -6,7 +6,6 @@ import flatbuffers
 from flatbuffers.compat import import_numpy
 np = import_numpy()
 
-# A high-precision 2D point in the World Coordinate System.
 class GeometricPoint(object):
     __slots__ = ['_tab']
 

@@ -58,28 +58,53 @@ class DucTextElement(object):
         return None
 
     # DucTextElement
-    def AutoResize(self):
+    def Dynamic(self, j):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.DucTextDynamicPart import DucTextDynamicPart
+            obj = DucTextDynamicPart()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucTextElement
+    def DynamicLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # DucTextElement
+    def DynamicIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        return o == 0
+
+    # DucTextElement
+    def AutoResize(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
     # DucTextElement
     def ContainerId(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # DucTextElement
     def OriginalText(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
 def DucTextElementStart(builder):
-    builder.StartObject(6)
+    builder.StartObject(7)
 
 def Start(builder):
     DucTextElementStart(builder)
@@ -102,20 +127,32 @@ def DucTextElementAddText(builder, text):
 def AddText(builder, text):
     DucTextElementAddText(builder, text)
 
+def DucTextElementAddDynamic(builder, dynamic):
+    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(dynamic), 0)
+
+def AddDynamic(builder, dynamic):
+    DucTextElementAddDynamic(builder, dynamic)
+
+def DucTextElementStartDynamicVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartDynamicVector(builder, numElems):
+    return DucTextElementStartDynamicVector(builder, numElems)
+
 def DucTextElementAddAutoResize(builder, autoResize):
-    builder.PrependBoolSlot(3, autoResize, 0)
+    builder.PrependBoolSlot(4, autoResize, 0)
 
 def AddAutoResize(builder, autoResize):
     DucTextElementAddAutoResize(builder, autoResize)
 
 def DucTextElementAddContainerId(builder, containerId):
-    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(containerId), 0)
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(containerId), 0)
 
 def AddContainerId(builder, containerId):
     DucTextElementAddContainerId(builder, containerId)
 
 def DucTextElementAddOriginalText(builder, originalText):
-    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(originalText), 0)
+    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(originalText), 0)
 
 def AddOriginalText(builder, originalText):
     DucTextElementAddOriginalText(builder, originalText)

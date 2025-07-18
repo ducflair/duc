@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 
 @dataclass
-class BinaryFiles:
+class DucExternalFiles:
     """
     Represents a collection of binary files with their associated metadata.
     """

@@ -7,9 +7,6 @@ import * as flatbuffers from 'flatbuffers';
 import { Element, unionToElement, unionListToElement } from '../duc/element';
 
 
-/**
- * A wrapper to hold an element from the union.
- */
 export class ElementWrapper {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;

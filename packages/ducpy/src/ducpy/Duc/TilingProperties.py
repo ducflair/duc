@@ -47,21 +47,21 @@ class TilingProperties(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return 0.0
+        return None
 
     # TilingProperties
     def OffsetX(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return 0.0
+        return None
 
     # TilingProperties
     def OffsetY(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
-        return 0.0
+        return None
 
 def TilingPropertiesStart(builder):
     builder.StartObject(5)
@@ -82,19 +82,19 @@ def AddAngle(builder, angle):
     TilingPropertiesAddAngle(builder, angle)
 
 def TilingPropertiesAddSpacing(builder, spacing):
-    builder.PrependFloat64Slot(2, spacing, 0.0)
+    builder.PrependFloat64Slot(2, spacing, None)
 
 def AddSpacing(builder, spacing):
     TilingPropertiesAddSpacing(builder, spacing)
 
 def TilingPropertiesAddOffsetX(builder, offsetX):
-    builder.PrependFloat64Slot(3, offsetX, 0.0)
+    builder.PrependFloat64Slot(3, offsetX, None)
 
 def AddOffsetX(builder, offsetX):
     TilingPropertiesAddOffsetX(builder, offsetX)
 
 def TilingPropertiesAddOffsetY(builder, offsetY):
-    builder.PrependFloat64Slot(4, offsetY, 0.0)
+    builder.PrependFloat64Slot(4, offsetY, None)
 
 def AddOffsetY(builder, offsetY):
     TilingPropertiesAddOffsetY(builder, offsetY)

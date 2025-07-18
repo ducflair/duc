@@ -67,7 +67,7 @@ class DucGlobalState(object):
     def ScopeExponentThreshold(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+            return self._tab.Get(flatbuffers.number_types.Int8Flags, o + self._tab.Pos)
         return 0
 
     # DucGlobalState
@@ -135,7 +135,7 @@ def AddIsDashSpacingAffectedByViewportScale(builder, isDashSpacingAffectedByView
     DucGlobalStateAddIsDashSpacingAffectedByViewportScale(builder, isDashSpacingAffectedByViewportScale)
 
 def DucGlobalStateAddScopeExponentThreshold(builder, scopeExponentThreshold):
-    builder.PrependInt32Slot(5, scopeExponentThreshold, 0)
+    builder.PrependInt8Slot(5, scopeExponentThreshold, 0)
 
 def AddScopeExponentThreshold(builder, scopeExponentThreshold):
     DucGlobalStateAddScopeExponentThreshold(builder, scopeExponentThreshold)

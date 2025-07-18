@@ -11,9 +11,6 @@ import { DucPointBinding } from '../duc/duc-point-binding';
 import { _DucElementBase } from '../duc/duc-element-base';
 
 
-/**
- * The base for linear elements like lines and arrows.
- */
 export class _DucLinearElementBase {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;

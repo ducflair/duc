@@ -32,19 +32,19 @@ angle():number {
   return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 }
 
-spacing():number {
+spacing():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
 }
 
-offsetX():number {
+offsetX():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 10);
-  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
 }
 
-offsetY():number {
+offsetY():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : null;
 }
 
 static startTilingProperties(builder:flatbuffers.Builder) {
@@ -60,15 +60,15 @@ static addAngle(builder:flatbuffers.Builder, angle:number) {
 }
 
 static addSpacing(builder:flatbuffers.Builder, spacing:number) {
-  builder.addFieldFloat64(2, spacing, 0.0);
+  builder.addFieldFloat64(2, spacing, null);
 }
 
 static addOffsetX(builder:flatbuffers.Builder, offsetX:number) {
-  builder.addFieldFloat64(3, offsetX, 0.0);
+  builder.addFieldFloat64(3, offsetX, null);
 }
 
 static addOffsetY(builder:flatbuffers.Builder, offsetY:number) {
-  builder.addFieldFloat64(4, offsetY, 0.0);
+  builder.addFieldFloat64(4, offsetY, null);
 }
 
 static endTilingProperties(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -76,13 +76,16 @@ static endTilingProperties(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createTilingProperties(builder:flatbuffers.Builder, sizeInPercent:number, angle:number, spacing:number, offsetX:number, offsetY:number):flatbuffers.Offset {
+static createTilingProperties(builder:flatbuffers.Builder, sizeInPercent:number, angle:number, spacing:number|null, offsetX:number|null, offsetY:number|null):flatbuffers.Offset {
   TilingProperties.startTilingProperties(builder);
   TilingProperties.addSizeInPercent(builder, sizeInPercent);
   TilingProperties.addAngle(builder, angle);
-  TilingProperties.addSpacing(builder, spacing);
-  TilingProperties.addOffsetX(builder, offsetX);
-  TilingProperties.addOffsetY(builder, offsetY);
+  if (spacing !== null)
+    TilingProperties.addSpacing(builder, spacing);
+  if (offsetX !== null)
+    TilingProperties.addOffsetX(builder, offsetX);
+  if (offsetY !== null)
+    TilingProperties.addOffsetY(builder, offsetY);
   return TilingProperties.endTilingProperties(builder);
 }
 }

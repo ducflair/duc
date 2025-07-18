@@ -1,7 +1,7 @@
 export * from "./typeChecks";
 
-import { BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, COLUMN_TYPE, DATUM_BRACKET_STYLE, DATUM_TARGET_TYPE, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_TYPE, TOLERANCE_ZONE_TYPE, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT } from "ducjs/duc";
-import { Standard } from "ducjs/technical/standards";
+import { BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION, COLUMN_TYPE, DATUM_BRACKET_STYLE, DATUM_TARGET_TYPE, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FIELD_SOURCE_PROPERTY, TEXT_FIELD_SOURCE_TYPE, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_TYPE, TOLERANCE_ZONE_TYPE, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT } from "ducjs/duc";
+import { Standard, StandardUnits } from "ducjs/technical/standards";
 import { DucView, PrecisionValue, Scope } from "ducjs/types";
 import { Axis, GeometricPoint, Percentage, Radian, ScaleFactor } from "ducjs/types/geometryTypes";
 import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "ducjs/types/utility-types";
@@ -71,9 +71,17 @@ type _DucElementBase = Readonly<_DucElementStylesBase & {
   isAnnotative: boolean;
   /** Whether the element is deleted */
   isDeleted: boolean;
-  /** List of groups the element belongs to.
-      Ordered from deepest to shallowest. */
+  /** 
+   * List of groups the element belongs to.
+   * Ordered from deepest to shallowest. 
+   */
   groupIds: readonly GroupId[];
+  /** 
+   * List of regions the element belongs. 
+   * Used to define boolean operations between elements.
+   * Ordered from deepest to shallowest. 
+   */
+  regionIds: readonly RegionId[];
   /** The layer the element belongs to */
   layerId: string;
   /** The frame the element belongs to */
@@ -109,11 +117,12 @@ export type Blending = ValueOf<typeof BLENDING>;
 
 export type GroupId = string;
 export type LayerId = string;
+export type RegionId = string;
 export type PointerType = "mouse" | "pen" | "touch";
 export type FractionalIndex = string & { _brand: "franctionalIndex" };
 export type ImageStatus = ValueOf<typeof IMAGE_STATUS>;
-export type FileId = string & { _brand: "FileId" };
-
+export type ExternalFileId = string & { _brand: "ExternalFileId" };
+export type BooleanOperation = ValueOf<typeof BOOLEAN_OPERATION>;
 
 /**
  * Map of duc elements.
@@ -155,6 +164,7 @@ export type DucElement =
   | DucViewportElement
   | DucPlotElement
   | DucXRayElement
+  | DucPdfElement
   | DucMermaidElement;
 
 
@@ -180,6 +190,7 @@ export type DucBindableElement =
   | DucDocElement
   | DucFeatureControlFrameElement
   | DucLinearElement
+  | DucPdfElement
   | DucMermaidElement;
 
 export type DucTextContainer =
@@ -207,8 +218,25 @@ export type RectangularElement =
   | DucFeatureControlFrameElement
   | DucViewportElement
   | DucPlotElement
+  | DucPdfElement
   | DucBlockInstanceElement;
 
+
+export type DucStackLikeElement =
+  | DucPlotElement
+  | DucViewportElement
+  | DucFrameElement;
+
+
+export type DucFrameLikeElement =
+  | DucPlotElement
+  | DucFrameElement;
+
+
+export type DucIframeLikeElement =
+  | DucEmbeddableElement
+  | DucTableElement
+  | DucDocElement;
 
 export type ElementConstructorOpts = MarkOptional<
   Omit<DucGenericElement, "id" | "type" | "isDeleted" | "updated">,
@@ -465,13 +493,18 @@ export type DucEmbeddableElement = _DucElementBase & {
   type: "embeddable";
 };
 
+export type DucPdfElement = _DucElementBase & {
+  type: "pdf";
+  fileId: ExternalFileId | null;
+};
+
 export type DucMermaidElement = _DucElementBase & {
   type: "mermaid";
   source: string; // Mermaid syntax
   /** if not provided, the theme will be the same as the document's theme, or default to 'default'
    * we decided to go with a string type because of the unpredictably of having different themes 
    */
-  theme?: string; 
+  theme?: string;
   svgPath: string | null;// optional cached SVG string
 };
 
@@ -615,7 +648,7 @@ export type DucImageFilter = {
 
 export type DucImageElement = _DucElementBase & {
   type: "image";
-  fileId: FileId | null;
+  fileId: ExternalFileId | null;
   /** whether respective file is persisted */
   status: ImageStatus;
   /** X and Y scale factors <-1, 1>, used for image axis flipping */
@@ -641,6 +674,7 @@ export type FontString = string & { _brand: "fontString" };
 export type TextAlign = ValueOf<typeof TEXT_ALIGN>;
 export type VerticalAlign = ValueOf<typeof VERTICAL_ALIGN>;
 export type LineSpacingType = ValueOf<typeof LINE_SPACING_TYPE>;
+export type TextFieldSourceProperty = ValueOf<typeof TEXT_FIELD_SOURCE_PROPERTY>;
 
 export type DucTextStyle = _DucElementStylesBase & {
   /** 
@@ -726,7 +760,20 @@ export type DucTextStyle = _DucElementStylesBase & {
 
 export type DucTextElement = _DucElementBase & DucTextStyle & {
   type: "text";
+
+  /**
+   * The display text, which can contain zero or more placeholders in the
+   * format `{{tag}}`. Each tag corresponds to an object in the `dynamic` array.
+   * Example: "Part: {{PN}} on Layer: {{LAYER}}"
+   */
   text: string;
+
+  /**
+   * An array of metadata objects that define the behavior of the placeholders
+   * found in the `text` property. If this is empty, the text is treated
+   * as purely static.
+   */
+  dynamic: readonly DucTextDynamicPart[];
 
   /**
    * Text sizing behavior:
@@ -742,6 +789,47 @@ export type DucTextElement = _DucElementBase & DucTextStyle & {
   /** A non-rendered, original version of the text, e.g., before finishing writing the text */
   originalText: string;
 };
+
+
+/**
+ * A discriminated union that precisely defines the source of a dynamic part's data.
+ * This structure is highly extensible.
+ */
+export type DucTextDynamicSource =
+  | {
+    sourceType: TEXT_FIELD_SOURCE_TYPE.ELEMENT;
+    /** The unique ID of the source element. */
+    elementId: DucElement["id"];
+    /** The specific property to retrieve from the source element. */
+    property: TextFieldSourceProperty;
+  }
+  | {
+    sourceType: TEXT_FIELD_SOURCE_TYPE.DICTIONARY;
+    /** The key to look up in the global drawing dictionary. */
+    key: string;
+  };
+
+/**
+ * Defines a single dynamic component within a text string.
+ * This object contains all the metadata needed to resolve and format a placeholder.
+ */
+export type DucTextDynamicPart = {
+  /**
+   * A unique key for this part, which matches the placeholder in the text string.
+   * E.g., for a placeholder `{{PartNumber}}`, the tag would be "PartNumber".
+   */
+  tag: string;
+
+  /** The source of the data for this dynamic part. */
+  source: DucTextDynamicSource;
+
+  /** Formatting rules for displaying the final value. */
+  formatting?: StandardUnits["primaryUnits"];
+
+  /** The last known value, used as a fallback or for initial display. */
+  cachedValue: string;
+};
+
 
 
 export type DucTextElementWithContainer = {
@@ -925,7 +1013,6 @@ export type DucBlockDuplicationArray = {
 
 /**
  * Defines the schema for a single attribute within a block definition.
- * This is analogous to an ATTDEF entity in DXF.
  */
 export type DucBlockAttributeDefinition = {
   /** The unique identifier for this attribute within the block (e.g., "PART_NUMBER"). */
@@ -967,7 +1054,6 @@ export type DucBlockInstanceElement = _DucElementBase & { //Instance of a block 
   /**
    * A record of the actual values for the attributes of this specific instance,
    * keyed by the attribute tag defined in the DucBlock.
-   * This is analogous to an ATTRIB entity in DXF.
    */
   attributeValues?: Readonly<Record<string, string>>;
 
@@ -1013,6 +1099,13 @@ export type DucGroup = _DucStackBase & {
   id: GroupId;
 };
 
+export type DucRegion = _DucStackBase & {
+  id: RegionId;
+  
+  /** The boolean operation to apply to all child elements. */
+  booleanOperation: BooleanOperation;
+};
+
 
 /**
  * Defines a Layer, a named collection of properties that can be inherited by elements.
@@ -1020,44 +1113,18 @@ export type DucGroup = _DucStackBase & {
  * control for the visual appearance (stroke, background, opacity) and behavior
  * (visibility, locking, plotting) of elements assigned to it.
  * 
- * This is the modern, type-safe equivalent of a DXF Layer Table entry.
  */
 export type DucLayer = _DucStackBase & {
   id: LayerId;
 
-  /**
-   * Whether this layer is a system-defined, non-deletable layer.
-   * This is true for "Layer 0", the default DXF layer.
-   * @maps DXF Layer Table: Special handling for "0" layer name.
-   */
   readonly: boolean;
 
-  /**
-   * A container for the default styling properties that elements on this layer will inherit
-   * when their corresponding property is set to "BYLAYER".
-   */
+  /** A container for the default styling properties that elements on this layer will inherit */
   overrides: {
     stroke: ElementStroke;
     background: ElementBackground;
   };
 };
-
-
-export type DucStackLikeElement =
-  | DucPlotElement
-  | DucViewportElement
-  | DucFrameElement;
-
-
-export type DucFrameLikeElement =
-  | DucPlotElement
-  | DucFrameElement;
-
-
-export type DucIframeLikeElement =
-  | DucEmbeddableElement
-  | DucTableElement
-  | DucDocElement;
 
 
 
@@ -1182,7 +1249,6 @@ export type BlockAttachment = ValueOf<typeof BLOCK_ATTACHMENT>;
 
 /**
  * Defines the visual appearance and behavior of a leader.
- * This corresponds to an MLEADERSTYLE in DXF.
  */
 export type DucLeaderStyle = _DucElementStylesBase & {
   /**
@@ -1233,7 +1299,6 @@ export type LeaderContent =
  * A leader element that connects an annotation (text or a block) to a point
  * or feature in the drawing. It is a single, atomic entity that manages its
  * own geometry and content. It is designed to be compatible with the modern
- * DXF MLEADER entity.
  */
 export type DucLeaderElement = _DucLinearElementBase & DucLeaderStyle & {
   type: "leader";
@@ -1638,7 +1703,6 @@ export type TextColumn = {
  * A rich text document element
  * It supports complex formatting through its style properties and uses a Markdown
  * string for inline text styling, which can be edited with a rich text editor.
- * Similar to MTEXT in DXF
  */
 export type DucDocElement = _DucElementBase & DucDocStyle & {
   type: "doc";
@@ -1651,8 +1715,18 @@ export type DucDocElement = _DucElementBase & DucDocStyle & {
    * 
    * It can also contain wildcards like `{@fieldname}` for dynamic data insertion.
    * Example: "This is **bold text** and this is a {color:red}red word{/color}."
+   * 
+   * It can also contain zero or more placeholders in the format `{{tag}}`.
+   * Example: "This document was last saved on {{SaveDate}} by {{Author}}."
    */
-  content: string;
+  text: string;
+
+  /**
+   * An array of metadata objects that define the behavior of the placeholders
+   * found in the `text` property. If this is empty, the text is treated
+   * as purely static.
+   */
+  dynamic: readonly DucTextDynamicPart[];
 
   /** Direction of text flow for multi-column layouts */
   flowDirection: TextFlowDirection;
@@ -1705,8 +1779,8 @@ export type ParametricElementSource =
   | {
     /** The geometry is loaded from a static 3D file. */
     type: "file";
-    /** A reference to the imported file in the BinaryFiles collection. */
-    fileId: FileId;
+    /** A reference to the imported file in the DucExternalFiles collection. */
+    fileId: ExternalFileId;
   };
 /**
  * An element that embeds a 3D model on the 2D canvas, defined either by

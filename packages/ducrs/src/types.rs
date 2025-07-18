@@ -896,7 +896,7 @@ pub struct AppState {
 // =============== BINARY FILES ===============
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct BinaryFileData {
+pub struct DucExternalFileData {
     pub id: String,
     pub mime_type: String,
     pub created: i64,  // epoch ms
@@ -924,7 +924,7 @@ pub struct RendererState {
 pub struct DucFile {
     pub elements: Vec<DucElementVariant>,
     pub app_state: Option<AppState>,
-    pub binary_files: HashMap<String, BinaryFileData>,
+    pub binary_files: HashMap<String, DucExternalFileData>,
     pub renderer_state: Option<RendererState>,
     pub blocks: Vec<DucBlock>,
     pub groups: Vec<DucGroup>,

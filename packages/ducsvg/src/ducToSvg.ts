@@ -31,7 +31,7 @@ import {
 } from "ducjs/types/elements";
 import { getPrecisionValueFromRaw } from "ducjs/technical/scopes";
 import { getBoundTextElement, getContainerElement, getElementAbsoluteCoords } from "ducjs/utils/bounds";
-import { DucState, BinaryFiles, RawValue, Scope, ScopedValue } from "ducjs/types";
+import { DucState, DucExternalFiles, RawValue, Scope, ScopedValue } from "ducjs/types";
 import { DESIGN_STANDARD, DesignStandard } from "ducjs/technical/standards";
 import { DEFAULT_FRAME_STYLE, SVG_NS } from "ducjs/utils/constants";
 import { getContainingFrame, getFrameLikeElements, getFrameLikeTitle } from "ducjs/utils/elements/frameElement";
@@ -1017,7 +1017,7 @@ const renderText = (element: DucTextElement, currentScope: Scope): SVGElement =>
 };
 
 // Render image element
-const renderImage = (element: DucImageElement, files: BinaryFiles, defs: SVGDefsElement): SVGElement => {
+const renderImage = (element: DucImageElement, files: DucExternalFiles, defs: SVGDefsElement): SVGElement => {
   const width = Math.round(element.width.scoped);
   const height = Math.round(element.height.scoped);
   const fileData = element.fileId && files[element.fileId];

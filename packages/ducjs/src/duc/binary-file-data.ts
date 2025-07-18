@@ -4,22 +4,22 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-export class BinaryFileData {
+export class DucExternalFileData {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
-  __init(i:number, bb:flatbuffers.ByteBuffer):BinaryFileData {
+  __init(i:number, bb:flatbuffers.ByteBuffer):DucExternalFileData {
   this.bb_pos = i;
   this.bb = bb;
   return this;
 }
 
-static getRootAsBinaryFileData(bb:flatbuffers.ByteBuffer, obj?:BinaryFileData):BinaryFileData {
-  return (obj || new BinaryFileData()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+static getRootAsBinaryFileData(bb:flatbuffers.ByteBuffer, obj?:DucExternalFileData):DucExternalFileData {
+  return (obj || new DucExternalFileData()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-static getSizePrefixedRootAsBinaryFileData(bb:flatbuffers.ByteBuffer, obj?:BinaryFileData):BinaryFileData {
+static getSizePrefixedRootAsBinaryFileData(bb:flatbuffers.ByteBuffer, obj?:DucExternalFileData):DucExternalFileData {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
-  return (obj || new BinaryFileData()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+  return (obj || new DucExternalFileData()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
 mimeType():string|null
@@ -93,13 +93,13 @@ static endBinaryFileData(builder:flatbuffers.Builder):flatbuffers.Offset {
 }
 
 static createBinaryFileData(builder:flatbuffers.Builder, mimeTypeOffset:flatbuffers.Offset, idOffset:flatbuffers.Offset, dataUrlOffset:flatbuffers.Offset, created:bigint, lastRetrieved:bigint, version:number):flatbuffers.Offset {
-  BinaryFileData.startBinaryFileData(builder);
-  BinaryFileData.addMimeType(builder, mimeTypeOffset);
-  BinaryFileData.addId(builder, idOffset);
-  BinaryFileData.addDataUrl(builder, dataUrlOffset);
-  BinaryFileData.addCreated(builder, created);
-  BinaryFileData.addLastRetrieved(builder, lastRetrieved);
-  BinaryFileData.addVersion(builder, version);
-  return BinaryFileData.endBinaryFileData(builder);
+  DucExternalFileData.startBinaryFileData(builder);
+  DucExternalFileData.addMimeType(builder, mimeTypeOffset);
+  DucExternalFileData.addId(builder, idOffset);
+  DucExternalFileData.addDataUrl(builder, dataUrlOffset);
+  DucExternalFileData.addCreated(builder, created);
+  DucExternalFileData.addLastRetrieved(builder, lastRetrieved);
+  DucExternalFileData.addVersion(builder, version);
+  return DucExternalFileData.endBinaryFileData(builder);
 }
 }

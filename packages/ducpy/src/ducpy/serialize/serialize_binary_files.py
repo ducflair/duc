@@ -1,6 +1,6 @@
 import flatbuffers
 from typing import Dict, Union, Any, List
-from ..Duc.BinaryFiles import (
+from ..Duc.DucExternalFiles import (
     Start as BinaryFilesStart,
     End as BinaryFilesEnd,
     StartEntriesVector, AddEntries
@@ -10,15 +10,15 @@ from ..Duc.BinaryFilesEntry import (
     End as BinaryFilesEntryEnd,
     AddKey, AddValue
 )
-from ..Duc.BinaryFileData import (
+from ..Duc.DucExternalFileData import (
     Start as BinaryFileDataStart,
     End as BinaryFileDataEnd,
     AddMimeType, AddId, StartDataVector,
     AddCreated, AddLastRetrieved, AddData
 )
-from ..classes.BinaryFilesClass import BinaryFiles
+from ..classes.BinaryFilesClass import DucExternalFiles
 
-def create_binary_file_data_dict(mime_type: str, image_id: str, image_bytes: bytes, timestamp_ms: int) -> Dict[str, BinaryFiles]:
+def create_binary_file_data_dict(mime_type: str, image_id: str, image_bytes: bytes, timestamp_ms: int) -> Dict[str, DucExternalFiles]:
     """
     Creates a dictionary representing the data for a single binary file.
     This dictionary is suitable for use as a value in the main binary_files dictionary
@@ -32,7 +32,7 @@ def create_binary_file_data_dict(mime_type: str, image_id: str, image_bytes: byt
         "data": image_bytes
     }
 
-def create_binary_files_dict_from_list(files_data: List[Dict[str, BinaryFiles]]) -> Dict[str, Dict[str, BinaryFiles]]:
+def create_binary_files_dict_from_list(files_data: List[Dict[str, DucExternalFiles]]) -> Dict[str, Dict[str, DucExternalFiles]]:
     """
     Creates the main binary_files dictionary from a list of file data dictionaries.
     Each item in the list should be a dictionary with keys:
@@ -56,7 +56,7 @@ def get_attribute(obj: Union[Dict, Any], attr: str, alt_attr: str = None):
         return obj.get(attr, obj.get(alt_attr) if alt_attr else None)
     return getattr(obj, attr, getattr(obj, alt_attr, None) if alt_attr else None)
 
-def serialize_binary_files(builder: flatbuffers.Builder, binary_files: Dict[str, Union[Dict, BinaryFiles]]) -> int:
+def serialize_binary_files(builder: flatbuffers.Builder, binary_files: Dict[str, Union[Dict, DucExternalFiles]]) -> int:
     if not binary_files:
         return 0
 
@@ -67,7 +67,7 @@ def serialize_binary_files(builder: flatbuffers.Builder, binary_files: Dict[str,
         # Create key string
         key_offset = builder.CreateString(file_id)
         
-        # Create BinaryFileData
+        # Create DucExternalFileData
         mime_type = get_attribute(binary_file, "mimeType", "mime_type")
         mime_type_offset = builder.CreateString(mime_type) if mime_type else None
         
@@ -85,7 +85,7 @@ def serialize_binary_files(builder: flatbuffers.Builder, binary_files: Dict[str,
         else:
             data_vector = None
         
-        # Create BinaryFileData table
+        # Create DucExternalFileData table
         BinaryFileDataStart(builder)
         if mime_type_offset:
             AddMimeType(builder, mime_type_offset)
@@ -116,7 +116,7 @@ def serialize_binary_files(builder: flatbuffers.Builder, binary_files: Dict[str,
         builder.PrependUOffsetTRelative(offset)
     entries_vector = builder.EndVector()
     
-    # Create BinaryFiles table
+    # Create DucExternalFiles table
     BinaryFilesStart(builder)
     AddEntries(builder, entries_vector)
     return BinaryFilesEnd(builder)
