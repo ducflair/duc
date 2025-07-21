@@ -8,10 +8,10 @@ import uuid
 import numpy as np
 import pytest
 
-from ducpy.classes.DucElementClass import DucElementUnion, DucRectangleElement, DucLinearElement
+from packages.ducpy.src.ducpy.classes.ElementsClass import DucElementUnion, DucRectangleElement, DucLinearElement
 from ducpy.classes.AppStateClass import AppState
 from ducpy.classes.BinaryFilesClass import DucExternalFiles
-from ducpy.classes.DucElementClass import (
+from packages.ducpy.src.ducpy.classes.ElementsClass import (
     ElementBackground, ElementStroke, ElementContentBase, Point, StrokeStyleProps, StrokeSides
 )
 from ducpy.utils.enums import (

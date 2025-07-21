@@ -40,10 +40,11 @@ if 'Duc' not in sys.modules:
             setattr(duc_module, module_name, module)
 
 # Import from Duc
-from . import Duc
+from .Duc import *
 
 # Import modules for direct access
-from . import utils
-from . import parse
-from . import serialize
-from . import classes
+from .utils import *
+from .parse import *
+from .serialize import *
+from .classes import *
+from .helpers import *

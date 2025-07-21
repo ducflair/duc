@@ -1,0 +1,866 @@
+from dataclasses import dataclass
+from typing import List, Optional, Dict, Union, TYPE_CHECKING
+
+from ducpy.Duc.ANGULAR_UNITS_FORMAT import ANGULAR_UNITS_FORMAT
+from ducpy.Duc.BEZIER_MIRRORING import BEZIER_MIRRORING
+from ducpy.Duc.BLENDING import BLENDING
+from ducpy.Duc.BLOCK_ATTACHMENT import BLOCK_ATTACHMENT
+from ducpy.Duc.BOOLEAN_OPERATION import BOOLEAN_OPERATION
+from ducpy.Duc.COLUMN_TYPE import COLUMN_TYPE
+from ducpy.Duc.DATUM_BRACKET_STYLE import DATUM_BRACKET_STYLE
+from ducpy.Duc.DIMENSION_FIT_RULE import DIMENSION_FIT_RULE
+from ducpy.Duc.DIMENSION_TEXT_PLACEMENT import DIMENSION_TEXT_PLACEMENT
+from ducpy.Duc.DIMENSION_TYPE import DIMENSION_TYPE
+from ducpy.Duc.ELEMENT_CONTENT_PREFERENCE import ELEMENT_CONTENT_PREFERENCE
+from ducpy.Duc.FEATURE_MODIFIER import FEATURE_MODIFIER
+from ducpy.Duc.GDT_SYMBOL import GDT_SYMBOL
+from ducpy.Duc.HATCH_STYLE import HATCH_STYLE
+from ducpy.Duc.IMAGE_STATUS import IMAGE_STATUS
+from ducpy.Duc.LINE_HEAD import LINE_HEAD
+from ducpy.Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
+from ducpy.Duc.MARK_ELLIPSE_CENTER import MARK_ELLIPSE_CENTER
+from ducpy.Duc.MATERIAL_CONDITION import MATERIAL_CONDITION
+from ducpy.Duc.STACKED_TEXT_ALIGN import STACKED_TEXT_ALIGN
+from ducpy.Duc.STROKE_CAP import STROKE_CAP
+from ducpy.Duc.STROKE_JOIN import STROKE_JOIN
+from ducpy.Duc.STROKE_PLACEMENT import STROKE_PLACEMENT
+from ducpy.Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
+from ducpy.Duc.STROKE_SIDE_PREFERENCE import STROKE_SIDE_PREFERENCE
+from ducpy.Duc.TABLE_CELL_ALIGNMENT import TABLE_CELL_ALIGNMENT
+from ducpy.Duc.TABLE_FLOW_DIRECTION import TABLE_FLOW_DIRECTION
+from ducpy.Duc.TEXT_ALIGN import TEXT_ALIGN
+from ducpy.Duc.TEXT_FIELD_SOURCE_PROPERTY import TEXT_FIELD_SOURCE_PROPERTY
+from ducpy.Duc.TEXT_FIELD_SOURCE_TYPE import TEXT_FIELD_SOURCE_TYPE
+from ducpy.Duc.TEXT_FLOW_DIRECTION import TEXT_FLOW_DIRECTION
+from ducpy.Duc.TOLERANCE_DISPLAY import TOLERANCE_DISPLAY
+from ducpy.Duc.TOLERANCE_TYPE import TOLERANCE_TYPE
+from ducpy.Duc.TOLERANCE_ZONE_TYPE import TOLERANCE_ZONE_TYPE
+from ducpy.Duc.VIEWPORT_SHADE_PLOT import VIEWPORT_SHADE_PLOT
+from ducpy.Duc.AXIS import AXIS
+from ducpy.Duc.PARAMETRIC_SOURCE_TYPE import PARAMETRIC_SOURCE_TYPE
+from ducpy.Duc.LEADER_CONTENT_TYPE import LEADER_CONTENT_TYPE
+from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
+
+if TYPE_CHECKING:
+    from ducpy.classes.StandardsClass import Standard, PrimaryUnits
+
+
+@dataclass
+class Identifier:
+    id: str
+    name: str
+    description: str = ""
+
+@dataclass
+class GeometricPoint:
+    x: float
+    y: float
+
+@dataclass
+class DucUcs:
+    origin: GeometricPoint
+    angle: float
+
+@dataclass
+class DucPoint:
+    x: float
+    y: float
+    mirroring: Optional[BEZIER_MIRRORING] = None
+
+@dataclass
+class DucView:
+    scroll_x: float
+    scroll_y: float
+    zoom: float
+    twist_angle: float
+    center_point: DucPoint
+    scope: str
+
+@dataclass
+class Margins:
+    top: float
+    right: float
+    bottom: float
+    left: float
+
+@dataclass
+class TilingProperties:
+    size_in_percent: float
+    angle: float
+    spacing: Optional[float] = None
+    offset_x: Optional[float] = None
+    offset_y: Optional[float] = None
+
+@dataclass
+class HatchPatternLine:
+    angle: float
+    origin: DucPoint
+    offset: List[float]
+    dash_pattern: List[float]
+
+@dataclass
+class CustomHatchPattern:
+    name: str
+    description: str
+    lines: List[HatchPatternLine]
+
+@dataclass
+class DucHatchStyle:
+    pattern_name: str
+    pattern_scale: float
+    pattern_angle: float
+    pattern_origin: DucPoint
+    pattern_double: bool
+    custom_pattern: CustomHatchPattern
+    hatch_style: Optional[HATCH_STYLE] = None
+
+@dataclass
+class DucImageFilter:
+    brightness: float
+    contrast: float
+
+@dataclass
+class ElementContentBase:
+    src: str
+    visible: bool
+    opacity: float
+    tiling: TilingProperties
+    hatch: DucHatchStyle
+    image_filter: DucImageFilter
+    preference: Optional[ELEMENT_CONTENT_PREFERENCE] = None
+
+@dataclass
+class StrokeStyle:
+    dash: List[float]
+    dash_line_override: str
+    preference: Optional[STROKE_PREFERENCE] = None
+    cap: Optional[STROKE_CAP] = None
+    join: Optional[STROKE_JOIN] = None
+    dash_cap: Optional[STROKE_CAP] = None
+    miter_limit: Optional[float] = None
+
+@dataclass
+class StrokeSides:
+    values: List[float]
+    preference: Optional[STROKE_SIDE_PREFERENCE] = None
+
+@dataclass
+class ElementStroke:
+    content: ElementContentBase
+    width: float
+    style: StrokeStyle
+    stroke_sides: StrokeSides
+    placement: Optional[STROKE_PLACEMENT] = None
+
+@dataclass
+class ElementBackground:
+    content: ElementContentBase
+
+@dataclass
+class DucElementStylesBase:
+    roundness: float
+    background: List[ElementBackground]
+    stroke: List[ElementStroke]
+    opacity: float
+    blending: Optional[BLENDING] = None
+
+@dataclass
+class BoundElement:
+    id: str
+    type: str
+
+@dataclass
+class DucElementBase:
+    id: str
+    styles: DucElementStylesBase
+    x: float
+    y: float
+    width: float
+    height: float
+    angle: float
+    scope: str
+    label: str
+    is_visible: bool
+    seed: int
+    version: int
+    version_nonce: int
+    updated: int
+    is_plot: bool
+    is_annotative: bool
+    is_deleted: bool
+    group_ids: List[str]
+    region_ids: List[str]
+    layer_id: str
+    bound_elements: List[BoundElement]
+    z_index: float
+    locked: bool
+    description: str = ""
+    index: Optional[str] = None
+    frame_id: str = ""
+    link: str = ""
+    custom_data: str = ""
+
+@dataclass
+class DucHead:
+    size: float
+    type: Optional[LINE_HEAD] = None
+    block_id: str = ""
+
+@dataclass
+class PointBindingPoint:
+    index: int
+    offset: float
+
+@dataclass
+class DucPointBinding:
+    element_id: str
+    focus: float
+    gap: float
+    fixed_point: GeometricPoint
+    point: PointBindingPoint
+    head: DucHead
+
+@dataclass
+class DucLineReference:
+    index: int
+    handle: GeometricPoint
+
+@dataclass
+class DucLine:
+    start: DucLineReference
+    end: DucLineReference
+
+@dataclass
+class DucPath:
+    line_indices: List[int]
+    background: ElementBackground
+    stroke: ElementStroke
+
+@dataclass
+class DucLinearElementBase:
+    base: DucElementBase
+    points: List[DucPoint]
+    lines: List[DucLine]
+    path_overrides: List[DucPath]
+    last_committed_point: DucPoint
+    start_binding: DucPointBinding
+    end_binding: DucPointBinding
+
+@dataclass
+class DucStackLikeStyles:
+    opacity: float
+    labeling_color: str
+
+@dataclass
+class DucStackBase:
+    label: str
+    is_collapsed: bool
+    is_plot: bool
+    is_visible: bool
+    locked: bool
+    styles: DucStackLikeStyles
+    description: str = ""
+
+@dataclass
+class DucStackElementBase:
+    base: DucElementBase
+    stack_base: "DucStackBase"
+    clip: bool
+    label_visible: bool
+    standard_override: "Standard"
+
+@dataclass
+class LineSpacing:
+    value: float
+    type: Optional[LINE_SPACING_TYPE] = None
+
+@dataclass
+class DucTextStyle:
+    base_style: DucElementStylesBase
+    is_ltr: bool
+    font_family: str
+    big_font_family: str
+    line_height: float
+    line_spacing: LineSpacing
+    oblique_angle: float
+    font_size: float
+    width_factor: float
+    is_upside_down: bool
+    is_backwards: bool
+    text_align: Optional[TEXT_ALIGN] = None
+    vertical_align: Optional[VERTICAL_ALIGN] = None
+    paper_text_height: Optional[float] = None
+
+@dataclass
+class DucTableCellStyle:
+    base_style: DucElementStylesBase
+    text_style: DucTextStyle
+    margins: Margins
+    alignment: Optional[TABLE_CELL_ALIGNMENT] = None
+
+@dataclass
+class DucTableStyle:
+    base_style: DucElementStylesBase
+    header_row_style: DucTableCellStyle
+    data_row_style: DucTableCellStyle
+    data_column_style: DucTableCellStyle
+    flow_direction: Optional[TABLE_FLOW_DIRECTION] = None
+
+@dataclass
+class DucLeaderStyle:
+    base_style: DucElementStylesBase
+    dogleg: float
+    text_style: DucTextStyle
+    heads_override: Optional[List[DucHead]] = None
+    text_attachment: Optional[VERTICAL_ALIGN] = None
+    block_attachment: Optional[BLOCK_ATTACHMENT] = None
+
+@dataclass
+class DimensionToleranceStyle:
+    enabled: bool
+    upper_value: float
+    lower_value: float
+    precision: int
+    display_method: Optional[TOLERANCE_DISPLAY] = None
+    text_style: Optional[DucTextStyle] = None
+
+@dataclass
+class DimensionFitStyle:
+    force_text_inside: bool
+    rule: Optional[DIMENSION_FIT_RULE] = None
+    text_placement: Optional[DIMENSION_TEXT_PLACEMENT] = None
+
+@dataclass
+class DimensionLineStyle:
+    stroke: ElementStroke
+    text_gap: float
+
+@dataclass
+class DimensionExtLineStyle:
+    stroke: ElementStroke
+    overshoot: float
+    offset: float
+
+@dataclass
+class DimensionSymbolStyle:
+    center_mark_size: float
+    heads_override: Optional[List[DucHead]] = None
+    center_mark_type: Optional[MARK_ELLIPSE_CENTER] = None
+
+@dataclass
+class DucDimensionStyle:
+    dim_line: DimensionLineStyle
+    ext_line: DimensionExtLineStyle
+    text_style: DucTextStyle
+    symbols: DimensionSymbolStyle
+    tolerance: DimensionToleranceStyle
+    fit: DimensionFitStyle
+
+@dataclass
+class FCFLayoutStyle:
+    padding: float
+    segment_spacing: float
+    row_spacing: float
+
+@dataclass
+class FCFSymbolStyle:
+    scale: float
+
+@dataclass
+class FCFDatumStyle:
+    bracket_style: Optional[DATUM_BRACKET_STYLE] = None
+
+@dataclass
+class DucFeatureControlFrameStyle:
+    base_style: DucElementStylesBase
+    text_style: DucTextStyle
+    layout: FCFLayoutStyle
+    symbols: FCFSymbolStyle
+    datum_style: FCFDatumStyle
+
+@dataclass
+class ParagraphFormatting:
+    first_line_indent: float
+    hanging_indent: float
+    left_indent: float
+    right_indent: float
+    space_before: float
+    space_after: float
+    tab_stops: List[float]
+
+@dataclass
+class StackFormatProperties:
+    upper_scale: float
+    lower_scale: float
+    alignment: Optional[STACKED_TEXT_ALIGN] = None
+
+@dataclass
+class StackFormat:
+    auto_stack: bool
+    stack_chars: List[str]
+    properties: StackFormatProperties
+
+@dataclass
+class DucDocStyle:
+    text_style: DucTextStyle
+    paragraph: ParagraphFormatting
+    stack_format: StackFormat
+
+@dataclass
+class DucViewportStyle:
+    base_style: DucElementStylesBase
+    scale_indicator_visible: bool
+
+@dataclass
+class DucPlotStyle:
+    base_style: DucElementStylesBase
+
+@dataclass
+class DucXRayStyle:
+    base_style: DucElementStylesBase
+    color: str
+
+@dataclass
+class DucRectangleElement:
+    base: DucElementBase
+
+@dataclass
+class DucPolygonElement:
+    base: DucElementBase
+    sides: int
+
+@dataclass
+class DucEllipseElement:
+    base: DucElementBase
+    ratio: float
+    start_angle: float
+    end_angle: float
+    show_aux_crosshair: bool
+
+@dataclass
+class DucEmbeddableElement:
+    base: DucElementBase
+
+@dataclass
+class DucPdfElement:
+    base: DucElementBase
+    file_id: str
+
+@dataclass
+class DucMermaidElement:
+    base: DucElementBase
+    source: str
+    theme: str = ""
+    svg_path: str = ""
+
+@dataclass
+class DucTableColumn:
+    id: str
+    width: float
+    style_overrides: Optional[DucTableCellStyle] = None
+
+@dataclass
+class DucTableRow:
+    id: str
+    height: float
+    style_overrides: Optional[DucTableCellStyle] = None
+
+@dataclass
+class DucTableCellSpan:
+    columns: int
+    rows: int
+
+@dataclass
+class DucTableCell:
+    row_id: str
+    column_id: str
+    data: str
+    span: DucTableCellSpan
+    locked: bool
+    style_overrides: Optional[DucTableCellStyle] = None
+
+@dataclass
+class DucTableColumnEntry:
+    key: str
+    value: DucTableColumn
+
+@dataclass
+class DucTableRowEntry:
+    key: str
+    value: DucTableRow
+
+@dataclass
+class DucTableCellEntry:
+    key: str
+    value: DucTableCell
+
+@dataclass
+class DucTableAutoSize:
+    columns: bool
+    rows: bool
+
+@dataclass
+class DucTableElement:
+    base: DucElementBase
+    style: DucTableStyle
+    column_order: List[str]
+    row_order: List[str]
+    columns: List[DucTableColumnEntry]
+    rows: List[DucTableRowEntry]
+    cells: List[DucTableCellEntry]
+    header_row_count: int
+    auto_size: DucTableAutoSize
+
+@dataclass
+class ImageCrop:
+    x: float
+    y: float
+    width: float
+    height: float
+    natural_width: float
+    natural_height: float
+
+@dataclass
+class DucImageElement:
+    base: DucElementBase
+    file_id: str
+    scale: List[float]
+    status: Optional[IMAGE_STATUS] = None
+    crop: Optional[ImageCrop] = None
+    filter: Optional[DucImageFilter] = None
+
+@dataclass
+class DucTextDynamicElementSource:
+    element_id: str
+    property: Optional[TEXT_FIELD_SOURCE_PROPERTY] = None
+
+@dataclass
+class DucTextDynamicDictionarySource:
+    key: str
+
+@dataclass
+class DucTextDynamicSource:
+    source: Union[DucTextDynamicElementSource, DucTextDynamicDictionarySource]
+    text_source_type: Optional[TEXT_FIELD_SOURCE_TYPE] = None
+
+@dataclass
+class DucTextDynamicPart:
+    tag: str
+    source: DucTextDynamicSource
+    formatting: "PrimaryUnits"
+    cached_value: str
+
+@dataclass
+class DucTextElement:
+    base: DucElementBase
+    style: DucTextStyle
+    text: str
+    dynamic: List[DucTextDynamicPart]
+    auto_resize: bool
+    original_text: str
+    container_id: Optional[str] = None
+
+@dataclass
+class DucLinearElement:
+    linear_base: DucLinearElementBase
+    wipeout_below: bool
+
+@dataclass
+class DucArrowElement:
+    linear_base: DucLinearElementBase
+    elbowed: bool
+
+@dataclass
+class DucFreeDrawEnds:
+    cap: bool
+    taper: float
+    easing: str
+
+@dataclass
+class DucFreeDrawElement:
+    base: DucElementBase
+    points: List[DucPoint]
+    size: float
+    thinning: float
+    smoothing: float
+    streamline: float
+    easing: str
+    pressures: List[float]
+    simulate_pressure: bool
+    last_committed_point: DucPoint
+    start: Optional[DucFreeDrawEnds] = None
+    end: Optional[DucFreeDrawEnds] = None
+    svg_path: Optional[str] = None
+
+@dataclass
+class DucBlockAttributeDefinition:
+    tag: str
+    prompt: str
+    default_value: str
+    is_constant: bool
+
+@dataclass
+class DucBlockAttributeDefinitionEntry:
+    key: str
+    value: DucBlockAttributeDefinition
+
+@dataclass
+class DucBlock:
+    id: str
+    label: str
+    version: int
+    elements: List["ElementWrapper"]
+    attribute_definitions: List[DucBlockAttributeDefinitionEntry]
+    description: Optional[str] = None
+
+@dataclass
+class StringValueEntry:
+    key: str
+    value: str
+
+@dataclass
+class DucBlockDuplicationArray:
+    rows: int
+    cols: int
+    row_spacing: float
+    col_spacing: float
+
+@dataclass
+class DucBlockInstanceElement:
+    base: DucElementBase
+    block_id: str
+    element_overrides: Optional[List[StringValueEntry]] = None
+    attribute_values: Optional[List[StringValueEntry]] = None
+    duplication_array: Optional[DucBlockDuplicationArray] = None
+
+@dataclass
+class DucFrameElement:
+    stack_element_base: DucStackElementBase
+
+@dataclass
+class PlotLayout:
+    margins: Margins
+
+@dataclass
+class DucPlotElement:
+    stack_element_base: DucStackElementBase
+    style: DucPlotStyle
+    layout: PlotLayout
+
+@dataclass
+class DucViewportElement:
+    linear_base: DucLinearElementBase
+    stack_base: DucStackBase
+    style: DucViewportStyle
+    view: DucView
+    scale: float
+    standard_override: "Standard"
+    shade_plot: Optional[VIEWPORT_SHADE_PLOT] = None
+    frozen_group_ids: Optional[List[str]] = None
+
+@dataclass
+class DucXRayElement:
+    base: DucElementBase
+    style: DucXRayStyle
+    origin: DucPoint
+    direction: DucPoint
+    start_from_origin: bool
+
+@dataclass
+class LeaderTextBlockContent:
+    text: str
+
+@dataclass
+class LeaderBlockContent:
+    block_id: str
+    attribute_values: Optional[List[StringValueEntry]] = None
+    element_overrides: Optional[List[StringValueEntry]] = None
+
+@dataclass
+class LeaderContent:
+    content: Union[LeaderTextBlockContent, LeaderBlockContent]
+    leader_content_type: Optional[LEADER_CONTENT_TYPE] = None
+
+@dataclass
+class DucLeaderElement:
+    linear_base: DucLinearElementBase
+    style: DucLeaderStyle
+    content_anchor: GeometricPoint
+    content: Optional[LeaderContent] = None
+
+@dataclass
+class DimensionDefinitionPoints:
+    origin1: GeometricPoint
+    origin2: GeometricPoint
+    location: GeometricPoint
+    center: GeometricPoint
+    jog: GeometricPoint
+
+@dataclass
+class DimensionBindings:
+    origin1: Optional[DucPointBinding] = None
+    origin2: Optional[DucPointBinding] = None
+    center: Optional[DucPointBinding] = None
+
+@dataclass
+class DimensionBaselineData:
+    base_dimension_id: Optional[str] = None
+
+@dataclass
+class DimensionContinueData:
+    continue_from_dimension_id: Optional[str] = None
+
+@dataclass
+class DucDimensionElement:
+    base: DucElementBase
+    style: DucDimensionStyle
+    definition_points: DimensionDefinitionPoints
+    oblique_angle: float
+    dimension_type: Optional[DIMENSION_TYPE] = None
+    ordinate_axis: Optional[AXIS] = None
+    bindings: Optional[DimensionBindings] = None
+    text_override: Optional[str] = None
+    text_position: Optional[GeometricPoint] = None
+    tolerance_override: Optional[DimensionToleranceStyle] = None
+    baseline_data: Optional[DimensionBaselineData] = None
+    continue_data: Optional[DimensionContinueData] = None
+
+@dataclass
+class DatumReference:
+    letters: str
+    modifier: Optional[MATERIAL_CONDITION] = None
+
+@dataclass
+class ToleranceClause:
+    value: str
+    feature_modifiers: List[FEATURE_MODIFIER]
+    zone_type: Optional[TOLERANCE_ZONE_TYPE] = None
+    material_condition: Optional[MATERIAL_CONDITION] = None
+
+@dataclass
+class FeatureControlFrameSegment:
+    tolerance: ToleranceClause
+    datums: List[DatumReference]
+    symbol: Optional[GDT_SYMBOL] = None
+
+@dataclass
+class FCFBetweenModifier:
+    start: str
+    end: str
+
+@dataclass
+class FCFProjectedZoneModifier:
+    value: float
+
+@dataclass
+class FCFFrameModifiers:
+    all_around: bool
+    all_over: bool
+    continuous_feature: bool
+    between: Optional[FCFBetweenModifier] = None
+    projected_tolerance_zone: Optional[FCFProjectedZoneModifier] = None
+
+@dataclass
+class FCFDatumDefinition:
+    letter: str
+    feature_binding: Optional[DucPointBinding] = None
+
+@dataclass
+class DucFeatureControlFrameElement:
+    base: DucElementBase
+    style: DucFeatureControlFrameStyle
+    rows: List[List[FeatureControlFrameSegment]]
+    frame_modifiers: Optional[FCFFrameModifiers] = None
+    leader_element_id: Optional[str] = None
+    datum_definition: Optional[FCFDatumDefinition] = None
+
+@dataclass
+class TextColumn:
+    width: float
+    gutter: float
+
+@dataclass
+class ColumnLayout:
+    definitions: List[TextColumn]
+    auto_height: bool
+    type: Optional[COLUMN_TYPE] = None
+
+@dataclass
+class DucDocElement:
+    base: DucElementBase
+    style: DucDocStyle
+    text: str
+    dynamic: List[DucTextDynamicPart]
+    columns: ColumnLayout
+    auto_resize: bool
+    flow_direction: Optional[TEXT_FLOW_DIRECTION] = None
+    
+
+@dataclass
+class DucCommonStyle:
+    background: ElementBackground
+    stroke: ElementStroke
+
+@dataclass
+class ParametricSource:
+    type: Optional[PARAMETRIC_SOURCE_TYPE] = None
+    code: Optional[str] = None
+    file_id: Optional[str] = None
+
+@dataclass
+class DucParametricElement:
+    base: DucElementBase
+    source: ParametricSource
+
+@dataclass
+class DucGroup:
+    id: str
+    stack_base: DucStackBase
+
+@dataclass
+class DucRegion:
+    id: str
+    stack_base: DucStackBase
+    boolean_operation: Optional[BOOLEAN_OPERATION] = None
+
+@dataclass
+class DucLayerOverrides:
+    stroke: ElementStroke
+    background: ElementBackground
+
+@dataclass
+class DucLayer:
+    id: str
+    stack_base: DucStackBase
+    readonly: bool
+    overrides: Optional[DucLayerOverrides] = None
+
+# Element Union
+DucElement = Union[
+    DucRectangleElement,
+    DucPolygonElement,
+    DucEllipseElement,
+    DucEmbeddableElement,
+    DucPdfElement,
+    DucMermaidElement,
+    DucTableElement,
+    DucImageElement,
+    DucTextElement,
+    DucLinearElement,
+    DucArrowElement,
+    DucFreeDrawElement,
+    DucBlockInstanceElement,
+    DucFrameElement,
+    DucPlotElement,
+    DucViewportElement,
+    DucXRayElement,
+    DucLeaderElement,
+    DucDimensionElement,
+    DucFeatureControlFrameElement,
+    DucDocElement,
+    DucParametricElement
+]
+
+@dataclass
+class ElementWrapper:
+    element: DucElement 

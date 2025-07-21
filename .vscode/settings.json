@@ -9,7 +9,4 @@
     "rust-analyzer.linkedProjects": [
       "packages/ducrs/Cargo.toml"
     ],
-    "python.analysis.extraPaths": [
-      "./packages/duc-py"
-    ],
 }

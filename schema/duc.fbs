@@ -1544,8 +1544,6 @@ table DucImageElement {
   scale: [double]; // [x, y]
   /** whether an element is cropped */
   crop: ImageCrop;
-  /** clipping boundary for the image */
-  clipping_boundary: _DucLinearElementBase;
   filter: DucImageFilter;
 }
 

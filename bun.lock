@@ -87,7 +87,7 @@
       },
     },
     "packages/ducpy": {
-      "name": "@ducflair/duc-py",
+      "name": "ducpy",
       "version": "0.0.0-development",
       "devDependencies": {
         "semantic-release": "^24.1.2",
@@ -130,8 +130,6 @@
     "@duc/docs": ["@duc/docs@workspace:apps/web"],
 
     "@duc/tsconfig": ["@duc/tsconfig@workspace:packages/tsconfig"],
-
-    "@ducflair/duc-py": ["@ducflair/duc-py@workspace:packages/ducpy"],
 
     "@emnapi/runtime": ["@emnapi/runtime@1.4.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-pBPWdu6MLKROBX05wSNKcNb++m5Er+KQ9QkB+WVM+pW2Kx9hoSrVTnu3BdkI5eBLZoKu/J6mW/B6i6bJB2ytXQ=="],
 
@@ -706,6 +704,8 @@
     "ducjs": ["ducjs@workspace:packages/ducjs"],
 
     "ducpdf": ["ducpdf@workspace:packages/ducpdf"],
+
+    "ducpy": ["ducpy@workspace:packages/ducpy"],
 
     "ducrs": ["ducrs@workspace:packages/ducrs"],
 

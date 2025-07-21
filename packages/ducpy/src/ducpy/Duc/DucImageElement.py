@@ -92,19 +92,8 @@ class DucImageElement(object):
         return None
 
     # DucImageElement
-    def ClippingBoundary(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc._DucLinearElementBase import _DucLinearElementBase
-            obj = _DucLinearElementBase()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # DucImageElement
     def Filter(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             x = self._tab.Indirect(o + self._tab.Pos)
             from Duc.DucImageFilter import DucImageFilter
@@ -114,7 +103,7 @@ class DucImageElement(object):
         return None
 
 def DucImageElementStart(builder):
-    builder.StartObject(7)
+    builder.StartObject(6)
 
 def Start(builder):
     DucImageElementStart(builder)
@@ -155,14 +144,8 @@ def DucImageElementAddCrop(builder, crop):
 def AddCrop(builder, crop):
     DucImageElementAddCrop(builder, crop)
 
-def DucImageElementAddClippingBoundary(builder, clippingBoundary):
-    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(clippingBoundary), 0)
-
-def AddClippingBoundary(builder, clippingBoundary):
-    DucImageElementAddClippingBoundary(builder, clippingBoundary)
-
 def DucImageElementAddFilter(builder, filter):
-    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(filter), 0)
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(filter), 0)
 
 def AddFilter(builder, filter):
     DucImageElementAddFilter(builder, filter)
