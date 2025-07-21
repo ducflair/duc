@@ -1,496 +1,1153 @@
 
-from ..Duc.DucElement import DucElement as DucElementBin
-from ..Duc.ImageCrop import ImageCrop as ImageCropBin
-from ..Duc.Point import Point as PointBin
-from ..Duc.BindingPoint import BindingPoint as BindPointBin
-from ..Duc.PointBinding import PointBinding as PointBindingBin
-from ..Duc.ElementContentBase import ElementContentBase as ElementContentBaseBin
-from ..Duc.ElementBackground import ElementBackground as ElementBackgroundBin
-from ..Duc.ElementStroke import ElementStroke as ElementStrokeBin
-from ..Duc.TilingProperties import TilingProperties as TilingPropertiesBin
-from ..Duc.StrokeSides import StrokeSides as StrokeSidesBin
-from ..Duc.SimplePoint import SimplePoint as SimplePointBin
-from ..Duc.DucLine import DucLine as DucLineBin
-from ..Duc.DucLineReference import DucLineReference as DucLineReferenceBin
-from ..Duc.DucPath import DucPath as DucPathBin
-from ..Duc.DucTableStyleProps import DucTableStyleProps as DucTableStylePropsBin
-from ..Duc.DucTableColumn import DucTableColumn as DucTableColumnBin
-from ..Duc.DucTableRow import DucTableRow as DucTableRowBin
-from ..Duc.DucTableCell import DucTableCell as DucTableCellBin
-from ..Duc.DucTableStyle import DucTableStyle as DucTableStyleBin
-from ..classes.DucElementClass import (
-    SimplePoint, Point, PointBinding, BoundElement, ElementStroke,
-    ElementBackground, ElementContentBase, StrokeStyleProps, StrokeSides,
-    TilingProperties, ImageCrop, DucLine, DucLineReference, DucPath,
-    DucTableStyleProps, DucTableColumn, DucTableRow, DucTableCell, DucTableStyle,
-    DucFreeDrawEnds,
-    # All element types
-    DucElementBase, DucTextElement, DucArrowElement, DucLinearElement,
-    DucFreeDrawElement, DucImageElement, DucFrameElement, DucGroupElement,
-    DucRectangleElement, DucEllipseElement, DucMagicFrameElement,
-    DucSelectionElement, DucTableElement, DucPolygonElement, DucDocElement,
-    DucEmbeddableElement, DucIframeElement
+from typing import List, Optional, Union, Dict
+
+# Import the dataclasses from ElementsClass.py and related classes
+from ..classes.ElementsClass import (
+    GeometricPoint, DucUcs, DucPoint, DucView, Margins, TilingProperties,
+    HatchPatternLine, CustomHatchPattern, DucHatchStyle, DucImageFilter,
+    ElementContentBase, StrokeStyle, StrokeSides, ElementStroke, ElementBackground,
+    DucElementStylesBase, BoundElement, DucElementBase, DucHead, PointBindingPoint,
+    DucPointBinding, DucLineReference, DucLine, DucPath, DucLinearElementBase,
+    DucStackLikeStyles, DucStackBase, DucStackElementBase, LineSpacing,
+    DucTextStyle, DucTableCellStyle, DucTableStyle, DucLeaderStyle,
+    DimensionToleranceStyle, DimensionFitStyle, DimensionLineStyle,
+    DimensionExtLineStyle, DimensionSymbolStyle, DucDimensionStyle, FCFLayoutStyle,
+    FCFSymbolStyle, FCFDatumStyle, DucFeatureControlFrameStyle, ParagraphFormatting,
+    StackFormatProperties, StackFormat, DucDocStyle, DucViewportStyle, DucPlotStyle,
+    DucXRayStyle, DucRectangleElement, DucPolygonElement, DucEllipseElement,
+    DucEmbeddableElement, DucPdfElement, DucMermaidElement,
+    DucTableColumn, DucTableRow, DucTableCellSpan, DucTableCell, DucTableAutoSize,
+    DucTableElement, ImageCrop, DucImageElement, DucTextDynamicElementSource,
+    DucTextDynamicDictionarySource, DucTextDynamicSource, DucTextDynamicPart,
+    DucTextElement, DucLinearElement, DucArrowElement, DucFreeDrawEnds,
+    DucFreeDrawElement, DucBlockAttributeDefinition, DucBlockDuplicationArray,
+    DucBlockInstanceElement, DucFrameElement, PlotLayout, DucPlotElement,
+    DucViewportElement, DucXRayElement, LeaderTextBlockContent, LeaderBlockContent,
+    LeaderContent, DimensionDefinitionPoints, DimensionBindings,
+    DimensionBaselineData, DimensionContinueData, DucDimensionElement, DatumReference,
+    ToleranceClause, FeatureControlFrameSegment, FCFBetweenModifier, FCFProjectedZoneModifier,
+    FCFFrameModifiers, FCFDatumDefinition, DucFeatureControlFrameElement, TextColumn,
+    ColumnLayout, DucDocElement, ParametricSource, DucParametricElement, StringValueEntry, ElementWrapper, \
+    DucBlock
 )
-from ..utils.enums import (
-    ElementType, FontFamily, TextAlign, VerticalAlign, LineHead,
-    ElementContentPreference, StrokePreference, StrokePlacement,
-    StrokeCap, StrokeJoin, StrokeSidePreference, Blending,
-    ElementSubset, ImageStatus
-)
-from ..utils.constants import DEFAULT_ELEMENT_PROPS
 
-def parse_simple_point(point: SimplePointBin) -> SimplePoint | None:
-    if not point:
-        return None
-    
-    return SimplePoint(
-        x=point.X(),
-        y=point.Y()
+# Import Standard and PrimaryUnits from StandardsClass.py
+from ..classes.StandardsClass import Standard, PrimaryUnits, Identifier
+
+# Explicit import for DucLeaderElement to avoid naming conflict
+from ..classes.ElementsClass import DucLeaderElement as DataClassDucLeaderElement
+
+# Import FlatBuffers generated classes with aliases
+from ..Duc.Identifier import Identifier as FBSIdentifier
+from ..Duc.GeometricPoint import GeometricPoint as FBSGeometricPoint
+from ..Duc.DucUcs import DucUcs as FBSDucUcs
+from ..Duc.DucPoint import DucPoint as FBSDucPoint
+from ..Duc.DucView import DucView as FBSDucView
+from ..Duc.Margins import Margins as FBSMargins
+from ..Duc.TilingProperties import TilingProperties as FBSTilingProperties
+from ..Duc.HatchPatternLine import HatchPatternLine as FBSHatchPatternLine
+from ..Duc.CustomHatchPattern import CustomHatchPattern as FBSCustomHatchPattern
+from ..Duc.DucHatchStyle import DucHatchStyle as FBSDucHatchStyle
+from ..Duc.DucImageFilter import DucImageFilter as FBSDucImageFilter
+from ..Duc.ElementContentBase import ElementContentBase as FBSElementContentBase
+from ..Duc.StrokeStyle import StrokeStyle as FBSStrokeStyle
+from ..Duc.StrokeSides import StrokeSides as FBSStrokeSides
+from ..Duc.ElementStroke import ElementStroke as FBSElementStroke
+from ..Duc.ElementBackground import ElementBackground as FBSElementBackground
+from ..Duc._DucElementStylesBase import _DucElementStylesBase as FBSDucElementStylesBase
+from ..Duc.BoundElement import BoundElement as FBSBoundElement
+from ..Duc._DucElementBase import _DucElementBase as FBSDucElementBase
+from ..Duc.DucHead import DucHead as FBSDucHead
+from ..Duc.PointBindingPoint import PointBindingPoint as FBSPointBindingPoint
+from ..Duc.DucPointBinding import DucPointBinding as FBSDucPointBinding
+from ..Duc.DucLineReference import DucLineReference as FBSDucLineReference
+from ..Duc.DucLine import DucLine as FBSDucLine
+from ..Duc.DucPath import DucPath as FBSDucPath
+from ..Duc._DucLinearElementBase import _DucLinearElementBase as FBSDucLinearElementBase
+from ..Duc.DucStackLikeStyles import DucStackLikeStyles as FBSDucStackLikeStyles
+from ..Duc._DucStackBase import _DucStackBase as FBSDucStackBase
+from ..Duc._DucStackElementBase import _DucStackElementBase as FBSDucStackElementBase
+from ..Duc.LineSpacing import LineSpacing as FBSLineSpacing
+from ..Duc.DucTextStyle import DucTextStyle as FBSDucTextStyle
+from ..Duc.DucTableCellStyle import DucTableCellStyle as FBSDucTableCellStyle
+from ..Duc.DucTableStyle import DucTableStyle as FBSDucTableStyle
+from ..Duc.DucLeaderStyle import DucLeaderStyle as FBSDucLeaderStyle
+from ..Duc.DimensionToleranceStyle import DimensionToleranceStyle as FBSDimensionToleranceStyle
+from ..Duc.DimensionFitStyle import DimensionFitStyle as FBSDimensionFitStyle
+from ..Duc.DimensionLineStyle import DimensionLineStyle as FBSDimensionLineStyle
+from ..Duc.DimensionExtLineStyle import DimensionExtLineStyle as FBSDimensionExtLineStyle
+from ..Duc.DimensionSymbolStyle import DimensionSymbolStyle as FBSDimensionSymbolStyle
+from ..Duc.DucDimensionStyle import DucDimensionStyle as FBSDucDimensionStyle
+from ..Duc.FCFLayoutStyle import FCFLayoutStyle as FBSFCFLayoutStyle
+from ..Duc.FCFSymbolStyle import FCFSymbolStyle as FBSFCFSymbolStyle
+from ..Duc.FCFDatumStyle import FCFDatumStyle as FBSFCFDatumStyle
+from ..Duc.DucFeatureControlFrameStyle import DucFeatureControlFrameStyle as FBSDucFeatureControlFrameStyle
+from ..Duc.ParagraphFormatting import ParagraphFormatting as FBSParagraphFormatting
+from ..Duc.StackFormatProperties import StackFormatProperties as FBSStackFormatProperties
+from ..Duc.StackFormat import StackFormat as FBSStackFormat
+from ..Duc.DucDocStyle import DucDocStyle as FBSDucDocStyle
+from ..Duc.DucViewportStyle import DucViewportStyle as FBSDucViewportStyle
+from ..Duc.DucPlotStyle import DucPlotStyle as FBSDucPlotStyle
+from ..Duc.DucXRayStyle import DucXRayStyle as FBSDucXRayStyle
+from ..Duc.DucRectangleElement import DucRectangleElement as FBSDucRectangleElement
+from ..Duc.DucPolygonElement import DucPolygonElement as FBSDucPolygonElement
+from ..Duc.DucEllipseElement import DucEllipseElement as FBSDucEllipseElement
+from ..Duc.DucEmbeddableElement import DucEmbeddableElement as FBSDucEmbeddableElement
+from ..Duc.DucPdfElement import DucPdfElement as FBSDucPdfElement
+from ..Duc.DucMermaidElement import DucMermaidElement as FBSDucMermaidElement
+from ..Duc.DucTableColumn import DucTableColumn as FBSDucTableColumn
+from ..Duc.DucTableRow import DucTableRow as FBSDucTableRow
+from ..Duc.DucTableCellSpan import DucTableCellSpan as FBSDucTableCellSpan
+from ..Duc.DucTableCell import DucTableCell as FBSDucTableCell
+from ..Duc.DucTableColumnEntry import DucTableColumnEntry as FBSDucTableColumnEntry
+from ..Duc.DucTableRowEntry import DucTableRowEntry as FBSDucTableRowEntry
+from ..Duc.DucTableCellEntry import DucTableCellEntry as FBSDucTableCellEntry
+from ..Duc.DucTableAutoSize import DucTableAutoSize as FBSDucTableAutoSize
+from ..Duc.DucTableElement import DucTableElement as FBSDucTableElement
+from ..Duc.ImageCrop import ImageCrop as FBSImageCrop
+from ..Duc.DucImageElement import DucImageElement as FBSDucImageElement
+from ..Duc.DucTextDynamicElementSource import DucTextDynamicElementSource as FBSDucTextDynamicElementSource
+from ..Duc.DucTextDynamicDictionarySource import DucTextDynamicDictionarySource as FBSDucTextDynamicDictionarySource
+from ..Duc.DucTextDynamicSource import DucTextDynamicSource as FBSDucTextDynamicSource
+from ..Duc.DucTextDynamicPart import DucTextDynamicPart as FBSDucTextDynamicPart
+from ..Duc.DucTextElement import DucTextElement as FBSDucTextElement
+from ..Duc.DucLinearElement import DucLinearElement as FBSDucLinearElement
+from ..Duc.DucArrowElement import DucArrowElement as FBSDucArrowElement
+from ..Duc.DucFreeDrawEnds import DucFreeDrawEnds as FBSDucFreeDrawEnds
+from ..Duc.DucFreeDrawElement import DucFreeDrawElement as FBSDucFreeDrawElement
+from ..Duc.DucBlock import DucBlock as FBSDucBlock
+from ..Duc.DucBlockAttributeDefinition import DucBlockAttributeDefinition as FBSDucBlockAttributeDefinition
+from ..Duc.DucBlockAttributeDefinitionEntry import DucBlockAttributeDefinitionEntry as FBSDucBlockAttributeDefinitionEntry
+from ..Duc.DucBlockDuplicationArray import DucBlockDuplicationArray as FBSDucBlockDuplicationArray
+from ..Duc.DucBlockInstanceElement import DucBlockInstanceElement as FBSDucBlockInstanceElement
+from ..Duc.DucFrameElement import DucFrameElement as FBSDucFrameElement
+from ..Duc.PlotLayout import PlotLayout as FBSPlotLayout
+from ..Duc.DucPlotElement import DucPlotElement as FBSDucPlotElement
+from ..Duc.DucViewportElement import DucViewportElement as FBSDucViewportElement
+from ..Duc.DucXRayElement import DucXRayElement as FBSDucXRayElement
+from ..Duc.LeaderTextBlockContent import LeaderTextBlockContent as FBSLeaderTextBlockContent
+from ..Duc.LeaderBlockContent import LeaderBlockContent as FBSLeaderBlockContent
+from ..Duc.LeaderContent import LeaderContent as FBSLeaderContent
+from ..Duc.DucLeaderElement import DucLeaderElement as FBSDucLeaderElement
+from ..Duc.DimensionDefinitionPoints import DimensionDefinitionPoints as FBSDimensionDefinitionPoints
+from ..Duc.DimensionBindings import DimensionBindings as FBSDimensionBindings
+from ..Duc.DimensionBaselineData import DimensionBaselineData as FBSDimensionBaselineData
+from ..Duc.DimensionContinueData import DimensionContinueData as FBSDimensionContinueData
+from ..Duc.DucDimensionElement import DucDimensionElement as FBSDucDimensionElement
+from ..Duc.DatumReference import DatumReference as FBSDatumReference
+from ..Duc.ToleranceClause import ToleranceClause as FBSToleranceClause
+from ..Duc.FeatureControlFrameSegment import FeatureControlFrameSegment as FBSFeatureControlFrameSegment
+from ..Duc.FCFBetweenModifier import FCFBetweenModifier as FBSFCFBetweenModifier
+from ..Duc.FCFProjectedZoneModifier import FCFProjectedZoneModifier as FBSFCFProjectedZoneModifier
+from ..Duc.FCFFrameModifiers import FCFFrameModifiers as FBSFCFFrameModifiers
+from ..Duc.FCFDatumDefinition import FCFDatumDefinition as FBSFCFDatumDefinition
+from ..Duc.DucFeatureControlFrameElement import DucFeatureControlFrameElement as FBSDucFeatureControlFrameElement
+from ..Duc.TextColumn import TextColumn as FBSTextColumn
+from ..Duc.ColumnLayout import ColumnLayout as FBSColumnLayout
+from ..Duc.DucDocElement import DucDocElement as FBSDucDocElement
+from ..Duc.ParametricSource import ParametricSource as FBSParametricSource
+from ..Duc.DucParametricElement import DucParametricElement as FBSDucParametricElement
+from ..Duc.StringValueEntry import StringValueEntry as FBSStringValueEntry
+from ..Duc.Element import Element as FBSElementUnion # Import the FlatBuffers union
+
+# Import Enums
+from ..Duc.BEZIER_MIRRORING import BEZIER_MIRRORING
+from ..Duc.ELEMENT_CONTENT_PREFERENCE import ELEMENT_CONTENT_PREFERENCE
+from ..Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
+from ..Duc.STROKE_CAP import STROKE_CAP
+from ..Duc.STROKE_JOIN import STROKE_JOIN
+from ..Duc.STROKE_SIDE_PREFERENCE import STROKE_SIDE_PREFERENCE
+from ..Duc.STROKE_PLACEMENT import STROKE_PLACEMENT
+from ..Duc.BLENDING import BLENDING
+from ..Duc.LINE_HEAD import LINE_HEAD
+from ..Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
+from ..Duc.TEXT_ALIGN import TEXT_ALIGN
+from ..Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
+from ..Duc.TABLE_CELL_ALIGNMENT import TABLE_CELL_ALIGNMENT
+from ..Duc.TABLE_FLOW_DIRECTION import TABLE_FLOW_DIRECTION
+from ..Duc.TOLERANCE_DISPLAY import TOLERANCE_DISPLAY
+from ..Duc.DIMENSION_FIT_RULE import DIMENSION_FIT_RULE
+from ..Duc.DIMENSION_TEXT_PLACEMENT import DIMENSION_TEXT_PLACEMENT
+from ..Duc.MARK_ELLIPSE_CENTER import MARK_ELLIPSE_CENTER
+from ..Duc.DATUM_BRACKET_STYLE import DATUM_BRACKET_STYLE
+from ..Duc.GDT_SYMBOL import GDT_SYMBOL
+from ..Duc.MATERIAL_CONDITION import MATERIAL_CONDITION
+from ..Duc.TOLERANCE_ZONE_TYPE import TOLERANCE_ZONE_TYPE
+from ..Duc.FEATURE_MODIFIER import FEATURE_MODIFIER
+from ..Duc.TEXT_FIELD_SOURCE_TYPE import TEXT_FIELD_SOURCE_TYPE
+from ..Duc.TEXT_FIELD_SOURCE_PROPERTY import TEXT_FIELD_SOURCE_PROPERTY
+from ..Duc.COLUMN_TYPE import COLUMN_TYPE
+from ..Duc.PARAMETRIC_SOURCE_TYPE import PARAMETRIC_SOURCE_TYPE
+from ..Duc.LEADER_CONTENT_TYPE import LEADER_CONTENT_TYPE
+from ..Duc.VIEWPORT_SHADE_PLOT import VIEWPORT_SHADE_PLOT
+from ..Duc.IMAGE_STATUS import IMAGE_STATUS
+
+# Import parsing for standards - using lazy import to avoid circular dependency
+# from .parse_duc_state import parse_fbs_standard # Import parse_fbs_standard from standards parsing
+
+def _get_parse_fbs_standard():
+    """Lazy import to avoid circular dependency."""
+    from .parse_duc_state import parse_fbs_standard
+    return parse_fbs_standard
+
+
+def parse_fbs_identifier(fbs_identifier: FBSIdentifier) -> Identifier:
+    return Identifier(
+        id=fbs_identifier.Id().decode('utf-8'),
+        name=fbs_identifier.Name().decode('utf-8'),
+        description=fbs_identifier.Description().decode('utf-8')
     )
-    
-def parse_point(point: PointBin) -> Point | None:
-    if not point:
-        return None
-    
-    return Point(
-        x=point.XV3(),
-        y=point.YV3(),
-        mirroring=point.Mirroring() if point.Mirroring() else None,
+
+def parse_fbs_geometric_point(fbs_geo_point: FBSGeometricPoint) -> GeometricPoint:
+    return GeometricPoint(x=fbs_geo_point.X(), y=fbs_geo_point.Y())
+
+def parse_fbs_margins(fbs_margins: FBSMargins) -> Margins:
+    return Margins(
+        top=fbs_margins.Top(),
+        right=fbs_margins.Right(),
+        bottom=fbs_margins.Bottom(),
+        left=fbs_margins.Left()
     )
 
-def parse_binding_point(binding_point: BindPointBin) -> dict | None:
-    if not binding_point:
-        return None
-    
-    return {
-        "index": binding_point.Index(),
-        "offset": binding_point.Offset()
-    }
-
-def parse_point_binding(binding: PointBindingBin) -> PointBinding | None:
-    if not binding:
-        return None
-
-    return PointBinding(
-        element_id=binding.ElementId().decode('utf-8'),
-        focus=binding.Focus(),
-        gap=binding.Gap(),
-        fixed_point=parse_simple_point(binding.FixedPoint()),
-        point=parse_binding_point(binding.Point()),
-        head=binding.Head() if binding.Head() else None
-    )
-
-def parse_element_content_base(content: ElementContentBaseBin, defaults: ElementContentBase) -> ElementContentBase:
-    if not content:
-        return defaults
-    
-    return ElementContentBase(
-        preference=content.Preference(),
-        src=content.Src().decode('utf-8') if content.Src() else defaults.src,
-        visible=content.Visible(),
-        opacity=content.Opacity(),
-        tiling=parse_tiling(content.Tiling())
-    )
-
-def parse_tiling(tiling: TilingPropertiesBin) -> TilingProperties | None:
-    if not tiling:
-        return None
-    
-    size_in_percent = tiling.SizeInPercent()
-    angle = tiling.Angle()
-
-    if size_in_percent is None or angle is None:
-        return None
-
+def parse_fbs_tiling_properties(fbs_tiling: FBSTilingProperties) -> TilingProperties:
     return TilingProperties(
-        size_in_percent=size_in_percent,
-        angle=angle,
-        spacing=tiling.Spacing() if tiling.Spacing() else None,
-        offset_x=tiling.OffsetX() if tiling.OffsetX() else None,
-        offset_y=tiling.OffsetY() if tiling.OffsetY() else None
+        size_in_percent=fbs_tiling.SizeInPercent(),
+        angle=fbs_tiling.Angle(),
+        spacing=fbs_tiling.Spacing() if fbs_tiling.Spacing() is not None else None,
+        offset_x=fbs_tiling.OffsetX() if fbs_tiling.OffsetX() is not None else None,
+        offset_y=fbs_tiling.OffsetY() if fbs_tiling.OffsetY() is not None else None,
     )
 
-def parse_stroke_sides(stroke_sides: StrokeSidesBin) -> StrokeSides | None:
-    if not stroke_sides:
-        return None
+def parse_fbs_duc_point(fbs_point: FBSDucPoint) -> DucPoint:
+    return DucPoint(
+        x=fbs_point.X(),
+        y=fbs_point.Y(),
+        mirroring=fbs_point.Mirroring() if fbs_point.Mirroring() is not None else None
+    )
 
+def parse_fbs_hatch_pattern_line(fbs_hatch_line: FBSHatchPatternLine) -> HatchPatternLine:
+    offset_list = [fbs_hatch_line.Offset(i) for i in range(fbs_hatch_line.OffsetLength())]
+    dash_pattern_list = [fbs_hatch_line.DashPattern(i) for i in range(fbs_hatch_line.DashPatternLength())]
+    return HatchPatternLine(
+        angle=fbs_hatch_line.Angle(),
+        origin=parse_fbs_duc_point(fbs_hatch_line.Origin()),
+        offset=offset_list,
+        dash_pattern=dash_pattern_list
+    )
+
+def parse_fbs_custom_hatch_pattern(fbs_custom_hatch: FBSCustomHatchPattern) -> CustomHatchPattern:
+    lines = [parse_fbs_hatch_pattern_line(fbs_custom_hatch.Lines(i)) for i in range(fbs_custom_hatch.LinesLength())]
+    return CustomHatchPattern(
+        name=fbs_custom_hatch.Name().decode('utf-8'),
+        description=fbs_custom_hatch.Description().decode('utf-8'),
+        lines=lines
+    )
+
+def parse_fbs_duc_hatch_style(fbs_hatch_style: FBSDucHatchStyle) -> DucHatchStyle:
+    return DucHatchStyle(
+        hatch_style=fbs_hatch_style.HatchStyle() if fbs_hatch_style.HatchStyle() is not None else None,
+        pattern_name=fbs_hatch_style.PatternName().decode('utf-8'),
+        pattern_scale=fbs_hatch_style.PatternScale(),
+        pattern_angle=fbs_hatch_style.PatternAngle(),
+        pattern_origin=parse_fbs_duc_point(fbs_hatch_style.PatternOrigin()),
+        pattern_double=bool(fbs_hatch_style.PatternDouble()),
+        custom_pattern=parse_fbs_custom_hatch_pattern(fbs_hatch_style.CustomPattern())
+    )
+
+def parse_fbs_duc_image_filter(fbs_image_filter: FBSDucImageFilter) -> DucImageFilter:
+    return DucImageFilter(
+        brightness=fbs_image_filter.Brightness(),
+        contrast=fbs_image_filter.Contrast()
+    )
+
+def parse_fbs_element_content_base(fbs_content_base: FBSElementContentBase) -> ElementContentBase:
+    return ElementContentBase(
+        preference=fbs_content_base.Preference() if fbs_content_base.Preference() is not None else None,
+        src=fbs_content_base.Src().decode('utf-8'),
+        visible=bool(fbs_content_base.Visible()),
+        opacity=fbs_content_base.Opacity(),
+        tiling=parse_fbs_tiling_properties(fbs_content_base.Tiling()),
+        hatch=parse_fbs_duc_hatch_style(fbs_content_base.Hatch()),
+        image_filter=parse_fbs_duc_image_filter(fbs_content_base.ImageFilter())
+    )
+
+def parse_fbs_stroke_style(fbs_stroke_style: FBSStrokeStyle) -> StrokeStyle:
+    dash_list = [fbs_stroke_style.Dash(i) for i in range(fbs_stroke_style.DashLength())]
+    return StrokeStyle(
+        preference=fbs_stroke_style.Preference() if fbs_stroke_style.Preference() is not None else None,
+        cap=fbs_stroke_style.Cap() if fbs_stroke_style.Cap() is not None else None,
+        join=fbs_stroke_style.Join() if fbs_stroke_style.Join() is not None else None,
+        dash=dash_list,
+        dash_line_override=fbs_stroke_style.DashLineOverride().decode('utf-8'),
+        dash_cap=fbs_stroke_style.DashCap() if fbs_stroke_style.DashCap() is not None else None,
+        miter_limit=fbs_stroke_style.MiterLimit() if fbs_stroke_style.MiterLimit() is not None else None
+    )
+
+def parse_fbs_stroke_sides(fbs_stroke_sides: FBSStrokeSides) -> StrokeSides:
+    values_list = [fbs_stroke_sides.Values(i) for i in range(fbs_stroke_sides.ValuesLength())]
     return StrokeSides(
-        preference=stroke_sides.Preference(),
-        values=[stroke_sides.Values(i) for i in range(stroke_sides.ValuesLength())] if stroke_sides.ValuesLength() > 0 else None
+        preference=fbs_stroke_sides.Preference() if fbs_stroke_sides.Preference() is not None else None,
+        values=values_list
     )
 
-def parse_element_stroke(stroke: ElementStrokeBin) -> ElementStroke | None:
-    if not stroke:
-        return None
-
-    # Check for minimum required stroke properties
-    has_content = bool(stroke.Content())
-    has_width = stroke.Width() is not None
-    has_style = bool(stroke.Style())
-    
-    # Return None if no essential stroke data
-    if not any([has_content, has_width, has_style]):
-        return None
-
-    # Only create stroke if we have valid content
-    stroke_content = parse_element_content_base(stroke.Content(), None)
-    if not stroke_content or not stroke_content.src:
-        return None
-
+def parse_fbs_element_stroke(fbs_element_stroke: FBSElementStroke) -> ElementStroke:
     return ElementStroke(
-        content=stroke_content,
-        width=stroke.Width(),
-        style=StrokeStyleProps(
-            preference=stroke.Style().Preference() if stroke.Style() else None,
-            cap=stroke.Style().Cap() if stroke.Style() else None,
-            join=stroke.Style().Join() if stroke.Style() else None,
-            dash=[stroke.Style().Dash(i) for i in range(stroke.Style().DashLength())] if stroke.Style() and stroke.Style().DashLength() > 0 else None,
-            dash_cap=stroke.Style().DashCap() if stroke.Style() else None,
-            miter_limit=stroke.Style().MiterLimit() if stroke.Style() else None
-        ),
-        placement=stroke.Placement(),
-        stroke_sides=parse_stroke_sides(stroke.StrokeSides())
+        content=parse_fbs_element_content_base(fbs_element_stroke.Content()),
+        width=fbs_element_stroke.Width(),
+        style=parse_fbs_stroke_style(fbs_element_stroke.Style()),
+        placement=fbs_element_stroke.Placement() if fbs_element_stroke.Placement() is not None else None,
+        stroke_sides=parse_fbs_stroke_sides(fbs_element_stroke.StrokeSides())
     )
 
-def parse_element_background(background: ElementBackgroundBin) -> ElementBackground | None:
-    if not background:
-        return None
-
-    # Check for minimum required background properties
-    bg_content = parse_element_content_base(background.Content(), None)
-    if not bg_content or not bg_content.src:
-        return None
-
+def parse_fbs_element_background(fbs_element_background: FBSElementBackground) -> ElementBackground:
     return ElementBackground(
-        content=bg_content
+        content=parse_fbs_element_content_base(fbs_element_background.Content())
     )
 
-def parse_image_crop(crop: ImageCropBin) -> ImageCrop | None:
-    if not crop:
-        return None
-    
-    return ImageCrop(
-        x=crop.X(),
-        y=crop.Y(),
-        width=crop.Width(),
-        height=crop.Height(),
-        natural_width=crop.NaturalWidth(),
-        natural_height=crop.NaturalHeight()
+def parse_fbs_duc_element_styles_base(fbs_styles_base: FBSDucElementStylesBase) -> DucElementStylesBase:
+    background_list = [parse_fbs_element_background(fbs_styles_base.Background(i)) for i in range(fbs_styles_base.BackgroundLength())]
+    stroke_list = [parse_fbs_element_stroke(fbs_styles_base.Stroke(i)) for i in range(fbs_styles_base.StrokeLength())]
+    return DucElementStylesBase(
+        roundness=fbs_styles_base.Roundness(),
+        blending=fbs_styles_base.Blending() if fbs_styles_base.Blending() is not None else None,
+        background=background_list,
+        stroke=stroke_list,
+        opacity=fbs_styles_base.Opacity()
     )
 
-def parse_duc_line_reference(ref: DucLineReferenceBin) -> DucLineReference | None:
-    if not ref:
-        return None
+def parse_fbs_bound_element(fbs_bound_element: FBSBoundElement) -> BoundElement:
+    return BoundElement(
+        id=fbs_bound_element.Id().decode('utf-8'),
+        type=fbs_bound_element.Type().decode('utf-8')
+    )
+
+def parse_fbs_duc_element_base(fbs_element_base: FBSDucElementBase) -> DucElementBase:
+    group_ids_list = [fbs_element_base.GroupIds(i).decode('utf-8') for i in range(fbs_element_base.GroupIdsLength())]
+    region_ids_list = [fbs_element_base.RegionIds(i).decode('utf-8') for i in range(fbs_element_base.RegionIdsLength())]
+    bound_elements_list = [parse_fbs_bound_element(fbs_element_base.BoundElements(i)) for i in range(fbs_element_base.BoundElementsLength())]
+
+    return DucElementBase(
+        id=fbs_element_base.Id().decode('utf-8'),
+        styles=parse_fbs_duc_element_styles_base(fbs_element_base.Styles()),
+        x=fbs_element_base.X(),
+        y=fbs_element_base.Y(),
+        width=fbs_element_base.Width(),
+        height=fbs_element_base.Height(),
+        angle=fbs_element_base.Angle(),
+        scope=fbs_element_base.Scope().decode('utf-8'),
+        label=fbs_element_base.Label().decode('utf-8'),
+        description=fbs_element_base.Description().decode('utf-8') if fbs_element_base.Description() is not None else "", # type: ignore
+        is_visible=bool(fbs_element_base.IsVisible()),
+        seed=fbs_element_base.Seed(),
+        version=fbs_element_base.Version(),
+        version_nonce=fbs_element_base.VersionNonce(),
+        updated=fbs_element_base.Updated(),
+        index=fbs_element_base.Index().decode('utf-8') if fbs_element_base.Index() is not None else None, # type: ignore
+        is_plot=bool(fbs_element_base.IsPlot()),
+        is_annotative=bool(fbs_element_base.IsAnnotative()),
+        is_deleted=bool(fbs_element_base.IsDeleted()),
+        group_ids=group_ids_list,
+        region_ids=region_ids_list,
+        layer_id=fbs_element_base.LayerId().decode('utf-8'),
+        frame_id=fbs_element_base.FrameId().decode('utf-8') if fbs_element_base.FrameId() is not None else "", # type: ignore
+        bound_elements=bound_elements_list,
+        z_index=fbs_element_base.ZIndex(),
+        link=fbs_element_base.Link().decode('utf-8') if fbs_element_base.Link() is not None else "", # type: ignore
+        locked=bool(fbs_element_base.Locked()),
+        custom_data=fbs_element_base.CustomData().decode('utf-8') if fbs_element_base.CustomData() is not None else "" # type: ignore
+    )
+
+def parse_fbs_duc_head(fbs_head: FBSDucHead) -> DucHead:
+    return DucHead(
+        type=fbs_head.Type() if fbs_head.Type() is not None else None,
+        block_id=fbs_head.BlockId().decode('utf-8'),
+        size=fbs_head.Size()
+    )
+
+def parse_fbs_point_binding_point(fbs_point_binding_point: FBSPointBindingPoint) -> PointBindingPoint:
+    return PointBindingPoint(
+        index=fbs_point_binding_point.Index(),
+        offset=fbs_point_binding_point.Offset()
+    )
+
+def parse_fbs_duc_point_binding(fbs_point_binding: FBSDucPointBinding) -> DucPointBinding:
+    return DucPointBinding(
+        element_id=fbs_point_binding.ElementId().decode('utf-8'),
+        focus=fbs_point_binding.Focus(),
+        gap=fbs_point_binding.Gap(),
+        fixed_point=parse_fbs_geometric_point(fbs_point_binding.FixedPoint()),
+        point=parse_fbs_point_binding_point(fbs_point_binding.Point()),
+        head=parse_fbs_duc_head(fbs_point_binding.Head())
+    )
+
+def parse_fbs_duc_line_reference(fbs_line_ref: FBSDucLineReference) -> DucLineReference:
     return DucLineReference(
-        index=ref.Index(),
-        handle=parse_simple_point(ref.Handle())
+        index=fbs_line_ref.Index(),
+        handle=parse_fbs_geometric_point(fbs_line_ref.Handle())
     )
 
-def parse_duc_line(line: DucLineBin) -> DucLine | None:
-    if not line:
-        return None
+def parse_fbs_duc_line(fbs_line: FBSDucLine) -> DucLine:
     return DucLine(
-        start=parse_duc_line_reference(line.Start()),
-        end=parse_duc_line_reference(line.End())
+        start=parse_fbs_duc_line_reference(fbs_line.Start()),
+        end=parse_fbs_duc_line_reference(fbs_line.End())
     )
 
-def parse_duc_path(path: DucPathBin) -> DucPath | None:
-    if not path:
-        return None
-    
-    line_indices_length = path.LineIndicesLength()
-    line_indices = [path.LineIndices(i) for i in range(line_indices_length)] if line_indices_length > 0 else []
-
+def parse_fbs_duc_path(fbs_path: FBSDucPath) -> DucPath:
+    line_indices_list = [fbs_path.LineIndices(i) for i in range(fbs_path.LineIndicesLength())]
     return DucPath(
-        line_indices=line_indices,
-        background=parse_element_background(path.Background()),
-        stroke=parse_element_stroke(path.Stroke())
+        line_indices=line_indices_list,
+        background=parse_fbs_element_background(fbs_path.Background()),
+        stroke=parse_fbs_element_stroke(fbs_path.Stroke())
     )
 
-def parse_duc_table_style_props(props: DucTableStylePropsBin) -> DucTableStyleProps | None:
-    if not props:
-        return None
-    
-    border_dashes_length = props.BorderDashesLength()
-    border_dashes = [props.BorderDashes(i) for i in range(border_dashes_length)] if border_dashes_length > 0 else []
+def parse_fbs_duc_linear_element_base(fbs_linear_base: FBSDucLinearElementBase) -> DucLinearElementBase:
+    points_list = [parse_fbs_duc_point(fbs_linear_base.Points(i)) for i in range(fbs_linear_base.PointsLength())]
+    lines_list = [parse_fbs_duc_line(fbs_linear_base.Lines(i)) for i in range(fbs_linear_base.LinesLength())]
+    path_overrides_list = [parse_fbs_duc_path(fbs_linear_base.PathOverrides(i)) for i in range(fbs_linear_base.PathOverridesLength())]
 
-    return DucTableStyleProps(
-        background_color=props.BackgroundColor().decode('utf-8') if props.BackgroundColor() else None,
-        border_width=props.BorderWidth(),
-        border_dashes=border_dashes,
-        border_color=props.BorderColor().decode('utf-8') if props.BorderColor() else None,
-        text_color=props.TextColor().decode('utf-8') if props.TextColor() else None,
-        text_size=props.TextSize(),
-        text_font=props.TextFont().decode('utf-8') if props.TextFont() else None,
-        text_align=props.TextAlign()
+    return DucLinearElementBase(
+        base=parse_fbs_duc_element_base(fbs_linear_base.Base()),
+        points=points_list,
+        lines=lines_list,
+        path_overrides=path_overrides_list,
+        last_committed_point=parse_fbs_duc_point(fbs_linear_base.LastCommittedPoint()),
+        start_binding=parse_fbs_duc_point_binding(fbs_linear_base.StartBinding()),
+        end_binding=parse_fbs_duc_point_binding(fbs_linear_base.EndBinding())
     )
 
-def parse_duc_table_column(column: DucTableColumnBin) -> DucTableColumn | None:
-    if not column:
-        return None
-    return DucTableColumn(
-        id=column.Id().decode('utf-8'),
-        width=column.Width(),
-        style=parse_duc_table_style_props(column.Style())
+def parse_fbs_duc_stack_like_styles(fbs_stack_styles: FBSDucStackLikeStyles) -> DucStackLikeStyles:
+    return DucStackLikeStyles(
+        opacity=fbs_stack_styles.Opacity(),
+        labeling_color=fbs_stack_styles.LabelingColor().decode('utf-8')
     )
 
-def parse_duc_table_row(row: DucTableRowBin) -> DucTableRow | None:
-    if not row:
-        return None
-    return DucTableRow(
-        id=row.Id().decode('utf-8'),
-        height=row.Height(),
-        style=parse_duc_table_style_props(row.Style())
+def parse_fbs_duc_stack_base(fbs_stack_base: FBSDucStackBase) -> DucStackBase:
+    return DucStackBase(
+        label=fbs_stack_base.Label().decode('utf-8'),
+        description=fbs_stack_base.Description().decode('utf-8') if fbs_stack_base.Description() is not None else "",
+        is_collapsed=bool(fbs_stack_base.IsCollapsed()),
+        is_plot=bool(fbs_stack_base.IsPlot()),
+        is_visible=bool(fbs_stack_base.IsVisible()),
+        locked=bool(fbs_stack_base.Locked()),
+        styles=parse_fbs_duc_stack_like_styles(fbs_stack_base.Styles())
     )
 
-def parse_duc_table_cell(cell: DucTableCellBin) -> DucTableCell | None:
-    if not cell:
-        return None
-    return DucTableCell(
-        row_id=cell.RowId().decode('utf-8'),
-        column_id=cell.ColumnId().decode('utf-8'),
-        data=cell.Data().decode('utf-8') if cell.Data() else None,
-        style=parse_duc_table_style_props(cell.Style())
+def parse_fbs_duc_stack_element_base(fbs_stack_element_base: FBSDucStackElementBase) -> DucStackElementBase:
+    return DucStackElementBase(
+        base=parse_fbs_duc_element_base(fbs_stack_element_base.Base()),
+        stack_base=parse_fbs_duc_stack_base(fbs_stack_element_base.StackBase()),
+        clip=bool(fbs_stack_element_base.Clip()),
+        label_visible=bool(fbs_stack_element_base.LabelVisible()),
+        standard_override=_get_parse_fbs_standard()(fbs_stack_element_base.StandardOverride()) # Lazy import to avoid circular dependency
     )
 
-def parse_duc_table_style(style: DucTableStyleBin) -> DucTableStyle | None:
-    if not style:
-        return None
+def parse_fbs_line_spacing(fbs_line_spacing: FBSLineSpacing) -> LineSpacing:
+    return LineSpacing(
+        value=fbs_line_spacing.Value(),
+        type=fbs_line_spacing.Type() if fbs_line_spacing.Type() is not None else None
+    )
+
+def parse_fbs_duc_text_style(fbs_text_style: FBSDucTextStyle) -> DucTextStyle:
+    return DucTextStyle(
+        base_style=parse_fbs_duc_element_styles_base(fbs_text_style.BaseStyle()),
+        is_ltr=bool(fbs_text_style.IsLtr()),
+        font_family=fbs_text_style.FontFamily().decode('utf-8'),
+        big_font_family=fbs_text_style.BigFontFamily().decode('utf-8'),
+        text_align=fbs_text_style.TextAlign() if fbs_text_style.TextAlign() is not None else None,
+        vertical_align=fbs_text_style.VerticalAlign() if fbs_text_style.VerticalAlign() is not None else None,
+        line_height=fbs_text_style.LineHeight(),
+        line_spacing=parse_fbs_line_spacing(fbs_text_style.LineSpacing()),
+        oblique_angle=fbs_text_style.ObliqueAngle(),
+        font_size=fbs_text_style.FontSize(),
+        paper_text_height=fbs_text_style.PaperTextHeight() if fbs_text_style.PaperTextHeight() is not None else None,
+        width_factor=fbs_text_style.WidthFactor(),
+        is_upside_down=bool(fbs_text_style.IsUpsideDown()),
+        is_backwards=bool(fbs_text_style.IsBackwards())
+    )
+
+def parse_fbs_duc_table_cell_style(fbs_cell_style: FBSDucTableCellStyle) -> DucTableCellStyle:
+    return DucTableCellStyle(
+        base_style=parse_fbs_duc_element_styles_base(fbs_cell_style.BaseStyle()),
+        text_style=parse_fbs_duc_text_style(fbs_cell_style.TextStyle()),
+        margins=parse_fbs_margins(fbs_cell_style.Margins()),
+        alignment=fbs_cell_style.Alignment() if fbs_cell_style.Alignment() is not None else None
+    )
+
+def parse_fbs_duc_table_style(fbs_table_style: FBSDucTableStyle) -> DucTableStyle:
     return DucTableStyle(
-        default_props=parse_duc_table_style_props(style.DefaultProps())
+        base_style=parse_fbs_duc_element_styles_base(fbs_table_style.BaseStyle()),
+        flow_direction=fbs_table_style.FlowDirection() if fbs_table_style.FlowDirection() is not None else None,
+        header_row_style=parse_fbs_duc_table_cell_style(fbs_table_style.HeaderRowStyle()),
+        data_row_style=parse_fbs_duc_table_cell_style(fbs_table_style.DataRowStyle()),
+        data_column_style=parse_fbs_duc_table_cell_style(fbs_table_style.DataColumnStyle())
     )
 
-def parse_duc_element(element: DucElementBin) -> DucElementBase:
-    if not element:
-        return None
+def parse_fbs_duc_leader_style(fbs_leader_style: FBSDucLeaderStyle) -> DucLeaderStyle:
+    heads_override_list = []
+    for i in range(fbs_leader_style.HeadsOverrideLength()):
+        heads_override_list.append(parse_fbs_duc_head(fbs_leader_style.HeadsOverride(i)))
+    return DucLeaderStyle(
+        base_style=parse_fbs_duc_element_styles_base(fbs_leader_style.BaseStyle()),
+        heads_override=heads_override_list,
+        dogleg=fbs_leader_style.Dogleg(),
+        text_style=parse_fbs_duc_text_style(fbs_leader_style.TextStyle()),
+        text_attachment=fbs_leader_style.TextAttachment() if fbs_leader_style.TextAttachment() is not None else None,
+        block_attachment=fbs_leader_style.BlockAttachment() if fbs_leader_style.BlockAttachment() is not None else None
+    )
+
+def parse_fbs_dimension_tolerance_style(fbs_tol_style: FBSDimensionToleranceStyle) -> DimensionToleranceStyle:
+    return DimensionToleranceStyle(
+        enabled=bool(fbs_tol_style.Enabled()),
+        display_method=fbs_tol_style.DisplayMethod() if fbs_tol_style.DisplayMethod() is not None else None,
+        upper_value=fbs_tol_style.UpperValue(),
+        lower_value=fbs_tol_style.LowerValue(),
+        precision=fbs_tol_style.Precision(),
+        text_style=parse_fbs_duc_text_style(fbs_tol_style.TextStyle())
+    )
+
+def parse_fbs_dimension_fit_style(fbs_fit_style: FBSDimensionFitStyle) -> DimensionFitStyle:
+    return DimensionFitStyle(
+        rule=fbs_fit_style.Rule() if fbs_fit_style.Rule() is not None else None,
+        text_placement=fbs_fit_style.TextPlacement() if fbs_fit_style.TextPlacement() is not None else None,
+        force_text_inside=bool(fbs_fit_style.ForceTextInside())
+    )
+
+def parse_fbs_dimension_line_style(fbs_dim_line_style: FBSDimensionLineStyle) -> DimensionLineStyle:
+    return DimensionLineStyle(
+        stroke=parse_fbs_element_stroke(fbs_dim_line_style.Stroke()),
+        text_gap=fbs_dim_line_style.TextGap()
+    )
+
+def parse_fbs_dimension_ext_line_style(fbs_ext_line_style: FBSDimensionExtLineStyle) -> DimensionExtLineStyle:
+    return DimensionExtLineStyle(
+        stroke=parse_fbs_element_stroke(fbs_ext_line_style.Stroke()),
+        overshoot=fbs_ext_line_style.Overshoot(),
+        offset=fbs_ext_line_style.Offset()
+    )
+
+def parse_fbs_dimension_symbol_style(fbs_sym_style: FBSDimensionSymbolStyle) -> DimensionSymbolStyle:
+    heads_override_list = []
+    for i in range(fbs_sym_style.HeadsOverrideLength()):
+        heads_override_list.append(parse_fbs_duc_head(fbs_sym_style.HeadsOverride(i)))
+    return DimensionSymbolStyle(
+        heads_override=heads_override_list,
+        center_mark_type=fbs_sym_style.CenterMarkType() if fbs_sym_style.CenterMarkType() is not None else None,
+        center_mark_size=fbs_sym_style.CenterMarkSize()
+    )
+
+def parse_fbs_duc_dimension_style(fbs_dim_style: FBSDucDimensionStyle) -> DucDimensionStyle:
+    return DucDimensionStyle(
+        dim_line=parse_fbs_dimension_line_style(fbs_dim_style.DimLine()),
+        ext_line=parse_fbs_dimension_ext_line_style(fbs_dim_style.ExtLine()),
+        text_style=parse_fbs_duc_text_style(fbs_dim_style.TextStyle()),
+        symbols=parse_fbs_dimension_symbol_style(fbs_dim_style.Symbols()),
+        tolerance=parse_fbs_dimension_tolerance_style(fbs_dim_style.Tolerance()),
+        fit=parse_fbs_dimension_fit_style(fbs_dim_style.Fit())
+    )
+
+def parse_fbs_fcf_layout_style(fbs_fcf_layout_style: FBSFCFLayoutStyle) -> FCFLayoutStyle:
+    return FCFLayoutStyle(
+        padding=fbs_fcf_layout_style.Padding(),
+        segment_spacing=fbs_fcf_layout_style.SegmentSpacing(),
+        row_spacing=fbs_fcf_layout_style.RowSpacing()
+    )
+
+def parse_fbs_fcf_symbol_style(fbs_fcf_symbol_style: FBSFCFSymbolStyle) -> FCFSymbolStyle:
+    return FCFSymbolStyle(
+        scale=fbs_fcf_symbol_style.Scale()
+    )
+
+def parse_fbs_fcf_datum_style(fbs_fcf_datum_style: FBSFCFDatumStyle) -> FCFDatumStyle:
+    return FCFDatumStyle(
+        bracket_style=fbs_fcf_datum_style.BracketStyle() if fbs_fcf_datum_style.BracketStyle() is not None else None
+    )
+
+def parse_fbs_duc_feature_control_frame_style(fbs_fcf_style: FBSDucFeatureControlFrameStyle) -> DucFeatureControlFrameStyle:
+    return DucFeatureControlFrameStyle(
+        base_style=parse_fbs_duc_element_styles_base(fbs_fcf_style.BaseStyle()),
+        text_style=parse_fbs_duc_text_style(fbs_fcf_style.TextStyle()),
+        layout=parse_fbs_fcf_layout_style(fbs_fcf_style.Layout()),
+        symbols=parse_fbs_fcf_symbol_style(fbs_fcf_style.Symbols()),
+        datum_style=parse_fbs_fcf_datum_style(fbs_fcf_style.DatumStyle())
+    )
+
+def parse_fbs_paragraph_formatting(fbs_para_formatting: FBSParagraphFormatting) -> ParagraphFormatting:
+    tab_stops_list = [fbs_para_formatting.TabStops(i) for i in range(fbs_para_formatting.TabStopsLength())]
+    return ParagraphFormatting(
+        first_line_indent=fbs_para_formatting.FirstLineIndent(),
+        hanging_indent=fbs_para_formatting.HangingIndent(),
+        left_indent=fbs_para_formatting.LeftIndent(),
+        right_indent=fbs_para_formatting.RightIndent(),
+        space_before=fbs_para_formatting.SpaceBefore(),
+        space_after=fbs_para_formatting.SpaceAfter(),
+        tab_stops=tab_stops_list
+    )
+
+def parse_fbs_stack_format_properties(fbs_stack_props: FBSStackFormatProperties) -> StackFormatProperties:
+    return StackFormatProperties(
+        upper_scale=fbs_stack_props.UpperScale(),
+        lower_scale=fbs_stack_props.LowerScale(),
+        alignment=fbs_stack_props.Alignment() if fbs_stack_props.Alignment() is not None else None
+    )
+
+def parse_fbs_stack_format(fbs_stack_format: FBSStackFormat) -> StackFormat:
+    stack_chars_list = [fbs_stack_format.StackChars(i).decode('utf-8') for i in range(fbs_stack_format.StackCharsLength())]
+    return StackFormat(
+        auto_stack=bool(fbs_stack_format.AutoStack()),
+        stack_chars=stack_chars_list,
+        properties=parse_fbs_stack_format_properties(fbs_stack_format.Properties())
+    )
+
+def parse_fbs_duc_doc_style(fbs_doc_style: FBSDucDocStyle) -> DucDocStyle:
+    return DucDocStyle(
+        text_style=parse_fbs_duc_text_style(fbs_doc_style.TextStyle()),
+        paragraph=parse_fbs_paragraph_formatting(fbs_doc_style.Paragraph()),
+        stack_format=parse_fbs_stack_format(fbs_doc_style.StackFormat())
+    )
+
+def parse_fbs_duc_viewport_style(fbs_viewport_style: FBSDucViewportStyle) -> DucViewportStyle:
+    return DucViewportStyle(
+        base_style=parse_fbs_duc_element_styles_base(fbs_viewport_style.BaseStyle()),
+        scale_indicator_visible=bool(fbs_viewport_style.ScaleIndicatorVisible())
+    )
+
+def parse_fbs_duc_plot_style(fbs_plot_style: FBSDucPlotStyle) -> DucPlotStyle:
+    return DucPlotStyle(
+        base_style=parse_fbs_duc_element_styles_base(fbs_plot_style.BaseStyle())
+    )
+
+def parse_fbs_duc_xray_style(fbs_xray_style: FBSDucXRayStyle) -> DucXRayStyle:
+    return DucXRayStyle(
+        base_style=parse_fbs_duc_element_styles_base(fbs_xray_style.BaseStyle()),
+        color=fbs_xray_style.Color().decode('utf-8')
+    )
+
+def parse_fbs_duc_rectangle_element(fbs_rect_element: FBSDucRectangleElement) -> DucRectangleElement:
+    return DucRectangleElement(
+        base=parse_fbs_duc_element_base(fbs_rect_element.Base())
+    )
+
+def parse_fbs_duc_polygon_element(fbs_poly_element: FBSDucPolygonElement) -> DucPolygonElement:
+    return DucPolygonElement(
+        base=parse_fbs_duc_element_base(fbs_poly_element.Base()),
+        sides=fbs_poly_element.Sides()
+    )
+
+def parse_fbs_duc_ellipse_element(fbs_ellipse_element: FBSDucEllipseElement) -> DucEllipseElement:
+    return DucEllipseElement(
+        base=parse_fbs_duc_element_base(fbs_ellipse_element.Base()),
+        ratio=fbs_ellipse_element.Ratio(),
+        start_angle=fbs_ellipse_element.StartAngle(),
+        end_angle=fbs_ellipse_element.EndAngle(),
+        show_aux_crosshair=bool(fbs_ellipse_element.ShowAuxCrosshair())
+    )
+
+def parse_fbs_duc_embeddable_element(fbs_embed_element: FBSDucEmbeddableElement) -> DucEmbeddableElement:
+    return DucEmbeddableElement(
+        base=parse_fbs_duc_element_base(fbs_embed_element.Base())
+    )
+
+def parse_fbs_duc_pdf_element(fbs_pdf_element: FBSDucPdfElement) -> DucPdfElement:
+    return DucPdfElement(
+        base=parse_fbs_duc_element_base(fbs_pdf_element.Base()),
+        file_id=fbs_pdf_element.FileId().decode('utf-8')
+    )
+
+def parse_fbs_duc_mermaid_element(fbs_mermaid_element: FBSDucMermaidElement) -> DucMermaidElement:
+    return DucMermaidElement(
+        base=parse_fbs_duc_element_base(fbs_mermaid_element.Base()),
+        source=fbs_mermaid_element.Source().decode('utf-8'),
+        theme=fbs_mermaid_element.Theme().decode('utf-8'),
+        svg_path=fbs_mermaid_element.SvgPath().decode('utf-8')
+    )
+
+def parse_fbs_duc_table_column(fbs_table_column: FBSDucTableColumn) -> DucTableColumn:
+    return DucTableColumn(
+        id=fbs_table_column.Id().decode('utf-8'),
+        width=fbs_table_column.Width(),
+        style_overrides=parse_fbs_duc_table_cell_style(fbs_table_column.StyleOverrides())
+    )
+
+def parse_fbs_duc_table_row(fbs_table_row: FBSDucTableRow) -> DucTableRow:
+    return DucTableRow(
+        id=fbs_table_row.Id().decode('utf-8'),
+        height=fbs_table_row.Height(),
+        style_overrides=parse_fbs_duc_table_cell_style(fbs_table_row.StyleOverrides())
+    )
+
+def parse_fbs_duc_table_cell_span(fbs_cell_span: FBSDucTableCellSpan) -> DucTableCellSpan:
+    return DucTableCellSpan(
+        columns=fbs_cell_span.Columns(),
+        rows=fbs_cell_span.Rows()
+    )
+
+def parse_fbs_duc_table_cell(fbs_table_cell: FBSDucTableCell) -> DucTableCell:
+    return DucTableCell(
+        row_id=fbs_table_cell.RowId().decode('utf-8'),
+        column_id=fbs_table_cell.ColumnId().decode('utf-8'),
+        data=fbs_table_cell.Data().decode('utf-8'),
+        span=parse_fbs_duc_table_cell_span(fbs_table_cell.Span()),
+        locked=bool(fbs_table_cell.Locked()),
+        style_overrides=parse_fbs_duc_table_cell_style(fbs_table_cell.StyleOverrides())
+    )
+
+def parse_fbs_duc_table_auto_size(fbs_table_auto_size: FBSDucTableAutoSize) -> DucTableAutoSize:
+    return DucTableAutoSize(
+        columns=bool(fbs_table_auto_size.Columns()),
+        rows=bool(fbs_table_auto_size.Rows())
+    )
+
+def parse_fbs_duc_table_element(fbs_table_element: FBSDucTableElement) -> DucTableElement:
+    column_order_list = [fbs_table_element.ColumnOrder(i).decode('utf-8') for i in range(fbs_table_element.ColumnOrderLength())]
+    row_order_list = [fbs_table_element.RowOrder(i).decode('utf-8') for i in range(fbs_table_element.RowOrderLength())]
     
-    element_type = element.Type().decode('utf-8')
-    if not element_type:
-        return None
+    columns_dict = {}
+    for i in range(fbs_table_element.ColumnsLength()):
+        entry = fbs_table_element.Columns(i)
+        columns_dict[entry.Key().decode('utf-8')] = parse_fbs_duc_table_column(entry.Value())
 
-    # Parse group IDs - Fix vector parsing
-    group_ids_length = element.GroupIdsLength()
-    group_ids = [element.GroupIds(i).decode('utf-8') for i in range(group_ids_length)] if group_ids_length > 0 else []
+    rows_dict = {}
+    for i in range(fbs_table_element.RowsLength()):
+        entry = fbs_table_element.Rows(i)
+        rows_dict[entry.Key().decode('utf-8')] = parse_fbs_duc_table_row(entry.Value())
 
-    # Parse bound elements - Fix vector parsing
-    bound_elements_length = element.BoundElementsLength()
-    bound_elements = [
-        BoundElement(
-            id=be.Id().decode('utf-8'),
-            type=be.Type().decode('utf-8')
-        ) for be in (element.BoundElements(i) for i in range(bound_elements_length))
-        if be and be.Id() and be.Type()
-    ]
+    cells_dict = {}
+    for i in range(fbs_table_element.CellsLength()):
+        entry = fbs_table_element.Cells(i)
+        cells_dict[entry.Key().decode('utf-8')] = parse_fbs_duc_table_cell(entry.Value())
 
-    # Parse strokes and backgrounds
-    strokes = []
-    backgrounds = []
+    return DucTableElement(
+        base=parse_fbs_duc_element_base(fbs_table_element.Base()),
+        style=parse_fbs_duc_table_style(fbs_table_element.Style()),
+        column_order=column_order_list,
+        row_order=row_order_list,
+        columns=columns_dict,
+        rows=rows_dict,
+        cells=cells_dict,
+        header_row_count=fbs_table_element.HeaderRowCount(),
+        auto_size=parse_fbs_duc_table_auto_size(fbs_table_element.AutoSize())
+    )
 
-    stroke_length = element.StrokeLength() if hasattr(element, 'StrokeLength') else 0
-    if stroke_length > 0:
-        strokes = [s for s in (parse_element_stroke(element.Stroke(i)) for i in range(stroke_length)) if s is not None]
+def parse_fbs_image_crop(fbs_image_crop: FBSImageCrop) -> ImageCrop:
+    return ImageCrop(
+        x=fbs_image_crop.X(),
+        y=fbs_image_crop.Y(),
+        width=fbs_image_crop.Width(),
+        height=fbs_image_crop.Height(),
+        natural_width=fbs_image_crop.NaturalWidth(),
+        natural_height=fbs_image_crop.NaturalHeight()
+    )
 
-    background_length = element.BackgroundLength() if hasattr(element, 'BackgroundLength') else 0
-    if background_length > 0:
-        backgrounds = [bg for bg in (parse_element_background(element.Background(i)) for i in range(background_length)) if bg is not None]
+def parse_fbs_duc_image_element(fbs_image_element: FBSDucImageElement) -> DucImageElement:
+    scale_list = [fbs_image_element.Scale(i) for i in range(fbs_image_element.ScaleLength())]
+    return DucImageElement(
+        base=parse_fbs_duc_element_base(fbs_image_element.Base()),
+        file_id=fbs_image_element.FileId().decode('utf-8'),
+        status=fbs_image_element.Status() if fbs_image_element.Status() is not None else None,
+        scale=scale_list,
+        crop=parse_fbs_image_crop(fbs_image_element.Crop()),
+        filter=parse_fbs_duc_image_filter(fbs_image_element.Filter())
+    )
 
-    # Parse lines
-    lines = []
-    lines_length = element.LinesLength() if hasattr(element, 'LinesLength') else 0
-    if lines_length > 0:
-        lines = [parse_duc_line(element.Lines(i)) for i in range(lines_length)]
+def parse_fbs_duc_text_dynamic_element_source(fbs_dynamic_el_source: FBSDucTextDynamicElementSource) -> DucTextDynamicElementSource:
+    return DucTextDynamicElementSource(
+        element_id=fbs_dynamic_el_source.ElementId().decode('utf-8'),
+        property=fbs_dynamic_el_source.Property() if fbs_dynamic_el_source.Property() is not None else None
+    )
 
-    # Parse linear element path overrides
-    linear_element_path_overrides = []
-    overrides_length = element.LinearElementPathOverridesLength() if hasattr(element, 'LinearElementPathOverridesLength') else 0
-    if overrides_length > 0:
-        linear_element_path_overrides = [parse_duc_path(element.LinearElementPathOverrides(i)) for i in range(overrides_length)]
+def parse_fbs_duc_text_dynamic_dictionary_source(fbs_dynamic_dict_source: FBSDucTextDynamicDictionarySource) -> DucTextDynamicDictionarySource:
+    return DucTextDynamicDictionarySource(
+        key=fbs_dynamic_dict_source.Key().decode('utf-8')
+    )
 
-    # Parse points for linear elements and freedraw
-    points = []
-    if element_type in [ElementType.FREEDRAW, ElementType.LINE, ElementType.ARROW]:
-        points_length = element.PointsLength()
-        if points_length > 0:
-            points = [parse_point(element.Points(i)) for i in range(points_length)]
+def parse_fbs_duc_text_dynamic_source(fbs_dynamic_source: FBSDucTextDynamicSource) -> DucTextDynamicSource:
+    source_data = None
+    if fbs_dynamic_source.SourceType() == FBSDucTextDynamicSource.DucTextDynamicElementSource:
+        source_data = parse_fbs_duc_text_dynamic_element_source(fbs_dynamic_source.SourceAsDucTextDynamicElementSource())
+    elif fbs_dynamic_source.SourceType() == FBSDucTextDynamicSource.DucTextDynamicDictionarySource:
+        source_data = parse_fbs_duc_text_dynamic_dictionary_source(fbs_dynamic_source.SourceAsDucTextDynamicDictionarySource())
+    
+    return DucTextDynamicSource(
+        text_source_type=fbs_dynamic_source.TextSourceType() if fbs_dynamic_source.TextSourceType() is not None else None,
+        source=source_data # type: ignore
+    )
 
-    # Parse pressures for freedraw
-    pressures = []
-    if element_type == ElementType.FREEDRAW:
-        pressures_length = element.PressuresV3Length()
-        if pressures_length > 0:
-            pressures = [element.PressuresV3(i) for i in range(pressures_length)]
+def parse_fbs_duc_text_dynamic_part(fbs_dynamic_part: FBSDucTextDynamicPart) -> DucTextDynamicPart:
+    return DucTextDynamicPart(
+        tag=fbs_dynamic_part.Tag().decode('utf-8'),
+        source=parse_fbs_duc_text_dynamic_source(fbs_dynamic_part.Source()),
+        formatting=parse_fbs_primary_units(fbs_dynamic_part.Formatting()), # Needs parse_fbs_primary_units from Standards
+        cached_value=fbs_dynamic_part.CachedValue().decode('utf-8')
+    )
 
-    # Base element attributes - only include common properties that all elements have
-    base_attrs = {
-        "id": element.Id().decode('utf-8'),
-        "x": element.XV3(),
-        "y": element.YV3(),
-        "is_visible": element.IsVisible(),
-        "opacity": element.Opacity(),
-        "width": element.WidthV3(),
-        "height": element.HeightV3(),
-        "angle": element.AngleV3(),
-        "is_deleted": element.IsDeleted(),
-        "frame_id": element.FrameId().decode('utf-8') if element.FrameId() else None,
-        "link": element.Link().decode('utf-8') if element.Link() else None,
-        "locked": element.Locked(),
-        "group_ids": group_ids,
-        "scope": element.Scope().decode('utf-8') if element.Scope() else "mm",
-        "label": element.Label().decode('utf-8') if element.Label() else DEFAULT_ELEMENT_PROPS["label"],
-        "bound_elements": bound_elements if bound_elements else None,
-        "stroke": strokes if strokes else None,
-        "background": backgrounds if backgrounds else None,
-        "blending": element.Blending() if element.Blending else None,
-        "roundness": element.Roundness() if element.Roundness else DEFAULT_ELEMENT_PROPS["roundness"],
-        "subset": element.Subset() if element.Subset else None,
-        "z_index": element.ZIndex() if element.ZIndex() else None
-    }
+def parse_fbs_duc_text_element(fbs_text_element: FBSDucTextElement) -> DucTextElement:
+    dynamic_list = [parse_fbs_duc_text_dynamic_part(fbs_text_element.Dynamic(i)) for i in range(fbs_text_element.DynamicLength())]
+    return DucTextElement(
+        base=parse_fbs_duc_element_base(fbs_text_element.Base()),
+        style=parse_fbs_duc_text_style(fbs_text_element.Style()),
+        text=fbs_text_element.Text().decode('utf-8'),
+        dynamic=dynamic_list,
+        auto_resize=bool(fbs_text_element.AutoResize()),
+        container_id=fbs_text_element.ContainerId().decode('utf-8'),
+        original_text=fbs_text_element.OriginalText().decode('utf-8')
+    )
 
-    if element_type == ElementType.TEXT:
-        return DucTextElement(
-            **base_attrs,
-            font_size=element.FontSizeV3(),
-            font_family=FontFamily(int(element.FontFamily().decode('utf-8'))),
-            text=element.Text().decode('utf-8'),
-            text_align=TextAlign(element.TextAlignV3()),
-            vertical_align=VerticalAlign(element.VerticalAlignV3()),
-            container_id=element.ContainerId().decode('utf-8') if element.ContainerId() else None,
-            original_text=element.Text().decode('utf-8'),
-            line_height=element.LineHeightV3(),
-            auto_resize=element.AutoResize()
-        )
-    elif element_type == ElementType.ARROW:
-        return DucArrowElement(
-            **base_attrs,
-            points=points,
-            lines=lines,
-            path_overrides=linear_element_path_overrides,
-            last_committed_point=parse_point(element.LastCommittedPoint()),
-            start_binding=parse_point_binding(element.StartBinding()),
-            end_binding=parse_point_binding(element.EndBinding()),
-            elbowed=element.Elbowed() if element.Elbowed else False
-        )
-    elif element_type == ElementType.LINE:
-        return DucLinearElement(
-            **base_attrs,
-            points=points,
-            lines=lines,
-            path_overrides=linear_element_path_overrides,
-            last_committed_point=parse_point(element.LastCommittedPoint()),
-            start_binding=parse_point_binding(element.StartBinding()),
-            end_binding=parse_point_binding(element.EndBinding())
-        )
-    elif element_type == ElementType.FREEDRAW:
-        # Parse freedraw start and end configurations
-        start_config = None
-        if element.FreeDrawStartCap() is not None or element.FreeDrawStartTaper() is not None or element.FreeDrawStartEasing():
-            start_config = DucFreeDrawEnds(
-                cap=element.FreeDrawStartCap() if element.FreeDrawStartCap() is not None else False,
-                taper=element.FreeDrawStartTaper() if element.FreeDrawStartTaper() is not None else 0.0,
-                easing=element.FreeDrawStartEasing().decode('utf-8') if element.FreeDrawStartEasing() else "linear"
-            )
-        
-        end_config = None
-        if element.FreeDrawEndCap() is not None or element.FreeDrawEndTaper() is not None or element.FreeDrawEndEasing():
-            end_config = DucFreeDrawEnds(
-                cap=element.FreeDrawEndCap() if element.FreeDrawEndCap() is not None else False,
-                taper=element.FreeDrawEndTaper() if element.FreeDrawEndTaper() is not None else 0.0,
-                easing=element.FreeDrawEndEasing().decode('utf-8') if element.FreeDrawEndEasing() else "linear"
-            )
-        
-        return DucFreeDrawElement(
-            **base_attrs,
-            points=points,
-            pressures=pressures,
-            simulate_pressure=element.SimulatePressure(),
-            last_committed_point=parse_point(element.LastCommittedPoint()),
-            thinning=element.FreeDrawThinning() if element.FreeDrawThinning() is not None else 0.0,
-            smoothing=element.FreeDrawSmoothing() if element.FreeDrawSmoothing() is not None else 0.0,
-            streamline=element.FreeDrawStreamline() if element.FreeDrawStreamline() is not None else 0.0,
-            easing=element.FreeDrawEasing().decode('utf-8') if element.FreeDrawEasing() else "linear",
-            start=start_config,
-            end=end_config,
-            size=element.FreeDrawSize() if element.FreeDrawSize() is not None else 1.0,
-            svg_path=element.FreeDrawSvgPath().decode('utf-8') if element.FreeDrawSvgPath() else None
-        )
-    elif element_type == ElementType.IMAGE:
-        return DucImageElement(
-            **base_attrs,
-            file_id=element.FileId().decode('utf-8') if element.FileId() else None,
-            status=ImageStatus(element.Status().decode('utf-8')),
-            scale=(element.ScaleV3().X(), element.ScaleV3().Y()) if element.ScaleV3() else (1.0, 1.0),
-            crop=parse_image_crop(element.Crop())
-        )
-    elif element_type == ElementType.FRAME:
-        return DucFrameElement(
-            **base_attrs,
-            is_collapsed=element.IsCollapsed(),
-            clip=element.Clip() if element.Clip else False
-        )
-    elif element_type == ElementType.GROUP:
-        return DucGroupElement(
-            **base_attrs,
-            is_collapsed=element.IsCollapsed(),
-            clip=element.Clip() if element.Clip else False,
-            group_id_ref=element.GroupIdRef().decode('utf-8')
-        )
-    elif element_type == ElementType.MAGIC_FRAME:
-        return DucMagicFrameElement(
-            **base_attrs,
-            is_collapsed=element.IsCollapsed(),
-            clip=element.Clip() if element.Clip else False
-        )
-    elif element_type == ElementType.SELECTION:
-        return DucSelectionElement(**base_attrs)
-    elif element_type == ElementType.RECTANGLE:
-        return DucRectangleElement(**base_attrs)
-    elif element_type == ElementType.DIAMOND:
-        return DucPolygonElement(
-            **base_attrs,
-            sides=4
-        )
-    elif element_type == ElementType.POLYGON:
-        return DucPolygonElement(
-            **base_attrs,
-            sides=element.PolygonSides() if element.PolygonSides() is not None else 6
-        )
-    elif element_type == ElementType.ELLIPSE:
-        return DucEllipseElement(
-            **base_attrs,
-            ratio=element.EllipseRatio() if element.EllipseRatio() is not None else 1.0,
-            start_angle=element.EllipseStartAngle() if element.EllipseStartAngle() is not None else 0.0,
-            end_angle=element.EllipseEndAngle() if element.EllipseEndAngle() is not None else 360.0,
-            show_aux_crosshair=element.EllipseShowAuxCrosshair() if element.EllipseShowAuxCrosshair() is not None else False
-        )
-    elif element_type == ElementType.TABLE:
-        column_order_length = element.ColumnOrderLength()
-        column_order = [element.ColumnOrder(i).decode('utf-8') for i in range(column_order_length)] if column_order_length > 0 else []
+def parse_fbs_duc_linear_element(fbs_linear_element: FBSDucLinearElement) -> DucLinearElement:
+    return DucLinearElement(
+        linear_base=parse_fbs_duc_linear_element_base(fbs_linear_element.LinearBase()),
+        wipeout_below=bool(fbs_linear_element.WipeoutBelow())
+    )
 
-        row_order_length = element.RowOrderLength()
-        row_order = [element.RowOrder(i).decode('utf-8') for i in range(row_order_length)] if row_order_length > 0 else []
+def parse_fbs_duc_arrow_element(fbs_arrow_element: FBSDucArrowElement) -> DucArrowElement:
+    return DucArrowElement(
+        linear_base=parse_fbs_duc_linear_element_base(fbs_arrow_element.LinearBase()),
+        elbowed=bool(fbs_arrow_element.Elbowed())
+    )
 
-        columns_length = element.ColumnsLength()
-        columns = [parse_duc_table_column(element.Columns(i)) for i in range(columns_length)] if columns_length > 0 else []
+def parse_fbs_duc_free_draw_ends(fbs_ends: FBSDucFreeDrawEnds) -> DucFreeDrawEnds:
+    return DucFreeDrawEnds(
+        cap=bool(fbs_ends.Cap()),
+        taper=fbs_ends.Taper(),
+        easing=fbs_ends.Easing().decode('utf-8')
+    )
 
-        rows_length = element.RowsLength()
-        rows = [parse_duc_table_row(element.Rows(i)) for i in range(rows_length)] if rows_length > 0 else []
+def parse_fbs_duc_free_draw_element(fbs_freedraw_element: FBSDucFreeDrawElement) -> DucFreeDrawElement:
+    points_list = [parse_fbs_duc_point(fbs_freedraw_element.Points(i)) for i in range(fbs_freedraw_element.PointsLength())]
+    pressures_list = [fbs_freedraw_element.Pressures(i) for i in range(fbs_freedraw_element.PressuresLength())]
+    return DucFreeDrawElement(
+        base=parse_fbs_duc_element_base(fbs_freedraw_element.Base()),
+        points=points_list,
+        size=fbs_freedraw_element.Size(),
+        thinning=fbs_freedraw_element.Thinning(),
+        smoothing=fbs_freedraw_element.Smoothing(),
+        streamline=fbs_freedraw_element.Streamline(),
+        easing=fbs_freedraw_element.Easing().decode('utf-8'),
+        start=parse_fbs_duc_free_draw_ends(fbs_freedraw_element.Start()),
+        end=parse_fbs_duc_free_draw_ends(fbs_freedraw_element.End()),
+        pressures=pressures_list,
+        simulate_pressure=bool(fbs_freedraw_element.SimulatePressure()),
+        last_committed_point=parse_fbs_duc_point(fbs_freedraw_element.LastCommittedPoint()),
+        svg_path=fbs_freedraw_element.SvgPath().decode('utf-8')
+    )
 
-        cells_length = element.CellsLength()
-        cells = [parse_duc_table_cell(element.Cells(i)) for i in range(cells_length)] if cells_length > 0 else []
-        
-        return DucTableElement(
-            **base_attrs,
-            column_order=column_order,
-            row_order=row_order,
-            columns=columns,
-            rows=rows,
-            cells=cells,
-            style=parse_duc_table_style_props(element.TableStyle().DefaultProps()) if element.TableStyle() and element.TableStyle().DefaultProps() else None
-        )
-    elif element_type == ElementType.DOC:
-        return DucDocElement(
-            **base_attrs,
-            content=element.DocContent().decode('utf-8') if element.DocContent() else ""
-        )
-    else:
-        raise ValueError(f"Unknown element type: {element_type}")
+def parse_fbs_duc_block_attribute_definition(fbs_attr_def: FBSDucBlockAttributeDefinition) -> DucBlockAttributeDefinition:
+    return DucBlockAttributeDefinition(
+        tag=fbs_attr_def.Tag().decode('utf-8'),
+        prompt=fbs_attr_def.Prompt().decode('utf-8'),
+        default_value=fbs_attr_def.DefaultValue().decode('utf-8'),
+        is_constant=bool(fbs_attr_def.IsConstant())
+    )
+
+def parse_fbs_duc_block_attribute_definition_entry(fbs_attr_def_entry: FBSDucBlockAttributeDefinitionEntry) -> DucBlockAttributeDefinition:
+    # Assuming the entry is just a wrapper for the value
+    return parse_fbs_duc_block_attribute_definition(fbs_attr_def_entry.Value())
+
+def parse_fbs_duc_block(fbs_block: FBSDucBlock) -> DucBlock:
+    elements_list = [parse_duc_element_wrapper(fbs_block.Elements(i)) for i in range(fbs_block.ElementsLength())]
+    attribute_definitions_list = [parse_fbs_duc_block_attribute_definition_entry(fbs_block.AttributeDefinitions(i)) for i in range(fbs_block.AttributeDefinitionsLength())]
+    return DucBlock(
+        id=fbs_block.Id().decode('utf-8'),
+        label=fbs_block.Label().decode('utf-8'),
+        description=fbs_block.Description().decode('utf-8'),
+        version=fbs_block.Version(),
+        elements=elements_list,
+        attribute_definitions=attribute_definitions_list
+    )
+
+def parse_fbs_string_value_entry(fbs_entry: FBSStringValueEntry) -> StringValueEntry:
+    return StringValueEntry(
+        key=fbs_entry.Key().decode('utf-8'),
+        value=fbs_entry.Value().decode('utf-8')
+    )
+
+def parse_fbs_duc_block_duplication_array(fbs_duplication_array: FBSDucBlockDuplicationArray) -> DucBlockDuplicationArray:
+    return DucBlockDuplicationArray(
+        rows=fbs_duplication_array.Rows(),
+        cols=fbs_duplication_array.Cols(),
+        row_spacing=fbs_duplication_array.RowSpacing(),
+        col_spacing=fbs_duplication_array.ColSpacing()
+    )
+
+def parse_fbs_duc_block_instance_element(fbs_block_instance: FBSDucBlockInstanceElement) -> DucBlockInstanceElement:
+    element_overrides_list = [parse_fbs_string_value_entry(fbs_block_instance.ElementOverrides(i)) for i in range(fbs_block_instance.ElementOverridesLength())]
+    attribute_values_list = [parse_fbs_string_value_entry(fbs_block_instance.AttributeValues(i)) for i in range(fbs_block_instance.AttributeValuesLength())]
+    return DucBlockInstanceElement(
+        base=parse_fbs_duc_element_base(fbs_block_instance.Base()),
+        block_id=fbs_block_instance.BlockId().decode('utf-8'),
+        element_overrides=element_overrides_list,
+        attribute_values=attribute_values_list,
+        duplication_array=parse_fbs_duc_block_duplication_array(fbs_block_instance.DuplicationArray())
+    )
+
+def parse_fbs_duc_frame_element(fbs_frame_element: FBSDucFrameElement) -> DucFrameElement:
+    return DucFrameElement(
+        stack_element_base=parse_fbs_duc_stack_element_base(fbs_frame_element.StackElementBase())
+    )
+
+def parse_fbs_plot_layout(fbs_plot_layout: FBSPlotLayout) -> PlotLayout:
+    return PlotLayout(
+        margins=parse_fbs_margins(fbs_plot_layout.Margins())
+    )
+
+def parse_fbs_duc_plot_element(fbs_plot_element: FBSDucPlotElement) -> DucPlotElement:
+    return DucPlotElement(
+        stack_element_base=parse_fbs_duc_stack_element_base(fbs_plot_element.StackElementBase()),
+        style=parse_fbs_duc_plot_style(fbs_plot_element.Style()),
+        layout=parse_fbs_plot_layout(fbs_plot_element.Layout())
+    )
+
+def parse_fbs_duc_viewport_element(fbs_viewport_element: FBSDucViewportElement) -> DucViewportElement:
+    frozen_group_ids_list = [fbs_viewport_element.FrozenGroupIds(i).decode('utf-8') for i in range(fbs_viewport_element.FrozenGroupIdsLength())]
+    return DucViewportElement(
+        linear_base=parse_fbs_duc_linear_element_base(fbs_viewport_element.LinearBase()),
+        stack_base=parse_fbs_duc_stack_base(fbs_viewport_element.StackBase()),
+        style=parse_fbs_duc_viewport_style(fbs_viewport_element.Style()),
+        view=parse_fbs_duc_view(fbs_viewport_element.View()),
+        scale=fbs_viewport_element.Scale(),
+        shade_plot=fbs_viewport_element.ShadePlot() if fbs_viewport_element.ShadePlot() is not None else None,
+        frozen_group_ids=frozen_group_ids_list,
+        standard_override=_get_parse_fbs_standard()(fbs_viewport_element.StandardOverride())
+    )
+
+def parse_fbs_duc_xray_element(fbs_xray_element: FBSDucXRayElement) -> DucXRayElement:
+    return DucXRayElement(
+        base=parse_fbs_duc_element_base(fbs_xray_element.Base()),
+        style=parse_fbs_duc_xray_style(fbs_xray_element.Style()),
+        origin=parse_fbs_geometric_point(fbs_xray_element.Origin()), # Corrected to GeometricPoint
+        direction=parse_fbs_geometric_point(fbs_xray_element.Direction()), # Corrected to GeometricPoint
+        start_from_origin=bool(fbs_xray_element.StartFromOrigin())
+    )
+
+def parse_fbs_leader_text_block_content(fbs_text_content: FBSLeaderTextBlockContent) -> LeaderTextBlockContent:
+    return LeaderTextBlockContent(
+        text=fbs_text_content.Text().decode('utf-8')
+    )
+
+def parse_fbs_leader_block_content(fbs_block_content: FBSLeaderBlockContent) -> LeaderBlockContent:
+    attribute_values_list = [parse_fbs_string_value_entry(fbs_block_content.AttributeValues(i)) for i in range(fbs_block_content.AttributeValuesLength())]
+    element_overrides_list = [parse_fbs_string_value_entry(fbs_block_content.ElementOverrides(i)) for i in range(fbs_block_content.ElementOverridesLength())]
+    return LeaderBlockContent(
+        block_id=fbs_block_content.BlockId().decode('utf-8'),
+        attribute_values=attribute_values_list,
+        element_overrides=element_overrides_list
+    )
+
+def parse_fbs_leader_content(fbs_leader_content: FBSLeaderContent) -> LeaderContent:
+    content_data = None
+    if fbs_leader_content.ContentType() == FBSLeaderContent.LeaderTextBlockContent:
+        content_data = parse_fbs_leader_text_block_content(fbs_leader_content.ContentAsLeaderTextBlockContent())
+    elif fbs_leader_content.ContentType() == FBSLeaderContent.LeaderBlockContent:
+        content_data = parse_fbs_leader_block_content(fbs_leader_content.ContentAsLeaderBlockContent())
+    
+    return LeaderContent(
+        leader_content_type=fbs_leader_content.ContentType() if fbs_leader_content.ContentType() is not None else None,
+        content=content_data # type: ignore
+    )
+
+def parse_fbs_duc_leader_element(fbs_leader_element: FBSDucLeaderElement) -> DataClassDucLeaderElement:
+    return DataClassDucLeaderElement(
+        linear_base=parse_fbs_duc_linear_element_base(fbs_leader_element.LinearBase()),
+        style=parse_fbs_duc_leader_style(fbs_leader_element.Style()),
+        content=parse_fbs_leader_content(fbs_leader_element.Content()),
+        content_anchor=parse_fbs_geometric_point(fbs_leader_element.ContentAnchor())
+    )
+
+def parse_fbs_dimension_definition_points(fbs_def_points: FBSDimensionDefinitionPoints) -> DimensionDefinitionPoints:
+    return DimensionDefinitionPoints(
+        origin1=parse_fbs_geometric_point(fbs_def_points.Origin1()),
+        origin2=parse_fbs_geometric_point(fbs_def_points.Origin2()),
+        location=parse_fbs_geometric_point(fbs_def_points.Location()),
+        center=parse_fbs_geometric_point(fbs_def_points.Center()),
+        jog=parse_fbs_geometric_point(fbs_def_points.Jog())
+    )
+
+def parse_fbs_dimension_bindings(fbs_dim_bindings: FBSDimensionBindings) -> DimensionBindings:
+    return DimensionBindings(
+        origin1=parse_fbs_duc_point_binding(fbs_dim_bindings.Origin1()),
+        origin2=parse_fbs_duc_point_binding(fbs_dim_bindings.Origin2()),
+        center=parse_fbs_duc_point_binding(fbs_dim_bindings.Center())
+    )
+
+def parse_fbs_dimension_baseline_data(fbs_baseline_data: FBSDimensionBaselineData) -> DimensionBaselineData:
+    return DimensionBaselineData(
+        base_dimension_id=fbs_baseline_data.BaseDimensionId().decode('utf-8')
+    )
+
+def parse_fbs_dimension_continue_data(fbs_continue_data: FBSDimensionContinueData) -> DimensionContinueData:
+    return DimensionContinueData(
+        continue_from_dimension_id=fbs_continue_data.ContinueFromDimensionId().decode('utf-8')
+    )
+
+def parse_fbs_duc_dimension_element(fbs_dim_element: FBSDucDimensionElement) -> DucDimensionElement:
+    return DucDimensionElement(
+        base=parse_fbs_duc_element_base(fbs_dim_element.Base()),
+        style=parse_fbs_duc_dimension_style(fbs_dim_element.Style()),
+        dimension_type=fbs_dim_element.DimensionType() if fbs_dim_element.DimensionType() is not None else None,
+        definition_points=parse_fbs_dimension_definition_points(fbs_dim_element.DefinitionPoints()),
+        oblique_angle=fbs_dim_element.ObliqueAngle(),
+        ordinate_axis=fbs_dim_element.OrdinateAxis() if fbs_dim_element.OrdinateAxis() is not None else None,
+        bindings=parse_fbs_dimension_bindings(fbs_dim_element.Bindings()),
+        text_override=fbs_dim_element.TextOverride().decode('utf-8'),
+        text_position=parse_fbs_geometric_point(fbs_dim_element.TextPosition()),
+        tolerance_override=parse_fbs_dimension_tolerance_style(fbs_dim_element.ToleranceOverride()),
+        baseline_data=parse_fbs_dimension_baseline_data(fbs_dim_element.BaselineData()),
+        continue_data=parse_fbs_dimension_continue_data(fbs_dim_element.ContinueData())
+    )
+
+def parse_fbs_datum_reference(fbs_datum_ref: FBSDatumReference) -> DatumReference:
+    return DatumReference(
+        letters=fbs_datum_ref.Letters().decode('utf-8'),
+        modifier=fbs_datum_ref.Modifier() if fbs_datum_ref.Modifier() is not None else None
+    )
+
+def parse_fbs_tolerance_clause(fbs_tol_clause: FBSToleranceClause) -> ToleranceClause:
+    feature_modifiers_list = [fbs_tol_clause.FeatureModifiers(i) for i in range(fbs_tol_clause.FeatureModifiersLength())]
+    return ToleranceClause(
+        value=fbs_tol_clause.Value().decode('utf-8'),
+        zone_type=fbs_tol_clause.ZoneType() if fbs_tol_clause.ZoneType() is not None else None,
+        feature_modifiers=feature_modifiers_list,
+        material_condition=fbs_tol_clause.MaterialCondition() if fbs_tol_clause.MaterialCondition() is not None else None
+    )
+
+def parse_fbs_feature_control_frame_segment(fbs_fcf_segment: FBSFeatureControlFrameSegment) -> FeatureControlFrameSegment:
+    datums_list = [parse_fbs_datum_reference(fbs_fcf_segment.Datums(i)) for i in range(fbs_fcf_segment.DatumsLength())]
+    return FeatureControlFrameSegment(
+        symbol=fbs_fcf_segment.Symbol() if fbs_fcf_segment.Symbol() is not None else None,
+        tolerance=parse_fbs_tolerance_clause(fbs_fcf_segment.Tolerance()),
+        datums=datums_list
+    )
+
+def parse_fbs_fcf_between_modifier(fbs_between_mod: FBSFCFBetweenModifier) -> FCFBetweenModifier:
+    return FCFBetweenModifier(
+        start=fbs_between_mod.Start().decode('utf-8'),
+        end=fbs_between_mod.End().decode('utf-8')
+    )
+
+def parse_fbs_fcf_projected_zone_modifier(fbs_proj_zone_mod: FBSFCFProjectedZoneModifier) -> FCFProjectedZoneModifier:
+    return FCFProjectedZoneModifier(
+        value=fbs_proj_zone_mod.Value()
+    )
+
+def parse_fbs_fcf_frame_modifiers(fbs_frame_mod: FBSFCFFrameModifiers) -> FCFFrameModifiers:
+    return FCFFrameModifiers(
+        all_around=bool(fbs_frame_mod.AllAround()),
+        all_over=bool(fbs_frame_mod.AllOver()),
+        continuous_feature=bool(fbs_frame_mod.ContinuousFeature()),
+        between=parse_fbs_fcf_between_modifier(fbs_frame_mod.Between()),
+        projected_tolerance_zone=parse_fbs_fcf_projected_zone_modifier(fbs_frame_mod.ProjectedToleranceZone())
+    )
+
+def parse_fbs_fcf_datum_definition(fbs_datum_def: FBSFCFDatumDefinition) -> FCFDatumDefinition:
+    return FCFDatumDefinition(
+        letter=fbs_datum_def.Letter().decode('utf-8'),
+        feature_binding=parse_fbs_duc_point_binding(fbs_datum_def.FeatureBinding())
+    )
+
+def parse_fbs_duc_feature_control_frame_element(fbs_fcf_element: FBSDucFeatureControlFrameElement) -> DucFeatureControlFrameElement:
+    rows_list = []
+    for i in range(fbs_fcf_element.RowsLength()):
+        segment_list = []
+        fbs_segment_vector = fbs_fcf_element.Rows(i)
+        for j in range(fbs_segment_vector.Length()):
+            segment_list.append(parse_fbs_feature_control_frame_segment(fbs_segment_vector.Get(j)))
+        rows_list.append(segment_list)
+
+    return DucFeatureControlFrameElement(
+        base=parse_fbs_duc_element_base(fbs_fcf_element.Base()),
+        style=parse_fbs_duc_feature_control_frame_style(fbs_fcf_element.Style()),
+        rows=rows_list,
+        frame_modifiers=parse_fbs_fcf_frame_modifiers(fbs_fcf_element.FrameModifiers()),
+        leader_element_id=fbs_fcf_element.LeaderElementId().decode('utf-8'),
+        datum_definition=parse_fbs_fcf_datum_definition(fbs_fcf_element.DatumDefinition())
+    )
+
+def parse_fbs_text_column(fbs_text_column: FBSTextColumn) -> TextColumn:
+    return TextColumn(
+        width=fbs_text_column.Width(),
+        gutter=fbs_text_column.Gutter()
+    )
+
+def parse_fbs_column_layout(fbs_column_layout: FBSColumnLayout) -> ColumnLayout:
+    definitions_list = [parse_fbs_text_column(fbs_column_layout.Definitions(i)) for i in range(fbs_column_layout.DefinitionsLength())]
+    return ColumnLayout(
+        type=fbs_column_layout.Type() if fbs_column_layout.Type() is not None else None,
+        definitions=definitions_list,
+        auto_height=bool(fbs_column_layout.AutoHeight())
+    )
+
+def parse_fbs_duc_doc_element(fbs_doc_element: FBSDucDocElement) -> DucDocElement:
+    dynamic_list = [parse_fbs_duc_text_dynamic_part(fbs_doc_element.Dynamic(i)) for i in range(fbs_doc_element.DynamicLength())]
+    return DucDocElement(
+        base=parse_fbs_duc_element_base(fbs_doc_element.Base()),
+        style=parse_fbs_duc_doc_style(fbs_doc_element.Style()),
+        text=fbs_doc_element.Text().decode('utf-8'),
+        dynamic=dynamic_list,
+        flow_direction=fbs_doc_element.FlowDirection() if fbs_doc_element.FlowDirection() is not None else None,
+        columns=parse_fbs_column_layout(fbs_doc_element.Columns()),
+        auto_resize=bool(fbs_doc_element.AutoResize())
+    )
+
+def parse_fbs_parametric_source(fbs_param_source: FBSParametricSource) -> ParametricSource:
+    return ParametricSource(
+        type=fbs_param_source.Type() if fbs_param_source.Type() is not None else None,
+        code=fbs_param_source.Code().decode('utf-8'),
+        file_id=fbs_param_source.FileId().decode('utf-8')
+    )
+
+def parse_fbs_duc_parametric_element(fbs_param_element: FBSDucParametricElement) -> DucParametricElement:
+    return DucParametricElement(
+        base=parse_fbs_duc_element_base(fbs_param_element.Base()),
+        source=parse_fbs_parametric_source(fbs_param_element.Source())
+    )
+
+# Main parsing function for ElementWrapper
+def parse_duc_element_wrapper(fbs_element_wrapper: FBSElementUnion) -> ElementWrapper:
+    element_type = fbs_element_wrapper.ElementType()
+    element_data = None
+
+    if element_type == FBSElementUnion.DucRectangleElement:
+        element_data = parse_fbs_duc_rectangle_element(fbs_element_wrapper.ElementAsDucRectangleElement())
+    elif element_type == FBSElementUnion.DucPolygonElement:
+        element_data = parse_fbs_duc_polygon_element(fbs_element_wrapper.ElementAsDucPolygonElement())
+    elif element_type == FBSElementUnion.DucEllipseElement:
+        element_data = parse_fbs_duc_ellipse_element(fbs_element_wrapper.ElementAsDucEllipseElement())
+    elif element_type == FBSElementUnion.DucEmbeddableElement:
+        element_data = parse_fbs_duc_embeddable_element(fbs_element_wrapper.ElementAsDucEmbeddableElement())
+    elif element_type == FBSElementUnion.DucPdfElement:
+        element_data = parse_fbs_duc_pdf_element(fbs_element_wrapper.ElementAsDucPdfElement())
+    elif element_type == FBSElementUnion.DucMermaidElement:
+        element_data = parse_fbs_duc_mermaid_element(fbs_element_wrapper.ElementAsDucMermaidElement())
+    elif element_type == FBSElementUnion.DucTableElement:
+        element_data = parse_fbs_duc_table_element(fbs_element_wrapper.ElementAsDucTableElement())
+    elif element_type == FBSElementUnion.DucImageElement:
+        element_data = parse_fbs_duc_image_element(fbs_element_wrapper.ElementAsDucImageElement())
+    elif element_type == FBSElementUnion.DucTextElement:
+        element_data = parse_fbs_duc_text_element(fbs_element_wrapper.ElementAsDucTextElement())
+    elif element_type == FBSElementUnion.DucLinearElement:
+        element_data = parse_fbs_duc_linear_element(fbs_element_wrapper.ElementAsDucLinearElement())
+    elif element_type == FBSElementUnion.DucArrowElement:
+        element_data = parse_fbs_duc_arrow_element(fbs_element_wrapper.ElementAsDucArrowElement())
+    elif element_type == FBSElementUnion.DucFreeDrawElement:
+        element_data = parse_fbs_duc_free_draw_element(fbs_element_wrapper.ElementAsDucFreeDrawElement())
+    elif element_type == FBSElementUnion.DucBlockInstanceElement:
+        element_data = parse_fbs_duc_block_instance_element(fbs_element_wrapper.ElementAsDucBlockInstanceElement())
+    elif element_type == FBSElementUnion.DucFrameElement:
+        element_data = parse_fbs_duc_frame_element(fbs_element_wrapper.ElementAsDucFrameElement())
+    elif element_type == FBSElementUnion.DucPlotElement:
+        element_data = parse_fbs_duc_plot_element(fbs_element_wrapper.ElementAsDucPlotElement())
+    elif element_type == FBSElementUnion.DucViewportElement:
+        element_data = parse_fbs_duc_viewport_element(fbs_element_wrapper.ElementAsDucViewportElement())
+    elif element_type == FBSElementUnion.DucXRayElement:
+        element_data = parse_fbs_duc_xray_element(fbs_element_wrapper.ElementAsDucXRayElement())
+    elif element_type == FBSElementUnion.DucLeaderElement:
+        element_data = parse_fbs_duc_leader_element(fbs_element_wrapper.ElementAsDucLeaderElement())
+    elif element_type == FBSElementUnion.DucDimensionElement:
+        element_data = parse_fbs_duc_dimension_element(fbs_element_wrapper.ElementAsDucDimensionElement())
+    elif element_type == FBSElementUnion.DucFeatureControlFrameElement:
+        element_data = parse_fbs_duc_feature_control_frame_element(fbs_element_wrapper.ElementAsDucFeatureControlFrameElement())
+    elif element_type == FBSElementUnion.DucDocElement:
+        element_data = parse_fbs_duc_doc_element(fbs_element_wrapper.ElementAsDucDocElement())
+    elif element_type == FBSElementUnion.DucParametricElement:
+        element_data = parse_fbs_duc_parametric_element(fbs_element_wrapper.ElementAsDucParametricElement())
+
+    return ElementWrapper(element=element_data) # type: ignore

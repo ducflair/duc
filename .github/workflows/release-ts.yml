@@ -12,7 +12,7 @@ on:
   #     - main
   #     - next
   #   paths:
-  #     - 'packages/duc-ts/**'
+  #     - 'packages/ducjs/**'
   #     - 'turbo.json'
   #     - 'package.json'
   # repository_dispatch:
@@ -54,13 +54,13 @@ jobs:
       - run: bun install
       - name: Replace workspace dependencies
         run: |
-          sed -i 's/"workspace:\*"/"*"/g' packages/duc-ts/package.json
+          sed -i 's/"workspace:\*"/"*"/g' packages/ducjs/package.json
       - name: Build
-        run: bun duc-ts:build
+        run: bun ducjs:build
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_LEGACY_PEER_DEPS: "true"
         run: npx semantic-release --ci
-        working-directory: ./packages/duc-ts 
+        working-directory: ./packages/ducjs 

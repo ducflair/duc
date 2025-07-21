@@ -8,7 +8,6 @@ import { DucImageFilter } from '../duc/duc-image-filter';
 import { IMAGE_STATUS } from '../duc/image-status';
 import { ImageCrop } from '../duc/image-crop';
 import { _DucElementBase } from '../duc/duc-element-base';
-import { _DucLinearElementBase } from '../duc/duc-linear-element-base';
 
 
 export class DucImageElement {
@@ -66,18 +65,13 @@ crop(obj?:ImageCrop):ImageCrop|null {
   return offset ? (obj || new ImageCrop()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-clippingBoundary(obj?:_DucLinearElementBase):_DucLinearElementBase|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
-  return offset ? (obj || new _DucLinearElementBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
 filter(obj?:DucImageFilter):DucImageFilter|null {
-  const offset = this.bb!.__offset(this.bb_pos, 16);
+  const offset = this.bb!.__offset(this.bb_pos, 14);
   return offset ? (obj || new DucImageFilter()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 static startDucImageElement(builder:flatbuffers.Builder) {
-  builder.startObject(7);
+  builder.startObject(6);
 }
 
 static addBase(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset) {
@@ -117,12 +111,8 @@ static addCrop(builder:flatbuffers.Builder, cropOffset:flatbuffers.Offset) {
   builder.addFieldOffset(4, cropOffset, 0);
 }
 
-static addClippingBoundary(builder:flatbuffers.Builder, clippingBoundaryOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, clippingBoundaryOffset, 0);
-}
-
 static addFilter(builder:flatbuffers.Builder, filterOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(6, filterOffset, 0);
+  builder.addFieldOffset(5, filterOffset, 0);
 }
 
 static endDucImageElement(builder:flatbuffers.Builder):flatbuffers.Offset {
