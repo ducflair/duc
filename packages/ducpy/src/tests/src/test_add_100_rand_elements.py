@@ -1,117 +1,45 @@
 """
 Test adding 100 random elements to a DUC file.
 """
-import argparse
 import os
 import random
-import uuid
-import numpy as np
 import pytest
+import ducpy as duc
 
-from packages.ducpy.src.ducpy.classes.ElementsClass import DucElementUnion, DucRectangleElement, DucLinearElement
-from ducpy.classes.AppStateClass import AppState
-from ducpy.classes.BinaryFilesClass import DucExternalFiles
-from packages.ducpy.src.ducpy.classes.ElementsClass import (
-    ElementBackground, ElementStroke, ElementContentBase, Point, StrokeStyleProps, StrokeSides
-)
-from ducpy.utils.enums import (
-    ElementType, ElementContentPreference, StrokePreference,
-    StrokePlacement, StrokeJoin, StrokeCap
-)
-from ducpy.serialize.serialize_duc import save_as_flatbuffers
-# from ducpy.parse.parse_duc import load_from_flatbuffers # Import might not be available
-
-scope = "mm"
-
-def create_random_rectangle(x: float, y: float) -> DucElementUnion:
+def create_random_rectangle(x: float, y: float):
     """Create a rectangle element with random dimensions."""
-    stroke = ElementStroke(
-        content=ElementContentBase(
-            preference=int(ElementContentPreference.SOLID),
-            src="#000000",
-            visible=True,
-            opacity=1.0,
-        ),
-        width=2.0,
-        style=StrokeStyleProps(
-            preference=int(StrokePreference.SOLID),
-            join=int(StrokeJoin.MITER),
-            cap=int(StrokeCap.BUTT)
-        ),
-        placement=int(StrokePlacement.INSIDE)
-    )
-    background = ElementBackground(
-        content=ElementContentBase(
-            preference=int(ElementContentPreference.SOLID),
-            src="transparent",
-            visible=False,
-            opacity=0.0,
-        )
-    )
-    return DucRectangleElement(
-        id=str(uuid.uuid4()),
-        scope=scope,
+    return duc.create_rectangle(
         x=x,
         y=y,
         width=random.uniform(50, 150),
         height=random.uniform(50, 150),
         angle=random.uniform(0, 360),
-        is_deleted=False,
-        bound_elements=[],
-        group_ids=[],
-        stroke=[stroke],
-        background=[background]
-    )
-
-def create_random_line(x: float, y: float) -> DucElementUnion:
-    """Create a line element with random points."""
-    points = [Point(x=x, y=y)]
-    num_points = random.randint(2, 5)
-    for _ in range(num_points - 1):
-        points.append(Point(
-            x=x + random.uniform(-100, 100),
-            y=y + random.uniform(-100, 100)
-        ))
-    
-    stroke = ElementStroke(
-        content=ElementContentBase(
-            preference=int(ElementContentPreference.SOLID),
-            src="#000000",
-            visible=True,
-            opacity=1.0,
-        ),
-        width=2.0,
-        style=StrokeStyleProps(
-            preference=int(StrokePreference.SOLID),
-            join=int(StrokeJoin.MITER),
-            cap=int(StrokeCap.BUTT)
-        ),
-        placement=int(StrokePlacement.CENTER)
-    )
-    background = ElementBackground(
-        content=ElementContentBase(
-            preference=int(ElementContentPreference.SOLID),
-            src="transparent",
-            visible=False,
-            opacity=0.0,
+        styles=duc.create_stroke_style(
+            duc.create_solid_content("#000000"),
+            width=2.0
         )
     )
-    
-    return DucLinearElement(
-        id=str(uuid.uuid4()),
-        scope=scope,
-        x=x,
-        y=y,
-        points=points,
-        angle=random.uniform(0, 360),
-        is_deleted=False,
-        bound_elements=[],
-        group_ids=[],
-        stroke=[stroke],
-        background=[background]
-    )
 
-def create_random_elements(num_elements: int = 100) -> list[DucElementUnion]:
+def create_random_line(x: float, y: float):
+    """Create a linear element with random path."""
+    # Create a simple line with 2-30 random points
+    num_points = random.randint(2, 30)
+    points = [(x, y)]  # Start at given position
+    
+    for i in range(1, num_points):
+        # Add points with some random offset
+        offset_x = random.uniform(-50, 50)
+        offset_y = random.uniform(-50, 50)
+        points.append((x + offset_x, y + offset_y))
+    
+    return duc.create_linear_element(
+        points=points,
+        styles=duc.create_stroke_style(
+            duc.create_solid_content("#0000FF"),
+            width=2.0
+        )
+    )
+def create_random_elements(num_elements: int = 100):
     """Create a list of random elements."""
     elements = []
     canvas_width = 2000
@@ -128,36 +56,42 @@ def create_random_elements(num_elements: int = 100) -> list[DucElementUnion]:
             
     return elements
 
+@pytest.fixture
+def test_output_dir():
+    """Create a test output directory."""
+    current_script_path = os.path.dirname(os.path.abspath(__file__))
+    output_dir = os.path.join(current_script_path, "..", "output")
+    os.makedirs(output_dir, exist_ok=True)
+    return output_dir
+
 def test_add_100_random_elements(test_output_dir):
     """Test adding 100 random elements and saving."""
     num_elements = 100
     output_file = os.path.join(test_output_dir, "test_100_random.duc")
 
-    # Create elements
+    # Create elements using the clean API
     elements = create_random_elements(num_elements)
-    app_state = AppState()
-    files = {}
     
-    # Serialize and save
-    duc_bytes = save_as_flatbuffers(elements, app_state, files)
+    # Serialize using the clean API
+    serialized_bytes = duc.serialize_duc(
+        name="RandomElementsTest",
+        elements=elements
+    )
+    
+    assert serialized_bytes is not None, "Serialization returned None"
+    assert len(serialized_bytes) > 0, "Serialization returned empty bytes"
+    
+    # Write to file
     with open(output_file, 'wb') as f:
-        f.write(duc_bytes)
+        f.write(serialized_bytes)
     
     print(f"Created DUC file with {len(elements)} random elements at {output_file}")
     assert os.path.exists(output_file), f"Output file was not created: {output_file}"
     assert os.path.getsize(output_file) > 0, "Output file is empty"
     
-    # Loading back is skipped as load_from_flatbuffers might not be available
-    # try:
-    #     loaded_elements, loaded_app_state, loaded_files = load_from_flatbuffers(duc_bytes)
-    #     assert len(loaded_elements) == num_elements, "Incorrect number of elements loaded"
-    #     print(f"Successfully loaded back {len(loaded_elements)} elements.")
-    # except (ImportError, NameError) as e:
-    #     pytest.skip(f"Skipping load test due to missing import/function: {e}")
-
 # This test should:
 # 1. Load a duc file (parse)
 # 2. Add 100 random elements to the file
 # 3. Save the duc file (serialize)
 if __name__ == "__main__":
-    main()
+    pytest.main([__file__])

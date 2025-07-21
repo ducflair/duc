@@ -216,14 +216,14 @@ class DucPointBinding:
     element_id: str
     focus: float
     gap: float
-    fixed_point: GeometricPoint
-    point: PointBindingPoint
-    head: DucHead
+    fixed_point: Optional[GeometricPoint] = None
+    point: Optional[PointBindingPoint] = None
+    head: Optional[DucHead] = None
 
 @dataclass
 class DucLineReference:
     index: int
-    handle: GeometricPoint
+    handle: Optional[GeometricPoint] = None
 
 @dataclass
 class DucLine:
@@ -242,9 +242,9 @@ class DucLinearElementBase:
     points: List[DucPoint]
     lines: List[DucLine]
     path_overrides: List[DucPath]
-    last_committed_point: DucPoint
-    start_binding: DucPointBinding
-    end_binding: DucPointBinding
+    last_committed_point: Optional[DucPoint]
+    start_binding: Optional[DucPointBinding]
+    end_binding: Optional[DucPointBinding]
 
 @dataclass
 class DucStackLikeStyles:

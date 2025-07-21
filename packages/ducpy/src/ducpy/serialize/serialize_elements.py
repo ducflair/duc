@@ -70,8 +70,8 @@ from ..Duc.DucDocElement import (DucDocElementAddAutoResize,
                                  DucDocElementEnd, DucDocElementStart)
 from ..Duc.DucEllipseElement import (  # Removed CreateDucEllipseElement
     DucEllipseElementAddBase, DucEllipseElementAddEndAngle,
-    DucEllipseElementAddShowAuxCrosshair, DucEllipseElementAddStartAngle,
-    DucEllipseElementEnd, DucEllipseElementStart)
+    DucEllipseElementAddRatio, DucEllipseElementAddShowAuxCrosshair, 
+    DucEllipseElementAddStartAngle, DucEllipseElementEnd, DucEllipseElementStart)
 from ..Duc.DucEmbeddableElement import \
     DucEmbeddableElementAddBase  # Corrected to AddBase, removed AddSrc, AddScale, AddStatus
 from ..Duc.DucEmbeddableElement import (DucEmbeddableElementEnd,
@@ -807,7 +807,10 @@ def serialize_fbs_leader_content(builder: flatbuffers.Builder, content: LeaderCo
 def serialize_fbs_duc_leader_element(builder: flatbuffers.Builder, leader: DucLeaderElement) -> int:
     """Serialize DucLeaderElement to FlatBuffers."""
     linear_base_offset = serialize_fbs_duc_linear_element_base(builder, leader.linear_base)
-    content_anchor_offset = serialize_fbs_geometric_point(builder, leader.content_anchor) if leader.content_anchor else None
+    content_anchor_offset = None
+    if leader.content_anchor:
+        from ..Duc.GeometricPoint import CreateGeometricPoint
+        content_anchor_offset = CreateGeometricPoint(builder, leader.content_anchor.x, leader.content_anchor.y)
     content_offset = serialize_fbs_leader_content(builder, leader.content) if leader.content else None
     style_offset = serialize_fbs_duc_leader_style(builder, leader.style) if leader.style else None
     

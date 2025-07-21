@@ -4,6 +4,9 @@ This module provides serialization for basic data structures and common elements
 """
 
 import flatbuffers
+import Duc
+from Duc.DucLineReference import *
+from Duc.GeometricPoint import GeometricPoint
 from typing import List, Optional
 
 # Import dataclasses from comprehensive classes
@@ -424,11 +427,11 @@ def serialize_fbs_duc_point_binding(builder: flatbuffers.Builder, point_binding:
 
 def serialize_fbs_duc_line_reference(builder: flatbuffers.Builder, line_ref: DucLineReference) -> int:
     """Serialize DucLineReference to FlatBuffers."""
-    handle_offset = serialize_fbs_geometric_point(builder, line_ref.handle) if line_ref.handle else None
 
     DucLineReferenceStart(builder)
     DucLineReferenceAddIndex(builder, line_ref.index)
-    if handle_offset is not None:
+    if line_ref.handle:
+        handle_offset = serialize_fbs_geometric_point(builder, line_ref.handle)
         DucLineReferenceAddHandle(builder, handle_offset)
     return DucLineReferenceEnd(builder)
 
