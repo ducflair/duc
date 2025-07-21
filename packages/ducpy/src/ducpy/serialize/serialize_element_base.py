@@ -34,7 +34,7 @@ from ducpy.Duc._DucElementBase import (
     _DucElementBaseAddIndex, _DucElementBaseAddSeed, _DucElementBaseAddVersion,
     _DucElementBaseAddVersionNonce, _DucElementBaseAddUpdated, _DucElementBaseAddIsPlot,
     _DucElementBaseAddIsAnnotative, _DucElementBaseAddCustomData,
-    _DucElementBaseStartRegionIdsVector
+    _DucElementBaseStartRegionIdsVector, _DucElementBaseAddRegionIds
 )
 from ducpy.Duc.DucStackLikeStyles import (
     DucStackLikeStylesStart, DucStackLikeStylesEnd,
@@ -54,13 +54,17 @@ from ducpy.Duc._DucStackElementBase import (
 from ducpy.Duc._DucLinearElementBase import (
     _DucLinearElementBaseStart, _DucLinearElementBaseEnd,
     _DucLinearElementBaseAddBase, _DucLinearElementBaseAddStartBinding,
-    _DucLinearElementBaseAddEndBinding
+    _DucLinearElementBaseAddEndBinding, _DucLinearElementBaseAddPoints,
+    _DucLinearElementBaseAddLines, _DucLinearElementBaseAddPathOverrides,
+    _DucLinearElementBaseAddLastCommittedPoint, _DucLinearElementBaseStartPointsVector,
+    _DucLinearElementBaseStartLinesVector, _DucLinearElementBaseStartPathOverridesVector
 )
 
 # Import from base elements
 from .serialize_base_elements import (
     serialize_fbs_element_stroke, serialize_fbs_element_background, 
-    serialize_fbs_bound_element, serialize_fbs_duc_point_binding
+    serialize_fbs_bound_element, serialize_fbs_duc_point_binding,
+    serialize_fbs_duc_point, serialize_fbs_duc_line, serialize_fbs_duc_path
 )
 
 
@@ -225,13 +229,60 @@ def serialize_fbs_duc_stack_element_base(builder: flatbuffers.Builder, stack_ele
 
 def serialize_fbs_duc_linear_element_base(builder: flatbuffers.Builder, linear_base: DucLinearElementBase) -> int:
     """Serialize DucLinearElementBase to FlatBuffers."""
-    element_base_offset = serialize_fbs_duc_element_base(builder, linear_base.element_base) if linear_base.element_base else None
+    element_base_offset = serialize_fbs_duc_element_base(builder, linear_base.base) if linear_base.base else None
     start_binding_offset = serialize_fbs_duc_point_binding(builder, linear_base.start_binding) if linear_base.start_binding else None
     end_binding_offset = serialize_fbs_duc_point_binding(builder, linear_base.end_binding) if linear_base.end_binding else None
+    
+    # Serialize points
+    points_offsets = []
+    for point in linear_base.points:
+        points_offsets.append(serialize_fbs_duc_point(builder, point))
+    
+    points_vector = None
+    if points_offsets:
+        _DucLinearElementBaseStartPointsVector(builder, len(points_offsets))
+        for offset in reversed(points_offsets):
+            builder.PrependUOffsetTRelative(offset)
+        points_vector = builder.EndVector()
+    
+    # Serialize lines
+    lines_offsets = []
+    for line in linear_base.lines:
+        lines_offsets.append(serialize_fbs_duc_line(builder, line))
+    
+    lines_vector = None
+    if lines_offsets:
+        _DucLinearElementBaseStartLinesVector(builder, len(lines_offsets))
+        for offset in reversed(lines_offsets):
+            builder.PrependUOffsetTRelative(offset)
+        lines_vector = builder.EndVector()
+    
+    # Serialize path overrides
+    path_overrides_offsets = []
+    for path in linear_base.path_overrides:
+        path_overrides_offsets.append(serialize_fbs_duc_path(builder, path))
+    
+    path_overrides_vector = None
+    if path_overrides_offsets:
+        _DucLinearElementBaseStartPathOverridesVector(builder, len(path_overrides_offsets))
+        for offset in reversed(path_overrides_offsets):
+            builder.PrependUOffsetTRelative(offset)
+        path_overrides_vector = builder.EndVector()
+    
+    # Serialize last committed point
+    last_committed_point_offset = serialize_fbs_duc_point(builder, linear_base.last_committed_point) if linear_base.last_committed_point else None
     
     _DucLinearElementBaseStart(builder)
     if element_base_offset is not None:
         _DucLinearElementBaseAddBase(builder, element_base_offset)
+    if points_vector is not None:
+        _DucLinearElementBaseAddPoints(builder, points_vector)
+    if lines_vector is not None:
+        _DucLinearElementBaseAddLines(builder, lines_vector)
+    if path_overrides_vector is not None:
+        _DucLinearElementBaseAddPathOverrides(builder, path_overrides_vector)
+    if last_committed_point_offset is not None:
+        _DucLinearElementBaseAddLastCommittedPoint(builder, last_committed_point_offset)
     if start_binding_offset is not None:
         _DucLinearElementBaseAddStartBinding(builder, start_binding_offset)
     if end_binding_offset is not None:
