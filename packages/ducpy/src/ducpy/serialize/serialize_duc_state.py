@@ -114,7 +114,6 @@ from ..Duc.IdentifiedView import (
     IdentifiedViewStart, IdentifiedViewEnd,
     IdentifiedViewAddId, IdentifiedViewAddView
 )
-from ..Duc.GeometricPoint import CreateGeometricPoint
 from ..Duc.DucView import (
     DucViewStart, DucViewEnd,
     DucViewAddScrollX, DucViewAddScrollY, DucViewAddZoom,

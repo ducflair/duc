@@ -43,7 +43,7 @@ def test_serialize_two_rectangles():
     output_dir = os.path.join(current_script_path, "..", "output")
     
     os.makedirs(output_dir, exist_ok=True)
-    output_file_name = "two_rectangles_test.duc"
+    output_file_name = "test_two_rectangles.duc"
     output_file_path = os.path.join(output_dir, output_file_name)
 
     # Serialize using the clean API - no need to construct ExportedDataState manually!
