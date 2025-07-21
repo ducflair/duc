@@ -1,81 +1,56 @@
 import os
+import sys
 import pytest
-
-from ducpy.classes.DucElementClass import DucElement
-from ducpy.utils.enums import ElementType  # Assuming ElementType.RECTANGLE provides the correct type string
-from ducpy.serialize.serialize_duc import save_as_flatbuffers
-from ducpy.classes.AppStateClass import AppState
-# from ducpy.classes.AppStateClass import AppState # Not strictly needed if passing None
-# from ducpy.classes.BinaryFilesClass import DucExternalFiles # Not strictly needed if passing {}
+import ducpy as duc
 
 
 def test_serialize_two_rectangles():
     """
-    Tests the serialization of two simple rectangle elements.
-    The output can be used to verify flatc conversion.
+    Tests the creation of two simple rectangle elements using the new clean, modular API.
+    This test focuses on the API builders themselves rather than serialization.
     """
-    # Define two simple rectangle elements
-    # Ensure that ElementType.RECTANGLE is the correct string representation (e.g., "rectangle")
-    # or replace with the literal string if necessary.
-    element1 = DucElement(
-        id="rect_1",
-        type=ElementType.RECTANGLE,  # Or "rectangle" if ElementType.RECTANGLE is not the string itself
+    # Create rectangle elements with the clean, modular API using numpy-style imports
+    element1 = duc.create_rectangle(
         x=10.0,
         y=20.0,
         width=100.0,
         height=50.0,
         angle=2.0,
-        z_index=1,
-        opacity=100.0,
-        locked=False,
-        is_visible=True,
-        scope="mm",
-        # Minimal other fields, relying on dataclass defaults for lists etc.
-        stroke=[],
-        background=[],
-        group_ids=[],
-        bound_elements=[]
+        label="Rectangle 1",
+        styles=duc.create_fill_style(duc.create_solid_content("#FF0000", opacity=1.0)),  # Red fill style
+        z_index=1.0
     )
 
-    element2 = DucElement(
-        id="rect_2",
-        type=ElementType.RECTANGLE, # Or "rectangle"
+    element2 = duc.create_rectangle(
         x=150.0,
         y=100.0,
         width=80.0,
         height=40.0,
         angle=0.0,
-        z_index=2,
-        opacity=50.0,
-        locked=False,
-        is_visible=True,
-        stroke=[],
-        background=[],
-        group_ids=[],
-        scope="mm",
-        bound_elements=[]
+        label="Rectangle 2",
+        styles=duc.create_fill_and_stroke_style(
+            duc.create_solid_content("#00FF00", opacity=0.5),  # Green fill at 50% opacity
+            duc.create_solid_content("#000000"),  # Black stroke
+            stroke_width=2.0
+        ),
+        z_index=2.0
     )
 
     elements = [element1, element2]
-    app_state = AppState()  # No specific app state needed for this test
-    binary_files = {}  # No binary files needed for this test
 
     # Determine output path
-    # Assumes the test is run from a context where 'packages' is accessible
-    # or that ducpy is installed and paths are resolved correctly.
-    # For robustness in a typical pytest setup within the project:
     current_script_path = os.path.dirname(os.path.abspath(__file__))
-    # Navigate from src/ to tests/ then to output/
-    # tests/src/test_serialize_two_rectangles.py -> tests/output/
     output_dir = os.path.join(current_script_path, "..", "output")
     
     os.makedirs(output_dir, exist_ok=True)
     output_file_name = "two_rectangles_test.duc"
     output_file_path = os.path.join(output_dir, output_file_name)
 
-    # Serialize the elements
-    # The 'name' parameter in save_as_flatbuffers is for metadata, not filename
-    serialized_bytes = save_as_flatbuffers(elements, app_state, binary_files, name="TwoRectanglesTest")
+    # Serialize using the clean API - no need to construct ExportedDataState manually!
+    serialized_bytes = duc.serialize_duc(
+      name="TwoRectanglesTest",
+      elements=elements
+    )
 
     assert serialized_bytes is not None, "Serialization returned None"
     assert len(serialized_bytes) > 0, "Serialization returned empty bytes"
@@ -89,4 +64,4 @@ def test_serialize_two_rectangles():
 
 if __name__ == "__main__":
     # Allow running the test directly for quick checks, e.g., during development
-    pytest.main([__file__]) 
+    pytest.main([__file__]) # type: ignore 

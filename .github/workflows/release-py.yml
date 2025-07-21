@@ -6,7 +6,7 @@ on:
       - main
       - next
     paths:
-      - 'packages/duc-py/**'
+      - 'packages/ducpy/**'
       - 'turbo.json'
       - 'package.json'
   repository_dispatch:
@@ -66,4 +66,4 @@ jobs:
           else
             echo "status=failure" >> $GITHUB_OUTPUT
           fi
-        working-directory: ./packages/duc-py 
+        working-directory: ./packages/ducpy 

@@ -655,8 +655,6 @@ export type DucImageElement = _DucElementBase & {
   scale: [number, number];
   /** whether an element is cropped */
   crop: ImageCrop | null;
-  /** clipping boundary for the image */
-  clippingBoundary: DucLinearElement | null;
   filter: DucImageFilter | null;
 };
 

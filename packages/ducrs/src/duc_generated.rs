@@ -15876,8 +15876,7 @@ impl<'a> DucImageElement<'a> {
   pub const VT_STATUS: flatbuffers::VOffsetT = 8;
   pub const VT_SCALE: flatbuffers::VOffsetT = 10;
   pub const VT_CROP: flatbuffers::VOffsetT = 12;
-  pub const VT_CLIPPING_BOUNDARY: flatbuffers::VOffsetT = 14;
-  pub const VT_FILTER: flatbuffers::VOffsetT = 16;
+  pub const VT_FILTER: flatbuffers::VOffsetT = 14;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -15890,7 +15889,6 @@ impl<'a> DucImageElement<'a> {
   ) -> flatbuffers::WIPOffset<DucImageElement<'bldr>> {
     let mut builder = DucImageElementBuilder::new(_fbb);
     if let Some(x) = args.filter { builder.add_filter(x); }
-    if let Some(x) = args.clipping_boundary { builder.add_clipping_boundary(x); }
     if let Some(x) = args.crop { builder.add_crop(x); }
     if let Some(x) = args.scale { builder.add_scale(x); }
     if let Some(x) = args.file_id { builder.add_file_id(x); }
@@ -15936,13 +15934,6 @@ impl<'a> DucImageElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<ImageCrop>>(DucImageElement::VT_CROP, None)}
   }
   #[inline]
-  pub fn clipping_boundary(&self) -> Option<_DucLinearElementBase<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucLinearElementBase>>(DucImageElement::VT_CLIPPING_BOUNDARY, None)}
-  }
-  #[inline]
   pub fn filter(&self) -> Option<DucImageFilter<'a>> {
     // Safety:
     // Created from valid Table for this object
@@ -15963,7 +15954,6 @@ impl flatbuffers::Verifiable for DucImageElement<'_> {
      .visit_field::<IMAGE_STATUS>("status", Self::VT_STATUS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f64>>>("scale", Self::VT_SCALE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<ImageCrop>>("crop", Self::VT_CROP, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<_DucLinearElementBase>>("clipping_boundary", Self::VT_CLIPPING_BOUNDARY, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucImageFilter>>("filter", Self::VT_FILTER, false)?
      .finish();
     Ok(())
@@ -15975,7 +15965,6 @@ pub struct DucImageElementArgs<'a> {
     pub status: Option<IMAGE_STATUS>,
     pub scale: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f64>>>,
     pub crop: Option<flatbuffers::WIPOffset<ImageCrop<'a>>>,
-    pub clipping_boundary: Option<flatbuffers::WIPOffset<_DucLinearElementBase<'a>>>,
     pub filter: Option<flatbuffers::WIPOffset<DucImageFilter<'a>>>,
 }
 impl<'a> Default for DucImageElementArgs<'a> {
@@ -15987,7 +15976,6 @@ impl<'a> Default for DucImageElementArgs<'a> {
       status: None,
       scale: None,
       crop: None,
-      clipping_boundary: None,
       filter: None,
     }
   }
@@ -16019,10 +16007,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucImageElementBuilder<'a, 'b, 
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ImageCrop>>(DucImageElement::VT_CROP, crop);
   }
   #[inline]
-  pub fn add_clipping_boundary(&mut self, clipping_boundary: flatbuffers::WIPOffset<_DucLinearElementBase<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucLinearElementBase>>(DucImageElement::VT_CLIPPING_BOUNDARY, clipping_boundary);
-  }
-  #[inline]
   pub fn add_filter(&mut self, filter: flatbuffers::WIPOffset<DucImageFilter<'b >>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucImageFilter>>(DucImageElement::VT_FILTER, filter);
   }
@@ -16049,7 +16033,6 @@ impl core::fmt::Debug for DucImageElement<'_> {
       ds.field("status", &self.status());
       ds.field("scale", &self.scale());
       ds.field("crop", &self.crop());
-      ds.field("clipping_boundary", &self.clipping_boundary());
       ds.field("filter", &self.filter());
       ds.finish()
   }
