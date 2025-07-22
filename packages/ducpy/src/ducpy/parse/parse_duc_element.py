@@ -331,6 +331,15 @@ def parse_fbs_element_background(fbs_element_background: FBSElementBackground) -
     )
 
 def parse_fbs_duc_element_styles_base(fbs_styles_base: FBSDucElementStylesBase) -> DucElementStylesBase:
+    if fbs_styles_base is None:
+        # Return a default styles base object
+        return DucElementStylesBase(
+            roundness=0.0,
+            blending=None,
+            background=[],
+            stroke=[],
+            opacity=1.0
+        )
     background_list = [parse_fbs_element_background(fbs_styles_base.Background(i)) for i in range(fbs_styles_base.BackgroundLength())]
     stroke_list = [parse_fbs_element_stroke(fbs_styles_base.Stroke(i)) for i in range(fbs_styles_base.StrokeLength())]
     return DucElementStylesBase(
@@ -490,12 +499,14 @@ def parse_fbs_line_spacing(fbs_line_spacing: FBSLineSpacing) -> LineSpacing:
         type=fbs_line_spacing.Type() if fbs_line_spacing.Type() is not None else None
     )
 
-def parse_fbs_duc_text_style(fbs_text_style: FBSDucTextStyle) -> DucTextStyle:
+def parse_fbs_duc_text_style(fbs_text_style: FBSDucTextStyle) -> Optional[DucTextStyle]:
+    if fbs_text_style is None:
+        return None
     return DucTextStyle(
         base_style=parse_fbs_duc_element_styles_base(fbs_text_style.BaseStyle()),
         is_ltr=bool(fbs_text_style.IsLtr()),
-        font_family=fbs_text_style.FontFamily().decode('utf-8'),
-        big_font_family=fbs_text_style.BigFontFamily().decode('utf-8'),
+        font_family=fbs_text_style.FontFamily().decode('utf-8') if fbs_text_style.FontFamily() else "",
+        big_font_family=fbs_text_style.BigFontFamily().decode('utf-8') if fbs_text_style.BigFontFamily() else "",
         text_align=fbs_text_style.TextAlign() if fbs_text_style.TextAlign() is not None else None,
         vertical_align=fbs_text_style.VerticalAlign() if fbs_text_style.VerticalAlign() is not None else None,
         line_height=fbs_text_style.LineHeight(),
@@ -509,6 +520,8 @@ def parse_fbs_duc_text_style(fbs_text_style: FBSDucTextStyle) -> DucTextStyle:
     )
 
 def parse_fbs_duc_table_cell_style(fbs_cell_style: FBSDucTableCellStyle) -> DucTableCellStyle:
+    if fbs_cell_style is None:
+        return None
     return DucTableCellStyle(
         base_style=parse_fbs_duc_element_styles_base(fbs_cell_style.BaseStyle()),
         text_style=parse_fbs_duc_text_style(fbs_cell_style.TextStyle()),
@@ -719,6 +732,8 @@ def parse_fbs_duc_table_row(fbs_table_row: FBSDucTableRow) -> DucTableRow:
     )
 
 def parse_fbs_duc_table_cell_span(fbs_cell_span: FBSDucTableCellSpan) -> DucTableCellSpan:
+    if fbs_cell_span is None:
+        return None
     return DucTableCellSpan(
         columns=fbs_cell_span.Columns(),
         rows=fbs_cell_span.Rows()
@@ -828,11 +843,11 @@ def parse_fbs_duc_text_element(fbs_text_element: FBSDucTextElement) -> DucTextEl
     return DucTextElement(
         base=parse_fbs_duc_element_base(fbs_text_element.Base()),
         style=parse_fbs_duc_text_style(fbs_text_element.Style()),
-        text=fbs_text_element.Text().decode('utf-8'),
+        text=fbs_text_element.Text().decode('utf-8') if fbs_text_element.Text() is not None else "",
         dynamic=dynamic_list,
         auto_resize=bool(fbs_text_element.AutoResize()),
-        container_id=fbs_text_element.ContainerId().decode('utf-8'),
-        original_text=fbs_text_element.OriginalText().decode('utf-8')
+        container_id=fbs_text_element.ContainerId().decode('utf-8') if fbs_text_element.ContainerId() is not None else "",
+        original_text=fbs_text_element.OriginalText().decode('utf-8') if fbs_text_element.OriginalText() is not None else ""
     )
 
 def parse_fbs_duc_linear_element(fbs_linear_element: FBSDucLinearElement) -> DucLinearElement:
@@ -903,7 +918,9 @@ def parse_fbs_string_value_entry(fbs_entry: FBSStringValueEntry) -> StringValueE
         value=fbs_entry.Value().decode('utf-8')
     )
 
-def parse_fbs_duc_block_duplication_array(fbs_duplication_array: FBSDucBlockDuplicationArray) -> DucBlockDuplicationArray:
+def parse_fbs_duc_block_duplication_array(fbs_duplication_array: FBSDucBlockDuplicationArray) -> Optional[DucBlockDuplicationArray]:
+    if fbs_duplication_array is None:
+        return None
     return DucBlockDuplicationArray(
         rows=fbs_duplication_array.Rows(),
         cols=fbs_duplication_array.Cols(),

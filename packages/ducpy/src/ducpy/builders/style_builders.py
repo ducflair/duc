@@ -6,7 +6,8 @@ from typing import List, Optional, Union
 from ..classes.ElementsClass import (
     DucElementStylesBase, ElementBackground, ElementStroke, ElementContentBase,
     StrokeStyle, StrokeSides, TilingProperties, DucHatchStyle, DucImageFilter,
-    DucPoint, CustomHatchPattern
+    DucPoint, CustomHatchPattern, DucTextStyle, LineSpacing, DucDocStyle,
+    ParagraphFormatting, StackFormat, StackFormatProperties, TextColumn, ColumnLayout
 )
 from ..Duc.ELEMENT_CONTENT_PREFERENCE import ELEMENT_CONTENT_PREFERENCE
 from ..Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
@@ -16,6 +17,11 @@ from ..Duc.STROKE_CAP import STROKE_CAP
 from ..Duc.STROKE_SIDE_PREFERENCE import STROKE_SIDE_PREFERENCE
 from ..Duc.BLENDING import BLENDING
 from ..Duc.HATCH_STYLE import HATCH_STYLE
+from ..Duc.TEXT_ALIGN import TEXT_ALIGN
+from ..Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
+from ..Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
+from ..Duc.COLUMN_TYPE import COLUMN_TYPE
+from ..Duc.STACKED_TEXT_ALIGN import STACKED_TEXT_ALIGN
 
 
 # Utility functions for creating default objects
@@ -262,3 +268,180 @@ def create_solid_style(color: str, opacity: float = 1.0):
 def create_hatch_style(color: str, spacing: float = 5.0, angle: float = 45.0, opacity: float = 1.0):
     """Create hatch content for use with create_fill_style or create_stroke_style."""
     return create_hatch_content(color, spacing, angle, opacity)
+
+
+# === Text and Document Style Builders ===
+
+def create_text_style(
+    base_style: Optional[DucElementStylesBase] = None,
+    font_family: str = "Arial",
+    font_size: float = 12,
+    is_ltr: bool = True,
+    text_align: Optional[TEXT_ALIGN] = None,
+    vertical_align: Optional[VERTICAL_ALIGN] = None,
+    line_height: float = 1.0,
+    line_spacing_value: float = 1.0,
+    line_spacing_type: Optional[LINE_SPACING_TYPE] = None,
+    oblique_angle: float = 0.0,
+    width_factor: float = 1.0,
+    is_upside_down: bool = False,
+    is_backwards: bool = False,
+    paper_text_height: Optional[float] = None
+) -> DucTextStyle:
+    """
+    Create a text style for table cells or other text elements.
+    
+    Args:
+        base_style: Base element style
+        font_family: Font family name
+        font_size: Font size
+        is_ltr: Left-to-right text direction
+        text_align: Horizontal text alignment
+        vertical_align: Vertical text alignment
+        line_height: Line height multiplier
+        line_spacing_value: Line spacing value
+        line_spacing_type: Line spacing type
+        oblique_angle: Text oblique angle
+        width_factor: Text width factor
+        is_upside_down: Whether text is upside down
+        is_backwards: Whether text is backwards
+        paper_text_height: Paper text height
+    """
+    if base_style is None:
+        base_style = create_simple_styles()
+    
+    if text_align is None:
+        text_align = TEXT_ALIGN.LEFT
+    
+    if vertical_align is None:
+        vertical_align = VERTICAL_ALIGN.TOP
+    
+    if line_spacing_type is None:
+        line_spacing_type = LINE_SPACING_TYPE.MULTIPLE
+    
+    line_spacing = LineSpacing(value=line_spacing_value, type=line_spacing_type)
+    
+    return DucTextStyle(
+        base_style=base_style,
+        is_ltr=is_ltr,
+        font_family=font_family,
+        big_font_family=font_family,  # Use same font for big text
+        line_height=line_height,
+        line_spacing=line_spacing,
+        oblique_angle=oblique_angle,
+        font_size=font_size,
+        width_factor=width_factor,
+        is_upside_down=is_upside_down,
+        is_backwards=is_backwards,
+        text_align=text_align,
+        vertical_align=vertical_align,
+        paper_text_height=paper_text_height
+    )
+
+
+def create_paragraph_formatting(
+    first_line_indent: float = 0.0,
+    hanging_indent: float = 0.0,
+    left_indent: float = 0.0,
+    right_indent: float = 0.0,
+    space_before: float = 0.0,
+    space_after: float = 0.0,
+    tab_stops: Optional[List[float]] = None
+) -> ParagraphFormatting:
+    """Create paragraph formatting settings."""
+    if tab_stops is None:
+        tab_stops = []
+    
+    return ParagraphFormatting(
+        first_line_indent=first_line_indent,
+        hanging_indent=hanging_indent,
+        left_indent=left_indent,
+        right_indent=right_indent,
+        space_before=space_before,
+        space_after=space_after,
+        tab_stops=tab_stops
+    )
+
+
+def create_stack_format_properties(
+    upper_scale: float = 0.7,
+    lower_scale: float = 0.7,
+    alignment: Optional[STACKED_TEXT_ALIGN] = None
+) -> StackFormatProperties:
+    """Create stack format properties for stacked text."""
+    if alignment is None:
+        alignment = STACKED_TEXT_ALIGN.CENTER
+    
+    return StackFormatProperties(
+        upper_scale=upper_scale,
+        lower_scale=lower_scale,
+        alignment=alignment
+    )
+
+
+def create_stack_format(
+    auto_stack: bool = True,
+    stack_chars: Optional[List[str]] = None,
+    properties: Optional[StackFormatProperties] = None
+) -> StackFormat:
+    """Create stack format for fractions and special text."""
+    if stack_chars is None:
+        stack_chars = ["/", "\\", "#"]
+    
+    if properties is None:
+        properties = create_stack_format_properties()
+    
+    return StackFormat(
+        auto_stack=auto_stack,
+        stack_chars=stack_chars,
+        properties=properties
+    )
+
+
+def create_doc_style(
+    text_style: Optional[DucTextStyle] = None,
+    paragraph: Optional[ParagraphFormatting] = None,
+    stack_format: Optional[StackFormat] = None
+) -> DucDocStyle:
+    """Create document style."""
+    if text_style is None:
+        text_style = create_text_style()
+    
+    if paragraph is None:
+        paragraph = create_paragraph_formatting()
+    
+    if stack_format is None:
+        stack_format = create_stack_format()
+    
+    return DucDocStyle(
+        text_style=text_style,
+        paragraph=paragraph,
+        stack_format=stack_format
+    )
+
+
+def create_text_column(
+    width: float,
+    gutter: float = 0.0
+) -> TextColumn:
+    """Create a text column definition."""
+    return TextColumn(width=width, gutter=gutter)
+
+
+def create_column_layout(
+    definitions: Optional[List[TextColumn]] = None,
+    auto_height: bool = True,
+    column_type: Optional[COLUMN_TYPE] = None
+) -> ColumnLayout:
+    """Create column layout for multi-column text."""
+    if definitions is None:
+        definitions = [create_text_column(width=200)]
+    
+    if column_type is None:
+        column_type = COLUMN_TYPE.STATIC_COLUMNS
+    
+    return ColumnLayout(
+        definitions=definitions,
+        auto_height=auto_height,
+        type=column_type
+    )
