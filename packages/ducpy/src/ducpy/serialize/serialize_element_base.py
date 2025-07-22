@@ -10,7 +10,7 @@ import numpy as np
 # Import dataclasses from comprehensive classes
 from ducpy.classes.ElementsClass import (
     DucElementStylesBase, DucElementBase, DucStackLikeStyles, DucStackBase,
-    DucStackElementBase, DucLinearElementBase
+    DucStackElementBase, DucLinearElementBase, DucLayerOverrides
 )
 
 # Import FlatBuffers generated classes
@@ -58,6 +58,10 @@ from ducpy.Duc._DucLinearElementBase import (
     _DucLinearElementBaseAddLines, _DucLinearElementBaseAddPathOverrides,
     _DucLinearElementBaseAddLastCommittedPoint, _DucLinearElementBaseStartPointsVector,
     _DucLinearElementBaseStartLinesVector, _DucLinearElementBaseStartPathOverridesVector
+)
+from ducpy.Duc.DucLayerOverrides import (
+    DucLayerOverridesStart, DucLayerOverridesEnd,
+    DucLayerOverridesAddStroke, DucLayerOverridesAddBackground
 )
 
 # Import from base elements
@@ -288,3 +292,21 @@ def serialize_fbs_duc_linear_element_base(builder: flatbuffers.Builder, linear_b
     if end_binding_offset is not None:
         _DucLinearElementBaseAddEndBinding(builder, end_binding_offset)
     return _DucLinearElementBaseEnd(builder)
+
+
+def serialize_fbs_duc_layer_overrides(builder: flatbuffers.Builder, overrides: DucLayerOverrides) -> int:
+    """Serialize DucLayerOverrides to FlatBuffers."""
+    stroke_offset = None
+    if overrides.stroke:
+        stroke_offset = serialize_fbs_element_stroke(builder, overrides.stroke)
+    
+    background_offset = None
+    if overrides.background:
+        background_offset = serialize_fbs_element_background(builder, overrides.background)
+    
+    DucLayerOverridesStart(builder)
+    if stroke_offset is not None:
+        DucLayerOverridesAddStroke(builder, stroke_offset)
+    if background_offset is not None:
+        DucLayerOverridesAddBackground(builder, background_offset)
+    return DucLayerOverridesEnd(builder)

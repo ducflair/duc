@@ -39,8 +39,6 @@ if 'Duc' not in sys.modules:
             spec.loader.exec_module(module)
             setattr(duc_module, module_name, module)
 
-# Import from Duc
-from .Duc import *
 
 # Import modules for direct access
 from .utils import *

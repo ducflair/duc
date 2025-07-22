@@ -206,13 +206,13 @@ def parse_fbs_duc_region(fbs_region: FBSDucRegion) -> DucRegion:
 
 def parse_fbs_duc_layer(fbs_layer: FBSDucLayer) -> DucLayer:
     return DucLayer(
-        id=fbs_layer.Id().decode('utf-8'),
-        stack_base=parse_fbs_duc_stack_base(fbs_layer.StackBase()), # Assuming parse_fbs_duc_stack_base is in elements parsing
+        id=fbs_layer.Id().decode('utf-8') if fbs_layer.Id() else "",
+        stack_base=parse_fbs_duc_stack_base(fbs_layer.StackBase()) if fbs_layer.StackBase() else None, # Assuming parse_fbs_duc_stack_base is in elements parsing
         readonly=bool(fbs_layer.Readonly()),
         overrides=DucLayerOverrides(
-            stroke=parse_fbs_element_stroke(fbs_layer.Overrides().Stroke()),
-            background=parse_fbs_element_background(fbs_layer.Overrides().Background())
-        )
+            stroke=parse_fbs_element_stroke(fbs_layer.Overrides().Stroke()) if fbs_layer.Overrides() and fbs_layer.Overrides().Stroke() else None,
+            background=parse_fbs_element_background(fbs_layer.Overrides().Background()) if fbs_layer.Overrides() and fbs_layer.Overrides().Background() else None
+        ) if fbs_layer.Overrides() else None
     )
 
 def parse_fbs_unit_system_base(fbs_unit_base: FBSUnitSystemBase) -> UnitSystemBase:

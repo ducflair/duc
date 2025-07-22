@@ -403,35 +403,38 @@ def serialize_fbs_stack_format_properties(
 def serialize_fbs_stack_format(builder: flatbuffers.Builder, stack_format: StackFormat) -> int:
     """Serialize StackFormat to FlatBuffers."""
     properties_offset = serialize_fbs_stack_format_properties(builder, stack_format.properties) if stack_format.properties else None
-    text_style_offset = serialize_fbs_duc_text_style(builder, stack_format.text_style) if stack_format.text_style else None
+    
+    # Serialize stack_chars list
+    stack_chars_offsets = []
+    for char in stack_format.stack_chars:
+        stack_chars_offsets.append(builder.CreateString(char))
+    
+    StackFormat.StackFormatStartStackCharsVector(builder, len(stack_chars_offsets))
+    for offset in reversed(stack_chars_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    stack_chars_vector = builder.EndVector()
     
     StackFormat.StackFormatStart(builder)
+    StackFormat.StackFormatAddAutoStack(builder, stack_format.auto_stack)
+    StackFormat.StackFormatAddStackChars(builder, stack_chars_vector)
     if properties_offset is not None:
         StackFormat.StackFormatAddProperties(builder, properties_offset)
-    if text_style_offset is not None:
-        StackFormat.StackFormatAddTextStyle(builder, text_style_offset)
     return StackFormat.StackFormatEnd(builder)
 
 
 def serialize_fbs_duc_doc_style(builder: flatbuffers.Builder, doc_style: DucDocStyle) -> int:
     """Serialize DucDocStyle to FlatBuffers."""
-    paragraph_formatting_offset = serialize_fbs_paragraph_formatting(builder, doc_style.paragraph_formatting) if doc_style.paragraph_formatting else None
+    paragraph_formatting_offset = serialize_fbs_paragraph_formatting(builder, doc_style.paragraph) if doc_style.paragraph else None
     stack_format_offset = serialize_fbs_stack_format(builder, doc_style.stack_format) if doc_style.stack_format else None
     text_style_offset = serialize_fbs_duc_text_style(builder, doc_style.text_style) if doc_style.text_style else None
-    # Import here to break circular dependency
-    from .serialize_base_elements import serialize_fbs_element_background
-
-    background_offset = serialize_fbs_element_background(builder, doc_style.background) if doc_style.background else None
     
     DucDocStyle.DucDocStyleStart(builder)
     if paragraph_formatting_offset is not None:
-        DucDocStyle.DucDocStyleAddParagraphFormatting(builder, paragraph_formatting_offset)
+        DucDocStyle.DucDocStyleAddParagraph(builder, paragraph_formatting_offset)
     if stack_format_offset is not None:
         DucDocStyle.DucDocStyleAddStackFormat(builder, stack_format_offset)
     if text_style_offset is not None:
         DucDocStyle.DucDocStyleAddTextStyle(builder, text_style_offset)
-    if background_offset is not None:
-        DucDocStyle.DucDocStyleAddBackground(builder, background_offset)
     return DucDocStyle.DucDocStyleEnd(builder)
 
 

@@ -8,6 +8,7 @@ import time
 
 if TYPE_CHECKING:
     from ..classes.StandardsClass import Standard
+    import numpy as np
 from ..classes.ElementsClass import (
     DucRectangleElement, DucEllipseElement, DucPolygonElement,
     DucElementBase, DucElementStylesBase, ElementWrapper, BoundElement,
@@ -17,11 +18,25 @@ from ..classes.ElementsClass import (
     DucArrowElement, DucTextElement, DucFrameElement, DucPlotElement,
     DucViewportElement, DucStackElementBase, DucStackBase, DucStackLikeStyles,
     PlotLayout, DucView, DucPlotStyle, DucViewportStyle, Margins,
-    DucFreeDrawElement
+    DucFreeDrawElement, DucBlockAttributeDefinition, DucBlockAttributeDefinitionEntry,
+    DucBlock, DucBlockDuplicationArray, StringValueEntry, DucBlockInstanceElement,
+    DucTableColumn, DucTableRow, DucTableCell, DucTableCellSpan, DucTableAutoSize,
+    DucTableElement, DucTableStyle, DucTableCellStyle, DucTextStyle, DucLayer, DucLayerOverrides,
+    DucRegion, DucDocElement, DucDocStyle, ParagraphFormatting, StackFormat, StackFormatProperties,
+    TextColumn, ColumnLayout, DucTextDynamicPart
 )
-from .style_builders import create_simple_styles
+from .style_builders import create_simple_styles, create_text_style, create_paragraph_formatting, create_stack_format_properties, create_stack_format, create_doc_style, create_text_column, create_column_layout
 from ducpy.utils import generate_random_id, DEFAULT_SCOPE, DEFAULT_STROKE_COLOR, DEFAULT_FILL_COLOR
 from ducpy.utils.rand_utils import random_versioning
+from ducpy.Duc.BOOLEAN_OPERATION import BOOLEAN_OPERATION
+from ducpy.Duc.TABLE_CELL_ALIGNMENT import TABLE_CELL_ALIGNMENT
+from ducpy.Duc.TABLE_FLOW_DIRECTION import TABLE_FLOW_DIRECTION
+from ducpy.Duc.TEXT_ALIGN import TEXT_ALIGN
+from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
+from ducpy.Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
+from ducpy.Duc.TEXT_FLOW_DIRECTION import TEXT_FLOW_DIRECTION
+from ducpy.Duc.COLUMN_TYPE import COLUMN_TYPE
+from ducpy.Duc.STACKED_TEXT_ALIGN import STACKED_TEXT_ALIGN
 
 import random
 import time
@@ -629,6 +644,9 @@ def create_text_element(
     text: str,
     width: float = 100,
     height: float = 20,
+    text_style: Optional[DucTextStyle] = None,
+    auto_resize: bool = False,
+    dynamic: Optional[List[DucTextDynamicPart]] = None,
     styles: Optional[DucElementStylesBase] = None,
     id: Optional[str] = None,
     label: str = "",
@@ -639,13 +657,26 @@ def create_text_element(
     explicit_properties_override: Optional[dict] = None
 ) -> ElementWrapper:
     """
-    Create a text element.
+    Create a text element with optional text styling.
+    
+    Args:
+        x, y: Position
+        text: Text content
+        width, height: Size
+        text_style: Optional text styling (from create_text_style())
+        auto_resize: Whether to auto-resize based on content
+        dynamic: Dynamic text parts
+        styles: Element styles
+        Other standard element parameters...
     """
     if id is None:
         id = f"text_{uuid.uuid4().hex[:8]}"
 
     if styles is None:
         styles = create_simple_styles()
+    
+    if dynamic is None:
+        dynamic = []
 
     # Use random_versioning utility
     versioning = random_versioning()
@@ -688,11 +719,11 @@ def create_text_element(
 
     text_params = {
         "base": base,
-        "style": None,  # Should be set by caller if needed
+        "style": text_style,
         "text": text,
-        "dynamic": [],
-        "auto_resize": False,
         "original_text": text,
+        "dynamic": dynamic,
+        "auto_resize": auto_resize,
         "container_id": None
     }
 
@@ -701,6 +732,7 @@ def create_text_element(
 
     text_element = DucTextElement(**text_params)
     return ElementWrapper(element=text_element)
+
 
 from ducpy.utils.mutate_utils import recursive_mutate
 
@@ -1000,3 +1032,697 @@ def create_viewport_element(
     )
     
     return ElementWrapper(element=viewport)
+
+
+# === Block-related builders ===
+
+def create_block_attribute_definition(
+    tag: str,
+    default_value: str,
+    is_constant: bool = False,
+    prompt: Optional[str] = None
+) -> DucBlockAttributeDefinition:
+    """Create a block attribute definition."""
+    return DucBlockAttributeDefinition(
+        tag=tag,
+        default_value=default_value,
+        is_constant=is_constant,
+        prompt=prompt
+    )
+
+
+def create_block_attribute_definition_entry(
+    key: str,
+    tag: str,
+    default_value: str,
+    is_constant: bool = False,
+    prompt: Optional[str] = None
+) -> DucBlockAttributeDefinitionEntry:
+    """Create a block attribute definition entry."""
+    attr_def = create_block_attribute_definition(tag, default_value, is_constant, prompt)
+    return DucBlockAttributeDefinitionEntry(key=key, value=attr_def)
+
+
+def create_block(
+    id: str,
+    label: str,
+    elements: List[ElementWrapper],
+    attribute_definitions: Optional[List[DucBlockAttributeDefinitionEntry]] = None,
+    description: Optional[str] = None,
+    version: int = 1
+) -> DucBlock:
+    """
+    Create a DucBlock (block definition - like a Figma component).
+    
+    Args:
+        id: Unique identifier for the block
+        label: Human-readable name
+        elements: List of elements that make up this block
+        attribute_definitions: Optional list of attribute definitions
+        description: Optional description
+        version: Version number
+    """
+    if attribute_definitions is None:
+        attribute_definitions = []
+        
+    return DucBlock(
+        id=id,
+        label=label,
+        version=version,
+        elements=elements,
+        attribute_definitions=attribute_definitions,
+        description=description
+    )
+
+
+def create_block_duplication_array(
+    rows: int = 1,
+    cols: int = 1,
+    row_spacing: float = 0.0,
+    col_spacing: float = 0.0
+) -> DucBlockDuplicationArray:
+    """Create a block duplication array for repeating instances."""
+    return DucBlockDuplicationArray(
+        rows=rows,
+        cols=cols,
+        row_spacing=row_spacing,
+        col_spacing=col_spacing
+    )
+
+
+def create_string_value_entry(key: str, value: str) -> StringValueEntry:
+    """Create a string value entry for block attributes."""
+    return StringValueEntry(key=key, value=value)
+
+
+def create_block_instance_element(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    block_id: str,
+    element_overrides: Optional[List[StringValueEntry]] = None,
+    attribute_values: Optional[List[StringValueEntry]] = None,
+    duplication_array: Optional[DucBlockDuplicationArray] = None,
+    angle: float = 0.0,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = DEFAULT_SCOPE,
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create a DucBlockInstanceElement (block instance - like a Figma component instance).
+    
+    Args:
+        x, y, width, height: Position and size
+        block_id: ID of the block definition to instance
+        element_overrides: Optional list of element property overrides
+        attribute_values: Optional list of attribute values
+        duplication_array: Optional duplication array for repeating the instance
+        Other standard element parameters...
+    """
+    from ..classes.ElementsClass import DucBlockInstanceElement
+    
+    base_params = {
+        "x": x, "y": y, "width": width, "height": height, "angle": angle,
+        "styles": styles, "id": id, "label": label, "scope": scope,
+        "locked": locked, "is_visible": is_visible, "z_index": z_index
+    }
+    
+    element_params = {
+        "block_id": block_id,
+        "element_overrides": element_overrides or [],
+        "attribute_values": attribute_values or [],
+        "duplication_array": duplication_array
+    }
+    
+    return _create_element_wrapper(
+        DucBlockInstanceElement,
+        base_params,
+        element_params,
+        explicit_properties_override
+    )
+
+
+# === Table-related builders ===
+
+def create_table_column(
+    id: str,
+    width: float,
+    style_overrides: Optional[DucTableCellStyle] = None
+) -> DucTableColumn:
+    """Create a table column definition."""
+    from ..classes.ElementsClass import DucTableColumn
+    
+    return DucTableColumn(
+        id=id,
+        width=width,
+        style_overrides=style_overrides
+    )
+
+
+def create_table_row(
+    id: str,
+    height: float,
+    style_overrides: Optional[DucTableCellStyle] = None
+) -> DucTableRow:
+    """Create a table row definition."""
+    from ..classes.ElementsClass import DucTableRow
+    
+    return DucTableRow(
+        id=id,
+        height=height,
+        style_overrides=style_overrides
+    )
+
+
+def create_table_cell(
+    row_id: str,
+    column_id: str,
+    data: str,
+    locked: bool = False,
+    span: Optional[DucTableCellSpan] = None,
+    style_overrides: Optional[DucTableCellStyle] = None
+) -> DucTableCell:
+    """Create a table cell."""
+    from ..classes.ElementsClass import DucTableCell
+    
+    return DucTableCell(
+        row_id=row_id,
+        column_id=column_id,
+        data=data,
+        locked=locked,
+        span=span,
+        style_overrides=style_overrides
+    )
+
+
+def create_table_cell_span(columns: int = 1, rows: int = 1) -> DucTableCellSpan:
+    """Create a table cell span."""
+    from ..classes.ElementsClass import DucTableCellSpan
+    
+    return DucTableCellSpan(columns=columns, rows=rows)
+
+
+def create_table_auto_size(columns: bool = True, rows: bool = True) -> DucTableAutoSize:
+    """Create table auto-size settings."""
+    from ..classes.ElementsClass import DucTableAutoSize
+    
+    return DucTableAutoSize(columns=columns, rows=rows)
+
+
+def create_table_cell_style(
+    base_style: Optional[DucElementStylesBase] = None,
+    text_style: Optional[DucTextStyle] = None,
+    margins: Optional[Margins] = None,
+    alignment: Optional[TABLE_CELL_ALIGNMENT] = None,
+    # Text style shortcuts
+    font_family: str = "Arial",
+    font_size: float = 12,
+    text_align: Optional[TEXT_ALIGN] = None,
+    vertical_align: Optional[VERTICAL_ALIGN] = None
+) -> DucTableCellStyle:
+    """
+    Create a table cell style.
+    
+    Args:
+        base_style: Base element style (stroke, background, etc.)
+        text_style: Text formatting style (if None, will be created from font parameters)
+        margins: Cell margins (padding)
+        alignment: Cell content alignment
+        font_family: Font family for text (used if text_style is None)
+        font_size: Font size for text (used if text_style is None)
+        text_align: Text alignment (used if text_style is None)
+        vertical_align: Vertical alignment (used if text_style is None)
+    """
+    from ..classes.ElementsClass import DucTableCellStyle, DucTextStyle, Margins, LineSpacing
+    from ..Duc.TABLE_CELL_ALIGNMENT import TABLE_CELL_ALIGNMENT
+    from ..Duc.TEXT_ALIGN import TEXT_ALIGN
+    from ..Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
+    from ..Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
+    
+    if base_style is None:
+        base_style = create_simple_styles()
+    
+    if text_style is None:
+        # Create text style from provided parameters
+        text_style = create_text_style(
+            base_style=create_simple_styles(),
+            font_family=font_family,
+            font_size=font_size,
+            text_align=text_align or TEXT_ALIGN.LEFT,
+            vertical_align=vertical_align or VERTICAL_ALIGN.TOP
+        )
+    
+    if margins is None:
+        margins = Margins(top=2, right=2, bottom=2, left=2)
+    
+    if alignment is None:
+        alignment = TABLE_CELL_ALIGNMENT.TOP_LEFT
+    
+    return DucTableCellStyle(
+        base_style=base_style,
+        text_style=text_style,
+        margins=margins,
+        alignment=alignment
+    )
+
+
+def create_table_style(
+    base_style: Optional[DucElementStylesBase] = None,
+    header_row_style: Optional[DucTableCellStyle] = None,
+    data_row_style: Optional[DucTableCellStyle] = None,
+    data_column_style: Optional[DucTableCellStyle] = None,
+    flow_direction: Optional[TABLE_FLOW_DIRECTION] = None
+) -> DucTableStyle:
+    """
+    Create a table style.
+    
+    Args:
+        base_style: Base element style for the table
+        header_row_style: Style for header rows
+        data_row_style: Style for data rows
+        data_column_style: Style for data columns
+        flow_direction: Table flow direction (down/right)
+    """
+    from ..classes.ElementsClass import DucTableStyle
+    from ..Duc.TABLE_FLOW_DIRECTION import TABLE_FLOW_DIRECTION
+    
+    if base_style is None:
+        base_style = create_simple_styles()
+    
+    if header_row_style is None:
+        header_row_style = create_table_cell_style()
+    
+    if data_row_style is None:
+        data_row_style = create_table_cell_style()
+    
+    if data_column_style is None:
+        data_column_style = create_table_cell_style()
+    
+    if flow_direction is None:
+        flow_direction = TABLE_FLOW_DIRECTION.DOWN
+    
+    return DucTableStyle(
+        base_style=base_style,
+        header_row_style=header_row_style,
+        data_row_style=data_row_style,
+        data_column_style=data_column_style,
+        flow_direction=flow_direction
+    )
+
+
+def create_table_from_data(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    data: List[List[str]],
+    column_headers: Optional[List[str]] = None,
+    column_widths: Optional[List[float]] = None,
+    row_height: float = 30,
+    header_row_count: int = 0,
+    style: Optional[DucTableStyle] = None,
+    auto_size: Optional[DucTableAutoSize] = None,
+    angle: float = 0.0,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = DEFAULT_SCOPE,
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create a table element from 2D data array with automatic column/row/cell generation.
+    
+    Args:
+        x, y, width, height: Position and size
+        data: 2D list of strings representing table data
+        column_headers: Optional list of column header names. If provided, will be used as first row
+        column_widths: Optional list of column widths. If None, widths are distributed evenly
+        row_height: Height for all rows
+        header_row_count: Number of header rows (auto-set to 1 if column_headers provided)
+        Other standard table element parameters...
+        
+    Example:
+        # Simple usage
+        table = duc.create_table_from_data(
+            x=50, y=50, width=300, height=120,
+            data=[
+                ["Element A", "Rectangle", "100x50"],
+                ["Element B", "Circle", "r=25"],
+                ["Element C", "Line", "length=75"]
+            ],
+            column_headers=["Name", "Type", "Value"],
+            column_widths=[100, 80, 120],
+            label="Main Data Table"
+        )
+    """
+    if not data:
+        raise ValueError("Data cannot be empty")
+    
+    num_cols = len(data[0])
+    num_rows = len(data)
+    
+    # Add headers to data if provided
+    if column_headers:
+        if len(column_headers) != num_cols:
+            raise ValueError(f"Column headers count ({len(column_headers)}) must match data columns ({num_cols})")
+        data = [column_headers] + data
+        num_rows += 1
+        if header_row_count == 0:
+            header_row_count = 1
+    
+    # Generate column widths if not provided
+    if column_widths is None:
+        column_widths = [width / num_cols] * num_cols
+    elif len(column_widths) != num_cols:
+        raise ValueError(f"Column widths count ({len(column_widths)}) must match data columns ({num_cols})")
+    
+    # Create columns
+    columns = []
+    for i, col_width in enumerate(column_widths):
+        columns.append(create_table_column(
+            id=f"col_{i}",
+            width=col_width
+        ))
+    
+    # Create rows
+    rows = []
+    for i in range(num_rows):
+        rows.append(create_table_row(
+            id=f"row_{i}",
+            height=row_height
+        ))
+    
+    # Create cells
+    cells = []
+    for row_idx, row_data in enumerate(data):
+        if len(row_data) != num_cols:
+            raise ValueError(f"Row {row_idx} has {len(row_data)} columns, expected {num_cols}")
+        
+        for col_idx, cell_data in enumerate(row_data):
+            cells.append(create_table_cell(
+                row_id=f"row_{row_idx}",
+                column_id=f"col_{col_idx}",
+                data=str(cell_data)
+            ))
+    
+    return create_table_element(
+        x=x, y=y, width=width, height=height,
+        columns=columns, rows=rows, cells=cells,
+        style=style, header_row_count=header_row_count, auto_size=auto_size,
+        angle=angle, styles=styles, id=id, label=label, scope=scope,
+        locked=locked, is_visible=is_visible, z_index=z_index,
+        explicit_properties_override=explicit_properties_override
+    )
+
+
+def create_table_element(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    columns: List[DucTableColumn],
+    rows: List[DucTableRow],
+    cells: List[DucTableCell],
+    style: Optional[DucTableStyle] = None,
+    header_row_count: int = 1,
+    auto_size: Optional[DucTableAutoSize] = None,
+    angle: float = 0.0,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = DEFAULT_SCOPE,
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create a DucTableElement with proper table structure.
+    
+    Args:
+        x, y, width, height: Position and size
+        columns: List of table column definitions
+        rows: List of table row definitions
+        cells: List of table cells
+        style: Optional table style
+        header_row_count: Number of header rows
+        auto_size: Auto-sizing settings
+        Other standard element parameters...
+    """
+    from ..classes.ElementsClass import (
+        DucTableElement, DucTableColumnEntry, DucTableRowEntry, 
+        DucTableCellEntry, DucTableStyle
+    )
+    
+    if style is None:
+        # Create default table style with all required arguments
+        from ..classes.ElementsClass import DucTableCellStyle, DucTextStyle, Margins
+        from ..Duc.TABLE_FLOW_DIRECTION import TABLE_FLOW_DIRECTION
+        from ..Duc.TABLE_CELL_ALIGNMENT import TABLE_CELL_ALIGNMENT
+        from ..Duc.TEXT_ALIGN import TEXT_ALIGN
+        from ..Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
+        
+        # Create minimal text style
+        from ..classes.ElementsClass import LineSpacing
+        from ..Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
+        
+        default_text_style = DucTextStyle(
+            base_style=create_simple_styles(),
+            is_ltr=True,
+            font_family="Arial",
+            big_font_family="Arial",
+            line_height=1.0,
+            line_spacing=LineSpacing(value=1.0, type=LINE_SPACING_TYPE.MULTIPLE),
+            oblique_angle=0.0,
+            font_size=12,
+            width_factor=1.0,
+            is_upside_down=False,
+            is_backwards=False,
+            text_align=TEXT_ALIGN.LEFT,
+            vertical_align=VERTICAL_ALIGN.TOP,
+            paper_text_height=None
+        )
+        
+        # Create minimal margins
+        default_margins = Margins(top=2, right=2, bottom=2, left=2)
+        
+        # Create minimal cell styles with all required arguments
+        default_cell_style = DucTableCellStyle(
+            base_style=create_simple_styles(),
+            text_style=default_text_style,
+            margins=default_margins,
+            alignment=TABLE_CELL_ALIGNMENT.TOP_LEFT
+        )
+        
+        style = DucTableStyle(
+            base_style=create_simple_styles(),
+            header_row_style=default_cell_style,
+            data_row_style=default_cell_style,
+            data_column_style=default_cell_style,
+            flow_direction=TABLE_FLOW_DIRECTION.DOWN
+        )
+    
+    if auto_size is None:
+        auto_size = create_table_auto_size()
+    
+    # Create column entries
+    column_entries = []
+    column_order = []
+    for col in columns:
+        column_entries.append(DucTableColumnEntry(key=col.id, value=col))
+        column_order.append(col.id)
+    
+    # Create row entries  
+    row_entries = []
+    row_order = []
+    for row in rows:
+        row_entries.append(DucTableRowEntry(key=row.id, value=row))
+        row_order.append(row.id)
+    
+    # Create cell entries
+    cell_entries = []
+    for cell in cells:
+        cell_key = f"{cell.row_id}_{cell.column_id}"
+        cell_entries.append(DucTableCellEntry(key=cell_key, value=cell))
+    
+    base_params = {
+        "x": x, "y": y, "width": width, "height": height, "angle": angle,
+        "styles": styles, "id": id, "label": label, "scope": scope,
+        "locked": locked, "is_visible": is_visible, "z_index": z_index
+    }
+    
+    element_params = {
+        "style": style,
+        "column_order": column_order,
+        "row_order": row_order,
+        "columns": column_entries,
+        "rows": row_entries,
+        "cells": cell_entries,
+        "header_row_count": header_row_count,
+        "auto_size": auto_size
+    }
+    
+    return _create_element_wrapper(
+        DucTableElement,
+        base_params,
+        element_params,
+        explicit_properties_override
+    )
+
+
+# === Layer and Region builders (to be added to state_builders.py) ===
+
+def create_layer_overrides(
+    stroke: Optional[ElementStroke] = None,
+    background: Optional[ElementBackground] = None
+) -> DucLayerOverrides:
+    """Create layer overrides for stroke and background."""
+    from ..classes.ElementsClass import DucLayerOverrides
+    from .style_builders import create_solid_content, create_stroke, create_background
+    
+    if stroke is None:
+        stroke = create_stroke(create_solid_content("#000000"), width=1.0)
+    if background is None:
+        background = create_background(create_solid_content("#FFFFFF"))
+    
+    return DucLayerOverrides(stroke=stroke, background=background)
+
+
+def create_layer(
+    id: str,
+    label: str,
+    readonly: bool = False,
+    stack_base: Optional[DucStackBase] = None,
+    overrides: Optional[DucLayerOverrides] = None
+) -> DucLayer:
+    """
+    Create a DucLayer.
+    
+    Args:
+        id: Unique identifier for the layer
+        label: Human-readable label
+        readonly: Whether the layer is read-only
+        stack_base: Stack base for layer properties
+        overrides: Layer style overrides
+    """
+    from ..classes.ElementsClass import DucLayer
+    
+    if stack_base is None:
+        stack_base = create_stack_base(label=label)
+    
+    if overrides is None:
+        overrides = create_layer_overrides()
+    
+    return DucLayer(
+        id=id,
+        stack_base=stack_base,
+        readonly=readonly,
+        overrides=overrides
+    )
+
+
+def create_region(
+    id: str,
+    label: str,
+    boolean_operation:BOOLEAN_OPERATION,
+    stack_base: Optional[DucStackBase] = None
+) -> DucRegion:
+    """
+    Create a DucRegion.
+    
+    Args:
+        id: Unique identifier for the region
+        label: Human-readable label
+        boolean_operation: Boolean operation type
+        stack_base: Stack base for region properties
+    """
+    from ..classes.ElementsClass import DucRegion
+    
+    if stack_base is None:
+        stack_base = create_stack_base(label=label)
+    
+    return DucRegion(
+        id=id,
+        stack_base=stack_base,
+        boolean_operation=boolean_operation
+    )
+
+
+# === Document Element builder ===
+
+def create_doc_element(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    text: str,
+    style: Optional[DucDocStyle] = None,
+    columns: Optional[ColumnLayout] = None,
+    auto_resize: bool = False,
+    flow_direction: Optional[TEXT_FLOW_DIRECTION] = None,
+    dynamic: Optional[List[DucTextDynamicPart]] = None,
+    angle: float = 0.0,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = DEFAULT_SCOPE,
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create a DucDocElement for rich text documents.
+    
+    Args:
+        x, y, width, height: Position and size
+        text: Document text content
+        style: Document styling
+        columns: Column layout for multi-column text
+        auto_resize: Whether to auto-resize based on content
+        flow_direction: Text flow direction
+        dynamic: Dynamic text parts
+        Other standard element parameters...
+    """
+    if style is None:
+        style = create_doc_style()
+    
+    if columns is None:
+        columns = create_column_layout()
+    
+    if flow_direction is None:
+        flow_direction = TEXT_FLOW_DIRECTION.LEFT_TO_RIGHT
+    
+    if dynamic is None:
+        dynamic = []
+    
+    base_params = {
+        "x": x, "y": y, "width": width, "height": height, "angle": angle,
+        "styles": styles, "id": id, "label": label, "scope": scope,
+        "locked": locked, "is_visible": is_visible, "z_index": z_index
+    }
+    
+    element_params = {
+        "style": style,
+        "text": text,
+        "dynamic": dynamic,
+        "columns": columns,
+        "auto_resize": auto_resize,
+        "flow_direction": flow_direction
+    }
+    
+    return _create_element_wrapper(
+        DucDocElement,
+        base_params,
+        element_params,
+        explicit_properties_override
+    )
