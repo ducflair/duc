@@ -15,6 +15,7 @@ from ..Duc.STROKE_JOIN import STROKE_JOIN
 from ..Duc.STROKE_CAP import STROKE_CAP
 from ..Duc.STROKE_SIDE_PREFERENCE import STROKE_SIDE_PREFERENCE
 from ..Duc.BLENDING import BLENDING
+from ..Duc.HATCH_STYLE import HATCH_STYLE
 
 
 # Utility functions for creating default objects
@@ -30,6 +31,7 @@ def _create_default_hatch_style() -> DucHatchStyle:
         pattern_angle=0.0,
         pattern_origin=DucPoint(x=0.0, y=0.0, mirroring=None),
         pattern_double=False,
+        hatch_style=HATCH_STYLE.NORMAL,
         custom_pattern=CustomHatchPattern(name="", description="", lines=[])
     )
 
@@ -240,8 +242,8 @@ def create_stroke_style(content, width: float = 1.0, placement: STROKE_PLACEMENT
     return create_simple_styles(opacity=opacity, strokes=[stroke])
 
 def create_fill_and_stroke_style(
-    fill_content, 
-    stroke_content, 
+    fill_content: ElementContentBase, 
+    stroke_content: ElementContentBase, 
     stroke_width: float = 1.0, 
     roundness: float = 0.0,
     opacity: float = 1.0,
