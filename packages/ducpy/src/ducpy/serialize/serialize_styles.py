@@ -438,20 +438,14 @@ def serialize_fbs_duc_doc_style(builder: flatbuffers.Builder, doc_style: DucDocS
 def serialize_fbs_duc_viewport_style(builder: flatbuffers.Builder, viewport_style: DucViewportStyle) -> int:
     """Serialize DucViewportStyle to FlatBuffers."""
     # Import here to break circular dependency
-    from .serialize_base_elements import serialize_fbs_element_stroke, serialize_fbs_element_background
+    from .serialize_element_base import serialize_fbs_duc_element_styles_base
 
-    border_stroke_offset = serialize_fbs_element_stroke(builder, viewport_style.border_stroke) if viewport_style.border_stroke else None
-    border_background_offset = serialize_fbs_element_background(builder, viewport_style.border_background) if viewport_style.border_background else None
+    base_style_offset = serialize_fbs_duc_element_styles_base(builder, viewport_style.base_style) if viewport_style.base_style else None
     
     DucViewportStyle.DucViewportStyleStart(builder)
-    if border_stroke_offset is not None:
-        DucViewportStyle.DucViewportStyleAddBorderStroke(builder, border_stroke_offset)
-    if border_background_offset is not None:
-        DucViewportStyle.DucViewportStyleAddBorderBackground(builder, border_background_offset)
-    DucViewportStyle.DucViewportStyleAddShadePlot(builder, viewport_style.shade_plot)
-    DucViewportStyle.DucViewportStyleAddClipping(builder, viewport_style.clipping)
-    DucViewportStyle.DucViewportStyleAddDisplayLocked(builder, viewport_style.display_locked)
-    DucViewportStyle.DucViewportStyleAddStandardScale(builder, viewport_style.standard_scale)
+    if base_style_offset is not None:
+        DucViewportStyle.DucViewportStyleAddBaseStyle(builder, base_style_offset)
+    DucViewportStyle.DucViewportStyleAddScaleIndicatorVisible(builder, viewport_style.scale_indicator_visible)
     return DucViewportStyle.DucViewportStyleEnd(builder)
 
 

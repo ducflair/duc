@@ -237,6 +237,20 @@ from ..Duc.ImageCrop import (ImageCropAddHeight,  # Removed CreateImageCrop
                              ImageCropAddWidth, ImageCropAddX, ImageCropAddY,
                              ImageCropEnd, ImageCropStart)
 from ..Duc.LeaderContentData import LeaderContentData as LeaderContentFBType
+# Import stack element base functions
+from ..Duc._DucStackElementBase import (
+    _DucStackElementBaseStart, _DucStackElementBaseEnd,
+    _DucStackElementBaseAddBase, _DucStackElementBaseAddStackBase,
+    _DucStackElementBaseAddClip, _DucStackElementBaseAddLabelVisible,
+    _DucStackElementBaseAddStandardOverride
+)
+from ..Duc._DucStackBase import (
+    _DucStackBaseStart, _DucStackBaseEnd,
+    _DucStackBaseAddLabel, _DucStackBaseAddDescription,
+    _DucStackBaseAddIsCollapsed, _DucStackBaseAddIsPlot,
+    _DucStackBaseAddIsVisible, _DucStackBaseAddLocked,
+    _DucStackBaseAddStyles
+)
 # Import from base elements, styles, and helpers
 from .serialize_base_elements import (serialize_fbs_bound_element,
                                       serialize_fbs_duc_head,
@@ -660,6 +674,69 @@ def serialize_fbs_duc_block_instance_element(builder: flatbuffers.Builder, block
     if duplication_array_offset:
         DucBlockInstanceElementAddDuplicationArray(builder, duplication_array_offset)
     return DucBlockInstanceElementEnd(builder)
+
+
+def serialize_fbs_duc_stack_base(builder: flatbuffers.Builder, stack_base) -> int:
+    """Serialize DucStackBase to FlatBuffers."""
+    # Serialize label
+    label_offset = None
+    if stack_base.label:
+        label_offset = builder.CreateString(stack_base.label)
+    
+    # Serialize description
+    description_offset = None
+    if stack_base.description:
+        description_offset = builder.CreateString(stack_base.description)
+    
+    # Serialize styles if present
+    styles_offset = None
+    if hasattr(stack_base, 'styles') and stack_base.styles:
+        # This would need a separate implementation for styles serialization
+        pass
+    
+    _DucStackBaseStart(builder)
+    if label_offset:
+        _DucStackBaseAddLabel(builder, label_offset)
+    if description_offset:
+        _DucStackBaseAddDescription(builder, description_offset)
+    _DucStackBaseAddIsCollapsed(builder, getattr(stack_base, 'is_collapsed', False))
+    _DucStackBaseAddIsPlot(builder, getattr(stack_base, 'is_plot', False))
+    _DucStackBaseAddIsVisible(builder, getattr(stack_base, 'is_visible', True))
+    _DucStackBaseAddLocked(builder, getattr(stack_base, 'locked', False))
+    if styles_offset:
+        _DucStackBaseAddStyles(builder, styles_offset)
+    return _DucStackBaseEnd(builder)
+
+
+def serialize_fbs_duc_stack_element_base(builder: flatbuffers.Builder, stack_element_base) -> int:
+    """Serialize DucStackElementBase to FlatBuffers."""
+    # Serialize base element
+    base_offset = serialize_fbs_duc_element_base(builder, stack_element_base.base)
+    
+    # Serialize stack base
+    stack_base_offset = serialize_fbs_duc_stack_base(builder, stack_element_base.stack_base)
+    
+    # Serialize clip if present
+    clip_offset = None
+    if hasattr(stack_element_base, 'clip') and stack_element_base.clip:
+        # This would need clip serialization implementation
+        pass
+    
+    # Serialize standard override if present
+    standard_override_offset = None
+    if hasattr(stack_element_base, 'standard_override') and stack_element_base.standard_override:
+        # This would need standard override serialization implementation
+        pass
+    
+    _DucStackElementBaseStart(builder)
+    _DucStackElementBaseAddBase(builder, base_offset)
+    _DucStackElementBaseAddStackBase(builder, stack_base_offset)
+    if clip_offset:
+        _DucStackElementBaseAddClip(builder, clip_offset)
+    _DucStackElementBaseAddLabelVisible(builder, getattr(stack_element_base, 'label_visible', True))
+    if standard_override_offset:
+        _DucStackElementBaseAddStandardOverride(builder, standard_override_offset)
+    return _DucStackElementBaseEnd(builder)
 
 
 def serialize_fbs_duc_frame_element(builder: flatbuffers.Builder, frame: DucFrameElement) -> int:
