@@ -202,8 +202,8 @@ def serialize_fbs_duc_global_state(builder: flatbuffers.Builder, global_state: D
     DucGlobalStateAddScopeExponentThreshold(builder, global_state.scope_exponent_threshold)
     DucGlobalStateAddDimensionsAssociativeByDefault(builder, global_state.dimensions_associative_by_default)
     DucGlobalStateAddUseAnnotativeScaling(builder, global_state.use_annotative_scaling)
-    DucGlobalStateAddDisplayPrecisionLinear(builder, global_state.display_precision_linear)
-    DucGlobalStateAddDisplayPrecisionAngular(builder, global_state.display_precision_angular)
+    DucGlobalStateAddDisplayPrecisionLinear(builder, global_state.display_precision.linear)
+    DucGlobalStateAddDisplayPrecisionAngular(builder, global_state.display_precision.angular)
     return DucGlobalStateEnd(builder)
 
 
@@ -214,7 +214,7 @@ def serialize_fbs_duc_local_state(builder: flatbuffers.Builder, local_state: Duc
     scope_offset = builder.CreateString(local_state.scope)
     active_standard_id_offset = builder.CreateString(local_state.active_standard_id)
     active_snap_settings_offset = builder.CreateString(local_state.active_snap_settings) if local_state.active_snap_settings else None
-    current_item_font_family_offset = builder.CreateString(local_state.current_item_font_family)
+    current_item_font_family_offset = builder.CreateString(local_state.current_item_font_family) if local_state.current_item_font_family else None
     
     # Serialize active grid settings
     if local_state.active_grid_settings:
@@ -245,8 +245,8 @@ def serialize_fbs_duc_local_state(builder: flatbuffers.Builder, local_state: Duc
     DucLocalStateAddIsBindingEnabled(builder, local_state.is_binding_enabled)
     DucLocalStateAddCurrentItemStroke(builder, current_item_stroke_offset)
     DucLocalStateAddCurrentItemBackground(builder, current_item_background_offset)
-    DucLocalStateAddCurrentItemOpacity(builder, local_state.current_item_opacity)
-    DucLocalStateAddCurrentItemFontFamily(builder, current_item_font_family_offset)
+    DucLocalStateAddCurrentItemOpacity(builder, local_state.current_item_opacity if local_state.current_item_opacity is not None else 1.0)
+    DucLocalStateAddCurrentItemFontFamily(builder, current_item_font_family_offset if current_item_font_family_offset else 0)
     return DucLocalStateEnd(builder)
 
 

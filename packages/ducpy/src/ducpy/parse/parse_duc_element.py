@@ -1,5 +1,5 @@
-
 from typing import List, Optional, Union, Dict
+import json
 
 # Import the dataclasses from ElementsClass.py and related classes
 from ..classes.ElementsClass import (
@@ -193,12 +193,14 @@ def _get_parse_fbs_standard():
 
 def parse_fbs_identifier(fbs_identifier: FBSIdentifier) -> Identifier:
     return Identifier(
-        id=fbs_identifier.Id().decode('utf-8'),
-        name=fbs_identifier.Name().decode('utf-8'),
-        description=fbs_identifier.Description().decode('utf-8')
+        id=fbs_identifier.Id().decode('utf-8') if fbs_identifier.Id() is not None else "",
+        name=fbs_identifier.Name().decode('utf-8') if fbs_identifier.Name() is not None else "",
+        description=fbs_identifier.Description().decode('utf-8') if fbs_identifier.Description() is not None else ""
     )
 
 def parse_fbs_geometric_point(fbs_geo_point: FBSGeometricPoint) -> GeometricPoint:
+    if fbs_geo_point is None:
+        return GeometricPoint(x=0.0, y=0.0)
     return GeometricPoint(x=fbs_geo_point.X(), y=fbs_geo_point.Y())
 
 def parse_fbs_margins(fbs_margins: FBSMargins) -> Margins:
@@ -219,10 +221,30 @@ def parse_fbs_tiling_properties(fbs_tiling: FBSTilingProperties) -> TilingProper
     )
 
 def parse_fbs_duc_point(fbs_point: FBSDucPoint) -> DucPoint:
+    if fbs_point is None:
+        return DucPoint(x=0.0, y=0.0, mirroring=None)
     return DucPoint(
         x=fbs_point.X(),
         y=fbs_point.Y(),
         mirroring=fbs_point.Mirroring() if fbs_point.Mirroring() is not None else None
+    )
+
+def parse_fbs_duc_ucs(fbs_ucs: FBSDucUcs) -> DucUcs:
+    if fbs_ucs is None:
+        return DucUcs(origin=GeometricPoint(x=0.0, y=0.0), angle=0.0)
+    return DucUcs(
+        origin=parse_fbs_geometric_point(fbs_ucs.Origin()),
+        angle=fbs_ucs.Angle()
+    )
+
+def parse_fbs_duc_view(fbs_view: FBSDucView) -> DucView:
+    if fbs_view is None:
+        return DucView(scroll_x=0.0, scroll_y=0.0, zoom=1.0, twist_angle=0.0)
+    return DucView(
+        scroll_x=fbs_view.ScrollX(),
+        scroll_y=fbs_view.ScrollY(),
+        zoom=fbs_view.Zoom(),
+        twist_angle=fbs_view.TwistAngle()
     )
 
 def parse_fbs_hatch_pattern_line(fbs_hatch_line: FBSHatchPatternLine) -> HatchPatternLine:
@@ -238,15 +260,15 @@ def parse_fbs_hatch_pattern_line(fbs_hatch_line: FBSHatchPatternLine) -> HatchPa
 def parse_fbs_custom_hatch_pattern(fbs_custom_hatch: FBSCustomHatchPattern) -> CustomHatchPattern:
     lines = [parse_fbs_hatch_pattern_line(fbs_custom_hatch.Lines(i)) for i in range(fbs_custom_hatch.LinesLength())]
     return CustomHatchPattern(
-        name=fbs_custom_hatch.Name().decode('utf-8'),
-        description=fbs_custom_hatch.Description().decode('utf-8'),
+        name=fbs_custom_hatch.Name().decode('utf-8') if fbs_custom_hatch.Name() is not None else "",
+        description=fbs_custom_hatch.Description().decode('utf-8') if fbs_custom_hatch.Description() is not None else "",
         lines=lines
     )
 
 def parse_fbs_duc_hatch_style(fbs_hatch_style: FBSDucHatchStyle) -> DucHatchStyle:
     return DucHatchStyle(
         hatch_style=fbs_hatch_style.HatchStyle() if fbs_hatch_style.HatchStyle() is not None else None,
-        pattern_name=fbs_hatch_style.PatternName().decode('utf-8'),
+        pattern_name=fbs_hatch_style.PatternName().decode('utf-8') if fbs_hatch_style.PatternName() is not None else "",
         pattern_scale=fbs_hatch_style.PatternScale(),
         pattern_angle=fbs_hatch_style.PatternAngle(),
         pattern_origin=parse_fbs_duc_point(fbs_hatch_style.PatternOrigin()),
@@ -263,7 +285,7 @@ def parse_fbs_duc_image_filter(fbs_image_filter: FBSDucImageFilter) -> DucImageF
 def parse_fbs_element_content_base(fbs_content_base: FBSElementContentBase) -> ElementContentBase:
     return ElementContentBase(
         preference=fbs_content_base.Preference() if fbs_content_base.Preference() is not None else None,
-        src=fbs_content_base.Src().decode('utf-8'),
+        src=fbs_content_base.Src().decode('utf-8') if fbs_content_base.Src() is not None else "",
         visible=bool(fbs_content_base.Visible()),
         opacity=fbs_content_base.Opacity(),
         tiling=parse_fbs_tiling_properties(fbs_content_base.Tiling()),
@@ -278,7 +300,7 @@ def parse_fbs_stroke_style(fbs_stroke_style: FBSStrokeStyle) -> StrokeStyle:
         cap=fbs_stroke_style.Cap() if fbs_stroke_style.Cap() is not None else None,
         join=fbs_stroke_style.Join() if fbs_stroke_style.Join() is not None else None,
         dash=dash_list,
-        dash_line_override=fbs_stroke_style.DashLineOverride().decode('utf-8'),
+        dash_line_override=fbs_stroke_style.DashLineOverride().decode('utf-8') if fbs_stroke_style.DashLineOverride() is not None else "",
         dash_cap=fbs_stroke_style.DashCap() if fbs_stroke_style.DashCap() is not None else None,
         miter_limit=fbs_stroke_style.MiterLimit() if fbs_stroke_style.MiterLimit() is not None else None
     )
@@ -291,6 +313,8 @@ def parse_fbs_stroke_sides(fbs_stroke_sides: FBSStrokeSides) -> StrokeSides:
     )
 
 def parse_fbs_element_stroke(fbs_element_stroke: FBSElementStroke) -> ElementStroke:
+    if fbs_element_stroke is None:
+        return None
     return ElementStroke(
         content=parse_fbs_element_content_base(fbs_element_stroke.Content()),
         width=fbs_element_stroke.Width(),
@@ -300,6 +324,8 @@ def parse_fbs_element_stroke(fbs_element_stroke: FBSElementStroke) -> ElementStr
     )
 
 def parse_fbs_element_background(fbs_element_background: FBSElementBackground) -> ElementBackground:
+    if fbs_element_background is None:
+        return None
     return ElementBackground(
         content=parse_fbs_element_content_base(fbs_element_background.Content())
     )
@@ -317,25 +343,25 @@ def parse_fbs_duc_element_styles_base(fbs_styles_base: FBSDucElementStylesBase) 
 
 def parse_fbs_bound_element(fbs_bound_element: FBSBoundElement) -> BoundElement:
     return BoundElement(
-        id=fbs_bound_element.Id().decode('utf-8'),
-        type=fbs_bound_element.Type().decode('utf-8')
+        id=fbs_bound_element.Id().decode('utf-8') if fbs_bound_element.Id() is not None else "",
+        type=fbs_bound_element.Type().decode('utf-8') if fbs_bound_element.Type() is not None else ""
     )
 
 def parse_fbs_duc_element_base(fbs_element_base: FBSDucElementBase) -> DucElementBase:
-    group_ids_list = [fbs_element_base.GroupIds(i).decode('utf-8') for i in range(fbs_element_base.GroupIdsLength())]
-    region_ids_list = [fbs_element_base.RegionIds(i).decode('utf-8') for i in range(fbs_element_base.RegionIdsLength())]
+    group_ids_list = [fbs_element_base.GroupIds(i).decode('utf-8') for i in range(fbs_element_base.GroupIdsLength()) if fbs_element_base.GroupIds(i) is not None]
+    region_ids_list = [fbs_element_base.RegionIds(i).decode('utf-8') for i in range(fbs_element_base.RegionIdsLength()) if fbs_element_base.RegionIds(i) is not None]
     bound_elements_list = [parse_fbs_bound_element(fbs_element_base.BoundElements(i)) for i in range(fbs_element_base.BoundElementsLength())]
 
     return DucElementBase(
-        id=fbs_element_base.Id().decode('utf-8'),
+        id=fbs_element_base.Id().decode('utf-8') if fbs_element_base.Id() is not None else "",
         styles=parse_fbs_duc_element_styles_base(fbs_element_base.Styles()),
         x=fbs_element_base.X(),
         y=fbs_element_base.Y(),
         width=fbs_element_base.Width(),
         height=fbs_element_base.Height(),
         angle=fbs_element_base.Angle(),
-        scope=fbs_element_base.Scope().decode('utf-8'),
-        label=fbs_element_base.Label().decode('utf-8'),
+        scope=fbs_element_base.Scope().decode('utf-8') if fbs_element_base.Scope() is not None else "",
+        label=fbs_element_base.Label().decode('utf-8') if fbs_element_base.Label() is not None else "",
         description=fbs_element_base.Description().decode('utf-8') if fbs_element_base.Description() is not None else "", # type: ignore
         is_visible=bool(fbs_element_base.IsVisible()),
         seed=fbs_element_base.Seed(),
@@ -348,36 +374,53 @@ def parse_fbs_duc_element_base(fbs_element_base: FBSDucElementBase) -> DucElemen
         is_deleted=bool(fbs_element_base.IsDeleted()),
         group_ids=group_ids_list,
         region_ids=region_ids_list,
-        layer_id=fbs_element_base.LayerId().decode('utf-8'),
+        layer_id=fbs_element_base.LayerId().decode('utf-8') if fbs_element_base.LayerId() is not None else "",
         frame_id=fbs_element_base.FrameId().decode('utf-8') if fbs_element_base.FrameId() is not None else "", # type: ignore
         bound_elements=bound_elements_list,
         z_index=fbs_element_base.ZIndex(),
         link=fbs_element_base.Link().decode('utf-8') if fbs_element_base.Link() is not None else "", # type: ignore
         locked=bool(fbs_element_base.Locked()),
-        custom_data=fbs_element_base.CustomData().decode('utf-8') if fbs_element_base.CustomData() is not None else "" # type: ignore
+        custom_data=json.loads(fbs_element_base.CustomData().decode('utf-8')) if fbs_element_base.CustomData() is not None else None # type: ignore
     )
 
 def parse_fbs_duc_head(fbs_head: FBSDucHead) -> DucHead:
+    if fbs_head is None:
+        return None
     return DucHead(
         type=fbs_head.Type() if fbs_head.Type() is not None else None,
-        block_id=fbs_head.BlockId().decode('utf-8'),
+        block_id=fbs_head.BlockId().decode('utf-8') if fbs_head.BlockId() is not None else "",
         size=fbs_head.Size()
     )
 
 def parse_fbs_point_binding_point(fbs_point_binding_point: FBSPointBindingPoint) -> PointBindingPoint:
+    if fbs_point_binding_point is None:
+        return PointBindingPoint(index=0, offset=0.0)
+    
     return PointBindingPoint(
         index=fbs_point_binding_point.Index(),
         offset=fbs_point_binding_point.Offset()
     )
 
 def parse_fbs_duc_point_binding(fbs_point_binding: FBSDucPointBinding) -> DucPointBinding:
+    if not fbs_point_binding:
+        return None
+
+    fbs_fixed_point = fbs_point_binding.FixedPoint()
+    fixed_point = parse_fbs_geometric_point(fbs_fixed_point) if fbs_fixed_point else None
+
+    fbs_point = fbs_point_binding.Point()
+    point = parse_fbs_point_binding_point(fbs_point) if fbs_point else None
+
+    fbs_head = fbs_point_binding.Head()
+    head = parse_fbs_duc_head(fbs_head) if fbs_head else None
+
     return DucPointBinding(
         element_id=fbs_point_binding.ElementId().decode('utf-8'),
         focus=fbs_point_binding.Focus(),
         gap=fbs_point_binding.Gap(),
-        fixed_point=parse_fbs_geometric_point(fbs_point_binding.FixedPoint()),
-        point=parse_fbs_point_binding_point(fbs_point_binding.Point()),
-        head=parse_fbs_duc_head(fbs_point_binding.Head())
+        fixed_point=fixed_point,
+        point=point,
+        head=head
     )
 
 def parse_fbs_duc_line_reference(fbs_line_ref: FBSDucLineReference) -> DucLineReference:
@@ -1104,50 +1147,96 @@ def parse_fbs_duc_parametric_element(fbs_param_element: FBSDucParametricElement)
 def parse_duc_element_wrapper(fbs_element_wrapper: FBSElementUnion) -> ElementWrapper:
     element_type = fbs_element_wrapper.ElementType()
     element_data = None
+    
+    element_table = fbs_element_wrapper.Element()
 
     if element_type == FBSElementUnion.DucRectangleElement:
-        element_data = parse_fbs_duc_rectangle_element(fbs_element_wrapper.ElementAsDucRectangleElement())
+        fbs_rect = FBSDucRectangleElement()
+        fbs_rect.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_rectangle_element(fbs_rect)
     elif element_type == FBSElementUnion.DucPolygonElement:
-        element_data = parse_fbs_duc_polygon_element(fbs_element_wrapper.ElementAsDucPolygonElement())
+        fbs_poly = FBSDucPolygonElement()
+        fbs_poly.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_polygon_element(fbs_poly)
     elif element_type == FBSElementUnion.DucEllipseElement:
-        element_data = parse_fbs_duc_ellipse_element(fbs_element_wrapper.ElementAsDucEllipseElement())
+        fbs_ellipse = FBSDucEllipseElement()
+        fbs_ellipse.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_ellipse_element(fbs_ellipse)
     elif element_type == FBSElementUnion.DucEmbeddableElement:
-        element_data = parse_fbs_duc_embeddable_element(fbs_element_wrapper.ElementAsDucEmbeddableElement())
+        fbs_embed = FBSDucEmbeddableElement()
+        fbs_embed.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_embeddable_element(fbs_embed)
     elif element_type == FBSElementUnion.DucPdfElement:
-        element_data = parse_fbs_duc_pdf_element(fbs_element_wrapper.ElementAsDucPdfElement())
+        fbs_pdf = FBSDucPdfElement()
+        fbs_pdf.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_pdf_element(fbs_pdf)
     elif element_type == FBSElementUnion.DucMermaidElement:
-        element_data = parse_fbs_duc_mermaid_element(fbs_element_wrapper.ElementAsDucMermaidElement())
+        fbs_mermaid = FBSDucMermaidElement()
+        fbs_mermaid.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_mermaid_element(fbs_mermaid)
     elif element_type == FBSElementUnion.DucTableElement:
-        element_data = parse_fbs_duc_table_element(fbs_element_wrapper.ElementAsDucTableElement())
+        fbs_table = FBSDucTableElement()
+        fbs_table.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_table_element(fbs_table)
     elif element_type == FBSElementUnion.DucImageElement:
-        element_data = parse_fbs_duc_image_element(fbs_element_wrapper.ElementAsDucImageElement())
+        fbs_image = FBSDucImageElement()
+        fbs_image.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_image_element(fbs_image)
     elif element_type == FBSElementUnion.DucTextElement:
-        element_data = parse_fbs_duc_text_element(fbs_element_wrapper.ElementAsDucTextElement())
+        fbs_text = FBSDucTextElement()
+        fbs_text.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_text_element(fbs_text)
     elif element_type == FBSElementUnion.DucLinearElement:
-        element_data = parse_fbs_duc_linear_element(fbs_element_wrapper.ElementAsDucLinearElement())
+        fbs_linear = FBSDucLinearElement()
+        fbs_linear.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_linear_element(fbs_linear)
     elif element_type == FBSElementUnion.DucArrowElement:
-        element_data = parse_fbs_duc_arrow_element(fbs_element_wrapper.ElementAsDucArrowElement())
+        fbs_arrow = FBSDucArrowElement()
+        fbs_arrow.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_arrow_element(fbs_arrow)
     elif element_type == FBSElementUnion.DucFreeDrawElement:
-        element_data = parse_fbs_duc_free_draw_element(fbs_element_wrapper.ElementAsDucFreeDrawElement())
+        fbs_freedraw = FBSDucFreeDrawElement()
+        fbs_freedraw.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_free_draw_element(fbs_freedraw)
     elif element_type == FBSElementUnion.DucBlockInstanceElement:
-        element_data = parse_fbs_duc_block_instance_element(fbs_element_wrapper.ElementAsDucBlockInstanceElement())
+        fbs_block_instance = FBSDucBlockInstanceElement()
+        fbs_block_instance.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_block_instance_element(fbs_block_instance)
     elif element_type == FBSElementUnion.DucFrameElement:
-        element_data = parse_fbs_duc_frame_element(fbs_element_wrapper.ElementAsDucFrameElement())
+        fbs_frame = FBSDucFrameElement()
+        fbs_frame.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_frame_element(fbs_frame)
     elif element_type == FBSElementUnion.DucPlotElement:
-        element_data = parse_fbs_duc_plot_element(fbs_element_wrapper.ElementAsDucPlotElement())
+        fbs_plot = FBSDucPlotElement()
+        fbs_plot.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_plot_element(fbs_plot)
     elif element_type == FBSElementUnion.DucViewportElement:
-        element_data = parse_fbs_duc_viewport_element(fbs_element_wrapper.ElementAsDucViewportElement())
+        fbs_viewport = FBSDucViewportElement()
+        fbs_viewport.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_viewport_element(fbs_viewport)
     elif element_type == FBSElementUnion.DucXRayElement:
-        element_data = parse_fbs_duc_xray_element(fbs_element_wrapper.ElementAsDucXRayElement())
+        fbs_xray = FBSDucXRayElement()
+        fbs_xray.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_xray_element(fbs_xray)
     elif element_type == FBSElementUnion.DucLeaderElement:
-        element_data = parse_fbs_duc_leader_element(fbs_element_wrapper.ElementAsDucLeaderElement())
+        fbs_leader = FBSDucLeaderElement()
+        fbs_leader.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_leader_element(fbs_leader)
     elif element_type == FBSElementUnion.DucDimensionElement:
-        element_data = parse_fbs_duc_dimension_element(fbs_element_wrapper.ElementAsDucDimensionElement())
+        fbs_dimension = FBSDucDimensionElement()
+        fbs_dimension.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_dimension_element(fbs_dimension)
     elif element_type == FBSElementUnion.DucFeatureControlFrameElement:
-        element_data = parse_fbs_duc_feature_control_frame_element(fbs_element_wrapper.ElementAsDucFeatureControlFrameElement())
+        fbs_fcf = FBSDucFeatureControlFrameElement()
+        fbs_fcf.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_feature_control_frame_element(fbs_fcf)
     elif element_type == FBSElementUnion.DucDocElement:
-        element_data = parse_fbs_duc_doc_element(fbs_element_wrapper.ElementAsDucDocElement())
+        fbs_doc = FBSDucDocElement()
+        fbs_doc.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_doc_element(fbs_doc)
     elif element_type == FBSElementUnion.DucParametricElement:
-        element_data = parse_fbs_duc_parametric_element(fbs_element_wrapper.ElementAsDucParametricElement())
+        fbs_parametric = FBSDucParametricElement()
+        fbs_parametric.Init(element_table.Bytes, element_table.Pos)
+        element_data = parse_fbs_duc_parametric_element(fbs_parametric)
 
-    return ElementWrapper(element=element_data) # type: ignore
+    return ElementWrapper(element=element_data)

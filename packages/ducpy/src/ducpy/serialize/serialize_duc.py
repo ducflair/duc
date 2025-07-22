@@ -213,6 +213,26 @@ def serialize_duc(
         bytes: Serialized DUC file data
     """
     try:
+        # Initialize empty lists for None collections
+        if elements is None:
+            elements = []
+        if blocks is None:
+            blocks = []
+        if groups is None:
+            groups = []
+        if regions is None:
+            regions = []
+        if layers is None:
+            layers = []
+        if standards is None:
+            standards = []
+        if dictionary is None:
+            dictionary = []
+        if external_files is None:
+            external_files = []
+        if thumbnail is None:
+            thumbnail = b""
+            
         data_state = ExportedDataState(
             type="duc",
             version=DUC_SCHEMA_VERSION,
