@@ -28,6 +28,8 @@ from ..classes.ElementsClass import (
 from ..Duc.DucArrowElement import DucArrowElementAddElbowed
 from ..Duc.DucArrowElement import DucArrowElementAddLinearBase
 from ..Duc.DucArrowElement import DucArrowElementEnd, DucArrowElementStart
+from ..Duc.StringValueEntry import (StringValueEntryStart, StringValueEntryEnd, 
+                                    StringValueEntryAddKey, StringValueEntryAddValue)
 from ..Duc.DucBlockInstanceElement import DucBlockInstanceElementAddBase 
 from ..Duc.DucBlockInstanceElement import DucBlockInstanceElementAddElementOverrides
 from ..Duc.DucBlockInstanceElement import DucBlockInstanceElementStartElementOverridesVector
@@ -190,8 +192,16 @@ from ..Duc.DucTableElement import (DucTableElementAddAutoSize,
                                    DucTableElementAddStyle, DucTableElementEnd,
                                    DucTableElementStart,
                                    DucTableElementStartCellsVector,
+                                   DucTableElementStartColumnOrderVector,
                                    DucTableElementStartColumnsVector,
+                                   DucTableElementStartRowOrderVector,
                                    DucTableElementStartRowsVector)
+from ..Duc.DucTableColumnEntry import (DucTableColumnEntryStart, DucTableColumnEntryAddKey,
+                                       DucTableColumnEntryAddValue, DucTableColumnEntryEnd)
+from ..Duc.DucTableRowEntry import (DucTableRowEntryStart, DucTableRowEntryAddKey,
+                                   DucTableRowEntryAddValue, DucTableRowEntryEnd)
+from ..Duc.DucTableCellEntry import (DucTableCellEntryStart, DucTableCellEntryAddKey,
+                                    DucTableCellEntryAddValue, DucTableCellEntryEnd)
 from ..Duc.DucTableRow import DucTableRowAddId  # Added AddId
 from ..Duc.DucTableRow import \
     DucTableRowAddStyleOverrides  # Added AddStyleOverrides
@@ -471,13 +481,24 @@ def serialize_fbs_duc_table_element(builder: flatbuffers.Builder, table: DucTabl
 
     # Serialize columns
     columns_offsets = []
-    for column_entry in table.columns:
-        key_offset = builder.CreateString(column_entry.key)
-        value_offset = serialize_fbs_duc_table_column(builder, column_entry.value)
-        DucTableColumnEntryStart(builder)
-        DucTableColumnEntryAddKey(builder, key_offset)
-        DucTableColumnEntryAddValue(builder, value_offset)
-        columns_offsets.append(DucTableColumnEntryEnd(builder))
+    if isinstance(table.columns, dict):
+        # Handle dictionary format (from parsing)
+        for key, column in table.columns.items():
+            key_offset = builder.CreateString(key)
+            value_offset = serialize_fbs_duc_table_column(builder, column)
+            DucTableColumnEntryStart(builder)
+            DucTableColumnEntryAddKey(builder, key_offset)
+            DucTableColumnEntryAddValue(builder, value_offset)
+            columns_offsets.append(DucTableColumnEntryEnd(builder))
+    else:
+        # Handle list format (from builder)
+        for column_entry in table.columns:
+            key_offset = builder.CreateString(column_entry.key)
+            value_offset = serialize_fbs_duc_table_column(builder, column_entry.value)
+            DucTableColumnEntryStart(builder)
+            DucTableColumnEntryAddKey(builder, key_offset)
+            DucTableColumnEntryAddValue(builder, value_offset)
+            columns_offsets.append(DucTableColumnEntryEnd(builder))
     DucTableElementStartColumnsVector(builder, len(columns_offsets))
     for offset in reversed(columns_offsets):
         builder.PrependUOffsetTRelative(offset)
@@ -485,13 +506,24 @@ def serialize_fbs_duc_table_element(builder: flatbuffers.Builder, table: DucTabl
 
     # Serialize rows
     rows_offsets = []
-    for row_entry in table.rows:
-        key_offset = builder.CreateString(row_entry.key)
-        value_offset = serialize_fbs_duc_table_row(builder, row_entry.value)
-        DucTableRowEntryStart(builder)
-        DucTableRowEntryAddKey(builder, key_offset)
-        DucTableRowEntryAddValue(builder, value_offset)
-        rows_offsets.append(DucTableRowEntryEnd(builder))
+    if isinstance(table.rows, dict):
+        # Handle dictionary format (from parsing)
+        for key, row in table.rows.items():
+            key_offset = builder.CreateString(key)
+            value_offset = serialize_fbs_duc_table_row(builder, row)
+            DucTableRowEntryStart(builder)
+            DucTableRowEntryAddKey(builder, key_offset)
+            DucTableRowEntryAddValue(builder, value_offset)
+            rows_offsets.append(DucTableRowEntryEnd(builder))
+    else:
+        # Handle list format (from builder)
+        for row_entry in table.rows:
+            key_offset = builder.CreateString(row_entry.key)
+            value_offset = serialize_fbs_duc_table_row(builder, row_entry.value)
+            DucTableRowEntryStart(builder)
+            DucTableRowEntryAddKey(builder, key_offset)
+            DucTableRowEntryAddValue(builder, value_offset)
+            rows_offsets.append(DucTableRowEntryEnd(builder))
     DucTableElementStartRowsVector(builder, len(rows_offsets))
     for offset in reversed(rows_offsets):
         builder.PrependUOffsetTRelative(offset)
@@ -499,13 +531,24 @@ def serialize_fbs_duc_table_element(builder: flatbuffers.Builder, table: DucTabl
 
     # Serialize cells
     cells_offsets = []
-    for cell_entry in table.cells:
-        key_offset = builder.CreateString(cell_entry.key)
-        value_offset = serialize_fbs_duc_table_cell(builder, cell_entry.value)
-        DucTableCellEntryStart(builder)
-        DucTableCellEntryAddKey(builder, key_offset)
-        DucTableCellEntryAddValue(builder, value_offset)
-        cells_offsets.append(DucTableCellEntryEnd(builder))
+    if isinstance(table.cells, dict):
+        # Handle dictionary format (from parsing)
+        for key, cell in table.cells.items():
+            key_offset = builder.CreateString(key)
+            value_offset = serialize_fbs_duc_table_cell(builder, cell)
+            DucTableCellEntryStart(builder)
+            DucTableCellEntryAddKey(builder, key_offset)
+            DucTableCellEntryAddValue(builder, value_offset)
+            cells_offsets.append(DucTableCellEntryEnd(builder))
+    else:
+        # Handle list format (from builder)
+        for cell_entry in table.cells:
+            key_offset = builder.CreateString(cell_entry.key)
+            value_offset = serialize_fbs_duc_table_cell(builder, cell_entry.value)
+            DucTableCellEntryStart(builder)
+            DucTableCellEntryAddKey(builder, key_offset)
+            DucTableCellEntryAddValue(builder, value_offset)
+            cells_offsets.append(DucTableCellEntryEnd(builder))
     DucTableElementStartCellsVector(builder, len(cells_offsets))
     for offset in reversed(cells_offsets):
         builder.PrependUOffsetTRelative(offset)
