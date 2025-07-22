@@ -9,7 +9,7 @@ import random
 
 import ducpy as duc
 from ducpy.classes.ElementsClass import *
-from ducpy.helpers.element_builders import mutate_element, create_element_base, create_rectangle, create_ellipse, create_polygon, create_linear_element, create_arrow_element, create_text_element
+from ducpy.builders.element_builders import mutate_element, create_element_base, create_rectangle, create_ellipse, create_polygon, create_linear_element, create_arrow_element, create_text_element
 from ducpy.utils.rand_utils import random_versioning
 
 def assert_versioning_changed(before, after):

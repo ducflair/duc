@@ -870,7 +870,7 @@ def parse_fbs_duc_free_draw_element(fbs_freedraw_element: FBSDucFreeDrawElement)
         pressures=pressures_list,
         simulate_pressure=bool(fbs_freedraw_element.SimulatePressure()),
         last_committed_point=parse_fbs_duc_point(fbs_freedraw_element.LastCommittedPoint()),
-        svg_path=fbs_freedraw_element.SvgPath().decode('utf-8')
+        svg_path=fbs_freedraw_element.SvgPath().decode('utf-8') if fbs_freedraw_element.SvgPath() is not None else None
     )
 
 def parse_fbs_duc_block_attribute_definition(fbs_attr_def: FBSDucBlockAttributeDefinition) -> DucBlockAttributeDefinition:

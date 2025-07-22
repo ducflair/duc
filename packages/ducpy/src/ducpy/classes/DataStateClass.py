@@ -108,7 +108,6 @@ class DucExternalFileData:
     data: bytes
     created: int
     last_retrieved: Optional[int] = None
-    version: Optional[int] = None
 
 @dataclass
 class DucExternalFileEntry:

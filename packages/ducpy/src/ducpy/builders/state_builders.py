@@ -173,12 +173,14 @@ def create_external_file(
     mime_type: str,
     data: bytes,
     id: Optional[str] = None,
+    last_retrieved: Optional[int] = None,
 ) -> DucExternalFileEntry:
     file_data = DucExternalFileData(
         mime_type=mime_type,
         id=id or generate_random_id(),
         data=data,
-        created=int(time.time() * 1000)
+        created=int(time.time() * 1000),
+        last_retrieved=last_retrieved
     )
     return DucExternalFileEntry(
         key=key,
