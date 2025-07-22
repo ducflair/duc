@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any
 
 from ducpy.Duc.PRUNING_LEVEL import PRUNING_LEVEL
 from ducpy.Duc.TEXT_ALIGN import TEXT_ALIGN
@@ -16,6 +16,11 @@ class DictionaryEntry:
     value: str
 
 @dataclass
+class DisplayPrecision:
+    linear: int
+    angular: int
+
+@dataclass
 class DucGlobalState:
     view_background_color: str
     main_scope: str
@@ -24,8 +29,7 @@ class DucGlobalState:
     scope_exponent_threshold: int
     dimensions_associative_by_default: bool
     use_annotative_scaling: bool
-    display_precision_linear: int
-    display_precision_angular: int
+    display_precision: DisplayPrecision
     name: Optional[str] = None
 
 @dataclass
@@ -36,60 +40,66 @@ class DucLocalState:
     scroll_y: float
     zoom: float
     is_binding_enabled: bool
-    current_item_stroke: ElementStroke
-    current_item_background: ElementBackground
-    current_item_opacity: float
-    current_item_font_family: str
-    current_item_font_size: float
-    current_item_start_line_head: DucHead
-    current_item_end_line_head: DucHead
-    current_item_roundness: float
     pen_mode: bool
     view_mode_enabled: bool
     objects_snap_mode_enabled: bool
     grid_mode_enabled: bool
     outline_mode_enabled: bool
-    active_grid_settings: List[str] = field(default_factory=list)
+    active_grid_settings: Optional[List[str]] = None
     active_snap_settings: Optional[str] = None
+    current_item_stroke: Optional[ElementStroke] = None
+    current_item_background: Optional[ElementBackground] = None
+    current_item_opacity: Optional[float] = None
+    current_item_font_family: Optional[str] = None
+    current_item_font_size: Optional[float] = None
     current_item_text_align: Optional[TEXT_ALIGN] = None
+    current_item_roundness: Optional[float] = None
+    current_item_start_line_head: Optional[DucHead] = None
+    current_item_end_line_head: Optional[DucHead] = None
 
 @dataclass
 class JSONPatchOperation:
     op: str
     path: str
-    value: str # Stored as serialized JSON string
+    value: Any # Value can be any JSON-serializable type
 
 @dataclass
 class VersionBase:
     id: str
     timestamp: int
     is_manual_save: bool
-    parent_id: Optional[str]
-    description: Optional[str]
-    user_id: Optional[str]
+    parent_id: Optional[str] = None
+    description: Optional[str] = None
+    user_id: Optional[str] = None
 
 @dataclass
 class Checkpoint(VersionBase):
-    data: bytes
-    size_bytes: int
+    data: bytes = b""
+    size_bytes: int = 0
+    type: str = "checkpoint"
 
 @dataclass
 class Delta(VersionBase):
-    patch: List[JSONPatchOperation]
+    patch: List[JSONPatchOperation] = None
+    type: str = "delta"
+    
+    def __post_init__(self):
+        if self.patch is None:
+            self.patch = []
 
 @dataclass
 class VersionGraphMetadata:
     last_pruned: int
     total_size: int
-    pruning_level: Optional[PRUNING_LEVEL] = None
+    pruning_level: PRUNING_LEVEL
 
 @dataclass
 class VersionGraph:
     checkpoints: List[Checkpoint]
     deltas: List[Delta]
     metadata: VersionGraphMetadata
-    user_checkpoint_version_id: Optional[str] = None
-    latest_version_id: Optional[str] = None
+    user_checkpoint_version_id: str
+    latest_version_id: str
 
 @dataclass
 class DucExternalFileData:
@@ -97,7 +107,8 @@ class DucExternalFileData:
     id: str
     data: bytes
     created: int
-    last_retrieved: int
+    last_retrieved: Optional[int] = None
+    version: Optional[int] = None
 
 @dataclass
 class DucExternalFileEntry:
@@ -109,16 +120,15 @@ class ExportedDataState:
     type: str
     version: str
     source: str
-    duc_local_state: DucLocalState
-    duc_global_state: DucGlobalState
-    version_graph: VersionGraph 
-    version_legacy: Optional[int] = None
-    thumbnail: bytes = b''
-    dictionary: List[DictionaryEntry] = field(default_factory=list)
-    elements: List[ElementWrapper] = field(default_factory=list)
-    blocks: List[DucBlock] = field(default_factory=list)
-    groups: List[DucGroup] = field(default_factory=list)
-    regions: List[DucRegion] = field(default_factory=list)
-    layers: List[DucLayer] = field(default_factory=list)
-    standards: List[Standard] = field(default_factory=list)
-    files: List[DucExternalFileEntry] = field(default_factory=list)
+    thumbnail: bytes
+    elements: List[ElementWrapper]
+    blocks: List[DucBlock]
+    groups: List[DucGroup]
+    regions: List[DucRegion]
+    layers: List[DucLayer]
+    standards: List[Standard]
+    dictionary: Dict[str, str] = field(default_factory=dict)
+    duc_local_state: Optional[DucLocalState] = None
+    duc_global_state: Optional[DucGlobalState] = None
+    version_graph: Optional[VersionGraph] = None
+    files: Optional[List[DucExternalFileEntry]] = None

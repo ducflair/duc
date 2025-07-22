@@ -1,4 +1,4 @@
-from typing import IO, List, Optional
+from typing import IO, List, Optional, Dict
 import flatbuffers
 from flatbuffers import Builder
 
@@ -22,7 +22,7 @@ from ..Duc.VersionGraph import VersionGraph as FBSVersionGraph
 
 # Import parsing functions from dedicated files
 from .parse_duc_element import parse_duc_element_wrapper # This will handle all element-related parsing
-from .parse_duc_state import parse_fbs_duc_local_state, parse_fbs_duc_global_state, parse_fbs_duc_group, parse_fbs_duc_region, parse_fbs_duc_layer, parse_fbs_standard # This will handle app state and standards parsing
+from .parse_duc_state import parse_fbs_duc_local_state, parse_fbs_duc_global_state, parse_fbs_duc_group, parse_fbs_duc_region, parse_fbs_duc_layer, parse_fbs_standard, parse_fbs_dictionary_entry # This will handle app state and standards parsing
 from .parse_external_files import parse_fbs_duc_external_file_entry # This will handle external files parsing
 from .parse_version_control import parse_fbs_version_graph # This will handle version control parsing
 from .parse_duc_element import parse_fbs_duc_block # Temporarily import parse_fbs_duc_block here until parse_duc_element.py is properly structured
@@ -43,22 +43,21 @@ def parse_duc_flatbuffers(blob: IO[bytes]) -> ExportedDataState:
     layers: List[DucLayer] = [parse_fbs_duc_layer(data.Layers(i)) for i in range(data.LayersLength())]
     standards: List[Standard] = [parse_fbs_standard(data.Standards(i)) for i in range(data.StandardsLength())]
     
-    duc_local_state: DucLocalState = parse_fbs_duc_local_state(data.DucLocalState())
-    duc_global_state: DucGlobalState = parse_fbs_duc_global_state(data.DucGlobalState())
+    duc_local_state: Optional[DucLocalState] = parse_fbs_duc_local_state(data.DucLocalState()) if data.DucLocalState() else None
+    duc_global_state: Optional[DucGlobalState] = parse_fbs_duc_global_state(data.DucGlobalState()) if data.DucGlobalState() else None
     
     files: List[DucExternalFileEntry] = [parse_fbs_duc_external_file_entry(data.Files(i)) for i in range(data.FilesLength())]
     
     version_graph: VersionGraph = parse_fbs_version_graph(data.VersionGraph())
 
-    dictionary: List[DictionaryEntry] = [parse_fbs_dictionary_entry(data.Dictionary(i)) for i in range(data.DictionaryLength())]
+    dictionary_entries: List[DictionaryEntry] = [parse_fbs_dictionary_entry(data.Dictionary(i)) for i in range(data.DictionaryLength())]
 
     return ExportedDataState(
         type=data.Type().decode('utf-8'),
-        version_legacy=data.VersionLegacy(),
         source=data.Source().decode('utf-8'),
         version=data.Version().decode('utf-8'),
         thumbnail=bytes(data.ThumbnailAsNumpy()) if data.ThumbnailLength() > 0 else b'',
-        dictionary=dictionary,
+        dictionary={entry.key: entry.value for entry in dictionary_entries},
         elements=elements,
         blocks=blocks,
         groups=groups,
@@ -70,3 +69,6 @@ def parse_duc_flatbuffers(blob: IO[bytes]) -> ExportedDataState:
         files=files,
         version_graph=version_graph
     )
+
+# Alias for external usage
+parse_duc = parse_duc_flatbuffers

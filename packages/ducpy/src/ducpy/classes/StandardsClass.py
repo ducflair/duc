@@ -24,7 +24,7 @@ from .ElementsClass import (DucCommonStyle, DucDimensionStyle, DucDocStyle,
 class GridStyle:
     color: str
     opacity: float
-    dash_pattern: List[float]
+    dash_pattern: Optional[List[float]] = None
 
 @dataclass
 class PolarGridSettings:
@@ -52,12 +52,12 @@ class GridSettings:
     min_zoom: float
     max_zoom: float
     auto_hide: bool
-    polar_settings: PolarGridSettings
-    isometric_settings: IsometricGridSettings
     enable_snapping: bool
     readonly: bool
-    type: Optional[GRID_TYPE] = None
-    display_type: Optional[GRID_DISPLAY_TYPE] = None
+    type: GRID_TYPE
+    display_type: GRID_DISPLAY_TYPE
+    polar_settings: Optional[PolarGridSettings] = None
+    isometric_settings: Optional[IsometricGridSettings] = None
 
 @dataclass
 class SnapOverride:
@@ -74,9 +74,9 @@ class DynamicSnapSettings:
 class PolarTrackingSettings:
     enabled: bool
     angles: List[float]
-    increment_angle: float
     track_from_last_point: bool
     show_polar_coordinates: bool
+    increment_angle: Optional[float] = None
 
 @dataclass
 class TrackingLineStyle:
@@ -91,20 +91,20 @@ class LayerSnapFilters:
 
 @dataclass
 class SnapMarkerStyle:
+    shape: SNAP_MARKER_SHAPE
     color: str
-    shape: Optional[SNAP_MARKER_SHAPE] = None
 
 @dataclass
 class SnapMarkerStyleEntry:
-    key: Optional[OBJECT_SNAP_MODE]
+    key: OBJECT_SNAP_MODE
     value: SnapMarkerStyle
 
 @dataclass
 class SnapMarkerSettings:
     enabled: bool
     size: int
-    duration: int = 0
-    styles: List[SnapMarkerStyleEntry] = field(default_factory=list)
+    styles: List[SnapMarkerStyleEntry]
+    duration: Optional[int] = None
 
 @dataclass
 class SnapSettings:
@@ -118,41 +118,41 @@ class SnapSettings:
     active_object_snap_modes: List[OBJECT_SNAP_MODE]
     snap_priority: List[OBJECT_SNAP_MODE]
     show_tracking_lines: bool
-    tracking_line_style: TrackingLineStyle
     dynamic_snap: DynamicSnapSettings
-    layer_snap_filters: LayerSnapFilters
     snap_markers: SnapMarkerSettings
     construction_snap_enabled: bool
-    temporary_overrides: List[SnapOverride] = field(default_factory=list)
-    incremental_distance: float = 0.0
-    magnetic_strength: float = 0.0
+    tracking_line_style: Optional[TrackingLineStyle] = None
+    temporary_overrides: Optional[List[SnapOverride]] = None
+    incremental_distance: Optional[float] = None
+    magnetic_strength: Optional[float] = None
+    layer_snap_filters: Optional[LayerSnapFilters] = None
+    element_type_filters: Optional[List[str]] = None
     snap_mode: Optional[SNAP_MODE] = None
-    element_type_filters: List[str] = field(default_factory=list)
-    snap_to_grid_intersections: bool = False
+    snap_to_grid_intersections: Optional[bool] = None
 
 @dataclass
 class UnitSystemBase:
     precision: int
     suppress_leading_zeros: bool
     suppress_trailing_zeros: bool
-    system: Optional[UNIT_SYSTEM]
+    system: UNIT_SYSTEM
 
 @dataclass
 class LinearUnitSystem(UnitSystemBase):
     suppress_zero_feet: bool
     suppress_zero_inches: bool
-    format: Optional[DIMENSION_UNITS_FORMAT]
-    decimal_separator: Optional[DECIMAL_SEPARATOR]
+    format: DIMENSION_UNITS_FORMAT
+    decimal_separator: DECIMAL_SEPARATOR
 
 @dataclass
 class AngularUnitSystem(UnitSystemBase):
-    format: Optional[ANGULAR_UNITS_FORMAT] = None
+    format: ANGULAR_UNITS_FORMAT
 
 @dataclass
 class AlternateUnits(UnitSystemBase):
     is_visible: bool
     multiplier: float
-    format: Optional[DIMENSION_UNITS_FORMAT] = None
+    format: DIMENSION_UNITS_FORMAT
 
 @dataclass
 class PrimaryUnits:
@@ -173,23 +173,23 @@ class UnitPrecision:
 
 @dataclass
 class StandardOverrides:
-    unit_precision: UnitPrecision
-    main_scope: str = ""
-    elements_stroke_width_override: float = 0.0
-    common_style_id: str = ""
-    stack_like_style_id: str = ""
-    text_style_id: str = ""
-    dimension_style_id: str = ""
-    leader_style_id: str = ""
-    feature_control_frame_style_id: str = ""
-    table_style_id: str = ""
-    doc_style_id: str = ""
-    viewport_style_id: str = ""
-    plot_style_id: str = ""
-    hatch_style_id: str = ""
-    active_grid_settings_id: List[str] = field(default_factory=list)
-    active_snap_settings_id: str = ""
-    dash_line_override: str = ""
+    unit_precision: Optional[UnitPrecision] = None
+    main_scope: Optional[str] = None
+    elements_stroke_width_override: Optional[float] = None
+    common_style_id: Optional[str] = None
+    stack_like_style_id: Optional[str] = None
+    text_style_id: Optional[str] = None
+    dimension_style_id: Optional[str] = None
+    leader_style_id: Optional[str] = None
+    feature_control_frame_style_id: Optional[str] = None
+    table_style_id: Optional[str] = None
+    doc_style_id: Optional[str] = None
+    viewport_style_id: Optional[str] = None
+    plot_style_id: Optional[str] = None
+    hatch_style_id: Optional[str] = None
+    active_grid_settings_id: Optional[List[str]] = None
+    active_snap_settings_id: Optional[str] = None
+    dash_line_override: Optional[str] = None
 
 @dataclass
 class IdentifiedCommonStyle:
@@ -299,17 +299,17 @@ class LayerValidationRules:
 
 @dataclass
 class StandardValidation:
-    dimension_rules: DimensionValidationRules
-    layer_rules: LayerValidationRules
+    dimension_rules: Optional[DimensionValidationRules] = None
+    layer_rules: Optional[LayerValidationRules] = None
 
 @dataclass
 class Standard:
     identifier: Identifier
     version: str
     readonly: bool
-    overrides: StandardOverrides
-    styles: StandardStyles
-    view_settings: StandardViewSettings
-    units: StandardUnits
-    validation: StandardValidation
+    overrides: Optional[StandardOverrides] = None
+    styles: Optional[StandardStyles] = None
+    view_settings: Optional[StandardViewSettings] = None
+    units: Optional[StandardUnits] = None
+    validation: Optional[StandardValidation] = None
 

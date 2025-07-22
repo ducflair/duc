@@ -1,12 +1,8 @@
 {
-    "typescript.preferences.importModuleSpecifier": "non-relative",
-    "svg.preview.background": "dark-transparent",
-    "cSpell.words": [
-        "presigner"
-    ],
-    "editor.tabSize": 2,
-    "editor.detectIndentation": false,
-    "rust-analyzer.linkedProjects": [
-      "packages/ducrs/Cargo.toml"
-    ],
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "svg.preview.background": "dark-transparent",
+  "cSpell.words": ["presigner"],
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false,
+  "rust-analyzer.linkedProjects": ["packages/ducrs/Cargo.toml"],
 }

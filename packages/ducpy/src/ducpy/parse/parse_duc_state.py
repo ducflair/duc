@@ -1,9 +1,10 @@
 from typing import List, Optional
 
 # Import the dataclasses
-from ..classes.DataStateClass import (DictionaryEntry, DucGlobalState,
+from ..classes.DataStateClass import (DictionaryEntry, DisplayPrecision, DucGlobalState,
                                       DucGroup, DucLayer, DucLocalState,
                                       DucRegion)
+from ..classes.ElementsClass import DucLayerOverrides
 from ..classes.StandardsClass import (AlternateUnits, AngularUnitSystem,
                                       DimensionValidationRules, DucCommonStyle,
                                       DynamicSnapSettings, GridSettings,
@@ -125,6 +126,8 @@ from .parse_duc_element import (parse_fbs_duc_dimension_style,
                                 parse_fbs_duc_stack_like_styles,
                                 parse_fbs_duc_table_style,
                                 parse_fbs_duc_text_style,
+                                parse_fbs_duc_ucs,
+                                parse_fbs_duc_view,
                                 parse_fbs_duc_viewport_style,
                                 parse_fbs_duc_xray_style,
                                 parse_fbs_element_background,
@@ -142,24 +145,30 @@ def parse_fbs_dictionary_entry(fbs_dict_entry: FBSDictionaryEntry) -> Dictionary
     )
 
 def parse_fbs_duc_global_state(fbs_global_state: FBSDucGlobalState) -> DucGlobalState:
-    return DucGlobalState(
-        name=fbs_global_state.Name().decode('utf-8') if fbs_global_state.Name() else None,
-        view_background_color=fbs_global_state.ViewBackgroundColor().decode('utf-8'),
-        main_scope=fbs_global_state.MainScope().decode('utf-8'),
-        dash_spacing_scale=fbs_global_state.DashSpacingScale(),
-        is_dash_spacing_affected_by_viewport_scale=bool(fbs_global_state.IsDashSpacingAffectedByViewportScale()),
-        scope_exponent_threshold=fbs_global_state.ScopeExponentThreshold(),
-        dimensions_associative_by_default=bool(fbs_global_state.DimensionsAssociativeByDefault()),
-        use_annotative_scaling=bool(fbs_global_state.UseAnnotativeScaling()),
-        display_precision_linear=fbs_global_state.DisplayPrecisionLinear(),
-        display_precision_angular=fbs_global_state.DisplayPrecisionAngular()
-    )
+  if fbs_global_state is None:
+    return None
+  return DucGlobalState(
+      name=fbs_global_state.Name().decode('utf-8') if fbs_global_state.Name() else None,
+      view_background_color=fbs_global_state.ViewBackgroundColor().decode('utf-8'),
+      main_scope=fbs_global_state.MainScope().decode('utf-8'),
+      dash_spacing_scale=fbs_global_state.DashSpacingScale(),
+      is_dash_spacing_affected_by_viewport_scale=bool(fbs_global_state.IsDashSpacingAffectedByViewportScale()),
+      scope_exponent_threshold=fbs_global_state.ScopeExponentThreshold(),
+      dimensions_associative_by_default=bool(fbs_global_state.DimensionsAssociativeByDefault()),
+      use_annotative_scaling=bool(fbs_global_state.UseAnnotativeScaling()),
+      display_precision=DisplayPrecision(
+          linear=fbs_global_state.DisplayPrecisionLinear(),
+          angular=fbs_global_state.DisplayPrecisionAngular()
+      )
+  )
 
 def parse_fbs_duc_local_state(fbs_local_state: FBSDucLocalState) -> DucLocalState:
+    if fbs_local_state is None:
+        return None
     active_grid_settings_list = [fbs_local_state.ActiveGridSettings(i).decode('utf-8') for i in range(fbs_local_state.ActiveGridSettingsLength())]
     return DucLocalState(
-        scope=fbs_local_state.Scope().decode('utf-8'),
-        active_standard_id=fbs_local_state.ActiveStandardId().decode('utf-8'),
+        scope=fbs_local_state.Scope().decode('utf-8') if fbs_local_state.Scope() is not None else "",
+        active_standard_id=fbs_local_state.ActiveStandardId().decode('utf-8') if fbs_local_state.ActiveStandardId() is not None else "",
         scroll_x=fbs_local_state.ScrollX(),
         scroll_y=fbs_local_state.ScrollY(),
         zoom=fbs_local_state.Zoom(),
@@ -169,7 +178,7 @@ def parse_fbs_duc_local_state(fbs_local_state: FBSDucLocalState) -> DucLocalStat
         current_item_stroke=parse_fbs_element_stroke(fbs_local_state.CurrentItemStroke()),
         current_item_background=parse_fbs_element_background(fbs_local_state.CurrentItemBackground()),
         current_item_opacity=fbs_local_state.CurrentItemOpacity(),
-        current_item_font_family=fbs_local_state.CurrentItemFontFamily().decode('utf-8'),
+        current_item_font_family=fbs_local_state.CurrentItemFontFamily().decode('utf-8') if fbs_local_state.CurrentItemFontFamily() is not None else "",
         current_item_font_size=fbs_local_state.CurrentItemFontSize(),
         current_item_text_align=fbs_local_state.CurrentItemTextAlign() if fbs_local_state.CurrentItemTextAlign() is not None else None,
         current_item_start_line_head=parse_fbs_duc_head(fbs_local_state.CurrentItemStartLineHead()),
@@ -184,13 +193,13 @@ def parse_fbs_duc_local_state(fbs_local_state: FBSDucLocalState) -> DucLocalStat
 
 def parse_fbs_duc_group(fbs_group: FBSDucGroup) -> DucGroup:
     return DucGroup(
-        id=fbs_group.Id().decode('utf-8'),
+        id=fbs_group.Id().decode('utf-8') if fbs_group.Id() is not None else "",
         stack_base=parse_fbs_duc_stack_base(fbs_group.StackBase()) # Assuming parse_fbs_duc_stack_base is in elements parsing
     )
 
 def parse_fbs_duc_region(fbs_region: FBSDucRegion) -> DucRegion:
     return DucRegion(
-        id=fbs_region.Id().decode('utf-8'),
+        id=fbs_region.Id().decode('utf-8') if fbs_region.Id() is not None else "",
         stack_base=parse_fbs_duc_stack_base(fbs_region.StackBase()), # Assuming parse_fbs_duc_stack_base is in elements parsing
         boolean_operation=fbs_region.BooleanOperation() if fbs_region.BooleanOperation() is not None else None
     )

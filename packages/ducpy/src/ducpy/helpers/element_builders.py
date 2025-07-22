@@ -10,7 +10,8 @@ from ..classes.ElementsClass import (
     DucElementBase, DucElementStylesBase, ElementWrapper, BoundElement,
     DucLinearElement, DucLinearElementBase, DucPoint, DucLine, 
     DucLineReference, GeometricPoint, DucPointBinding, DucPath,
-    PointBindingPoint, DucHead, ElementStroke, ElementBackground
+    PointBindingPoint, DucHead, ElementStroke, ElementBackground,
+    DucArrowElement, DucTextElement
 )
 from .style_builders import create_simple_styles
 
@@ -613,3 +614,135 @@ def create_bezier_line(
     end_ref = DucLineReference(index=end_index, handle=end_handle_point)
     
     return DucLine(start=start_ref, end=end_ref)
+
+def create_arrow_element(
+    points: List[tuple],
+    start_binding: Optional[DucPointBinding] = None,
+    end_binding: Optional[DucPointBinding] = None,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = "mm",
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create an arrow element. This is a specialized linear element.
+    """
+    if id is None:
+        id = f"arrow_{uuid.uuid4().hex[:8]}"
+
+    # Create the base linear element structure
+    linear_element_wrapper = create_linear_element(
+        points=points,
+        start_binding=start_binding,
+        end_binding=end_binding,
+        styles=styles,
+        id=id,
+        label=label,
+        scope=scope,
+        locked=locked,
+        is_visible=is_visible,
+        z_index=z_index,
+        explicit_properties_override=explicit_properties_override
+    )
+    
+    linear_base = linear_element_wrapper.element.linear_base
+
+    # Create the arrow element from the linear base
+    arrow = DucArrowElement(
+        linear_base=linear_base,
+        elbowed=False  # Default value, can be exposed as an argument if needed
+    )
+    
+    return ElementWrapper(element=arrow)
+
+def create_point_binding(element_id: str, focus: float = 0.5, gap: float = 0.0) -> DucPointBinding:
+    """
+    Creates a binding for a point on a linear element to another element.
+    """
+    return DucPointBinding(
+        element_id=element_id,
+        focus=focus,
+        gap=gap
+    )
+
+def create_text_element(
+    x: float,
+    y: float,
+    text: str,
+    width: float = 100,
+    height: float = 20,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = "mm",
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create a text element.
+    """
+    if id is None:
+        id = f"text_{uuid.uuid4().hex[:8]}"
+
+    if styles is None:
+        styles = create_simple_styles()
+
+    current_time = int(time.time() * 1000)
+    base_params = {
+        "id": id,
+        "styles": styles,
+        "x": x,
+        "y": y,
+        "width": width,
+        "height": height,
+        "angle": 0.0,
+        "scope": scope,
+        "label": label,
+        "description": "",
+        "is_visible": is_visible,
+        "seed": hash(id) % 2147483647,
+        "version": 1,
+        "version_nonce": 0,
+        "updated": current_time,
+        "index": None,
+        "is_plot": False,
+        "is_annotative": False,
+        "is_deleted": False,
+        "group_ids": [],
+        "region_ids": [],
+        "layer_id": "",
+        "frame_id": "",
+        "bound_elements": [],
+        "z_index": z_index,
+        "link": "",
+        "locked": locked,
+        "custom_data": ""
+    }
+
+    if explicit_properties_override and 'base' in explicit_properties_override:
+        base_params.update(explicit_properties_override['base'])
+
+    base = DucElementBase(**base_params)
+
+    text_params = {
+        "base": base,
+        "text": text,
+        "font_family": 1,
+        "font_size": 12,
+        "text_align": "left",
+        "vertical_align": "top",
+        "line_height": 1.5,
+        "is_wysiwyg": False
+    }
+
+    if explicit_properties_override and 'element' in explicit_properties_override:
+        text_params.update(explicit_properties_override['element'])
+
+    text_element = DucTextElement(**text_params)
+    return ElementWrapper(element=text_element)

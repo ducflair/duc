@@ -49,12 +49,27 @@ def parse_fbs_version_graph_metadata(fbs_metadata: FBSVersionGraphMetadata) -> V
     )
 
 def parse_fbs_version_graph(fbs_version_graph: FBSVersionGraph) -> VersionGraph:
+    if fbs_version_graph is None:
+        # Return a default version graph when None
+        return VersionGraph(
+            checkpoints=[],
+            deltas=[],
+            metadata=VersionGraphMetadata(
+                last_pruned=0,
+                total_size=0,
+                pruning_level=PRUNING_LEVEL.CONSERVATIVE
+            ),
+            user_checkpoint_version_id="",
+            latest_version_id=""
+        )
+    
     checkpoints_list = [parse_fbs_checkpoint(fbs_version_graph.Checkpoints(i)) for i in range(fbs_version_graph.CheckpointsLength())]
     deltas_list = [parse_fbs_delta(fbs_version_graph.Deltas(i)) for i in range(fbs_version_graph.DeltasLength())]
+    
     return VersionGraph(
-        user_checkpoint_version_id=fbs_version_graph.UserCheckpointVersionId().decode('utf-8') if fbs_version_graph.UserCheckpointVersionId() else None,
-        latest_version_id=fbs_version_graph.LatestVersionId().decode('utf-8') if fbs_version_graph.LatestVersionId() else None,
         checkpoints=checkpoints_list,
         deltas=deltas_list,
-        metadata=parse_fbs_version_graph_metadata(fbs_version_graph.Metadata())
+        metadata=parse_fbs_version_graph_metadata(fbs_version_graph.Metadata()),
+        user_checkpoint_version_id=fbs_version_graph.UserCheckpointVersionId().decode('utf-8'),
+        latest_version_id=fbs_version_graph.LatestVersionId().decode('utf-8')
     ) 

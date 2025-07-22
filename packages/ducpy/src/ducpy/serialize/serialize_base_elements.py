@@ -343,6 +343,8 @@ def serialize_fbs_stroke_sides(builder: flatbuffers.Builder, stroke_sides: Strok
 
 def serialize_fbs_element_stroke(builder: flatbuffers.Builder, element_stroke: ElementStroke) -> int:
     """Serialize ElementStroke to FlatBuffers."""
+    if element_stroke is None:
+        return 0
     content_offset = serialize_fbs_element_content_base(builder, element_stroke.content) if element_stroke.content else None
     style_offset = serialize_fbs_stroke_style(builder, element_stroke.style) if element_stroke.style else None
     stroke_sides_offset = serialize_fbs_stroke_sides(builder, element_stroke.stroke_sides) if element_stroke.stroke_sides else None
@@ -362,6 +364,8 @@ def serialize_fbs_element_stroke(builder: flatbuffers.Builder, element_stroke: E
 
 def serialize_fbs_element_background(builder: flatbuffers.Builder, element_background: ElementBackground) -> int:
     """Serialize ElementBackground to FlatBuffers."""
+    if element_background is None:
+        return 0
     content_offset = serialize_fbs_element_content_base(builder, element_background.content) if element_background.content else None
     
     ElementBackgroundStart(builder)

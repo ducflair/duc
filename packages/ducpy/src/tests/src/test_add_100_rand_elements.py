@@ -28,9 +28,9 @@ def create_random_line(x: float, y: float):
     
     for i in range(1, num_points):
         # Add points with some random offset
-        offset_x = random.uniform(-50, 50)
-        offset_y = random.uniform(-50, 50)
-        points.append((x + offset_x, y + offset_y))
+        x_offset = random.uniform(-50, 50)
+        y_offset = random.uniform(-50, 50)
+        points.append((x + x_offset, y + y_offset))
     
     return duc.create_linear_element(
         points=points,
