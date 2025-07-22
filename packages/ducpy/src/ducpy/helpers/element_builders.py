@@ -2,18 +2,132 @@
 Helper functions for creating DUC elements with a user-friendly API.
 """
 from math import pi
-from typing import List, Optional, Union
+from typing import List, Optional, Union, TYPE_CHECKING
 import uuid
 import time
+
+if TYPE_CHECKING:
+    from ..classes.StandardsClass import Standard
 from ..classes.ElementsClass import (
     DucRectangleElement, DucEllipseElement, DucPolygonElement,
     DucElementBase, DucElementStylesBase, ElementWrapper, BoundElement,
     DucLinearElement, DucLinearElementBase, DucPoint, DucLine, 
     DucLineReference, GeometricPoint, DucPointBinding, DucPath,
     PointBindingPoint, DucHead, ElementStroke, ElementBackground,
-    DucArrowElement, DucTextElement
+    DucArrowElement, DucTextElement, DucFrameElement, DucPlotElement,
+    DucViewportElement, DucStackElementBase, DucStackBase, DucStackLikeStyles,
+    PlotLayout, DucView, DucPlotStyle, DucViewportStyle, Margins
 )
 from .style_builders import create_simple_styles
+from ducpy.utils import generate_random_id, DEFAULT_SCOPE, DEFAULT_STROKE_COLOR, DEFAULT_FILL_COLOR
+from ducpy.utils.rand_utils import random_versioning
+
+import random
+import time
+
+def create_element_base(
+    x=0.0,
+    y=0.0,
+    width=1.0,
+    height=1.0,
+    angle=0.0,
+    styles=None,
+    id=None,
+    label="",
+    scope=DEFAULT_SCOPE,
+    locked=False,
+    is_visible=True,
+    z_index=0.0,
+    description="",
+    group_ids=None,
+    region_ids=None,
+    layer_id="",
+    frame_id="",
+    bound_elements=None,
+    link="",
+    custom_data="",
+    is_plot=False,
+    is_annotative=False,
+    is_deleted=False,
+    index=None,
+) -> DucElementBase:
+    """
+    Create a modular DucElementBase with all required versioning and random properties.
+    """
+    if id is None:
+        id = generate_random_id(16)
+    if styles is None:
+        styles = create_simple_styles()
+    
+    # Use random_versioning utility
+    versioning = random_versioning()
+    
+    group_ids = group_ids or []
+    region_ids = region_ids or []
+    bound_elements = bound_elements or []
+    return DucElementBase(
+        id=id,
+        styles=styles,
+        x=x,
+        y=y,
+        width=width,
+        height=height,
+        angle=angle,
+        scope=scope,
+        label=label,
+        description=description,
+        is_visible=is_visible,
+        seed=versioning["seed"],
+        version=versioning["version"],
+        version_nonce=versioning["version_nonce"],
+        updated=versioning["updated"],
+        index=index,
+        is_plot=is_plot,
+        is_annotative=is_annotative,
+        is_deleted=is_deleted,
+        group_ids=group_ids,
+        region_ids=region_ids,
+        layer_id=layer_id,
+        frame_id=frame_id,
+        bound_elements=bound_elements,
+        z_index=z_index,
+        link=link,
+        locked=locked,
+        custom_data=custom_data,
+    )
+
+
+def _apply_base_overrides(base: DucElementBase, explicit_properties_override: Optional[dict]) -> None:
+    """
+    Apply explicit property overrides to a DucElementBase instance.
+    """
+    if explicit_properties_override:
+        for k, v in explicit_properties_override.get("base", {}).items():
+            setattr(base, k, v)
+
+def _create_element_wrapper(element_class, base_params: dict, element_params: dict, 
+                           explicit_properties_override: Optional[dict] = None) -> ElementWrapper:
+    """
+    Generic helper for creating element wrappers with common pattern.
+    
+    Args:
+        element_class: The element class to instantiate
+        base_params: Parameters for creating the base element
+        element_params: Parameters specific to the element
+        explicit_properties_override: Optional overrides
+        
+    Returns:
+        ElementWrapper: Wrapped element
+    """
+    base = create_element_base(**base_params)
+    _apply_base_overrides(base, explicit_properties_override)
+    
+    final_element_params = {"base": base, **element_params}
+    if explicit_properties_override and "element" in explicit_properties_override:
+        final_element_params.update(explicit_properties_override["element"])
+    
+    element = element_class(**final_element_params)
+    return ElementWrapper(element=element)
 
 
 def create_rectangle(
@@ -25,7 +139,7 @@ def create_rectangle(
     styles: Optional[DucElementStylesBase] = None,
     id: Optional[str] = None,
     label: str = "",
-    scope: str = "mm",
+    scope: str = DEFAULT_SCOPE,
     locked: bool = False,
     is_visible: bool = True,
     z_index: float = 0.0,
@@ -33,110 +147,19 @@ def create_rectangle(
 ) -> ElementWrapper:
     """
     Create a rectangle element with a clean, modular API.
-    
-    Args:
-        x, y: Position
-        width, height: Dimensions
-        angle: Rotation angle in degrees
-        styles: Element styles created with style_builders functions (defaults to transparent)
-        id: Unique identifier (auto-generated if None)
-        label: Human-readable label
-        scope: Units ("mm", "px", etc.)
-        locked: Whether element is locked
-        is_visible: Whether element is visible
-        z_index: Layering order
-        explicit_properties_override: Optional dict to override any base or element properties.
-            Can contain 'base' key for DucElementBase overrides and 'element' key for 
-            DucRectangleElement overrides, or direct properties to override base.
-        
-    Returns:
-        ElementWrapper: Wrapped rectangle element ready for serialization
-        
-    Examples:
-        # Simple rectangle with blue fill
-        create_rectangle(0, 0, 100, 50, styles=solid_fill_style("#0000FF"))
-        
-        # Rectangle with custom styling
-        custom_styles = create_simple_styles(
-            backgrounds=[create_background(create_solid_content("#FF0000"))],
-            strokes=[create_stroke(create_solid_content("#000000"), 2.0)]
-        )
-        create_rectangle(10, 10, 200, 100, styles=custom_styles)
     """
-    # Generate ID if not provided
-    if id is None:
-        id = f"rect_{uuid.uuid4().hex[:8]}"
-    
-    # Use provided styles or create default transparent styles
-    if styles is None:
-        styles = create_simple_styles()
-    
-    # Create base element with sensible defaults
-    current_time = int(time.time() * 1000)  # milliseconds
     base_params = {
-        "id": id,
-        "styles": styles,
-        "x": x,
-        "y": y,
-        "width": width,
-        "height": height,
-        "angle": angle,
-        "scope": scope,
-        "label": label,
-        "description": "",
-        "is_visible": is_visible,
-        "seed": hash(id) % 2147483647,  # Generate deterministic seed from ID
-        "version": 1,
-        "version_nonce": 0,
-        "updated": current_time,
-        "index": None,
-        "is_plot": False,
-        "is_annotative": False,
-        "is_deleted": False,
-        "group_ids": [],
-        "region_ids": [],
-        "layer_id": "",
-        "frame_id": "",
-        "bound_elements": [],
-        "z_index": z_index,
-        "link": "",
-        "locked": locked,
-        "custom_data": ""
+        "x": x, "y": y, "width": width, "height": height, "angle": angle,
+        "styles": styles, "id": id, "label": label, "scope": scope,
+        "locked": locked, "is_visible": is_visible, "z_index": z_index
     }
     
-    # Apply explicit property overrides if provided
-    if explicit_properties_override:
-        # Only apply known base parameters to avoid unexpected keyword arguments
-        known_base_params = {
-            "id", "label", "scope", "locked", "is_visible", "is_deleted",
-            "group_ids", "region_ids", "layer_id", "frame_id", "bound_elements", 
-            "z_index", "link", "custom_data"
-        }
-        
-        # Check if it's a base override
-        if 'base' in explicit_properties_override:
-            for key, value in explicit_properties_override['base'].items():
-                if key in known_base_params:
-                    base_params[key] = value
-        else:
-            # Apply known base properties from override
-            for key, value in explicit_properties_override.items():
-                if key in known_base_params:
-                    base_params[key] = value
-    
-    base = DucElementBase(**base_params)
-    
-    # Create rectangle element
-    rect_params = {"base": base}
-    
-    # Apply element-specific overrides if they exist in explicit_properties_override
-    if explicit_properties_override and 'element' in explicit_properties_override:
-        rect_params.update(explicit_properties_override['element'])
-        
-    rectangle = DucRectangleElement(**rect_params)
-    
-    # Wrap and return
-    return ElementWrapper(element=rectangle)
+    return _create_element_wrapper(
+        DucRectangleElement, 
+        base_params, 
+        {}, 
+        explicit_properties_override
+    )
 
 
 def create_ellipse(
@@ -152,7 +175,7 @@ def create_ellipse(
     styles: Optional[DucElementStylesBase] = None,
     id: Optional[str] = None,
     label: str = "",
-    scope: str = "mm",
+    scope: str = DEFAULT_SCOPE,
     locked: bool = False,
     is_visible: bool = True,
     z_index: float = 0.0,
@@ -160,81 +183,26 @@ def create_ellipse(
 ) -> ElementWrapper:
     """
     Create an ellipse element with a clean, modular API.
-    Similar to create_rectangle but for ellipses.
-    
-    Args:
-        ratio: Aspect ratio of the ellipse
-        explicit_properties_override: Optional dict to override any base or element properties.
-            Can contain 'base' key for DucElementBase overrides and 'element' key for 
-            DucEllipseElement overrides, or direct properties to override base.
-        
-    Examples:
-        # Simple circle with red fill
-        create_ellipse(0, 0, 100, 100, styles=create_fill_style(create_solid_style("#FF0000")))
     """
-    if id is None:
-        id = f"ellipse_{uuid.uuid4().hex[:8]}"
-    
-    if styles is None:
-        styles = create_simple_styles()
-    
-    current_time = int(time.time() * 1000)
     base_params = {
-        "id": id,
-        "styles": styles,
-        "x": x,
-        "y": y,
-        "width": width,
-        "height": height,
-        "angle": angle,
-        "scope": scope,
-        "label": label,
-        "description": "",
-        "is_visible": is_visible,
-        "seed": hash(id) % 2147483647,
-        "version": 1,
-        "version_nonce": 0,
-        "updated": current_time,
-        "index": None,
-        "is_plot": False,
-        "is_annotative": False,
-        "is_deleted": False,
-        "group_ids": [],
-        "region_ids": [],
-        "layer_id": "",
-        "frame_id": "",
-        "bound_elements": [],
-        "z_index": z_index,
-        "link": "",
-        "locked": locked,
-        "custom_data": ""
+        "x": x, "y": y, "width": width, "height": height, "angle": angle,
+        "styles": styles, "id": id, "label": label, "scope": scope,
+        "locked": locked, "is_visible": is_visible, "z_index": z_index
     }
     
-    # Apply explicit property overrides if provided
-    if explicit_properties_override:
-        # Check if it's a base override
-        if 'base' in explicit_properties_override:
-            base_params.update(explicit_properties_override)
-        else:
-            # Apply to base by default
-            base_params.update(explicit_properties_override)
-        
-    base = DucElementBase(**base_params)
-    
-    ellipse_params = {
-        "base": base, 
+    element_params = {
         "ratio": ratio,
         "start_angle": start_angle,
         "end_angle": end_angle,
-        "show_aux_crosshair": show_aux_crosshair
+        "show_aux_crosshair": show_aux_crosshair,
     }
     
-    # Apply element-specific overrides if they exist in explicit_properties_override
-    if explicit_properties_override and 'element' in explicit_properties_override:
-        ellipse_params.update(explicit_properties_override['element'])
-        
-    ellipse = DucEllipseElement(**ellipse_params)
-    return ElementWrapper(element=ellipse)
+    return _create_element_wrapper(
+        DucEllipseElement, 
+        base_params, 
+        element_params, 
+        explicit_properties_override
+    )
 
 
 def create_polygon(
@@ -247,7 +215,7 @@ def create_polygon(
     styles: Optional[DucElementStylesBase] = None,
     id: Optional[str] = None,
     label: str = "",
-    scope: str = "mm",
+    scope: str = DEFAULT_SCOPE,
     locked: bool = False,
     is_visible: bool = True,
     z_index: float = 0.0,
@@ -255,79 +223,21 @@ def create_polygon(
 ) -> ElementWrapper:
     """
     Create a polygon element with a clean, modular API.
-    Similar to create_rectangle but for polygons.
-    
-    Args:
-        sides: Number of polygon sides
-        explicit_properties_override: Optional dict to override any base or element properties.
-            Can contain 'base' key for DucElementBase overrides and 'element' key for 
-            DucPolygonElement overrides, or direct properties to override base.
-        
-    Examples:
-        # Hexagon with green fill and black stroke
-        create_polygon(0, 0, 100, 100, sides=6, 
-                      styles=create_fill_and_stroke_style(
-                          create_solid_style("#00FF00"), 
-                          create_solid_style("#000000"), 
-                          stroke_width=2))
     """
-    if id is None:
-        id = f"polygon_{uuid.uuid4().hex[:8]}"
-    
-    if styles is None:
-        styles = create_simple_styles()
-    
-    current_time = int(time.time() * 1000)
     base_params = {
-        "id": id,
-        "styles": styles,
-        "x": x,
-        "y": y,
-        "width": width,
-        "height": height,
-        "angle": angle,
-        "scope": scope,
-        "label": label,
-        "description": "",
-        "is_visible": is_visible,
-        "seed": hash(id) % 2147483647,
-        "version": 1,
-        "version_nonce": 0,
-        "updated": current_time,
-        "index": None,
-        "is_plot": False,
-        "is_annotative": False,
-        "is_deleted": False,
-        "group_ids": [],
-        "region_ids": [],
-        "layer_id": "",
-        "frame_id": "",
-        "bound_elements": [],
-        "z_index": z_index,
-        "link": "",
-        "locked": locked,
-        "custom_data": ""
+        "x": x, "y": y, "width": width, "height": height, "angle": angle,
+        "styles": styles, "id": id, "label": label, "scope": scope,
+        "locked": locked, "is_visible": is_visible, "z_index": z_index
     }
     
-    # Apply explicit property overrides if provided
-    if explicit_properties_override:
-        # Check if it's a base override
-        if 'base' in explicit_properties_override:
-            base_params.update(explicit_properties_override)
-        else:
-            # Apply to base by default
-            base_params.update(explicit_properties_override)
-        
-    base = DucElementBase(**base_params)
+    element_params = {"sides": sides}
     
-    polygon_params = {"base": base, "sides": sides}
-    
-    # Apply element-specific overrides if they exist in explicit_properties_override
-    if explicit_properties_override and 'element' in explicit_properties_override:
-        polygon_params.update(explicit_properties_override['element'])
-        
-    polygon = DucPolygonElement(**polygon_params)
-    return ElementWrapper(element=polygon)
+    return _create_element_wrapper(
+        DucPolygonElement, 
+        base_params, 
+        element_params, 
+        explicit_properties_override
+    )
 
 
 def create_linear_element(
@@ -693,7 +603,9 @@ def create_text_element(
     if styles is None:
         styles = create_simple_styles()
 
-    current_time = int(time.time() * 1000)
+    # Use random_versioning utility
+    versioning = random_versioning()
+    
     base_params = {
         "id": id,
         "styles": styles,
@@ -706,10 +618,10 @@ def create_text_element(
         "label": label,
         "description": "",
         "is_visible": is_visible,
-        "seed": hash(id) % 2147483647,
-        "version": 1,
-        "version_nonce": 0,
-        "updated": current_time,
+        "seed": versioning["seed"],
+        "version": versioning["version"],
+        "version_nonce": versioning["version_nonce"],
+        "updated": versioning["updated"],
         "index": None,
         "is_plot": False,
         "is_annotative": False,
@@ -732,13 +644,12 @@ def create_text_element(
 
     text_params = {
         "base": base,
+        "style": None,  # Should be set by caller if needed
         "text": text,
-        "font_family": 1,
-        "font_size": 12,
-        "text_align": "left",
-        "vertical_align": "top",
-        "line_height": 1.5,
-        "is_wysiwyg": False
+        "dynamic": [],
+        "auto_resize": False,
+        "original_text": text,
+        "container_id": None
     }
 
     if explicit_properties_override and 'element' in explicit_properties_override:
@@ -746,3 +657,246 @@ def create_text_element(
 
     text_element = DucTextElement(**text_params)
     return ElementWrapper(element=text_element)
+
+from ducpy.utils.mutate_utils import recursive_mutate
+
+def mutate_element(el, **kwargs):
+    """
+    Mutate any property of an element (ElementWrapper) using keyword arguments.
+    Recursively traverses all nested dataclasses and sets matching properties.
+    Always mutates seed, updated, version, version_nonce.
+    Example: mutate_element(el, x=..., label=..., points=[...], style=..., ...)
+    """
+    # Always update versioning props
+    versioning = random_versioning()
+    kwargs.update(versioning)
+    recursive_mutate(el.element, kwargs)
+    return el
+
+
+# Stack-based element creation functions
+
+def create_stack_base(
+    label: str = "",
+    is_collapsed: bool = False,
+    is_plot: bool = False,
+    is_visible: bool = True,
+    locked: bool = False,
+    opacity: float = 1.0,
+    labeling_color: str = "#000000",
+    description: str = ""
+) -> DucStackBase:
+    """
+    Create a stack base for stack-like elements.
+    """
+    styles = DucStackLikeStyles(
+        opacity=opacity,
+        labeling_color=labeling_color
+    )
+    
+    return DucStackBase(
+        label=label,
+        is_collapsed=is_collapsed,
+        is_plot=is_plot,
+        is_visible=is_visible,
+        locked=locked,
+        styles=styles,
+        description=description
+    )
+
+def create_stack_element_base(
+    x: float,
+    y: float, 
+    width: float,
+    height: float,
+    stack_base: Optional[DucStackBase] = None,
+    clip: bool = False,
+    label_visible: bool = True,
+    standard_override: Optional["Standard"] = None,
+    angle: float = 0.0,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = DEFAULT_SCOPE,
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> DucStackElementBase:
+    """
+    Create a stack element base for frame and plot elements.
+    """
+    if stack_base is None:
+        stack_base = create_stack_base(label=label, is_visible=is_visible, locked=locked)
+    
+    base = create_element_base(
+        x=x, y=y, width=width, height=height, angle=angle,
+        styles=styles, id=id, label=label, scope=scope,
+        locked=locked, is_visible=is_visible, z_index=z_index
+    )
+    
+    _apply_base_overrides(base, explicit_properties_override)
+    
+    return DucStackElementBase(
+        base=base,
+        stack_base=stack_base,
+        clip=clip,
+        label_visible=label_visible,
+        standard_override=standard_override
+    )
+
+def create_frame_element(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    stack_base: Optional[DucStackBase] = None,
+    clip: bool = False,
+    label_visible: bool = True,
+    standard_override: Optional["Standard"] = None,
+    angle: float = 0.0,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = DEFAULT_SCOPE,
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create a frame element.
+    """
+    stack_element_base = create_stack_element_base(
+        x=x, y=y, width=width, height=height,
+        stack_base=stack_base, clip=clip, label_visible=label_visible,
+        standard_override=standard_override, angle=angle, styles=styles,
+        id=id, label=label, scope=scope, locked=locked,
+        is_visible=is_visible, z_index=z_index,
+        explicit_properties_override=explicit_properties_override
+    )
+    
+    frame = DucFrameElement(stack_element_base=stack_element_base)
+    return ElementWrapper(element=frame)
+
+def create_plot_element(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    margins: Optional[Margins] = None,
+    style: Optional[DucPlotStyle] = None,
+    stack_base: Optional[DucStackBase] = None,
+    clip: bool = False,
+    label_visible: bool = True,
+    standard_override: Optional["Standard"] = None,
+    angle: float = 0.0,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = DEFAULT_SCOPE,
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create a plot element.
+    """
+    if margins is None:
+        margins = Margins(top=0.0, right=0.0, bottom=0.0, left=0.0)
+    
+    if style is None:
+        from .style_builders import create_simple_styles
+        style = DucPlotStyle(base_style=create_simple_styles())
+    
+    if stack_base is None:
+        stack_base = create_stack_base(label=label, is_plot=True, is_visible=is_visible, locked=locked)
+    
+    stack_element_base = create_stack_element_base(
+        x=x, y=y, width=width, height=height,
+        stack_base=stack_base, clip=clip, label_visible=label_visible,
+        standard_override=standard_override, angle=angle, styles=styles,
+        id=id, label=label, scope=scope, locked=locked,
+        is_visible=is_visible, z_index=z_index,
+        explicit_properties_override=explicit_properties_override
+    )
+    
+    layout = PlotLayout(margins=margins)
+    plot = DucPlotElement(
+        stack_element_base=stack_element_base,
+        style=style,
+        layout=layout
+    )
+    return ElementWrapper(element=plot)
+
+def create_viewport_element(
+    points: List[tuple],
+    view: DucView,
+    scale: float = 1.0,
+    style: Optional[DucViewportStyle] = None,
+    stack_base: Optional[DucStackBase] = None,
+    standard_override: Optional["Standard"] = None,
+    shade_plot = None,  # Will be set to default
+    frozen_group_ids: Optional[List[str]] = None,
+    start_binding: Optional[DucPointBinding] = None,
+    end_binding: Optional[DucPointBinding] = None,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = "mm",
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create a viewport element.
+    """
+    if style is None:
+        from .style_builders import create_simple_styles
+        style = DucViewportStyle(
+            base_style=create_simple_styles(),
+            scale_indicator_visible=True
+        )
+        
+    if stack_base is None:
+        stack_base = create_stack_base(label=label, is_visible=is_visible, locked=locked)
+    
+    if frozen_group_ids is None:
+        frozen_group_ids = []
+    
+    # Create linear base for the viewport boundary
+    linear_element_wrapper = create_linear_element(
+        points=points,
+        start_binding=start_binding,
+        end_binding=end_binding,
+        styles=styles,
+        id=id,
+        label=label,
+        scope=scope,
+        locked=locked,
+        is_visible=is_visible,
+        z_index=z_index,
+        explicit_properties_override=explicit_properties_override
+    )
+    
+    linear_base = linear_element_wrapper.element.linear_base
+    
+    # Import the shade_plot enum if needed - for now use a default
+    from ..Duc.VIEWPORT_SHADE_PLOT import VIEWPORT_SHADE_PLOT
+    if shade_plot is None:
+        shade_plot = VIEWPORT_SHADE_PLOT.AS_DISPLAYED  # Use default value
+    
+    viewport = DucViewportElement(
+        linear_base=linear_base,
+        stack_base=stack_base,
+        style=style,
+        view=view,
+        scale=scale,
+        standard_override=standard_override,
+        shade_plot=shade_plot,
+        frozen_group_ids=frozen_group_ids
+    )
+    
+    return ElementWrapper(element=viewport)

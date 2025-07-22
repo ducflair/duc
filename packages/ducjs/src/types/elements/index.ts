@@ -55,7 +55,7 @@ type _DucElementBase = Readonly<_DucElementStylesBase & {
   width: PrecisionValue;
   height: PrecisionValue;
   angle: Radian;
-  /** Random integer used to seed shape generation so that the roughjs shape
+  /** Random integer used to seed shape generation
       doesn't differ across renders. */
   seed: number;
   /** Integer that is sequentially incremented on each change. Used to reconcile

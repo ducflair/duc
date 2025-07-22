@@ -43,25 +43,26 @@ def test_move_elements_randomly(test_output_dir):
     assert len(loaded_elements) == len(elements)
     
     for el_wrapper in loaded_elements:
-        el = el_wrapper.element
         move_x = random.uniform(-200, 200)
         move_y = random.uniform(-200, 200)
 
-        if isinstance(el, DucEllipseElement):
-            el.base.x += move_x
-            el.base.y += move_y
-        elif isinstance(el, DucRectangleElement):
-            el.base.x += move_x
-            el.base.y += move_y
-        elif isinstance(el, DucPolygonElement):
-            el.base.x += move_x
-            el.base.y += move_y
-        elif isinstance(el, DucLinearElement):
-            el.linear_base.base.x += move_x
-            el.linear_base.base.y += move_y
-            for point in el.linear_base.points:
-                point.x += move_x
-                point.y += move_y
+        if hasattr(el_wrapper.element, "linear_base"):
+            old_points = el_wrapper.element.linear_base.points
+            new_points = [
+                type(p)(x=p.x + move_x, y=p.y + move_y) for p in old_points
+            ]
+            duc.mutate_element(
+                el_wrapper,
+                x=el_wrapper.element.linear_base.base.x + move_x,
+                y=el_wrapper.element.linear_base.base.y + move_y,
+                points=new_points
+            )
+        elif hasattr(el_wrapper.element, "base"):
+            duc.mutate_element(
+                el_wrapper,
+                x=el_wrapper.element.base.x + move_x,
+                y=el_wrapper.element.base.y + move_y
+            )
 
     moved_output_file = os.path.join(test_output_dir, "test_move_elements_after.duc")
     
