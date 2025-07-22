@@ -3,13 +3,13 @@
 Example demonstrating the refactored and new element creation functionality.
 """
 
-from ducpy.helpers.element_builders import (
+from ducpy.builders.element_builders import (
     create_rectangle, create_ellipse, create_polygon,
     create_linear_element, create_arrow_element, create_text_element,
     create_frame_element, create_plot_element, create_viewport_element,
     create_stack_base, mutate_element
 )
-from ducpy.helpers.style_builders import create_simple_styles, create_solid_content
+from ducpy.builders.style_builders import create_simple_styles, create_solid_content
 from ducpy.classes.ElementsClass import DucView, DucPoint, Margins
 
 

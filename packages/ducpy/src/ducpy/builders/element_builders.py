@@ -16,7 +16,8 @@ from ..classes.ElementsClass import (
     PointBindingPoint, DucHead, ElementStroke, ElementBackground,
     DucArrowElement, DucTextElement, DucFrameElement, DucPlotElement,
     DucViewportElement, DucStackElementBase, DucStackBase, DucStackLikeStyles,
-    PlotLayout, DucView, DucPlotStyle, DucViewportStyle, Margins
+    PlotLayout, DucView, DucPlotStyle, DucViewportStyle, Margins,
+    DucFreeDrawElement
 )
 from .style_builders import create_simple_styles
 from ducpy.utils import generate_random_id, DEFAULT_SCOPE, DEFAULT_STROKE_COLOR, DEFAULT_FILL_COLOR
@@ -461,14 +462,6 @@ def create_path_override(
         
     Returns:
         DucPath: Path override object
-        
-    Examples:
-        # Override styling for lines 0 and 1 with red stroke
-        from ducpy.helpers.style_builders import create_stroke, create_solid_content
-        path_override = create_path_override(
-            [0, 1], 
-            stroke=create_stroke(create_solid_content("#FF0000"), width=3.0)
-        )
     """
     if not line_indices:
         raise ValueError("Path override requires at least one line index")
@@ -577,6 +570,57 @@ def create_point_binding(element_id: str, focus: float = 0.5, gap: float = 0.0) 
         element_id=element_id,
         focus=focus,
         gap=gap
+    )
+
+def create_image_element(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    scale: Optional["np.ndarray"] = None,
+    status=None,
+    file_id: Optional[str] = None,
+    crop=None,
+    filter=None,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = "mm",
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create an image element (DucImageElement) in a modular way.
+    """
+    import numpy as np
+    base_params = {
+        "x": x,
+        "y": y,
+        "width": width,
+        "height": height,
+        "styles": styles,
+        "id": id,
+        "label": label,
+        "scope": scope,
+        "locked": locked,
+        "is_visible": is_visible,
+        "z_index": z_index
+    }
+    element_params = {
+        "scale": scale if scale is not None else np.array([1.0, 1.0]),
+        "status": status,
+        "file_id": file_id,
+        "crop": crop,
+        "filter": filter
+    }
+    from ..classes.ElementsClass import DucImageElement
+    return _create_element_wrapper(
+        DucImageElement,
+        base_params,
+        element_params,
+        explicit_properties_override
     )
 
 def create_text_element(
@@ -829,6 +873,62 @@ def create_plot_element(
         layout=layout
     )
     return ElementWrapper(element=plot)
+
+def create_freedraw_element(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    points: list,
+    pressures: list,
+    size: float,
+    thinning: float,
+    smoothing: float,
+    streamline: float,
+    easing: str,
+    simulate_pressure: bool = False,
+    start=None,
+    end=None,
+    last_committed_point=None,
+    svg_path=None,
+    angle: float = 0.0,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = DEFAULT_SCOPE,
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create a freedraw element with a clean, modular API.
+    """
+    base_params = {
+        "x": x, "y": y, "width": width, "height": height, "angle": angle,
+        "styles": styles, "id": id, "label": label, "scope": scope,
+        "locked": locked, "is_visible": is_visible, "z_index": z_index
+    }
+    element_params = {
+        "points": points,
+        "pressures": pressures,
+        "size": size,
+        "thinning": thinning,
+        "smoothing": smoothing,
+        "streamline": streamline,
+        "easing": easing,
+        "simulate_pressure": simulate_pressure,
+        "start": start,
+        "end": end,
+        "last_committed_point": last_committed_point,
+        "svg_path": svg_path,
+    }
+    return _create_element_wrapper(
+        DucFreeDrawElement,
+        base_params,
+        element_params,
+        explicit_properties_override
+    )
 
 def create_viewport_element(
     points: List[tuple],
