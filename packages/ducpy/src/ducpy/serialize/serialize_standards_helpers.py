@@ -5,12 +5,13 @@ This module provides serialization for Standards-related structures and sub-comp
 
 import flatbuffers
 from typing import List, Optional
+from .serialize_styles import serialize_fbs_standard_styles
 
 # Import dataclasses from comprehensive classes
 from ..classes.StandardsClass import (
     Standard, StandardUnits, StandardOverrides, PrimaryUnits, 
     LinearUnitSystem, AngularUnitSystem, AlternateUnits, UnitPrecision,
-    DucStackLikeStyles, DucCommonStyle
+    UnitSystemBase, DucStackLikeStyles, DucCommonStyle, StandardStyles
 )
 
 # Import FlatBuffers generated classes for standards sub-structures
@@ -29,14 +30,26 @@ from ..Duc.PrimaryUnits import (
     PrimaryUnitsAddLinear, PrimaryUnitsAddAngular
 )
 from ..Duc.LinearUnitSystem import (
-    LinearUnitSystemStart, LinearUnitSystemEnd
+    LinearUnitSystemAddFormat,
+    LinearUnitSystemAddDecimalSeparator,
+    LinearUnitSystemStart, LinearUnitSystemEnd,
+    LinearUnitSystemAddSuppressZeroFeet, LinearUnitSystemAddSuppressZeroInches,
+    LinearUnitSystemAddBase
 )
 from ..Duc.AngularUnitSystem import (
-    AngularUnitSystemStart, AngularUnitSystemEnd
+    AngularUnitSystemAddFormat,
+    AngularUnitSystemStart, AngularUnitSystemEnd,
+    AngularUnitSystemAddBase
 )
 from ..Duc.AlternateUnits import (
     AlternateUnitsStart, AlternateUnitsEnd,
-    AlternateUnitsAddIsVisible, AlternateUnitsAddMultiplier
+    AlternateUnitsAddIsVisible, AlternateUnitsAddMultiplier,
+    AlternateUnitsAddBase, AlternateUnitsAddFormat
+)
+from ..Duc._UnitSystemBase import (
+    _UnitSystemBaseStart, _UnitSystemBaseEnd,
+    _UnitSystemBaseAddSystem, _UnitSystemBaseAddPrecision,
+    _UnitSystemBaseAddSuppressLeadingZeros, _UnitSystemBaseAddSuppressTrailingZeros
 )
 from ..Duc.StandardOverrides import (
     StandardOverridesStart, StandardOverridesEnd,
@@ -60,18 +73,34 @@ from ..Duc.UnitPrecision import (
 from .serialize_base_elements import serialize_fbs_identifier
 
 
+def serialize_fbs_unit_system_base(builder: flatbuffers.Builder, unit_system_base: UnitSystemBase) -> int:
+    """Serialize UnitSystemBase to FlatBuffers."""
+    if unit_system_base is None:
+        return 0
+    _UnitSystemBaseStart(builder)
+    if unit_system_base.system is not None:
+        _UnitSystemBaseAddSystem(builder, unit_system_base.system)
+    _UnitSystemBaseAddPrecision(builder, unit_system_base.precision)
+    _UnitSystemBaseAddSuppressLeadingZeros(builder, unit_system_base.suppress_leading_zeros)
+    _UnitSystemBaseAddSuppressTrailingZeros(builder, unit_system_base.suppress_trailing_zeros)
+    return _UnitSystemBaseEnd(builder)
+
+
 def serialize_fbs_linear_unit_system(builder: flatbuffers.Builder, linear_unit: LinearUnitSystem) -> int:
     """Serialize LinearUnitSystem to FlatBuffers."""
+    if linear_unit is None:
+        # Return 0 offset if missing
+        return 0
+    
+    # Serialize the base unit system
+    base_offset = serialize_fbs_unit_system_base(builder, linear_unit)
+    
     LinearUnitSystemStart(builder)
-    if linear_unit.system is not None:
-        LinearUnitSystemAddSystem(builder, linear_unit.system)
+    LinearUnitSystemAddBase(builder, base_offset)
     if linear_unit.format is not None:
         LinearUnitSystemAddFormat(builder, linear_unit.format)
-    LinearUnitSystemAddPrecision(builder, linear_unit.precision)
     if linear_unit.decimal_separator is not None:
         LinearUnitSystemAddDecimalSeparator(builder, linear_unit.decimal_separator)
-    LinearUnitSystemAddSuppressLeadingZeros(builder, linear_unit.suppress_leading_zeros)
-    LinearUnitSystemAddSuppressTrailingZeros(builder, linear_unit.suppress_trailing_zeros)
     LinearUnitSystemAddSuppressZeroFeet(builder, linear_unit.suppress_zero_feet)
     LinearUnitSystemAddSuppressZeroInches(builder, linear_unit.suppress_zero_inches)
     return LinearUnitSystemEnd(builder)
@@ -79,27 +108,32 @@ def serialize_fbs_linear_unit_system(builder: flatbuffers.Builder, linear_unit: 
 
 def serialize_fbs_angular_unit_system(builder: flatbuffers.Builder, angular_unit: AngularUnitSystem) -> int:
     """Serialize AngularUnitSystem to FlatBuffers."""
+    if angular_unit is None:
+        # Return 0 offset if missing
+        return 0
+    
+    # Serialize the base unit system
+    base_offset = serialize_fbs_unit_system_base(builder, angular_unit)
+    
     AngularUnitSystemStart(builder)
-    if angular_unit.system is not None:
-        AngularUnitSystemAddSystem(builder, angular_unit.system)
+    AngularUnitSystemAddBase(builder, base_offset)
     if angular_unit.format is not None:
         AngularUnitSystemAddFormat(builder, angular_unit.format)
-    AngularUnitSystemAddPrecision(builder, angular_unit.precision)
-    AngularUnitSystemAddSuppressLeadingZeros(builder, angular_unit.suppress_leading_zeros)
-    AngularUnitSystemAddSuppressTrailingZeros(builder, angular_unit.suppress_trailing_zeros)
     return AngularUnitSystemEnd(builder)
 
 
 def serialize_fbs_alternate_units(builder: flatbuffers.Builder, alternate_units: AlternateUnits) -> int:
     """Serialize AlternateUnits to FlatBuffers."""
+    if alternate_units is None:
+        return 0
+        
+    # Serialize the base unit system
+    base_offset = serialize_fbs_unit_system_base(builder, alternate_units)
+    
     AlternateUnitsStart(builder)
-    if alternate_units.system is not None:
-        AlternateUnitsAddSystem(builder, alternate_units.system)
+    AlternateUnitsAddBase(builder, base_offset)
     if alternate_units.format is not None:
         AlternateUnitsAddFormat(builder, alternate_units.format)
-    AlternateUnitsAddPrecision(builder, alternate_units.precision)
-    AlternateUnitsAddSuppressLeadingZeros(builder, alternate_units.suppress_leading_zeros)
-    AlternateUnitsAddSuppressTrailingZeros(builder, alternate_units.suppress_trailing_zeros)
     AlternateUnitsAddIsVisible(builder, alternate_units.is_visible)
     AlternateUnitsAddMultiplier(builder, alternate_units.multiplier)
     return AlternateUnitsEnd(builder)
@@ -177,6 +211,8 @@ def serialize_fbs_standard_overrides(builder: flatbuffers.Builder, overrides: St
 
 def serialize_fbs_standard_units(builder: flatbuffers.Builder, units: StandardUnits) -> int:
     """Serialize StandardUnits to FlatBuffers."""
+    if units is None:
+        return 0
     primary_units_offset = serialize_fbs_primary_units(builder, units.primary_units)
     alternate_units_offset = serialize_fbs_alternate_units(builder, units.alternate_units)
     
@@ -197,9 +233,15 @@ def serialize_fbs_standard(builder: flatbuffers.Builder, standard: Standard) -> 
     identifier_offset = serialize_fbs_identifier(builder, standard.identifier)
     version_offset = builder.CreateString(standard.version)
     overrides_offset = serialize_fbs_standard_overrides(builder, standard.overrides)
-    styles_offset = serialize_fbs_standard_styles(builder, standard.styles)
+    # Defensive: handle missing styles
+    if standard.styles is not None:
+        styles_offset = serialize_fbs_standard_styles(builder, standard.styles)
+    else:
+        from ..classes.StandardsClass import StandardStyles
+        styles_offset = serialize_fbs_standard_styles(builder, StandardStyles())
     view_settings_offset = serialize_fbs_standard_view_settings(builder, standard.view_settings)
     validation_offset = serialize_fbs_standard_validation(builder, standard.validation)
+    units_offset = serialize_fbs_standard_units(builder, standard.units)
 
     StandardStart(builder)
     StandardAddIdentifier(builder, identifier_offset)

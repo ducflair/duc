@@ -1726,3 +1726,7 @@ def create_doc_element(
         element_params,
         explicit_properties_override
     )
+
+def create_margins(top: float = 0.0, right: float = 0.0, bottom: float = 0.0, left: float = 0.0) -> Margins:
+    """Create margins object for layout elements."""
+    return Margins(top=top, right=right, bottom=bottom, left=left)
