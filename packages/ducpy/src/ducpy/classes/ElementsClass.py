@@ -742,6 +742,10 @@ class FeatureControlFrameSegment:
     symbol: GDT_SYMBOL
 
 @dataclass
+class FCFSegmentRow:
+    segments: List[FeatureControlFrameSegment]
+
+@dataclass
 class FCFBetweenModifier:
     start: str
     end: str
@@ -767,7 +771,7 @@ class FCFDatumDefinition:
 class DucFeatureControlFrameElement:
     base: DucElementBase
     style: DucFeatureControlFrameStyle
-    rows: List[List[FeatureControlFrameSegment]]
+    rows: List[FCFSegmentRow]
     frame_modifiers: Optional[FCFFrameModifiers] = None
     leader_element_id: Optional[str] = None
     datum_definition: Optional[FCFDatumDefinition] = None

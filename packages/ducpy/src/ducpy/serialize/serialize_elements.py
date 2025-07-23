@@ -21,6 +21,7 @@ from ducpy.Duc.FCFDatumDefinition import FCFDatumDefinitionAddFeatureBinding, FC
 from ducpy.Duc.FCFFrameModifiers import FCFFrameModifiersAddAllAround, FCFFrameModifiersAddAllOver, FCFFrameModifiersAddBetween, FCFFrameModifiersAddContinuousFeature, FCFFrameModifiersAddProjectedToleranceZone, FCFFrameModifiersEnd, FCFFrameModifiersStart
 from ducpy.Duc.FCFProjectedZoneModifier import FCFProjectedZoneModifierAddValue, FCFProjectedZoneModifierEnd, FCFProjectedZoneModifierStart
 from ducpy.Duc.FeatureControlFrameSegment import FeatureControlFrameSegmentAddDatums, FeatureControlFrameSegmentAddSymbol, FeatureControlFrameSegmentAddTolerance, FeatureControlFrameSegmentEnd, FeatureControlFrameSegmentStart, FeatureControlFrameSegmentStartDatumsVector
+from ducpy.Duc.FCFSegmentRow import FCFSegmentRowAddSegments, FCFSegmentRowEnd, FCFSegmentRowStart, FCFSegmentRowStartSegmentsVector
 
 from ..classes.ElementsClass import (
     ColumnLayout, DatumReference, DimensionBaselineData, DimensionBindings,
@@ -919,6 +920,10 @@ def serialize_fbs_leader_block_content(builder: flatbuffers.Builder, content: Le
 
 def serialize_fbs_leader_content(builder: flatbuffers.Builder, content: LeaderContent) -> int:
     """Serialize LeaderContent to FlatBuffers."""
+    if not content or not content.content:
+        # Create empty content if None
+        return None
+        
     content_offset = None
     content_type = None
     
@@ -940,10 +945,6 @@ def serialize_fbs_leader_content(builder: flatbuffers.Builder, content: LeaderCo
 def serialize_fbs_duc_leader_element(builder: flatbuffers.Builder, leader: DucLeaderElement) -> int:
     """Serialize DucLeaderElement to FlatBuffers."""
     linear_base_offset = serialize_fbs_duc_linear_element_base(builder, leader.linear_base)
-    content_anchor_offset = None
-    if leader.content_anchor:
-        from ..Duc.GeometricPoint import CreateGeometricPoint
-        content_anchor_offset = CreateGeometricPoint(builder, leader.content_anchor.x, leader.content_anchor.y)
     content_offset = serialize_fbs_leader_content(builder, leader.content) if leader.content else None
     style_offset = serialize_fbs_duc_leader_style(builder, leader.style) if leader.style else None
     
@@ -953,25 +954,43 @@ def serialize_fbs_duc_leader_element(builder: flatbuffers.Builder, leader: DucLe
         DucLeaderElementAddContent(builder, content_offset)
     if style_offset:
         DucLeaderElementAddStyle(builder, style_offset)
-    if content_anchor_offset:
+    if leader.content_anchor:
+        # Create struct inline - must be done immediately before adding to parent
+        from ..Duc.GeometricPoint import CreateGeometricPoint
+        content_anchor_offset = CreateGeometricPoint(builder, leader.content_anchor.x, leader.content_anchor.y)
         DucLeaderElementAddContentAnchor(builder, content_anchor_offset)
     return DucLeaderElementEnd(builder)
 
 
 def serialize_fbs_dimension_definition_points(builder: flatbuffers.Builder, definition_points: DimensionDefinitionPoints) -> int:
     """Serialize DimensionDefinitionPoints to FlatBuffers."""
-    origin1_offset = serialize_fbs_geometric_point(builder, definition_points.origin1) # Corrected to geometric_point
-    origin2_offset = serialize_fbs_geometric_point(builder, definition_points.origin2) # Corrected to geometric_point
-    location_offset = serialize_fbs_geometric_point(builder, definition_points.location) # Corrected to geometric_point
-    center_offset = serialize_fbs_geometric_point(builder, definition_points.center) # Corrected to geometric_point
-    jog_offset = serialize_fbs_geometric_point(builder, definition_points.jog) # Corrected to geometric_point
-
+    from ..Duc.GeometricPoint import CreateGeometricPoint
+    
     DimensionDefinitionPointsStart(builder)
-    DimensionDefinitionPointsAddOrigin1(builder, origin1_offset)
-    DimensionDefinitionPointsAddOrigin2(builder, origin2_offset)
+    
+    # Add jog if exists (create inline)
+    if definition_points.jog:
+        jog_offset = CreateGeometricPoint(builder, definition_points.jog.x, definition_points.jog.y)
+        DimensionDefinitionPointsAddJog(builder, jog_offset)
+    
+    # Add center if exists (create inline)
+    if definition_points.center:
+        center_offset = CreateGeometricPoint(builder, definition_points.center.x, definition_points.center.y)
+        DimensionDefinitionPointsAddCenter(builder, center_offset)
+    
+    # Add location (create inline)
+    location_offset = CreateGeometricPoint(builder, definition_points.location.x, definition_points.location.y)
     DimensionDefinitionPointsAddLocation(builder, location_offset)
-    DimensionDefinitionPointsAddCenter(builder, center_offset)
-    DimensionDefinitionPointsAddJog(builder, jog_offset)
+    
+    # Add origin2 if exists (create inline)
+    if definition_points.origin2:
+        origin2_offset = CreateGeometricPoint(builder, definition_points.origin2.x, definition_points.origin2.y)
+        DimensionDefinitionPointsAddOrigin2(builder, origin2_offset)
+    
+    # Add origin1 (create inline)
+    origin1_offset = CreateGeometricPoint(builder, definition_points.origin1.x, definition_points.origin1.y)
+    DimensionDefinitionPointsAddOrigin1(builder, origin1_offset)
+    
     return DimensionDefinitionPointsEnd(builder)
 
 
@@ -1118,19 +1137,57 @@ def serialize_fbs_duc_feature_control_frame_element(builder: flatbuffers.Builder
     style_offset = serialize_fbs_duc_feature_control_frame_style(builder, fcf.style) if fcf.style else None
     leader_element_id_offset = builder.CreateString(fcf.leader_element_id) if fcf.leader_element_id else None
     
-    # Serialize rows (list of lists of segments)
+    # Serialize rows - handle both new FCFSegmentRow objects and legacy formats
     rows_offsets = []
-    for row_segments in fcf.rows:
-        segments_in_row_offsets = []
-        for segment in row_segments:
-            segments_in_row_offsets.append(serialize_fbs_feature_control_frame_segment(builder, segment))
-        # Create vector for segments in this row
-        builder.StartVector(4, len(segments_in_row_offsets), 4)  # StartVector(element_size, num_elements, alignment)
-        for offset in reversed(segments_in_row_offsets):
-            builder.PrependUOffsetTRelative(offset)
-        rows_offsets.append(builder.EndVector())
+    for row_item in fcf.rows:
+        if hasattr(row_item, 'segments'):
+            # New FCFSegmentRow object
+            segments_in_row_offsets = []
+            for segment in row_item.segments:
+                segments_in_row_offsets.append(serialize_fbs_feature_control_frame_segment(builder, segment))
+            
+            # Create vector for segments in this row
+            FCFSegmentRowStartSegmentsVector(builder, len(segments_in_row_offsets))
+            for offset in reversed(segments_in_row_offsets):
+                builder.PrependUOffsetTRelative(offset)
+            segments_vector = builder.EndVector()
+            
+            # Create FCFSegmentRow wrapper
+            FCFSegmentRowStart(builder)
+            FCFSegmentRowAddSegments(builder, segments_vector)
+            rows_offsets.append(FCFSegmentRowEnd(builder))
+        elif isinstance(row_item, list):
+            # Legacy list of segments format
+            segments_in_row_offsets = []
+            for segment in row_item:
+                segments_in_row_offsets.append(serialize_fbs_feature_control_frame_segment(builder, segment))
+            
+            # Create vector for segments in this row
+            FCFSegmentRowStartSegmentsVector(builder, len(segments_in_row_offsets))
+            for offset in reversed(segments_in_row_offsets):
+                builder.PrependUOffsetTRelative(offset)
+            segments_vector = builder.EndVector()
+            
+            # Create FCFSegmentRow wrapper
+            FCFSegmentRowStart(builder)
+            FCFSegmentRowAddSegments(builder, segments_vector)
+            rows_offsets.append(FCFSegmentRowEnd(builder))
+        else:
+            # Legacy single segment format - wrap in FCFSegmentRow
+            segments_in_row_offsets = [serialize_fbs_feature_control_frame_segment(builder, row_item)]
+            
+            # Create vector for segments in this row
+            FCFSegmentRowStartSegmentsVector(builder, len(segments_in_row_offsets))
+            for offset in reversed(segments_in_row_offsets):
+                builder.PrependUOffsetTRelative(offset)
+            segments_vector = builder.EndVector()
+            
+            # Create FCFSegmentRow wrapper
+            FCFSegmentRowStart(builder)
+            FCFSegmentRowAddSegments(builder, segments_vector)
+            rows_offsets.append(FCFSegmentRowEnd(builder))
     
-    # Create vector of row vectors
+    # Create vector of FCFSegmentRow objects
     DucFeatureControlFrameElementStartRowsVector(builder, len(rows_offsets))
     for offset in reversed(rows_offsets):
         builder.PrependUOffsetTRelative(offset)

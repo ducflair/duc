@@ -21143,6 +21143,103 @@ impl core::fmt::Debug for FCFDatumDefinition<'_> {
       ds.finish()
   }
 }
+pub enum FCFSegmentRowOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct FCFSegmentRow<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for FCFSegmentRow<'a> {
+  type Inner = FCFSegmentRow<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> FCFSegmentRow<'a> {
+  pub const VT_SEGMENTS: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    FCFSegmentRow { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args FCFSegmentRowArgs<'args>
+  ) -> flatbuffers::WIPOffset<FCFSegmentRow<'bldr>> {
+    let mut builder = FCFSegmentRowBuilder::new(_fbb);
+    if let Some(x) = args.segments { builder.add_segments(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn segments(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FeatureControlFrameSegment<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FeatureControlFrameSegment>>>>(FCFSegmentRow::VT_SEGMENTS, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for FCFSegmentRow<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<FeatureControlFrameSegment>>>>("segments", Self::VT_SEGMENTS, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct FCFSegmentRowArgs<'a> {
+    pub segments: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FeatureControlFrameSegment<'a>>>>>,
+}
+impl<'a> Default for FCFSegmentRowArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    FCFSegmentRowArgs {
+      segments: None,
+    }
+  }
+}
+
+pub struct FCFSegmentRowBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> FCFSegmentRowBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_segments(&mut self, segments: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<FeatureControlFrameSegment<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FCFSegmentRow::VT_SEGMENTS, segments);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> FCFSegmentRowBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    FCFSegmentRowBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<FCFSegmentRow<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for FCFSegmentRow<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("FCFSegmentRow");
+      ds.field("segments", &self.segments());
+      ds.finish()
+  }
+}
 pub enum DucFeatureControlFrameElementOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -21201,11 +21298,11 @@ impl<'a> DucFeatureControlFrameElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucFeatureControlFrameStyle>>(DucFeatureControlFrameElement::VT_STYLE, None)}
   }
   #[inline]
-  pub fn rows(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FeatureControlFrameSegment<'a>>>> {
+  pub fn rows(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FCFSegmentRow<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FeatureControlFrameSegment>>>>(DucFeatureControlFrameElement::VT_ROWS, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FCFSegmentRow>>>>(DucFeatureControlFrameElement::VT_ROWS, None)}
   }
   #[inline]
   pub fn frame_modifiers(&self) -> Option<FCFFrameModifiers<'a>> {
@@ -21239,7 +21336,7 @@ impl flatbuffers::Verifiable for DucFeatureControlFrameElement<'_> {
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<_DucElementBase>>("base", Self::VT_BASE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucFeatureControlFrameStyle>>("style", Self::VT_STYLE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<FeatureControlFrameSegment>>>>("rows", Self::VT_ROWS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<FCFSegmentRow>>>>("rows", Self::VT_ROWS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<FCFFrameModifiers>>("frame_modifiers", Self::VT_FRAME_MODIFIERS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("leader_element_id", Self::VT_LEADER_ELEMENT_ID, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<FCFDatumDefinition>>("datum_definition", Self::VT_DATUM_DEFINITION, false)?
@@ -21250,7 +21347,7 @@ impl flatbuffers::Verifiable for DucFeatureControlFrameElement<'_> {
 pub struct DucFeatureControlFrameElementArgs<'a> {
     pub base: Option<flatbuffers::WIPOffset<_DucElementBase<'a>>>,
     pub style: Option<flatbuffers::WIPOffset<DucFeatureControlFrameStyle<'a>>>,
-    pub rows: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FeatureControlFrameSegment<'a>>>>>,
+    pub rows: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FCFSegmentRow<'a>>>>>,
     pub frame_modifiers: Option<flatbuffers::WIPOffset<FCFFrameModifiers<'a>>>,
     pub leader_element_id: Option<flatbuffers::WIPOffset<&'a str>>,
     pub datum_definition: Option<flatbuffers::WIPOffset<FCFDatumDefinition<'a>>>,
@@ -21283,7 +21380,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucFeatureControlFrameElementBu
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucFeatureControlFrameStyle>>(DucFeatureControlFrameElement::VT_STYLE, style);
   }
   #[inline]
-  pub fn add_rows(&mut self, rows: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<FeatureControlFrameSegment<'b >>>>) {
+  pub fn add_rows(&mut self, rows: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<FCFSegmentRow<'b >>>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucFeatureControlFrameElement::VT_ROWS, rows);
   }
   #[inline]

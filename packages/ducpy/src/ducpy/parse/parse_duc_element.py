@@ -26,7 +26,7 @@ from ..classes.ElementsClass import (
     LeaderContent, DimensionDefinitionPoints, DimensionBindings,
     DimensionBaselineData, DimensionContinueData, DucDimensionElement, DatumReference,
     ToleranceClause, FeatureControlFrameSegment, FCFBetweenModifier, FCFProjectedZoneModifier,
-    FCFFrameModifiers, FCFDatumDefinition, DucFeatureControlFrameElement, TextColumn,
+    FCFFrameModifiers, FCFDatumDefinition, FCFSegmentRow, DucFeatureControlFrameElement, TextColumn,
     ColumnLayout, DucDocElement, ParametricSource, DucParametricElement, StringValueEntry, ElementWrapper, \
     DucBlock
 )
@@ -128,6 +128,7 @@ from ..Duc.DucXRayElement import DucXRayElement as FBSDucXRayElement
 from ..Duc.LeaderTextBlockContent import LeaderTextBlockContent as FBSLeaderTextBlockContent
 from ..Duc.LeaderBlockContent import LeaderBlockContent as FBSLeaderBlockContent
 from ..Duc.LeaderContent import LeaderContent as FBSLeaderContent
+from ..Duc.LeaderContentData import LeaderContentData as LeaderContentFBType
 from ..Duc.DucLeaderElement import DucLeaderElement as FBSDucLeaderElement
 from ..Duc.DimensionDefinitionPoints import DimensionDefinitionPoints as FBSDimensionDefinitionPoints
 from ..Duc.DimensionBindings import DimensionBindings as FBSDimensionBindings
@@ -393,7 +394,7 @@ def parse_fbs_duc_point_binding(fbs_point_binding: FBSDucPointBinding) -> DucPoi
     head = parse_fbs_duc_head(fbs_head) if fbs_head else None
 
     return DucPointBinding(
-        element_id=fbs_point_binding.ElementId().decode('utf-8'),
+        element_id=fbs_point_binding.ElementId().decode('utf-8') if fbs_point_binding.ElementId() else "",
         focus=fbs_point_binding.Focus(),
         gap=fbs_point_binding.Gap(),
         fixed_point=fixed_point,
@@ -571,6 +572,8 @@ def parse_fbs_duc_dimension_style(fbs_dim_style: FBSDucDimensionStyle) -> DucDim
     )
 
 def parse_fbs_fcf_layout_style(fbs_fcf_layout_style: FBSFCFLayoutStyle) -> FCFLayoutStyle:
+    if fbs_fcf_layout_style is None:
+        return None
     return FCFLayoutStyle(
         padding=fbs_fcf_layout_style.Padding(),
         segment_spacing=fbs_fcf_layout_style.SegmentSpacing(),
@@ -578,19 +581,25 @@ def parse_fbs_fcf_layout_style(fbs_fcf_layout_style: FBSFCFLayoutStyle) -> FCFLa
     )
 
 def parse_fbs_fcf_symbol_style(fbs_fcf_symbol_style: FBSFCFSymbolStyle) -> FCFSymbolStyle:
+    if fbs_fcf_symbol_style is None:
+        return None
     return FCFSymbolStyle(
         scale=fbs_fcf_symbol_style.Scale()
     )
 
 def parse_fbs_fcf_datum_style(fbs_fcf_datum_style: FBSFCFDatumStyle) -> FCFDatumStyle:
+    if fbs_fcf_datum_style is None:
+        return None
     return FCFDatumStyle(
         bracket_style=fbs_fcf_datum_style.BracketStyle() if fbs_fcf_datum_style.BracketStyle() is not None else None
     )
 
 def parse_fbs_duc_feature_control_frame_style(fbs_fcf_style: FBSDucFeatureControlFrameStyle) -> DucFeatureControlFrameStyle:
+    if fbs_fcf_style is None:
+        return None
     return DucFeatureControlFrameStyle(
-        base_style=parse_fbs_duc_element_styles_base(fbs_fcf_style.BaseStyle()),
-        text_style=parse_fbs_duc_text_style(fbs_fcf_style.TextStyle()),
+        base_style=parse_fbs_duc_element_styles_base(fbs_fcf_style.BaseStyle()) if fbs_fcf_style.BaseStyle() else None,
+        text_style=parse_fbs_duc_text_style(fbs_fcf_style.TextStyle()) if fbs_fcf_style.TextStyle() else None,
         layout=parse_fbs_fcf_layout_style(fbs_fcf_style.Layout()),
         symbols=parse_fbs_fcf_symbol_style(fbs_fcf_style.Symbols()),
         datum_style=parse_fbs_fcf_datum_style(fbs_fcf_style.DatumStyle())
@@ -964,14 +973,16 @@ def parse_fbs_leader_block_content(fbs_block_content: FBSLeaderBlockContent) -> 
     )
 
 def parse_fbs_leader_content(fbs_leader_content: FBSLeaderContent) -> LeaderContent:
+    if not fbs_leader_content:
+        return None
+        
     content_data = None
-    if fbs_leader_content.ContentType() == FBSLeaderContent.LeaderTextBlockContent:
+    if fbs_leader_content.ContentType() == LeaderContentFBType.LeaderTextBlockContent:
         content_data = parse_fbs_leader_text_block_content(fbs_leader_content.ContentAsLeaderTextBlockContent())
-    elif fbs_leader_content.ContentType() == FBSLeaderContent.LeaderBlockContent:
+    elif fbs_leader_content.ContentType() == LeaderContentFBType.LeaderBlockContent:
         content_data = parse_fbs_leader_block_content(fbs_leader_content.ContentAsLeaderBlockContent())
     
     return LeaderContent(
-        leader_content_type=fbs_leader_content.ContentType() if fbs_leader_content.ContentType() is not None else None,
         content=content_data # type: ignore
     )
 
@@ -993,20 +1004,26 @@ def parse_fbs_dimension_definition_points(fbs_def_points: FBSDimensionDefinition
     )
 
 def parse_fbs_dimension_bindings(fbs_dim_bindings: FBSDimensionBindings) -> DimensionBindings:
+    if fbs_dim_bindings is None:
+        return None
     return DimensionBindings(
-        origin1=parse_fbs_duc_point_binding(fbs_dim_bindings.Origin1()),
-        origin2=parse_fbs_duc_point_binding(fbs_dim_bindings.Origin2()),
-        center=parse_fbs_duc_point_binding(fbs_dim_bindings.Center())
+        origin1=parse_fbs_duc_point_binding(fbs_dim_bindings.Origin1()) if fbs_dim_bindings.Origin1() else None,
+        origin2=parse_fbs_duc_point_binding(fbs_dim_bindings.Origin2()) if fbs_dim_bindings.Origin2() else None,
+        center=parse_fbs_duc_point_binding(fbs_dim_bindings.Center()) if fbs_dim_bindings.Center() else None
     )
 
 def parse_fbs_dimension_baseline_data(fbs_baseline_data: FBSDimensionBaselineData) -> DimensionBaselineData:
+    if fbs_baseline_data is None:
+        return None
     return DimensionBaselineData(
-        base_dimension_id=fbs_baseline_data.BaseDimensionId().decode('utf-8')
+        base_dimension_id=fbs_baseline_data.BaseDimensionId().decode('utf-8') if fbs_baseline_data.BaseDimensionId() else None
     )
 
 def parse_fbs_dimension_continue_data(fbs_continue_data: FBSDimensionContinueData) -> DimensionContinueData:
+    if fbs_continue_data is None:
+        return None
     return DimensionContinueData(
-        continue_from_dimension_id=fbs_continue_data.ContinueFromDimensionId().decode('utf-8')
+        continue_from_dimension_id=fbs_continue_data.ContinueFromDimensionId().decode('utf-8') if fbs_continue_data.ContinueFromDimensionId() else None
     )
 
 def parse_fbs_duc_dimension_element(fbs_dim_element: FBSDucDimensionElement) -> DucDimensionElement:
@@ -1017,12 +1034,12 @@ def parse_fbs_duc_dimension_element(fbs_dim_element: FBSDucDimensionElement) -> 
         definition_points=parse_fbs_dimension_definition_points(fbs_dim_element.DefinitionPoints()),
         oblique_angle=fbs_dim_element.ObliqueAngle(),
         ordinate_axis=fbs_dim_element.OrdinateAxis() if fbs_dim_element.OrdinateAxis() is not None else None,
-        bindings=parse_fbs_dimension_bindings(fbs_dim_element.Bindings()),
-        text_override=fbs_dim_element.TextOverride().decode('utf-8'),
-        text_position=parse_fbs_geometric_point(fbs_dim_element.TextPosition()),
-        tolerance_override=parse_fbs_dimension_tolerance_style(fbs_dim_element.ToleranceOverride()),
-        baseline_data=parse_fbs_dimension_baseline_data(fbs_dim_element.BaselineData()),
-        continue_data=parse_fbs_dimension_continue_data(fbs_dim_element.ContinueData())
+        bindings=parse_fbs_dimension_bindings(fbs_dim_element.Bindings()) if fbs_dim_element.Bindings() else None,
+        text_override=fbs_dim_element.TextOverride().decode('utf-8') if fbs_dim_element.TextOverride() else None,
+        text_position=parse_fbs_geometric_point(fbs_dim_element.TextPosition()) if fbs_dim_element.TextPosition() else None,
+        tolerance_override=parse_fbs_dimension_tolerance_style(fbs_dim_element.ToleranceOverride()) if fbs_dim_element.ToleranceOverride() else None,
+        baseline_data=parse_fbs_dimension_baseline_data(fbs_dim_element.BaselineData()) if fbs_dim_element.BaselineData() else None,
+        continue_data=parse_fbs_dimension_continue_data(fbs_dim_element.ContinueData()) if fbs_dim_element.ContinueData() else None
     )
 
 def parse_fbs_datum_reference(fbs_datum_ref: FBSDatumReference) -> DatumReference:
@@ -1049,17 +1066,23 @@ def parse_fbs_feature_control_frame_segment(fbs_fcf_segment: FBSFeatureControlFr
     )
 
 def parse_fbs_fcf_between_modifier(fbs_between_mod: FBSFCFBetweenModifier) -> FCFBetweenModifier:
+    if fbs_between_mod is None:
+        return None
     return FCFBetweenModifier(
         start=fbs_between_mod.Start().decode('utf-8'),
         end=fbs_between_mod.End().decode('utf-8')
     )
 
 def parse_fbs_fcf_projected_zone_modifier(fbs_proj_zone_mod: FBSFCFProjectedZoneModifier) -> FCFProjectedZoneModifier:
+    if fbs_proj_zone_mod is None:
+        return None
     return FCFProjectedZoneModifier(
         value=fbs_proj_zone_mod.Value()
     )
 
 def parse_fbs_fcf_frame_modifiers(fbs_frame_mod: FBSFCFFrameModifiers) -> FCFFrameModifiers:
+    if fbs_frame_mod is None:
+        return None
     return FCFFrameModifiers(
         all_around=bool(fbs_frame_mod.AllAround()),
         all_over=bool(fbs_frame_mod.AllOver()),
@@ -1069,26 +1092,31 @@ def parse_fbs_fcf_frame_modifiers(fbs_frame_mod: FBSFCFFrameModifiers) -> FCFFra
     )
 
 def parse_fbs_fcf_datum_definition(fbs_datum_def: FBSFCFDatumDefinition) -> FCFDatumDefinition:
+    if fbs_datum_def is None:
+        return None
     return FCFDatumDefinition(
         letter=fbs_datum_def.Letter().decode('utf-8'),
-        feature_binding=parse_fbs_duc_point_binding(fbs_datum_def.FeatureBinding())
+        feature_binding=parse_fbs_duc_point_binding(fbs_datum_def.FeatureBinding()) if fbs_datum_def.FeatureBinding() else None
     )
 
 def parse_fbs_duc_feature_control_frame_element(fbs_fcf_element: FBSDucFeatureControlFrameElement) -> DucFeatureControlFrameElement:
     rows_list = []
     for i in range(fbs_fcf_element.RowsLength()):
+        fbs_fcf_segment_row = fbs_fcf_element.Rows(i)
         segment_list = []
-        fbs_segment_vector = fbs_fcf_element.Rows(i)
-        for j in range(fbs_segment_vector.Length()):
-            segment_list.append(parse_fbs_feature_control_frame_segment(fbs_segment_vector.Get(j)))
-        rows_list.append(segment_list)
+        for j in range(fbs_fcf_segment_row.SegmentsLength()):
+            segment_list.append(parse_fbs_feature_control_frame_segment(fbs_fcf_segment_row.Segments(j)))
+        
+        # Create FCFSegmentRow dataclass instance
+        fcf_segment_row = FCFSegmentRow(segments=segment_list)
+        rows_list.append(fcf_segment_row)
 
     return DucFeatureControlFrameElement(
         base=parse_fbs_duc_element_base(fbs_fcf_element.Base()),
         style=parse_fbs_duc_feature_control_frame_style(fbs_fcf_element.Style()),
         rows=rows_list,
         frame_modifiers=parse_fbs_fcf_frame_modifiers(fbs_fcf_element.FrameModifiers()),
-        leader_element_id=fbs_fcf_element.LeaderElementId().decode('utf-8'),
+        leader_element_id=fbs_fcf_element.LeaderElementId().decode('utf-8') if fbs_fcf_element.LeaderElementId() else None,
         datum_definition=parse_fbs_fcf_datum_definition(fbs_fcf_element.DatumDefinition())
     )
 

@@ -57,8 +57,8 @@ class DucFeatureControlFrameElement(object):
             x = self._tab.Vector(o)
             x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
             x = self._tab.Indirect(x)
-            from Duc.FeatureControlFrameSegment import FeatureControlFrameSegment
-            obj = FeatureControlFrameSegment()
+            from Duc.FCFSegmentRow import FCFSegmentRow
+            obj = FCFSegmentRow()
             obj.Init(self._tab.Bytes, x)
             return obj
         return None

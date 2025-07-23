@@ -1930,6 +1930,10 @@ table FCFDatumDefinition {
   feature_binding: DucPointBinding;
 }
 
+table FCFSegmentRow {
+  segments: [FeatureControlFrameSegment];
+}
+
 table DucFeatureControlFrameElement {
   base: _DucElementBase;
   style: DucFeatureControlFrameStyle;
@@ -1938,7 +1942,7 @@ table DucFeatureControlFrameElement {
    * An array of rows. Most FCFs have one row. Composite frames have multiple rows.
    * Each row is an array of segments that are drawn horizontally.
    */
-  rows: [FeatureControlFrameSegment];
+  rows: [FCFSegmentRow];
   /** Modifiers that apply to the entire feature control frame. */
   frame_modifiers: FCFFrameModifiers;
   /**

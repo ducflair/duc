@@ -23,7 +23,12 @@ from ..classes.ElementsClass import (
     DucTableColumn, DucTableRow, DucTableCell, DucTableCellSpan, DucTableAutoSize,
     DucTableElement, DucTableStyle, DucTableCellStyle, DucTextStyle, DucLayer, DucLayerOverrides,
     DucRegion, DucDocElement, DucDocStyle, ParagraphFormatting, StackFormat, StackFormatProperties,
-    TextColumn, ColumnLayout, DucTextDynamicPart
+    TextColumn, ColumnLayout, DucTextDynamicPart, DucDimensionElement, DucDimensionStyle,
+    DimensionDefinitionPoints, DimensionBindings, DimensionLineStyle, DimensionExtLineStyle,
+    DimensionSymbolStyle, DimensionToleranceStyle, DimensionFitStyle, DimensionBaselineData,
+    DimensionContinueData, DucLeaderElement, LeaderContent, LeaderTextBlockContent, LeaderBlockContent,
+    DucFeatureControlFrameElement, ToleranceClause, FeatureControlFrameSegment, DatumReference,
+    FCFFrameModifiers, FCFBetweenModifier, FCFProjectedZoneModifier, FCFDatumDefinition, FCFSegmentRow
 )
 from .style_builders import create_simple_styles, create_text_style, create_paragraph_formatting, create_stack_format_properties, create_stack_format, create_doc_style, create_text_column, create_column_layout
 from ducpy.utils import generate_random_id, DEFAULT_SCOPE, DEFAULT_STROKE_COLOR, DEFAULT_FILL_COLOR
@@ -37,6 +42,13 @@ from ducpy.Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
 from ducpy.Duc.TEXT_FLOW_DIRECTION import TEXT_FLOW_DIRECTION
 from ducpy.Duc.COLUMN_TYPE import COLUMN_TYPE
 from ducpy.Duc.STACKED_TEXT_ALIGN import STACKED_TEXT_ALIGN
+from ducpy.Duc.DIMENSION_TYPE import DIMENSION_TYPE
+from ducpy.Duc.AXIS import AXIS
+from ducpy.Duc.GDT_SYMBOL import GDT_SYMBOL
+from ducpy.Duc.LEADER_CONTENT_TYPE import LEADER_CONTENT_TYPE
+from ducpy.Duc.TOLERANCE_ZONE_TYPE import TOLERANCE_ZONE_TYPE
+from ducpy.Duc.MATERIAL_CONDITION import MATERIAL_CONDITION
+from ducpy.Duc.FEATURE_MODIFIER import FEATURE_MODIFIER
 
 import random
 import time
@@ -1727,6 +1739,796 @@ def create_doc_element(
         explicit_properties_override
     )
 
+
+def create_dimension_style(
+    dim_line=None,
+    ext_line=None,
+    text_style=None,
+    symbols=None,
+    tolerance=None,
+    fit=None
+) -> DucDimensionStyle:
+    """Create a dimension style with default values."""
+    if dim_line is None:
+        from .style_builders import create_solid_content, create_stroke
+        stroke_content = create_solid_content("#000000", 1.0)
+        stroke = create_stroke(stroke_content, width=1.0)
+        dim_line = DimensionLineStyle(
+            stroke=stroke,
+            text_gap=2.0
+        )
+    if ext_line is None:
+        from .style_builders import create_solid_content, create_stroke
+        stroke_content = create_solid_content("#000000", 1.0)
+        stroke = create_stroke(stroke_content, width=1.0)
+        ext_line = DimensionExtLineStyle(
+            stroke=stroke,
+            overshoot=2.0,
+            offset=1.0
+        )
+    if text_style is None:
+        text_style = create_text_style(font_size=12)
+    if symbols is None:
+        from ducpy.Duc.MARK_ELLIPSE_CENTER import MARK_ELLIPSE_CENTER
+        symbols = DimensionSymbolStyle(
+            center_mark_size=5.0,
+            center_mark_type=MARK_ELLIPSE_CENTER.MARK
+        )
+    if tolerance is None:
+        from ducpy.Duc.TOLERANCE_DISPLAY import TOLERANCE_DISPLAY
+        tolerance = DimensionToleranceStyle(
+            enabled=False,
+            upper_value=0.0,
+            lower_value=0.0,
+            precision=2,
+            display_method=TOLERANCE_DISPLAY.NONE
+        )
+    if fit is None:
+        from ducpy.Duc.DIMENSION_FIT_RULE import DIMENSION_FIT_RULE
+        from ducpy.Duc.DIMENSION_TEXT_PLACEMENT import DIMENSION_TEXT_PLACEMENT
+        fit = DimensionFitStyle(
+            force_text_inside=False,
+            rule=DIMENSION_FIT_RULE.BEST_FIT,
+            text_placement=DIMENSION_TEXT_PLACEMENT.BESIDE_LINE
+        )
+    
+    return DucDimensionStyle(
+        dim_line=dim_line,
+        ext_line=ext_line,
+        text_style=text_style,
+        symbols=symbols,
+        tolerance=tolerance,
+        fit=fit
+    )
+
+
+def create_dimension_element(
+    x=0.0,
+    y=0.0,
+    width=100.0,
+    height=20.0,
+    origin1=None,
+    origin2=None,
+    location=None,
+    dimension_type=DIMENSION_TYPE.LINEAR,
+    oblique_angle=0.0,
+    style=None,
+    text_override=None,
+    ordinate_axis=None,
+    bindings=None,
+    baseline_data=None,
+    continue_data=None,
+    **kwargs
+) -> ElementWrapper:
+    """
+    Create a dimension element.
+    
+    Args:
+        x, y, width, height: Basic positioning and sizing
+        origin1: First origin point (GeometricPoint). If None, uses (x, y)
+        origin2: Second origin point (GeometricPoint). If None, uses (x+width, y)
+        location: Dimension line location (GeometricPoint). If None, uses (x+width/2, y+height)
+        dimension_type: Type of dimension (DIMENSION_TYPE enum)
+        oblique_angle: Oblique angle for extension lines (radians)
+        style: Dimension style (DucDimensionStyle)
+        text_override: Override dimension text
+        ordinate_axis: For ordinate dimensions (AXIS enum)
+        bindings: Point bindings to other elements (DimensionBindings)
+        baseline_data: For baseline dimensions (DimensionBaselineData)
+        continue_data: For continued dimensions (DimensionContinueData)
+    """
+    # Create default points if not provided
+    if origin1 is None:
+        origin1 = GeometricPoint(x=x, y=y)
+    if origin2 is None:
+        origin2 = GeometricPoint(x=x + width, y=y)
+    if location is None:
+        location = GeometricPoint(x=x + width/2, y=y + height)
+    
+    # Create definition points
+    definition_points = DimensionDefinitionPoints(
+        origin1=origin1,
+        origin2=origin2,
+        location=location
+    )
+    
+    # Create default style if not provided
+    if style is None:
+        style = create_dimension_style()
+    
+    # Separate base parameters from element-specific parameters
+    base_kwargs = {}
+    for key, value in kwargs.items():
+        if key in ['id', 'label', 'scope', 'locked', 'is_visible', 'z_index', 
+                  'description', 'group_ids', 'region_ids', 'layer_id', 'frame_id',
+                  'bound_elements', 'link', 'custom_data', 'is_plot', 'is_annotative',
+                  'is_deleted', 'index', 'angle', 'styles']:
+            base_kwargs[key] = value
+    
+    # Create base element
+    base_params = {
+        "x": x,
+        "y": y,
+        "width": width,
+        "height": height,
+        "styles": base_kwargs.get('styles', create_simple_styles()),
+        **base_kwargs
+    }
+    
+    element_params = {
+        "style": style,
+        "definition_points": definition_points,
+        "oblique_angle": oblique_angle,
+        "dimension_type": dimension_type,
+        "ordinate_axis": ordinate_axis,
+        "bindings": bindings,
+        "text_override": text_override,
+        "baseline_data": baseline_data,
+        "continue_data": continue_data
+    }
+    
+    return _create_element_wrapper(
+        DucDimensionElement,
+        base_params,
+        element_params
+    )
+
+
+def create_linear_dimension(
+    x1, y1, x2, y2, offset=20.0, text_override=None, style=None, **kwargs
+) -> ElementWrapper:
+    """Create a linear dimension between two points."""
+    return create_dimension_element(
+        x=min(x1, x2),
+        y=min(y1, y2) - offset,
+        width=abs(x2 - x1),
+        height=offset,
+        origin1=GeometricPoint(x=x1, y=y1),
+        origin2=GeometricPoint(x=x2, y=y2),
+        location=GeometricPoint(x=(x1 + x2) / 2, y=min(y1, y2) - offset),
+        dimension_type=DIMENSION_TYPE.LINEAR,
+        text_override=text_override,
+        style=style,
+        **kwargs
+    )
+
+
+def create_aligned_dimension(
+    x1, y1, x2, y2, offset=20.0, text_override=None, style=None, **kwargs
+) -> ElementWrapper:
+    """Create an aligned dimension between two points."""
+    # Calculate perpendicular offset direction
+    import math
+    dx = x2 - x1
+    dy = y2 - y1
+    length = math.sqrt(dx*dx + dy*dy)
+    if length > 0:
+        # Perpendicular vector (normalized)
+        perp_x = -dy / length
+        perp_y = dx / length
+        location_x = (x1 + x2) / 2 + perp_x * offset
+        location_y = (y1 + y2) / 2 + perp_y * offset
+    else:
+        location_x = x1
+        location_y = y1 - offset
+    
+    return create_dimension_element(
+        x=min(x1, x2),
+        y=min(y1, y2),
+        width=abs(x2 - x1),
+        height=abs(y2 - y1),
+        origin1=GeometricPoint(x=x1, y=y1),
+        origin2=GeometricPoint(x=x2, y=y2),
+        location=GeometricPoint(x=location_x, y=location_y),
+        dimension_type=DIMENSION_TYPE.ALIGNED,
+        text_override=text_override,
+        style=style,
+        **kwargs
+    )
+
+
+def create_angular_dimension(
+    center_x, center_y, x1, y1, x2, y2, offset=30.0, text_override=None, style=None, **kwargs
+) -> ElementWrapper:
+    """Create an angular dimension."""
+    return create_dimension_element(
+        x=center_x - offset,
+        y=center_y - offset,
+        width=offset * 2,
+        height=offset * 2,
+        origin1=GeometricPoint(x=x1, y=y1),
+        origin2=GeometricPoint(x=x2, y=y2),
+        location=GeometricPoint(x=center_x, y=center_y - offset),
+        definition_points=DimensionDefinitionPoints(
+            origin1=GeometricPoint(x=x1, y=y1),
+            origin2=GeometricPoint(x=x2, y=y2),
+            center=GeometricPoint(x=center_x, y=center_y),
+            location=GeometricPoint(x=center_x, y=center_y - offset)
+        ),
+        dimension_type=DIMENSION_TYPE.ANGULAR,
+        text_override=text_override,
+        style=style,
+        **kwargs
+    )
+
+
+def create_radius_dimension(
+    center_x, center_y, radius_point_x, radius_point_y, text_override=None, style=None, **kwargs
+) -> ElementWrapper:
+    """Create a radius dimension."""
+    return create_dimension_element(
+        x=center_x,
+        y=center_y,
+        width=abs(radius_point_x - center_x),
+        height=abs(radius_point_y - center_y),
+        origin1=GeometricPoint(x=center_x, y=center_y),
+        origin2=GeometricPoint(x=radius_point_x, y=radius_point_y),
+        location=GeometricPoint(x=(center_x + radius_point_x) / 2, y=(center_y + radius_point_y) / 2),
+        dimension_type=DIMENSION_TYPE.RADIUS,
+        text_override=text_override,
+        style=style,
+        **kwargs
+    )
+
+
+def create_diameter_dimension(
+    center_x, center_y, x1, y1, x2, y2, text_override=None, style=None, **kwargs
+) -> ElementWrapper:
+    """Create a diameter dimension."""
+    return create_dimension_element(
+        x=min(x1, x2),
+        y=min(y1, y2),
+        width=abs(x2 - x1),
+        height=abs(y2 - y1),
+        origin1=GeometricPoint(x=x1, y=y1),
+        origin2=GeometricPoint(x=x2, y=y2),
+        location=GeometricPoint(x=(x1 + x2) / 2, y=(y1 + y2) / 2),
+        definition_points=DimensionDefinitionPoints(
+            origin1=GeometricPoint(x=x1, y=y1),
+            origin2=GeometricPoint(x=x2, y=y2),
+            center=GeometricPoint(x=center_x, y=center_y),
+            location=GeometricPoint(x=(x1 + x2) / 2, y=(y1 + y2) / 2)
+        ),
+        dimension_type=DIMENSION_TYPE.DIAMETER,
+        text_override=text_override,
+        style=style,
+        **kwargs
+    )
+
+
+def create_arc_length_dimension(
+    center_x, center_y, start_angle, end_angle, radius, text_override=None, style=None, **kwargs
+) -> ElementWrapper:
+    """Create an arc length dimension."""
+    import math
+    # Calculate arc endpoints
+    start_x = center_x + radius * math.cos(start_angle)
+    start_y = center_y + radius * math.sin(start_angle)
+    end_x = center_x + radius * math.cos(end_angle)
+    end_y = center_y + radius * math.sin(end_angle)
+    
+    # Location is at the midpoint of the arc
+    mid_angle = (start_angle + end_angle) / 2
+    location_x = center_x + (radius + 20) * math.cos(mid_angle)
+    location_y = center_y + (radius + 20) * math.sin(mid_angle)
+    
+    return create_dimension_element(
+        x=center_x - radius,
+        y=center_y - radius,
+        width=radius * 2,
+        height=radius * 2,
+        origin1=GeometricPoint(x=start_x, y=start_y),
+        origin2=GeometricPoint(x=end_x, y=end_y),
+        location=GeometricPoint(x=location_x, y=location_y),
+        definition_points=DimensionDefinitionPoints(
+            origin1=GeometricPoint(x=start_x, y=start_y),
+            origin2=GeometricPoint(x=end_x, y=end_y),
+            center=GeometricPoint(x=center_x, y=center_y),
+            location=GeometricPoint(x=location_x, y=location_y)
+        ),
+        dimension_type=DIMENSION_TYPE.ARC_LENGTH,
+        text_override=text_override,
+        style=style,
+        **kwargs
+    )
+
+
+def create_center_mark_dimension(
+    center_x, center_y, size=10, text_override=None, style=None, **kwargs
+) -> ElementWrapper:
+    """Create a center mark dimension."""
+    return create_dimension_element(
+        x=center_x - size/2,
+        y=center_y - size/2,
+        width=size,
+        height=size,
+        origin1=GeometricPoint(x=center_x, y=center_y),
+        location=GeometricPoint(x=center_x, y=center_y - size),
+        definition_points=DimensionDefinitionPoints(
+            origin1=GeometricPoint(x=center_x, y=center_y),
+            location=GeometricPoint(x=center_x, y=center_y - size),
+            center=GeometricPoint(x=center_x, y=center_y)
+        ),
+        dimension_type=DIMENSION_TYPE.CENTER_MARK,
+        text_override=text_override,
+        style=style,
+        **kwargs
+    )
+
+
+def create_rotated_dimension(
+    x1, y1, x2, y2, rotation_angle, offset=20.0, text_override=None, style=None, **kwargs
+) -> ElementWrapper:
+    """Create a rotated dimension (linear dimension at a specific angle)."""
+    import math
+    
+    # Calculate the dimension line parallel to the specified angle
+    dx = x2 - x1
+    dy = y2 - y1
+    
+    # Calculate perpendicular offset direction
+    perp_x = -math.sin(rotation_angle)
+    perp_y = math.cos(rotation_angle)
+    
+    location_x = (x1 + x2) / 2 + perp_x * offset
+    location_y = (y1 + y2) / 2 + perp_y * offset
+    
+    return create_dimension_element(
+        x=min(x1, x2),
+        y=min(y1, y2),
+        width=abs(x2 - x1),
+        height=abs(y2 - y1),
+        origin1=GeometricPoint(x=x1, y=y1),
+        origin2=GeometricPoint(x=x2, y=y2),
+        location=GeometricPoint(x=location_x, y=location_y),
+        dimension_type=DIMENSION_TYPE.ROTATED,
+        oblique_angle=rotation_angle,
+        text_override=text_override,
+        style=style,
+        **kwargs
+    )
+
+
+def create_spacing_dimension(
+    x1, y1, x2, y2, x3, y3, x4, y4, text_override=None, style=None, **kwargs
+) -> ElementWrapper:
+    """Create a spacing dimension (measures distance between two objects)."""
+    # First object center
+    obj1_center_x = (x1 + x2) / 2
+    obj1_center_y = (y1 + y2) / 2
+    
+    # Second object center
+    obj2_center_x = (x3 + x4) / 2
+    obj2_center_y = (y3 + y4) / 2
+    
+    # Dimension location offset from center line
+    location_x = (obj1_center_x + obj2_center_x) / 2
+    location_y = (obj1_center_y + obj2_center_y) / 2 - 30
+    
+    return create_dimension_element(
+        x=min(obj1_center_x, obj2_center_x),
+        y=min(obj1_center_y, obj2_center_y),
+        width=abs(obj2_center_x - obj1_center_x),
+        height=abs(obj2_center_y - obj1_center_y),
+        origin1=GeometricPoint(x=obj1_center_x, y=obj1_center_y),
+        origin2=GeometricPoint(x=obj2_center_x, y=obj2_center_y),
+        location=GeometricPoint(x=location_x, y=location_y),
+        dimension_type=DIMENSION_TYPE.SPACING,
+        text_override=text_override,
+        style=style,
+        **kwargs
+    )
+
+
+def create_continue_dimension(
+    continue_from_dimension_id, x1, y1, x2, y2, text_override=None, style=None, **kwargs
+) -> ElementWrapper:
+    """Create a continued dimension (continues from a previous dimension)."""
+    continue_data = DimensionContinueData(continue_from_dimension_id=continue_from_dimension_id)
+    
+    return create_dimension_element(
+        x=min(x1, x2),
+        y=min(y1, y2),
+        width=abs(x2 - x1),
+        height=20,
+        origin1=GeometricPoint(x=x1, y=y1),
+        origin2=GeometricPoint(x=x2, y=y2),
+        location=GeometricPoint(x=(x1 + x2) / 2, y=min(y1, y2) - 20),
+        dimension_type=DIMENSION_TYPE.CONTINUE,
+        continue_data=continue_data,
+        text_override=text_override,
+        style=style,
+        **kwargs
+    )
+
+
+def create_baseline_dimension(
+    base_dimension_id, x1, y1, x2, y2, text_override=None, style=None, **kwargs
+) -> ElementWrapper:
+    """Create a baseline dimension (from a common baseline)."""
+    baseline_data = DimensionBaselineData(base_dimension_id=base_dimension_id)
+    
+    return create_dimension_element(
+        x=min(x1, x2),
+        y=min(y1, y2),
+        width=abs(x2 - x1),
+        height=20,
+        origin1=GeometricPoint(x=x1, y=y1),
+        origin2=GeometricPoint(x=x2, y=y2),
+        location=GeometricPoint(x=(x1 + x2) / 2, y=min(y1, y2) - 30),
+        dimension_type=DIMENSION_TYPE.BASELINE,
+        baseline_data=baseline_data,
+        text_override=text_override,
+        style=style,
+        **kwargs
+    )
+
+
+def create_jogged_linear_dimension(
+    x1, y1, x2, y2, jog_x, jog_y, text_override=None, style=None, **kwargs
+) -> ElementWrapper:
+    """Create a jogged linear dimension (linear dimension with a jogged dimension line)."""
+    return create_dimension_element(
+        x=min(x1, x2),
+        y=min(y1, y2),
+        width=abs(x2 - x1),
+        height=abs(y2 - y1),
+        origin1=GeometricPoint(x=x1, y=y1),
+        origin2=GeometricPoint(x=x2, y=y2),
+        location=GeometricPoint(x=(x1 + x2) / 2, y=(y1 + y2) / 2),
+        definition_points=DimensionDefinitionPoints(
+            origin1=GeometricPoint(x=x1, y=y1),
+            origin2=GeometricPoint(x=x2, y=y2),
+            location=GeometricPoint(x=(x1 + x2) / 2, y=(y1 + y2) / 2),
+            jog=GeometricPoint(x=jog_x, y=jog_y)
+        ),
+        dimension_type=DIMENSION_TYPE.JOGGED_LINEAR,
+        text_override=text_override,
+        style=style,
+        **kwargs
+    )
+
 def create_margins(top: float = 0.0, right: float = 0.0, bottom: float = 0.0, left: float = 0.0) -> Margins:
     """Create margins object for layout elements."""
     return Margins(top=top, right=right, bottom=bottom, left=left)
+
+
+# === TOLERANCE AND GD&T BUILDERS ===
+
+def create_tolerance_clause(
+    value: str,
+    zone_type: Optional[int] = None,
+    material_condition: Optional[int] = None,
+    feature_modifiers: Optional[List[int]] = None
+) -> ToleranceClause:
+    """Create a tolerance clause for GD&T."""
+    return ToleranceClause(
+        value=value,
+        zone_type=zone_type,
+        material_condition=material_condition,
+        feature_modifiers=feature_modifiers or []
+    )
+
+
+def create_datum_reference(
+    datum_letter: str,
+    material_condition: Optional[int] = None,
+    modifier: str = ""
+) -> DatumReference:
+    """Create a datum reference for GD&T."""
+    return DatumReference(
+        letters=datum_letter,
+        modifier=material_condition
+    )
+
+
+def create_feature_control_frame_segment(
+    symbol: int,
+    tolerance: ToleranceClause,
+    datums: Optional[List[DatumReference]] = None
+) -> FeatureControlFrameSegment:
+    """Create a feature control frame segment."""
+    return FeatureControlFrameSegment(
+        symbol=symbol,
+        tolerance=tolerance,
+        datums=datums or []
+    )
+
+
+def create_fcf_frame_modifiers(
+    all_around: bool = False,
+    all_over: bool = False,
+    continuous_feature: bool = False,
+    between: Optional[FCFBetweenModifier] = None,
+    projected_tolerance_zone: Optional[FCFProjectedZoneModifier] = None
+) -> FCFFrameModifiers:
+    """Create frame modifiers for feature control frames."""
+    return FCFFrameModifiers(
+        all_around=all_around,
+        all_over=all_over,
+        continuous_feature=continuous_feature,
+        between=between,
+        projected_tolerance_zone=projected_tolerance_zone
+    )
+
+
+def create_fcf_between_modifier(start: str, end: str) -> FCFBetweenModifier:
+    """Create a between modifier for feature control frames."""
+    return FCFBetweenModifier(start=start, end=end)
+
+
+def create_fcf_projected_zone_modifier(value: float) -> FCFProjectedZoneModifier:
+    """Create a projected zone modifier for feature control frames."""
+    return FCFProjectedZoneModifier(value=value)
+
+
+def create_fcf_datum_definition(
+    letter: str,
+    feature_binding: Optional[DucPointBinding] = None
+) -> FCFDatumDefinition:
+    """Create a datum definition for feature control frames."""
+    return FCFDatumDefinition(
+        letter=letter,
+        feature_binding=feature_binding
+    )
+
+
+def create_feature_control_frame_element(
+    x: float, y: float, width: float, height: float,
+    rows: List[FCFSegmentRow],
+    frame_modifiers: Optional[FCFFrameModifiers] = None,
+    leader_element_id: Optional[str] = None,
+    datum_definition: Optional[FCFDatumDefinition] = None,
+    style=None,
+    **kwargs
+) -> ElementWrapper:
+    """Create a feature control frame element."""
+    base = create_element_base(
+        x=x, y=y, width=width, height=height, **kwargs
+    )
+    
+    if style is None:
+        style = create_feature_control_frame_style()
+    
+    element = DucFeatureControlFrameElement(
+        base=base,
+        style=style,
+        rows=rows,
+        frame_modifiers=frame_modifiers,
+        leader_element_id=leader_element_id,
+        datum_definition=datum_definition
+    )
+    
+    return ElementWrapper(element=element)
+
+
+def create_feature_control_frame_style():
+    """Create a default feature control frame style."""
+    from .style_builders import create_simple_styles, create_text_style
+    
+    # Create a basic FCF style - this would need proper implementation
+    # For now, return a simple object that can be serialized
+    class DucFeatureControlFrameStyle:
+        def __init__(self):
+            self.base_style = create_simple_styles()
+            self.text_style = create_text_style()
+            self.layout = None
+            self.symbols = None
+            self.datum_style = None
+    
+    return DucFeatureControlFrameStyle()
+
+
+def create_leader_text_content(text: str) -> LeaderTextBlockContent:
+    """Create leader text block content."""
+    return LeaderTextBlockContent(text=text)
+
+
+def create_leader_block_content(
+    block_id: str,
+    attribute_values: Optional[List[StringValueEntry]] = None,
+    element_overrides: Optional[List[StringValueEntry]] = None
+) -> LeaderBlockContent:
+    """Create leader block content."""
+    return LeaderBlockContent(
+        block_id=block_id,
+        attribute_values=attribute_values,
+        element_overrides=element_overrides
+    )
+
+
+def create_leader_content(
+    content: Union[LeaderTextBlockContent, LeaderBlockContent]
+) -> LeaderContent:
+    """Create leader content."""
+    return LeaderContent(content=content)
+
+
+def create_leader_element(
+    x1: float, y1: float, x2: float, y2: float,
+    content_anchor_x: float, content_anchor_y: float,
+    content: Optional[LeaderContent] = None,
+    style=None,
+    **kwargs
+) -> ElementWrapper:
+    """Create a leader element."""
+    # Create DucPoints from coordinates
+    duc_points = [
+        DucPoint(x=x1, y=y1),
+        DucPoint(x=x2, y=y2)
+    ]
+    
+    # Create a line connecting the points
+    start_ref = DucLineReference(index=0, handle=GeometricPoint(x=0, y=0))
+    end_ref = DucLineReference(index=1, handle=GeometricPoint(x=0, y=0))
+    lines = [DucLine(start=start_ref, end=end_ref)]
+    
+    # Create the last committed point
+    last_committed_point = DucPoint(x=x2, y=y2)
+    
+    # Create empty bindings (leaders typically don't bind to specific elements)
+    start_binding = DucPointBinding(
+        element_id="",
+        focus=0.0,
+        gap=0.0
+    )
+    end_binding = DucPointBinding(
+        element_id="",
+        focus=0.0,
+        gap=0.0
+    )
+    
+    linear_base = DucLinearElementBase(
+        base=create_element_base(
+            x=min(x1, x2), y=min(y1, y2),
+            width=abs(x2 - x1), height=abs(y2 - y1),
+            **kwargs
+        ),
+        points=duc_points,
+        lines=lines,
+        path_overrides=[],
+        last_committed_point=last_committed_point,
+        start_binding=start_binding,
+        end_binding=end_binding
+    )
+    
+    if style is None:
+        style = create_leader_style()
+    
+    element = DucLeaderElement(
+        linear_base=linear_base,
+        style=style,
+        content_anchor=GeometricPoint(x=content_anchor_x, y=content_anchor_y),
+        content=content
+    )
+    
+    return ElementWrapper(element=element)
+
+
+def create_leader_style():
+    """Create a default leader style."""
+    from .style_builders import create_simple_styles
+    
+    # Create a basic leader style that matches the schema
+    class DucLeaderStyle:
+        def __init__(self):
+            self.base_style = create_simple_styles()
+            self.heads_override = []  # Empty list for heads override
+            self.dogleg = 10.0  # Default dogleg length
+            self.text_style = None  # No text style override
+            self.text_attachment = None  # No text attachment override
+            self.block_attachment = None  # No block attachment override
+    
+    return DucLeaderStyle()
+
+
+def create_position_tolerance_fcf(
+    x: float, y: float, width: float, height: float,
+    tolerance_value: str,
+    primary_datum: str = "A",
+    secondary_datum: str = "B", 
+    tertiary_datum: str = "C",
+    leader_element_id: Optional[str] = None,
+    **kwargs
+) -> ElementWrapper:
+    """Create a position tolerance feature control frame."""
+    # Create tolerance clause
+    tolerance = create_tolerance_clause(
+        value=tolerance_value,
+        zone_type=None,  # Could be TOLERANCE_ZONE_TYPE.CYLINDRICAL
+        material_condition=None  # Could be MATERIAL_CONDITION.MAXIMUM_MATERIAL
+    )
+    
+    # Create datum references
+    datums = [
+        create_datum_reference(primary_datum),
+        create_datum_reference(secondary_datum),
+        create_datum_reference(tertiary_datum)
+    ]
+    
+    # Create segment
+    segment = create_feature_control_frame_segment(
+        symbol=GDT_SYMBOL.POSITION,
+        tolerance=tolerance,
+        datums=datums
+    )
+    
+    # Create FCFSegmentRow with single segment
+    fcf_row = FCFSegmentRow(segments=[segment])
+    
+    # Create FCF with single row
+    return create_feature_control_frame_element(
+        x=x, y=y, width=width, height=height,
+        rows=[fcf_row],
+        leader_element_id=leader_element_id,
+        **kwargs
+    )
+
+
+def create_flatness_tolerance_fcf(
+    x: float, y: float, width: float, height: float,
+    tolerance_value: str,
+    leader_element_id: Optional[str] = None,
+    **kwargs
+) -> ElementWrapper:
+    """Create a flatness tolerance feature control frame."""
+    # Create tolerance clause
+    tolerance = create_tolerance_clause(value=tolerance_value)
+    
+    # Create segment (flatness doesn't use datums)
+    segment = create_feature_control_frame_segment(
+        symbol=GDT_SYMBOL.FLATNESS,
+        tolerance=tolerance,
+        datums=[]
+    )
+    
+    # Create FCFSegmentRow with single segment
+    fcf_row = FCFSegmentRow(segments=[segment])
+    
+    # Create FCF with single row
+    return create_feature_control_frame_element(
+        x=x, y=y, width=width, height=height,
+        rows=[fcf_row],
+        leader_element_id=leader_element_id,
+        **kwargs
+    )
+
+
+def create_datum_feature_symbol(
+    x: float, y: float, width: float, height: float,
+    datum_letter: str,
+    feature_binding: Optional[DucPointBinding] = None,
+    **kwargs
+) -> ElementWrapper:
+    """Create a datum feature symbol."""
+    datum_definition = create_fcf_datum_definition(
+        letter=datum_letter,
+        feature_binding=feature_binding
+    )
+    
+    return create_feature_control_frame_element(
+        x=x, y=y, width=width, height=height,
+        rows=[],  # Empty for datum symbols
+        datum_definition=datum_definition,
+        **kwargs
+    )
