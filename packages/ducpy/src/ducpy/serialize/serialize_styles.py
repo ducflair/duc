@@ -9,6 +9,8 @@ import flatbuffers
 from typing import List, Optional
 import numpy as np
 
+from ducpy.serialize.serialize_base_elements import serialize_fbs_duc_hatch_style
+
 # Import dataclasses from comprehensive classes
 from ..classes.ElementsClass import (
     LineSpacing, DucTextStyle, DucTableCellStyle, DucTableStyle,
@@ -63,7 +65,18 @@ from ducpy.Duc.StandardStyles import (
     StandardStylesAddLeaderStyles, StandardStylesAddFeatureControlFrameStyles,
     StandardStylesAddTableStyles, StandardStylesAddDocStyles,
     StandardStylesAddViewportStyles, StandardStylesAddHatchStyles,
-    StandardStylesAddXrayStyles
+    StandardStylesAddXrayStyles,
+    StandardStylesStartCommonStylesVector,
+    StandardStylesStartStackLikeStylesVector,
+    StandardStylesStartTextStylesVector,
+    StandardStylesStartDimensionStylesVector,
+    StandardStylesStartLeaderStylesVector,
+    StandardStylesStartFeatureControlFrameStylesVector,
+    StandardStylesStartTableStylesVector,
+    StandardStylesStartDocStylesVector,
+    StandardStylesStartViewportStylesVector,
+    StandardStylesStartHatchStylesVector,
+    StandardStylesStartXrayStylesVector
 )
 from ducpy.Duc.DucCommonStyle import DucCommonStyleStart, DucCommonStyleEnd, DucCommonStyleAddBackground, DucCommonStyleAddStroke
 from ducpy.Duc.DucStackLikeStyles import DucStackLikeStylesStart, DucStackLikeStylesEnd, DucStackLikeStylesAddOpacity, DucStackLikeStylesAddLabelingColor
@@ -678,16 +691,73 @@ def serialize_fbs_standard_styles(builder: flatbuffers.Builder, standard_styles:
     for style in standard_styles.xray_styles:
         xray_styles_offsets.append(serialize_fbs_identified_xray_style(builder, style))
     
+    # Build all vectors first
+    StandardStylesStartCommonStylesVector(builder, len(common_styles_offsets))
+    for offset in reversed(common_styles_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    common_styles_vector = builder.EndVector()
+
+    StandardStylesStartStackLikeStylesVector(builder, len(stack_like_styles_offsets))
+    for offset in reversed(stack_like_styles_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    stack_like_styles_vector = builder.EndVector()
+
+    StandardStylesStartTextStylesVector(builder, len(text_styles_offsets))
+    for offset in reversed(text_styles_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    text_styles_vector = builder.EndVector()
+
+    StandardStylesStartDimensionStylesVector(builder, len(dimension_styles_offsets))
+    for offset in reversed(dimension_styles_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    dimension_styles_vector = builder.EndVector()
+
+    StandardStylesStartLeaderStylesVector(builder, len(leader_styles_offsets))
+    for offset in reversed(leader_styles_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    leader_styles_vector = builder.EndVector()
+
+    StandardStylesStartFeatureControlFrameStylesVector(builder, len(feature_control_frame_styles_offsets))
+    for offset in reversed(feature_control_frame_styles_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    feature_control_frame_styles_vector = builder.EndVector()
+
+    StandardStylesStartTableStylesVector(builder, len(table_styles_offsets))
+    for offset in reversed(table_styles_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    table_styles_vector = builder.EndVector()
+
+    StandardStylesStartDocStylesVector(builder, len(doc_styles_offsets))
+    for offset in reversed(doc_styles_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    doc_styles_vector = builder.EndVector()
+
+    StandardStylesStartViewportStylesVector(builder, len(viewport_styles_offsets))
+    for offset in reversed(viewport_styles_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    viewport_styles_vector = builder.EndVector()
+
+    StandardStylesStartHatchStylesVector(builder, len(hatch_styles_offsets))
+    for offset in reversed(hatch_styles_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    hatch_styles_vector = builder.EndVector()
+
+    StandardStylesStartXrayStylesVector(builder, len(xray_styles_offsets))
+    for offset in reversed(xray_styles_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    xray_styles_vector = builder.EndVector()
+
+    # Now start the parent object and add the vectors
     StandardStylesStart(builder)
-    StandardStylesAddCommonStyles(builder, builder.CreateVector(list(reversed(common_styles_offsets))))
-    StandardStylesAddStackLikeStyles(builder, builder.CreateVector(list(reversed(stack_like_styles_offsets))))
-    StandardStylesAddTextStyles(builder, builder.CreateVector(list(reversed(text_styles_offsets))))
-    StandardStylesAddDimensionStyles(builder, builder.CreateVector(list(reversed(dimension_styles_offsets))))
-    StandardStylesAddLeaderStyles(builder, builder.CreateVector(list(reversed(leader_styles_offsets))))
-    StandardStylesAddFeatureControlFrameStyles(builder, builder.CreateVector(list(reversed(feature_control_frame_styles_offsets))))
-    StandardStylesAddTableStyles(builder, builder.CreateVector(list(reversed(table_styles_offsets))))
-    StandardStylesAddDocStyles(builder, builder.CreateVector(list(reversed(doc_styles_offsets))))
-    StandardStylesAddViewportStyles(builder, builder.CreateVector(list(reversed(viewport_styles_offsets))))
-    StandardStylesAddHatchStyles(builder, builder.CreateVector(list(reversed(hatch_styles_offsets))))
-    StandardStylesAddXrayStyles(builder, builder.CreateVector(list(reversed(xray_styles_offsets))))
+    StandardStylesAddCommonStyles(builder, common_styles_vector)
+    StandardStylesAddStackLikeStyles(builder, stack_like_styles_vector)
+    StandardStylesAddTextStyles(builder, text_styles_vector)
+    StandardStylesAddDimensionStyles(builder, dimension_styles_vector)
+    StandardStylesAddLeaderStyles(builder, leader_styles_vector)
+    StandardStylesAddFeatureControlFrameStyles(builder, feature_control_frame_styles_vector)
+    StandardStylesAddTableStyles(builder, table_styles_vector)
+    StandardStylesAddDocStyles(builder, doc_styles_vector)
+    StandardStylesAddViewportStyles(builder, viewport_styles_vector)
+    StandardStylesAddHatchStyles(builder, hatch_styles_vector)
+    StandardStylesAddXrayStyles(builder, xray_styles_vector)
     return StandardStylesEnd(builder)

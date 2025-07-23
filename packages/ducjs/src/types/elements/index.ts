@@ -1086,7 +1086,7 @@ export type _DucStackElementBase = _DucElementBase & _DucStackBase & {
   labelVisible: boolean;
 
   /** Everything inside the stack will use this standard */
-  standardOverride: Standard;
+  standardOverride: Standard["id"] | null;
 };
 
 export type DucFrameElement = _DucStackElementBase & {
@@ -1187,7 +1187,7 @@ export type DucViewportElement = _DucLinearElementBase & _DucStackBase & DucView
   frozenGroupIds: GroupId[];
 
   /** Everything inside the viewport will use this standard */
-  standardOverride: Standard;
+  standardOverride: Standard["id"] | null;
 };
 
 

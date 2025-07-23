@@ -215,7 +215,15 @@ def parse_fbs_duc_layer(fbs_layer: FBSDucLayer) -> DucLayer:
         ) if fbs_layer.Overrides() else None
     )
 
-def parse_fbs_unit_system_base(fbs_unit_base: FBSUnitSystemBase) -> UnitSystemBase:
+def parse_fbs_unit_system_base(fbs_unit_base: "FBSUnitSystemBase") -> UnitSystemBase:
+    if fbs_unit_base is None:
+        # Return default UnitSystemBase if missing
+        return UnitSystemBase(
+            system=None,
+            precision=0,
+            suppress_leading_zeros=False,
+            suppress_trailing_zeros=False
+        )
     return UnitSystemBase(
         system=fbs_unit_base.System() if fbs_unit_base.System() is not None else None,
         precision=fbs_unit_base.Precision(),
@@ -223,25 +231,64 @@ def parse_fbs_unit_system_base(fbs_unit_base: FBSUnitSystemBase) -> UnitSystemBa
         suppress_trailing_zeros=bool(fbs_unit_base.SuppressTrailingZeros())
     )
 
-def parse_fbs_linear_unit_system(fbs_linear_unit: FBSLinearUnitSystem) -> LinearUnitSystem:
+def parse_fbs_linear_unit_system(fbs_linear_unit: "FBSLinearUnitSystem") -> LinearUnitSystem:
+    if fbs_linear_unit is None:
+        
+        return None
+    
+    # Parse the base unit system properties
+    base = parse_fbs_unit_system_base(fbs_linear_unit.Base())
+    if base is None:
+        return None
     return LinearUnitSystem(
-        base=parse_fbs_unit_system_base(fbs_linear_unit.Base()),
-        format=fbs_linear_unit.Format() if fbs_linear_unit.Format() is not None else None,
-        decimal_separator=fbs_linear_unit.DecimalSeparator() if fbs_linear_unit.DecimalSeparator() is not None else None,
+        # Base properties
+        precision=base.precision,
+        suppress_leading_zeros=base.suppress_leading_zeros,
+        suppress_trailing_zeros=base.suppress_trailing_zeros,
+        system=base.system,
+        # Linear-specific properties
+        format=fbs_linear_unit.Format() if fbs_linear_unit.Format() is not None else DIMENSION_UNITS_FORMAT.DECIMAL,
+        decimal_separator=fbs_linear_unit.DecimalSeparator() if fbs_linear_unit.DecimalSeparator() is not None else DECIMAL_SEPARATOR.DOT,
         suppress_zero_feet=bool(fbs_linear_unit.SuppressZeroFeet()),
         suppress_zero_inches=bool(fbs_linear_unit.SuppressZeroInches())
     )
 
-def parse_fbs_angular_unit_system(fbs_angular_unit: FBSAngularUnitSystem) -> AngularUnitSystem:
+def parse_fbs_angular_unit_system(fbs_angular_unit: "FBSAngularUnitSystem") -> AngularUnitSystem:
+    if fbs_angular_unit is None:
+        return None
+    
+    # Parse the base unit system properties
+    base = parse_fbs_unit_system_base(fbs_angular_unit.Base())
+    if base is None:
+        return None
+    
     return AngularUnitSystem(
-        base=parse_fbs_unit_system_base(fbs_angular_unit.Base()),
-        format=fbs_angular_unit.Format() if fbs_angular_unit.Format() is not None else None
+        # Base properties
+        precision=base.precision,
+        suppress_leading_zeros=base.suppress_leading_zeros,
+        suppress_trailing_zeros=base.suppress_trailing_zeros,
+        system=base.system,
+        # Angular-specific properties
+        format=fbs_angular_unit.Format() if fbs_angular_unit.Format() is not None else ANGULAR_UNITS_FORMAT.DECIMAL_DEGREES
     )
 
-def parse_fbs_alternate_units(fbs_alternate_units: FBSAlternateUnits) -> AlternateUnits:
+def parse_fbs_alternate_units(fbs_alternate_units: "FBSAlternateUnits") -> AlternateUnits:
+    if fbs_alternate_units is None:
+        return None
+    
+    # Parse the base unit system properties
+    base = parse_fbs_unit_system_base(fbs_alternate_units.Base())
+    if base is None:
+        return None
+    
     return AlternateUnits(
-        base=parse_fbs_unit_system_base(fbs_alternate_units.Base()),
-        format=fbs_alternate_units.Format() if fbs_alternate_units.Format() is not None else None,
+        # Base properties
+        precision=base.precision,
+        suppress_leading_zeros=base.suppress_leading_zeros,
+        suppress_trailing_zeros=base.suppress_trailing_zeros,
+        system=base.system,
+        # Alternate-specific properties
+        format=fbs_alternate_units.Format() if fbs_alternate_units.Format() is not None else DIMENSION_UNITS_FORMAT.DECIMAL,
         is_visible=bool(fbs_alternate_units.IsVisible()),
         multiplier=fbs_alternate_units.Multiplier()
     )
@@ -252,7 +299,13 @@ def parse_fbs_primary_units(fbs_primary_units: FBSPrimaryUnits) -> PrimaryUnits:
         angular=parse_fbs_angular_unit_system(fbs_primary_units.Angular())
     )
 
-def parse_fbs_standard_units(fbs_standard_units: FBSStandardUnits) -> StandardUnits:
+def parse_fbs_standard_units(fbs_standard_units: "FBSStandardUnits") -> StandardUnits:
+    if fbs_standard_units is None:
+        # Return default StandardUnits if missing
+        return StandardUnits(
+            primary_units=PrimaryUnits(linear=None, angular=None),
+            alternate_units=AlternateUnits(system=None, format=None, precision=0, suppress_leading_zeros=False, suppress_trailing_zeros=False, is_visible=False, multiplier=1.0)
+        )
     return StandardUnits(
         primary_units=parse_fbs_primary_units(fbs_standard_units.PrimaryUnits()),
         alternate_units=parse_fbs_alternate_units(fbs_standard_units.AlternateUnits())
@@ -395,14 +448,27 @@ def parse_fbs_grid_style(fbs_grid_style: FBSGridStyle) -> GridStyle:
         dash_pattern=dash_pattern_list
     )
 
-def parse_fbs_polar_grid_settings(fbs_polar_grid: FBSPolarGridSettings) -> PolarGridSettings:
+def parse_fbs_polar_grid_settings(fbs_polar_grid: "FBSPolarGridSettings") -> PolarGridSettings:
+    if fbs_polar_grid is None:
+        # Return default PolarGridSettings if missing
+        return PolarGridSettings(
+            radial_divisions=0,
+            radial_spacing=0.0,
+            show_labels=False
+        )
     return PolarGridSettings(
         radial_divisions=fbs_polar_grid.RadialDivisions(),
         radial_spacing=fbs_polar_grid.RadialSpacing(),
         show_labels=bool(fbs_polar_grid.ShowLabels())
     )
 
-def parse_fbs_isometric_grid_settings(fbs_iso_grid: FBSIsometricGridSettings) -> IsometricGridSettings:
+def parse_fbs_isometric_grid_settings(fbs_iso_grid: "FBSIsometricGridSettings") -> IsometricGridSettings:
+    if fbs_iso_grid is None:
+        # Return default IsometricGridSettings if missing
+        return IsometricGridSettings(
+            left_angle=0.0,
+            right_angle=0.0
+        )
     return IsometricGridSettings(
         left_angle=fbs_iso_grid.LeftAngle(),
         right_angle=fbs_iso_grid.RightAngle()
@@ -454,7 +520,14 @@ def parse_fbs_polar_tracking_settings(fbs_polar_tracking: FBSPolarTrackingSettin
         show_polar_coordinates=bool(fbs_polar_tracking.ShowPolarCoordinates())
     )
 
-def parse_fbs_tracking_line_style(fbs_tracking_line: FBSTrackingLineStyle) -> TrackingLineStyle:
+def parse_fbs_tracking_line_style(fbs_tracking_line: "FBSTrackingLineStyle") -> TrackingLineStyle:
+    if fbs_tracking_line is None:
+        # Return default TrackingLineStyle if missing
+        return TrackingLineStyle(
+            color="#000000",
+            opacity=1.0,
+            dash_pattern=[]
+        )
     dash_pattern_list = [fbs_tracking_line.DashPattern(i) for i in range(fbs_tracking_line.DashPatternLength())]
     return TrackingLineStyle(
         color=fbs_tracking_line.Color().decode('utf-8'),
@@ -462,7 +535,13 @@ def parse_fbs_tracking_line_style(fbs_tracking_line: FBSTrackingLineStyle) -> Tr
         dash_pattern=dash_pattern_list
     )
 
-def parse_fbs_layer_snap_filters(fbs_layer_snap_filters: FBSLayerSnapFilters) -> LayerSnapFilters:
+def parse_fbs_layer_snap_filters(fbs_layer_snap_filters: "FBSLayerSnapFilters") -> LayerSnapFilters:
+    if fbs_layer_snap_filters is None:
+        # Return default LayerSnapFilters if missing
+        return LayerSnapFilters(
+            include_layers=[],
+            exclude_layers=[]
+        )
     include_layers_list = [fbs_layer_snap_filters.IncludeLayers(i).decode('utf-8') for i in range(fbs_layer_snap_filters.IncludeLayersLength())]
     exclude_layers_list = [fbs_layer_snap_filters.ExcludeLayers(i).decode('utf-8') for i in range(fbs_layer_snap_filters.ExcludeLayersLength())]
     return LayerSnapFilters(
@@ -570,7 +649,13 @@ def parse_fbs_layer_validation_rules(fbs_layer_validation: FBSLayerValidationRul
         prohibited_layer_names=prohibited_layer_names_list
     )
 
-def parse_fbs_standard_validation(fbs_standard_validation: FBSStandardValidation) -> StandardValidation:
+def parse_fbs_standard_validation(fbs_standard_validation: "FBSStandardValidation") -> StandardValidation:
+    if fbs_standard_validation is None:
+        # Return default StandardValidation if missing
+        return StandardValidation(
+            dimension_rules=DimensionValidationRules(min_text_height=0.0, max_text_height=0.0, allowed_precisions=[]),
+            layer_rules=LayerValidationRules(prohibited_layer_names=[])
+        )
     return StandardValidation(
         dimension_rules=parse_fbs_dimension_validation_rules(fbs_standard_validation.DimensionRules()),
         layer_rules=parse_fbs_layer_validation_rules(fbs_standard_validation.LayerRules())

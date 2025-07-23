@@ -267,7 +267,7 @@ class DucStackElementBase:
     stack_base: "DucStackBase"
     clip: bool
     label_visible: bool
-    standard_override: "Standard"
+    standard_override: Optional[str] = None
 
 @dataclass
 class LineSpacing:
@@ -653,9 +653,9 @@ class DucViewportElement:
     style: DucViewportStyle
     view: DucView
     scale: float
-    standard_override: "Standard"
     shade_plot: VIEWPORT_SHADE_PLOT
     frozen_group_ids: List[str]
+    standard_override: Optional[str] = None
 
 @dataclass
 class DucXRayElement:
