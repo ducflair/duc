@@ -119,6 +119,7 @@ export { FCFDatumStyle } from './duc/fcfdatum-style';
 export { FCFFrameModifiers } from './duc/fcfframe-modifiers';
 export { FCFLayoutStyle } from './duc/fcflayout-style';
 export { FCFProjectedZoneModifier } from './duc/fcfprojected-zone-modifier';
+export { FCFSegmentRow } from './duc/fcfsegment-row';
 export { FCFSymbolStyle } from './duc/fcfsymbol-style';
 export { FEATURE_MODIFIER } from './duc/feature-modifier';
 export { FeatureControlFrameSegment } from './duc/feature-control-frame-segment';

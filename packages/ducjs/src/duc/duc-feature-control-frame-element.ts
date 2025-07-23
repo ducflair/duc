@@ -7,7 +7,7 @@ import * as flatbuffers from 'flatbuffers';
 import { DucFeatureControlFrameStyle } from '../duc/duc-feature-control-frame-style';
 import { FCFDatumDefinition } from '../duc/fcfdatum-definition';
 import { FCFFrameModifiers } from '../duc/fcfframe-modifiers';
-import { FeatureControlFrameSegment } from '../duc/feature-control-frame-segment';
+import { FCFSegmentRow } from '../duc/fcfsegment-row';
 import { _DucElementBase } from '../duc/duc-element-base';
 
 
@@ -39,9 +39,9 @@ style(obj?:DucFeatureControlFrameStyle):DucFeatureControlFrameStyle|null {
   return offset ? (obj || new DucFeatureControlFrameStyle()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-rows(index: number, obj?:FeatureControlFrameSegment):FeatureControlFrameSegment|null {
+rows(index: number, obj?:FCFSegmentRow):FCFSegmentRow|null {
   const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? (obj || new FeatureControlFrameSegment()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+  return offset ? (obj || new FCFSegmentRow()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
 rowsLength():number {
