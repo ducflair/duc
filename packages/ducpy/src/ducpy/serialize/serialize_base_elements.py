@@ -73,7 +73,7 @@ from ..Duc.ElementContentBase import (
     ElementContentBaseAddHatch, ElementContentBaseAddImageFilter
 )
 from ..Duc.StrokeStyle import (
-    StrokeStyleStart, StrokeStyleEnd,
+    StrokeStyleAddDashLineOverride, StrokeStyleStart, StrokeStyleEnd,
     StrokeStyleAddPreference, StrokeStyleAddCap, StrokeStyleAddJoin,
     StrokeStyleAddDash, StrokeStyleAddDashCap, StrokeStyleAddMiterLimit,
     StrokeStyleStartDashVector
@@ -97,7 +97,7 @@ from ..Duc.BoundElement import (
     BoundElementAddId, BoundElementAddType
 )
 from ..Duc.DucHead import (
-    DucHeadStart, DucHeadEnd,
+    DucHeadAddBlockId, DucHeadAddType, DucHeadStart, DucHeadEnd,
     DucHeadAddSize
 )
 from ..Duc.PointBindingPoint import (
@@ -119,7 +119,7 @@ from ..Duc.DucLine import (
     DucLineAddStart, DucLineAddEnd
 )
 from ..Duc.DucPath import (
-    DucPathStart, DucPathEnd,
+    DucPathAddBackground, DucPathAddStroke, DucPathStart, DucPathEnd,
     DucPathAddLineIndices, DucPathStartLineIndicesVector
 )
 from ..Duc._DucStackBase import (

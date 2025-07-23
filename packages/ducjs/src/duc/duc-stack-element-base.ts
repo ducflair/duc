@@ -4,7 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { Standard } from '../duc/standard';
 import { _DucElementBase } from '../duc/duc-element-base';
 import { _DucStackBase } from '../duc/duc-stack-base';
 
@@ -47,9 +46,11 @@ labelVisible():boolean {
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
-standardOverride(obj?:Standard):Standard|null {
+standardOverride():string|null
+standardOverride(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+standardOverride(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? (obj || new Standard()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 static start_DucStackElementBase(builder:flatbuffers.Builder) {

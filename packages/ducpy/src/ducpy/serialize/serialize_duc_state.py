@@ -5,6 +5,7 @@ This module provides serialization for global and local state structures.
 
 import flatbuffers
 from typing import List, Optional
+import numpy as np
 
 # Import dataclasses from comprehensive classes
 from ..classes.DataStateClass import (
@@ -364,7 +365,6 @@ def serialize_fbs_isometric_grid_settings(builder: flatbuffers.Builder, isometri
 
 def serialize_fbs_grid_settings(builder: flatbuffers.Builder, grid_settings: GridSettings) -> int:
     """Serialize GridSettings to FlatBuffers."""
-    origin_offset = serialize_fbs_geometric_point(builder, grid_settings.origin)
     major_style_offset = serialize_fbs_grid_style(builder, grid_settings.major_style)
     minor_style_offset = serialize_fbs_grid_style(builder, grid_settings.minor_style)
     polar_settings_offset = serialize_fbs_polar_grid_settings(builder, grid_settings.polar_settings) if grid_settings.polar_settings else None
@@ -380,7 +380,7 @@ def serialize_fbs_grid_settings(builder: flatbuffers.Builder, grid_settings: Gri
     GridSettingsAddXSpacing(builder, grid_settings.x_spacing)
     GridSettingsAddYSpacing(builder, grid_settings.y_spacing)
     GridSettingsAddSubdivisions(builder, grid_settings.subdivisions)
-    GridSettingsAddOrigin(builder, origin_offset)
+    GridSettingsAddOrigin(builder, serialize_fbs_geometric_point(builder, grid_settings.origin))
     GridSettingsAddRotation(builder, grid_settings.rotation)
     GridSettingsAddFollowUcs(builder, grid_settings.follow_ucs)
     GridSettingsAddMajorStyle(builder, major_style_offset)
@@ -426,7 +426,8 @@ def serialize_fbs_polar_tracking_settings(builder: flatbuffers.Builder, polar_tr
     PolarTrackingSettingsAddEnabled(builder, polar_tracking_settings.enabled)
     if angles_offset is not None:
         PolarTrackingSettingsAddAngles(builder, angles_offset)
-    PolarTrackingSettingsAddIncrementAngle(builder, polar_tracking_settings.increment_angle)
+    if polar_tracking_settings.increment_angle is not None:
+        PolarTrackingSettingsAddIncrementAngle(builder, polar_tracking_settings.increment_angle)
     PolarTrackingSettingsAddTrackFromLastPoint(builder, polar_tracking_settings.track_from_last_point)
     PolarTrackingSettingsAddShowPolarCoordinates(builder, polar_tracking_settings.show_polar_coordinates)
     return PolarTrackingSettingsEnd(builder)
@@ -496,15 +497,22 @@ def serialize_fbs_snap_marker_settings(builder: flatbuffers.Builder, snap_marker
     for style_entry in snap_marker_settings.styles:
         styles_offsets.append(serialize_fbs_snap_marker_style_entry(builder, style_entry))
 
+    # Build styles vector first
+    if styles_offsets:
+        SnapMarkerSettingsStartStylesVector(builder, len(styles_offsets))
+        for offset in reversed(styles_offsets):
+            builder.PrependUOffsetTRelative(offset)
+        styles_vector = builder.EndVector()
+    else:
+        styles_vector = None
+
     SnapMarkerSettingsStart(builder)
     SnapMarkerSettingsAddEnabled(builder, snap_marker_settings.enabled)
     SnapMarkerSettingsAddSize(builder, snap_marker_settings.size)
-    SnapMarkerSettingsAddDuration(builder, snap_marker_settings.duration)
-    if styles_offsets:
-        SnapMarkerSettingsAddStyles(builder, SnapMarkerSettingsStartStylesVector(builder, len(styles_offsets)))
-        for offset in reversed(styles_offsets):
-            builder.PrependUOffsetTRelative(offset)
-        builder.EndVector()
+    if snap_marker_settings.duration is not None:
+        SnapMarkerSettingsAddDuration(builder, snap_marker_settings.duration)
+    if styles_vector is not None:
+        SnapMarkerSettingsAddStyles(builder, styles_vector)
     return SnapMarkerSettingsEnd(builder)
 
 
@@ -572,8 +580,10 @@ def serialize_fbs_snap_settings(builder: flatbuffers.Builder, snap_settings: Sna
         SnapSettingsAddDynamicSnap(builder, dynamic_snap_offset)
     if temporary_overrides_vector is not None:
         SnapSettingsAddTemporaryOverrides(builder, temporary_overrides_vector)
-    SnapSettingsAddIncrementalDistance(builder, snap_settings.incremental_distance)
-    SnapSettingsAddMagneticStrength(builder, snap_settings.magnetic_strength)
+    if snap_settings.incremental_distance is not None:
+        SnapSettingsAddIncrementalDistance(builder, snap_settings.incremental_distance)
+    if snap_settings.magnetic_strength is not None:
+        SnapSettingsAddMagneticStrength(builder, snap_settings.magnetic_strength)
     if layer_snap_filters_offset is not None:
         SnapSettingsAddLayerSnapFilters(builder, layer_snap_filters_offset)
     if element_type_filters_vector is not None:
@@ -583,7 +593,8 @@ def serialize_fbs_snap_settings(builder: flatbuffers.Builder, snap_settings: Sna
     if snap_markers_offset is not None:
         SnapSettingsAddSnapMarkers(builder, snap_markers_offset)
     SnapSettingsAddConstructionSnapEnabled(builder, snap_settings.construction_snap_enabled)
-    SnapSettingsAddSnapToGridIntersections(builder, snap_settings.snap_to_grid_intersections)
+    if snap_settings.snap_to_grid_intersections is not None:
+        SnapSettingsAddSnapToGridIntersections(builder, snap_settings.snap_to_grid_intersections)
     return SnapSettingsEnd(builder)
 
 
@@ -658,6 +669,10 @@ def serialize_fbs_identified_view(builder: flatbuffers.Builder, identified_view:
 
 def serialize_fbs_standard_view_settings(builder: flatbuffers.Builder, view_settings: StandardViewSettings) -> int:
     """Serialize StandardViewSettings to FlatBuffers."""
+    
+    if view_settings is None:
+        return 0
+    
     views_offsets = []
     for view in view_settings.views:
         views_offsets.append(serialize_fbs_identified_view(builder, view))
@@ -674,27 +689,48 @@ def serialize_fbs_standard_view_settings(builder: flatbuffers.Builder, view_sett
     for snap_setting in view_settings.snap_settings:
         snap_settings_offsets.append(serialize_fbs_identified_snap_settings(builder, snap_setting))
 
-    StandardViewSettingsStart(builder)
+    # Build vectors first
     if views_offsets:
-        StandardViewSettingsAddViews(builder, StandardViewSettingsStartViewsVector(builder, len(views_offsets)))
+        StandardViewSettingsStartViewsVector(builder, len(views_offsets))
         for offset in reversed(views_offsets):
             builder.PrependUOffsetTRelative(offset)
-        builder.EndVector()
+        views_vector = builder.EndVector()
+    else:
+        views_vector = None
+
     if ucs_offsets:
-        StandardViewSettingsAddUcs(builder, StandardViewSettingsStartUcsVector(builder, len(ucs_offsets)))
+        StandardViewSettingsStartUcsVector(builder, len(ucs_offsets))
         for offset in reversed(ucs_offsets):
             builder.PrependUOffsetTRelative(offset)
-        builder.EndVector()
+        ucs_vector = builder.EndVector()
+    else:
+        ucs_vector = None
+
     if grid_settings_offsets:
-        StandardViewSettingsAddGridSettings(builder, StandardViewSettingsStartGridSettingsVector(builder, len(grid_settings_offsets)))
+        StandardViewSettingsStartGridSettingsVector(builder, len(grid_settings_offsets))
         for offset in reversed(grid_settings_offsets):
             builder.PrependUOffsetTRelative(offset)
-        builder.EndVector()
+        grid_settings_vector = builder.EndVector()
+    else:
+        grid_settings_vector = None
+
     if snap_settings_offsets:
-        StandardViewSettingsAddSnapSettings(builder, StandardViewSettingsStartSnapSettingsVector(builder, len(snap_settings_offsets)))
+        StandardViewSettingsStartSnapSettingsVector(builder, len(snap_settings_offsets))
         for offset in reversed(snap_settings_offsets):
             builder.PrependUOffsetTRelative(offset)
-        builder.EndVector()
+        snap_settings_vector = builder.EndVector()
+    else:
+        snap_settings_vector = None
+
+    StandardViewSettingsStart(builder)
+    if views_vector is not None:
+        StandardViewSettingsAddViews(builder, views_vector)
+    if ucs_vector is not None:
+        StandardViewSettingsAddUcs(builder, ucs_vector)
+    if grid_settings_vector is not None:
+        StandardViewSettingsAddGridSettings(builder, grid_settings_vector)
+    if snap_settings_vector is not None:
+        StandardViewSettingsAddSnapSettings(builder, snap_settings_vector)
     return StandardViewSettingsEnd(builder)
 
 
@@ -719,9 +755,11 @@ def serialize_fbs_layer_validation_rules(builder: flatbuffers.Builder, rules: La
     """Serialize LayerValidationRules to FlatBuffers."""
     prohibited_layer_names_vector = None
     if rules.prohibited_layer_names:
-        LayerValidationRulesStartProhibitedLayerNamesVector(builder, len(rules.prohibited_layer_names))
-        for name in reversed(rules.prohibited_layer_names):
-            builder.PrependUOffsetTRelative(builder.CreateString(name))
+        # Pre-create all string offsets first
+        name_offsets = [builder.CreateString(name) for name in rules.prohibited_layer_names]
+        LayerValidationRulesStartProhibitedLayerNamesVector(builder, len(name_offsets))
+        for offset in reversed(name_offsets):
+            builder.PrependUOffsetTRelative(offset)
         prohibited_layer_names_vector = builder.EndVector()
     
     LayerValidationRulesStart(builder)
@@ -732,6 +770,8 @@ def serialize_fbs_layer_validation_rules(builder: flatbuffers.Builder, rules: La
 
 def serialize_fbs_standard_validation(builder: flatbuffers.Builder, validation: StandardValidation) -> int:
     """Serialize StandardValidation to FlatBuffers."""
+    if validation is None:
+        return 0
     dimension_rules_offset = serialize_fbs_dimension_validation_rules(builder, validation.dimension_rules) if validation.dimension_rules else None
     layer_rules_offset = serialize_fbs_layer_validation_rules(builder, validation.layer_rules) if validation.layer_rules else None
 

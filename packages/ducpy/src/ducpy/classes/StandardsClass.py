@@ -156,8 +156,8 @@ class AlternateUnits(UnitSystemBase):
 
 @dataclass
 class PrimaryUnits:
-    linear: LinearUnitSystem
-    angular: AngularUnitSystem
+    linear: Optional[LinearUnitSystem] = None
+    angular: Optional[AngularUnitSystem] = None
 
 @dataclass
 class StandardUnits:

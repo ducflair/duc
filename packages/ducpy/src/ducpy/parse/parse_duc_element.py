@@ -148,47 +148,7 @@ from ..Duc.DucDocElement import DucDocElement as FBSDucDocElement
 from ..Duc.ParametricSource import ParametricSource as FBSParametricSource
 from ..Duc.DucParametricElement import DucParametricElement as FBSDucParametricElement
 from ..Duc.StringValueEntry import StringValueEntry as FBSStringValueEntry
-from ..Duc.Element import Element as FBSElementUnion # Import the FlatBuffers union
-
-# Import Enums
-from ..Duc.BEZIER_MIRRORING import BEZIER_MIRRORING
-from ..Duc.ELEMENT_CONTENT_PREFERENCE import ELEMENT_CONTENT_PREFERENCE
-from ..Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
-from ..Duc.STROKE_CAP import STROKE_CAP
-from ..Duc.STROKE_JOIN import STROKE_JOIN
-from ..Duc.STROKE_SIDE_PREFERENCE import STROKE_SIDE_PREFERENCE
-from ..Duc.STROKE_PLACEMENT import STROKE_PLACEMENT
-from ..Duc.BLENDING import BLENDING
-from ..Duc.LINE_HEAD import LINE_HEAD
-from ..Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
-from ..Duc.TEXT_ALIGN import TEXT_ALIGN
-from ..Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
-from ..Duc.TABLE_CELL_ALIGNMENT import TABLE_CELL_ALIGNMENT
-from ..Duc.TABLE_FLOW_DIRECTION import TABLE_FLOW_DIRECTION
-from ..Duc.TOLERANCE_DISPLAY import TOLERANCE_DISPLAY
-from ..Duc.DIMENSION_FIT_RULE import DIMENSION_FIT_RULE
-from ..Duc.DIMENSION_TEXT_PLACEMENT import DIMENSION_TEXT_PLACEMENT
-from ..Duc.MARK_ELLIPSE_CENTER import MARK_ELLIPSE_CENTER
-from ..Duc.DATUM_BRACKET_STYLE import DATUM_BRACKET_STYLE
-from ..Duc.GDT_SYMBOL import GDT_SYMBOL
-from ..Duc.MATERIAL_CONDITION import MATERIAL_CONDITION
-from ..Duc.TOLERANCE_ZONE_TYPE import TOLERANCE_ZONE_TYPE
-from ..Duc.FEATURE_MODIFIER import FEATURE_MODIFIER
-from ..Duc.TEXT_FIELD_SOURCE_TYPE import TEXT_FIELD_SOURCE_TYPE
-from ..Duc.TEXT_FIELD_SOURCE_PROPERTY import TEXT_FIELD_SOURCE_PROPERTY
-from ..Duc.COLUMN_TYPE import COLUMN_TYPE
-from ..Duc.PARAMETRIC_SOURCE_TYPE import PARAMETRIC_SOURCE_TYPE
-from ..Duc.LEADER_CONTENT_TYPE import LEADER_CONTENT_TYPE
-from ..Duc.VIEWPORT_SHADE_PLOT import VIEWPORT_SHADE_PLOT
-from ..Duc.IMAGE_STATUS import IMAGE_STATUS
-
-# Import parsing for standards - using lazy import to avoid circular dependency
-# from .parse_duc_state import parse_fbs_standard # Import parse_fbs_standard from standards parsing
-
-def _get_parse_fbs_standard():
-    """Lazy import to avoid circular dependency."""
-    from .parse_duc_state import parse_fbs_standard
-    return parse_fbs_standard
+from ..Duc.Element import Element as FBSElementUnion
 
 
 def parse_fbs_identifier(fbs_identifier: FBSIdentifier) -> Identifier:
@@ -239,12 +199,21 @@ def parse_fbs_duc_ucs(fbs_ucs: FBSDucUcs) -> DucUcs:
 
 def parse_fbs_duc_view(fbs_view: FBSDucView) -> DucView:
     if fbs_view is None:
-        return DucView(scroll_x=0.0, scroll_y=0.0, zoom=1.0, twist_angle=0.0)
+        return DucView(
+            scroll_x=0.0, 
+            scroll_y=0.0, 
+            zoom=1.0, 
+            twist_angle=0.0,
+            center_point=DucPoint(x=0.0, y=0.0),
+            scope="mm"
+        )
     return DucView(
         scroll_x=fbs_view.ScrollX(),
         scroll_y=fbs_view.ScrollY(),
         zoom=fbs_view.Zoom(),
-        twist_angle=fbs_view.TwistAngle()
+        twist_angle=fbs_view.TwistAngle(),
+        center_point=parse_fbs_duc_point(fbs_view.CenterPoint()) if fbs_view.CenterPoint() else DucPoint(x=0.0, y=0.0),
+        scope=fbs_view.Scope() if fbs_view.Scope() else "mm"
     )
 
 def parse_fbs_hatch_pattern_line(fbs_hatch_line: FBSHatchPatternLine) -> HatchPatternLine:
@@ -490,7 +459,7 @@ def parse_fbs_duc_stack_element_base(fbs_stack_element_base: FBSDucStackElementB
         stack_base=parse_fbs_duc_stack_base(fbs_stack_element_base.StackBase()),
         clip=bool(fbs_stack_element_base.Clip()),
         label_visible=bool(fbs_stack_element_base.LabelVisible()),
-        standard_override=_get_parse_fbs_standard()(fbs_stack_element_base.StandardOverride()) # Lazy import to avoid circular dependency
+        standard_override=fbs_stack_element_base.StandardOverride().decode('utf-8'),
     )
 
 def parse_fbs_line_spacing(fbs_line_spacing: FBSLineSpacing) -> LineSpacing:
@@ -831,6 +800,8 @@ def parse_fbs_duc_text_dynamic_source(fbs_dynamic_source: FBSDucTextDynamicSourc
     )
 
 def parse_fbs_duc_text_dynamic_part(fbs_dynamic_part: FBSDucTextDynamicPart) -> DucTextDynamicPart:
+    # Local import to avoid circular dependency
+    from .parse_duc_state import parse_fbs_primary_units
     return DucTextDynamicPart(
         tag=fbs_dynamic_part.Tag().decode('utf-8'),
         source=parse_fbs_duc_text_dynamic_source(fbs_dynamic_part.Source()),
@@ -966,7 +937,7 @@ def parse_fbs_duc_viewport_element(fbs_viewport_element: FBSDucViewportElement) 
         scale=fbs_viewport_element.Scale(),
         shade_plot=fbs_viewport_element.ShadePlot() if fbs_viewport_element.ShadePlot() is not None else None,
         frozen_group_ids=frozen_group_ids_list,
-        standard_override=_get_parse_fbs_standard()(fbs_viewport_element.StandardOverride())
+        standard_override=fbs_viewport_element.StandardOverride().decode('utf-8'),
     )
 
 def parse_fbs_duc_xray_element(fbs_xray_element: FBSDucXRayElement) -> DucXRayElement:

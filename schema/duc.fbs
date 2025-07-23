@@ -1116,7 +1116,7 @@ table _DucStackElementBase {
   clip: bool;
   label_visible: bool;
   /** Everything inside the stack will use this standard */
-  standard_override: Standard;
+  standard_override: string; // Standard ID
 }
 
 
@@ -1729,7 +1729,7 @@ table DucViewportElement {
   /** Frozen layers in this viewport */
   frozen_group_ids: [string];
   /** Everything inside the viewport will use this standard */
-  standard_override: Standard;
+  standard_override: string; // Standard ID
 }
 
 table DucXRayElement {

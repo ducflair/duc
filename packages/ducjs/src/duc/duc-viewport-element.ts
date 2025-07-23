@@ -6,7 +6,6 @@ import * as flatbuffers from 'flatbuffers';
 
 import { DucView } from '../duc/duc-view';
 import { DucViewportStyle } from '../duc/duc-viewport-style';
-import { Standard } from '../duc/standard';
 import { VIEWPORT_SHADE_PLOT } from '../duc/viewport-shade-plot';
 import { _DucLinearElementBase } from '../duc/duc-linear-element-base';
 import { _DucStackBase } from '../duc/duc-stack-base';
@@ -72,9 +71,11 @@ frozenGroupIdsLength():number {
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-standardOverride(obj?:Standard):Standard|null {
+standardOverride():string|null
+standardOverride(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+standardOverride(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 18);
-  return offset ? (obj || new Standard()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 static startDucViewportElement(builder:flatbuffers.Builder) {

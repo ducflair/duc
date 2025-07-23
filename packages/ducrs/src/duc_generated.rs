@@ -10336,11 +10336,11 @@ impl<'a> _DucStackElementBase<'a> {
     unsafe { self._tab.get::<bool>(_DucStackElementBase::VT_LABEL_VISIBLE, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn standard_override(&self) -> Option<Standard<'a>> {
+  pub fn standard_override(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Standard>>(_DucStackElementBase::VT_STANDARD_OVERRIDE, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(_DucStackElementBase::VT_STANDARD_OVERRIDE, None)}
   }
 }
 
@@ -10355,7 +10355,7 @@ impl flatbuffers::Verifiable for _DucStackElementBase<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<_DucStackBase>>("stack_base", Self::VT_STACK_BASE, false)?
      .visit_field::<bool>("clip", Self::VT_CLIP, false)?
      .visit_field::<bool>("label_visible", Self::VT_LABEL_VISIBLE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<Standard>>("standard_override", Self::VT_STANDARD_OVERRIDE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("standard_override", Self::VT_STANDARD_OVERRIDE, false)?
      .finish();
     Ok(())
   }
@@ -10365,7 +10365,7 @@ pub struct _DucStackElementBaseArgs<'a> {
     pub stack_base: Option<flatbuffers::WIPOffset<_DucStackBase<'a>>>,
     pub clip: bool,
     pub label_visible: bool,
-    pub standard_override: Option<flatbuffers::WIPOffset<Standard<'a>>>,
+    pub standard_override: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for _DucStackElementBaseArgs<'a> {
   #[inline]
@@ -10402,8 +10402,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> _DucStackElementBaseBuilder<'a,
     self.fbb_.push_slot::<bool>(_DucStackElementBase::VT_LABEL_VISIBLE, label_visible, false);
   }
   #[inline]
-  pub fn add_standard_override(&mut self, standard_override: flatbuffers::WIPOffset<Standard<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Standard>>(_DucStackElementBase::VT_STANDARD_OVERRIDE, standard_override);
+  pub fn add_standard_override(&mut self, standard_override: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucStackElementBase::VT_STANDARD_OVERRIDE, standard_override);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> _DucStackElementBaseBuilder<'a, 'b, A> {
@@ -18641,11 +18641,11 @@ impl<'a> DucViewportElement<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(DucViewportElement::VT_FROZEN_GROUP_IDS, None)}
   }
   #[inline]
-  pub fn standard_override(&self) -> Option<Standard<'a>> {
+  pub fn standard_override(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Standard>>(DucViewportElement::VT_STANDARD_OVERRIDE, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucViewportElement::VT_STANDARD_OVERRIDE, None)}
   }
 }
 
@@ -18663,7 +18663,7 @@ impl flatbuffers::Verifiable for DucViewportElement<'_> {
      .visit_field::<f32>("scale", Self::VT_SCALE, false)?
      .visit_field::<VIEWPORT_SHADE_PLOT>("shade_plot", Self::VT_SHADE_PLOT, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("frozen_group_ids", Self::VT_FROZEN_GROUP_IDS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<Standard>>("standard_override", Self::VT_STANDARD_OVERRIDE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("standard_override", Self::VT_STANDARD_OVERRIDE, false)?
      .finish();
     Ok(())
   }
@@ -18676,7 +18676,7 @@ pub struct DucViewportElementArgs<'a> {
     pub scale: f32,
     pub shade_plot: Option<VIEWPORT_SHADE_PLOT>,
     pub frozen_group_ids: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
-    pub standard_override: Option<flatbuffers::WIPOffset<Standard<'a>>>,
+    pub standard_override: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for DucViewportElementArgs<'a> {
   #[inline]
@@ -18728,8 +18728,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucViewportElementBuilder<'a, '
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucViewportElement::VT_FROZEN_GROUP_IDS, frozen_group_ids);
   }
   #[inline]
-  pub fn add_standard_override(&mut self, standard_override: flatbuffers::WIPOffset<Standard<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Standard>>(DucViewportElement::VT_STANDARD_OVERRIDE, standard_override);
+  pub fn add_standard_override(&mut self, standard_override: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucViewportElement::VT_STANDARD_OVERRIDE, standard_override);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucViewportElementBuilder<'a, 'b, A> {

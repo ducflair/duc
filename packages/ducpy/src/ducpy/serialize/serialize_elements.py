@@ -3,9 +3,24 @@ Element serialization functions for duc.fbs schema.
 This module provides comprehensive serialization for all element types and related structures.
 """
 
+import flatbuffers
 from typing import List, Optional, Union
 
 import flatbuffers
+
+from ducpy.Duc.DatumReference import DatumReferenceAddLetters, DatumReferenceAddModifier, DatumReferenceEnd, DatumReferenceStart
+from ducpy.Duc.DimensionBaselineData import DimensionBaselineDataAddBaseDimensionId, DimensionBaselineDataEnd, DimensionBaselineDataStart
+from ducpy.Duc.DimensionContinueData import DimensionContinueDataAddContinueFromDimensionId, DimensionContinueDataEnd, DimensionContinueDataStart
+from ducpy.Duc.DimensionDefinitionPoints import DimensionDefinitionPointsAddCenter, DimensionDefinitionPointsAddJog, DimensionDefinitionPointsAddLocation, DimensionDefinitionPointsAddOrigin1, DimensionDefinitionPointsAddOrigin2, DimensionDefinitionPointsEnd, DimensionDefinitionPointsStart
+from ducpy.Duc.LeaderBlockContent import LeaderBlockContentAddAttributeValues, LeaderBlockContentAddBlockId, LeaderBlockContentAddElementOverrides, LeaderBlockContentEnd, LeaderBlockContentStart, LeaderBlockContentStartAttributeValuesVector, LeaderBlockContentStartElementOverridesVector
+from ducpy.Duc.LeaderContent import LeaderContentAddContent, LeaderContentAddLeaderContentType, LeaderContentEnd, LeaderContentStart
+from ducpy.Duc.LeaderTextBlockContent import LeaderTextBlockContentAddText, LeaderTextBlockContentEnd, LeaderTextBlockContentStart
+from ducpy.Duc.ToleranceClause import ToleranceClauseAddFeatureModifiers, ToleranceClauseAddMaterialCondition, ToleranceClauseAddValue, ToleranceClauseAddZoneType, ToleranceClauseEnd, ToleranceClauseStart, ToleranceClauseStartFeatureModifiersVector
+from ducpy.Duc.FCFBetweenModifier import FCFBetweenModifierAddEnd, FCFBetweenModifierAddStart, FCFBetweenModifierEnd, FCFBetweenModifierStart
+from ducpy.Duc.FCFDatumDefinition import FCFDatumDefinitionAddFeatureBinding, FCFDatumDefinitionAddLetter, FCFDatumDefinitionEnd, FCFDatumDefinitionStart
+from ducpy.Duc.FCFFrameModifiers import FCFFrameModifiersAddAllAround, FCFFrameModifiersAddAllOver, FCFFrameModifiersAddBetween, FCFFrameModifiersAddContinuousFeature, FCFFrameModifiersAddProjectedToleranceZone, FCFFrameModifiersEnd, FCFFrameModifiersStart
+from ducpy.Duc.FCFProjectedZoneModifier import FCFProjectedZoneModifierAddValue, FCFProjectedZoneModifierEnd, FCFProjectedZoneModifierStart
+from ducpy.Duc.FeatureControlFrameSegment import FeatureControlFrameSegmentAddDatums, FeatureControlFrameSegmentAddSymbol, FeatureControlFrameSegmentAddTolerance, FeatureControlFrameSegmentEnd, FeatureControlFrameSegmentStart, FeatureControlFrameSegmentStartDatumsVector
 
 from ..classes.ElementsClass import (
     ColumnLayout, DatumReference, DimensionBaselineData, DimensionBindings,
@@ -128,21 +143,18 @@ from ..Duc.DucLeaderElement import \
 from ..Duc.DucLeaderElement import (DucLeaderElementAddContent,
                                     DucLeaderElementAddStyle,
                                     DucLeaderElementEnd, DucLeaderElementStart)
-from ..Duc.DucLinearElement import \
-    DucLinearElementAddLinearBase  # Corrected to AddLinearBase
-from ..Duc.DucLinearElement import \
-    DucLinearElementAddWipeoutBelow  # Added wipeout_below
+from ..Duc.DucLinearElement import DucLinearElementAddLinearBase 
+from ..Duc.DucLinearElement import DucLinearElementAddWipeoutBelow  
 from ..Duc.DucLinearElement import DucLinearElementEnd, DucLinearElementStart
-from ..Duc.DucMermaidElement import (  # Corrected to AddSource, AddTheme, AddSvgPath
+from ..Duc.DucMermaidElement import ( 
     DucMermaidElementAddBase, DucMermaidElementAddSource,
     DucMermaidElementAddSvgPath, DucMermaidElementAddTheme,
     DucMermaidElementEnd, DucMermaidElementStart)
-from ..Duc.DucParametricElement import (  # Removed CreateDucParametricElement
+from ..Duc.DucParametricElement import ( 
     DucParametricElementAddBase, DucParametricElementAddSource,
     DucParametricElementEnd, DucParametricElementStart)
-from ..Duc.DucPdfElement import \
-    DucPdfElementAddBase  # Removed CreateDucPdfElement
-from ..Duc.DucPdfElement import DucPdfElementEnd, DucPdfElementStart
+from ..Duc.DucPdfElement import (DucPdfElementAddBase, DucPdfElementAddFileId,
+                                 DucPdfElementEnd, DucPdfElementStart)
 from ..Duc.DucPlotElement import \
     DucPlotElementAddStackElementBase  # Corrected to AddStackElementBase
 from ..Duc.DucPlotElement import (DucPlotElementAddLayout,
@@ -243,7 +255,7 @@ from ..Duc.Element import Element as ElementFBType
 from ..Duc.ElementWrapper import (  # Added ElementWrapperAddElementType
     ElementWrapperAddElement, ElementWrapperAddElementType, ElementWrapperEnd,
     ElementWrapperStart)
-from ..Duc.ImageCrop import (ImageCropAddHeight,  # Removed CreateImageCrop
+from ..Duc.ImageCrop import (ImageCropAddHeight, ImageCropAddNaturalHeight, ImageCropAddNaturalWidth,  # Removed CreateImageCrop
                              ImageCropAddWidth, ImageCropAddX, ImageCropAddY,
                              ImageCropEnd, ImageCropStart)
 from ..Duc.LeaderContentData import LeaderContentData as LeaderContentFBType
@@ -263,11 +275,11 @@ from ..Duc._DucStackBase import (
 )
 # Import from base elements, styles, and helpers
 from .serialize_base_elements import (serialize_fbs_bound_element,
-                                      serialize_fbs_duc_head,
-                                      serialize_fbs_duc_point,
+                                      serialize_fbs_duc_head, serialize_fbs_duc_image_filter,
+                                      serialize_fbs_duc_point, serialize_fbs_duc_point_binding,
                                       serialize_fbs_duc_view,
                                       serialize_fbs_element_background,
-                                      serialize_fbs_element_stroke)
+                                      serialize_fbs_element_stroke, serialize_fbs_geometric_point)
 # Import element base serialization (would need to be implemented)
 from .serialize_element_base import serialize_fbs_duc_element_base
 from .serialize_element_helpers import (
@@ -280,7 +292,7 @@ from .serialize_element_helpers import (
     serialize_fbs_fcf_datum_definition, serialize_fbs_fcf_frame_modifiers,
     serialize_fbs_feature_control_frame_segment, serialize_fbs_leader_content,
     serialize_fbs_parametric_source, serialize_fbs_plot_layout)
-from .serialize_styles import (serialize_fbs_duc_dimension_style,
+from .serialize_styles import (serialize_fbs_dimension_tolerance_style, serialize_fbs_duc_dimension_style,
                                serialize_fbs_duc_doc_style,
                                serialize_fbs_duc_feature_control_frame_style,
                                serialize_fbs_duc_leader_style,
@@ -336,12 +348,12 @@ def serialize_fbs_duc_embeddable_element(builder: flatbuffers.Builder, embeddabl
 
 def serialize_fbs_duc_pdf_element(builder: flatbuffers.Builder, pdf: DucPdfElement) -> int:
     """Serialize DucPdfElement to FlatBuffers."""
-    base_offset = serialize_fbs_duc_element_base(builder, pdf.base) # Corrected to .base
-    file_id_offset = builder.CreateString(pdf.file_id) # Added file_id serialization
+    base_offset = serialize_fbs_duc_element_base(builder, pdf.base)
+    file_id_offset = builder.CreateString(pdf.file_id) 
     
     DucPdfElementStart(builder)
     DucPdfElementAddBase(builder, base_offset)
-    DucPdfElementAddFileId(builder, file_id_offset) # Added file_id
+    DucPdfElementAddFileId(builder, file_id_offset)
     return DucPdfElementEnd(builder)
 
 
@@ -369,8 +381,8 @@ def serialize_fbs_image_crop(builder: flatbuffers.Builder, crop: ImageCrop) -> i
     ImageCropAddY(builder, crop.y)
     ImageCropAddWidth(builder, crop.width)
     ImageCropAddHeight(builder, crop.height)
-    ImageCropAddNaturalWidth(builder, crop.natural_width) # Added natural_width
-    ImageCropAddNaturalHeight(builder, crop.natural_height) # Added natural_height
+    ImageCropAddNaturalWidth(builder, crop.natural_width)
+    ImageCropAddNaturalHeight(builder, crop.natural_height)
     return ImageCropEnd(builder)
 
 
@@ -380,10 +392,10 @@ def serialize_fbs_duc_image_element(builder: flatbuffers.Builder, image: DucImag
     file_id_offset = builder.CreateString(image.file_id)
     crop_offset = serialize_fbs_image_crop(builder, image.crop) if image.crop else None
     filter_offset = serialize_fbs_duc_image_filter(builder, image.filter) if image.filter else None
-    scale_vector = builder.CreateNumpyVector(image.scale) # Convert list to numpy vector
+    scale_vector = builder.CreateNumpyVector(image.scale)
     
     DucImageElementStart(builder)
-    DucImageElementAddBase(builder, element_base_offset) # Corrected to AddBase
+    DucImageElementAddBase(builder, element_base_offset)
     DucImageElementAddFileId(builder, file_id_offset)
     DucImageElementAddStatus(builder, image.status)
     DucImageElementAddScale(builder, scale_vector)
@@ -765,11 +777,9 @@ def serialize_fbs_duc_stack_element_base(builder: flatbuffers.Builder, stack_ele
         # This would need clip serialization implementation
         pass
     
-    # Serialize standard override if present
     standard_override_offset = None
     if hasattr(stack_element_base, 'standard_override') and stack_element_base.standard_override:
-        # This would need standard override serialization implementation
-        pass
+        standard_override_offset = builder.CreateString(stack_element_base.standard_override)
     
     _DucStackElementBaseStart(builder)
     _DucStackElementBaseAddBase(builder, base_offset)
@@ -825,7 +835,10 @@ def serialize_fbs_duc_viewport_element(builder: flatbuffers.Builder, viewport: D
         frozen_group_ids_vector = builder.EndVector()
 
     # Serialize standard override
-    standard_override_offset = serialize_fbs_standard(builder, viewport.standard_override) if viewport.standard_override else None
+    standard_override_offset = None
+    if hasattr(viewport, 'standard_override') and viewport.standard_override:
+        standard_override_offset = builder.CreateString(viewport.standard_override)
+    
     
     DucViewportElementStart(builder)
     DucViewportElementAddLinearBase(builder, linear_base_offset) # Corrected to AddLinearBase
@@ -1111,7 +1124,8 @@ def serialize_fbs_duc_feature_control_frame_element(builder: flatbuffers.Builder
         segments_in_row_offsets = []
         for segment in row_segments:
             segments_in_row_offsets.append(serialize_fbs_feature_control_frame_segment(builder, segment))
-        FeatureControlFrameElementStartSegmentsVector(builder, len(segments_in_row_offsets))
+        # Create vector for segments in this row
+        builder.StartVector(4, len(segments_in_row_offsets), 4)  # StartVector(element_size, num_elements, alignment)
         for offset in reversed(segments_in_row_offsets):
             builder.PrependUOffsetTRelative(offset)
         rows_offsets.append(builder.EndVector())
