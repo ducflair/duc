@@ -21,23 +21,48 @@ def parse_fbs_version_base(fbs_version_base: FBSVersionBase) -> VersionBase:
     )
 
 def parse_fbs_json_patch_operation(fbs_json_patch_op: FBSJSONPatchOperation) -> JSONPatchOperation:
+    import json
+    
+    # Parse value field - handle JSON deserialization and None values
+    value = None
+    if fbs_json_patch_op.Value():
+        value_str = fbs_json_patch_op.Value().decode('utf-8')
+        try:
+            # Try to parse as JSON first
+            value = json.loads(value_str)
+        except json.JSONDecodeError:
+            # If not valid JSON, keep as string
+            value = value_str
+    
     return JSONPatchOperation(
         op=fbs_json_patch_op.Op().decode('utf-8'),
         path=fbs_json_patch_op.Path().decode('utf-8'),
-        value=fbs_json_patch_op.Value().decode('utf-8')
+        value=value
     )
 
 def parse_fbs_checkpoint(fbs_checkpoint: FBSCheckpoint) -> Checkpoint:
+    base = parse_fbs_version_base(fbs_checkpoint.Base())
     return Checkpoint(
-        base=parse_fbs_version_base(fbs_checkpoint.Base()),
+        id=base.id,
+        timestamp=base.timestamp,
+        is_manual_save=base.is_manual_save,
+        parent_id=base.parent_id,
+        description=base.description,
+        user_id=base.user_id,
         data=bytes(fbs_checkpoint.DataAsNumpy()) if fbs_checkpoint.DataLength() > 0 else b'',
         size_bytes=fbs_checkpoint.SizeBytes()
     )
 
 def parse_fbs_delta(fbs_delta: FBSDelta) -> Delta:
+    base = parse_fbs_version_base(fbs_delta.Base())
     patch_list = [parse_fbs_json_patch_operation(fbs_delta.Patch(i)) for i in range(fbs_delta.PatchLength())]
     return Delta(
-        base=parse_fbs_version_base(fbs_delta.Base()),
+        id=base.id,
+        timestamp=base.timestamp,
+        is_manual_save=base.is_manual_save,
+        parent_id=base.parent_id,
+        description=base.description,
+        user_id=base.user_id,
         patch=patch_list
     )
 

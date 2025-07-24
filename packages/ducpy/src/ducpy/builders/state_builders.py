@@ -168,6 +168,18 @@ def create_delta(
         patch=patch
     )
 
+def create_json_patch_operation(
+    op: str,
+    path: str,
+    value: Any = None
+) -> JSONPatchOperation:
+    """Create a JSON Patch operation for version control deltas."""
+    return JSONPatchOperation(
+        op=op,
+        path=path,
+        value=value
+    )
+
 def create_external_file(
     key: str,
     mime_type: str,

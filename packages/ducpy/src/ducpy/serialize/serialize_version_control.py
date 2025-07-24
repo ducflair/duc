@@ -46,30 +46,46 @@ from ..Duc.JSONPatchOperation import (
 def serialize_fbs_version_base(builder: flatbuffers.Builder, version_base: VersionBase) -> int:
     """Serialize VersionBase to FlatBuffers."""
     id_offset = builder.CreateString(version_base.id)
-    parent_id_offset = builder.CreateString(version_base.parent_id)
-    description_offset = builder.CreateString(version_base.description)
-    user_id_offset = builder.CreateString(version_base.user_id)
+    parent_id_offset = builder.CreateString(version_base.parent_id) if version_base.parent_id else None
+    description_offset = builder.CreateString(version_base.description) if version_base.description else None
+    user_id_offset = builder.CreateString(version_base.user_id) if version_base.user_id else None
     
     VersionBaseStart(builder)
     VersionBaseAddId(builder, id_offset)
-    VersionBaseAddParentId(builder, parent_id_offset)
+    if parent_id_offset is not None:
+        VersionBaseAddParentId(builder, parent_id_offset)
     VersionBaseAddTimestamp(builder, version_base.timestamp)
-    VersionBaseAddDescription(builder, description_offset)
+    if description_offset is not None:
+        VersionBaseAddDescription(builder, description_offset)
     VersionBaseAddIsManualSave(builder, version_base.is_manual_save)
-    VersionBaseAddUserId(builder, user_id_offset)
+    if user_id_offset is not None:
+        VersionBaseAddUserId(builder, user_id_offset)
     return VersionBaseEnd(builder)
 
 
 def serialize_fbs_json_patch_operation(builder: flatbuffers.Builder, patch_op: JSONPatchOperation) -> int:
     """Serialize JSONPatchOperation to FlatBuffers."""
+    import json
+    
     op_offset = builder.CreateString(patch_op.op)
     path_offset = builder.CreateString(patch_op.path)
-    value_offset = builder.CreateString(patch_op.value)
+    
+    # Handle value serialization - convert to JSON string if not None
+    if patch_op.value is not None:
+        if isinstance(patch_op.value, str):
+            value_offset = builder.CreateString(patch_op.value)
+        else:
+            # Serialize complex objects as JSON
+            value_json = json.dumps(patch_op.value)
+            value_offset = builder.CreateString(value_json)
+    else:
+        value_offset = None
     
     JSONPatchOperationStart(builder)
     JSONPatchOperationAddOp(builder, op_offset)
     JSONPatchOperationAddPath(builder, path_offset)
-    JSONPatchOperationAddValue(builder, value_offset)
+    if value_offset is not None:
+        JSONPatchOperationAddValue(builder, value_offset)
     return JSONPatchOperationEnd(builder)
 
 
