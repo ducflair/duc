@@ -16,7 +16,7 @@ from ..classes.ElementsClass import (
     DucImageFilter, ElementContentBase, StrokeStyle, StrokeSides,
     ElementStroke, ElementBackground, BoundElement, DucHead,
     PointBindingPoint, DucPointBinding, DucLineReference, DucLine, DucPath,
-    DucStackBase, DucStackLikeStyles
+    DucStackBase, DucStackLikeStyles, StringValueEntry
 )
 
 # Import FlatBuffers generated classes
@@ -496,3 +496,20 @@ def serialize_fbs_stack_base(builder: flatbuffers.Builder, stack_base: DucStackB
     if styles_offset is not None:
         _DucStackBaseAddStyles(builder, styles_offset)
     return _DucStackBaseEnd(builder)
+
+def serialize_fbs_string_value_entry(builder: flatbuffers.Builder, entry: StringValueEntry) -> int:
+    """
+    Serialize StringValueEntry to FlatBuffers.
+    """
+    from ..Duc.StringValueEntry import (
+        StringValueEntryStart, StringValueEntryEnd,
+        StringValueEntryAddKey, StringValueEntryAddValue
+    )
+
+    key_offset = builder.CreateString(entry.key)
+    value_offset = builder.CreateString(entry.value)
+
+    StringValueEntryStart(builder)
+    StringValueEntryAddKey(builder, key_offset)
+    StringValueEntryAddValue(builder, value_offset)
+    return StringValueEntryEnd(builder)

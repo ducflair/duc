@@ -4,5 +4,7 @@
   "cSpell.words": ["presigner"],
   "editor.tabSize": 2,
   "editor.detectIndentation": false,
-  "rust-analyzer.linkedProjects": ["packages/ducrs/Cargo.toml"],
+  "rust-analyzer.linkedProjects": [
+    "packages/ducrs/Cargo.toml"
+  ],
 }

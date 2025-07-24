@@ -28,7 +28,9 @@ from ..classes.ElementsClass import (
     DimensionSymbolStyle, DimensionToleranceStyle, DimensionFitStyle, DimensionBaselineData,
     DimensionContinueData, DucLeaderElement, LeaderContent, LeaderTextBlockContent, LeaderBlockContent,
     DucFeatureControlFrameElement, ToleranceClause, FeatureControlFrameSegment, DatumReference,
-    FCFFrameModifiers, FCFBetweenModifier, FCFProjectedZoneModifier, FCFDatumDefinition, FCFSegmentRow
+    FCFFrameModifiers, FCFBetweenModifier, FCFProjectedZoneModifier, FCFDatumDefinition, FCFSegmentRow,
+    DucMermaidElement, DucEmbeddableElement, DucXRayElement, DucXRayStyle, FCFLayoutStyle, FCFSymbolStyle, FCFDatumStyle, DucFeatureControlFrameStyle,
+    DucLeaderStyle, BLOCK_ATTACHMENT
 )
 from .style_builders import create_simple_styles, create_text_style, create_paragraph_formatting, create_stack_format_properties, create_stack_format, create_doc_style, create_text_column, create_column_layout
 from ducpy.utils import generate_random_id, DEFAULT_SCOPE, DEFAULT_STROKE_COLOR, DEFAULT_FILL_COLOR
@@ -49,6 +51,9 @@ from ducpy.Duc.LEADER_CONTENT_TYPE import LEADER_CONTENT_TYPE
 from ducpy.Duc.TOLERANCE_ZONE_TYPE import TOLERANCE_ZONE_TYPE
 from ducpy.Duc.MATERIAL_CONDITION import MATERIAL_CONDITION
 from ducpy.Duc.FEATURE_MODIFIER import FEATURE_MODIFIER
+from ducpy.Duc.PARAMETRIC_SOURCE_TYPE import PARAMETRIC_SOURCE_TYPE
+from ducpy.Duc.VIEWPORT_SHADE_PLOT import VIEWPORT_SHADE_PLOT
+from ducpy.Duc.IMAGE_STATUS import IMAGE_STATUS
 
 import random
 import time
@@ -604,7 +609,7 @@ def create_image_element(
     y: float,
     width: float,
     height: float,
-    scale: Optional["np.ndarray"] = None,
+    scale: Optional[GeometricPoint] = None,
     status=None,
     file_id: Optional[str] = None,
     crop=None,
@@ -645,6 +650,101 @@ def create_image_element(
     from ..classes.ElementsClass import DucImageElement
     return _create_element_wrapper(
         DucImageElement,
+        base_params,
+        element_params,
+        explicit_properties_override
+    )
+
+def create_pdf_element(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    file_id: Optional[str] = None,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = "mm",
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create a PDF element (DucPdfElement) in a modular way.
+    """
+    base_params = {
+        "x": x,
+        "y": y,
+        "width": width,
+        "height": height,
+        "styles": styles,
+        "id": id,
+        "label": label,
+        "scope": scope,
+        "locked": locked,
+        "is_visible": is_visible,
+        "z_index": z_index
+    }
+    element_params = {
+        "file_id": file_id
+    }
+    from ..classes.ElementsClass import DucPdfElement
+    return _create_element_wrapper(
+        DucPdfElement,
+        base_params,
+        element_params,
+        explicit_properties_override
+    )
+
+def create_parametric_element(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    file_id: Optional[str] = None,
+    source_type: PARAMETRIC_SOURCE_TYPE = PARAMETRIC_SOURCE_TYPE.FILE,
+    code: str = "",
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = "mm",
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create a parametric element (DucParametricElement) in a modular way.
+    """
+    base_params = {
+        "x": x,
+        "y": y,
+        "width": width,
+        "height": height,
+        "styles": styles,
+        "id": id,
+        "label": label,
+        "scope": scope,
+        "locked": locked,
+        "is_visible": is_visible,
+        "z_index": z_index
+    }
+    
+    from ..classes.ElementsClass import DucParametricElement, ParametricSource
+    from ..Duc.PARAMETRIC_SOURCE_TYPE import PARAMETRIC_SOURCE_TYPE
+
+    parametric_source = ParametricSource(
+        type=source_type,
+        code=code,
+        file_id=file_id
+    )
+
+    element_params = {
+        "source": parametric_source
+    }
+    return _create_element_wrapper(
+        DucParametricElement,
         base_params,
         element_params,
         explicit_properties_override
@@ -948,6 +1048,7 @@ def create_freedraw_element(
     """
     Create a freedraw element with a clean, modular API.
     """
+    import numpy as np
     base_params = {
         "x": x, "y": y, "width": width, "height": height, "angle": angle,
         "styles": styles, "id": id, "label": label, "scope": scope,
@@ -955,7 +1056,7 @@ def create_freedraw_element(
     }
     element_params = {
         "points": points,
-        "pressures": pressures,
+        "pressures": np.array(pressures),
         "size": size,
         "thinning": thinning,
         "smoothing": smoothing,
@@ -2322,22 +2423,74 @@ def create_feature_control_frame_element(
     return ElementWrapper(element=element)
 
 
-def create_feature_control_frame_style():
-    """Create a default feature control frame style."""
+def create_feature_control_frame_style(
+    base_style: Optional[DucElementStylesBase] = None,
+    text_style: Optional[DucTextStyle] = None,
+    layout: Optional[FCFLayoutStyle] = None,
+    symbols: Optional[FCFSymbolStyle] = None,
+    datum_style: Optional[FCFDatumStyle] = None
+) -> DucFeatureControlFrameStyle:
+    """
+    Create a feature control frame style with default values.
+    """
     from .style_builders import create_simple_styles, create_text_style
+    from ..classes.ElementsClass import FCFLayoutStyle, FCFSymbolStyle, FCFDatumStyle
     
-    # Create a basic FCF style - this would need proper implementation
-    # For now, return a simple object that can be serialized
-    class DucFeatureControlFrameStyle:
-        def __init__(self):
-            self.base_style = create_simple_styles()
-            self.text_style = create_text_style()
-            self.layout = None
-            self.symbols = None
-            self.datum_style = None
+    if base_style is None:
+        base_style = create_simple_styles()
+    if text_style is None:
+        text_style = create_text_style(font_size=12)
+    if layout is None:
+        layout = FCFLayoutStyle(padding=2.0, segment_spacing=5.0, row_spacing=5.0)
+    if symbols is None:
+        symbols = FCFSymbolStyle(scale=1.0)
+    if datum_style is None:
+        from ducpy.Duc.DATUM_BRACKET_STYLE import DATUM_BRACKET_STYLE
+        datum_style = FCFDatumStyle(bracket_style=DATUM_BRACKET_STYLE.SQUARE)
     
-    return DucFeatureControlFrameStyle()
+    return DucFeatureControlFrameStyle(
+        base_style=base_style,
+        text_style=text_style,
+        layout=layout,
+        symbols=symbols,
+        datum_style=datum_style
+    )
 
+def create_leader_style(
+    base_style: Optional[DucElementStylesBase] = None,
+    heads_override: Optional[List[DucHead]] = None,
+    dogleg: float = 10.0,
+    text_style: Optional[DucTextStyle] = None,
+    text_attachment: Optional[VERTICAL_ALIGN] = None,
+    block_attachment: Optional[BLOCK_ATTACHMENT] = None
+) -> DucLeaderStyle:
+    """
+    Create a default leader style.
+    """
+    from .style_builders import create_simple_styles, create_text_style
+    from ..classes.ElementsClass import DucLeaderStyle
+    
+    if base_style is None:
+        base_style = create_simple_styles()
+    if heads_override is None:
+        heads_override = []
+    if text_style is None:
+        text_style = create_text_style(font_size=12)
+    if text_attachment is None:
+        from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
+        text_attachment = VERTICAL_ALIGN.MIDDLE
+    if block_attachment is None:
+        from ducpy.Duc.BLOCK_ATTACHMENT import BLOCK_ATTACHMENT
+        block_attachment = BLOCK_ATTACHMENT.CENTER_EXTENTS
+
+    return DucLeaderStyle(
+        base_style=base_style,
+        heads_override=heads_override,
+        dogleg=dogleg,
+        text_style=text_style,
+        text_attachment=text_attachment,
+        block_attachment=block_attachment
+    )
 
 def create_leader_text_content(text: str) -> LeaderTextBlockContent:
     """Create leader text block content."""
@@ -2423,23 +2576,6 @@ def create_leader_element(
     )
     
     return ElementWrapper(element=element)
-
-
-def create_leader_style():
-    """Create a default leader style."""
-    from .style_builders import create_simple_styles
-    
-    # Create a basic leader style that matches the schema
-    class DucLeaderStyle:
-        def __init__(self):
-            self.base_style = create_simple_styles()
-            self.heads_override = []  # Empty list for heads override
-            self.dogleg = 10.0  # Default dogleg length
-            self.text_style = None  # No text style override
-            self.text_attachment = None  # No text attachment override
-            self.block_attachment = None  # No block attachment override
-    
-    return DucLeaderStyle()
 
 
 def create_position_tolerance_fcf(
@@ -2531,4 +2667,157 @@ def create_datum_feature_symbol(
         rows=[],  # Empty for datum symbols
         datum_definition=datum_definition,
         **kwargs
+    )
+
+def create_mermaid_element(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    source: str,
+    theme: Optional[str] = None,
+    svg_path: Optional[str] = None,
+    angle: float = 0.0,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = DEFAULT_SCOPE,
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create a Mermaid diagram element (DucMermaidElement) in a modular way.
+    """
+    base_params = {
+        "x": x,
+        "y": y,
+        "width": width,
+        "height": height,
+        "angle": angle,
+        "styles": styles,
+        "id": id,
+        "label": label,
+        "scope": scope,
+        "locked": locked,
+        "is_visible": is_visible,
+        "z_index": z_index
+    }
+    element_params = {
+        "source": source,
+        "theme": theme,
+        "svg_path": svg_path
+    }
+    from ..classes.ElementsClass import DucMermaidElement
+    return _create_element_wrapper(
+        DucMermaidElement,
+        base_params,
+        element_params,
+        explicit_properties_override
+    )
+
+def create_embeddable_element(
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    link: str,
+    angle: float = 0.0,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = DEFAULT_SCOPE,
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create an embeddable element (DucEmbeddableElement) in a modular way.
+    This can be used for embedding content like YouTube videos, iframes, etc.
+    """
+    base_params = {
+        "x": x,
+        "y": y,
+        "width": width,
+        "height": height,
+        "angle": angle,
+        "styles": styles,
+        "id": id,
+        "label": label,
+        "scope": scope,
+        "locked": locked,
+        "is_visible": is_visible,
+        "z_index": z_index,
+        "link": link
+    }
+    from ..classes.ElementsClass import DucEmbeddableElement
+    return _create_element_wrapper(
+        DucEmbeddableElement,
+        base_params,
+        {},
+        explicit_properties_override
+    )
+
+def create_xray_element(
+    x: float,
+    y: float,
+    origin_x: float,
+    origin_y: float,
+    direction_x: float,
+    direction_y: float,
+    color: str = "#FF0000",
+    start_from_origin: bool = False,
+    angle: float = 0.0,
+    styles: Optional[DucElementStylesBase] = None,
+    id: Optional[str] = None,
+    label: str = "",
+    scope: str = DEFAULT_SCOPE,
+    locked: bool = False,
+    is_visible: bool = True,
+    z_index: float = 0.0,
+    explicit_properties_override: Optional[dict] = None
+) -> ElementWrapper:
+    """
+    Create an X-Ray element (DucXRayElement).
+    """
+    base_params = {
+        "x": x,
+        "y": y,
+        "width": 0.0, # XRay elements don't have explicit width/height in the same way
+        "height": 0.0,
+        "angle": angle,
+        "styles": styles,
+        "id": id,
+        "label": label,
+        "scope": scope,
+        "locked": locked,
+        "is_visible": is_visible,
+        "z_index": z_index
+    }
+
+    from ..classes.ElementsClass import DucXRayElement, DucXRayStyle, GeometricPoint
+    from .style_builders import create_simple_styles
+
+    if styles is None:
+        styles = create_simple_styles()
+
+    xray_style = DucXRayStyle(
+        base_style=styles,
+        color=color
+    )
+
+    element_params = {
+        "style": xray_style,
+        "origin": GeometricPoint(x=origin_x, y=origin_y),
+        "direction": GeometricPoint(x=direction_x, y=direction_y),
+        "start_from_origin": start_from_origin
+    }
+
+    return _create_element_wrapper(
+        DucXRayElement,
+        base_params,
+        element_params,
+        explicit_properties_override
     )

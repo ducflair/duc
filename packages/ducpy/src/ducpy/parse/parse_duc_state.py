@@ -321,23 +321,24 @@ def parse_fbs_unit_precision(fbs_unit_precision: FBSUnitPrecision) -> UnitPrecis
 
 def parse_fbs_standard_overrides(fbs_overrides: FBSStandardOverrides) -> StandardOverrides:
     active_grid_settings_id_list = [fbs_overrides.ActiveGridSettingsId(i).decode('utf-8') for i in range(fbs_overrides.ActiveGridSettingsIdLength())]
+    
     return StandardOverrides(
         main_scope=fbs_overrides.MainScope().decode('utf-8'),
         elements_stroke_width_override=fbs_overrides.ElementsStrokeWidthOverride(),
-        common_style_id=fbs_overrides.CommonStyleId().decode('utf-8'),
-        stack_like_style_id=fbs_overrides.StackLikeStyleId().decode('utf-8'),
-        text_style_id=fbs_overrides.TextStyleId().decode('utf-8'),
-        dimension_style_id=fbs_overrides.DimensionStyleId().decode('utf-8'),
-        leader_style_id=fbs_overrides.LeaderStyleId().decode('utf-8'),
-        feature_control_frame_style_id=fbs_overrides.FeatureControlFrameStyleId().decode('utf-8'),
-        table_style_id=fbs_overrides.TableStyleId().decode('utf-8'),
-        doc_style_id=fbs_overrides.DocStyleId().decode('utf-8'),
-        viewport_style_id=fbs_overrides.ViewportStyleId().decode('utf-8'),
-        plot_style_id=fbs_overrides.PlotStyleId().decode('utf-8'),
-        hatch_style_id=fbs_overrides.HatchStyleId().decode('utf-8'),
+        common_style_id=fbs_overrides.CommonStyleId().decode('utf-8') if fbs_overrides.CommonStyleId() else None,
+        stack_like_style_id=fbs_overrides.StackLikeStyleId().decode('utf-8') if fbs_overrides.StackLikeStyleId() else None,
+        text_style_id=fbs_overrides.TextStyleId().decode('utf-8') if fbs_overrides.TextStyleId() else None,
+        dimension_style_id=fbs_overrides.DimensionStyleId().decode('utf-8') if fbs_overrides.DimensionStyleId() else None,
+        leader_style_id=fbs_overrides.LeaderStyleId().decode('utf-8') if fbs_overrides.LeaderStyleId() else None,
+        feature_control_frame_style_id=fbs_overrides.FeatureControlFrameStyleId().decode('utf-8') if fbs_overrides.FeatureControlFrameStyleId() else None,
+        table_style_id=fbs_overrides.TableStyleId().decode('utf-8') if fbs_overrides.TableStyleId() else None,
+        doc_style_id=fbs_overrides.DocStyleId().decode('utf-8') if fbs_overrides.DocStyleId() else None,
+        viewport_style_id=fbs_overrides.ViewportStyleId().decode('utf-8') if fbs_overrides.ViewportStyleId() else None,
+        plot_style_id=fbs_overrides.PlotStyleId().decode('utf-8') if fbs_overrides.PlotStyleId() else None,
+        hatch_style_id=fbs_overrides.HatchStyleId().decode('utf-8') if fbs_overrides.HatchStyleId() else None,
         active_grid_settings_id=active_grid_settings_id_list,
-        active_snap_settings_id=fbs_overrides.ActiveSnapSettingsId().decode('utf-8'),
-        dash_line_override=fbs_overrides.DashLineOverride().decode('utf-8'),
+        active_snap_settings_id=fbs_overrides.ActiveSnapSettingsId().decode('utf-8') if fbs_overrides.ActiveSnapSettingsId() else None,
+        dash_line_override=fbs_overrides.DashLineOverride().decode('utf-8') if fbs_overrides.DashLineOverride() else None,
         unit_precision=parse_fbs_unit_precision(fbs_overrides.UnitPrecision())
     )
 

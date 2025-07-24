@@ -5,13 +5,13 @@
 import argparse
 from typing import Dict, Any
 
-from ducpy.parse.parse_duc import parse_duc_flatbuffers
+from ducpy.parse.parse_duc import parse_duc
 from rich.pretty import pprint as rich_pprint
 
 def print_duc_file(input_path: str):
     try:
         with open(input_path, 'rb') as f:
-            duc_data = parse_duc_flatbuffers(f)
+            duc_data = parse_duc(f)
             
         # Use Rich's pretty print which can handle arbitrary objects nicely
         rich_pprint(duc_data)

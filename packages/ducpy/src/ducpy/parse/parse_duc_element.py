@@ -28,7 +28,7 @@ from ..classes.ElementsClass import (
     ToleranceClause, FeatureControlFrameSegment, FCFBetweenModifier, FCFProjectedZoneModifier,
     FCFFrameModifiers, FCFDatumDefinition, FCFSegmentRow, DucFeatureControlFrameElement, TextColumn,
     ColumnLayout, DucDocElement, ParametricSource, DucParametricElement, StringValueEntry, ElementWrapper, \
-    DucBlock
+    DucBlock, DucBlockAttributeDefinitionEntry
 )
 
 # Import Standard and PrimaryUnits from StandardsClass.py
@@ -438,6 +438,8 @@ def parse_fbs_duc_linear_element_base(fbs_linear_base: FBSDucLinearElementBase) 
     )
 
 def parse_fbs_duc_stack_like_styles(fbs_stack_styles: FBSDucStackLikeStyles) -> DucStackLikeStyles:
+    if fbs_stack_styles is None:
+        return None
     return DucStackLikeStyles(
         opacity=fbs_stack_styles.Opacity(),
         labeling_color=fbs_stack_styles.LabelingColor().decode('utf-8')
@@ -460,7 +462,7 @@ def parse_fbs_duc_stack_element_base(fbs_stack_element_base: FBSDucStackElementB
         stack_base=parse_fbs_duc_stack_base(fbs_stack_element_base.StackBase()),
         clip=bool(fbs_stack_element_base.Clip()),
         label_visible=bool(fbs_stack_element_base.LabelVisible()),
-        standard_override=fbs_stack_element_base.StandardOverride().decode('utf-8'),
+        standard_override=fbs_stack_element_base.StandardOverride().decode('utf-8') if fbs_stack_element_base.StandardOverride() else None,
     )
 
 def parse_fbs_line_spacing(fbs_line_spacing: FBSLineSpacing) -> LineSpacing:
@@ -678,7 +680,7 @@ def parse_fbs_duc_ellipse_element(fbs_ellipse_element: FBSDucEllipseElement) -> 
 
 def parse_fbs_duc_embeddable_element(fbs_embed_element: FBSDucEmbeddableElement) -> DucEmbeddableElement:
     return DucEmbeddableElement(
-        base=parse_fbs_duc_element_base(fbs_embed_element.Base())
+        base=parse_fbs_duc_element_base(fbs_embed_element.Base()),
     )
 
 def parse_fbs_duc_pdf_element(fbs_pdf_element: FBSDucPdfElement) -> DucPdfElement:
@@ -692,7 +694,7 @@ def parse_fbs_duc_mermaid_element(fbs_mermaid_element: FBSDucMermaidElement) -> 
         base=parse_fbs_duc_element_base(fbs_mermaid_element.Base()),
         source=fbs_mermaid_element.Source().decode('utf-8'),
         theme=fbs_mermaid_element.Theme().decode('utf-8'),
-        svg_path=fbs_mermaid_element.SvgPath().decode('utf-8')
+        svg_path=fbs_mermaid_element.SvgPath().decode('utf-8') if fbs_mermaid_element.SvgPath() is not None else None
     )
 
 def parse_fbs_duc_table_column(fbs_table_column: FBSDucTableColumn) -> DucTableColumn:
@@ -765,6 +767,8 @@ def parse_fbs_duc_table_element(fbs_table_element: FBSDucTableElement) -> DucTab
     )
 
 def parse_fbs_image_crop(fbs_image_crop: FBSImageCrop) -> ImageCrop:
+    if fbs_image_crop is None:
+        return None
     return ImageCrop(
         x=fbs_image_crop.X(),
         y=fbs_image_crop.Y(),
@@ -775,14 +779,17 @@ def parse_fbs_image_crop(fbs_image_crop: FBSImageCrop) -> ImageCrop:
     )
 
 def parse_fbs_duc_image_element(fbs_image_element: FBSDucImageElement) -> DucImageElement:
-    scale_list = [fbs_image_element.Scale(i) for i in range(fbs_image_element.ScaleLength())]
+    base = parse_fbs_duc_element_base(fbs_image_element.Base())
+    
+    scale = [fbs_image_element.Scale(i) for i in range(fbs_image_element.ScaleLength())]
+    
     return DucImageElement(
-        base=parse_fbs_duc_element_base(fbs_image_element.Base()),
-        file_id=fbs_image_element.FileId().decode('utf-8'),
-        status=fbs_image_element.Status() if fbs_image_element.Status() is not None else None,
-        scale=scale_list,
-        crop=parse_fbs_image_crop(fbs_image_element.Crop()),
-        filter=parse_fbs_duc_image_filter(fbs_image_element.Filter())
+        base=base,
+        scale=scale,
+        status=fbs_image_element.Status(),
+        file_id=fbs_image_element.FileId().decode('utf-8') if fbs_image_element.FileId() else None,
+        crop=parse_fbs_image_crop(fbs_image_element.Crop()) if fbs_image_element.Crop() else None,
+        filter=parse_fbs_duc_image_filter(fbs_image_element.Filter()) if fbs_image_element.Filter() else None
     )
 
 def parse_fbs_duc_text_dynamic_element_source(fbs_dynamic_el_source: FBSDucTextDynamicElementSource) -> DucTextDynamicElementSource:
@@ -843,6 +850,8 @@ def parse_fbs_duc_arrow_element(fbs_arrow_element: FBSDucArrowElement) -> DucArr
     )
 
 def parse_fbs_duc_free_draw_ends(fbs_ends: FBSDucFreeDrawEnds) -> DucFreeDrawEnds:
+    if fbs_ends is None:
+        return None
     return DucFreeDrawEnds(
         cap=bool(fbs_ends.Cap()),
         taper=fbs_ends.Taper(),
@@ -871,14 +880,17 @@ def parse_fbs_duc_free_draw_element(fbs_freedraw_element: FBSDucFreeDrawElement)
 def parse_fbs_duc_block_attribute_definition(fbs_attr_def: FBSDucBlockAttributeDefinition) -> DucBlockAttributeDefinition:
     return DucBlockAttributeDefinition(
         tag=fbs_attr_def.Tag().decode('utf-8'),
-        prompt=fbs_attr_def.Prompt().decode('utf-8'),
+        prompt=fbs_attr_def.Prompt().decode('utf-8') if fbs_attr_def.Prompt() else None,
         default_value=fbs_attr_def.DefaultValue().decode('utf-8'),
         is_constant=bool(fbs_attr_def.IsConstant())
     )
 
-def parse_fbs_duc_block_attribute_definition_entry(fbs_attr_def_entry: FBSDucBlockAttributeDefinitionEntry) -> DucBlockAttributeDefinition:
+def parse_fbs_duc_block_attribute_definition_entry(fbs_attr_def_entry: FBSDucBlockAttributeDefinitionEntry) -> DucBlockAttributeDefinitionEntry:
     # Assuming the entry is just a wrapper for the value
-    return parse_fbs_duc_block_attribute_definition(fbs_attr_def_entry.Value())
+    return DucBlockAttributeDefinitionEntry(
+        key=fbs_attr_def_entry.Key().decode('utf-8'),
+        value=parse_fbs_duc_block_attribute_definition(fbs_attr_def_entry.Value())
+    )
 
 def parse_fbs_duc_block(fbs_block: FBSDucBlock) -> DucBlock:
     elements_list = [parse_duc_element_wrapper(fbs_block.Elements(i)) for i in range(fbs_block.ElementsLength())]
@@ -886,7 +898,7 @@ def parse_fbs_duc_block(fbs_block: FBSDucBlock) -> DucBlock:
     return DucBlock(
         id=fbs_block.Id().decode('utf-8'),
         label=fbs_block.Label().decode('utf-8'),
-        description=fbs_block.Description().decode('utf-8'),
+        description=fbs_block.Description().decode('utf-8') if fbs_block.Description() else None,
         version=fbs_block.Version(),
         elements=elements_list,
         attribute_definitions=attribute_definitions_list
@@ -946,7 +958,7 @@ def parse_fbs_duc_viewport_element(fbs_viewport_element: FBSDucViewportElement) 
         scale=fbs_viewport_element.Scale(),
         shade_plot=fbs_viewport_element.ShadePlot() if fbs_viewport_element.ShadePlot() is not None else None,
         frozen_group_ids=frozen_group_ids_list,
-        standard_override=fbs_viewport_element.StandardOverride().decode('utf-8'),
+        standard_override=fbs_viewport_element.StandardOverride().decode('utf-8') if fbs_viewport_element.StandardOverride() else None,
     )
 
 def parse_fbs_duc_xray_element(fbs_xray_element: FBSDucXRayElement) -> DucXRayElement:

@@ -18,7 +18,7 @@ from ..classes.StandardsClass import (
     LayerSnapFilters, SnapMarkerSettings, SnapMarkerStyle, SnapMarkerStyleEntry
 )
 from ..classes.ElementsClass import (
-    DucView, DucUcs, DucPoint, GeometricPoint
+    DucView, DucUcs, DucPoint, GeometricPoint, DucGroup, DucStackBase
 )
 from ..Duc.PRUNING_LEVEL import PRUNING_LEVEL
 from ..Duc.GRID_TYPE import GRID_TYPE
@@ -197,6 +197,38 @@ def create_external_file(
     return DucExternalFileEntry(
         key=key,
         value=file_data
+    )
+
+def create_group(
+    id: Optional[str] = None,
+    label: str = "",
+    is_collapsed: bool = False,
+    is_plot: bool = False,
+    is_visible: bool = True,
+    locked: bool = False,
+    opacity: float = 1.0,
+    labeling_color: str = "#000000",
+    description: str = ""
+) -> DucGroup:
+    from .element_builders import create_stack_base
+    
+    if id is None:
+        id = generate_random_id()
+
+    stack_base = create_stack_base(
+        label=label,
+        is_collapsed=is_collapsed,
+        is_plot=is_plot,
+        is_visible=is_visible,
+        locked=locked,
+        opacity=opacity,
+        labeling_color=labeling_color,
+        description=description
+    )
+    
+    return DucGroup(
+        id=id,
+        stack_base=stack_base
     )
     
 # --- Mutate helpers for state classes ---

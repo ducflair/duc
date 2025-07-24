@@ -190,13 +190,13 @@ class DucElementBase:
     is_deleted: bool
     group_ids: List[str]
     region_ids: List[str]
-    layer_id: str
     z_index: float
     locked: bool
     description: Optional[str] = None
     index: Optional[str] = None
-    frame_id: Optional[str] = None
     link: Optional[str] = None
+    layer_id: Optional[str] = None
+    frame_id: Optional[str] = None
     bound_elements: Optional[List[BoundElement]] = None
     custom_data: Optional[Dict[str, Any]] = None
 

@@ -23,22 +23,20 @@ from ..Duc.DucExternalFileData import (
 
 
 def serialize_fbs_duc_external_file_data(builder: flatbuffers.Builder, file_data: DucExternalFileData) -> int:
-    """Serialize DucExternalFileData to FlatBuffers."""
+    """
+    Serialize DucExternalFileData to FlatBuffers.
+    """
     mime_type_offset = builder.CreateString(file_data.mime_type)
     id_offset = builder.CreateString(file_data.id)
-    
-    # Serialize data bytes
-    DucExternalFileDataStartDataVector(builder, len(file_data.data))
-    for byte_val in reversed(file_data.data):
-        builder.PrependByte(byte_val)
-    data_vector = builder.EndVector()
+    data_offset = builder.CreateByteVector(file_data.data) # Assuming data is bytes
     
     DucExternalFileDataStart(builder)
     DucExternalFileDataAddMimeType(builder, mime_type_offset)
     DucExternalFileDataAddId(builder, id_offset)
-    DucExternalFileDataAddData(builder, data_vector)
+    DucExternalFileDataAddData(builder, data_offset)
     DucExternalFileDataAddCreated(builder, file_data.created)
-    DucExternalFileDataAddLastRetrieved(builder, file_data.last_retrieved)
+    if file_data.last_retrieved is not None:
+        DucExternalFileDataAddLastRetrieved(builder, file_data.last_retrieved)
     return DucExternalFileDataEnd(builder)
 
 

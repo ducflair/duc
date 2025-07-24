@@ -255,14 +255,3 @@ def serialize_duc(
     except Exception as e:
         logger.error(f"Failed to serialize DUC file: {str(e)}")
         raise
-
-
-# Legacy alias for backward compatibility
-save_as_flatbuffers = serialize_duc
-
-def save_as_flatbuffers(data_state: ExportedDataState) -> bytes:
-    try:
-        return serialize_as_flatbuffers(data_state)
-    except Exception as e:
-        logger.error(f"Failed to save file: {str(e)}")
-        raise
