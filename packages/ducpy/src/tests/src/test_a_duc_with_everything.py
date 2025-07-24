@@ -8,7 +8,7 @@
 # - All possible styles and settings
 # - Diverse Layers, Regions, Blocks, Groups
 # - Diverse Dictionary key values
-# - Thumbnail image from assets
+# - Thumbnail image from assets (thumbnail.png)
 # - On external files at least three files related to elements (test.pdf, test.step and test.jpg)
 #    - Respectively these files will be necessary to link to the DucPdfElement, DucParametricElement and DucImageElement
 # - Some VersionGraph history
