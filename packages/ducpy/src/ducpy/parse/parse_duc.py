@@ -28,7 +28,7 @@ from .parse_version_control import parse_fbs_version_graph # This will handle ve
 from .parse_duc_element import parse_fbs_duc_block # Temporarily import parse_fbs_duc_block here until parse_duc_element.py is properly structured
 
 
-def parse_duc_flatbuffers(blob: IO[bytes]) -> ExportedDataState:
+def parse_duc(blob: IO[bytes]) -> ExportedDataState:
     buffer = blob.read()
     builder = Builder(0)
     builder.Bytes = buffer
@@ -69,6 +69,3 @@ def parse_duc_flatbuffers(blob: IO[bytes]) -> ExportedDataState:
         files=files,
         version_graph=version_graph
     )
-
-# Alias for external usage
-parse_duc = parse_duc_flatbuffers

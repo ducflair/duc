@@ -16,7 +16,7 @@ from ..classes.ElementsClass import (
     DucFreeDrawEnds, DucPath, DucLine, DucLineReference,
     
     # Block structures
-    DucBlockDuplicationArray, DucBlockAttributeDefinition,
+    DucBlockDuplicationArray, DucBlockAttributeDefinition, DucBlockAttributeDefinitionEntry,
     
     # Plot structures
     PlotLayout,
@@ -109,7 +109,7 @@ from ..Duc.SNAP_MARKER_SHAPE import SNAP_MARKER_SHAPE
 # Import base element helpers
 from .serialize_base_elements import (
     serialize_fbs_duc_point, serialize_fbs_duc_head, serialize_fbs_margins,
-    serialize_fbs_duc_point_binding
+    serialize_fbs_duc_point_binding, serialize_fbs_string_value_entry
 )
 
 
@@ -268,6 +268,47 @@ def serialize_fbs_duc_block_duplication_array(builder: flatbuffers.Builder, dupl
     DucBlockDuplicationArrayAddRowSpacing(builder, duplication_array.row_spacing)
     DucBlockDuplicationArrayAddColSpacing(builder, duplication_array.col_spacing)
     return DucBlockDuplicationArrayEnd(builder)
+
+
+def serialize_fbs_duc_block_attribute_definition(builder: flatbuffers.Builder, attribute_def: DucBlockAttributeDefinition) -> int:
+    """
+    Serialize DucBlockAttributeDefinition to FlatBuffers.
+    """
+    from ..Duc.DucBlockAttributeDefinition import (
+        DucBlockAttributeDefinitionStart, DucBlockAttributeDefinitionEnd,
+        DucBlockAttributeDefinitionAddTag, DucBlockAttributeDefinitionAddPrompt,
+        DucBlockAttributeDefinitionAddDefaultValue, DucBlockAttributeDefinitionAddIsConstant
+    )
+
+    tag_offset = builder.CreateString(attribute_def.tag)
+    prompt_offset = builder.CreateString(attribute_def.prompt) if attribute_def.prompt else None
+    default_value_offset = builder.CreateString(attribute_def.default_value)
+
+    DucBlockAttributeDefinitionStart(builder)
+    DucBlockAttributeDefinitionAddTag(builder, tag_offset)
+    if prompt_offset is not None:
+        DucBlockAttributeDefinitionAddPrompt(builder, prompt_offset)
+    DucBlockAttributeDefinitionAddDefaultValue(builder, default_value_offset)
+    DucBlockAttributeDefinitionAddIsConstant(builder, attribute_def.is_constant)
+    return DucBlockAttributeDefinitionEnd(builder)
+
+
+def serialize_fbs_duc_block_attribute_definition_entry(builder: flatbuffers.Builder, entry: DucBlockAttributeDefinitionEntry) -> int:
+    """
+    Serialize DucBlockAttributeDefinitionEntry to FlatBuffers.
+    """
+    from ..Duc.DucBlockAttributeDefinitionEntry import (
+        DucBlockAttributeDefinitionEntryStart, DucBlockAttributeDefinitionEntryEnd,
+        DucBlockAttributeDefinitionEntryAddKey, DucBlockAttributeDefinitionEntryAddValue
+    )
+
+    key_offset = builder.CreateString(entry.key)
+    value_offset = serialize_fbs_duc_block_attribute_definition(builder, entry.value)
+
+    DucBlockAttributeDefinitionEntryStart(builder)
+    DucBlockAttributeDefinitionEntryAddKey(builder, key_offset)
+    DucBlockAttributeDefinitionEntryAddValue(builder, value_offset)
+    return DucBlockAttributeDefinitionEntryEnd(builder)
 
 
 def serialize_fbs_plot_layout(builder: flatbuffers.Builder, plot_layout: PlotLayout) -> int:

@@ -84,7 +84,7 @@ def test_create_100_connected_elements(test_output_dir):
     assert os.path.exists(output_file) and os.path.getsize(output_file) > 0
 
     # Parse the file and verify the bindings
-    parsed_data = duc.parse_duc_flatbuffers(io.BytesIO(serialized_data))
+    parsed_data = duc.parse_duc(io.BytesIO(serialized_data))
     parsed_elements = parsed_data.elements
 
     assert len(parsed_elements) == len(elements)
