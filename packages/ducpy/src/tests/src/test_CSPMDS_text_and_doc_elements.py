@@ -76,83 +76,97 @@ def test_cspmds_text_and_doc_elements(test_output_dir):
     # === CREATE TEXT ELEMENTS ===
     
     # 1. Document title
-    title_element = duc.create_text_element(
-        x=200, y=50, width=400, height=40,
-        text="Technical Drawing Specification Document",
-        text_style=title_text_style,
-        auto_resize=True,
-        label="Document Title"
-    )
+    title_element = (duc.ElementBuilder()
+        .at_position(200, 50)
+        .with_size(400, 40)
+        .with_label("Document Title")
+        .with_styles(duc.create_simple_styles())
+        .build_text_element()
+        .with_text("Technical Drawing Specification Document")
+        .with_text_style(title_text_style)
+        .build())
     elements.append(title_element)
     
     # 2. Section header
-    section_header = duc.create_text_element(
-        x=50, y=120, width=300, height=30,
-        text="1. General Requirements",
-        text_style=header_text_style,
-        auto_resize=False,
-        label="Section Header"
-    )
+    section_header = (duc.ElementBuilder()
+        .at_position(50, 120)
+        .with_size(300, 30)
+        .with_label("Section Header")
+        .with_styles(duc.create_simple_styles())
+        .build_text_element()
+        .with_text("1. General Requirements")
+        .with_text_style(header_text_style)
+        .build())
     elements.append(section_header)
     
     # 3. Body text with line breaks
-    body_text = duc.create_text_element(
-        x=50, y=170, width=500, height=100,
-        text="""This document outlines the technical specifications for mechanical drawings.
+    body_text = (duc.ElementBuilder()
+        .at_position(50, 170)
+        .with_size(500, 100)
+        .with_label("Body Text")
+        .with_styles(duc.create_simple_styles())
+        .build_text_element()
+        .with_text("""This document outlines the technical specifications for mechanical drawings.
 All dimensions shall be in millimeters unless otherwise specified.
 Tolerances shall conform to ISO 2768-m standard.
-Materials and finishes are specified in the accompanying schedules.""",
-        text_style=body_text_style,
-        auto_resize=False,
-        label="Body Text"
-    )
+Materials and finishes are specified in the accompanying schedules.""")
+        .with_text_style(body_text_style)
+        .build())
     elements.append(body_text)
     
     # 4. Technical note with special formatting
-    technical_note = duc.create_text_element(
-        x=400, y=120, width=250, height=60,
-        text="NOTE: All welds shall be\ninspected per AWS D1.1\nstandards before final\nassembly.",
-        text_style=body_text_style,
-        auto_resize=True,
-        label="Technical Note"
-    )
+    technical_note = (duc.ElementBuilder()
+        .at_position(400, 120)
+        .with_size(250, 60)
+        .with_label("Technical Note")
+        .with_styles(duc.create_simple_styles())
+        .build_text_element()
+        .with_text("NOTE: All welds shall be\ninspected per AWS D1.1\nstandards before final\nassembly.")
+        .with_text_style(body_text_style)
+        .build())
     elements.append(technical_note)
     
     # 5. Caption text
-    caption_element = duc.create_text_element(
-        x=150, y=290, width=200, height=20,
-        text="Figure 1: Assembly Overview",
-        text_style=caption_text_style,
-        auto_resize=True,
-        label="Figure Caption"
-    )
+    caption_element = (duc.ElementBuilder()
+        .at_position(150, 290)
+        .with_size(200, 20)
+        .with_label("Figure Caption")
+        .with_styles(duc.create_simple_styles())
+        .build_text_element()
+        .with_text("Figure 1: Assembly Overview")
+        .with_text_style(caption_text_style)
+        .build())
     elements.append(caption_element)
     
     # 6. Code or part number
-    part_number = duc.create_text_element(
-        x=500, y=290, width=150, height=25,
-        text="P/N: MEC-2025-001-REV-A",
-        text_style=code_text_style,
-        auto_resize=True,
-        label="Part Number"
-    )
+    part_number = (duc.ElementBuilder()
+        .at_position(500, 290)
+        .with_size(150, 25)
+        .with_label("Part Number")
+        .with_styles(duc.create_simple_styles())
+        .build_text_element()
+        .with_text("P/N: MEC-2025-001-REV-A")
+        .with_text_style(code_text_style)
+        .build())
     elements.append(part_number)
     
     # 7. Multi-line technical specification
-    tech_spec = duc.create_text_element(
-        x=50, y=330, width=300, height=120,
-        text="""
+    tech_spec = (duc.ElementBuilder()
+        .at_position(50, 330)
+        .with_size(300, 120)
+        .with_label("Technical Specifications")
+        .with_styles(duc.create_simple_styles())
+        .build_text_element()
+        .with_text("""
           MATERIAL SPECIFICATIONS:
             • Base Material: ASTM A36 Steel
             • Coating: Hot-Dip Galvanized
             • Thickness: 6mm ± 0.5mm
             • Surface Finish: 125 μin Ra max
             • Heat Treatment: Stress Relieved
-        """,
-        text_style=body_text_style,
-        auto_resize=False,
-        label="Technical Specifications"
-    )
+        """)
+        .with_text_style(body_text_style)
+        .build())
     elements.append(tech_spec)
     
     # === CREATE DOC ELEMENTS ===
@@ -219,9 +233,13 @@ Materials and finishes are specified in the accompanying schedules.""",
         auto_height=True,
         column_type=duc.COLUMN_TYPE.STATIC_COLUMNS
     )    # 8. Rich document element with advanced formatting
-    rich_document = duc.create_doc_element(
-        x=400, y=330, width=420, height=200,
-        text="""DESIGN METHODOLOGY
+    rich_document = (duc.ElementBuilder()
+        .at_position(400, 330)
+        .with_size(420, 200)
+        .with_label("Rich Document")
+        .with_styles(duc.create_simple_styles()) \
+        .build_doc_element()
+        .with_text("""DESIGN METHODOLOGY
 
 This section describes the systematic approach used in the mechanical design process. The methodology incorporates industry best practices and follows established engineering principles.
 
@@ -233,13 +251,10 @@ Key Design Principles:
 
 The design process includes iterative analysis using finite element methods to ensure optimal performance under specified loading conditions. All calculations assume standard atmospheric conditions unless noted otherwise.
 
-Special attention is given to fatigue analysis for components subject to cyclic loading, with safety factors applied per ASME standards.""",
-        style=doc_style,
-        columns=column_layout,
-        auto_resize=False,
-        flow_direction=duc.TEXT_FLOW_DIRECTION.LEFT_TO_RIGHT,
-        label="Rich Document"
-    )
+Special attention is given to fatigue analysis for components subject to cyclic loading, with safety factors applied per ASME standards.""")
+        .with_doc_style(doc_style)
+        .with_columns_layout(column_layout)
+        .build())
     elements.append(rich_document)
     
     # 9. Simple document with different formatting
@@ -263,18 +278,19 @@ Special attention is given to fatigue analysis for components subject to cyclic 
         column_type=duc.COLUMN_TYPE.STATIC_COLUMNS
     )
     
-    revision_history = duc.create_doc_element(
-        x=50, y=480, width=300, height=100,
-        text="""REVISION HISTORY
+    revision_history = (duc.ElementBuilder()
+        .at_position(50, 480)
+        .with_size(300, 100)
+        .with_label("Revision History")
+        .with_styles(duc.create_simple_styles())
+        .build_doc_element()
+        .with_text("""REVISION HISTORY
 Rev A: Initial release - 2025-01-15
 Rev B: Updated tolerances - 2025-02-20
-Rev C: Material specification change - 2025-03-10""",
-        style=simple_doc_style,
-        columns=single_column,
-        auto_resize=True,
-        flow_direction=duc.TEXT_FLOW_DIRECTION.LEFT_TO_RIGHT,
-        label="Revision History"
-    )
+Rev C: Material specification change - 2025-03-10""")
+        .with_doc_style(simple_doc_style)
+        .with_columns_layout(single_column)
+        .build())
     elements.append(revision_history)
     
     print(f"Created {len(elements)} text and document elements")
@@ -283,10 +299,11 @@ Rev C: Material specification change - 2025-03-10""",
     print("💾 SERIALIZE: Saving initial state...")
     
     initial_file = os.path.join(test_output_dir, "cspmds_text_doc_initial.duc")
-    serialized_data = duc.serialize_duc(name="TextDocCSPMDS_Initial", elements=elements)
-    
-    with open(initial_file, 'wb') as f:
-        f.write(serialized_data)
+    duc.write_duc_file(
+        file_path=initial_file,
+        name="TextDocCSPMDS_Initial",
+        elements=elements
+    )
     
     assert os.path.exists(initial_file)
     print(f"Saved initial state to {initial_file}")
@@ -294,7 +311,7 @@ Rev C: Material specification change - 2025-03-10""",
     # === PARSE ===
     print("📖 PARSE: Loading saved file...")
     
-    parsed_data = duc.parse_duc(io.BytesIO(serialized_data))
+    parsed_data = duc.read_duc_file(initial_file)
     loaded_elements = parsed_data.elements
     
     assert len(loaded_elements) == len(elements)
@@ -411,10 +428,11 @@ Rev C: Material specification change - 2025-03-10""",
     print("💾 SERIALIZE: Saving final state...")
     
     final_file = os.path.join(test_output_dir, "cspmds_text_doc_final.duc")
-    final_serialized_data = duc.serialize_duc(name="TextDocCSPMDS_Final", elements=loaded_elements)
-    
-    with open(final_file, 'wb') as f:
-        f.write(final_serialized_data)
+    duc.write_duc_file(
+        file_path=final_file,
+        name="TextDocCSPMDS_Final",
+        elements=loaded_elements
+    )
     
     assert os.path.exists(final_file)
     print(f"Saved final state to {final_file}")
@@ -423,7 +441,7 @@ Rev C: Material specification change - 2025-03-10""",
     print("✅ VERIFICATION: Checking final state...")
     
     # Parse final file to verify
-    final_parsed_data = duc.parse_duc(io.BytesIO(final_serialized_data))
+    final_parsed_data = duc.read_duc_file(final_file)
     final_elements = final_parsed_data.elements
     
     print(f"Final element count: {len(final_elements)}")

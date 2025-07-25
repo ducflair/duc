@@ -155,12 +155,12 @@ ducGlobalState(obj?:DucGlobalState):DucGlobalState|null {
   return offset ? (obj || new DucGlobalState()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-files(index: number, obj?:DucExternalFileEntry):DucExternalFileEntry|null {
+externalFiles(index: number, obj?:DucExternalFileEntry):DucExternalFileEntry|null {
   const offset = this.bb!.__offset(this.bb_pos, 32);
   return offset ? (obj || new DucExternalFileEntry()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
-filesLength():number {
+externalFilesLength():number {
   const offset = this.bb!.__offset(this.bb_pos, 32);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
@@ -322,11 +322,11 @@ static addDucGlobalState(builder:flatbuffers.Builder, ducGlobalStateOffset:flatb
   builder.addFieldOffset(13, ducGlobalStateOffset, 0);
 }
 
-static addFiles(builder:flatbuffers.Builder, filesOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(14, filesOffset, 0);
+static addExternalFiles(builder:flatbuffers.Builder, externalFilesOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(14, externalFilesOffset, 0);
 }
 
-static createFilesVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+static createExternalFilesVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
   builder.startVector(4, data.length, 4);
   for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]!);
@@ -334,7 +334,7 @@ static createFilesVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[])
   return builder.endVector();
 }
 
-static startFilesVector(builder:flatbuffers.Builder, numElems:number) {
+static startExternalFilesVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
 }
 

@@ -81,7 +81,7 @@ class DucExternalFileData(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int64Flags, o + self._tab.Pos)
-        return 0
+        return None
 
 def DucExternalFileDataStart(builder):
     builder.StartObject(5)
@@ -120,7 +120,7 @@ def AddCreated(builder, created):
     DucExternalFileDataAddCreated(builder, created)
 
 def DucExternalFileDataAddLastRetrieved(builder, lastRetrieved):
-    builder.PrependInt64Slot(4, lastRetrieved, 0)
+    builder.PrependInt64Slot(4, lastRetrieved, None)
 
 def AddLastRetrieved(builder, lastRetrieved):
     DucExternalFileDataAddLastRetrieved(builder, lastRetrieved)

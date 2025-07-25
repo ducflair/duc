@@ -2,23 +2,25 @@
 Helper functions for creating DUC elements with a user-friendly API.
 """
 from math import pi
-from typing import List, Optional, Union, TYPE_CHECKING
+from typing import List, Optional, Union, TYPE_CHECKING, Any, Dict
 import uuid
 import time
+from dataclasses import dataclass, field
+import numpy as np
+import math
 
 if TYPE_CHECKING:
     from ..classes.StandardsClass import Standard
-    import numpy as np
 from ..classes.ElementsClass import (
-    DucRectangleElement, DucEllipseElement, DucPolygonElement,
+    DucFreeDrawEnds, DucImageFilter, DucRectangleElement, DucEllipseElement, DucPolygonElement,
     DucElementBase, DucElementStylesBase, ElementWrapper, BoundElement,
     DucLinearElement, DucLinearElementBase, DucPoint, DucLine, 
-    DucLineReference, GeometricPoint, DucPointBinding, DucPath,
-    PointBindingPoint, DucHead, ElementStroke, ElementBackground,
+    DucLineReference, GeometricPoint, DucPointBinding, DucPath, ImageCrop,
+    PointBindingPoint, DucHead, ElementStroke, ElementBackground, ElementContentBase, StrokeStyle,
     DucArrowElement, DucTextElement, DucFrameElement, DucPlotElement,
     DucViewportElement, DucStackElementBase, DucStackBase, DucStackLikeStyles,
     PlotLayout, DucView, DucPlotStyle, DucViewportStyle, Margins,
-    DucFreeDrawElement, DucBlockAttributeDefinition, DucBlockAttributeDefinitionEntry,
+    DucFreeDrawElement, DucImageElement, DucPdfElement, DucParametricElement, ParametricSource, DucBlockAttributeDefinition, DucBlockAttributeDefinitionEntry,
     DucBlock, DucBlockDuplicationArray, StringValueEntry, DucBlockInstanceElement,
     DucTableColumn, DucTableRow, DucTableCell, DucTableCellSpan, DucTableAutoSize,
     DucTableElement, DucTableStyle, DucTableCellStyle, DucTextStyle, DucLayer, DucLayerOverrides,
@@ -30,7 +32,7 @@ from ..classes.ElementsClass import (
     DucFeatureControlFrameElement, ToleranceClause, FeatureControlFrameSegment, DatumReference,
     FCFFrameModifiers, FCFBetweenModifier, FCFProjectedZoneModifier, FCFDatumDefinition, FCFSegmentRow,
     DucMermaidElement, DucEmbeddableElement, DucXRayElement, DucXRayStyle, FCFLayoutStyle, FCFSymbolStyle, FCFDatumStyle, DucFeatureControlFrameStyle,
-    DucLeaderStyle, BLOCK_ATTACHMENT
+    DucLeaderStyle, BLOCK_ATTACHMENT, DucTableColumnEntry, DucTableRowEntry, DucTableCellEntry
 )
 from .style_builders import create_simple_styles, create_text_style, create_paragraph_formatting, create_stack_format_properties, create_stack_format, create_doc_style, create_text_column, create_column_layout
 from ducpy.utils import generate_random_id, DEFAULT_SCOPE, DEFAULT_STROKE_COLOR, DEFAULT_FILL_COLOR
@@ -54,1276 +56,769 @@ from ducpy.Duc.FEATURE_MODIFIER import FEATURE_MODIFIER
 from ducpy.Duc.PARAMETRIC_SOURCE_TYPE import PARAMETRIC_SOURCE_TYPE
 from ducpy.Duc.VIEWPORT_SHADE_PLOT import VIEWPORT_SHADE_PLOT
 from ducpy.Duc.IMAGE_STATUS import IMAGE_STATUS
+from ducpy.Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
+from ducpy.Duc.STROKE_PLACEMENT import STROKE_PLACEMENT
+from ducpy.Duc.MARK_ELLIPSE_CENTER import MARK_ELLIPSE_CENTER
+from ducpy.Duc.DIMENSION_FIT_RULE import DIMENSION_FIT_RULE
+from ducpy.Duc.DIMENSION_TEXT_PLACEMENT import DIMENSION_TEXT_PLACEMENT
+from ducpy.Duc.TOLERANCE_DISPLAY import TOLERANCE_DISPLAY
+from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
+from ducpy.Duc.BLOCK_ATTACHMENT import BLOCK_ATTACHMENT
 
 import random
 import time
 
-def create_element_base(
-    x=0.0,
-    y=0.0,
-    width=1.0,
-    height=1.0,
-    angle=0.0,
-    styles=None,
-    id=None,
-    label="",
-    scope=DEFAULT_SCOPE,
-    locked=False,
-    is_visible=True,
-    z_index=0.0,
-    description="",
-    group_ids=None,
-    region_ids=None,
-    layer_id="",
-    frame_id="",
-    bound_elements=None,
-    link="",
-    custom_data="",
-    is_plot=False,
-    is_annotative=False,
-    is_deleted=False,
-    index=None,
-) -> DucElementBase:
-    """
-    Create a modular DucElementBase with all required versioning and random properties.
-    """
-    if id is None:
-        id = generate_random_id(16)
-    if styles is None:
-        styles = create_simple_styles()
-    
-    # Use random_versioning utility
+def _create_element_wrapper(element_class, base_params, element_params, explicit_properties_override=None):
+    """Helper function to create an ElementWrapper with the given parameters."""
+    # Create the base DucElementBase
+    from ducpy.utils import generate_random_id
+    from ducpy.utils.rand_utils import random_versioning
+    # Generate ID if not provided
+    if not base_params.get('id'):
+        base_params['id'] = generate_random_id()
+    # Set default values using rand_utils
     versioning = random_versioning()
+    base_params.setdefault('seed', versioning['seed'])
+    base_params.setdefault('version', versioning['version'])
+    base_params.setdefault('version_nonce', versioning['version_nonce'])
+    base_params.setdefault('updated', versioning['updated'])
+    base_element = DucElementBase(**base_params)
     
-    group_ids = group_ids or []
-    region_ids = region_ids or []
-    bound_elements = bound_elements or []
-    return DucElementBase(
-        id=id,
-        styles=styles,
-        x=x,
-        y=y,
-        width=width,
-        height=height,
-        angle=angle,
-        scope=scope,
-        label=label,
-        description=description,
-        is_visible=is_visible,
-        seed=versioning["seed"],
-        version=versioning["version"],
-        version_nonce=versioning["version_nonce"],
-        updated=versioning["updated"],
-        index=index,
-        is_plot=is_plot,
-        is_annotative=is_annotative,
-        is_deleted=is_deleted,
-        group_ids=group_ids,
-        region_ids=region_ids,
-        layer_id=layer_id,
-        frame_id=frame_id,
-        bound_elements=bound_elements,
-        z_index=z_index,
-        link=link,
-        locked=locked,
-        custom_data=custom_data,
-    )
-
-
-def _apply_base_overrides(base: DucElementBase, explicit_properties_override: Optional[dict]) -> None:
-    """
-    Apply explicit property overrides to a DucElementBase instance.
-    """
-    if explicit_properties_override:
-        for k, v in explicit_properties_override.get("base", {}).items():
-            setattr(base, k, v)
-
-def _create_element_wrapper(element_class, base_params: dict, element_params: dict, 
-                           explicit_properties_override: Optional[dict] = None) -> ElementWrapper:
-    """
-    Generic helper for creating element wrappers with common pattern.
-    
-    Args:
-        element_class: The element class to instantiate
-        base_params: Parameters for creating the base element
-        element_params: Parameters specific to the element
-        explicit_properties_override: Optional overrides
+    # Handle special cases for different element types
+    if element_class == DucLinearElement:
+        # Convert tuple points to DucPoint objects
+        points = element_params.get('points', [])
+        duc_points = []
+        for point in points:
+            if isinstance(point, tuple):
+                # Provide default mirroring as None
+                duc_points.append(DucPoint(x=float(point[0]), y=float(point[1]), mirroring=None))
+            else:
+                duc_points.append(point)
         
-    Returns:
-        ElementWrapper: Wrapped element
-    """
-    base = create_element_base(**base_params)
-    _apply_base_overrides(base, explicit_properties_override)
-    
-    final_element_params = {"base": base, **element_params}
-    if explicit_properties_override and "element" in explicit_properties_override:
-        final_element_params.update(explicit_properties_override["element"])
-    
-    element = element_class(**final_element_params)
-    return ElementWrapper(element=element)
-
-
-def create_rectangle(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a rectangle element with a clean, modular API.
-    """
-    base_params = {
-        "x": x, "y": y, "width": width, "height": height, "angle": angle,
-        "styles": styles, "id": id, "label": label, "scope": scope,
-        "locked": locked, "is_visible": is_visible, "z_index": z_index
-    }
-    
-    return _create_element_wrapper(
-        DucRectangleElement, 
-        base_params, 
-        {}, 
-        explicit_properties_override
-    )
-
-
-def create_ellipse(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    ratio: float = 1.0,
-    start_angle: float = 0.0,
-    end_angle: float = 2.0*pi,
-    show_aux_crosshair: bool = False,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create an ellipse element with a clean, modular API.
-    """
-    base_params = {
-        "x": x, "y": y, "width": width, "height": height, "angle": angle,
-        "styles": styles, "id": id, "label": label, "scope": scope,
-        "locked": locked, "is_visible": is_visible, "z_index": z_index
-    }
-    
-    element_params = {
-        "ratio": ratio,
-        "start_angle": start_angle,
-        "end_angle": end_angle,
-        "show_aux_crosshair": show_aux_crosshair,
-    }
-    
-    return _create_element_wrapper(
-        DucEllipseElement, 
-        base_params, 
-        element_params, 
-        explicit_properties_override
-    )
-
-
-def create_polygon(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    sides: int = 6,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a polygon element with a clean, modular API.
-    """
-    base_params = {
-        "x": x, "y": y, "width": width, "height": height, "angle": angle,
-        "styles": styles, "id": id, "label": label, "scope": scope,
-        "locked": locked, "is_visible": is_visible, "z_index": z_index
-    }
-    
-    element_params = {"sides": sides}
-    
-    return _create_element_wrapper(
-        DucPolygonElement, 
-        base_params, 
-        element_params, 
-        explicit_properties_override
-    )
-
-
-def create_linear_element(
-    points: List[tuple],
-    lines: Optional[List[DucLine]] = None,
-    bezier_handles: Optional[dict] = None,
-    line_definitions: Optional[List[dict]] = None,
-    path_overrides: Optional[List[DucPath]] = None,
-    last_committed_point: Optional[DucPoint] = None,
-    start_binding: Optional[DucPointBinding] = None,
-    end_binding: Optional[DucPointBinding] = None,
-    wipeout_below: bool = False,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = "mm",
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a linear element (line, polyline) with a clean, modular API supporting bezier curves.
-    
-    Args:
-        points: List of (x, y) tuples defining the line path.
-        lines: Optional list of DucLine objects. If None, creates lines connecting consecutive points.
-               If `line_definitions` is provided, this parameter is ignored.
-        bezier_handles: Optional dict mapping line indices to handle coordinates for curves.
-                        Format: {line_index: {'start': (x, y), 'end': (x, y)}}.
-                        This is used if `lines` or `line_definitions` are not provided.
-        line_definitions: Optional list of dicts defining connections between points, with optional
-                          bezier handles. Format: [{'start': 0, 'end': 1, 'start_handle': (x, y), 'end_handle': (x, y)}, ...].
-                          If provided, this takes precedence over `lines` and `bezier_handles`.
-        path_overrides: Optional list of DucPath objects for styling line segments.
-        last_committed_point: Optional last committed point. If None, uses the last point.
-        start_binding: Optional start point binding.
-        end_binding: Optional end point binding.
-        wipeout_below: Whether this linear element wipes out elements below it.
-        styles: Element styles (defaults to transparent).
-        id: Unique identifier (auto-generated if None).
-        label: Human-readable label.
-        scope: Units ("mm", "px", etc.).
-        locked: Whether element is locked.
-        is_visible: Whether element is visible.
-        z_index: Layering order.
-        explicit_properties_override: Optional dict to override properties.
-        
-    Returns:
-        ElementWrapper: Wrapped linear element ready for serialization.
-        
-    Examples:
-        # Simple line from (0,0) to (100,50)
-        create_linear_element([(0, 0), (100, 50)], 
-                            styles=create_stroke_style(create_solid_content("#000000")))
-        
-        # Curved line with bezier handles
-        create_linear_element(
-            [(0, 0), (100, 50)], 
-            bezier_handles={0: {'start': (25, -25), 'end': (75, 75)}}
+        # Create linear base first
+        linear_base = DucLinearElementBase(
+            base=base_element,
+            points=duc_points,
+            lines=element_params.get('lines', []),
+            path_overrides=element_params.get('path_overrides', []),
+            last_committed_point=element_params.get('last_committed_point'),
+            start_binding=element_params.get('start_binding'),
+            end_binding=element_params.get('end_binding')
         )
-        
-        # Complex path with multiple segments and custom styling
-        create_linear_element(
-            [(0, 0), (50, 25), (100, 0), (150, 50)],
-            path_overrides=[create_path_override([0, 1], stroke_style, fill_style)]
+        specific_element = element_class(
+            linear_base=linear_base,
+            wipeout_below=element_params.get('wipeout_below', False)
         )
+    elif element_class == DucArrowElement:
+        # Convert tuple points to DucPoint objects
+        points = element_params.get('points', [])
+        duc_points = []
+        for point in points:
+            if isinstance(point, tuple):
+                duc_points.append(DucPoint(x=float(point[0]), y=float(point[1]), mirroring=None))
+            else:
+                duc_points.append(point)
+        
+        # Create linear base first
+        linear_base = DucLinearElementBase(
+            base=base_element,
+            points=duc_points,
+            lines=[],
+            path_overrides=[],
+            last_committed_point=None,
+            start_binding=element_params.get('start_binding'),
+            end_binding=element_params.get('end_binding')
+        )
+        specific_element = element_class(
+            linear_base=linear_base,
+            elbowed=element_params.get('elbowed', False)
+        )
+    elif element_class == DucViewportElement:
+        # Convert tuple points to DucPoint objects
+        points = element_params.get('points', [])
+        duc_points = []
+        for point in points:
+            if isinstance(point, tuple):
+                duc_points.append(DucPoint(x=float(point[0]), y=float(point[1]), mirroring=None))
+            else:
+                duc_points.append(point)
+        
+        # Create linear base first
+        linear_base = DucLinearElementBase(
+            base=base_element,
+            points=duc_points,
+            lines=[],
+            path_overrides=[],
+            last_committed_point=None,
+            start_binding=element_params.get('start_binding'),
+            end_binding=element_params.get('end_binding')
+        )
+        # Create stack base if provided, otherwise use default
+        stack_base = element_params.get('stack_base')
+        if stack_base is None:
+            stack_base = DucStackBase(
+                label=base_params.get('label', ""),
+                is_collapsed=False,
+                is_plot=True,
+                is_visible=True,
+                locked=False,
+                styles=DucStackLikeStyles(opacity=1.0, labeling_color="#000"),
+                description=base_params.get('description', "")
+            )
+        # Create viewport style
+        from ducpy.builders.style_builders import create_simple_styles
+        viewport_style = element_params.get('style')
+        if viewport_style is None:
+            viewport_style = DucViewportStyle(base_style=create_simple_styles(), scale_indicator_visible=True)
+        specific_element = element_class(
+            linear_base=linear_base,
+            stack_base=stack_base,
+            style=viewport_style,
+            view=element_params.get('view'),
+            scale=element_params.get('scale', 1.0),
+            shade_plot=element_params.get('shade_plot'),
+            frozen_group_ids=element_params.get('frozen_group_ids', []),
+            standard_override=element_params.get('standard_override')
+        )
+    elif element_class == DucPlotElement:
+        # Create stack base if provided, otherwise use default
+        stack_base = element_params.get('stack_base')
+        if stack_base is None:
+            stack_base = DucStackBase(
+                label=base_params.get('label', ""),
+                is_collapsed=False,
+                is_plot=True,
+                is_visible=True,
+                locked=False,
+                styles=DucStackLikeStyles(opacity=1.0, labeling_color="#000"),
+                description=base_params.get('description', "")
+            )
+        # Create stack element base
+        stack_element_base = DucStackElementBase(
+            base=base_element,
+            stack_base=stack_base,
+            clip=element_params.get('clip', False),
+            label_visible=element_params.get('label_visible', True),
+            standard_override=element_params.get('standard_override')
+        )
+        # Create plot style
+        from ducpy.builders.style_builders import create_simple_styles
+        plot_style = element_params.get('style')
+        if plot_style is None:
+            plot_style = DucPlotStyle(base_style=create_simple_styles())
+        # Create plot layout
+        margins = element_params.get('margins')
+        if margins is None:
+            margins = Margins(top=10.0, right=10.0, bottom=10.0, left=10.0)
+        layout = PlotLayout(margins=margins)
+        specific_element = element_class(
+            stack_element_base=stack_element_base,
+            style=plot_style,
+            layout=layout
+        )
+    elif element_class == DucLeaderElement:
+        # Create linear base first
+        linear_base = DucLinearElementBase(
+            base=base_element,
+            points=element_params.get('points', []),
+            lines=[],
+            path_overrides=[],
+            last_committed_point=None,
+            start_binding=element_params.get('start_binding'),
+            end_binding=element_params.get('end_binding')
+        )
+        # Create leader style
+        from ducpy.builders.style_builders import create_simple_styles, create_text_style
+        leader_style = element_params.get('style')
+        if leader_style is None:
+            text_style = create_text_style()
+            leader_style = DucLeaderStyle(
+                base_style=create_simple_styles(),
+                text_style=text_style,
+                text_attachment=VERTICAL_ALIGN.TOP,
+                block_attachment=BLOCK_ATTACHMENT.CENTER_EXTENTS
+            )
+        # Create content anchor point
+        content_anchor_x = element_params.get('content_anchor_x', 0.0)
+        content_anchor_y = element_params.get('content_anchor_y', 0.0)
+        content_anchor = GeometricPoint(x=content_anchor_x, y=content_anchor_y)
+        specific_element = element_class(
+            linear_base=linear_base,
+            style=leader_style,
+            content_anchor=content_anchor,
+            content=element_params.get('content')
+        )
+    elif element_class == DucDocElement:
+        # Create doc style
+        from ducpy.builders.style_builders import create_simple_styles, create_text_style, create_paragraph_formatting, create_stack_format
+        doc_style = element_params.get('style')
+        if doc_style is None:
+            text_style = create_text_style()
+            paragraph = create_paragraph_formatting()
+            stack_format = create_stack_format()
+            doc_style = DucDocStyle(
+                text_style=text_style,
+                paragraph=paragraph,
+                stack_format=stack_format
+            )
+        # Create column layout
+        columns_layout = element_params.get('columns')
+        if columns_layout is None:
+            from ducpy.builders.style_builders import create_text_column, create_column_layout
+            text_column = create_text_column(width=100.0)
+            columns_layout = create_column_layout(definitions=[text_column])
+        specific_element = element_class(
+            base=base_element,
+            style=doc_style,
+            text=element_params.get('text', ""),
+            dynamic=element_params.get('dynamic', []),
+            columns=columns_layout,
+            auto_resize=element_params.get('auto_resize', False),
+            flow_direction=element_params.get('flow_direction')
+        )
+    elif element_class == DucDimensionElement:
+        # Create dimension style
+        from ducpy.builders.style_builders import create_simple_styles, create_text_style, create_solid_content, create_stroke
+        dimension_style = element_params.get('style')
+        if dimension_style is None:
+            text_style = create_text_style()
+            solid_content = create_solid_content("#000000", opacity=1.0, visible=True)
+            stroke = create_stroke(solid_content, width=1.0)
+            dimension_style = DucDimensionStyle(
+                dim_line=DimensionLineStyle(
+                    stroke=stroke,
+                    text_gap=1.0
+                ),
+                ext_line=DimensionExtLineStyle(
+                    stroke=stroke,
+                    overshoot=1.0,
+                    offset=1.0
+                ),
+                text_style=text_style,
+                symbols=DimensionSymbolStyle(
+                    center_mark_size=2.0,
+                    center_mark_type=MARK_ELLIPSE_CENTER.MARK,
+                    heads_override=None
+                ),
+                tolerance=DimensionToleranceStyle(
+                    enabled=False,
+                    upper_value=0.0,
+                    lower_value=0.0,
+                    precision=2,
+                    display_method=TOLERANCE_DISPLAY.NONE,
+                    text_style=text_style
+                ),
+                fit=DimensionFitStyle(
+                    force_text_inside=False,
+                    rule=DIMENSION_FIT_RULE.BEST_FIT,
+                    text_placement=DIMENSION_TEXT_PLACEMENT.BESIDE_LINE
+                )
+            )
+        # Create definition points
+        origin1 = element_params.get('origin1')
+        origin2 = element_params.get('origin2')
+        location = element_params.get('location')
+        
+        # Convert origin1, origin2, location to GeometricPoint if they are tuples
+        if isinstance(origin1, tuple):
+            origin1 = GeometricPoint(x=float(origin1[0]), y=float(origin1[1]))
+        if isinstance(origin2, tuple):
+            origin2 = GeometricPoint(x=float(origin2[0]), y=float(origin2[1]))
+        if isinstance(location, tuple):
+            location = GeometricPoint(x=float(location[0]), y=float(location[1]))
+        
+        if origin1 is None or origin2 is None or location is None:
+            # Create default points if not provided
+            origin1 = GeometricPoint(x=0.0, y=0.0)
+            origin2 = GeometricPoint(x=100.0, y=0.0)
+            location = GeometricPoint(x=50.0, y=-20.0)
+        
+        definition_points = DimensionDefinitionPoints(
+            origin1=origin1,
+            origin2=origin2,
+            location=location,
+            center=None,
+            jog=None
+        )
+        specific_element = element_class(
+            base=base_element,
+            style=dimension_style,
+            definition_points=definition_points,
+            oblique_angle=element_params.get('oblique_angle', 0.0),
+            dimension_type=element_params.get('dimension_type', DIMENSION_TYPE.LINEAR),
+            ordinate_axis=element_params.get('ordinate_axis'),
+            bindings=element_params.get('bindings'),
+            text_override=element_params.get('text_override'),
+            baseline_data=element_params.get('baseline_data'),
+            continue_data=element_params.get('continue_data'),
+            text_position=None,
+            tolerance_override=None
+        )
+    elif element_class == DucFeatureControlFrameElement:
+        # Create feature control frame style
+        from ducpy.builders.style_builders import create_simple_styles, create_text_style
+        fcf_style = element_params.get('style')
+        if fcf_style is None:
+            text_style = create_text_style()
+            fcf_style = DucFeatureControlFrameStyle(
+                base_style=create_simple_styles(),
+                text_style=text_style,
+                layout=FCFLayoutStyle(padding=2.0, segment_spacing=1.0, row_spacing=1.0),
+                symbols=FCFSymbolStyle(scale=1.0),
+                datum_style=FCFDatumStyle()
+            )
+        specific_element = element_class(
+            base=base_element,
+            style=fcf_style,
+            rows=element_params.get('rows', []),
+            frame_modifiers=element_params.get('frame_modifiers'),
+            leader_element_id=element_params.get('leader_element_id'),
+            datum_definition=element_params.get('datum_definition')
+        )
+    elif element_class == DucXRayElement:
+        # Create xray style
+        from ducpy.builders.style_builders import create_simple_styles
+        xray_style = DucXRayStyle(
+            base_style=create_simple_styles(),
+            color=element_params.get('color', "#FF0000")
+        )
+        # Create origin and direction points
+        origin = DucPoint(
+            x=element_params.get('origin_x', 0.0),
+            y=element_params.get('origin_y', 0.0),
+            mirroring=None
+        )
+        direction = DucPoint(
+            x=element_params.get('direction_x', 1.0),
+            y=element_params.get('direction_y', 0.0),
+            mirroring=None
+        )
+        specific_element = element_class(
+            base=base_element,
+            style=xray_style,
+            origin=origin,
+            direction=direction,
+            start_from_origin=element_params.get('start_from_origin', False)
+        )
+    elif element_class == DucFrameElement:
+        # Create stack base if provided, otherwise use default
+        stack_base = element_params.get('stack_base')
+        if stack_base is None:
+            stack_base = DucStackBase(
+                label=base_params.get('label', ""),
+                is_collapsed=False,
+                is_plot=True,
+                is_visible=True,
+                locked=False,
+                styles=DucStackLikeStyles(opacity=1.0, labeling_color="#000"),
+                description=base_params.get('description', "")
+            )
+        # Create stack element base
+        stack_element_base = DucStackElementBase(
+            base=base_element,
+            stack_base=stack_base,
+            clip=element_params.get('clip', False),
+            label_visible=element_params.get('label_visible', True),
+            standard_override=element_params.get('standard_override')
+        )
+        specific_element = element_class(
+            stack_element_base=stack_element_base
+        )
+    elif element_class == DucImageElement:
+        # Convert scale list to numpy array if needed
+        scale = element_params.get('scale', [1.0, 1.0])
+        if isinstance(scale, list):
+            element_params['scale'] = np.array(scale, dtype=np.float32)
+        
+        # Default case: add base to element_params and create
+        element_params['base'] = base_element
+        specific_element = element_class(**element_params)
+    elif element_class == DucFreeDrawElement:
+        # Convert points to DucPoint objects if they are tuples
+        points = element_params.get('points', [])
+        duc_points = []
+        for point in points:
+            if isinstance(point, tuple):
+                duc_points.append(DucPoint(x=float(point[0]), y=float(point[1]), mirroring=None))
+            else:
+                duc_points.append(point)
+        element_params['points'] = duc_points
 
-        # Complex shape using line_definitions
-        points = [(0, 0), (50, 0), (100, 25), (75, 75), (25, 50)]
-        line_defs = [
-            {'start': 0, 'end': 1},  # Straight line
-            {'start': 1, 'end': 2, 'start_handle': (75, -10), 'end_handle': (75, 35)},  # Curved
-            {'start': 2, 'end': 3, 'end_handle': (50, 90)},  # Curved end
-            {'start': 3, 'end': 4, 'start_handle': (60, 60)},  # Curved start
-            {'start': 4, 'end': 0}   # Close the shape
-        ]
-        create_linear_element(points=points, line_definitions=line_defs)
-    """
-    if not points or len(points) < 2:
-        raise ValueError("Linear element requires at least 2 points")
+        # Convert pressures list to numpy array if needed
+        pressures = element_params.get('pressures', [])
+        if isinstance(pressures, list):
+            element_params['pressures'] = np.array(pressures, dtype=np.float32)
+        
+        # Default case: add base to element_params and create
+        element_params['base'] = base_element
+        specific_element = element_class(**element_params)
+    else:
+        # Default case: add base to element_params and create
+        element_params['base'] = base_element
+        if element_class.__name__ == "DucTextElement":
+            if 'container_id' not in element_params:
+                element_params['container_id'] = None
+        specific_element = element_class(**element_params)
     
-    if id is None:
-        id = f"linear_{uuid.uuid4().hex[:8]}"
-    
-    if styles is None:
-        styles = create_simple_styles()
-    
-    # Calculate bounding box from points
-    x_coords = [p[0] for p in points]
-    y_coords = [p[1] for p in points]
-    min_x, max_x = min(x_coords), max(x_coords)
-    min_y, max_y = min(y_coords), max(y_coords)
-    
-    # Use first point as origin
-    origin_x, origin_y = points[0]
-    width = max_x - min_x if max_x != min_x else 1.0
-    height = max_y - min_y if max_y != min_y else 1.0
-    
-    current_time = int(time.time() * 1000)
-    base_params = {
-        "id": id,
-        "styles": styles,
-        "x": origin_x,
-        "y": origin_y,
-        "width": width,
-        "height": height,
-        "angle": 0.0,
-        "scope": scope,
-        "label": label,
-        "description": "",
-        "is_visible": is_visible,
-        "seed": hash(id) % 2147483647,
-        "version": 1,
-        "version_nonce": 0,
-        "updated": current_time,
-        "index": None,
-        "is_plot": False,
-        "is_annotative": False,
-        "is_deleted": False,
-        "group_ids": [],
-        "region_ids": [],
-        "layer_id": "",
-        "frame_id": "",
-        "bound_elements": [],
-        "z_index": z_index,
-        "link": "",
-        "locked": locked,
-        "custom_data": ""
-    }
-    
-    # Apply explicit property overrides if provided
+    # Apply explicit properties override if provided
     if explicit_properties_override:
-        known_base_params = {
-            "id", "label", "scope", "locked", "is_visible", "is_deleted",
-            "group_ids", "region_ids", "layer_id", "frame_id", "bound_elements", 
-            "z_index", "link", "custom_data", "x", "y", "width", "height", "angle"
-        }
-        
-        if 'base' in explicit_properties_override:
-            for key, value in explicit_properties_override['base'].items():
-                if key in base_params:
-                    base_params[key] = value
-        else:
-            for key, value in explicit_properties_override.items():
-                if key in base_params:
-                    base_params[key] = value
-    
-    base = DucElementBase(**base_params)
-    
-    # Convert points to DucPoint objects
-    duc_points = [DucPoint(x=float(x), y=float(y)) for x, y in points]
-    
-    # Prioritize line_definitions if provided, otherwise use bezier_handles or default to consecutive lines
-    if line_definitions is not None:
-        lines = []
-        for line_def in line_definitions:
-            start_idx = line_def['start']
-            end_idx = line_def['end']
-            start_handle = line_def.get('start_handle')
-            end_handle = line_def.get('end_handle')
-            
-            line = create_bezier_line(start_idx, end_idx, start_handle, end_handle)
-            lines.append(line)
-    elif lines is None: # Only generate lines if not provided by either parameter
-        lines = []
-        for i in range(len(duc_points) - 1):
-            start_handle = None
-            end_handle = None
-            
-            # Add bezier handles if provided
-            if bezier_handles and i in bezier_handles:
-                handles = bezier_handles[i]
-                if 'start' in handles:
-                    start_handle = GeometricPoint(x=float(handles['start'][0]), y=float(handles['start'][1]))
-                if 'end' in handles:
-                    end_handle = GeometricPoint(x=float(handles['end'][0]), y=float(handles['end'][1]))
-            
-            start_ref = DucLineReference(index=i, handle=start_handle)
-            end_ref = DucLineReference(index=i + 1, handle=end_handle)
-            lines.append(DucLine(start=start_ref, end=end_ref))
-    
-    # Use provided path_overrides or default to empty list
-    if path_overrides is None:
-        path_overrides = []
-    
-    # Create linear base
-    linear_base = DucLinearElementBase(
-        base=base,
-        points=duc_points,
-        lines=lines,
-        path_overrides=path_overrides,
-        last_committed_point=last_committed_point,
-        start_binding=start_binding,
-        end_binding=end_binding
-    )
-    
-    # Create linear element
-    linear_params = {"linear_base": linear_base, "wipeout_below": wipeout_below}
-    
-    # Apply element-specific overrides if they exist
-    if explicit_properties_override and 'element' in explicit_properties_override:
-        linear_params.update(explicit_properties_override['element'])
-        
-    linear_element = DucLinearElement(**linear_params)
-    return ElementWrapper(element=linear_element)
+        for key, value in explicit_properties_override.items():
+            try:
+                setattr(specific_element, key, value)
+            except AttributeError:
+                # Skip if attribute doesn't exist
+                pass
+    # Create and return the wrapper
+    return ElementWrapper(element=specific_element)
+
+@dataclass
+class BaseElementParams:
+    x: float
+    y: float
+    width: float
+    height: float
+    scope: str
+    angle: float = 0.0
+    styles: Optional[DucElementStylesBase] = None
+    id: Optional[str] = None
+    label: str = ""
+    locked: bool = False
+    is_visible: bool = True
+    z_index: float = 0.0
+    description: str = ""
+    group_ids: Optional[List[str]] = field(default_factory=list)
+    region_ids: Optional[List[str]] = field(default_factory=list)
+    layer_id: str = ""
+    frame_id: Optional[str] = None
+    bound_elements: Optional[List[BoundElement]] = field(default_factory=list)
+    link: str = ""
+    custom_data: Union[str, Dict[str, Any]] = ""
+    is_plot: bool = True
+    is_annotative: bool = False
+    is_deleted: bool = False
+    index: Optional[int] = None
+
+class ElementBuilder:
+    def __init__(
+        self,
+        x: float = 0.0,
+        y: float = 0.0,
+        width: float = 1.0,
+        height: float = 1.0,
+        scope: str = DEFAULT_SCOPE
+    ):
+        self.base = BaseElementParams(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            scope=scope
+        )
+        self.extra = {}
+
+    def at_position(self, x: float, y: float):
+        self.base.x = x
+        self.base.y = y
+        return self
+
+    def with_size(self, width: float, height: float):
+        self.base.width = width
+        self.base.height = height
+        return self
+
+    def with_angle(self, angle: float):
+        self.base.angle = angle
+        return self
+
+    def with_styles(self, styles: DucElementStylesBase):
+        self.base.styles = styles
+        return self
+
+    def with_id(self, id: str):
+        self.base.id = id
+        return self
+
+    def with_label(self, label: str):
+        self.base.label = label
+        return self
+
+    def with_scope(self, scope: str):
+        self.base.scope = scope
+        return self
+
+    def with_locked(self, locked: bool):
+        self.base.locked = locked
+        return self
+
+    def with_visible(self, is_visible: bool):
+        self.base.is_visible = is_visible
+        return self
+
+    def with_z_index(self, z_index: float):
+        self.base.z_index = z_index
+        return self
+
+    def with_description(self, description: str):
+        self.base.description = description
+        return self
+
+    def with_group_ids(self, group_ids: List[str]):
+        self.base.group_ids = group_ids
+        return self
+
+    def with_region_ids(self, region_ids: List[str]):
+        self.base.region_ids = region_ids
+        return self
+
+    def with_layer_id(self, layer_id: str):
+        self.base.layer_id = layer_id
+        return self
+
+    def with_frame_id(self, frame_id: str):
+        self.base.frame_id = frame_id
+        return self
+
+    def with_bound_elements(self, bound_elements: List[BoundElement]):
+        self.base.bound_elements = bound_elements
+        return self
+
+    def with_bound_element(self, element_id: str, element_type: str):
+        """Adds a single bound element to the current element."""
+        if self.base.bound_elements is None:
+            self.base.bound_elements = []
+        self.base.bound_elements.append(BoundElement(id=element_id, type=element_type))
+        return self
+
+    def with_link(self, link: str):
+        self.base.link = link
+        return self
+
+    def with_custom_data(self, custom_data: Union[str, Dict[str, Any]]):
+        self.base.custom_data = custom_data
+        return self
+
+    def with_plot(self, is_plot: bool):
+        self.base.is_plot = is_plot
+        return self
+
+    def with_annotative(self, is_annotative: bool):
+        self.base.is_annotative = is_annotative
+        return self
+
+    def with_deleted(self, is_deleted: bool):
+        self.base.is_deleted = is_deleted
+        return self
+
+    def with_index(self, index: int):
+        self.base.index = index
+        return self
+
+    def with_extra(self, **kwargs):
+        self.extra.update(kwargs)
+        return self
+
+    # Build methods that return element-specific builders
+    def build_rectangle(self):
+        return RectangleElementBuilder(self.base, self.extra)
+
+    def build_ellipse(self):
+        return EllipseElementBuilder(self.base, self.extra)
+
+    def build_polygon(self):
+        return PolygonElementBuilder(self.base, self.extra)
+
+    def build_linear_element(self):
+        return LinearElementBuilder(self.base, self.extra)
+
+    def build_arrow_element(self):
+        return ArrowElementBuilder(self.base, self.extra)
+
+    def build_image_element(self):
+        return ImageElementBuilder(self.base, self.extra)
+
+    def build_pdf_element(self):
+        return PdfElementBuilder(self.base, self.extra)
+
+    def build_parametric_element(self):
+        return ParametricElementBuilder(self.base, self.extra)
+
+    def build_text_element(self):
+        return TextElementBuilder(self.base, self.extra)
+
+    def build_table_from_data(self):
+        return TableFromDataBuilder(self.base, self.extra)
+
+    def build_table_element(self):
+        return TableElementBuilder(self.base, self.extra)
+
+    def build_frame_element(self):
+        return FrameElementBuilder(self.base, self.extra)
+
+    def build_plot_element(self):
+        return PlotElementBuilder(self.base, self.extra)
+
+    def build_viewport_element(self):
+        return ViewportElementBuilder(self.base, self.extra)
+
+    def build_freedraw_element(self):
+        return FreeDrawElementBuilder(self.base, self.extra)
+
+    def build_doc_element(self):
+        return DocElementBuilder(self.base, self.extra)
+
+    def build_linear_dimension(self):
+        return LinearDimensionBuilder(self.base, self.extra)
+
+    def build_aligned_dimension(self):
+        return AlignedDimensionBuilder(self.base, self.extra)
+
+    def build_angular_dimension(self):
+        return AngularDimensionBuilder(self.base, self.extra)
+
+    def build_radius_dimension(self):
+        return RadiusDimensionBuilder(self.base, self.extra)
+
+    def build_diameter_dimension(self):
+        return DiameterDimensionBuilder(self.base, self.extra)
+
+    def build_arc_length_dimension(self):
+        return ArcLengthDimensionBuilder(self.base, self.extra)
+
+    def build_center_mark_dimension(self):
+        return CenterMarkDimensionBuilder(self.base, self.extra)
+
+    def build_rotated_dimension(self):
+        return RotatedDimensionBuilder(self.base, self.extra)
+
+    def build_spacing_dimension(self):
+        return SpacingDimensionBuilder(self.base, self.extra)
+
+    def build_continue_dimension(self):
+        return ContinueDimensionBuilder(self.base, self.extra)
+
+    def build_baseline_dimension(self):
+        return BaselineDimensionBuilder(self.base, self.extra)
+
+    def build_jogged_linear_dimension(self):
+        return JoggedLinearDimensionBuilder(self.base, self.extra)
+
+    def build_leader_element(self):
+        return LeaderElementBuilder(self.base, self.extra)
+
+    def build_feature_control_frame_element(self):
+        return FeatureControlFrameElementBuilder(self.base, self.extra)
+
+    def build_block_instance_element(self):
+        return BlockInstanceElementBuilder(self.base, self.extra)
+
+    def build_mermaid_element(self):
+        return MermaidElementBuilder(self.base, self.extra)
+
+    def build_embeddable_element(self):
+        return EmbeddableElementBuilder(self.base, self.extra)
+
+    def build_xray_element(self):
+        return XrayElementBuilder(self.base, self.extra)
 
 
-def create_path_override(
+def create_duc_path(
     line_indices: List[int],
-    stroke: Optional[ElementStroke] = None,
-    background: Optional[ElementBackground] = None
+    background: Optional[ElementBackground] = None,
+    stroke: Optional[ElementStroke] = None
 ) -> DucPath:
-    """
-    Create a path override for styling specific segments of a linear element.
-    
-    Args:
-        line_indices: List of line indices to apply this styling to
-        stroke: Stroke styling for the path segment
-        background: Background styling for the path segment
-        
-    Returns:
-        DucPath: Path override object
-    """
-    if not line_indices:
-        raise ValueError("Path override requires at least one line index")
-    
-    # Use default styling if not provided
-    if stroke is None:
-        from .style_builders import create_solid_content, create_stroke
-        stroke = create_stroke(create_solid_content("#000000"))
-    
-    if background is None:
-        from .style_builders import create_solid_content, create_background  
-        background = create_background(create_solid_content("#FFFFFF", opacity=0))
-    
+    """Helper function to create a DucPath object for path overrides."""
     return DucPath(
         line_indices=line_indices,
-        stroke=stroke,
-        background=background
+        background=background,
+        stroke=stroke
     )
 
-
-def create_bezier_line(
-    start_index: int,
-    end_index: int, 
-    start_handle: Optional[tuple] = None,
-    end_handle: Optional[tuple] = None
-) -> DucLine:
-    """
-    Create a bezier line connecting two points with optional control handles.
-    
-    Args:
-        start_index: Index of the starting point
-        end_index: Index of the ending point
-        start_handle: Optional (x, y) tuple for the start control handle
-        end_handle: Optional (x, y) tuple for the end control handle
-        
-    Returns:
-        DucLine: Line with bezier handles
-        
-    Examples:
-        # Curved line from point 0 to point 1
-        bezier_line = create_bezier_line(0, 1, (25, -25), (75, 75))
-    """
-    start_handle_point = None
-    end_handle_point = None
-    
-    if start_handle:
-        start_handle_point = GeometricPoint(x=float(start_handle[0]), y=float(start_handle[1]))
-    
-    if end_handle:
-        end_handle_point = GeometricPoint(x=float(end_handle[0]), y=float(end_handle[1]))
-    
-    start_ref = DucLineReference(index=start_index, handle=start_handle_point)
-    end_ref = DucLineReference(index=end_index, handle=end_handle_point)
-    
-    return DucLine(start=start_ref, end=end_ref)
-
-def create_arrow_element(
-    points: List[tuple],
-    start_binding: Optional[DucPointBinding] = None,
-    end_binding: Optional[DucPointBinding] = None,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = "mm",
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create an arrow element. This is a specialized linear element.
-    """
-    if id is None:
-        id = f"arrow_{uuid.uuid4().hex[:8]}"
-
-    # Create the base linear element structure
-    linear_element_wrapper = create_linear_element(
-        points=points,
-        start_binding=start_binding,
-        end_binding=end_binding,
-        styles=styles,
-        id=id,
-        label=label,
-        scope=scope,
-        locked=locked,
-        is_visible=is_visible,
-        z_index=z_index,
-        explicit_properties_override=explicit_properties_override
-    )
-    
-    linear_base = linear_element_wrapper.element.linear_base
-
-    # Create the arrow element from the linear base
-    arrow = DucArrowElement(
-        linear_base=linear_base,
-        elbowed=False  # Default value, can be exposed as an argument if needed
-    )
-    
-    return ElementWrapper(element=arrow)
-
-def create_point_binding(element_id: str, focus: float = 0.5, gap: float = 0.0) -> DucPointBinding:
-    """
-    Creates a binding for a point on a linear element to another element.
-    """
-    return DucPointBinding(
-        element_id=element_id,
-        focus=focus,
-        gap=gap
+def create_datum_reference(
+    letters: str,
+    modifier: Optional[MATERIAL_CONDITION] = None
+) -> DatumReference:
+    """Helper function to create a DatumReference object."""
+    return DatumReference(
+        letters=letters,
+        modifier=modifier
     )
 
-def create_image_element(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    scale: Optional[GeometricPoint] = None,
-    status=None,
-    file_id: Optional[str] = None,
-    crop=None,
-    filter=None,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = "mm",
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create an image element (DucImageElement) in a modular way.
-    """
-    import numpy as np
-    base_params = {
-        "x": x,
-        "y": y,
-        "width": width,
-        "height": height,
-        "styles": styles,
-        "id": id,
-        "label": label,
-        "scope": scope,
-        "locked": locked,
-        "is_visible": is_visible,
-        "z_index": z_index
-    }
-    element_params = {
-        "scale": scale if scale is not None else np.array([1.0, 1.0]),
-        "status": status,
-        "file_id": file_id,
-        "crop": crop,
-        "filter": filter
-    }
-    from ..classes.ElementsClass import DucImageElement
-    return _create_element_wrapper(
-        DucImageElement,
-        base_params,
-        element_params,
-        explicit_properties_override
+def create_tolerance_clause(
+    value: str,
+    zone_type: Optional[TOLERANCE_ZONE_TYPE] = None,
+    feature_modifiers: Optional[List[FEATURE_MODIFIER]] = None,
+    material_condition: Optional[MATERIAL_CONDITION] = None
+) -> ToleranceClause:
+    """Helper function to create a ToleranceClause object."""
+    return ToleranceClause(
+        value=value,
+        zone_type=zone_type,
+        feature_modifiers=feature_modifiers or [],
+        material_condition=material_condition
     )
 
-def create_pdf_element(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    file_id: Optional[str] = None,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = "mm",
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a PDF element (DucPdfElement) in a modular way.
-    """
-    base_params = {
-        "x": x,
-        "y": y,
-        "width": width,
-        "height": height,
-        "styles": styles,
-        "id": id,
-        "label": label,
-        "scope": scope,
-        "locked": locked,
-        "is_visible": is_visible,
-        "z_index": z_index
-    }
-    element_params = {
-        "file_id": file_id
-    }
-    from ..classes.ElementsClass import DucPdfElement
-    return _create_element_wrapper(
-        DucPdfElement,
-        base_params,
-        element_params,
-        explicit_properties_override
+def create_fcf_segment(
+    symbol: GDT_SYMBOL,
+    tolerance: ToleranceClause,
+    datums: List[DatumReference]
+) -> FeatureControlFrameSegment:
+    """Helper function to create a FeatureControlFrameSegment object."""
+    return FeatureControlFrameSegment(
+        symbol=symbol,
+        tolerance=tolerance,
+        datums=datums
     )
 
-def create_parametric_element(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    file_id: Optional[str] = None,
-    source_type: PARAMETRIC_SOURCE_TYPE = PARAMETRIC_SOURCE_TYPE.FILE,
-    code: str = "",
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = "mm",
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a parametric element (DucParametricElement) in a modular way.
-    """
-    base_params = {
-        "x": x,
-        "y": y,
-        "width": width,
-        "height": height,
-        "styles": styles,
-        "id": id,
-        "label": label,
-        "scope": scope,
-        "locked": locked,
-        "is_visible": is_visible,
-        "z_index": z_index
-    }
-    
-    from ..classes.ElementsClass import DucParametricElement, ParametricSource
-    from ..Duc.PARAMETRIC_SOURCE_TYPE import PARAMETRIC_SOURCE_TYPE
-
-    parametric_source = ParametricSource(
-        type=source_type,
-        code=code,
-        file_id=file_id
+def create_fcf_segment_row(
+    segments: List[FeatureControlFrameSegment]
+) -> FCFSegmentRow:
+    """Helper function to create an FCFSegmentRow object."""
+    return FCFSegmentRow(
+        segments=segments
     )
 
-    element_params = {
-        "source": parametric_source
-    }
-    return _create_element_wrapper(
-        DucParametricElement,
-        base_params,
-        element_params,
-        explicit_properties_override
-    )
-
-def create_text_element(
-    x: float,
-    y: float,
-    text: str,
-    width: float = 100,
-    height: float = 20,
-    text_style: Optional[DucTextStyle] = None,
-    auto_resize: bool = False,
-    dynamic: Optional[List[DucTextDynamicPart]] = None,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = "mm",
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a text element with optional text styling.
-    
-    Args:
-        x, y: Position
-        text: Text content
-        width, height: Size
-        text_style: Optional text styling (from create_text_style())
-        auto_resize: Whether to auto-resize based on content
-        dynamic: Dynamic text parts
-        styles: Element styles
-        Other standard element parameters...
-    """
-    if id is None:
-        id = f"text_{uuid.uuid4().hex[:8]}"
-
-    if styles is None:
-        styles = create_simple_styles()
-    
-    if dynamic is None:
-        dynamic = []
-
-    # Use random_versioning utility
-    versioning = random_versioning()
-    
-    base_params = {
-        "id": id,
-        "styles": styles,
-        "x": x,
-        "y": y,
-        "width": width,
-        "height": height,
-        "angle": 0.0,
-        "scope": scope,
-        "label": label,
-        "description": "",
-        "is_visible": is_visible,
-        "seed": versioning["seed"],
-        "version": versioning["version"],
-        "version_nonce": versioning["version_nonce"],
-        "updated": versioning["updated"],
-        "index": None,
-        "is_plot": False,
-        "is_annotative": False,
-        "is_deleted": False,
-        "group_ids": [],
-        "region_ids": [],
-        "layer_id": "",
-        "frame_id": "",
-        "bound_elements": [],
-        "z_index": z_index,
-        "link": "",
-        "locked": locked,
-        "custom_data": ""
-    }
-
-    if explicit_properties_override and 'base' in explicit_properties_override:
-        base_params.update(explicit_properties_override['base'])
-
-    base = DucElementBase(**base_params)
-
-    text_params = {
-        "base": base,
-        "style": text_style,
-        "text": text,
-        "original_text": text,
-        "dynamic": dynamic,
-        "auto_resize": auto_resize,
-        "container_id": None
-    }
-
-    if explicit_properties_override and 'element' in explicit_properties_override:
-        text_params.update(explicit_properties_override['element'])
-
-    text_element = DucTextElement(**text_params)
-    return ElementWrapper(element=text_element)
-
-
-from ducpy.utils.mutate_utils import recursive_mutate
-
-def mutate_element(el, **kwargs):
-    """
-    Mutate any property of an element (ElementWrapper) using keyword arguments.
-    Recursively traverses all nested dataclasses and sets matching properties.
-    Always mutates seed, updated, version, version_nonce.
-    Example: mutate_element(el, x=..., label=..., points=[...], style=..., ...)
-    """
-    # Always update versioning props
-    versioning = random_versioning()
-    kwargs.update(versioning)
-    recursive_mutate(el.element, kwargs)
-    return el
-
-
-# Stack-based element creation functions
-
-def create_stack_base(
-    label: str = "",
-    is_collapsed: bool = False,
-    is_plot: bool = False,
-    is_visible: bool = True,
-    locked: bool = False,
-    opacity: float = 1.0,
-    labeling_color: str = "#000000",
-    description: str = ""
-) -> DucStackBase:
-    """
-    Create a stack base for stack-like elements.
-    """
-    styles = DucStackLikeStyles(
-        opacity=opacity,
-        labeling_color=labeling_color
-    )
-    
-    return DucStackBase(
-        label=label,
-        is_collapsed=is_collapsed,
-        is_plot=is_plot,
-        is_visible=is_visible,
-        locked=locked,
-        styles=styles,
-        description=description
-    )
-
-def create_stack_element_base(
-    x: float,
-    y: float, 
-    width: float,
-    height: float,
-    stack_base: Optional[DucStackBase] = None,
-    clip: bool = False,
-    label_visible: bool = True,
-    standard_override: Optional["Standard"] = None,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> DucStackElementBase:
-    """
-    Create a stack element base for frame and plot elements.
-    """
-    if stack_base is None:
-        stack_base = create_stack_base(label=label, is_visible=is_visible, locked=locked)
-    
-    base = create_element_base(
-        x=x, y=y, width=width, height=height, angle=angle,
-        styles=styles, id=id, label=label, scope=scope,
-        locked=locked, is_visible=is_visible, z_index=z_index
-    )
-    
-    _apply_base_overrides(base, explicit_properties_override)
-    
-    return DucStackElementBase(
-        base=base,
-        stack_base=stack_base,
-        clip=clip,
-        label_visible=label_visible,
-        standard_override=standard_override
-    )
-
-def create_frame_element(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    stack_base: Optional[DucStackBase] = None,
-    clip: bool = False,
-    label_visible: bool = True,
-    standard_override: Optional["Standard"] = None,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a frame element.
-    """
-    stack_element_base = create_stack_element_base(
-        x=x, y=y, width=width, height=height,
-        stack_base=stack_base, clip=clip, label_visible=label_visible,
-        standard_override=standard_override, angle=angle, styles=styles,
-        id=id, label=label, scope=scope, locked=locked,
-        is_visible=is_visible, z_index=z_index,
-        explicit_properties_override=explicit_properties_override
-    )
-    
-    frame = DucFrameElement(stack_element_base=stack_element_base)
-    return ElementWrapper(element=frame)
-
-def create_plot_element(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    margins: Optional[Margins] = None,
-    style: Optional[DucPlotStyle] = None,
-    stack_base: Optional[DucStackBase] = None,
-    clip: bool = False,
-    label_visible: bool = True,
-    standard_override: Optional["Standard"] = None,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a plot element.
-    """
-    if margins is None:
-        margins = Margins(top=0.0, right=0.0, bottom=0.0, left=0.0)
-    
-    if style is None:
-        from .style_builders import create_simple_styles
-        style = DucPlotStyle(base_style=create_simple_styles())
-    
-    if stack_base is None:
-        stack_base = create_stack_base(label=label, is_plot=True, is_visible=is_visible, locked=locked)
-    
-    stack_element_base = create_stack_element_base(
-        x=x, y=y, width=width, height=height,
-        stack_base=stack_base, clip=clip, label_visible=label_visible,
-        standard_override=standard_override, angle=angle, styles=styles,
-        id=id, label=label, scope=scope, locked=locked,
-        is_visible=is_visible, z_index=z_index,
-        explicit_properties_override=explicit_properties_override
-    )
-    
-    layout = PlotLayout(margins=margins)
-    plot = DucPlotElement(
-        stack_element_base=stack_element_base,
-        style=style,
-        layout=layout
-    )
-    return ElementWrapper(element=plot)
-
-def create_freedraw_element(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    points: list,
-    pressures: list,
-    size: float,
-    thinning: float,
-    smoothing: float,
-    streamline: float,
-    easing: str,
-    simulate_pressure: bool = False,
-    start=None,
-    end=None,
-    last_committed_point=None,
-    svg_path=None,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a freedraw element with a clean, modular API.
-    """
-    import numpy as np
-    base_params = {
-        "x": x, "y": y, "width": width, "height": height, "angle": angle,
-        "styles": styles, "id": id, "label": label, "scope": scope,
-        "locked": locked, "is_visible": is_visible, "z_index": z_index
-    }
-    element_params = {
-        "points": points,
-        "pressures": np.array(pressures),
-        "size": size,
-        "thinning": thinning,
-        "smoothing": smoothing,
-        "streamline": streamline,
-        "easing": easing,
-        "simulate_pressure": simulate_pressure,
-        "start": start,
-        "end": end,
-        "last_committed_point": last_committed_point,
-        "svg_path": svg_path,
-    }
-    return _create_element_wrapper(
-        DucFreeDrawElement,
-        base_params,
-        element_params,
-        explicit_properties_override
-    )
-
-def create_viewport_element(
-    points: List[tuple],
-    view: DucView,
-    scale: float = 1.0,
-    style: Optional[DucViewportStyle] = None,
-    stack_base: Optional[DucStackBase] = None,
-    standard_override: Optional["Standard"] = None,
-    shade_plot = None,  # Will be set to default
-    frozen_group_ids: Optional[List[str]] = None,
-    start_binding: Optional[DucPointBinding] = None,
-    end_binding: Optional[DucPointBinding] = None,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = "mm",
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a viewport element.
-    """
-    if style is None:
-        from .style_builders import create_simple_styles
-        style = DucViewportStyle(
-            base_style=create_simple_styles(),
-            scale_indicator_visible=True
-        )
-        
-    if stack_base is None:
-        stack_base = create_stack_base(label=label, is_visible=is_visible, locked=locked)
-    
-    if frozen_group_ids is None:
-        frozen_group_ids = []
-    
-    # Create linear base for the viewport boundary
-    linear_element_wrapper = create_linear_element(
-        points=points,
-        start_binding=start_binding,
-        end_binding=end_binding,
-        styles=styles,
-        id=id,
-        label=label,
-        scope=scope,
-        locked=locked,
-        is_visible=is_visible,
-        z_index=z_index,
-        explicit_properties_override=explicit_properties_override
-    )
-    
-    linear_base = linear_element_wrapper.element.linear_base
-    
-    # Import the shade_plot enum if needed - for now use a default
-    from ..Duc.VIEWPORT_SHADE_PLOT import VIEWPORT_SHADE_PLOT
-    if shade_plot is None:
-        shade_plot = VIEWPORT_SHADE_PLOT.AS_DISPLAYED  # Use default value
-    
-    viewport = DucViewportElement(
-        linear_base=linear_base,
-        stack_base=stack_base,
-        style=style,
-        view=view,
-        scale=scale,
-        standard_override=standard_override,
-        shade_plot=shade_plot,
-        frozen_group_ids=frozen_group_ids
-    )
-    
-    return ElementWrapper(element=viewport)
-
-
-# === Block-related builders ===
-
-def create_block_attribute_definition(
-    tag: str,
-    default_value: str,
-    is_constant: bool = False,
-    prompt: Optional[str] = None
-) -> DucBlockAttributeDefinition:
-    """Create a block attribute definition."""
-    return DucBlockAttributeDefinition(
-        tag=tag,
-        default_value=default_value,
-        is_constant=is_constant,
-        prompt=prompt
-    )
-
-
-def create_block_attribute_definition_entry(
-    key: str,
-    tag: str,
-    default_value: str,
-    is_constant: bool = False,
-    prompt: Optional[str] = None
-) -> DucBlockAttributeDefinitionEntry:
-    """Create a block attribute definition entry."""
-    attr_def = create_block_attribute_definition(tag, default_value, is_constant, prompt)
-    return DucBlockAttributeDefinitionEntry(key=key, value=attr_def)
-
-
-def create_block(
-    id: str,
-    label: str,
-    elements: List[ElementWrapper],
-    attribute_definitions: Optional[List[DucBlockAttributeDefinitionEntry]] = None,
-    description: Optional[str] = None,
-    version: int = 1
-) -> DucBlock:
-    """
-    Create a DucBlock (block definition - like a Figma component).
-    
-    Args:
-        id: Unique identifier for the block
-        label: Human-readable name
-        elements: List of elements that make up this block
-        attribute_definitions: Optional list of attribute definitions
-        description: Optional description
-        version: Version number
-    """
-    if attribute_definitions is None:
-        attribute_definitions = []
-        
-    return DucBlock(
-        id=id,
-        label=label,
-        version=version,
-        elements=elements,
-        attribute_definitions=attribute_definitions,
-        description=description
-    )
-
-
-def create_block_duplication_array(
-    rows: int = 1,
-    cols: int = 1,
-    row_spacing: float = 0.0,
-    col_spacing: float = 0.0
-) -> DucBlockDuplicationArray:
-    """Create a block duplication array for repeating instances."""
-    return DucBlockDuplicationArray(
-        rows=rows,
-        cols=cols,
-        row_spacing=row_spacing,
-        col_spacing=col_spacing
-    )
-
-
-def create_string_value_entry(key: str, value: str) -> StringValueEntry:
-    """Create a string value entry for block attributes."""
-    return StringValueEntry(key=key, value=value)
-
-
-def create_block_instance_element(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    block_id: str,
-    element_overrides: Optional[List[StringValueEntry]] = None,
-    attribute_values: Optional[List[StringValueEntry]] = None,
-    duplication_array: Optional[DucBlockDuplicationArray] = None,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a DucBlockInstanceElement (block instance - like a Figma component instance).
-    
-    Args:
-        x, y, width, height: Position and size
-        block_id: ID of the block definition to instance
-        element_overrides: Optional list of element property overrides
-        attribute_values: Optional list of attribute values
-        duplication_array: Optional duplication array for repeating the instance
-        Other standard element parameters...
-    """
-    from ..classes.ElementsClass import DucBlockInstanceElement
-    
-    base_params = {
-        "x": x, "y": y, "width": width, "height": height, "angle": angle,
-        "styles": styles, "id": id, "label": label, "scope": scope,
-        "locked": locked, "is_visible": is_visible, "z_index": z_index
-    }
-    
-    element_params = {
-        "block_id": block_id,
-        "element_overrides": element_overrides or [],
-        "attribute_values": attribute_values or [],
-        "duplication_array": duplication_array
-    }
-    
-    return _create_element_wrapper(
-        DucBlockInstanceElement,
-        base_params,
-        element_params,
-        explicit_properties_override
-    )
-
-
-# === Table-related builders ===
+def create_bound_element(
+    element_id: str,
+    element_type: str
+) -> BoundElement:
+    """Helper to create a BoundElement using a builder-like approach."""
+    return BoundElement(id=element_id, type=element_type)
 
 def create_table_column(
     id: str,
-    width: float,
-    style_overrides: Optional[DucTableCellStyle] = None
+    width: float = 100.0,
+    style_overrides: Optional[DucElementStylesBase] = None
 ) -> DucTableColumn:
-    """Create a table column definition."""
-    from ..classes.ElementsClass import DucTableColumn
-    
-    return DucTableColumn(
-        id=id,
-        width=width,
-        style_overrides=style_overrides
-    )
-
+    """Helper to create a DucTableColumn object."""
+    return DucTableColumn(id=id, width=width, style_overrides=style_overrides)
 
 def create_table_row(
     id: str,
-    height: float,
-    style_overrides: Optional[DucTableCellStyle] = None
+    height: float = 30.0,
+    style_overrides: Optional[DucElementStylesBase] = None
 ) -> DucTableRow:
-    """Create a table row definition."""
-    from ..classes.ElementsClass import DucTableRow
-    
-    return DucTableRow(
-        id=id,
-        height=height,
-        style_overrides=style_overrides
-    )
+    """Helper to create a DucTableRow object."""
+    return DucTableRow(id=id, height=height, style_overrides=style_overrides)
 
+def create_table_cell_span(
+    columns: int = 1,
+    rows: int = 1
+) -> DucTableCellSpan:
+    """Helper to create a DucTableCellSpan object."""
+    return DucTableCellSpan(columns=columns, rows=rows)
 
 def create_table_cell(
     row_id: str,
     column_id: str,
-    data: str,
+    data: str = "",
     locked: bool = False,
     span: Optional[DucTableCellSpan] = None,
-    style_overrides: Optional[DucTableCellStyle] = None
+    style_overrides: Optional[DucElementStylesBase] = None
 ) -> DucTableCell:
-    """Create a table cell."""
-    from ..classes.ElementsClass import DucTableCell
-    
+    """Helper to create a DucTableCell object."""
+    if span is None:
+        span = create_table_cell_span()
     return DucTableCell(
         row_id=row_id,
         column_id=column_id,
@@ -1333,1491 +828,1324 @@ def create_table_cell(
         style_overrides=style_overrides
     )
 
-
-def create_table_cell_span(columns: int = 1, rows: int = 1) -> DucTableCellSpan:
-    """Create a table cell span."""
-    from ..classes.ElementsClass import DucTableCellSpan
-    
-    return DucTableCellSpan(columns=columns, rows=rows)
-
-
-def create_table_auto_size(columns: bool = True, rows: bool = True) -> DucTableAutoSize:
-    """Create table auto-size settings."""
-    from ..classes.ElementsClass import DucTableAutoSize
-    
+def create_table_auto_size(
+    columns: bool = True,
+    rows: bool = True
+) -> DucTableAutoSize:
+    """Helper to create a DucTableAutoSize object."""
     return DucTableAutoSize(columns=columns, rows=rows)
 
+def create_table_column_entry(
+    key: str,
+    value: DucTableColumn
+) -> DucTableColumnEntry:
+    """Helper to create a DucTableColumnEntry object."""
+    return DucTableColumnEntry(key=key, value=value)
 
-def create_table_cell_style(
-    base_style: Optional[DucElementStylesBase] = None,
-    text_style: Optional[DucTextStyle] = None,
-    margins: Optional[Margins] = None,
-    alignment: Optional[TABLE_CELL_ALIGNMENT] = None,
-    # Text style shortcuts
-    font_family: str = "Arial",
-    font_size: float = 12,
-    text_align: Optional[TEXT_ALIGN] = None,
-    vertical_align: Optional[VERTICAL_ALIGN] = None
-) -> DucTableCellStyle:
-    """
-    Create a table cell style.
-    
-    Args:
-        base_style: Base element style (stroke, background, etc.)
-        text_style: Text formatting style (if None, will be created from font parameters)
-        margins: Cell margins (padding)
-        alignment: Cell content alignment
-        font_family: Font family for text (used if text_style is None)
-        font_size: Font size for text (used if text_style is None)
-        text_align: Text alignment (used if text_style is None)
-        vertical_align: Vertical alignment (used if text_style is None)
-    """
-    from ..classes.ElementsClass import DucTableCellStyle, DucTextStyle, Margins, LineSpacing
-    from ..Duc.TABLE_CELL_ALIGNMENT import TABLE_CELL_ALIGNMENT
-    from ..Duc.TEXT_ALIGN import TEXT_ALIGN
-    from ..Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
-    from ..Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
-    
-    if base_style is None:
-        base_style = create_simple_styles()
-    
-    if text_style is None:
-        # Create text style from provided parameters
-        text_style = create_text_style(
-            base_style=create_simple_styles(),
-            font_family=font_family,
-            font_size=font_size,
-            text_align=text_align or TEXT_ALIGN.LEFT,
-            vertical_align=vertical_align or VERTICAL_ALIGN.TOP
+def create_table_row_entry(
+    key: str,
+    value: DucTableRow
+) -> DucTableRowEntry:
+    """Helper to create a DucTableRowEntry object."""
+    return DucTableRowEntry(key=key, value=value)
+
+def create_table_cell_entry(
+    key: str,
+    value: DucTableCell
+) -> DucTableCellEntry:
+    """Helper to create a DucTableCellEntry object."""
+    return DucTableCellEntry(key=key, value=value)
+
+# Base class for element-specific builders
+class ElementSpecificBuilder:
+    def __init__(self, base: BaseElementParams, extra: dict):
+        self.base = base
+        self.extra = extra.copy()
+
+
+# Rectangle-specific builder
+class RectangleElementBuilder(ElementSpecificBuilder):
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        return _create_element_wrapper(
+            DucRectangleElement,
+            base_params,
+            {},
+            self.extra.get('explicit_properties_override')
         )
-    
-    if margins is None:
-        margins = Margins(top=2, right=2, bottom=2, left=2)
-    
-    if alignment is None:
-        alignment = TABLE_CELL_ALIGNMENT.TOP_LEFT
-    
-    return DucTableCellStyle(
-        base_style=base_style,
-        text_style=text_style,
-        margins=margins,
-        alignment=alignment
-    )
 
 
-def create_table_style(
-    base_style: Optional[DucElementStylesBase] = None,
-    header_row_style: Optional[DucTableCellStyle] = None,
-    data_row_style: Optional[DucTableCellStyle] = None,
-    data_column_style: Optional[DucTableCellStyle] = None,
-    flow_direction: Optional[TABLE_FLOW_DIRECTION] = None
-) -> DucTableStyle:
-    """
-    Create a table style.
-    
-    Args:
-        base_style: Base element style for the table
-        header_row_style: Style for header rows
-        data_row_style: Style for data rows
-        data_column_style: Style for data columns
-        flow_direction: Table flow direction (down/right)
-    """
-    from ..classes.ElementsClass import DucTableStyle
-    from ..Duc.TABLE_FLOW_DIRECTION import TABLE_FLOW_DIRECTION
-    
-    if base_style is None:
-        base_style = create_simple_styles()
-    
-    if header_row_style is None:
-        header_row_style = create_table_cell_style()
-    
-    if data_row_style is None:
-        data_row_style = create_table_cell_style()
-    
-    if data_column_style is None:
-        data_column_style = create_table_cell_style()
-    
-    if flow_direction is None:
-        flow_direction = TABLE_FLOW_DIRECTION.DOWN
-    
-    return DucTableStyle(
-        base_style=base_style,
-        header_row_style=header_row_style,
-        data_row_style=data_row_style,
-        data_column_style=data_column_style,
-        flow_direction=flow_direction
-    )
+# Ellipse-specific builder
+class EllipseElementBuilder(ElementSpecificBuilder):
+    def with_ratio(self, ratio: float):
+        self.extra["ratio"] = ratio
+        return self
+
+    def with_start_angle(self, start_angle: float):
+        self.extra["start_angle"] = start_angle
+        return self
+
+    def with_end_angle(self, end_angle: float):
+        self.extra["end_angle"] = end_angle
+        return self
+
+    def with_show_aux_crosshair(self, show_aux_crosshair: bool):
+        self.extra["show_aux_crosshair"] = show_aux_crosshair
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "ratio": self.extra.get('ratio', 1.0),
+            "start_angle": self.extra.get('start_angle', 0.0),
+            "end_angle": self.extra.get('end_angle', 2 * pi),
+            "show_aux_crosshair": self.extra.get('show_aux_crosshair', False),
+        }
+        return _create_element_wrapper(
+            DucEllipseElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
 
 
-def create_table_from_data(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    data: List[List[str]],
-    column_headers: Optional[List[str]] = None,
-    column_widths: Optional[List[float]] = None,
-    row_height: float = 30,
-    header_row_count: int = 0,
-    style: Optional[DucTableStyle] = None,
-    auto_size: Optional[DucTableAutoSize] = None,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a table element from 2D data array with automatic column/row/cell generation.
-    
-    Args:
-        x, y, width, height: Position and size
-        data: 2D list of strings representing table data
-        column_headers: Optional list of column header names. If provided, will be used as first row
-        column_widths: Optional list of column widths. If None, widths are distributed evenly
-        row_height: Height for all rows
-        header_row_count: Number of header rows (auto-set to 1 if column_headers provided)
-        Other standard table element parameters...
+# Polygon-specific builder
+class PolygonElementBuilder(ElementSpecificBuilder):
+    def with_sides(self, sides: int):
+        self.extra["sides"] = sides
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {"sides": self.extra.get('sides', 3)}
+        return _create_element_wrapper(
+            DucPolygonElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Linear element-specific builder
+class LinearElementBuilder(ElementSpecificBuilder):
+    def with_points(self, points: List[tuple]):
+        self.extra["points"] = points
+        return self
+
+    def with_lines(self, lines: Optional[List[DucLine]]):
+        self.extra["lines"] = lines
+        return self
+
+    def with_bezier_handles(self, bezier_handles: Optional[dict]):
+        self.extra["bezier_handles"] = bezier_handles
+        return self
+
+    def with_line_definitions(self, line_definitions: Optional[List[dict]]):
+        self.extra["line_definitions"] = line_definitions
+        return self
+
+    def with_path_overrides(self, path_overrides: Optional[List[DucPath]]):
+        self.extra["path_overrides"] = path_overrides
+        return self
+
+    def with_last_committed_point(self, last_committed_point: Optional[DucPoint]):
+        self.extra["last_committed_point"] = last_committed_point
+        return self
+
+    def with_start_binding(self, start_binding: Optional[DucPointBinding]):
+        self.extra["start_binding"] = start_binding
+        return self
+
+    def with_end_binding(self, end_binding: Optional[DucPointBinding]):
+        self.extra["end_binding"] = end_binding
+        return self
+
+    def with_wipeout_below(self, wipeout_below: bool):
+        self.extra["wipeout_below"] = wipeout_below
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "points": self.extra.get('points', []),
+            "lines": self.extra.get('lines', []),
+            "path_overrides": self.extra.get('path_overrides', []),
+            "last_committed_point": self.extra.get('last_committed_point'),
+            "start_binding": self.extra.get('start_binding'),
+            "end_binding": self.extra.get('end_binding'),
+            "wipeout_below": self.extra.get('wipeout_below', False)
+        }
+        return _create_element_wrapper(
+            DucLinearElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Arrow element-specific builder
+class ArrowElementBuilder(ElementSpecificBuilder):
+    def with_points(self, points: List[tuple]):
+        self.extra["points"] = points
+        return self
+
+    def with_start_binding(self, start_binding: Optional[DucPointBinding]):
+        self.extra["start_binding"] = start_binding
+        return self
+
+    def with_end_binding(self, end_binding: Optional[DucPointBinding]):
+        self.extra["end_binding"] = end_binding
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "points": self.extra.get('points', []),
+            "start_binding": self.extra.get('start_binding'),
+            "end_binding": self.extra.get('end_binding'),
+            "elbowed": self.extra.get('elbowed', False)
+        }
+        return _create_element_wrapper(
+            DucArrowElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Image element-specific builder
+class ImageElementBuilder(ElementSpecificBuilder):
+    def with_file_id(self, file_id: str):
+        self.extra["file_id"] = file_id
+        return self
+
+    def with_scale(self, scale: List[float]):
+        self.extra["scale"] = scale
+        return self
+
+    def with_status(self, status: IMAGE_STATUS):
+        self.extra["status"] = status
+        return self
+
+    def with_crop(self, crop: Optional[ImageCrop]):
+        self.extra["crop"] = crop
+        return self
+
+    def with_filter(self, filter: Optional[DucImageFilter]):
+        self.extra["filter"] = filter
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "scale": self.extra.get('scale', [1.0, 1.0]),
+            "status": self.extra.get('status', IMAGE_STATUS.SAVED),
+            "file_id": self.extra.get('file_id'),
+            "crop": self.extra.get('crop'),
+            "filter": self.extra.get('filter'),
+        }
+        return _create_element_wrapper(
+            DucImageElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# PDF element-specific builder
+class PdfElementBuilder(ElementSpecificBuilder):
+    def with_file_id(self, file_id: str):
+        self.extra["file_id"] = file_id
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "file_id": self.extra.get('file_id'),
+        }
+        return _create_element_wrapper(
+            DucPdfElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Parametric element-specific builder
+class ParametricElementBuilder(ElementSpecificBuilder):
+    def with_file_id(self, file_id: str):
+        self.extra["file_id"] = file_id
+        return self
+
+    def with_source_type(self, source_type: PARAMETRIC_SOURCE_TYPE):
+        self.extra["source_type"] = source_type
+        return self
+
+    def with_code(self, code: str):
+        self.extra["code"] = code
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        param_source = ParametricSource(
+            type=self.extra.get('source_type', PARAMETRIC_SOURCE_TYPE.FILE),
+            code=self.extra.get('code', ""),
+            file_id=self.extra.get('file_id', "")
+        )
+        element_params = {
+            "source": param_source,
+        }
+        return _create_element_wrapper(
+            DucParametricElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Text element-specific builder
+class TextElementBuilder(ElementSpecificBuilder):
+    def with_text(self, text: str):
+        self.extra["text"] = text
+        return self
+
+    def with_text_style(self, text_style: Optional[DucTextStyle]):
+        self.extra["text_style"] = text_style
+        return self
+
+    def with_auto_resize(self, auto_resize: bool):
+        self.extra["auto_resize"] = auto_resize
+        return self
+
+    def with_dynamic(self, dynamic: Optional[List[DucTextDynamicPart]]):
+        self.extra["dynamic"] = dynamic
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        # Create a default text style if none provided
+        text_style = self.extra.get('text_style')
+        if text_style is None:
+            from ducpy.builders.style_builders import create_text_style
+            text_style = create_text_style()
         
-    Example:
-        # Simple usage
-        table = duc.create_table_from_data(
-            x=50, y=50, width=300, height=120,
-            data=[
-                ["Element A", "Rectangle", "100x50"],
-                ["Element B", "Circle", "r=25"],
-                ["Element C", "Line", "length=75"]
-            ],
-            column_headers=["Name", "Type", "Value"],
-            column_widths=[100, 80, 120],
-            label="Main Data Table"
+        element_params = {
+            "style": text_style,
+            "text": self.extra.get('text', ''),
+            "dynamic": self.extra.get('dynamic', []),
+            "auto_resize": self.extra.get('auto_resize', False),
+            "original_text": self.extra.get('text', ''),
+        }
+        return _create_element_wrapper(
+            DucTextElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
         )
-    """
-    if not data:
-        raise ValueError("Data cannot be empty")
-    
-    num_cols = len(data[0])
-    num_rows = len(data)
-    
-    # Add headers to data if provided
-    if column_headers:
-        if len(column_headers) != num_cols:
-            raise ValueError(f"Column headers count ({len(column_headers)}) must match data columns ({num_cols})")
-        data = [column_headers] + data
-        num_rows += 1
-        if header_row_count == 0:
-            header_row_count = 1
-    
-    # Generate column widths if not provided
-    if column_widths is None:
-        column_widths = [width / num_cols] * num_cols
-    elif len(column_widths) != num_cols:
-        raise ValueError(f"Column widths count ({len(column_widths)}) must match data columns ({num_cols})")
-    
-    # Create columns
-    columns = []
-    for i, col_width in enumerate(column_widths):
-        columns.append(create_table_column(
-            id=f"col_{i}",
-            width=col_width
-        ))
-    
-    # Create rows
-    rows = []
-    for i in range(num_rows):
-        rows.append(create_table_row(
-            id=f"row_{i}",
-            height=row_height
-        ))
-    
-    # Create cells
-    cells = []
-    for row_idx, row_data in enumerate(data):
-        if len(row_data) != num_cols:
-            raise ValueError(f"Row {row_idx} has {len(row_data)} columns, expected {num_cols}")
+
+
+# Table from data builder
+class TableFromDataBuilder(ElementSpecificBuilder):
+    def with_data(self, data: List[List[str]]):
+        self.extra["data"] = data
+        return self
+
+    def with_column_headers(self, column_headers: Optional[List[str]]):
+        self.extra["column_headers"] = column_headers
+        return self
+
+    def with_column_widths(self, column_widths: Optional[List[float]]):
+        self.extra["column_widths"] = column_widths
+        return self
+
+    def with_row_height(self, row_height: float):
+        self.extra["row_height"] = row_height
+        return self
+
+    def with_header_row_count(self, header_row_count: int):
+        self.extra["header_row_count"] = header_row_count
+        return self
+
+    def with_table_style(self, style: Optional[DucTableStyle]):
+        self.extra["style"] = style
+        return self
+
+    def with_auto_size(self, auto_size: Optional[DucTableAutoSize]):
+        self.extra["auto_size"] = auto_size
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        data = self.extra.get('data', [])
+        n_rows = len(data)
+        n_cols = len(data[0]) if data else 0
         
-        for col_idx, cell_data in enumerate(row_data):
-            cells.append(create_table_cell(
-                row_id=f"row_{row_idx}",
-                column_id=f"col_{col_idx}",
-                data=str(cell_data)
-            ))
-    
-    return create_table_element(
-        x=x, y=y, width=width, height=height,
-        columns=columns, rows=rows, cells=cells,
-        style=style, header_row_count=header_row_count, auto_size=auto_size,
-        angle=angle, styles=styles, id=id, label=label, scope=scope,
-        locked=locked, is_visible=is_visible, z_index=z_index,
-        explicit_properties_override=explicit_properties_override
-    )
-
-
-def create_table_element(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    columns: List[DucTableColumn],
-    rows: List[DucTableRow],
-    cells: List[DucTableCell],
-    style: Optional[DucTableStyle] = None,
-    header_row_count: int = 1,
-    auto_size: Optional[DucTableAutoSize] = None,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a DucTableElement with proper table structure.
-    
-    Args:
-        x, y, width, height: Position and size
-        columns: List of table column definitions
-        rows: List of table row definitions
-        cells: List of table cells
-        style: Optional table style
-        header_row_count: Number of header rows
-        auto_size: Auto-sizing settings
-        Other standard element parameters...
-    """
-    from ..classes.ElementsClass import (
-        DucTableElement, DucTableColumnEntry, DucTableRowEntry, 
-        DucTableCellEntry, DucTableStyle
-    )
-    
-    if style is None:
-        # Create default table style with all required arguments
-        from ..classes.ElementsClass import DucTableCellStyle, DucTextStyle, Margins
-        from ..Duc.TABLE_FLOW_DIRECTION import TABLE_FLOW_DIRECTION
-        from ..Duc.TABLE_CELL_ALIGNMENT import TABLE_CELL_ALIGNMENT
-        from ..Duc.TEXT_ALIGN import TEXT_ALIGN
-        from ..Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
+        # Generate column and row IDs
+        column_ids = [f"col{i}" for i in range(n_cols)]
+        row_ids = [f"row{j}" for j in range(n_rows)]
         
-        # Create minimal text style
-        from ..classes.ElementsClass import LineSpacing
-        from ..Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
+        # Create columns
+        column_widths = self.extra.get('column_widths')
+        columns = [DucTableColumnEntry(key=col_id, value=DucTableColumn(id=col_id, width=column_widths[i] if column_widths and i < len(column_widths) else 100.0, style_overrides=None)) for i, col_id in enumerate(column_ids)]
+        # Create rows
+        row_height = self.extra.get('row_height', 30)
+        rows = [DucTableRowEntry(key=row_id, value=DucTableRow(id=row_id, height=row_height, style_overrides=None)) for row_id in row_ids]
+        # Create cells
+        cells = []
+        for j, row_id in enumerate(row_ids):
+            for i, col_id in enumerate(column_ids):
+                cells.append(DucTableCellEntry(
+                    key=f"{row_id}_{col_id}",
+                    value=DucTableCell(
+                        row_id=row_id,
+                        column_id=col_id,
+                        data=data[j][i] if j < len(data) and i < len(data[j]) else "",
+                        locked=False,
+                        span=DucTableCellSpan(columns=1, rows=1),
+                        style_overrides=None
+                    )
+                ))
         
-        default_text_style = DucTextStyle(
-            base_style=create_simple_styles(),
-            is_ltr=True,
-            font_family="Arial",
-            big_font_family="Arial",
-            line_height=1.0,
-            line_spacing=LineSpacing(value=1.0, type=LINE_SPACING_TYPE.MULTIPLE),
-            oblique_angle=0.0,
-            font_size=12,
-            width_factor=1.0,
-            is_upside_down=False,
-            is_backwards=False,
-            text_align=TEXT_ALIGN.LEFT,
-            vertical_align=VERTICAL_ALIGN.TOP,
-            paper_text_height=None
+        # Create the table element
+        element_params = {
+            "style": self.extra.get('style'),
+            "column_order": column_ids,
+            "row_order": row_ids,
+            "columns": columns,
+            "rows": rows,
+            "cells": cells,
+            "header_row_count": self.extra.get('header_row_count', 0),
+            "auto_size": self.extra.get('auto_size') or DucTableAutoSize(columns=True, rows=True),
+        }
+        return _create_element_wrapper(
+            DucTableElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
         )
+
+
+# Table element builder
+class TableElementBuilder(ElementSpecificBuilder):
+    def with_columns(self, columns: List[DucTableColumn]):
+        self.extra["columns"] = columns
+        return self
+
+    def with_rows(self, rows: List[DucTableRow]):
+        self.extra["rows"] = rows
+        return self
+
+    def with_cells(self, cells: List[DucTableCell]):
+        self.extra["cells"] = cells
+        return self
+
+    def with_table_style(self, style: Optional[DucTableStyle]):
+        self.extra["style"] = style
+        return self
+
+    def with_header_row_count(self, header_row_count: int):
+        self.extra["header_row_count"] = header_row_count
+        return self
+
+    def with_auto_size(self, auto_size: Optional[DucTableAutoSize]):
+        self.extra["auto_size"] = auto_size
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        # Ensure style is always set
+        style = self.extra.get('style')
+        if style is None:
+            from ducpy.builders.style_builders import create_simple_styles, create_text_style
+            style = DucTableStyle(
+                base_style=create_simple_styles(),
+                header_row_style=DucTableCellStyle(
+                    base_style=create_simple_styles(),
+                    text_style=create_text_style(),
+                    margins=Margins(top=0.0, right=0.0, bottom=0.0, left=0.0),
+                    alignment=TABLE_CELL_ALIGNMENT.MIDDLE_LEFT
+                ),
+                data_row_style=DucTableCellStyle(
+                    base_style=create_simple_styles(),
+                    text_style=create_text_style(),
+                    margins=Margins(top=0.0, right=0.0, bottom=0.0, left=0.0),
+                    alignment=TABLE_CELL_ALIGNMENT.MIDDLE_LEFT
+                ),
+                data_column_style=DucTableCellStyle(
+                    base_style=create_simple_styles(),
+                    text_style=create_text_style(),
+                    margins=Margins(top=0.0, right=0.0, bottom=0.0, left=0.0),
+                    alignment=TABLE_CELL_ALIGNMENT.MIDDLE_LEFT
+                ),
+                flow_direction=TABLE_FLOW_DIRECTION.DOWN
+            )
         
-        # Create minimal margins
-        default_margins = Margins(top=2, right=2, bottom=2, left=2)
+        # Extract column_order and row_order from the provided columns and rows
+        columns_list = self.extra.get('columns', [])
+        rows_list = self.extra.get('rows', [])
+        column_order = [col.key for col in columns_list]
+        row_order = [row.key for row in rows_list]
+
+        element_params = {
+            "column_order": column_order,
+            "row_order": row_order,
+            "columns": columns_list,
+            "rows": rows_list,
+            "cells": self.extra.get('cells', []),
+            "style": style,
+            "header_row_count": self.extra.get('header_row_count', 1),
+            "auto_size": self.extra.get('auto_size', DucTableAutoSize(columns=True, rows=True)),
+        }
+        return _create_element_wrapper(
+            DucTableElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Frame element builder
+class FrameElementBuilder(ElementSpecificBuilder):
+    def with_stack_base(self, stack_base: Optional[DucStackBase]):
+        self.extra["stack_base"] = stack_base
+        return self
+
+    def with_clip(self, clip: bool):
+        self.extra["clip"] = clip
+        return self
+
+    def with_label_visible(self, label_visible: bool):
+        self.extra["label_visible"] = label_visible
+        return self
+
+    def with_standard_override(self, standard_override: Optional["Standard"]):
+        self.extra["standard_override"] = standard_override
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "stack_base": self.extra.get('stack_base'),
+            "clip": self.extra.get('clip', False),
+            "label_visible": self.extra.get('label_visible', True),
+            "standard_override": self.extra.get('standard_override'),
+        }
+        return _create_element_wrapper(
+            DucFrameElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Plot element builder
+class PlotElementBuilder(ElementSpecificBuilder):
+    def with_margins(self, margins: Optional[Margins]):
+        self.extra["margins"] = margins
+        return self
+
+    def with_style(self, style: Optional[DucPlotStyle]):
+        self.extra["style"] = style
+        return self
+
+    def with_stack_base(self, stack_base: Optional[DucStackBase]):
+        self.extra["stack_base"] = stack_base
+        return self
+
+    def with_clip(self, clip: bool):
+        self.extra["clip"] = clip
+        return self
+
+    def with_label_visible(self, label_visible: bool):
+        self.extra["label_visible"] = label_visible
+        return self
+
+    def with_standard_override(self, standard_override: Optional["Standard"]):
+        self.extra["standard_override"] = standard_override
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "stack_base": self.extra.get('stack_base'),
+            "clip": self.extra.get('clip', False),
+            "label_visible": self.extra.get('label_visible', True),
+            "standard_override": self.extra.get('standard_override'),
+            "style": self.extra.get('style'),
+            "margins": self.extra.get('margins')
+        }
+        return _create_element_wrapper(
+            DucPlotElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Viewport element builder
+class ViewportElementBuilder(ElementSpecificBuilder):
+    def with_points(self, points: List[tuple]):
+        self.extra["points"] = points
+        return self
+
+    def with_view(self, view: DucView):
+        self.extra["view"] = view
+        return self
+
+    def with_view_scale(self, scale: float):
+        self.extra["scale"] = scale
+        return self
+
+    def with_viewport_style(self, style: Optional[DucViewportStyle]):
+        self.extra["style"] = style
+        return self
+
+    def with_stack_base(self, stack_base: Optional[DucStackBase]):
+        self.extra["stack_base"] = stack_base
+        return self
+
+    def with_standard_override(self, standard_override: Optional["Standard"]):
+        self.extra["standard_override"] = standard_override
+        return self
+
+    def with_shade_plot(self, shade_plot: Optional[VIEWPORT_SHADE_PLOT]):
+        self.extra["shade_plot"] = shade_plot
+        return self
+
+    def with_frozen_group_ids(self, frozen_group_ids: Optional[List[str]]):
+        self.extra["frozen_group_ids"] = frozen_group_ids
+        return self
+
+    def with_start_binding(self, start_binding: Optional[DucPointBinding]):
+        self.extra["start_binding"] = start_binding
+        return self
+
+    def with_end_binding(self, end_binding: Optional[DucPointBinding]):
+        self.extra["end_binding"] = end_binding
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "points": self.extra.get('points', []),
+            "start_binding": self.extra.get('start_binding'),
+            "end_binding": self.extra.get('end_binding'),
+            "stack_base": self.extra.get('stack_base'),
+            "style": self.extra.get('style'),
+            "view": self.extra.get('view'),
+            "scale": self.extra.get('scale', 1.0),
+            "shade_plot": self.extra.get('shade_plot'),
+            "frozen_group_ids": self.extra.get('frozen_group_ids', []),
+            "standard_override": self.extra.get('standard_override')
+        }
+        return _create_element_wrapper(
+            DucViewportElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# FreeDraw element builder
+class FreeDrawElementBuilder(ElementSpecificBuilder):
+    def with_points(self, points: list):
+        self.extra["points"] = points
+        return self
+
+    def with_pressures(self, pressures: list):
+        self.extra["pressures"] = pressures
+        return self
+
+    def with_size_thickness(self, size: float):
+        self.extra["size"] = size
+        return self
+
+    def with_thinning(self, thinning: float):
+        self.extra["thinning"] = thinning
+        return self
+
+    def with_smoothing(self, smoothing: float):
+        self.extra["smoothing"] = smoothing
+        return self
+
+    def with_streamline(self, streamline: float):
+        self.extra["streamline"] = streamline
+        return self
+
+    def with_easing(self, easing: str):
+        self.extra["easing"] = easing
+        return self
+
+    def with_simulate_pressure(self, simulate_pressure: bool):
+        self.extra["simulate_pressure"] = simulate_pressure
+        return self
+
+    def with_start_cap(self, cap: bool):
+        self.extra["start_cap"] = cap
+        return self
+
+    def with_start_taper(self, taper: float):
+        self.extra["start_taper"] = taper
+        return self
+
+    def with_start_easing(self, easing: str):
+        self.extra["start_easing"] = easing
+        return self
+
+    def with_end_cap(self, cap: bool):
+        self.extra["end_cap"] = cap
+        return self
+
+    def with_end_taper(self, taper: float):
+        self.extra["end_taper"] = taper
+        return self
+
+    def with_end_easing(self, easing: str):
+        self.extra["end_easing"] = easing
+        return self
+
+    def with_last_committed_point(self, last_committed_point: Optional[DucPoint]):
+        self.extra["last_committed_point"] = last_committed_point
+        return self
+
+    def with_svg_path(self, svg_path: Optional[str]):
+        self.extra["svg_path"] = svg_path
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
         
-        # Create minimal cell styles with all required arguments
-        default_cell_style = DucTableCellStyle(
-            base_style=create_simple_styles(),
-            text_style=default_text_style,
-            margins=default_margins,
-            alignment=TABLE_CELL_ALIGNMENT.TOP_LEFT
+        start_cap = self.extra.get('start_cap')
+        start_taper = self.extra.get('start_taper')
+        start_easing = self.extra.get('start_easing')
+        start_ends = None
+        if start_cap is not None or start_taper is not None or start_easing is not None:
+            start_ends = DucFreeDrawEnds(
+                cap=start_cap if start_cap is not None else True,  # Default to True if not provided
+                taper=start_taper if start_taper is not None else 0.0,
+                easing=start_easing if start_easing is not None else "linear"
+            )
+
+        end_cap = self.extra.get('end_cap')
+        end_taper = self.extra.get('end_taper')
+        end_easing = self.extra.get('end_easing')
+        end_ends = None
+        if end_cap is not None or end_taper is not None or end_easing is not None:
+            end_ends = DucFreeDrawEnds(
+                cap=end_cap if end_cap is not None else True,  # Default to True if not provided
+                taper=end_taper if end_taper is not None else 0.0,
+                easing=end_easing if end_easing is not None else "linear"
+            )
+
+        element_params = {
+            "points": self.extra.get('points', []),
+            "pressures": self.extra.get('pressures', []),
+            "size": self.extra.get('size', 1.0),
+            "thinning": self.extra.get('thinning', 0.0),
+            "smoothing": self.extra.get('smoothing', 0.0),
+            "streamline": self.extra.get('streamline', 0.0),
+            "easing": self.extra.get('easing', "linear"),
+            "simulate_pressure": self.extra.get('simulate_pressure', False),
+            "start": start_ends, 
+            "end": end_ends,     
+            "last_committed_point": self.extra.get('last_committed_point'),
+            "svg_path": self.extra.get('svg_path'),
+        }
+        return _create_element_wrapper(
+            DucFreeDrawElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
         )
-        
-        style = DucTableStyle(
-            base_style=create_simple_styles(),
-            header_row_style=default_cell_style,
-            data_row_style=default_cell_style,
-            data_column_style=default_cell_style,
-            flow_direction=TABLE_FLOW_DIRECTION.DOWN
+
+
+# Doc element builder
+class DocElementBuilder(ElementSpecificBuilder):
+    def with_text(self, text: str):
+        self.extra["text"] = text
+        return self
+
+    def with_doc_style(self, style: Optional[DucDocStyle]):
+        self.extra["style"] = style
+        return self
+
+    def with_columns_layout(self, columns: Optional[ColumnLayout]):
+        self.extra["columns"] = columns
+        return self
+
+    def with_auto_resize(self, auto_resize: bool):
+        self.extra["auto_resize"] = auto_resize
+        return self
+
+    def with_flow_direction(self, flow_direction: Optional[TEXT_FLOW_DIRECTION]):
+        self.extra["flow_direction"] = flow_direction
+        return self
+
+    def with_dynamic(self, dynamic: Optional[List[DucTextDynamicPart]]):
+        self.extra["dynamic"] = dynamic
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "style": self.extra.get('style'),
+            "text": self.extra.get('text', ""),
+            "dynamic": self.extra.get('dynamic', []),
+            "columns": self.extra.get('columns'),
+            "auto_resize": self.extra.get('auto_resize', False),
+            "flow_direction": self.extra.get('flow_direction')
+        }
+        return _create_element_wrapper(
+            DucDocElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
         )
-    
-    if auto_size is None:
-        auto_size = create_table_auto_size()
-    
-    # Create column entries
-    column_entries = []
-    column_order = []
-    for col in columns:
-        column_entries.append(DucTableColumnEntry(key=col.id, value=col))
-        column_order.append(col.id)
-    
-    # Create row entries  
-    row_entries = []
-    row_order = []
-    for row in rows:
-        row_entries.append(DucTableRowEntry(key=row.id, value=row))
-        row_order.append(row.id)
-    
-    # Create cell entries
-    cell_entries = []
-    for cell in cells:
-        cell_key = f"{cell.row_id}_{cell.column_id}"
-        cell_entries.append(DucTableCellEntry(key=cell_key, value=cell))
-    
-    base_params = {
-        "x": x, "y": y, "width": width, "height": height, "angle": angle,
-        "styles": styles, "id": id, "label": label, "scope": scope,
-        "locked": locked, "is_visible": is_visible, "z_index": z_index
-    }
-    
-    element_params = {
-        "style": style,
-        "column_order": column_order,
-        "row_order": row_order,
-        "columns": column_entries,
-        "rows": row_entries,
-        "cells": cell_entries,
-        "header_row_count": header_row_count,
-        "auto_size": auto_size
-    }
-    
-    return _create_element_wrapper(
-        DucTableElement,
-        base_params,
-        element_params,
-        explicit_properties_override
-    )
 
 
-# === Layer and Region builders (to be added to state_builders.py) ===
+# Dimension builders
+class LinearDimensionBuilder(ElementSpecificBuilder):
+    def with_origin1(self, origin1: GeometricPoint):
+        self.extra["origin1"] = origin1
+        return self
 
-def create_layer_overrides(
-    stroke: Optional[ElementStroke] = None,
-    background: Optional[ElementBackground] = None
-) -> DucLayerOverrides:
-    """Create layer overrides for stroke and background."""
-    from ..classes.ElementsClass import DucLayerOverrides
-    from .style_builders import create_solid_content, create_stroke, create_background
-    
-    if stroke is None:
-        stroke = create_stroke(create_solid_content("#000000"), width=1.0)
-    if background is None:
-        background = create_background(create_solid_content("#FFFFFF"))
-    
-    return DucLayerOverrides(stroke=stroke, background=background)
+    def with_origin2(self, origin2: GeometricPoint):
+        self.extra["origin2"] = origin2
+        return self
 
+    def with_location(self, location: GeometricPoint):
+        self.extra["location"] = location
+        return self
 
-def create_layer(
-    id: str,
-    label: str,
-    readonly: bool = False,
-    stack_base: Optional[DucStackBase] = None,
-    overrides: Optional[DucLayerOverrides] = None
-) -> DucLayer:
-    """
-    Create a DucLayer.
-    
-    Args:
-        id: Unique identifier for the layer
-        label: Human-readable label
-        readonly: Whether the layer is read-only
-        stack_base: Stack base for layer properties
-        overrides: Layer style overrides
-    """
-    from ..classes.ElementsClass import DucLayer
-    
-    if stack_base is None:
-        stack_base = create_stack_base(label=label)
-    
-    if overrides is None:
-        overrides = create_layer_overrides()
-    
-    return DucLayer(
-        id=id,
-        stack_base=stack_base,
-        readonly=readonly,
-        overrides=overrides
-    )
+    def with_dimension_style(self, style: Optional[DucDimensionStyle]):
+        self.extra["style"] = style
+        return self
 
+    def with_text_override(self, text_override: Optional[str]):
+        self.extra["text_override"] = text_override
+        return self
 
-def create_region(
-    id: str,
-    label: str,
-    boolean_operation:BOOLEAN_OPERATION,
-    stack_base: Optional[DucStackBase] = None
-) -> DucRegion:
-    """
-    Create a DucRegion.
-    
-    Args:
-        id: Unique identifier for the region
-        label: Human-readable label
-        boolean_operation: Boolean operation type
-        stack_base: Stack base for region properties
-    """
-    from ..classes.ElementsClass import DucRegion
-    
-    if stack_base is None:
-        stack_base = create_stack_base(label=label)
-    
-    return DucRegion(
-        id=id,
-        stack_base=stack_base,
-        boolean_operation=boolean_operation
-    )
-
-
-# === Document Element builder ===
-
-def create_doc_element(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    text: str,
-    style: Optional[DucDocStyle] = None,
-    columns: Optional[ColumnLayout] = None,
-    auto_resize: bool = False,
-    flow_direction: Optional[TEXT_FLOW_DIRECTION] = None,
-    dynamic: Optional[List[DucTextDynamicPart]] = None,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a DucDocElement for rich text documents.
-    
-    Args:
-        x, y, width, height: Position and size
-        text: Document text content
-        style: Document styling
-        columns: Column layout for multi-column text
-        auto_resize: Whether to auto-resize based on content
-        flow_direction: Text flow direction
-        dynamic: Dynamic text parts
-        Other standard element parameters...
-    """
-    if style is None:
-        style = create_doc_style()
-    
-    if columns is None:
-        columns = create_column_layout()
-    
-    if flow_direction is None:
-        flow_direction = TEXT_FLOW_DIRECTION.LEFT_TO_RIGHT
-    
-    if dynamic is None:
-        dynamic = []
-    
-    base_params = {
-        "x": x, "y": y, "width": width, "height": height, "angle": angle,
-        "styles": styles, "id": id, "label": label, "scope": scope,
-        "locked": locked, "is_visible": is_visible, "z_index": z_index
-    }
-    
-    element_params = {
-        "style": style,
-        "text": text,
-        "dynamic": dynamic,
-        "columns": columns,
-        "auto_resize": auto_resize,
-        "flow_direction": flow_direction
-    }
-    
-    return _create_element_wrapper(
-        DucDocElement,
-        base_params,
-        element_params,
-        explicit_properties_override
-    )
-
-
-def create_dimension_style(
-    dim_line=None,
-    ext_line=None,
-    text_style=None,
-    symbols=None,
-    tolerance=None,
-    fit=None
-) -> DucDimensionStyle:
-    """Create a dimension style with default values."""
-    if dim_line is None:
-        from .style_builders import create_solid_content, create_stroke
-        stroke_content = create_solid_content("#000000", 1.0)
-        stroke = create_stroke(stroke_content, width=1.0)
-        dim_line = DimensionLineStyle(
-            stroke=stroke,
-            text_gap=2.0
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "style": self.extra.get('style'),
+            "origin1": self.extra.get('origin1'),
+            "origin2": self.extra.get('origin2'),
+            "location": self.extra.get('location'),
+            "oblique_angle": self.extra.get('oblique_angle', 0.0),
+            "dimension_type": self.extra.get('dimension_type', DIMENSION_TYPE.LINEAR),
+            "ordinate_axis": self.extra.get('ordinate_axis'),
+            "bindings": self.extra.get('bindings'),
+            "text_override": self.extra.get('text_override'),
+            "baseline_data": self.extra.get('baseline_data'),
+            "continue_data": self.extra.get('continue_data')
+        }
+        return _create_element_wrapper(
+            DucDimensionElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
         )
-    if ext_line is None:
-        from .style_builders import create_solid_content, create_stroke
-        stroke_content = create_solid_content("#000000", 1.0)
-        stroke = create_stroke(stroke_content, width=1.0)
-        ext_line = DimensionExtLineStyle(
-            stroke=stroke,
-            overshoot=2.0,
-            offset=1.0
+
+
+class AlignedDimensionBuilder(LinearDimensionBuilder):
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "origin1": self.extra.get('origin1'),
+            "origin2": self.extra.get('origin2'),
+            "location": self.extra.get('location'),
+            "dimension_type": DIMENSION_TYPE.ALIGNED,
+            "oblique_angle": self.extra.get('oblique_angle', 0.0),
+            "style": self.extra.get('style'),
+            "text_override": self.extra.get('text_override'),
+            "ordinate_axis": self.extra.get('ordinate_axis'),
+            "bindings": self.extra.get('bindings'),
+            "baseline_data": self.extra.get('baseline_data'),
+            "continue_data": self.extra.get('continue_data'),
+        }
+        return _create_element_wrapper(
+            DucDimensionElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
         )
-    if text_style is None:
-        text_style = create_text_style(font_size=12)
-    if symbols is None:
-        from ducpy.Duc.MARK_ELLIPSE_CENTER import MARK_ELLIPSE_CENTER
-        symbols = DimensionSymbolStyle(
-            center_mark_size=5.0,
-            center_mark_type=MARK_ELLIPSE_CENTER.MARK
+
+
+class AngularDimensionBuilder(LinearDimensionBuilder):
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "origin1": self.extra.get('origin1'),
+            "origin2": self.extra.get('origin2'),
+            "location": self.extra.get('location'),
+            "dimension_type": DIMENSION_TYPE.ANGULAR,
+            "oblique_angle": self.extra.get('oblique_angle', 0.0),
+            "style": self.extra.get('style'),
+            "text_override": self.extra.get('text_override'),
+            "ordinate_axis": self.extra.get('ordinate_axis'),
+            "bindings": self.extra.get('bindings'),
+            "baseline_data": self.extra.get('baseline_data'),
+            "continue_data": self.extra.get('continue_data'),
+        }
+        return _create_element_wrapper(
+            DucDimensionElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
         )
-    if tolerance is None:
-        from ducpy.Duc.TOLERANCE_DISPLAY import TOLERANCE_DISPLAY
-        tolerance = DimensionToleranceStyle(
-            enabled=False,
-            upper_value=0.0,
-            lower_value=0.0,
-            precision=2,
-            display_method=TOLERANCE_DISPLAY.NONE
+
+
+class RadiusDimensionBuilder(LinearDimensionBuilder):
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "origin1": self.extra.get('origin1'),
+            "origin2": self.extra.get('origin2'),
+            "location": self.extra.get('location'),
+            "dimension_type": DIMENSION_TYPE.RADIUS,
+            "oblique_angle": self.extra.get('oblique_angle', 0.0),
+            "style": self.extra.get('style'),
+            "text_override": self.extra.get('text_override'),
+            "ordinate_axis": self.extra.get('ordinate_axis'),
+            "bindings": self.extra.get('bindings'),
+            "baseline_data": self.extra.get('baseline_data'),
+            "continue_data": self.extra.get('continue_data'),
+        }
+        return _create_element_wrapper(
+            DucDimensionElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
         )
-    if fit is None:
-        from ducpy.Duc.DIMENSION_FIT_RULE import DIMENSION_FIT_RULE
-        from ducpy.Duc.DIMENSION_TEXT_PLACEMENT import DIMENSION_TEXT_PLACEMENT
-        fit = DimensionFitStyle(
-            force_text_inside=False,
-            rule=DIMENSION_FIT_RULE.BEST_FIT,
-            text_placement=DIMENSION_TEXT_PLACEMENT.BESIDE_LINE
+
+
+class DiameterDimensionBuilder(LinearDimensionBuilder):
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "origin1": self.extra.get('origin1'),
+            "origin2": self.extra.get('origin2'),
+            "location": self.extra.get('location'),
+            "dimension_type": DIMENSION_TYPE.DIAMETER,
+            "oblique_angle": self.extra.get('oblique_angle', 0.0),
+            "style": self.extra.get('style'),
+            "text_override": self.extra.get('text_override'),
+            "ordinate_axis": self.extra.get('ordinate_axis'),
+            "bindings": self.extra.get('bindings'),
+            "baseline_data": self.extra.get('baseline_data'),
+            "continue_data": self.extra.get('continue_data'),
+        }
+        return _create_element_wrapper(
+            DucDimensionElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
         )
-    
-    return DucDimensionStyle(
-        dim_line=dim_line,
-        ext_line=ext_line,
-        text_style=text_style,
-        symbols=symbols,
-        tolerance=tolerance,
-        fit=fit
-    )
-
-
-def create_dimension_element(
-    x=0.0,
-    y=0.0,
-    width=100.0,
-    height=20.0,
-    origin1=None,
-    origin2=None,
-    location=None,
-    dimension_type=DIMENSION_TYPE.LINEAR,
-    oblique_angle=0.0,
-    style=None,
-    text_override=None,
-    ordinate_axis=None,
-    bindings=None,
-    baseline_data=None,
-    continue_data=None,
-    **kwargs
-) -> ElementWrapper:
-    """
-    Create a dimension element.
-    
-    Args:
-        x, y, width, height: Basic positioning and sizing
-        origin1: First origin point (GeometricPoint). If None, uses (x, y)
-        origin2: Second origin point (GeometricPoint). If None, uses (x+width, y)
-        location: Dimension line location (GeometricPoint). If None, uses (x+width/2, y+height)
-        dimension_type: Type of dimension (DIMENSION_TYPE enum)
-        oblique_angle: Oblique angle for extension lines (radians)
-        style: Dimension style (DucDimensionStyle)
-        text_override: Override dimension text
-        ordinate_axis: For ordinate dimensions (AXIS enum)
-        bindings: Point bindings to other elements (DimensionBindings)
-        baseline_data: For baseline dimensions (DimensionBaselineData)
-        continue_data: For continued dimensions (DimensionContinueData)
-    """
-    # Create default points if not provided
-    if origin1 is None:
-        origin1 = GeometricPoint(x=x, y=y)
-    if origin2 is None:
-        origin2 = GeometricPoint(x=x + width, y=y)
-    if location is None:
-        location = GeometricPoint(x=x + width/2, y=y + height)
-    
-    # Create definition points
-    definition_points = DimensionDefinitionPoints(
-        origin1=origin1,
-        origin2=origin2,
-        location=location
-    )
-    
-    # Create default style if not provided
-    if style is None:
-        style = create_dimension_style()
-    
-    # Separate base parameters from element-specific parameters
-    base_kwargs = {}
-    for key, value in kwargs.items():
-        if key in ['id', 'label', 'scope', 'locked', 'is_visible', 'z_index', 
-                  'description', 'group_ids', 'region_ids', 'layer_id', 'frame_id',
-                  'bound_elements', 'link', 'custom_data', 'is_plot', 'is_annotative',
-                  'is_deleted', 'index', 'angle', 'styles']:
-            base_kwargs[key] = value
-    
-    # Create base element
-    base_params = {
-        "x": x,
-        "y": y,
-        "width": width,
-        "height": height,
-        "styles": base_kwargs.get('styles', create_simple_styles()),
-        **base_kwargs
-    }
-    
-    element_params = {
-        "style": style,
-        "definition_points": definition_points,
-        "oblique_angle": oblique_angle,
-        "dimension_type": dimension_type,
-        "ordinate_axis": ordinate_axis,
-        "bindings": bindings,
-        "text_override": text_override,
-        "baseline_data": baseline_data,
-        "continue_data": continue_data
-    }
-    
-    return _create_element_wrapper(
-        DucDimensionElement,
-        base_params,
-        element_params
-    )
-
-
-def create_linear_dimension(
-    x1, y1, x2, y2, offset=20.0, text_override=None, style=None, **kwargs
-) -> ElementWrapper:
-    """Create a linear dimension between two points."""
-    return create_dimension_element(
-        x=min(x1, x2),
-        y=min(y1, y2) - offset,
-        width=abs(x2 - x1),
-        height=offset,
-        origin1=GeometricPoint(x=x1, y=y1),
-        origin2=GeometricPoint(x=x2, y=y2),
-        location=GeometricPoint(x=(x1 + x2) / 2, y=min(y1, y2) - offset),
-        dimension_type=DIMENSION_TYPE.LINEAR,
-        text_override=text_override,
-        style=style,
-        **kwargs
-    )
-
-
-def create_aligned_dimension(
-    x1, y1, x2, y2, offset=20.0, text_override=None, style=None, **kwargs
-) -> ElementWrapper:
-    """Create an aligned dimension between two points."""
-    # Calculate perpendicular offset direction
-    import math
-    dx = x2 - x1
-    dy = y2 - y1
-    length = math.sqrt(dx*dx + dy*dy)
-    if length > 0:
-        # Perpendicular vector (normalized)
-        perp_x = -dy / length
-        perp_y = dx / length
-        location_x = (x1 + x2) / 2 + perp_x * offset
-        location_y = (y1 + y2) / 2 + perp_y * offset
-    else:
-        location_x = x1
-        location_y = y1 - offset
-    
-    return create_dimension_element(
-        x=min(x1, x2),
-        y=min(y1, y2),
-        width=abs(x2 - x1),
-        height=abs(y2 - y1),
-        origin1=GeometricPoint(x=x1, y=y1),
-        origin2=GeometricPoint(x=x2, y=y2),
-        location=GeometricPoint(x=location_x, y=location_y),
-        dimension_type=DIMENSION_TYPE.ALIGNED,
-        text_override=text_override,
-        style=style,
-        **kwargs
-    )
-
-
-def create_angular_dimension(
-    center_x, center_y, x1, y1, x2, y2, offset=30.0, text_override=None, style=None, **kwargs
-) -> ElementWrapper:
-    """Create an angular dimension."""
-    return create_dimension_element(
-        x=center_x - offset,
-        y=center_y - offset,
-        width=offset * 2,
-        height=offset * 2,
-        origin1=GeometricPoint(x=x1, y=y1),
-        origin2=GeometricPoint(x=x2, y=y2),
-        location=GeometricPoint(x=center_x, y=center_y - offset),
-        definition_points=DimensionDefinitionPoints(
-            origin1=GeometricPoint(x=x1, y=y1),
-            origin2=GeometricPoint(x=x2, y=y2),
-            center=GeometricPoint(x=center_x, y=center_y),
-            location=GeometricPoint(x=center_x, y=center_y - offset)
-        ),
-        dimension_type=DIMENSION_TYPE.ANGULAR,
-        text_override=text_override,
-        style=style,
-        **kwargs
-    )
-
-
-def create_radius_dimension(
-    center_x, center_y, radius_point_x, radius_point_y, text_override=None, style=None, **kwargs
-) -> ElementWrapper:
-    """Create a radius dimension."""
-    return create_dimension_element(
-        x=center_x,
-        y=center_y,
-        width=abs(radius_point_x - center_x),
-        height=abs(radius_point_y - center_y),
-        origin1=GeometricPoint(x=center_x, y=center_y),
-        origin2=GeometricPoint(x=radius_point_x, y=radius_point_y),
-        location=GeometricPoint(x=(center_x + radius_point_x) / 2, y=(center_y + radius_point_y) / 2),
-        dimension_type=DIMENSION_TYPE.RADIUS,
-        text_override=text_override,
-        style=style,
-        **kwargs
-    )
-
-
-def create_diameter_dimension(
-    center_x, center_y, x1, y1, x2, y2, text_override=None, style=None, **kwargs
-) -> ElementWrapper:
-    """Create a diameter dimension."""
-    return create_dimension_element(
-        x=min(x1, x2),
-        y=min(y1, y2),
-        width=abs(x2 - x1),
-        height=abs(y2 - y1),
-        origin1=GeometricPoint(x=x1, y=y1),
-        origin2=GeometricPoint(x=x2, y=y2),
-        location=GeometricPoint(x=(x1 + x2) / 2, y=(y1 + y2) / 2),
-        definition_points=DimensionDefinitionPoints(
-            origin1=GeometricPoint(x=x1, y=y1),
-            origin2=GeometricPoint(x=x2, y=y2),
-            center=GeometricPoint(x=center_x, y=center_y),
-            location=GeometricPoint(x=(x1 + x2) / 2, y=(y1 + y2) / 2)
-        ),
-        dimension_type=DIMENSION_TYPE.DIAMETER,
-        text_override=text_override,
-        style=style,
-        **kwargs
-    )
-
-
-def create_arc_length_dimension(
-    center_x, center_y, start_angle, end_angle, radius, text_override=None, style=None, **kwargs
-) -> ElementWrapper:
-    """Create an arc length dimension."""
-    import math
-    # Calculate arc endpoints
-    start_x = center_x + radius * math.cos(start_angle)
-    start_y = center_y + radius * math.sin(start_angle)
-    end_x = center_x + radius * math.cos(end_angle)
-    end_y = center_y + radius * math.sin(end_angle)
-    
-    # Location is at the midpoint of the arc
-    mid_angle = (start_angle + end_angle) / 2
-    location_x = center_x + (radius + 20) * math.cos(mid_angle)
-    location_y = center_y + (radius + 20) * math.sin(mid_angle)
-    
-    return create_dimension_element(
-        x=center_x - radius,
-        y=center_y - radius,
-        width=radius * 2,
-        height=radius * 2,
-        origin1=GeometricPoint(x=start_x, y=start_y),
-        origin2=GeometricPoint(x=end_x, y=end_y),
-        location=GeometricPoint(x=location_x, y=location_y),
-        definition_points=DimensionDefinitionPoints(
-            origin1=GeometricPoint(x=start_x, y=start_y),
-            origin2=GeometricPoint(x=end_x, y=end_y),
-            center=GeometricPoint(x=center_x, y=center_y),
-            location=GeometricPoint(x=location_x, y=location_y)
-        ),
-        dimension_type=DIMENSION_TYPE.ARC_LENGTH,
-        text_override=text_override,
-        style=style,
-        **kwargs
-    )
-
-
-def create_center_mark_dimension(
-    center_x, center_y, size=10, text_override=None, style=None, **kwargs
-) -> ElementWrapper:
-    """Create a center mark dimension."""
-    return create_dimension_element(
-        x=center_x - size/2,
-        y=center_y - size/2,
-        width=size,
-        height=size,
-        origin1=GeometricPoint(x=center_x, y=center_y),
-        location=GeometricPoint(x=center_x, y=center_y - size),
-        definition_points=DimensionDefinitionPoints(
-            origin1=GeometricPoint(x=center_x, y=center_y),
-            location=GeometricPoint(x=center_x, y=center_y - size),
-            center=GeometricPoint(x=center_x, y=center_y)
-        ),
-        dimension_type=DIMENSION_TYPE.CENTER_MARK,
-        text_override=text_override,
-        style=style,
-        **kwargs
-    )
-
-
-def create_rotated_dimension(
-    x1, y1, x2, y2, rotation_angle, offset=20.0, text_override=None, style=None, **kwargs
-) -> ElementWrapper:
-    """Create a rotated dimension (linear dimension at a specific angle)."""
-    import math
-    
-    # Calculate the dimension line parallel to the specified angle
-    dx = x2 - x1
-    dy = y2 - y1
-    
-    # Calculate perpendicular offset direction
-    perp_x = -math.sin(rotation_angle)
-    perp_y = math.cos(rotation_angle)
-    
-    location_x = (x1 + x2) / 2 + perp_x * offset
-    location_y = (y1 + y2) / 2 + perp_y * offset
-    
-    return create_dimension_element(
-        x=min(x1, x2),
-        y=min(y1, y2),
-        width=abs(x2 - x1),
-        height=abs(y2 - y1),
-        origin1=GeometricPoint(x=x1, y=y1),
-        origin2=GeometricPoint(x=x2, y=y2),
-        location=GeometricPoint(x=location_x, y=location_y),
-        dimension_type=DIMENSION_TYPE.ROTATED,
-        oblique_angle=rotation_angle,
-        text_override=text_override,
-        style=style,
-        **kwargs
-    )
-
-
-def create_spacing_dimension(
-    x1, y1, x2, y2, x3, y3, x4, y4, text_override=None, style=None, **kwargs
-) -> ElementWrapper:
-    """Create a spacing dimension (measures distance between two objects)."""
-    # First object center
-    obj1_center_x = (x1 + x2) / 2
-    obj1_center_y = (y1 + y2) / 2
-    
-    # Second object center
-    obj2_center_x = (x3 + x4) / 2
-    obj2_center_y = (y3 + y4) / 2
-    
-    # Dimension location offset from center line
-    location_x = (obj1_center_x + obj2_center_x) / 2
-    location_y = (obj1_center_y + obj2_center_y) / 2 - 30
-    
-    return create_dimension_element(
-        x=min(obj1_center_x, obj2_center_x),
-        y=min(obj1_center_y, obj2_center_y),
-        width=abs(obj2_center_x - obj1_center_x),
-        height=abs(obj2_center_y - obj1_center_y),
-        origin1=GeometricPoint(x=obj1_center_x, y=obj1_center_y),
-        origin2=GeometricPoint(x=obj2_center_x, y=obj2_center_y),
-        location=GeometricPoint(x=location_x, y=location_y),
-        dimension_type=DIMENSION_TYPE.SPACING,
-        text_override=text_override,
-        style=style,
-        **kwargs
-    )
-
-
-def create_continue_dimension(
-    continue_from_dimension_id, x1, y1, x2, y2, text_override=None, style=None, **kwargs
-) -> ElementWrapper:
-    """Create a continued dimension (continues from a previous dimension)."""
-    continue_data = DimensionContinueData(continue_from_dimension_id=continue_from_dimension_id)
-    
-    return create_dimension_element(
-        x=min(x1, x2),
-        y=min(y1, y2),
-        width=abs(x2 - x1),
-        height=20,
-        origin1=GeometricPoint(x=x1, y=y1),
-        origin2=GeometricPoint(x=x2, y=y2),
-        location=GeometricPoint(x=(x1 + x2) / 2, y=min(y1, y2) - 20),
-        dimension_type=DIMENSION_TYPE.CONTINUE,
-        continue_data=continue_data,
-        text_override=text_override,
-        style=style,
-        **kwargs
-    )
-
-
-def create_baseline_dimension(
-    base_dimension_id, x1, y1, x2, y2, text_override=None, style=None, **kwargs
-) -> ElementWrapper:
-    """Create a baseline dimension (from a common baseline)."""
-    baseline_data = DimensionBaselineData(base_dimension_id=base_dimension_id)
-    
-    return create_dimension_element(
-        x=min(x1, x2),
-        y=min(y1, y2),
-        width=abs(x2 - x1),
-        height=20,
-        origin1=GeometricPoint(x=x1, y=y1),
-        origin2=GeometricPoint(x=x2, y=y2),
-        location=GeometricPoint(x=(x1 + x2) / 2, y=min(y1, y2) - 30),
-        dimension_type=DIMENSION_TYPE.BASELINE,
-        baseline_data=baseline_data,
-        text_override=text_override,
-        style=style,
-        **kwargs
-    )
-
-
-def create_jogged_linear_dimension(
-    x1, y1, x2, y2, jog_x, jog_y, text_override=None, style=None, **kwargs
-) -> ElementWrapper:
-    """Create a jogged linear dimension (linear dimension with a jogged dimension line)."""
-    return create_dimension_element(
-        x=min(x1, x2),
-        y=min(y1, y2),
-        width=abs(x2 - x1),
-        height=abs(y2 - y1),
-        origin1=GeometricPoint(x=x1, y=y1),
-        origin2=GeometricPoint(x=x2, y=y2),
-        location=GeometricPoint(x=(x1 + x2) / 2, y=(y1 + y2) / 2),
-        definition_points=DimensionDefinitionPoints(
-            origin1=GeometricPoint(x=x1, y=y1),
-            origin2=GeometricPoint(x=x2, y=y2),
-            location=GeometricPoint(x=(x1 + x2) / 2, y=(y1 + y2) / 2),
-            jog=GeometricPoint(x=jog_x, y=jog_y)
-        ),
-        dimension_type=DIMENSION_TYPE.JOGGED_LINEAR,
-        text_override=text_override,
-        style=style,
-        **kwargs
-    )
-
-def create_margins(top: float = 0.0, right: float = 0.0, bottom: float = 0.0, left: float = 0.0) -> Margins:
-    """Create margins object for layout elements."""
-    return Margins(top=top, right=right, bottom=bottom, left=left)
-
-
-# === TOLERANCE AND GD&T BUILDERS ===
-
-def create_tolerance_clause(
-    value: str,
-    zone_type: Optional[int] = None,
-    material_condition: Optional[int] = None,
-    feature_modifiers: Optional[List[int]] = None
-) -> ToleranceClause:
-    """Create a tolerance clause for GD&T."""
-    return ToleranceClause(
-        value=value,
-        zone_type=zone_type,
-        material_condition=material_condition,
-        feature_modifiers=feature_modifiers or []
-    )
-
-
-def create_datum_reference(
-    datum_letter: str,
-    material_condition: Optional[int] = None,
-    modifier: str = ""
-) -> DatumReference:
-    """Create a datum reference for GD&T."""
-    return DatumReference(
-        letters=datum_letter,
-        modifier=material_condition
-    )
-
-
-def create_feature_control_frame_segment(
-    symbol: int,
-    tolerance: ToleranceClause,
-    datums: Optional[List[DatumReference]] = None
-) -> FeatureControlFrameSegment:
-    """Create a feature control frame segment."""
-    return FeatureControlFrameSegment(
-        symbol=symbol,
-        tolerance=tolerance,
-        datums=datums or []
-    )
-
-
-def create_fcf_frame_modifiers(
-    all_around: bool = False,
-    all_over: bool = False,
-    continuous_feature: bool = False,
-    between: Optional[FCFBetweenModifier] = None,
-    projected_tolerance_zone: Optional[FCFProjectedZoneModifier] = None
-) -> FCFFrameModifiers:
-    """Create frame modifiers for feature control frames."""
-    return FCFFrameModifiers(
-        all_around=all_around,
-        all_over=all_over,
-        continuous_feature=continuous_feature,
-        between=between,
-        projected_tolerance_zone=projected_tolerance_zone
-    )
-
-
-def create_fcf_between_modifier(start: str, end: str) -> FCFBetweenModifier:
-    """Create a between modifier for feature control frames."""
-    return FCFBetweenModifier(start=start, end=end)
-
-
-def create_fcf_projected_zone_modifier(value: float) -> FCFProjectedZoneModifier:
-    """Create a projected zone modifier for feature control frames."""
-    return FCFProjectedZoneModifier(value=value)
-
-
-def create_fcf_datum_definition(
-    letter: str,
-    feature_binding: Optional[DucPointBinding] = None
-) -> FCFDatumDefinition:
-    """Create a datum definition for feature control frames."""
-    return FCFDatumDefinition(
-        letter=letter,
-        feature_binding=feature_binding
-    )
-
-
-def create_feature_control_frame_element(
-    x: float, y: float, width: float, height: float,
-    rows: List[FCFSegmentRow],
-    frame_modifiers: Optional[FCFFrameModifiers] = None,
-    leader_element_id: Optional[str] = None,
-    datum_definition: Optional[FCFDatumDefinition] = None,
-    style=None,
-    **kwargs
-) -> ElementWrapper:
-    """Create a feature control frame element."""
-    base = create_element_base(
-        x=x, y=y, width=width, height=height, **kwargs
-    )
-    
-    if style is None:
-        style = create_feature_control_frame_style()
-    
-    element = DucFeatureControlFrameElement(
-        base=base,
-        style=style,
-        rows=rows,
-        frame_modifiers=frame_modifiers,
-        leader_element_id=leader_element_id,
-        datum_definition=datum_definition
-    )
-    
-    return ElementWrapper(element=element)
-
-
-def create_feature_control_frame_style(
-    base_style: Optional[DucElementStylesBase] = None,
-    text_style: Optional[DucTextStyle] = None,
-    layout: Optional[FCFLayoutStyle] = None,
-    symbols: Optional[FCFSymbolStyle] = None,
-    datum_style: Optional[FCFDatumStyle] = None
-) -> DucFeatureControlFrameStyle:
-    """
-    Create a feature control frame style with default values.
-    """
-    from .style_builders import create_simple_styles, create_text_style
-    from ..classes.ElementsClass import FCFLayoutStyle, FCFSymbolStyle, FCFDatumStyle
-    
-    if base_style is None:
-        base_style = create_simple_styles()
-    if text_style is None:
-        text_style = create_text_style(font_size=12)
-    if layout is None:
-        layout = FCFLayoutStyle(padding=2.0, segment_spacing=5.0, row_spacing=5.0)
-    if symbols is None:
-        symbols = FCFSymbolStyle(scale=1.0)
-    if datum_style is None:
-        from ducpy.Duc.DATUM_BRACKET_STYLE import DATUM_BRACKET_STYLE
-        datum_style = FCFDatumStyle(bracket_style=DATUM_BRACKET_STYLE.SQUARE)
-    
-    return DucFeatureControlFrameStyle(
-        base_style=base_style,
-        text_style=text_style,
-        layout=layout,
-        symbols=symbols,
-        datum_style=datum_style
-    )
-
-def create_leader_style(
-    base_style: Optional[DucElementStylesBase] = None,
-    heads_override: Optional[List[DucHead]] = None,
-    dogleg: float = 10.0,
-    text_style: Optional[DucTextStyle] = None,
-    text_attachment: Optional[VERTICAL_ALIGN] = None,
-    block_attachment: Optional[BLOCK_ATTACHMENT] = None
-) -> DucLeaderStyle:
-    """
-    Create a default leader style.
-    """
-    from .style_builders import create_simple_styles, create_text_style
-    from ..classes.ElementsClass import DucLeaderStyle
-    
-    if base_style is None:
-        base_style = create_simple_styles()
-    if heads_override is None:
-        heads_override = []
-    if text_style is None:
-        text_style = create_text_style(font_size=12)
-    if text_attachment is None:
-        from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
-        text_attachment = VERTICAL_ALIGN.MIDDLE
-    if block_attachment is None:
-        from ducpy.Duc.BLOCK_ATTACHMENT import BLOCK_ATTACHMENT
-        block_attachment = BLOCK_ATTACHMENT.CENTER_EXTENTS
-
-    return DucLeaderStyle(
-        base_style=base_style,
-        heads_override=heads_override,
-        dogleg=dogleg,
-        text_style=text_style,
-        text_attachment=text_attachment,
-        block_attachment=block_attachment
-    )
-
-def create_leader_text_content(text: str) -> LeaderTextBlockContent:
-    """Create leader text block content."""
-    return LeaderTextBlockContent(text=text)
-
-
-def create_leader_block_content(
-    block_id: str,
-    attribute_values: Optional[List[StringValueEntry]] = None,
-    element_overrides: Optional[List[StringValueEntry]] = None
-) -> LeaderBlockContent:
-    """Create leader block content."""
-    return LeaderBlockContent(
-        block_id=block_id,
-        attribute_values=attribute_values,
-        element_overrides=element_overrides
-    )
-
-
-def create_leader_content(
-    content: Union[LeaderTextBlockContent, LeaderBlockContent]
-) -> LeaderContent:
-    """Create leader content."""
-    return LeaderContent(content=content)
-
-
-def create_leader_element(
-    x1: float, y1: float, x2: float, y2: float,
-    content_anchor_x: float, content_anchor_y: float,
-    content: Optional[LeaderContent] = None,
-    style=None,
-    **kwargs
-) -> ElementWrapper:
-    """Create a leader element."""
-    # Create DucPoints from coordinates
-    duc_points = [
-        DucPoint(x=x1, y=y1),
-        DucPoint(x=x2, y=y2)
-    ]
-    
-    # Create a line connecting the points
-    start_ref = DucLineReference(index=0, handle=GeometricPoint(x=0, y=0))
-    end_ref = DucLineReference(index=1, handle=GeometricPoint(x=0, y=0))
-    lines = [DucLine(start=start_ref, end=end_ref)]
-    
-    # Create the last committed point
-    last_committed_point = DucPoint(x=x2, y=y2)
-    
-    # Create empty bindings (leaders typically don't bind to specific elements)
-    start_binding = DucPointBinding(
-        element_id="",
-        focus=0.0,
-        gap=0.0
-    )
-    end_binding = DucPointBinding(
-        element_id="",
-        focus=0.0,
-        gap=0.0
-    )
-    
-    linear_base = DucLinearElementBase(
-        base=create_element_base(
-            x=min(x1, x2), y=min(y1, y2),
-            width=abs(x2 - x1), height=abs(y2 - y1),
-            **kwargs
-        ),
-        points=duc_points,
-        lines=lines,
-        path_overrides=[],
-        last_committed_point=last_committed_point,
-        start_binding=start_binding,
-        end_binding=end_binding
-    )
-    
-    if style is None:
-        style = create_leader_style()
-    
-    element = DucLeaderElement(
-        linear_base=linear_base,
-        style=style,
-        content_anchor=GeometricPoint(x=content_anchor_x, y=content_anchor_y),
-        content=content
-    )
-    
-    return ElementWrapper(element=element)
-
-
-def create_position_tolerance_fcf(
-    x: float, y: float, width: float, height: float,
-    tolerance_value: str,
-    primary_datum: str = "A",
-    secondary_datum: str = "B", 
-    tertiary_datum: str = "C",
-    leader_element_id: Optional[str] = None,
-    **kwargs
-) -> ElementWrapper:
-    """Create a position tolerance feature control frame."""
-    # Create tolerance clause
-    tolerance = create_tolerance_clause(
-        value=tolerance_value,
-        zone_type=None,  # Could be TOLERANCE_ZONE_TYPE.CYLINDRICAL
-        material_condition=None  # Could be MATERIAL_CONDITION.MAXIMUM_MATERIAL
-    )
-    
-    # Create datum references
-    datums = [
-        create_datum_reference(primary_datum),
-        create_datum_reference(secondary_datum),
-        create_datum_reference(tertiary_datum)
-    ]
-    
-    # Create segment
-    segment = create_feature_control_frame_segment(
-        symbol=GDT_SYMBOL.POSITION,
-        tolerance=tolerance,
-        datums=datums
-    )
-    
-    # Create FCFSegmentRow with single segment
-    fcf_row = FCFSegmentRow(segments=[segment])
-    
-    # Create FCF with single row
-    return create_feature_control_frame_element(
-        x=x, y=y, width=width, height=height,
-        rows=[fcf_row],
-        leader_element_id=leader_element_id,
-        **kwargs
-    )
-
-
-def create_flatness_tolerance_fcf(
-    x: float, y: float, width: float, height: float,
-    tolerance_value: str,
-    leader_element_id: Optional[str] = None,
-    **kwargs
-) -> ElementWrapper:
-    """Create a flatness tolerance feature control frame."""
-    # Create tolerance clause
-    tolerance = create_tolerance_clause(value=tolerance_value)
-    
-    # Create segment (flatness doesn't use datums)
-    segment = create_feature_control_frame_segment(
-        symbol=GDT_SYMBOL.FLATNESS,
-        tolerance=tolerance,
-        datums=[]
-    )
-    
-    # Create FCFSegmentRow with single segment
-    fcf_row = FCFSegmentRow(segments=[segment])
-    
-    # Create FCF with single row
-    return create_feature_control_frame_element(
-        x=x, y=y, width=width, height=height,
-        rows=[fcf_row],
-        leader_element_id=leader_element_id,
-        **kwargs
-    )
-
-
-def create_datum_feature_symbol(
-    x: float, y: float, width: float, height: float,
-    datum_letter: str,
-    feature_binding: Optional[DucPointBinding] = None,
-    **kwargs
-) -> ElementWrapper:
-    """Create a datum feature symbol."""
-    datum_definition = create_fcf_datum_definition(
-        letter=datum_letter,
-        feature_binding=feature_binding
-    )
-    
-    return create_feature_control_frame_element(
-        x=x, y=y, width=width, height=height,
-        rows=[],  # Empty for datum symbols
-        datum_definition=datum_definition,
-        **kwargs
-    )
-
-def create_mermaid_element(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    source: str,
-    theme: Optional[str] = None,
-    svg_path: Optional[str] = None,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create a Mermaid diagram element (DucMermaidElement) in a modular way.
-    """
-    base_params = {
-        "x": x,
-        "y": y,
-        "width": width,
-        "height": height,
-        "angle": angle,
-        "styles": styles,
-        "id": id,
-        "label": label,
-        "scope": scope,
-        "locked": locked,
-        "is_visible": is_visible,
-        "z_index": z_index
-    }
-    element_params = {
-        "source": source,
-        "theme": theme,
-        "svg_path": svg_path
-    }
-    from ..classes.ElementsClass import DucMermaidElement
-    return _create_element_wrapper(
-        DucMermaidElement,
-        base_params,
-        element_params,
-        explicit_properties_override
-    )
-
-def create_embeddable_element(
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    link: str,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create an embeddable element (DucEmbeddableElement) in a modular way.
-    This can be used for embedding content like YouTube videos, iframes, etc.
-    """
-    base_params = {
-        "x": x,
-        "y": y,
-        "width": width,
-        "height": height,
-        "angle": angle,
-        "styles": styles,
-        "id": id,
-        "label": label,
-        "scope": scope,
-        "locked": locked,
-        "is_visible": is_visible,
-        "z_index": z_index,
-        "link": link
-    }
-    from ..classes.ElementsClass import DucEmbeddableElement
-    return _create_element_wrapper(
-        DucEmbeddableElement,
-        base_params,
-        {},
-        explicit_properties_override
-    )
-
-def create_xray_element(
-    x: float,
-    y: float,
-    origin_x: float,
-    origin_y: float,
-    direction_x: float,
-    direction_y: float,
-    color: str = "#FF0000",
-    start_from_origin: bool = False,
-    angle: float = 0.0,
-    styles: Optional[DucElementStylesBase] = None,
-    id: Optional[str] = None,
-    label: str = "",
-    scope: str = DEFAULT_SCOPE,
-    locked: bool = False,
-    is_visible: bool = True,
-    z_index: float = 0.0,
-    explicit_properties_override: Optional[dict] = None
-) -> ElementWrapper:
-    """
-    Create an X-Ray element (DucXRayElement).
-    """
-    base_params = {
-        "x": x,
-        "y": y,
-        "width": 0.0, # XRay elements don't have explicit width/height in the same way
-        "height": 0.0,
-        "angle": angle,
-        "styles": styles,
-        "id": id,
-        "label": label,
-        "scope": scope,
-        "locked": locked,
-        "is_visible": is_visible,
-        "z_index": z_index
-    }
-
-    from ..classes.ElementsClass import DucXRayElement, DucXRayStyle, GeometricPoint
-    from .style_builders import create_simple_styles
-
-    if styles is None:
-        styles = create_simple_styles()
-
-    xray_style = DucXRayStyle(
-        base_style=styles,
-        color=color
-    )
-
-    element_params = {
-        "style": xray_style,
-        "origin": GeometricPoint(x=origin_x, y=origin_y),
-        "direction": GeometricPoint(x=direction_x, y=direction_y),
-        "start_from_origin": start_from_origin
-    }
-
-    return _create_element_wrapper(
-        DucXRayElement,
-        base_params,
-        element_params,
-        explicit_properties_override
-    )
+
+
+class ArcLengthDimensionBuilder(LinearDimensionBuilder):
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "origin1": self.extra.get('origin1'),
+            "origin2": self.extra.get('origin2'),
+            "location": self.extra.get('location'),
+            "dimension_type": DIMENSION_TYPE.ARC_LENGTH,
+            "oblique_angle": self.extra.get('oblique_angle', 0.0),
+            "style": self.extra.get('style'),
+            "text_override": self.extra.get('text_override'),
+            "ordinate_axis": self.extra.get('ordinate_axis'),
+            "bindings": self.extra.get('bindings'),
+            "baseline_data": self.extra.get('baseline_data'),
+            "continue_data": self.extra.get('continue_data'),
+        }
+        return _create_element_wrapper(
+            DucDimensionElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+class CenterMarkDimensionBuilder(LinearDimensionBuilder):
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "origin1": self.extra.get('origin1'),
+            "origin2": self.extra.get('origin2'),
+            "location": self.extra.get('location'),
+            "dimension_type": DIMENSION_TYPE.CENTER_MARK,
+            "oblique_angle": self.extra.get('oblique_angle', 0.0),
+            "style": self.extra.get('style'),
+            "text_override": self.extra.get('text_override'),
+            "ordinate_axis": self.extra.get('ordinate_axis'),
+            "bindings": self.extra.get('bindings'),
+            "baseline_data": self.extra.get('baseline_data'),
+            "continue_data": self.extra.get('continue_data'),
+        }
+        return _create_element_wrapper(
+            DucDimensionElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+class RotatedDimensionBuilder(LinearDimensionBuilder):
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "origin1": self.extra.get('origin1'),
+            "origin2": self.extra.get('origin2'),
+            "location": self.extra.get('location'),
+            "dimension_type": DIMENSION_TYPE.ROTATED,
+            "oblique_angle": self.extra.get('oblique_angle', 0.0),
+            "style": self.extra.get('style'),
+            "text_override": self.extra.get('text_override'),
+            "ordinate_axis": self.extra.get('ordinate_axis'),
+            "bindings": self.extra.get('bindings'),
+            "baseline_data": self.extra.get('baseline_data'),
+            "continue_data": self.extra.get('continue_data'),
+        }
+        return _create_element_wrapper(
+            DucDimensionElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+class SpacingDimensionBuilder(LinearDimensionBuilder):
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "origin1": self.extra.get('origin1'),
+            "origin2": self.extra.get('origin2'),
+            "location": self.extra.get('location'),
+            "dimension_type": DIMENSION_TYPE.SPACING,
+            "oblique_angle": self.extra.get('oblique_angle', 0.0),
+            "style": self.extra.get('style'),
+            "text_override": self.extra.get('text_override'),
+            "ordinate_axis": self.extra.get('ordinate_axis'),
+            "bindings": self.extra.get('bindings'),
+            "baseline_data": self.extra.get('baseline_data'),
+            "continue_data": self.extra.get('continue_data'),
+        }
+        return _create_element_wrapper(
+            DucDimensionElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+class ContinueDimensionBuilder(LinearDimensionBuilder):
+    def with_continue_from_dimension_id(self, continue_from_dimension_id: str):
+        self.extra["continue_from_dimension_id"] = continue_from_dimension_id
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "origin1": self.extra.get('origin1'),
+            "origin2": self.extra.get('origin2'),
+            "location": self.extra.get('location'),
+            "dimension_type": DIMENSION_TYPE.CONTINUE,
+            "oblique_angle": self.extra.get('oblique_angle', 0.0),
+            "style": self.extra.get('style'),
+            "text_override": self.extra.get('text_override'),
+            "ordinate_axis": self.extra.get('ordinate_axis'),
+            "bindings": self.extra.get('bindings'),
+            "baseline_data": self.extra.get('baseline_data'),
+            "continue_data": self.extra.get('continue_data'),
+        }
+        return _create_element_wrapper(
+            DucDimensionElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+class BaselineDimensionBuilder(LinearDimensionBuilder):
+    def with_base_dimension_id(self, base_dimension_id: str):
+        self.extra["base_dimension_id"] = base_dimension_id
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "origin1": self.extra.get('origin1'),
+            "origin2": self.extra.get('origin2'),
+            "location": self.extra.get('location'),
+            "dimension_type": DIMENSION_TYPE.BASELINE,
+            "oblique_angle": self.extra.get('oblique_angle', 0.0),
+            "style": self.extra.get('style'),
+            "text_override": self.extra.get('text_override'),
+            "ordinate_axis": self.extra.get('ordinate_axis'),
+            "bindings": self.extra.get('bindings'),
+            "baseline_data": self.extra.get('baseline_data'),
+            "continue_data": self.extra.get('continue_data'),
+        }
+        return _create_element_wrapper(
+            DucDimensionElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+class JoggedLinearDimensionBuilder(LinearDimensionBuilder):
+    def with_jog_x(self, jog_x: float):
+        self.extra["jog_x"] = jog_x
+        return self
+
+    def with_jog_y(self, jog_y: float):
+        self.extra["jog_y"] = jog_y
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "origin1": self.extra.get('origin1'),
+            "origin2": self.extra.get('origin2'),
+            "location": self.extra.get('location'),
+            "dimension_type": DIMENSION_TYPE.JOGGED_LINEAR,
+            "oblique_angle": self.extra.get('oblique_angle', 0.0),
+            "jog_x": self.extra.get('jog_x'),
+            "jog_y": self.extra.get('jog_y'),
+            "style": self.extra.get('style'),
+            "text_override": self.extra.get('text_override'),
+            "ordinate_axis": self.extra.get('ordinate_axis'),
+            "bindings": self.extra.get('bindings'),
+            "baseline_data": self.extra.get('baseline_data'),
+            "continue_data": self.extra.get('continue_data'),
+        }
+        return _create_element_wrapper(
+            DucDimensionElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Leader element builder
+class LeaderElementBuilder(ElementSpecificBuilder):
+    def with_content_anchor_x(self, content_anchor_x: float):
+        self.extra["content_anchor_x"] = content_anchor_x
+        return self
+
+    def with_content_anchor_y(self, content_anchor_y: float):
+        self.extra["content_anchor_y"] = content_anchor_y
+        return self
+
+    def with_content(self, content: Optional[LeaderContent]):
+        self.extra["content"] = content
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "points": self.extra.get('points', []),
+            "start_binding": self.extra.get('start_binding'),
+            "end_binding": self.extra.get('end_binding'),
+            "style": self.extra.get('style'),
+            "content_anchor_x": self.extra.get('content_anchor_x', 0.0),
+            "content_anchor_y": self.extra.get('content_anchor_y', 0.0),
+            "content": self.extra.get('content')
+        }
+        # Create leader style with default dogleg
+        leader_style = element_params.get('style')
+        if leader_style is None:
+            from ducpy.builders.style_builders import create_simple_styles, create_text_style
+            text_style = create_text_style()
+            leader_style = DucLeaderStyle(
+                base_style=create_simple_styles(),
+                text_style=text_style,
+                text_attachment=VERTICAL_ALIGN.TOP,
+                block_attachment=BLOCK_ATTACHMENT.CENTER_EXTENTS,
+                dogleg=self.extra.get('dogleg', 0.0), # Set default dogleg here
+                heads_override=None
+            )
+        element_params['style'] = leader_style # Update element_params with the new style
+        return _create_element_wrapper(
+            DucLeaderElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Feature Control Frame element builder
+class FeatureControlFrameElementBuilder(ElementSpecificBuilder):
+    def with_segments(self, segments: List[FCFSegmentRow]):
+        self.extra["rows"] = segments
+        return self
+
+    def with_frame_modifiers(self, frame_modifiers: Optional[FCFFrameModifiers]):
+        self.extra["frame_modifiers"] = frame_modifiers
+        return self
+
+    def with_leader_element_id(self, leader_element_id: Optional[str]):
+        self.extra["leader_element_id"] = leader_element_id
+        return self
+
+    def with_datum_definition(self, datum_definition: Optional[FCFDatumDefinition]):
+        self.extra["datum_definition"] = datum_definition
+        return self
+
+    def with_style(self, style: Optional[DucFeatureControlFrameStyle]):
+        self.extra["style"] = style
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "style": self.extra.get('style', DucFeatureControlFrameStyle(
+                base_style=create_simple_styles(),
+                text_style=create_text_style(),
+                layout=FCFLayoutStyle(padding=2.0, segment_spacing=1.0, row_spacing=1.0),
+                symbols=FCFSymbolStyle(scale=1.0),
+                datum_style=FCFDatumStyle(bracket_style=None)
+            )),
+            "rows": self.extra.get('rows', []),
+            "frame_modifiers": self.extra.get('frame_modifiers'),
+            "leader_element_id": self.extra.get('leader_element_id'),
+            "datum_definition": self.extra.get('datum_definition')
+        }
+        return _create_element_wrapper(
+            DucFeatureControlFrameElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Block instance element builder
+class BlockInstanceElementBuilder(ElementSpecificBuilder):
+    def with_block_id(self, block_id: str):
+        self.extra["block_id"] = block_id
+        return self
+
+    def with_element_overrides(self, element_overrides: Optional[List[StringValueEntry]]):
+        self.extra["element_overrides"] = element_overrides
+        return self
+
+    def with_attribute_values(self, attribute_values: Optional[List[StringValueEntry]]):
+        self.extra["attribute_values"] = attribute_values
+        return self
+
+    def with_duplication_array(self, duplication_array: Optional[DucBlockDuplicationArray]):
+        self.extra["duplication_array"] = duplication_array
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "block_id": self.extra.get('block_id', ''),
+            "element_overrides": self.extra.get('element_overrides'),
+            "attribute_values": self.extra.get('attribute_values'),
+            "duplication_array": self.extra.get('duplication_array')
+        }
+        return _create_element_wrapper(
+            DucBlockInstanceElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Mermaid element builder
+class MermaidElementBuilder(ElementSpecificBuilder):
+    def with_source(self, source: str):
+        self.extra["source"] = source
+        return self
+
+    def with_theme(self, theme: Optional[str]):
+        self.extra["theme"] = theme
+        return self
+
+    def with_svg_path(self, svg_path: Optional[str]):
+        self.extra["svg_path"] = svg_path
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "source": self.extra.get('source', ''),
+            "theme": self.extra.get('theme'),
+            "svg_path": self.extra.get('svg_path')
+        }
+        return _create_element_wrapper(
+            DucMermaidElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Embeddable element builder
+class EmbeddableElementBuilder(ElementSpecificBuilder):
+    def with_link(self, link: str):
+        self.extra["link"] = link
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        # Set the link property on the base params if provided
+        if 'link' in self.extra:
+            base_params['link'] = self.extra['link']
+        element_params = {}
+        return _create_element_wrapper(
+            DucEmbeddableElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+
+# Xray element builder
+class XrayElementBuilder(ElementSpecificBuilder):
+    def with_origin_x(self, origin_x: float):
+        self.extra["origin_x"] = origin_x
+        return self
+
+    def with_origin_y(self, origin_y: float):
+        self.extra["origin_y"] = origin_y
+        return self
+
+    def with_direction_x(self, direction_x: float):
+        self.extra["direction_x"] = direction_x
+        return self
+
+    def with_direction_y(self, direction_y: float):
+        self.extra["direction_y"] = direction_y
+        return self
+
+    def with_color(self, color: str):
+        self.extra["color"] = color
+        return self
+
+    def with_start_from_origin(self, start_from_origin: bool):
+        self.extra["start_from_origin"] = start_from_origin
+        return self
+
+    def build(self) -> ElementWrapper:
+        base_params = self.base.__dict__.copy()
+        element_params = {
+            "origin_x": self.extra.get("origin_x", 0.0),
+            "origin_y": self.extra.get("origin_y", 0.0),
+            "direction_x": self.extra.get("direction_x", 1.0),
+            "direction_y": self.extra.get("direction_y", 0.0),
+            "color": self.extra.get("color", "#FF0000"),
+            "start_from_origin": self.extra.get("start_from_origin", False),
+        }
+        return _create_element_wrapper(
+            DucXRayElement,
+            base_params,
+            element_params,
+            self.extra.get('explicit_properties_override')
+        )
+
+

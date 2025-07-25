@@ -7,7 +7,8 @@ from ..classes.ElementsClass import (
     DucElementStylesBase, ElementBackground, ElementStroke, ElementContentBase,
     StrokeStyle, StrokeSides, TilingProperties, DucHatchStyle, DucImageFilter,
     DucPoint, CustomHatchPattern, DucTextStyle, LineSpacing, DucDocStyle,
-    ParagraphFormatting, StackFormat, StackFormatProperties, TextColumn, ColumnLayout
+    ParagraphFormatting, StackFormat, StackFormatProperties, TextColumn, ColumnLayout,
+    Margins, DucTableCellStyle, DucTableStyle, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION
 )
 from ..Duc.ELEMENT_CONTENT_PREFERENCE import ELEMENT_CONTENT_PREFERENCE
 from ..Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
@@ -27,7 +28,13 @@ from ..Duc.STACKED_TEXT_ALIGN import STACKED_TEXT_ALIGN
 # Utility functions for creating default objects
 def _create_default_tiling_properties() -> TilingProperties:
     """Create default tiling properties."""
-    return TilingProperties(size_in_percent=100.0, angle=0.0)
+    return TilingProperties(
+        size_in_percent=100.0, 
+        angle=0.0,
+        spacing=1.0,
+        offset_x=0.0,
+        offset_y=0.0
+    )
 
 def _create_default_hatch_style() -> DucHatchStyle:
     """Create default hatch style."""
@@ -265,9 +272,9 @@ def create_solid_style(color: str, opacity: float = 1.0):
     """Create solid content for use with create_fill_style or create_stroke_style."""
     return create_solid_content(color, opacity)
 
-def create_hatch_style(color: str, spacing: float = 5.0, angle: float = 45.0, opacity: float = 1.0):
+def create_hatch_style(pattern: str, opacity: float = 1.0):
     """Create hatch content for use with create_fill_style or create_stroke_style."""
-    return create_hatch_content(color, spacing, angle, opacity)
+    return create_hatch_content(pattern, opacity)
 
 
 # === Text and Document Style Builders ===
@@ -444,4 +451,68 @@ def create_column_layout(
         definitions=definitions,
         auto_height=auto_height,
         type=column_type
+    )
+
+def create_margins(
+    top: float = 0.0,
+    right: float = 0.0,
+    bottom: float = 0.0,
+    left: float = 0.0
+) -> Margins:
+    """Create margin settings."""
+    return Margins(
+        top=top,
+        right=right,
+        bottom=bottom,
+        left=left
+    )
+
+def create_table_cell_style(
+    base_style: Optional[DucElementStylesBase] = None,
+    text_style: Optional[DucTextStyle] = None,
+    margins: Optional[Margins] = None,
+    alignment: Optional[TABLE_CELL_ALIGNMENT] = None
+) -> DucTableCellStyle:
+    """Create table cell style."""
+    if base_style is None:
+        base_style = create_simple_styles()
+    if text_style is None:
+        text_style = create_text_style()
+    if margins is None:
+        margins = create_margins() # Use new builder
+    if alignment is None:
+        alignment = TABLE_CELL_ALIGNMENT.MIDDLE_LEFT
+
+    return DucTableCellStyle(
+        base_style=base_style,
+        text_style=text_style,
+        margins=margins,
+        alignment=alignment
+    )
+
+def create_table_style(
+    base_style: Optional[DucElementStylesBase] = None,
+    header_row_style: Optional[DucTableCellStyle] = None,
+    data_row_style: Optional[DucTableCellStyle] = None,
+    data_column_style: Optional[DucTableCellStyle] = None,
+    flow_direction: Optional[TABLE_FLOW_DIRECTION] = None
+) -> DucTableStyle:
+    """Create table style."""
+    if base_style is None:
+        base_style = create_simple_styles()
+    if header_row_style is None:
+        header_row_style = create_table_cell_style() # Use new builder
+    if data_row_style is None:
+        data_row_style = create_table_cell_style() # Use new builder
+    if data_column_style is None:
+        data_column_style = create_table_cell_style() # Use new builder
+    if flow_direction is None:
+        flow_direction = TABLE_FLOW_DIRECTION.DOWN
+
+    return DucTableStyle(
+        base_style=base_style,
+        header_row_style=header_row_style,
+        data_row_style=data_row_style,
+        data_column_style=data_column_style,
+        flow_direction=flow_direction
     )

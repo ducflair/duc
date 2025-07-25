@@ -8,17 +8,13 @@ import ducpy as duc
 
 def create_random_rectangle(x: float, y: float):
     """Create a rectangle element with random dimensions."""
-    return duc.create_rectangle(
-        x=x,
-        y=y,
-        width=random.uniform(50, 150),
-        height=random.uniform(50, 150),
-        angle=random.uniform(0, 360),
-        styles=duc.create_stroke_style(
-            duc.create_solid_content("#000000"),
-            width=2.0
-        )
-    )
+    return (duc.ElementBuilder()
+            .at_position(x, y)
+            .with_size(random.uniform(50, 150), random.uniform(50, 150))
+            .with_angle(random.uniform(0, 360))
+            .with_styles(duc.create_stroke_style(duc.create_solid_content("#000000"), width=2.0))
+            .build_rectangle()
+            .build())
 
 def create_random_line(x: float, y: float):
     """Create a linear element with random path."""
@@ -32,13 +28,12 @@ def create_random_line(x: float, y: float):
         y_offset = random.uniform(-50, 50)
         points.append((x + x_offset, y + y_offset))
     
-    return duc.create_linear_element(
-        points=points,
-        styles=duc.create_stroke_style(
-            duc.create_solid_content("#0000FF"),
-            width=2.0
-        )
-    )
+    return (duc.ElementBuilder()
+            .with_styles(duc.create_stroke_style(duc.create_solid_content("#0000FF"), width=2.0))
+            .build_linear_element()
+            .with_points(points)
+            .build())
+
 def create_random_elements(num_elements: int = 100):
     """Create a list of random elements."""
     elements = []
@@ -69,10 +64,10 @@ def test_add_100_random_elements(test_output_dir):
     num_elements = 100
     output_file = os.path.join(test_output_dir, "test_100_random.duc")
 
-    # Create elements using the clean API
+    # Create elements using the new ElementBuilder API
     elements = create_random_elements(num_elements)
     
-    # Serialize using the clean API
+    # Serialize using the new io API
     serialized_bytes = duc.serialize_duc(
         name="RandomElementsTest",
         elements=elements

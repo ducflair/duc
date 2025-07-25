@@ -31,42 +31,34 @@ def test_binary_files_serialization(test_assets_dir, test_output_dir):
     mime_type = "image/png"
     image_id = "test_image"
 
-    external_file = duc.create_external_file(
-        key=image_id,
-        mime_type=mime_type,
-        data=image_bytes,
-        id=image_id,
-        last_retrieved=current_time_ms
-    )
+    external_file = (duc.StateBuilder()
+        .build_external_file()
+        .with_key(image_id)
+        .with_mime_type(mime_type)
+        .with_data(image_bytes)
+        .build())
 
-    # Use builder API for rectangle with image background
-    element = duc.create_image_element(
-        x=100,
-        y=100,
-        width=400,
-        height=300,
-        styles=duc.create_fill_and_stroke_style(
-            fill_content=duc.create_image_content(image_id),
-            stroke_content=duc.create_solid_content("#000000"),
-            stroke_width=0.0
-        ),
-        label="Image",
-        file_id=image_id
-    )
+    # Use builder API for image element
+    element = (duc.ElementBuilder()
+        .at_position(100, 100) 
+        .with_size(400, 300) 
+        .with_label("Image") 
+        .with_styles(duc.create_simple_styles()) 
+        .build_image_element() 
+        .with_file_id(image_id) 
+        .build())
 
     duc_path = os.path.join(test_output_dir, "test_create_image_element_with_external_file.duc")
-    duc_bytes = duc.serialize_duc(
+    
+    duc.write_duc_file(
+        file_path=duc_path,
         name="BinaryFilesTest",
         elements=[element],
         external_files=[external_file]
     )
 
-    with open(duc_path, 'wb') as f:
-        f.write(duc_bytes)
-
     print(f"Created DUC file with external file entry at {duc_path}")
     print(f"Image ('{image_path}') size: {len(image_bytes)} bytes")
-    print(f"DUC file size: {len(duc_bytes)} bytes")
 
     assert os.path.exists(duc_path), f"DUC file was not created: {duc_path}"
     assert os.path.getsize(duc_path) > 0, "DUC file should not be empty"
