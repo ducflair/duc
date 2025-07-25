@@ -50,7 +50,8 @@ def parse_fbs_checkpoint(fbs_checkpoint: FBSCheckpoint) -> Checkpoint:
         description=base.description,
         user_id=base.user_id,
         data=bytes(fbs_checkpoint.DataAsNumpy()) if fbs_checkpoint.DataLength() > 0 else b'',
-        size_bytes=fbs_checkpoint.SizeBytes()
+        size_bytes=fbs_checkpoint.SizeBytes(),
+        type="checkpoint"
     )
 
 def parse_fbs_delta(fbs_delta: FBSDelta) -> Delta:
@@ -63,7 +64,8 @@ def parse_fbs_delta(fbs_delta: FBSDelta) -> Delta:
         parent_id=base.parent_id,
         description=base.description,
         user_id=base.user_id,
-        patch=patch_list
+        patch=patch_list,
+        type="delta"
     )
 
 def parse_fbs_version_graph_metadata(fbs_metadata: FBSVersionGraphMetadata) -> VersionGraphMetadata:

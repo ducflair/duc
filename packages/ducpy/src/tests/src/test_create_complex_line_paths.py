@@ -18,14 +18,15 @@ def test_create_complex_line_paths(test_output_dir):
         y = 100 + (50 if i % 2 == 0 else -50)
         zigzag_points.append((x, y))
     
-    zigzag_element = duc.create_linear_element(
-        points=zigzag_points,
-        label="Zigzag Line",
-        styles=duc.create_stroke_style(
-            duc.create_solid_content("#0000FF"),
-            width=2.0
-        )
-    )
+    zigzag_element = (duc.ElementBuilder()
+                      .with_label("Zigzag Line")
+                      .with_styles(duc.create_stroke_style(
+                          duc.create_solid_content("#0000FF"),
+                          width=2.0
+                      ))
+                      .build_linear_element()
+                      .with_points(zigzag_points)
+                      .build())
     elements.append(zigzag_element)
     
     # Create a curved path with bezier handles
@@ -37,22 +38,21 @@ def test_create_complex_line_paths(test_output_dir):
     ]
     
     # Define bezier curves for smooth connections
-    curve_element = duc.create_linear_element(
-        points=curve_points,
-        label="Smooth Bezier Curve",
-        bezier_handles={
-            0: {'start': (25, 175), 'end': (75, 125)},  # First segment curve
-            1: {'start': (125, 175), 'end': (175, 275)},  # Second segment curve
-            2: {'start': (225, 275), 'end': (275, 175)}   # Third segment curve
-        },
-        styles=duc.create_stroke_style(
-            duc.create_solid_content("#FF0000"),
-            width=3.0
-        ),
-        explicit_properties_override={
-            'base': {'angle': 15.0}  # Rotated curve
-        }
-    )
+    curve_element = (duc.ElementBuilder()
+                     .with_label("Smooth Bezier Curve")
+                     .with_angle(15.0)  # Rotated curve
+                     .with_styles(duc.create_stroke_style(
+                         duc.create_solid_content("#FF0000"),
+                         width=3.0
+                     ))
+                     .build_linear_element()
+                     .with_points(curve_points)
+                     .with_bezier_handles({
+                         0: {'start': (25, 175), 'end': (75, 125)},  # First segment curve
+                         1: {'start': (125, 175), 'end': (175, 275)},  # Second segment curve
+                         2: {'start': (225, 275), 'end': (275, 175)}   # Third segment curve
+                     })
+                     .build())
     elements.append(curve_element)
     
     # Create a complex spiral
@@ -66,14 +66,15 @@ def test_create_complex_line_paths(test_output_dir):
         y = center_y + radius * math.sin(angle)
         spiral_points.append((x, y))
     
-    spiral_element = duc.create_linear_element(
-        points=spiral_points,
-        label="Spiral Path",
-        styles=duc.create_stroke_style(
-            duc.create_solid_content("#00FF00"),
-            width=1.5
-        )
-    )
+    spiral_element = (duc.ElementBuilder()
+                      .with_label("Spiral Path")
+                      .with_styles(duc.create_stroke_style(
+                          duc.create_solid_content("#00FF00"),
+                          width=1.5
+                      ))
+                      .build_linear_element()
+                      .with_points(spiral_points)
+                      .build())
     elements.append(spiral_element)
     
     # Create rectangles using linear elements (4-point closed paths)
@@ -85,217 +86,165 @@ def test_create_complex_line_paths(test_output_dir):
         (0, 0)  # Close the rectangle
     ]
     
-    rect1_element = duc.create_linear_element(
-        points=rect1_points,
-        label="Rectangle 1",
-        styles=duc.create_fill_and_stroke_style(
-            duc.create_solid_content("#FFFF00", opacity=0.3),  # Yellow fill
-            duc.create_solid_content("#000000"),  # Black stroke
-            stroke_width=2.0
-        ),
-        explicit_properties_override={
-            'base': {'x': 400.0, 'y': 100.0}
-        }
-    )
+    rect1_element = (duc.ElementBuilder()
+                     .at_position(400.0, 100.0)
+                     .with_label("Rectangle 1")
+                     .with_styles(duc.create_fill_and_stroke_style(
+                         duc.create_solid_content("#FFFF00", opacity=0.3),  # Yellow fill
+                         duc.create_solid_content("#000000"),  # Black stroke
+                         stroke_width=2.0
+                     ))
+                     .build_linear_element()
+                     .with_points(rect1_points)
+                     .build())
     elements.append(rect1_element)
     
+    # Create a second rectangle with different styling
     rect2_points = [
         (0, 0),
-        (80, 0), 
-        (80, 60),
-        (0, 60),
-        (0, 0)
+        (100, 0),
+        (100, 80),
+        (0, 80),
+        (0, 0)  # Close the rectangle
     ]
     
-    rect2_element = duc.create_linear_element(
-        points=rect2_points,
-        label="Rectangle 2",
-        styles=duc.create_fill_and_stroke_style(
-            duc.create_solid_content("#FF00FF", opacity=0.3),  # Magenta fill
-            duc.create_solid_content("#000000"),  # Black stroke
-            stroke_width=2.0
-        ),
-        explicit_properties_override={
-            'base': {'x': 400.0, 'y': 250.0}
-        }
-    )
+    rect2_element = (duc.ElementBuilder()
+                     .at_position(500.0, 100.0)
+                     .with_label("Rectangle 2")
+                     .with_styles(duc.create_fill_and_stroke_style(
+                         duc.create_solid_content("#FF00FF", opacity=0.5),  # Magenta fill
+                         duc.create_solid_content("#008000"),  # Green stroke
+                         stroke_width=3.0
+                     ))
+                     .build_linear_element()
+                     .with_points(rect2_points)
+                     .build())
     elements.append(rect2_element)
     
-    # Connector line between rectangles with bezier curve
-    connector_points = [
-        (440, 160),  # Start point
-        (460, 200),  # Control point
-        (440, 250)   # End point
-    ]
-    
-    connector_element = duc.create_linear_element(
-        points=connector_points,
-        label="Curved Connector",
-        bezier_handles={
-            0: {'end': (480, 180)},  # Curve the first segment
-            1: {'start': (480, 220)}  # Curve the second segment
-        },
-        styles=duc.create_stroke_style(
-            duc.create_solid_content("#000000"),
-            width=2.0
-        )
-    )
-    elements.append(connector_element)
-    
-    # Complex shape using the new create_complex_linear_shape function
+    # Create a complex path with multiple segments and different styles
     complex_points = [
-        (0, 0), (50, 0), (100, 25), (75, 75), (25, 50)
+        (0, 300),
+        (50, 250),
+        (100, 350),
+        (150, 250),
+        (200, 300),
+        (250, 200),
+        (300, 350)
     ]
     
-    complex_line_definitions = [
-        {'start': 0, 'end': 1},  # Straight line
-        {'start': 1, 'end': 2, 'start_handle': (75, -10), 'end_handle': (75, 35)},  # Curved
-        {'start': 2, 'end': 3, 'end_handle': (50, 90)},  # Curved end
-        {'start': 3, 'end': 4, 'start_handle': (60, 60)},  # Curved start
-        {'start': 4, 'end': 0}   # Close the shape
-    ]
+    complex_element = (duc.ElementBuilder()
+                       .with_label("Complex Multi-Segment")
+                       .with_styles(duc.create_stroke_style(
+                           duc.create_solid_content("#800080"),  # Purple
+                           width=4.0
+                       ))
+                       .build_linear_element()
+                       .with_points(complex_points)
+                       .build())
+    elements.append(complex_element)
     
-    complex_shape = duc.create_linear_element(
-        points=complex_points,
-        line_definitions=complex_line_definitions,
-        label="Complex Curved Shape",
-        styles=duc.create_fill_and_stroke_style(
-            duc.create_solid_content("#00FFFF", opacity=0.4),  # Cyan fill
-            duc.create_solid_content("#0000FF"),  # Blue stroke
-            stroke_width=2.5
-        ),
-        explicit_properties_override={
-            'base': {'x': 500.0, 'y': 300.0}
-        }
-    )
-    elements.append(complex_shape)
+    # Create a star shape using linear elements
+    star_points = []
+    center_x, center_y = 400, 400
+    outer_radius = 60
+    inner_radius = 30
     
-    # Multi-path element with path overrides for different segment styling
-    multi_path_points = [
-        (0, 0), (60, 20), (120, 0), (180, 30), (240, 0)
-    ]
-    
-    # Create custom lines for more control
-    custom_lines = [
-        duc.create_bezier_line(0, 1),  # Straight line
-        duc.create_bezier_line(1, 2, start_handle=(80, 40), end_handle=(100, 40)),  # Curved
-        duc.create_bezier_line(2, 3),  # Straight line  
-        duc.create_bezier_line(3, 4, start_handle=(200, 50), end_handle=(220, 50))   # Curved
-    ]
-    
-    # Create path overrides for different styling on different segments
-    path_overrides = [
-        duc.create_path_override([0, 2], stroke=duc.create_stroke(
-            duc.create_solid_content("#FF0000"), width=4.0)),  # Red for straight segments
-        duc.create_path_override([1, 3], stroke=duc.create_stroke(
-            duc.create_solid_content("#00FF00"), width=2.0))   # Green for curved segments
-    ]
-    
-    multi_path_element = duc.create_linear_element(
-        points=multi_path_points,
-        lines=custom_lines,
-        path_overrides=path_overrides,
-        label="Multi-Path Styled Line",
-        explicit_properties_override={
-            'base': {'x': 100.0, 'y': 500.0}
-        }
-    )
-    elements.append(multi_path_element)
-    
-    # Create an advanced organic shape
-    organic_points = []
-    center_x, center_y = 150, 600
-    num_points = 8
-    
-    for i in range(num_points):
-        angle = (2 * math.pi * i) / num_points
-        radius = 40 + 20 * math.sin(3 * angle)  # Varying radius for organic feel
+    for i in range(10):
+        angle = i * math.pi / 5  # 36 degrees per point
+        radius = outer_radius if i % 2 == 0 else inner_radius
         x = center_x + radius * math.cos(angle)
         y = center_y + radius * math.sin(angle)
-        organic_points.append((x, y))
+        star_points.append((x, y))
     
-    # Close the shape
-    organic_points.append(organic_points[0])
+    # Close the star
+    star_points.append(star_points[0])
     
-    # Create bezier handles for smooth organic curves
-    organic_bezier_handles = {}
-    for i in range(len(organic_points) - 1):
-        prev_idx = (i - 1) % (len(organic_points) - 1)
-        next_idx = (i + 1) % (len(organic_points) - 1)
-        
-        # Calculate smooth control points
-        handle_strength = 15
-        angle_to_prev = math.atan2(
-            organic_points[prev_idx][1] - organic_points[i][1],
-            organic_points[prev_idx][0] - organic_points[i][0]
-        )
-        angle_to_next = math.atan2(
-            organic_points[next_idx][1] - organic_points[i+1][1], 
-            organic_points[next_idx][0] - organic_points[i+1][0]
-        )
-        
-        start_handle = (
-            organic_points[i][0] + handle_strength * math.cos(angle_to_prev + math.pi/2),
-            organic_points[i][1] + handle_strength * math.sin(angle_to_prev + math.pi/2)
-        )
-        end_handle = (
-            organic_points[i+1][0] + handle_strength * math.cos(angle_to_next - math.pi/2),
-            organic_points[i+1][1] + handle_strength * math.sin(angle_to_next - math.pi/2)
-        )
-        
-        organic_bezier_handles[i] = {'start': start_handle, 'end': end_handle}
+    star_element = (duc.ElementBuilder()
+                    .with_label("Star Shape")
+                    .with_styles(duc.create_fill_and_stroke_style(
+                        duc.create_solid_content("#FFA500", opacity=0.7),  # Orange fill
+                        duc.create_solid_content("#000000"),  # Black stroke
+                        stroke_width=2.5
+                    ))
+                    .build_linear_element()
+                    .with_points(star_points)
+                    .build())
+    elements.append(star_element)
     
-    organic_element = duc.create_linear_element(
-        points=organic_points,
-        bezier_handles=organic_bezier_handles,
-        label="Organic Curved Shape",
-        styles=duc.create_fill_and_stroke_style(
-            duc.create_solid_content("#FF6B6B", opacity=0.6),  # Coral fill
-            duc.create_solid_content("#2E3440"),  # Dark stroke
-            stroke_width=3.0
-        )
+    # Test with Path Overrides
+    # This demonstrates applying specific styles to individual segments of a linear element.
+    path_override_line_points = [
+        (0, 500),
+        (100, 500),
+        (100, 600),
+        (200, 600),
+        (200, 500)
+    ]
+
+    # Create a red stroke style for override
+    red_stroke_content = duc.create_solid_content("#FF0000", opacity=1.0)
+    red_stroke = duc.create_stroke(red_stroke_content, width=5.0)
+
+    # Create a green fill style for override
+    green_fill_content = duc.create_solid_content("#00FF00", opacity=0.5)
+    green_background = duc.create_background(green_fill_content)
+
+    # Override the first line segment (index 0) with a thick red stroke
+    path_override1 = duc.create_duc_path(
+        line_indices=[0],
+        stroke=red_stroke
     )
-    elements.append(organic_element)
+
+    # Override the second line segment (index 1) with a green background
+    path_override2 = duc.create_duc_path(
+        line_indices=[1],
+        background=green_background
+    )
+
+    # Override the third line segment (index 2) with both a thick red stroke and a green background
+    path_override3 = duc.create_duc_path(
+        line_indices=[2],
+        stroke=red_stroke,
+        background=green_background
+    )
+
+    path_override_element = (duc.ElementBuilder()
+                             .at_position(50, 550) # Adjusted position to avoid overlap
+                             .with_label("Linear with Path Overrides")
+                             .with_styles(duc.create_stroke_style(
+                                 duc.create_solid_content("#000000"), # Default black stroke
+                                 width=1.0
+                             ))
+                             .build_linear_element()
+                             .with_points(path_override_line_points)
+                             .with_path_overrides([path_override1, path_override2, path_override3])
+                             .build())
+    elements.append(path_override_element)
+
+    # Determine output path
+    current_script_path = os.path.dirname(os.path.abspath(__file__))
+    output_dir = os.path.join(current_script_path, "..", "output")
     
-    # Serialize using the clean API
-    output_file = os.path.join(test_output_dir, "test_complex_line_paths.duc")
-    serialized_data = duc.serialize_duc(
+    os.makedirs(output_dir, exist_ok=True)
+    output_file_name = "test_complex_line_paths.duc"
+    output_file_path = os.path.join(output_dir, output_file_name)
+
+    # Serialize using the new io API
+    serialized_bytes = duc.serialize_duc(
         name="ComplexLinePathsTest",
         elements=elements
     )
-    
-    assert serialized_data is not None, "Serialization returned None"
-    assert len(serialized_data) > 0, "Serialization returned empty bytes"
-    
-    # Save to file
-    with open(output_file, 'wb') as f:
-        f.write(serialized_data)
-    
-    print(f"Serialized {len(elements)} complex elements successfully!")
-    print(f"Elements include:")
-    print("- Zigzag polyline")  
-    print("- Smooth bezier curves")
-    print("- Spiral path")
-    print("- Rectangular closed paths")
-    print("- Curved connectors")
-    print("- Complex multi-curved shapes")
-    print("- Multi-path styled elements with path overrides")
-    print("- Organic curved shapes with calculated bezier handles")
-    print(f"Saved to: {output_file}")
-    
-    # Verify file was created
-    assert os.path.exists(output_file), f"Output file was not created: {output_file}"
-    assert os.path.getsize(output_file) > 0, "Output file is empty"
 
-    print("✅ Complex line paths test passed!")
+    assert serialized_bytes is not None, "Serialization returned None"
+    assert len(serialized_bytes) > 0, "Serialization returned empty bytes"
 
-@pytest.fixture
-def test_output_dir():
-    """Create a test output directory."""
-    current_script_path = os.path.dirname(os.path.abspath(__file__))
-    output_dir = os.path.join(current_script_path, "..", "output")
-    os.makedirs(output_dir, exist_ok=True)
-    return output_dir
+    # Write the serialized bytes to a .duc file
+    with open(output_file_path, "wb") as f:
+        f.write(serialized_bytes)
+
+    print(f"Successfully serialized complex line paths to: {output_file_path}")
+    print(f"You can now test this file with: flatc --json -o <output_json_dir> schema/duc.fbs -- {output_file_path}")
 
 if __name__ == "__main__":
-    pytest.main([__file__]) 
+    # Allow running the test directly for quick checks, e.g., during development
+    pytest.main([__file__]) # type: ignore 

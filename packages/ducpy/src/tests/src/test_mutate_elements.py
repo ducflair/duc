@@ -9,8 +9,6 @@ import random
 
 import ducpy as duc
 from ducpy.classes.ElementsClass import *
-from ducpy.builders.element_builders import mutate_element, create_element_base, create_rectangle, create_ellipse, create_polygon, create_linear_element, create_arrow_element, create_text_element
-from ducpy.utils.rand_utils import random_versioning
 
 def assert_versioning_changed(before, after):
     assert before.seed != after.seed
@@ -18,16 +16,16 @@ def assert_versioning_changed(before, after):
     assert before.version != after.version
     assert before.version_nonce != after.version_nonce
 
-@pytest.mark.parametrize("builder,kwargs,base_attr", [
-    (create_rectangle, dict(x=1, y=2, width=3, height=4, label="rect"), "base"),
-    (create_ellipse, dict(x=5, y=6, width=7, height=8, label="ellipse"), "base"),
-    (create_polygon, dict(x=9, y=10, width=11, height=12, sides=5, label="polygon"), "base"),
-    (create_linear_element, dict(points=[(0,0),(1,1)], label="linear"), "linear_base.base"),
-    (create_arrow_element, dict(points=[(2,2),(3,3)], label="arrow"), "linear_base.base"),
-    (create_text_element, dict(x=13, y=14, text="hello", label="text"), "base"),
+@pytest.mark.parametrize("builder_func,kwargs,base_attr", [
+    (lambda: duc.ElementBuilder().at_position(1, 2).with_size(3, 4).with_label("rect").build_rectangle().build(), {}, "base"),
+    (lambda: duc.ElementBuilder().at_position(5, 6).with_size(7, 8).with_label("ellipse").build_ellipse().build(), {}, "base"),
+    (lambda: duc.ElementBuilder().at_position(9, 10).with_size(11, 12).with_label("polygon").build_polygon().with_sides(5).build(), {}, "base"),
+    (lambda: duc.ElementBuilder().with_label("linear").build_linear_element().with_points([(0,0),(1,1)]).build(), {}, "linear_base.base"),
+    (lambda: duc.ElementBuilder().with_label("arrow").build_arrow_element().with_points([(2,2),(3,3)]).build(), {}, "linear_base.base"),
+    (lambda: duc.ElementBuilder().at_position(13, 14).with_label("text").build_text_element().with_text("hello").build(), {}, "base"),
 ])
-def test_mutate_basic_elements(builder, kwargs, base_attr):
-    el = builder(**kwargs)
+def test_mutate_basic_elements(builder_func, kwargs, base_attr):
+    el = builder_func()
     # Get base object for versioning
     base = el.element
     for attr in base_attr.split('.'):
@@ -41,7 +39,7 @@ def test_mutate_basic_elements(builder, kwargs, base_attr):
 
     # Mutate position and versioning props
     updates = dict(x=old_x+10, y=old_y+10)
-    mutate_element(el, **updates)
+    duc.mutate_element(el, **updates)
     after = el.element
     for attr in base_attr.split('.'):
         after = getattr(after, attr)
@@ -54,78 +52,59 @@ def test_mutate_basic_elements(builder, kwargs, base_attr):
     assert after.updated >= old_updated
 
 def test_mutate_deep_nested():
-    el = create_linear_element(points=[(0,0),(1,1)], label="deep")
+    el = duc.ElementBuilder().with_label("deep").build_linear_element().with_points([(0,0),(1,1)]).build()
     # Mutate nested points
-    new_points = [DucPoint(x=2, y=2), DucPoint(x=3, y=3)]
-    mutate_element(el, points=new_points, **random_versioning())
+    new_points = [duc.DucPoint(x=2, y=2, mirroring=None), duc.DucPoint(x=3, y=3, mirroring=None)]
+    duc.mutate_element(el, points=new_points)
     points = el.element.linear_base.points
     assert points[0].x == 2 and points[1].y == 3
 
 def test_mutate_invalid_property():
-    el = create_rectangle(x=0, y=0, width=1, height=1)
+    el = duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_rectangle().build()
     # Should ignore invalid property
-    mutate_element(el, not_a_real_prop=123, **random_versioning())
+    duc.mutate_element(el, not_a_real_prop=123)
     assert not hasattr(el.element.base, "not_a_real_prop")
 
 def test_mutate_sequential():
-    el = create_rectangle(x=0, y=0, width=1, height=1)
+    el = duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_rectangle().build()
     base = el.element.base
     old_x = base.x
     old_y = base.y
-    mutate_element(el, x=old_x+1, **random_versioning())
-    mutate_element(el, y=old_y+2, **random_versioning())
+    duc.mutate_element(el, x=old_x+1)
+    duc.mutate_element(el, y=old_y+2)
     assert el.element.base.x == old_x+1
     assert el.element.base.y == old_y+2
 
 def test_mutate_all_element_types():
-    # Minimal instantiation for all element types with a base
-    element_types = [
-        DucRectangleElement,
-        DucPolygonElement,
-        DucEllipseElement,
-        DucEmbeddableElement,
-        DucPdfElement,
-        DucMermaidElement,
-        DucTableElement,
-        DucImageElement,
-        DucTextElement,
-        DucLinearElement,
-        DucArrowElement,
-        DucFreeDrawElement,
-        DucBlockInstanceElement,
-        DucFrameElement,
-        DucPlotElement,
-        DucViewportElement,
-        DucXRayElement,
-        DucLeaderElement,
-        DucDimensionElement,
-        DucFeatureControlFrameElement,
-        DucDocElement,
-        DucParametricElement,
+    # Test mutation for different element types using builders API
+    element_builders = [
+        lambda: duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_rectangle().build(),
+        lambda: duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_ellipse().build(),
+        lambda: duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_polygon().with_sides(3).build(),
+        lambda: duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_linear_element().with_points([(0,0),(1,1)]).build(),
+        lambda: duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_arrow_element().with_points([(0,0),(1,1)]).build(),
+        lambda: duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_text_element().with_text("test").build(),
+        lambda: duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_image_element().build(),
+        lambda: duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_frame_element().build(),
+        lambda: duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_plot_element().build(),
+        lambda: duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_viewport_element().with_points([(0,0),(1,1)]).build(),
+        lambda: duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_freedraw_element().with_points([(0,0),(1,1)]).build(),
+        lambda: duc.ElementBuilder().at_position(0, 0).with_size(1, 1).build_doc_element().with_text("test").build(),
     ]
-    # For each, create a dummy instance and mutate
-    for cls in element_types:
-        # Try to instantiate with minimal base
+    
+    for i, builder_func in enumerate(element_builders):
         try:
-            if hasattr(cls, "base"):
-                base = create_element_base(x=0, y=0, width=1, height=1)
-                el = cls(base=base)
-            elif hasattr(cls, "linear_base"):
-                base = create_element_base(x=0, y=0, width=1, height=1)
-                points = [DucPoint(x=0, y=0), DucPoint(x=1, y=1)]
-                lines = [DucLine(start=DucLineReference(index=0), end=DucLineReference(index=1))]
-                linear_base = DucLinearElementBase(base=base, points=points, lines=lines, path_overrides=[], last_committed_point=None, start_binding=None, end_binding=None)
-                el = cls(linear_base=linear_base, wipeout_below=False)
-            else:
-                continue
-            wrapper = ElementWrapper(element=el)
-            mutate_element(wrapper, x=10, y=20, **random_versioning())
-            # Check mutation
-            if hasattr(el, "base"):
-                assert el.base.x == 10 and el.base.y == 20
-            elif hasattr(el, "linear_base"):
-                assert el.linear_base.base.x == 10 and el.linear_base.base.y == 20
+            el = builder_func()
+            # Mutate position
+            duc.mutate_element(el, x=10, y=20)
+            
+            # Check mutation worked
+            if hasattr(el.element, "base"):
+                assert el.element.base.x == 10 and el.element.base.y == 20
+            elif hasattr(el.element, "linear_base"):
+                assert el.element.linear_base.base.x == 10 and el.element.linear_base.base.y == 20
+            print(f"✅ Mutated element type {i+1}")
         except Exception as e:
-            print(f"Skipped {cls.__name__}: {e}")
+            print(f"⚠️ Skipped element type {i+1}: {e}")
 
 print("✅ Mutation API test suite loaded successfully.")

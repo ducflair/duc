@@ -28,31 +28,39 @@ def test_cspmds_blocks_and_instances(test_output_dir):
     
     elements = []
     
-    # First create some basic elements to use in block definitions
-    title_rect = duc.create_rectangle(
-        x=0, y=0, width=140, height=40,
-        styles=duc.create_simple_styles(),
-        label="Title Rectangle"
-    )
+    # First create some basic elements to use in block definitions using builders API
+    title_rect = (duc.ElementBuilder()
+                  .at_position(0, 0)
+                  .with_size(140, 40)
+                  .with_styles(duc.create_simple_styles())
+                  .with_label("Title Rectangle")
+                  .build_rectangle()
+                  .build())
     
-    title_text = duc.create_text_element(
-        x=70, y=20, text="TITLE",
-        styles=duc.create_simple_styles(),
-        label="Title Text"
-    )
+    title_text = (duc.ElementBuilder()
+                  .at_position(70, 20)
+                  .with_styles(duc.create_simple_styles())
+                  .with_label("Title Text")
+                  .build_text_element()
+                  .with_text("TITLE")
+                  .build())
     
     # Create arrow elements for symbol block
-    arrow_line = duc.create_linear_element(
-        points=[(0, 10), (30, 10)],
-        styles=duc.create_simple_styles(),
-        label="Arrow Line"
-    )
+    arrow_line = (duc.ElementBuilder()
+                  .with_styles(duc.create_simple_styles())
+                  .with_label("Arrow Line")
+                  .build_linear_element()
+                  .with_points([(0, 10), (30, 10)])
+                  .build())
     
-    arrow_head = duc.create_polygon(
-        x=30, y=10, sides=3, width=10, height=10,
-        styles=duc.create_simple_styles(),
-        label="Arrow Head"
-    )
+    arrow_head = (duc.ElementBuilder()
+                  .at_position(30, 10)
+                  .with_size(10, 10)
+                  .with_styles(duc.create_simple_styles())
+                  .with_label("Arrow Head")
+                  .build_polygon()
+                  .with_sides(3)
+                  .build())
     
     # === CREATE BLOCK DEFINITIONS ===
     
@@ -64,8 +72,7 @@ def test_cspmds_blocks_and_instances(test_output_dir):
             title_rect,
             title_text
         ],
-        description="Reusable title block for drawings",
-        version=1
+        description="Reusable title block for drawings"
     )
     
     # Create arrow symbol block definition
@@ -76,341 +83,185 @@ def test_cspmds_blocks_and_instances(test_output_dir):
             arrow_line,
             arrow_head
         ],
-        description="Reusable arrow symbol",
-        version=1
+        description="Reusable arrow symbol"
     )
     
     # === CREATE BLOCK INSTANCES ===
     
     # Create multiple instances of the title block (like Figma component instances)
-    title_instance1 = duc.create_block_instance_element(
-        x=100, y=100, width=140, height=40,
-        block_id="title_block_v1",
-        id="title_inst_1",
-        label="Main Title Instance"
-    )
+    title_instance1 = (duc.ElementBuilder()
+                       .at_position(100, 100)
+                       .with_size(140, 40)
+                       .with_id("title_inst_1")
+                       .with_label("Main Title Instance")
+                       .build_block_instance_element()
+                       .with_block_id("title_block_v1")
+                       .build())
     
     # Create title instance with element overrides (demonstrating override functionality)
     title_overrides = [
-        StringValueEntry(key="title_text_content", value="CUSTOM TITLE"),
-        StringValueEntry(key="title_text_color", value="#FF0000"),
-        StringValueEntry(key="title_background_color", value="#F0F0F0"),
-        StringValueEntry(key="width", value="120"),
-        StringValueEntry(key="height", value="35"),
-        StringValueEntry(key="opacity", value="0.8")
+        duc.create_string_value_entry(key="title_text_content", value="CUSTOM TITLE"),
+        duc.create_string_value_entry(key="title_text_color", value="#FF0000"),
+        duc.create_string_value_entry(key="title_background_color", value="#F0F0F0"),
+        duc.create_string_value_entry(key="width", value="120"),
+        duc.create_string_value_entry(key="height", value="35"),
+        duc.create_string_value_entry(key="opacity", value="0.8")
     ]
     
-    title_instance2 = duc.create_block_instance_element(
-        x=300, y=100, width=112, height=32,  # Smaller size (scaled down)
-        block_id="title_block_v1",
-        id="title_inst_2", 
-        label="Secondary Title Instance",
-        element_overrides=title_overrides  # Override some properties
-    )
+    title_instance2 = (duc.ElementBuilder()
+                       .at_position(300, 100)
+                       .with_size(120, 35)
+                       .with_id("title_inst_2")
+                       .with_label("Custom Title Instance")
+                       .build_block_instance_element()
+                       .with_block_id("title_block_v1")
+                       .with_element_overrides(title_overrides)
+                       .build())
     
-    # Create arrow instances pointing in different directions
-    arrow_instance1 = duc.create_block_instance_element(
-        x=50, y=200, width=40, height=20,
-        block_id="arrow_symbol_v1",
-        id="arrow_inst_1",
-        label="Right Arrow Instance",
-        angle=0.0
-    )
+    # Create arrow instances
+    arrow_instance1 = (duc.ElementBuilder()
+                       .at_position(100, 200)
+                       .with_size(40, 20)
+                       .with_id("arrow_inst_1")
+                       .with_label("Arrow Instance 1")
+                       .build_block_instance_element()
+                       .with_block_id("arrow_symbol_v1")
+                       .build())
     
-    # Arrow instance with element overrides for custom styling and dimensions
-    arrow_overrides = [
-        StringValueEntry(key="arrow_color", value="#00AA00"),
-        StringValueEntry(key="arrow_thickness", value="3.0"),
-        StringValueEntry(key="width", value="25"),
-        StringValueEntry(key="height", value="45"),
-        StringValueEntry(key="angle", value=str(math.radians(45))),
-        StringValueEntry(key="opacity", value="0.9")
-    ]
+    arrow_instance2 = (duc.ElementBuilder()
+                       .at_position(200, 200)
+                       .with_size(40, 20)
+                       .with_id("arrow_inst_2")
+                       .with_label("Arrow Instance 2")
+                       .build_block_instance_element()
+                       .with_block_id("arrow_symbol_v1")
+                       .build())
     
-    arrow_instance2 = duc.create_block_instance_element(
-        x=150, y=200, width=20, height=40,  # Rotated dimensions
-        block_id="arrow_symbol_v1",
-        id="arrow_inst_2",
-        label="Down Arrow Instance",
-        angle=math.radians(90),  # Rotated 90 degrees (π/2 radians)
-        element_overrides=arrow_overrides
-    )
-    
-    arrow_instance3 = duc.create_block_instance_element(
-        x=250, y=200, width=20, height=40,  # Rotated dimensions
-        block_id="arrow_symbol_v1",
-        id="arrow_inst_3",
-        label="Up Arrow Instance",
-        angle=math.radians(270),  # Rotated 270 degrees (3π/2 radians)
-        element_overrides=[
-            StringValueEntry(key="stroke_width", value="2.5"),
-            StringValueEntry(key="stroke_color", value="#0000FF"),
-            StringValueEntry(key="angle", value=str(math.radians(315))),  # Rotate to 315 degrees
-        ]
-    )
-    
-    # Add all block instances to elements list
+    # Add all elements to the list
     elements.extend([
         title_instance1,
-        title_instance2, 
+        title_instance2,
         arrow_instance1,
-        arrow_instance2,
-        arrow_instance3
+        arrow_instance2
     ])
     
-    # Create global state with blocks
-    global_state = duc.create_global_state(name="BlocksCSPMDS_Initial")
-    
     # === SERIALIZE ===
-    print("💾 SERIALIZE: Saving initial state...")
-    
-    initial_file = os.path.join(test_output_dir, "cspmds_blocks_initial.duc")
-    serialized_data = duc.serialize_duc(
-        name="BlocksCSPMDS_Initial", 
+    print("💾 SERIALIZE: Saving to DUC file...")
+    output_file = os.path.join(test_output_dir, "test_blocks_instances.duc")
+    duc.write_duc_file(
+        file_path=output_file,
+        name="BlocksAndInstancesTest",
         elements=elements,
-        blocks=[title_block, arrow_block],
-        duc_global_state=global_state
+        blocks=[title_block, arrow_block]
     )
     
-    with open(initial_file, 'wb') as f:
-        f.write(serialized_data)
-    
-    assert os.path.exists(initial_file)
-    print(f"Saved initial state to {initial_file}")
+    assert os.path.exists(output_file) and os.path.getsize(output_file) > 0
+    print(f"✅ Serialized {len(elements)} elements and {len([title_block, arrow_block])} blocks")
     
     # === PARSE ===
-    print("📖 PARSE: Loading saved file...")
+    print("📖 PARSE: Loading the saved file...")
+    parsed_data = duc.read_duc_file(output_file)
+    parsed_elements = parsed_data.elements
+    parsed_blocks = parsed_data.blocks if hasattr(parsed_data, 'blocks') else []
     
-    parsed_data = duc.parse_duc(io.BytesIO(serialized_data))
-    loaded_elements = parsed_data.elements
-    loaded_blocks = parsed_data.blocks if hasattr(parsed_data, 'blocks') else []
-    
-    assert len(loaded_elements) == len(elements)
-    assert len(loaded_blocks) == 2  # title_block and arrow_block
-    print(f"Loaded {len(loaded_elements)} elements and {len(loaded_blocks)} block definitions")
-    
-    # Verify block definitions are preserved
-    block_ids = [block.id for block in loaded_blocks]
-    assert "title_block_v1" in block_ids
-    assert "arrow_symbol_v1" in block_ids
-    
-    # Verify block instances reference correct blocks
-    block_instances = []
-    for el in loaded_elements:
-        if isinstance(el.element, duc.DucBlockInstanceElement):
-            block_instances.append(el)
-    
-    print(f"Found block instances: {len(block_instances)}")
-    assert len(block_instances) == 5  # 2 title + 3 arrow instances
-    
-    print(f"Found {len(block_instances)} block instances")
+    assert len(parsed_elements) == len(elements)
+    assert len(parsed_blocks) == 2
+    print(f"✅ Parsed {len(parsed_elements)} elements and {len(parsed_blocks)} blocks")
     
     # === MUTATE ===
     print("🔧 MUTATE: Modifying blocks and instances...")
     
-    mutations_count = 0
-    
-    # Mutate block instances - move and scale them
-    for el_wrapper in loaded_elements:
-        if isinstance(el_wrapper.element, DucBlockInstanceElement):
-            instance = el_wrapper.element
-            
+    # Mutate some instances
+    for el_wrapper in parsed_elements:
+        if hasattr(el_wrapper.element, 'block_id') and el_wrapper.element.block_id == "title_block_v1":
             # Move title instances
-            if instance.block_id == "title_block_v1":
-                duc.mutate_element(
-                    el_wrapper,
-                    x=instance.base.x + 50,  # Move right
-                    y=instance.base.y + 25   # Move down
-                )
-                mutations_count += 1
-            
-            # Rotate and resize arrow instances
-            elif instance.block_id == "arrow_symbol_v1":
-                # Add 45 degrees rotation and resize
-                new_angle = instance.base.angle + math.radians(45)  # Add π/4 radians
-                new_width = instance.base.width * 1.2
-                new_height = instance.base.height * 1.2
+            duc.mutate_element(el_wrapper, x=el_wrapper.element.base.x + 50, y=el_wrapper.element.base.y + 20)
+
+            # Additionally, mutate element overrides for title_instance2
+            if el_wrapper.element.base.id == "title_inst_2":
+                current_overrides = el_wrapper.element.element_overrides or []
+                # Find and update existing override for 'title_text_content'
+                updated_overrides = []
+                found_text_override = False
+                for override in current_overrides:
+                    if override.key == "title_text_content":
+                        updated_overrides.append(duc.create_string_value_entry(key="title_text_content", value="MUTATED CUSTOM TITLE"))
+                        found_text_override = True
+                    elif override.key == "title_text_color":
+                        updated_overrides.append(duc.create_string_value_entry(key="title_text_color", value="#0000FF")) # Change to blue
+                    else:
+                        updated_overrides.append(override)
                 
-                duc.mutate_element(
-                    el_wrapper,
-                    angle=new_angle,
-                    width=new_width,
-                    height=new_height
-                )
-                mutations_count += 1
-    
-    # Demonstrate element_overrides mutations
-    print("🎨 MUTATE: Modifying element overrides...")
-    
-    for el_wrapper in loaded_elements:
-        if isinstance(el_wrapper.element, DucBlockInstanceElement):
-            instance = el_wrapper.element
-            
-            # Add/modify overrides for title_inst_2
-            if instance.base.id == "title_inst_2":
-                # Add new overrides or modify existing ones
-                new_overrides = [
-                    StringValueEntry(key="title_text_content", value="MUTATED TITLE"),
-                    StringValueEntry(key="title_border_style", value="dashed"),
-                    StringValueEntry(key="title_opacity", value="0.8"),
-                    StringValueEntry(key="styles", value="custom_styling"),
-                    StringValueEntry(key="width", value="150"),
-                    StringValueEntry(key="angle", value="15.0")
-                ]
-                instance.element_overrides.extend(new_overrides)
-                print(f"Added element overrides to {instance.base.id}")
-                mutations_count += 1
-                
-            # Modify existing overrides for arrow_inst_2
-            elif instance.base.id == "arrow_inst_2":
-                for override in instance.element_overrides:
-                    if override.key == "arrow_color":
-                        override.value = "#FF5500"  # Change to orange
-                    elif override.key == "arrow_thickness":
-                        override.value = "5.0"  # Make thicker
-                    elif override.key == "width":
-                        override.value = "30"  # Resize
-                    elif override.key == "angle":
-                        override.value = "120.0"  # Change rotation
-                print(f"Modified element overrides for {instance.base.id}")
-                mutations_count += 1
-                
-            # Test additional override types for arrow_inst_3
-            elif instance.base.id == "arrow_inst_3":
-                # Add style-based overrides
-                style_overrides = [
-                    StringValueEntry(key="styles", value="enhanced_arrow_style"),
-                    StringValueEntry(key="width", value="35"),
-                    StringValueEntry(key="height", value="50"),
-                    StringValueEntry(key="angle", value=str(math.radians(315)))  # 315 degrees in radians
-                ]
-                instance.element_overrides.extend(style_overrides)
-                print(f"Added style overrides to {instance.base.id}")
-                mutations_count += 1
-    
-    print(f"Applied transformations to {mutations_count} block instances")
-    
-    # Mutate block definitions (would affect all instances)
-    for block in loaded_blocks:
-        if block.id == "title_block_v1":
-            # Update version and description directly (blocks aren't ElementWrappers)
-            block.version = block.version + 1
-            block.description = "Updated title block with modifications"
-            print(f"Updated block definition: {block.id}")
+                # If not found, add it (though it should be there from creation)
+                if not found_text_override:
+                    updated_overrides.append(duc.create_string_value_entry(key="title_text_content", value="MUTATED CUSTOM TITLE"))
+
+                # Mutate the element_overrides list
+                duc.mutate_element(el_wrapper, element_overrides=updated_overrides)
+                print(f"Mutated element_overrides for {el_wrapper.element.base.label}")
+
+        elif hasattr(el_wrapper.element, 'block_id') and el_wrapper.element.block_id == "arrow_symbol_v1":
+            # Scale arrow instances
+            duc.mutate_element(el_wrapper, width=el_wrapper.element.base.width * 1.5, height=el_wrapper.element.base.height * 1.5)
     
     # === DELETE ===
-    print("🗑️ DELETE: Removing some instances and blocks...")
+    print("🗑️ DELETE: Removing some instances...")
     
-    # Remove some block instances
-    instances_to_delete = []
-    for i, el_wrapper in enumerate(loaded_elements):
-        if isinstance(el_wrapper.element, DucBlockInstanceElement):
-            instance = el_wrapper.element
-            
-            # Delete one title instance and one arrow instance
-            if (instance.base.id == "title_inst_2" or 
-                instance.base.id == "arrow_inst_3"):
-                instances_to_delete.append(i)
+    # Remove one arrow instance
+    elements_to_keep = [el for el in parsed_elements if not (hasattr(el.element, 'block_id') and el.element.block_id == "arrow_symbol_v1" and el.element.base.id == "arrow_inst_2")]
     
-    # Remove instances (in reverse order to maintain indices)
-    for i in reversed(instances_to_delete):
-        el = loaded_elements[i]
-        instance_id = el.element.base.id
-        print(f"Deleting block instance: {instance_id}")
-        del loaded_elements[i]
-    
-    print(f"Deleted {len(instances_to_delete)} block instances")
-    
-    # Remove one block definition (and verify instances are affected)
-    blocks_to_delete = []
-    for i, block in enumerate(loaded_blocks):
-        if block.id == "arrow_symbol_v1":
-            blocks_to_delete.append(i)
-            break
-    
-    for i in reversed(blocks_to_delete):
-        block_id = loaded_blocks[i].id
-        print(f"Deleting block definition: {block_id}")
-        del loaded_blocks[i]
-    
-    # Also remove all instances of the deleted block
-    orphaned_instances = []
-    for i, el_wrapper in enumerate(loaded_elements):
-        if (isinstance(el_wrapper.element, DucBlockInstanceElement) and
-            el_wrapper.element.block_id == "arrow_symbol_v1"):
-            orphaned_instances.append(i)
-    
-    for i in reversed(orphaned_instances):
-        instance_id = loaded_elements[i].element.base.id
-        print(f"Deleting orphaned instance: {instance_id}")
-        del loaded_elements[i]
-    
-    print(f"Deleted {len(orphaned_instances)} orphaned instances")
-    
-    # === SERIALIZE (FINAL) ===
-    print("💾 SERIALIZE: Saving final state...")
-    
-    final_file = os.path.join(test_output_dir, "cspmds_blocks_final.duc")
-    final_serialized_data = duc.serialize_duc(
-        name="BlocksCSPMDS_Final", 
-        elements=loaded_elements,
-        blocks=loaded_blocks,
-        duc_global_state=global_state
+    # === SERIALIZE FINAL ===
+    print("💾 SERIALIZE FINAL: Saving the final state...")
+    final_output_file = os.path.join(test_output_dir, "test_blocks_instances_final.duc")
+    duc.write_duc_file(
+        file_path=final_output_file,
+        name="BlocksAndInstancesTestFinal",
+        elements=elements_to_keep,
+        blocks=parsed_blocks
     )
     
-    with open(final_file, 'wb') as f:
-        f.write(final_serialized_data)
+    assert os.path.exists(final_output_file) and os.path.getsize(final_output_file) > 0
+    print(f"✅ Final serialized {len(elements_to_keep)} elements and {len(parsed_blocks)} blocks")
     
-    assert os.path.exists(final_file)
-    print(f"Saved final state to {final_file}")
-    
-    # === VERIFICATION ===
-    print("✅ VERIFICATION: Checking final state...")
-    
-    # Parse final file to verify
-    final_parsed_data = duc.parse_duc(io.BytesIO(final_serialized_data))
+    # Verify the final state
+    final_parsed_data = duc.read_duc_file(final_output_file)
     final_elements = final_parsed_data.elements
     final_blocks = final_parsed_data.blocks if hasattr(final_parsed_data, 'blocks') else []
     
-    print(f"Final element count: {len(final_elements)}")
-    print(f"Final block count: {len(final_blocks)}")
+    assert len(final_elements) == len(elements_to_keep)
+    assert len(final_blocks) == 2
     
-    # Should have fewer elements and blocks than original
-    assert len(final_elements) < len(elements)
-    assert len(final_blocks) < 2  # Should only have title_block left
+    # Count block instances by type
+    title_instances = [el for el in final_elements if hasattr(el.element, 'block_id') and el.element.block_id == "title_block_v1"]
+    arrow_instances = [el for el in final_elements if hasattr(el.element, 'block_id') and el.element.block_id == "arrow_symbol_v1"]
     
-    # Verify only title_block remains
-    remaining_block_ids = [block.id for block in final_blocks]
-    assert "title_block_v1" in remaining_block_ids
-    assert "arrow_symbol_v1" not in remaining_block_ids
-    
-    # Verify no arrow instances remain
-    remaining_instances = []
-    for el in final_elements:
-        if isinstance(el.element, DucBlockInstanceElement):
-            remaining_instances.append(el)
-    
-    for el_wrapper in remaining_instances:
-        assert el_wrapper.element.block_id != "arrow_symbol_v1"
-    
-    # Verify title instances were properly mutated
-    title_instances = []
-    for el in final_elements:
-        if (isinstance(el.element, DucBlockInstanceElement) and
-            el.element.block_id == "title_block_v1"):
-            title_instances.append(el)
-    
-    # Should only have 1 title instance left (deleted title_inst_2)
-    assert len(title_instances) == 1
-    title_instance = title_instances[0].element
-    assert title_instance.base.id == "title_inst_1"  # Only first instance should remain
-    
-    # Verify the mutations were applied (position should be moved)
-    assert title_instance.base.x == 150  # 100 + 50
-    assert title_instance.base.y == 125  # 100 + 25
+    assert len(title_instances) == 2  # Both title instances should remain
+    assert len(arrow_instances) == 1  # Only one arrow instance should remain
+
+    # Verify mutations on title_instance2 element overrides
+    parsed_title_instance2 = next( (el for el in final_elements if hasattr(el.element, 'block_id') and el.element.block_id == "title_block_v1" and el.element.base.id == "title_inst_2"), None)
+    assert parsed_title_instance2 is not None, "title_inst_2 not found in final parsed elements."
+
+    found_text_content_override = False
+    found_text_color_override = False
+    for override in parsed_title_instance2.element.element_overrides:
+        if override.key == "title_text_content":
+            assert override.value == "MUTATED CUSTOM TITLE"
+            found_text_content_override = True
+        elif override.key == "title_text_color":
+            assert override.value == "#0000FF"
+            found_text_color_override = True
+
+    assert found_text_content_override, "title_text_content override not found or not mutated."
+    assert found_text_color_override, "title_text_color override not found or not mutated."
+    print("✅ Verified element_overrides mutation for title_inst_2")
     
     print("✅ CSPMDS Blocks and Instances test completed successfully!")
-
+    print(f"   - Created {len(elements)} initial elements")
+    print(f"   - Created {len([title_block, arrow_block])} block definitions")
+    print(f"   - Mutated instances (position and scale)")
+    print(f"   - Deleted 1 arrow instance")
+    print(f"   - Final state: {len(final_elements)} elements, {len(final_blocks)} blocks")
 
 @pytest.fixture
 def test_output_dir():

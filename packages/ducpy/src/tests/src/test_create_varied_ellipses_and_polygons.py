@@ -22,24 +22,23 @@ def test_create_varied_ellipses_and_polygons(test_output_dir):
     ]
 
     for i, config in enumerate(ellipse_configs):
-        elements.append(duc.create_ellipse(
-            x=config["x"],
-            y=config["y"],
-            width=config["width"],
-            height=config["height"],
-            angle=random.uniform(0, math.pi / 4),
-            label=config["label"],
-            ratio=config["ratio"],
-            start_angle=math.radians(config["start_angle"]),
-            end_angle=math.radians(config["end_angle"]),
-            show_aux_crosshair=random.choice([True, False]),
-            styles=duc.create_fill_and_stroke_style(
-                fill_content=duc.create_solid_content(duc.generate_random_color()),
-                stroke_content=duc.create_solid_content(duc.generate_random_color()),
+        elements.append(duc.ElementBuilder()
+            .at_position(config["x"], config["y"])
+            .with_size(config["width"], config["height"])
+            .with_angle(random.uniform(0, math.pi / 4))
+            .with_label(config["label"])
+            .with_styles(duc.create_fill_and_stroke_style(
+                duc.create_solid_content(duc.generate_random_color()),
+                duc.create_solid_content(duc.generate_random_color()),
                 opacity=random.uniform(0.7, 1.0)
-            ),
-            z_index=i
-        ))
+            ))
+            .with_z_index(i)
+            .build_ellipse()
+            .with_ratio(config["ratio"])
+            .with_start_angle(math.radians(config["start_angle"]))
+            .with_end_angle(math.radians(config["end_angle"]))
+            .with_show_aux_crosshair(random.choice([True, False]))
+            .build())
 
     # Configuration for different polygons
     polygon_configs = [
@@ -50,33 +49,34 @@ def test_create_varied_ellipses_and_polygons(test_output_dir):
     ]
 
     for i, config in enumerate(polygon_configs):
-        elements.append(duc.create_polygon(
-            x=config["x"],
-            y=config["y"],
-            width=config["width"],
-            height=config["height"],
-            sides=config["sides"],
-            label=config["label"],
-            angle=random.uniform(0, math.pi / 2),
-            styles=duc.create_fill_and_stroke_style(
-                fill_content=duc.create_solid_content(duc.generate_random_color()),
-                stroke_content=duc.create_solid_content(duc.generate_random_color()),
+        elements.append(duc.ElementBuilder()
+            .at_position(config["x"], config["y"])
+            .with_size(config["width"], config["height"])
+            .with_angle(random.uniform(0, math.pi / 2))
+            .with_label(config["label"])
+            .with_styles(duc.create_fill_and_stroke_style(
+                duc.create_solid_content(duc.generate_random_color()),
+                duc.create_solid_content(duc.generate_random_color()),
                 opacity=random.uniform(0.7, 1.0)
-            ),
-            z_index=len(ellipse_configs) + i
-        ))
+            ))
+            .with_z_index(len(ellipse_configs) + i)
+            .build_polygon()
+            .with_sides(config["sides"])
+            .build())
 
-    # Serialize and save to file
+    # Serialize and save to file using the new io.py methods
     output_file = os.path.join(test_output_dir, "test_varied_ellipses_and_polygons.duc")
-    serialized_data = duc.serialize_duc(name="VariedShapesTest", elements=elements)
     
-    with open(output_file, 'wb') as f:
-        f.write(serialized_data)
+    duc.write_duc_file(
+        file_path=output_file,
+        name="VariedShapesTest",
+        elements=elements
+    )
     
     assert os.path.exists(output_file) and os.path.getsize(output_file) > 0
 
-    # Parse and verify the data
-    parsed_data = duc.parse_duc(io.BytesIO(serialized_data))
+    # Parse and verify the data using the new io.py methods
+    parsed_data = duc.read_duc_file(output_file)
     parsed_elements = parsed_data.elements
     
     assert len(parsed_elements) == len(elements)
@@ -100,7 +100,7 @@ def test_create_varied_ellipses_and_polygons(test_output_dir):
         if hasattr(original_el, 'sides'): # It's a polygon
             assert parsed_el.sides == original_el.sides
 
-    print(f"✅ Varied ellipses and polygons test passed! ({len(elements)} elements)")
+    print(f"Successfully created and verified {len(elements)} varied ellipse and polygon elements")
 
 @pytest.fixture
 def test_output_dir():

@@ -28,7 +28,7 @@ from ..classes.ElementsClass import (
     ToleranceClause, FeatureControlFrameSegment, FCFBetweenModifier, FCFProjectedZoneModifier,
     FCFFrameModifiers, FCFDatumDefinition, FCFSegmentRow, DucFeatureControlFrameElement, TextColumn,
     ColumnLayout, DucDocElement, ParametricSource, DucParametricElement, StringValueEntry, ElementWrapper, \
-    DucBlock, DucBlockAttributeDefinitionEntry
+    DucBlock, DucBlockAttributeDefinitionEntry, DucTableColumnEntry, DucTableRowEntry, DucTableCellEntry
 )
 
 # Import Standard and PrimaryUnits from StandardsClass.py
@@ -501,7 +501,9 @@ def parse_fbs_duc_table_cell_style(fbs_cell_style: FBSDucTableCellStyle) -> DucT
         alignment=fbs_cell_style.Alignment() if fbs_cell_style.Alignment() is not None else None
     )
 
-def parse_fbs_duc_table_style(fbs_table_style: FBSDucTableStyle) -> DucTableStyle:
+def parse_fbs_duc_table_style(fbs_table_style: FBSDucTableStyle) -> Optional[DucTableStyle]:
+    if fbs_table_style is None:
+        return None
     return DucTableStyle(
         base_style=parse_fbs_duc_element_styles_base(fbs_table_style.BaseStyle()),
         flow_direction=fbs_table_style.FlowDirection() if fbs_table_style.FlowDirection() is not None else None,
@@ -739,29 +741,38 @@ def parse_fbs_duc_table_element(fbs_table_element: FBSDucTableElement) -> DucTab
     column_order_list = [fbs_table_element.ColumnOrder(i).decode('utf-8') for i in range(fbs_table_element.ColumnOrderLength())]
     row_order_list = [fbs_table_element.RowOrder(i).decode('utf-8') for i in range(fbs_table_element.RowOrderLength())]
     
-    columns_dict = {}
+    # Parse columns into a list of DucTableColumnEntry objects
+    columns_list = []
     for i in range(fbs_table_element.ColumnsLength()):
-        entry = fbs_table_element.Columns(i)
-        columns_dict[entry.Key().decode('utf-8')] = parse_fbs_duc_table_column(entry.Value())
+        fbs_column_entry = fbs_table_element.Columns(i)
+        column_key = fbs_column_entry.Key().decode('utf-8')
+        column_value = parse_fbs_duc_table_column(fbs_column_entry.Value())
+        columns_list.append(DucTableColumnEntry(key=column_key, value=column_value))
 
-    rows_dict = {}
+    # Parse rows into a list of DucTableRowEntry objects
+    rows_list = []
     for i in range(fbs_table_element.RowsLength()):
-        entry = fbs_table_element.Rows(i)
-        rows_dict[entry.Key().decode('utf-8')] = parse_fbs_duc_table_row(entry.Value())
+        fbs_row_entry = fbs_table_element.Rows(i)
+        row_key = fbs_row_entry.Key().decode('utf-8')
+        row_value = parse_fbs_duc_table_row(fbs_row_entry.Value())
+        rows_list.append(DucTableRowEntry(key=row_key, value=row_value))
 
-    cells_dict = {}
+    # Parse cells into a list of DucTableCellEntry objects
+    cells_list = []
     for i in range(fbs_table_element.CellsLength()):
-        entry = fbs_table_element.Cells(i)
-        cells_dict[entry.Key().decode('utf-8')] = parse_fbs_duc_table_cell(entry.Value())
+        fbs_cell_entry = fbs_table_element.Cells(i)
+        cell_key = fbs_cell_entry.Key().decode('utf-8')
+        cell_value = parse_fbs_duc_table_cell(fbs_cell_entry.Value())
+        cells_list.append(DucTableCellEntry(key=cell_key, value=cell_value))
 
     return DucTableElement(
         base=parse_fbs_duc_element_base(fbs_table_element.Base()),
         style=parse_fbs_duc_table_style(fbs_table_element.Style()),
         column_order=column_order_list,
         row_order=row_order_list,
-        columns=columns_dict,
-        rows=rows_dict,
-        cells=cells_dict,
+        columns=columns_list,
+        rows=rows_list,
+        cells=cells_list,
         header_row_count=fbs_table_element.HeaderRowCount(),
         auto_size=parse_fbs_duc_table_auto_size(fbs_table_element.AutoSize())
     )

@@ -477,9 +477,9 @@ def parse_fbs_isometric_grid_settings(fbs_iso_grid: "FBSIsometricGridSettings") 
 
 def parse_fbs_grid_settings(fbs_grid_settings: FBSGridSettings) -> GridSettings:
     return GridSettings(
-        type=fbs_grid_settings.Type() if fbs_grid_settings.Type() is not None else None,
+        type=fbs_grid_settings.Type() if fbs_grid_settings.Type() is not None else GRID_TYPE.RECTANGULAR.value,
         readonly=bool(fbs_grid_settings.Readonly()),
-        display_type=fbs_grid_settings.DisplayType() if fbs_grid_settings.DisplayType() is not None else None,
+        display_type=fbs_grid_settings.DisplayType() if fbs_grid_settings.DisplayType() is not None else GRID_DISPLAY_TYPE.LINES.value,
         is_adaptive=bool(fbs_grid_settings.IsAdaptive()),
         x_spacing=fbs_grid_settings.XSpacing(),
         y_spacing=fbs_grid_settings.YSpacing(),
@@ -512,6 +512,8 @@ def parse_fbs_dynamic_snap_settings(fbs_dynamic_snap: FBSDynamicSnapSettings) ->
     )
 
 def parse_fbs_polar_tracking_settings(fbs_polar_tracking: FBSPolarTrackingSettings) -> PolarTrackingSettings:
+    if fbs_polar_tracking is None:
+        return PolarTrackingSettings(enabled=False, angles=[], track_from_last_point=False, show_polar_coordinates=False, increment_angle=None)
     angles_list = [fbs_polar_tracking.Angles(i) for i in range(fbs_polar_tracking.AnglesLength())]
     return PolarTrackingSettings(
         enabled=bool(fbs_polar_tracking.Enabled()),
@@ -624,7 +626,9 @@ def parse_fbs_identified_view(fbs_identified_view: FBSIdentifiedView) -> Identif
         view=parse_fbs_duc_view(fbs_identified_view.View())
     )
 
-def parse_fbs_standard_view_settings(fbs_view_settings: FBSStandardViewSettings) -> StandardViewSettings:
+def parse_fbs_standard_view_settings(fbs_view_settings: FBSStandardViewSettings) -> Optional[StandardViewSettings]:
+    if fbs_view_settings is None:
+        return None
     views_list = [parse_fbs_identified_view(fbs_view_settings.Views(i)) for i in range(fbs_view_settings.ViewsLength())]
     ucs_list = [parse_fbs_identified_ucs(fbs_view_settings.Ucs(i)) for i in range(fbs_view_settings.UcsLength())]
     grid_settings_list = [parse_fbs_identified_grid_settings(fbs_view_settings.GridSettings(i)) for i in range(fbs_view_settings.GridSettingsLength())]

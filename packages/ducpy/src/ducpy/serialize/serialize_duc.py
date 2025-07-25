@@ -23,11 +23,11 @@ from ducpy.Duc.ExportedDataState import (
     ExportedDataStateAddThumbnail, ExportedDataStateAddDictionary, ExportedDataStateAddElements,
     ExportedDataStateAddBlocks, ExportedDataStateAddGroups, ExportedDataStateAddRegions,
     ExportedDataStateAddLayers, ExportedDataStateAddStandards, ExportedDataStateAddDucLocalState,
-    ExportedDataStateAddDucGlobalState, ExportedDataStateAddFiles, ExportedDataStateAddVersionGraph,
+    ExportedDataStateAddDucGlobalState, ExportedDataStateAddExternalFiles, ExportedDataStateAddVersionGraph,
     ExportedDataStateStartElementsVector,
     ExportedDataStateStartBlocksVector, ExportedDataStateStartGroupsVector,
     ExportedDataStateStartRegionsVector, ExportedDataStateStartLayersVector,
-    ExportedDataStateStartStandardsVector, ExportedDataStateStartFilesVector,
+    ExportedDataStateStartStandardsVector, ExportedDataStateStartExternalFilesVector,
     ExportedDataStateStartDictionaryVector
 )
 
@@ -130,7 +130,7 @@ def serialize_as_flatbuffers(data_state: ExportedDataState) -> bytes:
         files_offsets = []
         for file_entry in data_state.files or []:
             files_offsets.append(serialize_fbs_duc_external_file_entry(builder, file_entry))
-        ExportedDataStateStartFilesVector(builder, len(files_offsets))
+        ExportedDataStateStartExternalFilesVector(builder, len(files_offsets))
         for offset in reversed(files_offsets):
             builder.PrependUOffsetTRelative(offset)
         files_vector = builder.EndVector()
@@ -171,7 +171,7 @@ def serialize_as_flatbuffers(data_state: ExportedDataState) -> bytes:
         ExportedDataStateAddStandards(builder, standards_vector)
         ExportedDataStateAddDucLocalState(builder, duc_local_state_offset)
         ExportedDataStateAddDucGlobalState(builder, duc_global_state_offset)
-        ExportedDataStateAddFiles(builder, files_vector)
+        ExportedDataStateAddExternalFiles(builder, files_vector)
         ExportedDataStateAddVersionGraph(builder, version_graph_offset)
 
         exported_data = ExportedDataStateEnd(builder)

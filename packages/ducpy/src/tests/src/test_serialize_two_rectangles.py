@@ -9,32 +9,30 @@ def test_serialize_two_rectangles():
     Tests the creation of two simple rectangle elements using the new clean, modular API.
     This test focuses on the API builders themselves rather than serialization.
     """
-    # Create rectangle elements with the clean, modular API using numpy-style imports
-    element1 = duc.create_rectangle(
-        x=10.0,
-        y=20.0,
-        width=100.0,
-        height=50.0,
-        angle=2.0,
-        label="Rectangle 1",
-        styles=duc.create_fill_style(duc.create_solid_content("#FF0000", opacity=1.0)),  # Red fill style
-        z_index=1.0
-    )
+    # Create rectangle elements with the new ElementBuilder API
+    element1 = (duc.ElementBuilder()
+                .at_position(10.0, 20.0)
+                .with_size(100.0, 50.0)
+                .with_angle(2.0)
+                .with_label("Rectangle 1")
+                .with_z_index(1.0)
+                .with_styles(duc.create_fill_style(duc.create_solid_content("#FF0000", opacity=1.0)))
+                .build_rectangle()
+                .build())
 
-    element2 = duc.create_rectangle(
-        x=150.0,
-        y=100.0,
-        width=80.0,
-        height=40.0,
-        angle=0.0,
-        label="Rectangle 2",
-        styles=duc.create_fill_and_stroke_style(
-            duc.create_solid_content("#00FF00", opacity=0.5),  # Green fill at 50% opacity
-            duc.create_solid_content("#000000"),  # Black stroke
-            stroke_width=2.0
-        ),
-        z_index=2.0
-    )
+    element2 = (duc.ElementBuilder()
+                .at_position(150.0, 100.0)
+                .with_size(80.0, 40.0)
+                .with_angle(0.0)
+                .with_label("Rectangle 2")
+                .with_z_index(2.0)
+                .with_styles(duc.create_fill_and_stroke_style(
+                    duc.create_solid_content("#00FF00", opacity=0.5),  # Green fill at 50% opacity
+                    duc.create_solid_content("#000000"),  # Black stroke
+                    stroke_width=2.0
+                ))
+                .build_rectangle()
+                .build())
 
     elements = [element1, element2]
 
@@ -46,10 +44,10 @@ def test_serialize_two_rectangles():
     output_file_name = "test_two_rectangles.duc"
     output_file_path = os.path.join(output_dir, output_file_name)
 
-    # Serialize using the clean API - no need to construct ExportedDataState manually!
+    # Serialize using the new io API
     serialized_bytes = duc.serialize_duc(
-      name="TwoRectanglesTest",
-      elements=elements
+        name="TwoRectanglesTest",
+        elements=elements
     )
 
     assert serialized_bytes is not None, "Serialization returned None"

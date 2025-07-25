@@ -21,36 +21,39 @@ def create_architectural_standard():
     elegant nested construction with all standard components.
     """
     # Create nested grid settings with precision
-    grid_settings = duc.create_grid_settings(
-        type=GRID_TYPE.RECTANGULAR,
-        x_spacing=12.0,  # 1 foot spacing
-        y_spacing=12.0,
-        major_line_interval=12,  # Major lines every 12 feet
-        show_grid=True,
-        snap_to_grid=True
-    )
+    grid_settings = (duc.StateBuilder()
+        .build_grid_settings() 
+        .with_grid_type(GRID_TYPE.RECTANGULAR) 
+        .with_x_spacing(12.0) 
+        .with_y_spacing(12.0) 
+        .with_major_line_interval(12) 
+        .with_show_grid(True) 
+        .with_snap_to_grid(True) 
+        .build())
     
     # Create advanced snap settings with multiple modes
-    snap_settings = duc.create_snap_settings(
-        enabled=True,
-        snap_modes=[SNAP_MODE.RUNNING, SNAP_MODE.SINGLE],
-        object_snap_modes=[
+    snap_settings = (duc.StateBuilder()
+        .build_snap_settings() 
+        .with_enabled(True) 
+        .with_snap_modes([SNAP_MODE.RUNNING, SNAP_MODE.SINGLE]) 
+        .with_object_snap_modes([
             OBJECT_SNAP_MODE.ENDPOINT,
             OBJECT_SNAP_MODE.MIDPOINT,
             OBJECT_SNAP_MODE.CENTER,
             OBJECT_SNAP_MODE.INTERSECTION,
             OBJECT_SNAP_MODE.PERPENDICULAR
-        ],
-        snap_tolerance=10.0,
-        tracking_enabled=True
-    )
+        ]) 
+        .with_snap_tolerance(10.0) 
+        .with_tracking_enabled(True) 
+        .build())
     
     # Create sophisticated polar tracking
     polar_tracking = duc.create_polar_tracking_settings(
         enabled=True,
         increment_angle=15.0,  # 15-degree increments
         angles=[22.5, 45.0, 67.5],  # Common architectural angles
-        track_from_last_point=True
+        track_from_last_point=True,
+        show_polar_coordinates=True
     )
     
     # Create precise linear unit system for architectural work
@@ -69,47 +72,65 @@ def create_architectural_standard():
     angular_units = duc.create_angular_unit_system(
         format=ANGULAR_UNITS_FORMAT.DECIMAL_DEGREES,
         precision=2,
-        suppress_trailing_zeros=False
+        suppress_trailing_zeros=False,
+        suppress_leading_zeros=False,
+        system=UNIT_SYSTEM.METRIC # Assuming metric as a sensible default
     )
     
     # Compose the complete standard with nested components
-    architectural_standard = duc.create_standard_complete(
-        id="arch_2024",
-        name="Architectural Standard 2024",
-        description="Professional architectural drawing standard with precision grid, snap, and units",
-        units=duc.create_standard_units_simple(
-            linear_units=linear_units,
-            angular_units=angular_units,
-            measurement_scale=1.0,
-            annotation_scale=1.0
-        ),
-        validation=duc.create_standard_validation_simple(
-            enforce_precision=True,
-            validate_dimensions=True,
-            require_units=True,
-            check_tolerances=True
-        ),
-        overrides=duc.create_standard_overrides_simple(
-            allow_user_modifications=True,
-            inherit_from_template=True,
-            lock_critical_settings=False
-        ),
-        styles=duc.create_standard_styles_simple(
-            default_text_height=3.0,  # 3mm text height
-            default_line_weight=0.25,
-            dimension_text_height=2.5,
-            leader_text_height=2.0
-        ),
-        view_settings=duc.create_standard_view_settings_simple(
-            default_viewport_scale=1.0,
-            show_grid=True,
-            show_snap_markers=True,
-            highlight_constraints=True
-        ),
-        grid_settings=grid_settings,
-        snap_settings=snap_settings,
-        polar_tracking_settings=polar_tracking
-    )
+    architectural_standard = (duc.StateBuilder()
+        .build_standard() 
+        .with_id("arch_2024") 
+        .with_name("Architectural Standard 2024") 
+        .with_description("Professional architectural drawing standard with precision grid, snap, and units") 
+        .with_units(duc.create_standard_units(
+            primary_units=duc.create_primary_units(
+                linear=linear_units,
+                angular=angular_units
+            ),
+            alternate_units=None # No alternate units for now
+        )) 
+        .with_validation(duc.create_standard_validation(
+            dimension_rules=duc.create_dimension_validation_rules(
+                min_text_height=0.1, max_text_height=100.0, allowed_precisions=[0, 1, 2, 3, 4]
+            ),
+            layer_rules=duc.create_layer_validation_rules(
+                prohibited_layer_names=["temp_layer"]
+            )
+        )) 
+        .with_overrides(duc.create_standard_overrides(
+            main_scope="architectural",
+            unit_precision=duc.UnitPrecision(linear=4, angular=2, area=2, volume=2)
+        )) 
+        .with_styles(duc.create_standard_styles(
+            common_styles=[duc.IdentifiedCommonStyle(id=duc.create_identifier("default_common", "Default Common Style"), style=duc.DucCommonStyle(
+                background=duc.create_background(duc.create_solid_content("#FFFFFF", opacity=1.0)), # Default white background
+                stroke=duc.create_stroke(duc.create_solid_content("#000000", opacity=1.0), width=1.0) # Default black stroke
+            ))],
+            text_styles=[duc.IdentifiedTextStyle(id=duc.create_identifier("default_text", "Default Text Style"), style=duc.DucTextStyle(
+                base_style=duc.DucElementStylesBase(roundness=0.0, background=[], stroke=[], opacity=1.0),
+                is_ltr=True,
+                font_family="Arial",
+                big_font_family="Arial",
+                line_height=1.0,
+                line_spacing=duc.LineSpacing(value=1.0, type=duc.LINE_SPACING_TYPE.AT_LEAST),
+                oblique_angle=0.0,
+                font_size=12,
+                width_factor=1.0,
+                is_upside_down=False,
+                is_backwards=False,
+                text_align=duc.TEXT_ALIGN.LEFT,
+                vertical_align=duc.VERTICAL_ALIGN.MIDDLE,
+                paper_text_height=None
+            ))]
+        )) 
+        .with_view_settings(duc.create_standard_view_settings(
+            grid_settings=[duc.IdentifiedGridSettings(id=duc.create_identifier("default_grid", "Default Grid"), settings=grid_settings)],
+            snap_settings=[duc.IdentifiedSnapSettings(id=duc.create_identifier("default_snap", "Default Snap"), settings=snap_settings)],
+            views=[], # No default views for now
+            ucs=[] # No default UCS for now
+        )) 
+        .build())
     
     return architectural_standard
 
@@ -120,30 +141,32 @@ def create_mechanical_standard():
     and tight tolerances.
     """
     # Metric grid with 5mm spacing
-    grid_settings = duc.create_grid_settings(
-        type=GRID_TYPE.RECTANGULAR,
-        x_spacing=5.0,
-        y_spacing=5.0,
-        major_line_interval=10,
-        show_grid=True,
-        snap_to_grid=True
-    )
+    grid_settings = (duc.StateBuilder()
+        .build_grid_settings() 
+        .with_grid_type(GRID_TYPE.RECTANGULAR) 
+        .with_x_spacing(5.0) 
+        .with_y_spacing(5.0) 
+        .with_major_line_interval(10) 
+        .with_show_grid(True) 
+        .with_snap_to_grid(True) 
+        .build())
     
     # Precision snap settings for mechanical work
-    snap_settings = duc.create_snap_settings(
-        enabled=True,
-        snap_modes=[SNAP_MODE.RUNNING, SNAP_MODE.SINGLE],
-        object_snap_modes=[
+    snap_settings = (duc.StateBuilder()
+        .build_snap_settings() 
+        .with_enabled(True) 
+        .with_snap_modes([SNAP_MODE.RUNNING, SNAP_MODE.SINGLE]) 
+        .with_object_snap_modes([
             OBJECT_SNAP_MODE.ENDPOINT,
             OBJECT_SNAP_MODE.MIDPOINT,
             OBJECT_SNAP_MODE.CENTER,
             OBJECT_SNAP_MODE.TANGENT,
             OBJECT_SNAP_MODE.PERPENDICULAR,
             OBJECT_SNAP_MODE.PARALLEL
-        ],
-        snap_tolerance=5.0,  # Tighter tolerance
-        tracking_enabled=True
-    )
+        ]) 
+        .with_snap_tolerance(5.0) 
+        .with_tracking_enabled(True) 
+        .build())
     
     # Metric linear units with high precision
     linear_units = duc.create_linear_unit_system(
@@ -151,55 +174,75 @@ def create_mechanical_standard():
         precision=3,  # 0.001mm precision
         decimal_separator=DECIMAL_SEPARATOR.DOT,
         suppress_trailing_zeros=True,
-        suppress_leading_zeros=True
+        suppress_leading_zeros=True,
+        suppress_zero_feet=False,  # Add missing argument
+        suppress_zero_inches=False, # Add missing argument
+        format=duc.DIMENSION_UNITS_FORMAT.DECIMAL # Add missing argument
     )
     
     # Angular units in degrees/minutes/seconds for precision
     angular_units = duc.create_angular_unit_system(
         format=ANGULAR_UNITS_FORMAT.DEGREES_MINUTES_SECONDS,
         precision=1,  # 1 arc-second precision
-        suppress_trailing_zeros=True
+        suppress_trailing_zeros=True,
+        suppress_leading_zeros=False, # Add missing argument
+        system=UNIT_SYSTEM.METRIC # Add missing argument
     )
     
     # Create the mechanical standard
-    mechanical_standard = duc.create_standard_complete(
-        id="mech_iso",
-        name="Mechanical Engineering Standard ISO",
-        description="ISO-compliant mechanical drawing standard with metric units and precision",
-        units=duc.create_standard_units_simple(
-            linear_units=linear_units,
-            angular_units=angular_units,
-            measurement_scale=1.0,
-            annotation_scale=1.0
-        ),
-        validation=duc.create_standard_validation_simple(
-            enforce_precision=True,
-            validate_dimensions=True,
-            require_units=True,
-            check_tolerances=True,
-            tolerance_stack_analysis=True
-        ),
-        overrides=duc.create_standard_overrides_simple(
-            allow_user_modifications=False,  # Strict ISO compliance
-            inherit_from_template=True,
-            lock_critical_settings=True
-        ),
-        styles=duc.create_standard_styles_simple(
-            default_text_height=2.5,
-            default_line_weight=0.13,  # ISO standard line weight
-            dimension_text_height=2.0,
-            leader_text_height=1.8
-        ),
-        view_settings=duc.create_standard_view_settings_simple(
-            default_viewport_scale=1.0,
-            show_grid=True,
-            show_snap_markers=True,
-            highlight_constraints=True,
-            show_dimensions=True
-        ),
-        grid_settings=grid_settings,
-        snap_settings=snap_settings
-    )
+    mechanical_standard = (duc.StateBuilder()
+        .build_standard() 
+        .with_id("mech_iso") 
+        .with_name("Mechanical Engineering Standard ISO") 
+        .with_description("ISO-compliant mechanical drawing standard with metric units and precision") 
+        .with_units(duc.create_standard_units(
+            primary_units=duc.create_primary_units(
+                linear=linear_units,
+                angular=angular_units
+            ),
+            alternate_units=None # No alternate units for now
+        )) 
+        .with_validation(duc.create_standard_validation(
+            dimension_rules=duc.create_dimension_validation_rules(
+                min_text_height=0.01, max_text_height=500.0, allowed_precisions=[0, 1, 2, 3, 4, 5]
+            ),
+            layer_rules=duc.create_layer_validation_rules(
+                prohibited_layer_names=["DO_NOT_PRINT"]
+            )
+        )) 
+        .with_overrides(duc.create_standard_overrides(
+            main_scope="mechanical",
+            unit_precision=duc.UnitPrecision(linear=3, angular=1, area=3, volume=3)
+        )) 
+        .with_styles(duc.create_standard_styles(
+            common_styles=[duc.IdentifiedCommonStyle(id=duc.create_identifier("mechanical_common", "Mechanical Common Style"), style=duc.DucCommonStyle(
+                background=duc.create_background(duc.create_solid_content("#F0F0F0", opacity=1.0)),
+                stroke=duc.create_stroke(duc.create_solid_content("#333333", opacity=1.0), width=0.5)
+            ))],
+            text_styles=[duc.IdentifiedTextStyle(id=duc.create_identifier("mechanical_text", "Mechanical Text Style"), style=duc.DucTextStyle(
+                base_style=duc.DucElementStylesBase(roundness=0.0, background=[], stroke=[], opacity=1.0),
+                is_ltr=True,
+                font_family="Roboto",
+                big_font_family="Roboto",
+                line_height=1.0,
+                line_spacing=duc.LineSpacing(value=1.0, type=duc.LINE_SPACING_TYPE.AT_LEAST),
+                oblique_angle=0.0,
+                font_size=10,
+                width_factor=1.0,
+                is_upside_down=False,
+                is_backwards=False,
+                text_align=duc.TEXT_ALIGN.CENTER,
+                vertical_align=duc.VERTICAL_ALIGN.MIDDLE,
+                paper_text_height=None
+            ))]
+        )) 
+        .with_view_settings(duc.create_standard_view_settings(
+            grid_settings=[duc.IdentifiedGridSettings(id=duc.create_identifier("mechanical_grid", "Mechanical Grid"), settings=grid_settings)],
+            snap_settings=[duc.IdentifiedSnapSettings(id=duc.create_identifier("mechanical_snap", "Mechanical Snap"), settings=snap_settings)],
+            views=[],
+            ucs=[]
+        )) 
+        .build())
     
     return mechanical_standard
 
@@ -210,66 +253,95 @@ def demonstrate_standard_variations():
     from a common base configuration.
     """
     # Base configuration for engineering standards
-    base_grid = duc.create_grid_settings(
-        grid_type=GRID_TYPE.RECTANGULAR,
-        x_spacing=10.0,
-        y_spacing=10.0,
-        show_grid=True,
-        snap_to_grid=True
-    )
+    base_grid = (duc.StateBuilder()
+        .build_grid_settings() 
+        .with_grid_type(GRID_TYPE.RECTANGULAR) 
+        .with_x_spacing(10.0) 
+        .with_y_spacing(10.0) 
+        .with_show_grid(True) 
+        .with_snap_to_grid(True) 
+        .build())
     
-    base_snap = duc.create_snap_settings(
-        enabled=True,
-        snap_modes=[SNAP_MODE.RUNNING, SNAP_MODE.SINGLE],
-        object_snap_modes=[OBJECT_SNAP_MODE.ENDPOINT, OBJECT_SNAP_MODE.MIDPOINT, OBJECT_SNAP_MODE.CENTER],
-        snap_tolerance=8.0
-    )
+    base_snap = (duc.StateBuilder()
+        .build_snap_settings() 
+        .with_enabled(True) 
+        .with_snap_modes([SNAP_MODE.RUNNING, SNAP_MODE.SINGLE]) 
+        .with_object_snap_modes([OBJECT_SNAP_MODE.ENDPOINT, OBJECT_SNAP_MODE.MIDPOINT, OBJECT_SNAP_MODE.CENTER]) 
+        .with_snap_tolerance(8.0) 
+        .build())
     
     # Variation 1: Imperial with fractions
     imperial_units = duc.create_linear_unit_system(
         system=UNIT_SYSTEM.IMPERIAL,
         precision=32,  # 1/32" precision
         decimal_separator=DECIMAL_SEPARATOR.DOT,
-        suppress_zero_feet=True
+        suppress_zero_feet=True,
+        suppress_leading_zeros=True, # Added missing argument
+        suppress_trailing_zeros=True, # Added missing argument
+        suppress_zero_inches=True, # Added missing argument
+        format=duc.DIMENSION_UNITS_FORMAT.FRACTIONAL # Added missing argument
     )
     
-    imperial_standard = duc.create_standard_complete(
-        id="imperial_eng",
-        name="Imperial Engineering Standard",
-        description="US customary units with fractional precision",
-        units=duc.create_standard_units_simple(
-            linear_units=imperial_units,
-            angular_units=duc.create_angular_unit_system(
-                format=ANGULAR_UNITS_FORMAT.DECIMAL_DEGREES,
-                precision=2
-            )
-        ),
-        grid_settings=base_grid,
-        snap_settings=base_snap
+    # Angular units for variations (re-defined for clarity within this function)
+    angular_units = duc.create_angular_unit_system(
+        format=ANGULAR_UNITS_FORMAT.DECIMAL_DEGREES,
+        precision=2,
+        suppress_trailing_zeros=False,
+        suppress_leading_zeros=False,
+        system=UNIT_SYSTEM.IMPERIAL # Assuming imperial as a sensible default
     )
     
-    # Variation 2: Metric with decimals
+    imperial_standard = (duc.StateBuilder()
+        .build_standard() 
+        .with_id("imperial_frac") 
+        .with_name("Imperial Standard - Fractional") 
+        .with_description("Imperial standard with fractional units for construction.") 
+        .with_units(duc.create_standard_units(
+            primary_units=duc.create_primary_units(
+                linear=imperial_units,
+                angular=angular_units
+            ),
+            alternate_units=None
+        )) 
+        .with_view_settings(duc.create_standard_view_settings(
+            grid_settings=[duc.IdentifiedGridSettings(id=duc.create_identifier("imperial_grid", "Imperial Grid"), settings=base_grid)],
+            snap_settings=[duc.IdentifiedSnapSettings(id=duc.create_identifier("imperial_snap", "Imperial Snap"), settings=base_snap)],
+            views=[],
+            ucs=[]
+        )) 
+        .build())
+    
+    # Variation 2: Metric with high precision
     metric_units = duc.create_linear_unit_system(
         system=UNIT_SYSTEM.METRIC,
-        precision=2,
+        precision=2, 
         decimal_separator=DECIMAL_SEPARATOR.DOT,
-        suppress_trailing_zeros=False
+        suppress_trailing_zeros=False,
+        suppress_leading_zeros=False, # Added missing argument
+        suppress_zero_feet=False, # Added missing argument
+        suppress_zero_inches=False, # Added missing argument
+        format=duc.DIMENSION_UNITS_FORMAT.DECIMAL # Added missing argument
     )
     
-    metric_standard = duc.create_standard_complete(
-        id="metric_eng",
-        name="Metric Engineering Standard",
-        description="Metric units with decimal precision",
-        units=duc.create_standard_units_simple(
-            linear_units=metric_units,
-            angular_units=duc.create_angular_unit_system(
-                format=ANGULAR_UNITS_FORMAT.DECIMAL_DEGREES,
-                precision=1
-            )
-        ),
-        grid_settings=base_grid,
-        snap_settings=base_snap
-    )
+    metric_standard = (duc.StateBuilder()
+        .build_standard() 
+        .with_id("metric_high_prec") 
+        .with_name("Metric Standard - High Precision") 
+        .with_description("Metric standard for manufacturing with high precision.") 
+        .with_units(duc.create_standard_units(
+            primary_units=duc.create_primary_units(
+                linear=metric_units,
+                angular=angular_units
+            ),
+            alternate_units=None
+        )) 
+        .with_view_settings(duc.create_standard_view_settings(
+            grid_settings=[duc.IdentifiedGridSettings(id=duc.create_identifier("metric_grid", "Metric Grid"), settings=base_grid)],
+            snap_settings=[duc.IdentifiedSnapSettings(id=duc.create_identifier("metric_snap", "Metric Snap"), settings=base_snap)],
+            views=[],
+            ucs=[]
+        )) 
+        .build())
     
     return imperial_standard, metric_standard
 

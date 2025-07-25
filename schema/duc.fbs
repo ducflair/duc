@@ -2571,7 +2571,7 @@ table DucExternalFileData {
    * Epoch timestamp in milliseconds when the file was last retrieved from storage to be loaded onto the scene.
    * We use this flag to determine whether to delete unused files from storage.
    */
-  last_retrieved: long;
+  last_retrieved: long = null;
 }
 
 table DucExternalFileEntry {
@@ -2609,7 +2609,7 @@ table ExportedDataState {
   /** Project-wide settings that are saved with the document and shared by all users */
   duc_global_state: DucGlobalState;
   
-  files: [DucExternalFileEntry];
+  external_files: [DucExternalFileEntry];
   
   /** In case it is needed to embed the version control into the file format */
   version_graph: VersionGraph;
