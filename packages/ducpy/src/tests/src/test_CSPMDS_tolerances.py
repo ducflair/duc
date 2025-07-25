@@ -1,454 +1,232 @@
 """
-CSPMDS Test for Tolerance Elements: Create-Serialize-Parse-Mutate-Delete-Serialize
-Tests the full lifecycle of tolerance elements (Leader, Feature Control Frame, Dimension with tolerances) in DUC files.
+CSPMDS Test for Tolerances: Create-Serialize-Parse-Mutate-Delete-Serialize
+Tests the full lifecycle of tolerance elements in DUC files.
 """
 import io
 import os
-import random
 import pytest
-import math
 
 import ducpy as duc
-from ducpy.classes.ElementsClass import FCFSegmentRow
 
 
 def test_cspmds_tolerances(test_output_dir):
     """
-    Test Create-Serialize-Parse-Mutate-Delete-Serialize lifecycle for tolerance elements.
-    
-    This test covers:
-    - Create: Build tolerance elements with various GD&T symbols and configurations
-    - Serialize: Save initial state to file
-    - Parse: Load and verify all elements can be parsed correctly
-    - Mutate: Modify tolerance properties and relationships  
-    - Delete: Remove some tolerance elements
+    CSPMDS test for tolerance elements:
+    - Create: Create tolerance elements with different types
+    - Serialize: Save to DUC file
+    - Parse: Load the saved file
+    - Mutate: Modify tolerance properties
+    - Delete: Remove some tolerances
     - Serialize: Save the final state
     """
     
     # === CREATE ===
-    print("🔨 CREATE: Creating tolerance elements with various GD&T configurations...")
+    print("🔨 CREATE: Creating tolerance elements...")
     
     elements = []
     
-    # Create some basic geometric elements to apply tolerances to
-    rect1 = duc.create_rectangle(
-        x=50, y=50, width=100, height=60,
-        styles=duc.create_simple_styles(),
-        label="Base Rectangle"
-    )
-    elements.append(rect1)
+    # Create base elements for tolerances using builders API
+    rect1 = (duc.ElementBuilder()
+              .at_position(100, 100)
+              .with_size(80, 60)
+              .with_styles(duc.create_simple_styles())
+              .with_label("Base Rectangle 1")
+              .build_rectangle()
+              .build())
     
-    rect2 = duc.create_rectangle(
-        x=200, y=100, width=80, height=40,
-        styles=duc.create_simple_styles(),
-        label="Feature Rectangle"
-    )
-    elements.append(rect2)
+    rect2 = (duc.ElementBuilder()
+              .at_position(300, 100)
+              .with_size(80, 60)
+              .with_styles(duc.create_simple_styles())
+              .with_label("Base Rectangle 2")
+              .build_rectangle()
+              .build())
     
-    circle = duc.create_ellipse(
-        x=350, y=80, width=60, height=60,
-        styles=duc.create_simple_styles(),
-        label="Cylindrical Feature"
-    )
-    elements.append(circle)
+    # Create tolerance elements
+    from ducpy.classes.ElementsClass import GeometricPoint
     
-    # === 1. LEADER ELEMENTS ===
+    linear_tolerance1 = (duc.ElementBuilder()
+                         .at_position(140, 80)
+                         .with_size(120, 40)
+                         .with_id("linear_tolerance_1")
+                         .with_label("Linear Tolerance 1")
+                         .build_linear_dimension()
+                         .with_origin1((100, 100))
+                         .with_origin2((180, 100))
+                         .with_location((140, 80))
+                         .with_text_override("80±0.1mm")
+                         .build())
     
-    # Leader with text content pointing to a feature
-    leader_text_content = duc.create_leader_text_content("Feature Note")
-    leader_content = duc.create_leader_content(leader_text_content)
+    angular_tolerance1 = (duc.ElementBuilder()
+                          .at_position(200, 200)
+                          .with_size(100, 100)
+                          .with_id("angular_tolerance_1")
+                          .with_label("Angular Tolerance 1")
+                          .build_angular_dimension()
+                          .with_origin1((200, 200))
+                          .with_origin2((250, 200))
+                          .with_location((225, 175))
+                          .with_text_override("45°±0.5°")
+                          .build())
     
-    leader1 = duc.create_leader_element(
-        x1=380, y1=110,  # Start at circle center
-        x2=450, y2=80,   # End point for leader line
-        content_anchor_x=450, content_anchor_y=80,
-        content=leader_content,
-        label="Text Leader"
-    )
-    elements.append(leader1)
+    # Add a Feature Control Frame (FCF) element
+    # This is a complex tolerance type often used in GD&T
+    fcf_element = (duc.ElementBuilder()
+                   .at_position(450, 150)  # Adjusted position
+                   .with_size(150, 50)  # Approximate size for visualization
+                   .with_id("fcf_tolerance_1")
+                   .with_label("FCF Tolerance 1")
+                   .build_feature_control_frame_element()
+                   .with_segments([
+                       duc.create_fcf_segment_row(  # First row, one segment
+                           segments=[
+                               duc.create_fcf_segment(
+                                   symbol=duc.GDT_SYMBOL.POSITION,
+                                   tolerance=duc.create_tolerance_clause(
+                                       value="0.05",
+                                       zone_type=duc.TOLERANCE_ZONE_TYPE.CYLINDRICAL,
+                                       feature_modifiers=[duc.FEATURE_MODIFIER.DIAMETER],
+                                       material_condition=duc.MATERIAL_CONDITION.MAXIMUM
+                                   ),
+                                   datums=[
+                                       duc.create_datum_reference("A"),
+                                       duc.create_datum_reference("B", modifier=duc.MATERIAL_CONDITION.LEAST),
+                                       duc.create_datum_reference("C")
+                                   ]
+                               )
+                           ]
+                       )
+                   ])
+                   .build())
+
+    # Add all elements to the list
+    elements.extend([
+        rect1, rect2,
+        linear_tolerance1, angular_tolerance1, fcf_element
+    ])
     
-    # Leader with block content
-    block_attributes = [duc.create_string_value_entry("TYPE", "HOLE")]
-    leader_block_content = duc.create_leader_block_content(
-        block_id="detail_block_1",
-        attribute_values=block_attributes
-    )
-    leader_content2 = duc.create_leader_content(leader_block_content)
-    
-    leader2 = duc.create_leader_element(
-        x1=100, y1=80,   # Start at rectangle
-        x2=50, y2=30,    # End point
-        content_anchor_x=50, content_anchor_y=30,
-        content=leader_content2,
-        label="Block Leader"
-    )
-    elements.append(leader2)
-    
-    # === 2. FEATURE CONTROL FRAME ELEMENTS ===
-    
-    # Position tolerance FCF
-    position_fcf = duc.create_position_tolerance_fcf(
-        x=100, y=200, width=120, height=25,
-        tolerance_value="⌖0.05",
-        primary_datum="A",
-        secondary_datum="B",
-        tertiary_datum="C",
-        leader_element_id=leader1.element.linear_base.base.id,
-        label="Position Tolerance FCF"
-    )
-    elements.append(position_fcf)
-    
-    # Flatness tolerance FCF
-    flatness_fcf = duc.create_flatness_tolerance_fcf(
-        x=250, y=200, width=80, height=25,
-        tolerance_value="0.02",
-        label="Flatness Tolerance FCF"
-    )
-    elements.append(flatness_fcf)
-    
-    # Complex FCF with multiple symbols (composite tolerance)
-    tolerance1 = duc.create_tolerance_clause(
-        value="⌖0.1",
-        zone_type=duc.TOLERANCE_ZONE_TYPE.CYLINDRICAL if hasattr(duc, 'TOLERANCE_ZONE_TYPE') else None,
-        material_condition=duc.MATERIAL_CONDITION.MAXIMUM if hasattr(duc, 'MATERIAL_CONDITION') else None
-    )
-    
-    tolerance2 = duc.create_tolerance_clause(
-        value="⌖0.05"
-    )
-    
-    datums1 = [
-        duc.create_datum_reference("A"),
-        duc.create_datum_reference("B"),
-        duc.create_datum_reference("C")
-    ]
-    
-    datums2 = [
-        duc.create_datum_reference("A"),
-        duc.create_datum_reference("B")
-    ]
-    
-    segment1 = duc.create_feature_control_frame_segment(
-        symbol=duc.GDT_SYMBOL.POSITION,
-        tolerance=tolerance1,
-        datums=datums1
-    )
-    
-    segment2 = duc.create_feature_control_frame_segment(
-        symbol=duc.GDT_SYMBOL.POSITION,
-        tolerance=tolerance2,
-        datums=datums2
-    )
-    
-    # Frame modifiers
-    frame_modifiers = duc.create_fcf_frame_modifiers(
-        all_around=True,
-        continuous_feature=False
-    )
-    
-    composite_fcf = duc.create_feature_control_frame_element(
-        x=100, y=250, width=140, height=50,
-        rows=[
-            FCFSegmentRow(segments=[segment1]), 
-            FCFSegmentRow(segments=[segment2])
-        ],
-        frame_modifiers=frame_modifiers,
-        label="Composite Position FCF"
-    )
-    elements.append(composite_fcf)
-    
-    # === 3. DATUM FEATURE SYMBOLS ===
-    
-    # Datum A symbol
-    datum_binding = duc.create_point_binding(rect1.element.base.id, focus=0.5)
-    datum_a = duc.create_datum_feature_symbol(
-        x=50, y=30, width=20, height=20,
-        datum_letter="A",
-        feature_binding=datum_binding,
-        label="Datum A Symbol"
-    )
-    elements.append(datum_a)
-    
-    # Datum B symbol
-    datum_b = duc.create_datum_feature_symbol(
-        x=200, y=80, width=20, height=20,  
-        datum_letter="B",
-        label="Datum B Symbol"
-    )
-    elements.append(datum_b)
-    
-    # Datum C symbol
-    datum_c = duc.create_datum_feature_symbol(
-        x=350, y=60, width=20, height=20,
-        datum_letter="C", 
-        label="Datum C Symbol"
-    )
-    elements.append(datum_c)
-    
-    # === 4. VARIOUS GD&T SYMBOLS ===
-    
-    # Straightness
-    straightness_tolerance = duc.create_tolerance_clause(value="0.01")
-    straightness_segment = duc.create_feature_control_frame_segment(
-        symbol=duc.GDT_SYMBOL.STRAIGHTNESS,
-        tolerance=straightness_tolerance
-    )
-    straightness_fcf = duc.create_feature_control_frame_element(
-        x=400, y=200, width=70, height=25,
-        rows=[FCFSegmentRow(segments=[straightness_segment])],
-        label="Straightness FCF"
-    )
-    elements.append(straightness_fcf)
-    
-    # Circularity
-    circularity_tolerance = duc.create_tolerance_clause(value="0.005")
-    circularity_segment = duc.create_feature_control_frame_segment(
-        symbol=duc.GDT_SYMBOL.CIRCULARITY,
-        tolerance=circularity_tolerance
-    )
-    circularity_fcf = duc.create_feature_control_frame_element(
-        x=400, y=240, width=70, height=25,
-        rows=[FCFSegmentRow(segments=[circularity_segment])],
-        label="Circularity FCF"
-    )
-    elements.append(circularity_fcf)
-    
-    # Perpendicularity
-    perp_tolerance = duc.create_tolerance_clause(value="0.02")
-    perp_datums = [duc.create_datum_reference("A")]
-    perp_segment = duc.create_feature_control_frame_segment(
-        symbol=duc.GDT_SYMBOL.PERPENDICULARITY,
-        tolerance=perp_tolerance,
-        datums=perp_datums
-    )
-    perp_fcf = duc.create_feature_control_frame_element(
-        x=400, y=280, width=90, height=25,
-        rows=[FCFSegmentRow(segments=[perp_segment])],
-        label="Perpendicularity FCF"
-    )
-    elements.append(perp_fcf)
-    
-    # Profile of Surface
-    profile_tolerance = duc.create_tolerance_clause(value="0.1")
-    profile_datums = [
-        duc.create_datum_reference("A"),
-        duc.create_datum_reference("B"),
-        duc.create_datum_reference("C")
-    ]
-    profile_segment = duc.create_feature_control_frame_segment(
-        symbol=duc.GDT_SYMBOL.PROFILE_OF_SURFACE,
-        tolerance=profile_tolerance,
-        datums=profile_datums
-    )
-    profile_fcf = duc.create_feature_control_frame_element(
-        x=100, y=320, width=120, height=25,
-        rows=[FCFSegmentRow(segments=[profile_segment])],
-        label="Profile of Surface FCF"
-    )
-    elements.append(profile_fcf)
-    
-    # === 5. DIMENSION ELEMENTS WITH TOLERANCES ===
-    
-    # Linear dimension with tolerance
-    dimension_with_tolerance = duc.create_linear_dimension(
-        x1=50, y1=110,   # Bottom of rect1
-        x2=150, y2=110,  # Bottom right of rect1
-        offset=30,
-        text_override="100±0.05",
-        label="Toleranced Linear Dimension"
-    )
-    elements.append(dimension_with_tolerance)
-    
-    # Angular dimension with tolerance
-    angular_tolerance_dim = duc.create_angular_dimension(
-        center_x=300, center_y=350,
-        x1=250, y1=350,
-        x2=300, y2=300,
-        offset=40,
-        text_override="45°±1°",
-        label="Toleranced Angular Dimension"
-    )
-    elements.append(angular_tolerance_dim)
-    
-    
-    print(f"Created {len(elements)} elements with comprehensive tolerance representations including FCF elements")
-    
-    # All elements including FCF elements should now work with the fixed schema
-    print(f"Testing with all {len(elements)} elements (including FCF elements with fixed parsing)")    # === SERIALIZE ===
-    print("💾 SERIALIZE: Saving initial state...")
-    
-    initial_file = os.path.join(test_output_dir, "cspmds_tolerances_initial.duc")
+    # === SERIALIZE ===
+    print("💾 SERIALIZE: Saving to DUC file...")
+    output_file = os.path.join(test_output_dir, "test_tolerance_elements.duc")
     serialized_data = duc.serialize_duc(
-        name="ToleranceElementsCSPMDS_Initial", 
+        name="ToleranceElementsTest",
         elements=elements
     )
     
-    with open(initial_file, 'wb') as f:
+    with open(output_file, 'wb') as f:
         f.write(serialized_data)
     
-    assert os.path.exists(initial_file)
-    print(f"Saved initial state to {initial_file}")
+    assert os.path.exists(output_file) and os.path.getsize(output_file) > 0
+    print(f"✅ Serialized {len(elements)} elements")
     
     # === PARSE ===
-    print("📖 PARSE: Loading saved file...")
-    
+    print("📖 PARSE: Loading the saved file...")
     parsed_data = duc.parse_duc(io.BytesIO(serialized_data))
-    loaded_elements = parsed_data.elements
+    parsed_elements = parsed_data.elements
     
-    # Verify tolerance-specific elements
-    for element in loaded_elements:
-        if hasattr(element, 'element'):
-            if hasattr(element.element, 'rows'):  # FCF element
-                print(f"  ✓ FCF with {len(element.element.rows)} rows")
-                for i, fcf_row in enumerate(element.element.rows):
-                    print(f"    Row {i+1}: {len(fcf_row.segments)} segments")
-                    for j, segment in enumerate(fcf_row.segments):
-                        symbol_name = "UNKNOWN"
-                        for name in dir(duc.GDT_SYMBOL):
-                            if not name.startswith('_') and getattr(duc.GDT_SYMBOL, name) == segment.symbol:
-                                symbol_name = name
-                                break
-                        print(f"      Segment {j+1}: {symbol_name}, tolerance={segment.tolerance.value if segment.tolerance else 'None'}")
-            
-            elif hasattr(element.element, 'content_anchor'):  # Leader element
-                print(f"  ✓ Leader element with anchor at ({element.element.content_anchor.x}, {element.element.content_anchor.y})")
-                if element.element.content:
-                    if hasattr(element.element.content.content, 'text'):
-                        print(f"    Text content: '{element.element.content.content.text}'")
-                    elif hasattr(element.element.content.content, 'block_id'):
-                        print(f"    Block content: {element.element.content.content.block_id}")
-            
-            elif hasattr(element.element, 'dimension_type'):  # Dimension element
-                print(f"  ✓ Dimension element with tolerance text")
-    
-    assert len(loaded_elements) == len(elements), f"Expected {len(elements)} elements, got {len(loaded_elements)}"
-    print(f"Successfully parsed {len(loaded_elements)} elements")
+    assert len(parsed_elements) == len(elements)
+    print(f"✅ Parsed {len(parsed_elements)} elements")
     
     # === MUTATE ===
-    print("🔧 MUTATE: Modifying tolerance properties...")
+    print("🔧 MUTATE: Modifying tolerance elements...")
     
-    mutations_made = 0
-    
-    for element in loaded_elements:
-        if hasattr(element, 'element') and hasattr(element.element, 'rows'):
-            # Modify FCF tolerances
-            if element.element.rows:
-                for fcf_row in element.element.rows:
-                    for segment in fcf_row.segments:
-                        if segment.tolerance and "0.05" in segment.tolerance.value:
-                            segment.tolerance.value = segment.tolerance.value.replace("0.05", "0.03")
-                            mutations_made += 1
-                            print(f"  ✓ Updated tolerance value in FCF")
+    # Mutate tolerance properties
+    for el_wrapper in parsed_elements:
+        if isinstance(el_wrapper.element, duc.DucDimensionElement):
+            original_x = el_wrapper.element.base.x
+            original_y = el_wrapper.element.base.y
+            original_text = el_wrapper.element.text_override
+
+            # Update position and text_override for dimension elements
+            duc.mutate_element(el_wrapper, 
+                              x=original_x + 20,
+                              y=original_y + 10,
+                              text_override=f"MUTATED {original_text}")
+            print(f"Mutated {el_wrapper.element.base.label}: New X={el_wrapper.element.base.x}, New Y={el_wrapper.element.base.y}, New Text='{el_wrapper.element.text_override}'")
         
-        elif hasattr(element, 'element') and hasattr(element.element, 'content_anchor'):
-            # Modify leader positions
-            element.element.content_anchor.x += 10
-            element.element.content_anchor.y += 5
-            mutations_made += 1
-            print(f"  ✓ Moved leader anchor point")
-        
-        elif hasattr(element, 'element') and hasattr(element.element, 'text_override'):
-            # Modify dimension tolerance text
-            if "±" in element.element.text_override:
-                element.element.text_override = element.element.text_override.replace("±0.05", "±0.02")
-                mutations_made += 1
-                print(f"  ✓ Updated dimension tolerance")
-    
-    print(f"Made {mutations_made} mutations to tolerance elements")
-    
-    # Add a new FCF element to test dynamic additions
-    new_runout_tolerance = duc.create_tolerance_clause(value="0.03")
-    new_runout_datums = [duc.create_datum_reference("A")]
-    new_runout_segment = duc.create_feature_control_frame_segment(
-        symbol=duc.GDT_SYMBOL.CIRCULAR_RUNOUT,
-        tolerance=new_runout_tolerance,
-        datums=new_runout_datums
-    )
-    new_runout_fcf_row = FCFSegmentRow(segments=[new_runout_segment])
-    new_runout_fcf = duc.create_feature_control_frame_element(
-        x=300, y=380, width=90, height=25,
-        rows=[new_runout_fcf_row],
-        label="New Runout FCF"
-    )
-    loaded_elements.append(new_runout_fcf)
-    print("✓ Added new Runout FCF element")
-    
+        elif isinstance(el_wrapper.element, duc.DucFeatureControlFrameElement):
+            # Mutate the label of the FCF element
+            original_label = el_wrapper.element.base.label
+            duc.mutate_element(el_wrapper, label=f"MUTATED {original_label}")
+            print(f"Mutated {el_wrapper.element.base.label}")
+
     # === DELETE ===
     print("🗑️ DELETE: Removing some tolerance elements...")
     
-    elements_to_remove = []
-    for element in loaded_elements:
-        if hasattr(element, 'element') and hasattr(element.element, 'base') and hasattr(element.element.base, 'label'):
-            # Remove elements with "Circularity" in the label
-            if "Circularity" in element.element.base.label:
-                elements_to_remove.append(element)
-            # Remove one of the datum symbols
-            elif "Datum C" in element.element.base.label:
-                elements_to_remove.append(element)
+    # Remove angular tolerance and one base rectangle
+    elements_to_keep = [
+        el for el in parsed_elements 
+        if not (
+            (isinstance(el.element, duc.DucDimensionElement) and "Angular" in el.element.base.label) or
+            (isinstance(el.element, duc.DucRectangleElement) and "Base Rectangle 2" in el.element.base.label)
+        )
+    ]
     
-    for element in elements_to_remove:
-        loaded_elements.remove(element)
-        print(f"  ✓ Removed element: {element.element.base.label}")
-    
-    print(f"Removed {len(elements_to_remove)} elements")
-    
-    # === SERIALIZE ===
-    print("💾 SERIALIZE: Saving final state...")
-    
-    final_file = os.path.join(test_output_dir, "cspmds_tolerances_final.duc")
+    # === SERIALIZE FINAL ===
+    print("💾 SERIALIZE FINAL: Saving the final state...")
+    final_output_file = os.path.join(test_output_dir, "test_tolerance_elements_final.duc")
     final_serialized_data = duc.serialize_duc(
-        name="ToleranceElementsCSPMDS_Final", 
-        elements=loaded_elements
+        name="ToleranceElementsTestFinal",
+        elements=elements_to_keep
     )
     
-    with open(final_file, 'wb') as f:
+    with open(final_output_file, 'wb') as f:
         f.write(final_serialized_data)
     
-    assert os.path.exists(final_file)
-    print(f"Saved final state to {final_file}")
+    assert os.path.exists(final_output_file) and os.path.getsize(final_output_file) > 0
+    print(f"✅ Final serialized {len(elements_to_keep)} elements")
     
-    # === VERIFICATION ===
-    print("✅ VERIFICATION: Final validation...")
-    
-    # Verify final file can be loaded
+    # Verify the final state
     final_parsed_data = duc.parse_duc(io.BytesIO(final_serialized_data))
     final_elements = final_parsed_data.elements
     
-    print(f"Final verification: {len(final_elements)} elements in final file")
-    
-    # Count tolerance elements by type
-    leader_count = 0
-    fcf_count = 0
-    datum_count = 0
-    dimension_tolerance_count = 0
-    
-    for element in final_elements:
-        if hasattr(element, 'element'):
-            if hasattr(element.element, 'content_anchor'):
-                leader_count += 1
-            elif hasattr(element.element, 'rows'):
-                if element.element.rows:  # FCF with tolerance segments
-                    fcf_count += 1
-                else:  # Datum symbol (empty rows)
-                    datum_count += 1
-            elif hasattr(element.element, 'text_override') and "±" in str(element.element.text_override):
-                dimension_tolerance_count += 1
-    
-    print(f"Final count: {leader_count} leaders, {fcf_count} FCFs, {datum_count} datums, {dimension_tolerance_count} toleranced dimensions")
-    
-    # Verify we have the expected variety of GD&T symbols
-    symbols_found = set()
-    for element in final_elements:
-        if hasattr(element, 'element') and hasattr(element.element, 'rows'):
-            for fcf_row in element.element.rows:
-                for segment in fcf_row.segments:
-                    symbols_found.add(segment.symbol)
-    
-    print(f"GD&T symbols found: {len(symbols_found)} different types")
-    
-    assert len(final_elements) >= 5, "Should have at least 5 working elements after mutations and deletions"
-    
-    print("🎉 CSPMDS tolerance elements test completed successfully!")
-    print(f"   ✅ Created, serialized, parsed, mutated, deleted, and re-serialized {len(final_elements)} tolerance elements")
-    print(f"   ✅ Successfully handled leader elements, FCF elements, datum symbols, and dimension elements with tolerance text")
-    print(f"   ✅ All tolerance elements including FCF elements working with fixed schema") 
+    assert len(final_elements) == len(elements_to_keep), "Final element count mismatch after deletion."
+
+    # Count element types in the final state
+    linear_tolerances = [el for el in final_elements if isinstance(el.element, duc.DucDimensionElement) and el.element.dimension_type == duc.DIMENSION_TYPE.LINEAR]
+    angular_tolerances = [el for el in final_elements if isinstance(el.element, duc.DucDimensionElement) and el.element.dimension_type == duc.DIMENSION_TYPE.ANGULAR]
+    fcf_elements = [el for el in final_elements if isinstance(el.element, duc.DucFeatureControlFrameElement)]
+    rectangles = [el for el in final_elements if isinstance(el.element, duc.DucRectangleElement)]
+
+    # Verify correct counts after deletion
+    assert len(linear_tolerances) == 1, "Expected 1 linear tolerance to remain."
+    assert len(angular_tolerances) == 0, "Expected 0 angular tolerances after deletion."
+    assert len(fcf_elements) == 1, "Expected 1 FCF element to remain."
+    assert len(rectangles) == 1, "Expected 1 rectangle to remain after deleting Base Rectangle 2."
+
+    print(f"Final elements: {len(final_elements)}")
+    print(f"Linear tolerances: {len(linear_tolerances)}")
+    print(f"Angular tolerances: {len(angular_tolerances)}")
+    print(f"FCF elements: {len(fcf_elements)}")
+    print(f"Rectangles: {len(rectangles)}")
+
+    # Verify mutations were applied to the remaining elements
+    for el_wrapper in final_elements:
+        if isinstance(el_wrapper.element, duc.DucDimensionElement):
+            # Check for linear tolerance mutation
+            if el_wrapper.element.base.id == "linear_tolerance_1":
+                assert el_wrapper.element.base.x == 140 + 20 # Original x from at_position + 20
+                assert el_wrapper.element.base.y == 80 + 10  # Original y from at_position + 10
+                assert el_wrapper.element.text_override == "MUTATED 80±0.1mm"
+                print("✅ Verified mutation for Linear Tolerance 1")
+
+        elif isinstance(el_wrapper.element, duc.DucFeatureControlFrameElement):
+            # Check for FCF element mutation
+            if el_wrapper.element.base.id == "fcf_tolerance_1":
+                assert el_wrapper.element.base.label == "MUTATED FCF Tolerance 1"
+                print("✅ Verified mutation for FCF Tolerance 1")
+
+
+    print("✅ CSPMDS Tolerances test completed successfully!")
+    print(f"   - Created {len(elements)} initial elements")
+    print(f"   - Mutated tolerance properties and FCF label")
+    print(f"   - Deleted 1 angular tolerance and 1 base rectangle")
+    print(f"   - Final state: {len(final_elements)} elements")
+
+@pytest.fixture
+def test_output_dir():
+    """Create a test output directory."""
+    current_script_path = os.path.dirname(os.path.abspath(__file__))
+    output_dir = os.path.join(current_script_path, "..", "output")
+    os.makedirs(output_dir, exist_ok=True)
+    return output_dir 

@@ -46,7 +46,7 @@ def parse_duc(blob: IO[bytes]) -> ExportedDataState:
     duc_local_state: Optional[DucLocalState] = parse_fbs_duc_local_state(data.DucLocalState()) if data.DucLocalState() else None
     duc_global_state: Optional[DucGlobalState] = parse_fbs_duc_global_state(data.DucGlobalState()) if data.DucGlobalState() else None
     
-    files: List[DucExternalFileEntry] = [parse_fbs_duc_external_file_entry(data.Files(i)) for i in range(data.FilesLength())]
+    files: List[DucExternalFileEntry] = [parse_fbs_duc_external_file_entry(data.ExternalFiles(i)) for i in range(data.ExternalFilesLength())]
     
     version_graph: VersionGraph = parse_fbs_version_graph(data.VersionGraph())
 

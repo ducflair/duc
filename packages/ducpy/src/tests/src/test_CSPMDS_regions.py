@@ -1,297 +1,206 @@
 """
-CSPMDS Test for Regions: Create-Serialize-Parse-Mutate-Delete-Serialize
-Tests the full lifecycle of region management in DUC files.
+CSPMDS Test for Regions: Create-Mutate-Delete
+Tests the lifecycle of region elements in DUC files.
 """
-import io
-import os
-import random
 import pytest
+import os
+from ducpy.utils.mutate_utils import recursive_mutate
 
 import ducpy as duc
-from ducpy.Duc.BOOLEAN_OPERATION import BOOLEAN_OPERATION
 
 
 def test_cspmds_regions(test_output_dir):
     """
-    CSPMDS test for regions:
-    - Create: Create elements assigned to different regions
-    - Serialize: Save to DUC file
-    - Parse: Load the saved file
-    - Mutate: Modify region assignments
-    - Delete: Remove some regions and elements
-    - Serialize: Save the final state
+    CSPMDS test for region elements:
+    - Create: Create region elements with different boolean operations
+    - Mutate: Modify region properties
+    - Delete: Remove some region elements
     """
     
     # === CREATE ===
-    print("🔨 CREATE: Creating DucRegion objects and elements...")
+    print("🔨 CREATE: Creating region elements...")
     
-    # Create actual DucRegion objects using builders
-    regions = []
-    region_a = duc.create_region(
-        id="region_A",
-        label="Region A - Primary",
-        boolean_operation=BOOLEAN_OPERATION.UNION
-    )
-    region_b = duc.create_region(
-        id="region_B", 
-        label="Region B - Secondary",
-        boolean_operation=BOOLEAN_OPERATION.SUBTRACT
-    )
-    region_c = duc.create_region(
-        id="region_C",
-        label="Region C - Intersection",
-        boolean_operation=BOOLEAN_OPERATION.INTERSECT
-    )
-    region_d = duc.create_region(
-        id="region_D",
-        label="Region D - Exclude",
-        boolean_operation=BOOLEAN_OPERATION.EXCLUDE
-    )
+    # Create region elements
     
-    regions = [region_a, region_b, region_c, region_d]
-    region_ids = [r.id for r in regions]
+    union_region = (duc.StateBuilder()
+        .with_id("region_union")
+        .with_description("Region with union operation")
+        .build_region()
+        .with_label("Union Region")
+        .with_boolean_operation(duc.BOOLEAN_OPERATION.UNION)
+        .build())
     
-    elements = []
+    intersect_region = (duc.StateBuilder()
+        .with_id("region_intersect")
+        .with_description("Region with intersection operation")
+        .build_region()
+        .with_label("Intersection Region") 
+        .with_boolean_operation(duc.BOOLEAN_OPERATION.INTERSECT)
+        .build())
+
+    subtract_region = (duc.StateBuilder()
+        .with_id("region_subtract")
+        .with_description("Region with subtract operation")
+        .build_region()
+        .with_label("Subtract Region")
+        .with_boolean_operation(duc.BOOLEAN_OPERATION.SUBTRACT)
+        .build())
+
+    exclude_region = (duc.StateBuilder()
+        .with_id("region_exclude")
+        .with_description("Region with exclude operation")
+        .build_region()
+        .with_label("Exclude Region")
+        .with_boolean_operation(duc.BOOLEAN_OPERATION.EXCLUDE)
+        .build())
     
-    # Create elements and assign them to regions
-    for i in range(12):  # Create 12 elements
-        region_id = region_ids[i % len(region_ids)]  # Distribute across regions
-        
-        if i % 4 == 0:
-            # Rectangle
-            element = duc.create_rectangle(
-                x=i*30, y=i*20, width=40, height=30,
-                styles=duc.create_simple_styles(),
-                label=f"Rect_{i}_in_{region_id}"
-            )
-        elif i % 4 == 1:
-            # Ellipse
-            element = duc.create_ellipse(
-                x=i*30, y=i*20, width=35, height=25,
-                styles=duc.create_simple_styles(),
-                label=f"Ellipse_{i}_in_{region_id}"
-            )
-        elif i % 4 == 2:
-            # Polygon
-            element = duc.create_polygon(
-                x=i*30, y=i*20, sides=5+i%3, width=30, height=30,
-                styles=duc.create_simple_styles(),
-                label=f"Polygon_{i}_in_{region_id}"
-            )
-        else:
-            # Linear element
-            element = duc.create_linear_element(
-                points=[(i*30, i*20), (i*30+50, i*20+30)],
-                styles=duc.create_simple_styles(),
-                label=f"Line_{i}_in_{region_id}"
-            )
-        
-        # Assign to region using mutate_element
-        duc.mutate_element(element, region_ids=[region_id])
-        elements.append(element)
-    
-    print(f"Created {len(elements)} elements and {len(regions)} DucRegion objects")
-    
+    regions = [union_region, intersect_region, subtract_region, exclude_region]
+    print(f"✅ Created {len(regions)} regions")
+
+    # Create elements to be affected by regions
+    elements_to_region = []
+
+    # Elements for Union Region
+    elements_to_region.append(duc.ElementBuilder()
+        .at_position(0, 0).with_size(50, 50).with_label("Union Rect 1")
+        .with_region_ids(["region_union"])
+        .build_rectangle().build())
+    elements_to_region.append(duc.ElementBuilder()
+        .at_position(30, 0).with_size(50, 50).with_label("Union Rect 2")
+        .with_region_ids(["region_union"])
+        .build_rectangle().build())
+
+    # Elements for Intersect Region
+    elements_to_region.append(duc.ElementBuilder()
+        .at_position(100, 0).with_size(50, 50).with_label("Intersect Rect 1")
+        .with_region_ids(["region_intersect"])
+        .build_rectangle().build())
+    elements_to_region.append(duc.ElementBuilder()
+        .at_position(130, 0).with_size(50, 50).with_label("Intersect Rect 2")
+        .with_region_ids(["region_intersect"])
+        .build_rectangle().build())
+
+    # Elements for Subtract Region (order matters)
+    elements_to_region.append(duc.ElementBuilder()
+        .at_position(200, 0).with_size(80, 80).with_label("Subtract Base Rect")
+        .with_region_ids(["region_subtract"])
+        .build_rectangle().build())
+    elements_to_region.append(duc.ElementBuilder()
+        .at_position(210, 10).with_size(60, 60).with_label("Subtract Cut Rect")
+        .with_region_ids(["region_subtract"])
+        .build_rectangle().build())
+
+    # Elements for Exclude Region
+    elements_to_region.append(duc.ElementBuilder()
+        .at_position(300, 0).with_size(50, 50).with_label("Exclude Rect 1")
+        .with_region_ids(["region_exclude"])
+        .build_rectangle().build())
+    elements_to_region.append(duc.ElementBuilder()
+        .at_position(330, 0).with_size(50, 50).with_label("Exclude Rect 2")
+        .with_region_ids(["region_exclude"])
+        .build_rectangle().build())
+
+    print(f"✅ Created {len(elements_to_region)} elements to be affected by regions")
+
+    # Debugging: Print region_ids before serialization
+    print("--- Region IDs before serialization ---")
+    for el in elements_to_region:
+        print(f"Element '{el.element.base.label}' (ID: {el.element.base.id}): Region IDs: {el.element.base.region_ids}")
+    print("---------------------------------------")
+
     # === SERIALIZE ===
     print("💾 SERIALIZE: Saving initial state...")
-    
     initial_file = os.path.join(test_output_dir, "cspmds_regions_initial.duc")
-    serialized_data = duc.serialize_duc(
-        name="RegionsCSPMDS_Initial", 
-        elements=elements,
-        regions=regions
+    duc.write_duc_file(
+        file_path=initial_file,
+        name="RegionsCSPMDS_Initial",
+        regions=regions,
+        elements=elements_to_region
     )
-    
-    with open(initial_file, 'wb') as f:
-        f.write(serialized_data)
-    
-    assert os.path.exists(initial_file)
+    assert os.path.exists(initial_file) and os.path.getsize(initial_file) > 0
     print(f"Saved initial state to {initial_file}")
-    
+
     # === PARSE ===
     print("📖 PARSE: Loading saved file...")
-    
-    parsed_data = duc.parse_duc(io.BytesIO(serialized_data))
-    loaded_elements = parsed_data.elements
-    loaded_regions = parsed_data.regions if hasattr(parsed_data, 'regions') else []
-    
-    assert len(loaded_elements) == len(elements)
+    parsed_data = duc.read_duc_file(initial_file)
+    loaded_regions = parsed_data.regions
     assert len(loaded_regions) == len(regions)
-    print(f"Loaded {len(loaded_elements)} elements and {len(loaded_regions)} DucRegion objects")
-    
-    # Verify region assignments
-    region_counts = {}
-    for el_wrapper in loaded_elements:
-        if hasattr(el_wrapper.element, 'base'):
-            region_ids = el_wrapper.element.base.region_ids
-        elif hasattr(el_wrapper.element, 'linear_base'):
-            region_ids = el_wrapper.element.linear_base.base.region_ids
-        else:
-            region_ids = []
-            
-        for region_id in region_ids:
-            region_counts[region_id] = region_counts.get(region_id, 0) + 1
-    
-    print(f"Initial region distribution: {region_counts}")
-    
+    print(f"Loaded {len(loaded_regions)} regions")
+
     # === MUTATE ===
-    print("🔧 MUTATE: Modifying region assignments...")
+    print("🔧 MUTATE: Modifying region elements...")
     
-    mutations_count = 0
-    
-    for el_wrapper in loaded_elements:
-        # Randomly reassign some elements to different regions
-        if random.random() < 0.4:  # 40% chance to reassign
-            available_regions = [r for r in region_ids if r in ["region_A", "region_B", "region_D"]]  # Skip region_C for now
-            if available_regions:
-                new_regions = random.sample(available_regions, k=min(random.randint(1, 2), len(available_regions)))  # 1-2 regions
-                duc.mutate_element(el_wrapper, region_ids=new_regions)
-                mutations_count += 1
+    # Mutate region properties
+    for region in loaded_regions:
+        # Update label and description
+        duc.mutate_element(region.stack_base, label=f"Modified {region.stack_base.label}")
+        duc.mutate_element(region.stack_base, description=f"Updated: {region.stack_base.description}")
         
-        # Also randomly move elements within their regions
-        if hasattr(el_wrapper.element, 'base'):
-            duc.mutate_element(
-                el_wrapper,
-                x=el_wrapper.element.base.x + random.uniform(-30, 30),
-                y=el_wrapper.element.base.y + random.uniform(-30, 30)
-            )
-        elif hasattr(el_wrapper.element, 'linear_base'):
-            old_points = el_wrapper.element.linear_base.points
-            new_points = [
-                type(p)(x=p.x + random.uniform(-20, 20), y=p.y + random.uniform(-20, 20)) 
-                for p in old_points
-            ]
-            duc.mutate_element(el_wrapper, points=new_points)
+        # Mutate boolean operation of the Subtract Region
+        if region.id == "region_subtract":
+            duc.mutate_element(region, boolean_operation=duc.BOOLEAN_OPERATION.UNION)
+            print(f"Mutated Subtract Region: new boolean_operation={region.boolean_operation}")
     
-    print(f"Mutated {mutations_count} region assignments")
+    print("✅ Mutated region properties")
     
     # === DELETE ===
-    print("🗑️ DELETE: Removing elements from specific regions...")
+    print("🗑️ DELETE: Removing some region elements...")
     
-    # Remove all elements from region_C (simulate deleting the region)
-    elements_to_delete = []
-    for i, el_wrapper in enumerate(loaded_elements):
-        if hasattr(el_wrapper.element, 'base'):
-            region_ids = el_wrapper.element.base.region_ids
-        elif hasattr(el_wrapper.element, 'linear_base'):
-            region_ids = el_wrapper.element.linear_base.base.region_ids
-        else:
-            region_ids = []
-            
-        # Delete if element is ONLY in region_C
-        if region_ids == ["region_C"]:
-            elements_to_delete.append(i)
+    # Remove one region (e.g., Exclude Region)
+    regions_to_keep = [r for r in loaded_regions if r.id != "region_exclude"]
     
-    # Remove elements (in reverse order to maintain indices)
-    for i in reversed(elements_to_delete):
-        el = loaded_elements[i]
-        label = getattr(el.element.base if hasattr(el.element, 'base') else el.element.linear_base.base, 'label', 'unknown')
-        print(f"Deleting element exclusively in region_C: {label}")
-        del loaded_elements[i]
-    
-    print(f"Deleted {len(elements_to_delete)} elements exclusively in region_C")
-    
-    # Remove region_C from the regions list as well
-    regions_to_delete = []
-    for i, region in enumerate(loaded_regions):
-        # Check both id and label since parsing might have issues with id
-        if region.id == "region_C" or "Region C" in region.stack_base.label:
-            regions_to_delete.append(i)
-    
-    for i in reversed(regions_to_delete):
-        del loaded_regions[i]
-    
-    print(f"Deleted region_C definition")
-    
-    # Remove elements that are in multiple regions including region_C by updating their region_ids
-    for el_wrapper in loaded_elements:
-        if hasattr(el_wrapper.element, 'base'):
-            region_ids = el_wrapper.element.base.region_ids
-        elif hasattr(el_wrapper.element, 'linear_base'):
-            region_ids = el_wrapper.element.linear_base.base.region_ids
-        else:
-            region_ids = []
-            
-        if "region_C" in region_ids:
-            new_region_ids = [rid for rid in region_ids if rid != "region_C"]
-            duc.mutate_element(el_wrapper, region_ids=new_region_ids)
-            print(f"Removed region_C from element with multiple regions")
-    
-    # Also randomly delete some other elements
-    additional_deletes = min(2, len(loaded_elements) // 4)  # Delete up to 1/4 but max 2
-    for _ in range(additional_deletes):
-        if loaded_elements:
-            random_index = random.randint(0, len(loaded_elements) - 1)
-            del loaded_elements[random_index]
-    
-    print(f"Deleted {additional_deletes} additional random elements")
+    print(f"Deleted 1 region, keeping {len(regions_to_keep)}")
     
     # === SERIALIZE (FINAL) ===
     print("💾 SERIALIZE: Saving final state...")
-    
     final_file = os.path.join(test_output_dir, "cspmds_regions_final.duc")
-    final_serialized_data = duc.serialize_duc(
-        name="RegionsCSPMDS_Final", 
-        elements=loaded_elements,
-        regions=loaded_regions
+    duc.write_duc_file(
+        file_path=final_file,
+        name="RegionsCSPMDS_Final",
+        regions=regions_to_keep,
+        elements=elements_to_region
     )
-    
-    with open(final_file, 'wb') as f:
-        f.write(final_serialized_data)
-    
-    assert os.path.exists(final_file)
+    assert os.path.exists(final_file) and os.path.getsize(final_file) > 0
     print(f"Saved final state to {final_file}")
-    
+
     # === VERIFICATION ===
     print("✅ VERIFICATION: Checking final state...")
+    final_parsed_data = duc.read_duc_file(final_file)
+    final_regions = final_parsed_data.regions
+    final_elements_to_region = [el for el in final_parsed_data.elements if el.element.base.region_ids]
     
-    # Parse final file to verify
-    final_parsed_data = duc.parse_duc(io.BytesIO(final_serialized_data))
-    final_elements = final_parsed_data.elements
-    final_regions = final_parsed_data.regions if hasattr(final_parsed_data, 'regions') else []
-    
-    print(f"Final element count: {len(final_elements)}")
-    print(f"Final region count: {len(final_regions)}")
-    assert len(final_elements) == len(loaded_elements)
-    assert len(final_elements) < len(elements)  # Should be fewer than original
-    assert len(final_regions) < len(regions)  # Should have fewer regions too
-    
-    # Verify region_C is completely removed
-    region_c_found = any(r.id == "region_C" or "Region C" in r.stack_base.label for r in final_regions)
-    assert not region_c_found, "Region C should be completely removed"
-    
-    # Verify no elements are exclusively in region_C
-    final_region_counts = {}
-    elements_with_region_c = 0
-    
-    for el_wrapper in final_elements:
-        if hasattr(el_wrapper.element, 'base'):
-            region_ids = el_wrapper.element.base.region_ids
-        elif hasattr(el_wrapper.element, 'linear_base'):
-            region_ids = el_wrapper.element.linear_base.base.region_ids
-        else:
-            region_ids = []
-            
-        # Check if any element is exclusively in region_C
-        if region_ids == ["region_C"]:
-            elements_with_region_c += 1
-            
-        for region_id in region_ids:
-            final_region_counts[region_id] = final_region_counts.get(region_id, 0) + 1
-    
-    print(f"Final region distribution: {final_region_counts}")
-    assert elements_with_region_c == 0, "No elements should be exclusively in region_C"
-    
+    assert len(final_regions) == len(regions_to_keep), "Final region count mismatch after deletion."
+    assert len(final_elements_to_region) == len(elements_to_region) # Elements should persist
+
+    # Debugging: Print region_ids after deserialization
+    print("--- Region IDs after deserialization ---")
+    for el in final_parsed_data.elements:
+        print(f"Element '{el.element.base.label}' (ID: {el.element.base.id}): Region IDs: {el.element.base.region_ids}")
+    print("----------------------------------------")
+
+    # Verify mutations on regions
+    for region in final_regions:
+        if region.id == "region_union":
+            assert "Modified Union Region" in region.stack_base.label
+            assert "Updated: Region with union operation" in region.stack_base.description
+            assert region.boolean_operation == duc.BOOLEAN_OPERATION.UNION # Should remain UNION
+        elif region.id == "region_intersect":
+            assert "Modified Intersection Region" in region.stack_base.label
+            assert "Updated: Region with intersection operation" in region.stack_base.description
+            assert region.boolean_operation == duc.BOOLEAN_OPERATION.INTERSECT # Should remain INTERSECT
+        elif region.id == "region_subtract":
+            assert "Modified Subtract Region" in region.stack_base.label
+            assert "Updated: Region with subtract operation" in region.stack_base.description
+            assert region.boolean_operation == duc.BOOLEAN_OPERATION.UNION # Should have been mutated to UNION
+
+    # Verify deleted region is gone
+    assert next((r for r in final_regions if r.id == "region_exclude"), None) is None, "Exclude Region should have been deleted."
+
     print("✅ CSPMDS Regions test completed successfully!")
-
-
-@pytest.fixture
-def test_output_dir():
-    """Create a test output directory."""
-    current_script_path = os.path.dirname(os.path.abspath(__file__))
-    output_dir = os.path.join(current_script_path, "..", "output")
-    os.makedirs(output_dir, exist_ok=True)
-    return output_dir
+    print(f"   - Created {len(regions)} initial regions and {len(elements_to_region)} elements")
+    print(f"   - Mutated region properties and boolean operation")
+    print(f"   - Deleted 1 region")
+    print(f"   - Final state: {len(final_regions)} regions, {len(final_elements_to_region)} elements")
 
 
 if __name__ == "__main__":

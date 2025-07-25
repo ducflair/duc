@@ -478,11 +478,13 @@ def serialize_fbs_duc_xray_style(builder: flatbuffers.Builder, xray_style: DucXR
     """Serialize DucXRayStyle to FlatBuffers."""
     color_offset = builder.CreateString(xray_style.color)
     
+    # Serialize the base_style separately
+    base_style_offset = serialize_fbs_duc_element_styles_base(builder, xray_style.base_style) if xray_style.base_style else None
+
     DucXRayStyle.DucXRayStyleStart(builder)
-    DucXRayStyle.DucXRayStyleAddOpacity(builder, xray_style.opacity)
+    if base_style_offset is not None:
+        DucXRayStyle.DucXRayStyleAddBaseStyle(builder, base_style_offset)
     DucXRayStyle.DucXRayStyleAddColor(builder, color_offset)
-    DucXRayStyle.DucXRayStyleAddShowBehind(builder, xray_style.show_behind)
-    DucXRayStyle.DucXRayStyleAddShowInFront(builder, xray_style.show_in_front)
     return DucXRayStyle.DucXRayStyleEnd(builder)
 
 

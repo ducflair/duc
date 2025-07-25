@@ -1,8 +1,13 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Union, Any
+from typing import List, Optional, Dict, Union, Any, TYPE_CHECKING
 
 from ducpy.Duc.PRUNING_LEVEL import PRUNING_LEVEL
 from ducpy.Duc.TEXT_ALIGN import TEXT_ALIGN
+
+if TYPE_CHECKING:
+    from ducpy.classes.ElementsClass import ElementWrapper
+    from ducpy.classes.StandardsClass import Standard
+
 from ducpy.classes.ElementsClass import (DucBlock, DucGroup, DucHead, DucLayer,
                                          DucRegion, ElementBackground,
                                          ElementStroke, ElementWrapper,
@@ -30,7 +35,7 @@ class DucGlobalState:
     dimensions_associative_by_default: bool
     use_annotative_scaling: bool
     display_precision: DisplayPrecision
-    name: Optional[str] = None
+    name: Optional[str]
 
 @dataclass
 class DucLocalState:
@@ -45,17 +50,17 @@ class DucLocalState:
     objects_snap_mode_enabled: bool
     grid_mode_enabled: bool
     outline_mode_enabled: bool
-    active_grid_settings: Optional[List[str]] = None
-    active_snap_settings: Optional[str] = None
-    current_item_stroke: Optional[ElementStroke] = None
-    current_item_background: Optional[ElementBackground] = None
-    current_item_opacity: Optional[float] = None
-    current_item_font_family: Optional[str] = None
-    current_item_font_size: Optional[float] = None
-    current_item_text_align: Optional[TEXT_ALIGN] = None
-    current_item_roundness: Optional[float] = None
-    current_item_start_line_head: Optional[DucHead] = None
-    current_item_end_line_head: Optional[DucHead] = None
+    active_grid_settings: Optional[List[str]]
+    active_snap_settings: Optional[str]
+    current_item_stroke: Optional["ElementStroke"]
+    current_item_background: Optional["ElementBackground"]
+    current_item_opacity: Optional[float]
+    current_item_font_family: Optional[str]
+    current_item_font_size: Optional[float]
+    current_item_text_align: Optional["TEXT_ALIGN"]
+    current_item_roundness: Optional[float]
+    current_item_start_line_head: Optional["DucHead"]
+    current_item_end_line_head: Optional["DucHead"]
 
 @dataclass
 class JSONPatchOperation:
@@ -68,20 +73,20 @@ class VersionBase:
     id: str
     timestamp: int
     is_manual_save: bool
-    parent_id: Optional[str] = None
-    description: Optional[str] = None
-    user_id: Optional[str] = None
+    parent_id: Optional[str]
+    description: Optional[str]
+    user_id: Optional[str]
 
 @dataclass
 class Checkpoint(VersionBase):
-    data: bytes = b""
-    size_bytes: int = 0
-    type: str = "checkpoint"
+    data: bytes
+    size_bytes: int
+    type: str
 
 @dataclass
 class Delta(VersionBase):
-    patch: List[JSONPatchOperation] = None
-    type: str = "delta"
+    patch: List[JSONPatchOperation]
+    type: str
     
     def __post_init__(self):
         if self.patch is None:
@@ -107,7 +112,7 @@ class DucExternalFileData:
     id: str
     data: bytes
     created: int
-    last_retrieved: Optional[int] = None
+    last_retrieved: Optional[int]
 
 @dataclass
 class DucExternalFileEntry:
@@ -121,13 +126,13 @@ class ExportedDataState:
     source: str
     thumbnail: bytes
     elements: List[ElementWrapper]
-    blocks: List[DucBlock]
-    groups: List[DucGroup]
-    regions: List[DucRegion]
-    layers: List[DucLayer]
+    blocks: List["DucBlock"]
+    groups: List["DucGroup"]
+    regions: List["DucRegion"]
+    layers: List["DucLayer"]
     standards: List[Standard]
-    dictionary: Dict[str, str] = field(default_factory=dict)
-    duc_local_state: Optional[DucLocalState] = None
-    duc_global_state: Optional[DucGlobalState] = None
-    version_graph: Optional[VersionGraph] = None
-    files: Optional[List[DucExternalFileEntry]] = None
+    dictionary: Dict[str, str]
+    duc_local_state: Optional[DucLocalState]
+    duc_global_state: Optional[DucGlobalState]
+    version_graph: Optional[VersionGraph]
+    files: Optional[List[DucExternalFileEntry]]

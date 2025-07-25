@@ -21,23 +21,24 @@ def test_output_dir():
 # --- TESTS ---
 
 def test_grid_settings_comprehensive_properties():
-    """Test all GridSettings properties including polar and isometric variants"""
+    """Test creating grid settings with all comprehensive properties."""
     
     # Test rectangular grid
-    rectangular_grid = duc.create_grid_settings(
-        is_adaptive=True,
-        x_spacing=42.0,
-        y_spacing=24.0,
-        subdivisions=7,
-        origin_x=1.0,
-        origin_y=2.0,
-        rotation=0.5,
-        follow_ucs=False,
-        major_color="#123456",
-        minor_color="#654321",
-        type=duc.GRID_TYPE.RECTANGULAR,
-        display_type=duc.GRID_DISPLAY_TYPE.LINES
-    )
+    rectangular_grid = (duc.StateBuilder()
+        .build_grid_settings()
+        .with_is_adaptive(True) 
+        .with_x_spacing(42.0) 
+        .with_y_spacing(24.0) 
+        .with_subdivisions(7) 
+        .with_origin_x(1.0) 
+        .with_origin_y(2.0) 
+        .with_rotation(0.5) 
+        .with_follow_ucs(False) 
+        .with_major_color("#123456") 
+        .with_minor_color("#654321") 
+        .with_grid_type(duc.GRID_TYPE.RECTANGULAR) 
+        .with_display_type(duc.GRID_DISPLAY_TYPE.LINES) 
+        .build())
     
     assert rectangular_grid.is_adaptive is True
     assert rectangular_grid.x_spacing == 42.0
@@ -59,11 +60,13 @@ def test_grid_settings_comprehensive_properties():
         show_labels=False
     )
     
-    polar_grid = duc.create_grid_settings(
-        type=duc.GRID_TYPE.POLAR,
-        display_type=duc.GRID_DISPLAY_TYPE.DOTS
-    )
-    polar_grid.polar_settings = polar_settings
+    polar_grid = (duc.StateBuilder()
+        .build_grid_settings()
+        .with_is_adaptive(False) 
+        .with_grid_type(duc.GRID_TYPE.POLAR) 
+        .with_display_type(duc.GRID_DISPLAY_TYPE.DOTS) 
+        .with_polar_settings(polar_settings) 
+        .build())
     
     assert polar_grid.type == duc.GRID_TYPE.POLAR
     assert polar_grid.polar_settings.radial_divisions == 12
@@ -76,8 +79,12 @@ def test_grid_settings_comprehensive_properties():
         right_angle=math.radians(30.0)
     )
     
-    isometric_grid = duc.create_grid_settings(type=duc.GRID_TYPE.ISOMETRIC)
-    isometric_grid.isometric_settings = isometric_settings
+    isometric_grid = (duc.StateBuilder()
+        .build_grid_settings()
+        .with_is_adaptive(False) 
+        .with_grid_type(duc.GRID_TYPE.ISOMETRIC) 
+        .with_isometric_settings(isometric_settings) 
+        .build())
     
     assert isometric_grid.type == duc.GRID_TYPE.ISOMETRIC
     assert isometric_grid.isometric_settings.left_angle == math.radians(30.0)
@@ -115,11 +122,11 @@ def test_snap_settings_comprehensive_properties():
     marker_styles = [
         duc.create_snap_marker_style_entry(
             key=duc.OBJECT_SNAP_MODE.ENDPOINT,
-            value=duc.create_snap_marker_style(duc.SNAP_MARKER_SHAPE.SQUARE, "#FF0000")
+            value=duc.create_snap_marker_style(shape=duc.SNAP_MARKER_SHAPE.SQUARE, color="#FF0000")
         ),
         duc.create_snap_marker_style_entry(
             key=duc.OBJECT_SNAP_MODE.MIDPOINT,
-            value=duc.create_snap_marker_style(duc.SNAP_MARKER_SHAPE.TRIANGLE, "#00FF00")
+            value=duc.create_snap_marker_style(shape=duc.SNAP_MARKER_SHAPE.TRIANGLE, color="#00FF00")
         )
     ]
     
@@ -131,37 +138,42 @@ def test_snap_settings_comprehensive_properties():
     )
     
     overrides = [
-        duc.create_snap_override("ctrl", duc.SNAP_OVERRIDE_BEHAVIOR.DISABLE),
-        duc.create_snap_override("shift", duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_GRID)
+        duc.create_snap_override(key="ctrl", behavior=duc.SNAP_OVERRIDE_BEHAVIOR.DISABLE),
+        duc.create_snap_override(key="shift", behavior=duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_GRID)
     ]
     
-    snap = duc.create_snap_settings(
-        readonly=False,
-        twist_angle=0.785,  # 45 degrees
-        snap_tolerance=15,
-        object_snap_aperture=20,
-        is_ortho_mode_on=True,
-        is_object_snap_on=True,
-        active_object_snap_modes=[
+    snap = (duc.StateBuilder()
+        .build_snap_settings()
+        .with_readonly(False) 
+        .with_twist_angle(0.785) 
+        .with_snap_tolerance(15) 
+        .with_object_snap_aperture(20) 
+        .with_is_ortho_mode_on(True) 
+        .with_is_object_snap_on(True) 
+        .with_active_object_snap_modes([
             duc.OBJECT_SNAP_MODE.ENDPOINT,
             duc.OBJECT_SNAP_MODE.MIDPOINT,
             duc.OBJECT_SNAP_MODE.CENTER
-        ],
-        snap_mode=duc.SNAP_MODE.RUNNING
-    )
-    
-    # Add the complex configurations
-    snap.polar_tracking = polar_tracking
-    snap.dynamic_snap = dynamic_snap
-    snap.tracking_line_style = tracking_line_style
-    snap.layer_snap_filters = layer_filters
-    snap.snap_markers = snap_markers
-    snap.temporary_overrides = overrides
-    snap.incremental_distance = 5.0
-    snap.magnetic_strength = 75.0
-    snap.element_type_filters = ["line", "circle", "arc"]
-    snap.construction_snap_enabled = True
-    snap.snap_to_grid_intersections = True
+        ]) 
+        .with_snap_mode(duc.SNAP_MODE.RUNNING) 
+        .with_snap_priority([
+            duc.OBJECT_SNAP_MODE.ENDPOINT,
+            duc.OBJECT_SNAP_MODE.MIDPOINT,
+            duc.OBJECT_SNAP_MODE.CENTER
+        ]) 
+        .with_show_tracking_lines(True) 
+        .with_dynamic_snap(dynamic_snap) 
+        .with_snap_markers(snap_markers) 
+        .with_construction_snap_enabled(True) 
+        .with_tracking_line_style(tracking_line_style) 
+        .with_temporary_overrides(overrides) 
+        .with_incremental_distance(5.0) 
+        .with_magnetic_strength(75.0) 
+        .with_layer_snap_filters(layer_filters) 
+        .with_element_type_filters(["line", "circle", "arc"]) 
+        .with_snap_to_grid_intersections(True) 
+        .with_polar_tracking(polar_tracking) 
+        .build())
     
     assert snap.twist_angle == 0.785
     assert snap.snap_tolerance == 15
@@ -249,10 +261,7 @@ def test_standard_units_comprehensive_properties():
     assert angular_units_edge.format == duc.ANGULAR_UNITS_FORMAT.GRADS
 
     # PrimaryUnits
-    primary_units = duc.create_primary_units(
-        linear=linear_units,
-        angular=angular_units
-    )
+    primary_units = duc.create_primary_units(linear=linear_units, angular=angular_units)
     assert primary_units.linear == linear_units
     assert primary_units.angular == angular_units
 
@@ -289,10 +298,7 @@ def test_standard_units_comprehensive_properties():
     assert alternate_units_edge.format == duc.DIMENSION_UNITS_FORMAT.FRACTIONAL
 
     # StandardUnits
-    standard_units = duc.create_standard_units(
-        primary_units=primary_units,
-        alternate_units=alternate_units
-    )
+    standard_units = duc.create_standard_units(primary_units=primary_units, alternate_units=alternate_units)
     assert standard_units.primary_units == primary_units
     assert standard_units.alternate_units == alternate_units
 
@@ -451,16 +457,34 @@ def test_standard_styles_comprehensive_properties():
     
     styles = duc.create_standard_styles(
         common_styles=[
-            ("primary_common", common_style1),
-            ("secondary_common", common_style2)
+            duc.IdentifiedCommonStyle(
+                id=duc.create_identifier("primary_common", "Primary Common Style"),
+                style=common_style1
+            ),
+            duc.IdentifiedCommonStyle(
+                id=duc.create_identifier("secondary_common", "Secondary Common Style"),
+                style=common_style2
+            )
         ],
         text_styles=[
-            ("title_text", text_style1),
-            ("body_text", text_style2)
+            duc.IdentifiedTextStyle(
+                id=duc.create_identifier("title_text", "Title Text Style"),
+                style=text_style1
+            ),
+            duc.IdentifiedTextStyle(
+                id=duc.create_identifier("body_text", "Body Text Style"),
+                style=text_style2
+            )
         ],
         doc_styles=[
-            ("main_doc", doc_style1),
-            ("secondary_doc", doc_style2)
+            duc.IdentifiedDocStyle(
+                id=duc.create_identifier("main_doc", "Main Doc Style"),
+                style=doc_style1
+            ),
+            duc.IdentifiedDocStyle(
+                id=duc.create_identifier("secondary_doc", "Secondary Doc Style"),
+                style=doc_style2
+            )
         ]
     )
     
@@ -484,72 +508,107 @@ def test_standard_view_settings_comprehensive_properties():
     """Test all StandardViewSettings properties"""
     
     # Create multiple grid settings with different configurations
-    grid1 = duc.create_grid_settings(
-        is_adaptive=True,
-        x_spacing=10.0,
-        y_spacing=10.0,
-        type=duc.GRID_TYPE.RECTANGULAR,
-        origin_x=0.0,
-        origin_y=0.0
+    grid1 = duc.IdentifiedGridSettings(
+        id=duc.create_identifier("grid_1", "Grid 1"),
+        settings=(duc.StateBuilder().build_grid_settings() 
+            .with_x_spacing(10.0) 
+            .with_y_spacing(10.0) 
+            .with_major_line_interval(10) 
+            .with_show_grid(True) 
+            .with_snap_to_grid(True) 
+            .build())
     )
-    
-    grid2 = duc.create_grid_settings(
-        is_adaptive=False,
-        x_spacing=5.0,
-        y_spacing=5.0,
-        type=duc.GRID_TYPE.POLAR,
-        origin_x=100.0,
-        origin_y=100.0
+    grid2 = duc.IdentifiedGridSettings(
+        id=duc.create_identifier("grid_2", "Grid 2"),
+        settings=(duc.StateBuilder().build_grid_settings() 
+            .with_x_spacing(20.0) 
+            .with_y_spacing(20.0) 
+            .with_grid_type(duc.GRID_TYPE.POLAR) 
+            .with_origin_x(200.0) 
+            .with_origin_y(200.0) 
+            .with_polar_settings(duc.create_polar_grid_settings(radial_divisions=8, radial_spacing=15.0, show_labels=True)) 
+            .build())
     )
-    
-    grid3 = duc.create_grid_settings(
-        is_adaptive=True,
-        x_spacing=1.0,
-        y_spacing=1.0,
-        type=duc.GRID_TYPE.ISOMETRIC,
-        origin_x=50.0,
-        origin_y=50.0
+    grid3 = duc.IdentifiedGridSettings(
+        id=duc.create_identifier("grid_3", "Grid 3"),
+        settings=(duc.StateBuilder().build_grid_settings() 
+            .with_x_spacing(5.0) 
+            .with_y_spacing(5.0) 
+            .with_grid_type(duc.GRID_TYPE.ISOMETRIC) 
+            .with_origin_x(400.0) 
+            .with_origin_y(400.0) 
+            .with_isometric_settings(duc.create_isometric_grid_settings(left_angle=0.5, right_angle=0.5)) 
+            .build())
     )
     
     # Create multiple snap settings
-    snap1 = duc.create_snap_settings(
-        readonly=False,
-        snap_tolerance=10,
-        is_object_snap_on=True,
-        snap_mode=duc.SNAP_MODE.RUNNING
+    snap1 = duc.IdentifiedSnapSettings(
+        id=duc.create_identifier("snap_1", "Snap 1"),
+        settings=(duc.StateBuilder().build_snap_settings()
+            .with_enabled(True)
+            .with_snap_tolerance(10.0)
+            .build())
     )
     
-    snap2 = duc.create_snap_settings(
-        readonly=True,
-        snap_tolerance=5,
-        is_object_snap_on=False,
-        snap_mode=duc.SNAP_MODE.SINGLE
+    snap2 = duc.IdentifiedSnapSettings(
+        id=duc.create_identifier("snap_2", "Secondary Snap"),
+        settings=(duc.StateBuilder().build_snap_settings()
+            .with_readonly(True)
+            .with_snap_tolerance(5)
+            .with_is_object_snap_on(False)
+            .with_snap_mode(duc.SNAP_MODE.SINGLE)
+            .with_active_object_snap_modes([])
+            .with_snap_priority([])
+            .build())
     )
     
-    snap3 = duc.create_snap_settings(
-        readonly=False,
-        snap_tolerance=15,
-        is_object_snap_on=True,
-        snap_mode=duc.SNAP_MODE.RUNNING
+    snap3 = duc.IdentifiedSnapSettings(
+        id=duc.create_identifier("snap_3", "Tertiary Snap"),
+        settings=(duc.StateBuilder().build_snap_settings()
+            .with_readonly(False)
+            .with_snap_tolerance(15)
+            .with_is_object_snap_on(True)
+            .with_snap_mode(duc.SNAP_MODE.RUNNING)
+            .with_active_object_snap_modes([
+                duc.OBJECT_SNAP_MODE.ENDPOINT,
+                duc.OBJECT_SNAP_MODE.MIDPOINT,
+                duc.OBJECT_SNAP_MODE.CENTER
+            ])
+            .with_snap_priority([
+                duc.OBJECT_SNAP_MODE.ENDPOINT,
+                duc.OBJECT_SNAP_MODE.MIDPOINT,
+                duc.OBJECT_SNAP_MODE.CENTER
+            ])
+            .build())
     )
     
     # Create views and UCS with proper wrappers
     view1 = duc.IdentifiedView(
         id=duc.create_identifier("view_1", "View 1"),
-        view=duc.create_view(scroll_x=0, scroll_y=0, zoom=1.0, scope="mm")
+        view=(duc.StateBuilder().build_view()
+            .with_scroll_x(0)
+            .with_scroll_y(0)
+            .with_zoom(1.0)
+            .with_scope("mm")
+            .build())
     )
     view2 = duc.IdentifiedView(
         id=duc.create_identifier("view_2", "View 2"),
-        view=duc.create_view(scroll_x=100, scroll_y=200, zoom=2.0, scope="inches")
+        view=(duc.StateBuilder().build_view()
+            .with_scroll_x(100)
+            .with_scroll_y(200)
+            .with_zoom(2.0)
+            .with_scope("inches")
+            .build())
     )
     
     ucs1 = duc.IdentifiedUcs(
         id=duc.create_identifier("ucs_1", "UCS 1"),
-        ucs=duc.create_ucs()
+        ucs=duc.StateBuilder().build_ucs().build()
     )
     ucs2 = duc.IdentifiedUcs(
         id=duc.create_identifier("ucs_2", "UCS 2"),
-        ucs=duc.create_ucs()
+        ucs=duc.StateBuilder().build_ucs().build()
     )
     
     # Create comprehensive view settings
@@ -567,8 +626,8 @@ def test_standard_view_settings_comprehensive_properties():
     
     # Verify grid settings
     assert view_settings.grid_settings[0].settings.origin.x == 0.0
-    assert view_settings.grid_settings[1].settings.origin.x == 100.0
-    assert view_settings.grid_settings[2].settings.origin.x == 50.0
+    assert view_settings.grid_settings[1].settings.origin.x == 200.0
+    assert view_settings.grid_settings[2].settings.origin.x == 400.0
     assert view_settings.grid_settings[0].settings.type == duc.GRID_TYPE.RECTANGULAR
     assert view_settings.grid_settings[1].settings.type == duc.GRID_TYPE.POLAR
     assert view_settings.grid_settings[2].settings.type == duc.GRID_TYPE.ISOMETRIC
@@ -592,66 +651,97 @@ def test_comprehensive_standard_full_lifecycle(test_output_dir):
     # === CREATE PHASE ===
     
     # Create comprehensive grid settings with all variants
-    rectangular_grid = duc.create_grid_settings(
-        is_adaptive=True,
-        x_spacing=25.0,
-        y_spacing=25.0,
-        subdivisions=5,
-        origin_x=0.0,
-        origin_y=0.0,
-        rotation=0.0,
-        follow_ucs=True,
-        major_color="#404040",
-        minor_color="#C0C0C0",
-        type=duc.GRID_TYPE.RECTANGULAR,
-        display_type=duc.GRID_DISPLAY_TYPE.LINES
+    rectangular_grid_settings = (duc.StateBuilder().build_grid_settings() 
+        .with_is_adaptive(True) 
+        .with_x_spacing(25.0) 
+        .with_y_spacing(25.0) 
+        .with_subdivisions(5) 
+        .with_origin_x(0.0) 
+        .with_origin_y(0.0) 
+        .with_rotation(0.0) 
+        .with_follow_ucs(True) 
+        .with_major_color("#404040") 
+        .with_minor_color("#C0C0C0") 
+        .with_grid_type(duc.GRID_TYPE.RECTANGULAR) 
+        .with_display_type(duc.GRID_DISPLAY_TYPE.LINES) 
+        .build())
+    rectangular_grid = duc.IdentifiedGridSettings(
+        id=duc.create_identifier("grid_0", "Main Rectangular Grid"),
+        settings=rectangular_grid_settings
     )
     
-    polar_grid = duc.create_grid_settings(
-        type=duc.GRID_TYPE.POLAR,
-        display_type=duc.GRID_DISPLAY_TYPE.DOTS,
-        origin_x=200.0,
-        origin_y=200.0
-    )
-    polar_grid.polar_settings = duc.create_polar_grid_settings(
-        radial_divisions=16,
-        radial_spacing=20.0,
-        show_labels=True
+    polar_grid_settings = (duc.StateBuilder().build_grid_settings() 
+        .with_is_adaptive(False) 
+        .with_grid_type(duc.GRID_TYPE.POLAR) 
+        .with_display_type(duc.GRID_DISPLAY_TYPE.DOTS) 
+        .with_origin_x(200.0) 
+        .with_origin_y(200.0) 
+        .with_polar_settings(duc.create_polar_grid_settings(
+            radial_divisions=16,
+            radial_spacing=20.0,
+            show_labels=True
+        )) 
+        .build())
+    polar_grid = duc.IdentifiedGridSettings(
+        id=duc.create_identifier("grid_1", "Main Polar Grid"),
+        settings=polar_grid_settings
     )
     
-    isometric_grid = duc.create_grid_settings(
-        type=duc.GRID_TYPE.ISOMETRIC,
-        display_type=duc.GRID_DISPLAY_TYPE.LINES,
-        origin_x=400.0,
-        origin_y=400.0
-    )
-    isometric_grid.isometric_settings = duc.create_isometric_grid_settings(
-        left_angle=math.radians(30.0),   # 30 degrees
-        right_angle=math.radians(30.0)
+    isometric_grid_settings = (duc.StateBuilder().build_grid_settings() 
+        .with_is_adaptive(False) 
+        .with_grid_type(duc.GRID_TYPE.ISOMETRIC) 
+        .with_display_type(duc.GRID_DISPLAY_TYPE.LINES) 
+        .with_origin_x(400.0) 
+        .with_origin_y(400.0) 
+        .with_isometric_settings(duc.create_isometric_grid_settings(
+            left_angle=math.radians(30.0),   # 30 degrees
+            right_angle=math.radians(30.0)
+        )) 
+        .build())
+    isometric_grid = duc.IdentifiedGridSettings(
+        id=duc.create_identifier("grid_2", "Main Isometric Grid"),
+        settings=isometric_grid_settings
     )
     
     # Create simpler snap settings to avoid serialization issues
-    primary_snap = duc.create_snap_settings(
-        readonly=False,
-        twist_angle=math.radians(45.0),  # 45 degrees
-        snap_tolerance=12,
-        object_snap_aperture=18,
-        is_ortho_mode_on=False,
-        is_object_snap_on=True,
-        active_object_snap_modes=[
+    primary_snap_settings = (duc.StateBuilder().build_snap_settings() 
+        .with_readonly(False) 
+        .with_twist_angle(math.radians(45.0)) 
+        .with_snap_tolerance(12) 
+        .with_object_snap_aperture(18) 
+        .with_is_ortho_mode_on(False) 
+        .with_is_object_snap_on(True) 
+        .with_active_object_snap_modes([
             duc.OBJECT_SNAP_MODE.ENDPOINT,
             duc.OBJECT_SNAP_MODE.MIDPOINT,
             duc.OBJECT_SNAP_MODE.CENTER
-        ],
-        snap_mode=duc.SNAP_MODE.RUNNING
+        ]) 
+        .with_snap_mode(duc.SNAP_MODE.RUNNING) 
+        .with_snap_priority([
+            duc.OBJECT_SNAP_MODE.ENDPOINT,
+            duc.OBJECT_SNAP_MODE.MIDPOINT,
+            duc.OBJECT_SNAP_MODE.CENTER
+        ]) 
+        .with_snap_markers(duc.create_snap_marker_settings(enabled=True, size=10, styles=[], duration=1000)) 
+        .build())
+    primary_snap = duc.IdentifiedSnapSettings(
+        id=duc.create_identifier("snap_0", "Primary Snap Settings"),
+        settings=primary_snap_settings
     )
     
     # Create secondary snap for contrast
-    secondary_snap = duc.create_snap_settings(
-        readonly=True,
-        snap_tolerance=5,
-        is_object_snap_on=False,
-        snap_mode=duc.SNAP_MODE.SINGLE
+    secondary_snap_settings = (duc.StateBuilder().build_snap_settings() 
+        .with_readonly(True) 
+        .with_snap_tolerance(5) 
+        .with_is_object_snap_on(False) 
+        .with_snap_mode(duc.SNAP_MODE.SINGLE) 
+        .with_active_object_snap_modes([]) 
+        .with_snap_priority([]) 
+        .with_snap_markers(duc.create_snap_marker_settings(enabled=False, size=0, styles=[], duration=0)) 
+        .build())
+    secondary_snap = duc.IdentifiedSnapSettings(
+        id=duc.create_identifier("snap_1", "Secondary Snap Settings"),
+        settings=secondary_snap_settings
     )
     
     # Create comprehensive units
@@ -671,10 +761,10 @@ def test_comprehensive_standard_full_lifecycle(test_output_dir):
         suppress_leading_zeros=False,
         suppress_trailing_zeros=True,
         system=duc.UNIT_SYSTEM.METRIC,
-        format=duc.ANGULAR_UNITS_FORMAT.DECIMAL_DEGREES
+        format=duc.ANGULAR_UNITS_FORMAT.DEGREES_MINUTES_SECONDS
     )
     
-    primary_units = duc.create_primary_units(linear_units, angular_units)
+    primary_units = duc.create_primary_units(linear=linear_units, angular=angular_units)
     
     alternate_units = duc.create_alternate_units(
         precision=2,
@@ -686,7 +776,7 @@ def test_comprehensive_standard_full_lifecycle(test_output_dir):
         format=duc.DIMENSION_UNITS_FORMAT.DECIMAL
     )
     
-    standard_units = duc.create_standard_units(primary_units, alternate_units)
+    standard_units = duc.create_standard_units(primary_units=primary_units, alternate_units=alternate_units)
     
     # Create simpler validation to avoid serialization issues
     dim_validation = duc.create_dimension_validation_rules(
@@ -699,28 +789,18 @@ def test_comprehensive_standard_full_lifecycle(test_output_dir):
         prohibited_layer_names=["0"]  # Simplified list
     )
     
-    validation = duc.create_standard_validation(dim_validation, layer_validation)
+    validation = duc.create_standard_validation(dimension_rules=dim_validation, layer_rules=layer_validation)
     
     # Create comprehensive overrides
-    unit_precision = duc.UnitPrecision(linear=3, angular=2, area=2, volume=2)
+    unit_precision = duc.UnitPrecision(linear=3, angular=2, area=4, volume=5)
     overrides = duc.create_standard_overrides(
         main_scope="metric",
         unit_precision=unit_precision,
         elements_stroke_width_override=1.5,
-        common_style_id="main_common_style",
-        stack_like_style_id="main_stack_style", 
-        text_style_id="main_text_style",
-        dimension_style_id="main_dim_style",
-        leader_style_id="main_leader_style",
-        feature_control_frame_style_id="main_fcf_style",
-        table_style_id="main_table_style",
-        doc_style_id="main_doc_style",
-        viewport_style_id="main_viewport_style",
-        plot_style_id="main_plot_style",
-        hatch_style_id="main_hatch_style",
-        active_grid_settings_id=["grid_0", "grid_1", "grid_2"],
-        active_snap_settings_id="snap_0",
-        dash_line_override="custom_dash_pattern"
+        common_style_id="elegant_common",
+        text_style_id="elegant_text",
+        active_grid_settings_id=["metric_grid", "detailed_grid"],
+        active_snap_settings_id="precision_snap"
     )
     
     # Create comprehensive styles
@@ -745,54 +825,82 @@ def test_comprehensive_standard_full_lifecycle(test_output_dir):
     
     styles = duc.create_standard_styles(
         common_styles=[
-            ("header_common", common_style1),
-            ("body_common", common_style2)
+            duc.IdentifiedCommonStyle(
+                id=duc.create_identifier("header_common", "Header Common Style"),
+                style=common_style1
+            ),
+            duc.IdentifiedCommonStyle(
+                id=duc.create_identifier("body_common", "Body Common Style"),
+                style=common_style2
+            )
         ],
         text_styles=[
-            ("title_text", text_style1),
-            ("content_text", text_style2)
+            duc.IdentifiedTextStyle(
+                id=duc.create_identifier("title_text", "Title Text Style"),
+                style=text_style1
+            ),
+            duc.IdentifiedTextStyle(
+                id=duc.create_identifier("content_text", "Content Text Style"),
+                style=text_style2
+            )
         ],
         doc_styles=[
-            ("main_document", doc_style1),
-            ("template_document", doc_style2)
+            duc.IdentifiedDocStyle(
+                id=duc.create_identifier("main_document", "Main Document Style"),
+                style=doc_style1
+            ),
+            duc.IdentifiedDocStyle(
+                id=duc.create_identifier("template_document", "Template Document Style"),
+                style=doc_style2
+            )
         ]
     )
     
     # Create views and UCS with identified wrappers
     main_view = duc.IdentifiedView(
         id=duc.create_identifier("main_view", "Main View"),
-        view=duc.create_view(
-            scroll_x=0.0,
-            scroll_y=0.0,
-            zoom=1.0,
-            twist_angle=0.0,
-            center_x=500.0,
-            center_y=500.0,
-            scope="mm"
-        )
+        view=(duc.StateBuilder().build_view()
+            .with_scroll_x(0.0)
+            .with_scroll_y(0.0)
+            .with_zoom(1.0)
+            .with_twist_angle(0.0)
+            .with_center_x(500.0)
+            .with_center_y(500.0)
+            .with_scope("mm")
+            .build())
     )
     
     detail_view = duc.IdentifiedView(
         id=duc.create_identifier("detail_view", "Detail View"),
-        view=duc.create_view(
-            scroll_x=100.0,
-            scroll_y=200.0,
-            zoom=2.5,
-            twist_angle=math.radians(45.0),  # 45 degrees
-            center_x=250.0,
-            center_y=250.0,
-            scope="mm"
-        )
+        view=(duc.StateBuilder().build_view()
+            .with_scroll_x(100.0)
+            .with_scroll_y(200.0)
+            .with_zoom(2.5)
+            .with_twist_angle(math.radians(45.0))
+            .build()) 
     )
     
     main_ucs = duc.IdentifiedUcs(
         id=duc.create_identifier("main_ucs", "Main UCS"),
-        ucs=duc.create_ucs()
+        ucs=(duc.StateBuilder().build_ucs()
+            .with_origin_x(0.0)
+            .with_origin_y(0.0)
+            .with_angle(0.0)
+            .build())
+    )
+    
+    rotated_ucs = duc.IdentifiedUcs(
+        id=duc.create_identifier("rotated_ucs", "Rotated UCS"),
+        ucs=(duc.StateBuilder().build_ucs()
+            .with_origin_x(100.0)
+            .with_origin_y(100.0)
+            .with_angle(math.radians(30.0))
+            .build())
     )
     
     auxiliary_ucs = duc.IdentifiedUcs(
         id=duc.create_identifier("aux_ucs", "Auxiliary UCS"), 
-        ucs=duc.create_ucs()
+        ucs=(duc.StateBuilder().build_ucs().build())
     )
     
     # Create comprehensive view settings
@@ -800,21 +908,21 @@ def test_comprehensive_standard_full_lifecycle(test_output_dir):
         grid_settings=[rectangular_grid, polar_grid, isometric_grid],
         snap_settings=[primary_snap, secondary_snap],
         views=[main_view, detail_view],
-        ucs=[main_ucs, auxiliary_ucs]
+        ucs=[main_ucs, rotated_ucs, auxiliary_ucs]
     )
     
     # Create the comprehensive standard
-    standard = duc.create_standard(
-        id="comprehensive_standard_v1",
-        name="Comprehensive Test Standard",
-        version="2.0.1",
-        readonly=False,
-        view_settings=view_settings,
-        overrides=overrides,
-        styles=styles,
-        units=standard_units,
-        validation=validation
-    )
+    standard = (duc.StateBuilder().build_standard() 
+        .with_id("comprehensive_standard_v1") 
+        .with_name("Comprehensive Test Standard") 
+        .with_version("2.0.1") 
+        .with_readonly(False) 
+        .with_view_settings(view_settings) 
+        .with_overrides(overrides) 
+        .with_styles(styles) 
+        .with_units(standard_units) 
+        .with_validation(validation) 
+        .build())
     standards = [standard]
     
     print(f"✅ Created comprehensive standard with {len(view_settings.grid_settings)} grids, {len(view_settings.snap_settings)} snap configs")
@@ -847,7 +955,7 @@ def test_comprehensive_standard_full_lifecycle(test_output_dir):
     assert len(loaded_standard.view_settings.grid_settings) == 3
     assert len(loaded_standard.view_settings.snap_settings) == 2
     assert len(loaded_standard.view_settings.views) == 2
-    assert len(loaded_standard.view_settings.ucs) == 2
+    assert len(loaded_standard.view_settings.ucs) == 3
     
     # Verify grid types
     assert loaded_standard.view_settings.grid_settings[0].settings.type == duc.GRID_TYPE.RECTANGULAR
@@ -1007,61 +1115,64 @@ def test_grid_style_and_advanced_configurations():
     )
     
     # Create grid with custom styles
-    grid = duc.create_grid_settings(
-        is_adaptive=False,
-        x_spacing=12.5,
-        y_spacing=8.75,
-        subdivisions=4,
-        origin_x=25.0,
-        origin_y=15.0,
-        rotation=math.radians(15.0),  # 15 degrees
-        follow_ucs=False,
-        type=duc.GRID_TYPE.RECTANGULAR,
-        display_type=duc.GRID_DISPLAY_TYPE.LINES
+    grid_settings = (duc.StateBuilder().build_grid_settings() 
+        .with_is_adaptive(False) 
+        .with_x_spacing(12.5) 
+        .with_y_spacing(8.75) 
+        .with_subdivisions(4) 
+        .with_origin_x(25.0) 
+        .with_origin_y(15.0) 
+        .with_rotation(math.radians(15.0)) 
+        .with_follow_ucs(False) 
+        .with_grid_type(duc.GRID_TYPE.RECTANGULAR) 
+        .with_display_type(duc.GRID_DISPLAY_TYPE.LINES) 
+        .with_major_style(major_style) 
+        .with_minor_style(minor_style) 
+        .with_show_minor(True) 
+        .with_min_zoom(0.25) 
+        .with_max_zoom(8.0) 
+        .with_auto_hide(True) 
+        .with_snap_to_grid(True) 
+        .with_readonly(False) 
+        .build())
+
+    grid = duc.IdentifiedGridSettings(
+        id=duc.create_identifier("custom_grid", "Custom Grid Settings"),
+        settings=grid_settings
     )
     
-    # Replace default styles with custom ones
-    grid.major_style = major_style
-    grid.minor_style = minor_style
-    grid.show_minor = True
-    grid.min_zoom = 0.25
-    grid.max_zoom = 8.0
-    grid.auto_hide = True
-    grid.enable_snapping = True
-    grid.readonly = False
-    
-    assert grid.major_style.color == "#FF0000"
-    assert grid.major_style.opacity == 0.8
-    assert len(grid.major_style.dash_pattern) == 4
-    assert grid.minor_style.color == "#00FF00"
-    assert grid.minor_style.opacity == 0.4
-    assert len(grid.minor_style.dash_pattern) == 2
-    assert grid.x_spacing == 12.5
-    assert grid.y_spacing == 8.75
-    assert grid.rotation == math.radians(15.0)
-    assert grid.min_zoom == 0.25
-    assert grid.max_zoom == 8.0
-    assert grid.auto_hide is True
+    assert grid.settings.major_style.color == "#FF0000"
+    assert grid.settings.major_style.opacity == 0.8
+    assert grid.settings.major_style.dash_pattern == [5.0, 3.0, 1.0, 3.0]
+    assert grid.settings.minor_style.color == "#00FF00"
+    assert grid.settings.minor_style.opacity == 0.4
+    assert grid.settings.minor_style.dash_pattern == [2.0, 2.0]
+    assert grid.settings.x_spacing == 12.5
+    assert grid.settings.y_spacing == 8.75
+    assert grid.settings.rotation == math.radians(15.0)
+    assert grid.settings.min_zoom == 0.25
+    assert grid.settings.max_zoom == 8.0
+    assert grid.settings.auto_hide is True
 
 def test_complex_snap_marker_configurations():
     """Test complex SnapMarkerSettings configurations"""
     
     # Create various marker styles for different snap modes
-    endpoint_marker = duc.create_snap_marker_style(duc.SNAP_MARKER_SHAPE.SQUARE, "#FF0000")
-    midpoint_marker = duc.create_snap_marker_style(duc.SNAP_MARKER_SHAPE.TRIANGLE, "#00FF00")
-    center_marker = duc.create_snap_marker_style(duc.SNAP_MARKER_SHAPE.CIRCLE, "#0000FF")
-    quadrant_marker = duc.create_snap_marker_style(duc.SNAP_MARKER_SHAPE.SQUARE, "#FFFF00")
-    intersection_marker = duc.create_snap_marker_style(duc.SNAP_MARKER_SHAPE.X, "#FF00FF")
-    perpendicular_marker = duc.create_snap_marker_style(duc.SNAP_MARKER_SHAPE.X, "#00FFFF")
+    endpoint_marker = duc.create_snap_marker_style(shape=duc.SNAP_MARKER_SHAPE.SQUARE, color="#FF0000")
+    midpoint_marker = duc.create_snap_marker_style(shape=duc.SNAP_MARKER_SHAPE.TRIANGLE, color="#00FF00")
+    center_marker = duc.create_snap_marker_style(shape=duc.SNAP_MARKER_SHAPE.CIRCLE, color="#0000FF")
+    quadrant_marker = duc.create_snap_marker_style(shape=duc.SNAP_MARKER_SHAPE.SQUARE, color="#FFFF00")
+    intersection_marker = duc.create_snap_marker_style(shape=duc.SNAP_MARKER_SHAPE.X, color="#FF00FF")
+    perpendicular_marker = duc.create_snap_marker_style(shape=duc.SNAP_MARKER_SHAPE.X, color="#00FFFF")
     
     # Create marker style entries
     marker_entries = [
-        duc.create_snap_marker_style_entry(duc.OBJECT_SNAP_MODE.ENDPOINT, endpoint_marker),
-        duc.create_snap_marker_style_entry(duc.OBJECT_SNAP_MODE.MIDPOINT, midpoint_marker),
-        duc.create_snap_marker_style_entry(duc.OBJECT_SNAP_MODE.CENTER, center_marker),
-        duc.create_snap_marker_style_entry(duc.OBJECT_SNAP_MODE.QUADRANT, quadrant_marker),
-        duc.create_snap_marker_style_entry(duc.OBJECT_SNAP_MODE.INTERSECTION, intersection_marker),
-        duc.create_snap_marker_style_entry(duc.OBJECT_SNAP_MODE.PERPENDICULAR, perpendicular_marker)
+        duc.create_snap_marker_style_entry(key=duc.OBJECT_SNAP_MODE.ENDPOINT, value=endpoint_marker),
+        duc.create_snap_marker_style_entry(key=duc.OBJECT_SNAP_MODE.MIDPOINT, value=midpoint_marker),
+        duc.create_snap_marker_style_entry(key=duc.OBJECT_SNAP_MODE.CENTER, value=center_marker),
+        duc.create_snap_marker_style_entry(key=duc.OBJECT_SNAP_MODE.QUADRANT, value=quadrant_marker),
+        duc.create_snap_marker_style_entry(key=duc.OBJECT_SNAP_MODE.INTERSECTION, value=intersection_marker),
+        duc.create_snap_marker_style_entry(key=duc.OBJECT_SNAP_MODE.PERPENDICULAR, value=perpendicular_marker)
     ]
     
     # Create comprehensive marker settings
@@ -1226,14 +1337,14 @@ def test_all_snap_override_behaviors():
     """Test all SnapOverride behaviors and key combinations"""
     
     overrides = [
-        duc.create_snap_override("ctrl", duc.SNAP_OVERRIDE_BEHAVIOR.DISABLE),
-        duc.create_snap_override("shift", duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_GRID),
-        duc.create_snap_override("alt", duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_OBJECT),
-        duc.create_snap_override("tab", duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_GRID),
-        duc.create_snap_override("space", duc.SNAP_OVERRIDE_BEHAVIOR.DISABLE),
-        duc.create_snap_override("ctrl+shift", duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_GRID),
-        duc.create_snap_override("ctrl+alt", duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_OBJECT),
-        duc.create_snap_override("shift+alt", duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_GRID)
+        duc.create_snap_override(key="ctrl", behavior=duc.SNAP_OVERRIDE_BEHAVIOR.DISABLE),
+        duc.create_snap_override(key="shift", behavior=duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_GRID),
+        duc.create_snap_override(key="alt", behavior=duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_OBJECT),
+        duc.create_snap_override(key="tab", behavior=duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_GRID),
+        duc.create_snap_override(key="space", behavior=duc.SNAP_OVERRIDE_BEHAVIOR.DISABLE),
+        duc.create_snap_override(key="ctrl+shift", behavior=duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_GRID),
+        duc.create_snap_override(key="ctrl+alt", behavior=duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_OBJECT),
+        duc.create_snap_override(key="shift+alt", behavior=duc.SNAP_OVERRIDE_BEHAVIOR.FORCE_GRID)
     ]
     
     assert len(overrides) == 8
@@ -1252,14 +1363,12 @@ def test_nested_standard_builders_elegant_construction():
     """Test elegant nested construction of standards using builder functions"""
     
     # Demonstrate elegant nesting by constructing everything inline
-    standard = duc.create_standard(
-        id="elegant_nested_standard",
-        name="Elegantly Nested Standard",
-        version="3.0.0",
-        readonly=False,
-        
-        # Nested units construction
-        units=duc.create_standard_units(
+    standard = (duc.StateBuilder().build_standard()
+        .with_id("elegant_nested_standard")
+        .with_name("Elegantly Nested Standard")
+        .with_version("3.0.0")
+        .with_readonly(False)
+        .with_units(duc.create_standard_units(
             primary_units=duc.create_primary_units(
                 linear=duc.create_linear_unit_system(
                     precision=3,
@@ -1288,10 +1397,8 @@ def test_nested_standard_builders_elegant_construction():
                 multiplier=25.4,  # mm to inches conversion
                 format=duc.DIMENSION_UNITS_FORMAT.FRACTIONAL
             )
-        ),
-        
-        # Nested validation construction
-        validation=duc.create_standard_validation(
+        ))
+        .with_validation(duc.create_standard_validation(
             dimension_rules=duc.create_dimension_validation_rules(
                 min_text_height=0.8,
                 max_text_height=72.0,
@@ -1300,10 +1407,8 @@ def test_nested_standard_builders_elegant_construction():
             layer_rules=duc.create_layer_validation_rules(
                 prohibited_layer_names=["0", "defpoints", "system", "temp"]
             )
-        ),
-        
-        # Nested overrides construction
-        overrides=duc.create_standard_overrides(
+        ))
+        .with_overrides(duc.create_standard_overrides(
             main_scope="metric",
             unit_precision=duc.UnitPrecision(linear=3, angular=2, area=4, volume=5),
             elements_stroke_width_override=1.5,
@@ -1311,8 +1416,8 @@ def test_nested_standard_builders_elegant_construction():
             text_style_id="elegant_text",
             active_grid_settings_id=["metric_grid", "detailed_grid"],
             active_snap_settings_id="precision_snap"
-        )
-    )
+        ))
+        .build())
     
     # Verify the nested construction worked properly
     assert standard.identifier.id == "elegant_nested_standard"
@@ -1342,19 +1447,16 @@ def test_nested_standard_builders_elegant_construction():
     assert standard.overrides.unit_precision.angular == 2
     assert standard.overrides.elements_stroke_width_override == 1.5
     assert len(standard.overrides.active_grid_settings_id) == 2
-    
-    print("✅ Elegantly nested standard construction successful!")
 
 
 def test_advanced_unit_systems_serialization_roundtrip(test_output_dir):
     """Test advanced unit systems with full serialization and parsing roundtrip"""
     
     # Create advanced unit configurations with edge cases
-    advanced_standard = duc.create_standard(
-        id="advanced_units_test",
-        name="Advanced Units Test Standard",
-        
-        units=duc.create_standard_units(
+    advanced_standard = (duc.StateBuilder().build_standard()
+        .with_id("advanced_units_test")
+        .with_name("Advanced Units Test Standard")
+        .with_units(duc.create_standard_units(
             primary_units=duc.create_primary_units(
                 # High precision metric linear units
                 linear=duc.create_linear_unit_system(
@@ -1386,8 +1488,8 @@ def test_advanced_unit_systems_serialization_roundtrip(test_output_dir):
                 multiplier=0.0393701,  # Precise mm to inches
                 format=duc.DIMENSION_UNITS_FORMAT.ARCHITECTURAL
             )
-        )
-    )
+        ))
+        .build())
     
     # Serialize to bytes
     print("🔨 CREATE: Advanced units standard created")
@@ -1595,12 +1697,12 @@ def test_all_standards_class_dataclasses():
     assert alt_units.format == duc.DIMENSION_UNITS_FORMAT.SCIENTIFIC
     
     # Test PrimaryUnits
-    primary_units = duc.create_primary_units(linear_units, angular_units)
+    primary_units = duc.create_primary_units(linear=linear_units, angular=angular_units)
     assert primary_units.linear.precision == 5
     assert primary_units.angular.precision == 4
     
     # Test StandardUnits
-    standard_units = duc.create_standard_units(primary_units, alt_units)
+    standard_units = duc.create_standard_units(primary_units=primary_units, alternate_units=alt_units)
     assert standard_units.primary_units.linear.system == duc.UNIT_SYSTEM.IMPERIAL
     assert standard_units.alternate_units.system == duc.UNIT_SYSTEM.METRIC
     assert standard_units.alternate_units.multiplier == 2.54
@@ -1632,7 +1734,7 @@ def test_all_standards_class_dataclasses():
     assert "backup" in layer_rules.prohibited_layer_names
     
     # Test StandardValidation
-    validation = duc.create_standard_validation(dim_rules, layer_rules)
+    validation = duc.create_standard_validation(dimension_rules=dim_rules, layer_rules=layer_rules)
     assert validation.dimension_rules.min_text_height == 0.25
     assert validation.layer_rules.prohibited_layer_names == ["system", "locked", "frozen", "temp", "backup"]
     
@@ -1662,14 +1764,14 @@ def test_all_standards_class_dataclasses():
     
     # Test StandardStyles
     styles = duc.create_standard_styles(
-        common_styles=[("common1", common_style)],
-        text_styles=[("text1", text_style)],
-        doc_styles=[("doc1", doc_style)]
+        common_styles=[identified_common],
+        text_styles=[identified_text],
+        doc_styles=[identified_doc]
     )
     assert len(styles.common_styles) == 1
     assert len(styles.text_styles) == 1
     assert len(styles.doc_styles) == 1
-    assert styles.common_styles[0].id.id == "common1"
+    assert styles.common_styles[0].id.id == "test_common"
     
     print("✅ ALL StandardsClass dataclasses tested successfully!")
 

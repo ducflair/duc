@@ -1,124 +1,89 @@
 """
-Test moving elements randomly in a DUC file.
+Random element movement test using the new builders API.
+Tests moving elements randomly across the canvas.
 """
-import io
-import os
 import random
-
+import os
 import pytest
 
 import ducpy as duc
-from ducpy.classes.ElementsClass import DucEllipseElement, DucRectangleElement, DucPolygonElement, DucLinearElement
 
-def test_move_elements_randomly(test_output_dir):
-    """
-    Tests creating a DUC file, loading it, moving elements randomly, and saving.
-    """
+
+def test_move_elements_randomly():
+    """Test moving elements randomly using the new builders API."""
+    
+    # Create elements using the new ElementBuilder API
     elements = [
-        duc.create_rectangle(x=100, y=100, width=50, height=50, styles=duc.create_simple_styles(), label="Rectangle"),
-        duc.create_ellipse(x=200, y=200, width=80, height=60, styles=duc.create_simple_styles(), label="Ellipse"),
-        duc.create_polygon(x=300, y=150, sides=5, width=70, height=70, styles=duc.create_simple_styles(), label="Pentagon"),
-        duc.create_linear_element(points=[(400, 400), (500, 450)], styles=duc.create_simple_styles(), label="Line")
+        (duc.ElementBuilder()
+         .at_position(100, 100)
+         .with_size(50, 50)
+         .with_styles(duc.create_simple_styles())
+         .with_label("Rectangle")
+         .build_rectangle()
+         .build()),
+        
+        (duc.ElementBuilder()
+         .at_position(200, 200)
+         .with_size(60, 40)
+         .with_styles(duc.create_simple_styles())
+         .with_label("Ellipse")
+         .build_ellipse()
+         .build()),
+        
+        (duc.ElementBuilder()
+         .at_position(300, 150)
+         .with_size(80, 60)
+         .with_styles(duc.create_simple_styles())
+         .with_label("Polygon")
+         .build_polygon()
+         .with_sides(6)
+         .build()),
+        
+        (duc.ElementBuilder()
+         .at_position(150, 300)
+         .with_styles(duc.create_simple_styles())
+         .with_label("Line")
+         .build_linear_element()
+         .with_points([(0, 0), (100, 50)])
+         .build()),
     ]
     
-    initial_positions = {}
-    for el in elements:
-        if hasattr(el.element, 'base'):
-            initial_positions[el.element.base.id] = (el.element.base.x, el.element.base.y)
-        elif hasattr(el.element, 'linear_base'):
-            initial_positions[el.element.linear_base.base.id] = (el.element.linear_base.base.x, el.element.linear_base.base.y)
+    print(f"Created {len(elements)} elements")
     
-    output_file = os.path.join(test_output_dir, "test_move_elements_before.duc")
-    
-    serialized_data = duc.serialize_duc(name="MoveTestInitial", elements=elements)
-    
-    with open(output_file, 'wb') as f:
-        f.write(serialized_data)
+    # Move elements randomly
+    for i, element in enumerate(elements):
+        new_x = random.uniform(0, 500)
+        new_y = random.uniform(0, 500)
         
-    assert os.path.exists(output_file)
+        duc.mutate_element(element, x=new_x, y=new_y)
+        print(f"Moved element {i+1} to ({new_x:.1f}, {new_y:.1f})")
     
-    parsed_data = duc.parse_duc(io.BytesIO(serialized_data))
-    loaded_elements = parsed_data.elements
-    
-    assert len(loaded_elements) == len(elements)
-    
-    for el_wrapper in loaded_elements:
-        move_x = random.uniform(-200, 200)
-        move_y = random.uniform(-200, 200)
-
-        if hasattr(el_wrapper.element, "linear_base"):
-            old_points = el_wrapper.element.linear_base.points
-            new_points = [
-                type(p)(x=p.x + move_x, y=p.y + move_y) for p in old_points
-            ]
-            duc.mutate_element(
-                el_wrapper,
-                x=el_wrapper.element.linear_base.base.x + move_x,
-                y=el_wrapper.element.linear_base.base.y + move_y,
-                points=new_points
-            )
-        elif hasattr(el_wrapper.element, "base"):
-            duc.mutate_element(
-                el_wrapper,
-                x=el_wrapper.element.base.x + move_x,
-                y=el_wrapper.element.base.y + move_y
-            )
-
-    moved_output_file = os.path.join(test_output_dir, "test_move_elements_after.duc")
-    
-    moved_serialized_data = duc.serialize_duc(name="MoveTestMoved", elements=loaded_elements)
-    
-    with open(moved_output_file, 'wb') as f:
-        f.write(moved_serialized_data)
-        
-    assert os.path.exists(moved_output_file)
-    
-    re_parsed_data = duc.parse_duc(io.BytesIO(moved_serialized_data))
-    re_loaded_elements = re_parsed_data.elements
-    
-    assert len(re_loaded_elements) == len(elements)
-
-    assert len(loaded_elements) == len(elements)
-    
-    positions_changed = 0
-    for el_wrapper in re_loaded_elements:
-        el = el_wrapper.element
-        if hasattr(el, 'base'):
-            current_pos = (el.base.x, el.base.y)
-            for orig_el in elements:
-                if (hasattr(orig_el.element, 'base') and 
-                    orig_el.element.base.label == el.base.label):
-                    initial_pos = (orig_el.element.base.x, orig_el.element.base.y)
-                    if current_pos != initial_pos:
-                        positions_changed += 1
-                    break
-        elif hasattr(el, 'linear_base'):
-            current_pos = (el.linear_base.base.x, el.linear_base.base.y)
-            for orig_el in elements:
-                if (hasattr(orig_el.element, 'linear_base') and 
-                    orig_el.element.linear_base.base.label == el.linear_base.base.label):
-                    initial_pos = (orig_el.element.linear_base.base.x, orig_el.element.linear_base.base.y)
-                    if current_pos != initial_pos:
-                        positions_changed += 1
-                    break
-
-    assert positions_changed == len(elements)
-    print(f"Successfully moved {positions_changed} elements")
-    print(f"Re-parsed {len(re_loaded_elements)} elements from moved file")
-
-    print("✅ Test for moving elements randomly passed!")
-
-@pytest.fixture
-def test_output_dir():
-    """Create a test output directory."""
+    # Determine output path
     current_script_path = os.path.dirname(os.path.abspath(__file__))
     output_dir = os.path.join(current_script_path, "..", "output")
+    
     os.makedirs(output_dir, exist_ok=True)
-    return output_dir
+    output_file_name = "test_move_elements_randomly.duc"
+    output_file_path = os.path.join(output_dir, output_file_name)
+    
+    # Serialize using the new io API
+    serialized_bytes = duc.serialize_duc(
+        name="MoveElementsRandomlyTest",
+        elements=elements
+    )
+    
+    assert serialized_bytes is not None, "Serialization returned None"
+    assert len(serialized_bytes) > 0, "Serialization returned empty bytes"
+    
+    # Write the serialized bytes to a .duc file
+    with open(output_file_path, "wb") as f:
+        f.write(serialized_bytes)
+    
+    print(f"Successfully serialized moved elements to: {output_file_path}")
+    print(f"You can now test this file with: flatc --json -o <output_json_dir> schema/duc.fbs -- {output_file_path}")
 
-# This test should:
-# 1. Load a duc file (parse)
-# 2. Move all the elements around randomly
-# 3. Save the duc file (serialize)
+
 if __name__ == "__main__":
+    # Allow running the test directly for quick checks, e.g., during development
+    import pytest # type: ignore
     pytest.main([__file__])

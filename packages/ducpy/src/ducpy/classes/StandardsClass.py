@@ -1,30 +1,29 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Dict, Union, Any, TYPE_CHECKING
 
-from ducpy.Duc.ANGULAR_UNITS_FORMAT import ANGULAR_UNITS_FORMAT
-from ducpy.Duc.DECIMAL_SEPARATOR import DECIMAL_SEPARATOR
-from ducpy.Duc.DIMENSION_UNITS_FORMAT import DIMENSION_UNITS_FORMAT
-from ducpy.Duc.GRID_DISPLAY_TYPE import GRID_DISPLAY_TYPE
 from ducpy.Duc.GRID_TYPE import GRID_TYPE
-from ducpy.Duc.OBJECT_SNAP_MODE import OBJECT_SNAP_MODE
-from ducpy.Duc.SNAP_MARKER_SHAPE import SNAP_MARKER_SHAPE
+from ducpy.Duc.GRID_DISPLAY_TYPE import GRID_DISPLAY_TYPE
 from ducpy.Duc.SNAP_MODE import SNAP_MODE
+from ducpy.Duc.OBJECT_SNAP_MODE import OBJECT_SNAP_MODE
 from ducpy.Duc.SNAP_OVERRIDE_BEHAVIOR import SNAP_OVERRIDE_BEHAVIOR
+from ducpy.Duc.SNAP_MARKER_SHAPE import SNAP_MARKER_SHAPE
 from ducpy.Duc.UNIT_SYSTEM import UNIT_SYSTEM
+from ducpy.Duc.DIMENSION_UNITS_FORMAT import DIMENSION_UNITS_FORMAT
+from ducpy.Duc.DECIMAL_SEPARATOR import DECIMAL_SEPARATOR
+from ducpy.Duc.ANGULAR_UNITS_FORMAT import ANGULAR_UNITS_FORMAT
+from ducpy.Duc.PRUNING_LEVEL import PRUNING_LEVEL
 
-from .ElementsClass import (DucCommonStyle, DucDimensionStyle, DucDocStyle,
-                            DucFeatureControlFrameStyle, DucHatchStyle,
-                            DucLeaderStyle, DucStackLikeStyles, DucTableStyle,
-                            DucTextStyle, DucUcs, DucView, DucViewportStyle,
-                            DucXRayStyle, ElementBackground, ElementStroke,
-                            GeometricPoint, Identifier)
-
+from ducpy.classes.ElementsClass import (
+    DucCommonStyle, DucStackLikeStyles, DucTextStyle, DucDimensionStyle,
+    DucLeaderStyle, DucFeatureControlFrameStyle, DucTableStyle, DucDocStyle,
+    DucViewportStyle, DucHatchStyle, DucXRayStyle, DucUcs, DucView, Identifier
+)
 
 @dataclass
 class GridStyle:
     color: str
     opacity: float
-    dash_pattern: Optional[List[float]] = None
+    dash_pattern: Optional[List[float]]
 
 @dataclass
 class PolarGridSettings:
@@ -43,7 +42,7 @@ class GridSettings:
     x_spacing: float
     y_spacing: float
     subdivisions: int
-    origin: GeometricPoint
+    origin: "GeometricPoint"
     rotation: float
     follow_ucs: bool
     major_style: GridStyle
@@ -56,13 +55,13 @@ class GridSettings:
     readonly: bool
     type: GRID_TYPE
     display_type: GRID_DISPLAY_TYPE
-    polar_settings: Optional[PolarGridSettings] = None
-    isometric_settings: Optional[IsometricGridSettings] = None
+    polar_settings: Optional[PolarGridSettings]
+    isometric_settings: Optional[IsometricGridSettings]
 
 @dataclass
 class SnapOverride:
     key: str
-    behavior: Optional[SNAP_OVERRIDE_BEHAVIOR] = None
+    behavior: Optional[SNAP_OVERRIDE_BEHAVIOR]
 
 @dataclass
 class DynamicSnapSettings:
@@ -76,7 +75,7 @@ class PolarTrackingSettings:
     angles: List[float]
     track_from_last_point: bool
     show_polar_coordinates: bool
-    increment_angle: Optional[float] = None
+    increment_angle: Optional[float]
 
 @dataclass
 class TrackingLineStyle:
@@ -86,8 +85,8 @@ class TrackingLineStyle:
 
 @dataclass
 class LayerSnapFilters:
-    include_layers: List[str] = field(default_factory=list)
-    exclude_layers: List[str] = field(default_factory=list)
+    include_layers: List[str]
+    exclude_layers: List[str]
 
 @dataclass
 class SnapMarkerStyle:
@@ -121,14 +120,14 @@ class SnapSettings:
     dynamic_snap: DynamicSnapSettings
     snap_markers: SnapMarkerSettings
     construction_snap_enabled: bool
-    tracking_line_style: Optional[TrackingLineStyle] = None
-    temporary_overrides: Optional[List[SnapOverride]] = None
-    incremental_distance: Optional[float] = None
-    magnetic_strength: Optional[float] = None
-    layer_snap_filters: Optional[LayerSnapFilters] = None
-    element_type_filters: Optional[List[str]] = None
-    snap_mode: Optional[SNAP_MODE] = None
-    snap_to_grid_intersections: Optional[bool] = None
+    tracking_line_style: Optional[TrackingLineStyle]
+    temporary_overrides: Optional[List[SnapOverride]]
+    incremental_distance: Optional[float]
+    magnetic_strength: Optional[float]
+    layer_snap_filters: Optional[LayerSnapFilters]
+    element_type_filters: Optional[List[str]]
+    snap_mode: Optional[SNAP_MODE]
+    snap_to_grid_intersections: Optional[bool]
 
 @dataclass
 class UnitSystemBase:
@@ -156,8 +155,8 @@ class AlternateUnits(UnitSystemBase):
 
 @dataclass
 class PrimaryUnits:
-    linear: Optional[LinearUnitSystem] = None
-    angular: Optional[AngularUnitSystem] = None
+    linear: Optional[LinearUnitSystem]
+    angular: Optional[AngularUnitSystem]
 
 @dataclass
 class StandardUnits:
@@ -173,78 +172,78 @@ class UnitPrecision:
 
 @dataclass
 class StandardOverrides:
-    unit_precision: Optional[UnitPrecision] = None
-    main_scope: Optional[str] = None
-    elements_stroke_width_override: Optional[float] = None
-    common_style_id: Optional[str] = None
-    stack_like_style_id: Optional[str] = None
-    text_style_id: Optional[str] = None
-    dimension_style_id: Optional[str] = None
-    leader_style_id: Optional[str] = None
-    feature_control_frame_style_id: Optional[str] = None
-    table_style_id: Optional[str] = None
-    doc_style_id: Optional[str] = None
-    viewport_style_id: Optional[str] = None
-    plot_style_id: Optional[str] = None
-    hatch_style_id: Optional[str] = None
-    active_grid_settings_id: Optional[List[str]] = None
-    active_snap_settings_id: Optional[str] = None
-    dash_line_override: Optional[str] = None
+    unit_precision: Optional[UnitPrecision]
+    main_scope: Optional[str]
+    elements_stroke_width_override: Optional[float]
+    common_style_id: Optional[str]
+    stack_like_style_id: Optional[str]
+    text_style_id: Optional[str]
+    dimension_style_id: Optional[str]
+    leader_style_id: Optional[str]
+    feature_control_frame_style_id: Optional[str]
+    table_style_id: Optional[str]
+    doc_style_id: Optional[str]
+    viewport_style_id: Optional[str]
+    plot_style_id: Optional[str]
+    hatch_style_id: Optional[str]
+    active_grid_settings_id: Optional[List[str]]
+    active_snap_settings_id: Optional[str]
+    dash_line_override: Optional[str]
 
 @dataclass
 class IdentifiedCommonStyle:
     id: Identifier
-    style: DucCommonStyle
+    style: "DucCommonStyle"
 
 @dataclass
 class IdentifiedStackLikeStyle:
     id: Identifier
-    style: DucStackLikeStyles
+    style: "DucStackLikeStyles"
 
 @dataclass
 class IdentifiedTextStyle:
     id: Identifier
-    style: DucTextStyle
+    style: "DucTextStyle"
 
 @dataclass
 class IdentifiedDimensionStyle:
     id: Identifier
-    style: DucDimensionStyle
+    style: "DucDimensionStyle"
 
 @dataclass
 class IdentifiedLeaderStyle:
     id: Identifier
-    style: DucLeaderStyle
+    style: "DucLeaderStyle"
 
 @dataclass
 class IdentifiedFCFStyle:
     id: Identifier
-    style: DucFeatureControlFrameStyle
+    style: "DucFeatureControlFrameStyle"
 
 @dataclass
 class IdentifiedTableStyle:
     id: Identifier
-    style: DucTableStyle
+    style: "DucTableStyle"
 
 @dataclass
 class IdentifiedDocStyle:
     id: Identifier
-    style: DucDocStyle
+    style: "DucDocStyle"
 
 @dataclass
 class IdentifiedViewportStyle:
     id: Identifier
-    style: DucViewportStyle
+    style: "DucViewportStyle"
 
 @dataclass
 class IdentifiedHatchStyle:
     id: Identifier
-    style: DucHatchStyle
+    style: "DucHatchStyle"
 
 @dataclass
 class IdentifiedXRayStyle:
     id: Identifier
-    style: DucXRayStyle
+    style: "DucXRayStyle"
 
 @dataclass
 class StandardStyles:
@@ -273,43 +272,43 @@ class IdentifiedSnapSettings:
 @dataclass
 class IdentifiedUcs:
     id: Identifier
-    ucs: DucUcs
+    ucs: "DucUcs"
 
 @dataclass
 class IdentifiedView:
     id: Identifier
-    view: DucView
+    view: "DucView"
 
 @dataclass
 class StandardViewSettings:
-    views: List[IdentifiedView] = field(default_factory=list)
-    ucs: List[IdentifiedUcs] = field(default_factory=list)
-    grid_settings: List[IdentifiedGridSettings] = field(default_factory=list)
-    snap_settings: List[IdentifiedSnapSettings] = field(default_factory=list)
+    views: List[IdentifiedView]
+    ucs: List[IdentifiedUcs]
+    grid_settings: List[IdentifiedGridSettings]
+    snap_settings: List[IdentifiedSnapSettings]
 
 @dataclass
 class DimensionValidationRules:
-    min_text_height: float = 0.0
-    max_text_height: float = 0.0
-    allowed_precisions: List[int] = field(default_factory=list)
+    min_text_height: float
+    max_text_height: float
+    allowed_precisions: List[int]
 
 @dataclass
 class LayerValidationRules:
-    prohibited_layer_names: List[str] = field(default_factory=list)
+    prohibited_layer_names: List[str]
 
 @dataclass
 class StandardValidation:
-    dimension_rules: Optional[DimensionValidationRules] = None
-    layer_rules: Optional[LayerValidationRules] = None
+    dimension_rules: Optional[DimensionValidationRules]
+    layer_rules: Optional[LayerValidationRules]
 
 @dataclass
 class Standard:
     identifier: Identifier
     version: str
     readonly: bool
-    overrides: Optional[StandardOverrides] = None
-    styles: Optional[StandardStyles] = None
-    view_settings: Optional[StandardViewSettings] = None
-    units: Optional[StandardUnits] = None
-    validation: Optional[StandardValidation] = None
+    overrides: Optional[StandardOverrides]
+    styles: Optional[StandardStyles]
+    view_settings: Optional[StandardViewSettings]
+    units: Optional[StandardUnits]
+    validation: Optional[StandardValidation]
 

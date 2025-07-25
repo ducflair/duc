@@ -274,7 +274,7 @@ class ExportedDataState(object):
         return None
 
     # ExportedDataState
-    def Files(self, j):
+    def ExternalFiles(self, j):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
         if o != 0:
             x = self._tab.Vector(o)
@@ -287,14 +287,14 @@ class ExportedDataState(object):
         return None
 
     # ExportedDataState
-    def FilesLength(self):
+    def ExternalFilesLength(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # ExportedDataState
-    def FilesIsNone(self):
+    def ExternalFilesIsNone(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(32))
         return o == 0
 
@@ -441,17 +441,17 @@ def ExportedDataStateAddDucGlobalState(builder, ducGlobalState):
 def AddDucGlobalState(builder, ducGlobalState):
     ExportedDataStateAddDucGlobalState(builder, ducGlobalState)
 
-def ExportedDataStateAddFiles(builder, files):
-    builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(files), 0)
+def ExportedDataStateAddExternalFiles(builder, externalFiles):
+    builder.PrependUOffsetTRelativeSlot(14, flatbuffers.number_types.UOffsetTFlags.py_type(externalFiles), 0)
 
-def AddFiles(builder, files):
-    ExportedDataStateAddFiles(builder, files)
+def AddExternalFiles(builder, externalFiles):
+    ExportedDataStateAddExternalFiles(builder, externalFiles)
 
-def ExportedDataStateStartFilesVector(builder, numElems):
+def ExportedDataStateStartExternalFilesVector(builder, numElems):
     return builder.StartVector(4, numElems, 4)
 
-def StartFilesVector(builder, numElems):
-    return ExportedDataStateStartFilesVector(builder, numElems)
+def StartExternalFilesVector(builder, numElems):
+    return ExportedDataStateStartExternalFilesVector(builder, numElems)
 
 def ExportedDataStateAddVersionGraph(builder, versionGraph):
     builder.PrependUOffsetTRelativeSlot(15, flatbuffers.number_types.UOffsetTFlags.py_type(versionGraph), 0)

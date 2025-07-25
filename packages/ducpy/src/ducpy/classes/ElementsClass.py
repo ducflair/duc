@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 class Identifier:
     id: str
     name: str
-    description: str = ""
+    description: str
 
 @dataclass
 class GeometricPoint:
@@ -65,7 +65,7 @@ class DucUcs:
 class DucPoint:
     x: float
     y: float
-    mirroring: Optional[BEZIER_MIRRORING] = None
+    mirroring: Optional[BEZIER_MIRRORING]
 
 @dataclass
 class DucView:
@@ -87,9 +87,9 @@ class Margins:
 class TilingProperties:
     size_in_percent: float
     angle: float
-    spacing: Optional[float] = None
-    offset_x: Optional[float] = None
-    offset_y: Optional[float] = None
+    spacing: Optional[float]
+    offset_x: Optional[float]
+    offset_y: Optional[float]
 
 @dataclass
 class HatchPatternLine:
@@ -112,7 +112,7 @@ class DucHatchStyle:
     pattern_origin: DucPoint
     pattern_double: bool
     hatch_style: HATCH_STYLE
-    custom_pattern: Optional[CustomHatchPattern] = None
+    custom_pattern: Optional[CustomHatchPattern]
 
 @dataclass
 class DucImageFilter:
@@ -124,25 +124,25 @@ class ElementContentBase:
     src: str
     visible: bool
     opacity: float
-    tiling: Optional[TilingProperties] = None
-    hatch: Optional[DucHatchStyle] = None
-    image_filter: Optional[DucImageFilter] = None
-    preference: Optional[ELEMENT_CONTENT_PREFERENCE] = None
+    tiling: Optional[TilingProperties]
+    hatch: Optional[DucHatchStyle]
+    image_filter: Optional[DucImageFilter]
+    preference: Optional[ELEMENT_CONTENT_PREFERENCE]
 
 @dataclass
 class StrokeStyle:
     preference: STROKE_PREFERENCE
-    dash: Optional[List[float]] = None
-    dash_line_override: Optional[str] = None
-    cap: Optional[STROKE_CAP] = None
-    join: Optional[STROKE_JOIN] = None
-    dash_cap: Optional[STROKE_CAP] = None
-    miter_limit: Optional[float] = None
+    dash: Optional[List[float]]
+    dash_line_override: Optional[str]
+    cap: Optional[STROKE_CAP]
+    join: Optional[STROKE_JOIN]
+    dash_cap: Optional[STROKE_CAP]
+    miter_limit: Optional[float]
 
 @dataclass
 class StrokeSides:
     preference: STROKE_SIDE_PREFERENCE
-    values: Optional[List[float]] = None
+    values: Optional[List[float]]
 
 @dataclass
 class ElementStroke:
@@ -150,7 +150,7 @@ class ElementStroke:
     width: float
     style: StrokeStyle
     placement: STROKE_PLACEMENT
-    stroke_sides: Optional[StrokeSides] = None
+    stroke_sides: Optional[StrokeSides]
 
 @dataclass
 class ElementBackground:
@@ -192,19 +192,19 @@ class DucElementBase:
     region_ids: List[str]
     z_index: float
     locked: bool
-    description: Optional[str] = None
-    index: Optional[str] = None
-    link: Optional[str] = None
-    layer_id: Optional[str] = None
-    frame_id: Optional[str] = None
-    bound_elements: Optional[List[BoundElement]] = None
-    custom_data: Optional[Dict[str, Any]] = None
+    description: Optional[str]
+    index: Optional[str]
+    link: Optional[str]
+    layer_id: Optional[str]
+    frame_id: Optional[str]
+    bound_elements: Optional[List[BoundElement]]
+    custom_data: Optional[Dict[str, Any]]
 
 @dataclass
 class DucHead:
     size: float
     type: LINE_HEAD
-    block_id: Optional[str] = None
+    block_id: Optional[str]
 
 @dataclass
 class PointBindingPoint:
@@ -216,14 +216,14 @@ class DucPointBinding:
     element_id: str
     focus: float
     gap: float
-    fixed_point: Optional[GeometricPoint] = None
-    point: Optional[PointBindingPoint] = None
-    head: Optional[DucHead] = None
+    fixed_point: Optional[GeometricPoint]
+    point: Optional[PointBindingPoint]
+    head: Optional[DucHead]
 
 @dataclass
 class DucLineReference:
     index: int
-    handle: Optional[GeometricPoint] = None
+    handle: Optional[GeometricPoint]
 
 @dataclass
 class DucLine:
@@ -233,8 +233,8 @@ class DucLine:
 @dataclass
 class DucPath:
     line_indices: List[int]
-    background: Optional[ElementBackground] = None
-    stroke: Optional[ElementStroke] = None
+    background: Optional[ElementBackground]
+    stroke: Optional[ElementStroke]
 
 @dataclass
 class DucLinearElementBase:
@@ -259,7 +259,7 @@ class DucStackBase:
     is_visible: bool
     locked: bool
     styles: DucStackLikeStyles
-    description: str = ""
+    description: str
 
 @dataclass
 class DucStackElementBase:
@@ -267,7 +267,7 @@ class DucStackElementBase:
     stack_base: "DucStackBase"
     clip: bool
     label_visible: bool
-    standard_override: Optional[str] = None
+    standard_override: Optional[str]
 
 @dataclass
 class LineSpacing:
@@ -289,7 +289,7 @@ class DucTextStyle:
     is_backwards: bool
     text_align: TEXT_ALIGN
     vertical_align: VERTICAL_ALIGN
-    paper_text_height: Optional[float] = None
+    paper_text_height: Optional[float]
 
 @dataclass
 class DucTableCellStyle:
@@ -312,8 +312,8 @@ class DucLeaderStyle:
     text_style: DucTextStyle
     text_attachment: VERTICAL_ALIGN
     block_attachment: BLOCK_ATTACHMENT
-    dogleg: Optional[float] = None
-    heads_override: Optional[List[DucHead]] = None
+    dogleg: Optional[float]
+    heads_override: Optional[List[DucHead]]
 
 @dataclass
 class DimensionToleranceStyle:
@@ -322,7 +322,7 @@ class DimensionToleranceStyle:
     lower_value: float
     precision: int
     display_method: TOLERANCE_DISPLAY
-    text_style: Optional[DucTextStyle] = None
+    text_style: Optional[DucTextStyle]
 
 @dataclass
 class DimensionFitStyle:
@@ -345,7 +345,7 @@ class DimensionExtLineStyle:
 class DimensionSymbolStyle:
     center_mark_size: float
     center_mark_type: MARK_ELLIPSE_CENTER
-    heads_override: Optional[List[DucHead]] = None
+    heads_override: Optional[List[DucHead]]
 
 @dataclass
 class DucDimensionStyle:
@@ -368,7 +368,7 @@ class FCFSymbolStyle:
 
 @dataclass
 class FCFDatumStyle:
-    bracket_style: Optional[DATUM_BRACKET_STYLE] = None
+    bracket_style: Optional[DATUM_BRACKET_STYLE]
 
 @dataclass
 class DucFeatureControlFrameStyle:
@@ -392,7 +392,7 @@ class ParagraphFormatting:
 class StackFormatProperties:
     upper_scale: float
     lower_scale: float
-    alignment: Optional[STACKED_TEXT_ALIGN] = None
+    alignment: Optional[STACKED_TEXT_ALIGN]
 
 @dataclass
 class StackFormat:
@@ -444,26 +444,26 @@ class DucEmbeddableElement:
 @dataclass
 class DucPdfElement:
     base: DucElementBase
-    file_id: Optional[str] = None
+    file_id: Optional[str]
 
 @dataclass
 class DucMermaidElement:
     base: DucElementBase
     source: str
-    theme: Optional[str] = None
-    svg_path: Optional[str] = None
+    theme: Optional[str]
+    svg_path: Optional[str]
 
 @dataclass
 class DucTableColumn:
     id: str
     width: float
-    style_overrides: Optional[DucTableCellStyle] = None
+    style_overrides: Optional[DucTableCellStyle]
 
 @dataclass
 class DucTableRow:
     id: str
     height: float
-    style_overrides: Optional[DucTableCellStyle] = None
+    style_overrides: Optional[DucTableCellStyle]
 
 @dataclass
 class DucTableCellSpan:
@@ -476,8 +476,8 @@ class DucTableCell:
     column_id: str
     data: str
     locked: bool
-    span: Optional[DucTableCellSpan] = None
-    style_overrides: Optional[DucTableCellStyle] = None
+    span: Optional[DucTableCellSpan]
+    style_overrides: Optional[DucTableCellStyle]
 
 @dataclass
 class DucTableColumnEntry:
@@ -525,9 +525,9 @@ class DucImageElement:
     base: DucElementBase
     scale: List[float]
     status: IMAGE_STATUS
-    file_id: Optional[str] = None
-    crop: Optional[ImageCrop] = None
-    filter: Optional[DucImageFilter] = None
+    file_id: Optional[str]
+    crop: Optional[ImageCrop]
+    filter: Optional[DucImageFilter]
 
 @dataclass
 class DucTextDynamicElementSource:
@@ -547,7 +547,7 @@ class DucTextDynamicPart:
     tag: str
     source: DucTextDynamicSource
     cached_value: str
-    formatting: Optional["PrimaryUnits"] = None
+    formatting: Optional["PrimaryUnits"]
 
 @dataclass
 class DucTextElement:
@@ -557,7 +557,7 @@ class DucTextElement:
     dynamic: List[DucTextDynamicPart]
     auto_resize: bool
     original_text: str
-    container_id: Optional[str] = None
+    container_id: Optional[str]
 
 @dataclass
 class DucLinearElement:
@@ -586,17 +586,17 @@ class DucFreeDrawElement:
     easing: str
     pressures: List[float]
     simulate_pressure: bool
-    last_committed_point: Optional[DucPoint] = None
-    start: Optional[DucFreeDrawEnds] = None
-    end: Optional[DucFreeDrawEnds] = None
-    svg_path: Optional[str] = None
+    last_committed_point: Optional[DucPoint]
+    start: Optional[DucFreeDrawEnds]
+    end: Optional[DucFreeDrawEnds]
+    svg_path: Optional[str]
 
 @dataclass
 class DucBlockAttributeDefinition:
     tag: str
     default_value: str
     is_constant: bool
-    prompt: Optional[str] = None
+    prompt: Optional[str]
 
 @dataclass
 class DucBlockAttributeDefinitionEntry:
@@ -610,7 +610,7 @@ class DucBlock:
     version: int
     elements: List["ElementWrapper"]
     attribute_definitions: List[DucBlockAttributeDefinitionEntry]
-    description: Optional[str] = None
+    description: Optional[str]
 
 @dataclass
 class StringValueEntry:
@@ -628,9 +628,9 @@ class DucBlockDuplicationArray:
 class DucBlockInstanceElement:
     base: DucElementBase
     block_id: str
-    element_overrides: Optional[List[StringValueEntry]] = None
-    attribute_values: Optional[List[StringValueEntry]] = None
-    duplication_array: Optional[DucBlockDuplicationArray] = None
+    element_overrides: Optional[List[StringValueEntry]]
+    attribute_values: Optional[List[StringValueEntry]]
+    duplication_array: Optional[DucBlockDuplicationArray]
 
 @dataclass
 class DucFrameElement:
@@ -655,7 +655,7 @@ class DucViewportElement:
     scale: float
     shade_plot: VIEWPORT_SHADE_PLOT
     frozen_group_ids: List[str]
-    standard_override: Optional[str] = None
+    standard_override: Optional[str]
 
 @dataclass
 class DucXRayElement:
@@ -672,8 +672,8 @@ class LeaderTextBlockContent:
 @dataclass
 class LeaderBlockContent:
     block_id: str
-    attribute_values: Optional[List[StringValueEntry]] = None
-    element_overrides: Optional[List[StringValueEntry]] = None
+    attribute_values: Optional[List[StringValueEntry]]
+    element_overrides: Optional[List[StringValueEntry]]
 
 @dataclass
 class LeaderContent:
@@ -684,29 +684,29 @@ class DucLeaderElement:
     linear_base: DucLinearElementBase
     style: DucLeaderStyle
     content_anchor: GeometricPoint
-    content: Optional[LeaderContent] = None
+    content: Optional[LeaderContent]
 
 @dataclass
 class DimensionDefinitionPoints:
     origin1: GeometricPoint
     location: GeometricPoint
-    origin2: Optional[GeometricPoint] = None
-    center: Optional[GeometricPoint] = None
-    jog: Optional[GeometricPoint] = None
+    origin2: Optional[GeometricPoint]
+    center: Optional[GeometricPoint]
+    jog: Optional[GeometricPoint]
 
 @dataclass
 class DimensionBindings:
-    origin1: Optional[DucPointBinding] = None
-    origin2: Optional[DucPointBinding] = None
-    center: Optional[DucPointBinding] = None
+    origin1: Optional[DucPointBinding]
+    origin2: Optional[DucPointBinding]
+    center: Optional[DucPointBinding]
 
 @dataclass
 class DimensionBaselineData:
-    base_dimension_id: Optional[str] = None
+    base_dimension_id: Optional[str]
 
 @dataclass
 class DimensionContinueData:
-    continue_from_dimension_id: Optional[str] = None
+    continue_from_dimension_id: Optional[str]
 
 @dataclass
 class DucDimensionElement:
@@ -715,25 +715,25 @@ class DucDimensionElement:
     definition_points: DimensionDefinitionPoints
     oblique_angle: float
     dimension_type: DIMENSION_TYPE
-    ordinate_axis: Optional[AXIS] = None
-    bindings: Optional[DimensionBindings] = None
-    text_override: Optional[str] = None
-    text_position: Optional[GeometricPoint] = None
-    tolerance_override: Optional[DimensionToleranceStyle] = None
-    baseline_data: Optional[DimensionBaselineData] = None
-    continue_data: Optional[DimensionContinueData] = None
+    ordinate_axis: Optional[AXIS]
+    bindings: Optional[DimensionBindings]
+    text_override: Optional[str]
+    text_position: Optional[GeometricPoint]
+    tolerance_override: Optional[DimensionToleranceStyle]
+    baseline_data: Optional[DimensionBaselineData]
+    continue_data: Optional[DimensionContinueData]
 
 @dataclass
 class DatumReference:
     letters: str
-    modifier: Optional[MATERIAL_CONDITION] = None
+    modifier: Optional[MATERIAL_CONDITION]
 
 @dataclass
 class ToleranceClause:
     value: str
     feature_modifiers: List[FEATURE_MODIFIER]
-    zone_type: Optional[TOLERANCE_ZONE_TYPE] = None
-    material_condition: Optional[MATERIAL_CONDITION] = None
+    zone_type: Optional[TOLERANCE_ZONE_TYPE]
+    material_condition: Optional[MATERIAL_CONDITION]
 
 @dataclass
 class FeatureControlFrameSegment:
@@ -756,25 +756,25 @@ class FCFProjectedZoneModifier:
 
 @dataclass
 class FCFFrameModifiers:
-    between: Optional[FCFBetweenModifier] = None
-    projected_tolerance_zone: Optional[FCFProjectedZoneModifier] = None
-    all_around: Optional[bool] = None
-    all_over: Optional[bool] = None
-    continuous_feature: Optional[bool] = None
+    between: Optional[FCFBetweenModifier]
+    projected_tolerance_zone: Optional[FCFProjectedZoneModifier]
+    all_around: Optional[bool]
+    all_over: Optional[bool]
+    continuous_feature: Optional[bool]
 
 @dataclass
 class FCFDatumDefinition:
     letter: str
-    feature_binding: Optional[DucPointBinding] = None
+    feature_binding: Optional[DucPointBinding]
 
 @dataclass
 class DucFeatureControlFrameElement:
     base: DucElementBase
     style: DucFeatureControlFrameStyle
     rows: List[FCFSegmentRow]
-    frame_modifiers: Optional[FCFFrameModifiers] = None
-    leader_element_id: Optional[str] = None
-    datum_definition: Optional[FCFDatumDefinition] = None
+    frame_modifiers: Optional[FCFFrameModifiers]
+    leader_element_id: Optional[str]
+    datum_definition: Optional[FCFDatumDefinition]
 
 @dataclass
 class TextColumn:

@@ -56,9 +56,9 @@ created():bigint {
   return offset ? this.bb!.readInt64(this.bb_pos + offset) : BigInt('0');
 }
 
-lastRetrieved():bigint {
+lastRetrieved():bigint|null {
   const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? this.bb!.readInt64(this.bb_pos + offset) : BigInt('0');
+  return offset ? this.bb!.readInt64(this.bb_pos + offset) : null;
 }
 
 static startDucExternalFileData(builder:flatbuffers.Builder) {
@@ -94,7 +94,7 @@ static addCreated(builder:flatbuffers.Builder, created:bigint) {
 }
 
 static addLastRetrieved(builder:flatbuffers.Builder, lastRetrieved:bigint) {
-  builder.addFieldInt64(4, lastRetrieved, BigInt('0'));
+  builder.addFieldInt64(4, lastRetrieved, null);
 }
 
 static endDucExternalFileData(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -103,13 +103,14 @@ static endDucExternalFileData(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createDucExternalFileData(builder:flatbuffers.Builder, mimeTypeOffset:flatbuffers.Offset, idOffset:flatbuffers.Offset, dataOffset:flatbuffers.Offset, created:bigint, lastRetrieved:bigint):flatbuffers.Offset {
+static createDucExternalFileData(builder:flatbuffers.Builder, mimeTypeOffset:flatbuffers.Offset, idOffset:flatbuffers.Offset, dataOffset:flatbuffers.Offset, created:bigint, lastRetrieved:bigint|null):flatbuffers.Offset {
   DucExternalFileData.startDucExternalFileData(builder);
   DucExternalFileData.addMimeType(builder, mimeTypeOffset);
   DucExternalFileData.addId(builder, idOffset);
   DucExternalFileData.addData(builder, dataOffset);
   DucExternalFileData.addCreated(builder, created);
-  DucExternalFileData.addLastRetrieved(builder, lastRetrieved);
+  if (lastRetrieved !== null)
+    DucExternalFileData.addLastRetrieved(builder, lastRetrieved);
   return DucExternalFileData.endDucExternalFileData(builder);
 }
 }
