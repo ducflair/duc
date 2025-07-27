@@ -1,5 +1,8 @@
 import { BEZIER_MIRRORING, BLENDING, ELEMENT_CONTENT_PREFERENCE, IMAGE_STATUS, LINE_HEAD, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/duc";
-import type { DucExternalFiles, LibraryItem, LibraryItems, LibraryItems_anyVersion, PrecisionValue, RawValue, RendererState, Scope, ScopedValue } from "ducjs/types";
+import { getPrecisionScope, ScaleFactors, SupportedMeasures } from "ducjs/technical/measurements";
+import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScaledZoomValueForScope, getScopedBezierPointFromDucPoint, getScopedZoomValue, NEUTRAL_SCOPE } from "ducjs/technical/scopes";
+import { DESIGN_STANDARD, DesignStandard, Standard } from "ducjs/technical/standards";
+import type { Dictionary, DucExternalFiles, DucGlobalState, ImportedDataState, LibraryItem, LibraryItems, PrecisionValue, RawValue, Scope, ScopedValue, VersionGraph } from "ducjs/types";
 import { DucLocalState } from "ducjs/types";
 import type {
   BezierMirroring,
@@ -10,17 +13,15 @@ import type {
   DucFreeDrawEasing,
   DucFreeDrawEnds,
   DucGroup,
+  DucLayer,
   DucLine,
   DucLinearElement,
   DucPath,
   DucPoint,
   DucPointBinding,
+  DucRegion,
   DucSelectionElement,
-  DucTableCell,
-  DucTableColumn,
   DucTableElement,
-  DucTableRow,
-  DucTableStyleProps,
   DucTextElement,
   ElementBackground,
   ElementContentBase,
@@ -77,52 +78,39 @@ import { getNormalizedPoints, mergeOverlappingPoints, validateClosedPath } from 
 import { detectLineHeight, refreshTextDimensions } from "ducjs/utils/elements/textElement";
 import { getSizeFromPoints } from "ducjs/utils/math";
 import { randomId } from "ducjs/utils/math/random";
-import { getPrecisionScope, ScaleFactors, SupportedMeasures } from "ducjs/technical/measurements";
 import {
   getNormalizedDimensions,
-  getNormalizedGridSize,
-  getNormalizedGridStep,
   getNormalizedZoom,
-  normalizeFixedPoint,
+  normalizeFixedPoint
 } from "ducjs/utils/normalize";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScaledZoomValueForScope, getScopedBezierPointFromDucPoint, getScopedZoomValue, NEUTRAL_SCOPE } from "ducjs/technical/scopes";
-import { DESIGN_STANDARD, DesignStandard, Standard } from "ducjs/technical/standards";
-import { getDefaultDucState, updateActiveTool } from "ducjs/utils/state";
 import { normalizeLink } from "ducjs/utils/url";
 import tinycolor from "tinycolor2";
 
-export type RestoredDucState = Omit<
+export type RestoredLocalState = Omit<
   DucLocalState,
   "offsetTop" | "offsetLeft" | "width" | "height"
 >;
 
-export interface ImportedDataState {
-  type?: string;
-  version?: string;
-  source?: string;
-  elements?: readonly DucElement[] | null;
-  appState?: Readonly<Partial<DucLocalState>> | null;
-  scrollToContent?: boolean;
-  libraryItems?: LibraryItems_anyVersion;
-  files?: DucExternalFiles;
-  rendererState?: RendererState;
-  blocks?: readonly DucBlock[];
-  groups?: readonly DucGroup[];
-}
+export type RestoredDataState = {
+  thumbnail: Uint8Array | undefined;
+  dictionary: Dictionary | undefined;
 
-export interface ImportedExtendedDataState<TExtendedAppState = any> {
-  type?: string;
-  version?: number;
-  source?: string;
-  elements?: readonly DucElement[] | null;
-  appState?: Readonly<Partial<TExtendedAppState>> | null;
-  scrollToContent?: boolean;
-  libraryItems?: LibraryItems_anyVersion;
-  files?: DucExternalFiles;
-  rendererState?: RendererState;
-  blocks?: readonly DucBlock[];
-  groups?: readonly DucGroup[];
-}
+  elements: OrderedDucElement[];
+  
+  localState: RestoredLocalState;
+  globalState: DucGlobalState;
+
+  files: DucExternalFiles;
+
+  blocks: DucBlock[];
+  groups: DucGroup[];
+  regions: DucRegion[];
+  layers: DucLayer[];
+
+  standards: Standard[];
+  versionGraph: VersionGraph | undefined;
+};
+
 
 export interface ExportedLibraryData {
   type: string;
@@ -136,30 +124,6 @@ export interface ImportedLibraryData extends Partial<ExportedLibraryData> {
   library?: LibraryItems;
 }
 
-export type RestoredDataState = {
-  elements: OrderedDucElement[];
-  appState: RestoredDucState;
-  files: DucExternalFiles;
-  rendererState: RendererState | null;
-  blocks: DucBlock[];
-  groups: DucGroup[];
-};
-
-export type RestoredExtendedDataState<TExtendedAppState = any> = {
-  elements: OrderedDucElement[];
-  appState: TExtendedAppState;
-  files: DucExternalFiles;
-  rendererState: RendererState | null;
-  blocks: DucBlock[];
-  groups: DucGroup[];
-};
-
-// Extended AppState restorer function type
-export type ExtendedAppStateRestorer<TExtendedAppState> = (
-  extendedAppState: Partial<TExtendedAppState> | null | undefined,
-  localExtendedAppState: Partial<TExtendedAppState> | null | undefined,
-  restoredDucState: RestoredDucState,
-) => TExtendedAppState;
 
 export type ElementsConfig = {
   syncInvalidIndices: (
@@ -168,33 +132,32 @@ export type ElementsConfig = {
   ) => OrderedDucElement[];
   refreshDimensions?: boolean;
   repairBindings?: boolean;
-  appState?: Readonly<Partial<DucLocalState>> | null;
 }
 
+// FIXME: MOVE RESTORE LOGIC FROM HERE TO restore/restoreElements.ts
+export const restore = (
+  data: ImportedDataState | null,
+  elementsConfig: ElementsConfig | null,
+): RestoredDataState => {
+  const restoredGlobalState = restoreGlobalState(data?.ducGlobalState);
+  const restoredLocalState = restoreLocalState(data?.ducLocalState, restoredGlobalState);
+  const restoredBlocks = restoreBlocks(data?.blocks, restoredLocalState.scope);
+  const restoredGroups = restoreGroups(data?.groups, restoredLocalState.scope);
 
-export const AllowedDucActiveTools: Record<
-  DucLocalState["activeTool"]["type"],
-  boolean
-> = {
-  selection: true,
-  text: true,
-  rectangle: true,
-  polygon: true,
-  ellipse: true,
-  line: true,
-  image: true,
-  arrow: true,
-  freedraw: true,
-  eraser: false,
-  custom: true,
-  frame: true,
-  embeddable: true,
-  hand: true,
-  laser: false,
-  ruler: false,
-  lasso: true,
-  table: true,
+  return {
+    elements: restoreElements(data?.elements, restoredLocalState.scope, null, {
+      ...elementsConfig,
+      localState: restoredLocalState
+    }),
+    localState: restoredLocalState,
+    globalState: restoredGlobalState,
+    files: data?.files || {},
+    blocks: restoredBlocks,
+    groups: restoredGroups,
+  };
 };
+
+
 
 export const isValidElementScopeValue = (value: string | undefined, appState?: Readonly<Partial<DucLocalState>> | null): SupportedMeasures => {
   // Only check if the provided value is valid
@@ -579,20 +542,11 @@ const restoreElement = (
     }
     case "table": {
       const tableElement = element as DucTableElement;
-      return restoreElementWithProperties(tableElement, {
-        columnOrder: tableElement.columnOrder || [],
-        rowOrder: tableElement.rowOrder || [],
-        columns: restoreTableColumns(tableElement.columns, element.scope, currentScope),
-        rows: restoreTableRows(tableElement.rows, element.scope, currentScope),
-        cells: restoreTableCells(tableElement.cells, element.scope, currentScope),
-        style: tableElement.style ? restoreTableStyleProps(tableElement.style, element.scope, currentScope) : undefined,
-      }, appState);
+      //TODO: Implement table element restore
     }
     case "doc": {
       const docElement = element as DucDocElement;
-      return restoreElementWithProperties(docElement, {
-        content: docElement.content || "",
-      }, appState);
+      //TODO: Implement doc element restore
     }
   }
   return null;
@@ -1142,88 +1096,115 @@ export const restoreElements = (
   return restoredElements;
 };
 
-export const restoreDucState = (
-  ducState: ImportedDataState["appState"],
-  localDucState: Partial<DucLocalState> | null | undefined,
-): RestoredDucState => {
-  ducState = ducState || {};
-  const defaultDucState = getDefaultDucState();
+/**
+ * Restores the global state of the document from imported data.
+ * It validates and provides defaults for missing or invalid properties.
+ *
+ * @param importedState - The partially imported global state data.
+ * @returns A complete and valid DucGlobalState object.
+ */
+export const restoreGlobalState = (
+  importedState: Partial<DucGlobalState> = {},
+): DucGlobalState => {
+  // Assume you have a function that returns the default global state
+  const defaults = getDefaultDucGlobalState();
 
-  const scopeExponentThreshold = isValidAppStateScopeExponentThresholdValue(
-    ducState.scopeExponentThreshold,
-    defaultDucState.scopeExponentThreshold
+  // The old 'coordDecimalPlaces' is mapped to the new 'displayPrecision.linear'.
+  // We'll use the default for 'angular' as there's no corresponding old property.
+  const linearPrecision = isValidFinitePositiveByteValue(
+    (importedState as any).coordDecimalPlaces, // casting to any to check for the old property
+    defaults.displayPrecision.linear,
   );
-  const mainScope = isValidAppStateScopeValue(ducState.mainScope);
-  const zoomValue = getNormalizedZoom(
-    isFiniteNumber(ducState.zoom)
-      ? ducState.zoom
-      : ducState.zoom?.value ?? defaultDucState.zoom.value,
-  );
-  const scope = isValidPrecisionScopeValue(zoomValue, mainScope, scopeExponentThreshold);
-  const scopedZoom = getScopedZoomValue(zoomValue, scope);
 
   return {
-    ...defaultDucState,
-    viewBackgroundColor: ducState.viewBackgroundColor ?? defaultDucState.viewBackgroundColor,
-    scope,
-    mainScope,
-    standard: isValidStandard(ducState.standard) ?? defaultDucState.standard,
-    scrollX: ducState.scrollX ?
-      restorePrecisionValue(ducState.scrollX, NEUTRAL_SCOPE, scope) :
-      getPrecisionValueFromRaw(defaultDucState.scrollX.value, NEUTRAL_SCOPE, scope),
-    scrollY: ducState.scrollY ?
-      restorePrecisionValue(ducState.scrollY, NEUTRAL_SCOPE, scope) :
-      getPrecisionValueFromRaw(defaultDucState.scrollY.value, NEUTRAL_SCOPE, scope),
+    ...defaults, // Start with defaults to ensure all keys are present
+    name: importedState.name ?? defaults.name,
+    viewBackgroundColor: importedState.viewBackgroundColor ?? defaults.viewBackgroundColor,
+    mainScope: isValidAppStateScopeValue(importedState.mainScope) ?? defaults.mainScope,
+    scopeExponentThreshold: isValidAppStateScopeExponentThresholdValue(
+      importedState.scopeExponentThreshold,
+      defaults.scopeExponentThreshold,
+    ),
+    // Properties from DucGlobalState that were not in the old function are set to default
+    dashSpacingScale: importedState.dashSpacingScale ?? defaults.dashSpacingScale,
+    isDashSpacingAffectedByViewportScale: 
+      importedState.isDashSpacingAffectedByViewportScale ?? defaults.isDashSpacingAffectedByViewportScale,
+    dimensionsAssociativeByDefault: 
+      importedState.dimensionsAssociativeByDefault ?? defaults.dimensionsAssociativeByDefault,
+    useAnnotativeScaling: 
+      importedState.useAnnotativeScaling ?? defaults.useAnnotativeScaling,
+    displayPrecision: {
+      linear: linearPrecision,
+      angular: importedState.displayPrecision?.angular ?? defaults.displayPrecision.angular,
+    },
+  };
+};
+
+/**
+ * Restores the user's local session state from imported data.
+ * It requires the already-restored global state to correctly calculate dependent values
+ * like zoom and scope.
+ *
+ * @param importedState - The partially imported local state data.
+ * @param globalState - The complete and valid global state for the document.
+ * @returns A complete and valid DucLocalState object.
+ */
+export const restoreLocalState = (
+  importedState: Partial<DucLocalState> = {},
+  globalState: DucGlobalState, // Dependency on restored global state
+): DucLocalState => {
+  // Assume you have a function that returns the default local state
+  const defaults = getDefaultDucLocalState();
+
+  // --- This complex calculation is preserved but now uses the correct sources ---
+  const zoomValue = getNormalizedZoom(
+    isFiniteNumber(importedState.zoom?.value)
+      ? importedState.zoom!.value
+      : defaults.zoom.value,
+  );
+
+  // The scope calculation now correctly depends on the GLOBAL state
+  const scope = isValidPrecisionScopeValue(
+    zoomValue,
+    globalState.mainScope, // Use global state
+    globalState.scopeExponentThreshold, // Use global state
+  );
+  const scopedZoom = getScopedZoomValue(zoomValue, scope);
+  // ---
+
+  return {
+    ...defaults, // Start with defaults
+    scope, // The newly calculated scope
+    activeStandardId: isValidStandard( (importedState as any).standard )?.id ?? defaults.activeStandardId,
+    isBindingEnabled: isValidBoolean(importedState.isBindingEnabled, defaults.isBindingEnabled),
+    penMode: isValidBoolean(importedState.penMode, defaults.penMode),
+    scrollX: importedState.scrollX
+      ? restorePrecisionValue(importedState.scrollX, NEUTRAL_SCOPE, scope)
+      : getPrecisionValueFromRaw(defaults.scrollX.value, NEUTRAL_SCOPE, scope),
+    scrollY: importedState.scrollY
+      ? restorePrecisionValue(importedState.scrollY, NEUTRAL_SCOPE, scope)
+      : getPrecisionValueFromRaw(defaults.scrollY.value, NEUTRAL_SCOPE, scope),
     zoom: {
       value: zoomValue,
       scoped: scopedZoom,
       scaled: getScaledZoomValueForScope(scopedZoom, scope),
     },
-    name: ducState.name ?? defaultDucState.name,
-    scrolledOutside: isValidBoolean(ducState.scrolledOutside, defaultDucState.scrolledOutside),
-    selectedElementIds: ducState.selectedElementIds ?? defaultDucState.selectedElementIds,
-    selectedGroupIds: ducState.selectedGroupIds ?? defaultDucState.selectedGroupIds,
-    displayAllPointDistances: isValidBoolean(ducState.displayAllPointDistances, defaultDucState.displayAllPointDistances),
-    displayDistanceOnDrawing: isValidBoolean(ducState.displayDistanceOnDrawing, defaultDucState.displayDistanceOnDrawing),
-    displayAllPointCoordinates: isValidBoolean(ducState.displayAllPointCoordinates, defaultDucState.displayAllPointCoordinates),
-    displayAllPointInfoSelected: isValidBoolean(ducState.displayAllPointInfoSelected, defaultDucState.displayAllPointInfoSelected),
-    displayRootAxis: isValidBoolean(ducState.displayRootAxis, defaultDucState.displayRootAxis),
-    lineBendingMode: isValidBoolean(ducState.lineBendingMode, defaultDucState.lineBendingMode),
-    coordDecimalPlaces: isValidFinitePositiveByteValue(ducState.coordDecimalPlaces, defaultDucState.coordDecimalPlaces),
-    activeGridSettings: ducState.activeGridSettings ?? defaultDucState.activeGridSettings,
-    activeSnapSettings: ducState.activeSnapSettings ?? defaultDucState.activeSnapSettings,
-    gridSize: getNormalizedGridSize(
-      isFiniteNumber(ducState.gridSize) ? ducState.gridSize : defaultDucState.gridSize
-    ),
-    gridStep: getNormalizedGridStep(
-      isFiniteNumber(ducState.gridStep) ? ducState.gridStep : defaultDucState.gridStep
-    ),
-    debugRendering: isValidBoolean(ducState.debugRendering, defaultDucState.debugRendering),
-    editingLinearElement: ducState.editingLinearElement ?? defaultDucState.editingLinearElement,
-    scopeExponentThreshold,
-    elementHovered: ducState.elementHovered ?? defaultDucState.elementHovered,
-    elementsPendingErasure: ducState.elementsPendingErasure ?? defaultDucState.elementsPendingErasure,
-    suggestedBindings: ducState.suggestedBindings ?? defaultDucState.suggestedBindings,
-    isBindingEnabled: isValidBoolean(ducState.isBindingEnabled, defaultDucState.isBindingEnabled),
-
-
-    penMode: isValidBoolean(ducState.penMode, defaultDucState.penMode),
-    activeTool: {
-      ...updateActiveTool(
-        defaultDucState,
-        ducState.activeTool?.type && AllowedDucActiveTools[ducState.activeTool.type]
-          ? ducState.activeTool
-          : { type: "selection" }
-      ),
-      lastActiveTool: null,
-      locked: isValidBoolean(ducState.activeTool?.locked, false),
-    },
-
-    currentItemBackground: validateBackground(ducState.currentItemBackground),
-    currentItemStroke: validateStroke(ducState.currentItemStroke, scope, scope),
-    currentItemStartLineHead: isValidLineHeadValue(ducState.currentItemStartLineHead),
-    currentItemEndLineHead: isValidLineHeadValue(ducState.currentItemEndLineHead),
-    currentItemOpacity: isValidPercentageValue(ducState.currentItemOpacity, DEFAULT_ELEMENT_PROPS.opacity),
+    activeGridSettings: importedState.activeGridSettings ?? defaults.activeGridSettings,
+    activeSnapSettings: importedState.activeSnapSettings ?? defaults.activeSnapSettings,
+    currentItemStroke: validateStroke(importedState.currentItemStroke, scope, scope) ?? defaults.currentItemStroke,
+    currentItemBackground: validateBackground(importedState.currentItemBackground) ?? defaults.currentItemBackground,
+    currentItemOpacity: isValidPercentageValue(importedState.currentItemOpacity, defaults.currentItemOpacity),
+    currentItemStartLineHead: isValidLineHeadValue(importedState.currentItemStartLineHead) ?? defaults.currentItemStartLineHead,
+    currentItemEndLineHead: isValidLineHeadValue(importedState.currentItemEndLineHead) ?? defaults.currentItemEndLineHead,
+    // Other local state props are set to their defaults
+    currentItemFontFamily: defaults.currentItemFontFamily,
+    currentItemFontSize: defaults.currentItemFontSize,
+    currentItemTextAlign: defaults.currentItemTextAlign,
+    currentItemRoundness: defaults.currentItemRoundness,
+    viewModeEnabled: defaults.viewModeEnabled,
+    objectsSnapModeEnabled: defaults.objectsSnapModeEnabled,
+    gridModeEnabled: defaults.gridModeEnabled,
+    outlineModeEnabled: defaults.outlineModeEnabled,
   };
 };
 
@@ -1238,13 +1219,13 @@ export const createExtendedAppStateRestorer = <TExtendedAppState extends Record<
   restoreExtendedProps: (
     extendedAppState: Partial<TExtendedAppState> | null | undefined,
     localExtendedAppState: Partial<TExtendedAppState> | null | undefined,
-    restoredDucState: RestoredDucState,
+    restoredDucState: RestoredLocalState,
   ) => Omit<TExtendedAppState, keyof DucLocalState>
 ): ExtendedAppStateRestorer<TExtendedAppState> => {
   return (
     extendedAppState: Partial<TExtendedAppState> | null | undefined,
     localExtendedAppState: Partial<TExtendedAppState> | null | undefined,
-    restoredDucState: RestoredDucState,
+    restoredDucState: RestoredLocalState,
   ): TExtendedAppState => {
     // Restore the extended properties
     const extendedProps = restoreExtendedProps(extendedAppState, localExtendedAppState, restoredDucState);
@@ -1257,88 +1238,6 @@ export const createExtendedAppStateRestorer = <TExtendedAppState extends Record<
   };
 };
 
-// Old restore function
-// export const restore = (
-//   data: Pick<ImportedDataState, "appState" | "elements" | "files" | "rendererState" | "blocks" | "groups"> | null,
-//   /**
-//    * Local DucState (`this.state` or initial state from localStorage) so that we
-//    * don't overwrite local state with default values (when values not
-//    * explicitly specified).
-//    * Supply `null` if you can't get access to it.
-//    */
-//   localDucState: Partial<DucState> | null | undefined,
-//   localElements: readonly DucElement[] | null | undefined,
-//   elementsConfig?: ElementsConfig,
-// ): RestoredDataState => {
-//   const restoredDucState = restoreDucState(data?.appState, localDucState || null);
-//   const restoredBlocks = restoreBlocks(data?.blocks, restoredDucState.scope);
-//   const restoredGroups = restoreGroups(data?.groups, restoredDucState.scope);
-
-//   return {
-//     elements: restoreElements(data?.elements, restoredDucState.scope, localElements, {
-//       ...elementsConfig,
-//       appState: restoredDucState
-//     }),
-//     appState: restoredDucState,
-//     files: data?.files || {},
-//     rendererState: data?.rendererState || null,
-//     blocks: restoredBlocks,
-//     groups: restoredGroups,
-//   };
-// };
-
-export const noopExtendedAppStateRestorer: ExtendedAppStateRestorer<DucLocalState> = (
-  extendedAppState,
-  localExtendedAppState,
-  restoredDucState,
-) => {
-  return restoredDucState;
-};
-
-/**
- * Extended restore function that supports restoring extended AppState.
- * This allows users of the library to provide their own AppState restoration logic.
- */
-export function restore<TExtendedAppState>(
-  data: Pick<ImportedExtendedDataState<TExtendedAppState>, "appState" | "elements" | "files" | "rendererState" | "blocks" | "groups"> | null,
-  /**
-   * Local extended AppState for fallback values.
-   * Supply `null` if you can't get access to it.
-   */
-  localExtendedAppState: Partial<TExtendedAppState> | null | undefined,
-  localElements: readonly DucElement[] | null | undefined,
-  /**
-   * Extended AppState restorer function that handles the extended properties.
-   * This should be created using `createExtendedAppStateRestorer`.
-   */
-  extendedAppStateRestorer: ExtendedAppStateRestorer<TExtendedAppState>,
-  elementsConfig?: ElementsConfig,
-): RestoredExtendedDataState<TExtendedAppState> {
-  // First restore the DucState portion
-  const restoredDucState = restoreDucState(data?.appState, localExtendedAppState);
-
-  // Use the provided restorer to handle the full extended AppState
-  const restoredExtendedAppState = extendedAppStateRestorer(
-    data?.appState,
-    localExtendedAppState,
-    restoredDucState
-  );
-
-  const restoredBlocks = restoreBlocks(data?.blocks, restoredDucState.scope);
-  const restoredGroups = restoreGroups(data?.groups, restoredDucState.scope);
-
-  return {
-    elements: restoreElements(data?.elements, restoredDucState.scope, localElements, {
-      ...elementsConfig,
-      appState: restoredDucState
-    }),
-    appState: restoredExtendedAppState,
-    files: data?.files || {},
-    rendererState: data?.rendererState || null,
-    blocks: restoredBlocks,
-    groups: restoredGroups,
-  };
-}
 
 const restoreLibraryItem = (libraryItem: LibraryItem, currentScope: Scope) => {
   const elements = restoreElements(
@@ -1786,88 +1685,7 @@ export const restoreBlocks = (
     }));
 };
 
-const restoreTableStyleProps = (
-  style: DucTableStyleProps | undefined,
-  elementScope: SupportedMeasures,
-  currentScope: SupportedMeasures
-): DucTableStyleProps | undefined => {
-  if (!style) return undefined;
 
-  const border = style.border ? {
-    width: style.border.width ? restorePrecisionValue(style.border.width, elementScope, currentScope, 1) : undefined,
-    dashes: style.border.dashes || undefined,
-    color: style.border.color ? isValidColor(style.border.color) : undefined,
-  } : undefined;
-
-  const text = style.text ? {
-    color: style.text.color ? isValidColor(style.text.color) : undefined,
-    size: style.text.size ? restorePrecisionValue(style.text.size, elementScope, currentScope, DEFAULT_FONT_SIZE) : undefined,
-    font: style.text.font || undefined,
-    align: isValidTextAlignValue(style.text.align) || DEFAULT_TEXT_ALIGN,
-  } : undefined;
-
-  const restoredStyle: DucTableStyleProps = {};
-  if (style.background) restoredStyle.background = style.background;
-  if (border && Object.values(border).some(v => v !== undefined)) restoredStyle.border = border;
-  if (text && Object.values(text).some(v => v !== undefined)) restoredStyle.text = text;
-
-  return Object.keys(restoredStyle).length > 0 ? restoredStyle : undefined;
-};
-
-const restoreTableColumns = (
-  columns: Record<string, DucTableColumn> | undefined,
-  elementScope: SupportedMeasures,
-  currentScope: SupportedMeasures
-): Record<string, DucTableColumn> => {
-  if (!columns) return {};
-  const restoredColumns: Record<string, DucTableColumn> = {};
-  for (const colId in columns) {
-    const col = columns[colId];
-    restoredColumns[colId] = {
-      id: col.id,
-      width: col.width ? restorePrecisionValue(col.width, elementScope, currentScope) : undefined,
-      style: col.style ? restoreTableStyleProps(col.style, elementScope, currentScope) : undefined,
-    };
-  }
-  return restoredColumns;
-};
-
-const restoreTableRows = (
-  rows: Record<string, DucTableRow> | undefined,
-  elementScope: SupportedMeasures,
-  currentScope: SupportedMeasures
-): Record<string, DucTableRow> => {
-  if (!rows) return {};
-  const restoredRows: Record<string, DucTableRow> = {};
-  for (const rowId in rows) {
-    const row = rows[rowId];
-    restoredRows[rowId] = {
-      id: row.id,
-      height: row.height ? restorePrecisionValue(row.height, elementScope, currentScope) : undefined,
-      style: row.style ? restoreTableStyleProps(row.style, elementScope, currentScope) : undefined,
-    };
-  }
-  return restoredRows;
-};
-
-const restoreTableCells = (
-  cells: Record<string, DucTableCell> | undefined,
-  elementScope: SupportedMeasures,
-  currentScope: SupportedMeasures
-): Record<string, DucTableCell> => {
-  if (!cells) return {};
-  const restoredCells: Record<string, DucTableCell> = {};
-  for (const cellKey in cells) {
-    const cell = cells[cellKey];
-    restoredCells[cellKey] = {
-      rowId: cell.rowId,
-      columnId: cell.columnId,
-      data: cell.data || "",
-      style: cell.style ? restoreTableStyleProps(cell.style, elementScope, currentScope) : undefined,
-    };
-  }
-  return restoredCells;
-};
 
 
 export const isValidRadianValue = (

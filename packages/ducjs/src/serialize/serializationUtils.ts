@@ -20,7 +20,7 @@ const ensureFiniteNumber = (num: number | undefined, defaultValue: number = 0): 
  * @param defaultValue The default value to return if pv is undefined or the extracted value is not finite.
  * @returns A finite number.
  */
-export const getPrecisionValueField = (pv: PrecisionValue | undefined, scoped: boolean, defaultValue: number = 0): number => {
+const getPrecisionValueField = (pv: PrecisionValue | undefined, scoped: boolean, defaultValue: number = 0): number => {
   if (!pv) {
     return defaultValue;
   }
@@ -29,4 +29,4 @@ export const getPrecisionValueField = (pv: PrecisionValue | undefined, scoped: b
 };
 
 
-export { ensureFiniteNumber }; 
+export { ensureFiniteNumber, getPrecisionValueField }; 

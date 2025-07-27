@@ -39,8 +39,8 @@ export interface ExportedDataState {
   version: string;
   
   source: string;
-  thumbnail: Uint8Array;
-  dictionary: Dictionary;
+  thumbnail: Uint8Array | undefined;
+  dictionary: Dictionary | undefined;
 
   elements: readonly DucElement[];
 
@@ -61,6 +61,13 @@ export interface ExportedDataState {
   /** In case it is needed to embed the version control into the file format */
   versionGraph: VersionGraph | undefined;
 }
+
+/**
+ * A version of the data state where all fields are optional.
+ * This is useful for importing data where some fields might be missing.
+ */
+export type ImportedDataState = Partial<ExportedDataState>;
+
 
 
 export type Identifier = {

@@ -2589,7 +2589,7 @@ table DucExternalFileEntry {
 table ExportedDataState {
   /** Untouchable fields even on Breaking Versions. */
   type: string;
-  version_legacy: int (deprecated);
+  version_legacy: int;
   source: string;
   version: string;
   //

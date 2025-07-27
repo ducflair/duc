@@ -1,7 +1,7 @@
-import * as flatbuffers from 'flatbuffers';
-import { DucExternalFileData, BinaryFilesEntry, DucExternalFiles as BinBinaryFiles } from 'ducjs/duc';
-import { DucExternalFiles as BinaryFilesType } from 'ducjs/types';
+import { BinaryFilesEntry, DucExternalFiles as BinBinaryFiles, DucExternalFileData } from 'ducjs/duc';
 import { ensureFiniteNumber } from 'ducjs/serialize/serializationUtils'; // Import shared helper
+import { DucExternalFiles as BinaryFilesType } from 'ducjs/types';
+import * as flatbuffers from 'flatbuffers';
 
 // Helper function to convert a DataURL (base64 string) to Uint8Array
 const dataURLToUint8Array = (dataURL: string): Uint8Array => {
@@ -25,7 +25,10 @@ const dataURLToUint8Array = (dataURL: string): Uint8Array => {
   }
 };
 
-const serializeBinaryFiles = (builder: flatbuffers.Builder, files: BinaryFilesType): flatbuffers.Offset => {
+const serializeBinaryFiles = (
+  builder: flatbuffers.Builder, 
+  files: BinaryFilesType
+): flatbuffers.Offset => {
   const fileEntriesOffsets = Object.keys(files).map(key => {
     const file = files[key];
     const keyOffset = builder.createString(key);
