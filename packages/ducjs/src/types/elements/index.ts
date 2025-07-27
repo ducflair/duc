@@ -1,6 +1,6 @@
 export * from "./typeChecks";
 
-import { BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION, COLUMN_TYPE, DATUM_BRACKET_STYLE, DATUM_TARGET_TYPE, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FIELD_SOURCE_PROPERTY, TEXT_FIELD_SOURCE_TYPE, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_TYPE, TOLERANCE_ZONE_TYPE, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT } from "ducjs/duc";
+import { BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION, COLUMN_TYPE, DATUM_BRACKET_STYLE, DATUM_TARGET_TYPE, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, PARAMETRIC_SOURCE_TYPE, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FIELD_SOURCE_PROPERTY, TEXT_FIELD_SOURCE_TYPE, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_TYPE, TOLERANCE_ZONE_TYPE, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT } from "ducjs/duc";
 import { Standard, StandardUnits } from "ducjs/technical/standards";
 import { DucView, PrecisionValue, Scope } from "ducjs/types";
 import { Axis, GeometricPoint, Percentage, Radian, ScaleFactor } from "ducjs/types/geometryTypes";
@@ -38,7 +38,7 @@ export type _DucElementStylesBase = {
 /**
  * Base element properties that all elements share
  */
-type _DucElementBase = Readonly<_DucElementStylesBase & {
+export type _DucElementBase = Readonly<_DucElementStylesBase & {
   id: string;
   x: PrecisionValue;
   y: PrecisionValue;
@@ -83,7 +83,7 @@ type _DucElementBase = Readonly<_DucElementStylesBase & {
    */
   regionIds: readonly RegionId[];
   /** The layer the element belongs to */
-  layerId: string;
+  layerId: string | null;
   /** The frame the element belongs to */
   frameId: string | null;
   /** other elements that are bound to this element 
@@ -178,6 +178,12 @@ export type NonDeleted<TElement extends DucElement> = TElement & {
 export type NonDeletedDucElement = NonDeleted<DucElement> & {
   idx?: number;
 };
+
+export type DucBinderElement = 
+  | DucLinearElement
+  | DucDimensionElement
+  | DucFeatureControlFrameElement
+  | DucLeaderElement;
 
 export type DucBindableElement =
   | DucRectangleElement
@@ -1305,7 +1311,7 @@ export type DucLeaderElement = _DucLinearElementBase & DucLeaderStyle & {
   /** 
    * The content attached to the leader. Stored internally to keep the element atomic.
    */
-  content: LeaderContent | null;
+  leaderContent: LeaderContent | null;
 
   /**
    * The anchor point for the content block, in world coordinates.
@@ -1455,9 +1461,9 @@ export type DucDimensionElement = _DucElementBase & DucDimensionStyle & {
    * The keys correspond to the keys in `definitionPoints`.
    */
   bindings?: {
-    origin1?: DucPointBinding;
-    origin2?: DucPointBinding;
-    center?: DucPointBinding;
+    origin1: DucPointBinding | null;
+    origin2: DucPointBinding | null;
+    center: DucPointBinding | null;
   };
 
   /**
@@ -1771,13 +1777,13 @@ export type DucDocElement = _DucElementBase & DucDocStyle & {
 export type ParametricElementSource =
   | {
     /** The geometry is defined by executable Replicad code. */
-    type: "code";
+    type: PARAMETRIC_SOURCE_TYPE.CODE;
     /** The JavaScript code that generates the Replicad model. */
     code: string;
   }
   | {
     /** The geometry is loaded from a static 3D file. */
-    type: "file";
+    type: PARAMETRIC_SOURCE_TYPE.FILE;
     /** A reference to the imported file in the DucExternalFiles collection. */
     fileId: ExternalFileId;
   };
