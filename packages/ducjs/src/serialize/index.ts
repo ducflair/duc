@@ -1,51 +1,42 @@
-export * from "./serializeAppStateFromDuc";
-export * from "./serializeElementFromDuc";
-export * from "./serializeBinaryFilesFromDuc";
-export * from "./serializeRendererStateFromDuc";
-export * from "./serializeGroupFromDuc";
-export * from "./serializeBlockFromDuc";
 export * from "./serializationUtils";
+export * from "./serializeBinaryFilesFromDuc";
+export * from "./serializeBlockFromDuc";
+export * from "./serializeElementFromDuc";
+export * from "./serializeGroupFromDuc";
+export * from "./serializeStateFromDuc";
 
-import * as flatbuffers from 'flatbuffers';
 import {
   ExportedDataState,
 } from 'ducjs/duc';
-import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, MIME_TYPES } from 'ducjs/utils/constants';
-import { DucBlock, DucElement, DucGroup, OrderedDucElement } from 'ducjs/types/elements';
-import { DucExternalFiles, RendererState, DucLocalState } from 'ducjs/types';
-import { serializeDucElement } from 'ducjs/serialize/serializeElementFromDuc';
 import { serializeAppState } from 'ducjs/serialize/serializeAppStateFromDuc';
 import { serializeBinaryFiles } from 'ducjs/serialize/serializeBinaryFilesFromDuc';
-import { restore, ExtendedAppStateRestorer, noopExtendedAppStateRestorer } from 'ducjs/utils/restore';
-import { serializeRendererState } from 'ducjs/serialize/serializeRendererStateFromDuc';
 import { serializeDucBlock } from 'ducjs/serialize/serializeBlockFromDuc';
+import { serializeDucElement } from 'ducjs/serialize/serializeElementFromDuc';
 import { serializeDucGroup } from 'ducjs/serialize/serializeGroupFromDuc';
+import { serializeRendererState } from 'ducjs/serialize/serializeRendererStateFromDuc';
+import { Standard } from "ducjs/technical";
+import { Dictionary, DucExternalFiles, DucGlobalState, DucLocalState, ImportedDataState, VersionGraph } from 'ducjs/types';
+import { DucBlock, DucElement, DucGroup, DucLayer, DucRegion, OrderedDucElement } from 'ducjs/types/elements';
+import { EXPORT_DATA_TYPES } from 'ducjs/utils/constants';
+import { restore } from 'ducjs/utils/restore';
+import * as flatbuffers from 'flatbuffers';
 
 export const DUC_SCHEMA_VERSION = process.env.DUC_SCHEMA_VERSION || "0.0.0";
 
 export const serializeDuc = async (
-  elements: readonly DucElement[],
-  ducState: Partial<DucLocalState>,
-  files: DucExternalFiles,
-  blocks: readonly DucBlock[],
-  groups: readonly DucGroup[],
-  rendererState?: RendererState,
-  extendedAppStateRestorer: ExtendedAppStateRestorer<DucLocalState> = noopExtendedAppStateRestorer,
+  data: ImportedDataState,
 ): Promise<Uint8Array> => {
   const builder = new flatbuffers.Builder(1024);
 
   const sanitized = restore(
     {
       elements,
-      appState: ducState,
       files,
       blocks,
       groups,
-      rendererState,
     },
     null, // localExtendedAppState
     null, // localElements
-    extendedAppStateRestorer,
     {
       refreshDimensions: false,
       syncInvalidIndices: (elements) => elements as OrderedDucElement[],

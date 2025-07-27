@@ -1,40 +1,26 @@
-export * from "./parseElementFromBinary";
-export * from "./parseAppStateFromBinary";
-export * from "./parseRendererStateFromBinary";
-export * from "./parseBlockFromBinary";
-export * from "./parseGroupFromBinary";
 export * from "./parseBinaryFilesFromBinary";
+export * from "./parseBlockFromBinary";
+export * from "./parseElementFromBinary";
+export * from "./parseGroupFromBinary";
 
 
 import { FileSystemHandle } from 'browser-fs-access';
-import * as flatbuffers from 'flatbuffers';
-import { restore, ExtendedAppStateRestorer } from 'ducjs/utils/restore';
-import { DucElement, DucBlock, DucGroup, OrderedDucElement } from 'ducjs/types/elements';
-import { DucExternalFiles, DucLocalState, RendererState } from 'ducjs/types';
 import {
   ExportedDataState
 } from 'ducjs/duc';
-import { parseAppStateFromBinary } from 'ducjs/parse/parseAppStateFromBinary';
-import { parseBinaryFilesFromBinary } from 'ducjs/parse/parseBinaryFilesFromBinary';
-import { parseElementFromBinary } from 'ducjs/parse/parseElementFromBinary';
-import { parseRendererStateFromBinary } from 'ducjs/parse/parseRendererStateFromBinary';
-import { parseBlockFromBinary } from 'ducjs/parse/parseBlockFromBinary';
-import { parseGroupFromBinary } from 'ducjs/parse/parseGroupFromBinary';
 import { parseDucFlatBuffers as parseDucFlatBuffersV1 } from 'ducjs/legacy/v1/parse';
-
-export type ParseDucResult = {
-  elements: DucElement[];
-  appState: Partial<DucLocalState>;
-  files: DucExternalFiles;
-  blocks: DucBlock[];
-  groups: DucGroup[];
-  rendererState: RendererState;
-};
+import { parseBlockFromBinary } from 'ducjs/parse/parseBlockFromBinary';
+import { parseElementFromBinary } from 'ducjs/parse/parseElementFromBinary';
+import { parseGroupFromBinary } from 'ducjs/parse/parseGroupFromBinary';
+import { DucExternalFiles, DucLocalState } from 'ducjs/types';
+import { DucBlock, DucElement, DucGroup, OrderedDucElement } from 'ducjs/types/elements';
+import { restore, RestoredDataState } from 'ducjs/utils/restore';
+import * as flatbuffers from 'flatbuffers';
 
 export const parseDuc = async (
   blob: Blob | File, 
   fileHandle: FileSystemHandle | null = null
-): Promise<ParseDucResult> => {
+): Promise<RestoredDataState> => {
   const arrayBuffer = await blob.arrayBuffer();
   const byteBuffer = new flatbuffers.ByteBuffer(new Uint8Array(arrayBuffer));
 
@@ -43,7 +29,7 @@ export const parseDuc = async (
   // TODO: Remove on a late duc v2 version
   const legacyVersion = data.versionLegacy();
   if(legacyVersion) {
-    return parseDucFlatBuffersV1(blob, fileHandle) as unknown as ParseDucResult;
+    return parseDucFlatBuffersV1(blob, fileHandle) as unknown as RestoredDataState;
   }
 
   const version = data.version() || "0.0.0";
@@ -61,16 +47,12 @@ export const parseDuc = async (
   }
 
   // Parse appState
-  const appState = data.appState();
-  const parsedAppState: Partial<DucLocalState> = parseAppStateFromBinary(appState, version);
+  const localState = data.ducLocalState();
+  const parsedLocalState: Partial<DucLocalState> = parseDucLocalStateFromBinary(localState, version);
 
   // Parse files
-  const binaryFiles = data.files();
-  const parsedFiles: DucExternalFiles = parseBinaryFilesFromBinary(binaryFiles);
-
-  // Parse rendererState
-  const rendererState = data.rendererState();
-  const parsedRendererState = parseRendererStateFromBinary(rendererState);
+  const externalFiles = data.externalFiles();
+  const parsedFiles: DucExternalFiles = parseExternalFilesFromBinary(externalFiles);
 
   // Parse blocks
   const blocks: DucBlock[] = [];
@@ -88,51 +70,37 @@ export const parseDuc = async (
   const groups: DucGroup[] = [];  
   for (let i = 0; i < data.groupsLength(); i++) {
     const group = data.groups(i);
-    if (group && parsedAppState.scope) {
-      const parsedGroup = parseGroupFromBinary(group, parsedAppState.scope);
+    if (group && parsedLocalState.scope) {
+      const parsedGroup = parseGroupFromBinary(group, parsedLocalState.scope);
       if (parsedGroup) {
         groups.push(parsedGroup as DucGroup);
       }
     }
   }
 
-  const customExtendedAppStateRestorer: ExtendedAppStateRestorer<DucLocalState> = (
-    extendedAppState,
-    localExtendedAppState,
-    restoredDucState,
-  ) => {
-    return {
-      ...restoredDucState,
-      fileHandle: fileHandle || (blob && 'handle' in blob ? blob.handle as FileSystemHandle : null),
-    };
-  };
+
 
   const sanitized = restore(
     {
       elements: elements as DucElement[],
-      appState: parsedAppState,
+      localState: parsedLocalState,
       files: parsedFiles,
       blocks,
       groups,
-      rendererState: parsedRendererState,
     },
-    undefined,
-    undefined,
-    customExtendedAppStateRestorer,
     { 
+      syncInvalidIndices: (elements) => elements as OrderedDucElement[],
       repairBindings: true, 
       refreshDimensions: false,
-      syncInvalidIndices: (elements) => elements as OrderedDucElement[],
     },
   );
-  const { ...cleanAppState } = sanitized.appState;
 
   return {
     elements: sanitized.elements,
-    appState: cleanAppState,
+    localState: sanitized.localState,
+    globalState: sanitized.globalState,
     files: sanitized.files,
     blocks: sanitized.blocks,
     groups: sanitized.groups,
-    rendererState: parsedRendererState,
   };
 };

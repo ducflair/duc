@@ -46,6 +46,11 @@ type(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
+versionLegacy():number {
+  const offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
+}
+
 source():string|null
 source(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 source(optionalEncoding?:any):string|Uint8Array|null {
@@ -176,6 +181,10 @@ static startExportedDataState(builder:flatbuffers.Builder) {
 
 static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
   builder.addFieldOffset(0, typeOffset, 0);
+}
+
+static addVersionLegacy(builder:flatbuffers.Builder, versionLegacy:number) {
+  builder.addFieldInt32(1, versionLegacy, 0);
 }
 
 static addSource(builder:flatbuffers.Builder, sourceOffset:flatbuffers.Offset) {

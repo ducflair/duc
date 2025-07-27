@@ -1,5 +1,5 @@
-import { DucExternalFiles as BinBinaryFiles } from 'ducjs/duc';
-import { DucExternalFiles, DucExternalFileData as AppBinaryFileData } from 'ducjs/types';
+import { DucExternalFileEntry as BinDucExternalFileEntry } from 'ducjs/duc';
+import { DucExternalFiles, DucExternalFileData } from 'ducjs/types';
 
 // Helper function to convert Uint8Array to DataURL
 export const uint8ArrayToDataURL = (uint8Array: Uint8Array, mimeType: string): string => {
@@ -10,12 +10,12 @@ export const uint8ArrayToDataURL = (uint8Array: Uint8Array, mimeType: string): s
   return `data:${mimeType};base64,${base64}`;
 };
 
-export const parseBinaryFilesFromBinary = (binaryFiles: BinBinaryFiles | null): DucExternalFiles => {
-  if (!binaryFiles) return {};
+export const parseBinaryFilesFromBinary = (externalFiles: BinDucExternalFileEntry | null): DucExternalFiles => {
+  if (!externalFiles) return {};
 
   const files: DucExternalFiles = {};
-  for (let i = 0; i < binaryFiles.entriesLength(); i++) {
-    const entry = binaryFiles.entries(i);
+  for (let i = 0; i < externalFiles.entriesLength(); i++) {
+    const entry = externalFiles.entries(i);
     if (entry === null) continue;
     const key = entry.key();
     const fileData = entry.value();
@@ -28,7 +28,7 @@ export const parseBinaryFilesFromBinary = (binaryFiles: BinBinaryFiles | null): 
         dataURL: uint8ArrayToDataURL(dataArray, mimeType), // Convert Uint8Array back to dataURL
         created: Number(fileData.created()),
         lastRetrieved: Number(fileData.lastRetrieved()),
-      } as AppBinaryFileData;
+      } as DucExternalFileData;
     }
   }
 
