@@ -6,7 +6,7 @@ export * from "./math";
 export * from "./state";
 export * from "./constants";
 export * from "./shape";
-export * from "./restore";
+export * from "../restore";
 export * from "./bounds";
 export * from "./normalize";
 export * from "./url";

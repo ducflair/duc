@@ -4,10 +4,6 @@ import {
   DucLine as BinDucLine,
   DucLineReference as BinDucLineReference,
   DucPath as BinDucPath,
-  DucTableCell as BinDucTableCell,
-  DucTableColumn as BinDucTableColumn,
-  DucTableRow as BinDucTableRow,
-  DucTableStyleProps as BinDucTableStyleProps,
   ElementBackground as BinElementBackground,
   ElementContentBase as BinElementContentBase,
   ElementStroke as BinElementStroke,
@@ -17,8 +13,8 @@ import {
   StrokeSides as BinStrokeSides,
   TilingProperties as BinTilingProperties
 } from 'ducjs/duc';
-import { SupportedMeasures } from 'ducjs/technical/scopes';
-import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/technical/scopes';
+import { getPrecisionValueFromRaw, NEUTRAL_SCOPE, SupportedMeasures } from 'ducjs/technical/scopes';
+import { RawValue, Scope } from 'ducjs/types';
 import {
   BezierMirroring,
   Blending,
@@ -40,11 +36,6 @@ import {
   DucPolygonElement,
   DucRectangleElement,
   DucSelectionElement,
-  DucTableCell,
-  DucTableColumn,
-  DucTableElement,
-  DucTableRow,
-  DucTableStyleProps,
   DucTextElement,
   ElementBackground,
   ElementContentBase,
@@ -64,87 +55,11 @@ import {
   TilingProperties,
   VerticalAlign
 } from 'ducjs/types/elements';
-import { RawValue } from 'ducjs/types';
-import { DEFAULT_ELEMENT_PROPS, FREEDRAW_EASINGS } from 'ducjs/utils/constants';
 import { Percentage, Radian } from 'ducjs/types/geometryTypes';
-import tinycolor from 'tinycolor2';
+import { DEFAULT_ELEMENT_PROPS, FREEDRAW_EASINGS } from 'ducjs/utils/constants';
 
-export const parsePoint = (point: BinPoint | null, elementScope: SupportedMeasures): DucPoint | null => {
-  if (!point) return null;
 
-  return {
-    x: getPrecisionValueFromRaw(point.xV3() as RawValue, elementScope, elementScope),
-    y: getPrecisionValueFromRaw(point.yV3() as RawValue, elementScope, elementScope),
-    ...(point.mirroring() && { mirroring: point.mirroring() as BezierMirroring }),
-  };
-};
 
-const parseLineReference = (lineRef: BinDucLineReference | null, elementScope: SupportedMeasures): DucLineReference | null => {
-  if (!lineRef) return null;
-
-  const handle = lineRef.handle();
-  return {
-    index: lineRef.index(),
-    handle: handle ? {
-      x: getPrecisionValueFromRaw(handle.x() as RawValue, elementScope, elementScope),
-      y: getPrecisionValueFromRaw(handle.y() as RawValue, elementScope, elementScope)
-    } : null
-  };
-};
-
-const parseLine = (line: BinDucLine | null, elementScope: SupportedMeasures): DucLine | null => {
-  if (!line) return null;
-
-  const start = parseLineReference(line.start(), elementScope);
-  const end = parseLineReference(line.end(), elementScope);
-
-  if (!start || !end) return null;
-
-  return [start, end];
-};
-
-const parseDucPath = (path: BinDucPath | null, elementScope: SupportedMeasures): DucPath | null => {
-  if (!path) return null;
-
-  const lineIndices = Array.from({ length: path.lineIndicesLength() })
-    .map((_, i) => path.lineIndices(i))
-    .filter((index): index is number => index !== null && index !== undefined);
-
-  const background = path.background() ? parseElementBinBackground(path.background()) : null;
-  const stroke = path.stroke() ? parseElementBinStroke(path.stroke(), elementScope) : null;
-
-  return {
-    lineIndices,
-    background,
-    stroke
-  };
-};
-
-const parseBindingPoint = (bindingPoint: BinBindingPoint | null): { index: number; offset: number } | null => {
-  if (!bindingPoint) return null;
-
-  return {
-    index: bindingPoint.index(),
-    offset: bindingPoint.offset()
-  };
-};
-
-const parsePointBinding = (binding: BinPointBinding | null, elementScope: SupportedMeasures): DucPointBinding | null => {
-  if (!binding) return null;
-
-  const fixedPoint = binding.fixedPoint();
-  return {
-    elementId: binding.elementId() || '',
-    focus: binding.focus(),
-    gap: getPrecisionValueFromRaw(binding.gap() as RawValue, elementScope, elementScope),
-    fixedPoint: fixedPoint ? {
-      x: fixedPoint.x(),
-      y: fixedPoint.y(),
-    } : null,
-    point: binding.point() ? parseBindingPoint(binding.point()) : null,
-    head: binding.head() as LineHead | null
-  };
-};
 
 export const parseElementFromBinary = (e: BinDucElement, v: string): Partial<DucElement> | null => {
   if (!e) return null;
@@ -155,7 +70,7 @@ export const parseElementFromBinary = (e: BinDucElement, v: string): Partial<Duc
   // Will be removed since we don't need to support legacy v1 migration on v2
   const forceNeutralScope = v <= '5';
 
-  let readScope = e.scope() as SupportedMeasures | null;
+  let readScope = e.scope() as Scope | null;
   const elementScope = forceNeutralScope ? NEUTRAL_SCOPE : (readScope || NEUTRAL_SCOPE);
 
   // Populate groupIds array
@@ -176,11 +91,9 @@ export const parseElementFromBinary = (e: BinDucElement, v: string): Partial<Duc
       !!element.id && !!element.type
     );
 
-  // Handle backward compatibility for stroke and background
   let strokes: ElementStroke[] = [];
   let backgrounds: ElementBackground[] = [];
 
-  // v4
   if (e.strokeLength && e.strokeLength() > 0) {
     strokes = Array.from({ length: e.strokeLength() })
       .map((_, i) => {
@@ -189,22 +102,7 @@ export const parseElementFromBinary = (e: BinDucElement, v: string): Partial<Duc
       })
       .filter((stroke): stroke is ElementStroke => stroke !== null);
   }
-  // v3
-  else if (e.strokeColorV3 && e.strokeColorV3()) {
-    const strokeColor = e.strokeColorV3()!;
-    const color = tinycolor(strokeColor);
-    const stroke: ElementStroke = {
-      ...DEFAULT_ELEMENT_PROPS.stroke,
-      content: {
-        ...DEFAULT_ELEMENT_PROPS.stroke.content,
-        src: color.toHexString(),
-        opacity: color.getAlpha() as Percentage,
-      },
-    };
-    strokes = [stroke];
-  }
 
-  // v4
   if (e.backgroundLength && e.backgroundLength() > 0) {
     backgrounds = Array.from({ length: e.backgroundLength() })
       .map((_, i) => {
@@ -212,19 +110,6 @@ export const parseElementFromBinary = (e: BinDucElement, v: string): Partial<Duc
         return parseElementBinBackground(background);
       })
       .filter((background): background is ElementBackground => background !== null);
-  }
-  // v3
-  else if (e.backgroundColorV3 && e.backgroundColorV3()) {
-    const backgroundColor = e.backgroundColorV3()!;
-    const color = tinycolor(backgroundColor);
-    const background: ElementBackground = {
-      content: {
-        ...DEFAULT_ELEMENT_PROPS.background.content,
-        src: color.toHexString(),
-        opacity: color.getAlpha() as Percentage,
-      }
-    };
-    backgrounds = [background];
   }
 
   const points: DucPoint[] = ['freedraw', 'line', 'arrow'].includes(elType)
@@ -260,12 +145,6 @@ export const parseElementFromBinary = (e: BinDucElement, v: string): Partial<Duc
       .map((_, j) => e.freeDrawPressures(j))
       .filter((pressure): pressure is number => pressure !== null && pressure !== undefined)
     : [];
-
-  const xValue = v >= '2' ? e.x() : e.xV2() || undefined
-  const yValue = v >= '2' ? e.y() : e.yV2() || undefined
-  const widthValue = v >= '2' ? e.width() : e.widthV2() || undefined
-  const heightValue = v >= '2' ? e.height() : e.heightV2() || undefined
-  const roundnessValue = e.roundness()
 
   const baseElement: Partial<DucElement> = {
     id: e.id() || undefined,
@@ -372,8 +251,6 @@ export const parseElementFromBinary = (e: BinDucElement, v: string): Partial<Duc
         isCollapsed: e.stackLikeIsCollapsed(),
         clip: e.stackLikeClip() || undefined,
         labelingColor: e.stackLikeLabelingColor() || undefined,
-        strokeOverride: e.stackLikeStrokeOverride() ? parseElementBinStroke(e.stackLikeStrokeOverride(), elementScope) : null,
-        backgroundOverride: e.stackLikeBackgroundOverride() ? parseElementBinBackground(e.stackLikeBackgroundOverride()) : null,
       } as DucFrameElement;
     case "selection":
       return {
@@ -400,17 +277,6 @@ export const parseElementFromBinary = (e: BinDucElement, v: string): Partial<Duc
         endAngle: e.ellipseEndAngle() ?? undefined,
         showAuxCrosshair: e.ellipseShowAuxCrosshair() ?? undefined,
       } as DucEllipseElement;
-    case "table":
-      return {
-        ...baseElement,
-        type: elType,
-        columnOrder: Array.from({ length: e.tableColumnOrderLength() }, (_, j) => e.tableColumnOrder(j) || ''),
-        rowOrder: Array.from({ length: e.tableRowOrderLength() }, (_, j) => e.tableRowOrder(j) || ''),
-        columns: parseDucTableColumns(e.tableColumnsLength(), e.tableColumns.bind(e), elementScope),
-        rows: parseDucTableRows(e.tableRowsLength(), e.tableRows.bind(e), elementScope),
-        cells: parseDucTableCells(e.tableCellsLength(), e.tableCells.bind(e), elementScope),
-        style: e.tableStyle() ? parseDucTableStyleProps(e.tableStyle()!.defaultProps(), elementScope) : undefined,
-      } as DucTableElement;
     case "doc":
       return {
         ...baseElement,
@@ -429,12 +295,91 @@ export const parseElementFromBinary = (e: BinDucElement, v: string): Partial<Duc
         ...baseElement,
         type: elType,
         blockId: e.blockInstanceBlockId() || '',
-        blockElementOverrides: Object.keys(blockElementOverrides).length > 0 ? blockElementOverrides : undefined,
       } as DucBlockInstanceElement;
     default:
       return null;
   }
 };
+
+
+
+export const parsePoint = (point: BinPoint | null, elementScope: SupportedMeasures): DucPoint | null => {
+  if (!point) return null;
+
+  return {
+    x: getPrecisionValueFromRaw(point.xV3() as RawValue, elementScope, elementScope),
+    y: getPrecisionValueFromRaw(point.yV3() as RawValue, elementScope, elementScope),
+    ...(point.mirroring() && { mirroring: point.mirroring() as BezierMirroring }),
+  };
+};
+
+const parseLineReference = (lineRef: BinDucLineReference | null, elementScope: SupportedMeasures): DucLineReference | null => {
+  if (!lineRef) return null;
+
+  const handle = lineRef.handle();
+  return {
+    index: lineRef.index(),
+    handle: handle ? {
+      x: getPrecisionValueFromRaw(handle.x() as RawValue, elementScope, elementScope),
+      y: getPrecisionValueFromRaw(handle.y() as RawValue, elementScope, elementScope)
+    } : null
+  };
+};
+
+const parseLine = (line: BinDucLine | null, elementScope: SupportedMeasures): DucLine | null => {
+  if (!line) return null;
+
+  const start = parseLineReference(line.start(), elementScope);
+  const end = parseLineReference(line.end(), elementScope);
+
+  if (!start || !end) return null;
+
+  return [start, end];
+};
+
+const parseDucPath = (path: BinDucPath | null, elementScope: SupportedMeasures): DucPath | null => {
+  if (!path) return null;
+
+  const lineIndices = Array.from({ length: path.lineIndicesLength() })
+    .map((_, i) => path.lineIndices(i))
+    .filter((index): index is number => index !== null && index !== undefined);
+
+  const background = path.background() ? parseElementBinBackground(path.background()) : null;
+  const stroke = path.stroke() ? parseElementBinStroke(path.stroke(), elementScope) : null;
+
+  return {
+    lineIndices,
+    background,
+    stroke
+  };
+};
+
+const parseBindingPoint = (bindingPoint: BinBindingPoint | null): { index: number; offset: number } | null => {
+  if (!bindingPoint) return null;
+
+  return {
+    index: bindingPoint.index(),
+    offset: bindingPoint.offset()
+  };
+};
+
+const parsePointBinding = (binding: BinPointBinding | null, elementScope: SupportedMeasures): DucPointBinding | null => {
+  if (!binding) return null;
+
+  const fixedPoint = binding.fixedPoint();
+  return {
+    elementId: binding.elementId() || '',
+    focus: binding.focus(),
+    gap: getPrecisionValueFromRaw(binding.gap() as RawValue, elementScope, elementScope),
+    fixedPoint: fixedPoint ? {
+      x: fixedPoint.x(),
+      y: fixedPoint.y(),
+    } : null,
+    point: binding.point() ? parseBindingPoint(binding.point()) : null,
+    head: binding.head() as LineHead | null
+  };
+};
+
 
 export const parseElementContentBase = (content: BinElementContentBase | null, defaults: ElementContentBase): ElementContentBase => {
   if (!content) return defaults;
@@ -524,75 +469,4 @@ const parseImageCrop = (crop: BinImageCrop | null): ImageCrop | null => {
     naturalWidth: crop.naturalWidth(),
     naturalHeight: crop.naturalHeight()
   };
-};
-
-const parseDucTableStyleProps = (styleProps: BinDucTableStyleProps | null, elementScope: SupportedMeasures): DucTableStyleProps | undefined => {
-  if (!styleProps) return undefined;
-
-  const rawDashes = Array.from({ length: styleProps.borderDashesLength() }, (_, j) => styleProps.borderDashes(j));
-  const dashes = rawDashes.filter((d): d is number => d !== null && d !== undefined);
-
-  const border = {
-    width: styleProps.borderWidth() ? getPrecisionValueFromRaw(styleProps.borderWidth() as RawValue, elementScope, elementScope) : undefined,
-    dashes: dashes.length > 0 ? dashes : undefined,
-    color: styleProps.borderColor() || undefined,
-  };
-  const text = {
-    color: styleProps.textColor() || undefined,
-    size: styleProps.textSize() ? getPrecisionValueFromRaw(styleProps.textSize() as RawValue, elementScope, elementScope) : undefined,
-    font: styleProps.textFont() || undefined,
-    align: styleProps.textAlign() as TextAlign || undefined,
-  };
-  return {
-    background: styleProps.backgroundColor() || undefined,
-    border: Object.values(border).some(val => val !== undefined) ? border : undefined,
-    text: Object.values(text).some(val => val !== undefined) ? text : undefined,
-  };
-};
-
-const parseDucTableColumns = (length: number, getter: (j: number) => BinDucTableColumn | null, elementScope: SupportedMeasures): Record<string, DucTableColumn> => {
-  const columns: Record<string, DucTableColumn> = {};
-  for (let j = 0; j < length; j++) {
-    const col = getter(j);
-    if (col && col.id()) {
-      columns[col.id()!] = {
-        id: col.id()!,
-        width: col.width() ? getPrecisionValueFromRaw(col.width() as RawValue, elementScope, elementScope) : undefined,
-        style: parseDucTableStyleProps(col.style(), elementScope),
-      };
-    }
-  }
-  return columns;
-};
-
-const parseDucTableRows = (length: number, getter: (j: number) => BinDucTableRow | null, elementScope: SupportedMeasures): Record<string, DucTableRow> => {
-  const rows: Record<string, DucTableRow> = {};
-  for (let j = 0; j < length; j++) {
-    const row = getter(j);
-    if (row && row.id()) {
-      rows[row.id()!] = {
-        id: row.id()!,
-        height: row.height() ? getPrecisionValueFromRaw(row.height() as RawValue, elementScope, elementScope) : undefined,
-        style: parseDucTableStyleProps(row.style(), elementScope),
-      };
-    }
-  }
-  return rows;
-};
-
-const parseDucTableCells = (length: number, getter: (j: number) => BinDucTableCell | null, elementScope: SupportedMeasures): Record<string, DucTableCell> => {
-  const cells: Record<string, DucTableCell> = {};
-  for (let j = 0; j < length; j++) {
-    const cell = getter(j);
-    if (cell && cell.rowId() && cell.columnId()) {
-      const key = `${cell.rowId()!}:${cell.columnId()!}`;
-      cells[key] = {
-        rowId: cell.rowId()!,
-        columnId: cell.columnId()!,
-        data: cell.data() || "",
-        style: parseDucTableStyleProps(cell.style(), elementScope),
-      };
-    }
-  }
-  return cells;
 };

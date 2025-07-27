@@ -1,9 +1,7 @@
 import {
-  DucBlock as BinDucBlock,
-  DucBlockAttribute as BinDucBlockAttribute,
-  DucBlockAttributeDetails as BinDucBlockAttributeDetails,
+  DucBlock as BinDucBlock
 } from 'ducjs/duc';
-import { DucBlock, DucBlockAttributeDetailsType, DucElement } from 'ducjs/types/elements';
+import { DucBlock, DucElement } from 'ducjs/types/elements';
 import { parseElementFromBinary } from './parseElementFromBinary';
 
 export const parseBlockFromBinary = (
@@ -29,56 +27,11 @@ export const parseBlockFromBinary = (
     }
   }
 
-  // Parse attributes
-  const attributes: Record<string, DucBlockAttributeDetailsType> = {};
-  for (let i = 0; i < block.attributesLength(); i++) {
-    const attribute = block.attributes(i);
-    if (attribute) {
-      const parsedAttribute = parseBlockAttributeFromBinary(attribute);
-      if (parsedAttribute) {
-        attributes[parsedAttribute.name] = parsedAttribute.details;
-      }
-    }
-  }
-
   return {
     id,
     label,
     description,
     version: blockVersion,
-    elements,
-    attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
+    elements
   };
 };
-
-const parseBlockAttributeFromBinary = (
-  attribute: BinDucBlockAttribute
-): { name: string; details: DucBlockAttributeDetailsType } | null => {
-  if (!attribute) return null;
-
-  const name = attribute.name() || '';
-  const details = parseBlockAttributeDetailsFromBinary(attribute.details());
-
-  if (!details) return null;
-
-  return {
-    name,
-    details,
-  };
-};
-
-const parseBlockAttributeDetailsFromBinary = (
-  details: BinDucBlockAttributeDetails | null
-): DucBlockAttributeDetailsType | null => {
-  if (!details) return null;
-
-  const tag = details.tag() || '';
-  const defaultValue = details.defaultValue() || '';
-  const prompt = details.prompt() || undefined;
-
-  return {
-    tag,
-    defaultValue,
-    prompt,
-  };
-}; 
