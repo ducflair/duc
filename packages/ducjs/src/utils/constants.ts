@@ -249,6 +249,8 @@ export const DEFAULT_FRAME_STYLE: {
 
 export const DEFAULT_ELEMENT_PROPS: {
   isVisible: DucElement["isVisible"];
+  isPlot: DucElement["isPlot"];
+  isAnnotative: DucElement["isAnnotative"];
   stroke: ElementStroke;
   background: ElementBackground;
   roundness: DucElement["roundness"];
@@ -288,6 +290,8 @@ export const DEFAULT_ELEMENT_PROPS: {
     },
   },
   isVisible: true,
+  isPlot: true,
+  isAnnotative: false,
   roundness: { value: 0 as RawValue, scoped: 0 as ScopedValue },
   opacity: 1 as Percentage,
   locked: false,

@@ -54,6 +54,7 @@ import type {
   DucHead,
   DucLayer,
   DucRegion,
+  DucBlockAttributeDefinition,
   ElementBackground,
   ElementContentBase,
   ElementStroke,
@@ -192,14 +193,15 @@ export const restore = (
   };
 };
 
-export const restoreDictionary = (importedDictionary: any): Dictionary => {
+export const restoreDictionary = (importedDictionary: unknown): Dictionary => {
   if (!importedDictionary || typeof importedDictionary !== "object") {
     return {};
   }
   const restoredDictionary: Dictionary = {};
-  for (const key in importedDictionary) {
-    if (Object.prototype.hasOwnProperty.call(importedDictionary, key)) {
-      restoredDictionary[key] = importedDictionary[key];
+  const dict = importedDictionary as Record<string, unknown>;
+  for (const key in dict) {
+    if (Object.prototype.hasOwnProperty.call(dict, key)) {
+      restoredDictionary[key] = typeof dict[key] === "string" ? dict[key] : String(dict[key]);
     }
   }
   return restoredDictionary;
@@ -216,7 +218,7 @@ export const restoreDictionary = (importedDictionary: any): Dictionary => {
  * @returns A validated array of DucGroup objects, or an empty array if the input is invalid.
  */
 export const restoreGroups = (
-  groups: any,
+  groups: unknown,
 ): RestoredDataState["groups"] => {
   // 1. Guard against invalid input (e.g., null, undefined, not an array).
   if (!Array.isArray(groups)) {
@@ -226,22 +228,17 @@ export const restoreGroups = (
   // 2. Filter for valid group candidates and map them to clean DucGroup objects.
   return groups
     .filter(
-      (g) =>
-        // A valid candidate must be an object with a string id and a 'group' type.
-        g &&
-        typeof g === "object" &&
-        typeof g.id === "string" &&
-        g.type === "group"
+      (g) => {
+        if (!g || typeof g !== "object") return false;
+        const obj = g as Record<string, unknown>;
+        return typeof obj.id === "string" && obj.type === "group";
+      }
     )
     .map((g): DucGroup => {
-      // 3. Construct the final, validated DucGroup object.
+      const obj = g as Record<string, unknown>;
       return {
-        // The 'id' is known to be a string from the filter step.
-        id: g.id,
-        // The restoreDucStackProperties helper handles all properties
-        // inherited from _DucStackBase (label, locked, isVisible, etc.),
-        // providing validation and default values.
-        ...restoreDucStackProperties(g),
+        id: obj.id as string,
+        ...restoreDucStackProperties(obj),
       };
     });
 };
@@ -260,7 +257,7 @@ export const restoreGroups = (
  * @returns A validated array of DucLayer objects, or an empty array if the input is invalid.
  */
 export const restoreLayers = (
-  layers: any,
+  layers: unknown,
   currentScope: Scope
 ): RestoredDataState["layers"] => {
   // 1. Guard against invalid input.
@@ -271,33 +268,31 @@ export const restoreLayers = (
   // 2. Filter for valid layer candidates and map them to clean DucLayer objects.
   return layers
     .filter(
-      (l) =>
-        // A valid candidate must be an object with a string id and a 'layer' type.
-        l &&
-        typeof l === "object" &&
-        typeof l.id === "string" &&
-        l.type === "layer"
+      (l) => {
+        if (!l || typeof l !== "object") return false;
+        const obj = l as Record<string, unknown>;
+        return typeof obj.id === "string" && obj.type === "layer";
+      }
     )
     .map((l): DucLayer => {
-      // 3. Construct the final, validated DucLayer object.
+      const obj = l as Record<string, unknown>;
       return {
-        id: l.id,
-        // Restore all properties from the _DucStackBase.
-        ...restoreDucStackProperties(l),
-
-        // Restore layer-specific properties.
-        readonly: isValidBoolean(l.readonly, false),
-
-        // Restore the nested 'overrides' object, which defines default
-        // styles for elements on this layer.
+        id: obj.id as string,
+        ...restoreDucStackProperties(obj),
+        readonly: isValidBoolean(obj.readonly, false),
         overrides: {
-          // The 'validateStroke' function handles potentially undefined input
-          // and returns a complete, default ElementStroke object if needed.
-          // It requires the scope to correctly interpret width values.
-          stroke: validateStroke(l.overrides?.stroke, currentScope, currentScope),
-
-          // 'validateBackground' performs a similar restoration for the background.
-          background: validateBackground(l.overrides?.background),
+          stroke: validateStroke(
+            obj.overrides && typeof obj.overrides === "object"
+              ? (obj.overrides as Record<string, unknown>).stroke as ElementStroke | undefined
+              : undefined,
+            currentScope,
+            currentScope
+          ),
+          background: validateBackground(
+            obj.overrides && typeof obj.overrides === "object"
+              ? (obj.overrides as Record<string, unknown>).background as ElementBackground | undefined
+              : undefined
+          ),
         },
       };
     });
@@ -307,31 +302,31 @@ export const restoreLayers = (
 /**
  * Restores the regions array, ensuring correct structure and types.
  */
-export const restoreRegions = (regions: any): RestoredDataState["regions"] => {
+export const restoreRegions = (regions: unknown): RestoredDataState["regions"] => {
   if (!Array.isArray(regions)) {
     return [];
   }
 
   return regions
     .filter(
-      (r) =>
-        r &&
-        typeof r === "object" &&
-        typeof r.id === "string" &&
-        r.type === "region" // Filter for region-typed objects
+      (r) => {
+        if (!r || typeof r !== "object") return false;
+        const obj = r as Record<string, unknown>;
+        return typeof obj.id === "string" && obj.type === "region";
+      }
     )
-    .map((r) => ({
-      // NOTE: The `type` property is not in the `DucRegion` type definition but is included
-      // here to maintain consistency with `restoreGroups` and for runtime type discrimination.
-      type: "region",
-      id: r.id,
-      ...restoreDucStackProperties(r),
-      booleanOperation: (Object.values(BOOLEAN_OPERATION) as string[]).includes(
-        r.booleanOperation
-      )
-        ? r.booleanOperation
-        : BOOLEAN_OPERATION.UNION, // Default to UNION if invalid or missing
-    }));
+    .map((r) => {
+      const obj = r as Record<string, unknown>;
+      return {
+        type: "region",
+        id: obj.id as string,
+        ...restoreDucStackProperties(obj),
+        booleanOperation:
+          Object.values(BOOLEAN_OPERATION).includes(obj.booleanOperation as BOOLEAN_OPERATION)
+            ? (obj.booleanOperation as BOOLEAN_OPERATION)
+            : BOOLEAN_OPERATION.UNION,
+      };
+    });
 };
 
 /**
@@ -344,7 +339,7 @@ export const restoreRegions = (regions: any): RestoredDataState["regions"] => {
  * providing the complete block list from Pass 1 as the necessary context.
  */
 export const restoreBlocks = (
-  blocks: ImportedDataState["blocks"],
+  blocks: unknown,
   currentScope: Scope,
   elementsConfig: ElementsConfig
 ): RestoredDataState["blocks"] => {
@@ -356,20 +351,26 @@ export const restoreBlocks = (
   // Create the basic structure of all blocks. This establishes their IDs and
   // top-level properties, creating the reference list that restoreElements needs.
   const partiallyRestoredBlocks: RestoredDataState["blocks"] = blocks
-    .filter((b) => b && typeof b === "object" && typeof b.id === "string")
-    .map((b) => ({
-      id: b.id,
-      label: typeof b.label === "string" ? b.label : "",
-      description:
-        typeof b.description === "string" ? b.description : undefined,
-      version: typeof b.version === "number" ? b.version : 1,
-      attributes: b.attributes || undefined,
-      attributeDefinitions: Array.isArray(b.attributeDefinitions)
-        ? b.attributeDefinitions
-        : [],
-      // CRITICAL: Defer element restoration. We'll populate this in Pass 2.
-      elements: [],
-    }));
+    .filter((b) => {
+      if (!b || typeof b !== "object") return false;
+      const obj = b as Record<string, unknown>;
+      return typeof obj.id === "string";
+    })
+    .map((b) => {
+      const obj = b as Record<string, unknown>;
+      return {
+        id: obj.id as string,
+        label: typeof obj.label === "string" ? obj.label : "",
+        description: typeof obj.description === "string" ? obj.description : undefined,
+        version: typeof obj.version === "number" ? obj.version : 1,
+        attributes: obj.attributes || undefined,
+        attributeDefinitions:
+          obj.attributeDefinitions && typeof obj.attributeDefinitions === "object"
+            ? (obj.attributeDefinitions as Readonly<Record<string, DucBlockAttributeDefinition>>)
+            : {},
+        elements: [],
+      };
+    });
 
   // --- PASS 2: DEEP RESTORATION (Populating Elements) ---
   // Now, iterate through the original raw blocks again to get their element data.
@@ -468,7 +469,7 @@ export const restoreLocalState = (
   // --- This complex calculation is preserved but now uses the correct sources ---
   const zoomValue = getNormalizedZoom(
     isFiniteNumber(importedState.zoom?.value)
-      ? importedState.zoom!.value
+      ? importedState.zoom.value
       : defaults.zoom.value
   );
 
@@ -741,7 +742,7 @@ export const isValidPrecisionScopeValue = (
   mainScope: Scope,
   scopeExponentThreshold: number
 ): Scope => {
-  return getPrecisionScope(zoom, mainScope, scopeExponentThreshold) as Scope;
+  return getPrecisionScope(zoom, mainScope, scopeExponentThreshold);
 };
 
 /**
@@ -833,7 +834,7 @@ export const isValidScopeValue = (
 
   // Then check localState.mainScope if available
   if (mainScope && Object.keys(ScaleFactors).includes(mainScope)) {
-    return mainScope as Scope;
+    return mainScope;
   }
 
   // Then check localState.scope if available
@@ -841,7 +842,7 @@ export const isValidScopeValue = (
     localState?.scope &&
     Object.keys(ScaleFactors).includes(localState.scope)
   ) {
-    return localState.scope as Scope;
+    return localState.scope;
   }
 
   // Finally, use the default scope as last resort
@@ -1091,7 +1092,7 @@ export const isValidPercentageValue = (
   allowNegative: boolean = false
 ): Percentage => {
   if (value === undefined || !Number.isFinite(value)) {
-    return defaultValue as Percentage;
+    return defaultValue;
   }
   // If the value is between 1 and 100, assume it's a percentage that needs to be divided by 100
   if (value > 1 && value <= 100) {
@@ -1156,4 +1157,21 @@ export const isValidBlockId = (
   const validId = isValidString(blockId);
   if (blocks.some((b) => b.id === validId)) return validId;
   return null;
+};
+
+/**
+ * A generic helper to validate an enum value from a lookup object.
+ * @param value The value to check.
+ * @param enumObject The object containing valid enum values (e.g., VIEWPORT_SHADE_PLOT).
+ * @param defaultValue The value to return if the input is invalid.
+ */
+export const isValidEnumValue = <T>(
+  value: any,
+  enumObject: object,
+  defaultValue: T
+): T => {
+  if (value !== undefined && Object.values(enumObject).includes(value)) {
+    return value as T;
+  }
+  return defaultValue;
 };
