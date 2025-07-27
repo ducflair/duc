@@ -149,6 +149,7 @@ export type DucElement =
   | DucTextElement
   | DucLinearElement
   | DucFreeDrawElement
+  | DucArrowElement
   | DucImageElement
   | DucFrameElement
   | DucEmbeddableElement
