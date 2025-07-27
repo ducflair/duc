@@ -40,13 +40,11 @@ export const getDefaultStackProperties = (): _DucStackBase => {
   return {
     label: "",
     isCollapsed: false,
-    clip: true,
     locked: false,
     isVisible: true,
+    isPlot: true,
     opacity: 1 as Percentage,
     labelingColor: "transparent",
-    strokeOverride: null,
-    backgroundOverride: null,
     description: null,
   };
 };
