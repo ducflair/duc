@@ -1,4 +1,4 @@
-import { BinaryFilesEntry, DucExternalFiles as BinBinaryFiles, DucExternalFileData } from 'ducjs/duc';
+import { DucExternalFiles as BinBinaryFiles, DucExternalFileData } from 'ducjs/duc';
 import { ensureFiniteNumber } from 'ducjs/serialize/serializationUtils'; // Import shared helper
 import { DucExternalFiles as BinaryFilesType } from 'ducjs/types';
 import * as flatbuffers from 'flatbuffers';
@@ -25,7 +25,7 @@ const dataURLToUint8Array = (dataURL: string): Uint8Array => {
   }
 };
 
-const serializeBinaryFiles = (
+const serializeExternalFiles = (
   builder: flatbuffers.Builder, 
   files: BinaryFilesType
 ): flatbuffers.Offset => {
@@ -60,4 +60,4 @@ const serializeBinaryFiles = (
   return BinBinaryFiles.createBinaryFiles(builder, filesVectorOffset);
 };
 
-export { serializeBinaryFiles };
+export { serializeExternalFiles };

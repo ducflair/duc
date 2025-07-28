@@ -1,7 +1,7 @@
 import { HANDLE_TYPE } from "ducjs/duc";
 import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint } from "ducjs/technical/scopes";
 import type { PrecisionValue, RawValue, Scope, ScopedValue } from "ducjs/types";
-import type { DucLine, DucLinearElement, DucPoint, DucTextElementWithContainer, ElementsMap, NonDeleted } from "ducjs/types/elements";
+import type { DucArrowElement, DucLine, DucLinearElement, DucLinearLikeElement, DucPoint, DucTextElementWithContainer, ElementsMap, NonDeleted } from "ducjs/types/elements";
 import { Bounds, GeometricPoint } from "ducjs/types/geometryTypes";
 import type { ValueOf } from "ducjs/types/utility-types";
 import { ElementAbsoluteCoords, getBoundTextElement, getElementAbsoluteCoords, getElementPointsCoords } from "ducjs/utils/bounds";
@@ -373,7 +373,7 @@ export const getNormalizedPoints = (
 
 /** scene coords */
 export const getPointsGlobalCoordinates = (
-  element: DucLinearElement,
+  element: DucLinearLikeElement,
   elementsMap: ElementsMap,
   currentScope: Scope,
 ): DucPoint[] => {
@@ -400,7 +400,7 @@ export const getPointsGlobalCoordinates = (
 
 /** scene coords */
 export const getPointGlobalCoordinates = (
-  element: DucLinearElement,
+  element: DucLinearLikeElement,
   point: GeometricPoint,
   elementsMap: ElementsMap,
   currentScope: Scope,
@@ -417,7 +417,7 @@ export const getPointGlobalCoordinates = (
 };
 
 export const getBoundTextElementPosition = (
-  element: DucLinearElement,
+  element: DucLinearLikeElement,
   boundTextElement: DucTextElementWithContainer,
   elementsMap: ElementsMap,
   currentScope: Scope,
@@ -766,7 +766,7 @@ export const getMinMaxXYWithBoundText = (
 };
 
 export const getSegmentMidPoint = (
-  element: NonDeleted<DucLinearElement>,
+  element: NonDeleted<DucLinearLikeElement>,
   startPoint: GeometricPoint,
   endPoint: GeometricPoint,
   endPointIndex: number,

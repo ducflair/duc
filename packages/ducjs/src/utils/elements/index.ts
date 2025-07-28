@@ -2,6 +2,8 @@ export * from "./newElement";
 export * from "./freedrawElement";
 export * from "./linearElement";
 export * from "./textElement";
+export * from "./frameElement";
+export * from "./viewportElement";
 
 import { LINE_SPACING_TYPE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION } from "ducjs/duc";
 import { Scope, RawValue } from "ducjs/types";

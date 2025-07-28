@@ -1,24 +1,21 @@
 export * from "./serializationUtils";
-export * from "./serializeBinaryFilesFromDuc";
 export * from "./serializeBlockFromDuc";
 export * from "./serializeElementFromDuc";
+export * from "./serializeExternalFilesFromDuc";
 export * from "./serializeGroupFromDuc";
 export * from "./serializeStateFromDuc";
 
 import {
   ExportedDataState,
 } from 'ducjs/duc';
-import { serializeAppState } from 'ducjs/serialize/serializeAppStateFromDuc';
-import { serializeBinaryFiles } from 'ducjs/serialize/serializeBinaryFilesFromDuc';
+import { restore } from 'ducjs/restore/restoreDataState';
 import { serializeDucBlock } from 'ducjs/serialize/serializeBlockFromDuc';
 import { serializeDucElement } from 'ducjs/serialize/serializeElementFromDuc';
+import { serializeExternalFiles } from "ducjs/serialize/serializeExternalFilesFromDuc";
 import { serializeDucGroup } from 'ducjs/serialize/serializeGroupFromDuc';
-import { serializeRendererState } from 'ducjs/serialize/serializeRendererStateFromDuc';
-import { Standard } from "ducjs/technical";
-import { Dictionary, DucExternalFiles, DucGlobalState, DucLocalState, ImportedDataState, VersionGraph } from 'ducjs/types';
-import { DucBlock, DucElement, DucGroup, DucLayer, DucRegion, OrderedDucElement } from 'ducjs/types/elements';
+import { ImportedDataState } from 'ducjs/types';
+import { OrderedDucElement } from 'ducjs/types/elements';
 import { EXPORT_DATA_TYPES } from 'ducjs/utils/constants';
-import { restore } from 'ducjs/utils/restore';
 import * as flatbuffers from 'flatbuffers';
 
 export const DUC_SCHEMA_VERSION = process.env.DUC_SCHEMA_VERSION || "0.0.0";
@@ -29,14 +26,7 @@ export const serializeDuc = async (
   const builder = new flatbuffers.Builder(1024);
 
   const sanitized = restore(
-    {
-      elements,
-      files,
-      blocks,
-      groups,
-    },
-    null, // localExtendedAppState
-    null, // localElements
+    data,
     {
       refreshDimensions: false,
       syncInvalidIndices: (elements) => elements as OrderedDucElement[],
@@ -49,29 +39,24 @@ export const serializeDuc = async (
   
   // Serialize elements
   const elementOffsets = sanitized.elements.map((element) => {
-    return serializeDucElement(builder, element, Boolean(rendererState));
+    return serializeDucElement(builder, element);
   });
   const elementsOffset = ExportedDataState.createElementsVector(builder, elementOffsets);
 
-  // Serialize appState
-  const appStateOffset = serializeAppState(builder, sanitized.appState, Boolean(rendererState));
+  // Serialize localState
+  const localStateOffset = serializeLocalState(builder, sanitized.localState);
 
   // Serialize files
-  const binaryFilesOffset = serializeBinaryFiles(builder, sanitized.files);
-
-  // Serialize rendererState
-  const rendererStateOffset = rendererState
-    ? serializeRendererState(builder, rendererState)
-    : null;
+  const externalFilesOffset = serializeExternalFiles(builder, sanitized.files);
 
   // Serialize blocks
   const blocksOffset = sanitized.blocks.length > 0 
-    ? ExportedDataState.createBlocksVector(builder, sanitized.blocks.map(block => serializeDucBlock(builder, block, Boolean(rendererState))))
+    ? ExportedDataState.createBlocksVector(builder, sanitized.blocks.map(block => serializeDucBlock(builder, block)))
     : null;
 
   // Serialize groups
   const groupsOffset = sanitized.groups.length > 0
-    ? ExportedDataState.createGroupsVector(builder, sanitized.groups.map(group => serializeDucGroup(builder, group, Boolean(rendererState))))
+    ? ExportedDataState.createGroupsVector(builder, sanitized.groups.map(group => serializeDucGroup(builder, group)))
     : null;
 
   ExportedDataState.startExportedDataState(builder);
@@ -79,11 +64,8 @@ export const serializeDuc = async (
   ExportedDataState.addVersion(builder, versionOffset);
   ExportedDataState.addSource(builder, sourceOffset);
   ExportedDataState.addElements(builder, elementsOffset);
-  ExportedDataState.addAppState(builder, appStateOffset);
-  ExportedDataState.addFiles(builder, binaryFilesOffset);
-  if (rendererStateOffset) {
-    ExportedDataState.addRendererState(builder, rendererStateOffset);
-  }
+  ExportedDataState.addLocalState(builder, localStateOffset);
+  ExportedDataState.addExternalFiles(builder, externalFilesOffset);
   if (blocksOffset) {
     ExportedDataState.addBlocks(builder, blocksOffset);
   }
