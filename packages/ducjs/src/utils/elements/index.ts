@@ -5,7 +5,7 @@ export * from "./textElement";
 
 import { LINE_SPACING_TYPE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION } from "ducjs/duc";
 import { Scope, RawValue } from "ducjs/types";
-import { _DucStackBase, DucElement, DucNonSelectionElement, DucTableElement, DucTextContainer, DucTextElement, DucTextStyle, ElementConstructorOpts, ElementsMap, NonDeleted } from "ducjs/types/elements";
+import { _DucStackBase, _DucStackElementBase, DucElement, DucNonSelectionElement, DucStackLikeElement, DucTableElement, DucTextContainer, DucTextElement, DucTextStyle, ElementConstructorOpts, ElementsMap, NonDeleted } from "ducjs/types/elements";
 import { isFreeDrawElement, isLinearElement } from "ducjs/types/elements/typeChecks";
 import { GeometricPoint, Percentage, Radian, ScaleFactor, TuplePoint } from "ducjs/types/geometryTypes";
 import { Mutable } from "ducjs/types/utility-types";
@@ -17,6 +17,34 @@ import { adjustXYWithRotation } from "ducjs/utils/math";
 import { randomInteger } from "ducjs/utils/math/random";
 import { normalizeText } from "ducjs/utils/normalize";
 import { getPrecisionValueFromRaw } from "ducjs/technical/scopes";
+
+/**
+ * Returns a default DucTextStyle object for the given scope.
+ */
+export function getDefaultTextStyle(currentScope: Scope): DucTextStyle {
+  return {
+    roundness: DEFAULT_ELEMENT_PROPS.roundness,
+    blending: undefined,
+    strokeColor: undefined,
+    backgroundColor: undefined,
+    background: [DEFAULT_ELEMENT_PROPS.background],
+    stroke: [DEFAULT_ELEMENT_PROPS.stroke],
+    opacity: DEFAULT_ELEMENT_PROPS.opacity,
+    isLtr: true,
+    fontFamily: DEFAULT_FONT_FAMILY,
+    bigFontFamily: "sans-serif",
+    textAlign: DEFAULT_TEXT_ALIGN,
+    verticalAlign: DEFAULT_VERTICAL_ALIGN,
+    lineHeight: 1.2 as any,
+    lineSpacing: { type: LINE_SPACING_TYPE.MULTIPLE, value: 1.2 as any },
+    obliqueAngle: 0 as Radian,
+    fontSize: getPrecisionValueFromRaw(DEFAULT_FONT_SIZE as RawValue, currentScope, currentScope),
+    paperTextHeight: undefined,
+    widthFactor: 1 as ScaleFactor,
+    isUpsideDown: false,
+    isBackwards: false,
+  };
+}
 
 /**
  * Mutates element, bumping `version`, `versionNonce`, and `updated`.
@@ -32,8 +60,6 @@ export const bumpVersion = <T extends Mutable<DucElement>>(
   element.updated = getUpdatedTimestamp();
   return element;
 };
-
-
 
 export const getDefaultStackProperties = (): _DucStackBase => {
   return {
@@ -200,8 +226,6 @@ export const isInvisiblySmallElement = (
   }
   return element.width.scoped === 0 && element.height.scoped === 0;
 };
-
-
 
 /**
  * Sorts a list of DucElements by their z-index (lowest first).

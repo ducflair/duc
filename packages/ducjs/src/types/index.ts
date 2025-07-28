@@ -157,6 +157,28 @@ export type SuggestedPointBinding = [
   NonDeleted<DucBindableElement>
 ];
 
+export type ToolType =
+  | "selection"
+  | "rectangle"
+  | "polygon"
+  | "ellipse"
+  | "arrow"
+  | "line"
+  | "freedraw"
+  | "text"
+  | "image"
+  | "eraser"
+  | "hand"
+  | "frame"
+  | "magicframe"
+  | "embeddable"
+  | "ruler"
+  | "lasso"
+  | "laser"
+  | "table";
+
+export type ElementOrToolType = DucElementType | ToolType | "custom";
+
 /**
  * Defines the global, persistent settings for the drawing. These are fundamental
  * properties of the document itself and are independent of any active Standard.
