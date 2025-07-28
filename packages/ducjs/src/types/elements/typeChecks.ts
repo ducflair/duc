@@ -263,9 +263,18 @@ export const isDucElement = (
     case "frame":
     case "image":
     case "table":
+    case "dimension":
+    case "leader":
     case "doc":
     case "blockinstance":
-    case "selection": {
+    case "selection":
+    case "parametric":
+    case "featurecontrolframe":
+    case "viewport":
+    case "plot":
+    case "xray":
+    case "pdf":
+    case "mermaid": {
       return true;
     }
     default: {

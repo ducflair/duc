@@ -11,6 +11,8 @@ import {
   DucLocalState,
   RawValue,
   ScaleFactor,
+  Scope,
+  Zoom,
 } from "ducjs/types";
 import {
   COLOR_PALETTE,
@@ -19,6 +21,8 @@ import {
   DEFAULT_FONT_SIZE,
 } from "ducjs/utils/constants";
 import { getNormalizedZoom } from "ducjs/utils/normalize";
+import { isFiniteNumber } from "ducjs/utils";
+import { isValidPrecisionScopeValue } from "ducjs/restore/restoreDataState";
 
 // appState
 
@@ -77,6 +81,32 @@ import { getNormalizedZoom } from "ducjs/utils/normalize";
 // theme: THEME.LIGHT,
 // debugRendering: false,
 
+/**
+ * Returns the zoom object with value, scoped, and scaled properties,
+ * using importedState, restoredGlobalState, and defaults.
+ */
+export const getZoom = (
+  value: number,
+  mainScope: Scope, 
+  scopeExponentThreshold: number,
+): Zoom => {
+  const zoomValue = getNormalizedZoom(
+    isFiniteNumber(value)
+      ? value
+      : 1
+  );
+  const scope = isValidPrecisionScopeValue(
+    value,
+    mainScope,
+    scopeExponentThreshold
+  );
+  const scopedZoom = getScopedZoomValue(value, scope);
+  return {
+    value: zoomValue,
+    scoped: scopedZoom,
+    scaled: getScaledZoomValueForScope(scopedZoom, scope),
+  };
+};
 
 export const getDefaultGlobalState = (): DucGlobalState => {
   return {
