@@ -234,6 +234,10 @@ export type DucStackLikeElement =
   | DucViewportElement
   | DucFrameElement;
 
+export type DucLinearLikeElement = 
+  | DucLinearElement
+  | DucViewportElement
+  | DucArrowElement;
 
 export type DucFrameLikeElement =
   | DucPlotElement

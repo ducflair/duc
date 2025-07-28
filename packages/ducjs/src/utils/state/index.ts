@@ -1,3 +1,7 @@
+export * from "./grid";
+
+
+
 import { TEXT_ALIGN } from "ducjs/duc";
 import { PREDEFINED_STANDARDS } from "ducjs/technical";
 import {
@@ -181,5 +185,8 @@ export const getDefaultLocalState = (): Omit<
     objectsSnapModeEnabled: true,
     gridModeEnabled: false,
     outlineModeEnabled: false,
+
+    gridSize: 10,
+    gridStep: 10,
   };
 };

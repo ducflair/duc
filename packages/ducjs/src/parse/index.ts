@@ -1,4 +1,4 @@
-export * from "./parseBinaryFilesFromBinary";
+export * from "./parseExternalFilesFromBinary";
 export * from "./parseBlockFromBinary";
 export * from "./parseElementFromBinary";
 export * from "./parseGroupFromBinary";
@@ -14,7 +14,7 @@ import { parseElementFromBinary } from 'ducjs/parse/parseElementFromBinary';
 import { parseGroupFromBinary } from 'ducjs/parse/parseGroupFromBinary';
 import { DucExternalFiles, DucLocalState } from 'ducjs/types';
 import { DucBlock, DucElement, DucGroup, OrderedDucElement } from 'ducjs/types/elements';
-import { restore, RestoredDataState } from 'ducjs/utils/restore';
+import { restore, RestoredDataState } from 'ducjs/restore/restoreDataState';
 import * as flatbuffers from 'flatbuffers';
 
 export const parseDuc = async (
@@ -26,7 +26,7 @@ export const parseDuc = async (
 
   const data = ExportedDataState.getRootAsExportedDataState(byteBuffer);
   
-  // TODO: Remove on a late duc v2 version
+  // TODO: For now don't touch, to be removed on a late duc v2 version
   const legacyVersion = data.versionLegacy();
   if(legacyVersion) {
     return parseDucFlatBuffersV1(blob, fileHandle) as unknown as RestoredDataState;
@@ -82,11 +82,20 @@ export const parseDuc = async (
 
   const sanitized = restore(
     {
+      thumbnail,
+      dictionary,
       elements: elements as DucElement[],
       localState: parsedLocalState,
-      files: parsedFiles,
+      globalState: parsedGlobalState,
       blocks,
       groups,
+      regions,
+      layers,
+      
+      standards,
+      files: parsedFiles,
+
+      versionGraph,
     },
     { 
       syncInvalidIndices: (elements) => elements as OrderedDucElement[],
