@@ -268,6 +268,10 @@ export type ElementConstructorOpts = MarkOptional<
   | "description"
   | "scope"
   | "blending"
+  | "isPlot"
+  | "isAnnotative"
+  | "regionIds"
+  | "layerId"
 >;
 
 export type ElementUpdate<TElement extends DucElement> = Omit<

@@ -76,6 +76,7 @@ import type { ValueOf } from "ducjs/types/utility-types";
 import {
   getDefaultGlobalState,
   getDefaultLocalState,
+  getZoom,
   isFiniteNumber,
 } from "ducjs/utils";
 import {
@@ -466,21 +467,13 @@ export const restoreLocalState = (
   // Assume you have a function that returns the default local state
   const defaults = getDefaultLocalState();
 
-  // --- This complex calculation is preserved but now uses the correct sources ---
-  const zoomValue = getNormalizedZoom(
-    isFiniteNumber(importedState.zoom?.value)
-      ? importedState.zoom.value
-      : defaults.zoom.value
-  );
-
   // The scope calculation now correctly depends on the GLOBAL state
+  const zoom = getZoom(importedState.zoom?.value ?? defaults.zoom.value, restoredGlobalState.mainScope, restoredGlobalState.scopeExponentThreshold);
   const scope = isValidPrecisionScopeValue(
-    zoomValue,
+    zoom.value,
     restoredGlobalState.mainScope, // Use global state
     restoredGlobalState.scopeExponentThreshold // Use global state
   );
-  const scopedZoom = getScopedZoomValue(zoomValue, scope);
-  // ---
 
   return {
     ...defaults, // Start with defaults
@@ -501,11 +494,7 @@ export const restoreLocalState = (
     scrollY: importedState.scrollY
       ? restorePrecisionValue(importedState.scrollY, NEUTRAL_SCOPE, scope)
       : getPrecisionValueFromRaw(defaults.scrollY.value, NEUTRAL_SCOPE, scope),
-    zoom: {
-      value: zoomValue,
-      scoped: scopedZoom,
-      scaled: getScaledZoomValueForScope(scopedZoom, scope),
-    },
+    zoom,
     activeGridSettings:
       importedState.activeGridSettings ?? defaults.activeGridSettings,
     activeSnapSettings:

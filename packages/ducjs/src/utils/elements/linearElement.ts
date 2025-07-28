@@ -442,25 +442,16 @@ export const getBoundTextElementPosition = (
     );
     x = midPoint.x - boundTextElement.width.scoped / 2;
     y = midPoint.y - boundTextElement.height.scoped / 2;
-  } else {
+    } else {
     const index = element.points.length / 2 - 1;
-
-    const initialMidSegmentMidpoint = LinearElementEditor.editorMidPointsCache.points[index];
-    let midSegmentMidpoint: GeometricPoint | null = initialMidSegmentMidpoint ? {
-      x: initialMidSegmentMidpoint.x.scoped,
-      y: initialMidSegmentMidpoint.y.scoped
-    } : null;
+    let midSegmentMidpoint: GeometricPoint | null = null;
 
     if (element.points.length === 2) {
       midSegmentMidpoint = centerPoint(
         { x: points[0].x.scoped, y: points[0].y.scoped },
         { x: points[1].x.scoped, y: points[1].y.scoped },
       );
-    }
-    if (
-      !midSegmentMidpoint ||
-      LinearElementEditor.editorMidPointsCache.version !== element.version
-    ) {
+    } else {
       midSegmentMidpoint = getSegmentMidPoint(
         element,
         getScopedBezierPointFromDucPoint(points[index]),
