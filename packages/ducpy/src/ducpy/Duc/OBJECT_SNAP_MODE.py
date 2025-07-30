@@ -3,6 +3,7 @@
 # namespace: Duc
 
 class OBJECT_SNAP_MODE(object):
+    NONE = 0
     ENDPOINT = 10
     MIDPOINT = 11
     CENTER = 12

@@ -524,6 +524,7 @@ export const DEFAULT_SNAP_SETTINGS: SnapSettings = {
     size: 8,
     duration: 2000,
     styles: {
+      [OBJECT_SNAP_MODE.NONE]: { shape: SNAP_MARKER_SHAPE.SQUARE, color: "#FFFFFF" },
       [OBJECT_SNAP_MODE.ENDPOINT]: { shape: SNAP_MARKER_SHAPE.SQUARE, color: "#FF0000" },
       [OBJECT_SNAP_MODE.MIDPOINT]: { shape: SNAP_MARKER_SHAPE.TRIANGLE, color: "#00FF00" },
       [OBJECT_SNAP_MODE.INTERSECTION]: { shape: SNAP_MARKER_SHAPE.X, color: "#FF00FF" },

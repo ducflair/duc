@@ -626,14 +626,14 @@ export type DucTableElement = _DucElementBase & DucTableStyle & {
   rowOrder: readonly string[];
 
   /** A record of all column definitions, keyed by their ID */
-  columns: Readonly<Record<string, DucTableColumn>>;
+  columns: Record<string, DucTableColumn>;
   /** A record of all row definitions, keyed by their ID */
-  rows: Readonly<Record<string, DucTableRow>>;
+  rows: Record<string, DucTableRow>;
   /** 
    * A record of all cell data, keyed by a composite "rowId:columnId" string.
    * This flat structure is efficient for lookups and updates.
    */
-  cells: Readonly<Record<string, DucTableCell>>;
+  cells: Record<string, DucTableCell>;
 
   /** Number of top rows to be treated as headers, using the headerRowStyle */
   headerRowCount: number;
@@ -1136,7 +1136,7 @@ export type DucLayer = _DucStackBase & {
   overrides: {
     stroke: ElementStroke;
     background: ElementBackground;
-  };
+  } | null;
 };
 
 

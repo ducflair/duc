@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 export enum OBJECT_SNAP_MODE {
+  NONE = 0,
   ENDPOINT = 10,
   MIDPOINT = 11,
   CENTER = 12,

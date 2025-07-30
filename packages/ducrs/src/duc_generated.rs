@@ -1939,12 +1939,13 @@ impl<'a> flatbuffers::Verifiable for GRID_TYPE {
 
 impl flatbuffers::SimpleToVerifyInSlice for GRID_TYPE {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MIN_OBJECT_SNAP_MODE: u8 = 10;
+pub const ENUM_MIN_OBJECT_SNAP_MODE: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_OBJECT_SNAP_MODE: u8 = 28;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_OBJECT_SNAP_MODE: [OBJECT_SNAP_MODE; 19] = [
+pub const ENUM_VALUES_OBJECT_SNAP_MODE: [OBJECT_SNAP_MODE; 20] = [
+  OBJECT_SNAP_MODE::NONE,
   OBJECT_SNAP_MODE::ENDPOINT,
   OBJECT_SNAP_MODE::MIDPOINT,
   OBJECT_SNAP_MODE::CENTER,
@@ -1971,6 +1972,7 @@ pub const ENUM_VALUES_OBJECT_SNAP_MODE: [OBJECT_SNAP_MODE; 19] = [
 pub struct OBJECT_SNAP_MODE(pub u8);
 #[allow(non_upper_case_globals)]
 impl OBJECT_SNAP_MODE {
+  pub const NONE: Self = Self(0);
   pub const ENDPOINT: Self = Self(10);
   pub const MIDPOINT: Self = Self(11);
   pub const CENTER: Self = Self(12);
@@ -1991,9 +1993,10 @@ impl OBJECT_SNAP_MODE {
   pub const POINT_ON_CURVE: Self = Self(27);
   pub const GEOMETRIC: Self = Self(28);
 
-  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MIN: u8 = 0;
   pub const ENUM_MAX: u8 = 28;
   pub const ENUM_VALUES: &'static [Self] = &[
+    Self::NONE,
     Self::ENDPOINT,
     Self::MIDPOINT,
     Self::CENTER,
@@ -2017,6 +2020,7 @@ impl OBJECT_SNAP_MODE {
   /// Returns the variant's name or "" if unknown.
   pub fn variant_name(self) -> Option<&'static str> {
     match self {
+      Self::NONE => Some("NONE"),
       Self::ENDPOINT => Some("ENDPOINT"),
       Self::MIDPOINT => Some("MIDPOINT"),
       Self::CENTER => Some("CENTER"),
@@ -3296,12 +3300,13 @@ impl<'a> flatbuffers::Verifiable for MATERIAL_CONDITION {
 
 impl flatbuffers::SimpleToVerifyInSlice for MATERIAL_CONDITION {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MIN_FEATURE_MODIFIER: u8 = 10;
+pub const ENUM_MIN_FEATURE_MODIFIER: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_FEATURE_MODIFIER: u8 = 24;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_FEATURE_MODIFIER: [FEATURE_MODIFIER; 15] = [
+pub const ENUM_VALUES_FEATURE_MODIFIER: [FEATURE_MODIFIER; 16] = [
+  FEATURE_MODIFIER::NONE,
   FEATURE_MODIFIER::FREE_STATE,
   FEATURE_MODIFIER::TANGENT_PLANE,
   FEATURE_MODIFIER::PROJECTED_TOLERANCE_ZONE,
@@ -3324,6 +3329,7 @@ pub const ENUM_VALUES_FEATURE_MODIFIER: [FEATURE_MODIFIER; 15] = [
 pub struct FEATURE_MODIFIER(pub u8);
 #[allow(non_upper_case_globals)]
 impl FEATURE_MODIFIER {
+  pub const NONE: Self = Self(0);
   pub const FREE_STATE: Self = Self(10);
   pub const TANGENT_PLANE: Self = Self(11);
   pub const PROJECTED_TOLERANCE_ZONE: Self = Self(12);
@@ -3340,9 +3346,10 @@ impl FEATURE_MODIFIER {
   pub const CONTINUOUS_FEATURE: Self = Self(23);
   pub const UNEQUALLY_DISPOSED: Self = Self(24);
 
-  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MIN: u8 = 0;
   pub const ENUM_MAX: u8 = 24;
   pub const ENUM_VALUES: &'static [Self] = &[
+    Self::NONE,
     Self::FREE_STATE,
     Self::TANGENT_PLANE,
     Self::PROJECTED_TOLERANCE_ZONE,
@@ -3362,6 +3369,7 @@ impl FEATURE_MODIFIER {
   /// Returns the variant's name or "" if unknown.
   pub fn variant_name(self) -> Option<&'static str> {
     match self {
+      Self::NONE => Some("NONE"),
       Self::FREE_STATE => Some("FREE_STATE"),
       Self::TANGENT_PLANE => Some("TANGENT_PLANE"),
       Self::PROJECTED_TOLERANCE_ZONE => Some("PROJECTED_TOLERANCE_ZONE"),

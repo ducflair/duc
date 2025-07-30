@@ -290,6 +290,7 @@ enum GRID_TYPE:ubyte {
 }
 
 enum OBJECT_SNAP_MODE:ubyte {
+  NONE,
   /** Snaps to the endpoint of a line or arc. */
   ENDPOINT = 10,
   /** Snaps to the midpoint of a line or arc. */
@@ -512,6 +513,7 @@ enum MATERIAL_CONDITION:ubyte {
 }
 
 enum FEATURE_MODIFIER:ubyte {
+  NONE,
   /** Free State modifier. "Ⓕ" */
   FREE_STATE = 10,
   /** Tangent Plane modifier. "Ⓣ" */
