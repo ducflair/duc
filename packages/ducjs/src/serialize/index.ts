@@ -13,6 +13,7 @@ import { serializeDucBlock } from 'ducjs/serialize/serializeBlockFromDuc';
 import { serializeDucElement } from 'ducjs/serialize/serializeElementFromDuc';
 import { serializeExternalFiles } from "ducjs/serialize/serializeExternalFilesFromDuc";
 import { serializeDucGroup } from 'ducjs/serialize/serializeGroupFromDuc';
+import { serializeLocalState } from 'ducjs/serialize/serializeStateFromDuc';
 import { ImportedDataState } from 'ducjs/types';
 import { OrderedDucElement } from 'ducjs/types/elements';
 import { EXPORT_DATA_TYPES } from 'ducjs/utils/constants';
@@ -64,7 +65,7 @@ export const serializeDuc = async (
   ExportedDataState.addVersion(builder, versionOffset);
   ExportedDataState.addSource(builder, sourceOffset);
   ExportedDataState.addElements(builder, elementsOffset);
-  ExportedDataState.addLocalState(builder, localStateOffset);
+  ExportedDataState.addDucLocalState(builder, localStateOffset);
   ExportedDataState.addExternalFiles(builder, externalFilesOffset);
   if (blocksOffset) {
     ExportedDataState.addBlocks(builder, blocksOffset);

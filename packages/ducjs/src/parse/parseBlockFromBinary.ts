@@ -2,18 +2,18 @@ import {
   DucBlock as BinDucBlock
 } from 'ducjs/duc';
 import { DucBlock, DucElement } from 'ducjs/types/elements';
-import { parseElementFromBinary } from './parseElementFromBinary';
+import { parseElementFromBinary } from 'ducjs/parse/parseElementFromBinary';
 
 export const parseBlockFromBinary = (
   block: BinDucBlock,
   version: string
-): Partial<DucBlock> | null => {
+): DucBlock | null => {
   if (!block) return null;
 
-  const id = block.id() || undefined;
-  const label = block.label() || undefined;
-  const description = block.description() || undefined;
-  const blockVersion = block.version() || undefined;
+  const id = block.id();
+  const label = block.label();
+  const description = block.description();
+  const blockVersion = block.version();
 
   // Parse elements
   const elements: DucElement[] = [];
@@ -28,10 +28,11 @@ export const parseBlockFromBinary = (
   }
 
   return {
-    id,
-    label,
-    description,
+    id: id!,
+    label: label!,
+    description: description!,
     version: blockVersion,
-    elements
+    elements,
+    attributeDefinitions: {}, // TODO: Parse attribute definitions if available
   };
 };

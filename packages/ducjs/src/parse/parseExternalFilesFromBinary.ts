@@ -10,26 +10,22 @@ export const uint8ArrayToDataURL = (uint8Array: Uint8Array, mimeType: string): s
   return `data:${mimeType};base64,${base64}`;
 };
 
-export const parseBinaryFilesFromBinary = (externalFiles: BinDucExternalFileEntry | null): DucExternalFiles => {
-  if (!externalFiles) return {};
+export const parseBinaryFilesFromBinary = (externalFile: BinDucExternalFileEntry | null): DucExternalFiles => {
+  if (!externalFile) return {};
 
   const files: DucExternalFiles = {};
-  for (let i = 0; i < externalFiles.entriesLength(); i++) {
-    const entry = externalFiles.entries(i);
-    if (entry === null) continue;
-    const key = entry.key();
-    const fileData = entry.value();
-    if (key && fileData) {
-      const mimeType = fileData.mimeType() || 'application/octet-stream';
-      const dataArray = fileData.dataArray() || new Uint8Array();
-      files[key] = {
-        mimeType,
-        id: fileData.id() || '',
-        dataURL: uint8ArrayToDataURL(dataArray, mimeType), // Convert Uint8Array back to dataURL
-        created: Number(fileData.created()),
-        lastRetrieved: Number(fileData.lastRetrieved()),
-      } as DucExternalFileData;
-    }
+  const key = externalFile.key();
+  const fileData = externalFile.value();
+  if (key && fileData) {
+    const mimeType = fileData.mimeType() || 'application/octet-stream';
+    const dataArray = fileData.dataArray() || new Uint8Array();
+    files[key] = {
+      mimeType,
+      id: fileData.id() || '',
+      dataURL: uint8ArrayToDataURL(dataArray, mimeType), // Convert Uint8Array back to dataURL
+      created: Number(fileData.created()),
+      lastRetrieved: Number(fileData.lastRetrieved()),
+    } as DucExternalFileData;
   }
 
   return files;
