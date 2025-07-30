@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 export enum FEATURE_MODIFIER {
+  NONE = 0,
   FREE_STATE = 10,
   TANGENT_PLANE = 11,
   PROJECTED_TOLERANCE_ZONE = 12,
