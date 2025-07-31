@@ -166,7 +166,7 @@ export const parseDuc = async (
       standards,
       files: parsedFiles,
 
-      versionGraph: versionGraph || undefined,
+      versionGraph: versionGraph ?? undefined,
     },
     { 
       syncInvalidIndices: (elements) => elements as OrderedDucElement[],

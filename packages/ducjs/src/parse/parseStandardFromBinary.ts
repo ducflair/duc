@@ -3,6 +3,33 @@ import {
   Standard as BinStandard,
   StandardOverrides as BinStandardOverrides,
   UnitPrecision as BinUnitPrecision,
+  StandardStyles as BinStandardStyles,
+  StandardViewSettings as BinStandardViewSettings,
+  StandardUnits as BinStandardUnits,
+  StandardValidation as BinStandardValidation,
+  IdentifiedCommonStyle,
+  IdentifiedStackLikeStyle,
+  IdentifiedTextStyle,
+  IdentifiedDimensionStyle,
+  IdentifiedLeaderStyle,
+  IdentifiedFCFStyle,
+  IdentifiedTableStyle,
+  IdentifiedDocStyle,
+  IdentifiedViewportStyle,
+  IdentifiedHatchStyle,
+  IdentifiedXRayStyle,
+  IdentifiedGridSettings,
+  IdentifiedSnapSettings,
+  IdentifiedUcs,
+  IdentifiedView,
+  GridSettings as BinGridSettings,
+  SnapSettings as BinSnapSettings,
+  DucUcs as BinDucUcs,
+  DucView as BinDucView,
+  _UnitSystemBase as BinUnitSystemBase,
+  LinearUnitSystem as BinLinearUnitSystem,
+  AngularUnitSystem as BinAngularUnitSystem,
+  AlternateUnits as BinAlternateUnits,
 } from "ducjs/duc";
 import {
   getPrecisionValueFromRaw,
@@ -13,12 +40,12 @@ import {
   Standard,
   StandardOverrides,
   StandardStyles,
+  StandardViewSettings,
+  StandardUnits,
+  StandardValidation,
 } from "ducjs/technical/standards";
-import { Identifier, PrecisionValue, RawValue } from "ducjs/types";
+import { Identifier, PrecisionValue, RawValue, Scope } from "ducjs/types";
 import { Percentage, Radian, ScaleFactor } from "ducjs/types/geometryTypes";
-import { StandardStyles as BinStandardStyles } from "ducjs/duc";
-
-// Import style types
 import {
   DucCommonStyle,
   DucDimensionStyle,
@@ -32,608 +59,725 @@ import {
   DucViewportStyle,
   DucXRayStyle,
 } from "ducjs/types/elements";
+import {
+  GridSettings,
+  SnapSettings,
+  DucUcs,
+  DucView,
+} from "ducjs/types";
 import { parseElementBackgroundFromBinary, parseElementStrokeFromBinary } from "ducjs/parse/parseElementStyleFromBinary";
 
-// Helper function to create a default PrecisionValue
-const createDefaultPrecisionValue = (): PrecisionValue => {
-  return getPrecisionValueFromRaw(0 as RawValue, "m", "m");
-};
+// Helper: Identifier
+function parseIdentifierFromBinary(identifier: BinIdentifier): Identifier {
+  return {
+    id: identifier.id()!,
+    name: identifier.name()!,
+    description: identifier.description() ?? undefined,
+  };
+}
 
-/**
- * Parses a Standard from FlatBuffers binary data.
- *
- * @param standard - The FlatBuffers Standard object to parse
- * @returns A partial Standard object with the parsed data
- */
-/**
- * Parses an Identifier from FlatBuffers binary data.
- *
- * @param identifier - The FlatBuffers Identifier object to parse
- * @returns A complete Identifier object with the parsed data
- */
-/**
- * Parses a UnitPrecision from FlatBuffers binary data.
- *
- * @param unitPrecision - The FlatBuffers UnitPrecision object to parse
- * @returns A partial unitPrecision object with the parsed data
- */
-export function parseUnitPrecisionFromBinary(unitPrecision: BinUnitPrecision):
-  | {
-      linear?: number;
-      angular?: number;
-      area?: number;
-      volume?: number;
-    }
-  | undefined {
+// Helper: UnitPrecision
+function parseUnitPrecisionFromBinary(unitPrecision: BinUnitPrecision | null) {
   if (!unitPrecision) return undefined;
-
   return {
-    linear: unitPrecision.linear() || undefined,
-    angular: unitPrecision.angular() || undefined,
-    area: unitPrecision.area() || undefined,
-    volume: unitPrecision.volume() || undefined,
+    linear: unitPrecision.linear() ?? undefined,
+    angular: unitPrecision.angular() ?? undefined,
+    area: unitPrecision.area() ?? undefined,
+    volume: unitPrecision.volume() ?? undefined,
   };
 }
 
-/**
- * Parses StandardStyles from FlatBuffers binary data.
- *
- * @param styles - The FlatBuffers StandardStyles object to parse
- * @returns A StandardStyles object with the parsed data
- */
-export function parseStandardStylesFromBinary(
-  styles: BinStandardStyles
-): StandardStyles | null {
+// Helper: LinearUnitSystem  
+function parseLinearUnitSystemFromBinary(unit: BinLinearUnitSystem | null) {
+  if (!unit) return null;
+  const base = unit.base();
+  return {
+    format: unit.format()!,
+    system: base?.system()!,
+    precision: base?.precision()!,
+    suppressLeadingZeros: base?.suppressLeadingZeros()!,
+    suppressTrailingZeros: base?.suppressTrailingZeros()!,
+    decimalSeparator: unit.decimalSeparator()!,
+    suppressZeroFeet: unit.suppressZeroFeet(),
+    suppressZeroInches: unit.suppressZeroInches(),
+  };
+}
+
+// Helper: AngularUnitSystem
+function parseAngularUnitSystemFromBinary(unit: BinAngularUnitSystem | null) {
+  if (!unit) return null;
+  const base = unit.base();
+  return {
+    format: unit.format()!,
+    system: base?.system()!,
+    precision: base?.precision()!,
+    suppressLeadingZeros: base?.suppressLeadingZeros()!,
+    suppressTrailingZeros: base?.suppressTrailingZeros()!,
+  };
+}
+
+// Helper: AlternateUnits
+function parseAlternateUnitsFromBinary(unit: BinAlternateUnits | null) {
+  if (!unit) return null;
+  const base = unit.base();
+  return {
+    format: unit.format()!,
+    system: base?.system()!,
+    precision: base?.precision()!,
+    suppressLeadingZeros: base?.suppressLeadingZeros()!,
+    suppressTrailingZeros: base?.suppressTrailingZeros()!,
+    isVisible: unit.isVisible()!,
+    multiplier: unit.multiplier()!,
+  };
+}
+
+// Helper: StandardUnits
+function parseStandardUnitsFromBinary(units: BinStandardUnits | null): StandardUnits | null {
+  if (!units) return null;
+  const primary = units.primaryUnits();
+  const alternate = units.alternateUnits();
+  return {
+    primaryUnits: {
+      linear: parseLinearUnitSystemFromBinary(primary?.linear()!)!,
+      angular: parseAngularUnitSystemFromBinary(primary?.angular()!)!,
+    },
+    alternateUnits: parseAlternateUnitsFromBinary(alternate!)!
+  };
+}
+
+// Helper: StandardValidation
+function parseStandardValidationFromBinary(validation: BinStandardValidation | null): StandardValidation | null {
+  if (!validation) return null;
+  const dimRules = validation.dimensionRules();
+  const layerRules = validation.layerRules();
+  return {
+    dimensionRules: dimRules
+      ? {
+          minTextHeight: dimRules.minTextHeight() !== null ? getPrecisionValueFromRaw(dimRules.minTextHeight() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE) : undefined,
+          maxTextHeight: dimRules.maxTextHeight() !== null ? getPrecisionValueFromRaw(dimRules.maxTextHeight() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE) : undefined,
+          allowedPrecisions: (() => {
+            const arr: number[] = [];
+            for (let i = 0; i < dimRules.allowedPrecisionsLength(); i++) {
+              const v = dimRules.allowedPrecisions(i);
+              if (v !== null && v !== undefined) arr.push(v);
+            }
+            return arr.length ? arr : undefined;
+          })(),
+        }
+      : undefined,
+    layerRules: layerRules
+      ? {
+          prohibitedLayerNames: (() => {
+            const arr: string[] = [];
+            for (let i = 0; i < layerRules.prohibitedLayerNamesLength(); i++) {
+              const v = layerRules.prohibitedLayerNames(i);
+              if (v) arr.push(v);
+            }
+            return arr.length ? arr : undefined;
+          })(),
+        }
+      : undefined,
+  };
+}
+
+// Helper: StandardViewSettings
+function parseStandardViewSettingsFromBinary(viewSettings: BinStandardViewSettings | null): StandardViewSettings | null {
+  if (!viewSettings) return null;
+  
+  // Views
+  const views: Array<Identifier & DucView> = [];
+  for (let i = 0; i < viewSettings.viewsLength(); i++) {
+    const v = viewSettings.views(i);
+    if (v && v.id()) {
+      const id = parseIdentifierFromBinary(v.id()!);
+      const view = v.view();
+      if (view) {
+        const zoomValue = view.zoom();
+        const normalizedZoom = Math.max(0.01, Math.min(100, zoomValue)) as any; // Normalize zoom to valid range
+        const scopedZoom = normalizedZoom as any; // For now, use same value
+        const scaledZoom = normalizedZoom as any; // For now, use same value
+        
+        views.push({
+          ...id,
+          scrollX: getPrecisionValueFromRaw(view.scrollX() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          scrollY: getPrecisionValueFromRaw(view.scrollY() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          zoom: {
+            value: normalizedZoom,
+            scoped: scopedZoom,
+            scaled: scaledZoom,
+          },
+          twistAngle: view.twistAngle() as Radian,
+          centerPoint: {
+            x: getPrecisionValueFromRaw(view.centerPoint()!.x() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+            y: getPrecisionValueFromRaw(view.centerPoint()!.y() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          },
+          scope: view.scope() as Scope,
+        });
+      }
+    }
+  }
+  
+  // UCS
+  const ucs: Array<Identifier & DucUcs> = [];
+  for (let i = 0; i < viewSettings.ucsLength(); i++) {
+    const v = viewSettings.ucs(i);
+    if (v && v.id()) {
+      const id = parseIdentifierFromBinary(v.id()!);
+      const u = v.ucs();
+      if (u) {
+        ucs.push({
+          ...id,
+          origin: {
+            x: u.origin()!.x(),
+            y: u.origin()!.y(),
+          },
+          angle: u.angle() as Radian,
+        });
+      }
+    }
+  }
+  
+  // GridSettings
+  const gridSettings: Array<Identifier & GridSettings> = [];
+  for (let i = 0; i < viewSettings.gridSettingsLength(); i++) {
+    const v = viewSettings.gridSettings(i);
+    if (v && v.id()) {
+      const id = parseIdentifierFromBinary(v.id()!);
+      const s = v.settings();
+      if (s) {
+        gridSettings.push({
+          ...id,
+          type: s.type()!,
+          readonly: s.readonly(),
+          displayType: s.displayType()!,
+          isAdaptive: s.isAdaptive(),
+          xSpacing: getPrecisionValueFromRaw(s.xSpacing() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          ySpacing: getPrecisionValueFromRaw(s.ySpacing() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          subdivisions: s.subdivisions(),
+          origin: {
+            x: s.origin()!.x(),
+            y: s.origin()!.y(),
+          },
+          rotation: s.rotation() as Radian,
+          followUCS: s.followUcs(),
+          majorStyle: {
+            color: s.majorStyle()!.color()!,
+            opacity: s.majorStyle()!.opacity()! as any,
+            dashPattern: [],
+          },
+          minorStyle: {
+            color: s.minorStyle()!.color()!, 
+            opacity: s.minorStyle()!.opacity()! as any,
+            dashPattern: [],
+          },
+          showMinor: s.showMinor(),
+          minZoom: s.minZoom(),
+          maxZoom: s.maxZoom(),
+          autoHide: s.autoHide(),
+          enableSnapping: s.enableSnapping(),
+        });
+      }
+    }
+  }
+  
+  // SnapSettings
+  const snapSettings: Array<Identifier & SnapSettings> = [];
+  for (let i = 0; i < viewSettings.snapSettingsLength(); i++) {
+    const v = viewSettings.snapSettings(i);
+    if (v && v.id()) {
+      const id = parseIdentifierFromBinary(v.id()!);
+      const s = v.settings();
+      if (s) {
+        snapSettings.push({
+          ...id,
+          readonly: s.readonly(),
+          twistAngle: s.twistAngle() as Radian,
+          snapTolerance: s.snapTolerance(),
+          objectSnapAperture: s.objectSnapAperture(),
+          isOrthoModeOn: s.isOrthoModeOn(),
+          polarTracking: {
+            enabled: s.polarTracking()!.enabled(),
+            angles: [],
+            incrementAngle: s.polarTracking()!.incrementAngle() as any,
+            trackFromLastPoint: s.polarTracking()!.trackFromLastPoint(),
+            showPolarCoordinates: s.polarTracking()!.showPolarCoordinates(),
+          },
+          isObjectSnapOn: s.isObjectSnapOn(),
+          activeObjectSnapModes: [],
+          snapPriority: [],
+          showTrackingLines: s.showTrackingLines(),
+          dynamicSnap: {
+            enabledDuringDrag: s.dynamicSnap()!.enabledDuringDrag(),
+            enabledDuringRotation: s.dynamicSnap()!.enabledDuringRotation(),
+            enabledDuringScale: s.dynamicSnap()!.enabledDuringScale(),
+          },
+          snapMode: s.snapMode() as any,
+          snapMarkers: {
+            enabled: s.snapMarkers()!.enabled(),
+            size: s.snapMarkers()!.size(),
+            duration: s.snapMarkers()!.duration(),
+            styles: {} as any,
+          },
+          constructionSnapEnabled: s.constructionSnapEnabled(),
+        });
+      }
+    }
+  }
+  
+  return {
+    views,
+    ucs,
+    gridSettings,
+    snapSettings,
+  };
+}
+
+// Helper: StandardStyles
+function parseStandardStylesFromBinary(styles: BinStandardStyles | null): StandardStyles | null {
   if (!styles) return null;
-
+  // Helper for each identified style type
+  function parseIdentifiedStyles<T, B extends { id(): any; style(): any }>(
+    length: number,
+    getter: (i: number) => B | null,
+    parseStyle: (id: Identifier, style: any) => T
+  ): T[] {
+    const arr: T[] = [];
+    for (let i = 0; i < length; i++) {
+      const entry = getter(i);
+      if (entry) {
+        const id = parseIdentifierFromBinary(entry.id()!);
+        const style = entry.style();
+        if (style) arr.push(parseStyle(id, style));
+      }
+    }
+    return arr;
+  }
   return {
-    commonStyles: parseIdentifiedCommonStyles(styles),
-    stackLikeStyles: parseIdentifiedStackLikeStyles(styles),
-    textStyles: parseIdentifiedTextStyles(styles),
-    dimensionStyles: parseIdentifiedDimensionStyles(styles),
-    leaderStyles: parseIdentifiedLeaderStyles(styles),
-    featureControlFrameStyles: parseIdentifiedFCFStyles(styles),
-    tableStyles: parseIdentifiedTableStyles(styles),
-    docStyles: parseIdentifiedDocStyles(styles),
-    viewportStyles: parseIdentifiedViewportStyles(styles),
-    hatchStyles: parseIdentifiedHatchStyles(styles),
-    xrayStyles: parseIdentifiedXRayStyles(styles),
-  };
-}
-
-function parseIdentifiedCommonStyles(
-  styles: BinStandardStyles,
-): Array<Identifier & DucCommonStyle> {
-  const result: Array<Identifier & DucCommonStyle> = [];
-  const length = styles.commonStylesLength();
-
-  for (let i = 0; i < length; i++) {
-    const identifiedStyle = styles.commonStyles(i);
-    if (identifiedStyle) {
-      const idObj = identifiedStyle.id();
-      const styleObj = identifiedStyle.style();
-
-      if (idObj && styleObj) {
-        const id = parseIdentifierFromBinary(idObj);
-        const background = styleObj.background();
-        const stroke = styleObj.stroke();
-
-        if (id) {
-          const parsedBackground = background
-            ? parseElementBackgroundFromBinary(background)
-            : null;
-          const parsedStroke = stroke
-            ? parseElementStrokeFromBinary(stroke, NEUTRAL_SCOPE)
-            : null;
-
-          if (parsedBackground && parsedStroke) {
-            const commonStyle: Identifier & DucCommonStyle = {
-              ...id,
-              background: parsedBackground,
-              stroke: parsedStroke,
-            };
-
-            result.push(commonStyle);
+    commonStyles: parseIdentifiedStyles(
+      styles.commonStylesLength(),
+      styles.commonStyles.bind(styles),
+      (id, style): Identifier & DucCommonStyle => ({
+        ...id,
+        background: parseElementBackgroundFromBinary(style.background(), NEUTRAL_SCOPE)!,
+        stroke: parseElementStrokeFromBinary(style.stroke(), NEUTRAL_SCOPE)!,
+      })
+    ),
+    stackLikeStyles: parseIdentifiedStyles(
+      styles.stackLikeStylesLength(),
+      styles.stackLikeStyles.bind(styles),
+      (id, style): Identifier & DucStackLikeStyles => ({
+        ...id,
+        opacity: style.opacity() as Percentage,
+        labelingColor: style.labelingColor(),
+      })
+    ),
+    textStyles: parseIdentifiedStyles(
+      styles.textStylesLength(),
+      styles.textStyles.bind(styles),
+      (id, style): Identifier & DucTextStyle => ({
+        ...id,
+        // _DucElementStylesBase
+        roundness: getPrecisionValueFromRaw(style.roundness() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        blending: style.blending() ?? undefined,
+        background: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.backgroundLength(); i++) {
+            const b = style.background(i);
+            if (b) arr.push(parseElementBackgroundFromBinary(b, NEUTRAL_SCOPE)!);
           }
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-function parseIdentifiedStackLikeStyles(
-  styles: BinStandardStyles
-): Array<Identifier & DucStackLikeStyles> {
-  const result: Array<Identifier & DucStackLikeStyles> = [];
-  const length = styles.stackLikeStylesLength();
-
-  for (let i = 0; i < length; i++) {
-    const identifiedStyle = styles.stackLikeStyles(i);
-    if (identifiedStyle) {
-      const idObj = identifiedStyle.id();
-      const styleObj = identifiedStyle.style();
-
-      if (idObj && styleObj) {
-        const id = parseIdentifierFromBinary(idObj);
-        // TODO: Implement parsing for stack-like style properties
-        if (id) {
-          const stackLikeStyle: Identifier & DucStackLikeStyles = {
-            ...id,
-            // Add stack-like style properties here
-            opacity: 1 as Percentage, // Default value
-            labelingColor: "#000000",
-          };
-
-          result.push(stackLikeStyle);
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-function parseIdentifiedTextStyles(
-  styles: BinStandardStyles
-): Array<Identifier & DucTextStyle> {
-  const result: Array<Identifier & DucTextStyle> = [];
-  const length = styles.textStylesLength();
-
-  for (let i = 0; i < length; i++) {
-    const identifiedStyle = styles.textStyles(i);
-    if (identifiedStyle) {
-      const idObj = identifiedStyle.id();
-      const styleObj = identifiedStyle.style();
-
-      if (idObj && styleObj) {
-        const id = parseIdentifierFromBinary(idObj);
-        // TODO: Implement parsing for text style properties
-        if (id) {
-          const backgroundArr = styleObj.background()
-            ? [parseElementBackgroundFromBinary(styleObj.background())!]
-            : [];
-          const textStyleBase: Omit<Identifier & DucTextStyle, "background"> = {
-            ...id,
-            isLtr: true,
-            fontFamily: 0,
-            bigFontFamily: "",
-            textAlign: "left" as any, // TODO: Fix branded type
-            verticalAlign: "top" as any, // TODO: Fix branded type
-            roundness: createDefaultPrecisionValue(),
-            stroke: [] as any, // TODO: Fix type
-            opacity: 1 as Percentage, // Default value
-            isBackwards: false,
-            lineHeight: 1.2 as number & { _brand: "unitlessLineHeight" },
-            lineSpacing: {
-              value: createDefaultPrecisionValue(),
-              type: "multiple" as any, // TODO: Fix branded type
-            },
-            obliqueAngle: 0 as Radian,
-            fontSize: createDefaultPrecisionValue(),
-            widthFactor: 0.7 as ScaleFactor,
-            isUpsideDown: false,
-          };
-          const textStyle = { ...textStyleBase, background: backgroundArr } as Identifier & DucTextStyle;
-
-          result.push(textStyle);
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-function parseIdentifiedDimensionStyles(
-  styles: BinStandardStyles
-): Array<Identifier & DucDimensionStyle> {
-  const result: Array<Identifier & DucDimensionStyle> = [];
-  const length = styles.dimensionStylesLength();
-
-  for (let i = 0; i < length; i++) {
-    const identifiedStyle = styles.dimensionStyles(i);
-    if (identifiedStyle) {
-      const idObj = identifiedStyle.id();
-      const styleObj = identifiedStyle.style();
-
-      if (idObj && styleObj) {
-        const id = parseIdentifierFromBinary(idObj);
-        // TODO: Implement parsing for dimension style properties
-        if (id) {
-          const dimensionStyle: Identifier & DucDimensionStyle = {
-            ...id,
-            dimLine: undefined as any, // TODO: Fix type
-            extLine: undefined as any, // TODO: Fix type
-            textStyle: undefined as any, // TODO: Fix type
-            symbols: undefined as any, // TODO: Fix type
-            tolerance: undefined as any, // TODO: Fix type
-            fit: undefined as any, // TODO: Fix type
-          };
-
-          result.push(dimensionStyle);
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-function parseIdentifiedLeaderStyles(
-  styles: BinStandardStyles
-): Array<Identifier & DucLeaderStyle> {
-  const result: Array<Identifier & DucLeaderStyle> = [];
-  const length = styles.leaderStylesLength();
-
-  for (let i = 0; i < length; i++) {
-    const identifiedStyle = styles.leaderStyles(i);
-    if (identifiedStyle) {
-      const idObj = identifiedStyle.id();
-      const styleObj = identifiedStyle.style();
-
-      if (idObj && styleObj) {
-        const id = parseIdentifierFromBinary(idObj);
-        // TODO: Implement parsing for leader style properties
-        if (id) {
-          const leaderStyle: Identifier & DucLeaderStyle = {
-            ...id,
-            // Base properties
-            roundness: createDefaultPrecisionValue(),
-            background: [] as any, // TODO: Fix type
-            stroke: [] as any, // TODO: Fix type
-            opacity: 1 as any, // TODO: Fix type
-            // Leader-specific properties
-            headsOverride: undefined as any, // TODO: Fix type
-            dogleg: null as any, // TODO: Fix type
-            textStyle: undefined as any, // TODO: Fix type
-            textAttachment: undefined as any, // TODO: Fix type
-            blockAttachment: undefined as any, // TODO: Fix type
-          };
-
-          result.push(leaderStyle);
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-function parseIdentifiedFCFStyles(
-  styles: BinStandardStyles
-): Array<Identifier & DucFeatureControlFrameStyle> {
-  const result: Array<Identifier & DucFeatureControlFrameStyle> = [];
-  const length = styles.featureControlFrameStylesLength();
-
-  for (let i = 0; i < length; i++) {
-    const identifiedStyle = styles.featureControlFrameStyles(i);
-    if (identifiedStyle) {
-      const idObj = identifiedStyle.id();
-      const styleObj = identifiedStyle.style();
-
-      if (idObj && styleObj) {
-        const id = parseIdentifierFromBinary(idObj);
-        // TODO: Implement parsing for feature control frame style properties
-        if (id) {
-          const featureControlFrameStyle: Identifier &
-            DucFeatureControlFrameStyle = {
-            ...id,
-            // Base properties
-            roundness: createDefaultPrecisionValue(),
-            background: [] as any, // TODO: Fix type
-            stroke: [] as any, // TODO: Fix type
-            opacity: 1 as any, // TODO: Fix type
-            // Feature control frame-specific properties
-            textStyle: undefined as any, // TODO: Fix type
-            layout: undefined as any, // TODO: Fix type
-            symbols: undefined as any, // TODO: Fix type
-            datumStyle: undefined as any, // TODO: Fix type
-          };
-
-          result.push(featureControlFrameStyle);
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-function parseIdentifiedTableStyles(
-  styles: BinStandardStyles
-): Array<Identifier & DucTableStyle> {
-  const result: Array<Identifier & DucTableStyle> = [];
-  const length = styles.tableStylesLength();
-
-  for (let i = 0; i < length; i++) {
-    const identifiedStyle = styles.tableStyles(i);
-    if (identifiedStyle) {
-      const idObj = identifiedStyle.id();
-      const styleObj = identifiedStyle.style();
-
-      if (idObj && styleObj) {
-        const id = parseIdentifierFromBinary(idObj);
-        // TODO: Implement parsing for table style properties
-        if (id) {
-          const tableStyle: Identifier & DucTableStyle = {
-            ...id,
-            // Base properties
-            roundness: createDefaultPrecisionValue(),
-            background: [] as any, // TODO: Fix type
-            stroke: [] as any, // TODO: Fix type
-            opacity: 1 as any, // TODO: Fix type
-            // Table-specific properties
-            flowDirection: undefined as any, // TODO: Fix type
-            headerRowStyle: undefined as any, // TODO: Fix type
-            dataRowStyle: undefined as any, // TODO: Fix type
-            dataColumnStyle: undefined as any, // TODO: Fix type
-          };
-
-          result.push(tableStyle);
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-function parseIdentifiedDocStyles(
-  styles: BinStandardStyles
-): Array<Identifier & DucDocStyle> {
-  const result: Array<Identifier & DucDocStyle> = [];
-  const length = styles.docStylesLength();
-
-  for (let i = 0; i < length; i++) {
-    const identifiedStyle = styles.docStyles(i);
-    if (identifiedStyle) {
-      const idObj = identifiedStyle.id();
-      const styleObj = identifiedStyle.style();
-
-      if (idObj && styleObj) {
-        const id = parseIdentifierFromBinary(idObj);
-        // TODO: Implement parsing for doc style properties
-        if (id) {
-          const docStyle: Identifier & DucDocStyle = {
-            ...id,
-            // Base properties
-            roundness: createDefaultPrecisionValue(),
-            background: [] as any, // TODO: Fix type
-            stroke: [] as any, // TODO: Fix type
-            opacity: 1 as any, // TODO: Fix type
-            // Doc-specific properties (DucTextStyle properties)
-            isLtr: true,
-            fontFamily: 0,
-            bigFontFamily: "",
-            textAlign: "left" as any, // TODO: Fix branded type
-            verticalAlign: "top" as any, // TODO: Fix branded type
-            isBackwards: false,
-            // Required DucTextStyle properties
-            lineHeight: 1.2 as number & { _brand: "unitlessLineHeight" },
-            obliqueAngle: 0 as Radian,
-            fontSize: createDefaultPrecisionValue(),
-            widthFactor: 0.7 as ScaleFactor,
-            isUpsideDown: false,
-            lineSpacing: undefined as any, // TODO: Fix type
-            // Required DucDocStyle properties
-            paragraph: {
-              firstLineIndent: createDefaultPrecisionValue(),
-              hangingIndent: createDefaultPrecisionValue(),
-              leftIndent: createDefaultPrecisionValue(),
-              rightIndent: createDefaultPrecisionValue(),
-              spaceBefore: createDefaultPrecisionValue(),
-              spaceAfter: createDefaultPrecisionValue(),
-              tabStops: [],
-            },
-            stackFormat: {
-              autoStack: false,
-              stackChars: [],
-              properties: {
-                upperScale: 0.7,
-                lowerScale: 0.7,
-                alignment: "center" as any, // TODO: Fix branded type
-              },
-            },
-          };
-
-          result.push(docStyle);
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-function parseIdentifiedViewportStyles(
-  styles: BinStandardStyles
-): Array<Identifier & DucViewportStyle> {
-  const result: Array<Identifier & DucViewportStyle> = [];
-  const length = styles.viewportStylesLength();
-
-  for (let i = 0; i < length; i++) {
-    const identifiedStyle = styles.viewportStyles(i);
-    if (identifiedStyle) {
-      const idObj = identifiedStyle.id();
-      const styleObj = identifiedStyle.style();
-
-      if (idObj && styleObj) {
-        const id = parseIdentifierFromBinary(idObj);
-        // TODO: Implement parsing for viewport style properties
-        if (id) {
-          const viewportStyle: Identifier & DucViewportStyle = {
-            ...id,
-            // Base properties
-            roundness: createDefaultPrecisionValue(),
-            background: [] as any, // TODO: Fix type
-            stroke: [] as any, // TODO: Fix type
-            opacity: 1 as any, // TODO: Fix type
-            // Viewport-specific properties
-            scaleIndicatorVisible: false, // Default value
-          };
-
-          result.push(viewportStyle);
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-function parseIdentifiedHatchStyles(
-  styles: BinStandardStyles
-): Array<Identifier & DucHatchStyle> {
-  const result: Array<Identifier & DucHatchStyle> = [];
-  const length = styles.hatchStylesLength();
-
-  for (let i = 0; i < length; i++) {
-    const identifiedStyle = styles.hatchStyles(i);
-    if (identifiedStyle) {
-      const idObj = identifiedStyle.id();
-      const styleObj = identifiedStyle.style();
-
-      if (idObj && styleObj) {
-        const id = parseIdentifierFromBinary(idObj);
-        // TODO: Implement parsing for hatch style properties
-        if (id) {
-          const hatchStyle: Identifier & DucHatchStyle = {
-            ...id,
-            // Hatch-specific properties
-            hatchStyle: undefined as any, // TODO: Fix type
-            pattern: undefined as any, // TODO: Fix type
-          };
-
-          result.push(hatchStyle);
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-function parseIdentifiedXRayStyles(
-  styles: BinStandardStyles
-): Array<Identifier & DucXRayStyle> {
-  const result: Array<Identifier & DucXRayStyle> = [];
-  const length = styles.xrayStylesLength();
-
-  for (let i = 0; i < length; i++) {
-    const identifiedStyle = styles.xrayStyles(i);
-    if (identifiedStyle) {
-      const idObj = identifiedStyle.id();
-      const styleObj = identifiedStyle.style();
-
-      if (idObj && styleObj) {
-        const id = parseIdentifierFromBinary(idObj);
-        // TODO: Implement parsing for XRay style properties
-        if (id) {
-          const xrayStyle: Identifier & DucXRayStyle = {
-            ...id,
-            // Base properties
-            roundness: createDefaultPrecisionValue(),
-            background: [] as any, // TODO: Fix type
-            stroke: [] as any, // TODO: Fix type
-            opacity: 1 as any, // TODO: Fix type
-            // XRay-specific properties
-            color: "#000000", // Default value
-          };
-
-          result.push(xrayStyle);
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-/**
- * Parses an Identifier from FlatBuffers binary data.
- *
- * @param identifier - The FlatBuffers Identifier object to parse
- * @returns A complete Identifier object with the parsed data
- */
-export function parseIdentifierFromBinary(
-  identifier: BinIdentifier
-): Identifier {
-  return {
-    id: identifier.id() || "",
-    name: identifier.name() || "",
-    description: identifier.description() || undefined,
+          return arr;
+        })(),
+        stroke: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.strokeLength(); i++) {
+            const s = style.stroke(i);
+            if (s) arr.push(parseElementStrokeFromBinary(s, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        opacity: style.opacity() as Percentage,
+        // DucTextStyle
+        isLtr: style.isLtr(),
+        fontFamily: style.fontFamily(),
+        bigFontFamily: style.bigFontFamily(),
+        textAlign: style.textAlign(),
+        verticalAlign: style.verticalAlign(),
+        lineHeight: style.lineHeight(),
+        lineSpacing: style.lineSpacing()
+          ? {
+              value: getPrecisionValueFromRaw(style.lineSpacing()!.value() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+              type: style.lineSpacing()!.type(),
+            }
+          : undefined!,
+        obliqueAngle: style.obliqueAngle() as Radian,
+        fontSize: getPrecisionValueFromRaw(style.fontSize() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        paperTextHeight: style.paperTextHeight() !== null ? getPrecisionValueFromRaw(style.paperTextHeight() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE) : undefined,
+        widthFactor: style.widthFactor() as ScaleFactor,
+        isUpsideDown: style.isUpsideDown(),
+        isBackwards: style.isBackwards(),
+      })
+    ),
+    dimensionStyles: parseIdentifiedStyles(
+      styles.dimensionStylesLength(),
+      styles.dimensionStyles.bind(styles),
+      (id, style): Identifier & DucDimensionStyle => ({
+        ...id,
+        dimLine: {
+          stroke: parseElementStrokeFromBinary(style.dimLine()!.stroke(), NEUTRAL_SCOPE)!,
+          textGap: getPrecisionValueFromRaw(style.dimLine()!.textGap() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        },
+        extLine: {
+          stroke: parseElementStrokeFromBinary(style.extLine()!.stroke(), NEUTRAL_SCOPE)!,
+          overshoot: getPrecisionValueFromRaw(style.extLine()!.overshoot() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          offset: getPrecisionValueFromRaw(style.extLine()!.offset() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        },
+        textStyle: style.textStyle() ? {
+          // Only parse required fields for now
+          fontSize: getPrecisionValueFromRaw(style.textStyle()!.fontSize() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        } as any : undefined!,
+        symbols: style.symbols() ? {
+          headsOverride: (() => {
+            const arr: any[] = [];
+            for (let i = 0; i < style.symbols()!.headsOverrideLength(); i++) {
+              const h = style.symbols()!.headsOverride(i);
+              if (h) arr.push({
+                type: h.type(),
+                blockId: h.blockId(),
+                size: getPrecisionValueFromRaw(h.size() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+              });
+            }
+            return arr.length ? arr as any : undefined;
+          })(),
+          centerMark: {
+            type: style.symbols()!.centerMarkType(),
+            size: getPrecisionValueFromRaw(style.symbols()!.centerMarkSize() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          },
+        } : undefined!,
+        tolerance: style.tolerance() ? {
+          enabled: style.tolerance()!.enabled(),
+          displayMethod: style.tolerance()!.displayMethod(),
+          upperValue: style.tolerance()!.upperValue(),
+          lowerValue: style.tolerance()!.lowerValue(),
+          precision: style.tolerance()!.precision(),
+          textStyle: {}, // TODO: parse partial textStyle
+        } : undefined!,
+        fit: style.fit() ? {
+          rule: style.fit()!.rule(),
+          textPlacement: style.fit()!.textPlacement(),
+          forceTextInside: style.fit()!.forceTextInside(),
+        } : undefined!,
+      })
+    ),
+    leaderStyles: parseIdentifiedStyles(
+      styles.leaderStylesLength(),
+      styles.leaderStyles.bind(styles),
+      (id, style): Identifier & DucLeaderStyle => ({
+        ...id,
+        // _DucElementStylesBase
+        roundness: getPrecisionValueFromRaw(style.roundness() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        blending: style.blending() ?? undefined,
+        background: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.backgroundLength(); i++) {
+            const b = style.background(i);
+            if (b) arr.push(parseElementBackgroundFromBinary(b, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        stroke: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.strokeLength(); i++) {
+            const s = style.stroke(i);
+            if (s) arr.push(parseElementStrokeFromBinary(s, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        opacity: style.opacity() as Percentage,
+        // DucLeaderStyle
+        headsOverride: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.headsOverrideLength(); i++) {
+            const h = style.headsOverride(i);
+            if (h) arr.push({
+              type: h.type(),
+              blockId: h.blockId(),
+              size: getPrecisionValueFromRaw(h.size() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+            });
+          }
+          return arr.length ? arr as any : undefined;
+        })(),
+        dogleg: style.dogleg() !== null ? getPrecisionValueFromRaw(style.dogleg() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE) : undefined,
+        textStyle: style.textStyle() ? {
+          fontSize: getPrecisionValueFromRaw(style.textStyle()!.fontSize() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        } as any : undefined!,
+        textAttachment: style.textAttachment(),
+        blockAttachment: style.blockAttachment(),
+      })
+    ),
+    featureControlFrameStyles: parseIdentifiedStyles(
+      styles.featureControlFrameStylesLength(),
+      styles.featureControlFrameStyles.bind(styles),
+      (id, style): Identifier & DucFeatureControlFrameStyle => ({
+        ...id,
+        // _DucElementStylesBase
+        roundness: getPrecisionValueFromRaw(style.roundness() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        blending: style.blending() ?? undefined,
+        background: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.backgroundLength(); i++) {
+            const b = style.background(i);
+            if (b) arr.push(parseElementBackgroundFromBinary(b, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        stroke: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.strokeLength(); i++) {
+            const s = style.stroke(i);
+            if (s) arr.push(parseElementStrokeFromBinary(s, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        opacity: style.opacity() as Percentage,
+        // DucFeatureControlFrameStyle
+        textStyle: style.textStyle() ? {
+          fontSize: getPrecisionValueFromRaw(style.textStyle()!.fontSize() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        } as any : undefined!,
+        layout: style.layout() ? {
+          padding: getPrecisionValueFromRaw(style.layout()!.padding() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          segmentSpacing: getPrecisionValueFromRaw(style.layout()!.segmentSpacing() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          rowSpacing: getPrecisionValueFromRaw(style.layout()!.rowSpacing() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        } : undefined!,
+        symbols: style.symbols() ? {
+          scale: style.symbols()!.scale(),
+        } : undefined!,
+        datumStyle: style.datumStyle() ? {
+          bracketStyle: style.datumStyle()!.bracketStyle(),
+        } : undefined!,
+      })
+    ),
+    tableStyles: parseIdentifiedStyles(
+      styles.tableStylesLength(),
+      styles.tableStyles.bind(styles),
+      (id, style): Identifier & DucTableStyle => ({
+        ...id,
+        // _DucElementStylesBase
+        roundness: getPrecisionValueFromRaw(style.roundness() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        blending: style.blending() ?? undefined,
+        background: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.backgroundLength(); i++) {
+            const b = style.background(i);
+            if (b) arr.push(parseElementBackgroundFromBinary(b, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        stroke: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.strokeLength(); i++) {
+            const s = style.stroke(i);
+            if (s) arr.push(parseElementStrokeFromBinary(s, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        opacity: style.opacity() as Percentage,
+        // DucTableStyle
+        flowDirection: style.flowDirection(),
+        headerRowStyle: style.headerRowStyle() ? {} as any : undefined!,
+        dataRowStyle: style.dataRowStyle() ? {} as any : undefined!,
+        dataColumnStyle: style.dataColumnStyle() ? {} as any : undefined!,
+      })
+    ),
+    docStyles: parseIdentifiedStyles(
+      styles.docStylesLength(),
+      styles.docStyles.bind(styles),
+      (id, style): Identifier & DucDocStyle => ({
+        ...id,
+        // _DucElementStylesBase
+        roundness: getPrecisionValueFromRaw(style.roundness() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        blending: style.blending() ?? undefined,
+        background: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.backgroundLength(); i++) {
+            const b = style.background(i);
+            if (b) arr.push(parseElementBackgroundFromBinary(b, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        stroke: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.strokeLength(); i++) {
+            const s = style.stroke(i);
+            if (s) arr.push(parseElementStrokeFromBinary(s, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        opacity: style.opacity() as Percentage,
+        // DucTextStyle
+        isLtr: style.isLtr(),
+        fontFamily: style.fontFamily(),
+        bigFontFamily: style.bigFontFamily(),
+        textAlign: style.textAlign(),
+        verticalAlign: style.verticalAlign(),
+        lineHeight: style.lineHeight(),
+        lineSpacing: style.lineSpacing()
+          ? {
+              value: getPrecisionValueFromRaw(style.lineSpacing()!.value() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+              type: style.lineSpacing()!.type(),
+            }
+          : undefined!,
+        obliqueAngle: style.obliqueAngle() as Radian,
+        fontSize: getPrecisionValueFromRaw(style.fontSize() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        paperTextHeight: style.paperTextHeight() !== null ? getPrecisionValueFromRaw(style.paperTextHeight() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE) : undefined,
+        widthFactor: style.widthFactor() as ScaleFactor,
+        isUpsideDown: style.isUpsideDown(),
+        isBackwards: style.isBackwards(),
+        // DucDocStyle
+        paragraph: style.paragraph() ? {
+          firstLineIndent: getPrecisionValueFromRaw(style.paragraph()!.firstLineIndent() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          hangingIndent: getPrecisionValueFromRaw(style.paragraph()!.hangingIndent() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          leftIndent: getPrecisionValueFromRaw(style.paragraph()!.leftIndent() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          rightIndent: getPrecisionValueFromRaw(style.paragraph()!.rightIndent() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          spaceBefore: getPrecisionValueFromRaw(style.paragraph()!.spaceBefore() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          spaceAfter: getPrecisionValueFromRaw(style.paragraph()!.spaceAfter() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          tabStops: (() => {
+            const arr: PrecisionValue[] = [];
+            for (let i = 0; i < style.paragraph()!.tabStopsLength(); i++) {
+              const v = style.paragraph()!.tabStops(i);
+              if (v !== null && v !== undefined) arr.push(getPrecisionValueFromRaw(v as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE));
+            }
+            return arr;
+          })(),
+        } : undefined!,
+        stackFormat: style.stackFormat() ? {
+          autoStack: style.stackFormat()!.autoStack(),
+          stackChars: (() => {
+            const arr: string[] = [];
+            for (let i = 0; i < style.stackFormat()!.stackCharsLength(); i++) {
+              const v = style.stackFormat()!.stackChars(i);
+              if (v) arr.push(v);
+            }
+            return arr;
+          })(),
+          properties: style.stackFormat()!.properties() ? {
+            upperScale: style.stackFormat()!.properties()!.upperScale(),
+            lowerScale: style.stackFormat()!.properties()!.lowerScale(),
+            alignment: style.stackFormat()!.properties()!.alignment(),
+          } : undefined!,
+        } : undefined!,
+      })
+    ),
+    viewportStyles: parseIdentifiedStyles(
+      styles.viewportStylesLength(),
+      styles.viewportStyles.bind(styles),
+      (id, style): Identifier & DucViewportStyle => ({
+        ...id,
+        roundness: getPrecisionValueFromRaw(style.roundness() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        blending: style.blending() ?? undefined,
+        background: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.backgroundLength(); i++) {
+            const b = style.background(i);
+            if (b) arr.push(parseElementBackgroundFromBinary(b, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        stroke: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.strokeLength(); i++) {
+            const s = style.stroke(i);
+            if (s) arr.push(parseElementStrokeFromBinary(s, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        opacity: style.opacity() as Percentage,
+        scaleIndicatorVisible: style.scaleIndicatorVisible(),
+      })
+    ),
+    hatchStyles: parseIdentifiedStyles(
+      styles.hatchStylesLength(),
+      styles.hatchStyles.bind(styles),
+      (id, style): Identifier & DucHatchStyle => ({
+        ...id,
+        hatchStyle: style.hatchStyle(),
+        pattern: {
+          name: style.patternName(),
+          scale: style.patternScale(),
+          angle: style.patternAngle() as Radian,
+          origin: {
+            x: getPrecisionValueFromRaw(style.patternOrigin()!.x() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+            y: getPrecisionValueFromRaw(style.patternOrigin()!.y() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+          },
+          double: style.patternDouble(),
+        },
+        customPattern: undefined, // TODO: parse customPattern if needed
+      })
+    ),
+    xrayStyles: parseIdentifiedStyles(
+      styles.xrayStylesLength(),
+      styles.xrayStyles.bind(styles),
+      (id, style): Identifier & DucXRayStyle => ({
+        ...id,
+        roundness: getPrecisionValueFromRaw(style.roundness() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+        blending: style.blending() ?? undefined,
+        background: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.backgroundLength(); i++) {
+            const b = style.background(i);
+            if (b) arr.push(parseElementBackgroundFromBinary(b, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        stroke: (() => {
+          const arr: any[] = [];
+          for (let i = 0; i < style.strokeLength(); i++) {
+            const s = style.stroke(i);
+            if (s) arr.push(parseElementStrokeFromBinary(s, NEUTRAL_SCOPE)!);
+          }
+          return arr;
+        })(),
+        opacity: style.opacity() as Percentage,
+        color: style.color(),
+      })
+    ),
   };
 }
 
-/**
- * Parses StandardOverrides from FlatBuffers binary data.
- *
- * @param overrides - The FlatBuffers StandardOverrides object to parse
- * @returns A partial StandardOverrides object with the parsed data
- */
-export function parseStandardOverridesFromBinary(
-  overrides: BinStandardOverrides
+// Helper: StandardOverrides
+function parseStandardOverridesFromBinary(
+  overrides: BinStandardOverrides | null
 ): StandardOverrides | null {
   if (!overrides) return null;
-
-  // Parse activeGridSettingsId array
   const activeGridSettingsId: string[] = [];
-  const activeGridSettingsIdLength = overrides.activeGridSettingsIdLength();
-  for (let i = 0; i < activeGridSettingsIdLength; i++) {
+  for (let i = 0; i < overrides.activeGridSettingsIdLength(); i++) {
     const id = overrides.activeGridSettingsId(i);
-    if (id !== null) {
-      activeGridSettingsId.push(id);
-    }
+    if (id !== null) activeGridSettingsId.push(id);
   }
-
   const unitPrecision = overrides.unitPrecision();
-
-  // For now, we'll use a neutral scope for parsing. In a real implementation,
-  // this would need to be determined from context.
-  const neutralScope: SupportedMeasures = "m";
-
-  const elementsStrokeWidthOverrideValue =
-    overrides.elementsStrokeWidthOverride();
-
   return {
-    mainScope: (overrides.mainScope() as SupportedMeasures) || undefined,
-    elementsStrokeWidthOverride: elementsStrokeWidthOverrideValue
-      ? getPrecisionValueFromRaw(
-          elementsStrokeWidthOverrideValue as RawValue,
-          neutralScope,
-          neutralScope
-        )
+    mainScope: (overrides.mainScope() as SupportedMeasures) ?? undefined,
+    elementsStrokeWidthOverride: overrides.elementsStrokeWidthOverride() !== null
+      ? getPrecisionValueFromRaw(overrides.elementsStrokeWidthOverride() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE)
       : undefined,
-    commonStyleId: overrides.commonStyleId() || undefined,
-    stackLikeStyleId: overrides.stackLikeStyleId() || undefined,
-    textStyleId: overrides.textStyleId() || undefined,
-    dimensionStyleId: overrides.dimensionStyleId() || undefined,
-    leaderStyleId: overrides.leaderStyleId() || undefined,
-    featureControlFrameStyleId:
-      overrides.featureControlFrameStyleId() || undefined,
-    tableStyleId: overrides.tableStyleId() || undefined,
-    docStyleId: overrides.docStyleId() || undefined,
-    viewportStyleId: overrides.viewportStyleId() || undefined,
-    plotStyleId: overrides.plotStyleId() || undefined,
-    hatchStyleId: overrides.hatchStyleId() || undefined,
-    activeGridSettingsId:
-      activeGridSettingsId.length > 0 ? activeGridSettingsId : undefined,
-    activeSnapSettingsId: overrides.activeSnapSettingsId() || undefined,
-    dashLineOverride: overrides.dashLineOverride() || undefined,
-    unitPrecision: unitPrecision
-      ? parseUnitPrecisionFromBinary(unitPrecision)
-      : undefined,
+    commonStyleId: overrides.commonStyleId() ?? undefined,
+    stackLikeStyleId: overrides.stackLikeStyleId() ?? undefined,
+    textStyleId: overrides.textStyleId() ?? undefined,
+    dimensionStyleId: overrides.dimensionStyleId() ?? undefined,
+    leaderStyleId: overrides.leaderStyleId() ?? undefined,
+    featureControlFrameStyleId: overrides.featureControlFrameStyleId() ?? undefined,
+    tableStyleId: overrides.tableStyleId() ?? undefined,
+    docStyleId: overrides.docStyleId() ?? undefined,
+    viewportStyleId: overrides.viewportStyleId() ?? undefined,
+    plotStyleId: overrides.plotStyleId() ?? undefined,
+    hatchStyleId: overrides.hatchStyleId() ?? undefined,
+    activeGridSettingsId: activeGridSettingsId.length > 0 ? activeGridSettingsId : undefined,
+    activeSnapSettingsId: overrides.activeSnapSettingsId() ?? undefined,
+    dashLineOverride: overrides.dashLineOverride() ?? undefined,
+    unitPrecision: unitPrecision ? parseUnitPrecisionFromBinary(unitPrecision) : undefined,
   };
 }
 
-/**
- * Parses a Standard from FlatBuffers binary data.
- *
- * @param standard - The FlatBuffers Standard object to parse
- * @returns A partial Standard object with the parsed data
- */
+// Main function
 export function parseStandardFromBinary(standard: BinStandard): Standard {
   const identifier = standard.identifier()!;
   const version = standard.version()!;
@@ -650,8 +794,8 @@ export function parseStandardFromBinary(standard: BinStandard): Standard {
     readonly,
     overrides: overrides ? parseStandardOverridesFromBinary(overrides) : null,
     styles: styles ? parseStandardStylesFromBinary(styles) : null,
-    viewSettings: null, // TODO: Implement parseStandardViewSettingsFromBinary
-    units: null, // TODO: Implement parseStandardUnitsFromBinary
-    validation: null, // TODO: Implement parseStandardValidationFromBinary
+    viewSettings: viewSettings ? parseStandardViewSettingsFromBinary(viewSettings) : null,
+    units: units ? parseStandardUnitsFromBinary(units) : null,
+    validation: validation ? parseStandardValidationFromBinary(validation) : null,
   };
 }

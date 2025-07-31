@@ -32,7 +32,7 @@ export function parseLocalStateFromBinary(localState: BinDucLocalState | null, v
     activeSnapSettings: localState.activeSnapSettings() ? localState.activeSnapSettings() : null,
     isBindingEnabled: localState.isBindingEnabled() ? localState.isBindingEnabled() : true,
     currentItemStroke: parseElementStrokeFromBinary(localState.currentItemStroke(), parsedScope)!,
-    currentItemBackground: parseElementBackgroundFromBinary(localState.currentItemBackground())!,
+    currentItemBackground: parseElementBackgroundFromBinary(localState.currentItemBackground(), parsedScope)!,
     currentItemOpacity: localState.currentItemOpacity() as Percentage,
     currentItemFontFamily: localState.currentItemFontFamily() as any, // FIXME: in the future when we handle fonts better, come back and fix this
     currentItemFontSize: getPrecisionValueFromRaw(localState.currentItemFontSize() as RawValue, parsedScope, parsedScope),

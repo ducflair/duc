@@ -79,10 +79,12 @@ export function parseStrokeStyleFromBinary(
  * Parses an ElementBackground from FlatBuffers binary data.
  *
  * @param background - The FlatBuffers ElementBackground object to parse
+ * @param scope - The scope for precision value conversions
  * @returns A partial ElementBackground object with the parsed data
  */
 export function parseElementBackgroundFromBinary(
-  background: BinElementBackground | null
+  background: BinElementBackground | null,
+  scope: Scope
 ): ElementBackground | null {
   if (!background) {
     return null;
@@ -95,7 +97,7 @@ export function parseElementBackgroundFromBinary(
     return null;
   }
 
-  const parsedContent = parseElementContentBaseFromBinary(content);
+  const parsedContent = parseElementContentBaseFromBinary(content, scope);
   if (parsedContent === null) {
     return null;
   }
@@ -157,7 +159,7 @@ export function parseElementStrokeFromBinary(
 
   const content = stroke.content();
   const width = stroke.width();
-  // Convert width number to PrecisionValue or use default
+  // Convert width number to PrecisionValue
   const precisionWidth = getPrecisionValueFromRaw(width as RawValue, elementScope, elementScope);
   const style = stroke.style();
   const placement = stroke.placement();
@@ -165,7 +167,7 @@ export function parseElementStrokeFromBinary(
 
   // Check if we have all required properties for a complete ElementStroke
   const parsedContent =
-    content !== null ? parseElementContentBaseFromBinary(content) : null;
+    content !== null ? parseElementContentBaseFromBinary(content, elementScope) : null;
   if (parsedContent === null) {
     return null;
   }
@@ -190,7 +192,7 @@ export function parseElementStrokeFromBinary(
     style: parsedStyle,
     placement: placement!,
     ...(strokeSides !== null && {
-      strokeSides: parseStrokeSidesFromBinary(strokeSides) || undefined,
+      strokeSides: parseStrokeSidesFromBinary(strokeSides) ?? undefined,
     }),
   };
 }
@@ -253,7 +255,7 @@ export function parseDucHatchStyleFromBinary(
     scale: patternScale,
     angle: patternAngle as Radian,
     origin: parsePoint(patternOrigin, scope)!,
-    double: patternDouble ?? false,
+    double: patternDouble ?? null!,
   };
 
   // For now, only return the hatchStyle and pattern if we have all required properties
@@ -316,7 +318,7 @@ export function parseElementStyleFromBinary(
   for (let i = 0; i < backgroundLength; i++) {
     const background = baseStyle.background(i);
     if (background) {
-      const parsedBackground = parseElementBackgroundFromBinary(background);
+      const parsedBackground = parseElementBackgroundFromBinary(background, scope);
       parsedBackground && backgrounds.push(parsedBackground);
     }
   }
@@ -345,10 +347,12 @@ export function parseElementStyleFromBinary(
  * Parses an ElementContentBase from FlatBuffers binary data.
  *
  * @param contentBase - The FlatBuffers ElementContentBase object to parse
+ * @param scope - The scope for precision value conversions
  * @returns A partial ElementContentBase object with the parsed data
  */
 export function parseElementContentBaseFromBinary(
-  contentBase: BinElementContentBase | null
+  contentBase: BinElementContentBase | null,
+  scope: Scope
 ): ElementContentBase | null {
   if (!contentBase) {
     return null;
@@ -373,13 +377,13 @@ export function parseElementContentBaseFromBinary(
     visible,
     opacity: opacity as Percentage,
     ...(tiling !== null && {
-      tiling: parseTilingPropertiesFromBinary(tiling) || undefined,
+      tiling: parseTilingPropertiesFromBinary(tiling) ?? undefined,
     }),
     ...(hatch !== null && {
-      hatch: parseDucHatchStyleFromBinary(hatch) || undefined,
+      hatch: parseDucHatchStyleFromBinary(hatch, scope) ?? undefined,
     }),
     ...(imageFilter !== null && {
-      imageFilter: parseDucImageFilterFromBinary(imageFilter) || undefined,
+      imageFilter: parseDucImageFilterFromBinary(imageFilter) ?? undefined,
     }),
   };
 }

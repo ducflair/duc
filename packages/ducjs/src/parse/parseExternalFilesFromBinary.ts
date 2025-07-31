@@ -21,7 +21,7 @@ export const parseBinaryFilesFromBinary = (externalFile: BinDucExternalFileEntry
     const dataArray = fileData.dataArray() || new Uint8Array();
     files[key] = {
       mimeType,
-      id: fileData.id() || '',
+      id: fileData.id() ?? null!,
       dataURL: uint8ArrayToDataURL(dataArray, mimeType), // Convert Uint8Array back to dataURL
       created: Number(fileData.created()),
       lastRetrieved: Number(fileData.lastRetrieved()),

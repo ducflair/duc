@@ -12,6 +12,7 @@ import {
   DucLeaderElement as BinDucLeaderElement, DucLine as BinDucLine, DucLinearElement as BinDucLinearElement, DucLineReference as BinDucLineReference, DucMermaidElement as BinDucMermaidElement,
   DucParametricElement as BinDucParametricElement, DucPath as BinDucPath, DucPdfElement as BinDucPdfElement,
   DucPlotElement as BinDucPlotElement,
+  DucPoint as BinDucPoint,
   DucPolygonElement as BinDucPolygonElement,
   DucRectangleElement as BinDucRectangleElement, _DucStackBase as BinDucStackBase, DucTableCellStyle as BinDucTableCellStyle, DucTableElement as BinDucTableElement, DucTextElement as BinDucTextElement,
   DucViewportElement as BinDucViewportElement,
@@ -25,7 +26,18 @@ import {
   STROKE_JOIN as StrokeJoin,
   STROKE_PLACEMENT as StrokePlacement,
   STROKE_PREFERENCE as StrokePreference,
+  FCFSegmentRow as BinFCFSegmentRow,
+  FCFFrameModifiers as BinFCFFrameModifiers,
+  FCFDatumDefinition as BinFCFDatumDefinition,
+  FCFBetweenModifier as BinFCFBetweenModifier,
+  FCFProjectedZoneModifier as BinFCFProjectedZoneModifier,
+  DucPointBinding as BinDucPointBinding,
+  _UnitSystemBase as BinUnitSystemBase,
+  LinearUnitSystem as BinLinearUnitSystem,
+  AngularUnitSystem as BinAngularUnitSystem,
   DucTextDynamicSource as BinDucTextDynamicSource,
+  DucTextDynamicPart as BinDucTextDynamicPart,
+  DimensionDefinitionPoints as BinDimensionDefinitionPoints,
   STROKE_SIDE_PREFERENCE as StrokeSidePreference, TABLE_CELL_ALIGNMENT,
   TABLE_FLOW_DIRECTION, TEXT_FIELD_SOURCE_TYPE, TEXT_ALIGN as TextAlign,
   VERTICAL_ALIGN as VerticalAlign,
@@ -39,7 +51,11 @@ import {
   DucTextDynamicElementSource,
   DucTextDynamicDictionarySource
 } from "ducjs/duc";
-import { _DucElementStylesBase, _DucStackBase } from "ducjs/types/elements";
+import { _DucElementStylesBase, _DucStackBase, LineSpacingType, DucPointBinding } from "ducjs/types/elements";
+
+// Use existing types from DucFeatureControlFrameElement
+type FCFFrameModifiers = NonNullable<DucFeatureControlFrameElement["frameModifiers"]>;
+type FCFDatumDefinition = NonNullable<DucFeatureControlFrameElement["datumDefinition"]>;
 
 import { Element as BinElement, unionToElement as unionToBinElement } from 'ducjs/duc/element';
 import { getPrecisionValueFromRaw, NEUTRAL_SCOPE, SupportedMeasures } from 'ducjs/technical/scopes';
@@ -47,15 +63,18 @@ import { NormalizedZoomValue, PrecisionValue, RawValue, Scope, Zoom } from 'ducj
 import {
   _DucElementBase,
   BoundElement,
+  DimensionDefinitionPoints,
   DucArrowElement,
   DucBlockInstanceElement,
   DucDimensionElement,
   DucDocElement,
   DucEllipseElement,
   DucEmbeddableElement,
+  DucElementTypes,
   DucFeatureControlFrameElement,
   DucFrameElement,
   DucFreeDrawElement,
+  DucHead,
   DucImageElement,
   DucLeaderElement,
   DucLine,
@@ -67,7 +86,6 @@ import {
   DucPdfElement,
   DucPlotElement,
   DucPoint,
-  DucPointBinding,
   DucPolygonElement,
   DucRectangleElement,
   DucTableCell,
@@ -77,35 +95,53 @@ import {
   DucTextDynamicPart,
   DucTextDynamicSource,
   DucTextElement,
+  DucTextStyle,
   DucViewportElement,
   DucXRayElement,
   ElementBackground,
   ElementContentBase,
   ElementStroke,
+  ExternalFileId,
   FillStyle,
   FontFamilyValues,
   FractionalIndex,
   ImageCrop,
+  LeaderContent,
   StrokeSides,
   TextFieldSourceProperty,
   TilingProperties,
   ViewportScale
 } from 'ducjs/types/elements';
-import { parseElementBackgroundFromBinary, parseElementStrokeFromBinary, parseElementStyleFromBinary } from './parseElementStyleFromBinary';
+import { FeatureControlFrameSegment, DatumReference, ToleranceClause, GDTSymbol, FeatureModifier } from 'ducjs/types/elements';
+import { FEATURE_MODIFIER } from 'ducjs/duc';
+import { parseElementBackgroundFromBinary, parseElementStrokeFromBinary, parseElementStyleFromBinary, parseDucImageFilterFromBinary } from './parseElementStyleFromBinary';
 
 import { StandardUnits } from 'ducjs/technical/standards';
 import { Percentage, Radian, ScaleFactor } from 'ducjs/types/geometryTypes';
-import { DEFAULT_ELEMENT_PROPS, FREEDRAW_EASINGS } from 'ducjs/utils/constants';
+import { DEFAULT_ELEMENT_PROPS, FREEDRAW_EASINGS, FONT_FAMILY, DEFAULT_FONT_FAMILY } from 'ducjs/utils/constants';
 
 // Helper function to get the base element for different element types
-function getElementBase(e: any) {
-  if (e.base) return e.base();
-  if (e.linearBase) return e.linearBase();
+function getElementBase(e: BinDucRectangleElement | BinDucPolygonElement | BinDucEllipseElement | BinDucImageElement | BinDucTextElement | BinDucLinearElement | BinDucArrowElement | BinDucFreeDrawElement | BinDucBlockInstanceElement | BinDucFrameElement | BinDucPlotElement | BinDucViewportElement | BinDucXRayElement | BinDucLeaderElement | BinDucDimensionElement | BinDucFeatureControlFrameElement | BinDucDocElement | BinDucParametricElement | BinDucEmbeddableElement | BinDucPdfElement | BinDucMermaidElement | BinDucTableElement | null): BinElementBase | null {
+  if (!e) return null;
+  
+  // Try different methods to get the base element
+  if ('base' in e && typeof e.base === 'function') {
+    return e.base();
+  }
+  if ('linearBase' in e && typeof e.linearBase === 'function') {
+    const linearBase = e.linearBase();
+    return linearBase?.base?.() ?? null;
+  }
+  if ('stackElementBase' in e && typeof e.stackElementBase === 'function') {
+    const stackBase = e.stackElementBase();
+    return stackBase?.base?.() ?? null;
+  }
+  
   return null;
 }
 
 // Helper function to get the scope from different element types
-function getElementScope(e: any) {
+function getElementScope(e: BinDucRectangleElement | BinDucPolygonElement | BinDucEllipseElement | BinDucImageElement | BinDucTextElement | BinDucLinearElement | BinDucArrowElement | BinDucFreeDrawElement | BinDucBlockInstanceElement | BinDucFrameElement | BinDucPlotElement | BinDucViewportElement | BinDucXRayElement | BinDucLeaderElement | BinDucDimensionElement | BinDucFeatureControlFrameElement | BinDucDocElement | BinDucParametricElement | BinDucEmbeddableElement | BinDucPdfElement | BinDucMermaidElement | BinDucTableElement | null) {
   const base = getElementBase(e);
   return base?.scope?.();
 }
@@ -184,33 +220,43 @@ function parseDynamicTextSource(source: BinDucTextDynamicSource | null): DucText
   return undefined;
 }
 
-// Helper function to parse unit systems
-function parseUnitSystem(unitSystem: any): any {
-  if (!unitSystem) return undefined;
+// Helper function to parse angular unit system
+function parseAngularUnitSystem(angularUnitSystem: BinAngularUnitSystem | null): StandardUnits["primaryUnits"]["angular"] | null {
+  if (!angularUnitSystem) return null;
+  
+  const base = angularUnitSystem.base();
+  if (!base) return null;
   
   return {
-    format: unitSystem.format() ?? 0,
-    system: unitSystem.system() ?? 0,
-    precision: unitSystem.precision() ?? 0,
-    suppressLeadingZeros: unitSystem.suppressLeadingZeros() ?? false,
-    suppressTrailingZeros: unitSystem.suppressTrailingZeros() ?? false
+    format: angularUnitSystem.format() ?? null!,
+    system: base.system() ?? null!,
+    precision: base.precision() ?? null!,
+    suppressLeadingZeros: base.suppressLeadingZeros() ?? null!,
+    suppressTrailingZeros: base.suppressTrailingZeros() ?? null!
   };
 }
 
 // Helper function to parse linear unit system
-function parseLinearUnitSystem(linearUnitSystem: any): any {
-  if (!linearUnitSystem) return undefined;
+function parseLinearUnitSystem(linearUnitSystem: BinLinearUnitSystem | null): StandardUnits["primaryUnits"]["linear"] | null {
+  if (!linearUnitSystem) return null;
+  
+  const base = linearUnitSystem.base();
+  if (!base) return null;
   
   return {
-    ...parseUnitSystem(linearUnitSystem),
-    decimalSeparator: linearUnitSystem.decimalSeparator() ?? 0,
-    suppressZeroFeet: linearUnitSystem.suppressZeroFeet() ?? false,
-    suppressZeroInches: linearUnitSystem.suppressZeroInches() ?? false
+    format: linearUnitSystem.format() ?? null!,
+    system: base.system() ?? null!,
+    precision: base.precision() ?? null!,
+    suppressLeadingZeros: base.suppressLeadingZeros() ?? null!,
+    suppressTrailingZeros: base.suppressTrailingZeros() ?? null!,
+    decimalSeparator: linearUnitSystem.decimalSeparator() ?? null!,
+    suppressZeroFeet: linearUnitSystem.suppressZeroFeet() ?? null!,
+    suppressZeroInches: linearUnitSystem.suppressZeroInches() ?? null!
   };
 }
 
 // Helper function to parse dynamic text parts
-function parseDynamicTextPart(dynamicPart: any): DucTextDynamicPart | undefined {
+function parseDynamicTextPart(dynamicPart: BinDucTextDynamicPart): DucTextDynamicPart | undefined {
   if (!dynamicPart) {
     return undefined;
   }
@@ -224,47 +270,59 @@ function parseDynamicTextPart(dynamicPart: any): DucTextDynamicPart | undefined 
     const linearData = formattingData.linear();
     const angularData = formattingData.angular();
     
-    formatting = {
-      linear: linearData ? parseLinearUnitSystem(linearData) : undefined,
-      angular: angularData ? parseUnitSystem(angularData) : undefined
-    };
+    const linear = linearData ? parseLinearUnitSystem(linearData) : null;
+    const angular = angularData ? parseAngularUnitSystem(angularData) : null;
+    
+    if (linear && angular) {
+      formatting = {
+        linear,
+        angular
+      };
+    }
   }
   
   return {
-    tag: dynamicPart.tag() || "",
+    tag: dynamicPart.tag() ?? null!,
     source: source!,
     formatting: formatting,
-    cachedValue: dynamicPart.cachedValue() || ""
+    cachedValue: dynamicPart.cachedValue() ?? null!
   };
 }
 
 // Helper function to get groupIds from different element types
-function getElementGroupIds(e: any): string[] {
+function getElementGroupIds(e: BinDucRectangleElement | BinDucPolygonElement | BinDucEllipseElement | BinDucImageElement | BinDucTextElement | BinDucLinearElement | BinDucArrowElement | BinDucFreeDrawElement | BinDucBlockInstanceElement | BinDucFrameElement | BinDucPlotElement | BinDucViewportElement | BinDucXRayElement | BinDucLeaderElement | BinDucDimensionElement | BinDucFeatureControlFrameElement | BinDucDocElement | BinDucParametricElement | BinDucEmbeddableElement | BinDucPdfElement | BinDucMermaidElement | BinDucTableElement | null): string[] {
   const base = getElementBase(e);
   if (!base) return [];
   
   const groupIds: string[] = [];
-  const groupIdsLength = base.groupIdsLength?.() || 0;
+  const groupIdsLength = base.groupIdsLength?.() ?? null!;
   for (let i = 0; i < groupIdsLength; i++) {
-    groupIds.push(base.groupIds?.(i) || '');
+    const groupId = base.groupIds?.(i);
+    if (groupId !== undefined && groupId !== null) {
+      groupIds.push(groupId);
+    }
   }
   return groupIds;
 }
 
 // Helper function to get boundElements from different element types
-function getElementBoundElements(e: any): any[] {
+function getElementBoundElements(e: BinDucRectangleElement | BinDucPolygonElement | BinDucEllipseElement | BinDucImageElement | BinDucTextElement | BinDucLinearElement | BinDucArrowElement | BinDucFreeDrawElement | BinDucBlockInstanceElement | BinDucFrameElement | BinDucPlotElement | BinDucViewportElement | BinDucXRayElement | BinDucLeaderElement | BinDucDimensionElement | BinDucFeatureControlFrameElement | BinDucDocElement | BinDucParametricElement | BinDucEmbeddableElement | BinDucPdfElement | BinDucMermaidElement | BinDucTableElement | null): BoundElement[] {
   const base = getElementBase(e);
   if (!base) return [];
   
-  const boundElements: any[] = [];
-  const boundElementsLength = base.boundElementsLength?.() || 0;
+  const boundElements: BoundElement[] = [];
+  const boundElementsLength = base.boundElementsLength?.() ?? null!;
   for (let i = 0; i < boundElementsLength; i++) {
     const boundElement = base.boundElements?.(i);
-    if (boundElement) {
-      boundElements.push({
-        id: boundElement.id?.(),
-        type: boundElement.type?.(),
-      });
+    if (boundElement && boundElement.id?.() && boundElement.type?.()) {
+      const id = boundElement.id();
+      const type = boundElement.type();
+      if (id && type) {
+        boundElements.push({
+          id: id,
+          type: type as DucElementTypes,
+        });
+      }
     }
   }
   return boundElements;
@@ -278,7 +336,7 @@ function parseElementStyles(styles: BinElementStylesBase | null, scope: Scope): 
 
 
 // Your main parsing function, now corrected.
-function parseLeaderContent(binLeaderContent: BinLeaderContent, scope: Scope): any {
+function parseLeaderContent(binLeaderContent: BinLeaderContent, scope: Scope): LeaderContent | undefined {
   if (!binLeaderContent) return undefined;
   
   const contentType = binLeaderContent.leaderContentType();
@@ -344,99 +402,122 @@ function parseStringValueEntryVector(
 
     if (valueEntry) {
       // 6. Get the key and value from the populated 'valueEntry' object and add them to our result.
-      //    We provide default empty strings for safety in case key/value are null.
-      result[valueEntry.key() || ''] = valueEntry.value() || '';
+      const key = valueEntry.key();
+      const value = valueEntry.value();
+      if (key !== undefined && key !== null && value !== undefined && value !== null) {
+        result[key] = value;
+      }
     }
   }
 
   return result;
+}
+
+// Helper function to parse geometric point from binary to simple point
+function parseGeometricPoint(binaryPoint: import('ducjs/duc').GeometricPoint | null): { x: number; y: number } | null {
+  if (!binaryPoint) return null;
+  return {
+    x: binaryPoint.x(),
+    y: binaryPoint.y()
+  };
 }
 
 // Helper function to parse dimension definition points
-function parseDimensionDefinitionPoints(definitionPoints: any, scope: Scope): any {
-  if (!definitionPoints) return {};
+function parseDimensionDefinitionPoints(definitionPoints: BinDimensionDefinitionPoints | null, scope: Scope): DimensionDefinitionPoints {
+  if (!definitionPoints) return {} as DimensionDefinitionPoints;
   
-  const result: any = {};
-  
-  // Parse origin point
-  if (definitionPoints.origin?.()) {
-    result.origin = parsePoint(definitionPoints.origin(), scope);
-  }
+  const result: Partial<DimensionDefinitionPoints> = {};
   
   // Parse origin1 point
-  if (definitionPoints.origin1?.()) {
-    result.origin1 = parsePoint(definitionPoints.origin1(), scope);
+  const origin1 = definitionPoints.origin1();
+  if (origin1) {
+    const parsed = parseGeometricPoint(origin1);
+    if (parsed) result.origin1 = parsed;
   }
   
   // Parse origin2 point
-  if (definitionPoints.origin2?.()) {
-    result.origin2 = parsePoint(definitionPoints.origin2(), scope);
+  const origin2 = definitionPoints.origin2();
+  if (origin2) {
+    const parsed = parseGeometricPoint(origin2);
+    if (parsed) result.origin2 = parsed;
   }
   
   // Parse location point
-  if (definitionPoints.location?.()) {
-    result.location = parsePoint(definitionPoints.location(), scope);
+  const location = definitionPoints.location();
+  if (location) {
+    const parsed = parseGeometricPoint(location);
+    if (parsed) result.location = parsed;
   }
   
   // Parse center point
-  if (definitionPoints.center?.()) {
-    result.center = parsePoint(definitionPoints.center(), scope);
+  const center = definitionPoints.center();
+  if (center) {
+    const parsed = parseGeometricPoint(center);
+    if (parsed) result.center = parsed;
   }
   
   // Parse jog point
-  if (definitionPoints.jog?.()) {
-    result.jog = parsePoint(definitionPoints.jog(), scope);
+  const jog = definitionPoints.jog();
+  if (jog) {
+    const parsed = parseGeometricPoint(jog);
+    if (parsed) result.jog = parsed;
   }
   
-  return result;
-}
-
-// Helper function to parse associative references
-function parseAssociativeReferences(associativeReferences: any, scope: Scope): any {
-  if (!associativeReferences) return undefined;
-  
-  const result: Record<string, any> = {};
-  const keysLength = associativeReferences.keysLength?.() || 0;
-  
-  for (let i = 0; i < keysLength; i++) {
-    const key = associativeReferences.keys?.(i);
-    const reference = associativeReferences.values?.(i);
-    if (key && reference) {
-      result[key] = {
-        elementId: reference.elementId?.() || "",
-        subIndex: reference.subIndex?.() ?? null,
-      };
-    }
-  }
-  
-  return result;
+  return result as DimensionDefinitionPoints;
 }
 
 // Helper function to parse feature control frame rows
-function parseFeatureControlFrameRows(rows: any, scope: Scope): any {
-  if (!rows) return [];
+function parseFeatureControlFrameRows(fcfElement: BinDucFeatureControlFrameElement, scope: Scope): readonly (readonly FeatureControlFrameSegment[])[] {
+  if (!fcfElement) return [];
   
-  const result: any[] = [];
-  const rowsLength = rows.rowsLength?.() || 0;
+  const result: FeatureControlFrameSegment[][] = [];
+  const rowsLength = fcfElement.rowsLength();
   
   for (let i = 0; i < rowsLength; i++) {
-    const row = rows.rows?.(i);
+    const row = fcfElement.rows(i);
     if (row) {
-      const segments: any[] = [];
-      const segmentsLength = row.segmentsLength?.() || 0;
+      const segments: FeatureControlFrameSegment[] = [];
+      const segmentsLength = row.segmentsLength();
       
       for (let j = 0; j < segmentsLength; j++) {
-        const segment = row.segments?.(j);
+        const segment = row.segments(j);
         if (segment) {
-          segments.push({
-            symbol: segment.symbol?.(),
-            tolerance: segment.tolerance?.(),
-            materialCondition: segment.materialCondition?.(),
-            primaryDatum: segment.primaryDatum?.(),
-            secondaryDatum: segment.secondaryDatum?.(),
-            tertiaryDatum: segment.tertiaryDatum?.(),
-            datumModifiers: segment.datumModifiers?.() ? parseDatumModifiers(segment.datumModifiers()) : undefined,
-          });
+          const datums: DatumReference[] = [];
+          for (let k = 0; k < segment.datumsLength(); k++) {
+            const datum = segment.datums(k);
+            if (datum) {
+              datums.push({
+                letters: datum.letters() ?? '',
+                modifier: datum.modifier() ?? undefined,
+              });
+            }
+          }
+          
+          // Parse tolerance clause
+          const toleranceClause: ToleranceClause | undefined = segment.tolerance() ? {
+            value: segment.tolerance()!.value() ?? '',
+            zoneType: segment.tolerance()!.zoneType() ?? undefined,
+            featureModifiers: (() => {
+              const modifiers: typeof FEATURE_MODIFIER[keyof typeof FEATURE_MODIFIER][] = [];
+              const tolerance = segment.tolerance()!;
+              for (let m = 0; m < tolerance.featureModifiersLength(); m++) {
+                const modifier = tolerance.featureModifiers(m);
+                if (modifier !== null) {
+                  modifiers.push(modifier);
+                }
+              }
+              return modifiers;
+            })(),
+            materialCondition: segment.tolerance()!.materialCondition() ?? undefined,
+          } : undefined;
+          
+          if (toleranceClause) {
+            segments.push({
+              symbol: segment.symbol() as GDTSymbol,
+              tolerance: toleranceClause,
+              datums: [datums[0], datums[1], datums[2]] as const,
+            });
+          }
         }
       }
       
@@ -447,80 +528,53 @@ function parseFeatureControlFrameRows(rows: any, scope: Scope): any {
   return result;
 }
 
-// Helper function to parse datum modifiers
-function parseDatumModifiers(datumModifiers: any): any {
-  if (!datumModifiers) return undefined;
-  
-  return {
-    maxMaterialCondition: datumModifiers.maxMaterialCondition?.() ?? false,
-    leastMaterialCondition: datumModifiers.leastMaterialCondition?.() ?? false,
-    regardlessOfFeatureSize: datumModifiers.regardlessOfFeatureSize?.() ?? false,
-    projected: datumModifiers.projected?.() ?? false,
-    tangentPlane: datumModifiers.tangentPlane?.() ?? false,
-  };
-}
-
 // Helper function to parse frame modifiers
-function parseFrameModifiers(frameModifiers: any): any {
+function parseFrameModifiers(frameModifiers: BinFCFFrameModifiers | null): FCFFrameModifiers | undefined {
   if (!frameModifiers) return undefined;
   
+  const between = frameModifiers.between();
+  const projectedToleranceZone = frameModifiers.projectedToleranceZone();
+  
   return {
-    allAround: frameModifiers.allAround?.() ?? false,
-    allOver: frameModifiers.allOver?.() ?? false,
-    continuousFeature: frameModifiers.continuousFeature?.() ?? false,
-    between: frameModifiers.between?.() ?? false,
+    allAround: frameModifiers.allAround(),
+    allOver: frameModifiers.allOver(),
+    continuousFeature: frameModifiers.continuousFeature(),
+    between: between ? {
+      start: between.start() || '',
+      end: between.end() || ''
+    } : undefined,
+    projectedToleranceZone: projectedToleranceZone ? {
+      value: getPrecisionValueFromRaw(projectedToleranceZone.value() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE)
+    } : undefined
   };
-}
-
-// Helper function to parse parametric parameters
-function parseParametricParameters(parameters: any, scope: Scope): any {
-  if (!parameters) return undefined;
-  
-  const result: Record<string, any> = {};
-  const keysLength = parameters.keysLength?.() || 0;
-  
-  for (let i = 0; i < keysLength; i++) {
-    const key = parameters.keys?.(i);
-    const parameter = parameters.values?.(i);
-    if (key && parameter) {
-      result[key] = {
-        name: parameter.name?.() || "",
-        value: parameter.value?.() ?? 0,
-        unit: parameter.unit?.() ?? "",
-        description: parameter.description?.() ?? "",
-        isLocked: parameter.isLocked?.() ?? false,
-      };
-    }
-  }
-  
-  return result;
-}
-
-// Helper function to parse parametric dependencies
-function parseParametricDependencies(dependencies: any): any {
-  if (!dependencies) return undefined;
-  
-  const result: string[] = [];
-  const length = dependencies.dependenciesLength?.() || 0;
-  
-  for (let i = 0; i < length; i++) {
-    const dependency = dependencies.dependencies?.(i);
-    if (dependency) {
-      result.push(dependency);
-    }
-  }
-  
-  return result;
 }
 
 // Helper function to parse datum definition
-function parseDatumDefinition(datumDefinition: any): any {
+function parseDatumDefinition(datumDefinition: BinFCFDatumDefinition | null): FCFDatumDefinition | undefined {
   if (!datumDefinition) return undefined;
   
+  const featureBinding = datumDefinition.featureBinding();
+  
   return {
-    letter: datumDefinition.letter?.() || "",
-    associatedFeatureId: datumDefinition.associatedFeatureId?.() || "",
-    isTheoretical: datumDefinition.isTheoretical?.() ?? false,
+    letter: datumDefinition.letter() || '',
+    featureBinding: featureBinding ? {
+      elementId: featureBinding.elementId() || '',
+      focus: featureBinding.focus(),
+      gap: getPrecisionValueFromRaw(featureBinding.gap() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE),
+      fixedPoint: featureBinding.fixedPoint() ? {
+        x: featureBinding.fixedPoint()!.x(),
+        y: featureBinding.fixedPoint()!.y()
+      } : null,
+      point: featureBinding.point() ? {
+        index: featureBinding.point()!.index(),
+        offset: featureBinding.point()!.offset()
+      } : null,
+      head: featureBinding.head() ? {
+        type: featureBinding.head()!.type() as LineHead,
+        blockId: featureBinding.head()!.blockId() ?? null,
+        size: getPrecisionValueFromRaw(featureBinding.head()!.size() as RawValue, NEUTRAL_SCOPE, NEUTRAL_SCOPE)
+      } : null
+    } : undefined
   };
 }
 
@@ -709,7 +763,7 @@ export function parseElementFromBinary(
     baseProps = imageElement.base();
   } else if (isFrameElement(e) && e) {
     const frameElement = e as BinDucFrameElement;
-    baseProps = frameElement.stackElementBase()?.base() || null;
+    baseProps = frameElement.stackElementBase()?.base() ?? null;
   } else if (isPolygonElement(e) && e) {
     const polygonElement = e as BinDucPolygonElement;
     baseProps = polygonElement.base();
@@ -752,7 +806,7 @@ export function parseElementFromBinary(
     baseProps = rectangleElement.base();
   } else if (isPlotElement(e) && e) {
     const plotElement = e as BinDucPlotElement;
-    baseProps = plotElement.stackElementBase()?.base() || null;
+    baseProps = plotElement.stackElementBase()?.base() ?? null;
   } else if (isParametricElement(e) && e) {
     const parametricElement = e as BinDucParametricElement;
     baseProps = parametricElement.base();
@@ -791,7 +845,7 @@ export function parseElementFromBinary(
     groupIds: groupIds,
     regionIds: (() => {
     const regionIds: string[] = [];
-    const regionIdsLength = baseProps?.regionIdsLength?.() || 0;
+    const regionIdsLength = baseProps?.regionIdsLength?.() ?? null!;
     for (let i = 0; i < regionIdsLength; i++) {
       const regionId = baseProps?.regionIds?.(i);
       if (regionId) regionIds.push(regionId);
@@ -891,11 +945,11 @@ export function parseElementFromBinary(
       return {
         ...baseElement,
         type: elType,
-        fileId: imageElement.fileId() ?? (undefined as any),
-        status: imageElement.status() ?? (undefined as any),
-        scale: (() => { const scaleLength = imageElement.scaleLength(); return scaleLength >= 2 ? [imageElement.scale(0)!, imageElement.scale(1)!] : (undefined as any); })(),
+        fileId: imageElement.fileId() ? imageElement.fileId()! as ExternalFileId : null,
+        status: imageElement.status()!,
+        scale: (() => { const scaleLength = imageElement.scaleLength(); return scaleLength >= 2 ? [imageElement.scale(0)!, imageElement.scale(1)!] : [1, 1]; })(),
         crop: parseImageCrop(imageElement.crop()),
-        filter: imageElement.filter() ?? (undefined as any)
+        filter: imageElement.filter() ? parseDucImageFilterFromBinary(imageElement.filter()) : null
       } as DucImageElement;
     case "frame":
       if (!isFrameElement(e) || !e) return null;
@@ -903,7 +957,7 @@ export function parseElementFromBinary(
       return {
         ...baseElement,
         type: elType,
-        isCollapsed: frameElement.stackElementBase()?.stackBase()?.isCollapsed() ?? false,
+        isCollapsed: frameElement.stackElementBase()?.stackBase()?.isCollapsed() ?? null!,
         clip: frameElement.stackElementBase()?.clip() ?? undefined,
         labelingColor: frameElement.stackElementBase()?.stackBase()?.styles()?.labelingColor() ?? undefined,
       } as DucFrameElement;
@@ -941,31 +995,31 @@ export function parseElementFromBinary(
       // Parse text style properties - these are required in DucTextStyle
       const textStyle = docElement.style()?.textStyle();
       const parsedTextStyle = {
-        isLtr: textStyle?.isLtr() ?? (undefined as any),
-        fontFamily: textStyle?.fontFamily() ?? (undefined as any),
-        bigFontFamily: textStyle?.bigFontFamily() ?? (undefined as any),
-        textAlign: textStyle?.textAlign() ?? (undefined as any),
-        verticalAlign: textStyle?.verticalAlign() ?? (undefined as any),
-        lineHeight: textStyle?.lineHeight() ?? (undefined as any),
+        isLtr: textStyle?.isLtr()!,
+        fontFamily: textStyle?.fontFamily()! as any, //FIXME: in the future when we handle fonts, will update this
+        bigFontFamily: textStyle?.bigFontFamily()!,
+        textAlign: textStyle?.textAlign()!,
+        verticalAlign: textStyle?.verticalAlign()!,
+        lineHeight: textStyle?.lineHeight()! as (number & { _brand: "unitlessLineHeight" }),
         lineSpacing: (() => {
           const lineSpacing = textStyle?.lineSpacing();
           if (lineSpacing) {
             const value = lineSpacing.value();
             return value !== undefined ? {
               value: getPrecisionValueFromRaw(value as RawValue, elementScope, elementScope),
-              type: lineSpacing.type() ?? (undefined as any),
-            } : (undefined as any);
+              type: lineSpacing.type()!,
+            } : undefined;
           }
-          return (undefined as any);
+          return undefined;
         })(),
-        obliqueAngle: textStyle?.obliqueAngle() ?? (undefined as any),
+        obliqueAngle: textStyle?.obliqueAngle()! as Radian,
         fontSize: (() => {
           const fontSize = textStyle?.fontSize();
-          return fontSize !== undefined ? getPrecisionValueFromRaw(fontSize as RawValue, elementScope, elementScope) : (undefined as any);
+          return fontSize !== undefined ? getPrecisionValueFromRaw(fontSize as RawValue, elementScope, elementScope) : undefined!;
         })(),
-        widthFactor: textStyle?.widthFactor() ?? (undefined as any),
-        isUpsideDown: textStyle?.isUpsideDown() ?? (undefined as any),
-        isBackwards: textStyle?.isBackwards() ?? (undefined as any),
+        widthFactor: textStyle?.widthFactor()! as ScaleFactor,
+        isUpsideDown: textStyle?.isUpsideDown()!,
+        isBackwards: textStyle?.isBackwards()!,
       };
       
       // Parse paragraph formatting properties - these are required in DucDocStyle
@@ -1009,34 +1063,34 @@ export function parseElementFromBinary(
       // Parse stack format properties - these are required in DucDocStyle
       const stackFormat = docElement.style()?.stackFormat();
       const parsedStackFormat = stackFormat ? {
-        autoStack: stackFormat.autoStack() ?? (undefined as any),
+        autoStack: stackFormat.autoStack() ?? undefined,
         stackChars: (() => {
           const length = stackFormat.stackCharsLength();
           const result: (string | undefined)[] = [];
           for (let i = 0; i < length; i++) {
             const char = stackFormat.stackChars(i);
-            result.push(char ?? (undefined as any));
+            result.push(char ?? undefined);
           }
           return result as any;
         })(),
         properties: {
           upperScale: stackFormat.properties()?.upperScale() as ScaleFactor,
           lowerScale: stackFormat.properties()?.lowerScale() as ScaleFactor,
-          alignment: stackFormat.properties()?.alignment() ?? (undefined as any),
+          alignment: stackFormat.properties()?.alignment()!,
         },
-      } : (undefined as any);
+      } : undefined;
       
       return {
         ...baseElement,
         type: elType,
-        text: docElement.text() ?? (undefined as any),
+        text: docElement.text()!,
         dynamic: Array.from({ length: docElement.dynamicLength() }).map((_, i) => {
           const dynamicPart = docElement.dynamic(i);
-          return parseDynamicTextPart(dynamicPart);
+          return dynamicPart ? parseDynamicTextPart(dynamicPart) : undefined;
         }).filter((part): part is DucTextDynamicPart => part !== undefined),
-        flowDirection: docElement.flowDirection() ?? (undefined as any),
+        flowDirection: docElement.flowDirection()!,
         columns: docElement.columns() ? {
-          type: docElement.columns()!.type() ?? (undefined as any),
+          type: docElement.columns()!.type()!,
           definitions: Array.from({ length: docElement.columns()!.definitionsLength() })
             .map((_, i) => {
               const col = docElement.columns()!.definitions(i);
@@ -1044,12 +1098,12 @@ export function parseElementFromBinary(
                 const widthValue = col.width();
                 const gutterValue = col.gutter();
                 return {
-                  width: widthValue !== undefined ? getPrecisionValueFromRaw(widthValue as RawValue, elementScope, elementScope) : (undefined as any),
-                  gutter: gutterValue !== undefined ? getPrecisionValueFromRaw(gutterValue as RawValue, elementScope, elementScope) : (undefined as any)
+                  width: widthValue !== undefined ? getPrecisionValueFromRaw(widthValue as RawValue, elementScope, elementScope) : undefined!,
+                  gutter: gutterValue !== undefined ? getPrecisionValueFromRaw(gutterValue as RawValue, elementScope, elementScope) : undefined!
                 };
               }
               return undefined;
-            }).filter((def): def is { width: PrecisionValue | undefined; gutter: PrecisionValue | undefined } => def !== undefined),
+            }).filter((def): def is { width: PrecisionValue; gutter: PrecisionValue } => def !== undefined),
           autoHeight: docElement.columns()!.autoHeight() ?? undefined
         } : undefined,
         // Text style properties
@@ -1091,8 +1145,8 @@ export function parseElementFromBinary(
       // Parse duplication array
       const duplicationArrayData = blockInstanceElement.duplicationArray();
       const duplicationArray = duplicationArrayData ? {
-        rows: duplicationArrayData.rows() || 0,
-        cols: duplicationArrayData.cols() || 0,
+        rows: duplicationArrayData.rows() ?? null!,
+        cols: duplicationArrayData.cols() ?? null!,
         rowSpacing: duplicationArrayData.rowSpacing() !== undefined ? 
           getPrecisionValueFromRaw(duplicationArrayData.rowSpacing() as RawValue, elementScope, elementScope) : 
           getPrecisionValueFromRaw(0 as RawValue, elementScope, elementScope),
@@ -1104,7 +1158,7 @@ export function parseElementFromBinary(
       return {
         ...baseElement,
         type: elType,
-        blockId: blockInstanceElement.blockId() ?? (undefined as any),
+        blockId: blockInstanceElement.blockId() ?? undefined,
         elementOverrides: Object.keys(blockElementOverrides).length > 0 ? blockElementOverrides : undefined,
         attributeValues: Object.keys(attributeValues).length > 0 ? attributeValues : undefined,
         duplicationArray,
@@ -1120,9 +1174,9 @@ export function parseElementFromBinary(
       return {
         ...baseElement,
         type: elType,
-        source: mermaidElement.source() ?? (undefined as any),
+        source: mermaidElement.source() ?? undefined,
         theme: mermaidElement.theme() ?? undefined,
-        svgPath: mermaidElement.svgPath() ?? (undefined as any),
+        svgPath: mermaidElement.svgPath() ?? undefined,
       } as DucMermaidElement;
     case "pdf":
       if (!isPdfElement(e) || !e) return null;
@@ -1130,7 +1184,7 @@ export function parseElementFromBinary(
       return {
         ...baseElement,
         type: elType,
-        fileId: pdfElement.fileId() ?? (undefined as any),
+        fileId: pdfElement.fileId() ?? undefined,
       } as DucPdfElement;
     case "table":
       if (!isTableElement(e) || !e) return null;
@@ -1161,7 +1215,7 @@ export function parseElementFromBinary(
             columns[columnId] = {
               id: columnId,
               width: getPrecisionValueFromRaw(column.width() as RawValue, elementScope, elementScope),
-              styleOverrides: column.styleOverrides() ? parseTableCellStyle(column.styleOverrides(), elementScope) || undefined : undefined,
+              styleOverrides: column.styleOverrides() ? parseTableCellStyle(column.styleOverrides(), elementScope) ?? undefined : undefined,
             };
           }
         }
@@ -1178,7 +1232,7 @@ export function parseElementFromBinary(
             tableRows[rowId] = {
               id: rowId,
               height: getPrecisionValueFromRaw(row.height() as RawValue, elementScope, elementScope),
-              styleOverrides: row.styleOverrides() ? parseTableCellStyle(row.styleOverrides(), elementScope) || undefined : undefined,
+              styleOverrides: row.styleOverrides() ? parseTableCellStyle(row.styleOverrides(), elementScope) ?? undefined : undefined,
             };
           }
         }
@@ -1198,13 +1252,13 @@ export function parseElementFromBinary(
               cells[cellKey] = {
                 rowId: rowId,
                 columnId: columnId,
-                data: cell.data() || '',
+                data: cell.data() ?? null!,
                 span: cell.span() ? {
-                  columns: cell.span()!.columns() || 1,
-                  rows: cell.span()!.rows() || 1,
+                  columns: cell.span()!.columns() ?? null!,
+                  rows: cell.span()!.rows() ?? null!,
                 } : undefined,
-                locked: cell.locked() || false,
-                styleOverrides: cell.styleOverrides() ? (parseTableCellStyle(cell.styleOverrides(), elementScope) || undefined) : undefined,
+                locked: cell.locked() ?? null!,
+                styleOverrides: cell.styleOverrides() ? (parseTableCellStyle(cell.styleOverrides(), elementScope) ?? undefined) : undefined,
               };
             }
           }
@@ -1290,14 +1344,14 @@ export function parseElementFromBinary(
       
       // Parse frozen group IDs
       const frozenGroupIds: string[] = [];
-      const frozenGroupIdsLength = viewportElement.frozenGroupIdsLength?.() || 0;
+      const frozenGroupIdsLength = viewportElement.frozenGroupIdsLength?.() ?? null!;
       for (let j = 0; j < frozenGroupIdsLength; j++) {
         const groupId = viewportElement.frozenGroupIds?.(j);
         if (groupId) frozenGroupIds.push(groupId);
       }
       
       // Parse standard override
-      const standardOverride = viewportElement.standardOverride?.() || null;
+      const standardOverride = viewportElement.standardOverride?.() ?? null;
       
       // Parse linear base properties for viewport element
       const linearBase = viewportElement.linearBase();
@@ -1355,7 +1409,7 @@ export function parseElementFromBinary(
       
       // Parse viewport style properties
       const styleData = viewportElement.style?.();
-      const scaleIndicatorVisible = styleData?.scaleIndicatorVisible() ?? true;
+      const scaleIndicatorVisible = styleData?.scaleIndicatorVisible() ?? null!;
       
       return {
         ...baseElement,
@@ -1372,8 +1426,8 @@ export function parseElementFromBinary(
         frozenGroupIds,
         standardOverride,
         // Stack base properties (from _DucStackBase)
-        isCollapsed: viewportElement.stackBase()?.isCollapsed() ?? false,
-        labelingColor: viewportElement.stackBase()?.styles()?.labelingColor() ?? "#000000",
+        isCollapsed: viewportElement.stackBase()?.isCollapsed() ?? null!,
+        labelingColor: viewportElement.stackBase()?.styles()?.labelingColor() ?? null!,
         // Viewport style properties
         scaleIndicatorVisible,
       } as DucViewportElement;
@@ -1385,7 +1439,7 @@ export function parseElementFromBinary(
         type: elType,
         origin: xrayElement.origin() ? parsePoint(xrayElement.origin(), elementScope) : (undefined as any),
         direction: xrayElement.direction() ? parsePoint(xrayElement.direction(), elementScope) : (undefined as any),
-        startFromOrigin: xrayElement.startFromOrigin() ?? (undefined as any),
+        startFromOrigin: xrayElement.startFromOrigin() ?? undefined,
       } as DucXRayElement;
     case "leader":
       if (!isLeaderElement(e) || !e) return null;
@@ -1393,6 +1447,8 @@ export function parseElementFromBinary(
       
       // Parse leader style properties
       const leaderStyles = parseElementStyles(leaderElement.style()?.baseStyle() ?? null, elementScope);
+      const leaderStyleObj = leaderElement.style();
+      
       return {
         ...baseElement,
         ...leaderStyles!,
@@ -1403,8 +1459,54 @@ export function parseElementFromBinary(
         lastCommittedPoint: leaderElement.linearBase() && leaderElement.linearBase()!.lastCommittedPoint() ? parsePoint(leaderElement.linearBase()!.lastCommittedPoint(), elementScope) : null,
         startBinding: leaderElement.linearBase() && leaderElement.linearBase()!.startBinding() ? parsePointBinding(leaderElement.linearBase()!.startBinding(), elementScope) : null,
         endBinding: leaderElement.linearBase() && leaderElement.linearBase()!.endBinding() ? parsePointBinding(leaderElement.linearBase()!.endBinding(), elementScope) : null,
-        leaderContent: leaderElement.content() ? parseLeaderContent(leaderElement.content(), elementScope) : undefined,
-        contentAnchor: leaderElement.contentAnchor() ? parsePoint(leaderElement.contentAnchor(), elementScope) : undefined,
+        leaderContent: leaderElement.content() ? parseLeaderContent(leaderElement.content()!, elementScope) : undefined,
+        contentAnchor: leaderElement.contentAnchor() ? {
+          x: leaderElement.contentAnchor()!.x() ?? null!,
+          y: leaderElement.contentAnchor()!.y() ?? null!,
+        } : { x: 0, y: 0 },
+        // Leader style specific properties
+        headsOverride: leaderStyleObj && leaderStyleObj.headsOverrideLength() > 0 ? (() => {
+          const arr: DucHead[] = [];
+          const length = leaderStyleObj!.headsOverrideLength();
+          for (let i = 0; i < length; i++) {
+            const head = leaderStyleObj!.headsOverride(i);
+            if (head) arr.push({
+              type: head.type() as LineHead,
+              blockId: head.blockId(),
+              size: getPrecisionValueFromRaw(head.size() as RawValue, elementScope, elementScope),
+            });
+          }
+          return arr.length >= 2 ? [arr[0], arr[1]] as [DucHead, DucHead] : undefined;
+        })() : undefined,
+        dogleg: leaderStyleObj?.dogleg() !== null ? getPrecisionValueFromRaw(leaderStyleObj!.dogleg() as RawValue, elementScope, elementScope) : undefined,
+        textStyle: leaderStyleObj?.textStyle() ? (() => {
+          const textStyle = leaderStyleObj.textStyle()!;
+          return {
+            roundness: textStyle.baseStyle() ? getPrecisionValueFromRaw(textStyle.baseStyle()!.roundness() as RawValue, elementScope, elementScope) : getPrecisionValueFromRaw(0 as RawValue, elementScope, elementScope),
+            blending: textStyle.baseStyle()?.blending() ?? undefined,
+            background: [],
+            stroke: [],
+            opacity: (textStyle.baseStyle()?.opacity() ?? null!) as any,
+            isLtr: textStyle.isLtr(),
+            fontFamily: textStyle.fontFamily() as any,
+            bigFontFamily: textStyle.bigFontFamily()!,
+            textAlign: textStyle.textAlign()!,
+            verticalAlign: textStyle.verticalAlign()!,
+            lineHeight: textStyle.lineHeight() as any,
+            lineSpacing: textStyle.lineSpacing() ? {
+              value: getPrecisionValueFromRaw(textStyle.lineSpacing()!.value() as RawValue, elementScope, elementScope),
+              type: textStyle.lineSpacing()!.type(),
+            } : undefined!,
+            obliqueAngle: textStyle.obliqueAngle() as any,
+            fontSize: getPrecisionValueFromRaw(textStyle.fontSize() as RawValue, elementScope, elementScope),
+            paperTextHeight: textStyle.paperTextHeight() !== null ? getPrecisionValueFromRaw(textStyle.paperTextHeight() as RawValue, elementScope, elementScope) : undefined,
+            widthFactor: textStyle.widthFactor() as any,
+            isUpsideDown: textStyle.isUpsideDown(),
+            isBackwards: textStyle.isBackwards(),
+          };
+        })()! : undefined!,
+        textAttachment: leaderStyleObj?.textAttachment()!,
+        blockAttachment: leaderStyleObj?.blockAttachment()!,
       } as DucLeaderElement;
     case "dimension":
       if (!isDimensionElement(e) || !e) return null;
@@ -1416,9 +1518,9 @@ export function parseElementFromBinary(
       return {
         ...baseElement,
         type: elType,
-        dimensionType: dimensionElement.dimensionType() ?? (undefined as any),
+        dimensionType: dimensionElement.dimensionType() ?? undefined,
         definitionPoints,
-        obliqueAngle: dimensionElement.obliqueAngle?.() ?? (0 as Radian),
+        obliqueAngle: dimensionElement.obliqueAngle?.() ?? undefined,
         ordinateAxis: dimensionElement.ordinateAxis?.() ?? null,
       } as DucDimensionElement;
     case "featurecontrolframe":
@@ -1453,7 +1555,7 @@ export function parseElementFromBinary(
 
 
 
-export const parsePoint = (point: any | null, elementScope: SupportedMeasures): DucPoint | null => {
+export const parsePoint = (point: BinDucPoint | null, elementScope: SupportedMeasures): DucPoint | null => {
   if (!point) return null;
 
   // Handle different point types
@@ -1504,7 +1606,7 @@ const parseDucPath = (path: BinDucPath | null, elementScope: SupportedMeasures):
     .map((_, i) => path.lineIndices(i))
     .filter((index): index is number => index !== null && index !== undefined);
 
-  const background = path.background() ? parseElementBackgroundFromBinary(path.background()) : null;
+  const background = path.background() ? parseElementBackgroundFromBinary(path.background()!, elementScope) : null;
   const stroke = path.stroke() ? parseElementStrokeFromBinary(path.stroke(), elementScope) : null;
 
   return {
@@ -1529,7 +1631,7 @@ const parsePointBinding = (binding: BinPointBinding | null, elementScope: Suppor
   const fixedPoint = binding.fixedPoint();
   const head = binding.head();
   return {
-    elementId: binding.elementId() || '',
+    elementId: binding.elementId()!,
     focus: binding.focus(),
     gap: getPrecisionValueFromRaw(binding.gap() as RawValue, elementScope, elementScope),
     fixedPoint: fixedPoint ? {
@@ -1539,7 +1641,7 @@ const parsePointBinding = (binding: BinPointBinding | null, elementScope: Suppor
     point: binding.point() ? parseBindingPoint(binding.point()) : null,
     head: head ? {
       type: head.type() as LineHead,
-      blockId: head.blockId() || null,
+      blockId: head.blockId() ?? null,
       size: getPrecisionValueFromRaw(head.size() as RawValue, elementScope, elementScope)
     } : null
   };
@@ -1548,7 +1650,7 @@ const parsePointBinding = (binding: BinPointBinding | null, elementScope: Suppor
 
 export function parseTableCellStyle(
   cellStyle: BinDucTableCellStyle | null,
-  scope: any
+  scope: SupportedMeasures
 ): DucTableCellStyle | null {
   if (!cellStyle) return null;
 
@@ -1557,24 +1659,24 @@ export function parseTableCellStyle(
   const margins = cellStyle.margins();
   const alignment = cellStyle.alignment();
 
-  const styleBase = parseElementStyleFromBinary(baseStyle, scope);
+  const styleBase = baseStyle ? parseElementStyleFromBinary(baseStyle, scope) : null;
 
-  let textStyleObj: any = undefined;
+  let textStyleObj: DucTextStyle | undefined = undefined;
   if (textStyle) {
     textStyleObj = {
-      ...styleBase,
+      ...styleBase!,
       isLtr: textStyle.isLtr(),
       fontFamily: textStyle.fontFamily() ? Number(textStyle.fontFamily()) as FontFamilyValues : (undefined as any),
-      bigFontFamily: textStyle.bigFontFamily() || '',
-      lineHeight: getPrecisionValueFromRaw(textStyle.lineHeight() as RawValue, scope, scope),
+      bigFontFamily: textStyle.bigFontFamily() ?? null!,
+      lineHeight: textStyle.lineHeight() as DucTextStyle["lineHeight"],
       lineSpacing: {
         value: getPrecisionValueFromRaw(textStyle.lineSpacing()!.value() as RawValue, scope, scope),
-        type: textStyle.lineSpacing()!.type(),
+        type: textStyle.lineSpacing()!.type() as LineSpacingType,
       },
-      obliqueAngle: getPrecisionValueFromRaw(textStyle.obliqueAngle() as RawValue, scope, scope),
+      obliqueAngle: textStyle.obliqueAngle() as Radian,
       fontSize: getPrecisionValueFromRaw(textStyle.fontSize() as RawValue, scope, scope),
       paperTextHeight: textStyle.paperTextHeight() ? getPrecisionValueFromRaw(textStyle.paperTextHeight() as RawValue, scope, scope) : undefined,
-      widthFactor: getPrecisionValueFromRaw(textStyle.widthFactor() as RawValue, scope, scope),
+      widthFactor: textStyle.widthFactor() as ScaleFactor,
       isUpsideDown: textStyle.isUpsideDown(),
       isBackwards: textStyle.isBackwards(),
       textAlign: textStyle.textAlign() as TextAlign,
@@ -1640,7 +1742,7 @@ export function parseDucStackBaseFromBinary(stackBase: BinDucStackBase | null): 
   
   return {
     label: label as string,
-    description: description || null,
+    description: description ?? null,
     isCollapsed,
     isPlot,
     isVisible,

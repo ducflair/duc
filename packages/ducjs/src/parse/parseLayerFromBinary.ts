@@ -20,7 +20,7 @@ export function parseLayerOverridesFromBinary(overrides: BinDucLayerOverrides | 
   const background = overrides.background();
   
   const parsedStroke = stroke !== null ? parseElementStrokeFromBinary(stroke, scope) : null;
-  const parsedBackground = background !== null ? parseElementBackgroundFromBinary(background) : null;
+  const parsedBackground = background !== null ? parseElementBackgroundFromBinary(background, scope) : null;
   
   // Both stroke and background are required for a valid overrides object
   if (parsedStroke !== null && parsedBackground !== null) {

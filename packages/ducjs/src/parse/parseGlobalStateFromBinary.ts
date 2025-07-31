@@ -20,7 +20,7 @@ export function parseGlobalStateFromBinary(globalState: BinDucGlobalState | null
   const isDashSpacingAffectedByViewportScale = globalState.isDashSpacingAffectedByViewportScale();
   
   return {
-    name: name || null,
+    name: name ?? null,
     viewBackgroundColor: viewBackgroundColor!,
     mainScope: (mainScope as Scope) || NEUTRAL_SCOPE,
     dashSpacingScale: dashSpacingScale as ScaleFactor,
