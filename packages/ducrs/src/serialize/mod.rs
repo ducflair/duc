@@ -1,6 +1,6 @@
 pub mod serialize_duc_element;
-pub mod serialize_app_state;
-pub mod serialize_binary_files;
+pub mod serialize_state;
+pub mod serialize_external_files;
 pub mod serialize_renderer_state;
 pub mod serialize_duc_block;
 pub mod serialize_duc_group;
@@ -58,13 +58,13 @@ pub fn serialize_duc_file(file: &DucFile) -> Vec<u8> {
     
     // Serialize app state
     let app_state = if let Some(app_state) = &file.app_state {
-        Some(serialize_app_state::serialize_app_state(&mut builder, app_state))
+        Some(serialize_state::serialize_app_state(&mut builder, app_state))
     } else {
         None
     };
     
     // Serialize binary files
-    let binary_files = serialize_binary_files::serialize_binary_files(&mut builder, &file.binary_files);
+    let binary_files = serialize_external_files::serialize_binary_files(&mut builder, &file.binary_files);
     
     // Serialize renderer state
     let renderer_state = if let Some(renderer_state) = &file.renderer_state {

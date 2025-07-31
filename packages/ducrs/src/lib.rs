@@ -76,7 +76,6 @@ mod tests {
                 println!("\nElement #{}", i + 1);
                 println!("  ID: {}", element.id().unwrap_or("<none>"));
                 println!("  Type: {}", element.type_().unwrap_or("<none>"));
-                println!("  Position: ({}, {})", element.x_v3(), element.y_v3());
                 
                 if let Some(label) = element.label() {
                     if !label.is_empty() {
@@ -88,9 +87,9 @@ mod tests {
                 println!("  Deleted: {}", element.is_deleted());
                 
                 // Print element dimensions if available
-                println!("  Width: {}", element.width_v3());
-                println!("  Height: {}", element.height_v3());
-                println!("  Angle: {}", element.angle_v3());
+                println!("  Width: {}", element.width());
+                println!("  Height: {}", element.height());
+                println!("  Angle: {}", element.angle());
                 
                 // Print group IDs if any
                 if let Some(group_ids) = element.group_ids() {
@@ -134,7 +133,6 @@ mod tests {
                     match element_type {
                         "text" => {
                             println!("  Text Content: {}", element.text().unwrap_or("<none>"));
-                            println!("  Font Size: {}", element.font_size_v3().unwrap_or(0.0));
                             println!("  Font Family: {}", element.font_family().unwrap_or("<none>"));
                         },
                         "image" => {
@@ -147,7 +145,7 @@ mod tests {
                             }
                         },
                         "freedraw" => {
-                            if let Some(pressures) = element.pressures_v3() {
+                            if let Some(pressures) = element.pressures() {
                                 println!("  Pressures: {} values", pressures.len());
                             }
                         },
