@@ -1,7 +1,5 @@
-use std::collections::HashMap;
-
 use crate::generated::duc::{
-    ANGULAR_UNITS_FORMAT, AXIS, BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION, COLUMN_TYPE, DATUM_BRACKET_STYLE, DECIMAL_SEPARATOR, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, DIMENSION_UNITS_FORMAT, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, GRID_DISPLAY_TYPE, GRID_TYPE, HANDLE_TYPE, HATCH_STYLE, IMAGE_STATUS, LEADER_CONTENT_TYPE, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, OBJECT_SNAP_MODE, PARAMETRIC_SOURCE_TYPE, PRUNING_LEVEL, SNAP_MARKER_SHAPE, SNAP_MODE, SNAP_OVERRIDE_BEHAVIOR, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FIELD_SOURCE_PROPERTY, TEXT_FIELD_SOURCE_TYPE, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_ZONE_TYPE, UNIT_SYSTEM, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT
+    ANGULAR_UNITS_FORMAT, AXIS, BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION, COLUMN_TYPE, DATUM_BRACKET_STYLE, DECIMAL_SEPARATOR, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, DIMENSION_UNITS_FORMAT, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, GRID_DISPLAY_TYPE, GRID_TYPE, HATCH_STYLE, IMAGE_STATUS, LEADER_CONTENT_TYPE, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, OBJECT_SNAP_MODE, PARAMETRIC_SOURCE_TYPE, PRUNING_LEVEL, SNAP_MARKER_SHAPE, SNAP_MODE, SNAP_OVERRIDE_BEHAVIOR, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FIELD_SOURCE_PROPERTY, TEXT_FIELD_SOURCE_TYPE, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_ZONE_TYPE, UNIT_SYSTEM, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT
 };
 
 // =============== ENUMS (Custom for Rust convenience) ===============
@@ -335,7 +333,7 @@ pub struct DucStackElementBase {
     pub clip: bool,
     pub label_visible: bool,
     // Note: Standard type will be defined later in Standards & Settings section
-    pub standard_override: Standard,
+    pub standard_override: String,
 }
 
 
@@ -593,14 +591,32 @@ pub struct DucTableAutoSize {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DucTableColumnEntry {
+    pub key: String,
+    pub value: DucTableColumn,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucTableRowEntry {
+    pub key: String,
+    pub value: DucTableRow,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucTableCellEntry {
+    pub key: String,
+    pub value: DucTableCell,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DucTableElement {
     pub base: DucElementBase,
     pub style: DucTableStyle,
     pub column_order: Vec<String>,
     pub row_order: Vec<String>,
-    pub columns: HashMap<String, DucTableColumn>,
-    pub rows: HashMap<String, DucTableRow>,
-    pub cells: HashMap<String, DucTableCell>,
+    pub columns: Vec<DucTableColumnEntry>,
+    pub rows: Vec<DucTableRowEntry>,
+    pub cells: Vec<DucTableCellEntry>,
     pub header_row_count: i32,
     pub auto_size: DucTableAutoSize,
 }
@@ -739,7 +755,7 @@ pub struct DucViewportElement {
     pub scale: f32,
     pub shade_plot: Option<VIEWPORT_SHADE_PLOT>,
     pub frozen_group_ids: Vec<String>,
-    pub standard_override: Standard,
+    pub standard_override: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -818,11 +834,11 @@ pub struct DucDimensionElement {
     pub oblique_angle: f32,
     pub ordinate_axis: Option<AXIS>,
     pub bindings: DimensionBindings,
-    pub text_override: String,
-    pub text_position: GeometricPoint,
+    pub text_override: Option<String>,
+    pub text_position: Option<GeometricPoint>,
     pub tolerance_override: DimensionToleranceStyle,
-    pub baseline_data: DimensionBaselineData,
-    pub continue_data: DimensionContinueData,
+    pub baseline_data: Option<DimensionBaselineData>,
+    pub continue_data: Option<DimensionContinueData>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -873,13 +889,18 @@ pub struct FCFDatumDefinition {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct FCFSegmentRow {
+    pub segments: Vec<FeatureControlFrameSegment>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DucFeatureControlFrameElement {
     pub base: DucElementBase,
     pub style: DucFeatureControlFrameStyle,
-    pub rows: Vec<Vec<FeatureControlFrameSegment>>,
+    pub rows: Vec<FCFSegmentRow>,
     pub frame_modifiers: FCFFrameModifiers,
-    pub leader_element_id: String,
-    pub datum_definition: FCFDatumDefinition,
+    pub leader_element_id: Option<String>,
+    pub datum_definition: Option<FCFDatumDefinition>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -972,13 +993,19 @@ pub struct DucBlockDuplicationArray {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DucBlockAttributeDefinitionEntry {
+    pub key: String,
+    pub value: DucBlockAttributeDefinition,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DucBlock {
     pub id: String,
     pub label: String,
     pub description: String,
     pub version: i32,
     pub elements: Vec<ElementWrapper>,
-    pub attribute_definitions: Vec<DucBlockAttributeDefinition>,
+    pub attribute_definitions: Vec<DucBlockAttributeDefinitionEntry>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1470,7 +1497,7 @@ pub struct DucExternalFileData {
     pub id: String,
     pub data: Vec<u8>,
     pub created: i64,
-    pub last_retrieved: i64,
+    pub last_retrieved: Option<i64>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1483,8 +1510,7 @@ pub struct DucExternalFileEntry {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ExportedDataState {
-    pub data_type: String, // Renamed 'type' to 'data_type'
-    pub version_legacy: i32,
+    pub data_type: String,
     pub source: String,
     pub version: String,
     pub thumbnail: Vec<u8>,
@@ -1497,6 +1523,6 @@ pub struct ExportedDataState {
     pub standards: Vec<Standard>,
     pub duc_local_state: DucLocalState,
     pub duc_global_state: DucGlobalState,
-    pub files: Vec<DucExternalFileEntry>,
-    pub version_graph: VersionGraph,
+    pub external_files: Vec<DucExternalFileEntry>,
+    pub version_graph: Option<VersionGraph>,
 }
