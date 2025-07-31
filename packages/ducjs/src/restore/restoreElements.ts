@@ -2334,19 +2334,22 @@ const restoreLeaderContent = (
   const type = isValidEnumValue(content.type, LEADER_CONTENT_TYPE, null);
   if (type === LEADER_CONTENT_TYPE.TEXT) {
     // Only access text if type is "text"
-    return { type: "text", text: isValidString((content as any).text) };
+    if ('text' in content) {
+      return { type: "text", text: isValidString(content.text) };
+    }
   }
   if (type === LEADER_CONTENT_TYPE.BLOCK) {
     // Only access blockId and instanceData if type is "block"
-    const blockContent = content as { type: "block"; blockId?: string; instanceData?: any };
-    return {
-      type: "block",
-      blockId: isValidString(blockContent.blockId),
-      instanceData: {
-        attributeValues: blockContent.instanceData?.attributeValues,
-        elementOverrides: blockContent.instanceData?.elementOverrides,
-      },
-    };
+    if ('blockId' in content && 'instanceData' in content) {
+      return {
+        type: "block",
+        blockId: isValidString(content.blockId),
+        instanceData: {
+          attributeValues: content.instanceData?.attributeValues,
+          elementOverrides: content.instanceData?.elementOverrides,
+        },
+      };
+    }
   }
   return null;
 };

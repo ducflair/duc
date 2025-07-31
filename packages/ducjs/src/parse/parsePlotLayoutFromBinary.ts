@@ -20,7 +20,6 @@ export function parseMarginsFromBinary(
     return null;
   }
 
-  // Parse margin values, using default values for any missing properties
   const top = margins.top();
   const right = margins.right();
   const bottom = margins.bottom();
