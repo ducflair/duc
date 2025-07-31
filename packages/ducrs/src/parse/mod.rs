@@ -1,6 +1,6 @@
 pub mod parse_duc_element;
-pub mod parse_app_state;
-pub mod parse_binary_files;
+pub mod parse_state;
+pub mod parse_external_files;
 pub mod parse_renderer_state;
 pub mod parse_duc_group;
 pub mod parse_duc_block;
@@ -39,14 +39,14 @@ pub fn parse_duc_file(data: &[u8]) -> Result<DucFile, &'static str> {
     
     // Parse app state
     let app_state = if let Some(app_state_fb) = exported_data.app_state() {
-        Some(parse_app_state::parse_app_state(&app_state_fb))
+        Some(parse_state::parse_app_state(&app_state_fb))
     } else {
         None
     };
     
     // Parse binary files
     let (binary_files, _binary_data) = if let Some(files_fb) = exported_data.files() {
-        let files = parse_binary_files::parse_binary_files(&files_fb);
+        let files = parse_external_files::parse_binary_files(&files_fb);
         
         // Extract binary data for each file
         let mut binary_data = HashMap::new();
@@ -58,7 +58,7 @@ pub fn parse_duc_file(data: &[u8]) -> Result<DucFile, &'static str> {
                 // Access value and key directly
                 if let Some(key) = entry.key() {
                     if let Some(file_data) = entry.value() {
-                        if let Some(data) = parse_binary_files::extract_binary_data(&file_data) {
+                        if let Some(data) = parse_external_files::extract_binary_data(&file_data) {
                             binary_data.insert(key.to_string(), data);
                         }
                     }
