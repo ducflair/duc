@@ -38,7 +38,7 @@ from ..Duc.VersionBase import (
     VersionBaseAddDescription, VersionBaseAddIsManualSave, VersionBaseAddUserId
 )
 from ..Duc.JSONPatchOperation import (
-    JSONPatchOperationStart, JSONPatchOperationEnd,
+    JSONPatchOperationAddFrom, JSONPatchOperationStart, JSONPatchOperationEnd,
     JSONPatchOperationAddOp, JSONPatchOperationAddPath, JSONPatchOperationAddValue
 )
 
@@ -84,6 +84,7 @@ def serialize_fbs_json_patch_operation(builder: flatbuffers.Builder, patch_op: J
     JSONPatchOperationStart(builder)
     JSONPatchOperationAddOp(builder, op_offset)
     JSONPatchOperationAddPath(builder, path_offset)
+    JSONPatchOperationAddFrom(builder, patch_op.from_path) if patch_op.from_path else None
     if value_offset is not None:
         JSONPatchOperationAddValue(builder, value_offset)
     return JSONPatchOperationEnd(builder)

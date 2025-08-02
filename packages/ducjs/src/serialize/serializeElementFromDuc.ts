@@ -18,9 +18,10 @@ import {
   Element as BinElement,
   ElementWrapper as BinElementWrapper,
   _DucLinearElementBase as BinDucLinearElementBase,
+  BoundElement as BinBoundElement,
 } from 'ducjs/duc';
 import { getPrecisionValueField } from 'ducjs/serialize/serializationUtils';
-import type { DucLine, DucLineReference, DucPath, DucPoint } from 'ducjs/types/elements';
+import type { DucLine, DucLineReference, DucPath, DucPoint, DucLinearElement } from 'ducjs/types/elements';
 import {
   DucElement,
   DucPointBinding,
@@ -207,15 +208,21 @@ export const serializeDucElementBase = (
   BinDucElement.addScope(builder, scopeOffset);
   if (labelOffset) BinDucElement.addLabel(builder, labelOffset);
   if (descriptionOffset) BinDucElement.addDescription(builder, descriptionOffset);
-  BinDucElement.addIsVisible(builder, element.isVisible !== false);
+  if (element.isVisible !== undefined) {
+    BinDucElement.addIsVisible(builder, element.isVisible);
+  }
   if (element.seed !== undefined) {
     BinDucElement.addSeed(builder, element.seed);
   }
-  BinDucElement.addVersion(builder, element.version ?? null!);
+  if (element.version !== undefined) {
+    BinDucElement.addVersion(builder, element.version);
+  }
   if (element.versionNonce !== undefined) {
     BinDucElement.addVersionNonce(builder, element.versionNonce);
   }
-  BinDucElement.addUpdated(builder, BigInt(element.updated || Date.now()));
+  if (element.updated !== undefined) {
+    BinDucElement.addUpdated(builder, BigInt(element.updated));
+  }
   
   // Add optional properties
   if (element.index !== undefined) {
@@ -230,6 +237,47 @@ export const serializeDucElementBase = (
   }
   if (element.isDeleted !== undefined) {
     BinDucElement.addIsDeleted(builder, element.isDeleted);
+  }
+
+  // Optional base relationships and metadata
+  if (element.regionIds && element.regionIds.length > 0) {
+    const regionIdOffsets = element.regionIds.map(id => builder.createString(id));
+    const regionIdsVector = BinDucElement.createRegionIdsVector(builder, regionIdOffsets);
+    BinDucElement.addRegionIds(builder, regionIdsVector);
+  }
+  if (element.layerId !== undefined) {
+    const layerIdOffset = builder.createString(element.layerId);
+    BinDucElement.addLayerId(builder, layerIdOffset);
+  }
+  if (element.frameId !== undefined) {
+    const frameIdOffset = builder.createString(element.frameId);
+    BinDucElement.addFrameId(builder, frameIdOffset);
+  }
+  if (element.boundElements && element.boundElements.length > 0) {
+    const boundOffsets = element.boundElements.map(be => {
+      const idOff = builder.createString(be.id);
+      const typeOff = builder.createString(be.type);
+      BinBoundElement.startBoundElement(builder);
+      BinBoundElement.addId(builder, idOff);
+      BinBoundElement.addType(builder, typeOff);
+      return BinBoundElement.endBoundElement(builder);
+    });
+    const boundVector = BinDucElement.createBoundElementsVector(builder, boundOffsets);
+    BinDucElement.addBoundElements(builder, boundVector);
+  }
+  if (element.zIndex !== undefined) {
+    (BinDucElement as any).addZIndex?.(builder, element.zIndex);
+  }
+  if (element.link !== undefined) {
+    const linkOffset = builder.createString(element.link);
+    (BinDucElement as any).addLink?.(builder, linkOffset);
+  }
+  if (element.locked !== undefined) {
+    (BinDucElement as any).addLocked?.(builder, element.locked);
+  }
+  if (element.customData) {
+    const customOffset = builder.createString(JSON.stringify(element.customData));
+    (BinDucElement as any).addCustomData?.(builder, customOffset);
   }
   
   // Create styles object first
@@ -362,9 +410,11 @@ export const serializeDucPointBinding = (builder: flatbuffers.Builder, pointBind
 
 const serializeTilingProperties = (builder: flatbuffers.Builder, tiling: TilingProperties): flatbuffers.Offset => {
   BinTilingProperties.startTilingProperties(builder);
-  if (tiling.angle !== undefined) BinTilingProperties.addAngle(builder, tiling.angle); 
-  if (tiling.offsetX !== undefined) BinTilingProperties.addOffsetX(builder, tiling.offsetX); 
-  if (tiling.offsetY !== undefined) BinTilingProperties.addOffsetY(builder, tiling.offsetY); 
+  if (tiling.sizeInPercent !== undefined) BinTilingProperties.addSizeInPercent(builder, tiling.sizeInPercent);
+  if (tiling.angle !== undefined) BinTilingProperties.addAngle(builder, tiling.angle);
+  if (tiling.spacing !== undefined) BinTilingProperties.addSpacing(builder, tiling.spacing);
+  if (tiling.offsetX !== undefined) BinTilingProperties.addOffsetX(builder, tiling.offsetX);
+  if (tiling.offsetY !== undefined) BinTilingProperties.addOffsetY(builder, tiling.offsetY);
   return BinTilingProperties.endTilingProperties(builder);
 };
 
@@ -373,10 +423,10 @@ const serializeElementContentBase = (builder: flatbuffers.Builder, content: Elem
   const tilingOffset = content.tiling ? serializeTilingProperties(builder, content.tiling) : undefined;
 
   BinElementContentBase.startElementContentBase(builder);
-  BinElementContentBase.addPreference(builder, content.preference);
+  if (content.preference !== undefined) BinElementContentBase.addPreference(builder, content.preference);
   BinElementContentBase.addSrc(builder, srcOffset);
-  BinElementContentBase.addVisible(builder, content.visible !== false);
-  if (content.opacity !== undefined) BinElementContentBase.addOpacity(builder, content.opacity); 
+  if (content.visible !== undefined) BinElementContentBase.addVisible(builder, content.visible);
+  if (content.opacity !== undefined) BinElementContentBase.addOpacity(builder, content.opacity);
   if (tilingOffset) BinElementContentBase.addTiling(builder, tilingOffset);
   return BinElementContentBase.endElementContentBase(builder);
 };
@@ -443,21 +493,21 @@ const serializeImageCrop = (builder: flatbuffers.Builder, crop: ImageCrop): flat
 
 export const serializeDucLinearElementBase = (
   builder: flatbuffers.Builder,
-  element: any,
+  element: Pick<DucLinearElement, "points" | "lines" | "pathOverrides" | "lastCommittedPoint" | "startBinding" | "endBinding"> & DucElement,
 ): flatbuffers.Offset => {
-  const baseOffset = serializeDucElementBase(builder, element);
+  const baseOffset = serializeDucElementBase(builder, element as DucElement);
   
   // Serialize points
   let pointsVector: flatbuffers.Offset | null = null;
   if (element.points && element.points.length > 0) {
-    const pointOffsets = element.points.map((point: any) => serializeDucPoint(builder, point));
+    const pointOffsets = element.points.map((point: DucPoint) => serializeDucPoint(builder, point));
     pointsVector = BinDucLinearElementBase.createPointsVector(builder, pointOffsets);
   }
   
   // Serialize lines
   let linesVector: flatbuffers.Offset | null = null;
   if (element.lines && element.lines.length > 0) {
-    const lineOffsets = element.lines.map((line: any) => {
+    const lineOffsets = element.lines.map((line: DucLine) => {
       const startOffset = serializeDucLineReference(builder, line[0]);
       const endOffset = serializeDucLineReference(builder, line[1]);
       BinDucLine.startDucLine(builder);
@@ -471,7 +521,7 @@ export const serializeDucLinearElementBase = (
   // Serialize path overrides
   let pathOverridesVector: flatbuffers.Offset | null = null;
   if (element.pathOverrides && element.pathOverrides.length > 0) {
-    const pathOffsets = element.pathOverrides.map((path: any) => {
+    const pathOffsets = element.pathOverrides.map((path: DucPath) => {
       const lineIndicesVector = BinDucPath.createLineIndicesVector(builder, Array.from(path.lineIndices));
       
       const backgroundOffset = path.background ? serializeElementBackground(builder, path.background) : 0;

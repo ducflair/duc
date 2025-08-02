@@ -59,6 +59,33 @@ impl ElementType {
     }
 }
 
+// Element variant enum that wraps all element types
+#[derive(Debug, Clone, PartialEq)]
+pub enum DucElementVariant {
+    Rectangle(DucRectangleElement),
+    Ellipse(DucEllipseElement),
+    Polygon(DucPolygonElement),
+    Linear(DucLinearElement),
+    Arrow(DucArrowElement),
+    Text(DucTextElement),
+    Image(DucImageElement),
+    Frame(DucFrameElement),
+    FreeDraw(DucFreeDrawElement),
+    Table(DucTableElement),
+    Plot(DucPlotElement),
+    Viewport(DucViewportElement),
+    XRay(DucXRayElement),
+    Leader(DucLeaderElement),
+    Dimension(DucDimensionElement),
+    FeatureControlFrame(DucFeatureControlFrameElement),
+    Doc(DucDocElement),
+    Parametric(DucParametricElement),
+    BlockInstance(DucBlockInstanceElement),
+    Embeddable(DucEmbeddableElement),
+    Pdf(DucPdfElement),
+    Mermaid(DucMermaidElement),
+}
+
 
 // =============== UTILITY & GEOMETRY TYPES ===============
 
@@ -141,7 +168,7 @@ pub struct HatchPatternLine {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CustomHatchPattern {
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
     pub lines: Vec<HatchPatternLine>,
 }
 
@@ -153,7 +180,7 @@ pub struct DucHatchStyle {
     pub pattern_angle: f64,
     pub pattern_origin: DucPoint,
     pub pattern_double: bool,
-    pub custom_pattern: CustomHatchPattern,
+    pub custom_pattern: Option<CustomHatchPattern>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -168,9 +195,9 @@ pub struct ElementContentBase {
     pub src: String,
     pub visible: bool,
     pub opacity: f64,
-    pub tiling: TilingProperties,
-    pub hatch: DucHatchStyle,
-    pub image_filter: DucImageFilter,
+    pub tiling: Option<TilingProperties>,
+    pub hatch: Option<DucHatchStyle>,
+    pub image_filter: Option<DucImageFilter>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -179,7 +206,7 @@ pub struct StrokeStyle {
     pub cap: Option<STROKE_CAP>,
     pub join: Option<STROKE_JOIN>,
     pub dash: Vec<f64>,
-    pub dash_line_override: String,
+    pub dash_line_override: Option<String>,
     pub dash_cap: Option<STROKE_CAP>,
     pub miter_limit: Option<f64>,
 }
@@ -232,32 +259,32 @@ pub struct DucElementBase {
     pub height: f64,
     pub angle: f64,
     pub scope: String,
-    pub label: String,
-    pub description: String,
+    pub label: Option<String>,
+    pub description: Option<String>,
     pub is_visible: bool,
     pub seed: i32,
     pub version: i32,
     pub version_nonce: i32,
     pub updated: i64,
-    pub index: String,
+    pub index: Option<String>,
     pub is_plot: bool,
     pub is_annotative: bool,
     pub is_deleted: bool,
     pub group_ids: Vec<String>,
     pub region_ids: Vec<String>,
-    pub layer_id: String,
-    pub frame_id: String,
-    pub bound_elements: Vec<BoundElement>,
+    pub layer_id: Option<String>,
+    pub frame_id: Option<String>,
+    pub bound_elements: Option<Vec<BoundElement>>,
     pub z_index: f32,
-    pub link: String,
+    pub link: Option<String>,
     pub locked: bool,
-    pub custom_data: String,
+    pub custom_data: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucHead {
     pub head_type: Option<LINE_HEAD>, // Renamed 'type' to 'head_type' to avoid keyword conflict
-    pub block_id: String,
+    pub block_id: Option<String>,
     pub size: f64,
 }
 
@@ -273,14 +300,14 @@ pub struct DucPointBinding {
     pub focus: f32,
     pub gap: f64,
     pub fixed_point: GeometricPoint,
-    pub point: PointBindingPoint,
-    pub head: DucHead,
+    pub point: Option<PointBindingPoint>,
+    pub head: Option<DucHead>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucLineReference {
     pub index: i32,
-    pub handle: GeometricPoint,
+    pub handle: Option<GeometricPoint>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -292,8 +319,8 @@ pub struct DucLine {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucPath {
     pub line_indices: Vec<i32>,
-    pub background: ElementBackground,
-    pub stroke: ElementStroke,
+    pub background: Option<ElementBackground>,
+    pub stroke: Option<ElementStroke>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -302,9 +329,9 @@ pub struct DucLinearElementBase {
     pub points: Vec<DucPoint>,
     pub lines: Vec<DucLine>,
     pub path_overrides: Vec<DucPath>,
-    pub last_committed_point: DucPoint,
-    pub start_binding: DucPointBinding,
-    pub end_binding: DucPointBinding,
+    pub last_committed_point: Option<DucPoint>,
+    pub start_binding: Option<DucPointBinding>,
+    pub end_binding: Option<DucPointBinding>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -316,7 +343,7 @@ pub struct DucStackLikeStyles {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucStackBase {
     pub label: String,
-    pub description: String,
+    pub description: Option<String>,
     pub is_collapsed: bool,
     pub is_plot: bool,
     pub is_visible: bool,
@@ -355,7 +382,7 @@ pub struct DucTextStyle {
     pub line_spacing: LineSpacing,
     pub oblique_angle: f64,
     pub font_size: f64,
-    pub paper_text_height: f64,
+    pub paper_text_height: Option<f64>,
     pub width_factor: f32,
     pub is_upside_down: bool,
     pub is_backwards: bool,
@@ -381,8 +408,8 @@ pub struct DucTableStyle {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucLeaderStyle {
     pub base_style: DucElementStylesBase,
-    pub heads_override: Vec<DucHead>,
-    pub dogleg: f64,
+    pub heads_override: Option<Vec<DucHead>>,
+    pub dogleg: Option<f64>,
     pub text_style: DucTextStyle,
     pub text_attachment: Option<VERTICAL_ALIGN>,
     pub block_attachment: Option<BLOCK_ATTACHMENT>,
@@ -541,29 +568,29 @@ pub struct DucEmbeddableElement {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucPdfElement {
     pub base: DucElementBase,
-    pub file_id: String,
+    pub file_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucMermaidElement {
     pub base: DucElementBase,
     pub source: String,
-    pub theme: String,
-    pub svg_path: String,
+    pub theme: Option<String>,
+    pub svg_path: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucTableColumn {
     pub id: String,
     pub width: f64,
-    pub style_overrides: DucTableCellStyle,
+    pub style_overrides: Option<DucTableCellStyle>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucTableRow {
     pub id: String,
     pub height: f64,
-    pub style_overrides: DucTableCellStyle,
+    pub style_overrides: Option<DucTableCellStyle>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -577,9 +604,9 @@ pub struct DucTableCell {
     pub row_id: String,
     pub column_id: String,
     pub data: String,
-    pub span: DucTableCellSpan,
+    pub span: Option<DucTableCellSpan>,
     pub locked: bool,
-    pub style_overrides: DucTableCellStyle,
+    pub style_overrides: Option<DucTableCellStyle>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -632,11 +659,11 @@ pub struct ImageCrop {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucImageElement {
     pub base: DucElementBase,
-    pub file_id: String,
+    pub file_id: Option<String>,
     pub status: Option<IMAGE_STATUS>,
     pub scale: Vec<f64>,
-    pub crop: ImageCrop,
-    pub filter: DucImageFilter,
+    pub crop: Option<ImageCrop>,
+    pub filter: Option<DucImageFilter>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -666,7 +693,7 @@ pub struct DucTextDynamicSource {
 pub struct DucTextDynamicPart {
     pub tag: String,
     pub source: DucTextDynamicSource,
-    pub formatting: PrimaryUnits,
+    pub formatting: Option<PrimaryUnits>,
     pub cached_value: String,
 }
 
@@ -677,7 +704,7 @@ pub struct DucTextElement {
     pub text: String,
     pub dynamic: Vec<DucTextDynamicPart>,
     pub auto_resize: bool,
-    pub container_id: String,
+    pub container_id: Option<String>,
     pub original_text: String,
 }
 
@@ -709,12 +736,12 @@ pub struct DucFreeDrawElement {
     pub smoothing: f32,
     pub streamline: f32,
     pub easing: String,
-    pub start: DucFreeDrawEnds,
-    pub end: DucFreeDrawEnds,
+    pub start: Option<DucFreeDrawEnds>,
+    pub end: Option<DucFreeDrawEnds>,
     pub pressures: Vec<f32>,
     pub simulate_pressure: bool,
-    pub last_committed_point: DucPoint,
-    pub svg_path: String,
+    pub last_committed_point: Option<DucPoint>,
+    pub svg_path: Option<String>,
 }
 
 
@@ -722,9 +749,9 @@ pub struct DucFreeDrawElement {
 pub struct DucBlockInstanceElement {
     pub base: DucElementBase,
     pub block_id: String,
-    pub element_overrides: Vec<StringValueEntry>,
-    pub attribute_values: Vec<StringValueEntry>,
-    pub duplication_array: DucBlockDuplicationArray,
+    pub element_overrides: Option<Vec<StringValueEntry>>,
+    pub attribute_values: Option<Vec<StringValueEntry>>,
+    pub duplication_array: Option<DucBlockDuplicationArray>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -753,7 +780,7 @@ pub struct DucViewportElement {
     pub scale: f32,
     pub shade_plot: Option<VIEWPORT_SHADE_PLOT>,
     pub frozen_group_ids: Vec<String>,
-    pub standard_override: String,
+    pub standard_override: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -773,8 +800,8 @@ pub struct LeaderTextBlockContent {
 #[derive(Debug, Clone, PartialEq)]
 pub struct LeaderBlockContent {
     pub block_id: String,
-    pub attribute_values: Vec<StringValueEntry>,
-    pub element_overrides: Vec<StringValueEntry>,
+    pub attribute_values: Option<Vec<StringValueEntry>>,
+    pub element_overrides: Option<Vec<StringValueEntry>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -793,34 +820,34 @@ pub struct LeaderContent {
 pub struct DucLeaderElement {
     pub linear_base: DucLinearElementBase,
     pub style: DucLeaderStyle,
-    pub content: LeaderContent,
+    pub content: Option<LeaderContent>,
     pub content_anchor: GeometricPoint,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionDefinitionPoints {
     pub origin1: GeometricPoint,
-    pub origin2: GeometricPoint,
+    pub origin2: Option<GeometricPoint>,
     pub location: GeometricPoint,
-    pub center: GeometricPoint,
-    pub jog: GeometricPoint,
+    pub center: Option<GeometricPoint>,
+    pub jog: Option<GeometricPoint>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionBindings {
-    pub origin1: DucPointBinding,
-    pub origin2: DucPointBinding,
-    pub center: DucPointBinding,
+    pub origin1: Option<DucPointBinding>,
+    pub origin2: Option<DucPointBinding>,
+    pub center: Option<DucPointBinding>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionBaselineData {
-    pub base_dimension_id: String,
+    pub base_dimension_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionContinueData {
-    pub continue_from_dimension_id: String,
+    pub continue_from_dimension_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -831,10 +858,10 @@ pub struct DucDimensionElement {
     pub definition_points: DimensionDefinitionPoints,
     pub oblique_angle: f32,
     pub ordinate_axis: Option<AXIS>,
-    pub bindings: DimensionBindings,
+    pub bindings: Option<DimensionBindings>,
     pub text_override: Option<String>,
     pub text_position: Option<GeometricPoint>,
-    pub tolerance_override: DimensionToleranceStyle,
+    pub tolerance_override: Option<DimensionToleranceStyle>,
     pub baseline_data: Option<DimensionBaselineData>,
     pub continue_data: Option<DimensionContinueData>,
 }
@@ -876,14 +903,14 @@ pub struct FCFFrameModifiers {
     pub all_around: bool,
     pub all_over: bool,
     pub continuous_feature: bool,
-    pub between: FCFBetweenModifier,
-    pub projected_tolerance_zone: FCFProjectedZoneModifier,
+    pub between: Option<FCFBetweenModifier>,
+    pub projected_tolerance_zone: Option<FCFProjectedZoneModifier>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FCFDatumDefinition {
     pub letter: String,
-    pub feature_binding: DucPointBinding,
+    pub feature_binding: Option<DucPointBinding>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -896,7 +923,7 @@ pub struct DucFeatureControlFrameElement {
     pub base: DucElementBase,
     pub style: DucFeatureControlFrameStyle,
     pub rows: Vec<FCFSegmentRow>,
-    pub frame_modifiers: FCFFrameModifiers,
+    pub frame_modifiers: Option<FCFFrameModifiers>,
     pub leader_element_id: Option<String>,
     pub datum_definition: Option<FCFDatumDefinition>,
 }
@@ -929,7 +956,7 @@ pub struct DucDocElement {
 pub struct ParametricSource {
     pub source_type: Option<PARAMETRIC_SOURCE_TYPE>, // Renamed 'type' to 'source_type'
     pub code: String,
-    pub file_id: String,
+    pub file_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -977,7 +1004,7 @@ pub struct ElementWrapper {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucBlockAttributeDefinition {
     pub tag: String,
-    pub prompt: String,
+    pub prompt: Option<String>,
     pub default_value: String,
     pub is_constant: bool,
 }
@@ -1000,7 +1027,7 @@ pub struct DucBlockAttributeDefinitionEntry {
 pub struct DucBlock {
     pub id: String,
     pub label: String,
-    pub description: String,
+    pub description: Option<String>,
     pub version: i32,
     pub elements: Vec<ElementWrapper>,
     pub attribute_definitions: Vec<DucBlockAttributeDefinitionEntry>,
@@ -1044,8 +1071,8 @@ pub struct DucLocalState {
     pub scroll_x: f64,
     pub scroll_y: f64,
     pub zoom: f64,
-    pub active_grid_settings: Vec<String>,
-    pub active_snap_settings: String,
+    pub active_grid_settings: Option<Vec<String>>,
+    pub active_snap_settings: Option<String>,
     pub is_binding_enabled: bool,
     pub current_item_stroke: ElementStroke,
     pub current_item_background: ElementBackground,
@@ -1087,7 +1114,7 @@ pub struct DucLayer {
     pub id: String,
     pub stack_base: DucStackBase,
     pub readonly: bool,
-    pub overrides: DucLayerOverrides,
+    pub overrides: Option<DucLayerOverrides>,
 }
 
 
@@ -1138,31 +1165,31 @@ pub struct StandardUnits {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnitPrecision {
-    pub linear: i32,
-    pub angular: i32,
-    pub area: i32,
-    pub volume: i32,
+    pub linear: Option<i32>,
+    pub angular: Option<i32>,
+    pub area: Option<i32>,
+    pub volume: Option<i32>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StandardOverrides {
-    pub main_scope: String,
-    pub elements_stroke_width_override: f64,
-    pub common_style_id: String,
-    pub stack_like_style_id: String,
-    pub text_style_id: String,
-    pub dimension_style_id: String,
-    pub leader_style_id: String,
-    pub feature_control_frame_style_id: String,
-    pub table_style_id: String,
-    pub doc_style_id: String,
-    pub viewport_style_id: String,
-    pub plot_style_id: String,
-    pub hatch_style_id: String,
-    pub active_grid_settings_id: Vec<String>,
-    pub active_snap_settings_id: String,
-    pub dash_line_override: String,
-    pub unit_precision: UnitPrecision,
+    pub main_scope: Option<String>,
+    pub elements_stroke_width_override: Option<f64>,
+    pub common_style_id: Option<String>,
+    pub stack_like_style_id: Option<String>,
+    pub text_style_id: Option<String>,
+    pub dimension_style_id: Option<String>,
+    pub leader_style_id: Option<String>,
+    pub feature_control_frame_style_id: Option<String>,
+    pub table_style_id: Option<String>,
+    pub doc_style_id: Option<String>,
+    pub viewport_style_id: Option<String>,
+    pub plot_style_id: Option<String>,
+    pub hatch_style_id: Option<String>,
+    pub active_grid_settings_id: Option<Vec<String>>,
+    pub active_snap_settings_id: Option<String>,
+    pub dash_line_override: Option<String>,
+    pub unit_precision: Option<UnitPrecision>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1290,8 +1317,8 @@ pub struct GridSettings {
     pub min_zoom: f64,
     pub max_zoom: f64,
     pub auto_hide: bool,
-    pub polar_settings: PolarGridSettings,
-    pub isometric_settings: IsometricGridSettings,
+    pub polar_settings: Option<PolarGridSettings>,
+    pub isometric_settings: Option<IsometricGridSettings>,
     pub enable_snapping: bool,
 }
 
@@ -1362,17 +1389,17 @@ pub struct SnapSettings {
     pub active_object_snap_modes: Vec<OBJECT_SNAP_MODE>,
     pub snap_priority: Vec<OBJECT_SNAP_MODE>,
     pub show_tracking_lines: bool,
-    pub tracking_line_style: TrackingLineStyle,
+    pub tracking_line_style: Option<TrackingLineStyle>,
     pub dynamic_snap: DynamicSnapSettings,
-    pub temporary_overrides: Vec<SnapOverride>,
-    pub incremental_distance: f64,
-    pub magnetic_strength: f64,
-    pub layer_snap_filters: LayerSnapFilters,
-    pub element_type_filters: Vec<String>,
+    pub temporary_overrides: Option<Vec<SnapOverride>>,
+    pub incremental_distance: Option<f64>,
+    pub magnetic_strength: Option<f64>,
+    pub layer_snap_filters: Option<LayerSnapFilters>,
+    pub element_type_filters: Option<Vec<String>>,
     pub snap_mode: Option<SNAP_MODE>,
     pub snap_markers: SnapMarkerSettings,
     pub construction_snap_enabled: bool,
-    pub snap_to_grid_intersections: bool,
+    pub snap_to_grid_intersections: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1421,8 +1448,8 @@ pub struct LayerValidationRules {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StandardValidation {
-    pub dimension_rules: DimensionValidationRules,
-    pub layer_rules: LayerValidationRules,
+    pub dimension_rules: Option<DimensionValidationRules>,
+    pub layer_rules: Option<LayerValidationRules>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1443,11 +1470,11 @@ pub struct Standard {
 #[derive(Debug, Clone, PartialEq)]
 pub struct VersionBase {
     pub id: String,
-    pub parent_id: String,
+    pub parent_id: Option<String>,
     pub timestamp: i64,
-    pub description: String,
+    pub description: Option<String>,
     pub is_manual_save: bool,
-    pub user_id: String,
+    pub user_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1462,7 +1489,7 @@ pub struct JSONPatchOperation {
     pub op: String,
     pub path: String,
     pub from: Option<String>,
-    pub value: String,
+    pub value: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1505,6 +1532,37 @@ pub struct DucExternalFileEntry {
     pub value: DucExternalFileData,
 }
 
+// Missing enum values that are used in the code
+pub type Blending = BLENDING;
+pub type BezierMirroring = BEZIER_MIRRORING;
+pub type StrokePlacement = STROKE_PLACEMENT;
+pub type ElementContentPreference = ELEMENT_CONTENT_PREFERENCE;
+pub type StrokePreference = STROKE_PREFERENCE;
+
+// Design standard enum
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DesignStandard {
+    DUC,
+    ANSI,
+    ISO,
+    JIS,
+    GOST,
+}
+
+impl Default for DesignStandard {
+    fn default() -> Self {
+        DesignStandard::DUC
+    }
+}
+
+// File type for parsing
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucFile {
+    pub exported_data_state: ExportedDataState,
+}
+
+pub const NO_PEER_POINTS: &[DucPoint] = &[];
+
 // =============== ROOT TYPE ===============
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1512,8 +1570,8 @@ pub struct ExportedDataState {
     pub data_type: String,
     pub source: String,
     pub version: String,
-    pub thumbnail: Vec<u8>,
-    pub dictionary: Vec<DictionaryEntry>,
+    pub thumbnail: Option<Vec<u8>>,
+    pub dictionary: Option<Vec<DictionaryEntry>>,
     pub elements: Vec<ElementWrapper>,
     pub blocks: Vec<DucBlock>,
     pub groups: Vec<DucGroup>,
@@ -1522,6 +1580,6 @@ pub struct ExportedDataState {
     pub standards: Vec<Standard>,
     pub duc_local_state: DucLocalState,
     pub duc_global_state: DucGlobalState,
-    pub external_files: Vec<DucExternalFileEntry>,
+    pub external_files: Option<Vec<DucExternalFileEntry>>,
     pub version_graph: Option<VersionGraph>,
 }
