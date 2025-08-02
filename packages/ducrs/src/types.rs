@@ -1461,6 +1461,7 @@ pub struct Checkpoint {
 pub struct JSONPatchOperation {
     pub op: String,
     pub path: String,
+    pub from: Option<String>,
     pub value: String,
 }
 
