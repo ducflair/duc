@@ -14,9 +14,7 @@ pub fn parse_base_duc_element(element: &BinDucElement) -> RustDucElement {
     let z_index = element.z_index();
     let scope = element.scope().unwrap_or("").to_string();
 
-    let subset = element
-        .subset()
-        .map(|val| unsafe { std::mem::transmute::<i8, crate::types::ElementSubset>(val) });
+
 
     let label = element.label().unwrap_or("").to_string();
     let is_visible = element.is_visible();
@@ -109,7 +107,6 @@ pub fn parse_base_duc_element(element: &BinDucElement) -> RustDucElement {
         y,
         z_index,
         scope,
-        subset,
         label,
         is_visible,
         roundness,

@@ -2529,6 +2529,7 @@ table Checkpoint {
 table JSONPatchOperation {
   op: string;
   path: string;
+  from: string;
   /** Can be any JSON type. It is stored here as a serialized JSON string. */
   value: string;
 }
