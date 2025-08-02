@@ -66,6 +66,7 @@ class DucLocalState:
 class JSONPatchOperation:
     op: str
     path: str
+    from_path: Optional[str]
     value: Any # Value can be any JSON-serializable type
 
 @dataclass

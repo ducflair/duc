@@ -37,6 +37,7 @@ def parse_fbs_json_patch_operation(fbs_json_patch_op: FBSJSONPatchOperation) -> 
     return JSONPatchOperation(
         op=fbs_json_patch_op.Op().decode('utf-8'),
         path=fbs_json_patch_op.Path().decode('utf-8'),
+        from_path=fbs_json_patch_op.From().decode('utf-8') if fbs_json_patch_op.From() else None,
         value=value
     )
 

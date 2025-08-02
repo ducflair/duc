@@ -6,13 +6,15 @@ export const serializeDucStackLikeStyles = (
   builder: flatbuffers.Builder,
   styles: AppDucStackLikeStyles,
 ): flatbuffers.Offset => {
-  // Create string offset for labeling color
-  const labelingColorOffset = builder.createString(styles.labelingColor || '#000000');
-
-  // Create the styles
   DucStackLikeStyles.startDucStackLikeStyles(builder);
-  DucStackLikeStyles.addOpacity(builder, styles.opacity ?? null!);
-  DucStackLikeStyles.addLabelingColor(builder, labelingColorOffset);
+
+  if (typeof styles.opacity === 'number') {
+    DucStackLikeStyles.addOpacity(builder, styles.opacity);
+  }
+  if (typeof styles.labelingColor === 'string') {
+    const labelingColorOffset = builder.createString(styles.labelingColor);
+    DucStackLikeStyles.addLabelingColor(builder, labelingColorOffset);
+  }
 
   return DucStackLikeStyles.endDucStackLikeStyles(builder);
 };

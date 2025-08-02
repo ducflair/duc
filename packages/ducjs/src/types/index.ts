@@ -722,7 +722,7 @@ export type NullableGridSize =
 //// VERSION CONTROL
 export type VersionId = string;
 /** JSON Patch RFC6902 */
-export type JSONPatch = Array<{ op: string; path: string; value?: any }>;
+export type JSONPatch = Array<{ op: string; path: string; from?: string; value?: any }>;
 export type PruningLevel = ValueOf<typeof PRUNING_LEVEL>;
 
 export interface VersionBase {
