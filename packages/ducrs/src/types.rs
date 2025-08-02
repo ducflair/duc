@@ -9,6 +9,7 @@ pub enum ElementType {
     Rectangle,
     Ellipse,
     Polygon,
+    Table,
     Text,
     Line,
     Arrow,
@@ -25,10 +26,8 @@ pub enum ElementType {
     Parametric,
     Embeddable,
     BlockInstance,
-    Block,
-    Group,
-    Region,
-    Layer,
+    Pdf,
+    Mermaid
 }
 
 impl ElementType {
@@ -37,6 +36,7 @@ impl ElementType {
             ElementType::Rectangle => "rectangle",
             ElementType::Ellipse => "ellipse",
             ElementType::Polygon => "polygon",
+            ElementType::Table => "table",
             ElementType::Text => "text",
             ElementType::Line => "line",
             ElementType::Arrow => "arrow",
@@ -48,15 +48,13 @@ impl ElementType {
             ElementType::XRay => "xray",
             ElementType::Leader => "leader",
             ElementType::Dimension => "dimension",
-            ElementType::FeatureControlFrame => "feature_control_frame",
+            ElementType::FeatureControlFrame => "featurecontrolframe",
             ElementType::Doc => "doc",
             ElementType::Parametric => "parametric",
             ElementType::Embeddable => "embeddable",
-            ElementType::BlockInstance => "block_instance",
-            ElementType::Block => "block",
-            ElementType::Group => "group",
-            ElementType::Region => "region",
-            ElementType::Layer => "layer",
+            ElementType::BlockInstance => "blockinstance",
+            ElementType::Pdf => "pdf",
+            ElementType::Mermaid => "mermaid",
         }
     }
 }

@@ -7,4 +7,7 @@
   "rust-analyzer.linkedProjects": [
     "packages/ducrs/Cargo.toml"
   ],
+  "rust-analyzer.files.exclude": [
+    "packages/ducrs/src/duc_generated.rs"
+  ],
 }

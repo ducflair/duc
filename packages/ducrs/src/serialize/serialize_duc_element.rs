@@ -1,211 +1,120 @@
 use flatbuffers::{self, FlatBufferBuilder, WIPOffset};
 
 use crate::generated::duc::{
-    BindingPointBuilder, BoundElementBuilder, 
-    DucBlockInstanceElementOverrideBuilder, DucElement as FbDucElement, DucElementBuilder,
-    DucPath as FbDucPath, DucPathBuilder, DucTableCell as FbDucTableCell, DucTableCellBuilder,
-    DucTableColumn as FbDucTableColumn, DucTableColumnBuilder, DucTableRow as FbDucTableRow,
-    DucTableRowBuilder, DucTableStyleBuilder, DucTableStyleProps as FbDucTableStyleProps,
-    DucTableStylePropsBuilder, ElementBackground as FbElementBackground, ElementBackgroundBuilder,
-    ElementContentBase as FbElementContentBase, ElementContentBaseBuilder,
-    ElementStroke as FbElementStroke, ElementStrokeBuilder, ImageCrop as FbImageCrop,
-    ImageCropBuilder, Point as FbPoint, PointBinding as FbPointBinding, PointBindingBuilder,
-    PointBuilder, SimplePoint as FbSimplePoint, SimplePointBuilder, StrokeSides as FbStrokeSides,
-    StrokeSidesBuilder, StrokeStyle as FbStrokeStyle, StrokeStyleBuilder,
-    TilingProperties as FbTilingProperties, TilingPropertiesBuilder,
+    _DucElementBaseBuilder, _DucLinearElementBaseBuilder, _DucStackElementBaseBuilder,
+    _DucStackBaseBuilder, ColumnLayoutBuilder, DucArrowElementBuilder, DucBlockAttributeDefinitionEntryBuilder,
+    DucBlockBuilder, DucBlockInstanceElementBuilder, DucDocElementBuilder,
+    DucDimensionElementBuilder, DucEllipseElementBuilder, DucEmbeddableElementBuilder,
+    DucFeatureControlFrameElementBuilder, DucFrameElementBuilder, DucFreeDrawElementBuilder,
+    DucImageElementBuilder, DucLeaderElementBuilder, DucLinearElementBuilder,
+    DucMermaidElementBuilder, DucParametricElementBuilder, DucPdfElementBuilder,
+    DucPlotElementBuilder, DucPolygonElementBuilder, DucRectangleElementBuilder,
+    DucTableElementBuilder, DucTextElementBuilder, DucViewportElementBuilder, DucXRayElementBuilder,
+    Element as FbDucElement, ElementWrapperBuilder, StringValueEntryBuilder,
 };
-use crate::types::*;
+use crate::generated::duc as fb;
+use crate::serialize::serialize_duc_element_utils::*;
+use crate::serialize::serialize_stack_likes::serialize_duc_stack_like_styles;
+use crate::types::{
+    DucArrowElement, DucBlock, DucBlockAttributeDefinition, DucBlockAttributeDefinitionEntry,
+    DucBlockInstanceElement, DucDimensionElement, DucDocElement, DucElementBase, DucElementEnum,
+    DucEllipseElement, DucEmbeddableElement, DucFeatureControlFrameElement, DucFrameElement,
+    DucFreeDrawElement, DucImageElement, DucLeaderElement, DucLinearElement,
+    DucLinearElementBase, DucMermaidElement, DucParametricElement, DucPdfElement, DucPlotElement,
+    DucPolygonElement, DucRectangleElement, DucStackElementBase, DucTableElement, DucTextElement,
+    DucViewportElement, DucXRayElement, ElementWrapper,
+};
 
-/// Serializes a Rust DucElementVariant into a FlatBuffers DucElement
-pub fn serialize_duc_element<'a>(
+pub fn serialize_element_wrapper<'a>(
     builder: &mut FlatBufferBuilder<'a>,
-    element_variant: &DucElementVariant,
+    element_wrapper: &ElementWrapper,
+) -> WIPOffset<crate::generated::duc::ElementWrapper<'a>> {
+    let element_offset = serialize_element(builder, &element_wrapper.element);
+    let mut wrapper_builder = ElementWrapperBuilder::new(builder);
+    wrapper_builder.add_element(element_offset);
+    wrapper_builder.finish()
+}
+
+pub fn serialize_element<'a>(
+    builder: &mut FlatBufferBuilder<'a>,
+    element: &DucElementEnum,
 ) -> WIPOffset<FbDucElement<'a>> {
-    match element_variant {
-        DucElementVariant::Base(element) => serialize_base_duc_element(builder, element),
-        DucElementVariant::Rectangle(element) => {
-            let base = serialize_base_duc_element_with_builder(builder, &element.base);
-            base.finish()
+    match element {
+        DucElementEnum::DucRectangleElement(el) => serialize_rectangle_element(builder, el),
+        DucElementEnum::DucPolygonElement(el) => serialize_polygon_element(builder, el),
+        DucElementEnum::DucEllipseElement(el) => serialize_ellipse_element(builder, el),
+        DucElementEnum::DucEmbeddableElement(el) => serialize_embeddable_element(builder, el),
+        DucElementEnum::DucPdfElement(el) => serialize_pdf_element(builder, el),
+        DucElementEnum::DucMermaidElement(el) => serialize_mermaid_element(builder, el),
+        DucElementEnum::DucTableElement(el) => serialize_table_element(builder, el),
+        DucElementEnum::DucImageElement(el) => serialize_image_element(builder, el),
+        DucElementEnum::DucTextElement(el) => serialize_text_element(builder, el),
+        DucElementEnum::DucLinearElement(el) => serialize_linear_element(builder, el),
+        DucElementEnum::DucArrowElement(el) => serialize_arrow_element(builder, el),
+        DucElementEnum::DucFreeDrawElement(el) => serialize_freedraw_element(builder, el),
+        DucElementEnum::DucBlockInstanceElement(el) => {
+            serialize_block_instance_element(builder, el)
         }
-        DucElementVariant::Ellipse(element) => serialize_ellipse_element(builder, element),
-        DucElementVariant::Polygon(element) => serialize_polygon_element(builder, element),
-        DucElementVariant::Text(element) => serialize_text_element(builder, element),
-        DucElementVariant::Linear(element) => serialize_linear_element(builder, element),
-        DucElementVariant::Arrow(element) => serialize_arrow_element(builder, element),
-        DucElementVariant::FreeDraw(element) => serialize_freedraw_element(builder, element),
-        DucElementVariant::Image(element) => serialize_image_element(builder, element),
-        DucElementVariant::Frame(element) => serialize_frame_element(builder, element),
-        DucElementVariant::MagicFrame(element) => serialize_magic_frame_element(builder, element),
-        DucElementVariant::Selection(element) => {
-            let base = serialize_base_duc_element_with_builder(builder, &element.base);
-            base.finish()
+        DucElementEnum::DucFrameElement(el) => serialize_frame_element(builder, el),
+        DucElementEnum::DucPlotElement(el) => serialize_plot_element(builder, el),
+        DucElementEnum::DucViewportElement(el) => serialize_viewport_element(builder, el),
+        DucElementEnum::DucXRayElement(el) => serialize_xray_element(builder, el),
+        DucElementEnum::DucLeaderElement(el) => serialize_leader_element(builder, el),
+        DucElementEnum::DucDimensionElement(el) => serialize_dimension_element(builder, el),
+        DucElementEnum::DucFeatureControlFrameElement(el) => {
+            serialize_feature_control_frame_element(builder, el)
         }
-        DucElementVariant::Table(element) => serialize_table_element(builder, element),
-        DucElementVariant::Doc(element) => serialize_doc_element(builder, element),
-        DucElementVariant::Embeddable(element) => {
-            let base = serialize_base_duc_element_with_builder(builder, &element.base);
-            base.finish()
-        }
-        DucElementVariant::BlockInstance(element) => serialize_block_instance_element(builder, element),
+        DucElementEnum::DucDocElement(el) => serialize_doc_element(builder, el),
+        DucElementEnum::DucParametricElement(el) => serialize_parametric_element(builder, el),
     }
 }
 
-/// Helper function to serialize a base DucElement
-pub fn serialize_base_duc_element<'a>(
+fn serialize_base_element<'a>(
     builder: &mut FlatBufferBuilder<'a>,
-    element: &DucElement,
-) -> WIPOffset<FbDucElement<'a>> {
-    let element_builder = serialize_base_duc_element_with_builder(builder, element);
-    element_builder.finish()
-}
+    base: &DucElementBase,
+) -> WIPOffset<crate::generated::duc::_DucElementBase<'a>> {
+    let id = builder.create_string(&base.id);
+    let styles = serialize_duc_element_styles_base(builder, &base.styles);
+    let scope = builder.create_string(&base.scope);
+    let label = builder.create_string(&base.label);
+    let description = builder.create_string(&base.description);
+    let index = builder.create_string(&base.index);
+    let group_ids = builder.create_vector_of_strings(&base.group_ids);
+    let region_ids = builder.create_vector_of_strings(&base.region_ids);
+    let layer_id = builder.create_string(&base.layer_id);
+    let frame_id = builder.create_string(&base.frame_id);
+    let link = builder.create_string(&base.link);
+    let custom_data = builder.create_string(&base.custom_data);
 
-/// Helper function to create a DucElementBuilder with common fields
-pub fn serialize_base_duc_element_with_builder<'a, 'b, A: flatbuffers::Allocator + 'a>(
-    builder: &'b mut FlatBufferBuilder<'a, A>,
-    element: &DucElement,
-) -> DucElementBuilder<'a, 'b, A> {
-    // Create string offsets
-    let id = builder.create_string(&element.id);
-    let element_type = builder.create_string(&element.element_type);
-    let scope = builder.create_string(&element.scope);
-    let label = builder.create_string(&element.label);
-
-    // Create description offset if present
-    let description_offset = element.description.as_ref().map(|desc| builder.create_string(desc));
-
-    // Serialize group IDs
-    let group_ids = if !element.group_ids.is_empty() {
-        let mut ids_vec = Vec::with_capacity(element.group_ids.len());
-        for id in &element.group_ids {
-            ids_vec.push(builder.create_string(id));
-        }
-        Some(builder.create_vector(&ids_vec))
-    } else {
-        None
-    };
-
-    // Serialize frame ID
-    let frame_id = element
-        .frame_id
-        .as_ref()
-        .map(|id| builder.create_string(id));
-
-    // Serialize link
-    let link = element.link.as_ref().map(|l| builder.create_string(l));
-
-    // Serialize bound elements
-    let bound_elements = if let Some(elements) = &element.bound_elements {
-        if !elements.is_empty() {
-            let mut elements_vec = Vec::with_capacity(elements.len());
-            for bound in elements {
-                let id = builder.create_string(&bound.id);
-                let element_type = builder.create_string(&bound.element_type);
-
-                let mut bound_builder = BoundElementBuilder::new(builder);
-                bound_builder.add_id(id);
-                bound_builder.add_type_(element_type);
-
-                elements_vec.push(bound_builder.finish());
-            }
-            Some(builder.create_vector(&elements_vec))
-        } else {
-            None
-        }
-    } else {
-        None
-    };
-
-    // Serialize strokes
-    let strokes = if !element.stroke.is_empty() {
-        let mut strokes_vec = Vec::with_capacity(element.stroke.len());
-        for stroke in &element.stroke {
-            let stroke_offset = serialize_element_stroke(builder, stroke);
-            strokes_vec.push(stroke_offset);
-        }
-        Some(builder.create_vector(&strokes_vec))
-    } else {
-        None
-    };
-
-    // Serialize backgrounds
-    let backgrounds = if !element.background.is_empty() {
-        let mut bg_vec = Vec::with_capacity(element.background.len());
-        for bg in &element.background {
-            let bg_offset = serialize_element_background(builder, bg);
-            bg_vec.push(bg_offset);
-        }
-        Some(builder.create_vector(&bg_vec))
-    } else {
-        None
-    };
-
-    // Create element builder and add common fields
-    let mut element_builder = DucElementBuilder::new(builder);
-    element_builder.add_id(id);
-    element_builder.add_type_(element_type);
-    element_builder.add_x(element.x);
-    element_builder.add_y(element.y);
-    element_builder.add_scope(scope);
-    element_builder.add_label(label);
-    element_builder.add_is_visible(element.is_visible);
-    element_builder.add_roundness(element.roundness);
-
-    // Add blending mode if present
-    if let Some(blending) = element.blending {
-        element_builder.add_blending(blending as i8);
-    }
-
-    // Add element subset if present
-    if let Some(subset) = element.subset {
-        element_builder.add_subset(subset as i8);
-    }
-
-    element_builder.add_opacity(element.opacity as f32);
-    element_builder.add_width(element.width);
-    element_builder.add_height(element.height);
-    element_builder.add_angle(element.angle);
-    element_builder.add_is_deleted(element.is_deleted);
-
-    // Add group IDs if present
-    if let Some(ids) = group_ids {
-        element_builder.add_group_ids(ids);
-    }
-
-    // Add frame ID if present
-    if let Some(id) = frame_id {
-        element_builder.add_frame_id(id);
-    }
-
-    // Add bound elements if present
-    if let Some(elements) = bound_elements {
-        element_builder.add_bound_elements(elements);
-    }
-
-    // Add link if present
-    if let Some(l) = link {
-        element_builder.add_link(l);
-    }
-
-    element_builder.add_locked(element.locked);
-    element_builder.add_z_index(element.z_index);
-
-    // Add strokes if present
-    if let Some(s) = strokes {
-        element_builder.add_stroke(s);
-    }
-
-    // Add backgrounds if present
-    if let Some(bg) = backgrounds {
-        element_builder.add_background(bg);
-    }
-
-    // Add description field if present
-    if let Some(description) = description_offset {
-        element_builder.add_description(description);
-    }
-    element_builder.add_no_plot(element.no_plot);
-
-    element_builder
+    let mut base_builder = _DucElementBaseBuilder::new(builder);
+    base_builder.add_id(id);
+    base_builder.add_styles(styles);
+    base_builder.add_x(base.x);
+    base_builder.add_y(base.y);
+    base_builder.add_width(base.width);
+    base_builder.add_height(base.height);
+    base_builder.add_angle(base.angle);
+    base_builder.add_scope(scope);
+    base_builder.add_label(label);
+    base_builder.add_description(description);
+    base_builder.add_is_visible(base.is_visible);
+    base_builder.add_seed(base.seed);
+    base_builder.add_version(base.version);
+    base_builder.add_version_nonce(base.version_nonce);
+    base_builder.add_updated(base.updated);
+    base_builder.add_index(index);
+    base_builder.add_is_plot(base.is_plot);
+    base_builder.add_is_annotative(base.is_annotative);
+    base_builder.add_is_deleted(base.is_deleted);
+    base_builder.add_group_ids(group_ids);
+    base_builder.add_region_ids(region_ids);
+    base_builder.add_layer_id(layer_id);
+    base_builder.add_frame_id(frame_id);
+    base_builder.add_z_index(base.z_index);
+    base_builder.add_link(link);
+    base_builder.add_locked(base.locked);
+    base_builder.add_custom_data(custom_data);
+    base_builder.finish()
 }
 
 /// Serialize a Text element
@@ -316,11 +225,6 @@ pub fn serialize_text_element<'a>(
     // Add blending mode if present
     if let Some(blending) = element.base.blending {
         element_builder.add_blending(blending as i8);
-    }
-
-    // Add element subset if present
-    if let Some(subset) = element.base.subset {
-        element_builder.add_subset(subset as i8);
     }
 
     element_builder.add_opacity(element.base.opacity as f32);
@@ -693,81 +597,44 @@ pub fn serialize_frame_element<'a>(
     builder: &mut FlatBufferBuilder<'a>,
     element: &DucFrameElement,
 ) -> WIPOffset<FbDucElement<'a>> {
-    // Create labeling color string
-    let labeling_color_offset = builder.create_string(&element.labeling_color);
+    // Create the base element
+    let base_element = serialize_base_duc_element_with_builder(builder, &element.stack_element_base.base);
     
-    // Create stroke override if present
-    let stroke_override_offset = if let Some(stroke) = &element.stroke_override {
-        Some(serialize_element_stroke(builder, stroke))
-    } else {
-        None
-    };
+    // Create the stack styles
+    let styles = serialize_duc_stack_like_styles(builder, &element.stack_element_base.stack_base.styles);
     
-    // Create background override if present
-    let background_override_offset = if let Some(background) = &element.background_override {
-        Some(serialize_element_background(builder, background))
-    } else {
-        None
-    };
-
-    // Now create the element builder
-    let mut element_builder = serialize_base_duc_element_with_builder(builder, &element.base);
-
-    // Add frame-specific fields
-    element_builder.add_stack_like_is_collapsed(element.is_collapsed);
-    element_builder.add_stack_like_clip(element.clip);
-    element_builder.add_stack_like_labeling_color(labeling_color_offset);
+    // Create all strings first to avoid borrow checker issues
+    let label = builder.create_string(&element.stack_element_base.stack_base.label);
+    let description = builder.create_string(&element.stack_element_base.stack_base.description);
+    let standard_override = builder.create_string(&element.stack_element_base.standard_override);
     
-    if let Some(stroke_offset) = stroke_override_offset {
-        element_builder.add_stack_like_stroke_override(stroke_offset);
-    }
+    // Create the stack base
+    let mut stack_base_builder = fb::_DucStackBaseBuilder::new(builder);
+    stack_base_builder.add_label(label);
+    stack_base_builder.add_description(description);
+    stack_base_builder.add_is_collapsed(element.stack_element_base.stack_base.is_collapsed);
+    stack_base_builder.add_is_plot(element.stack_element_base.stack_base.is_plot);
+    stack_base_builder.add_is_visible(element.stack_element_base.stack_base.is_visible);
+    stack_base_builder.add_locked(element.stack_element_base.stack_base.locked);
+    stack_base_builder.add_styles(styles);
+    let stack_base = stack_base_builder.finish();
     
-    if let Some(bg_offset) = background_override_offset {
-        element_builder.add_stack_like_background_override(bg_offset);
-    }
-
-    element_builder.finish()
-}
-
-/// Serialize a MagicFrame element
-pub fn serialize_magic_frame_element<'a>(
-    builder: &mut FlatBufferBuilder<'a>,
-    element: &DucMagicFrameElement,
-) -> WIPOffset<FbDucElement<'a>> {
-    // Create labeling color string
-    let labeling_color_offset = builder.create_string(&element.labeling_color);
+    // Create the stack element base
+    let mut stack_element_base_builder = fb::_DucStackElementBaseBuilder::new(builder);
+    stack_element_base_builder.add_base(base_element);
+    stack_element_base_builder.add_stack_base(stack_base);
+    stack_element_base_builder.add_clip(element.stack_element_base.clip);
+    stack_element_base_builder.add_label_visible(element.stack_element_base.label_visible);
+    stack_element_base_builder.add_standard_override(standard_override);
+    let stack_element_base = stack_element_base_builder.finish();
     
-    // Create stroke override if present
-    let stroke_override_offset = if let Some(stroke) = &element.stroke_override {
-        Some(serialize_element_stroke(builder, stroke))
-    } else {
-        None
-    };
+    // Create the frame element
+    let mut frame_builder = fb::DucFrameElementBuilder::new(builder);
+    frame_builder.add_stack_element_base(stack_element_base);
+    let frame_element = frame_builder.finish();
     
-    // Create background override if present
-    let background_override_offset = if let Some(background) = &element.background_override {
-        Some(serialize_element_background(builder, background))
-    } else {
-        None
-    };
-
-    // Now create the element builder
-    let mut element_builder = serialize_base_duc_element_with_builder(builder, &element.base);
-
-    // Add magicframe-specific fields
-    element_builder.add_stack_like_is_collapsed(element.is_collapsed);
-    element_builder.add_stack_like_clip(element.clip);
-    element_builder.add_stack_like_labeling_color(labeling_color_offset);
-    
-    if let Some(stroke_offset) = stroke_override_offset {
-        element_builder.add_stack_like_stroke_override(stroke_offset);
-    }
-    
-    if let Some(bg_offset) = background_override_offset {
-        element_builder.add_stack_like_background_override(bg_offset);
-    }
-
-    element_builder.finish()
+    // Return the frame element as a union offset
+    flatbuffers::WIPOffset::new(frame_element.value())
 }
 
 /// Helper function to serialize a Point
@@ -1093,21 +960,21 @@ pub fn serialize_table_element<'a>(
 
     let columns_offsets = element
         .columns
-        .values()
+        .iter()
         .map(|col| serialize_duc_table_column(builder, col))
         .collect::<Vec<_>>();
     let columns_vector = Some(builder.create_vector(&columns_offsets));
 
     let rows_offsets = element
         .rows
-        .values()
+        .iter()
         .map(|row| serialize_duc_table_row(builder, row))
         .collect::<Vec<_>>();
     let rows_vector = Some(builder.create_vector(&rows_offsets));
 
     let cells_offsets = element
         .cells
-        .values()
+        .iter()
         .map(|cell| serialize_duc_table_cell(builder, cell))
         .collect::<Vec<_>>();
     let cells_vector = Some(builder.create_vector(&cells_offsets));
@@ -1122,28 +989,32 @@ pub fn serialize_table_element<'a>(
         table_style_builder.finish()
     });
 
-    let mut element_builder = serialize_base_duc_element_with_builder(builder, &element.base);
+    let base_element = serialize_base_duc_element_with_builder(builder, &element.base);
 
+    let mut table_builder = DucTableElementBuilder::new(builder);
+    table_builder.add_base(base_element);
+    
     if let Some(vec) = column_order_vector {
-        element_builder.add_table_column_order(vec);
+        table_builder.add_column_order(vec);
     }
     if let Some(vec) = row_order_vector {
-        element_builder.add_table_row_order(vec);
+        table_builder.add_row_order(vec);
     }
     if let Some(vec) = columns_vector {
-        element_builder.add_table_columns(vec);
+        table_builder.add_columns(vec);
     }
     if let Some(vec) = rows_vector {
-        element_builder.add_table_rows(vec);
+        table_builder.add_rows(vec);
     }
     if let Some(vec) = cells_vector {
-        element_builder.add_table_cells(vec);
+        table_builder.add_cells(vec);
     }
     if let Some(offset) = table_style_offset {
-        element_builder.add_table_style(offset);
+        table_builder.add_style(offset);
     }
 
-    element_builder.finish()
+    let table_element = table_builder.finish();
+    flatbuffers::WIPOffset::new(table_element.value())
 }
 
 /// Serialize a Doc element
@@ -1151,10 +1022,15 @@ pub fn serialize_doc_element<'a>(
     builder: &mut FlatBufferBuilder<'a>,
     element: &DucDocElement,
 ) -> WIPOffset<FbDucElement<'a>> {
-    let content_offset = builder.create_string(&element.content);
-    let mut element_builder = serialize_base_duc_element_with_builder(builder, &element.base);
-    element_builder.add_doc_content(content_offset);
-    element_builder.finish()
+    let content_offset = builder.create_string(&element.text);
+    let base_element = serialize_base_duc_element_with_builder(builder, &element.base);
+    
+    let mut doc_builder = DucDocElementBuilder::new(builder);
+    doc_builder.add_base(base_element);
+    doc_builder.add_text(content_offset);
+    
+    let doc_element = doc_builder.finish();
+    flatbuffers::WIPOffset::new(doc_element.value())
 }
 
 // Helper functions for serializing table components
@@ -1279,22 +1155,17 @@ pub fn serialize_ellipse_element<'a>(
     builder: &mut FlatBufferBuilder<'a>,
     element: &DucEllipseElement,
 ) -> WIPOffset<FbDucElement<'a>> {
-    let mut element_builder = serialize_base_duc_element_with_builder(builder, &element.base);
-
-    if let Some(ratio) = element.ratio {
-        element_builder.add_ellipse_ratio(ratio);
-    }
-    if let Some(start_angle) = element.start_angle {
-        element_builder.add_ellipse_start_angle(start_angle);
-    }
-    if let Some(end_angle) = element.end_angle {
-        element_builder.add_ellipse_end_angle(end_angle);
-    }
-    if let Some(show_aux_crosshair) = element.show_aux_crosshair {
-        element_builder.add_ellipse_show_aux_crosshair(show_aux_crosshair);
-    }
-
-    element_builder.finish()
+    let base_element = serialize_base_duc_element_with_builder(builder, &element.base);
+    
+    let mut ellipse_builder = DucEllipseElementBuilder::new(builder);
+    ellipse_builder.add_base(base_element);
+    ellipse_builder.add_ratio(element.ratio);
+    ellipse_builder.add_start_angle(element.start_angle);
+    ellipse_builder.add_end_angle(element.end_angle);
+    ellipse_builder.add_show_aux_crosshair(element.show_aux_crosshair);
+    
+    let ellipse_element = ellipse_builder.finish();
+    flatbuffers::WIPOffset::new(ellipse_element.value())
 }
 
 /// Serialize a BlockInstance element
@@ -1305,33 +1176,112 @@ pub fn serialize_block_instance_element<'a>(
     let block_id_offset = builder.create_string(&element.block_id);
     
     // Serialize block element overrides if present
-    let overrides_vector = if let Some(overrides) = &element.block_element_overrides {
-        if !overrides.is_empty() {
-            let mut overrides_vec = Vec::with_capacity(overrides.len());
-            for (element_id, overrides_json) in overrides {
-                let element_id_offset = builder.create_string(element_id);
-                let overrides_offset = builder.create_string(overrides_json);
-                
-                let mut override_builder = DucBlockInstanceElementOverrideBuilder::new(builder);
-                override_builder.add_element_id(element_id_offset);
-                override_builder.add_overrides(overrides_offset);
-                
-                overrides_vec.push(override_builder.finish());
-            }
-            Some(builder.create_vector(&overrides_vec))
-        } else {
-            None
+    let overrides_vector = if !element.element_overrides.is_empty() {
+        let mut overrides_vec = Vec::with_capacity(element.element_overrides.len());
+        for override_entry in &element.element_overrides {
+            let key_offset = builder.create_string(&override_entry.key);
+            let value_offset = builder.create_string(&override_entry.value);
+            
+            // Note: Need to replace DucBlockInstanceElementOverrideBuilder with actual type
+            let mut override_builder = StringValueEntryBuilder::new(builder);
+            override_builder.add_key(key_offset);
+            override_builder.add_value(value_offset);
+            
+            overrides_vec.push(override_builder.finish());
         }
+        Some(builder.create_vector(&overrides_vec))
     } else {
         None
     };
 
-    let mut element_builder = serialize_base_duc_element_with_builder(builder, &element.base);
-    element_builder.add_block_instance_block_id(block_id_offset);
+    let base_element = serialize_base_duc_element_with_builder(builder, &element.base);
+    
+    let mut block_instance_builder = DucBlockInstanceElementBuilder::new(builder);
+    block_instance_builder.add_base(base_element);
+    block_instance_builder.add_block_id(block_id_offset);
     
     if let Some(overrides) = overrides_vector {
-        element_builder.add_block_instance_element_overrides(overrides);
+        block_instance_builder.add_element_overrides(overrides);
     }
 
-    element_builder.finish()
+    let block_instance_element = block_instance_builder.finish();
+    flatbuffers::WIPOffset::new(block_instance_element.value())
+}
+
+// Missing element serialization functions - TODO: implement properly
+pub fn serialize_rectangle_element<'a>(
+    builder: &mut FlatBufferBuilder<'a>,
+    _element: &DucRectangleElement,
+) -> WIPOffset<FbDucElement<'a>> {
+    todo!("Rectangle element serialization not implemented")
+}
+
+pub fn serialize_embeddable_element<'a>(
+    builder: &mut FlatBufferBuilder<'a>,
+    _element: &DucEmbeddableElement,
+) -> WIPOffset<FbDucElement<'a>> {
+    todo!("Embeddable element serialization not implemented")
+}
+
+pub fn serialize_pdf_element<'a>(
+    builder: &mut FlatBufferBuilder<'a>,
+    _element: &DucPdfElement,
+) -> WIPOffset<FbDucElement<'a>> {
+    todo!("PDF element serialization not implemented")
+}
+
+pub fn serialize_mermaid_element<'a>(
+    builder: &mut FlatBufferBuilder<'a>,
+    _element: &DucMermaidElement,
+) -> WIPOffset<FbDucElement<'a>> {
+    todo!("Mermaid element serialization not implemented")
+}
+
+pub fn serialize_plot_element<'a>(
+    builder: &mut FlatBufferBuilder<'a>,
+    _element: &DucPlotElement,
+) -> WIPOffset<FbDucElement<'a>> {
+    todo!("Plot element serialization not implemented")
+}
+
+pub fn serialize_viewport_element<'a>(
+    builder: &mut FlatBufferBuilder<'a>,
+    _element: &DucViewportElement,
+) -> WIPOffset<FbDucElement<'a>> {
+    todo!("Viewport element serialization not implemented")
+}
+
+pub fn serialize_xray_element<'a>(
+    builder: &mut FlatBufferBuilder<'a>,
+    _element: &DucXRayElement,
+) -> WIPOffset<FbDucElement<'a>> {
+    todo!("XRay element serialization not implemented")
+}
+
+pub fn serialize_leader_element<'a>(
+    builder: &mut FlatBufferBuilder<'a>,
+    _element: &DucLeaderElement,
+) -> WIPOffset<FbDucElement<'a>> {
+    todo!("Leader element serialization not implemented")
+}
+
+pub fn serialize_dimension_element<'a>(
+    builder: &mut FlatBufferBuilder<'a>,
+    _element: &DucDimensionElement,
+) -> WIPOffset<FbDucElement<'a>> {
+    todo!("Dimension element serialization not implemented")
+}
+
+pub fn serialize_feature_control_frame_element<'a>(
+    builder: &mut FlatBufferBuilder<'a>,
+    _element: &DucFeatureControlFrameElement,
+) -> WIPOffset<FbDucElement<'a>> {
+    todo!("Feature control frame element serialization not implemented")
+}
+
+pub fn serialize_parametric_element<'a>(
+    builder: &mut FlatBufferBuilder<'a>,
+    _element: &DucParametricElement,
+) -> WIPOffset<FbDucElement<'a>> {
+    todo!("Parametric element serialization not implemented")
 }

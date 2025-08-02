@@ -30686,7 +30686,8 @@ impl<'a> flatbuffers::Follow<'a> for JSONPatchOperation<'a> {
 impl<'a> JSONPatchOperation<'a> {
   pub const VT_OP: flatbuffers::VOffsetT = 4;
   pub const VT_PATH: flatbuffers::VOffsetT = 6;
-  pub const VT_VALUE: flatbuffers::VOffsetT = 8;
+  pub const VT_FROM: flatbuffers::VOffsetT = 8;
+  pub const VT_VALUE: flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -30699,6 +30700,7 @@ impl<'a> JSONPatchOperation<'a> {
   ) -> flatbuffers::WIPOffset<JSONPatchOperation<'bldr>> {
     let mut builder = JSONPatchOperationBuilder::new(_fbb);
     if let Some(x) = args.value { builder.add_value(x); }
+    if let Some(x) = args.from { builder.add_from(x); }
     if let Some(x) = args.path { builder.add_path(x); }
     if let Some(x) = args.op { builder.add_op(x); }
     builder.finish()
@@ -30720,6 +30722,13 @@ impl<'a> JSONPatchOperation<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(JSONPatchOperation::VT_PATH, None)}
   }
   #[inline]
+  pub fn from(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(JSONPatchOperation::VT_FROM, None)}
+  }
+  #[inline]
   pub fn value(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
@@ -30737,6 +30746,7 @@ impl flatbuffers::Verifiable for JSONPatchOperation<'_> {
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("op", Self::VT_OP, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("path", Self::VT_PATH, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("from", Self::VT_FROM, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("value", Self::VT_VALUE, false)?
      .finish();
     Ok(())
@@ -30745,6 +30755,7 @@ impl flatbuffers::Verifiable for JSONPatchOperation<'_> {
 pub struct JSONPatchOperationArgs<'a> {
     pub op: Option<flatbuffers::WIPOffset<&'a str>>,
     pub path: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub from: Option<flatbuffers::WIPOffset<&'a str>>,
     pub value: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for JSONPatchOperationArgs<'a> {
@@ -30753,6 +30764,7 @@ impl<'a> Default for JSONPatchOperationArgs<'a> {
     JSONPatchOperationArgs {
       op: None,
       path: None,
+      from: None,
       value: None,
     }
   }
@@ -30770,6 +30782,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> JSONPatchOperationBuilder<'a, '
   #[inline]
   pub fn add_path(&mut self, path: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(JSONPatchOperation::VT_PATH, path);
+  }
+  #[inline]
+  pub fn add_from(&mut self, from: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(JSONPatchOperation::VT_FROM, from);
   }
   #[inline]
   pub fn add_value(&mut self, value: flatbuffers::WIPOffset<&'b  str>) {
@@ -30795,6 +30811,7 @@ impl core::fmt::Debug for JSONPatchOperation<'_> {
     let mut ds = f.debug_struct("JSONPatchOperation");
       ds.field("op", &self.op());
       ds.field("path", &self.path());
+      ds.field("from", &self.from());
       ds.field("value", &self.value());
       ds.finish()
   }
