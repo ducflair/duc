@@ -36,15 +36,22 @@ path(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-value():string|null
-value(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-value(optionalEncoding?:any):string|Uint8Array|null {
+from():string|null
+from(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+from(optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
+value():string|null
+value(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+value(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 10);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
 static startJSONPatchOperation(builder:flatbuffers.Builder) {
-  builder.startObject(3);
+  builder.startObject(4);
 }
 
 static addOp(builder:flatbuffers.Builder, opOffset:flatbuffers.Offset) {
@@ -55,8 +62,12 @@ static addPath(builder:flatbuffers.Builder, pathOffset:flatbuffers.Offset) {
   builder.addFieldOffset(1, pathOffset, 0);
 }
 
+static addFrom(builder:flatbuffers.Builder, fromOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(2, fromOffset, 0);
+}
+
 static addValue(builder:flatbuffers.Builder, valueOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, valueOffset, 0);
+  builder.addFieldOffset(3, valueOffset, 0);
 }
 
 static endJSONPatchOperation(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -64,10 +75,11 @@ static endJSONPatchOperation(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createJSONPatchOperation(builder:flatbuffers.Builder, opOffset:flatbuffers.Offset, pathOffset:flatbuffers.Offset, valueOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createJSONPatchOperation(builder:flatbuffers.Builder, opOffset:flatbuffers.Offset, pathOffset:flatbuffers.Offset, fromOffset:flatbuffers.Offset, valueOffset:flatbuffers.Offset):flatbuffers.Offset {
   JSONPatchOperation.startJSONPatchOperation(builder);
   JSONPatchOperation.addOp(builder, opOffset);
   JSONPatchOperation.addPath(builder, pathOffset);
+  JSONPatchOperation.addFrom(builder, fromOffset);
   JSONPatchOperation.addValue(builder, valueOffset);
   return JSONPatchOperation.endJSONPatchOperation(builder);
 }
