@@ -623,12 +623,12 @@ export const restoreVersionGraph = (
           !op ||
           typeof op !== "object" ||
           !isValidString(op.op) ||
-          !isValidString(op.from)
+          !isValidString(op.path)
         ) {
           isPatchValid = false;
           break;
         }
-        patch.push({ op: op.op, path: op.path, from: op.from, value: op.value });
+        patch.push({ op: op.op, path: op.path, value: op.value });
       }
       if (!isPatchValid) {
         continue;
