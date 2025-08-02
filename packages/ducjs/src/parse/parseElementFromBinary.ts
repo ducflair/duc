@@ -1,5 +1,6 @@
 import {
-  BEZIER_MIRRORING as BezierMirroring, DucArrowElement as BinDucArrowElement,
+  BEZIER_MIRRORING as BezierMirroring,
+  DucArrowElement as BinDucArrowElement,
   DucBlockInstanceElement as BinDucBlockInstanceElement,
   DucDimensionElement as BinDucDimensionElement,
   DucDocElement as BinDucDocElement,
@@ -9,19 +10,37 @@ import {
   DucFrameElement as BinDucFrameElement,
   DucFreeDrawElement as BinDucFreeDrawElement,
   DucImageElement as BinDucImageElement,
-  DucLeaderElement as BinDucLeaderElement, DucLine as BinDucLine, DucLinearElement as BinDucLinearElement, DucLineReference as BinDucLineReference, DucMermaidElement as BinDucMermaidElement,
-  DucParametricElement as BinDucParametricElement, DucPath as BinDucPath, DucPdfElement as BinDucPdfElement,
+  DucLeaderElement as BinDucLeaderElement,
+  DucLine as BinDucLine,
+  DucLinearElement as BinDucLinearElement,
+  DucLineReference as BinDucLineReference,
+  DucMermaidElement as BinDucMermaidElement,
+  DucParametricElement as BinDucParametricElement,
+  DucPath as BinDucPath,
+  DucPdfElement as BinDucPdfElement,
   DucPlotElement as BinDucPlotElement,
   DucPoint as BinDucPoint,
   DucPolygonElement as BinDucPolygonElement,
-  DucRectangleElement as BinDucRectangleElement, _DucStackBase as BinDucStackBase, DucTableCellStyle as BinDucTableCellStyle, DucTableElement as BinDucTableElement, DucTextElement as BinDucTextElement,
+  DucRectangleElement as BinDucRectangleElement,
+  _DucStackBase as BinDucStackBase,
+  DucTableCellStyle as BinDucTableCellStyle,
+  DucTableElement as BinDucTableElement,
+  DucTextElement as BinDucTextElement,
   DucViewportElement as BinDucViewportElement,
   DucXRayElement as BinDucXRayElement,
-  _DucElementBase as BinElementBase, ElementContentBase as BinElementContentBase,
+  _DucElementBase as BinElementBase,
+  ElementContentBase as BinElementContentBase,
   _DucElementStylesBase as BinElementStylesBase,
-  ElementStroke as BinElementStroke, ElementWrapper as BinElementWrapper, ImageCrop as BinImageCrop, DucPointBinding as BinPointBinding, PointBindingPoint as BinPointBindingPoint,
+  ElementStroke as BinElementStroke,
+  ElementWrapper as BinElementWrapper,
+  ImageCrop as BinImageCrop,
+  DucPointBinding as BinPointBinding,
+  PointBindingPoint as BinPointBindingPoint,
   StrokeSides as BinStrokeSides,
-  TilingProperties as BinTilingProperties, BLENDING as Blending, LINE_SPACING_TYPE, LINE_HEAD as LineHead,
+  TilingProperties as BinTilingProperties,
+  BLENDING as Blending,
+  LINE_SPACING_TYPE,
+  LINE_HEAD as LineHead,
   STROKE_CAP as StrokeCap,
   STROKE_JOIN as StrokeJoin,
   STROKE_PLACEMENT as StrokePlacement,
@@ -38,8 +57,11 @@ import {
   DucTextDynamicSource as BinDucTextDynamicSource,
   DucTextDynamicPart as BinDucTextDynamicPart,
   DimensionDefinitionPoints as BinDimensionDefinitionPoints,
-  STROKE_SIDE_PREFERENCE as StrokeSidePreference, TABLE_CELL_ALIGNMENT,
-  TABLE_FLOW_DIRECTION, TEXT_FIELD_SOURCE_TYPE, TEXT_ALIGN as TextAlign,
+  STROKE_SIDE_PREFERENCE as StrokeSidePreference,
+  TABLE_CELL_ALIGNMENT,
+  TABLE_FLOW_DIRECTION,
+  TEXT_FIELD_SOURCE_TYPE,
+  TEXT_ALIGN as TextAlign,
   VERTICAL_ALIGN as VerticalAlign,
   DucTextDynamicSourceData as BinDucTextDynamicSourceData,
   LeaderContent as BinLeaderContent,
@@ -927,16 +949,30 @@ export function parseElementFromBinary(
         smoothing: (freeDrawElement.smoothing() ?? undefined) as Percentage,
         streamline: (freeDrawElement.streamline() ?? undefined) as Percentage,
         easing: freeDrawElement.easing() ? FREEDRAW_EASINGS[freeDrawElement.easing() as keyof typeof FREEDRAW_EASINGS] : undefined,
-        start: freeDrawElement.start() !== null || freeDrawElement.start() !== null || freeDrawElement.start() !== null ? {
-          cap: freeDrawElement.start()?.cap() ?? undefined,
-          taper: (freeDrawElement.start()?.taper() ?? undefined) as Percentage,
-          easing: freeDrawElement.start()?.easing() ? FREEDRAW_EASINGS[freeDrawElement.start()?.easing() as keyof typeof FREEDRAW_EASINGS] : undefined,
-        } : undefined,
-        end: freeDrawElement.end() !== null || freeDrawElement.end() !== null || freeDrawElement.end() !== null ? {
-          cap: freeDrawElement.end()?.cap() ?? undefined,
-          taper: (freeDrawElement.end()?.taper() ?? undefined) as Percentage,
-          easing: freeDrawElement.end()?.easing() ? FREEDRAW_EASINGS[freeDrawElement.end()?.easing() as keyof typeof FREEDRAW_EASINGS] : undefined,
-        } : undefined,
+        start: (() => {
+          const start = freeDrawElement.start();
+          if (!start) return undefined;
+          const cap = start.cap();
+          const taper = start.taper();
+          const easingKey = start.easing();
+          return {
+            ...(cap !== null && { cap }),
+            ...(taper !== null && { taper: taper as Percentage }),
+            ...(easingKey ? { easing: FREEDRAW_EASINGS[easingKey as keyof typeof FREEDRAW_EASINGS] } : {}),
+          };
+        })(),
+        end: (() => {
+          const end = freeDrawElement.end();
+          if (!end) return undefined;
+          const cap = end.cap();
+          const taper = end.taper();
+          const easingKey = end.easing();
+          return {
+            ...(cap !== null && { cap }),
+            ...(taper !== null && { taper: taper as Percentage }),
+            ...(easingKey ? { easing: FREEDRAW_EASINGS[easingKey as keyof typeof FREEDRAW_EASINGS] } : {}),
+          };
+        })(),
         svgPath: freeDrawElement.svgPath() ?? undefined,
       } as DucFreeDrawElement;
     case "image":
@@ -947,7 +983,17 @@ export function parseElementFromBinary(
         type: elType,
         fileId: imageElement.fileId() ? imageElement.fileId()! as ExternalFileId : null,
         status: imageElement.status()!,
-        scale: (() => { const scaleLength = imageElement.scaleLength(); return scaleLength >= 2 ? [imageElement.scale(0)!, imageElement.scale(1)!] : [1, 1]; })(),
+        scale: (() => {
+          const scaleLength = imageElement.scaleLength();
+          if (scaleLength >= 2) {
+            const x = imageElement.scale(0);
+            const y = imageElement.scale(1);
+            if (x !== null && y !== null) {
+              return [x, y] as [number, number];
+            }
+          }
+          return undefined;
+        })(),
         crop: parseImageCrop(imageElement.crop()),
         filter: imageElement.filter() ? parseDucImageFilterFromBinary(imageElement.filter()) : null
       } as DucImageElement;
@@ -1144,16 +1190,22 @@ export function parseElementFromBinary(
       
       // Parse duplication array
       const duplicationArrayData = blockInstanceElement.duplicationArray();
-      const duplicationArray = duplicationArrayData ? {
-        rows: duplicationArrayData.rows() ?? null!,
-        cols: duplicationArrayData.cols() ?? null!,
-        rowSpacing: duplicationArrayData.rowSpacing() !== undefined ? 
-          getPrecisionValueFromRaw(duplicationArrayData.rowSpacing() as RawValue, elementScope, elementScope) : 
-          getPrecisionValueFromRaw(0 as RawValue, elementScope, elementScope),
-        colSpacing: duplicationArrayData.colSpacing() !== undefined ? 
-          getPrecisionValueFromRaw(duplicationArrayData.colSpacing() as RawValue, elementScope, elementScope) : 
-          getPrecisionValueFromRaw(0 as RawValue, elementScope, elementScope),
-      } : null;
+      const duplicationArray = (() => {
+        if (!duplicationArrayData) return null;
+        const rows = duplicationArrayData.rows();
+        const cols = duplicationArrayData.cols();
+        const rowSpacing = duplicationArrayData.rowSpacing();
+        const colSpacing = duplicationArrayData.colSpacing();
+        if (rows === null || cols === null || rowSpacing === null || colSpacing === null) {
+          return null;
+        }
+        return {
+          rows,
+          cols,
+          rowSpacing: getPrecisionValueFromRaw(rowSpacing as RawValue, elementScope, elementScope),
+          colSpacing: getPrecisionValueFromRaw(colSpacing as RawValue, elementScope, elementScope),
+        };
+      })();
       
       return {
         ...baseElement,
@@ -1267,10 +1319,12 @@ export function parseElementFromBinary(
       
       // Parse auto size
       const autoSize = tableElement.autoSize();
-      const parsedAutoSize = autoSize ? {
-        columns: autoSize.columns(),
-        rows: autoSize.rows(),
-      } : { columns: false, rows: false };
+      const parsedAutoSize = autoSize
+        ? {
+            columns: autoSize.columns(),
+            rows: autoSize.rows(),
+          }
+        : undefined;
       
       return {
         ...baseElement,
@@ -1280,7 +1334,7 @@ export function parseElementFromBinary(
         columns,
         rows: tableRows,
         cells,
-        headerRowCount: tableElement.headerRowCount(),
+        ...(tableElement.headerRowCount() !== null && { headerRowCount: tableElement.headerRowCount() }),
         autoSize: parsedAutoSize,
         ...(tableStyle ? {
           flowDirection: tableStyle.flowDirection() as TABLE_FLOW_DIRECTION,
@@ -1323,21 +1377,34 @@ export function parseElementFromBinary(
       
       // Parse view configuration
       const viewData = viewportElement.view?.();
-      const view = viewData ? {
-        scrollX: viewData.scrollX() !== undefined ? 
-          getPrecisionValueFromRaw(viewData.scrollX() as RawValue, elementScope, elementScope) : 
-          (undefined as any),
-        scrollY: viewData.scrollY() !== undefined ? 
-          getPrecisionValueFromRaw(viewData.scrollY() as RawValue, elementScope, elementScope) : 
-          (undefined as any),
-        zoom: viewData.zoom() !== undefined && { value: viewData.zoom() as NormalizedZoomValue, } as Zoom,
-        twistAngle: viewData.twistAngle() !== undefined && viewData.twistAngle() as Radian,
-        centerPoint: viewData.centerPoint() ? parsePoint(viewData.centerPoint(), elementScope) : (undefined as any),
-        scope: elementScope,
-      } : (undefined as any);
+      const view = (() => {
+        if (!viewData) return undefined;
+        const out: Partial<Zoom> & Partial<{
+          scrollX: PrecisionValue;
+          scrollY: PrecisionValue;
+          twistAngle: Radian;
+          centerPoint: DucPoint;
+          scope: Scope;
+        }> = {};
+        const sx = viewData.scrollX();
+        const sy = viewData.scrollY();
+        const z = viewData.zoom();
+        const ta = viewData.twistAngle();
+        const cp = viewData.centerPoint();
+        if (sx !== null) out.scrollX = getPrecisionValueFromRaw(sx as RawValue, elementScope, elementScope);
+        if (sy !== null) out.scrollY = getPrecisionValueFromRaw(sy as RawValue, elementScope, elementScope);
+        if (z !== null) (out as any).zoom = { value: z as NormalizedZoomValue } as Zoom;
+        if (ta !== null) out.twistAngle = ta as Radian;
+        if (cp) {
+          const parsed = parsePoint(cp, elementScope);
+          if (parsed) out.centerPoint = parsed;
+        }
+        out.scope = elementScope;
+        return Object.keys(out).length ? (out as any) : undefined;
+      })();
       
       // Parse scale settings (ViewportScale is a branded number)
-      const scale = viewportElement.scale() !== undefined && viewportElement.scale() as ViewportScale;
+      const scale = viewportElement.scale() !== null ? (viewportElement.scale() as ViewportScale) : undefined;
       
       // Parse shade plot setting
       const shadePlot = viewportElement.shadePlot?.();
@@ -1409,7 +1476,7 @@ export function parseElementFromBinary(
       
       // Parse viewport style properties
       const styleData = viewportElement.style?.();
-      const scaleIndicatorVisible = styleData?.scaleIndicatorVisible() ?? null!;
+      const scaleIndicatorVisible = styleData && styleData.scaleIndicatorVisible() !== null ? styleData.scaleIndicatorVisible() : undefined;
       
       return {
         ...baseElement,
@@ -1426,8 +1493,8 @@ export function parseElementFromBinary(
         frozenGroupIds,
         standardOverride,
         // Stack base properties (from _DucStackBase)
-        isCollapsed: viewportElement.stackBase()?.isCollapsed() ?? null!,
-        labelingColor: viewportElement.stackBase()?.styles()?.labelingColor() ?? null!,
+        ...(viewportElement.stackBase() && viewportElement.stackBase()!.isCollapsed() !== null && { isCollapsed: viewportElement.stackBase()!.isCollapsed() }),
+        ...(viewportElement.stackBase() && viewportElement.stackBase()!.styles() && viewportElement.stackBase()!.styles()!.labelingColor() !== null && { labelingColor: viewportElement.stackBase()!.styles()!.labelingColor() }),
         // Viewport style properties
         scaleIndicatorVisible,
       } as DucViewportElement;
@@ -1460,10 +1527,12 @@ export function parseElementFromBinary(
         startBinding: leaderElement.linearBase() && leaderElement.linearBase()!.startBinding() ? parsePointBinding(leaderElement.linearBase()!.startBinding(), elementScope) : null,
         endBinding: leaderElement.linearBase() && leaderElement.linearBase()!.endBinding() ? parsePointBinding(leaderElement.linearBase()!.endBinding(), elementScope) : null,
         leaderContent: leaderElement.content() ? parseLeaderContent(leaderElement.content()!, elementScope) : undefined,
-        contentAnchor: leaderElement.contentAnchor() ? {
-          x: leaderElement.contentAnchor()!.x() ?? null!,
-          y: leaderElement.contentAnchor()!.y() ?? null!,
-        } : { x: 0, y: 0 },
+        contentAnchor: leaderElement.contentAnchor()
+          ? {
+              x: leaderElement.contentAnchor()!.x(),
+              y: leaderElement.contentAnchor()!.y(),
+            }
+          : undefined,
         // Leader style specific properties
         headsOverride: leaderStyleObj && leaderStyleObj.headsOverrideLength() > 0 ? (() => {
           const arr: DucHead[] = [];

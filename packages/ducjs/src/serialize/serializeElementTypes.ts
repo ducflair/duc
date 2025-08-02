@@ -299,33 +299,38 @@ const serializePrimaryUnits = (builder: flatbuffers.Builder, primaryUnits: Stand
 };
 
 const serializeDucTextStyle = (builder: flatbuffers.Builder, element: DucTextStyle): flatbuffers.Offset => {
-  // Serialize base style
-  const baseStyleOffset = serializeElementBackground(builder, element.background[0] || { content: { preference: 12, src: "#000000", visible: true, opacity: 1 } });
+  // Serialize base style only if present via background on element
+  let baseStyleOffset: flatbuffers.Offset | null = null;
+  if (Array.isArray(element.background) && element.background.length > 0) {
+    baseStyleOffset = serializeElementBackground(builder, element.background[0]);
+  }
   
-  const fontFamilyOffset = builder.createString(element.fontFamily?.toString() ?? null!);
-  const bigFontFamilyOffset = builder.createString(element.bigFontFamily?.toString() ?? null!);
+  const fontFamilyOffset = element.fontFamily !== undefined ? builder.createString(element.fontFamily.toString()) : 0;
+  const bigFontFamilyOffset = element.bigFontFamily !== undefined ? builder.createString(element.bigFontFamily.toString()) : 0;
 
   BinDucTextStyle.startDucTextStyle(builder);
-  BinDucTextStyle.addBaseStyle(builder, baseStyleOffset);
-  BinDucTextStyle.addIsLtr(builder, element.isLtr !== false);
-  BinDucTextStyle.addFontFamily(builder, fontFamilyOffset);
-  BinDucTextStyle.addBigFontFamily(builder, bigFontFamilyOffset);
+  if (baseStyleOffset) BinDucTextStyle.addBaseStyle(builder, baseStyleOffset);
+  if (element.isLtr !== undefined) BinDucTextStyle.addIsLtr(builder, element.isLtr);
+  if (fontFamilyOffset) BinDucTextStyle.addFontFamily(builder, fontFamilyOffset);
+  if (bigFontFamilyOffset) BinDucTextStyle.addBigFontFamily(builder, bigFontFamilyOffset);
   if (element.textAlign !== undefined) BinDucTextStyle.addTextAlign(builder, element.textAlign);
   if (element.verticalAlign !== undefined) BinDucTextStyle.addVerticalAlign(builder, element.verticalAlign);
-  BinDucTextStyle.addLineHeight(builder, element.lineHeight ?? null!);
+  if (element.lineHeight !== undefined) BinDucTextStyle.addLineHeight(builder, element.lineHeight as DucTextElement["lineHeight"]);
   
   // Serialize line spacing
   if (element.lineSpacing) {
     BinLineSpacing.startLineSpacing(builder);
     // Handle the union type PrecisionValue | ScaleFactor
-    let lineSpacingValue: number;
+    let lineSpacingValue: number | null = null;
     if (typeof element.lineSpacing.value === 'number') {
-      lineSpacingValue = element.lineSpacing.value ?? null!;
+      lineSpacingValue = element.lineSpacing.value as number;
     } else {
-      // It's a PrecisionValue object, extract the value
-      lineSpacingValue = getPrecisionValueField(element.lineSpacing.value, false) ?? null!;
+      // It's a PrecisionValue-like object, extract the raw value
+      lineSpacingValue = getPrecisionValueField(element.lineSpacing.value, false);
     }
-    BinLineSpacing.addValue(builder, lineSpacingValue);
+    if (lineSpacingValue !== null) {
+      BinLineSpacing.addValue(builder, lineSpacingValue);
+    }
     if (element.lineSpacing.type !== undefined) BinLineSpacing.addType(builder, element.lineSpacing.type);
     const lineSpacingOffset = BinLineSpacing.endLineSpacing(builder);
     BinDucTextStyle.addLineSpacing(builder, lineSpacingOffset);
@@ -415,7 +420,7 @@ export const serializeDucTextElement = (builder: flatbuffers.Builder, element: D
     const containerIdOffset = element.containerId ? builder.createString(element.containerId) : null;
     
     // Serialize originalText
-    const originalTextOffset = builder.createString(element.originalText ?? null!);
+    const originalTextOffset = element.originalText !== undefined ? builder.createString(element.originalText) : 0;
     
     BinDucTextElement.startDucTextElement(builder);
     BinDucTextElement.addBase(builder, baseOffset);
@@ -452,7 +457,7 @@ export const serializeDucFreeDrawElement = (builder: flatbuffers.Builder, elemen
     // Serialize points
     let pointsVector: flatbuffers.Offset | null = null;
     if (element.points && element.points.length > 0) {
-        const pointOffsets = element.points.map((point: any) => serializeDucPoint(builder, point));
+        const pointOffsets = element.points.map((point: DucPoint) => serializeDucPoint(builder, point));
         pointsVector = BinDucFreeDrawElement.createPointsVector(builder, pointOffsets);
     }
     
@@ -602,7 +607,9 @@ export const serializeDucFrameElement = (builder: flatbuffers.Builder, element: 
     if (element.isPlot !== undefined) {
         BinDucStackBase.addIsPlot(builder, element.isPlot);
     }
-    BinDucStackBase.addIsVisible(builder, element.isVisible !== false);
+    if (element.isVisible !== undefined) {
+        BinDucStackBase.addIsVisible(builder, element.isVisible);
+    }
     if (element.locked !== undefined) {
         BinDucStackBase.addLocked(builder, element.locked);
     }
@@ -616,7 +623,9 @@ export const serializeDucFrameElement = (builder: flatbuffers.Builder, element: 
     if (element.clip !== undefined) {
         BinDucStackElementBase.addClip(builder, element.clip);
     }
-    BinDucStackElementBase.addLabelVisible(builder, element.labelVisible !== false);
+    if (element.labelVisible !== undefined) {
+        BinDucStackElementBase.addLabelVisible(builder, element.labelVisible);
+    }
     if (element.standardOverride) {
         const standardOverrideOffset = builder.createString(element.standardOverride);
         BinDucStackElementBase.addStandardOverride(builder, standardOverrideOffset);
@@ -653,7 +662,9 @@ export const serializeDucPlotElement = (builder: flatbuffers.Builder, element: D
     if (element.isPlot !== undefined) {
         BinDucStackBase.addIsPlot(builder, element.isPlot);
     }
-    BinDucStackBase.addIsVisible(builder, element.isVisible !== false);
+    if (element.isVisible !== undefined) {
+        BinDucStackBase.addIsVisible(builder, element.isVisible);
+    }
     if (element.locked !== undefined) {
         BinDucStackBase.addLocked(builder, element.locked);
     }
@@ -667,7 +678,9 @@ export const serializeDucPlotElement = (builder: flatbuffers.Builder, element: D
     if (element.clip !== undefined) {
         BinDucStackElementBase.addClip(builder, element.clip);
     }
-    BinDucStackElementBase.addLabelVisible(builder, element.labelVisible !== false);
+    if (element.labelVisible !== undefined) {
+        BinDucStackElementBase.addLabelVisible(builder, element.labelVisible);
+    }
     if (element.standardOverride) {
         const standardOverrideOffset = builder.createString(element.standardOverride);
         BinDucStackElementBase.addStandardOverride(builder, standardOverrideOffset);
@@ -675,19 +688,25 @@ export const serializeDucPlotElement = (builder: flatbuffers.Builder, element: D
     const stackElementBaseOffset = BinDucStackElementBase.end_DucStackElementBase(builder);
     
     // Create plot style
-    const plotStyleBaseOffset = serializeElementBackground(builder, element.background[0] || { content: { preference: 12, src: "#000000", visible: true, opacity: 1 } });
+    let plotStyleBaseOffset: flatbuffers.Offset | null = null;
+    if (Array.isArray(element.background) && element.background.length > 0) {
+        plotStyleBaseOffset = serializeElementBackground(builder, element.background[0]);
+    }
     BinDucPlotStyle.startDucPlotStyle(builder);
-    BinDucPlotStyle.addBaseStyle(builder, plotStyleBaseOffset);
+    if (plotStyleBaseOffset) BinDucPlotStyle.addBaseStyle(builder, plotStyleBaseOffset);
     const plotStyleOffset = BinDucPlotStyle.endDucPlotStyle(builder);
     
     // Create layout
     if (element.layout) {
         BinMargins.startMargins(builder);
-        const marginsValue = getPrecisionValueField(element.layout.margins.top, false) ?? null!;
-        BinMargins.addTop(builder, marginsValue);
-        BinMargins.addRight(builder, getPrecisionValueField(element.layout.margins.right, false) ?? null!);
-        BinMargins.addBottom(builder, getPrecisionValueField(element.layout.margins.bottom, false) ?? null!);
-        BinMargins.addLeft(builder, getPrecisionValueField(element.layout.margins.left, false) ?? null!);
+        const top = getPrecisionValueField(element.layout.margins.top, false);
+        const right = getPrecisionValueField(element.layout.margins.right, false);
+        const bottom = getPrecisionValueField(element.layout.margins.bottom, false);
+        const left = getPrecisionValueField(element.layout.margins.left, false);
+        if (top !== null) BinMargins.addTop(builder, top);
+        if (right !== null) BinMargins.addRight(builder, right);
+        if (bottom !== null) BinMargins.addBottom(builder, bottom);
+        if (left !== null) BinMargins.addLeft(builder, left);
         const marginsOffset = BinMargins.endMargins(builder);
         
         BinPlotLayout.startPlotLayout(builder);
@@ -732,7 +751,9 @@ export const serializeDucViewportElement = (builder: flatbuffers.Builder, elemen
     if (element.isPlot !== undefined) {
         BinDucStackBase.addIsPlot(builder, element.isPlot);
     }
-    BinDucStackBase.addIsVisible(builder, element.isVisible !== false);
+    if (element.isVisible !== undefined) {
+        BinDucStackBase.addIsVisible(builder, element.isVisible);
+    }
     if (element.locked !== undefined) {
         BinDucStackBase.addLocked(builder, element.locked);
     }
@@ -740,10 +761,13 @@ export const serializeDucViewportElement = (builder: flatbuffers.Builder, elemen
     const stackBaseOffset = BinDucStackBase.end_DucStackBase(builder);
     
     // Create viewport style
-    const viewportStyleBaseOffset = serializeElementBackground(builder, element.background[0] || { content: { preference: 12, src: "#000000", visible: true, opacity: 1 } });
+    let viewportStyleBaseOffset: flatbuffers.Offset | null = null;
+    if (Array.isArray(element.background) && element.background.length > 0) {
+        viewportStyleBaseOffset = serializeElementBackground(builder, element.background[0]);
+    }
     BinDucViewportStyle.startDucViewportStyle(builder);
-    BinDucViewportStyle.addBaseStyle(builder, viewportStyleBaseOffset);
-    BinDucViewportStyle.addScaleIndicatorVisible(builder, element.scaleIndicatorVisible !== false);
+    if (viewportStyleBaseOffset) BinDucViewportStyle.addBaseStyle(builder, viewportStyleBaseOffset);
+    if (element.scaleIndicatorVisible !== undefined) BinDucViewportStyle.addScaleIndicatorVisible(builder, element.scaleIndicatorVisible);
     const viewportStyleOffset = BinDucViewportStyle.endDucViewportStyle(builder);
     
     // Create view
@@ -770,6 +794,15 @@ export const serializeDucViewportElement = (builder: flatbuffers.Builder, elemen
         if (element.view.scope) {
             const scopeOffset = builder.createString(element.view.scope);
             BinDucView.addScope(builder, scopeOffset);
+        }
+        // center_point (optional)
+        if (element.view.centerPoint) {
+            const cx = getPrecisionValueField(element.view.centerPoint.x, false);
+            const cy = getPrecisionValueField(element.view.centerPoint.y, false);
+            if (cx !== null && cy !== null) {
+                const cp = BinGeometricPoint.createGeometricPoint(builder, cx, cy);
+                BinDucView.addCenterPoint(builder, cp);
+            }
         }
         viewOffset = BinDucView.endDucView(builder);
     }
@@ -804,35 +837,42 @@ export const serializeDucXRayElement = (builder: flatbuffers.Builder, element: D
     const baseOffset = serializeDucElementBase(builder, element);
     
     // Serialize style
-    const styleBaseOffset = serializeElementBackground(builder, element.background[0] || { content: { preference: 12, src: "#000000", visible: true, opacity: 1 } });
-    const colorOffset = builder.createString(element.color ?? null!);
+    let styleBaseOffset: flatbuffers.Offset | null = null;
+    if (Array.isArray(element.background) && element.background.length > 0) {
+        styleBaseOffset = serializeElementBackground(builder, element.background[0]);
+    }
+    const colorOffset = element.color !== undefined ? builder.createString(element.color) : 0;
     BinDucXRayStyle.startDucXRayStyle(builder);
-    BinDucXRayStyle.addBaseStyle(builder, styleBaseOffset);
-    BinDucXRayStyle.addColor(builder, colorOffset);
+    if (styleBaseOffset) BinDucXRayStyle.addBaseStyle(builder, styleBaseOffset);
+    if (colorOffset) BinDucXRayStyle.addColor(builder, colorOffset);
     const styleOffset = BinDucXRayStyle.endDucXRayStyle(builder);
     
     // Serialize origin point
     let originOffset: flatbuffers.Offset | null = null;
     if (element.origin) {
-        const originX = getPrecisionValueField(element.origin.x, false) ?? null!;
-        const originY = getPrecisionValueField(element.origin.y, false) ?? null!;
-        originOffset = BinGeometricPoint.createGeometricPoint(
-            builder,
-            originX,
-            originY
-        );
+        const originX = getPrecisionValueField(element.origin.x, false);
+        const originY = getPrecisionValueField(element.origin.y, false);
+        if (originX !== null && originY !== null) {
+            originOffset = BinGeometricPoint.createGeometricPoint(
+                builder,
+                originX,
+                originY
+            );
+        }
     }
     
     // Serialize direction point
     let directionOffset: flatbuffers.Offset | null = null;
     if (element.direction) {
-        const directionX = getPrecisionValueField(element.direction.x, false) ?? null!;
-        const directionY = getPrecisionValueField(element.direction.y, false) ?? null!;
-        directionOffset = BinGeometricPoint.createGeometricPoint(
-            builder,
-            directionX,
-            directionY
-        );
+        const directionX = getPrecisionValueField(element.direction.x, false);
+        const directionY = getPrecisionValueField(element.direction.y, false);
+        if (directionX !== null && directionY !== null) {
+            directionOffset = BinGeometricPoint.createGeometricPoint(
+                builder,
+                directionX,
+                directionY
+            );
+        }
     }
     
     BinDucXRayElement.startDucXRayElement(builder);
@@ -856,13 +896,13 @@ export const serializeDucLeaderElement = (builder: flatbuffers.Builder, element:
         
         if (element.leaderContent.type === "text") {
             contentType = LEADER_CONTENT_TYPE.TEXT;
-            const textOffset = builder.createString(element.leaderContent.text ?? null!);
+            const textOffset = element.leaderContent.text !== undefined ? builder.createString(element.leaderContent.text) : 0;
             BinLeaderTextBlockContent.startLeaderTextBlockContent(builder);
             BinLeaderTextBlockContent.addText(builder, textOffset);
             contentDataOffset = BinLeaderTextBlockContent.endLeaderTextBlockContent(builder);
         } else if (element.leaderContent.type === "block") {
             contentType = LEADER_CONTENT_TYPE.BLOCK
-            const blockIdOffset = builder.createString(element.leaderContent.blockId ?? null!);
+            const blockIdOffset = element.leaderContent.blockId !== undefined ? builder.createString(element.leaderContent.blockId) : 0;
             
             // Serialize attribute values if present
             let attributeValuesVector: flatbuffers.Offset | null = null;
@@ -922,7 +962,10 @@ export const serializeDucLeaderElement = (builder: flatbuffers.Builder, element:
     }
     
     // Serialize style properties
-    const baseStyleOffset = serializeElementBackground(builder, element.background[0] || { content: { preference: 12, src: "#000000", visible: true, opacity: 1 } });
+    let baseStyleOffset: flatbuffers.Offset | null = null;
+    if (Array.isArray(element.background) && element.background.length > 0) {
+        baseStyleOffset = serializeElementBackground(builder, element.background[0]);
+    }
     
     // Serialize text style
     const textStyleOffset = serializeDucTextStyle(builder, element.textStyle);
@@ -950,7 +993,7 @@ export const serializeDucLeaderElement = (builder: flatbuffers.Builder, element:
     }
     
     BinDucLeaderStyle.startDucLeaderStyle(builder);
-    BinDucLeaderStyle.addBaseStyle(builder, baseStyleOffset);
+    if (baseStyleOffset) BinDucLeaderStyle.addBaseStyle(builder, baseStyleOffset);
     if (textStyleOffset) BinDucLeaderStyle.addTextStyle(builder, textStyleOffset);
     if (headsOverrideVector) BinDucLeaderStyle.addHeadsOverride(builder, headsOverrideVector);
     if (doglegValue !== null) BinDucLeaderStyle.addDogleg(builder, doglegValue);
@@ -1421,7 +1464,10 @@ export const serializeDucMermaidElement = (builder: flatbuffers.Builder, element
 
 const serializeDucTableStyle = (builder: flatbuffers.Builder, element: DucTableElement): flatbuffers.Offset => {
     // Serialize base style (inherited from _DucElementStylesBase)
-    const baseStyleOffset = serializeElementBackground(builder, element.background[0] || { content: { preference: 12, src: "#000000", visible: true, opacity: 1 } });
+    let baseStyleOffset: flatbuffers.Offset | null = null;
+    if (Array.isArray(element.background) && element.background.length > 0) {
+        baseStyleOffset = serializeElementBackground(builder, element.background[0]);
+    }
     
     // Serialize header row style
     let headerRowStyleOffset: flatbuffers.Offset | null = null;
@@ -1442,7 +1488,7 @@ const serializeDucTableStyle = (builder: flatbuffers.Builder, element: DucTableE
     }
     
     BinDucTableStyle.startDucTableStyle(builder);
-    BinDucTableStyle.addBaseStyle(builder, baseStyleOffset);
+    if (baseStyleOffset) BinDucTableStyle.addBaseStyle(builder, baseStyleOffset);
     if (element.flowDirection) BinDucTableStyle.addFlowDirection(builder, element.flowDirection);
     if (headerRowStyleOffset) BinDucTableStyle.addHeaderRowStyle(builder, headerRowStyleOffset);
     if (dataRowStyleOffset) BinDucTableStyle.addDataRowStyle(builder, dataRowStyleOffset);

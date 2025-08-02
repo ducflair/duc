@@ -31,8 +31,9 @@ import { parseStandardFromBinary } from 'ducjs/parse/parseStandardFromBinary';
 import { parseThumbnailFromBinary } from 'ducjs/parse/parseThumbnailFromBinary';
 import { parseVersionGraphFromBinary } from 'ducjs/parse/parseVersionGraphFromBinary';
 import { restore, RestoredDataState } from 'ducjs/restore/restoreDataState';
+import { Standard } from "ducjs/technical";
 import { DucExternalFiles, DucGlobalState, DucLocalState } from 'ducjs/types';
-import { DucBlock, DucElement, DucGroup, OrderedDucElement } from 'ducjs/types/elements';
+import { DucBlock, DucElement, DucGroup, DucLayer, DucRegion, OrderedDucElement } from 'ducjs/types/elements';
 import * as flatbuffers from 'flatbuffers';
 
 export const parseDuc = async (
@@ -53,7 +54,7 @@ export const parseDuc = async (
   const version = data.version() || "0.0.0";
 
   const localState = data.ducLocalState();
-  const parsedLocalState = localState && parseLocalStateFromBinary(localState, version);
+  const parsedLocalState = localState && parseLocalStateFromBinary(localState, version ?? "");
 
   // Parse global state
   const globalState = data.ducGlobalState();
@@ -86,7 +87,7 @@ export const parseDuc = async (
   for (let i = 0; i < data.blocksLength(); i++) {
     const block = data.blocks(i);
     if (block) {
-      const parsedBlock = parseBlockFromBinary(block, version);
+      const parsedBlock = parseBlockFromBinary(block, version ?? "");
       if (parsedBlock) {
         blocks.push(parsedBlock as DucBlock);
       }
@@ -116,7 +117,7 @@ export const parseDuc = async (
   const versionGraph = parseVersionGraphFromBinary(versionGraphData);
   
   // Parse regions
-  const regions: any[] = [];
+  const regions: DucRegion[] = [];
   for (let i = 0; i < data.regionsLength(); i++) {
     const region = data.regions(i);
     if (region) {
@@ -128,7 +129,7 @@ export const parseDuc = async (
   }
   
   // Parse layers
-  const layers: any[] = [];
+  const layers: DucLayer[] = [];
   for (let i = 0; i < data.layersLength(); i++) {
     const layer = data.layers(i);
     if (layer && parsedLocalState?.scope) {
@@ -140,7 +141,7 @@ export const parseDuc = async (
   }
   
   // Parse standards
-  const standards: any[] = [];
+  const standards: Standard[] = [];
   for (let i = 0; i < data.standardsLength(); i++) {
     const standard = data.standards(i);
     if (standard) {

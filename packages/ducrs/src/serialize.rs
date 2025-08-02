@@ -9,7 +9,8 @@ use flatbuffers::{FlatBufferBuilder, WIPOffset};
 pub fn serialize(state: &types::ExportedDataState) -> Vec<u8> {
     let mut builder = FlatBufferBuilder::new();
     let root = serialize_exported_data_state(&mut builder, state);
-    builder.finish(root, Some(fb::EXPORTED_DATA_STATE_FILE_IDENTIFIER));
+    // Use the correct generated file identifier constant
+    builder.finish(root, Some(fb::EXPORTED_DATA_STATE_IDENTIFIER));
     builder.finished_data().to_vec()
 }
 
@@ -20,7 +21,7 @@ pub fn serialize(state: &types::ExportedDataState) -> Vec<u8> {
 fn serialize_vec_of_strings<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     vec: &[String],
-) -> Option<WIPOffset<flatbuffers::Vector<'bldr, WIPOffset<&'bldr str>>>> {
+) -> Option<WIPOffset<flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<&'bldr str>>>> {
     if vec.is_empty() {
         return None;
     }
@@ -36,19 +37,29 @@ fn serialize_geometric_point(point: &types::GeometricPoint) -> fb::GeometricPoin
     fb::GeometricPoint::new(point.x, point.y)
 }
 
-fn serialize_duc_point(point: &types::DucPoint) -> fb::DucPoint {
-    fb::DucPoint::new(point.x, point.y, point.mirroring.unwrap_or(fb::BEZIER_MIRRORING::NONE))
+fn serialize_duc_point<'bldr>(
+    builder: &mut FlatBufferBuilder<'bldr>,
+    point: &types::DucPoint,
+) -> WIPOffset<fb::DucPoint<'bldr>> {
+    fb::DucPoint::create(
+        builder,
+        &fb::DucPointArgs {
+            x: point.x,
+            y: point.y,
+            mirroring: Some(point.mirroring.unwrap_or(fb::BEZIER_MIRRORING::NONE)),
+        },
+    )
 }
 
 fn serialize_vec_of_duc_points<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     vec: &[types::DucPoint],
-) -> Option<WIPOffset<flatbuffers::Vector<'bldr, fb::DucPoint>>> {
+) -> Option<WIPOffset<flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucPoint<'bldr>>>>> {
     if vec.is_empty() {
         return None;
     }
-    let points: Vec<_> = vec.iter().map(serialize_duc_point).collect();
-    Some(builder.create_vector(&points))
+    let offsets: Vec<_> = vec.iter().map(|p| serialize_duc_point(builder, p)).collect();
+    Some(builder.create_vector(&offsets))
 }
 
 fn serialize_identifier<'bldr>(
@@ -119,7 +130,7 @@ fn serialize_duc_view<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     view: &types::DucView,
 ) -> WIPOffset<fb::DucView<'bldr>> {
-    let center_point = serialize_duc_point(&view.center_point);
+    let center_point_offset = serialize_duc_point(builder, &view.center_point);
     let scope_offset = builder.create_string(&view.scope);
 
     fb::DucView::create(
@@ -129,7 +140,7 @@ fn serialize_duc_view<'bldr>(
             scroll_y: view.scroll_y,
             zoom: view.zoom,
             twist_angle: view.twist_angle,
-            center_point: Some(&center_point),
+            center_point: Some(center_point_offset),
             scope: Some(scope_offset),
         },
     )
@@ -163,9 +174,9 @@ fn serialize_tiling_properties<'bldr>(
         &fb::TilingPropertiesArgs {
             size_in_percent: tiling.size_in_percent,
             angle: tiling.angle,
-            spacing: tiling.spacing.unwrap_or(0.0), // Handle Option
-            offset_x: tiling.offset_x.unwrap_or(0.0),
-            offset_y: tiling.offset_y.unwrap_or(0.0),
+            spacing: Some(tiling.spacing.unwrap_or(0.0)),
+            offset_x: Some(tiling.offset_x.unwrap_or(0.0)),
+            offset_y: Some(tiling.offset_y.unwrap_or(0.0)),
         },
     )
 }
@@ -174,7 +185,7 @@ fn serialize_hatch_pattern_line<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     line: &types::HatchPatternLine,
 ) -> WIPOffset<fb::HatchPatternLine<'bldr>> {
-    let origin = serialize_duc_point(&line.origin);
+    let origin_offset = serialize_duc_point(builder, &line.origin);
     let offset_vec = builder.create_vector(&line.offset);
     let dash_pattern_vec = builder.create_vector(&line.dash_pattern);
 
@@ -182,7 +193,7 @@ fn serialize_hatch_pattern_line<'bldr>(
         builder,
         &fb::HatchPatternLineArgs {
             angle: line.angle,
-            origin: Some(&origin),
+            origin: Some(origin_offset),
             offset: Some(offset_vec),
             dash_pattern: Some(dash_pattern_vec),
         },
@@ -217,17 +228,17 @@ fn serialize_duc_hatch_style<'bldr>(
     style: &types::DucHatchStyle,
 ) -> WIPOffset<fb::DucHatchStyle<'bldr>> {
     let pattern_name_offset = builder.create_string(&style.pattern_name);
-    let pattern_origin = serialize_duc_point(&style.pattern_origin);
+    let pattern_origin_offset = serialize_duc_point(builder, &style.pattern_origin);
     let custom_pattern_offset = serialize_custom_hatch_pattern(builder, &style.custom_pattern);
 
     fb::DucHatchStyle::create(
         builder,
         &fb::DucHatchStyleArgs {
-            hatch_style: style.hatch_style.unwrap_or(fb::HATCH_STYLE::NORMAL),
+            hatch_style: Some(style.hatch_style.unwrap_or(fb::HATCH_STYLE::NORMAL)),
             pattern_name: Some(pattern_name_offset),
             pattern_scale: style.pattern_scale,
             pattern_angle: style.pattern_angle,
-            pattern_origin: Some(&pattern_origin),
+            pattern_origin: Some(pattern_origin_offset),
             pattern_double: style.pattern_double,
             custom_pattern: Some(custom_pattern_offset),
         },
@@ -259,9 +270,9 @@ fn serialize_element_content_base<'bldr>(
     fb::ElementContentBase::create(
         builder,
         &fb::ElementContentBaseArgs {
-            preference: content
+            preference: Some(content
                 .preference
-                .unwrap_or(fb::ELEMENT_CONTENT_PREFERENCE::SOLID),
+                .unwrap_or(fb::ELEMENT_CONTENT_PREFERENCE::SOLID)),
             src: Some(src_offset),
             visible: content.visible,
             opacity: content.opacity,
@@ -282,13 +293,13 @@ fn serialize_stroke_style<'bldr>(
     fb::StrokeStyle::create(
         builder,
         &fb::StrokeStyleArgs {
-            preference: style.preference.unwrap_or(fb::STROKE_PREFERENCE::SOLID),
-            cap: style.cap.unwrap_or(fb::STROKE_CAP::BUTT),
-            join: style.join.unwrap_or(fb::STROKE_JOIN::MITER),
+            preference: Some(style.preference.unwrap_or(fb::STROKE_PREFERENCE::SOLID)),
+            cap: Some(style.cap.unwrap_or(fb::STROKE_CAP::BUTT)),
+            join: Some(style.join.unwrap_or(fb::STROKE_JOIN::MITER)),
             dash: Some(dash_vec),
             dash_line_override: Some(dash_line_override_offset),
-            dash_cap: style.dash_cap.unwrap_or(fb::STROKE_CAP::BUTT),
-            miter_limit: style.miter_limit.unwrap_or(0.0),
+            dash_cap: Some(style.dash_cap.unwrap_or(fb::STROKE_CAP::BUTT)),
+            miter_limit: Some(style.miter_limit.unwrap_or(0.0)),
         },
     )
 }
@@ -301,9 +312,9 @@ fn serialize_stroke_sides<'bldr>(
     fb::StrokeSides::create(
         builder,
         &fb::StrokeSidesArgs {
-            preference: sides
+            preference: Some(sides
                 .preference
-                .unwrap_or(fb::STROKE_SIDE_PREFERENCE::ALL),
+                .unwrap_or(fb::STROKE_SIDE_PREFERENCE::ALL)),
             values: Some(values_vec),
         },
     )
@@ -323,7 +334,7 @@ fn serialize_element_stroke<'bldr>(
             content: Some(content_offset),
             width: stroke.width,
             style: Some(style_offset),
-            placement: stroke.placement.unwrap_or(fb::STROKE_PLACEMENT::CENTER),
+            placement: Some(stroke.placement.unwrap_or(fb::STROKE_PLACEMENT::CENTER)),
             stroke_sides: Some(stroke_sides_offset),
         },
     )
@@ -364,7 +375,7 @@ fn serialize_duc_element_styles_base<'bldr>(
         builder,
         &fb::_DucElementStylesBaseArgs {
             roundness: styles.roundness,
-            blending: styles.blending.unwrap_or(fb::BLENDING::MULTIPLY),
+            blending: Some(styles.blending.unwrap_or(fb::BLENDING::MULTIPLY)),
             background: Some(background_vec),
             stroke: Some(stroke_vec),
             opacity: styles.opacity,
@@ -457,7 +468,7 @@ fn serialize_duc_head<'bldr>(
     fb::DucHead::create(
         builder,
         &fb::DucHeadArgs {
-            type_: head.head_type.unwrap_or(fb::LINE_HEAD::ARROW),
+            type_: Some(head.head_type.unwrap_or(fb::LINE_HEAD::ARROW)),
             block_id: Some(block_id_offset),
             size: head.size,
         },
@@ -563,7 +574,7 @@ fn serialize_duc_linear_element_base<'bldr>(
         .map(|p| serialize_duc_path(builder, p))
         .collect();
     let path_overrides_vec = builder.create_vector(&path_overrides_offsets);
-    let last_committed_point = serialize_duc_point(&base.last_committed_point);
+    let last_committed_point_offset = serialize_duc_point(builder, &base.last_committed_point);
     let start_binding_offset = serialize_duc_point_binding(builder, &base.start_binding);
     let end_binding_offset = serialize_duc_point_binding(builder, &base.end_binding);
 
@@ -574,7 +585,7 @@ fn serialize_duc_linear_element_base<'bldr>(
             points: points_vec,
             lines: Some(lines_vec),
             path_overrides: Some(path_overrides_vec),
-            last_committed_point: Some(&last_committed_point),
+            last_committed_point: Some(last_committed_point_offset),
             start_binding: Some(start_binding_offset),
             end_binding: Some(end_binding_offset),
         },
@@ -647,9 +658,9 @@ fn serialize_line_spacing<'bldr>(
         builder,
         &fb::LineSpacingArgs {
             value: spacing.value,
-            type_: spacing
+            type_: Some(spacing
                 .line_type
-                .unwrap_or(fb::LINE_SPACING_TYPE::AT_LEAST),
+                .unwrap_or(fb::LINE_SPACING_TYPE::AT_LEAST)),
         },
     )
 }
@@ -670,8 +681,8 @@ fn serialize_duc_text_style<'bldr>(
             is_ltr: style.is_ltr,
             font_family: Some(font_family_offset),
             big_font_family: Some(big_font_family_offset),
-            text_align: style.text_align.unwrap_or(fb::TEXT_ALIGN::LEFT),
-            vertical_align: style.vertical_align.unwrap_or(fb::VERTICAL_ALIGN::TOP),
+            text_align: Some(style.text_align.unwrap_or(fb::TEXT_ALIGN::LEFT)),
+            vertical_align: Some(style.vertical_align.unwrap_or(fb::VERTICAL_ALIGN::TOP)),
             line_height: style.line_height,
             line_spacing: Some(line_spacing_offset),
             oblique_angle: style.oblique_angle,
@@ -698,9 +709,9 @@ fn serialize_duc_table_cell_style<'bldr>(
             base_style: Some(base_style_offset),
             text_style: Some(text_style_offset),
             margins: Some(margins_offset),
-            alignment: style
+            alignment: Some(style
                 .alignment
-                .unwrap_or(fb::TABLE_CELL_ALIGNMENT::TOP_LEFT),
+                .unwrap_or(fb::TABLE_CELL_ALIGNMENT::TOP_LEFT)),
         },
     )
 }
@@ -719,9 +730,9 @@ fn serialize_duc_table_style<'bldr>(
         builder,
         &fb::DucTableStyleArgs {
             base_style: Some(base_style_offset),
-            flow_direction: style
+            flow_direction: Some(style
                 .flow_direction
-                .unwrap_or(fb::TABLE_FLOW_DIRECTION::DOWN),
+                .unwrap_or(fb::TABLE_FLOW_DIRECTION::DOWN)),
             header_row_style: Some(header_row_style_offset),
             data_row_style: Some(data_row_style_offset),
             data_column_style: Some(data_column_style_offset),
@@ -749,12 +760,8 @@ fn serialize_duc_leader_style<'bldr>(
             heads_override: Some(heads_override_vec),
             dogleg: style.dogleg,
             text_style: Some(text_style_offset),
-            text_attachment: style
-                .text_attachment
-                .unwrap_or(fb::VERTICAL_ALIGN::MIDDLE),
-            block_attachment: style
-                .block_attachment
-                .unwrap_or(fb::BLOCK_ATTACHMENT::CENTER_EXTENTS),
+            text_attachment: Some(style.text_attachment.unwrap_or(fb::VERTICAL_ALIGN::MIDDLE)),
+            block_attachment: Some(style.block_attachment.unwrap_or(fb::BLOCK_ATTACHMENT::CENTER_EXTENTS)),
         },
     )
 }
@@ -769,9 +776,9 @@ fn serialize_dimension_tolerance_style<'bldr>(
         builder,
         &fb::DimensionToleranceStyleArgs {
             enabled: style.enabled,
-            display_method: style
+            display_method: Some(style
                 .display_method
-                .unwrap_or(fb::TOLERANCE_DISPLAY::NONE),
+                .unwrap_or(fb::TOLERANCE_DISPLAY::NONE)),
             upper_value: style.upper_value,
             lower_value: style.lower_value,
             precision: style.precision,
@@ -787,12 +794,12 @@ fn serialize_dimension_fit_style<'bldr>(
     fb::DimensionFitStyle::create(
         builder,
         &fb::DimensionFitStyleArgs {
-            rule: style
+            rule: Some(style
                 .rule
-                .unwrap_or(fb::DIMENSION_FIT_RULE::TEXT_AND_ARROWS),
-            text_placement: style
+                .unwrap_or(fb::DIMENSION_FIT_RULE::TEXT_AND_ARROWS)),
+            text_placement: Some(style
                 .text_placement
-                .unwrap_or(fb::DIMENSION_TEXT_PLACEMENT::BESIDE_LINE),
+                .unwrap_or(fb::DIMENSION_TEXT_PLACEMENT::BESIDE_LINE)),
             force_text_inside: style.force_text_inside,
         },
     )
@@ -841,9 +848,7 @@ fn serialize_dimension_symbol_style<'bldr>(
         builder,
         &fb::DimensionSymbolStyleArgs {
             heads_override: Some(heads_override_vec),
-            center_mark_type: style
-                .center_mark_type
-                .unwrap_or(fb::MARK_ELLIPSE_CENTER::MARK),
+            center_mark_type: Some(style.center_mark_type.unwrap_or(fb::MARK_ELLIPSE_CENTER::MARK)),
             center_mark_size: style.center_mark_size,
         },
     )
@@ -901,9 +906,7 @@ fn serialize_fcf_datum_style<'bldr>(
     fb::FCFDatumStyle::create(
         builder,
         &fb::FCFDatumStyleArgs {
-            bracket_style: style
-                .bracket_style
-                .unwrap_or(fb::DATUM_BRACKET_STYLE::SQUARE),
+            bracket_style: Some(style.bracket_style.unwrap_or(fb::DATUM_BRACKET_STYLE::SQUARE)),
         },
     )
 }
@@ -958,7 +961,7 @@ fn serialize_stack_format_properties<'bldr>(
         &fb::StackFormatPropertiesArgs {
             upper_scale: props.upper_scale,
             lower_scale: props.lower_scale,
-            alignment: props.alignment.unwrap_or(fb::STACKED_TEXT_ALIGN::CENTER),
+            alignment: Some(props.alignment.unwrap_or(fb::STACKED_TEXT_ALIGN::CENTER)),
         },
     )
 }
@@ -1338,7 +1341,7 @@ fn serialize_duc_image_element<'bldr>(
         &fb::DucImageElementArgs {
             base: Some(base_offset),
             file_id: Some(file_id_offset),
-            status: element.status.unwrap_or(fb::IMAGE_STATUS::PENDING),
+            status: Some(element.status.unwrap_or(fb::IMAGE_STATUS::PENDING)),
             scale: Some(scale_vec),
             crop: Some(crop_offset),
             filter: Some(filter_offset),
@@ -1355,9 +1358,9 @@ fn serialize_duc_text_dynamic_element_source<'bldr>(
         builder,
         &fb::DucTextDynamicElementSourceArgs {
             element_id: Some(element_id_offset),
-            property: source
+            property: Some(source
                 .property
-                .unwrap_or(fb::TEXT_FIELD_SOURCE_PROPERTY::AREA),
+                .unwrap_or(fb::TEXT_FIELD_SOURCE_PROPERTY::AREA)),
         },
     )
 }
@@ -1393,9 +1396,9 @@ fn serialize_duc_text_dynamic_source<'bldr>(
     fb::DucTextDynamicSource::create(
         builder,
         &fb::DucTextDynamicSourceArgs {
-            text_source_type: source
+            text_source_type: Some(source
                 .text_source_type
-                .unwrap_or(fb::TEXT_FIELD_SOURCE_TYPE::ELEMENT),
+                .unwrap_or(fb::TEXT_FIELD_SOURCE_TYPE::ELEMENT)),
             source_type,
             source: Some(source_offset),
         },
@@ -1505,7 +1508,7 @@ fn serialize_duc_free_draw_element<'bldr>(
     let start_offset = serialize_duc_free_draw_ends(builder, &element.start);
     let end_offset = serialize_duc_free_draw_ends(builder, &element.end);
     let pressures_vec = builder.create_vector(&element.pressures);
-    let last_committed_point = serialize_duc_point(&element.last_committed_point);
+    let last_committed_point_offset = serialize_duc_point(builder, &element.last_committed_point);
     let svg_path_offset = builder.create_string(&element.svg_path);
 
     fb::DucFreeDrawElement::create(
@@ -1522,7 +1525,7 @@ fn serialize_duc_free_draw_element<'bldr>(
             end: Some(end_offset),
             pressures: Some(pressures_vec),
             simulate_pressure: element.simulate_pressure,
-            last_committed_point: Some(&last_committed_point),
+            last_committed_point: Some(last_committed_point_offset),
             svg_path: Some(svg_path_offset),
         },
     )
@@ -1641,9 +1644,7 @@ fn serialize_duc_viewport_element<'bldr>(
             style: Some(style_offset),
             view: Some(view_offset),
             scale: element.scale,
-            shade_plot: element
-                .shade_plot
-                .unwrap_or(fb::VIEWPORT_SHADE_PLOT::AS_DISPLAYED),
+            shade_plot: Some(element.shade_plot.unwrap_or(fb::VIEWPORT_SHADE_PLOT::AS_DISPLAYED)),
             frozen_group_ids: frozen_group_ids_vec,
             standard_override: Some(standard_override_offset),
         },
@@ -1656,12 +1657,12 @@ fn serialize_duc_xray_element<'bldr>(
 ) -> WIPOffset<fb::DucXRayElement<'bldr>> {
     let base_offset = serialize_duc_element_base(builder, &element.base);
     let style_offset = serialize_duc_xray_style(builder, &element.style);
-    let origin = serialize_duc_point(&types::DucPoint {
+    let origin_offset = serialize_duc_point(builder, &types::DucPoint {
         x: element.origin.x,
         y: element.origin.y,
         mirroring: None
     });
-    let direction = serialize_duc_point(&types::DucPoint {
+    let direction_offset = serialize_duc_point(builder, &types::DucPoint {
         x: element.direction.x,
         y: element.direction.y,
         mirroring: None
@@ -1672,8 +1673,8 @@ fn serialize_duc_xray_element<'bldr>(
         &fb::DucXRayElementArgs {
             base: Some(base_offset),
             style: Some(style_offset),
-            origin: Some(&origin),
-            direction: Some(&direction),
+            origin: Some(origin_offset),
+            direction: Some(direction_offset),
             start_from_origin: element.start_from_origin,
         },
     )
@@ -1738,9 +1739,11 @@ fn serialize_leader_content<'bldr>(
     fb::LeaderContent::create(
         builder,
         &fb::LeaderContentArgs {
-            leader_content_type: content
-                .leader_content_type
-                .unwrap_or(fb::LEADER_CONTENT_TYPE::TEXT),
+            leader_content_type: Some(
+                content
+                    .leader_content_type
+                    .unwrap_or(fb::LEADER_CONTENT_TYPE::TEXT)
+            ),
             content_type,
             content: Some(content_offset),
         },
@@ -1844,7 +1847,7 @@ fn serialize_duc_dimension_element<'bldr>(
     let bindings_offset = serialize_dimension_bindings(builder, &element.bindings);
     let text_override_offset = element
         .text_override
-        .as_ref()
+        .as_deref()
         .map(|s| builder.create_string(s));
     let text_position_offset = element
         .text_position
@@ -1861,24 +1864,21 @@ fn serialize_duc_dimension_element<'bldr>(
         .as_ref()
         .map(|d| serialize_dimension_continue_data(builder, d));
 
-    let mut args = fb::DucDimensionElementArgs {
+    // text_override_offset is Option<WIPOffset<&str>>; keep as-is.
+    let args = fb::DucDimensionElementArgs {
         base: Some(base_offset),
         style: Some(style_offset),
-        dimension_type: element.dimension_type.unwrap_or(fb::DIMENSION_TYPE::LINEAR),
+        dimension_type: Some(element.dimension_type.unwrap_or(fb::DIMENSION_TYPE::LINEAR)),
         definition_points: Some(definition_points_offset),
         oblique_angle: element.oblique_angle,
-        ordinate_axis: element.ordinate_axis.unwrap_or(fb::AXIS::X),
+        ordinate_axis: Some(element.ordinate_axis.unwrap_or(fb::AXIS::X)),
         bindings: Some(bindings_offset),
         text_override: text_override_offset,
-        text_position: text_position_offset,
+        text_position: text_position_offset.as_ref(),
         tolerance_override: Some(tolerance_override_offset),
         baseline_data: baseline_data_offset,
         continue_data: continue_data_offset,
     };
-    if let Some(pos) = text_position_offset {
-        // Flatbuffers requires a reference to a struct on the stack, can't be created inline
-        args.text_position = Some(&pos);
-    }
 
     fb::DucDimensionElement::create(builder, &args)
 }
@@ -1892,9 +1892,11 @@ fn serialize_datum_reference<'bldr>(
         builder,
         &fb::DatumReferenceArgs {
             letters: Some(letters_offset),
-            modifier: datum
-                .modifier
-                .unwrap_or(fb::MATERIAL_CONDITION::MAXIMUM),
+            modifier: Some(
+                datum
+                    .modifier
+                    .unwrap_or(fb::MATERIAL_CONDITION::MAXIMUM)
+            ),
         },
     )
 }
@@ -1909,13 +1911,17 @@ fn serialize_tolerance_clause<'bldr>(
         builder,
         &fb::ToleranceClauseArgs {
             value: Some(value_offset),
-            zone_type: clause
-                .zone_type
-                .unwrap_or(fb::TOLERANCE_ZONE_TYPE::CYLINDRICAL),
+            zone_type: Some(
+                clause
+                    .zone_type
+                    .unwrap_or(fb::TOLERANCE_ZONE_TYPE::CYLINDRICAL)
+            ),
             feature_modifiers: Some(feature_modifiers_vec),
-            material_condition: clause
-                .material_condition
-                .unwrap_or(fb::MATERIAL_CONDITION::MAXIMUM),
+            material_condition: Some(
+                clause
+                    .material_condition
+                    .unwrap_or(fb::MATERIAL_CONDITION::MAXIMUM)
+            ),
         },
     )
 }
@@ -1934,7 +1940,7 @@ fn serialize_feature_control_frame_segment<'bldr>(
     fb::FeatureControlFrameSegment::create(
         builder,
         &fb::FeatureControlFrameSegmentArgs {
-            symbol: segment.symbol.unwrap_or(fb::GDT_SYMBOL::STRAIGHTNESS),
+            symbol: Some(segment.symbol.unwrap_or(fb::GDT_SYMBOL::STRAIGHTNESS)),
             tolerance: Some(tolerance_offset),
             datums: Some(datums_vec),
         },
@@ -2035,7 +2041,7 @@ fn serialize_duc_feature_control_frame_element<'bldr>(
     let frame_modifiers_offset = serialize_fcf_frame_modifiers(builder, &element.frame_modifiers);
     let leader_element_id_offset = element
         .leader_element_id
-        .as_ref()
+        .as_deref()
         .map(|id| builder.create_string(id));
     let datum_definition_offset = element
         .datum_definition
@@ -2081,9 +2087,11 @@ fn serialize_column_layout<'bldr>(
     fb::ColumnLayout::create(
         builder,
         &fb::ColumnLayoutArgs {
-            type_: layout
-                .column_type
-                .unwrap_or(fb::COLUMN_TYPE::NO_COLUMNS),
+            type_: Some(
+                layout
+                    .column_type
+                    .unwrap_or(fb::COLUMN_TYPE::NO_COLUMNS)
+            ),
             definitions: Some(definitions_vec),
             auto_height: layout.auto_height,
         },
@@ -2112,9 +2120,11 @@ fn serialize_duc_doc_element<'bldr>(
             style: Some(style_offset),
             text: Some(text_offset),
             dynamic: Some(dynamic_vec),
-            flow_direction: element
-                .flow_direction
-                .unwrap_or(fb::TEXT_FLOW_DIRECTION::LEFT_TO_RIGHT),
+            flow_direction: Some(
+                element
+                    .flow_direction
+                    .unwrap_or(fb::TEXT_FLOW_DIRECTION::LEFT_TO_RIGHT)
+            ),
             columns: Some(columns_offset),
             auto_resize: element.auto_resize,
         },
@@ -2130,9 +2140,11 @@ fn serialize_parametric_source<'bldr>(
     fb::ParametricSource::create(
         builder,
         &fb::ParametricSourceArgs {
-            type_: source
-                .source_type
-                .unwrap_or(fb::PARAMETRIC_SOURCE_TYPE::CODE),
+            type_: Some(
+                source
+                    .source_type
+                    .unwrap_or(fb::PARAMETRIC_SOURCE_TYPE::CODE)
+            ),
             code: Some(code_offset),
             file_id: Some(file_id_offset),
         },
@@ -2399,7 +2411,7 @@ fn serialize_duc_local_state<'bldr>(
             current_item_opacity: state.current_item_opacity,
             current_item_font_family: Some(current_item_font_family_offset),
             current_item_font_size: state.current_item_font_size,
-            current_item_text_align: state.current_item_text_align.unwrap_or(fb::TEXT_ALIGN::LEFT),
+            current_item_text_align: Some(state.current_item_text_align.unwrap_or(fb::TEXT_ALIGN::LEFT)),
             current_item_start_line_head: Some(current_item_start_line_head_offset),
             current_item_end_line_head: Some(current_item_end_line_head_offset),
             current_item_roundness: state.current_item_roundness,
@@ -2438,9 +2450,11 @@ fn serialize_duc_region<'bldr>(
         &fb::DucRegionArgs {
             id: Some(id_offset),
             stack_base: Some(stack_base_offset),
-            boolean_operation: region
-                .boolean_operation
-                .unwrap_or(fb::BOOLEAN_OPERATION::UNION),
+            boolean_operation: Some(
+                region
+                    .boolean_operation
+                    .unwrap_or(fb::BOOLEAN_OPERATION::UNION)
+            ),
         },
     )
 }
@@ -2489,7 +2503,7 @@ fn serialize_unit_system_base<'bldr>(
     fb::_UnitSystemBase::create(
         builder,
         &fb::_UnitSystemBaseArgs {
-            system: base.system.unwrap_or(fb::UNIT_SYSTEM::METRIC),
+            system: Some(base.system.unwrap_or(fb::UNIT_SYSTEM::METRIC)),
             precision: base.precision,
             suppress_leading_zeros: base.suppress_leading_zeros,
             suppress_trailing_zeros: base.suppress_trailing_zeros,
@@ -2506,12 +2520,12 @@ fn serialize_linear_unit_system<'bldr>(
         builder,
         &fb::LinearUnitSystemArgs {
             base: Some(base_offset),
-            format: sys
+            format: Some(sys
                 .format
-                .unwrap_or(fb::DIMENSION_UNITS_FORMAT::DECIMAL),
-            decimal_separator: sys
+                .unwrap_or(fb::DIMENSION_UNITS_FORMAT::DECIMAL)),
+            decimal_separator: Some(sys
                 .decimal_separator
-                .unwrap_or(fb::DECIMAL_SEPARATOR::DOT),
+                .unwrap_or(fb::DECIMAL_SEPARATOR::DOT)),
             suppress_zero_feet: sys.suppress_zero_feet,
             suppress_zero_inches: sys.suppress_zero_inches,
         },
@@ -2527,9 +2541,9 @@ fn serialize_angular_unit_system<'bldr>(
         builder,
         &fb::AngularUnitSystemArgs {
             base: Some(base_offset),
-            format: sys
+            format: Some(sys
                 .format
-                .unwrap_or(fb::ANGULAR_UNITS_FORMAT::DECIMAL_DEGREES),
+                .unwrap_or(fb::ANGULAR_UNITS_FORMAT::DECIMAL_DEGREES)),
         },
     )
 }
@@ -2543,9 +2557,9 @@ fn serialize_alternate_units<'bldr>(
         builder,
         &fb::AlternateUnitsArgs {
             base: Some(base_offset),
-            format: units
+            format: Some(units
                 .format
-                .unwrap_or(fb::DIMENSION_UNITS_FORMAT::DECIMAL),
+                .unwrap_or(fb::DIMENSION_UNITS_FORMAT::DECIMAL)),
             is_visible: units.is_visible,
             multiplier: units.multiplier,
         },
@@ -2980,11 +2994,9 @@ fn serialize_grid_settings<'bldr>(
     fb::GridSettings::create(
         builder,
         &fb::GridSettingsArgs {
-            type_: settings.grid_type.unwrap_or(fb::GRID_TYPE::RECTANGULAR),
+            type_: Some(settings.grid_type.unwrap_or(fb::GRID_TYPE::RECTANGULAR)),
             readonly: settings.readonly,
-            display_type: settings
-                .display_type
-                .unwrap_or(fb::GRID_DISPLAY_TYPE::LINES),
+            display_type: Some(settings.display_type.unwrap_or(fb::GRID_DISPLAY_TYPE::LINES)),
             is_adaptive: settings.is_adaptive,
             x_spacing: settings.x_spacing,
             y_spacing: settings.y_spacing,
@@ -3014,7 +3026,7 @@ fn serialize_snap_override<'bldr>(
         builder,
         &fb::SnapOverrideArgs {
             key: Some(key_offset),
-            behavior: so.behavior.unwrap_or(fb::SNAP_OVERRIDE_BEHAVIOR::DISABLE),
+            behavior: Some(so.behavior.unwrap_or(fb::SNAP_OVERRIDE_BEHAVIOR::DISABLE)),
         },
     )
 }
@@ -3089,7 +3101,7 @@ fn serialize_snap_marker_style<'bldr>(
     fb::SnapMarkerStyle::create(
         builder,
         &fb::SnapMarkerStyleArgs {
-            shape: style.shape.unwrap_or(fb::SNAP_MARKER_SHAPE::SQUARE),
+            shape: Some(style.shape.unwrap_or(fb::SNAP_MARKER_SHAPE::SQUARE)),
             color: Some(color_offset),
         },
     )
@@ -3103,7 +3115,7 @@ fn serialize_snap_marker_style_entry<'bldr>(
     fb::SnapMarkerStyleEntry::create(
         builder,
         &fb::SnapMarkerStyleEntryArgs {
-            key: entry.key.unwrap_or(fb::OBJECT_SNAP_MODE::NONE),
+            key: Some(entry.key.unwrap_or(fb::OBJECT_SNAP_MODE::NONE)),
             value: Some(value_offset),
         },
     )
@@ -3174,7 +3186,7 @@ fn serialize_snap_settings<'bldr>(
             magnetic_strength: settings.magnetic_strength,
             layer_snap_filters: Some(layer_snap_filters_offset),
             element_type_filters: element_type_filters_vec,
-            snap_mode: settings.snap_mode.unwrap_or(fb::SNAP_MODE::RUNNING),
+            snap_mode: Some(settings.snap_mode.unwrap_or(fb::SNAP_MODE::RUNNING)),
             snap_markers: Some(snap_markers_offset),
             construction_snap_enabled: settings.construction_snap_enabled,
             snap_to_grid_intersections: settings.snap_to_grid_intersections,
@@ -3404,14 +3416,15 @@ fn serialize_json_patch_operation<'bldr>(
 ) -> WIPOffset<fb::JSONPatchOperation<'bldr>> {
     let op_offset = builder.create_string(&op.op);
     let path_offset = builder.create_string(&op.path);
-    let from_offset = builder.create_string(&op.from);
+    // 'from' is optional in JSON Patch; convert Option<String> -> Option<&str> then map to FB string
+    let from_offset = op.from.as_deref().map(|s| builder.create_string(s));
     let value_offset = builder.create_string(&op.value);
     fb::JSONPatchOperation::create(
         builder,
         &fb::JSONPatchOperationArgs {
             op: Some(op_offset),
             path: Some(path_offset),
-            from: Some(from_offset),
+            from: from_offset,
             value: Some(value_offset),
         },
     )
@@ -3444,9 +3457,10 @@ fn serialize_version_graph_metadata<'bldr>(
     fb::VersionGraphMetadata::create(
         builder,
         &fb::VersionGraphMetadataArgs {
-            pruning_level: meta
-                .pruning_level
-                .unwrap_or(fb::PRUNING_LEVEL::BALANCED),
+            pruning_level: Some(
+                meta.pruning_level
+                    .unwrap_or(fb::PRUNING_LEVEL::BALANCED)
+            ),
             last_pruned: meta.last_pruned,
             total_size: meta.total_size,
         },
@@ -3504,7 +3518,7 @@ fn serialize_duc_external_file_data<'bldr>(
             id: Some(id_offset),
             data: Some(data_vec),
             created: file.created,
-            last_retrieved: file.last_retrieved.unwrap_or(0),
+            last_retrieved: Some(file.last_retrieved.unwrap_or(0)),
         },
     )
 }
