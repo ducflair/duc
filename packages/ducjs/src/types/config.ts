@@ -1,7 +1,6 @@
 import { PruningLevel } from "ducjs/types";
 import { ValueOf } from "ducjs/types/utility-types";
 
-
 export interface DucConfig { // User's Config of AppState
   theme: Theme;
 
