@@ -1,0 +1,70 @@
+// SCHEMA_VERSION=1.0.0
+
+// Official FlatBuffers Compiler: https://flatbuffers.ar.je/ 
+// Official FlatBuffers Documentation: https://flatbuffers.dev/tutorial/
+
+// To maintain backward compatibility when evolving FlatBuffers schemas, follow these guidelines:
+
+// - **Should be fine to rename fields**
+// - **Add new fields at the END of tables**: This ensures older code can still read the data without issues.
+// - **DONT REMOVE FIELDS**: Instead of deleting unused fields, mark them as deprecated to prevent their use in new code while maintaining compatibility with existing data.
+// - **DONT CHANGE FIELD TYPES**: Modifying a field's type can lead to incompatibilities. If necessary, add a new field with the desired type and deprecate the old one.
+// - **BE CAREFUL WITH DEFAULT VALUES**: Changing default values can cause inconsistencies when reading older data. It's best to set appropriate defaults initially and avoid altering them. 
+// - **STRING or TABLE CANNOT FALLBACK TO NULL**: these fields cannot be null. They already have a default null value.
+
+namespace Duconfig;
+
+// MIME TYPE: .duconfig
+file_identifier "DFIG";
+
+// --- ENUMS ---
+// Usually we start from the value 10 on enums because on some languages, 0 is treated as false and 1 is treated as true on if statements
+
+enum THEME:ubyte {
+  LIGHT = 10,
+  DARK = 11
+}
+
+enum ANTI_ALIASING:ubyte {
+  MSAA_8 = 8,
+  MSAA_16 = 16,
+  NONE = 10,
+  ANALYTIC = 11
+}
+
+enum SHOW_HYPERLINK_POPUP:ubyte { 
+  NONE = 10, 
+  INFO = 11, 
+  EDITOR = 12 
+}
+
+enum PRUNING_LEVEL:ubyte {
+  CONSERVATIVE = 10,
+  BALANCED = 20,
+  AGGRESSIVE = 30
+}
+
+// --- TABLES ---
+
+/// User's personal application settings, applied across all projects
+table Duconfig {
+  theme: THEME = LIGHT;
+  anti_aliasing: ANTI_ALIASING = ANALYTIC;
+
+  show_hyperlink_popup: SHOW_HYPERLINK_POPUP = INFO;
+  zoom_step: float;
+
+  v_sync: bool;
+  scale_ratio_locked: bool;
+  display_all_point_distances: bool;
+  display_distance_on_drawing: bool;
+  display_all_point_coordinates: bool;
+  display_all_point_info_selected: bool;
+  display_root_axis: bool;
+
+  debug_rendering: bool;
+  manual_save_mode: bool;
+  default_version_graph_pruning_level: PRUNING_LEVEL = BALANCED;
+}
+
+root_type Duconfig;

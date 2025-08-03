@@ -86,6 +86,34 @@ pub enum DucElementVariant {
     Mermaid(DucMermaidElement),
 }
 
+impl DucElementVariant {
+    pub fn get_base(&self) -> &DucElementBase {
+        match self {
+            DucElementVariant::Rectangle(elem) => &elem.base,
+            DucElementVariant::Ellipse(elem) => &elem.base,
+            DucElementVariant::Polygon(elem) => &elem.base,
+            DucElementVariant::Linear(elem) => &elem.linear_base.base,
+            DucElementVariant::Arrow(elem) => &elem.linear_base.base,
+            DucElementVariant::Text(elem) => &elem.base,
+            DucElementVariant::Image(elem) => &elem.base,
+            DucElementVariant::Frame(elem) => &elem.stack_element_base.base,
+            DucElementVariant::FreeDraw(elem) => &elem.base,
+            DucElementVariant::Table(elem) => &elem.base,
+            DucElementVariant::Plot(elem) => &elem.stack_element_base.base,
+            DucElementVariant::Viewport(elem) => &elem.linear_base.base,
+            DucElementVariant::XRay(elem) => &elem.base,
+            DucElementVariant::Leader(elem) => &elem.linear_base.base,
+            DucElementVariant::Dimension(elem) => &elem.base,
+            DucElementVariant::FeatureControlFrame(elem) => &elem.base,
+            DucElementVariant::Doc(elem) => &elem.base,
+            DucElementVariant::Parametric(elem) => &elem.base,
+            DucElementVariant::BlockInstance(elem) => &elem.base,
+            DucElementVariant::Embeddable(elem) => &elem.base,
+            DucElementVariant::Pdf(elem) => &elem.base,
+            DucElementVariant::Mermaid(elem) => &elem.base,
+        }
+    }
+}
 
 // =============== UTILITY & GEOMETRY TYPES ===============
 
@@ -223,7 +251,7 @@ pub struct ElementStroke {
     pub width: f64,
     pub style: StrokeStyle,
     pub placement: Option<STROKE_PLACEMENT>,
-    pub stroke_sides: StrokeSides,
+    pub stroke_sides: Option<StrokeSides>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1531,37 +1559,6 @@ pub struct DucExternalFileEntry {
     pub key: String,
     pub value: DucExternalFileData,
 }
-
-// Missing enum values that are used in the code
-pub type Blending = BLENDING;
-pub type BezierMirroring = BEZIER_MIRRORING;
-pub type StrokePlacement = STROKE_PLACEMENT;
-pub type ElementContentPreference = ELEMENT_CONTENT_PREFERENCE;
-pub type StrokePreference = STROKE_PREFERENCE;
-
-// Design standard enum
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum DesignStandard {
-    DUC,
-    ANSI,
-    ISO,
-    JIS,
-    GOST,
-}
-
-impl Default for DesignStandard {
-    fn default() -> Self {
-        DesignStandard::DUC
-    }
-}
-
-// File type for parsing
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucFile {
-    pub exported_data_state: ExportedDataState,
-}
-
-pub const NO_PEER_POINTS: &[DucPoint] = &[];
 
 // =============== ROOT TYPE ===============
 
