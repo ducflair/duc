@@ -1,5 +1,5 @@
-import { RestoredDataState } from "ducjs/utils/restore";
 import {
+  RestoredDataState,
   isArrowElement,
   isEllipseElement,
   isEmbeddableElement,
@@ -7,9 +7,7 @@ import {
   isFreeDrawElement,
   isLinearElement,
   isTableElement,
-  isTextElement
-} from "ducjs/types/elements/typeChecks";
-import {
+  isTextElement,
   DucArrowElement,
   DucDocElement,
   DucElement,
@@ -27,28 +25,39 @@ import {
   DucTextElementWithContainer,
   ElementBackground,
   ElementStroke,
-  NonDeletedDucElement
-} from "ducjs/types/elements";
-import { getPrecisionValueFromRaw } from "ducjs/technical/scopes";
-import { getBoundTextElement, getContainerElement, getElementAbsoluteCoords } from "ducjs/utils/bounds";
-import { DucState, DucExternalFiles, RawValue, Scope, ScopedValue } from "ducjs/types";
-import { DESIGN_STANDARD, DesignStandard } from "ducjs/technical/standards";
-import { DEFAULT_FRAME_STYLE, SVG_NS } from "ducjs/utils/constants";
-import { getContainingFrame, getFrameLikeElements, getFrameLikeTitle } from "ducjs/utils/elements/frameElement";
-import { Percentage } from "ducjs/types/geometryTypes";
-import {
+  NonDeletedDucElement,
+  DEFAULT_FRAME_STYLE,
+  DucExternalFiles,
+  RawValue,
+  SVG_NS,
+  Scope,
+  arrayToMap,
+  getBoundTextElement,
+  getBoundTextElementPosition,
+  getContainerElement,
+  getElementAbsoluteCoords,
+  getElementsSortedByZIndex,
+  isRTL,
+  Percentage,
+  THEME,
+  convertShapeToLinearElement,
+  getContainingFrame,
   getFontFamilyString,
+  getFrameLikeElements,
+  getFrameLikeTitle,
+  getFreeDrawSvgPath,
   getLineHeightInPx,
-} from "ducjs/utils/elements/textElement";
+  getPrecisionValueFromRaw,
+  DucLocalState,
+  getDefaultLocalState,
+  DucGlobalState,
+  Radian,
+} from "ducjs";
+import { TEXT_ALIGN } from "ducjs/duc";
 import { renderLinearElementToSvg } from "ducsvg/utils/linearElementToSvg";
-import { getElementsSortedByZIndex } from "ducjs/utils/elements";
-import { getBoundTextElementPosition } from "ducjs/utils/elements/linearElement";
-import { arrayToMap, isRTL } from "ducjs/utils";
-import { getFreeDrawSvgPath } from "ducjs/utils/elements/freedrawElement";
 
-import { convertShapeToLinearElement } from "ducjs/utils/shape";
-import { getDefaultDucState } from "ducjs/utils/state";
-import { TEXT_ALIGN, THEME } from "ducjs/duc";
+
+export type PartialDucState = Partial<DucLocalState & DucGlobalState>;
 
 const DUC_STANDARD_PRIMARY_COLOR = "#7878dd";
 const BACKGROUND_OPACITY: Percentage = 0.1 as Percentage;
@@ -138,7 +147,8 @@ export type FrameRendering = {
 // Main export function to convert DUC data to SVG string
 export const ducToSvg = async (
   elements: RestoredDataState["elements"],
-  appState: RestoredDataState["appState"],
+  localState: RestoredDataState["localState"],
+  globalState: RestoredDataState["globalState"],
   files: RestoredDataState["files"],
   opts?: {
     // frameRendering?: AppState["frameRendering"];
@@ -147,7 +157,7 @@ export const ducToSvg = async (
     skipInliningFonts?: boolean;
   }
 ): Promise<string> => {
-  const currentScope = appState.scope;
+  const currentScope = localState.scope;
   
   // Get frame rendering configuration
   // const frameRendering = getFrameRenderingConfig(
@@ -161,6 +171,7 @@ export const ducToSvg = async (
     clip: true,
   };
   
+  const ducState = { ...localState, ...globalState }
   // Filter out deleted elements
   const elementsForRender = elements.filter(el => !el.isDeleted) as readonly NonDeletedDucElement[];
   
@@ -177,7 +188,7 @@ export const ducToSvg = async (
   svgDocument.setAttribute("viewBox", `${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`);
   
   // Add metadata from appState
-  addMetadata(svgDocument, appState, elementsForRender.length);
+  addMetadata(svgDocument, ducState, elementsForRender.length);
   
   // Sort elements by z-index
   const sortedElements = getElementsSortedByZIndex(elementsForRender);
@@ -289,7 +300,7 @@ export const ducToSvg = async (
     const frameGroup = renderElementToSvg(
       frame, 
       elementsMap, 
-      appState, 
+      ducState, 
       files, 
       defs, 
       frameRendering, 
@@ -316,7 +327,7 @@ export const ducToSvg = async (
             const elementNode = renderElementToSvg(
               element, 
               elementsMap, 
-              appState, 
+              ducState, 
               files, 
               defs, 
               frameRendering, 
@@ -333,7 +344,7 @@ export const ducToSvg = async (
               const boundTextGroup = renderElementToSvg(
                 boundTextElement,
                 elementsMap,
-                appState,
+                ducState,
                 files,
                 defs,
                 frameRendering,
@@ -356,7 +367,7 @@ export const ducToSvg = async (
             const elementNode = renderElementToSvg(
               element, 
               elementsMap, 
-              appState, 
+              ducState, 
               files, 
               defs, 
               frameRendering, 
@@ -377,7 +388,7 @@ export const ducToSvg = async (
             const elementNode = renderElementToSvg(
               element, 
               elementsMap, 
-              appState, 
+              ducState, 
               files, 
               defs, 
               frameRendering, 
@@ -394,7 +405,7 @@ export const ducToSvg = async (
               const boundTextGroup = renderElementToSvg(
                 boundTextElement,
                 elementsMap,
-                appState,
+                ducState,
                 files,
                 defs,
                 frameRendering,
@@ -415,7 +426,7 @@ export const ducToSvg = async (
             const elementNode = renderElementToSvg(
               element, 
               elementsMap, 
-              appState, 
+              ducState, 
               files, 
               defs, 
               frameRendering, 
@@ -540,10 +551,15 @@ const getRotatedElementCorners = (
   });
 };
 
+
 // FIXME: This does not seem complete
-const addMetadata = (svgRoot: SVGElement, appState: Partial<DucState>, elementCount: number) => {
-  const defaultState = getDefaultDucState();
-  const state = { ...defaultState, ...appState };
+const addMetadata = (
+  svgRoot: SVGElement, 
+  ducState: PartialDucState,
+  elementCount: number
+) => {
+  const defaultState = getDefaultLocalState();
+  const state = { ...defaultState, ...ducState };
   
   // Add metadata
   svgRoot.setAttribute("data-duc-elements", `${elementCount}`);
@@ -568,14 +584,13 @@ const addMetadata = (svgRoot: SVGElement, appState: Partial<DucState>, elementCo
   metadataElement.setAttribute("id", "duc-metadata");
   
   // Add relevant app state properties as metadata
-  const relevantStateProps: (keyof DucState)[] = [
+  const relevantStateProps: (keyof typeof state)[] = [
     "gridSize",
     "gridStep",
     // "gridModeEnabled",
     "viewBackgroundColor",
     "scope",
     "mainScope",
-    "standard",
   ] as const;
   
   // Type-safe implementation for adding metadata
@@ -595,7 +610,7 @@ const addMetadata = (svgRoot: SVGElement, appState: Partial<DucState>, elementCo
 const renderCrosshair = (
   element: DucEllipseElement,
   renderedElement: DucElement,
-  angle: number, // radians
+  angle: Radian, // radians
   rotCx: number,
   rotCy: number,
 ): SVGElement => {
@@ -676,7 +691,7 @@ const renderCrosshair = (
 export const renderElementToSvg = (
   _element: DucElement,
   elementsMap: Map<string, DucElement>,
-  appState: RestoredDataState["appState"],
+  ducState: PartialDucState,
   files: RestoredDataState["files"],
   defs: SVGDefsElement,
   frameRendering: FrameRendering, // FIXME: use Standards in the future
@@ -786,7 +801,7 @@ export const renderElementToSvg = (
       const result = renderLinearElementToSvg(
         element as DucLinearElement,
         elementsMap,
-        appState,
+        ducState,
         files,
         defs,
         frameRendering,
@@ -1124,7 +1139,7 @@ const renderIframe = (element: DucIframeLikeElement | DucFrameLikeElement): SVGE
 const renderTable = (element: DucTableElement): SVGElement => {
   // For SVG export, we'll create a group with rectangles for cells
   const tableGroup = document.createElementNS(SVG_NS, "g");
-  
+  // TODO: We need to implement table rendering for SVG export
   const { columnOrder, rowOrder, columns, rows, cells } = element;
   
   // Create outer rectangle for table
@@ -1136,73 +1151,73 @@ const renderTable = (element: DucTableElement): SVGElement => {
   
   // Calculate cell dimensions
   let currentY = 0;
-  for (const rowId of rowOrder) {
-    const row = rows[rowId];
-    const rowHeight = row?.height?.scoped || (element.height.scoped / rowOrder.length);
+  // for (const rowId of rowOrder) {
+  //   const row = rows[rowId];
+  //   const rowHeight = row?.height?.scoped || (element.height.scoped / rowOrder.length);
     
-    let currentX = 0;
-    for (const colId of columnOrder) {
-      const col = columns[colId];
-      const colWidth = col?.width?.scoped || (element.width.scoped / columnOrder.length);
+  //   let currentX = 0;
+  //   for (const colId of columnOrder) {
+  //     const col = columns[colId];
+  //     const colWidth = col?.width?.scoped || (element.width.scoped / columnOrder.length);
       
-      // Create cell
-      const cellKey = `${rowId}:${colId}`;
-      const cell = cells[cellKey];
+  //     // Create cell
+  //     const cellKey = `${rowId}:${colId}`;
+  //     const cell = cells[cellKey];
       
-      if (cell) {
-        // Create cell rectangle
-        const cellRect = document.createElementNS(SVG_NS, "rect");
-        cellRect.setAttribute("x", currentX.toString());
-        cellRect.setAttribute("y", currentY.toString());
-        cellRect.setAttribute("width", colWidth.toString());
-        cellRect.setAttribute("height", rowHeight.toString());
+  //     if (cell) {
+  //       // Create cell rectangle
+  //       const cellRect = document.createElementNS(SVG_NS, "rect");
+  //       cellRect.setAttribute("x", currentX.toString());
+  //       cellRect.setAttribute("y", currentY.toString());
+  //       cellRect.setAttribute("width", colWidth.toString());
+  //       cellRect.setAttribute("height", rowHeight.toString());
         
-        // Apply cell styles if available
-        if (cell.style) {
-          if (cell.style.background) {
-            cellRect.setAttribute("fill", cell.style.background);
-          }
+  //       // Apply cell styles if available
+  //       if (cell.style) {
+  //         if (cell.style.background) {
+  //           cellRect.setAttribute("fill", cell.style.background);
+  //         }
           
-          if (cell.style.border) {
-            cellRect.setAttribute("stroke", cell.style.border.color || "#000");
-            if (cell.style.border.width) {
-              cellRect.setAttribute("stroke-width", cell.style.border.width.scoped.toString());
-            }
-          }
-        }
+  //         if (cell.style.border) {
+  //           cellRect.setAttribute("stroke", cell.style.border.color || "#000");
+  //           if (cell.style.border.width) {
+  //             cellRect.setAttribute("stroke-width", cell.style.border.width.scoped.toString());
+  //           }
+  //         }
+  //       }
         
-        tableGroup.appendChild(cellRect);
+  //       tableGroup.appendChild(cellRect);
         
-        // Add cell text
-        if (cell.data) {
-          const cellText = document.createElementNS(SVG_NS, "text");
-          cellText.setAttribute("x", (currentX + colWidth / 2).toString());
-          cellText.setAttribute("y", (currentY + rowHeight / 2).toString());
-          cellText.setAttribute("text-anchor", "middle");
-          cellText.setAttribute("dominant-baseline", "central");
+  //       // Add cell text
+  //       if (cell.data) {
+  //         const cellText = document.createElementNS(SVG_NS, "text");
+  //         cellText.setAttribute("x", (currentX + colWidth / 2).toString());
+  //         cellText.setAttribute("y", (currentY + rowHeight / 2).toString());
+  //         cellText.setAttribute("text-anchor", "middle");
+  //         cellText.setAttribute("dominant-baseline", "central");
           
-          if (cell.style?.text) {
-            if (cell.style.text.color) {
-              cellText.setAttribute("fill", cell.style.text.color);
-            }
-            if (cell.style.text.size) {
-              cellText.setAttribute("font-size", cell.style.text.size.scoped.toString());
-            }
-            if (cell.style.text.font) {
-              cellText.setAttribute("font-family", cell.style.text.font);
-            }
-          }
+  //         if (cell.style?.text) {
+  //           if (cell.style.text.color) {
+  //             cellText.setAttribute("fill", cell.style.text.color);
+  //           }
+  //           if (cell.style.text.size) {
+  //             cellText.setAttribute("font-size", cell.style.text.size.scoped.toString());
+  //           }
+  //           if (cell.style.text.font) {
+  //             cellText.setAttribute("font-family", cell.style.text.font);
+  //           }
+  //         }
           
-          cellText.textContent = cell.data;
-          tableGroup.appendChild(cellText);
-        }
-      }
+  //         cellText.textContent = cell.data;
+  //         tableGroup.appendChild(cellText);
+  //       }
+  //     }
       
-      currentX += colWidth;
-    }
+  //     currentX += colWidth;
+  //   }
     
-    currentY += rowHeight;
-  }
+  //   currentY += rowHeight;
+  // }
   
   return tableGroup;
 };
@@ -1211,6 +1226,7 @@ const renderTable = (element: DucTableElement): SVGElement => {
 const renderDoc = (element: DucDocElement): SVGElement => {
   // For SVG export, we'll create a foreign object with HTML content
   const rect = document.createElementNS(SVG_NS, "rect");
+  // TODO: We need to implement doc rendering for SVG export
   
   rect.setAttribute("width", element.width.scoped.toString());
   rect.setAttribute("height", element.height.scoped.toString());
@@ -1218,34 +1234,6 @@ const renderDoc = (element: DucDocElement): SVGElement => {
   // Apply styles
   applyStyles(rect, element.stroke, element.background);
   
-  // Add text data as a title
-  const title = document.createElementNS(SVG_NS, "title");
-  title.textContent = element.content;
-  rect.appendChild(title);
   
   return rect;
-};
-
-// Render frame name
-const renderFrameName = (element: DucFrameLikeElement, appState?: RestoredDataState["appState"]): SVGElement => {
-  const frameName = getFrameLikeTitle(element);
-  
-  const text = document.createElementNS(SVG_NS, "text");
-  // Position the frame name at the top-left, above the frame
-  text.setAttribute("x", "0");
-  // Position text above the frame's top border, ensuring string conversion
-  text.setAttribute("y", `${-(DEFAULT_FRAME_STYLE.nameFontSize + DEFAULT_FRAME_STYLE.nameOffsetY)}`); 
-  text.setAttribute("font-family", "Roboto Mono");
-  text.setAttribute("font-size", DEFAULT_FRAME_STYLE.nameFontSize.toString());
-  
-  // Use appropriate color based on theme, fallback to light theme color
-  const isDarkTheme = appState?.theme === THEME.DARK;
-  const textColor = isDarkTheme ? DEFAULT_FRAME_STYLE.nameColorDarkTheme : DEFAULT_FRAME_STYLE.nameColorLightTheme;
-  text.setAttribute("fill", textColor);
-  
-  text.setAttribute("text-anchor", "start");
-  text.setAttribute("dominant-baseline", "auto");
-  text.textContent = frameName;
-  
-  return text;
 };

@@ -667,7 +667,7 @@ export type DucImageElement = _DucElementBase & {
   /** whether respective file is persisted */
   status: ImageStatus;
   /** X and Y scale factors <-1, 1>, used for image axis flipping */
-  scale: [number, number];
+  scaleFlip: [number, number];
   /** whether an element is cropped */
   crop: ImageCrop | null;
   filter: DucImageFilter | null;

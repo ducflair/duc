@@ -476,7 +476,7 @@ const restoreElement = (
         {
           status: isValidImageStatusValue(element.status),
           fileId: element.fileId,
-          scale: isValidImageScaleValue(element.scale),
+          scale: isValidImageScaleValue(element.scaleFlip),
           crop: element.crop || null,
           filter: element.filter || null,
         },
