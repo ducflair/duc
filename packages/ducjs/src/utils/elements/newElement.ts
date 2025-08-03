@@ -404,7 +404,7 @@ export const newImageElement = (
   type: "image",
   status: opts.status ?? IMAGE_STATUS.PENDING,
   fileId: opts.fileId ?? null,
-  scale: opts.scale ?? [1, 1],
+  scaleFlip: opts.scaleFlip ?? [1, 1],
   crop: null,
   filter: null,
 });

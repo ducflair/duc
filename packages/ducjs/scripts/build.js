@@ -32,8 +32,7 @@ function main() {
   
   const tsc = spawn('npx', ['tsc'], {
     env,
-    stdio: 'inherit',
-    shell: true
+    stdio: 'inherit'
   });
   
   tsc.on('close', (code) => {
@@ -48,4 +47,4 @@ function main() {
 
 if (require.main === module) {
   main();
-} 
+}

@@ -983,7 +983,7 @@ export function parseElementFromBinary(
         type: elType,
         fileId: imageElement.fileId() ? imageElement.fileId()! as ExternalFileId : null,
         status: imageElement.status()!,
-        scale: (() => {
+        scaleFlip: (() => {
           const scaleLength = imageElement.scaleLength();
           if (scaleLength >= 2) {
             const x = imageElement.scale(0);

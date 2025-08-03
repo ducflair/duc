@@ -393,8 +393,8 @@ export const serializeDucImageElement = (builder: flatbuffers.Builder, element: 
     BinDucImageElement.addBase(builder, baseOffset);
     BinDucImageElement.addFileId(builder, fileIdOffset);
     if (element.status) BinDucImageElement.addStatus(builder, element.status);
-    if (element.scale) {
-        const scaleVector = BinDucImageElement.createScaleVector(builder, element.scale);
+    if (element.scaleFlip) {
+        const scaleVector = BinDucImageElement.createScaleVector(builder, element.scaleFlip);
         BinDucImageElement.addScale(builder, scaleVector);
     }
     if (cropOffset) BinDucImageElement.addCrop(builder, cropOffset);

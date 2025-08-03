@@ -1,6 +1,7 @@
 export * from "./elements";
 export * from "./geometryTypes";
 export * from "./utility-types";
+export * from "./config";
 
 import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "ducjs/duc";
 import { SupportedMeasures } from "ducjs/technical/scopes";
