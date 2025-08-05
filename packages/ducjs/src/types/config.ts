@@ -1,7 +1,9 @@
+import { PRUNING_LEVEL } from "ducjs/duc";
 import { PruningLevel } from "ducjs/types";
 import { ValueOf } from "ducjs/types/utility-types";
 
-export interface DucConfig { // User's Config of AppState
+export interface DucConfig {
+  // User's Config of AppState
   theme: Theme;
 
   showHyperlinkPopup: ShowHyperlinkPopup;
@@ -9,7 +11,6 @@ export interface DucConfig { // User's Config of AppState
   antiAliasing: AntiAliasing;
   vSync: boolean;
   zoomStep: number;
-
 
   scaleRatioLocked: boolean;
   displayAllPointDistances: boolean;
@@ -27,7 +28,6 @@ export interface DucConfig { // User's Config of AppState
 
   defaultVersionGraphPruningLevel: PruningLevel;
 }
-
 
 export type ShowHyperlinkPopup = ValueOf<typeof SHOW_HYPERLINK_POPUP>;
 export type AntiAliasing = ValueOf<typeof ANTI_ALIASING>;
@@ -48,3 +48,22 @@ export const THEME = {
   LIGHT: "light",
   DARK: "dark",
 } as const;
+
+export const getDefaultConfigState = (): DucConfig => {
+  return {
+    theme: THEME.LIGHT,
+    showHyperlinkPopup: SHOW_HYPERLINK_POPUP.NONE,
+    antiAliasing: ANTI_ALIASING.MSAA_8,
+    vSync: true,
+    zoomStep: 0.1,
+    scaleRatioLocked: false,
+    displayAllPointDistances: false,
+    displayDistanceOnDrawing: false,
+    displayAllPointCoordinates: false,
+    displayAllPointInfoSelected: false,
+    displayRootAxis: false,
+    debugRendering: false,
+    manualSaveMode: false,
+    defaultVersionGraphPruningLevel: PRUNING_LEVEL.CONSERVATIVE,
+  };
+};

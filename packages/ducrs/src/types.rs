@@ -133,7 +133,7 @@ pub struct StringValueEntry {
 pub struct Identifier {
     pub id: String,
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -202,7 +202,7 @@ pub struct CustomHatchPattern {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucHatchStyle {
-    pub hatch_style: Option<HATCH_STYLE>,
+    pub hatch_style: HATCH_STYLE,
     pub pattern_name: String,
     pub pattern_scale: f32,
     pub pattern_angle: f64,
@@ -233,7 +233,7 @@ pub struct StrokeStyle {
     pub preference: Option<STROKE_PREFERENCE>,
     pub cap: Option<STROKE_CAP>,
     pub join: Option<STROKE_JOIN>,
-    pub dash: Vec<f64>,
+    pub dash: Option<Vec<f64>>,
     pub dash_line_override: Option<String>,
     pub dash_cap: Option<STROKE_CAP>,
     pub miter_limit: Option<f64>,
@@ -242,7 +242,7 @@ pub struct StrokeStyle {
 #[derive(Debug, Clone, PartialEq)]
 pub struct StrokeSides {
     pub preference: Option<STROKE_SIDE_PREFERENCE>,
-    pub values: Vec<f64>,
+    pub values: Option<Vec<f64>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -287,7 +287,7 @@ pub struct DucElementBase {
     pub height: f64,
     pub angle: f64,
     pub scope: String,
-    pub label: Option<String>,
+    pub label: String,
     pub description: Option<String>,
     pub is_visible: bool,
     pub seed: i32,
@@ -385,8 +385,7 @@ pub struct DucStackElementBase {
     pub stack_base: DucStackBase,
     pub clip: bool,
     pub label_visible: bool,
-    // Note: Standard type will be defined later in Standards & Settings section
-    pub standard_override: String,
+    pub standard_override: Option<String>,
 }
 
 
@@ -395,7 +394,7 @@ pub struct DucStackElementBase {
 #[derive(Debug, Clone, PartialEq)]
 pub struct LineSpacing {
     pub value: f64,
-    pub line_type: Option<LINE_SPACING_TYPE>, // Renamed 'type' to 'line_type'
+    pub line_type: Option<LINE_SPACING_TYPE>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -404,8 +403,8 @@ pub struct DucTextStyle {
     pub is_ltr: bool,
     pub font_family: String,
     pub big_font_family: String,
-    pub text_align: Option<TEXT_ALIGN>,
-    pub vertical_align: Option<VERTICAL_ALIGN>,
+    pub text_align: TEXT_ALIGN,
+    pub vertical_align: VERTICAL_ALIGN,
     pub line_height: f32,
     pub line_spacing: LineSpacing,
     pub oblique_angle: f64,
@@ -427,7 +426,7 @@ pub struct DucTableCellStyle {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucTableStyle {
     pub base_style: DucElementStylesBase,
-    pub flow_direction: Option<TABLE_FLOW_DIRECTION>,
+    pub flow_direction: TABLE_FLOW_DIRECTION,
     pub header_row_style: DucTableCellStyle,
     pub data_row_style: DucTableCellStyle,
     pub data_column_style: DucTableCellStyle,
@@ -439,24 +438,24 @@ pub struct DucLeaderStyle {
     pub heads_override: Option<Vec<DucHead>>,
     pub dogleg: Option<f64>,
     pub text_style: DucTextStyle,
-    pub text_attachment: Option<VERTICAL_ALIGN>,
-    pub block_attachment: Option<BLOCK_ATTACHMENT>,
+    pub text_attachment: VERTICAL_ALIGN,
+    pub block_attachment: BLOCK_ATTACHMENT,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionToleranceStyle {
     pub enabled: bool,
-    pub display_method: Option<TOLERANCE_DISPLAY>,
+    pub display_method: TOLERANCE_DISPLAY,
     pub upper_value: f64,
     pub lower_value: f64,
     pub precision: i32,
-    pub text_style: DucTextStyle,
+    pub text_style: Option<DucTextStyle>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionFitStyle {
-    pub rule: Option<DIMENSION_FIT_RULE>,
-    pub text_placement: Option<DIMENSION_TEXT_PLACEMENT>,
+    pub rule: DIMENSION_FIT_RULE,
+    pub text_placement: DIMENSION_TEXT_PLACEMENT,
     pub force_text_inside: bool,
 }
 
@@ -475,8 +474,8 @@ pub struct DimensionExtLineStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionSymbolStyle {
-    pub heads_override: Vec<DucHead>,
-    pub center_mark_type: Option<MARK_ELLIPSE_CENTER>,
+    pub heads_override: Option<Vec<DucHead>>,
+    pub center_mark_type: MARK_ELLIPSE_CENTER,
     pub center_mark_size: f64,
 }
 
@@ -504,7 +503,7 @@ pub struct FCFSymbolStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FCFDatumStyle {
-    pub bracket_style: Option<DATUM_BRACKET_STYLE>,
+    pub bracket_style: DATUM_BRACKET_STYLE,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -531,7 +530,7 @@ pub struct ParagraphFormatting {
 pub struct StackFormatProperties {
     pub upper_scale: f64,
     pub lower_scale: f64,
-    pub alignment: Option<STACKED_TEXT_ALIGN>,
+    pub alignment: STACKED_TEXT_ALIGN,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -688,7 +687,7 @@ pub struct ImageCrop {
 pub struct DucImageElement {
     pub base: DucElementBase,
     pub file_id: Option<String>,
-    pub status: Option<IMAGE_STATUS>,
+    pub status: IMAGE_STATUS,
     pub scale: Vec<f64>,
     pub crop: Option<ImageCrop>,
     pub filter: Option<DucImageFilter>,
@@ -715,6 +714,8 @@ pub enum DucTextDynamicSourceData {
 pub struct DucTextDynamicSource {
     pub text_source_type: Option<TEXT_FIELD_SOURCE_TYPE>,
     pub source: DucTextDynamicSourceData,
+    pub formatting: Option<PrimaryUnits>,
+    pub cached_value: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -806,7 +807,7 @@ pub struct DucViewportElement {
     pub style: DucViewportStyle,
     pub view: DucView,
     pub scale: f32,
-    pub shade_plot: Option<VIEWPORT_SHADE_PLOT>,
+    pub shade_plot: VIEWPORT_SHADE_PLOT,
     pub frozen_group_ids: Vec<String>,
     pub standard_override: Option<String>,
 }
@@ -840,7 +841,7 @@ pub enum LeaderContentData {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LeaderContent {
-    pub leader_content_type: Option<LEADER_CONTENT_TYPE>,
+    pub leader_content_type: LEADER_CONTENT_TYPE,
     pub content: LeaderContentData,
 }
 
@@ -882,7 +883,7 @@ pub struct DimensionContinueData {
 pub struct DucDimensionElement {
     pub base: DucElementBase,
     pub style: DucDimensionStyle,
-    pub dimension_type: Option<DIMENSION_TYPE>,
+    pub dimension_type: DIMENSION_TYPE,
     pub definition_points: DimensionDefinitionPoints,
     pub oblique_angle: f32,
     pub ordinate_axis: Option<AXIS>,
@@ -910,9 +911,9 @@ pub struct ToleranceClause {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FeatureControlFrameSegment {
-    pub symbol: Option<GDT_SYMBOL>,
+    pub symbol: GDT_SYMBOL,
     pub tolerance: ToleranceClause,
-    pub datums: Vec<DatumReference>,
+    pub datums: Vec<Option<DatumReference>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -964,7 +965,7 @@ pub struct TextColumn {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ColumnLayout {
-    pub column_type: Option<COLUMN_TYPE>, // Renamed 'type' to 'column_type'
+    pub column_type: COLUMN_TYPE,
     pub definitions: Vec<TextColumn>,
     pub auto_height: bool,
 }
@@ -975,14 +976,14 @@ pub struct DucDocElement {
     pub style: DucDocStyle,
     pub text: String,
     pub dynamic: Vec<DucTextDynamicPart>,
-    pub flow_direction: Option<TEXT_FLOW_DIRECTION>,
+    pub flow_direction: TEXT_FLOW_DIRECTION,
     pub columns: ColumnLayout,
     pub auto_resize: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParametricSource {
-    pub source_type: Option<PARAMETRIC_SOURCE_TYPE>, // Renamed 'type' to 'source_type'
+    pub source_type: PARAMETRIC_SOURCE_TYPE,
     pub code: String,
     pub file_id: Option<String>,
 }
@@ -1080,7 +1081,7 @@ pub struct DucBlockAttributeDetails {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucGlobalState {
-    pub name: String,
+    pub name: Option<String>,
     pub view_background_color: String,
     pub main_scope: String,
     pub dash_spacing_scale: f32,
@@ -1107,9 +1108,9 @@ pub struct DucLocalState {
     pub current_item_opacity: f32,
     pub current_item_font_family: String,
     pub current_item_font_size: f64,
-    pub current_item_text_align: Option<TEXT_ALIGN>,
-    pub current_item_start_line_head: DucHead,
-    pub current_item_end_line_head: DucHead,
+    pub current_item_text_align: TEXT_ALIGN,
+    pub current_item_start_line_head: Option<DucHead>,
+    pub current_item_end_line_head: Option<DucHead>,
     pub current_item_roundness: f64,
     pub pen_mode: bool,
     pub view_mode_enabled: bool,
@@ -1128,7 +1129,7 @@ pub struct DucGroup {
 pub struct DucRegion {
     pub id: String,
     pub stack_base: DucStackBase,
-    pub boolean_operation: Option<BOOLEAN_OPERATION>,
+    pub boolean_operation: BOOLEAN_OPERATION,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1150,7 +1151,8 @@ pub struct DucLayer {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnitSystemBase {
-    pub system: Option<UNIT_SYSTEM>,
+    pub system: UNIT_SYSTEM,
+    pub format: Option<String>,
     pub precision: i32,
     pub suppress_leading_zeros: bool,
     pub suppress_trailing_zeros: bool,
@@ -1159,8 +1161,8 @@ pub struct UnitSystemBase {
 #[derive(Debug, Clone, PartialEq)]
 pub struct LinearUnitSystem {
     pub base: UnitSystemBase,
-    pub format: Option<DIMENSION_UNITS_FORMAT>,
-    pub decimal_separator: Option<DECIMAL_SEPARATOR>,
+    pub format: DIMENSION_UNITS_FORMAT,
+    pub decimal_separator: DECIMAL_SEPARATOR,
     pub suppress_zero_feet: bool,
     pub suppress_zero_inches: bool,
 }
@@ -1168,13 +1170,13 @@ pub struct LinearUnitSystem {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AngularUnitSystem {
     pub base: UnitSystemBase,
-    pub format: Option<ANGULAR_UNITS_FORMAT>,
+    pub format: ANGULAR_UNITS_FORMAT,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AlternateUnits {
     pub base: UnitSystemBase,
-    pub format: Option<DIMENSION_UNITS_FORMAT>,
+    pub format: DIMENSION_UNITS_FORMAT,
     pub is_visible: bool,
     pub multiplier: f32,
 }
@@ -1329,9 +1331,9 @@ pub struct IsometricGridSettings {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GridSettings {
-    pub grid_type: Option<GRID_TYPE>, // Renamed 'type' to 'grid_type'
+    pub grid_type: GRID_TYPE,
     pub readonly: bool,
-    pub display_type: Option<GRID_DISPLAY_TYPE>,
+    pub display_type: GRID_DISPLAY_TYPE,
     pub is_adaptive: bool,
     pub x_spacing: f64,
     pub y_spacing: f64,
@@ -1348,6 +1350,8 @@ pub struct GridSettings {
     pub polar_settings: Option<PolarGridSettings>,
     pub isometric_settings: Option<IsometricGridSettings>,
     pub enable_snapping: bool,
+    pub construction_snap_enabled: bool,
+    pub snap_to_grid_intersections: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1367,7 +1371,7 @@ pub struct DynamicSnapSettings {
 pub struct PolarTrackingSettings {
     pub enabled: bool,
     pub angles: Vec<f64>,
-    pub increment_angle: f64,
+    pub increment_angle: Option<f64>,
     pub track_from_last_point: bool,
     pub show_polar_coordinates: bool,
 }
@@ -1376,24 +1380,24 @@ pub struct PolarTrackingSettings {
 pub struct TrackingLineStyle {
     pub color: String,
     pub opacity: f64,
-    pub dash_pattern: Vec<f64>,
+    pub dash_pattern: Option<Vec<f64>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LayerSnapFilters {
-    pub include_layers: Vec<String>,
-    pub exclude_layers: Vec<String>,
+    pub include_layers: Option<Vec<String>>,
+    pub exclude_layers: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SnapMarkerStyle {
-    pub shape: Option<SNAP_MARKER_SHAPE>,
+    pub shape: SNAP_MARKER_SHAPE,
     pub color: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SnapMarkerStyleEntry {
-    pub key: Option<OBJECT_SNAP_MODE>,
+    pub key: OBJECT_SNAP_MODE,
     pub value: SnapMarkerStyle,
 }
 
@@ -1401,7 +1405,7 @@ pub struct SnapMarkerStyleEntry {
 pub struct SnapMarkerSettings {
     pub enabled: bool,
     pub size: i32,
-    pub duration: i32,
+    pub duration: Option<i32>,
     pub styles: Vec<SnapMarkerStyleEntry>,
 }
 
@@ -1424,7 +1428,7 @@ pub struct SnapSettings {
     pub magnetic_strength: Option<f64>,
     pub layer_snap_filters: Option<LayerSnapFilters>,
     pub element_type_filters: Option<Vec<String>>,
-    pub snap_mode: Option<SNAP_MODE>,
+    pub snap_mode: SNAP_MODE,
     pub snap_markers: SnapMarkerSettings,
     pub construction_snap_enabled: bool,
     pub snap_to_grid_intersections: Option<bool>,
@@ -1464,14 +1468,14 @@ pub struct StandardViewSettings {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DimensionValidationRules {
-    pub min_text_height: f64,
-    pub max_text_height: f64,
+    pub min_text_height: Option<f64>,
+    pub max_text_height: Option<f64>,
     pub allowed_precisions: Vec<i32>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LayerValidationRules {
-    pub prohibited_layer_names: Vec<String>,
+    pub prohibited_layer_names: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1485,11 +1489,11 @@ pub struct Standard {
     pub identifier: Identifier,
     pub version: String,
     pub readonly: bool,
-    pub overrides: StandardOverrides,
-    pub styles: StandardStyles,
-    pub view_settings: StandardViewSettings,
-    pub units: StandardUnits,
-    pub validation: StandardValidation,
+    pub overrides: Option<StandardOverrides>,
+    pub styles: Option<StandardStyles>,
+    pub view_settings: Option<StandardViewSettings>,
+    pub units: Option<StandardUnits>,
+    pub validation: Option<StandardValidation>,
 }
 
 
@@ -1528,7 +1532,7 @@ pub struct Delta {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VersionGraphMetadata {
-    pub pruning_level: Option<PRUNING_LEVEL>,
+    pub pruning_level: PRUNING_LEVEL,
     pub last_pruned: i64,
     pub total_size: i64,
 }
@@ -1552,6 +1556,7 @@ pub struct DucExternalFileData {
     pub data: Vec<u8>,
     pub created: i64,
     pub last_retrieved: Option<i64>,
+    pub version: Option<i32>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

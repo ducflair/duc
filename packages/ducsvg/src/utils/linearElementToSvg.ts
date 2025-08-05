@@ -696,7 +696,6 @@ export const renderLinearElementToSvg = (
   ducState: PartialDucState,
   files: RestoredDataState["files"],
   defs: SVGDefsElement,
-  frameRendering: FrameRendering,
   currentScope: Scope,
   offsetX: number,
   offsetY: number,
