@@ -328,7 +328,7 @@ fn parse_duc_point_binding(binding: fb::DucPointBinding) -> ParseResult<types::D
         element_id: binding.element_id().ok_or("Missing DucPointBinding.element_id")?.to_string(),
         focus: binding.focus(),
         gap: binding.gap(),
-        fixed_point: parse_required_geometric_point(binding.fixed_point().copied())?,
+        fixed_point: binding.fixed_point().map(|p| parse_geometric_point(&p)),
         point: binding.point().map(parse_point_binding_point).transpose()?,
         head: binding.head().map(parse_duc_head).transpose()?,
     })
