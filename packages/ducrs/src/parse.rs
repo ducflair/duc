@@ -96,7 +96,7 @@ fn parse_identifier(id: fb::Identifier) -> ParseResult<types::Identifier> {
     Ok(types::Identifier {
         id: id.id().to_string(),
         name: id.name().map(|s| s.to_string()).unwrap_or_default(),
-        description: id.description().map(|s| s.to_string()).unwrap_or_default(),
+        description: id.description().map(|s| s.to_string()),
     })
 }
 
@@ -128,7 +128,7 @@ fn parse_duc_view(view: fb::DucView) -> ParseResult<types::DucView> {
         zoom: view.zoom(),
         twist_angle: view.twist_angle(),
         center_point: parse_required_duc_point(view.center_point())?,
-        scope: view.scope().map(|s| s.to_string()).ok_or("Missing DucView.scope")?,
+        scope: view.scope().map(|s| s.to_string()).unwrap_or_default(),
     })
 }
 
@@ -176,7 +176,7 @@ fn parse_custom_hatch_pattern(pattern: fb::CustomHatchPattern) -> ParseResult<ty
 
 fn parse_duc_hatch_style(style: fb::DucHatchStyle) -> ParseResult<types::DucHatchStyle> {
     Ok(types::DucHatchStyle {
-        hatch_style: style.hatch_style(),
+        hatch_style: style.hatch_style().expect("Missing DucHatchStyle.hatch_style"),
         pattern_name: style.pattern_name().map(|s| s.to_string()).ok_or("Missing DucHatchStyle.pattern_name")?,
         pattern_scale: style.pattern_scale(),
         pattern_angle: style.pattern_angle(),
@@ -196,7 +196,7 @@ fn parse_duc_image_filter(filter: fb::DucImageFilter) -> ParseResult<types::DucI
 fn parse_element_content_base(content: fb::ElementContentBase) -> ParseResult<types::ElementContentBase> {
     Ok(types::ElementContentBase {
         preference: content.preference(),
-        src: content.src().map(|s| s.to_string()).ok_or("Missing ElementContentBase.src")?,
+        src: content.src().map(|s| s.to_string()).unwrap_or_default(),
         visible: content.visible(),
         opacity: content.opacity(),
         tiling: content.tiling().map(parse_tiling_properties).transpose()?,
@@ -210,7 +210,7 @@ fn parse_stroke_style(style: fb::StrokeStyle) -> ParseResult<types::StrokeStyle>
         preference: style.preference(),
         cap: style.cap(),
         join: style.join(),
-        dash: style.dash().ok_or("Missing StrokeStyle.dash")?.iter().collect(),
+        dash: style.dash().map(|v| Some(v.iter().collect())).unwrap_or(None),
         dash_line_override: style.dash_line_override().map(|s| s.to_string()),
         dash_cap: style.dash_cap(),
         miter_limit: style.miter_limit(),
@@ -220,7 +220,7 @@ fn parse_stroke_style(style: fb::StrokeStyle) -> ParseResult<types::StrokeStyle>
 fn parse_stroke_sides(sides: fb::StrokeSides) -> ParseResult<types::StrokeSides> {
     Ok(types::StrokeSides {
         preference: sides.preference(),
-        values: sides.values().ok_or("Missing StrokeSides.values")?.iter().collect(),
+        values: sides.values().map(|v| v.iter().collect()),
     })
 }
 
@@ -230,7 +230,10 @@ fn parse_element_stroke(stroke: fb::ElementStroke) -> ParseResult<types::Element
         width: stroke.width(),
         style: parse_stroke_style(stroke.style().ok_or("Missing ElementStroke.style")?)?,
         placement: stroke.placement(),
-        stroke_sides: Some(parse_stroke_sides(stroke.stroke_sides().ok_or("Missing ElementStroke.stroke_sides")?)?),
+        stroke_sides: stroke
+            .stroke_sides()
+            .map(parse_stroke_sides)
+            .transpose()?,
     })
 }
 
@@ -282,7 +285,7 @@ fn parse_duc_element_base(base: fb::_DucElementBase) -> ParseResult<types::DucEl
         height: base.height(),
         angle: base.angle(),
         scope: base.scope().map(|s| s.to_string()).ok_or("Missing _DucElementBase.scope")?,
-        label: base.label().map(|s| s.to_string()),
+        label: base.label().map(|s| s.to_string()).unwrap_or_default(),
         description: base.description().map(|s| s.to_string()),
         is_visible: base.is_visible(),
         seed: base.seed(),
@@ -334,7 +337,7 @@ fn parse_duc_point_binding(binding: fb::DucPointBinding) -> ParseResult<types::D
 fn parse_duc_line_reference(line_ref: fb::DucLineReference) -> ParseResult<types::DucLineReference> {
     Ok(types::DucLineReference {
         index: line_ref.index(),
-        handle: Some(parse_required_geometric_point(line_ref.handle().copied())?),
+        handle: line_ref.handle().map(|gp| parse_geometric_point(&gp)),
     })
 }
 
@@ -354,11 +357,17 @@ fn parse_duc_path(path: fb::DucPath) -> ParseResult<types::DucPath> {
 }
 
 fn parse_duc_linear_element_base(base: fb::_DucLinearElementBase) -> ParseResult<types::DucLinearElementBase> {
-    let lines_vec = base.lines().ok_or("Missing _DucLinearElementBase.lines")?;
-    let lines = lines_vec.iter().map(parse_duc_line).collect::<ParseResult<Vec<_>>>()?;
+    let lines = base
+        .lines()
+        .map(|v| v.iter().map(parse_duc_line).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
 
-    let path_overrides_vec = base.path_overrides().ok_or("Missing _DucLinearElementBase.path_overrides")?;
-    let path_overrides = path_overrides_vec.iter().map(parse_duc_path).collect::<ParseResult<_>>()?;
+    let path_overrides = base
+        .path_overrides()
+        .map(|v| v.iter().map(parse_duc_path).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
 
     Ok(types::DucLinearElementBase {
         base: parse_duc_element_base(base.base().ok_or("Missing _DucLinearElementBase.base")?)?,
@@ -374,7 +383,7 @@ fn parse_duc_linear_element_base(base: fb::_DucLinearElementBase) -> ParseResult
 fn parse_duc_stack_like_styles(styles: fb::DucStackLikeStyles) -> ParseResult<types::DucStackLikeStyles> {
     Ok(types::DucStackLikeStyles {
         opacity: styles.opacity(),
-        labeling_color: styles.labeling_color().ok_or("Missing DucStackLikeStyles.labeling_color")?.to_string(),
+        labeling_color: styles.labeling_color().map(|s| s.to_string()).unwrap_or_default(),
     })
 }
 
@@ -396,7 +405,7 @@ fn parse_duc_stack_element_base(base: fb::_DucStackElementBase) -> ParseResult<t
         stack_base: parse_duc_stack_base(base.stack_base().ok_or("Missing _DucStackElementBase.stack_base")?)?,
         clip: base.clip(),
         label_visible: base.label_visible(),
-        standard_override: base.standard_override().ok_or("Missing _DucStackElementBase.standard_override")?.to_string(),
+        standard_override: base.standard_override().map(|s| s.to_string()),
     })
 }
 
@@ -417,8 +426,8 @@ fn parse_duc_text_style(style: fb::DucTextStyle) -> ParseResult<types::DucTextSt
         is_ltr: style.is_ltr(),
         font_family: style.font_family().map(|s| s.to_string()).ok_or("Missing DucTextStyle.font_family")?,
         big_font_family: style.big_font_family().map(|s| s.to_string()).ok_or("Missing DucTextStyle.big_font_family")?,
-        text_align: style.text_align(),
-        vertical_align: style.vertical_align(),
+        text_align: style.text_align().expect("Missing DucTextStyle.text_align"),
+        vertical_align: style.vertical_align().expect("Missing DucTextStyle.vertical_align"),
         line_height: style.line_height(),
         line_spacing: parse_line_spacing(style.line_spacing().ok_or("Missing DucTextStyle.line_spacing")?)?,
         oblique_angle: style.oblique_angle(),
@@ -442,7 +451,7 @@ fn parse_duc_table_cell_style(style: fb::DucTableCellStyle) -> ParseResult<types
 fn parse_duc_table_style(style: fb::DucTableStyle) -> ParseResult<types::DucTableStyle> {
     Ok(types::DucTableStyle {
         base_style: parse_duc_element_styles_base(style.base_style().ok_or("Missing DucTableStyle.base_style")?)?,
-        flow_direction: style.flow_direction(),
+        flow_direction: style.flow_direction().expect("Missing DucTableStyle.flow_direction"),
         header_row_style: parse_duc_table_cell_style(style.header_row_style().ok_or("Missing DucTableStyle.header_row_style")?)?,
         data_row_style: parse_duc_table_cell_style(style.data_row_style().ok_or("Missing DucTableStyle.data_row_style")?)?,
         data_column_style: parse_duc_table_cell_style(style.data_column_style().ok_or("Missing DucTableStyle.data_column_style")?)?,
@@ -450,33 +459,35 @@ fn parse_duc_table_style(style: fb::DucTableStyle) -> ParseResult<types::DucTabl
 }
 
 fn parse_duc_leader_style(style: fb::DucLeaderStyle) -> ParseResult<types::DucLeaderStyle> {
-    let heads_vec = style.heads_override().ok_or("Missing DucLeaderStyle.heads_override")?;
-    let heads_override = heads_vec.iter().map(parse_duc_head).collect::<ParseResult<Vec<_>>>()?;
+    let heads_override = style
+        .heads_override()
+        .map(|v| v.iter().map(parse_duc_head).collect::<ParseResult<Vec<_>>>())
+        .transpose()?;
     Ok(types::DucLeaderStyle {
         base_style: parse_duc_element_styles_base(style.base_style().ok_or("Missing DucLeaderStyle.base_style")?)?,
-        heads_override: Some(heads_override),
+        heads_override,
         dogleg: Some(style.dogleg()),
         text_style: parse_duc_text_style(style.text_style().ok_or("Missing DucLeaderStyle.text_style")?)?,
-        text_attachment: style.text_attachment(),
-        block_attachment: style.block_attachment(),
+        text_attachment: style.text_attachment().expect("Missing DucLeaderStyle.text_attachment"),
+        block_attachment: style.block_attachment().expect("Missing DucLeaderStyle.block_attachment"),
     })
 }
 
 fn parse_dimension_tolerance_style(style: fb::DimensionToleranceStyle) -> ParseResult<types::DimensionToleranceStyle> {
     Ok(types::DimensionToleranceStyle {
         enabled: style.enabled(),
-        display_method: style.display_method(),
+        display_method: style.display_method().expect("Missing DimensionToleranceStyle.display_method"),
         upper_value: style.upper_value(),
         lower_value: style.lower_value(),
         precision: style.precision(),
-        text_style: parse_duc_text_style(style.text_style().ok_or("Missing DimensionToleranceStyle.text_style")?)?,
+        text_style: style.text_style().map(parse_duc_text_style).transpose()?,
     })
 }
 
 fn parse_dimension_fit_style(style: fb::DimensionFitStyle) -> ParseResult<types::DimensionFitStyle> {
     Ok(types::DimensionFitStyle {
-        rule: style.rule(),
-        text_placement: style.text_placement(),
+        rule: style.rule().expect("Missing DimensionFitStyle.rule"),
+        text_placement: style.text_placement().expect("Missing DimensionFitStyle.text_placement"),
         force_text_inside: style.force_text_inside(),
     })
 }
@@ -497,11 +508,13 @@ fn parse_dimension_ext_line_style(style: fb::DimensionExtLineStyle) -> ParseResu
 }
 
 fn parse_dimension_symbol_style(style: fb::DimensionSymbolStyle) -> ParseResult<types::DimensionSymbolStyle> {
-    let heads_vec = style.heads_override().ok_or("Missing DimensionSymbolStyle.heads_override")?;
-    let heads_override = heads_vec.iter().map(parse_duc_head).collect::<ParseResult<_>>()?;
+    let heads_override = style
+        .heads_override()
+        .map(|v| v.iter().map(parse_duc_head).collect::<ParseResult<Vec<_>>>())
+        .transpose()?;
     Ok(types::DimensionSymbolStyle {
         heads_override,
-        center_mark_type: style.center_mark_type(),
+        center_mark_type: style.center_mark_type().expect("Missing DimensionSymbolStyle.center_mark_type"),
         center_mark_size: style.center_mark_size(),
     })
 }
@@ -533,7 +546,7 @@ fn parse_fcf_symbol_style(style: fb::FCFSymbolStyle) -> ParseResult<types::FCFSy
 
 fn parse_fcf_datum_style(style: fb::FCFDatumStyle) -> ParseResult<types::FCFDatumStyle> {
     Ok(types::FCFDatumStyle {
-        bracket_style: style.bracket_style(),
+        bracket_style: style.bracket_style().expect("Missing FCFDatumStyle.bracket_style"),
     })
 }
 
@@ -563,14 +576,14 @@ fn parse_stack_format_properties(props: fb::StackFormatProperties) -> ParseResul
     Ok(types::StackFormatProperties {
         upper_scale: props.upper_scale(),
         lower_scale: props.lower_scale(),
-        alignment: props.alignment(),
+        alignment: props.alignment().expect("Missing StackFormatProperties.alignment"),
     })
 }
 
 fn parse_stack_format(format: fb::StackFormat) -> ParseResult<types::StackFormat> {
     Ok(types::StackFormat {
         auto_stack: format.auto_stack(),
-        stack_chars: parse_vec_of_required_strings(format.stack_chars())?,
+        stack_chars: format.stack_chars().map(|v| parse_vec_of_strings(Some(v))).unwrap_or_default(),
         properties: parse_stack_format_properties(format.properties().ok_or("Missing StackFormat.properties")?)?,
     })
 }
@@ -752,7 +765,7 @@ fn parse_duc_image_element(el: fb::DucImageElement) -> ParseResult<types::DucIma
     Ok(types::DucImageElement {
         base: parse_duc_element_base(el.base().ok_or("Missing DucImageElement.base")?)?,
         file_id: el.file_id().map(|s| s.to_string()),
-        status: el.status(),
+        status: el.status().expect("Missing DucImageElement.status"),
         scale: el.scale().ok_or("Missing DucImageElement.scale")?.iter().collect(),
         crop: el.crop().map(parse_image_crop).transpose()?,
         filter: el.filter().map(parse_duc_image_filter).transpose()?,
@@ -787,6 +800,8 @@ fn parse_duc_text_dynamic_source(source: fb::DucTextDynamicSource) -> ParseResul
     Ok(types::DucTextDynamicSource {
         text_source_type: source.text_source_type(),
         source: source_data,
+        formatting: None,
+        cached_value: String::new(),
     })
 }
 
@@ -831,7 +846,7 @@ fn parse_duc_free_draw_ends(ends: fb::DucFreeDrawEnds) -> ParseResult<types::Duc
     Ok(types::DucFreeDrawEnds {
         cap: ends.cap(),
         taper: ends.taper(),
-        easing: ends.easing().ok_or("Missing DucFreeDrawEnds.easing")?.to_string(),
+        easing: ends.easing().unwrap_or_default().to_string(),
     })
 }
 
@@ -843,10 +858,10 @@ fn parse_duc_free_draw_element(el: fb::DucFreeDrawElement) -> ParseResult<types:
         thinning: el.thinning(),
         smoothing: el.smoothing(),
         streamline: el.streamline(),
-        easing: el.easing().ok_or("Missing DucFreeDrawElement.easing")?.to_string(),
+        easing: el.easing().unwrap_or_default().to_string(),
         start: el.start().map(parse_duc_free_draw_ends).transpose()?,
         end: el.end().map(parse_duc_free_draw_ends).transpose()?,
-        pressures: el.pressures().ok_or("Missing DucFreeDrawElement.pressures")?.iter().collect(),
+        pressures: el.pressures().map(|v| v.iter().collect()).unwrap_or_default(),
         simulate_pressure: el.simulate_pressure(),
         last_committed_point: el.last_committed_point().map(|p| parse_duc_point(p)),
         svg_path: el.svg_path().map(|s| s.to_string()),
@@ -909,7 +924,7 @@ fn parse_duc_viewport_element(el: fb::DucViewportElement) -> ParseResult<types::
         style: parse_duc_viewport_style(el.style().ok_or("Missing DucViewportElement.style")?)?,
         view: parse_duc_view(el.view().ok_or("Missing DucViewportElement.view")?)?,
         scale: el.scale(),
-        shade_plot: el.shade_plot(),
+        shade_plot: el.shade_plot().expect("Missing DucViewportElement.shade_plot"),
         frozen_group_ids: parse_vec_of_strings(el.frozen_group_ids()),
         standard_override: el.standard_override().map(|s| s.to_string()),
     })
@@ -970,7 +985,7 @@ fn parse_leader_content(content: fb::LeaderContent) -> ParseResult<types::Leader
         _ => return Err("Unknown LeaderContentData type"),
     };
     Ok(types::LeaderContent {
-        leader_content_type: content.leader_content_type(),
+        leader_content_type: content.leader_content_type().expect("Missing LeaderContent.leader_content_type"),
         content: content_data,
     })
 }
@@ -1018,7 +1033,7 @@ fn parse_duc_dimension_element(el: fb::DucDimensionElement) -> ParseResult<types
     Ok(types::DucDimensionElement {
         base: parse_duc_element_base(el.base().ok_or("Missing DucDimensionElement.base")?)?,
         style: parse_duc_dimension_style(el.style().ok_or("Missing DucDimensionElement.style")?)?,
-        dimension_type: el.dimension_type(),
+        dimension_type: el.dimension_type().expect("Missing DucDimensionElement.dimension_type"),
         definition_points: parse_dimension_definition_points(el.definition_points().ok_or("Missing DucDimensionElement.definition_points")?)?,
         oblique_angle: el.oblique_angle(),
         ordinate_axis: el.ordinate_axis(),
@@ -1049,9 +1064,12 @@ fn parse_tolerance_clause(clause: fb::ToleranceClause) -> ParseResult<types::Tol
 
 fn parse_feature_control_frame_segment(segment: fb::FeatureControlFrameSegment) -> ParseResult<types::FeatureControlFrameSegment> {
     let datums_vec = segment.datums().ok_or("Missing FeatureControlFrameSegment.datums")?;
-    let datums = datums_vec.iter().map(parse_datum_reference).collect::<ParseResult<_>>()?;
+    let datums = datums_vec
+        .iter()
+        .map(|d| Ok(Some(parse_datum_reference(d)?)))
+        .collect::<ParseResult<Vec<Option<types::DatumReference>>>>()?;
     Ok(types::FeatureControlFrameSegment {
-        symbol: segment.symbol(),
+        symbol: segment.symbol().expect("Missing FeatureControlFrameSegment.symbol"),
         tolerance: parse_tolerance_clause(segment.tolerance().ok_or("Missing FeatureControlFrameSegment.tolerance")?)?,
         datums,
     })
@@ -1119,21 +1137,24 @@ fn parse_column_layout(layout: fb::ColumnLayout) -> ParseResult<types::ColumnLay
     let defs_vec = layout.definitions().ok_or("Missing ColumnLayout.definitions")?;
     let definitions = defs_vec.iter().map(parse_text_column).collect::<ParseResult<_>>()?;
     Ok(types::ColumnLayout {
-        column_type: layout.type_(),
+        column_type: layout.type_().expect("Missing ColumnLayout.type"),
         definitions,
         auto_height: layout.auto_height(),
     })
 }
 
 fn parse_duc_doc_element(el: fb::DucDocElement) -> ParseResult<types::DucDocElement> {
-    let dynamic_vec = el.dynamic().ok_or("Missing DucDocElement.dynamic")?;
-    let dynamic = dynamic_vec.iter().map(parse_duc_text_dynamic_part).collect::<ParseResult<_>>()?;
+    let dynamic = el
+        .dynamic()
+        .map(|v| v.iter().map(parse_duc_text_dynamic_part).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
     Ok(types::DucDocElement {
         base: parse_duc_element_base(el.base().ok_or("Missing DucDocElement.base")?)?,
         style: parse_duc_doc_style(el.style().ok_or("Missing DucDocElement.style")?)?,
         text: el.text().map(|s| s.to_string()).ok_or("Missing DucDocElement.text")?,
         dynamic,
-        flow_direction: el.flow_direction(),
+        flow_direction: el.flow_direction().expect("Missing DucDocElement.flow_direction"),
         columns: parse_column_layout(el.columns().ok_or("Missing DucDocElement.columns")?)?,
         auto_resize: el.auto_resize(),
     })
@@ -1141,7 +1162,7 @@ fn parse_duc_doc_element(el: fb::DucDocElement) -> ParseResult<types::DucDocElem
 
 fn parse_parametric_source(source: fb::ParametricSource) -> ParseResult<types::ParametricSource> {
     Ok(types::ParametricSource {
-        source_type: source.type_(),
+        source_type: source.type_().expect("Missing ParametricSource.type"),
         code: source.code().unwrap_or_default().to_string(),
         file_id: source.file_id().map(|s| s.to_string()),
     })
@@ -1217,7 +1238,7 @@ fn parse_element_wrapper(wrapper: fb::ElementWrapper) -> ParseResult<types::Elem
             types::DucElementEnum::DucFrameElement(parse_duc_frame_element(el)?)
         },
         fb::Element::DucPlotElement => {
-            let el = wrapper.element_as_duc_plot_element().ok_or("Mismatched element type")?;
+            let el = wrapper.element_as_duc_plot_element().ok_or("Missing element type")?;
             types::DucElementEnum::DucPlotElement(parse_duc_plot_element(el)?)
         },
         fb::Element::DucViewportElement => {
@@ -1261,7 +1282,7 @@ fn parse_element_wrapper(wrapper: fb::ElementWrapper) -> ParseResult<types::Elem
 fn parse_duc_block_attribute_definition(def: fb::DucBlockAttributeDefinition) -> ParseResult<types::DucBlockAttributeDefinition> {
     Ok(types::DucBlockAttributeDefinition {
         tag: def.tag().ok_or("Missing DucBlockAttributeDefinition.tag")?.to_string(),
-        prompt: Some(def.prompt().ok_or("Missing DucBlockAttributeDefinition.prompt")?.to_string()),
+        prompt: def.prompt().map(|s| s.to_string()),
         default_value: def.default_value().ok_or("Missing DucBlockAttributeDefinition.default_value")?.to_string(),
         is_constant: def.is_constant(),
     })
@@ -1283,7 +1304,7 @@ fn parse_duc_block(block: fb::DucBlock) -> ParseResult<types::DucBlock> {
 
     Ok(types::DucBlock {
         id: block.id().to_string(),
-        label: block.label().unwrap_or_default().to_string(),
+        label: block.label().map(|s| s.to_string()).unwrap_or_default(),
         description: block.description().map(|s| s.to_string()),
         version: block.version(),
         elements,
@@ -1298,7 +1319,7 @@ fn parse_duc_block(block: fb::DucBlock) -> ParseResult<types::DucBlock> {
 
 fn parse_duc_global_state(state: fb::DucGlobalState) -> ParseResult<types::DucGlobalState> {
     Ok(types::DucGlobalState {
-        name: state.name().map(|s| s.to_string()).unwrap_or_default(),
+        name: Some(state.name().map(|s| s.to_string()).unwrap_or_default()),
         view_background_color: state.view_background_color().map(|s| s.to_string()).unwrap_or_default(),
         main_scope: state.main_scope().map(|s| s.to_string()).unwrap_or_default(),
         dash_spacing_scale: state.dash_spacing_scale(),
@@ -1329,9 +1350,9 @@ fn parse_duc_local_state(state: fb::DucLocalState) -> ParseResult<types::DucLoca
         current_item_opacity: state.current_item_opacity(),
         current_item_font_family: state.current_item_font_family().map(|s| s.to_string()).unwrap_or_default(),
         current_item_font_size: state.current_item_font_size(),
-        current_item_text_align: state.current_item_text_align(),
-        current_item_start_line_head: parse_duc_head(state.current_item_start_line_head().ok_or("Missing DucLocalState.current_item_start_line_head")?)?,
-        current_item_end_line_head: parse_duc_head(state.current_item_end_line_head().ok_or("Missing DucLocalState.current_item_end_line_head")?)?,
+        current_item_text_align: state.current_item_text_align().unwrap_or(fb::TEXT_ALIGN(0)),
+        current_item_start_line_head: state.current_item_start_line_head().map(parse_duc_head).transpose()?,
+        current_item_end_line_head: state.current_item_end_line_head().map(parse_duc_head).transpose()?,
         current_item_roundness: state.current_item_roundness(),
         pen_mode: state.pen_mode(),
         view_mode_enabled: state.view_mode_enabled(),
@@ -1352,7 +1373,7 @@ fn parse_duc_region(region: fb::DucRegion) -> ParseResult<types::DucRegion> {
     Ok(types::DucRegion {
         id: region.id().to_string(),
         stack_base: parse_duc_stack_base(region.stack_base().ok_or("Missing DucRegion.stack_base")?)?,
-        boolean_operation: region.boolean_operation(),
+        boolean_operation: region.boolean_operation().expect("Missing DucRegion.boolean_operation"),
     })
 }
 
@@ -1379,7 +1400,8 @@ fn parse_duc_layer(layer: fb::DucLayer) -> ParseResult<types::DucLayer> {
 
 fn parse_unit_system_base(base: fb::_UnitSystemBase) -> ParseResult<types::UnitSystemBase> {
     Ok(types::UnitSystemBase {
-        system: base.system(),
+        system: base.system().expect("Missing UnitSystemBase.system"),
+        format: None,
         precision: base.precision(),
         suppress_leading_zeros: base.suppress_leading_zeros(),
         suppress_trailing_zeros: base.suppress_trailing_zeros(),
@@ -1389,8 +1411,8 @@ fn parse_unit_system_base(base: fb::_UnitSystemBase) -> ParseResult<types::UnitS
 fn parse_linear_unit_system(sys: fb::LinearUnitSystem) -> ParseResult<types::LinearUnitSystem> {
     Ok(types::LinearUnitSystem {
         base: parse_unit_system_base(sys.base().ok_or("Missing LinearUnitSystem.base")?)?,
-        format: sys.format(),
-        decimal_separator: sys.decimal_separator(),
+        format: sys.format().expect("Missing LinearUnitSystem.format"),
+        decimal_separator: sys.decimal_separator().expect("Missing LinearUnitSystem.decimal_separator"),
         suppress_zero_feet: sys.suppress_zero_feet(),
         suppress_zero_inches: sys.suppress_zero_inches(),
     })
@@ -1399,14 +1421,14 @@ fn parse_linear_unit_system(sys: fb::LinearUnitSystem) -> ParseResult<types::Lin
 fn parse_angular_unit_system(sys: fb::AngularUnitSystem) -> ParseResult<types::AngularUnitSystem> {
     Ok(types::AngularUnitSystem {
         base: parse_unit_system_base(sys.base().ok_or("Missing AngularUnitSystem.base")?)?,
-        format: sys.format(),
+        format: sys.format().expect("Missing AngularUnitSystem.format"),
     })
 }
 
 fn parse_alternate_units(units: fb::AlternateUnits) -> ParseResult<types::AlternateUnits> {
     Ok(types::AlternateUnits {
         base: parse_unit_system_base(units.base().ok_or("Missing AlternateUnits.base")?)?,
-        format: units.format(),
+        format: units.format().expect("Missing AlternateUnits.format"),
         is_visible: units.is_visible(),
         multiplier: units.multiplier(),
     })
@@ -1594,9 +1616,9 @@ fn parse_isometric_grid_settings(settings: fb::IsometricGridSettings) -> ParseRe
 
 fn parse_grid_settings(settings: fb::GridSettings) -> ParseResult<types::GridSettings> {
     Ok(types::GridSettings {
-        grid_type: settings.type_(),
+        grid_type: settings.type_().expect("Missing GridSettings.type"),
         readonly: settings.readonly(),
-        display_type: settings.display_type(),
+        display_type: settings.display_type().expect("Missing GridSettings.display_type"),
         is_adaptive: settings.is_adaptive(),
         x_spacing: settings.x_spacing(),
         y_spacing: settings.y_spacing(),
@@ -1613,6 +1635,9 @@ fn parse_grid_settings(settings: fb::GridSettings) -> ParseResult<types::GridSet
         polar_settings: settings.polar_settings().map(parse_polar_grid_settings).transpose()?,
         isometric_settings: settings.isometric_settings().map(parse_isometric_grid_settings).transpose()?,
         enable_snapping: settings.enable_snapping(),
+        // construction_snap_enabled and snap_to_grid_intersections are not present in the generated getters
+        construction_snap_enabled: false,
+        snap_to_grid_intersections: None,
     })
 }
 
@@ -1635,7 +1660,7 @@ fn parse_polar_tracking_settings(settings: fb::PolarTrackingSettings) -> ParseRe
     Ok(types::PolarTrackingSettings {
         enabled: settings.enabled(),
         angles: settings.angles().ok_or("Missing PolarTrackingSettings.angles")?.iter().collect(),
-        increment_angle: settings.increment_angle(),
+        increment_angle: Some(settings.increment_angle()),
         track_from_last_point: settings.track_from_last_point(),
         show_polar_coordinates: settings.show_polar_coordinates(),
     })
@@ -1645,27 +1670,27 @@ fn parse_tracking_line_style(style: fb::TrackingLineStyle) -> ParseResult<types:
     Ok(types::TrackingLineStyle {
         color: style.color().ok_or("Missing TrackingLineStyle.color")?.to_string(),
         opacity: style.opacity(),
-        dash_pattern: style.dash_pattern().ok_or("Missing TrackingLineStyle.dash_pattern")?.iter().collect(),
+        dash_pattern: style.dash_pattern().map(|v| v.iter().collect()),
     })
 }
 
 fn parse_layer_snap_filters(filters: fb::LayerSnapFilters) -> ParseResult<types::LayerSnapFilters> {
     Ok(types::LayerSnapFilters {
-        include_layers: parse_vec_of_strings(filters.include_layers()),
-        exclude_layers: parse_vec_of_strings(filters.exclude_layers()),
+        include_layers: filters.include_layers().map(|v| parse_vec_of_strings(Some(v))),
+        exclude_layers: filters.exclude_layers().map(|v| parse_vec_of_strings(Some(v))),
     })
 }
 
 fn parse_snap_marker_style(style: fb::SnapMarkerStyle) -> ParseResult<types::SnapMarkerStyle> {
     Ok(types::SnapMarkerStyle {
-        shape: style.shape(),
+        shape: style.shape().expect("Missing SnapMarkerStyle.shape"),
         color: style.color().ok_or("Missing SnapMarkerStyle.color")?.to_string(),
     })
 }
 
 fn parse_snap_marker_style_entry(entry: fb::SnapMarkerStyleEntry) -> ParseResult<types::SnapMarkerStyleEntry> {
     Ok(types::SnapMarkerStyleEntry {
-        key: entry.key(),
+        key: entry.key().expect("Missing SnapMarkerStyleEntry.key"),
         value: parse_snap_marker_style(entry.value().ok_or("Missing SnapMarkerStyleEntry.value")?)?,
     })
 }
@@ -1676,7 +1701,7 @@ fn parse_snap_marker_settings(settings: fb::SnapMarkerSettings) -> ParseResult<t
     Ok(types::SnapMarkerSettings {
         enabled: settings.enabled(),
         size: settings.size(),
-        duration: settings.duration(),
+        duration: Some(settings.duration()),
         styles,
     })
 }
@@ -1704,7 +1729,7 @@ fn parse_snap_settings(settings: fb::SnapSettings) -> ParseResult<types::SnapSet
         magnetic_strength: Some(settings.magnetic_strength()),
         layer_snap_filters: settings.layer_snap_filters().map(parse_layer_snap_filters).transpose()?,
         element_type_filters: settings.element_type_filters().map(|v| parse_vec_of_strings(Some(v))),
-        snap_mode: settings.snap_mode(),
+        snap_mode: settings.snap_mode().expect("Missing SnapSettings.snap_mode"),
         snap_markers: parse_snap_marker_settings(settings.snap_markers().ok_or("Missing SnapSettings.snap_markers")?)?,
         construction_snap_enabled: settings.construction_snap_enabled(),
         snap_to_grid_intersections: Some(settings.snap_to_grid_intersections()),
@@ -1768,15 +1793,15 @@ fn parse_standard_view_settings(settings: fb::StandardViewSettings) -> ParseResu
 
 fn parse_dimension_validation_rules(rules: fb::DimensionValidationRules) -> ParseResult<types::DimensionValidationRules> {
     Ok(types::DimensionValidationRules {
-        min_text_height: rules.min_text_height(),
-        max_text_height: rules.max_text_height(),
+        min_text_height: Some(rules.min_text_height()),
+        max_text_height: Some(rules.max_text_height()),
         allowed_precisions: rules.allowed_precisions().ok_or("Missing DimensionValidationRules.allowed_precisions")?.iter().collect(),
     })
 }
 
 fn parse_layer_validation_rules(rules: fb::LayerValidationRules) -> ParseResult<types::LayerValidationRules> {
     Ok(types::LayerValidationRules {
-        prohibited_layer_names: parse_vec_of_strings(rules.prohibited_layer_names()),
+        prohibited_layer_names: rules.prohibited_layer_names().map(|v| parse_vec_of_strings(Some(v))),
     })
 }
 
@@ -1792,11 +1817,11 @@ fn parse_standard(standard: fb::Standard) -> ParseResult<types::Standard> {
         identifier: parse_identifier(standard.identifier().ok_or("Missing Standard.identifier")?)?,
         version: standard.version().map(|s| s.to_string()).ok_or("Missing Standard.version")?,
         readonly: standard.readonly(),
-        overrides: parse_standard_overrides(standard.overrides().ok_or("Missing Standard.overrides")?)?,
-        styles: parse_standard_styles(standard.styles().ok_or("Missing Standard.styles")?)?,
-        view_settings: parse_standard_view_settings(standard.view_settings().ok_or("Missing Standard.view_settings")?)?,
-        units: parse_standard_units(standard.units().ok_or("Missing Standard.units")?)?,
-        validation: parse_standard_validation(standard.validation().ok_or("Missing Standard.validation")?)?,
+        overrides: standard.overrides().map(parse_standard_overrides).transpose()?,
+        styles: standard.styles().map(parse_standard_styles).transpose()?,
+        view_settings: standard.view_settings().map(parse_standard_view_settings).transpose()?,
+        units: standard.units().map(parse_standard_units).transpose()?,
+        validation: standard.validation().map(parse_standard_validation).transpose()?,
     })
 }
 
@@ -1844,7 +1869,7 @@ fn parse_delta(delta: fb::Delta) -> ParseResult<types::Delta> {
 
 fn parse_version_graph_metadata(meta: fb::VersionGraphMetadata) -> ParseResult<types::VersionGraphMetadata> {
     Ok(types::VersionGraphMetadata {
-        pruning_level: meta.pruning_level(),
+        pruning_level: meta.pruning_level().expect("Missing VersionGraphMetadata.pruning_level"),
         last_pruned: meta.last_pruned(),
         total_size: meta.total_size(),
     })
@@ -1878,6 +1903,7 @@ fn parse_duc_external_file_data(file: fb::DucExternalFileData) -> ParseResult<ty
         data: file.data().ok_or("Missing DucExternalFileData.data")?.bytes().to_vec(),
         created: file.created(),
         last_retrieved: file.last_retrieved(),
+        version: None,
     })
 }
 
@@ -1901,20 +1927,40 @@ fn parse_exported_data_state(root: fb::ExportedDataState) -> ParseResult<types::
     let elements_vec = root.elements().ok_or("Missing ExportedDataState.elements")?;
     let elements = elements_vec.iter().map(parse_element_wrapper).collect::<ParseResult<_>>()?;
 
-    let blocks_vec = root.blocks().ok_or("Missing ExportedDataState.blocks")?;
-    let blocks = blocks_vec.iter().map(parse_duc_block).collect::<ParseResult<_>>()?;
+    // blocks is optional: treat missing as empty vec
+    let blocks = root
+        .blocks()
+        .map(|v| v.iter().map(parse_duc_block).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
     
-    let groups_vec = root.groups().ok_or("Missing ExportedDataState.groups")?;
-    let groups = groups_vec.iter().map(parse_duc_group).collect::<ParseResult<_>>()?;
+    // groups optional
+    let groups = root
+        .groups()
+        .map(|v| v.iter().map(parse_duc_group).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
 
-    let regions_vec = root.regions().ok_or("Missing ExportedDataState.regions")?;
-    let regions = regions_vec.iter().map(parse_duc_region).collect::<ParseResult<_>>()?;
+    // regions optional
+    let regions = root
+        .regions()
+        .map(|v| v.iter().map(parse_duc_region).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
 
-    let layers_vec = root.layers().ok_or("Missing ExportedDataState.layers")?;
-    let layers = layers_vec.iter().map(parse_duc_layer).collect::<ParseResult<_>>()?;
+    // layers optional
+    let layers = root
+        .layers()
+        .map(|v| v.iter().map(parse_duc_layer).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
 
-    let standards_vec = root.standards().ok_or("Missing ExportedDataState.standards")?;
-    let standards = standards_vec.iter().map(parse_standard).collect::<ParseResult<_>>()?;
+    // standards optional
+    let standards = root
+        .standards()
+        .map(|v| v.iter().map(parse_standard).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
 
     let external_files = root
         .external_files()

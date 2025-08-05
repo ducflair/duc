@@ -2,6 +2,7 @@ import {
   ElementsConfig,
   isValidBezierMirroringValue,
   isValidBlendingValue,
+  isValidBoolean,
   isValidBoolean as isValidBooleanValue, // Renaming to avoid conflict
   isValidColor,
   isValidDucHead,
@@ -111,7 +112,6 @@ import {
   getUpdatedTimestamp,
   isFiniteNumber,
   isInvisiblySmallElement,
-  isValidBoolean,
   LINE_CONFIRM_THRESHOLD,
   mergeOverlappingPoints,
   migratePoints,
@@ -476,7 +476,7 @@ const restoreElement = (
         {
           status: isValidImageStatusValue(element.status),
           fileId: element.fileId,
-          scale: isValidImageScaleValue(element.scaleFlip),
+          scaleFlip: isValidImageScaleValue(element.scaleFlip),
           crop: element.crop || null,
           filter: element.filter || null,
         },
@@ -2414,13 +2414,11 @@ const restoreFcfFrameModifiers = (
         }
       : undefined,
     projectedToleranceZone: mods.projectedToleranceZone
-      ? {
-          value: restorePrecisionValue(
+      ? restorePrecisionValue(
             mods.projectedToleranceZone.value,
             elementScope,
             currentScope
-          ),
-        }
+          )
       : undefined,
   };
 };

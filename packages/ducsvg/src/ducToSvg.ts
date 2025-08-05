@@ -303,7 +303,6 @@ export const ducToSvg = async (
       ducState, 
       files, 
       defs, 
-      frameRendering, 
       currentScope
     );
     
@@ -330,7 +329,6 @@ export const ducToSvg = async (
               ducState, 
               files, 
               defs, 
-              frameRendering, 
               currentScope
             );
             
@@ -347,7 +345,6 @@ export const ducToSvg = async (
                 ducState,
                 files,
                 defs,
-                frameRendering,
                 currentScope
               );
               if (boundTextGroup) {
@@ -370,7 +367,6 @@ export const ducToSvg = async (
               ducState, 
               files, 
               defs, 
-              frameRendering, 
               currentScope
             );
             
@@ -391,7 +387,6 @@ export const ducToSvg = async (
               ducState, 
               files, 
               defs, 
-              frameRendering, 
               currentScope
             );
             
@@ -408,7 +403,6 @@ export const ducToSvg = async (
                 ducState,
                 files,
                 defs,
-                frameRendering,
                 currentScope
               );
               if (boundTextGroup) {
@@ -429,7 +423,6 @@ export const ducToSvg = async (
               ducState, 
               files, 
               defs, 
-              frameRendering, 
               currentScope
             );
             
@@ -694,7 +687,6 @@ export const renderElementToSvg = (
   ducState: PartialDucState,
   files: RestoredDataState["files"],
   defs: SVGDefsElement,
-  frameRendering: FrameRendering, // FIXME: use Standards in the future
   currentScope: Scope,
 ): SVGElement | null => {
   let element = _element;
@@ -804,7 +796,6 @@ export const renderElementToSvg = (
         ducState,
         files,
         defs,
-        frameRendering,
         currentScope,
         offsetX,
         offsetY,
@@ -1069,12 +1060,12 @@ const renderImage = (element: DucImageElement, files: DucExternalFiles, defs: SV
   use.setAttribute("height", `${height}`);
 
   // Handle scaling/flipping (copied approach from staticSvgScene.ts)
-  if (element.scale && (element.scale[0] !== 1 || element.scale[1] !== 1)) {
-    const translateX = element.scale[0] !== 1 ? -width : 0;
-    const translateY = element.scale[1] !== 1 ? -height : 0;
+  if (element.scaleFlip && (element.scaleFlip[0] !== 1 || element.scaleFlip[1] !== 1)) {
+    const translateX = element.scaleFlip[0] !== 1 ? -width : 0;
+    const translateY = element.scaleFlip[1] !== 1 ? -height : 0;
     use.setAttribute(
       "transform",
-      `scale(${element.scale[0]}, ${element.scale[1]}) translate(${translateX} ${translateY})`,
+      `scale(${element.scaleFlip[0]}, ${element.scaleFlip[1]}) translate(${translateX} ${translateY})`,
     );
   }
 
