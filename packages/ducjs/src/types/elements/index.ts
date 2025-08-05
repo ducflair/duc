@@ -12,7 +12,6 @@ import {
 
 
 
-
 /**
  * Base styles that all elements share
  */
@@ -1621,9 +1620,7 @@ export type DucFeatureControlFrameElement = _DucElementBase & DucFeatureControlF
       start: string; // Identifier for start point, e.g., "A"
       end: string;   // Identifier for end point, e.g., "B"
     };
-    projectedToleranceZone?: {
-      value: PrecisionValue;
-    };
+    projectedToleranceZone?: PrecisionValue;
   };
 
   /** 
