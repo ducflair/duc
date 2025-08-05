@@ -327,7 +327,7 @@ pub struct DucPointBinding {
     pub element_id: String,
     pub focus: f32,
     pub gap: f64,
-    pub fixed_point: GeometricPoint,
+    pub fixed_point: Option<GeometricPoint>,
     pub point: Option<PointBindingPoint>,
     pub head: Option<DucHead>,
 }

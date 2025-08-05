@@ -512,7 +512,9 @@ fn serialize_duc_point_binding<'bldr>(
     binding: &types::DucPointBinding,
 ) -> WIPOffset<fb::DucPointBinding<'bldr>> {
     let element_id_offset = builder.create_string(&binding.element_id);
-    let fixed_point = serialize_geometric_point(&binding.fixed_point);
+    let fixed_point_built: Option<fb::GeometricPoint> =
+        binding.fixed_point.as_ref().map(|gp| serialize_geometric_point(gp));
+    let fixed_point_ref: Option<&fb::GeometricPoint> = fixed_point_built.as_ref();
     let point_offset = binding.point.as_ref().map(|p| serialize_point_binding_point(builder, p));
     let head_offset = binding.head.as_ref().map(|h| serialize_duc_head(builder, h));
 
@@ -522,7 +524,7 @@ fn serialize_duc_point_binding<'bldr>(
             element_id: Some(element_id_offset),
             focus: binding.focus,
             gap: binding.gap,
-            fixed_point: Some(&fixed_point),
+            fixed_point: fixed_point_ref,
             point: point_offset,
             head: head_offset,
         },
