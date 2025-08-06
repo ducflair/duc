@@ -5,7 +5,7 @@ export * from "./textElement";
 export * from "./frameElement";
 export * from "./viewportElement";
 
-import { LINE_SPACING_TYPE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION } from "ducjs/duc";
+import { LINE_SPACING_TYPE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION } from "ducjs/flatbuffers/duc";
 import { Scope, RawValue } from "ducjs/types";
 import { _DucStackBase, _DucStackElementBase, DucElement, DucNonSelectionElement, DucStackLikeElement, DucTableElement, DucTextContainer, DucTextElement, DucTextStyle, ElementConstructorOpts, ElementsMap, NonDeleted } from "ducjs/types/elements";
 import { isFreeDrawElement, isLinearElement } from "ducjs/types/elements/typeChecks";

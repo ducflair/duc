@@ -2,7 +2,7 @@ export * from "./grid";
 
 
 
-import { TEXT_ALIGN } from "ducjs/duc";
+import { TEXT_ALIGN } from "ducjs/flatbuffers/duc";
 import { PREDEFINED_STANDARDS } from "ducjs/technical";
 import {
   getPrecisionValueFromRaw,

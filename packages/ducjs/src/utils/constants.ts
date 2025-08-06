@@ -1,4 +1,4 @@
-import { ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, OBJECT_SNAP_MODE, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/duc";
+import { ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, OBJECT_SNAP_MODE, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/flatbuffers/duc";
 import { GridSettings, RawValue, ScopedValue, SnapSettings } from "ducjs/types";
 import { DucElement, DucEllipseElement, DucFreeDrawElement, DucTextElement, ElementBackground, ElementStroke, FontFamilyValues } from "ducjs/types/elements";
 import { Percentage, Radian } from "ducjs/types/geometryTypes";

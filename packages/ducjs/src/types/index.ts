@@ -1,9 +1,8 @@
 export * from "./elements";
 export * from "./geometryTypes";
 export * from "./utility-types";
-export * from "./config";
 
-import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "ducjs/duc";
+import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "ducjs/flatbuffers/duc";
 import { SupportedMeasures } from "ducjs/technical/scopes";
 import { Standard } from "ducjs/technical/standards";
 import {
@@ -421,10 +420,6 @@ export type JSONValue = string | number | boolean | null | object;
 export type EmbedsValidationStatus = Map<DucIframeLikeElement["id"], boolean>;
 
 export type ElementsPendingErasure = Set<DucElement["id"]>;
-
-export type RendererState = {
-  deletedElementIds: string[];
-};
 
 export type PendingDucElements = DucElement[];
 

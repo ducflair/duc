@@ -13,7 +13,7 @@ import {
   STROKE_SIDE_PREFERENCE,
   TEXT_ALIGN,
   VERTICAL_ALIGN,
-} from "ducjs/duc";
+} from "ducjs/flatbuffers/duc";
 import { restoreElements } from "ducjs/restore/restoreElements";
 import {
   isStandardIdPresent,

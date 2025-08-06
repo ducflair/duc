@@ -82,7 +82,7 @@ import {
   _DucLinearElementBase as _DucLinearElementBaseFb,
   _DucStackBase as _DucStackBaseFb,
   _DucStackElementBase as _DucStackElementBaseFb
-} from "ducjs/duc";
+} from "ducjs/flatbuffers/duc";
 import { parseDucFlatBuffers as parseDucFlatBuffersV1 } from 'ducjs/legacy/v1/parse';
 import { RestoredDataState, restore } from "ducjs/restore";
 import {

@@ -5,7 +5,7 @@ import {
   GRID_DISPLAY_TYPE,
   GRID_TYPE,
   UNIT_SYSTEM,
-} from "ducjs/duc";
+} from "ducjs/flatbuffers/duc";
 import {
   isValidBoolean,
   isValidEnumValue,

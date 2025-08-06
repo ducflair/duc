@@ -7,9 +7,9 @@ set -eo pipefail
 LOG_DIR="../build_logs"
 TARGET_DIR="../packages"
 
-TS_DIR="ducjs/src"
+TS_DIR="ducjs/src/flatbuffers"
 PY_DIR="ducpy/src/ducpy"
-RUST_DIR="ducrs/src"
+RUST_DIR="ducrs/src/flatbuffers"
 
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 mkdir -p "$LOG_DIR"
@@ -19,11 +19,15 @@ if [ -t 1 ]; then
     TS_COLOR="\033[34m"    # Dark Blue
     PY_COLOR="\033[36m"    # Light Blue
     RUST_COLOR="\033[38;5;208m" # Orange
+    SUCCESS_COLOR="\033[32m" # Green
+    ERROR_COLOR="\033[31m" # Red
     RESET="\033[0m"
 else
     TS_COLOR=""
     PY_COLOR=""
     RUST_COLOR=""
+    SUCCESS_COLOR=""
+    ERROR_COLOR=""
     RESET=""
 fi
 
@@ -69,10 +73,10 @@ printf "${RUST_COLOR}Rust:      ${RESET} %s\n" "$([ "$RUST_SUCCESS" = true ] && 
 # Exit with error if any failed
 if ! $TS_SUCCESS || ! $PY_SUCCESS || ! $RUST_SUCCESS; then
     echo ""
-    echo "Error: Some generations failed - check logs in $LOG_DIR/"
+    echo -e "${ERROR_COLOR}Error: Some generations failed - check logs in $LOG_DIR/${RESET}"
     exit 1
 fi
 
 echo ""
-echo "All duc generations completed successfully 🎉"
+echo -e "${SUCCESS_COLOR}All generations completed successfully 🎉${RESET}"
 exit 0
