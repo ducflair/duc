@@ -144,7 +144,7 @@ import {
   TOLERANCE_ZONE_TYPE,
   VERTICAL_ALIGN,
   VIEWPORT_SHADE_PLOT,
-} from "ducjs/duc";
+} from "ducjs/flatbuffers/duc";
 import tinycolor from "tinycolor2";
 
 const restoreElementWithProperties = <

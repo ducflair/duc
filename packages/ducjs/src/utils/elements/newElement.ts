@@ -10,7 +10,7 @@ import {
   TEXT_FLOW_DIRECTION,
   VERTICAL_ALIGN,
   VIEWPORT_SHADE_PLOT,
-} from "ducjs/duc";
+} from "ducjs/flatbuffers/duc";
 import { RawValue, Scope } from "ducjs/types";
 import {
   _DucElementBase,

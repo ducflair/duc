@@ -11,7 +11,7 @@ import {
   Scope,
   SVG_NS,
 } from "ducjs";
-import { LINE_HEAD, STROKE_PLACEMENT } from "ducjs/duc";
+import { LINE_HEAD, STROKE_PLACEMENT } from "ducjs/flatbuffers/duc";
 import { applyStyles, FrameRendering, PartialDucState } from "ducsvg/ducToSvg";
 
 // This file will contain the new, robust SVG rendering logic for linear elements,

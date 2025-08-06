@@ -1,4 +1,4 @@
-import { BEZIER_MIRRORING } from "ducjs/duc";
+import { BEZIER_MIRRORING } from "ducjs/flatbuffers/duc";
 import { RawValue, Scope, ScopedValue } from "ducjs/types";
 import { DucElement, DucFreeDrawElement, DucLine, DucLinearElement, DucNonSelectionElement, DucPath, DucPoint, NonDeletedDucElement } from "ducjs/types/elements";
 import { isArrowElement, isEllipseElement, isFreeDrawElement, isLinearElement, isPolygonElement } from "ducjs/types/elements/typeChecks";
