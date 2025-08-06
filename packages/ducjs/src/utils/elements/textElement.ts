@@ -1,4 +1,4 @@
-import { TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/duc";
+import { TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/flatbuffers/duc";
 import { DucLocalState, RawValue, Scope, ScopedValue } from "ducjs/types";
 import { DucElement, DucElementType, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap, FontFamilyValues, FontString, NonDeletedDucElement } from "ducjs/types/elements";
 import { isArrowElement, isBoundToContainer, isTextElement } from "ducjs/types/elements/typeChecks";

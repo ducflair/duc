@@ -1,4 +1,4 @@
-import { GRID_TYPE, GRID_DISPLAY_TYPE } from "ducjs/duc";
+import { GRID_TYPE, GRID_DISPLAY_TYPE } from "ducjs/flatbuffers/duc";
 import { getPrecisionValueFromRaw } from "ducjs/technical";
 import { GridSettings, Radian, RawValue, Scope } from "ducjs/types";
 import { DEFAULT_GRID_SETTINGS } from "ducjs/utils/constants";

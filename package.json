@@ -9,6 +9,7 @@
     "@semantic-release/github": "^11.0.3",
     "@semantic-release/npm": "^12.0.1",
     "@semantic-release/release-notes-generator": "^14.0.3",
+    "del-cli": "^6.0.0",
     "@types/node": "22.14.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
@@ -47,8 +48,9 @@
   "packageManager": "bun@1.1.24",
   "private": true,
   "scripts": {
-    "flatc:gen": "cd schema && bash flatc-duc-generate.sh",
-    "clean": "bun run rm -rf **/dist node_modules **/package-lock.json **/tsconfig.tsbuildinfo",
+    "flatc:gen": "bun run flatc:gen:duc",
+    "flatc:gen:duc": "cd schema && bash flatc-duc-generate.sh",
+    "clean": "bun del-cli \"**/dist\" \".turbo\" \"**/node_modules\" \"**/package-lock.json\" \"**/tsconfig.tsbuildinfo\" \"**/tsconfig.node.tsbuildinfo\" \"**/vite.config.js\"",
     "docs:dev": "turbo dev --filter=@duc/docs",
     "docs:build": "turbo build --filter=@duc/docs",
     "ducpy:docs:build": "turbo run gen:docs --filter=ducpy",
@@ -60,7 +62,7 @@
     "ducsvg:build": "turbo build --filter=ducsvg",
     "semantic-release": "turbo run semantic-release",
     "sst:build": "bash -c 'bun run sst:clean && sst unlock ${1:+--stage $1} && sst refresh ${1:+--stage $1} && sst deploy ${1:+--stage $1}' --",
-    "sst:clean": "bun run rm -rf .sst **/sst-env.d.ts **/sst.pyi",
+    "sst:clean": "bun del-cli \".sst\" \"**/sst-env.d.ts\" \"**/sst.pyi\"",
     "sst:dev": "bun run sst dev",
     "knip:deps": "bash -c 'bun run sst unlock ${1:+--stage $1} && bun sst shell ${1:+--stage $1} -- bunx knip --dependencies' --",
     "knip": "bash -c 'bun run sst unlock ${1:+--stage $1} && bun sst shell ${1:+--stage $1} -- bunx knip' --"

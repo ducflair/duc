@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 /* IMPORTANT:
    - Single-file serializer for DUC FlatBuffers schema.
-   - No enum remapping tables: use enums directly from ducjs/duc.
+   - No enum remapping tables: use enums directly from ducjs/flatbuffers/duc.
    - No defaults added: only write what's present in TS objects.
    - PrecisionValue, Radian, Percentage, ScaleFactor, etc. are branded numbers:
      cast to number at the final write site (e.g. pv.value).
    - Keep args strongly typed. Never use any for function args.
 */
-import * as Duc from "ducjs/duc";
+import * as Duc from "ducjs/flatbuffers/duc";
 import * as flatbuffers from "flatbuffers";
 
 import {

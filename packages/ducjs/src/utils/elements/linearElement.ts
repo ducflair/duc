@@ -1,4 +1,4 @@
-import { HANDLE_TYPE } from "ducjs/duc";
+import { HANDLE_TYPE } from "ducjs/flatbuffers/duc";
 import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint } from "ducjs/technical/scopes";
 import type { PrecisionValue, RawValue, Scope, ScopedValue } from "ducjs/types";
 import type { DucArrowElement, DucLine, DucLinearElement, DucLinearLikeElement, DucPoint, DucTextElementWithContainer, ElementsMap, NonDeleted } from "ducjs/types/elements";
