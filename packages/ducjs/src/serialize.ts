@@ -145,7 +145,7 @@ function writeStringVector(builder: flatbuffers.Builder, items: (string | null |
 /**
  * Element style/content serializers
  */
-function writeTiling(b: flatbuffers.Builder, t: ElementContentBase["tiling"]): number | undefined {
+function writeTiling(b: flatbuffers.Builder, t: ElementContentBase["tiling"], usv: boolean): number | undefined {
   if (!t) return undefined;
   Duc.TilingProperties.startTilingProperties(b);
   Duc.TilingProperties.addSizeInPercent(b, t.sizeInPercent);
@@ -156,9 +156,9 @@ function writeTiling(b: flatbuffers.Builder, t: ElementContentBase["tiling"]): n
   return Duc.TilingProperties.endTilingProperties(b);
 }
 
-function writeHatchPatternLine(b: flatbuffers.Builder, l: HatchPatternLine): number {
-  const origin = writeDucPoint(b, l.origin);
-  const offsetVec = Duc.HatchPatternLine.createOffsetVector(b, [Number(l.offset[0]), Number(l.offset[1])]);
+function writeHatchPatternLine(b: flatbuffers.Builder, l: HatchPatternLine, usv: boolean): number {
+  const origin = writeDucPoint(b, l.origin, usv);
+  const offsetVec = Duc.HatchPatternLine.createOffsetVector(b, [getPrecisionValue(l.offset[0], usv), getPrecisionValue(l.offset[1], usv)]);
   const dashVec = Duc.HatchPatternLine.createDashPatternVector(b, l.dashPattern.map(Number));
   Duc.HatchPatternLine.startHatchPatternLine(b);
   Duc.HatchPatternLine.addAngle(b, l.angle);
@@ -168,11 +168,11 @@ function writeHatchPatternLine(b: flatbuffers.Builder, l: HatchPatternLine): num
   return Duc.HatchPatternLine.endHatchPatternLine(b);
 }
 
-function writeCustomHatch(b: flatbuffers.Builder, p: CustomHatchPattern | null | undefined): number | undefined {
+function writeCustomHatch(b: flatbuffers.Builder, p: CustomHatchPattern | null | undefined, usv: boolean): number | undefined {
   if (!p) return undefined;
   const name = str(b, p.name);
   const desc = str(b, p.description);
-  const lines = Duc.CustomHatchPattern.createLinesVector(b, p.lines.map((ln) => writeHatchPatternLine(b, ln)));
+  const lines = Duc.CustomHatchPattern.createLinesVector(b, p.lines.map((ln) => writeHatchPatternLine(b, ln, usv)));
   Duc.CustomHatchPattern.startCustomHatchPattern(b);
   if (name) Duc.CustomHatchPattern.addName(b, name);
   if (desc) Duc.CustomHatchPattern.addDescription(b, desc);
@@ -180,11 +180,11 @@ function writeCustomHatch(b: flatbuffers.Builder, p: CustomHatchPattern | null |
   return Duc.CustomHatchPattern.endCustomHatchPattern(b);
 }
 
-function writeHatchStyle(b: flatbuffers.Builder, h: DucHatchStyle | null | undefined): number | undefined {
+function writeHatchStyle(b: flatbuffers.Builder, h: DucHatchStyle | null | undefined, usv: boolean): number | undefined {
   if (!h) return undefined;
   const pattName = str(b, h.pattern.name);
-  const pattOrigin = writeDucPoint(b, h.pattern.origin);
-  const custom = writeCustomHatch(b, h.customPattern);
+  const pattOrigin = writeDucPoint(b, h.pattern.origin, usv);
+  const custom = writeCustomHatch(b, h.customPattern, usv);
   Duc.DucHatchStyle.startDucHatchStyle(b);
   if (h.hatchStyle !== undefined) Duc.DucHatchStyle.addHatchStyle(b, h.hatchStyle);
   if (pattName) Duc.DucHatchStyle.addPatternName(b, pattName);
@@ -196,7 +196,7 @@ function writeHatchStyle(b: flatbuffers.Builder, h: DucHatchStyle | null | undef
   return Duc.DucHatchStyle.endDucHatchStyle(b);
 }
 
-function writeImageFilter(b: flatbuffers.Builder, f: DucImageFilter | null | undefined): number | undefined {
+function writeImageFilter(b: flatbuffers.Builder, f: DucImageFilter | null | undefined, usv: boolean): number | undefined {
   if (!f) return undefined;
   Duc.DucImageFilter.startDucImageFilter(b);
   Duc.DucImageFilter.addBrightness(b, f.brightness);
@@ -204,12 +204,12 @@ function writeImageFilter(b: flatbuffers.Builder, f: DucImageFilter | null | und
   return Duc.DucImageFilter.endDucImageFilter(b);
 }
 
-function writeContentBase(b: flatbuffers.Builder, c: ElementContentBase | null | undefined): number | undefined {
+function writeContentBase(b: flatbuffers.Builder, c: ElementContentBase | null | undefined, usv: boolean): number | undefined {
   if (!c) return undefined;
   const s = str(b, c.src);
-  const til = writeTiling(b, c.tiling);
-  const hatch = writeHatchStyle(b, c.hatch);
-  const filt = writeImageFilter(b, c.imageFilter);
+  const til = writeTiling(b, c.tiling, usv);
+  const hatch = writeHatchStyle(b, c.hatch, usv);
+  const filt = writeImageFilter(b, c.imageFilter, usv);
 
   Duc.ElementContentBase.startElementContentBase(b);
   if (c.preference !== undefined) Duc.ElementContentBase.addPreference(b, c.preference);
@@ -222,7 +222,7 @@ function writeContentBase(b: flatbuffers.Builder, c: ElementContentBase | null |
   return Duc.ElementContentBase.endElementContentBase(b);
 }
 
-function writeStrokeStyle(b: flatbuffers.Builder, s: StrokeStyle | null | undefined): number | undefined {
+function writeStrokeStyle(b: flatbuffers.Builder, s: StrokeStyle | null | undefined, usv: boolean): number | undefined {
   if (!s) return undefined;
   const dashVec = s.dash?.length ? Duc.StrokeStyle.createDashVector(b, s.dash) : undefined;
   const dashLineOverride = str(b, s.dashLineOverride);
@@ -237,7 +237,7 @@ function writeStrokeStyle(b: flatbuffers.Builder, s: StrokeStyle | null | undefi
   return Duc.StrokeStyle.endStrokeStyle(b);
 }
 
-function writeStrokeSides(b: flatbuffers.Builder, ss: StrokeSides | null | undefined): number | undefined {
+function writeStrokeSides(b: flatbuffers.Builder, ss: StrokeSides | null | undefined, usv: boolean): number | undefined {
   if (!ss) return undefined;
   const valuesVec = ss.values?.length ? Duc.StrokeSides.createValuesVector(b, ss.values) : undefined;
   Duc.StrokeSides.startStrokeSides(b);
@@ -246,15 +246,15 @@ function writeStrokeSides(b: flatbuffers.Builder, ss: StrokeSides | null | undef
   return Duc.StrokeSides.endStrokeSides(b);
 }
 
-function writeElementStroke(b: flatbuffers.Builder, s: ElementStroke | null | undefined): number | undefined {
+function writeElementStroke(b: flatbuffers.Builder, s: ElementStroke | null | undefined, usv: boolean): number | undefined {
   if (!s) return undefined;
-  const c = writeContentBase(b, s.content);
-  const st = writeStrokeStyle(b, s.style);
-  const sides = writeStrokeSides(b, s.strokeSides);
+  const c = writeContentBase(b, s.content, usv);
+  const st = writeStrokeStyle(b, s.style, usv);
+  const sides = writeStrokeSides(b, s.strokeSides, usv);
   Duc.ElementStroke.startElementStroke(b);
   if (c) Duc.ElementStroke.addContent(b, c);
   if (s.width) {
-    Duc.ElementStroke.addWidth(b, s.width.value);
+    Duc.ElementStroke.addWidth(b, getPrecisionValue(s.width, usv));
   }
   if (st) Duc.ElementStroke.addStyle(b, st);
   if (s.placement) Duc.ElementStroke.addPlacement(b, s.placement);
@@ -262,15 +262,15 @@ function writeElementStroke(b: flatbuffers.Builder, s: ElementStroke | null | un
   return Duc.ElementStroke.endElementStroke(b);
 }
 
-function writeElementBackground(b: flatbuffers.Builder, bg: ElementBackground | null | undefined): number | undefined {
+function writeElementBackground(b: flatbuffers.Builder, bg: ElementBackground | null | undefined, usv: boolean): number | undefined {
   if (!bg) return undefined;
-  const c = writeContentBase(b, bg.content);
+  const c = writeContentBase(b, bg.content, usv);
   Duc.ElementBackground.startElementBackground(b);
   if (c) Duc.ElementBackground.addContent(b, c);
   return Duc.ElementBackground.endElementBackground(b);
 }
 
-function writeStylesBase(b: flatbuffers.Builder, s: _DucElementStylesBase | undefined): number | null {
+function writeStylesBase(b: flatbuffers.Builder, s: _DucElementStylesBase | undefined, usv: boolean): number | null {
   if (!s) return null;
 
   const bgArrRaw = s.background;
@@ -290,10 +290,10 @@ function writeStylesBase(b: flatbuffers.Builder, s: _DucElementStylesBase | unde
       : (stArrRaw ? [stArrRaw as ElementStroke] : []);
 
   const bgOffsets = bgArr
-    .map((x) => (x ? writeElementBackground(b, x) : undefined))
+    .map((x) => (x ? writeElementBackground(b, x, usv) : undefined))
     .filter((o): o is number => o !== undefined);
   const stOffsets = stArr
-    .map((x) => (x ? writeElementStroke(b, x) : undefined))
+    .map((x) => (x ? writeElementStroke(b, x, usv) : undefined))
     .filter((o): o is number => o !== undefined);
 
   const bgs = Duc._DucElementStylesBase.createBackgroundVector(b, bgOffsets);
@@ -301,7 +301,7 @@ function writeStylesBase(b: flatbuffers.Builder, s: _DucElementStylesBase | unde
 
   Duc._DucElementStylesBase.start_DucElementStylesBase(b);
   if (s.roundness) {
-    Duc._DucElementStylesBase.addRoundness(b, s.roundness.value);
+    Duc._DucElementStylesBase.addRoundness(b, getPrecisionValue(s.roundness, usv));
   }
   if (s.blending) Duc._DucElementStylesBase.addBlending(b, s.blending);
   Duc._DucElementStylesBase.addBackground(b, bgs);
@@ -338,31 +338,31 @@ function writeIdentifier(b: flatbuffers.Builder, id: Identifier): number {
 /**
  * Geometry and bindings
  */
-function writeDucPoint(b: flatbuffers.Builder, p: DucPoint | null | undefined): number | undefined {
+function writeDucPoint(b: flatbuffers.Builder, p: DucPoint | null | undefined, usv: boolean): number | undefined {
   if (!p) return undefined;
   Duc.DucPoint.startDucPoint(b);
-  Duc.DucPoint.addX(b, p.x.value);
-  Duc.DucPoint.addY(b, p.y.value);
+  Duc.DucPoint.addX(b, getPrecisionValue(p.x, usv));
+  Duc.DucPoint.addY(b, getPrecisionValue(p.y, usv));
   if (p.mirroring != null) Duc.DucPoint.addMirroring(b, p.mirroring);
   return Duc.DucPoint.endDucPoint(b);
 }
 
-function writeGeomPoint(b: flatbuffers.Builder, p: GeometricPoint | null | undefined): number | undefined {
+function writeGeomPoint(b: flatbuffers.Builder, p: GeometricPoint | null | undefined, usv: boolean): number | undefined {
   if (!p) return undefined;
   return Duc.GeometricPoint.createGeometricPoint(b, p.x, p.y);
 }
 
-function writeHead(b: flatbuffers.Builder, h: DucHead | null | undefined): number | undefined {
+function writeHead(b: flatbuffers.Builder, h: DucHead | null | undefined, usv: boolean): number | undefined {
   if (!h) return undefined;
   const blockId = str(b, h.blockId);
   Duc.DucHead.startDucHead(b);
   Duc.DucHead.addType(b, h.type);
   if (blockId) Duc.DucHead.addBlockId(b, blockId);
-  Duc.DucHead.addSize(b, h.size.value);
+  Duc.DucHead.addSize(b, getPrecisionValue(h.size, usv));
   return Duc.DucHead.endDucHead(b);
 }
 
-function writeBindingPoint(b: flatbuffers.Builder, p: { index: number; offset: number } | null | undefined): number | undefined {
+function writeBindingPoint(b: flatbuffers.Builder, p: { index: number; offset: number } | null | undefined, usv: boolean): number | undefined {
   if (!p) return undefined;
   Duc.PointBindingPoint.startPointBindingPoint(b);
   Duc.PointBindingPoint.addIndex(b, p.index);
@@ -370,47 +370,47 @@ function writeBindingPoint(b: flatbuffers.Builder, p: { index: number; offset: n
   return Duc.PointBindingPoint.endPointBindingPoint(b);
 }
 
-function writePointBinding(b: flatbuffers.Builder, pb: DucPointBinding | null | undefined): number | undefined {
+function writePointBinding(b: flatbuffers.Builder, pb: DucPointBinding | null | undefined, usv: boolean): number | undefined {
   if (!pb) return undefined;
   const el = str(b, pb.elementId);
-  const fixed = pb.fixedPoint ? writeGeomPoint(b, pb.fixedPoint) : undefined;
-  const point = writeBindingPoint(b, pb.point);
-  const head = writeHead(b, pb.head);
+  const fixed = pb.fixedPoint ? writeGeomPoint(b, pb.fixedPoint, usv) : undefined;
+  const point = writeBindingPoint(b, pb.point, usv);
+  const head = writeHead(b, pb.head, usv);
   Duc.DucPointBinding.startDucPointBinding(b);
   if (el) Duc.DucPointBinding.addElementId(b, el);
   Duc.DucPointBinding.addFocus(b, pb.focus);
-  Duc.DucPointBinding.addGap(b, pb.gap.value);
+  Duc.DucPointBinding.addGap(b, getPrecisionValue(pb.gap, usv));
   if (fixed) Duc.DucPointBinding.addFixedPoint(b, fixed);
   if (point) Duc.DucPointBinding.addPoint(b, point);
   if (head) Duc.DucPointBinding.addHead(b, head);
   return Duc.DucPointBinding.endDucPointBinding(b);
 }
 
-function writeLineRef(b: flatbuffers.Builder, r: DucLineReference): number {
+function writeLineRef(b: flatbuffers.Builder, r: DucLineReference, usv: boolean): number {
   Duc.DucLineReference.startDucLineReference(b);
   Duc.DucLineReference.addIndex(b, r.index);
   if (r.handle) {
-    const hx = r.handle.x.value;
-    const hy = r.handle.y.value;
+    const hx = getPrecisionValue(r.handle.x, usv);
+    const hy = getPrecisionValue(r.handle.y, usv);
     const gp = Duc.GeometricPoint.createGeometricPoint(b, hx, hy);
     Duc.DucLineReference.addHandle(b, gp);
   }
   return Duc.DucLineReference.endDucLineReference(b);
 }
 
-function writeLine(b: flatbuffers.Builder, l: DucLine): number {
-  const s = writeLineRef(b, l[0]);
-  const e = writeLineRef(b, l[1]);
+function writeLine(b: flatbuffers.Builder, l: DucLine, usv: boolean): number {
+  const s = writeLineRef(b, l[0], usv);
+  const e = writeLineRef(b, l[1], usv);
   Duc.DucLine.startDucLine(b);
   Duc.DucLine.addStart(b, s);
   Duc.DucLine.addEnd(b, e);
   return Duc.DucLine.endDucLine(b);
 }
 
-function writePath(b: flatbuffers.Builder, p: DucPath): number {
+function writePath(b: flatbuffers.Builder, p: DucPath, usv: boolean): number {
   const lineIndices = Duc.DucPath.createLineIndicesVector(b, p.lineIndices.map((x) => x));
-  const bg = p.background ? writeElementBackground(b, p.background) : undefined;
-  const st = p.stroke ? writeElementStroke(b, p.stroke) : undefined;
+  const bg = p.background ? writeElementBackground(b, p.background, usv) : undefined;
+  const st = p.stroke ? writeElementStroke(b, p.stroke, usv) : undefined;
   Duc.DucPath.startDucPath(b);
   Duc.DucPath.addLineIndices(b, lineIndices);
   if (bg) Duc.DucPath.addBackground(b, bg);
@@ -421,7 +421,7 @@ function writePath(b: flatbuffers.Builder, p: DucPath): number {
 /**
  * DucElement bases
  */
-function writeBoundElement(b: flatbuffers.Builder, be: BoundElement): number {
+function writeBoundElement(b: flatbuffers.Builder, be: BoundElement, usv: boolean): number {
   const id = str(b, be.id)!;
   const type = str(b, be.type)!;
   Duc.BoundElement.startBoundElement(b);
@@ -430,9 +430,9 @@ function writeBoundElement(b: flatbuffers.Builder, be: BoundElement): number {
   return Duc.BoundElement.endBoundElement(b);
 }
 
-function writeElementBase(b: flatbuffers.Builder, e: _DucElementStylesBase & _DucStackElementBase & _DucStackBase): number {
+function writeElementBase(b: flatbuffers.Builder, e: _DucElementStylesBase & _DucStackElementBase & _DucStackBase, usv: boolean): number {
   const id = str(b, e.id);
-  const styles = writeStylesBase(b, e);
+  const styles = writeStylesBase(b, e, usv);
   const scope = str(b, e.scope);
   const label = str(b, e.label ?? undefined);
   const desc = str(b, e.description ?? undefined);
@@ -441,17 +441,17 @@ function writeElementBase(b: flatbuffers.Builder, e: _DucElementStylesBase & _Du
   const regionIds = e.regionIds?.length ? Duc._DucElementBase.createRegionIdsVector(b, e.regionIds.map((r) => b.createString(r))) : undefined;
   const layerId = str(b, e.layerId ?? undefined);
   const frameId = str(b, e.frameId ?? undefined);
-  const bound = e.boundElements?.length ? Duc._DucElementBase.createBoundElementsVector(b, e.boundElements.map((x) => writeBoundElement(b, x))) : undefined;
+  const bound = e.boundElements?.length ? Duc._DucElementBase.createBoundElementsVector(b, e.boundElements.map((x) => writeBoundElement(b, x, usv))) : undefined;
   const link = str(b, e.link ?? undefined);
   const custom = e.customData != null ? str(b, JSON.stringify(e.customData)) : undefined;
 
   Duc._DucElementBase.start_DucElementBase(b);
   if (id) Duc._DucElementBase.addId(b, id);
   if (styles) Duc._DucElementBase.addStyles(b, styles);
-  Duc._DucElementBase.addX(b, e.x.value);
-  Duc._DucElementBase.addY(b, e.y.value);
-  Duc._DucElementBase.addWidth(b, e.width.value);
-  Duc._DucElementBase.addHeight(b, e.height.value);
+  Duc._DucElementBase.addX(b, getPrecisionValue(e.x, usv));
+  Duc._DucElementBase.addY(b, getPrecisionValue(e.y, usv));
+  Duc._DucElementBase.addWidth(b, getPrecisionValue(e.width, usv));
+  Duc._DucElementBase.addHeight(b, getPrecisionValue(e.height, usv));
   Duc._DucElementBase.addAngle(b, e.angle);
   if (scope) Duc._DucElementBase.addScope(b, scope);
   if (label) Duc._DucElementBase.addLabel(b, label);
@@ -477,8 +477,8 @@ function writeElementBase(b: flatbuffers.Builder, e: _DucElementStylesBase & _Du
   return Duc._DucElementBase.end_DucElementBase(b);
 }
 
-function writeLinearBase(b: flatbuffers.Builder, e: _DucLinearElementBase): number {
-  const base = writeElementBase(b, e as unknown as any);
+function writeLinearBase(b: flatbuffers.Builder, e: _DucLinearElementBase, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
 
   // Type-safe guards without using any: default to empty arrays if undefined
   const pointsArr: ReadonlyArray<DucPoint> = e.points ?? [];
@@ -487,19 +487,19 @@ function writeLinearBase(b: flatbuffers.Builder, e: _DucLinearElementBase): numb
 
   const points = Duc._DucLinearElementBase.createPointsVector(
     b,
-    pointsArr.map((p) => writeDucPoint(b, p)!).filter((v): v is number => v !== undefined)
+    pointsArr.map((p) => writeDucPoint(b, p, usv)!).filter((v): v is number => v !== undefined)
   );
   const lines = Duc._DucLinearElementBase.createLinesVector(
     b,
-    linesArr.map((ln) => writeLine(b, ln))
+    linesArr.map((ln) => writeLine(b, ln, usv))
   );
   const pathOverrides = pathOverridesArr.length
-    ? Duc._DucLinearElementBase.createPathOverridesVector(b, pathOverridesArr.map((p) => writePath(b, p)))
+    ? Duc._DucLinearElementBase.createPathOverridesVector(b, pathOverridesArr.map((p) => writePath(b, p, usv)))
     : undefined;
 
-  const lastCommitted = writeDucPoint(b, e.lastCommittedPoint);
-  const startBinding = writePointBinding(b, e.startBinding);
-  const endBinding = writePointBinding(b, e.endBinding);
+  const lastCommitted = writeDucPoint(b, e.lastCommittedPoint, usv);
+  const startBinding = writePointBinding(b, e.startBinding, usv);
+  const endBinding = writePointBinding(b, e.endBinding, usv);
 
   Duc._DucLinearElementBase.start_DucLinearElementBase(b);
   Duc._DucLinearElementBase.addBase(b, base);
@@ -515,23 +515,23 @@ function writeLinearBase(b: flatbuffers.Builder, e: _DucLinearElementBase): numb
 /**
  * Elements
  */
-function writeRect(b: flatbuffers.Builder, e: DucRectangleElement): number {
-  const base = writeElementBase(b, e as unknown as any);
+function writeRect(b: flatbuffers.Builder, e: DucRectangleElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
   Duc.DucRectangleElement.startDucRectangleElement(b);
   Duc.DucRectangleElement.addBase(b, base);
   return Duc.DucRectangleElement.endDucRectangleElement(b);
 }
 
-function writePolygon(b: flatbuffers.Builder, e: DucPolygonElement): number {
-  const base = writeElementBase(b, e as unknown as any);
+function writePolygon(b: flatbuffers.Builder, e: DucPolygonElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
   Duc.DucPolygonElement.startDucPolygonElement(b);
   Duc.DucPolygonElement.addBase(b, base);
   Duc.DucPolygonElement.addSides(b, e.sides);
   return Duc.DucPolygonElement.endDucPolygonElement(b);
 }
 
-function writeEllipse(b: flatbuffers.Builder, e: DucEllipseElement): number {
-  const base = writeElementBase(b, e as unknown as any);
+function writeEllipse(b: flatbuffers.Builder, e: DucEllipseElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
   Duc.DucEllipseElement.startDucEllipseElement(b);
   Duc.DucEllipseElement.addBase(b, base);
   Duc.DucEllipseElement.addRatio(b, e.ratio);
@@ -541,23 +541,23 @@ function writeEllipse(b: flatbuffers.Builder, e: DucEllipseElement): number {
   return Duc.DucEllipseElement.endDucEllipseElement(b);
 }
 
-function writeLinear(b: flatbuffers.Builder, e: DucLinearElement): number {
-  const base = writeLinearBase(b, e as unknown as any);
+function writeLinear(b: flatbuffers.Builder, e: DucLinearElement, usv: boolean): number {
+  const base = writeLinearBase(b, e as unknown as any, usv);
   Duc.DucLinearElement.startDucLinearElement(b);
   Duc.DucLinearElement.addLinearBase(b, base);
   Duc.DucLinearElement.addWipeoutBelow(b, e.wipeoutBelow);
   return Duc.DucLinearElement.endDucLinearElement(b);
 }
 
-function writeArrow(b: flatbuffers.Builder, e: DucArrowElement): number {
-  const base = writeLinearBase(b, e as unknown as any);
+function writeArrow(b: flatbuffers.Builder, e: DucArrowElement, usv: boolean): number {
+  const base = writeLinearBase(b, e as unknown as any, usv);
   Duc.DucArrowElement.startDucArrowElement(b);
   Duc.DucArrowElement.addLinearBase(b, base);
   Duc.DucArrowElement.addElbowed(b, e.elbowed);
   return Duc.DucArrowElement.endDucArrowElement(b);
 }
 
-function writeFreeDrawEnds(b: flatbuffers.Builder, ends: DucFreeDrawEnds | null | undefined): number | undefined {
+function writeFreeDrawEnds(b: flatbuffers.Builder, ends: DucFreeDrawEnds | null | undefined, usv: boolean): number | undefined {
   if (!ends) return undefined;
   const easing = str(b, ends.easing as unknown as string);
   Duc.DucFreeDrawEnds.startDucFreeDrawEnds(b);
@@ -579,12 +579,12 @@ function writeImageCrop(b: flatbuffers.Builder, c: ImageCrop | null | undefined)
   return Duc.ImageCrop.endImageCrop(b);
 }
 
-function writeImage(b: flatbuffers.Builder, e: DucImageElement): number {
-  const base = writeElementBase(b, e as unknown as any);
+function writeImage(b: flatbuffers.Builder, e: DucImageElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
   const fileId = str(b, e.fileId);
   const scaleVec = e.scaleFlip ? Duc.DucImageElement.createScaleVector(b, [e.scaleFlip[0], e.scaleFlip[1]]) : undefined;
   const crop = writeImageCrop(b, e.crop);
-  const filter = writeImageFilter(b, e.filter);
+  const filter = writeImageFilter(b, e.filter, usv);
 
   Duc.DucImageElement.startDucImageElement(b);
   Duc.DucImageElement.addBase(b, base);
@@ -596,13 +596,13 @@ function writeImage(b: flatbuffers.Builder, e: DucImageElement): number {
   return Duc.DucImageElement.endDucImageElement(b);
 }
 
-function writeFreeDraw(b: flatbuffers.Builder, e: DucFreeDrawElement): number {
-  const base = writeElementBase(b, e as unknown as any);
+function writeFreeDraw(b: flatbuffers.Builder, e: DucFreeDrawElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
 
   const pointsVec = e.points && e.points.length
     ? Duc.DucFreeDrawElement.createPointsVector(
         b,
-        e.points.map((p) => writeDucPoint(b, p)!).filter((v): v is number => v !== undefined)
+        e.points.map((p) => writeDucPoint(b, p, usv)!).filter((v): v is number => v !== undefined)
       )
     : Duc.DucFreeDrawElement.createPointsVector(b, []);
 
@@ -611,16 +611,16 @@ function writeFreeDraw(b: flatbuffers.Builder, e: DucFreeDrawElement): number {
     : undefined;
 
   const easing = e.easing != null ? b.createString(e.easing as unknown as string) : undefined;
-  const startEnds = writeFreeDrawEnds(b, e.start);
-  const endEnds = writeFreeDrawEnds(b, e.end);
-  const lcp = e.lastCommittedPoint ? writeDucPoint(b, e.lastCommittedPoint) : undefined;
+  const startEnds = writeFreeDrawEnds(b, e.start, usv);
+  const endEnds = writeFreeDrawEnds(b, e.end, usv);
+  const lcp = e.lastCommittedPoint ? writeDucPoint(b, e.lastCommittedPoint, usv) : undefined;
   const svgPath = e.svgPath ? b.createString(e.svgPath) : undefined;
 
   Duc.DucFreeDrawElement.startDucFreeDrawElement(b);
   Duc.DucFreeDrawElement.addBase(b, base);
   Duc.DucFreeDrawElement.addPoints(b, pointsVec);
 
-  Duc.DucFreeDrawElement.addSize(b, e.size.value);
+  Duc.DucFreeDrawElement.addSize(b, getPrecisionValue(e.size, usv));
   Duc.DucFreeDrawElement.addThinning(b, e.thinning);
   Duc.DucFreeDrawElement.addSmoothing(b, e.smoothing);
   Duc.DucFreeDrawElement.addStreamline(b, e.streamline);
@@ -639,22 +639,22 @@ function writeFreeDraw(b: flatbuffers.Builder, e: DucFreeDrawElement): number {
 /**
  * Text
  */
-function writeLineSpacing(b: flatbuffers.Builder, ls: DucTextStyle["lineSpacing"] | undefined): number | undefined {
+function writeLineSpacing(b: flatbuffers.Builder, ls: DucTextStyle["lineSpacing"] | undefined, usv: boolean): number | undefined {
   if (!ls) return undefined;
   Duc.LineSpacing.startLineSpacing(b);
   if (typeof ls.value === "number") {
     Duc.LineSpacing.addValue(b, ls.value);
   } else {
-    Duc.LineSpacing.addValue(b, ls.value.value);
+    Duc.LineSpacing.addValue(b, getPrecisionValue(ls.value, usv));
   }
 
   Duc.LineSpacing.addType(b, ls.type);
   return Duc.LineSpacing.endLineSpacing(b);
 }
 
-function writeTextStyle(b: flatbuffers.Builder, s: DucTextStyle): number {
-  const base = writeStylesBase(b, s);
-  const lineSpacing = writeLineSpacing(b, s.lineSpacing);
+function writeTextStyle(b: flatbuffers.Builder, s: DucTextStyle, usv: boolean): number {
+  const base = writeStylesBase(b, s, usv);
+  const lineSpacing = writeLineSpacing(b, s.lineSpacing, usv);
   const fontFamily = str(b, s.fontFamily.toString());
   const bigFont = str(b, s.bigFontFamily);
   Duc.DucTextStyle.startDucTextStyle(b);
@@ -667,15 +667,15 @@ function writeTextStyle(b: flatbuffers.Builder, s: DucTextStyle): number {
   Duc.DucTextStyle.addLineHeight(b, s.lineHeight);
   if (lineSpacing) Duc.DucTextStyle.addLineSpacing(b, lineSpacing);
   Duc.DucTextStyle.addObliqueAngle(b, s.obliqueAngle);
-  Duc.DucTextStyle.addFontSize(b, s.fontSize.value);
-  if (s.paperTextHeight !== undefined) Duc.DucTextStyle.addPaperTextHeight(b, s.paperTextHeight.value);
+  Duc.DucTextStyle.addFontSize(b, getPrecisionValue(s.fontSize, usv));
+  if (s.paperTextHeight !== undefined) Duc.DucTextStyle.addPaperTextHeight(b, getPrecisionValue(s.paperTextHeight, usv));
   Duc.DucTextStyle.addWidthFactor(b, s.widthFactor);
   Duc.DucTextStyle.addIsUpsideDown(b, s.isUpsideDown);
   Duc.DucTextStyle.addIsBackwards(b, s.isBackwards);
   return Duc.DucTextStyle.endDucTextStyle(b);
 }
 
-function writePrimaryUnits(b: flatbuffers.Builder, units: StandardUnits["primaryUnits"] | undefined): number | undefined {
+function writePrimaryUnits(b: flatbuffers.Builder, units: StandardUnits["primaryUnits"] | undefined, usv: boolean): number | undefined {
   if (!units) return undefined;
 
   // Linear
@@ -713,7 +713,7 @@ function writePrimaryUnits(b: flatbuffers.Builder, units: StandardUnits["primary
   return Duc.PrimaryUnits.endPrimaryUnits(b);
 }
 
-function writeTextDynamicSource(b: flatbuffers.Builder, s: DucTextDynamicSource): number {
+function writeTextDynamicSource(b: flatbuffers.Builder, s: DucTextDynamicSource, usv: boolean): number {
   // discriminate by sourceType union ("element" | "dictionary")
   if (s.sourceType === Duc.TEXT_FIELD_SOURCE_TYPE.ELEMENT) {
     const el = str(b, s.elementId);
@@ -741,10 +741,10 @@ function writeTextDynamicSource(b: flatbuffers.Builder, s: DucTextDynamicSource)
   return Duc.DucTextDynamicSource.endDucTextDynamicSource(b);
 }
 
-function writeTextDynamicPart(b: flatbuffers.Builder, p: DucTextDynamicPart): number {
+function writeTextDynamicPart(b: flatbuffers.Builder, p: DucTextDynamicPart, usv: boolean): number {
   const tag = str(b, p.tag);
-  const src = writeTextDynamicSource(b, p.source);
-  const fmt = writePrimaryUnits(b, p.formatting as any);
+  const src = writeTextDynamicSource(b, p.source, usv);
+  const fmt = writePrimaryUnits(b, p.formatting as any, usv);
   const cached = str(b, p.cachedValue);
   Duc.DucTextDynamicPart.startDucTextDynamicPart(b);
   if (tag) Duc.DucTextDynamicPart.addTag(b, tag);
@@ -754,27 +754,27 @@ function writeTextDynamicPart(b: flatbuffers.Builder, p: DucTextDynamicPart): nu
   return Duc.DucTextDynamicPart.endDucTextDynamicPart(b);
 }
 
-function writeTextColumn(b: flatbuffers.Builder, c: TextColumn): number {
+function writeTextColumn(b: flatbuffers.Builder, c: TextColumn, usv: boolean): number {
   Duc.TextColumn.startTextColumn(b);
-  Duc.TextColumn.addWidth(b, c.width.value);
-  Duc.TextColumn.addGutter(b, c.gutter.value);
+  Duc.TextColumn.addWidth(b, getPrecisionValue(c.width, usv));
+  Duc.TextColumn.addGutter(b, getPrecisionValue(c.gutter, usv));
   return Duc.TextColumn.endTextColumn(b);
 }
 
-function writeParagraphFormatting(b: flatbuffers.Builder, p: DucDocStyle["paragraph"]): number {
-  const tabs = Duc.ParagraphFormatting.createTabStopsVector(b, p.tabStops.map((t) => t.value));
+function writeParagraphFormatting(b: flatbuffers.Builder, p: DucDocStyle["paragraph"], usv: boolean): number {
+  const tabs = Duc.ParagraphFormatting.createTabStopsVector(b, p.tabStops.map((t) => getPrecisionValue(t, usv)));
   Duc.ParagraphFormatting.startParagraphFormatting(b);
-  Duc.ParagraphFormatting.addFirstLineIndent(b, p.firstLineIndent.value);
-  Duc.ParagraphFormatting.addHangingIndent(b, p.hangingIndent.value);
-  Duc.ParagraphFormatting.addLeftIndent(b, p.leftIndent.value);
-  Duc.ParagraphFormatting.addRightIndent(b, p.rightIndent.value);
-  Duc.ParagraphFormatting.addSpaceBefore(b, p.spaceBefore.value);
-  Duc.ParagraphFormatting.addSpaceAfter(b, p.spaceAfter.value);
+  Duc.ParagraphFormatting.addFirstLineIndent(b, getPrecisionValue(p.firstLineIndent, usv));
+  Duc.ParagraphFormatting.addHangingIndent(b, getPrecisionValue(p.hangingIndent, usv));
+  Duc.ParagraphFormatting.addLeftIndent(b, getPrecisionValue(p.leftIndent, usv));
+  Duc.ParagraphFormatting.addRightIndent(b, getPrecisionValue(p.rightIndent, usv));
+  Duc.ParagraphFormatting.addSpaceBefore(b, getPrecisionValue(p.spaceBefore, usv));
+  Duc.ParagraphFormatting.addSpaceAfter(b, getPrecisionValue(p.spaceAfter, usv));
   Duc.ParagraphFormatting.addTabStops(b, tabs);
   return Duc.ParagraphFormatting.endParagraphFormatting(b);
 }
 
-function writeStackFormat(b: flatbuffers.Builder, s: DucDocStyle["stackFormat"]): number {
+function writeStackFormat(b: flatbuffers.Builder, s: DucDocStyle["stackFormat"], usv: boolean): number {
   const chars = Duc.StackFormat.createStackCharsVector(b, [...s.stackChars].map((c) => b.createString(c)));
   Duc.StackFormatProperties.startStackFormatProperties(b);
   Duc.StackFormatProperties.addUpperScale(b, s.properties.upperScale);
@@ -788,10 +788,10 @@ function writeStackFormat(b: flatbuffers.Builder, s: DucDocStyle["stackFormat"])
   return Duc.StackFormat.endStackFormat(b);
 }
 
-function writeDocStyle(b: flatbuffers.Builder, s: DucDocStyle): number {
-  const text = writeTextStyle(b, s);
-  const para = writeParagraphFormatting(b, s.paragraph);
-  const stack = writeStackFormat(b, s.stackFormat);
+function writeDocStyle(b: flatbuffers.Builder, s: DucDocStyle, usv: boolean): number {
+  const text = writeTextStyle(b, s, usv);
+  const para = writeParagraphFormatting(b, s.paragraph, usv);
+  const stack = writeStackFormat(b, s.stackFormat, usv);
   Duc.DucDocStyle.startDucDocStyle(b);
   Duc.DucDocStyle.addTextStyle(b, text);
   Duc.DucDocStyle.addParagraph(b, para);
@@ -799,8 +799,8 @@ function writeDocStyle(b: flatbuffers.Builder, s: DucDocStyle): number {
   return Duc.DucDocStyle.endDucDocStyle(b);
 }
 
-function writeColumnLayout(b: flatbuffers.Builder, c: DucDocElement["columns"]): number {
-  const defs = Duc.ColumnLayout.createDefinitionsVector(b, c.definitions.map((d) => writeTextColumn(b, d)));
+function writeColumnLayout(b: flatbuffers.Builder, c: DucDocElement["columns"], usv: boolean): number {
+  const defs = Duc.ColumnLayout.createDefinitionsVector(b, c.definitions.map((d) => writeTextColumn(b, d, usv)));
   Duc.ColumnLayout.startColumnLayout(b);
   Duc.ColumnLayout.addType(b, c.type);
   Duc.ColumnLayout.addDefinitions(b, defs);
@@ -808,11 +808,11 @@ function writeColumnLayout(b: flatbuffers.Builder, c: DucDocElement["columns"]):
   return Duc.ColumnLayout.endColumnLayout(b);
 }
 
-function writeText(b: flatbuffers.Builder, e: DucTextElement): number {
-  const base = writeElementBase(b, e as unknown as any);
-  const style = writeTextStyle(b, e);
+function writeText(b: flatbuffers.Builder, e: DucTextElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
+  const style = writeTextStyle(b, e, usv);
   const text = str(b, e.text);
-  const dynamic = Duc.DucTextElement.createDynamicVector(b, e.dynamic.map((d) => writeTextDynamicPart(b, d)));
+  const dynamic = Duc.DucTextElement.createDynamicVector(b, e.dynamic.map((d) => writeTextDynamicPart(b, d, usv)));
   const containerId = str(b, e.containerId ?? undefined);
   const original = str(b, e.originalText);
   Duc.DucTextElement.startDucTextElement(b);
@@ -829,7 +829,7 @@ function writeText(b: flatbuffers.Builder, e: DucTextElement): number {
 /**
  * Blocks
  */
-function writeBlockAttrDef(b: flatbuffers.Builder, d: DucBlockAttributeDefinition): number {
+function writeBlockAttrDef(b: flatbuffers.Builder, d: DucBlockAttributeDefinition, usv: boolean): number {
   const tag = b.createString(d.tag);
   const prompt = b.createString(d.prompt);
   const defVal = b.createString(d.defaultValue);
@@ -841,16 +841,16 @@ function writeBlockAttrDef(b: flatbuffers.Builder, d: DucBlockAttributeDefinitio
   return Duc.DucBlockAttributeDefinition.endDucBlockAttributeDefinition(b);
 }
 
-function writeBlock(b: flatbuffers.Builder, bl: DucBlock): number {
+function writeBlock(b: flatbuffers.Builder, bl: DucBlock, usv: boolean): number {
   const id = b.createString(bl.id);
   const label = b.createString(bl.label);
   const desc = b.createString(bl.description ?? "");
-  const elems = Duc.DucBlock.createElementsVector(b, bl.elements.map((el) => writeElementWrapper(b, el)));
+  const elems = Duc.DucBlock.createElementsVector(b, bl.elements.map((el) => writeElementWrapper(b, el, usv)));
   const defs = Duc.DucBlock.createAttributeDefinitionsVector(
     b,
     Object.entries(bl.attributeDefinitions ?? {}).map(([k, v]) => {
       const key = b.createString(k);
-      const val = writeBlockAttrDef(b, v);
+      const val = writeBlockAttrDef(b, v, usv);
       Duc.DucBlockAttributeDefinitionEntry.startDucBlockAttributeDefinitionEntry(b);
       Duc.DucBlockAttributeDefinitionEntry.addKey(b, key);
       Duc.DucBlockAttributeDefinitionEntry.addValue(b, val);
@@ -867,8 +867,8 @@ function writeBlock(b: flatbuffers.Builder, bl: DucBlock): number {
   return Duc.DucBlock.endDucBlock(b);
 }
 
-function writeBlockInstance(b: flatbuffers.Builder, e: DucBlockInstanceElement): number {
-  const base = writeElementBase(b, e as unknown as any);
+function writeBlockInstance(b: flatbuffers.Builder, e: DucBlockInstanceElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
   const blockId = b.createString(e.blockId);
   const overrides = Duc.DucBlockInstanceElement.createElementOverridesVector(
     b,
@@ -883,8 +883,8 @@ function writeBlockInstance(b: flatbuffers.Builder, e: DucBlockInstanceElement):
       Duc.DucBlockDuplicationArray.startDucBlockDuplicationArray(b);
       Duc.DucBlockDuplicationArray.addRows(b, e.duplicationArray.rows);
       Duc.DucBlockDuplicationArray.addCols(b, e.duplicationArray.cols);
-      Duc.DucBlockDuplicationArray.addRowSpacing(b, e.duplicationArray.rowSpacing.value);
-      Duc.DucBlockDuplicationArray.addColSpacing(b, e.duplicationArray.colSpacing.value);
+      Duc.DucBlockDuplicationArray.addRowSpacing(b, getPrecisionValue(e.duplicationArray.rowSpacing, usv));
+      Duc.DucBlockDuplicationArray.addColSpacing(b, getPrecisionValue(e.duplicationArray.colSpacing, usv));
       return Duc.DucBlockDuplicationArray.endDucBlockDuplicationArray(b);
     })()
     : undefined;
@@ -901,7 +901,7 @@ function writeBlockInstance(b: flatbuffers.Builder, e: DucBlockInstanceElement):
 /**
  * Stack containers
  */
-function writeStackLikeStyles(b: flatbuffers.Builder, s: DucStackLikeStyles): number {
+function writeStackLikeStyles(b: flatbuffers.Builder, s: DucStackLikeStyles, usv: boolean): number {
   const color = b.createString(s.labelingColor);
   Duc.DucStackLikeStyles.startDucStackLikeStyles(b);
   Duc.DucStackLikeStyles.addOpacity(b, s.opacity);
@@ -909,10 +909,10 @@ function writeStackLikeStyles(b: flatbuffers.Builder, s: DucStackLikeStyles): nu
   return Duc.DucStackLikeStyles.endDucStackLikeStyles(b);
 }
 
-function writeStackBase(b: flatbuffers.Builder, s: _DucStackBase): number {
+function writeStackBase(b: flatbuffers.Builder, s: _DucStackBase, usv: boolean): number {
   const label = b.createString(s.label);
   const desc = str(b, s.description ?? undefined);
-  const styles = writeStackLikeStyles(b, s);
+  const styles = writeStackLikeStyles(b, s, usv);
   Duc._DucStackBase.start_DucStackBase(b);
   Duc._DucStackBase.addLabel(b, label);
   if (desc) Duc._DucStackBase.addDescription(b, desc);
@@ -924,9 +924,9 @@ function writeStackBase(b: flatbuffers.Builder, s: _DucStackBase): number {
   return Duc._DucStackBase.end_DucStackBase(b);
 }
 
-function writeStackElementBase(b: flatbuffers.Builder, s: _DucStackElementBase & _DucStackBase): number {
-  const base = writeElementBase(b, s as unknown as any);
-  const stackBase = writeStackBase(b, s);
+function writeStackElementBase(b: flatbuffers.Builder, s: _DucStackElementBase & _DucStackBase, usv: boolean): number {
+  const base = writeElementBase(b, s as unknown as any, usv);
+  const stackBase = writeStackBase(b, s, usv);
   const std = str(b, s.standardOverride);
   Duc._DucStackElementBase.start_DucStackElementBase(b);
   Duc._DucStackElementBase.addBase(b, base);
@@ -937,34 +937,34 @@ function writeStackElementBase(b: flatbuffers.Builder, s: _DucStackElementBase &
   return Duc._DucStackElementBase.end_DucStackElementBase(b);
 }
 
-function writeFrame(b: flatbuffers.Builder, e: DucFrameElement): number {
-  const base = writeStackElementBase(b, e as unknown as any);
+function writeFrame(b: flatbuffers.Builder, e: DucFrameElement, usv: boolean): number {
+  const base = writeStackElementBase(b, e as unknown as any, usv);
   Duc.DucFrameElement.startDucFrameElement(b);
   Duc.DucFrameElement.addStackElementBase(b, base);
   return Duc.DucFrameElement.endDucFrameElement(b);
 }
 
-function writePlotLayout(b: flatbuffers.Builder, l: PlotLayout): number {
+function writePlotLayout(b: flatbuffers.Builder, l: PlotLayout, usv: boolean): number {
   Duc.Margins.startMargins(b);
-  Duc.Margins.addTop(b, l.margins.top.value);
-  Duc.Margins.addRight(b, l.margins.right.value);
-  Duc.Margins.addBottom(b, l.margins.bottom.value);
-  Duc.Margins.addLeft(b, l.margins.left.value);
+  Duc.Margins.addTop(b, getPrecisionValue(l.margins.top, usv));
+  Duc.Margins.addRight(b, getPrecisionValue(l.margins.right, usv));
+  Duc.Margins.addBottom(b, getPrecisionValue(l.margins.bottom, usv));
+  Duc.Margins.addLeft(b, getPrecisionValue(l.margins.left, usv));
   const margins = Duc.Margins.endMargins(b);
   Duc.PlotLayout.startPlotLayout(b);
   Duc.PlotLayout.addMargins(b, margins);
   return Duc.PlotLayout.endPlotLayout(b);
 }
 
-function writePlot(b: flatbuffers.Builder, e: DucPlotElement): number {
-  const stackBase = writeStackElementBase(b, e as unknown as any);
-  const baseStyle = writeStylesBase(b, e);
+function writePlot(b: flatbuffers.Builder, e: DucPlotElement, usv: boolean): number {
+  const stackBase = writeStackElementBase(b, e as unknown as any, usv);
+  const baseStyle = writeStylesBase(b, e, usv);
   const plotStyle = (() => {
     Duc.DucPlotStyle.startDucPlotStyle(b);
     if (baseStyle) Duc.DucPlotStyle.addBaseStyle(b, baseStyle);
     return Duc.DucPlotStyle.endDucPlotStyle(b);
   })();
-  const layout = writePlotLayout(b, e.layout);
+  const layout = writePlotLayout(b, e.layout, usv);
   Duc.DucPlotElement.startDucPlotElement(b);
   Duc.DucPlotElement.addStackElementBase(b, stackBase);
   Duc.DucPlotElement.addStyle(b, plotStyle);
@@ -975,12 +975,12 @@ function writePlot(b: flatbuffers.Builder, e: DucPlotElement): number {
 /**
  * Views / Viewports / XRay
  */
-function writeView(b: flatbuffers.Builder, v: DucView): number {
-  const center = writeDucPoint(b, v.centerPoint);
+function writeView(b: flatbuffers.Builder, v: DucView, usv: boolean): number {
+  const center = writeDucPoint(b, v.centerPoint, usv);
   const scope = b.createString(v.scope);
   Duc.DucView.startDucView(b);
-  Duc.DucView.addScrollX(b, v.scrollX.value);
-  Duc.DucView.addScrollY(b, v.scrollY.value);
+  Duc.DucView.addScrollX(b, getPrecisionValue(v.scrollX, usv));
+  Duc.DucView.addScrollY(b, getPrecisionValue(v.scrollY, usv));
   Duc.DucView.addZoom(b, v.zoom.value);
   Duc.DucView.addTwistAngle(b, v.twistAngle);
   if (center) Duc.DucView.addCenterPoint(b, center);
@@ -988,19 +988,19 @@ function writeView(b: flatbuffers.Builder, v: DucView): number {
   return Duc.DucView.endDucView(b);
 }
 
-function writeViewportStyle(b: flatbuffers.Builder, s: DucViewportStyle): number {
-  const base = writeStylesBase(b, s);
+function writeViewportStyle(b: flatbuffers.Builder, s: DucViewportStyle, usv: boolean): number {
+  const base = writeStylesBase(b, s, usv);
   Duc.DucViewportStyle.startDucViewportStyle(b);
   if (base) Duc.DucViewportStyle.addBaseStyle(b, base);
   Duc.DucViewportStyle.addScaleIndicatorVisible(b, s.scaleIndicatorVisible);
   return Duc.DucViewportStyle.endDucViewportStyle(b);
 }
 
-function writeViewport(b: flatbuffers.Builder, e: DucViewportElement): number {
-  const linear = writeLinearBase(b, e as unknown as any);
-  const stackBase = writeStackBase(b, e as unknown as any);
-  const style = writeViewportStyle(b, e);
-  const view = writeView(b, e.view);
+function writeViewport(b: flatbuffers.Builder, e: DucViewportElement, usv: boolean): number {
+  const linear = writeLinearBase(b, e as unknown as any, usv);
+  const stackBase = writeStackBase(b, e as unknown as any, usv);
+  const style = writeViewportStyle(b, e, usv);
+  const view = writeView(b, e.view, usv);
   const frozen = e.frozenGroupIds?.length ? Duc.DucViewportElement.createFrozenGroupIdsVector(b, e.frozenGroupIds.map((id) => b.createString(id))) : undefined;
   const std = str(b, e.standardOverride);
   Duc.DucViewportElement.startDucViewportElement(b);
@@ -1015,8 +1015,8 @@ function writeViewport(b: flatbuffers.Builder, e: DucViewportElement): number {
   return Duc.DucViewportElement.endDucViewportElement(b);
 }
 
-function writeXRayStyle(b: flatbuffers.Builder, s: DucXRayStyle): number {
-  const base = writeStylesBase(b, s);
+function writeXRayStyle(b: flatbuffers.Builder, s: DucXRayStyle, usv: boolean): number {
+  const base = writeStylesBase(b, s, usv);
   const color = b.createString(s.color);
   Duc.DucXRayStyle.startDucXRayStyle(b);
   if (base) Duc.DucXRayStyle.addBaseStyle(b, base);
@@ -1024,11 +1024,11 @@ function writeXRayStyle(b: flatbuffers.Builder, s: DucXRayStyle): number {
   return Duc.DucXRayStyle.endDucXRayStyle(b);
 }
 
-function writeXRay(b: flatbuffers.Builder, e: DucXRayElement): number {
-  const base = writeElementBase(b, e as unknown as any);
-  const style = writeXRayStyle(b, e);
-  const origin = writeDucPoint(b, e.origin);
-  const direction = writeDucPoint(b, e.direction);
+function writeXRay(b: flatbuffers.Builder, e: DucXRayElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
+  const style = writeXRayStyle(b, e, usv);
+  const origin = writeDucPoint(b, e.origin, usv);
+  const direction = writeDucPoint(b, e.direction, usv);
   Duc.DucXRayElement.startDucXRayElement(b);
   Duc.DucXRayElement.addBase(b, base);
   Duc.DucXRayElement.addStyle(b, style);
@@ -1041,7 +1041,7 @@ function writeXRay(b: flatbuffers.Builder, e: DucXRayElement): number {
 /**
  * Leader & Dimension & FCF
  */
-function writeLeaderContent(b: flatbuffers.Builder, c: LeaderContent | null): number | undefined {
+function writeLeaderContent(b: flatbuffers.Builder, c: LeaderContent | null, usv: boolean): number | undefined {
   if (!c) return undefined;
   let contentOffset: number;
   let contentType: Duc.LeaderContentData;
@@ -1071,25 +1071,25 @@ function writeLeaderContent(b: flatbuffers.Builder, c: LeaderContent | null): nu
   return Duc.LeaderContent.endLeaderContent(b);
 }
 
-function writeLeaderStyle(b: flatbuffers.Builder, s: DucLeaderStyle): number {
-  const base = writeStylesBase(b, s);
-  const text = writeTextStyle(b, s.textStyle);
-  const heads = s.headsOverride ? Duc.DucLeaderStyle.createHeadsOverrideVector(b, s.headsOverride.map((h) => writeHead(b, h)!)) : undefined;
+function writeLeaderStyle(b: flatbuffers.Builder, s: DucLeaderStyle, usv: boolean): number {
+  const base = writeStylesBase(b, s, usv);
+  const text = writeTextStyle(b, s.textStyle, usv);
+  const heads = s.headsOverride ? Duc.DucLeaderStyle.createHeadsOverrideVector(b, s.headsOverride.map((h) => writeHead(b, h, usv)!)) : undefined;
   Duc.DucLeaderStyle.startDucLeaderStyle(b);
   if (base) Duc.DucLeaderStyle.addBaseStyle(b, base);
   if (heads) Duc.DucLeaderStyle.addHeadsOverride(b, heads);
-  if (s.dogleg !== undefined) Duc.DucLeaderStyle.addDogleg(b, s.dogleg.value);
+  if (s.dogleg !== undefined) Duc.DucLeaderStyle.addDogleg(b, getPrecisionValue(s.dogleg, usv));
   Duc.DucLeaderStyle.addTextStyle(b, text);
   if (s.textAttachment !== undefined) Duc.DucLeaderStyle.addTextAttachment(b, s.textAttachment);
   if (s.blockAttachment !== undefined) Duc.DucLeaderStyle.addBlockAttachment(b, s.blockAttachment);
   return Duc.DucLeaderStyle.endDucLeaderStyle(b);
 }
 
-function writeLeader(b: flatbuffers.Builder, e: DucLeaderElement): number {
-  const linear = writeLinearBase(b, e as unknown as any);
-  const style = writeLeaderStyle(b, e);
-  const content = writeLeaderContent(b, e.leaderContent);
-  const anchor = writeGeomPoint(b, e.contentAnchor);
+function writeLeader(b: flatbuffers.Builder, e: DucLeaderElement, usv: boolean): number {
+  const linear = writeLinearBase(b, e as unknown as any, usv);
+  const style = writeLeaderStyle(b, e, usv);
+  const content = writeLeaderContent(b, e.leaderContent, usv);
+  const anchor = writeGeomPoint(b, e.contentAnchor, usv);
   Duc.DucLeaderElement.startDucLeaderElement(b);
   Duc.DucLeaderElement.addLinearBase(b, linear);
   Duc.DucLeaderElement.addStyle(b, style);
@@ -1098,12 +1098,12 @@ function writeLeader(b: flatbuffers.Builder, e: DucLeaderElement): number {
   return Duc.DucLeaderElement.endDucLeaderElement(b);
 }
 
-function writeDimDefPoints(b: flatbuffers.Builder, d: DimensionDefinitionPoints): number {
-  const o1 = writeGeomPoint(b, d.origin1);
-  const o2 = d.origin2 ? writeGeomPoint(b, d.origin2) : undefined;
-  const loc = writeGeomPoint(b, d.location);
-  const center = d.center ? writeGeomPoint(b, d.center) : undefined;
-  const jog = d.jog ? writeGeomPoint(b, d.jog) : undefined;
+function writeDimDefPoints(b: flatbuffers.Builder, d: DimensionDefinitionPoints, usv: boolean): number {
+  const o1 = writeGeomPoint(b, d.origin1, usv);
+  const o2 = d.origin2 ? writeGeomPoint(b, d.origin2, usv) : undefined;
+  const loc = writeGeomPoint(b, d.location, usv);
+  const center = d.center ? writeGeomPoint(b, d.center, usv) : undefined;
+  const jog = d.jog ? writeGeomPoint(b, d.jog, usv) : undefined;
   Duc.DimensionDefinitionPoints.startDimensionDefinitionPoints(b);
   if (o1) Duc.DimensionDefinitionPoints.addOrigin1(b, o1);
   if (o2) Duc.DimensionDefinitionPoints.addOrigin2(b, o2);
@@ -1113,11 +1113,11 @@ function writeDimDefPoints(b: flatbuffers.Builder, d: DimensionDefinitionPoints)
   return Duc.DimensionDefinitionPoints.endDimensionDefinitionPoints(b);
 }
 
-function writeDimBindings(b: flatbuffers.Builder, d: DucDimensionElement["bindings"] | undefined): number | undefined {
+function writeDimBindings(b: flatbuffers.Builder, d: DucDimensionElement["bindings"] | undefined, usv: boolean): number | undefined {
   if (!d) return undefined;
-  const o1 = d.origin1 ? writePointBinding(b, d.origin1) : undefined;
-  const o2 = d.origin2 ? writePointBinding(b, d.origin2) : undefined;
-  const c = d.center ? writePointBinding(b, d.center) : undefined;
+  const o1 = d.origin1 ? writePointBinding(b, d.origin1, usv) : undefined;
+  const o2 = d.origin2 ? writePointBinding(b, d.origin2, usv) : undefined;
+  const c = d.center ? writePointBinding(b, d.center, usv) : undefined;
   Duc.DimensionBindings.startDimensionBindings(b);
   if (o1) Duc.DimensionBindings.addOrigin1(b, o1);
   if (o2) Duc.DimensionBindings.addOrigin2(b, o2);
@@ -1125,8 +1125,8 @@ function writeDimBindings(b: flatbuffers.Builder, d: DucDimensionElement["bindin
   return Duc.DimensionBindings.endDimensionBindings(b);
 }
 
-function writeDimTolStyle(b: flatbuffers.Builder, t: DucDimensionStyle["tolerance"]): number {
-  const textStyle = writeTextStyle(b, t.textStyle as DucTextStyle);
+function writeDimTolStyle(b: flatbuffers.Builder, t: DucDimensionStyle["tolerance"], usv: boolean): number {
+  const textStyle = writeTextStyle(b, t.textStyle as DucTextStyle, usv);
   Duc.DimensionToleranceStyle.startDimensionToleranceStyle(b);
   Duc.DimensionToleranceStyle.addEnabled(b, t.enabled);
   Duc.DimensionToleranceStyle.addDisplayMethod(b, t.displayMethod);
@@ -1137,38 +1137,38 @@ function writeDimTolStyle(b: flatbuffers.Builder, t: DucDimensionStyle["toleranc
   return Duc.DimensionToleranceStyle.endDimensionToleranceStyle(b);
 }
 
-function writeDimLineStyle(b: flatbuffers.Builder, s: DucDimensionStyle["dimLine"]): number {
-  const st = writeElementStroke(b, s.stroke);
+function writeDimLineStyle(b: flatbuffers.Builder, s: DucDimensionStyle["dimLine"], usv: boolean): number {
+  const st = writeElementStroke(b, s.stroke, usv);
   Duc.DimensionLineStyle.startDimensionLineStyle(b);
   if (st) Duc.DimensionLineStyle.addStroke(b, st);
-  Duc.DimensionLineStyle.addTextGap(b, s.textGap.value);
+  Duc.DimensionLineStyle.addTextGap(b, getPrecisionValue(s.textGap, usv));
   return Duc.DimensionLineStyle.endDimensionLineStyle(b);
 }
 
-function writeExtLineStyle(b: flatbuffers.Builder, s: DucDimensionStyle["extLine"]): number {
-  const st = writeElementStroke(b, s.stroke);
+function writeExtLineStyle(b: flatbuffers.Builder, s: DucDimensionStyle["extLine"], usv: boolean): number {
+  const st = writeElementStroke(b, s.stroke, usv);
   Duc.DimensionExtLineStyle.startDimensionExtLineStyle(b);
   if (st) Duc.DimensionExtLineStyle.addStroke(b, st);
-  Duc.DimensionExtLineStyle.addOvershoot(b, s.overshoot.value);
-  Duc.DimensionExtLineStyle.addOffset(b, s.offset.value);
+  Duc.DimensionExtLineStyle.addOvershoot(b, getPrecisionValue(s.overshoot, usv));
+  Duc.DimensionExtLineStyle.addOffset(b, getPrecisionValue(s.offset, usv));
   return Duc.DimensionExtLineStyle.endDimensionExtLineStyle(b);
 }
 
-function writeDimSymbolStyle(b: flatbuffers.Builder, s: DucDimensionStyle["symbols"]): number {
-  const heads = s.headsOverride ? Duc.DimensionSymbolStyle.createHeadsOverrideVector(b, s.headsOverride.map((h) => writeHead(b, h)!)) : undefined;
+function writeDimSymbolStyle(b: flatbuffers.Builder, s: DucDimensionStyle["symbols"], usv: boolean): number {
+  const heads = s.headsOverride ? Duc.DimensionSymbolStyle.createHeadsOverrideVector(b, s.headsOverride.map((h) => writeHead(b, h, usv)!)) : undefined;
   Duc.DimensionSymbolStyle.startDimensionSymbolStyle(b);
   if (heads) Duc.DimensionSymbolStyle.addHeadsOverride(b, heads);
   Duc.DimensionSymbolStyle.addCenterMarkType(b, s.centerMark.type);
-  Duc.DimensionSymbolStyle.addCenterMarkSize(b, s.centerMark.size.value);
+  Duc.DimensionSymbolStyle.addCenterMarkSize(b, getPrecisionValue(s.centerMark.size, usv));
   return Duc.DimensionSymbolStyle.endDimensionSymbolStyle(b);
 }
 
-function writeDimStyle(b: flatbuffers.Builder, s: DucDimensionStyle): number {
-  const dim = writeDimLineStyle(b, s.dimLine);
-  const ext = writeExtLineStyle(b, s.extLine);
-  const text = writeTextStyle(b, s.textStyle);
-  const sym = writeDimSymbolStyle(b, s.symbols);
-  const tol = writeDimTolStyle(b, s.tolerance);
+function writeDimStyle(b: flatbuffers.Builder, s: DucDimensionStyle, usv: boolean): number {
+  const dim = writeDimLineStyle(b, s.dimLine, usv);
+  const ext = writeExtLineStyle(b, s.extLine, usv);
+  const text = writeTextStyle(b, s.textStyle, usv);
+  const sym = writeDimSymbolStyle(b, s.symbols, usv);
+  const tol = writeDimTolStyle(b, s.tolerance, usv);
   const fit = (() => {
     Duc.DimensionFitStyle.startDimensionFitStyle(b);
     Duc.DimensionFitStyle.addRule(b, s.fit.rule);
@@ -1186,14 +1186,14 @@ function writeDimStyle(b: flatbuffers.Builder, s: DucDimensionStyle): number {
   return Duc.DucDimensionStyle.endDucDimensionStyle(b);
 }
 
-function writeDimension(b: flatbuffers.Builder, e: DucDimensionElement): number {
-  const base = writeElementBase(b, e as unknown as any);
-  const style = writeDimStyle(b, e);
-  const def = writeDimDefPoints(b, e.definitionPoints);
-  const bindings = writeDimBindings(b, e.bindings);
+function writeDimension(b: flatbuffers.Builder, e: DucDimensionElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
+  const style = writeDimStyle(b, e, usv);
+  const def = writeDimDefPoints(b, e.definitionPoints, usv);
+  const bindings = writeDimBindings(b, e.bindings, usv);
   const textOverride = e.textOverride != null ? b.createString(e.textOverride) : undefined;
-  const textPos = e.textPosition ? writeGeomPoint(b, e.textPosition) : undefined;
-  const tolOverride = e.toleranceOverride ? writeDimTolStyle(b, e.toleranceOverride as any) : undefined;
+  const textPos = e.textPosition ? writeGeomPoint(b, e.textPosition, usv) : undefined;
+  const tolOverride = e.toleranceOverride ? writeDimTolStyle(b, e.toleranceOverride as any, usv) : undefined;
   const baseline = e.baselineData
     ? (() => {
       Duc.DimensionBaselineData.startDimensionBaselineData(b);
@@ -1225,7 +1225,7 @@ function writeDimension(b: flatbuffers.Builder, e: DucDimensionElement): number 
   return Duc.DucDimensionElement.endDucDimensionElement(b);
 }
 
-function writeDatumRef(b: flatbuffers.Builder, d: DatumReference): number {
+function writeDatumRef(b: flatbuffers.Builder, d: DatumReference, usv: boolean): number {
   const letters = b.createString(d.letters);
   Duc.DatumReference.startDatumReference(b);
   Duc.DatumReference.addLetters(b, letters);
@@ -1233,7 +1233,7 @@ function writeDatumRef(b: flatbuffers.Builder, d: DatumReference): number {
   return Duc.DatumReference.endDatumReference(b);
 }
 
-function writeToleranceClause(b: flatbuffers.Builder, t: ToleranceClause): number {
+function writeToleranceClause(b: flatbuffers.Builder, t: ToleranceClause, usv: boolean): number {
   const value = b.createString(t.value);
   const featureMods = t.featureModifiers?.length
     ? Duc.ToleranceClause.createFeatureModifiersVector(b, t.featureModifiers.map((f) => f))
@@ -1246,9 +1246,9 @@ function writeToleranceClause(b: flatbuffers.Builder, t: ToleranceClause): numbe
   return Duc.ToleranceClause.endToleranceClause(b);
 }
 
-function writeFcfSegment(b: flatbuffers.Builder, s: FeatureControlFrameSegment): number {
-  const tol = writeToleranceClause(b, s.tolerance);
-  const datums = s.datums?.length ? Duc.FeatureControlFrameSegment.createDatumsVector(b, s.datums.filter(Boolean).map((d) => writeDatumRef(b, d!))) : undefined;
+function writeFcfSegment(b: flatbuffers.Builder, s: FeatureControlFrameSegment, usv: boolean): number {
+  const tol = writeToleranceClause(b, s.tolerance, usv);
+  const datums = s.datums?.length ? Duc.FeatureControlFrameSegment.createDatumsVector(b, s.datums.filter(Boolean).map((d) => writeDatumRef(b, d!, usv))) : undefined;
   Duc.FeatureControlFrameSegment.startFeatureControlFrameSegment(b);
   Duc.FeatureControlFrameSegment.addSymbol(b, s.symbol);
   Duc.FeatureControlFrameSegment.addTolerance(b, tol);
@@ -1256,14 +1256,14 @@ function writeFcfSegment(b: flatbuffers.Builder, s: FeatureControlFrameSegment):
   return Duc.FeatureControlFrameSegment.endFeatureControlFrameSegment(b);
 }
 
-function writeFcfSegmentRow(b: flatbuffers.Builder, row: readonly FeatureControlFrameSegment[]): number {
-  const segs = Duc.FCFSegmentRow.createSegmentsVector(b, row.map((s) => writeFcfSegment(b, s)));
+function writeFcfSegmentRow(b: flatbuffers.Builder, row: readonly FeatureControlFrameSegment[], usv: boolean): number {
+  const segs = Duc.FCFSegmentRow.createSegmentsVector(b, row.map((s) => writeFcfSegment(b, s, usv)));
   Duc.FCFSegmentRow.startFCFSegmentRow(b);
   Duc.FCFSegmentRow.addSegments(b, segs);
   return Duc.FCFSegmentRow.endFCFSegmentRow(b);
 }
 
-function writeFcfBetween(b: flatbuffers.Builder, v: { start: string; end: string }): number {
+function writeFcfBetween(b: flatbuffers.Builder, v: { start: string; end: string }, usv: boolean): number {
   const s = b.createString(v.start);
   const e = b.createString(v.end);
   Duc.FCFBetweenModifier.startFCFBetweenModifier(b);
@@ -1272,41 +1272,41 @@ function writeFcfBetween(b: flatbuffers.Builder, v: { start: string; end: string
   return Duc.FCFBetweenModifier.endFCFBetweenModifier(b);
 }
 
-function writeProjectedZone(b: flatbuffers.Builder, v: PrecisionValue): number {
+function writeProjectedZone(b: flatbuffers.Builder, v: PrecisionValue, usv: boolean): number {
   Duc.FCFProjectedZoneModifier.startFCFProjectedZoneModifier(b);
-  Duc.FCFProjectedZoneModifier.addValue(b, v.value);
+  Duc.FCFProjectedZoneModifier.addValue(b, getPrecisionValue(v, usv));
   return Duc.FCFProjectedZoneModifier.endFCFProjectedZoneModifier(b);
 }
 
-function writeFcfFrameModifiers(b: flatbuffers.Builder, m: DucFeatureControlFrameElement["frameModifiers"] | undefined): number | undefined {
+function writeFcfFrameModifiers(b: flatbuffers.Builder, m: DucFeatureControlFrameElement["frameModifiers"] | undefined, usv: boolean): number | undefined {
   if (!m) return undefined;
   Duc.FCFFrameModifiers.startFCFFrameModifiers(b);
   if (m.allAround !== undefined) Duc.FCFFrameModifiers.addAllAround(b, m.allAround);
   if (m.allOver !== undefined) Duc.FCFFrameModifiers.addAllOver(b, m.allOver);
   if (m.continuousFeature !== undefined) Duc.FCFFrameModifiers.addContinuousFeature(b, m.continuousFeature);
-  if (m.between) Duc.FCFFrameModifiers.addBetween(b, writeFcfBetween(b, m.between));
-  if (m.projectedToleranceZone) Duc.FCFFrameModifiers.addProjectedToleranceZone(b, writeProjectedZone(b, m.projectedToleranceZone));
+  if (m.between) Duc.FCFFrameModifiers.addBetween(b, writeFcfBetween(b, m.between, usv));
+  if (m.projectedToleranceZone) Duc.FCFFrameModifiers.addProjectedToleranceZone(b, writeProjectedZone(b, m.projectedToleranceZone, usv));
   return Duc.FCFFrameModifiers.endFCFFrameModifiers(b);
 }
 
-function writeFcfDatumDefinition(b: flatbuffers.Builder, d: DucFeatureControlFrameElement["datumDefinition"] | undefined): number | undefined {
+function writeFcfDatumDefinition(b: flatbuffers.Builder, d: DucFeatureControlFrameElement["datumDefinition"] | undefined, usv: boolean): number | undefined {
   if (!d) return undefined;
   const letter = b.createString(d.letter);
-  const binding = d.featureBinding ? writePointBinding(b, d.featureBinding) : undefined;
+  const binding = d.featureBinding ? writePointBinding(b, d.featureBinding, usv) : undefined;
   Duc.FCFDatumDefinition.startFCFDatumDefinition(b);
   Duc.FCFDatumDefinition.addLetter(b, letter);
   if (binding) Duc.FCFDatumDefinition.addFeatureBinding(b, binding);
   return Duc.FCFDatumDefinition.endFCFDatumDefinition(b);
 }
 
-function writeFcfStyle(b: flatbuffers.Builder, s: DucFeatureControlFrameStyle): number {
-  const base = writeStylesBase(b, s);
-  const text = writeTextStyle(b, s.textStyle);
+function writeFcfStyle(b: flatbuffers.Builder, s: DucFeatureControlFrameStyle, usv: boolean): number {
+  const base = writeStylesBase(b, s, usv);
+  const text = writeTextStyle(b, s.textStyle, usv);
   const layout = (() => {
     Duc.FCFLayoutStyle.startFCFLayoutStyle(b);
-    Duc.FCFLayoutStyle.addPadding(b, s.layout.padding.value);
-    Duc.FCFLayoutStyle.addSegmentSpacing(b, s.layout.segmentSpacing.value);
-    Duc.FCFLayoutStyle.addRowSpacing(b, s.layout.rowSpacing.value);
+    Duc.FCFLayoutStyle.addPadding(b, getPrecisionValue(s.layout.padding, usv));
+    Duc.FCFLayoutStyle.addSegmentSpacing(b, getPrecisionValue(s.layout.segmentSpacing, usv));
+    Duc.FCFLayoutStyle.addRowSpacing(b, getPrecisionValue(s.layout.rowSpacing, usv));
     return Duc.FCFLayoutStyle.endFCFLayoutStyle(b);
   })();
   const sym = (() => {
@@ -1328,13 +1328,13 @@ function writeFcfStyle(b: flatbuffers.Builder, s: DucFeatureControlFrameStyle): 
   return Duc.DucFeatureControlFrameStyle.endDucFeatureControlFrameStyle(b);
 }
 
-function writeFcf(b: flatbuffers.Builder, e: DucFeatureControlFrameElement): number {
-  const base = writeElementBase(b, e as unknown as any);
-  const style = writeFcfStyle(b, e);
-  const rows = Duc.DucFeatureControlFrameElement.createRowsVector(b, e.rows.map((r) => writeFcfSegmentRow(b, r)));
-  const mods = writeFcfFrameModifiers(b, e.frameModifiers);
+function writeFcf(b: flatbuffers.Builder, e: DucFeatureControlFrameElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
+  const style = writeFcfStyle(b, e, usv);
+  const rows = Duc.DucFeatureControlFrameElement.createRowsVector(b, e.rows.map((r) => writeFcfSegmentRow(b, r, usv)));
+  const mods = writeFcfFrameModifiers(b, e.frameModifiers, usv);
   const leaderId = e.leaderElementId ? b.createString(e.leaderElementId) : undefined;
-  const datumDef = writeFcfDatumDefinition(b, e.datumDefinition);
+  const datumDef = writeFcfDatumDefinition(b, e.datumDefinition, usv);
   Duc.DucFeatureControlFrameElement.startDucFeatureControlFrameElement(b);
   Duc.DucFeatureControlFrameElement.addBase(b, base);
   Duc.DucFeatureControlFrameElement.addStyle(b, style);
@@ -1348,14 +1348,14 @@ function writeFcf(b: flatbuffers.Builder, e: DucFeatureControlFrameElement): num
 /**
  * Doc element
  */
-function writeDoc(b: flatbuffers.Builder, e: DucDocElement): number {
-  const base = writeElementBase(b, e as unknown as any);
-  const style = writeDocStyle(b, e);
+function writeDoc(b: flatbuffers.Builder, e: DucDocElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
+  const style = writeDocStyle(b, e, usv);
   const text = b.createString(e.text);
-  const dynamic = Duc.DucDocElement.createDynamicVector(b, e.dynamic.map((d) => writeTextDynamicPart(b, d)));
+  const dynamic = Duc.DucDocElement.createDynamicVector(b, e.dynamic.map((d) => writeTextDynamicPart(b, d, usv)));
   const columns = (() => {
     const col = e.columns;
-    const defs = Duc.ColumnLayout.createDefinitionsVector(b, col.definitions.map((d) => writeTextColumn(b, d)));
+    const defs = Duc.ColumnLayout.createDefinitionsVector(b, col.definitions.map((d) => writeTextColumn(b, d, usv)));
     Duc.ColumnLayout.startColumnLayout(b);
     Duc.ColumnLayout.addType(b, col.type);
     Duc.ColumnLayout.addDefinitions(b, defs);
@@ -1376,7 +1376,7 @@ function writeDoc(b: flatbuffers.Builder, e: DucDocElement): number {
 /**
  * Parametric, PDF, Mermaid, Embeddable
  */
-function writeParametricSource(b: flatbuffers.Builder, s: ParametricElementSource): number {
+function writeParametricSource(b: flatbuffers.Builder, s: ParametricElementSource, usv: boolean): number {
   Duc.ParametricSource.startParametricSource(b);
   Duc.ParametricSource.addType(b, s.type);
   if (s.type === Duc.PARAMETRIC_SOURCE_TYPE.CODE) {
@@ -1387,17 +1387,17 @@ function writeParametricSource(b: flatbuffers.Builder, s: ParametricElementSourc
   return Duc.ParametricSource.endParametricSource(b);
 }
 
-function writeParametric(b: flatbuffers.Builder, e: DucParametricElement): number {
-  const base = writeElementBase(b, e as unknown as any);
-  const src = writeParametricSource(b, e.source);
+function writeParametric(b: flatbuffers.Builder, e: DucParametricElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
+  const src = writeParametricSource(b, e.source, usv);
   Duc.DucParametricElement.startDucParametricElement(b);
   Duc.DucParametricElement.addBase(b, base);
   Duc.DucParametricElement.addSource(b, src);
   return Duc.DucParametricElement.endDucParametricElement(b);
 }
 
-function writePdf(b: flatbuffers.Builder, e: DucPdfElement): number {
-  const base = writeElementBase(b, e as unknown as any);
+function writePdf(b: flatbuffers.Builder, e: DucPdfElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
   const fileId = b.createString(e.fileId);
   Duc.DucPdfElement.startDucPdfElement(b);
   Duc.DucPdfElement.addBase(b, base);
@@ -1405,8 +1405,8 @@ function writePdf(b: flatbuffers.Builder, e: DucPdfElement): number {
   return Duc.DucPdfElement.endDucPdfElement(b);
 }
 
-function writeMermaid(b: flatbuffers.Builder, e: DucMermaidElement): number {
-  const base = writeElementBase(b, e as unknown as any);
+function writeMermaid(b: flatbuffers.Builder, e: DucMermaidElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
   const src = b.createString(e.source);
   const theme = e.theme ? b.createString(e.theme) : undefined;
   const svg = e.svgPath ? b.createString(e.svgPath) : undefined;
@@ -1418,8 +1418,8 @@ function writeMermaid(b: flatbuffers.Builder, e: DucMermaidElement): number {
   return Duc.DucMermaidElement.endDucMermaidElement(b);
 }
 
-function writeEmbeddable(b: flatbuffers.Builder, e: DucEmbeddableElement): number {
-  const base = writeElementBase(b, e as unknown as any);
+function writeEmbeddable(b: flatbuffers.Builder, e: DucEmbeddableElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
   Duc.DucEmbeddableElement.startDucEmbeddableElement(b);
   Duc.DucEmbeddableElement.addBase(b, base);
   return Duc.DucEmbeddableElement.endDucEmbeddableElement(b);
@@ -1428,14 +1428,14 @@ function writeEmbeddable(b: flatbuffers.Builder, e: DucEmbeddableElement): numbe
 /**
  * Table
  */
-function writeTableCellStyle(b: flatbuffers.Builder, s: DucTableCellStyle): number {
-  const base = writeStylesBase(b, s);
-  const text = writeTextStyle(b, s.textStyle);
+function writeTableCellStyle(b: flatbuffers.Builder, s: DucTableCellStyle, usv: boolean): number {
+  const base = writeStylesBase(b, s, usv);
+  const text = writeTextStyle(b, s.textStyle, usv);
   Duc.Margins.startMargins(b);
-  Duc.Margins.addTop(b, s.margins.top.value);
-  Duc.Margins.addRight(b, s.margins.right.value);
-  Duc.Margins.addBottom(b, s.margins.bottom.value);
-  Duc.Margins.addLeft(b, s.margins.left.value);
+  Duc.Margins.addTop(b, getPrecisionValue(s.margins.top, usv));
+  Duc.Margins.addRight(b, getPrecisionValue(s.margins.right, usv));
+  Duc.Margins.addBottom(b, getPrecisionValue(s.margins.bottom, usv));
+  Duc.Margins.addLeft(b, getPrecisionValue(s.margins.left, usv));
   const margins = Duc.Margins.endMargins(b);
   Duc.DucTableCellStyle.startDucTableCellStyle(b);
   if (base) Duc.DucTableCellStyle.addBaseStyle(b, base);
@@ -1445,11 +1445,11 @@ function writeTableCellStyle(b: flatbuffers.Builder, s: DucTableCellStyle): numb
   return Duc.DucTableCellStyle.endDucTableCellStyle(b);
 }
 
-function writeTableStyle(b: flatbuffers.Builder, s: DucTableStyle): number {
-  const base = writeStylesBase(b, s);
-  const header = writeTableCellStyle(b, s.headerRowStyle);
-  const dataRow = writeTableCellStyle(b, s.dataRowStyle);
-  const dataCol = writeTableCellStyle(b, s.dataColumnStyle);
+function writeTableStyle(b: flatbuffers.Builder, s: DucTableStyle, usv: boolean): number {
+  const base = writeStylesBase(b, s, usv);
+  const header = writeTableCellStyle(b, s.headerRowStyle, usv);
+  const dataRow = writeTableCellStyle(b, s.dataRowStyle, usv);
+  const dataCol = writeTableCellStyle(b, s.dataColumnStyle, usv);
   Duc.DucTableStyle.startDucTableStyle(b);
   if (base) Duc.DucTableStyle.addBaseStyle(b, base);
   Duc.DucTableStyle.addFlowDirection(b, s.flowDirection);
@@ -1459,9 +1459,9 @@ function writeTableStyle(b: flatbuffers.Builder, s: DucTableStyle): number {
   return Duc.DucTableStyle.endDucTableStyle(b);
 }
 
-function writeTable(b: flatbuffers.Builder, e: DucTableElement): number {
-  const base = writeElementBase(b, e as unknown as any);
-  const style = writeTableStyle(b, e);
+function writeTable(b: flatbuffers.Builder, e: DucTableElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
+  const style = writeTableStyle(b, e, usv);
   const colOrder = Duc.DucTableElement.createColumnOrderVector(b, e.columnOrder.map((id) => b.createString(id)));
   const rowOrder = Duc.DucTableElement.createRowOrderVector(b, e.rowOrder.map((id) => b.createString(id)));
   const columns = Duc.DucTableElement.createColumnsVector(
@@ -1472,8 +1472,8 @@ function writeTable(b: flatbuffers.Builder, e: DucTableElement): number {
         const id = b.createString(v.id);
         Duc.DucTableColumn.startDucTableColumn(b);
         Duc.DucTableColumn.addId(b, id);
-        Duc.DucTableColumn.addWidth(b, v.width.value);
-        const styleOverrides = v.styleOverrides ? writeTableCellStyle(b, v.styleOverrides as DucTableCellStyle) : undefined;
+        Duc.DucTableColumn.addWidth(b, getPrecisionValue(v.width, usv));
+        const styleOverrides = v.styleOverrides ? writeTableCellStyle(b, v.styleOverrides as DucTableCellStyle, usv) : undefined;
         if (styleOverrides) Duc.DucTableColumn.addStyleOverrides(b, styleOverrides);
         return Duc.DucTableColumn.endDucTableColumn(b);
       })();
@@ -1491,8 +1491,8 @@ function writeTable(b: flatbuffers.Builder, e: DucTableElement): number {
         const id = b.createString(v.id);
         Duc.DucTableRow.startDucTableRow(b);
         Duc.DucTableRow.addId(b, id);
-        Duc.DucTableRow.addHeight(b, v.height.value);
-        const styleOverrides = v.styleOverrides ? writeTableCellStyle(b, v.styleOverrides as DucTableCellStyle) : undefined;
+        Duc.DucTableRow.addHeight(b, getPrecisionValue(v.height, usv));
+        const styleOverrides = v.styleOverrides ? writeTableCellStyle(b, v.styleOverrides as DucTableCellStyle, usv) : undefined;
         if (styleOverrides) Duc.DucTableRow.addStyleOverrides(b, styleOverrides);
         return Duc.DucTableRow.endDucTableRow(b);
       })();
@@ -1518,7 +1518,7 @@ function writeTable(b: flatbuffers.Builder, e: DucTableElement): number {
             return Duc.DucTableCellSpan.endDucTableCellSpan(b);
           })()
           : undefined;
-        const styleOverrides = v.styleOverrides ? writeTableCellStyle(b, v.styleOverrides as DucTableCellStyle) : undefined;
+        const styleOverrides = v.styleOverrides ? writeTableCellStyle(b, v.styleOverrides as DucTableCellStyle, usv) : undefined;
         Duc.DucTableCell.startDucTableCell(b);
         Duc.DucTableCell.addRowId(b, row);
         Duc.DucTableCell.addColumnId(b, col);
@@ -1557,98 +1557,98 @@ function writeTable(b: flatbuffers.Builder, e: DucTableElement): number {
 /**
  * Element wrapper
  */
-function writeElementWrapper(b: flatbuffers.Builder, e: DucElement): number {
+function writeElementWrapper(b: flatbuffers.Builder, e: DucElement, usv: boolean): number {
   let elem: number;
   let type: Duc.Element;
 
   switch (e.type) {
     case "rectangle":
       type = Duc.Element.DucRectangleElement;
-      elem = writeRect(b, e);
+      elem = writeRect(b, e, usv);
       break;
     case "polygon":
       type = Duc.Element.DucPolygonElement;
-      elem = writePolygon(b, e);
+      elem = writePolygon(b, e, usv);
       break;
     case "ellipse":
       type = Duc.Element.DucEllipseElement;
-      elem = writeEllipse(b, e);
+      elem = writeEllipse(b, e, usv);
       break;
     case "line":
       type = Duc.Element.DucLinearElement;
-      elem = writeLinear(b, e);
+      elem = writeLinear(b, e, usv);
       break;
     case "text":
       type = Duc.Element.DucTextElement;
-      elem = writeText(b, e);
+      elem = writeText(b, e, usv);
       break;
     case "arrow":
       type = Duc.Element.DucArrowElement;
-      elem = writeArrow(b, e);
+      elem = writeArrow(b, e, usv);
       break;
     case "freedraw":
       type = Duc.Element.DucFreeDrawElement;
-      elem = writeFreeDraw(b, e);
+      elem = writeFreeDraw(b, e, usv);
       break;
     case "image":
       type = Duc.Element.DucImageElement;
-      elem = writeImage(b, e);
+      elem = writeImage(b, e, usv);
       break;
     case "table":
       type = Duc.Element.DucTableElement;
-      elem = writeTable(b, e);
+      elem = writeTable(b, e, usv);
       break;
     case "blockinstance":
       type = Duc.Element.DucBlockInstanceElement;
-      elem = writeBlockInstance(b, e);
+      elem = writeBlockInstance(b, e, usv);
       break;
     case "frame":
       type = Duc.Element.DucFrameElement;
-      elem = writeFrame(b, e);
+      elem = writeFrame(b, e, usv);
       break;
     case "plot":
       type = Duc.Element.DucPlotElement;
-      elem = writePlot(b, e);
+      elem = writePlot(b, e, usv);
       break;
     case "viewport":
       type = Duc.Element.DucViewportElement;
-      elem = writeViewport(b, e);
+      elem = writeViewport(b, e, usv);
       break;
     case "xray":
       type = Duc.Element.DucXRayElement;
-      elem = writeXRay(b, e);
+      elem = writeXRay(b, e, usv);
       break;
     case "leader":
       type = Duc.Element.DucLeaderElement;
-      elem = writeLeader(b, e);
+      elem = writeLeader(b, e, usv);
       break;
     case "dimension":
       type = Duc.Element.DucDimensionElement;
-      elem = writeDimension(b, e);
+      elem = writeDimension(b, e, usv);
       break;
     case "featurecontrolframe":
       type = Duc.Element.DucFeatureControlFrameElement;
-      elem = writeFcf(b, e);
+      elem = writeFcf(b, e, usv);
       break;
     case "doc":
       type = Duc.Element.DucDocElement;
-      elem = writeDoc(b, e);
+      elem = writeDoc(b, e, usv);
       break;
     case "parametric":
       type = Duc.Element.DucParametricElement;
-      elem = writeParametric(b, e);
+      elem = writeParametric(b, e, usv);
       break;
     case "embeddable":
       type = Duc.Element.DucEmbeddableElement;
-      elem = writeEmbeddable(b, e);
+      elem = writeEmbeddable(b, e, usv);
       break;
     case "pdf":
       type = Duc.Element.DucPdfElement;
-      elem = writePdf(b, e);
+      elem = writePdf(b, e, usv);
       break;
     case "mermaid":
       type = Duc.Element.DucMermaidElement;
-      elem = writeMermaid(b, e);
+      elem = writeMermaid(b, e, usv);
       break;
     default:
       throw new Error(`Unknown element type: ${(e as any).type}`);
@@ -1664,7 +1664,7 @@ function writeElementWrapper(b: flatbuffers.Builder, e: DucElement): number {
   Duc.ElementWrapper.addElement(b, elem);
   return Duc.ElementWrapper.endElementWrapper(b);
 }
-function writeGridStyle(b: flatbuffers.Builder, s: GridStyle): number {
+function writeGridStyle(b: flatbuffers.Builder, s: GridStyle, usv: boolean): number {
   const color = b.createString(s.color);
   const dash = Duc.GridStyle.createDashPatternVector(b, s.dashPattern);
   Duc.GridStyle.startGridStyle(b);
@@ -1674,35 +1674,35 @@ function writeGridStyle(b: flatbuffers.Builder, s: GridStyle): number {
   return Duc.GridStyle.endGridStyle(b);
 }
 
-function writePolarGridSettings(b: flatbuffers.Builder, p: PolarGridSettings): number {
+function writePolarGridSettings(b: flatbuffers.Builder, p: PolarGridSettings, usv: boolean): number {
   Duc.PolarGridSettings.startPolarGridSettings(b);
   Duc.PolarGridSettings.addRadialDivisions(b, p.radialDivisions);
-  Duc.PolarGridSettings.addRadialSpacing(b, p.radialSpacing.value);
+  Duc.PolarGridSettings.addRadialSpacing(b, getPrecisionValue(p.radialSpacing, usv));
   Duc.PolarGridSettings.addShowLabels(b, p.showLabels);
   return Duc.PolarGridSettings.endPolarGridSettings(b);
 }
 
-function writeIsometricGridSettings(b: flatbuffers.Builder, i: IsometricGridSettings): number {
+function writeIsometricGridSettings(b: flatbuffers.Builder, i: IsometricGridSettings, usv: boolean): number {
   Duc.IsometricGridSettings.startIsometricGridSettings(b);
   Duc.IsometricGridSettings.addLeftAngle(b, i.leftAngle);
   Duc.IsometricGridSettings.addRightAngle(b, i.rightAngle);
   return Duc.IsometricGridSettings.endIsometricGridSettings(b);
 }
 
-function writeGridSettings(b: flatbuffers.Builder, g: GridSettings): number {
+function writeGridSettings(b: flatbuffers.Builder, g: GridSettings, usv: boolean): number {
   const origin = Duc.GeometricPoint.createGeometricPoint(b, g.origin.x, g.origin.y);
-  const major = writeGridStyle(b, g.majorStyle);
-  const minor = writeGridStyle(b, g.minorStyle);
-  const polar = g.polarSettings ? writePolarGridSettings(b, g.polarSettings) : undefined;
-  const iso = g.isometricSettings ? writeIsometricGridSettings(b, g.isometricSettings) : undefined;
+  const major = writeGridStyle(b, g.majorStyle, usv);
+  const minor = writeGridStyle(b, g.minorStyle, usv);
+  const polar = g.polarSettings ? writePolarGridSettings(b, g.polarSettings, usv) : undefined;
+  const iso = g.isometricSettings ? writeIsometricGridSettings(b, g.isometricSettings, usv) : undefined;
 
   Duc.GridSettings.startGridSettings(b);
   Duc.GridSettings.addType(b, g.type);
   Duc.GridSettings.addReadonly(b, g.readonly);
   Duc.GridSettings.addDisplayType(b, g.displayType);
   Duc.GridSettings.addIsAdaptive(b, g.isAdaptive);
-  Duc.GridSettings.addXSpacing(b, g.xSpacing.value);
-  Duc.GridSettings.addYSpacing(b, g.ySpacing.value);
+  Duc.GridSettings.addXSpacing(b, getPrecisionValue(g.xSpacing, usv));
+  Duc.GridSettings.addYSpacing(b, getPrecisionValue(g.ySpacing, usv));
   Duc.GridSettings.addSubdivisions(b, g.subdivisions);
   Duc.GridSettings.addOrigin(b, origin);
   Duc.GridSettings.addRotation(b, g.rotation);
@@ -1719,7 +1719,7 @@ function writeGridSettings(b: flatbuffers.Builder, g: GridSettings): number {
   return Duc.GridSettings.endGridSettings(b);
 }
 
-function writeSnapMarkerSettings(b: flatbuffers.Builder, s: SnapMarkerSettings): number {
+function writeSnapMarkerSettings(b: flatbuffers.Builder, s: SnapMarkerSettings, usv: boolean): number {
   const styles = Duc.SnapMarkerSettings.createStylesVector(
     b,
     Object.entries(s.styles).map(([k, v]) => {
@@ -1743,7 +1743,7 @@ function writeSnapMarkerSettings(b: flatbuffers.Builder, s: SnapMarkerSettings):
   return Duc.SnapMarkerSettings.endSnapMarkerSettings(b);
 }
 
-function writeTrackingLineStyle(b: flatbuffers.Builder, t: TrackingLineStyle | undefined): number | undefined {
+function writeTrackingLineStyle(b: flatbuffers.Builder, t: TrackingLineStyle | undefined, usv: boolean): number | undefined {
   if (!t) return undefined;
   const color = b.createString(t.color);
   const dash = t.dashPattern ? Duc.TrackingLineStyle.createDashPatternVector(b, t.dashPattern) : undefined;
@@ -1754,7 +1754,7 @@ function writeTrackingLineStyle(b: flatbuffers.Builder, t: TrackingLineStyle | u
   return Duc.TrackingLineStyle.endTrackingLineStyle(b);
 }
 
-function writeDynamicSnapSettings(b: flatbuffers.Builder, d: DynamicSnapSettings): number {
+function writeDynamicSnapSettings(b: flatbuffers.Builder, d: DynamicSnapSettings, usv: boolean): number {
   Duc.DynamicSnapSettings.startDynamicSnapSettings(b);
   Duc.DynamicSnapSettings.addEnabledDuringDrag(b, d.enabledDuringDrag);
   Duc.DynamicSnapSettings.addEnabledDuringRotation(b, d.enabledDuringRotation);
@@ -1762,7 +1762,7 @@ function writeDynamicSnapSettings(b: flatbuffers.Builder, d: DynamicSnapSettings
   return Duc.DynamicSnapSettings.endDynamicSnapSettings(b);
 }
 
-function writeSnapOverride(b: flatbuffers.Builder, o: SnapOverride): number {
+function writeSnapOverride(b: flatbuffers.Builder, o: SnapOverride, usv: boolean): number {
   const key = b.createString(o.key);
   Duc.SnapOverride.startSnapOverride(b);
   Duc.SnapOverride.addKey(b, key);
@@ -1770,7 +1770,7 @@ function writeSnapOverride(b: flatbuffers.Builder, o: SnapOverride): number {
   return Duc.SnapOverride.endSnapOverride(b);
 }
 
-function writePolarTrackingSettings(b: flatbuffers.Builder, p: PolarTrackingSettings): number {
+function writePolarTrackingSettings(b: flatbuffers.Builder, p: PolarTrackingSettings, usv: boolean): number {
   const angles = Duc.PolarTrackingSettings.createAnglesVector(b, p.angles.map(a => a));
   Duc.PolarTrackingSettings.startPolarTrackingSettings(b);
   Duc.PolarTrackingSettings.addEnabled(b, p.enabled);
@@ -1781,7 +1781,7 @@ function writePolarTrackingSettings(b: flatbuffers.Builder, p: PolarTrackingSett
   return Duc.PolarTrackingSettings.endPolarTrackingSettings(b);
 }
 
-function writeLayerSnapFilters(b: flatbuffers.Builder, f: LayerSnapFilters | undefined): number | undefined {
+function writeLayerSnapFilters(b: flatbuffers.Builder, f: LayerSnapFilters | undefined, usv: boolean): number | undefined {
   if (!f) return undefined;
   const include = f.includeLayers ? Duc.LayerSnapFilters.createIncludeLayersVector(b, f.includeLayers.map(id => b.createString(id))) : undefined;
   const exclude = f.excludeLayers ? Duc.LayerSnapFilters.createExcludeLayersVector(b, f.excludeLayers.map(id => b.createString(id))) : undefined;
@@ -1791,17 +1791,17 @@ function writeLayerSnapFilters(b: flatbuffers.Builder, f: LayerSnapFilters | und
   return Duc.LayerSnapFilters.endLayerSnapFilters(b);
 }
 
-function writeSnapSettings(b: flatbuffers.Builder, s: SnapSettings): number {
+function writeSnapSettings(b: flatbuffers.Builder, s: SnapSettings, usv: boolean): number {
   const overridesArray = s.temporaryOverrides ?? [];
   const overridesVec = overridesArray.length
-    ? Duc.SnapSettings.createTemporaryOverridesVector(b, overridesArray.map(o => writeSnapOverride(b, o)))
+    ? Duc.SnapSettings.createTemporaryOverridesVector(b, overridesArray.map(o => writeSnapOverride(b, o, usv)))
     : undefined;
-  const tracking = writeTrackingLineStyle(b, s.trackingLineStyle);
-  const dynamic = writeDynamicSnapSettings(b, s.dynamicSnap);
+  const tracking = writeTrackingLineStyle(b, s.trackingLineStyle, usv);
+  const dynamic = writeDynamicSnapSettings(b, s.dynamicSnap, usv);
   // Always build PolarTrackingSettings (constructor ensures required fields); no defaults introduced.
-  const polar = writePolarTrackingSettings(b, s.polarTracking as PolarTrackingSettings);
-  const layers = writeLayerSnapFilters(b, s.layerSnapFilters);
-  const markers = writeSnapMarkerSettings(b, s.snapMarkers);
+  const polar = writePolarTrackingSettings(b, s.polarTracking as PolarTrackingSettings, usv);
+  const layers = writeLayerSnapFilters(b, s.layerSnapFilters, usv);
+  const markers = writeSnapMarkerSettings(b, s.snapMarkers, usv);
   const types = s.elementTypeFilters ? Duc.SnapSettings.createElementTypeFiltersVector(b, s.elementTypeFilters.map(t => {
     // element type enum is Duc.Element (wrapper), but here it's a string union.
     // The schema likely stores raw strings; we store as strings.
@@ -1847,13 +1847,13 @@ function writeUcs(b: flatbuffers.Builder, u: DucUcs): number {
  */
 import type { Standard, StandardOverrides, StandardStyles, StandardUnits, StandardValidation, StandardViewSettings } from "ducjs/technical/standards";
 
-function serializeStandardOverrides(b: flatbuffers.Builder, o: StandardOverrides): number {
+function serializeStandardOverrides(b: flatbuffers.Builder, o: StandardOverrides, usv: boolean): number {
   const activeGrid = o.activeGridSettingsId ? Duc.StandardOverrides.createActiveGridSettingsIdVector(b, o.activeGridSettingsId.map(id => b.createString(id))) : undefined;
   const dashOverride = o.dashLineOverride ? b.createString(o.dashLineOverride) : undefined;
 
   Duc.StandardOverrides.startStandardOverrides(b);
   if (o.mainScope) Duc.StandardOverrides.addMainScope(b, b.createString(o.mainScope));
-  if (o.elementsStrokeWidthOverride) Duc.StandardOverrides.addElementsStrokeWidthOverride(b, o.elementsStrokeWidthOverride.value);
+  if (o.elementsStrokeWidthOverride) Duc.StandardOverrides.addElementsStrokeWidthOverride(b, getPrecisionValue(o.elementsStrokeWidthOverride, usv));
   if (o.commonStyleId) Duc.StandardOverrides.addCommonStyleId(b, b.createString(o.commonStyleId));
   if (o.stackLikeStyleId) Duc.StandardOverrides.addStackLikeStyleId(b, b.createString(o.stackLikeStyleId));
   if (o.textStyleId) Duc.StandardOverrides.addTextStyleId(b, b.createString(o.textStyleId));
@@ -1880,7 +1880,7 @@ function serializeStandardOverrides(b: flatbuffers.Builder, o: StandardOverrides
   return Duc.StandardOverrides.endStandardOverrides(b);
 }
 
-function serializeStandardUnits(b: flatbuffers.Builder, u: StandardUnits): number {
+function serializeStandardUnits(b: flatbuffers.Builder, u: StandardUnits, usv: boolean): number {
   const primary = writePrimaryUnits(b, {
     linear: {
       system: u.primaryUnits.linear.system,
@@ -1899,7 +1899,7 @@ function serializeStandardUnits(b: flatbuffers.Builder, u: StandardUnits): numbe
       suppressTrailingZeros: u.primaryUnits.angular.suppressTrailingZeros,
       format: u.primaryUnits.angular.format,
     },
-  } as any);
+  } as any, usv);
 
   Duc.AlternateUnits.startAlternateUnits(b);
   Duc.AlternateUnits.addIsVisible(b, u.alternateUnits.isVisible);
@@ -1930,10 +1930,10 @@ function serializeStandardUnits(b: flatbuffers.Builder, u: StandardUnits): numbe
   return Duc.StandardUnits.endStandardUnits(b);
 }
 
-function writeIdentifiedCommonStyle(b: flatbuffers.Builder, entry: StandardStyles["commonStyles"][number]): number {
+function writeIdentifiedCommonStyle(b: flatbuffers.Builder, entry: StandardStyles["commonStyles"][number], usv: boolean): number {
   const idOff = writeIdentifier(b, entry);
-  const bg = writeElementBackground(b, entry.background);
-  const st = writeElementStroke(b, entry.stroke);
+  const bg = writeElementBackground(b, entry.background, usv);
+  const st = writeElementStroke(b, entry.stroke, usv);
   Duc.DucCommonStyle.startDucCommonStyle(b);
   if (bg) Duc.DucCommonStyle.addBackground(b, bg);
   if (st) Duc.DucCommonStyle.addStroke(b, st);
@@ -1945,7 +1945,7 @@ function writeIdentifiedCommonStyle(b: flatbuffers.Builder, entry: StandardStyle
   return Duc.IdentifiedCommonStyle.endIdentifiedCommonStyle(b);
 }
 
-function writeIdentifiedStackLikeStyle(b: flatbuffers.Builder, entry: StandardStyles["stackLikeStyles"][number]): number {
+function writeIdentifiedStackLikeStyle(b: flatbuffers.Builder, entry: StandardStyles["stackLikeStyles"][number], usv: boolean): number {
   const idOff = writeIdentifier(b, entry);
   const s = (() => {
     Duc.DucStackLikeStyles.startDucStackLikeStyles(b);
@@ -1960,120 +1960,120 @@ function writeIdentifiedStackLikeStyle(b: flatbuffers.Builder, entry: StandardSt
   return Duc.IdentifiedStackLikeStyle.endIdentifiedStackLikeStyle(b);
 }
 
-function writeIdentifiedTextStyle(b: flatbuffers.Builder, entry: StandardStyles["textStyles"][number]): number {
+function writeIdentifiedTextStyle(b: flatbuffers.Builder, entry: StandardStyles["textStyles"][number], usv: boolean): number {
   const idOff = writeIdentifier(b, entry);
-  const style = writeTextStyle(b, entry);
+  const style = writeTextStyle(b, entry, usv);
   Duc.IdentifiedTextStyle.startIdentifiedTextStyle(b);
   Duc.IdentifiedTextStyle.addId(b, idOff);
   Duc.IdentifiedTextStyle.addStyle(b, style);
   return Duc.IdentifiedTextStyle.endIdentifiedTextStyle(b);
 }
 
-function writeIdentifiedDimensionStyle(b: flatbuffers.Builder, entry: StandardStyles["dimensionStyles"][number]): number {
+function writeIdentifiedDimensionStyle(b: flatbuffers.Builder, entry: StandardStyles["dimensionStyles"][number], usv: boolean): number {
   const idOff = writeIdentifier(b, entry);
-  const style = writeDimStyle(b, entry);
+  const style = writeDimStyle(b, entry, usv);
   Duc.IdentifiedDimensionStyle.startIdentifiedDimensionStyle(b);
   Duc.IdentifiedDimensionStyle.addId(b, idOff);
   Duc.IdentifiedDimensionStyle.addStyle(b, style);
   return Duc.IdentifiedDimensionStyle.endIdentifiedDimensionStyle(b);
 }
 
-function writeIdentifiedLeaderStyle(b: flatbuffers.Builder, entry: StandardStyles["leaderStyles"][number]): number {
+function writeIdentifiedLeaderStyle(b: flatbuffers.Builder, entry: StandardStyles["leaderStyles"][number], usv: boolean): number {
   const idOff = writeIdentifier(b, entry);
-  const style = writeLeaderStyle(b, entry);
+  const style = writeLeaderStyle(b, entry, usv);
   Duc.IdentifiedLeaderStyle.startIdentifiedLeaderStyle(b);
   Duc.IdentifiedLeaderStyle.addId(b, idOff);
   Duc.IdentifiedLeaderStyle.addStyle(b, style);
   return Duc.IdentifiedLeaderStyle.endIdentifiedLeaderStyle(b);
 }
 
-function writeIdentifiedFCFStyle(b: flatbuffers.Builder, entry: StandardStyles["featureControlFrameStyles"][number]): number {
+function writeIdentifiedFCFStyle(b: flatbuffers.Builder, entry: StandardStyles["featureControlFrameStyles"][number], usv: boolean): number {
   const idOff = writeIdentifier(b, entry);
-  const style = writeFcfStyle(b, entry);
+  const style = writeFcfStyle(b, entry, usv);
   Duc.IdentifiedFCFStyle.startIdentifiedFCFStyle(b);
   Duc.IdentifiedFCFStyle.addId(b, idOff);
   Duc.IdentifiedFCFStyle.addStyle(b, style);
   return Duc.IdentifiedFCFStyle.endIdentifiedFCFStyle(b);
 }
 
-function writeIdentifiedTableStyle(b: flatbuffers.Builder, entry: StandardStyles["tableStyles"][number]): number {
+function writeIdentifiedTableStyle(b: flatbuffers.Builder, entry: StandardStyles["tableStyles"][number], usv: boolean): number {
   const idOff = writeIdentifier(b, entry);
-  const style = writeTableStyle(b, entry);
+  const style = writeTableStyle(b, entry, usv);
   Duc.IdentifiedTableStyle.startIdentifiedTableStyle(b);
   Duc.IdentifiedTableStyle.addId(b, idOff);
   Duc.IdentifiedTableStyle.addStyle(b, style);
   return Duc.IdentifiedTableStyle.endIdentifiedTableStyle(b);
 }
 
-function writeIdentifiedDocStyle(b: flatbuffers.Builder, entry: StandardStyles["docStyles"][number]): number {
+function writeIdentifiedDocStyle(b: flatbuffers.Builder, entry: StandardStyles["docStyles"][number], usv: boolean): number {
   const idOff = writeIdentifier(b, entry);
-  const style = writeDocStyle(b, entry);
+  const style = writeDocStyle(b, entry, usv);
   Duc.IdentifiedDocStyle.startIdentifiedDocStyle(b);
   Duc.IdentifiedDocStyle.addId(b, idOff);
   Duc.IdentifiedDocStyle.addStyle(b, style);
   return Duc.IdentifiedDocStyle.endIdentifiedDocStyle(b);
 }
 
-function writeIdentifiedViewportStyle(b: flatbuffers.Builder, entry: StandardStyles["viewportStyles"][number]): number {
+function writeIdentifiedViewportStyle(b: flatbuffers.Builder, entry: StandardStyles["viewportStyles"][number], usv: boolean): number {
   const idOff = writeIdentifier(b, entry);
-  const style = writeViewportStyle(b, entry);
+  const style = writeViewportStyle(b, entry, usv);
   Duc.IdentifiedViewportStyle.startIdentifiedViewportStyle(b);
   Duc.IdentifiedViewportStyle.addId(b, idOff);
   Duc.IdentifiedViewportStyle.addStyle(b, style);
   return Duc.IdentifiedViewportStyle.endIdentifiedViewportStyle(b);
 }
 
-function writeIdentifiedHatchStyle(b: flatbuffers.Builder, entry: StandardStyles["hatchStyles"][number]): number {
+function writeIdentifiedHatchStyle(b: flatbuffers.Builder, entry: StandardStyles["hatchStyles"][number], usv: boolean): number {
   const idOff = writeIdentifier(b, entry);
-  const style = writeHatchStyle(b, entry);
+  const style = writeHatchStyle(b, entry, usv);
   Duc.IdentifiedHatchStyle.startIdentifiedHatchStyle(b);
   Duc.IdentifiedHatchStyle.addId(b, idOff);
   if (style) Duc.IdentifiedHatchStyle.addStyle(b, style);
   return Duc.IdentifiedHatchStyle.endIdentifiedHatchStyle(b);
 }
 
-function writeIdentifiedXRayStyle(b: flatbuffers.Builder, entry: StandardStyles["xrayStyles"][number]): number {
+function writeIdentifiedXRayStyle(b: flatbuffers.Builder, entry: StandardStyles["xrayStyles"][number], usv: boolean): number {
   const idOff = writeIdentifier(b, entry);
-  const style = writeXRayStyle(b, entry);
+  const style = writeXRayStyle(b, entry, usv);
   Duc.IdentifiedXRayStyle.startIdentifiedXRayStyle(b);
   Duc.IdentifiedXRayStyle.addId(b, idOff);
   Duc.IdentifiedXRayStyle.addStyle(b, style);
   return Duc.IdentifiedXRayStyle.endIdentifiedXRayStyle(b);
 }
 
-function serializeStandardStyles(b: flatbuffers.Builder, s: StandardStyles): number {
+function serializeStandardStyles(b: flatbuffers.Builder, s: StandardStyles, usv: boolean): number {
   const commonVec = s.commonStyles.length
-    ? Duc.StandardStyles.createCommonStylesVector(b, s.commonStyles.map(cs => writeIdentifiedCommonStyle(b, cs)))
+    ? Duc.StandardStyles.createCommonStylesVector(b, s.commonStyles.map(cs => writeIdentifiedCommonStyle(b, cs, usv)))
     : undefined;
   const stackLikeVec = s.stackLikeStyles.length
-    ? Duc.StandardStyles.createStackLikeStylesVector(b, s.stackLikeStyles.map(st => writeIdentifiedStackLikeStyle(b, st)))
+    ? Duc.StandardStyles.createStackLikeStylesVector(b, s.stackLikeStyles.map(st => writeIdentifiedStackLikeStyle(b, st, usv)))
     : undefined;
   const textVec = s.textStyles.length
-    ? Duc.StandardStyles.createTextStylesVector(b, s.textStyles.map(ts => writeIdentifiedTextStyle(b, ts)))
+    ? Duc.StandardStyles.createTextStylesVector(b, s.textStyles.map(ts => writeIdentifiedTextStyle(b, ts, usv)))
     : undefined;
   const dimVec = s.dimensionStyles.length
-    ? Duc.StandardStyles.createDimensionStylesVector(b, s.dimensionStyles.map(ds => writeIdentifiedDimensionStyle(b, ds)))
+    ? Duc.StandardStyles.createDimensionStylesVector(b, s.dimensionStyles.map(ds => writeIdentifiedDimensionStyle(b, ds, usv)))
     : undefined;
   const leaderVec = s.leaderStyles.length
-    ? Duc.StandardStyles.createLeaderStylesVector(b, s.leaderStyles.map(ls => writeIdentifiedLeaderStyle(b, ls)))
+    ? Duc.StandardStyles.createLeaderStylesVector(b, s.leaderStyles.map(ls => writeIdentifiedLeaderStyle(b, ls, usv)))
     : undefined;
   const fcfVec = s.featureControlFrameStyles.length
-    ? Duc.StandardStyles.createFeatureControlFrameStylesVector(b, s.featureControlFrameStyles.map(fs => writeIdentifiedFCFStyle(b, fs)))
+    ? Duc.StandardStyles.createFeatureControlFrameStylesVector(b, s.featureControlFrameStyles.map(fs => writeIdentifiedFCFStyle(b, fs, usv)))
     : undefined;
   const tableVec = s.tableStyles.length
-    ? Duc.StandardStyles.createTableStylesVector(b, s.tableStyles.map(ts => writeIdentifiedTableStyle(b, ts)))
+    ? Duc.StandardStyles.createTableStylesVector(b, s.tableStyles.map(ts => writeIdentifiedTableStyle(b, ts, usv)))
     : undefined;
   const docVec = s.docStyles.length
-    ? Duc.StandardStyles.createDocStylesVector(b, s.docStyles.map(ds => writeIdentifiedDocStyle(b, ds)))
+    ? Duc.StandardStyles.createDocStylesVector(b, s.docStyles.map(ds => writeIdentifiedDocStyle(b, ds, usv)))
     : undefined;
   const viewportVec = s.viewportStyles.length
-    ? Duc.StandardStyles.createViewportStylesVector(b, s.viewportStyles.map(vs => writeIdentifiedViewportStyle(b, vs)))
+    ? Duc.StandardStyles.createViewportStylesVector(b, s.viewportStyles.map(vs => writeIdentifiedViewportStyle(b, vs, usv)))
     : undefined;
   const hatchVec = s.hatchStyles.length
-    ? Duc.StandardStyles.createHatchStylesVector(b, s.hatchStyles.map(hs => writeIdentifiedHatchStyle(b, hs)))
+    ? Duc.StandardStyles.createHatchStylesVector(b, s.hatchStyles.map(hs => writeIdentifiedHatchStyle(b, hs, usv)))
     : undefined;
   const xrayVec = s.xrayStyles.length
-    ? Duc.StandardStyles.createXrayStylesVector(b, s.xrayStyles.map(xs => writeIdentifiedXRayStyle(b, xs)))
+    ? Duc.StandardStyles.createXrayStylesVector(b, s.xrayStyles.map(xs => writeIdentifiedXRayStyle(b, xs, usv)))
     : undefined;
 
   Duc.StandardStyles.startStandardStyles(b);
@@ -2091,13 +2091,13 @@ function serializeStandardStyles(b: flatbuffers.Builder, s: StandardStyles): num
   return Duc.StandardStyles.endStandardStyles(b);
 }
 
-function serializeStandardViewSettings(b: flatbuffers.Builder, v: StandardViewSettings): number {
+function serializeStandardViewSettings(b: flatbuffers.Builder, v: StandardViewSettings, usv: boolean): number {
   const viewsVec = v.views && v.views.length
     ? Duc.StandardViewSettings.createViewsVector(
       b,
       v.views.map((entry) => {
         const id = writeIdentifier(b, entry);
-        const view = writeView(b, entry);
+        const view = writeView(b, entry, usv);
         Duc.IdentifiedView.startIdentifiedView(b);
         Duc.IdentifiedView.addId(b, id);
         Duc.IdentifiedView.addView(b, view);
@@ -2125,7 +2125,7 @@ function serializeStandardViewSettings(b: flatbuffers.Builder, v: StandardViewSe
       b,
       v.gridSettings.map((entry) => {
         const id = writeIdentifier(b, entry);
-        const settings = writeGridSettings(b, entry);
+        const settings = writeGridSettings(b, entry, usv);
         Duc.IdentifiedGridSettings.startIdentifiedGridSettings(b);
         Duc.IdentifiedGridSettings.addId(b, id);
         Duc.IdentifiedGridSettings.addSettings(b, settings);
@@ -2139,7 +2139,7 @@ function serializeStandardViewSettings(b: flatbuffers.Builder, v: StandardViewSe
       b,
       v.snapSettings.map((entry) => {
         const id = writeIdentifier(b, entry);
-        const settings = writeSnapSettings(b, entry);
+        const settings = writeSnapSettings(b, entry, usv);
         Duc.IdentifiedSnapSettings.startIdentifiedSnapSettings(b);
         Duc.IdentifiedSnapSettings.addId(b, id);
         Duc.IdentifiedSnapSettings.addSettings(b, settings);
@@ -2156,12 +2156,12 @@ function serializeStandardViewSettings(b: flatbuffers.Builder, v: StandardViewSe
   return Duc.StandardViewSettings.endStandardViewSettings(b);
 }
 
-function serializeStandardValidation(b: flatbuffers.Builder, val: StandardValidation): number {
+function serializeStandardValidation(b: flatbuffers.Builder, val: StandardValidation, usv: boolean): number {
   Duc.StandardValidation.startStandardValidation(b);
   if (val.dimensionRules) {
     Duc.DimensionValidationRules.startDimensionValidationRules(b);
-    if (val.dimensionRules.minTextHeight !== undefined) Duc.DimensionValidationRules.addMinTextHeight(b, val.dimensionRules.minTextHeight.value);
-    if (val.dimensionRules.maxTextHeight !== undefined) Duc.DimensionValidationRules.addMaxTextHeight(b, val.dimensionRules.maxTextHeight.value);
+    if (val.dimensionRules.minTextHeight !== undefined) Duc.DimensionValidationRules.addMinTextHeight(b, getPrecisionValue(val.dimensionRules.minTextHeight, usv));
+    if (val.dimensionRules.maxTextHeight !== undefined) Duc.DimensionValidationRules.addMaxTextHeight(b, getPrecisionValue(val.dimensionRules.maxTextHeight, usv));
     if (val.dimensionRules.allowedPrecisions) {
       Duc.DimensionValidationRules.addAllowedPrecisions(b, Duc.DimensionValidationRules.createAllowedPrecisionsVector(b, val.dimensionRules.allowedPrecisions));
     }
@@ -2180,14 +2180,14 @@ function serializeStandardValidation(b: flatbuffers.Builder, val: StandardValida
   return Duc.StandardValidation.endStandardValidation(b);
 }
 
-function serializeStandard(b: flatbuffers.Builder, s: Standard): number {
+function serializeStandard(b: flatbuffers.Builder, s: Standard, usv: boolean): number {
   const ident = writeIdentifier(b, s);
   const version = b.createString(s.version);
-  const overrides = s.overrides ? serializeStandardOverrides(b, s.overrides) : undefined;
-  const styles = s.styles ? serializeStandardStyles(b, s.styles) : undefined;
-  const view = s.viewSettings ? serializeStandardViewSettings(b, s.viewSettings) : undefined;
-  const units = s.units ? serializeStandardUnits(b, s.units) : undefined;
-  const validation = s.validation ? serializeStandardValidation(b, s.validation) : undefined;
+  const overrides = s.overrides ? serializeStandardOverrides(b, s.overrides, usv) : undefined;
+  const styles = s.styles ? serializeStandardStyles(b, s.styles, usv) : undefined;
+  const view = s.viewSettings ? serializeStandardViewSettings(b, s.viewSettings, usv) : undefined;
+  const units = s.units ? serializeStandardUnits(b, s.units, usv) : undefined;
+  const validation = s.validation ? serializeStandardValidation(b, s.validation, usv) : undefined;
 
   Duc.Standard.startStandard(b);
   Duc.Standard.addIdentifier(b, ident);
@@ -2278,7 +2278,7 @@ function serializeDucVersionGraph(b: flatbuffers.Builder, vg: VersionGraph): num
 // #endregion
 
 // #region STATE SERIALIZERS
-function serializeDucGlobalState(builder: flatbuffers.Builder, state: DucGlobalState): number {
+function serializeDucGlobalState(builder: flatbuffers.Builder, state: DucGlobalState, usv: boolean): number {
   const nameOffset = writeString(builder, state.name);
   const viewBackgroundColorOffset = writeString(builder, state.viewBackgroundColor);
   const mainScopeOffset = writeString(builder, state.mainScope);
@@ -2297,20 +2297,20 @@ function serializeDucGlobalState(builder: flatbuffers.Builder, state: DucGlobalS
   return Duc.DucGlobalState.endDucGlobalState(builder);
 }
 
-function serializeDucLocalState(builder: flatbuffers.Builder, state: DucLocalState): number {
+function serializeDucLocalState(builder: flatbuffers.Builder, state: DucLocalState, usv: boolean): number {
   const scopeOffset = writeString(builder, state.scope);
   const activeStandardIdOffset = writeString(builder, state.activeStandardId);
   const activeGridSettingsVector = writeStringVector(builder, state.activeGridSettings);
   const activeSnapSettingsOffset = writeString(builder, state.activeSnapSettings);
-  const currentItemStrokeOffset = writeElementStroke(builder, state.currentItemStroke);
-  const currentItemBackgroundOffset = writeElementBackground(builder, state.currentItemBackground);
+  const currentItemStrokeOffset = writeElementStroke(builder, state.currentItemStroke, usv);
+  const currentItemBackgroundOffset = writeElementBackground(builder, state.currentItemBackground, usv);
   const currentItemFontFamilyOffset = writeString(builder, state.currentItemFontFamily.toString());
 
   Duc.DucLocalState.startDucLocalState(builder);
   if (scopeOffset) Duc.DucLocalState.addScope(builder, scopeOffset);
   if (activeStandardIdOffset) Duc.DucLocalState.addActiveStandardId(builder, activeStandardIdOffset);
-  Duc.DucLocalState.addScrollX(builder, state.scrollX.value);
-  Duc.DucLocalState.addScrollY(builder, state.scrollY.value);
+  Duc.DucLocalState.addScrollX(builder, getPrecisionValue(state.scrollX, usv));
+  Duc.DucLocalState.addScrollY(builder, getPrecisionValue(state.scrollY, usv));
   Duc.DucLocalState.addZoom(builder, state.zoom.value);
   if (activeGridSettingsVector) Duc.DucLocalState.addActiveGridSettings(builder, activeGridSettingsVector);
   if (activeSnapSettingsOffset) Duc.DucLocalState.addActiveSnapSettings(builder, activeSnapSettingsOffset);
@@ -2319,9 +2319,9 @@ function serializeDucLocalState(builder: flatbuffers.Builder, state: DucLocalSta
   if (currentItemBackgroundOffset) Duc.DucLocalState.addCurrentItemBackground(builder, currentItemBackgroundOffset);
   Duc.DucLocalState.addCurrentItemOpacity(builder, state.currentItemOpacity);
   if (currentItemFontFamilyOffset) Duc.DucLocalState.addCurrentItemFontFamily(builder, currentItemFontFamilyOffset);
-  Duc.DucLocalState.addCurrentItemFontSize(builder, state.currentItemFontSize.value);
+  Duc.DucLocalState.addCurrentItemFontSize(builder, getPrecisionValue(state.currentItemFontSize, usv));
   if (state.currentItemTextAlign) Duc.DucLocalState.addCurrentItemTextAlign(builder, state.currentItemTextAlign);
-  Duc.DucLocalState.addCurrentItemRoundness(builder, state.currentItemRoundness.value);
+  Duc.DucLocalState.addCurrentItemRoundness(builder, getPrecisionValue(state.currentItemRoundness, usv));
   Duc.DucLocalState.addPenMode(builder, state.penMode);
   Duc.DucLocalState.addViewModeEnabled(builder, state.viewModeEnabled);
   Duc.DucLocalState.addObjectsSnapModeEnabled(builder, state.objectsSnapModeEnabled);
@@ -2345,18 +2345,18 @@ function serializeDictionary(builder: flatbuffers.Builder, dictionary: Dictionar
 
 // #endregion
 
-function serializeDucGroup(builder: flatbuffers.Builder, g: DucGroup): number {
+function serializeDucGroup(builder: flatbuffers.Builder, g: DucGroup, usv: boolean): number {
   const id = builder.createString(g.id);
-  const stack = writeStackBase(builder, g);
+  const stack = writeStackBase(builder, g, usv);
   Duc.DucGroup.startDucGroup(builder);
   Duc.DucGroup.addId(builder, id);
   Duc.DucGroup.addStackBase(builder, stack);
   return Duc.DucGroup.endDucGroup(builder);
 }
 
-function serializeDucRegion(builder: flatbuffers.Builder, r: DucRegion): number {
+function serializeDucRegion(builder: flatbuffers.Builder, r: DucRegion, usv: boolean): number {
   const id = builder.createString(r.id);
-  const stack = writeStackBase(builder, r);
+  const stack = writeStackBase(builder, r, usv);
   Duc.DucRegion.startDucRegion(builder);
   Duc.DucRegion.addId(builder, id);
   Duc.DucRegion.addStackBase(builder, stack);
@@ -2364,12 +2364,12 @@ function serializeDucRegion(builder: flatbuffers.Builder, r: DucRegion): number 
   return Duc.DucRegion.endDucRegion(builder);
 }
 
-function serializeDucLayer(builder: flatbuffers.Builder, l: DucLayer): number {
+function serializeDucLayer(builder: flatbuffers.Builder, l: DucLayer, usv: boolean): number {
   const id = builder.createString(l.id);
-  const stack = writeStackBase(builder, l);
+  const stack = writeStackBase(builder, l, usv);
   const overrides = l.overrides ? (() => {
-    const stroke = writeElementStroke(builder, l.overrides!.stroke);
-    const bg = writeElementBackground(builder, l.overrides!.background);
+    const stroke = writeElementStroke(builder, l.overrides!.stroke, usv);
+    const bg = writeElementBackground(builder, l.overrides!.background, usv);
     Duc.DucLayerOverrides.startDucLayerOverrides(builder);
     if (stroke) Duc.DucLayerOverrides.addStroke(builder, stroke);
     if (bg) Duc.DucLayerOverrides.addBackground(builder, bg);
@@ -2386,7 +2386,7 @@ function serializeDucLayer(builder: flatbuffers.Builder, l: DucLayer): number {
 /**
  * External files map serializer: returns vector offset or undefined
  */
-function serializeExternalFiles(builder: flatbuffers.Builder, files: DucExternalFiles | undefined): number | undefined {
+function serializeExternalFiles(builder: flatbuffers.Builder, files: DucExternalFiles | undefined, usv: boolean): number | undefined {
   if (!files) return undefined;
 
 
@@ -2444,37 +2444,37 @@ export const serializeDuc = async (
 
   // Serialize elements
   const elementOffsets = sanitized.elements.map((element) => {
-    return writeElementWrapper(builder, element);
+    return writeElementWrapper(builder, element, useScopedValues);
   });
   const elementsOffset = Duc.ExportedDataState.createElementsVector(builder, elementOffsets);
 
   // Serialize localState
-  const localStateOffset = serializeDucLocalState(builder, sanitized.localState);
+  const localStateOffset = serializeDucLocalState(builder, sanitized.localState, useScopedValues);
 
   // Serialize files
-  const externalFilesOffset = serializeExternalFiles(builder, sanitized.files);
+  const externalFilesOffset = serializeExternalFiles(builder, sanitized.files, useScopedValues);
 
   // Serialize blocks
-  const blocksOffset = Duc.ExportedDataState.createBlocksVector(builder, sanitized.blocks.map(block => writeBlock(builder, block)));
+  const blocksOffset = Duc.ExportedDataState.createBlocksVector(builder, sanitized.blocks.map(block => writeBlock(builder, block, useScopedValues)));
 
   // Serialize groups
   const groupsOffset = sanitized.groups.length > 0
-    ? Duc.ExportedDataState.createGroupsVector(builder, sanitized.groups.map(group => serializeDucGroup(builder, group)))
+    ? Duc.ExportedDataState.createGroupsVector(builder, sanitized.groups.map(group => serializeDucGroup(builder, group, useScopedValues)))
     : null;
 
   // Serialize regions
   const regionsOffset = (sanitized.regions && sanitized.regions.length > 0)
-    ? Duc.ExportedDataState.createRegionsVector(builder, sanitized.regions.map(region => serializeDucRegion(builder, region)))
+    ? Duc.ExportedDataState.createRegionsVector(builder, sanitized.regions.map(region => serializeDucRegion(builder, region, useScopedValues)))
     : null;
 
   // Serialize layers
   const layersOffset = (sanitized.layers && sanitized.layers.length > 0)
-    ? Duc.ExportedDataState.createLayersVector(builder, sanitized.layers.map(layer => serializeDucLayer(builder, layer)))
+    ? Duc.ExportedDataState.createLayersVector(builder, sanitized.layers.map(layer => serializeDucLayer(builder, layer, useScopedValues)))
     : null;
 
   // Serialize standards
   const standardsOffset = (sanitized.standards && sanitized.standards.length > 0)
-    ? Duc.ExportedDataState.createStandardsVector(builder, sanitized.standards.map(standard => serializeStandard(builder, standard)))
+    ? Duc.ExportedDataState.createStandardsVector(builder, sanitized.standards.map(standard => serializeStandard(builder, standard, useScopedValues)))
     : null;
 
   // Serialize dictionary
@@ -2484,7 +2484,7 @@ export const serializeDuc = async (
 
   // Serialize duc_global_state
   const ducGlobalStateOffset = sanitized.globalState
-    ? serializeDucGlobalState(builder, sanitized.globalState)
+    ? serializeDucGlobalState(builder, sanitized.globalState, useScopedValues)
     : null;
 
   // Serialize version_graph
