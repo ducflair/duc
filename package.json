@@ -9,15 +9,15 @@
     "@semantic-release/github": "^11.0.3",
     "@semantic-release/npm": "^12.0.1",
     "@semantic-release/release-notes-generator": "^14.0.3",
-    "del-cli": "^6.0.0",
     "@types/node": "22.14.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "autoprefixer": "^10.4.21",
+    "del-cli": "^6.0.0",
     "postcss": "^8.5.5",
     "semantic-release": "^24.2.5",
     "tailwindcss": "^4.1.10",
-    "turbo": "^2.5.4",
+    "turbo": "^2.5.5",
     "typescript": "^5.8.3"
   },
   "dependencies": {
