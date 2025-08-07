@@ -119,12 +119,13 @@ import { EXPORT_DATA_TYPES } from "ducjs/utils";
 const str = (b: flatbuffers.Builder, v: string | null | undefined): number | undefined =>
   v == null ? undefined : b.createString(v);
 
-const bytes = (b: flatbuffers.Builder, v: Uint8Array | null | undefined): number | undefined =>
-  v == null ? undefined : b.createByteVector(v);
-
 function writeString(builder: flatbuffers.Builder, str: string | null | undefined): number | undefined {
   if (str === null || str === undefined) return undefined;
   return builder.createString(str);
+}
+
+function getPrecisionValue(value: PrecisionValue, useScopedValues: boolean): number {
+  return useScopedValues ? value.scoped : value.value;
 }
 
 function writeStringVector(builder: flatbuffers.Builder, items: (string | null | undefined)[] | ReadonlyArray<string | null | undefined> | null | undefined): number | undefined {
@@ -2425,6 +2426,7 @@ export const DUC_SCHEMA_VERSION = process.env.DUC_SCHEMA_VERSION || "0.0.0";
 
 export const serializeDuc = async (
   data: ImportedDataState,
+  useScopedValues: boolean = false
 ): Promise<Uint8Array> => {
   const builder = new flatbuffers.Builder(1024);
 
