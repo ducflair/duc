@@ -70,14 +70,16 @@ import type {
   StrokeStyle,
   TextAlign,
   VerticalAlign,
+  ExternalFileId,
 } from "ducjs/types/elements";
 import { Percentage, Radian } from "ducjs/types/geometryTypes";
-import type { ValueOf } from "ducjs/types/utility-types";
+import { MakeBrand, MaybePromise, ValueOf } from "ducjs/types/utility-types";
 import {
   getDefaultGlobalState,
   getDefaultLocalState,
   getZoom,
   isFiniteNumber,
+  base64ToUint8Array,
 } from "ducjs/utils";
 import {
   DEFAULT_ELEMENT_PROPS,
@@ -145,9 +147,9 @@ export const restore = (
 ): RestoredDataState => {
   const restoredStandards = restoreStandards(data?.standards);
   const restoredDictionary = restoreDictionary(data?.dictionary);
-  const restoredGlobalState = restoreGlobalState(data?.ducGlobalState);
+  const restoredGlobalState = restoreGlobalState(data?.globalState);
   const restoredLocalState = restoreLocalState(
-    data?.ducLocalState,
+    data?.localState,
     restoredGlobalState,
     restoredStandards
   );
@@ -178,7 +180,7 @@ export const restore = (
 
   return {
     dictionary: restoredDictionary,
-    thumbnail: data?.thumbnail,
+    thumbnail: isValidUint8Array(data?.thumbnail),
     elements: restoredElements,
     blocks: restoredBlocks,
     groups: restoredGroups,
@@ -190,8 +192,51 @@ export const restore = (
 
     localState: restoredLocalState,
     globalState: restoredGlobalState,
-    files: data?.files || {},
+    files: restoreFiles(data?.files),
   };
+};
+
+export const restoreFiles = (importedFiles: unknown): DucExternalFiles => {
+  if (!importedFiles || typeof importedFiles !== "object") {
+    return {};
+  }
+
+  const restoredFiles: DucExternalFiles = {};
+  const files = importedFiles as Record<string, unknown>;
+
+  for (const key in files) {
+    if (Object.prototype.hasOwnProperty.call(files, key)) {
+      const fileData = files[key];
+      if (!fileData || typeof fileData !== "object") {
+        continue;
+      }
+      const id = isValidExternalFileId((fileData as any).id);
+      const mimeType = isValidString((fileData as any).mimeType);
+      const created = isFiniteNumber((fileData as any).created)
+        ? (fileData as any).created
+        : Date.now();
+
+      // Check for data under 'data' or 'dataURL' to be more flexible.
+      const dataSource = (fileData as any).data ?? (fileData as any).dataURL;
+      const data = isValidUint8Array(dataSource);
+
+      if (id && mimeType && data) {
+        restoredFiles[id] = {
+          id,
+          mimeType,
+          data,
+          created,
+          lastRetrieved: isFiniteNumber((fileData as any).lastRetrieved)
+            ? (fileData as any).lastRetrieved
+            : undefined,
+          version: isFiniteNumber((fileData as any).version)
+            ? (fileData as any).version
+            : undefined,
+        };
+      }
+    }
+  }
+  return restoredFiles;
 };
 
 export const restoreDictionary = (importedDictionary: unknown): Dictionary => {
@@ -221,12 +266,9 @@ export const restoreDictionary = (importedDictionary: unknown): Dictionary => {
 export const restoreGroups = (
   groups: unknown,
 ): RestoredDataState["groups"] => {
-  // 1. Guard against invalid input (e.g., null, undefined, not an array).
   if (!Array.isArray(groups)) {
     return [];
   }
-
-  // 2. Filter for valid group candidates and map them to clean DucGroup objects.
   return groups
     .filter(
       (g) => {
@@ -261,12 +303,9 @@ export const restoreLayers = (
   layers: unknown,
   currentScope: Scope
 ): RestoredDataState["layers"] => {
-  // 1. Guard against invalid input.
   if (!Array.isArray(layers)) {
     return [];
   }
-
-  // 2. Filter for valid layer candidates and map them to clean DucLayer objects.
   return layers
     .filter(
       (l) => {
@@ -307,7 +346,6 @@ export const restoreRegions = (regions: unknown): RestoredDataState["regions"] =
   if (!Array.isArray(regions)) {
     return [];
   }
-
   return regions
     .filter(
       (r) => {
@@ -347,10 +385,6 @@ export const restoreBlocks = (
   if (!Array.isArray(blocks)) {
     return [];
   }
-
-  // --- PASS 1: SHALLOW RESTORATION ---
-  // Create the basic structure of all blocks. This establishes their IDs and
-  // top-level properties, creating the reference list that restoreElements needs.
   const partiallyRestoredBlocks: RestoredDataState["blocks"] = blocks
     .filter((b) => {
       if (!b || typeof b !== "object") return false;
@@ -372,30 +406,18 @@ export const restoreBlocks = (
         elements: [],
       };
     });
-
-  // --- PASS 2: DEEP RESTORATION (Populating Elements) ---
-  // Now, iterate through the original raw blocks again to get their element data.
-  // For each one, we'll populate the corresponding shallow block from Pass 1.
   partiallyRestoredBlocks.forEach((restoredBlock) => {
-    // Find the original raw block data corresponding to our shallow block.
-    const originalBlockData = blocks.find((b) => b.id === restoredBlock.id);
-
-    if (originalBlockData && originalBlockData.elements) {
-      // Now, call restoreElements. It can be safely given the `partiallyRestoredBlocks`
-      // array, because this array contains a complete (if shallow) representation of all blocks.
+    const originalBlockData = blocks.find((b) => (b as any).id === restoredBlock.id);
+    if (originalBlockData && (originalBlockData as any).elements) {
       const finalElements = restoreElements(
-        originalBlockData.elements,
+        (originalBlockData as any).elements,
         currentScope,
         partiallyRestoredBlocks,
         elementsConfig
       );
-
-      // Mutate the shallow block to add its fully restored elements.
       restoredBlock.elements = finalElements;
     }
   });
-
-  // The `partiallyRestoredBlocks` array has now been fully populated and is the final result.
   return partiallyRestoredBlocks;
 };
 
@@ -409,18 +431,13 @@ export const restoreBlocks = (
 export const restoreGlobalState = (
   importedState: Partial<DucGlobalState> = {}
 ): DucGlobalState => {
-  // Assume you have a function that returns the default global state
   const defaults = getDefaultGlobalState();
-
-  // The old 'coordDecimalPlaces' is mapped to the new 'displayPrecision.linear'.
-  // We'll use the default for 'angular' as there's no corresponding old property.
   const linearPrecision = isValidFinitePositiveByteValue(
-    (importedState as any).coordDecimalPlaces, // casting to any to check for the old property
+    (importedState as any).coordDecimalPlaces,
     defaults.displayPrecision.linear
   );
-
   return {
-    ...defaults, // Start with defaults to ensure all keys are present
+    ...defaults,
     name: importedState.name ?? defaults.name,
     viewBackgroundColor:
       importedState.viewBackgroundColor ?? defaults.viewBackgroundColor,
@@ -430,7 +447,6 @@ export const restoreGlobalState = (
       importedState.scopeExponentThreshold,
       defaults.scopeExponentThreshold
     ),
-    // Properties from DucGlobalState that were not in the old function are set to default
     dashSpacingScale:
       importedState.dashSpacingScale ?? defaults.dashSpacingScale,
     isDashSpacingAffectedByViewportScale:
@@ -464,20 +480,16 @@ export const restoreLocalState = (
   restoredGlobalState: RestoredDataState["globalState"],
   restoredStandards: RestoredDataState["standards"]
 ): DucLocalState => {
-  // Assume you have a function that returns the default local state
   const defaults = getDefaultLocalState();
-
-  // The scope calculation now correctly depends on the GLOBAL state
   const zoom = getZoom(importedState.zoom?.value ?? defaults.zoom.value, restoredGlobalState.mainScope, restoredGlobalState.scopeExponentThreshold);
   const scope = isValidPrecisionScopeValue(
     zoom.value,
-    restoredGlobalState.mainScope, // Use global state
-    restoredGlobalState.scopeExponentThreshold // Use global state
+    restoredGlobalState.mainScope,
+    restoredGlobalState.scopeExponentThreshold
   );
-
   return {
-    ...defaults, // Start with defaults
-    scope, // The newly calculated scope
+    ...defaults,
+    scope,
     activeStandardId: isValidStandardId(
       importedState.activeStandardId,
       restoredStandards,
@@ -515,7 +527,6 @@ export const restoreLocalState = (
     currentItemEndLineHead:
       isValidLineHeadValue(importedState.currentItemEndLineHead) ??
       defaults.currentItemEndLineHead,
-    // Other local state props are set to their defaults
     currentItemFontFamily: defaults.currentItemFontFamily,
     currentItemFontSize: defaults.currentItemFontSize,
     currentItemTextAlign: defaults.currentItemTextAlign,
@@ -530,56 +541,41 @@ export const restoreLocalState = (
 export const restoreVersionGraph = (
   importedGraph: any
 ): RestoredDataState["versionGraph"] => {
-  // 1. Basic validation: If the graph is not a valid object, we can't restore it.
   if (!importedGraph || typeof importedGraph !== "object") {
     return undefined;
   }
-
-  // 2. Validate essential root properties. Without these, the graph is unusable.
   const userCheckpointVersionId = isValidString(
     importedGraph.userCheckpointVersionId
   );
   const latestVersionId = isValidString(importedGraph.latestVersionId);
-
   if (!userCheckpointVersionId || !latestVersionId) {
     return undefined;
   }
-
-  // 3. Restore checkpoints array
   const checkpoints: Checkpoint[] = [];
   if (Array.isArray(importedGraph.checkpoints)) {
     for (const c of importedGraph.checkpoints) {
       if (!c || typeof c !== "object" || c.type !== "checkpoint") {
         continue;
       }
-
       const id = isValidString(c.id);
       if (!id) {
         continue;
       }
-
-      // Restore VersionBase properties
       const parentId = typeof c.parentId === "string" ? c.parentId : null;
       const timestamp = isFiniteNumber(c.timestamp) ? c.timestamp : 0;
       const isManualSave = isValidBoolean(c.isManualSave, false);
-
-      // Restore checkpoint-specific properties
       const sizeBytes =
         isFiniteNumber(c.sizeBytes) && c.sizeBytes >= 0 ? c.sizeBytes : 0;
-
-      // Handle Uint8Array, which might be serialized from JSON
       let data: Uint8Array;
       if (c.data instanceof Uint8Array) {
         data = c.data;
       } else if (Array.isArray(c.data)) {
         data = new Uint8Array(c.data);
       } else if (c.data && typeof c.data === "object") {
-        // Handle POJO that looks like an array, e.g., { "0": 1, "1": 2, ... }
         data = new Uint8Array(Object.values(c.data));
       } else {
-        continue; // Skip if data format is unrecognized
+        continue;
       }
-
       checkpoints.push({
         type: "checkpoint",
         id,
@@ -593,26 +589,19 @@ export const restoreVersionGraph = (
       });
     }
   }
-
-  // 4. Restore deltas array
   const deltas: Delta[] = [];
   if (Array.isArray(importedGraph.deltas)) {
     for (const d of importedGraph.deltas) {
       if (!d || typeof d !== "object" || d.type !== "delta") {
         continue;
       }
-
       const id = isValidString(d.id);
       if (!id) {
         continue;
       }
-
-      // Restore VersionBase properties
       const parentId = typeof d.parentId === "string" ? d.parentId : null;
       const timestamp = isFiniteNumber(d.timestamp) ? d.timestamp : 0;
       const isManualSave = isValidBoolean(d.isManualSave, false);
-
-      // Validate JSONPatch structure
       if (!Array.isArray(d.patch)) {
         continue;
       }
@@ -633,7 +622,6 @@ export const restoreVersionGraph = (
       if (!isPatchValid) {
         continue;
       }
-
       deltas.push({
         type: "delta",
         id,
@@ -646,15 +634,13 @@ export const restoreVersionGraph = (
       });
     }
   }
-
-  // 5. Restore metadata, providing defaults for missing/invalid values
   const importedMetadata = importedGraph.metadata;
   const metadata: VersionGraph["metadata"] = {
     pruningLevel:
       importedMetadata?.pruningLevel &&
       Object.values(PRUNING_LEVEL).includes(importedMetadata.pruningLevel)
         ? importedMetadata.pruningLevel
-        : PRUNING_LEVEL.BALANCED, // Default to BALANCED if invalid
+        : PRUNING_LEVEL.BALANCED,
     lastPruned: isFiniteNumber(importedMetadata?.lastPruned)
       ? importedMetadata.lastPruned
       : 0,
@@ -664,8 +650,6 @@ export const restoreVersionGraph = (
         ? importedMetadata.totalSize
         : 0,
   };
-
-  // 6. Assemble and return the fully restored VersionGraph
   return {
     userCheckpointVersionId,
     latestVersionId,
@@ -708,7 +692,6 @@ export const restoreDucStackProperties = (
 };
 
 export const isValidAppStateScopeValue = (value: string | undefined): Scope => {
-  // Only check if the provided value is valid
   if (value !== undefined && Object.keys(ScaleFactors).includes(value)) {
     return value as Scope;
   }
@@ -752,18 +735,13 @@ export const restorePrecisionValue = (
     currentScope,
     currentScope
   );
-
   if (value === undefined || value === null) {
-    // Return default value with given scope
     return fallbackValue;
   }
-
   if (typeof value === "number") {
-    // If value is a number, check if it's finite. Otherwise, use fallback.
     if (!Number.isFinite(value)) {
       return fallbackValue;
     }
-    // Legacy value (finite number), convert to PrecisionValue
     return fromScoped
       ? getPrecisionValueFromScoped(
           value as ScopedValue,
@@ -772,7 +750,6 @@ export const restorePrecisionValue = (
         )
       : getPrecisionValueFromRaw(value as RawValue, elementScope, currentScope);
   }
-
   return getPrecisionValueFromRaw(value.value, elementScope, currentScope);
 };
 
@@ -816,25 +793,18 @@ export const isValidScopeValue = (
   localState?: Readonly<Partial<DucLocalState>> | null,
   mainScope?: Scope
 ): Scope => {
-  // First check if the provided value is valid
   if (value !== undefined && Object.keys(ScaleFactors).includes(value)) {
     return value as Scope;
   }
-
-  // Then check localState.mainScope if available
   if (mainScope && Object.keys(ScaleFactors).includes(mainScope)) {
     return mainScope;
   }
-
-  // Then check localState.scope if available
   if (
     localState?.scope &&
     Object.keys(ScaleFactors).includes(localState.scope)
   ) {
     return localState.scope;
   }
-
-  // Finally, use the default scope as last resort
   return NEUTRAL_SCOPE;
 };
 
@@ -853,7 +823,6 @@ export const isValidDucHead = (
   currentScope: Scope
 ): DucHead | null => {
   if (value === undefined || value === null) return null;
-
   const type = isValidLineHeadValue(value.type);
   const blockId = isValidBlockId(value.blockId, blocks);
   if (type === null || blockId === null) return null;
@@ -1033,21 +1002,14 @@ export const isValidFinitePositiveByteValue = (
   value: number | undefined,
   defaultValue: number
 ): number => {
-  // Return default if value is undefined or not a finite number
   if (value === undefined || !Number.isFinite(value)) {
     return defaultValue;
   }
-
-  // Round the value to the nearest integer
   const roundedValue = Math.round(value);
-
-  // Clamp the rounded value to the byte range [0, 255]
   return Math.max(0, Math.min(255, roundedValue));
 };
 
-// Utility to validate polygon sides
 export const isValidPolygonSides = (sides: any): number => {
-  // Validate sides: integer >= 3
   if (sides >= 3) {
     if (Number.isInteger(sides)) {
       return sides;
@@ -1083,7 +1045,6 @@ export const isValidPercentageValue = (
   if (value === undefined || !Number.isFinite(value)) {
     return defaultValue;
   }
-  // If the value is between 1 and 100, assume it's a percentage that needs to be divided by 100
   if (value > 1 && value <= 100) {
     value /= 100;
   }
@@ -1119,6 +1080,67 @@ export const isValidString = (
   if (typeof value !== "string") return defaultValue;
   if (value.trim().length === 0) return defaultValue;
   return value;
+};
+
+export const isValidExternalFileId = (
+  value: any,
+  defaultValue: ExternalFileId = "" as ExternalFileId,
+): ExternalFileId => {
+  if (typeof value !== "string") return defaultValue;
+  if (value.trim().length === 0) return defaultValue;
+  return value as ExternalFileId;
+};
+
+/**
+ * Validates a value to ensure it is or can be converted to a non-empty Uint8Array.
+ *
+ * This function handles three types of input:
+ * 1. An existing `Uint8Array`.
+ * 2. A Base64-encoded string.
+ * 3. A full Data URL string (e.g., "data:image/png;base64,...").
+ *
+ * @param value The unknown value to validate.
+ * @returns A valid, non-empty `Uint8Array` if the conversion is successful, otherwise `undefined`.
+ */
+export const isValidUint8Array = (value: unknown): Uint8Array | undefined => {
+  if (value instanceof Uint8Array) {
+    return value.byteLength > 0 ? value : undefined;
+  }
+  
+  if (typeof value === "string") {
+    let base64String = value;
+
+    if (value.startsWith("data:")) {
+      const commaIndex = value.indexOf(",");
+      if (commaIndex === -1) {
+        console.warn("Invalid Data URL format: missing comma.");
+        return undefined; // Malformed Data URL
+      }
+      
+      // Ensure it's a base64-encoded Data URL
+      const header = value.substring(0, commaIndex);
+      if (!header.includes(";base64")) {
+        console.warn("Unsupported Data URL: only base64 encoding is supported.");
+        return undefined;
+      }
+      
+      // Extract the actual base64 payload
+      base64String = value.substring(commaIndex + 1);
+    }
+    
+    try {
+      if (base64String.trim().length === 0) {
+        return undefined;
+      }
+      const decodedData = base64ToUint8Array(base64String);
+      return decodedData.byteLength > 0 ? decodedData : undefined;
+    } catch (error) {
+      console.warn("Failed to decode base64 string:", error);
+      return undefined;
+    }
+  }
+
+  return undefined;
 };
 
 /**
