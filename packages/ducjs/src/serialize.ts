@@ -2388,44 +2388,22 @@ function serializeDucLayer(builder: flatbuffers.Builder, l: DucLayer): number {
 function serializeExternalFiles(builder: flatbuffers.Builder, files: DucExternalFiles | undefined): number | undefined {
   if (!files) return undefined;
 
-  // Guard against huge inline data URLs causing stack issues; decode in manageable chunks.
-  const decodeBase64ToBytes = (b64: string): Uint8Array => {
-    if (!b64) return new Uint8Array(0);
-
-    const chunkSize = 0x8000;
-    const binary = atob(b64);
-    const len = binary.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i += chunkSize) {
-      const end = Math.min(i + chunkSize, len);
-      for (let j = i, k = 0; j < end; j++, k++) {
-        bytes[j] = binary.charCodeAt(j);
-      }
-    }
-    return bytes;
-  };
 
   const entries = Object.entries(files).map(([key, value]) => {
     const keyOff = builder.createString(key);
     const mt = builder.createString(value.mimeType);
     const idOff = builder.createString(value.id);
-
-    let dataBytesOffset: number | undefined;
-    try {
-      const dataUrl: string = value.dataURL as unknown as string;
-      const commaIdx = dataUrl.indexOf(",");
-      const base64 = commaIdx >= 0 ? dataUrl.slice(commaIdx + 1) : "";
-      const bytesArr = decodeBase64ToBytes(base64);
-      dataBytesOffset = builder.createByteVector(bytesArr);
-    } catch {
-      // On failure, omit data payload to avoid breaking the entire file
-      dataBytesOffset = builder.createByteVector(new Uint8Array(0));
+    
+    let dataVectorOffset: number | undefined = undefined;
+    if (value.data) {
+      dataVectorOffset = Duc.DucExternalFileData.createDataVector(builder, value.data);
     }
+
 
     Duc.DucExternalFileData.startDucExternalFileData(builder);
     Duc.DucExternalFileData.addMimeType(builder, mt);
     Duc.DucExternalFileData.addId(builder, idOff);
-    if (dataBytesOffset) Duc.DucExternalFileData.addData(builder, dataBytesOffset);
+    if (dataVectorOffset) Duc.DucExternalFileData.addData(builder, dataVectorOffset);
     Duc.DucExternalFileData.addCreated(builder, BigInt(value.created));
     if (value.lastRetrieved !== undefined) Duc.DucExternalFileData.addLastRetrieved(builder, BigInt(value.lastRetrieved));
     const dataOff = Duc.DucExternalFileData.endDucExternalFileData(builder);
