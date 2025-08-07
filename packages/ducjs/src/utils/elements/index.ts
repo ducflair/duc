@@ -7,7 +7,7 @@ export * from "./viewportElement";
 
 import { LINE_SPACING_TYPE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION } from "ducjs/flatbuffers/duc";
 import { Scope, RawValue } from "ducjs/types";
-import { _DucStackBase, _DucStackElementBase, DucElement, DucNonSelectionElement, DucStackLikeElement, DucTableElement, DucTextContainer, DucTextElement, DucTextStyle, ElementConstructorOpts, ElementsMap, NonDeleted } from "ducjs/types/elements";
+import { _DucStackBase, _DucStackElementBase, DucElement, DucNonSelectionElement, DucStackLikeElement, DucTableColumn, DucTableElement, DucTableRow, DucTextContainer, DucTextElement, DucTextStyle, ElementConstructorOpts, ElementsMap, NonDeleted } from "ducjs/types/elements";
 import { isFreeDrawElement, isLinearElement } from "ducjs/types/elements/typeChecks";
 import { GeometricPoint, Percentage, Radian, ScaleFactor, TuplePoint } from "ducjs/types/geometryTypes";
 import { Mutable } from "ducjs/types/utility-types";
@@ -96,13 +96,33 @@ export const getDefaultTableData = (currentScope: Scope): {
   headerRowCount: DucTableElement["headerRowCount"];
   autoSize: DucTableElement["autoSize"];
 } => {
-  // Generate default column and row IDs
-  const columnIds = ["col1", "col2", "col3"];
-  const rowIds = ["row1", "row2", "row3"];
-  const defaultCellSize = getPrecisionValueFromRaw(100 as RawValue, currentScope, currentScope);
+  // Default structure
+  const columnCount = 3;
+  const headerRowCount = 1;
+  const dataRowCount = 3; // header + 3 data rows
+  const totalRows = headerRowCount + dataRowCount;
 
-  // Default styling for cells
-  const defaultCellStyle: DucTableElement["dataRowStyle"] = {
+  const columnIds = Array.from({ length: columnCount }, (_, i) => `col${i + 1}`);
+  const rowIds = Array.from({ length: totalRows }, (_, i) => `row${i + 1}`);
+
+  // Spacing and sizing
+  const hMargin = getPrecisionValueFromRaw(8 as RawValue, currentScope, currentScope);
+  const vMargin = getPrecisionValueFromRaw(6 as RawValue, currentScope, currentScope);
+  const defaultFontSize = getPrecisionValueFromRaw(
+    DEFAULT_FONT_SIZE as RawValue,
+    currentScope,
+    currentScope
+  );
+
+  // Slightly taller header row for visual hierarchy
+  const dataRowHeight = (defaultFontSize.value * 1.2) + (vMargin.value * 2);
+  const headerRowHeight = (defaultFontSize.value * 1.4) + (vMargin.value * 2);
+
+  // A practical starting column width
+  const defaultColumnWidth = getPrecisionValueFromRaw(140 as RawValue, currentScope, currentScope);
+
+  // Base/default styling for cells
+  const baseCellStyle: DucTableElement["dataRowStyle"] = {
     ...DEFAULT_ELEMENT_PROPS,
     background: [DEFAULT_ELEMENT_PROPS.background],
     stroke: [DEFAULT_ELEMENT_PROPS.stroke],
@@ -112,10 +132,10 @@ export const getDefaultTableData = (currentScope: Scope): {
       bigFontFamily: "sans-serif",
       textAlign: DEFAULT_TEXT_ALIGN,
       verticalAlign: DEFAULT_VERTICAL_ALIGN,
-      lineHeight: 1.15 as DucTextStyle["lineHeight"],
-      lineSpacing: { type: LINE_SPACING_TYPE.MULTIPLE, value: 1.15 as ScaleFactor },
+      lineHeight: 1.2 as DucTextStyle["lineHeight"],
+      lineSpacing: { type: LINE_SPACING_TYPE.MULTIPLE, value: 1.2 as ScaleFactor },
       obliqueAngle: 0 as Radian,
-      fontSize: getPrecisionValueFromRaw(DEFAULT_FONT_SIZE as RawValue, currentScope, currentScope),
+      fontSize: defaultFontSize,
       paperTextHeight: undefined,
       widthFactor: 1 as ScaleFactor,
       isUpsideDown: false,
@@ -126,30 +146,50 @@ export const getDefaultTableData = (currentScope: Scope): {
       opacity: DEFAULT_ELEMENT_PROPS.opacity,
     },
     margins: {
-      top: getPrecisionValueFromRaw(5 as RawValue, currentScope, currentScope),
-      right: getPrecisionValueFromRaw(5 as RawValue, currentScope, currentScope),
-      bottom: getPrecisionValueFromRaw(5 as RawValue, currentScope, currentScope),
-      left: getPrecisionValueFromRaw(5 as RawValue, currentScope, currentScope),
+      top: vMargin,
+      right: hMargin,
+      bottom: vMargin,
+      left: hMargin,
     },
-    alignment: TABLE_CELL_ALIGNMENT.MIDDLE_CENTER,
+    // Left + middle is a great general-purpose default for tables
+    alignment: TABLE_CELL_ALIGNMENT.MIDDLE_LEFT,
   };
 
   // Create default columns
-  const columns = Object.fromEntries(
-    columnIds.map(id => [id, { id, width: defaultCellSize }])
+  const columns: Record<string, DucTableColumn> = Object.fromEntries(
+    columnIds.map((id) => [id, { id, width: defaultColumnWidth }])
   );
 
-  // Create default rows
-  const rows = Object.fromEntries(
-    rowIds.map(id => [id, { id, height: defaultCellSize }])
+  // Create default rows (taller header row)
+  const rows: Record<string, DucTableRow> = Object.fromEntries(
+    rowIds.map((id, idx) => [
+      id,
+      { 
+        id, 
+        height: idx < headerRowCount 
+          ? getPrecisionValueFromRaw(headerRowHeight as RawValue, currentScope, currentScope)
+          : getPrecisionValueFromRaw(dataRowHeight as RawValue, currentScope, currentScope)
+      },
+    ])
   );
 
   // Create default cells
   const cells: Record<string, DucTableElement["cells"][string]> = Object.create(null);
-  rowIds.forEach(rowId => {
-    columnIds.forEach(colId => {
+
+  // Friendly header labels via Markdown (bold)
+  const headerLabels = ["Column A", "Column B", "Column C"];
+
+  rowIds.forEach((rowId, rIdx) => {
+    columnIds.forEach((colId, cIdx) => {
       const cellId = `${rowId}:${colId}`;
-      cells[cellId] = { rowId, columnId: colId, data: "", locked: false };
+      const isHeaderRow = rIdx < headerRowCount;
+
+      cells[cellId] = {
+        rowId,
+        columnId: colId,
+        data: isHeaderRow ? `**${headerLabels[cIdx] ?? `Column ${cIdx + 1}` }**` : "",
+        locked: false,
+      };
     });
   });
 
@@ -162,11 +202,12 @@ export const getDefaultTableData = (currentScope: Scope): {
     cells,
     // Style & Behavior
     flowDirection: TABLE_FLOW_DIRECTION.DOWN,
-    headerRowStyle: defaultCellStyle,
-    dataRowStyle: defaultCellStyle,
-    dataColumnStyle: defaultCellStyle,
-    headerRowCount: 1,
-    autoSize: { columns: false, rows: false },
+    headerRowStyle: baseCellStyle,
+    dataRowStyle: baseCellStyle,
+    dataColumnStyle: baseCellStyle,
+    headerRowCount,
+    // Let rows grow to fit content; keep columns fixed unless user opts in
+    autoSize: { columns: false, rows: true },
   };
 };
 
