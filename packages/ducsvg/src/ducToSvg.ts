@@ -46,7 +46,8 @@ import {
   isLinearElement,
   isRTL,
   isTableElement,
-  isTextElement
+  isTextElement,
+  uint8ArrayToBase64
 } from "ducjs";
 import { TEXT_ALIGN } from "ducjs/flatbuffers/duc";
 import { renderLinearElementToSvg } from "ducsvg/utils/linearElementToSvg";
@@ -1043,7 +1044,7 @@ const renderImage = (element: DucImageElement, files: DucExternalFiles, defs: SV
     const image = document.createElementNS(SVG_NS, "image");
     image.setAttribute("width", "100%");
     image.setAttribute("height", "100%");
-    image.setAttribute("href", fileData.dataURL);
+    image.setAttribute("href", uint8ArrayToBase64(fileData.data));
 
     symbol.appendChild(image);
     defs.appendChild(symbol);

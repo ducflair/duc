@@ -7,6 +7,7 @@ export * from "./bounds";
 export * from "./normalize";
 export * from "./url";
 export * from "./version";
+export * from "./filebyte";
 
 /**
  * supply `null` as message if non-never value is valid, you just need to

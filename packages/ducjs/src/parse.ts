@@ -1285,17 +1285,12 @@ export function parseDictionaryFromBinary(data: ExportedDataStateFb): Dictionary
 
 export function parseExternalFilesFromBinary(entry: DucExternalFileEntry): DucExternalFiles {
   const fileData = entry.value()!;
-  const bytes = fileData.dataArray()!;
-  let binaryString = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binaryString += String.fromCharCode(bytes[i]);
-  }
-  const dataUrl = `data:${fileData.mimeType()};base64,${btoa(binaryString)}`;
+  const data = fileData.dataArray();
   return {
     [entry.key()!]: {
       id: fileData.id()! as ExternalFileId,
       mimeType: fileData.mimeType()!,
-      dataURL: dataUrl as any,
+      data,
       created: Number(fileData.created()),
       lastRetrieved: Number(fileData.lastRetrieved()) || undefined,
     }
@@ -1750,7 +1745,7 @@ export const parseDuc = async (
     return parseDucFlatBuffersV1(blob, fileHandle) as unknown as RestoredDataState;
   }
 
-  const version = data.version() || "0.0.0";
+  const version = data.version();
 
   const localState = data.ducLocalState();
   const parsedLocalState = localState && parseLocalStateFromBinary(localState);
@@ -1856,8 +1851,8 @@ export const parseDuc = async (
       thumbnail,
       dictionary,
       elements: elements as DucElement[],
-      ducLocalState: parsedLocalState!,
-      ducGlobalState: parsedGlobalState!,
+      localState: parsedLocalState!,
+      globalState: parsedGlobalState!,
       blocks,
       groups,
       regions,

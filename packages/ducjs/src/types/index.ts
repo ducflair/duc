@@ -56,9 +56,9 @@ export interface ExportedDataState {
   elements: readonly DucElement[];
 
   /** The user's current session state for a specific project */
-  ducLocalState: DucLocalState;
+  localState: DucLocalState;
   /** Project-wide settings that are saved with the document and shared by all users */
-  ducGlobalState: DucGlobalState;
+  globalState: DucGlobalState;
 
   blocks: readonly DucBlock[];
   groups: readonly DucGroup[];
@@ -125,12 +125,11 @@ export type DucUcs = {
 
 export type Scope = SupportedMeasures;
 
-export type DataURL = string & { _brand: "DataURL" };
 
 export type DucExternalFileData = {
   mimeType: string;
   id: ExternalFileId;
-  dataURL: DataURL;
+  data: Uint8Array;
   /**
    * Epoch timestamp in milliseconds
    */
@@ -145,12 +144,12 @@ export type DucExternalFileData = {
   lastRetrieved?: number;
   /**
    * indicates the version of the file. This can be used to determine whether
-   * the file dataURL has changed e.g. as part of restore due to schema update.
+   * the file data has changed e.g. as part of restore due to schema update.
    */
   version?: number;
 };
 
-export type DucExternalFileMetadata = Omit<DucExternalFileData, "dataURL">;
+export type DucExternalFileMetadata = Omit<DucExternalFileData, "data">;
 
 export type DucExternalFiles = Record<DucElement["id"], DucExternalFileData>;
 
