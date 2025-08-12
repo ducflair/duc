@@ -72,6 +72,8 @@ export interface ExportedDataState {
   versionGraph: VersionGraph | undefined;
 }
 
+export type ExportedDataStateContent = Omit<ExportedDataState, "type" | "version" | "source">;
+
 /**
  * A version of the data state where all fields are optional.
  * This is useful for importing data where some fields might be missing.
