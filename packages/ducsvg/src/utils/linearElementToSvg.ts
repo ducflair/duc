@@ -3,15 +3,16 @@ import {
   DucElement,
   DucLine,
   DucLinearElement,
+  DucLinearLikeElement,
   DucPoint,
   ElementBackground,
-} from "ducjs/types/elements";
-import { Scope } from "ducjs/types";
-import { LINE_HEAD, STROKE_PLACEMENT } from "ducjs/duc";
-import { applyStyles, FrameRendering } from "ducsvg/ducToSvg";
-import { isArrowElement } from "ducjs/types/elements/typeChecks";
-import { SVG_NS } from "ducjs/utils/constants";
-import { RestoredDataState } from "ducjs/utils/restore";
+  isArrowElement,
+  RestoredDataState,
+  Scope,
+  SVG_NS,
+} from "ducjs";
+import { LINE_HEAD, STROKE_PLACEMENT } from "ducjs/flatbuffers/duc";
+import { applyStyles, FrameRendering, PartialDucState } from "ducsvg/ducToSvg";
 
 // This file will contain the new, robust SVG rendering logic for linear elements,
 // ported from the Rust implementation.
@@ -267,7 +268,7 @@ const renderLineHead = (
     return path;
   };
 
-  switch (binding.head) {
+  switch (binding.head.type) {
     case LINE_HEAD.ARROW:
     case LINE_HEAD.OPEN_ARROW:
       headShape = createPath(`M 0 0 L ${-3.5 * scale} ${1.5 * scale} M 0 0 L ${-3.5 * scale} ${-1.5 * scale}`);
@@ -406,7 +407,7 @@ const addSegmentToPathString = (
  * Creates the SVG path data string for all strokes of a linear element.
  * It chains continuous segments together into subpaths.
  */
-const createStrokePathData = (element: DucLinearElement): { path: string, subPathPointIndices: number[][] } => {
+const createStrokePathData = (element: DucLinearLikeElement): { path: string, subPathPointIndices: number[][] } => {
   const { points, lines } = element;
   if (points.length === 0 || lines.length === 0) {
     return { path: "", subPathPointIndices: [] };
@@ -481,7 +482,7 @@ const createStrokePathData = (element: DucLinearElement): { path: string, subPat
  * This is a TypeScript port of the logic from the Rust renderer.
  */
 const getFillPaths = (
-  element: DucLinearElement,
+  element: DucLinearLikeElement,
 ): { path: string, lineIndices: number[] }[] => {
   const { points, lines } = element;
   if (points.length === 0 || lines.length === 0) {
@@ -690,12 +691,11 @@ const stringToPathData = (d: string): PathSegment[] => {
 };
 
 export const renderLinearElementToSvg = (
-  element: DucLinearElement | DucArrowElement,
+  element: DucLinearLikeElement,
   elementsMap: Map<string, DucElement>,
-  appState: RestoredDataState["appState"],
+  ducState: PartialDucState,
   files: RestoredDataState["files"],
   defs: SVGDefsElement,
-  frameRendering: FrameRendering,
   currentScope: Scope,
   offsetX: number,
   offsetY: number,

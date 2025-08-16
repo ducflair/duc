@@ -1,4 +1,4 @@
-import { AXIS } from "ducjs/duc";
+import { AXIS } from "ducjs/flatbuffers/duc";
 import { ScopedValue, ValueOf } from "ducjs/types";
 
 /**

@@ -1,12 +1,9 @@
 import { Scope, ScopedValue } from "ducjs/types";
 import { DucElement, DucFreeDrawElement, DucLine, DucLinearElement, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap } from "ducjs/types/elements";
-import { Bounds } from "ducjs/types/geometryTypes";
-import { getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, rescaleLines, rescalePoints } from "ducjs/utils/math";
-import { GeometricPoint } from "ducjs/types/geometryTypes";
-import { rotate } from "ducjs/utils/math";
-import { LinearElementEditor } from "ducjs/duc";
-import { isFreeDrawElement, isLinearElement, isTextElement, isArrowElement } from "ducjs/types/elements/typeChecks";
+import { isArrowElement, isFreeDrawElement, isLinearElement, isTextElement } from "ducjs/types/elements/typeChecks";
+import { Bounds, GeometricPoint } from "ducjs/types/geometryTypes";
 import { getBoundTextElementPosition, getLinearElementAbsoluteCoords } from "ducjs/utils/elements/linearElement";
+import { getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, rescaleLines, rescalePoints, rotate } from "ducjs/utils/math";
 
 type SV = ScopedValue;
 

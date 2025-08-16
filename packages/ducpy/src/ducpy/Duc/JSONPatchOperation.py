@@ -43,14 +43,21 @@ class JSONPatchOperation(object):
         return None
 
     # JSONPatchOperation
-    def Value(self):
+    def From(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
+    # JSONPatchOperation
+    def Value(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
 def JSONPatchOperationStart(builder):
-    builder.StartObject(3)
+    builder.StartObject(4)
 
 def Start(builder):
     JSONPatchOperationStart(builder)
@@ -67,8 +74,14 @@ def JSONPatchOperationAddPath(builder, path):
 def AddPath(builder, path):
     JSONPatchOperationAddPath(builder, path)
 
+def JSONPatchOperationAddFrom(builder, from_):
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(from_), 0)
+
+def AddFrom(builder, from_):
+    JSONPatchOperationAddFrom(builder, from_)
+
 def JSONPatchOperationAddValue(builder, value):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(value), 0)
+    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(value), 0)
 
 def AddValue(builder, value):
     JSONPatchOperationAddValue(builder, value)

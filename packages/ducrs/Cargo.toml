@@ -9,7 +9,7 @@ repository = "https://github.com/ducflair/duc/tree/main/packages/ducrs"
 readme = "README.md"
 
 [dependencies]
-flatbuffers = "24.3.25"
+flatbuffers = "25.2.10"
 base64 = "0.21.5"
 percent-encoding = "2.3.1"
 log = "0.4.22"

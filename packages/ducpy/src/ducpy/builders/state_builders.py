@@ -1265,6 +1265,7 @@ def create_json_patch_operation(
     return JSONPatchOperation(
         op=op,
         path=path,
+        from_path=None,
         value=value
     )
 

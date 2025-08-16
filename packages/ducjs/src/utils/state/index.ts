@@ -1,12 +1,138 @@
-import { ANTI_ALIASING, TEXT_ALIGN, THEME } from "ducjs/duc";
-import { ActiveTool, DucLocalState, RawValue, ToolType } from "ducjs/types";
-import { COLOR_PALETTE, DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_GRID_SIZE, DEFAULT_GRID_STEP } from "ducjs/utils/constants";
+export * from "./grid";
+
+
+
+import { TEXT_ALIGN } from "ducjs/flatbuffers/duc";
+import { PREDEFINED_STANDARDS } from "ducjs/technical";
+import {
+  getPrecisionValueFromRaw,
+  getScaledZoomValueForScope,
+  getScopedZoomValue,
+  NEUTRAL_SCOPE,
+} from "ducjs/technical/scopes";
+import {
+  DucGlobalState,
+  DucLocalState,
+  RawValue,
+  ScaleFactor,
+  Scope,
+  Zoom,
+} from "ducjs/types";
+import {
+  COLOR_PALETTE,
+  DEFAULT_ELEMENT_PROPS,
+  DEFAULT_FONT_FAMILY,
+  DEFAULT_FONT_SIZE,
+} from "ducjs/utils/constants";
 import { getNormalizedZoom } from "ducjs/utils/normalize";
-import { getPrecisionValueFromRaw, getScaledZoomValueForScope, getScopedZoomValue, NEUTRAL_SCOPE } from "ducjs/technical/scopes";
-import { DESIGN_STANDARD } from "ducjs/technical/standards";
+import { isFiniteNumber } from "ducjs/utils";
+import { isValidPrecisionScopeValue } from "ducjs/restore/restoreDataState";
+
+// appState
+
+// export const updateActiveTool = (
+//   appState: Pick<DucLocalState, "activeTool">,
+//   data: ((
+//     | {
+//       type: ToolType;
+//     }
+//     | { type: "custom"; customType: string }
+//   ) & { locked?: boolean; fromSelection?: boolean }) & {
+//     lastActiveToolBeforeEraser?: ActiveTool | null;
+//   },
+// ): DucLocalState["activeTool"] => {
+//   if (data.type === "custom") {
+//     return {
+//       ...appState.activeTool,
+//       type: "custom",
+//       customType: data.customType,
+//       locked: data.locked ?? appState.activeTool.locked,
+//     };
+//   }
+
+//   return {
+//     ...appState.activeTool,
+//     lastActiveTool:
+//       data.lastActiveToolBeforeEraser === undefined
+//         ? appState.activeTool.lastActiveTool
+//         : data.lastActiveToolBeforeEraser,
+//     type: data.type,
+//     customType: null,
+//     locked: data.locked ?? appState.activeTool.locked,
+//     fromSelection: data.fromSelection ?? false,
+//   };
+// };
+// activeTool: {
+//   type: "selection",
+//   customType: null,
+//   locked: DEFAULT_ELEMENT_PROPS.locked,
+//   fromSelection: false,
+//   lastActiveTool: null,
+// },
 
 
-export const getDefaultDucState = (): Omit<
+// duconfig
+// displayAllPointDistances: false,
+// displayDistanceOnDrawing: true,
+// displayAllPointInfoSelected: false,
+// displayAllPointCoordinates: false,
+// displayRootAxis: false,
+// showHyperlinkPopup: false,
+// antiAliasing: ANTI_ALIASING.ANALYTIC,
+// vSync: true,
+// zoomStep: 0,
+// scaleRatioLocked: false,
+// theme: THEME.LIGHT,
+// debugRendering: false,
+
+/**
+ * Returns the zoom object with value, scoped, and scaled properties,
+ * using importedState, restoredGlobalState, and defaults.
+ */
+export const getZoom = (
+  value: number,
+  mainScope: Scope, 
+  scopeExponentThreshold: number,
+): Zoom => {
+  const zoomValue = getNormalizedZoom(
+    isFiniteNumber(value)
+      ? value
+      : 1
+  );
+  const scope = isValidPrecisionScopeValue(
+    value,
+    mainScope,
+    scopeExponentThreshold
+  );
+  const scopedZoom = getScopedZoomValue(value, scope);
+  return {
+    value: zoomValue,
+    scoped: scopedZoom,
+    scaled: getScaledZoomValueForScope(scopedZoom, scope),
+  };
+};
+
+export const getDefaultGlobalState = (): DucGlobalState => {
+  return {
+    name: null,
+    viewBackgroundColor: window.matchMedia("(prefers-color-scheme: dark)")
+      .matches
+      ? COLOR_PALETTE.night
+      : COLOR_PALETTE.white,
+    scopeExponentThreshold: 2,
+    mainScope: NEUTRAL_SCOPE,
+    dashSpacingScale: 1 as ScaleFactor,
+    isDashSpacingAffectedByViewportScale: false,
+    dimensionsAssociativeByDefault: false,
+    useAnnotativeScaling: false,
+    displayPrecision: {
+      linear: 2,
+      angular: 1,
+    },
+  };
+};
+
+export const getDefaultLocalState = (): Omit<
   DucLocalState,
   "offsetTop" | "offsetLeft" | "width" | "height"
 > => {
@@ -18,47 +144,23 @@ export const getDefaultDucState = (): Omit<
 
   return {
     scope,
-    mainScope: scope,
-    standard: DESIGN_STANDARD.DUC,
-    editingLinearElement: null,
-    elementHovered: null,
-    gridSize: DEFAULT_GRID_SIZE,
-    gridStep: DEFAULT_GRID_STEP,
+    activeStandardId: PREDEFINED_STANDARDS.DUC,
     isBindingEnabled: true,
-    name: null,
-    scrolledOutside: false,
-    scrollX: getPrecisionValueFromRaw(scrollX as RawValue, NEUTRAL_SCOPE, scope),
-    scrollY: getPrecisionValueFromRaw(scrollY as RawValue, NEUTRAL_SCOPE, scope),
-    selectedElementIds: {},
-    selectedGroupIds: {},
-    suggestedBindings: [],
-    viewBackgroundColor: window.matchMedia('(prefers-color-scheme: dark)').matches ? COLOR_PALETTE.night : COLOR_PALETTE.white,
+
+    scrollX: getPrecisionValueFromRaw(
+      scrollX as RawValue,
+      NEUTRAL_SCOPE,
+      scope
+    ),
+    scrollY: getPrecisionValueFromRaw(
+      scrollY as RawValue,
+      NEUTRAL_SCOPE,
+      scope
+    ),
     zoom: {
       value: zoom,
       scoped: scopedZoom,
       scaled: getScaledZoomValueForScope(scopedZoom, scope),
-    },
-
-    displayAllPointDistances: false,
-    displayDistanceOnDrawing: true,
-    displayAllPointInfoSelected: false,
-    displayAllPointCoordinates: false,
-
-    coordDecimalPlaces: 2,
-    scopeExponentThreshold: 2,
-
-    displayRootAxis: false,
-    lineBendingMode: false,
-
-    debugRendering: false,
-    elementsPendingErasure: new Set(),
-
-    activeTool: {
-      type: "selection",
-      customType: null,
-      locked: DEFAULT_ELEMENT_PROPS.locked,
-      fromSelection: false,
-      lastActiveTool: null,
     },
 
     currentItemBackground: DEFAULT_ELEMENT_PROPS.background,
@@ -67,63 +169,24 @@ export const getDefaultDucState = (): Omit<
     currentItemEndLineHead: null,
     currentItemFontFamily: DEFAULT_FONT_FAMILY,
     currentItemTextAlign: TEXT_ALIGN.LEFT,
-    currentItemFontSize: getPrecisionValueFromRaw(DEFAULT_FONT_SIZE as RawValue, scope, scope),
+    currentItemFontSize: getPrecisionValueFromRaw(
+      DEFAULT_FONT_SIZE as RawValue,
+      scope,
+      scope
+    ),
     currentItemOpacity: DEFAULT_ELEMENT_PROPS.opacity,
     currentItemRoundness: getPrecisionValueFromRaw(0 as RawValue, scope, scope),
-
 
     activeGridSettings: [],
     activeSnapSettings: "",
 
-
-    antiAliasing: ANTI_ALIASING.ANALYTIC,
-    vSync: true,
-
     penMode: false,
-    showHyperlinkPopup: false,
-
-    zoomStep: 0,
-    scaleRatioLocked: false,
-
-    theme: THEME.LIGHT,
-
     viewModeEnabled: false,
     objectsSnapModeEnabled: true,
     gridModeEnabled: false,
-  };
-};
+    outlineModeEnabled: false,
 
-
-export const updateActiveTool = (
-  appState: Pick<DucLocalState, "activeTool">,
-  data: ((
-    | {
-      type: ToolType;
-    }
-    | { type: "custom"; customType: string }
-  ) & { locked?: boolean; fromSelection?: boolean }) & {
-    lastActiveToolBeforeEraser?: ActiveTool | null;
-  },
-): DucLocalState["activeTool"] => {
-  if (data.type === "custom") {
-    return {
-      ...appState.activeTool,
-      type: "custom",
-      customType: data.customType,
-      locked: data.locked ?? appState.activeTool.locked,
-    };
-  }
-
-
-  return {
-    ...appState.activeTool,
-    lastActiveTool:
-      data.lastActiveToolBeforeEraser === undefined
-        ? appState.activeTool.lastActiveTool
-        : data.lastActiveToolBeforeEraser,
-    type: data.type,
-    customType: null,
-    locked: data.locked ?? appState.activeTool.locked,
-    fromSelection: data.fromSelection ?? false,
+    gridSize: 10,
+    gridStep: 10,
   };
 };
