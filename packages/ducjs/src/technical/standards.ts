@@ -1,4 +1,4 @@
-import { ANGULAR_UNITS_FORMAT, DECIMAL_SEPARATOR, DIMENSION_UNITS_FORMAT } from "ducjs/duc";
+import { ANGULAR_UNITS_FORMAT, DECIMAL_SEPARATOR, DIMENSION_UNITS_FORMAT } from "ducjs/flatbuffers/duc";
 import { UnitSystem } from "ducjs/technical/scopes";
 import { DucCommonStyle, DucDimensionStyle, DucDocStyle, DucFeatureControlFrameStyle, DucHatchStyle, DucLeaderStyle, DucPlotElement, DucStackLikeStyles, DucTableStyle, DucTextStyle, DucUcs, DucView, DucViewportStyle, DucXRayStyle, GridSettings, Identifier, PrecisionValue, ScaleFactor, Scope, SnapSettings, StrokeStyle } from "ducjs/types";
 import { ValueOf } from "ducjs/types/utility-types";

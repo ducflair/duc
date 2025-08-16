@@ -1,4 +1,4 @@
-import { UNIT_SYSTEM } from "ducjs/duc";
+import { UNIT_SYSTEM } from "ducjs/flatbuffers/duc";
 import { PrecisionValue, RawValue, ScaledZoom, Scope, ScopedValue, ScopedZoomValue, ValueOf } from "ducjs/types";
 import { DucPoint } from "ducjs/types/elements";
 import { GeometricPoint } from "ducjs/types/geometryTypes";

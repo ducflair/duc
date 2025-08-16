@@ -3,6 +3,7 @@
 # namespace: Duc
 
 class FEATURE_MODIFIER(object):
+    NONE = 0
     FREE_STATE = 10
     TANGENT_PLANE = 11
     PROJECTED_TOLERANCE_ZONE = 12

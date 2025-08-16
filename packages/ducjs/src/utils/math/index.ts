@@ -10,7 +10,7 @@ import type {
   Zoom
 } from "ducjs/types";
 import { Scope, ScopedValue } from "ducjs/types";
-import type { DucElement, DucLine, DucLinearElement, DucLineReference, DucPoint, NonDeleted } from "ducjs/types/elements";
+import type { DucElement, DucLine, DucLinearElement, DucLinearLikeElement, DucLineReference, DucPoint, NonDeleted } from "ducjs/types/elements";
 import type { Bounds, GeometricPoint, GeometricVector, Percentage, Radian } from "ducjs/types/geometryTypes";
 import { Heading } from "ducjs/types/geometryTypes";
 import { Mutable } from "ducjs/types/utility-types";
@@ -1450,7 +1450,7 @@ export const reverseExponent = (num: number): number => {
  * Retrieves control points for a Bezier curve.
  */
 export const getControlPointsForBezierCurve = (
-  element: NonDeleted<DucLinearElement>,
+  element: NonDeleted<DucLinearLikeElement>,
   endPoint: GeometricPoint,
 ): (GeometricPoint)[] | null => {
   const endPointIndex = element.points.findIndex((p) =>
@@ -1499,7 +1499,7 @@ export const getControlPointsForBezierCurve = (
  * Gets points along a Bezier curve for better accuracy.
  */
 export const getPointsInBezierCurve = (
-  element: NonDeleted<DucLinearElement>,
+  element: NonDeleted<DucLinearLikeElement>,
   endPoint: GeometricPoint,
 ): GeometricPoint[] => {
   const controlPoints: Mutable<GeometricPoint>[] = getControlPointsForBezierCurve(
@@ -1535,7 +1535,7 @@ export const getPointsInBezierCurve = (
  * Calculates the arc lengths of a Bezier curve.
  */
 export const getBezierCurveArcLengths = (
-  element: NonDeleted<DucLinearElement>,
+  element: NonDeleted<DucLinearLikeElement>,
   endPoint: GeometricPoint,
 ): number[] => {
   const arcLengths: number[] = [];
@@ -1562,7 +1562,7 @@ export const getBezierCurveArcLengths = (
  * Calculates the total length of a Bezier curve.
  */
 export const getBezierCurveLength = (
-  element: NonDeleted<DucLinearElement>,
+  element: NonDeleted<DucLinearLikeElement>,
   endPoint: GeometricPoint,
 ): number => {
   const arcLengths = getBezierCurveArcLengths(element, endPoint);
@@ -1574,7 +1574,7 @@ export const getBezierCurveLength = (
  * Maps an interval to the corresponding t parameter on the Bezier curve based on length.
  */
 export const mapIntervalToBezierT = (
-  element: NonDeleted<DucLinearElement>,
+  element: NonDeleted<DucLinearLikeElement>,
   endPoint: GeometricPoint,
   interval: number, // The interval between 0 to 1 for which you want to find the point on the curve,
 ): number => {
