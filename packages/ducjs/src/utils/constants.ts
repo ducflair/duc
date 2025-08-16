@@ -1,4 +1,4 @@
-import { ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, OBJECT_SNAP_MODE, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/duc";
+import { ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, OBJECT_SNAP_MODE, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/flatbuffers/duc";
 import { GridSettings, RawValue, ScopedValue, SnapSettings } from "ducjs/types";
 import { DucElement, DucEllipseElement, DucFreeDrawElement, DucTextElement, ElementBackground, ElementStroke, FontFamilyValues } from "ducjs/types/elements";
 import { Percentage, Radian } from "ducjs/types/geometryTypes";
@@ -249,6 +249,8 @@ export const DEFAULT_FRAME_STYLE: {
 
 export const DEFAULT_ELEMENT_PROPS: {
   isVisible: DucElement["isVisible"];
+  isPlot: DucElement["isPlot"];
+  isAnnotative: DucElement["isAnnotative"];
   stroke: ElementStroke;
   background: ElementBackground;
   roundness: DucElement["roundness"];
@@ -288,6 +290,8 @@ export const DEFAULT_ELEMENT_PROPS: {
     },
   },
   isVisible: true,
+  isPlot: true,
+  isAnnotative: false,
   roundness: { value: 0 as RawValue, scoped: 0 as ScopedValue },
   opacity: 1 as Percentage,
   locked: false,
@@ -520,6 +524,7 @@ export const DEFAULT_SNAP_SETTINGS: SnapSettings = {
     size: 8,
     duration: 2000,
     styles: {
+      [OBJECT_SNAP_MODE.NONE]: { shape: SNAP_MARKER_SHAPE.SQUARE, color: "#FFFFFF" },
       [OBJECT_SNAP_MODE.ENDPOINT]: { shape: SNAP_MARKER_SHAPE.SQUARE, color: "#FF0000" },
       [OBJECT_SNAP_MODE.MIDPOINT]: { shape: SNAP_MARKER_SHAPE.TRIANGLE, color: "#00FF00" },
       [OBJECT_SNAP_MODE.INTERSECTION]: { shape: SNAP_MARKER_SHAPE.X, color: "#FF00FF" },

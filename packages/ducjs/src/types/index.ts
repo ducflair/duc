@@ -2,7 +2,7 @@ export * from "./elements";
 export * from "./geometryTypes";
 export * from "./utility-types";
 
-import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "ducjs/duc";
+import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "ducjs/flatbuffers/duc";
 import { SupportedMeasures } from "ducjs/technical/scopes";
 import { Standard } from "ducjs/technical/standards";
 import {
@@ -23,13 +23,24 @@ import {
   FontFamilyValues,
   LineHead,
   NonDeleted,
-  TextAlign
+  TextAlign,
 } from "ducjs/types/elements";
-import { GeometricPoint, Percentage, Radian, ScaleFactor } from "ducjs/types/geometryTypes";
-import { MaybePromise, ValueOf } from "ducjs/types/utility-types";
-import type { GRID_DISPLAY_TYPE, GRID_TYPE, IMAGE_MIME_TYPES, MIME_TYPES, SNAP_MARKER_SHAPE, SNAP_MODE, SNAP_OVERRIDE_BEHAVIOR } from "ducjs/utils/constants";
-
-
+import {
+  GeometricPoint,
+  Percentage,
+  Radian,
+  ScaleFactor,
+} from "ducjs/types/geometryTypes";
+import { MakeBrand, MaybePromise, ValueOf } from "ducjs/types/utility-types";
+import type {
+  GRID_DISPLAY_TYPE,
+  GRID_TYPE,
+  IMAGE_MIME_TYPES,
+  MIME_TYPES,
+  SNAP_MARKER_SHAPE,
+  SNAP_MODE,
+  SNAP_OVERRIDE_BEHAVIOR,
+} from "ducjs/utils/constants";
 
 /**
  * Root data structure for the stored data state
@@ -37,18 +48,17 @@ import type { GRID_DISPLAY_TYPE, GRID_TYPE, IMAGE_MIME_TYPES, MIME_TYPES, SNAP_M
 export interface ExportedDataState {
   type: string;
   version: string;
-  
+
   source: string;
-  thumbnail: Uint8Array;
-  dictionary: Dictionary;
+  thumbnail: Uint8Array | undefined;
+  dictionary: Dictionary | undefined;
 
   elements: readonly DucElement[];
 
   /** The user's current session state for a specific project */
-  ducLocalState: DucLocalState;
+  localState: DucLocalState;
   /** Project-wide settings that are saved with the document and shared by all users */
-  ducGlobalState: DucGlobalState;
-
+  globalState: DucGlobalState;
 
   blocks: readonly DucBlock[];
   groups: readonly DucGroup[];
@@ -62,6 +72,13 @@ export interface ExportedDataState {
   versionGraph: VersionGraph | undefined;
 }
 
+export type ExportedDataStateContent = Omit<ExportedDataState, "type" | "version" | "source">;
+
+/**
+ * A version of the data state where all fields are optional.
+ * This is useful for importing data where some fields might be missing.
+ */
+export type ImportedDataState = Partial<ExportedDataState>;
 
 export type Identifier = {
   /** Unique identifier for this standard */
@@ -70,12 +87,11 @@ export type Identifier = {
   name: string;
   /** Description of the standard */
   description?: string;
-}
-
+};
 
 export type Dictionary = {
   [key: string]: string;
-}
+};
 
 export type DucView = {
   scrollX: PrecisionValue;
@@ -111,12 +127,11 @@ export type DucUcs = {
 
 export type Scope = SupportedMeasures;
 
-export type DataURL = string & { _brand: "DataURL" };
 
 export type DucExternalFileData = {
   mimeType: string;
   id: ExternalFileId;
-  dataURL: DataURL;
+  data: Uint8Array;
   /**
    * Epoch timestamp in milliseconds
    */
@@ -131,12 +146,12 @@ export type DucExternalFileData = {
   lastRetrieved?: number;
   /**
    * indicates the version of the file. This can be used to determine whether
-   * the file dataURL has changed e.g. as part of restore due to schema update.
+   * the file data has changed e.g. as part of restore due to schema update.
    */
   version?: number;
 };
 
-export type DucExternalFileMetadata = Omit<DucExternalFileData, "dataURL">;
+export type DucExternalFileMetadata = Omit<DucExternalFileData, "data">;
 
 export type DucExternalFiles = Record<DucElement["id"], DucExternalFileData>;
 
@@ -149,6 +164,26 @@ export type SuggestedPointBinding = [
   "start" | "end" | "both",
   NonDeleted<DucBindableElement>
 ];
+
+export type ToolType =
+  | "selection"
+  | "rectangle"
+  | "polygon"
+  | "ellipse"
+  | "line"
+  | "freedraw"
+  | "text"
+  | "image"
+  | "eraser"
+  | "hand"
+  | "frame"
+  | "embeddable"
+  | "ruler"
+  | "lasso"
+  | "laser"
+  | "table";
+
+export type ElementOrToolType = DucElementType | ToolType | "custom";
 
 /**
  * Defines the global, persistent settings for the drawing. These are fundamental
@@ -248,6 +283,15 @@ export type DucLocalState = {
   currentItemEndLineHead: LineHead | null;
   currentItemRoundness: DucElement["roundness"];
 
+  /**
+   * grid cell px size
+   * @deprecated use activeGridSettings instead
+   * */
+  gridSize: number;
+  /**
+   * @deprecated use activeGridSettings instead
+   * */
+  gridStep: number;
 
   /**
    * Pen mode is enabled, creates a better experience for drawing with a pen
@@ -358,8 +402,8 @@ export type LibraryItems_anyVersion = LibraryItems | LibraryItems_v1;
 
 export type LibraryItemsSource =
   | ((
-    currentLibraryItems: LibraryItems,
-  ) => MaybePromise<LibraryItems_anyVersion | Blob>)
+      currentLibraryItems: LibraryItems
+    ) => MaybePromise<LibraryItems_anyVersion | Blob>)
   | MaybePromise<LibraryItems_anyVersion | Blob>;
 // -----------------------------------------------------------------------------
 
@@ -374,19 +418,11 @@ export type Primitive =
 
 export type JSONValue = string | number | boolean | null | object;
 
-export type EmbedsValidationStatus = Map<
-  DucIframeLikeElement["id"],
-  boolean
->;
+export type EmbedsValidationStatus = Map<DucIframeLikeElement["id"], boolean>;
 
 export type ElementsPendingErasure = Set<DucElement["id"]>;
 
-export type RendererState = {
-  deletedElementIds: string[];
-};
-
 export type PendingDucElements = DucElement[];
-
 
 export type GridDisplayType = ValueOf<typeof GRID_DISPLAY_TYPE>;
 export type GridType = ValueOf<typeof GRID_TYPE>;
@@ -464,7 +500,6 @@ export type GridSettings = {
   /** Minor grid line/dot styling */
   minorStyle: GridStyle;
 
-
   /** Show minor subdivisions */
   showMinor: boolean;
 
@@ -487,13 +522,10 @@ export type GridSettings = {
   enableSnapping: boolean;
 };
 
-
-
 export type ObjectSnapMode = ValueOf<typeof OBJECT_SNAP_MODE>;
 export type SnapOverrideBehavior = ValueOf<typeof SNAP_OVERRIDE_BEHAVIOR>;
 export type SnapMarkerShape = ValueOf<typeof SNAP_MARKER_SHAPE>;
 export type SnapMode = ValueOf<typeof SNAP_MODE>;
-
 
 /**
  * Temporary snap override settings
@@ -677,13 +709,15 @@ export type SnapSettings = {
   snapToGridIntersections?: boolean;
 };
 
-
-
+/** Runtime gridSize value. Null indicates disabled grid. */
+export type NullableGridSize =
+  | (DucLocalState["gridSize"] & MakeBrand<"NullableGridSize">)
+  | null;
 
 //// VERSION CONTROL
 export type VersionId = string;
 /** JSON Patch RFC6902 */
-export type JSONPatch = Array<{ op: string; path: string; value?: any }>; 
+export type JSONPatch = Array<{ op: string; path: string; from?: string; value?: any }>;
 export type PruningLevel = ValueOf<typeof PRUNING_LEVEL>;
 
 export interface VersionBase {
@@ -696,13 +730,13 @@ export interface VersionBase {
 }
 
 export interface Checkpoint extends VersionBase {
-  type: 'checkpoint';
+  type: "checkpoint";
   data: Uint8Array;
   sizeBytes: number;
 }
 
 export interface Delta extends VersionBase {
-  type: 'delta';
+  type: "delta";
   patch: JSONPatch;
 }
 

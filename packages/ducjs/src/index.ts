@@ -1,7 +1,9 @@
-export * as DucBin from "ducjs/duc";
+export * as DucBin from "./flatbuffers/duc";
 
-export * from "ducjs/types";
-export * from "ducjs/utils";
-export * from "ducjs/serialize";
-export * from "ducjs/parse";
-export * from "ducjs/legacy";
+export * from "./types";
+export * from "./utils";
+export * from "./serialize";
+export * from "./parse";
+export * from "./legacy";
+export * from "./restore";
+export * from "./technical";

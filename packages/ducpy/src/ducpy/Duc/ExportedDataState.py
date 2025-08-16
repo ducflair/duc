@@ -36,6 +36,13 @@ class ExportedDataState(object):
         return None
 
     # ExportedDataState
+    def VersionLegacy(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+        return 0
+
+    # ExportedDataState
     def Source(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
@@ -320,6 +327,12 @@ def ExportedDataStateAddType(builder, type):
 
 def AddType(builder, type):
     ExportedDataStateAddType(builder, type)
+
+def ExportedDataStateAddVersionLegacy(builder, versionLegacy):
+    builder.PrependInt32Slot(1, versionLegacy, 0)
+
+def AddVersionLegacy(builder, versionLegacy):
+    ExportedDataStateAddVersionLegacy(builder, versionLegacy)
 
 def ExportedDataStateAddSource(builder, source):
     builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(source), 0)

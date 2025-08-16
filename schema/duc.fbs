@@ -290,6 +290,7 @@ enum GRID_TYPE:ubyte {
 }
 
 enum OBJECT_SNAP_MODE:ubyte {
+  NONE,
   /** Snaps to the endpoint of a line or arc. */
   ENDPOINT = 10,
   /** Snaps to the midpoint of a line or arc. */
@@ -512,6 +513,7 @@ enum MATERIAL_CONDITION:ubyte {
 }
 
 enum FEATURE_MODIFIER:ubyte {
+  NONE,
   /** Free State modifier. "Ⓕ" */
   FREE_STATE = 10,
   /** Tangent Plane modifier. "Ⓣ" */
@@ -2527,6 +2529,7 @@ table Checkpoint {
 table JSONPatchOperation {
   op: string;
   path: string;
+  from: string;
   /** Can be any JSON type. It is stored here as a serialized JSON string. */
   value: string;
 }
@@ -2589,7 +2592,7 @@ table DucExternalFileEntry {
 table ExportedDataState {
   /** Untouchable fields even on Breaking Versions. */
   type: string;
-  version_legacy: int (deprecated);
+  version_legacy: int;
   source: string;
   version: string;
   //
