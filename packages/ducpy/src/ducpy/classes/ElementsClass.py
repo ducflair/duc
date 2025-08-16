@@ -214,7 +214,7 @@ class PointBindingPoint:
 @dataclass
 class DucPointBinding:
     element_id: str
-    focus: float
+    focus: Optional[float]
     gap: float
     fixed_point: Optional[GeometricPoint]
     point: Optional[PointBindingPoint]
@@ -250,6 +250,7 @@ class DucLinearElementBase:
 class DucStackLikeStyles:
     opacity: float
     labeling_color: str
+    blending: Optional[BLENDING] = None
 
 @dataclass
 class DucStackBase:
@@ -865,4 +866,4 @@ DucElement = Union[
 
 @dataclass
 class ElementWrapper:
-    element: DucElement 
+    element: DucElement
