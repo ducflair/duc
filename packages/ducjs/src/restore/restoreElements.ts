@@ -7,11 +7,11 @@ import {
   isValidColor,
   isValidDucHead,
   isValidEnumValue,
+  isValidFunction,
   isValidImageScaleValue,
   isValidImageStatusValue,
   isValidPercentageValue,
   isValidPolygonSides,
-  isValidPrecisionScopeValue,
   isValidRadianValue,
   isValidString,
   isValidTextAlignValue,
@@ -20,7 +20,7 @@ import {
   restoreDucStackProperties,
   restorePrecisionValue,
   validateBackground,
-  validateStroke,
+  validateStroke
 } from "ducjs/restore/restoreDataState";
 import {
   getPrecisionValueFromRaw,
@@ -32,21 +32,30 @@ import {
   ScaleFactors,
 } from "ducjs/technical/scopes";
 import {
+  _DucElementBase,
   _DucStackElementBase,
   BezierMirroring,
   DatumReference,
+  DimensionDefinitionPoints,
+  DucBinderElement,
+  DucDimensionElement,
+  DucDimensionStyle,
   DucDocElement,
   DucDocStyle,
   DucElement,
+  DucFeatureControlFrameElement,
   DucFrameElement,
   DucFreeDrawEasing,
   DucFreeDrawEnds,
   DucGlobalState,
   DucHead,
+  DucLeaderElement,
   DucLine,
   DucLinearElement,
   DucLocalState,
+  DucParametricElement,
   DucPath,
+  DucPlotElement,
   DucPoint,
   DucPointBinding,
   DucSelectionElement,
@@ -57,40 +66,31 @@ import {
   DucTextDynamicPart,
   DucTextElement,
   DucTextStyle,
+  DucView,
+  DucViewportElement,
+  DucXRayElement,
   ElementContentBase,
   ExternalFileId,
+  FeatureControlFrameSegment,
   FontFamilyValues,
   ImportedDataState,
   isElbowArrow,
   isLinearElement,
   isTextElement,
+  LeaderContent,
   Mutable,
   NonDeleted,
   OrderedDucElement,
   ParametricElementSource,
   Percentage,
+  PlotLayout,
   PrecisionValue,
   Radian,
   RawValue,
+  ScaleFactor,
   Scope,
   TextColumn,
   ViewportScale,
-  DimensionDefinitionPoints,
-  DucDimensionElement,
-  DucDimensionStyle,
-  DucFeatureControlFrameElement,
-  DucLeaderElement,
-  DucParametricElement,
-  DucPlotElement,
-  DucView,
-  DucViewportElement,
-  DucXRayElement,
-  FeatureControlFrameSegment,
-  LeaderContent,
-  PlotLayout,
-  ScaleFactor,
-  DucBinderElement,
-  _DucElementBase,
 } from "ducjs/types";
 import {
   arrayToMap,
@@ -178,7 +178,7 @@ const restoreElementWithProperties = <
         ),
         width: restorePrecisionValue(
           (_element as any).strokeWidth ||
-            DEFAULT_ELEMENT_PROPS.stroke.width.value,
+          DEFAULT_ELEMENT_PROPS.stroke.width.value,
           elementScope,
           currentScope,
           DEFAULT_ELEMENT_PROPS.stroke.width.value
@@ -389,10 +389,10 @@ const restoreElement = (
           fontSize: finalFontSize,
           paperTextHeight: element.paperTextHeight
             ? restorePrecisionValue(
-                element.paperTextHeight,
-                textElementScope,
-                currentScope
-              )
+              element.paperTextHeight,
+              textElementScope,
+              currentScope
+            )
             : undefined,
           widthFactor:
             typeof element.widthFactor === "number"
@@ -440,10 +440,10 @@ const restoreElement = (
           ),
           lastCommittedPoint: element.lastCommittedPoint
             ? restorePoint(
-                element.lastCommittedPoint as DucPoint,
-                elementScope,
-                currentScope
-              )
+              element.lastCommittedPoint as DucPoint,
+              elementScope,
+              currentScope
+            )
             : null,
           simulatePressure: isValidBoolean(element.simulatePressure, false),
           pressures: Array.isArray(element.pressures) ? element.pressures : [],
@@ -550,34 +550,34 @@ const restoreElement = (
       // Process bindings
       const processedStartBinding =
         startBinding &&
-        startBinding.head !== undefined &&
-        (!startBinding.elementId || startBinding.elementId === "")
+          startBinding.head !== undefined &&
+          (!startBinding.elementId || startBinding.elementId === "")
           ? createHeadOnlyBinding(
-              startBinding.head,
-              restoredBlocks,
-              currentScope
-            )
+            startBinding.head,
+            restoredBlocks,
+            currentScope
+          )
           : startBinding
             ? repairBinding(
-                element,
-                startBinding,
-                currentScope,
-                restoredBlocks
-              )
+              element,
+              startBinding,
+              currentScope,
+              restoredBlocks
+            )
             : null;
 
       const processedEndBinding =
         endBinding &&
-        endBinding.head !== undefined &&
-        (!endBinding.elementId || endBinding.elementId === "")
+          endBinding.head !== undefined &&
+          (!endBinding.elementId || endBinding.elementId === "")
           ? createHeadOnlyBinding(endBinding.head, restoredBlocks, currentScope)
           : endBinding
             ? repairBinding(
-                element,
-                endBinding,
-                currentScope,
-                restoredBlocks
-              )
+              element,
+              endBinding,
+              currentScope,
+              restoredBlocks
+            )
             : null;
 
       // Create the base restored element
@@ -591,10 +591,10 @@ const restoreElement = (
           lines,
           lastCommittedPoint: element.lastCommittedPoint
             ? restorePoint(
-                element.lastCommittedPoint,
-                element.scope,
-                currentScope
-              )
+              element.lastCommittedPoint,
+              element.scope,
+              currentScope
+            )
             : null,
           startBinding: processedStartBinding,
           wipeoutBelow: isValidBooleanValue(element.wipeoutBelow, false),
@@ -605,17 +605,17 @@ const restoreElement = (
           ...(!sizeFromPoints
             ? {}
             : {
-                width: getPrecisionValueFromScoped(
-                  sizeFromPoints.width,
-                  element.scope,
-                  currentScope
-                ),
-                height: getPrecisionValueFromScoped(
-                  sizeFromPoints.height,
-                  element.scope,
-                  currentScope
-                ),
-              }),
+              width: getPrecisionValueFromScoped(
+                sizeFromPoints.width,
+                element.scope,
+                currentScope
+              ),
+              height: getPrecisionValueFromScoped(
+                sizeFromPoints.height,
+                element.scope,
+                currentScope
+              ),
+            }),
         },
         localState
       );
@@ -1163,17 +1163,17 @@ const restoreElement = (
           ),
           baselineData: dimElement.baselineData
             ? {
-                baseDimensionId: isValidString(
-                  dimElement.baselineData.baseDimensionId
-                ),
-              }
+              baseDimensionId: isValidString(
+                dimElement.baselineData.baseDimensionId
+              ),
+            }
             : undefined,
           continueData: dimElement.continueData
             ? {
-                continueFromDimensionId: isValidString(
-                  dimElement.continueData.continueFromDimensionId
-                ),
-              }
+              continueFromDimensionId: isValidString(
+                dimElement.continueData.continueFromDimensionId
+              ),
+            }
             : undefined,
         },
         localState,
@@ -1194,14 +1194,14 @@ export const restorePoint = (
   point:
     | Partial<DucPoint>
     | {
-        x: number | PrecisionValue;
-        y: number | PrecisionValue;
-        isCurve?: boolean;
-        mirroring?: BezierMirroring;
-        handleIn?: { x: number | PrecisionValue; y: number | PrecisionValue };
-        handleOut?: { x: number | PrecisionValue; y: number | PrecisionValue };
-        borderRadius?: number | PrecisionValue;
-      }
+      x: number | PrecisionValue;
+      y: number | PrecisionValue;
+      isCurve?: boolean;
+      mirroring?: BezierMirroring;
+      handleIn?: { x: number | PrecisionValue; y: number | PrecisionValue };
+      handleOut?: { x: number | PrecisionValue; y: number | PrecisionValue };
+      borderRadius?: number | PrecisionValue;
+    }
     | undefined,
   elementScope: Scope,
   currentScope: Scope
@@ -1845,10 +1845,10 @@ const restoreTableCells = (
         locked: isValidBooleanValue(cell.locked, false),
         span: cell.span
           ? {
-              columns:
-                typeof cell.span.columns === "number" ? cell.span.columns : 1,
-              rows: typeof cell.span.rows === "number" ? cell.span.rows : 1,
-            }
+            columns:
+              typeof cell.span.columns === "number" ? cell.span.columns : 1,
+            rows: typeof cell.span.rows === "number" ? cell.span.rows : 1,
+          }
           : undefined,
         styleOverrides: cell.styleOverrides, // Not deeply restored for now
       };
@@ -1918,19 +1918,19 @@ const restoreTextColumns = (columns: any, currentScope: Scope) => {
 
   const definitions: TextColumn[] = Array.isArray(columns.definitions)
     ? columns.definitions.map((def: any) => ({
-        width: restorePrecisionValue(
-          def?.width,
-          currentScope,
-          currentScope,
-          defaultWidth.value
-        ),
-        gutter: restorePrecisionValue(
-          def?.gutter,
-          currentScope,
-          currentScope,
-          defaultGutter.value
-        ),
-      }))
+      width: restorePrecisionValue(
+        def?.width,
+        currentScope,
+        currentScope,
+        defaultWidth.value
+      ),
+      gutter: restorePrecisionValue(
+        def?.gutter,
+        currentScope,
+        currentScope,
+        defaultGutter.value
+      ),
+    }))
     : [];
 
   return {
@@ -1975,16 +1975,16 @@ const repairBinding = (
   // Ensure we preserve the point attribute for linear-to-linear bindings
   const pointData = binding.point
     ? {
-        point: {
-          index:
-            typeof binding.point.index === "number" ? binding.point.index : 0,
-          offset:
-            typeof binding.point.offset === "number"
-              ? // Clamp offset between -1 and 1
-                Math.max(-1, Math.min(1, binding.point.offset))
-              : 0,
-        },
-      }
+      point: {
+        index:
+          typeof binding.point.index === "number" ? binding.point.index : 0,
+        offset:
+          typeof binding.point.offset === "number"
+            ? // Clamp offset between -1 and 1
+            Math.max(-1, Math.min(1, binding.point.offset))
+            : 0,
+      },
+    }
     : { point: null };
 
   return {
@@ -2096,13 +2096,14 @@ const validatePathOverrides = (
   return validPaths;
 };
 
-/**
- * Ensures the supplied easing function is valid. Falls back to the default easing otherwise.
- */
+
 export const isValidFreeDrawEasingValue = (
-  value: DucFreeDrawEasing | undefined
+  value: DucFreeDrawEasing | string | undefined
 ): DucFreeDrawEasing => {
-  return typeof value === "function" ? value : DEFAULT_FREEDRAW_ELEMENT.easing;
+  return isValidFunction<DucFreeDrawEasing>(
+    value as unknown as DucFreeDrawEasing | string,
+    DEFAULT_FREEDRAW_ELEMENT.easing
+  );
 };
 
 /**
@@ -2300,27 +2301,27 @@ const restoreDimensionBindings = (
   return {
     origin1: bindings.origin1
       ? repairBinding(
-          undefined,
-          bindings.origin1 ?? null,
-          currentScope,
-          restoredBlocks
-        )
+        undefined,
+        bindings.origin1 ?? null,
+        currentScope,
+        restoredBlocks
+      )
       : null,
     origin2: bindings.origin2
       ? repairBinding(
-          undefined,
-          bindings.origin2 ?? null,
-          currentScope,
-          restoredBlocks
-        )
+        undefined,
+        bindings.origin2 ?? null,
+        currentScope,
+        restoredBlocks
+      )
       : null,
     center: bindings.center
       ? repairBinding(
-          undefined,
-          bindings.center ?? null,
-          currentScope,
-          restoredBlocks
-        )
+        undefined,
+        bindings.center ?? null,
+        currentScope,
+        restoredBlocks
+      )
       : null,
   };
 };
@@ -2361,40 +2362,40 @@ const restoreFcfRows = (
 ): readonly (readonly FeatureControlFrameSegment[])[] => {
   return rows ? rows.map((row) =>
     row ? row.map((segment) => ({
-          symbol: isValidEnumValue(
-            segment.symbol,
-            GDT_SYMBOL,
-            GDT_SYMBOL.POSITION
+      symbol: isValidEnumValue(
+        segment.symbol,
+        GDT_SYMBOL,
+        GDT_SYMBOL.POSITION
+      ),
+      tolerance: {
+        value: isValidString(segment.tolerance?.value),
+        zoneType: isValidEnumValue(
+          segment.tolerance?.zoneType,
+          TOLERANCE_ZONE_TYPE,
+          undefined
+        ),
+        featureModifiers: Array.isArray(segment.tolerance?.featureModifiers)
+          ? segment.tolerance.featureModifiers
+          : [],
+        materialCondition: isValidEnumValue(
+          segment.tolerance?.materialCondition,
+          MATERIAL_CONDITION,
+          undefined
+        ),
+      },
+      datums: (Array.isArray(segment.datums)
+        ? segment.datums.map((datum) => ({
+          letters: isValidString(datum?.letters),
+          modifier: isValidEnumValue(
+            datum?.modifier,
+            MATERIAL_CONDITION,
+            undefined
           ),
-          tolerance: {
-            value: isValidString(segment.tolerance?.value),
-            zoneType: isValidEnumValue(
-              segment.tolerance?.zoneType,
-              TOLERANCE_ZONE_TYPE,
-              undefined
-            ),
-            featureModifiers: Array.isArray(segment.tolerance?.featureModifiers)
-              ? segment.tolerance.featureModifiers
-              : [],
-            materialCondition: isValidEnumValue(
-              segment.tolerance?.materialCondition,
-              MATERIAL_CONDITION,
-              undefined
-            ),
-          },
-          datums: (Array.isArray(segment.datums)
-            ? segment.datums.map((datum) => ({
-                letters: isValidString(datum?.letters),
-                modifier: isValidEnumValue(
-                  datum?.modifier,
-                  MATERIAL_CONDITION,
-                  undefined
-                ),
-              }))
-            : []) as [DatumReference?, DatumReference?, DatumReference?],
         }))
+        : []) as [DatumReference?, DatumReference?, DatumReference?],
+    }))
       : []
-  ): [];
+  ) : [];
 };
 
 const restoreFcfFrameModifiers = (
@@ -2409,16 +2410,16 @@ const restoreFcfFrameModifiers = (
     continuousFeature: isValidBoolean(mods.continuousFeature),
     between: mods.between
       ? {
-          start: isValidString(mods.between.start),
-          end: isValidString(mods.between.end),
-        }
+        start: isValidString(mods.between.start),
+        end: isValidString(mods.between.end),
+      }
       : undefined,
     projectedToleranceZone: mods.projectedToleranceZone
       ? restorePrecisionValue(
-            mods.projectedToleranceZone.value,
-            elementScope,
-            currentScope
-          )
+        mods.projectedToleranceZone.value,
+        elementScope,
+        currentScope
+      )
       : undefined,
   };
 };
@@ -2455,10 +2456,10 @@ const restoreTextStyle = (
       : { background: [DEFAULT_ELEMENT_PROPS.background] }),
     ...(style?.stroke
       ? {
-          stroke: style.stroke.map((s) =>
-            validateStroke(s, NEUTRAL_SCOPE, currentScope)
-          ),
-        }
+        stroke: style.stroke.map((s) =>
+          validateStroke(s, NEUTRAL_SCOPE, currentScope)
+        ),
+      }
       : { stroke: [DEFAULT_ELEMENT_PROPS.stroke] }),
     roundness: restorePrecisionValue(
       style?.roundness,
@@ -2492,10 +2493,10 @@ const restoreTextStyle = (
     ),
     paperTextHeight: style?.paperTextHeight
       ? restorePrecisionValue(
-          style.paperTextHeight,
-          NEUTRAL_SCOPE,
-          currentScope
-        )
+        style.paperTextHeight,
+        NEUTRAL_SCOPE,
+        currentScope
+      )
       : undefined,
     widthFactor: style?.widthFactor ?? 1 as ScaleFactor,
     isUpsideDown: isValidBoolean(style?.isUpsideDown, false),
