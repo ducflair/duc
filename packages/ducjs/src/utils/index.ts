@@ -8,6 +8,7 @@ export * from "./normalize";
 export * from "./url";
 export * from "./version";
 export * from "./filebyte";
+export * from "./functionCodec";
 
 /**
  * supply `null` as message if non-never value is valid, you just need to
