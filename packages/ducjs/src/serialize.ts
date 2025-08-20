@@ -610,7 +610,7 @@ function writeFreeDraw(b: flatbuffers.Builder, e: DucFreeDrawElement, usv: boole
     ? Duc.DucFreeDrawElement.createPressuresVector(b, e.pressures as number[])
     : undefined;
 
-  const easing = e.easing != null ? b.createString(e.easing as unknown as string) : undefined;
+  const easing = b.createString(encodeFunctionString(e.easing));
   const startEnds = writeFreeDrawEnds(b, e.start, usv);
   const endEnds = writeFreeDrawEnds(b, e.end, usv);
   const lcp = e.lastCommittedPoint ? writeDucPoint(b, e.lastCommittedPoint, usv) : undefined;
