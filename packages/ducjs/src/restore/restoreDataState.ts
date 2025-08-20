@@ -23,10 +23,8 @@ import { getPrecisionScope } from "ducjs/technical/measurements";
 import {
   getPrecisionValueFromRaw,
   getPrecisionValueFromScoped,
-  getScaledZoomValueForScope,
-  getScopedZoomValue,
   NEUTRAL_SCOPE,
-  ScaleFactors,
+  ScaleFactors
 } from "ducjs/technical/scopes";
 import { PREDEFINED_STANDARDS, Standard } from "ducjs/technical/standards";
 import type {
@@ -49,15 +47,16 @@ import type {
   _DucStackBase,
   BezierMirroring,
   DucBlock,
+  DucBlockAttributeDefinition,
   DucElement,
   DucGroup,
   DucHead,
   DucLayer,
   DucRegion,
-  DucBlockAttributeDefinition,
   ElementBackground,
   ElementContentBase,
   ElementStroke,
+  ExternalFileId,
   FillStyle,
   ImageStatus,
   LineHead,
@@ -70,16 +69,17 @@ import type {
   StrokeStyle,
   TextAlign,
   VerticalAlign,
-  ExternalFileId,
 } from "ducjs/types/elements";
 import { Percentage, Radian } from "ducjs/types/geometryTypes";
-import { MakeBrand, MaybePromise, ValueOf } from "ducjs/types/utility-types";
+import { ValueOf } from "ducjs/types/utility-types";
 import {
+  base64ToUint8Array,
   getDefaultGlobalState,
   getDefaultLocalState,
   getZoom,
+  isEncodedFunctionString,
   isFiniteNumber,
-  base64ToUint8Array,
+  reviveEncodedFunction,
 } from "ducjs/utils";
 import {
   DEFAULT_ELEMENT_PROPS,
@@ -92,7 +92,6 @@ import {
   VERSIONS,
 } from "ducjs/utils/constants";
 import { getDefaultStackProperties } from "ducjs/utils/elements";
-import { getNormalizedZoom } from "ducjs/utils/normalize";
 import tinycolor from "tinycolor2";
 
 export type RestoredLocalState = Omit<
@@ -273,15 +272,13 @@ export const restoreGroups = (
     .filter(
       (g) => {
         if (!g || typeof g !== "object") return false;
-        const obj = g as Record<string, unknown>;
-        return typeof obj.id === "string" && obj.type === "group";
+        return typeof g.id === "string";
       }
     )
     .map((g): DucGroup => {
-      const obj = g as Record<string, unknown>;
       return {
-        id: obj.id as string,
-        ...restoreDucStackProperties(obj),
+        id: g.id as string,
+        ...restoreDucStackProperties(g),
       };
     });
 };
@@ -308,31 +305,19 @@ export const restoreLayers = (
   }
   return layers
     .filter(
-      (l) => {
-        if (!l || typeof l !== "object") return false;
-        const obj = l as Record<string, unknown>;
-        return typeof obj.id === "string" && obj.type === "layer";
+      (g) => {
+        if (!g || typeof g !== "object") return false;
+        return typeof g.id === "string";
       }
     )
     .map((l): DucLayer => {
-      const obj = l as Record<string, unknown>;
       return {
-        id: obj.id as string,
-        ...restoreDucStackProperties(obj),
-        readonly: isValidBoolean(obj.readonly, false),
+        id: l.id as string,
+        ...restoreDucStackProperties(l),
+        readonly: isValidBoolean(l.readonly, false),
         overrides: {
-          stroke: validateStroke(
-            obj.overrides && typeof obj.overrides === "object"
-              ? (obj.overrides as Record<string, unknown>).stroke as ElementStroke | undefined
-              : undefined,
-            currentScope,
-            currentScope
-          ),
-          background: validateBackground(
-            obj.overrides && typeof obj.overrides === "object"
-              ? (obj.overrides as Record<string, unknown>).background as ElementBackground | undefined
-              : undefined
-          ),
+          stroke: validateStroke(l.overrides.stroke, currentScope, currentScope),
+          background: validateBackground(l.overrides.background),
         },
       };
     });
@@ -348,21 +333,19 @@ export const restoreRegions = (regions: unknown): RestoredDataState["regions"] =
   }
   return regions
     .filter(
-      (r) => {
-        if (!r || typeof r !== "object") return false;
-        const obj = r as Record<string, unknown>;
-        return typeof obj.id === "string" && obj.type === "region";
+      (g) => {
+        if (!g || typeof g !== "object") return false;
+        return typeof g.id === "string";
       }
     )
     .map((r) => {
-      const obj = r as Record<string, unknown>;
       return {
         type: "region",
-        id: obj.id as string,
-        ...restoreDucStackProperties(obj),
+        id: r.id as string,
+        ...restoreDucStackProperties(r),
         booleanOperation:
-          Object.values(BOOLEAN_OPERATION).includes(obj.booleanOperation as BOOLEAN_OPERATION)
-            ? (obj.booleanOperation as BOOLEAN_OPERATION)
+          Object.values(BOOLEAN_OPERATION).includes(r.booleanOperation as BOOLEAN_OPERATION)
+            ? (r.booleanOperation as BOOLEAN_OPERATION)
             : BOOLEAN_OPERATION.UNION,
       };
     });
@@ -638,7 +621,7 @@ export const restoreVersionGraph = (
   const metadata: VersionGraph["metadata"] = {
     pruningLevel:
       importedMetadata?.pruningLevel &&
-      Object.values(PRUNING_LEVEL).includes(importedMetadata.pruningLevel)
+        Object.values(PRUNING_LEVEL).includes(importedMetadata.pruningLevel)
         ? importedMetadata.pruningLevel
         : PRUNING_LEVEL.BALANCED,
     lastPruned: isFiniteNumber(importedMetadata?.lastPruned)
@@ -646,7 +629,7 @@ export const restoreVersionGraph = (
       : 0,
     totalSize:
       isFiniteNumber(importedMetadata?.totalSize) &&
-      importedMetadata.totalSize >= 0
+        importedMetadata.totalSize >= 0
         ? importedMetadata.totalSize
         : 0,
   };
@@ -664,7 +647,7 @@ export const restoreVersionGraph = (
  */
 export const restoreDucStackProperties = (
   stack: any
-): Omit<_DucStackBase, "id" | "type"> => {
+): Omit<_DucStackBase, "id"> => {
   const defaultStackProperties = getDefaultStackProperties();
   return {
     label: typeof stack.label === "string" ? stack.label : "",
@@ -744,10 +727,10 @@ export const restorePrecisionValue = (
     }
     return fromScoped
       ? getPrecisionValueFromScoped(
-          value as ScopedValue,
-          elementScope,
-          currentScope
-        )
+        value as ScopedValue,
+        elementScope,
+        currentScope
+      )
       : getPrecisionValueFromRaw(value as RawValue, elementScope, currentScope);
   }
   return getPrecisionValueFromRaw(value.value, elementScope, currentScope);
@@ -1061,6 +1044,21 @@ export const isValidBoolean = (
   return typeof value === "boolean" ? value : defaultValue;
 };
 
+/**
+ * Ensures the supplied easing function is valid. Falls back to the default easing otherwise.
+ */
+export const isValidFunction = <T extends Function>(
+  value: unknown,
+  defaultFn: T
+): T => {
+  if (typeof value === "function") return value as T;
+  if (typeof value === "string" && isEncodedFunctionString(value)) {
+    const revived = reviveEncodedFunction(value);
+    if (typeof revived === "function") return revived as T;
+  }
+  return defaultFn;
+};
+
 export const isValidColor = (
   value: any,
   defaultValue: string = "#000000"
@@ -1106,7 +1104,7 @@ export const isValidUint8Array = (value: unknown): Uint8Array | undefined => {
   if (value instanceof Uint8Array) {
     return value.byteLength > 0 ? value : undefined;
   }
-  
+
   if (typeof value === "string") {
     let base64String = value;
 
@@ -1116,18 +1114,18 @@ export const isValidUint8Array = (value: unknown): Uint8Array | undefined => {
         console.warn("Invalid Data URL format: missing comma.");
         return undefined; // Malformed Data URL
       }
-      
+
       // Ensure it's a base64-encoded Data URL
       const header = value.substring(0, commaIndex);
       if (!header.includes(";base64")) {
         console.warn("Unsupported Data URL: only base64 encoding is supported.");
         return undefined;
       }
-      
+
       // Extract the actual base64 payload
       base64String = value.substring(commaIndex + 1);
     }
-    
+
     try {
       if (base64String.trim().length === 0) {
         return undefined;
