@@ -111,7 +111,7 @@ import {
 } from "ducjs/types";
 
 import { restore } from "ducjs/restore";
-import { EXPORT_DATA_TYPES } from "ducjs/utils";
+import { encodeFunctionString, EXPORT_DATA_TYPES } from "ducjs/utils";
 
 /**
  * Basic helpers
@@ -559,7 +559,7 @@ function writeArrow(b: flatbuffers.Builder, e: DucArrowElement, usv: boolean): n
 
 function writeFreeDrawEnds(b: flatbuffers.Builder, ends: DucFreeDrawEnds | null | undefined, usv: boolean): number | undefined {
   if (!ends) return undefined;
-  const easing = str(b, ends.easing as unknown as string);
+  const easing = str(b, encodeFunctionString(ends.easing));
   Duc.DucFreeDrawEnds.startDucFreeDrawEnds(b);
   Duc.DucFreeDrawEnds.addCap(b, ends.cap);
   Duc.DucFreeDrawEnds.addTaper(b, ends.taper);
@@ -2422,7 +2422,10 @@ function serializeExternalFiles(builder: flatbuffers.Builder, files: DucExternal
 }
 
 
-export const DUC_SCHEMA_VERSION = process.env.DUC_SCHEMA_VERSION || "0.0.0";
+export const DUC_SCHEMA_VERSION =
+  (typeof process !== "undefined" && (process as any).env && (process as any).env.DUC_SCHEMA_VERSION) ||
+  (typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.DUC_SCHEMA_VERSION) ||
+  "0.0.0";
 
 export const serializeDuc = async (
   data: ImportedDataState,
@@ -2439,7 +2442,7 @@ export const serializeDuc = async (
   );
 
   const typeOffset = builder.createString(EXPORT_DATA_TYPES.duc);
-  const sourceOffset = builder.createString(window.location.origin ?? null!);
+  const sourceOffset = builder.createString(typeof window !== "undefined" ? window.location.origin : "unknown");
   const versionOffset = builder.createString(DUC_SCHEMA_VERSION);
 
   // Serialize elements
