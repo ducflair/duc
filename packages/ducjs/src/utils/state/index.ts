@@ -115,10 +115,7 @@ export const getZoom = (
 export const getDefaultGlobalState = (): DucGlobalState => {
   return {
     name: null,
-    viewBackgroundColor: window.matchMedia("(prefers-color-scheme: dark)")
-      .matches
-      ? COLOR_PALETTE.night
-      : COLOR_PALETTE.white,
+    viewBackgroundColor: typeof window !== "undefined" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? COLOR_PALETTE.night : COLOR_PALETTE.white) : COLOR_PALETTE.white,
     scopeExponentThreshold: 2,
     mainScope: NEUTRAL_SCOPE,
     dashSpacingScale: 1 as ScaleFactor,
@@ -136,8 +133,8 @@ export const getDefaultLocalState = (): Omit<
   DucLocalState,
   "offsetTop" | "offsetLeft" | "width" | "height"
 > => {
-  const scrollX = window.innerWidth / 2;
-  const scrollY = window.innerHeight / 2;
+  const scrollX = typeof window !== "undefined" ? window.innerWidth / 2 : 0;
+  const scrollY = typeof window !== "undefined" ? window.innerHeight / 2 : 0;
   const zoom = getNormalizedZoom(1);
   const scope = NEUTRAL_SCOPE;
   const scopedZoom = getScopedZoomValue(zoom, scope);
