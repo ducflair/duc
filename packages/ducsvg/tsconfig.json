@@ -1,0 +1,16 @@
+{
+  "extends": "@duc/tsconfig/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "dist",
+    "declaration": true,
+    "declarationDir": "dist",
+    "rootDir": "src",
+    "paths": {
+      "ducsvg/*": ["src/*"],
+      "ducjs/*": ["../../../packages/ducjs/src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

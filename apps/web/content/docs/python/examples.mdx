@@ -62,7 +62,7 @@ rect.points = [p1, p2, p3, p4, p5]
 elements.append(rect)
 
 # Create binary files container
-files = BinaryFilesClass.BinaryFiles()
+files = BinaryFilesClass.DucExternalFiles()
 
 # Save to file
 with open("new_drawing.duc", "wb") as f:
@@ -155,7 +155,7 @@ import math
 # Create a new duc file with animation frames
 app_state = duc.classes.AppStateClass.AppState()
 app_state.zoom = 1.0
-files = duc.classes.BinaryFilesClass.BinaryFiles()
+files = duc.classes.BinaryFilesClass.DucExternalFiles()
 
 # Create a circle element
 def create_circle(x, y, radius):
@@ -216,7 +216,7 @@ offset_y = 200
 # Create app state and files
 app_state = duc.classes.AppStateClass.AppState()
 app_state.zoom = 1.0
-files = duc.classes.BinaryFilesClass.BinaryFiles()
+files = duc.classes.BinaryFilesClass.DucExternalFiles()
 
 # Create elements list
 elements = []
