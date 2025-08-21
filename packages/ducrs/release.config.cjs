@@ -9,7 +9,7 @@ module.exports = {
       "@semantic-release/github",
       {
         assets: [
-          { path: "dist/**/*", label: "Distribution files" },
+          { path: "target/release/**/*", label: "Distribution files" },
         ]
       }
     ],
