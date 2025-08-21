@@ -37,7 +37,7 @@ pip install ducpy
 ## Usage
 
 ```python
-from ducpy import Duc # imports the raw `duc` class
+import ducpy as duc
 ```
 
 ## Documentation
@@ -46,8 +46,7 @@ For detailed documentation, including all available types and utility functions,
 
 ## Tools
 
-- [Playground](https://ducflair.com/core): Experiment with the `duc` format in a live environment.
-- [Documentation](https://duc.ducflair.com): Comprehensive guides and API references.
+- [Playground](https://scopture.com): Experiment with the `duc` format in a live environment.
 
 ## Contributing
 
