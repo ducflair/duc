@@ -1,16 +1,20 @@
 name: Release Rust
 
 on:
-  push:
-    branches:
-      - main
-      - next
-    paths:
-      - 'packages/ducrs/**'
-      - 'turbo.json'
-      - 'package.json'
-  repository_dispatch:
-    types: [trigger-rs-release]
+  workflow_dispatch:
+    # Keeping only manual trigger option
+  # Removed automatic triggers to disable workflow
+  # push:
+  #   branches:
+  #     - main
+  #     - next
+  #   paths:
+  #     - 'packages/ducrs/**'
+  #     - 'turbo.json'
+  #     - 'package.json'
+  # repository_dispatch:
+  #   types: [trigger-rs-release]
+  
 
 permissions:
   contents: write
@@ -27,7 +31,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: main
+          ref: ${{ github.ref_name }}
           persist-credentials: true
       - name: Set Git User
         run: |
