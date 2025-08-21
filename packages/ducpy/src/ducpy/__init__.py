@@ -10,7 +10,6 @@ Import usage examples:
     duc.utils.some_utility
 """
 
-# Create Duc as a top-level module for flatbuffers imports to work
 import sys
 import importlib.util
 from pathlib import Path
