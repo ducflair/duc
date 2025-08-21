@@ -1,15 +1,13 @@
 {
-    "typescript.preferences.importModuleSpecifier": "non-relative",
-    "svg.preview.background": "dark-transparent",
-    "cSpell.words": [
-        "presigner"
-    ],
-    "editor.tabSize": 2,
-    "editor.detectIndentation": false,
-    "rust-analyzer.linkedProjects": [
-      "packages/duc-rs/Cargo.toml"
-    ],
-    "python.analysis.extraPaths": [
-      "./packages/duc-py"
-    ],
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "svg.preview.background": "dark-transparent",
+  "cSpell.words": ["presigner"],
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false,
+  "rust-analyzer.linkedProjects": [
+    "packages/ducrs/Cargo.toml"
+  ],
+  "rust-analyzer.files.exclude": [
+    "packages/ducrs/src/duc_generated.rs"
+  ],
 }

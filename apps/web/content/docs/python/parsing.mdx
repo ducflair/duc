@@ -26,7 +26,7 @@ with open('example.duc', 'rb') as f:
     # Access the parsed data
     elements = duc_data['elements']  # List of DucElement objects
     app_state = duc_data['appState']  # AppState object
-    files = duc_data['files']  # BinaryFiles object
+    files = duc_data['files']  # DucExternalFiles object
     file_type = duc_data['type']  # File type string
     version = duc_data['version']  # File version number
     source = duc_data['source']  # Source string
@@ -69,7 +69,7 @@ When parsing a duc file, you get a dictionary with the following keys:
 
 - `elements`: A list of `DucElementUnion` objects representing all elements in the file
 - `appState`: An `AppState` object containing application state information
-- `files`: A `BinaryFiles` object containing any binary files embedded in the duc file
+- `files`: A `DucExternalFiles` object containing any binary files embedded in the duc file
 - `type`: The file type string
 - `version`: The file version number
 - `source`: The source of the file

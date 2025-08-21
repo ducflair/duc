@@ -1,0 +1,1 @@
+export { DUC_SCHEMA_VERSION as DUC_VERSION } from "ducjs/serialize"
