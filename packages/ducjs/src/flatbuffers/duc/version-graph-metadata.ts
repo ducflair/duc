@@ -4,9 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { PRUNING_LEVEL } from '../duc/pruning-level';
-
-
 export class VersionGraphMetadata {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -25,35 +22,26 @@ static getSizePrefixedRootAsVersionGraphMetadata(bb:flatbuffers.ByteBuffer, obj?
   return (obj || new VersionGraphMetadata()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-pruningLevel():PRUNING_LEVEL|null {
-  const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
-}
-
 lastPruned():bigint {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
+  const offset = this.bb!.__offset(this.bb_pos, 4);
   return offset ? this.bb!.readInt64(this.bb_pos + offset) : BigInt('0');
 }
 
 totalSize():bigint {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
+  const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? this.bb!.readInt64(this.bb_pos + offset) : BigInt('0');
 }
 
 static startVersionGraphMetadata(builder:flatbuffers.Builder) {
-  builder.startObject(3);
-}
-
-static addPruningLevel(builder:flatbuffers.Builder, pruningLevel:PRUNING_LEVEL) {
-  builder.addFieldInt8(0, pruningLevel, null);
+  builder.startObject(2);
 }
 
 static addLastPruned(builder:flatbuffers.Builder, lastPruned:bigint) {
-  builder.addFieldInt64(1, lastPruned, BigInt('0'));
+  builder.addFieldInt64(0, lastPruned, BigInt('0'));
 }
 
 static addTotalSize(builder:flatbuffers.Builder, totalSize:bigint) {
-  builder.addFieldInt64(2, totalSize, BigInt('0'));
+  builder.addFieldInt64(1, totalSize, BigInt('0'));
 }
 
 static endVersionGraphMetadata(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -61,10 +49,8 @@ static endVersionGraphMetadata(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createVersionGraphMetadata(builder:flatbuffers.Builder, pruningLevel:PRUNING_LEVEL|null, lastPruned:bigint, totalSize:bigint):flatbuffers.Offset {
+static createVersionGraphMetadata(builder:flatbuffers.Builder, lastPruned:bigint, totalSize:bigint):flatbuffers.Offset {
   VersionGraphMetadata.startVersionGraphMetadata(builder);
-  if (pruningLevel !== null)
-    VersionGraphMetadata.addPruningLevel(builder, pruningLevel);
   VersionGraphMetadata.addLastPruned(builder, lastPruned);
   VersionGraphMetadata.addTotalSize(builder, totalSize);
   return VersionGraphMetadata.endVersionGraphMetadata(builder);

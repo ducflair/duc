@@ -211,8 +211,15 @@ class DucLocalState(object):
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
+    # DucLocalState
+    def ManualSaveMode(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(48))
+        if o != 0:
+            return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
+        return False
+
 def DucLocalStateStart(builder):
-    builder.StartObject(22)
+    builder.StartObject(23)
 
 def Start(builder):
     DucLocalStateStart(builder)
@@ -354,6 +361,12 @@ def DucLocalStateAddOutlineModeEnabled(builder, outlineModeEnabled):
 
 def AddOutlineModeEnabled(builder, outlineModeEnabled):
     DucLocalStateAddOutlineModeEnabled(builder, outlineModeEnabled)
+
+def DucLocalStateAddManualSaveMode(builder, manualSaveMode):
+    builder.PrependBoolSlot(22, manualSaveMode, 0)
+
+def AddManualSaveMode(builder, manualSaveMode):
+    DucLocalStateAddManualSaveMode(builder, manualSaveMode)
 
 def DucLocalStateEnd(builder):
     return builder.EndObject()

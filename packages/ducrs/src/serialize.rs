@@ -2387,6 +2387,7 @@ fn serialize_duc_global_state<'bldr>(
             use_annotative_scaling: state.use_annotative_scaling,
             display_precision_linear: state.display_precision_linear,
             display_precision_angular: state.display_precision_angular,
+            pruning_level: Some(state.pruning_level),
         },
     )
 }
@@ -2432,6 +2433,7 @@ fn serialize_duc_local_state<'bldr>(
             objects_snap_mode_enabled: state.objects_snap_mode_enabled,
             grid_mode_enabled: state.grid_mode_enabled,
             outline_mode_enabled: state.outline_mode_enabled,
+            manual_save_mode: state.manual_save_mode,
         },
     )
 }
@@ -3453,7 +3455,6 @@ fn serialize_version_graph_metadata<'bldr>(
     fb::VersionGraphMetadata::create(
         builder,
         &fb::VersionGraphMetadataArgs {
-            pruning_level: Some(meta.pruning_level),
             last_pruned: meta.last_pruned,
             total_size: meta.total_size,
         },
