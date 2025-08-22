@@ -19,7 +19,7 @@
     }
   },
   "dependencies": {
-    "ducjs": "link:ducjs"
+    "ducjs": "workspace:^"
   },
   "scripts": {
     "build": "tsc"
