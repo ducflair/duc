@@ -22,7 +22,7 @@ classifiers = [
 
 [project.urls]
 "Homepage" = "https://duc.ducflair.com"
-"Source" = "https://github.com/ducflair/duc/tree/main/packages/duc-py"
+"Source" = "https://github.com/ducflair/duc/tree/main/packages/ducpy"
 "Documentation" = "https://python.duc.ducflair.com"
 
 [build-system]

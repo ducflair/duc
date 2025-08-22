@@ -3,7 +3,7 @@ import re
 from setuptools import setup
 
 # Path to the schema file, relative to this setup.py file
-# setup.py is in packages/duc-py/
+# setup.py is in packages/ducpy/
 # schema/duc.fbs is at the workspace root, so ../../schema/duc.fbs
 SCHEMA_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'schema', 'duc.fbs')
 # Path where _version.py will be written

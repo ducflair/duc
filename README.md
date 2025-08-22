@@ -6,7 +6,7 @@
     <p align="center" style="align: center;">
     <a href="https://github.com/ducflair/duc/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-780000" alt="NPM" /></a>
     <a href="https://www.npmjs.com/package/@ducflair/duc"><img src="https://shields.io/badge/NPM-cc3534?logo=Npm&logoColor=white&style=round-square" alt="NPM" /></a>
-    <a href="https://pypi.org/project/ducflair-duc/"><img src="https://shields.io/badge/Pip-blue?logo=Pypi&logoColor=white&style=round-square" alt="Pip" /></a>
+    <a href="https://pypi.org/project/ducpy/"><img src="https://shields.io/badge/Pip-blue?logo=Pypi&logoColor=white&style=round-square" alt="Pip" /></a>
     <a href="https://crates.io/crates/ducflair-duc/"><img src="https://shields.io/badge/Crates-FFC933?logo=Rust&logoColor=646464&style=round-square" alt="Crates" /></a>
   </p>
 
