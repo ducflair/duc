@@ -27,7 +27,7 @@ export default $config({
     const stageHostname = $app.stage === 'preview' ? `${$app.stage}-${hostname}` : undefined;
     const domainName = isProduction 
       ? hostname 
-      : $app.stage === 'preview' && `preview-${hostname}`;
+      : $app.stage === 'preview' ? `preview-${hostname}` : undefined;
 
     // Secrets - https://sst.dev/docs/component/secret
     const secrets: sst.Secret[] = [];
@@ -57,8 +57,8 @@ export default $config({
     // Host the Python generated docs
     new sst.aws.StaticSite("MyPythonDocs", {
       build: {
-        command: "bun duc-py:docs:build",
-        output: "packages/duc-py/docs/_build/html",
+        command: "bun ducpy:docs:build",
+        output: "packages/ducpy/docs/_build/html",
       },
       domain: domainName && {
         name: `python.${domainName}`,
