@@ -1329,6 +1329,7 @@ fn parse_duc_global_state(state: fb::DucGlobalState) -> ParseResult<types::DucGl
         use_annotative_scaling: state.use_annotative_scaling(),
         display_precision_linear: state.display_precision_linear(),
         display_precision_angular: state.display_precision_angular(),
+        pruning_level: state.pruning_level().expect("Missing DucGlobalState.pruning_level"),
     })
 }
 
@@ -1359,6 +1360,7 @@ fn parse_duc_local_state(state: fb::DucLocalState) -> ParseResult<types::DucLoca
         objects_snap_mode_enabled: state.objects_snap_mode_enabled(),
         grid_mode_enabled: state.grid_mode_enabled(),
         outline_mode_enabled: state.outline_mode_enabled(),
+        manual_save_mode: state.manual_save_mode(),
     })
 }
 
@@ -1869,7 +1871,6 @@ fn parse_delta(delta: fb::Delta) -> ParseResult<types::Delta> {
 
 fn parse_version_graph_metadata(meta: fb::VersionGraphMetadata) -> ParseResult<types::VersionGraphMetadata> {
     Ok(types::VersionGraphMetadata {
-        pruning_level: meta.pruning_level().expect("Missing VersionGraphMetadata.pruning_level"),
         last_pruned: meta.last_pruned(),
         total_size: meta.total_size(),
     })

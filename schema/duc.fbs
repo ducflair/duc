@@ -2110,6 +2110,9 @@ table DucGlobalState {
    */
   display_precision_linear: int;
   display_precision_angular: int;
+  
+  /** The level of pruning to the versions from the version graph. */
+  pruning_level: PRUNING_LEVEL = null;
 }
 
 table DucLocalState {
@@ -2152,6 +2155,8 @@ table DucLocalState {
   grid_mode_enabled: bool;
   /** Whether to disable the fill on all shapes */
   outline_mode_enabled: bool;
+  /** When enabled, the version graph is not updated automatically. The user needs to manually update the graph for new versions to be saved in version control. */
+  manual_save_mode: bool;
 }
 
 table DucGroup {
@@ -2540,7 +2545,6 @@ table Delta {
 }
 
 table VersionGraphMetadata {
-  pruning_level: PRUNING_LEVEL = null;
   last_pruned: long;
   total_size: long;
 }
