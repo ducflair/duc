@@ -48,7 +48,6 @@ jobs:
         with:
           python-version: '3.x'
       - run: bun install
-        working-directory: ./packages/ducpy
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
