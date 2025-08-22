@@ -2612,7 +2612,7 @@ from ducpy.Duc.DucBlock import (
 
 # Global/Local State (vector helpers)
 from ducpy.Duc.DucLocalState import (
-    DucLocalStateStart, DucLocalStateAddScope, DucLocalStateAddActiveStandardId, DucLocalStateAddScrollX,
+    DucLocalStateAddManualSaveMode, DucLocalStateStart, DucLocalStateAddScope, DucLocalStateAddActiveStandardId, DucLocalStateAddScrollX,
     DucLocalStateAddScrollY, DucLocalStateAddZoom, DucLocalStateAddActiveGridSettings, DucLocalStateAddActiveSnapSettings,
     DucLocalStateAddIsBindingEnabled, DucLocalStateAddCurrentItemStroke, DucLocalStateAddCurrentItemBackground,
     DucLocalStateAddCurrentItemOpacity, DucLocalStateAddCurrentItemFontFamily, DucLocalStateAddCurrentItemFontSize,
@@ -2622,7 +2622,7 @@ from ducpy.Duc.DucLocalState import (
     DucLocalStateEnd, DucLocalStateStartActiveGridSettingsVector
 )
 from ducpy.Duc.DucGlobalState import (
-    DucGlobalStateStart, DucGlobalStateAddName, DucGlobalStateAddViewBackgroundColor, DucGlobalStateAddMainScope,
+    DucGlobalStateAddPruningLevel, DucGlobalStateStart, DucGlobalStateAddName, DucGlobalStateAddViewBackgroundColor, DucGlobalStateAddMainScope,
     DucGlobalStateAddDashSpacingScale, DucGlobalStateAddIsDashSpacingAffectedByViewportScale,
     DucGlobalStateAddScopeExponentThreshold, DucGlobalStateAddDimensionsAssociativeByDefault,
     DucGlobalStateAddUseAnnotativeScaling, DucGlobalStateAddDisplayPrecisionLinear,
@@ -2654,7 +2654,7 @@ from ducpy.Duc.Delta import (
     DeltaStart, DeltaAddBase, DeltaAddPatch, DeltaEnd, DeltaStartPatchVector
 )
 from ducpy.Duc.VersionGraphMetadata import (
-    VersionGraphMetadataStart, VersionGraphMetadataAddPruningLevel, VersionGraphMetadataAddLastPruned,
+    VersionGraphMetadataStart, VersionGraphMetadataAddLastPruned,
     VersionGraphMetadataAddTotalSize, VersionGraphMetadataEnd
 )
 from ducpy.Duc.VersionGraph import (
@@ -3432,6 +3432,7 @@ def serialize_fbs_duc_global_state(builder: flatbuffers.Builder, s: Optional[DS_
     if s.display_precision:
         DucGlobalStateAddDisplayPrecisionLinear(builder, s.display_precision.linear)
         DucGlobalStateAddDisplayPrecisionAngular(builder, s.display_precision.angular)
+    if s.pruning_level is not None: DucGlobalStateAddPruningLevel(builder, s.pruning_level)
     return DucGlobalStateEnd(builder)
 
 def serialize_fbs_duc_local_state(builder: flatbuffers.Builder, s: Optional[DS_DucLocalState]) -> int:
@@ -3447,10 +3448,14 @@ def serialize_fbs_duc_local_state(builder: flatbuffers.Builder, s: Optional[DS_D
         active_grid_vec = builder.EndVector()
     active_snap_settings_offset = _str(builder, s.active_snap_settings)
     current_item_stroke_offset = serialize_fbs_element_stroke(builder, s.current_item_stroke) if s.current_item_stroke else 0
+
     current_item_bg_offset = serialize_fbs_element_background(builder, s.current_item_background) if s.current_item_background else 0
+
     current_item_font_family_offset = _str(builder, s.current_item_font_family)
     current_item_start_head_offset = serialize_fbs_duc_head(builder, s.current_item_start_line_head) if s.current_item_start_line_head else 0
+
     current_item_end_head_offset = serialize_fbs_duc_head(builder, s.current_item_end_line_head) if s.current_item_end_line_head else 0
+
 
     DucLocalStateStart(builder)
     DucLocalStateAddScope(builder, scope_offset)
@@ -3460,21 +3465,30 @@ def serialize_fbs_duc_local_state(builder: flatbuffers.Builder, s: Optional[DS_D
     DucLocalStateAddZoom(builder, s.zoom)
     if active_grid_vec: DucLocalStateAddActiveGridSettings(builder, active_grid_vec)
     if active_snap_settings_offset: DucLocalStateAddActiveSnapSettings(builder, active_snap_settings_offset)
+
     DucLocalStateAddIsBindingEnabled(builder, s.is_binding_enabled)
     if current_item_stroke_offset: DucLocalStateAddCurrentItemStroke(builder, current_item_stroke_offset)
     if current_item_bg_offset: DucLocalStateAddCurrentItemBackground(builder, current_item_bg_offset)
     if s.current_item_opacity is not None: DucLocalStateAddCurrentItemOpacity(builder, s.current_item_opacity)
+
     if current_item_font_family_offset: DucLocalStateAddCurrentItemFontFamily(builder, current_item_font_family_offset)
+
     if s.current_item_font_size is not None: DucLocalStateAddCurrentItemFontSize(builder, s.current_item_font_size)
+
     if s.current_item_text_align is not None: DucLocalStateAddCurrentItemTextAlign(builder, s.current_item_text_align)
+
     if current_item_start_head_offset: DucLocalStateAddCurrentItemStartLineHead(builder, current_item_start_head_offset)
+
     if current_item_end_head_offset: DucLocalStateAddCurrentItemEndLineHead(builder, current_item_end_head_offset)
+
     if s.current_item_roundness is not None: DucLocalStateAddCurrentItemRoundness(builder, s.current_item_roundness)
+
     DucLocalStateAddPenMode(builder, s.pen_mode)
     DucLocalStateAddViewModeEnabled(builder, s.view_mode_enabled)
     DucLocalStateAddObjectsSnapModeEnabled(builder, s.objects_snap_mode_enabled)
     DucLocalStateAddGridModeEnabled(builder, s.grid_mode_enabled)
-    DucLocalStateAddOutlineModeEnabled(builder, s.outline_mode_enabled)
+    DucLocalStateAddOutlineModeEnabled(builder, s.outline_mode_enabled);
+    if s.manual_save_mode is not None: DucLocalStateAddManualSaveMode(builder, s.manual_save_mode)
     return DucLocalStateEnd(builder)
 
 # -----------------------------------------------------------------------------
@@ -3559,8 +3573,6 @@ def serialize_fbs_version_graph_metadata(builder: flatbuffers.Builder, m: Option
     if m is None:
         return 0
     VersionGraphMetadataStart(builder)
-    if m.pruning_level is not None:
-        VersionGraphMetadataAddPruningLevel(builder, m.pruning_level)
     VersionGraphMetadataAddLastPruned(builder, m.last_pruned)
     VersionGraphMetadataAddTotalSize(builder, m.total_size)
     return VersionGraphMetadataEnd(builder)
@@ -3582,6 +3594,7 @@ def serialize_fbs_version_graph(builder: flatbuffers.Builder, g: Optional[DS_Ver
 
     metadata_offset = serialize_fbs_version_graph_metadata(builder, g.metadata)
     user_chk_offset = builder.CreateString(g.user_checkpoint_version_id) if g.user_checkpoint_version_id else 0
+
     latest_offset = builder.CreateString(g.latest_version_id) if g.latest_version_id else 0
 
     VersionGraphStart(builder)

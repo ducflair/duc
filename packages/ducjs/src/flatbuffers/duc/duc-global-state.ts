@@ -4,6 +4,9 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { PRUNING_LEVEL } from '../duc/pruning-level';
+
+
 export class DucGlobalState {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -78,8 +81,13 @@ displayPrecisionAngular():number {
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
+pruningLevel():PRUNING_LEVEL|null {
+  const offset = this.bb!.__offset(this.bb_pos, 24);
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
+}
+
 static startDucGlobalState(builder:flatbuffers.Builder) {
-  builder.startObject(10);
+  builder.startObject(11);
 }
 
 static addName(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset) {
@@ -122,12 +130,16 @@ static addDisplayPrecisionAngular(builder:flatbuffers.Builder, displayPrecisionA
   builder.addFieldInt32(9, displayPrecisionAngular, 0);
 }
 
+static addPruningLevel(builder:flatbuffers.Builder, pruningLevel:PRUNING_LEVEL) {
+  builder.addFieldInt8(10, pruningLevel, null);
+}
+
 static endDucGlobalState(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   return offset;
 }
 
-static createDucGlobalState(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset, viewBackgroundColorOffset:flatbuffers.Offset, mainScopeOffset:flatbuffers.Offset, dashSpacingScale:number, isDashSpacingAffectedByViewportScale:boolean, scopeExponentThreshold:number, dimensionsAssociativeByDefault:boolean, useAnnotativeScaling:boolean, displayPrecisionLinear:number, displayPrecisionAngular:number):flatbuffers.Offset {
+static createDucGlobalState(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset, viewBackgroundColorOffset:flatbuffers.Offset, mainScopeOffset:flatbuffers.Offset, dashSpacingScale:number, isDashSpacingAffectedByViewportScale:boolean, scopeExponentThreshold:number, dimensionsAssociativeByDefault:boolean, useAnnotativeScaling:boolean, displayPrecisionLinear:number, displayPrecisionAngular:number, pruningLevel:PRUNING_LEVEL|null):flatbuffers.Offset {
   DucGlobalState.startDucGlobalState(builder);
   DucGlobalState.addName(builder, nameOffset);
   DucGlobalState.addViewBackgroundColor(builder, viewBackgroundColorOffset);
@@ -139,6 +151,8 @@ static createDucGlobalState(builder:flatbuffers.Builder, nameOffset:flatbuffers.
   DucGlobalState.addUseAnnotativeScaling(builder, useAnnotativeScaling);
   DucGlobalState.addDisplayPrecisionLinear(builder, displayPrecisionLinear);
   DucGlobalState.addDisplayPrecisionAngular(builder, displayPrecisionAngular);
+  if (pruningLevel !== null)
+    DucGlobalState.addPruningLevel(builder, pruningLevel);
   return DucGlobalState.endDucGlobalState(builder);
 }
 }

@@ -2262,7 +2262,6 @@ function serializeDucVersionGraph(b: flatbuffers.Builder, vg: VersionGraph): num
   const checkpoints = Duc.VersionGraph.createCheckpointsVector(b, vg.checkpoints.map(c => serializeCheckpoint(b, c)));
   const deltas = Duc.VersionGraph.createDeltasVector(b, vg.deltas.map(d => serializeDelta(b, d)));
   Duc.VersionGraphMetadata.startVersionGraphMetadata(b);
-  Duc.VersionGraphMetadata.addPruningLevel(b, vg.metadata.pruningLevel);
   Duc.VersionGraphMetadata.addLastPruned(b, BigInt(vg.metadata.lastPruned));
   Duc.VersionGraphMetadata.addTotalSize(b, BigInt(vg.metadata.totalSize));
   const meta = Duc.VersionGraphMetadata.endVersionGraphMetadata(b);
@@ -2290,6 +2289,7 @@ function serializeDucGlobalState(builder: flatbuffers.Builder, state: DucGlobalS
   Duc.DucGlobalState.addDashSpacingScale(builder, state.dashSpacingScale);
   Duc.DucGlobalState.addIsDashSpacingAffectedByViewportScale(builder, state.isDashSpacingAffectedByViewportScale);
   Duc.DucGlobalState.addScopeExponentThreshold(builder, state.scopeExponentThreshold);
+  if (state.pruningLevel) Duc.DucGlobalState.addPruningLevel(builder, state.pruningLevel);
   Duc.DucGlobalState.addDimensionsAssociativeByDefault(builder, state.dimensionsAssociativeByDefault);
   Duc.DucGlobalState.addUseAnnotativeScaling(builder, state.useAnnotativeScaling);
   Duc.DucGlobalState.addDisplayPrecisionLinear(builder, state.displayPrecision.linear);
@@ -2304,29 +2304,33 @@ function serializeDucLocalState(builder: flatbuffers.Builder, state: DucLocalSta
   const activeSnapSettingsOffset = writeString(builder, state.activeSnapSettings);
   const currentItemStrokeOffset = writeElementStroke(builder, state.currentItemStroke, usv);
   const currentItemBackgroundOffset = writeElementBackground(builder, state.currentItemBackground, usv);
-  const currentItemFontFamilyOffset = writeString(builder, state.currentItemFontFamily.toString());
+  const currentItemFontFamilyOffset = state.currentItemFontFamily && writeString(builder, state.currentItemFontFamily.toString());
 
   Duc.DucLocalState.startDucLocalState(builder);
   if (scopeOffset) Duc.DucLocalState.addScope(builder, scopeOffset);
   if (activeStandardIdOffset) Duc.DucLocalState.addActiveStandardId(builder, activeStandardIdOffset);
-  Duc.DucLocalState.addScrollX(builder, getPrecisionValue(state.scrollX, usv));
-  Duc.DucLocalState.addScrollY(builder, getPrecisionValue(state.scrollY, usv));
-  Duc.DucLocalState.addZoom(builder, state.zoom.value);
+  if (state.scrollX) Duc.DucLocalState.addScrollX(builder, getPrecisionValue(state.scrollX, usv));
+  if (state.scrollY) Duc.DucLocalState.addScrollY(builder, getPrecisionValue(state.scrollY, usv));
+  if (state.zoom) Duc.DucLocalState.addZoom(builder, state.zoom.value);
   if (activeGridSettingsVector) Duc.DucLocalState.addActiveGridSettings(builder, activeGridSettingsVector);
   if (activeSnapSettingsOffset) Duc.DucLocalState.addActiveSnapSettings(builder, activeSnapSettingsOffset);
   Duc.DucLocalState.addIsBindingEnabled(builder, state.isBindingEnabled);
   if (currentItemStrokeOffset) Duc.DucLocalState.addCurrentItemStroke(builder, currentItemStrokeOffset);
   if (currentItemBackgroundOffset) Duc.DucLocalState.addCurrentItemBackground(builder, currentItemBackgroundOffset);
+
   Duc.DucLocalState.addCurrentItemOpacity(builder, state.currentItemOpacity);
   if (currentItemFontFamilyOffset) Duc.DucLocalState.addCurrentItemFontFamily(builder, currentItemFontFamilyOffset);
-  Duc.DucLocalState.addCurrentItemFontSize(builder, getPrecisionValue(state.currentItemFontSize, usv));
+
+  if (state.currentItemFontSize) Duc.DucLocalState.addCurrentItemFontSize(builder, getPrecisionValue(state.currentItemFontSize, usv));
   if (state.currentItemTextAlign) Duc.DucLocalState.addCurrentItemTextAlign(builder, state.currentItemTextAlign);
-  Duc.DucLocalState.addCurrentItemRoundness(builder, getPrecisionValue(state.currentItemRoundness, usv));
+
+  if (state.currentItemRoundness) Duc.DucLocalState.addCurrentItemRoundness(builder, getPrecisionValue(state.currentItemRoundness, usv));
   Duc.DucLocalState.addPenMode(builder, state.penMode);
   Duc.DucLocalState.addViewModeEnabled(builder, state.viewModeEnabled);
   Duc.DucLocalState.addObjectsSnapModeEnabled(builder, state.objectsSnapModeEnabled);
   Duc.DucLocalState.addGridModeEnabled(builder, state.gridModeEnabled);
   Duc.DucLocalState.addOutlineModeEnabled(builder, state.outlineModeEnabled);
+  Duc.DucLocalState.addManualSaveMode(builder, state.manualSaveMode);
   return Duc.DucLocalState.endDucLocalState(builder);
 }
 
@@ -2389,7 +2393,6 @@ function serializeDucLayer(builder: flatbuffers.Builder, l: DucLayer, usv: boole
 function serializeExternalFiles(builder: flatbuffers.Builder, files: DucExternalFiles | undefined, usv: boolean): number | undefined {
   if (!files) return undefined;
 
-
   const entries = Object.entries(files).map(([key, value]) => {
     const keyOff = builder.createString(key);
     const mt = builder.createString(value.mimeType);
@@ -2407,6 +2410,7 @@ function serializeExternalFiles(builder: flatbuffers.Builder, files: DucExternal
     if (dataVectorOffset) Duc.DucExternalFileData.addData(builder, dataVectorOffset);
     Duc.DucExternalFileData.addCreated(builder, BigInt(value.created));
     if (value.lastRetrieved !== undefined) Duc.DucExternalFileData.addLastRetrieved(builder, BigInt(value.lastRetrieved));
+
     const dataOff = Duc.DucExternalFileData.endDucExternalFileData(builder);
 
     Duc.DucExternalFileEntry.startDucExternalFileEntry(builder);
@@ -2443,6 +2447,7 @@ export const serializeDuc = async (
 
   const typeOffset = builder.createString(EXPORT_DATA_TYPES.duc);
   const sourceOffset = builder.createString(typeof window !== "undefined" ? window.location.origin : "unknown");
+
   const versionOffset = builder.createString(DUC_SCHEMA_VERSION);
 
   // Serialize elements
@@ -2459,6 +2464,7 @@ export const serializeDuc = async (
 
   // Serialize blocks
   const blocksOffset = Duc.ExportedDataState.createBlocksVector(builder, sanitized.blocks.map(block => writeBlock(builder, block, useScopedValues)));
+
 
   // Serialize groups
   const groupsOffset = sanitized.groups.length > 0
