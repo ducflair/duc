@@ -3,7 +3,6 @@
 Import usage examples:
     import ducpy as duc
     
-    # Access modules directly:
     duc.classes.SomeClass
     duc.parse.parse_function
     duc.serialize.serialize_function
