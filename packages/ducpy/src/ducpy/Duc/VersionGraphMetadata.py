@@ -29,46 +29,33 @@ class VersionGraphMetadata(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # VersionGraphMetadata
-    def PruningLevel(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
-        if o != 0:
-            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
-        return None
-
-    # VersionGraphMetadata
     def LastPruned(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int64Flags, o + self._tab.Pos)
         return 0
 
     # VersionGraphMetadata
     def TotalSize(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int64Flags, o + self._tab.Pos)
         return 0
 
 def VersionGraphMetadataStart(builder):
-    builder.StartObject(3)
+    builder.StartObject(2)
 
 def Start(builder):
     VersionGraphMetadataStart(builder)
 
-def VersionGraphMetadataAddPruningLevel(builder, pruningLevel):
-    builder.PrependUint8Slot(0, pruningLevel, None)
-
-def AddPruningLevel(builder, pruningLevel):
-    VersionGraphMetadataAddPruningLevel(builder, pruningLevel)
-
 def VersionGraphMetadataAddLastPruned(builder, lastPruned):
-    builder.PrependInt64Slot(1, lastPruned, 0)
+    builder.PrependInt64Slot(0, lastPruned, 0)
 
 def AddLastPruned(builder, lastPruned):
     VersionGraphMetadataAddLastPruned(builder, lastPruned)
 
 def VersionGraphMetadataAddTotalSize(builder, totalSize):
-    builder.PrependInt64Slot(2, totalSize, 0)
+    builder.PrependInt64Slot(1, totalSize, 0)
 
 def AddTotalSize(builder, totalSize):
     VersionGraphMetadataAddTotalSize(builder, totalSize)

@@ -1091,6 +1091,7 @@ pub struct DucGlobalState {
     pub use_annotative_scaling: bool,
     pub display_precision_linear: i32,
     pub display_precision_angular: i32,
+    pub pruning_level: PRUNING_LEVEL,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1117,6 +1118,7 @@ pub struct DucLocalState {
     pub objects_snap_mode_enabled: bool,
     pub grid_mode_enabled: bool,
     pub outline_mode_enabled: bool,
+    pub manual_save_mode: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1532,7 +1534,6 @@ pub struct Delta {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VersionGraphMetadata {
-    pub pruning_level: PRUNING_LEVEL,
     pub last_pruned: i64,
     pub total_size: i64,
 }
