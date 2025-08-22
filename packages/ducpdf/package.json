@@ -11,7 +11,7 @@
     "build:ts": "tsc"
   },
   "dependencies": {
-    "ducjs": "workspace:*",
+    "ducjs": "workspace:^",
     "pdfjs-dist": "^4.4.178"
   },
   "devDependencies": {

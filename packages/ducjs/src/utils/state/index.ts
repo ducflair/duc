@@ -2,7 +2,7 @@ export * from "./grid";
 
 
 
-import { TEXT_ALIGN } from "ducjs/flatbuffers/duc";
+import { PRUNING_LEVEL, TEXT_ALIGN } from "ducjs/flatbuffers/duc";
 import { PREDEFINED_STANDARDS } from "ducjs/technical";
 import {
   getPrecisionValueFromRaw,
@@ -126,6 +126,7 @@ export const getDefaultGlobalState = (): DucGlobalState => {
       linear: 2,
       angular: 1,
     },
+    pruningLevel: PRUNING_LEVEL.BALANCED,
   };
 };
 
@@ -182,7 +183,7 @@ export const getDefaultLocalState = (): Omit<
     objectsSnapModeEnabled: true,
     gridModeEnabled: false,
     outlineModeEnabled: false,
-
+    manualSaveMode: false,
     gridSize: 10,
     gridStep: 10,
   };

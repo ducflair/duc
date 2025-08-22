@@ -1311,6 +1311,7 @@ export function parseGlobalStateFromBinary(state: DucGlobalStateFb): DucGlobalSt
       linear: state.displayPrecisionLinear(),
       angular: state.displayPrecisionAngular(),
     },
+    pruningLevel: state.pruningLevel()!,
   };
 }
 
@@ -1360,6 +1361,7 @@ export function parseLocalStateFromBinary(state: DucLocalStateFb): DucLocalState
     objectsSnapModeEnabled: state.objectsSnapModeEnabled(),
     gridModeEnabled: state.gridModeEnabled(),
     outlineModeEnabled: state.outlineModeEnabled(),
+    manualSaveMode: state.manualSaveMode(),
   };
 }
 
@@ -1708,7 +1710,6 @@ export function parseVersionGraphFromBinary(graph: VersionGraphFb | null): Versi
       };
     }),
     metadata: {
-      pruningLevel: metadata.pruningLevel()!,
       lastPruned: Number(metadata.lastPruned()),
       totalSize: Number(metadata.totalSize()),
     },
