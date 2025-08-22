@@ -9,7 +9,6 @@ from typing import List, Dict, Optional, Union, Any, IO
 import flatbuffers
 from flatbuffers.table import Table
 
-# Dataclasses (authoring model)
 from ducpy.classes.DataStateClass import (
     ExportedDataState as DS_ExportedDataState,
     DictionaryEntry as DS_DictionaryEntry,
