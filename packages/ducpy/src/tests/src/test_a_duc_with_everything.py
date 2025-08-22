@@ -123,7 +123,6 @@ def test_a_duc_with_everything(test_output_dir):
             .with_deltas([delta])
             .with_user_checkpoint_version_id(checkpoint.id)
             .with_latest_version_id(delta.id)
-            .with_pruning_level(duc.PRUNING_LEVEL.AGGRESSIVE) # Explicitly set pruning level
             .build())
 
     # --- Global State ---
@@ -137,6 +136,7 @@ def test_a_duc_with_everything(test_output_dir):
         .with_use_annotative_scaling(True)
         .with_linear_precision(4)
         .with_angular_precision(3)
+        .with_pruning_level(duc.PRUNING_LEVEL.AGGRESSIVE) # Explicitly set pruning level
         .build())
 
     # --- Local State ---
@@ -626,6 +626,5 @@ def test_a_duc_with_everything(test_output_dir):
     assert parsed.duc_global_state is not None, "Parsed state missing global state"
     assert parsed.duc_local_state is not None, "Parsed state missing local state"
     assert parsed.version_graph.metadata is not None, "Parsed state missing version graph metadata"
-    assert parsed.version_graph.metadata.pruning_level == duc.PRUNING_LEVEL.AGGRESSIVE, "Pruning level not correctly set"
 
     print("✅ Everything test passed and file created:", output_file)

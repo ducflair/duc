@@ -2120,6 +2120,7 @@ def parse_fbs_duc_global_state(obj) -> Optional[DS_DucGlobalState]:
         use_annotative_scaling=obj.UseAnnotativeScaling(),
         display_precision=dp,
         name=_s(obj.Name()),
+        pruning_level=obj.PruningLevel() if hasattr(obj, "PruningLevel") else PRUNING_LEVEL.BALANCED,
     )
 
 def parse_fbs_duc_local_state(obj) -> Optional[DS_DucLocalState]:
@@ -2149,6 +2150,7 @@ def parse_fbs_duc_local_state(obj) -> Optional[DS_DucLocalState]:
         current_item_roundness=obj.CurrentItemRoundness() if hasattr(obj, "CurrentItemRoundness") else None,
         current_item_start_line_head=parse_fbs_duc_head(obj.CurrentItemStartLineHead()) if obj.CurrentItemStartLineHead() else None,
         current_item_end_line_head=parse_fbs_duc_head(obj.CurrentItemEndLineHead()) if obj.CurrentItemEndLineHead() else None,
+        manual_save_mode=obj.ManualSaveMode() if hasattr(obj, "ManualSaveMode") else None,
     )
 
 # -----------------------------------------------------------------------------
@@ -2226,7 +2228,6 @@ def parse_fbs_version_graph_metadata(obj: FBSVersionGraphMetadata) -> Optional[D
     return DS_VersionGraphMetadata(
         last_pruned=obj.LastPruned(),
         total_size=obj.TotalSize(),
-        pruning_level=obj.PruningLevel() if hasattr(obj, "PruningLevel") else PRUNING_LEVEL.CONSERVATIVE,
     )
 
 def parse_fbs_version_graph(obj: FBSVersionGraph) -> Optional[DS_VersionGraph]:
@@ -2235,7 +2236,7 @@ def parse_fbs_version_graph(obj: FBSVersionGraph) -> Optional[DS_VersionGraph]:
     checkpoints = [parse_fbs_checkpoint(obj.Checkpoints(i)) for i in range(obj.CheckpointsLength())]
     deltas = [parse_fbs_delta(obj.Deltas(i)) for i in range(obj.DeltasLength())]
     metadata = parse_fbs_version_graph_metadata(obj.Metadata()) or DS_VersionGraphMetadata(
-        last_pruned=0, total_size=0, pruning_level=PRUNING_LEVEL.CONSERVATIVE
+        last_pruned=0, total_size=0
     )
     return DS_VersionGraph(
         checkpoints=checkpoints,

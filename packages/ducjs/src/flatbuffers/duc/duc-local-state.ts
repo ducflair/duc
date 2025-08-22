@@ -153,8 +153,13 @@ outlineModeEnabled():boolean {
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
+manualSaveMode():boolean {
+  const offset = this.bb!.__offset(this.bb_pos, 48);
+  return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
+}
+
 static startDucLocalState(builder:flatbuffers.Builder) {
-  builder.startObject(22);
+  builder.startObject(23);
 }
 
 static addScope(builder:flatbuffers.Builder, scopeOffset:flatbuffers.Offset) {
@@ -255,6 +260,10 @@ static addGridModeEnabled(builder:flatbuffers.Builder, gridModeEnabled:boolean) 
 
 static addOutlineModeEnabled(builder:flatbuffers.Builder, outlineModeEnabled:boolean) {
   builder.addFieldInt8(21, +outlineModeEnabled, +false);
+}
+
+static addManualSaveMode(builder:flatbuffers.Builder, manualSaveMode:boolean) {
+  builder.addFieldInt8(22, +manualSaveMode, +false);
 }
 
 static endDucLocalState(builder:flatbuffers.Builder):flatbuffers.Offset {

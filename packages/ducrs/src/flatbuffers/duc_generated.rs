@@ -22773,6 +22773,7 @@ impl<'a> DucGlobalState<'a> {
   pub const VT_USE_ANNOTATIVE_SCALING: flatbuffers::VOffsetT = 18;
   pub const VT_DISPLAY_PRECISION_LINEAR: flatbuffers::VOffsetT = 20;
   pub const VT_DISPLAY_PRECISION_ANGULAR: flatbuffers::VOffsetT = 22;
+  pub const VT_PRUNING_LEVEL: flatbuffers::VOffsetT = 24;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -22790,6 +22791,7 @@ impl<'a> DucGlobalState<'a> {
     if let Some(x) = args.main_scope { builder.add_main_scope(x); }
     if let Some(x) = args.view_background_color { builder.add_view_background_color(x); }
     if let Some(x) = args.name { builder.add_name(x); }
+    if let Some(x) = args.pruning_level { builder.add_pruning_level(x); }
     builder.add_use_annotative_scaling(args.use_annotative_scaling);
     builder.add_dimensions_associative_by_default(args.dimensions_associative_by_default);
     builder.add_scope_exponent_threshold(args.scope_exponent_threshold);
@@ -22868,6 +22870,13 @@ impl<'a> DucGlobalState<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i32>(DucGlobalState::VT_DISPLAY_PRECISION_ANGULAR, Some(0)).unwrap()}
   }
+  #[inline]
+  pub fn pruning_level(&self) -> Option<PRUNING_LEVEL> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<PRUNING_LEVEL>(DucGlobalState::VT_PRUNING_LEVEL, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for DucGlobalState<'_> {
@@ -22887,6 +22896,7 @@ impl flatbuffers::Verifiable for DucGlobalState<'_> {
      .visit_field::<bool>("use_annotative_scaling", Self::VT_USE_ANNOTATIVE_SCALING, false)?
      .visit_field::<i32>("display_precision_linear", Self::VT_DISPLAY_PRECISION_LINEAR, false)?
      .visit_field::<i32>("display_precision_angular", Self::VT_DISPLAY_PRECISION_ANGULAR, false)?
+     .visit_field::<PRUNING_LEVEL>("pruning_level", Self::VT_PRUNING_LEVEL, false)?
      .finish();
     Ok(())
   }
@@ -22902,6 +22912,7 @@ pub struct DucGlobalStateArgs<'a> {
     pub use_annotative_scaling: bool,
     pub display_precision_linear: i32,
     pub display_precision_angular: i32,
+    pub pruning_level: Option<PRUNING_LEVEL>,
 }
 impl<'a> Default for DucGlobalStateArgs<'a> {
   #[inline]
@@ -22917,6 +22928,7 @@ impl<'a> Default for DucGlobalStateArgs<'a> {
       use_annotative_scaling: false,
       display_precision_linear: 0,
       display_precision_angular: 0,
+      pruning_level: None,
     }
   }
 }
@@ -22967,6 +22979,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucGlobalStateBuilder<'a, 'b, A
     self.fbb_.push_slot::<i32>(DucGlobalState::VT_DISPLAY_PRECISION_ANGULAR, display_precision_angular, 0);
   }
   #[inline]
+  pub fn add_pruning_level(&mut self, pruning_level: PRUNING_LEVEL) {
+    self.fbb_.push_slot_always::<PRUNING_LEVEL>(DucGlobalState::VT_PRUNING_LEVEL, pruning_level);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucGlobalStateBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     DucGlobalStateBuilder {
@@ -22994,6 +23010,7 @@ impl core::fmt::Debug for DucGlobalState<'_> {
       ds.field("use_annotative_scaling", &self.use_annotative_scaling());
       ds.field("display_precision_linear", &self.display_precision_linear());
       ds.field("display_precision_angular", &self.display_precision_angular());
+      ds.field("pruning_level", &self.pruning_level());
       ds.finish()
   }
 }
@@ -23035,6 +23052,7 @@ impl<'a> DucLocalState<'a> {
   pub const VT_OBJECTS_SNAP_MODE_ENABLED: flatbuffers::VOffsetT = 42;
   pub const VT_GRID_MODE_ENABLED: flatbuffers::VOffsetT = 44;
   pub const VT_OUTLINE_MODE_ENABLED: flatbuffers::VOffsetT = 46;
+  pub const VT_MANUAL_SAVE_MODE: flatbuffers::VOffsetT = 48;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -23061,6 +23079,7 @@ impl<'a> DucLocalState<'a> {
     if let Some(x) = args.active_grid_settings { builder.add_active_grid_settings(x); }
     if let Some(x) = args.active_standard_id { builder.add_active_standard_id(x); }
     if let Some(x) = args.scope { builder.add_scope(x); }
+    builder.add_manual_save_mode(args.manual_save_mode);
     builder.add_outline_mode_enabled(args.outline_mode_enabled);
     builder.add_grid_mode_enabled(args.grid_mode_enabled);
     builder.add_objects_snap_mode_enabled(args.objects_snap_mode_enabled);
@@ -23226,6 +23245,13 @@ impl<'a> DucLocalState<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<bool>(DucLocalState::VT_OUTLINE_MODE_ENABLED, Some(false)).unwrap()}
   }
+  #[inline]
+  pub fn manual_save_mode(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(DucLocalState::VT_MANUAL_SAVE_MODE, Some(false)).unwrap()}
+  }
 }
 
 impl flatbuffers::Verifiable for DucLocalState<'_> {
@@ -23257,6 +23283,7 @@ impl flatbuffers::Verifiable for DucLocalState<'_> {
      .visit_field::<bool>("objects_snap_mode_enabled", Self::VT_OBJECTS_SNAP_MODE_ENABLED, false)?
      .visit_field::<bool>("grid_mode_enabled", Self::VT_GRID_MODE_ENABLED, false)?
      .visit_field::<bool>("outline_mode_enabled", Self::VT_OUTLINE_MODE_ENABLED, false)?
+     .visit_field::<bool>("manual_save_mode", Self::VT_MANUAL_SAVE_MODE, false)?
      .finish();
     Ok(())
   }
@@ -23284,6 +23311,7 @@ pub struct DucLocalStateArgs<'a> {
     pub objects_snap_mode_enabled: bool,
     pub grid_mode_enabled: bool,
     pub outline_mode_enabled: bool,
+    pub manual_save_mode: bool,
 }
 impl<'a> Default for DucLocalStateArgs<'a> {
   #[inline]
@@ -23311,6 +23339,7 @@ impl<'a> Default for DucLocalStateArgs<'a> {
       objects_snap_mode_enabled: false,
       grid_mode_enabled: false,
       outline_mode_enabled: false,
+      manual_save_mode: false,
     }
   }
 }
@@ -23409,6 +23438,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucLocalStateBuilder<'a, 'b, A>
     self.fbb_.push_slot::<bool>(DucLocalState::VT_OUTLINE_MODE_ENABLED, outline_mode_enabled, false);
   }
   #[inline]
+  pub fn add_manual_save_mode(&mut self, manual_save_mode: bool) {
+    self.fbb_.push_slot::<bool>(DucLocalState::VT_MANUAL_SAVE_MODE, manual_save_mode, false);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucLocalStateBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     DucLocalStateBuilder {
@@ -23448,6 +23481,7 @@ impl core::fmt::Debug for DucLocalState<'_> {
       ds.field("objects_snap_mode_enabled", &self.objects_snap_mode_enabled());
       ds.field("grid_mode_enabled", &self.grid_mode_enabled());
       ds.field("outline_mode_enabled", &self.outline_mode_enabled());
+      ds.field("manual_save_mode", &self.manual_save_mode());
       ds.finish()
   }
 }
@@ -30946,9 +30980,8 @@ impl<'a> flatbuffers::Follow<'a> for VersionGraphMetadata<'a> {
 }
 
 impl<'a> VersionGraphMetadata<'a> {
-  pub const VT_PRUNING_LEVEL: flatbuffers::VOffsetT = 4;
-  pub const VT_LAST_PRUNED: flatbuffers::VOffsetT = 6;
-  pub const VT_TOTAL_SIZE: flatbuffers::VOffsetT = 8;
+  pub const VT_LAST_PRUNED: flatbuffers::VOffsetT = 4;
+  pub const VT_TOTAL_SIZE: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -30962,18 +30995,10 @@ impl<'a> VersionGraphMetadata<'a> {
     let mut builder = VersionGraphMetadataBuilder::new(_fbb);
     builder.add_total_size(args.total_size);
     builder.add_last_pruned(args.last_pruned);
-    if let Some(x) = args.pruning_level { builder.add_pruning_level(x); }
     builder.finish()
   }
 
 
-  #[inline]
-  pub fn pruning_level(&self) -> Option<PRUNING_LEVEL> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<PRUNING_LEVEL>(VersionGraphMetadata::VT_PRUNING_LEVEL, None)}
-  }
   #[inline]
   pub fn last_pruned(&self) -> i64 {
     // Safety:
@@ -30997,7 +31022,6 @@ impl flatbuffers::Verifiable for VersionGraphMetadata<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<PRUNING_LEVEL>("pruning_level", Self::VT_PRUNING_LEVEL, false)?
      .visit_field::<i64>("last_pruned", Self::VT_LAST_PRUNED, false)?
      .visit_field::<i64>("total_size", Self::VT_TOTAL_SIZE, false)?
      .finish();
@@ -31005,7 +31029,6 @@ impl flatbuffers::Verifiable for VersionGraphMetadata<'_> {
   }
 }
 pub struct VersionGraphMetadataArgs {
-    pub pruning_level: Option<PRUNING_LEVEL>,
     pub last_pruned: i64,
     pub total_size: i64,
 }
@@ -31013,7 +31036,6 @@ impl<'a> Default for VersionGraphMetadataArgs {
   #[inline]
   fn default() -> Self {
     VersionGraphMetadataArgs {
-      pruning_level: None,
       last_pruned: 0,
       total_size: 0,
     }
@@ -31025,10 +31047,6 @@ pub struct VersionGraphMetadataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + '
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> VersionGraphMetadataBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_pruning_level(&mut self, pruning_level: PRUNING_LEVEL) {
-    self.fbb_.push_slot_always::<PRUNING_LEVEL>(VersionGraphMetadata::VT_PRUNING_LEVEL, pruning_level);
-  }
   #[inline]
   pub fn add_last_pruned(&mut self, last_pruned: i64) {
     self.fbb_.push_slot::<i64>(VersionGraphMetadata::VT_LAST_PRUNED, last_pruned, 0);
@@ -31055,7 +31073,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> VersionGraphMetadataBuilder<'a,
 impl core::fmt::Debug for VersionGraphMetadata<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("VersionGraphMetadata");
-      ds.field("pruning_level", &self.pruning_level());
       ds.field("last_pruned", &self.last_pruned());
       ds.field("total_size", &self.total_size());
       ds.finish()
