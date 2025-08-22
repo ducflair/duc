@@ -446,6 +446,11 @@ export const restoreGlobalState = (
         importedState.displayPrecision?.angular ??
         defaults.displayPrecision.angular,
     },
+    pruningLevel:
+      importedState.pruningLevel &&
+        Object.values(PRUNING_LEVEL).includes(importedState.pruningLevel)
+        ? importedState.pruningLevel
+        : PRUNING_LEVEL.BALANCED,
   };
 };
 
@@ -472,6 +477,7 @@ export const restoreLocalState = (
   );
   return {
     ...defaults,
+    ...importedState,
     scope,
     activeStandardId: isValidStandardId(
       importedState.activeStandardId,
@@ -510,14 +516,6 @@ export const restoreLocalState = (
     currentItemEndLineHead:
       isValidLineHeadValue(importedState.currentItemEndLineHead) ??
       defaults.currentItemEndLineHead,
-    currentItemFontFamily: defaults.currentItemFontFamily,
-    currentItemFontSize: defaults.currentItemFontSize,
-    currentItemTextAlign: defaults.currentItemTextAlign,
-    currentItemRoundness: defaults.currentItemRoundness,
-    viewModeEnabled: defaults.viewModeEnabled,
-    objectsSnapModeEnabled: defaults.objectsSnapModeEnabled,
-    gridModeEnabled: defaults.gridModeEnabled,
-    outlineModeEnabled: defaults.outlineModeEnabled,
   };
 };
 
@@ -549,14 +547,8 @@ export const restoreVersionGraph = (
       const isManualSave = isValidBoolean(c.isManualSave, false);
       const sizeBytes =
         isFiniteNumber(c.sizeBytes) && c.sizeBytes >= 0 ? c.sizeBytes : 0;
-      let data: Uint8Array;
-      if (c.data instanceof Uint8Array) {
-        data = c.data;
-      } else if (Array.isArray(c.data)) {
-        data = new Uint8Array(c.data);
-      } else if (c.data && typeof c.data === "object") {
-        data = new Uint8Array(Object.values(c.data));
-      } else {
+      const data = isValidUint8Array(c.data);
+      if (!data) {
         continue;
       }
       checkpoints.push({
@@ -619,11 +611,6 @@ export const restoreVersionGraph = (
   }
   const importedMetadata = importedGraph.metadata;
   const metadata: VersionGraph["metadata"] = {
-    pruningLevel:
-      importedMetadata?.pruningLevel &&
-        Object.values(PRUNING_LEVEL).includes(importedMetadata.pruningLevel)
-        ? importedMetadata.pruningLevel
-        : PRUNING_LEVEL.BALANCED,
     lastPruned: isFiniteNumber(importedMetadata?.lastPruned)
       ? importedMetadata.lastPruned
       : 0,

@@ -249,6 +249,9 @@ export type DucGlobalState = {
     linear: number;
     angular: number;
   };
+
+  /** The level of pruning to the versions from the version graph. */
+  pruningLevel: PruningLevel;
 };
 
 export type DucLocalState = {
@@ -313,6 +316,8 @@ export type DucLocalState = {
    * Wether to disable the fill on all shapes
    */
   outlineModeEnabled: boolean;
+  /** When enabled, the version graph is not updated automatically. The user needs to manually update the graph for new versions to be saved in version control. */
+  manualSaveMode: boolean;
 };
 
 export type NormalizedZoomValue = number & { _brand: "normalizedZoom" };
@@ -746,7 +751,6 @@ export interface VersionGraph {
   checkpoints: Checkpoint[];
   deltas: Delta[];
   metadata: {
-    pruningLevel: PruningLevel;
     lastPruned: number;
     totalSize: number;
   };
