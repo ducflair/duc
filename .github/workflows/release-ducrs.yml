@@ -25,7 +25,7 @@ jobs:
   release_duc_rs:
     runs-on: ubuntu-latest
     concurrency:
-      group: release-rs
+      group: release-ducrs
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
