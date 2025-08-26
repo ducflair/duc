@@ -1,22 +1,17 @@
-name: Release TypeScript
-
-# Workflow temporarily disabled
-run-name: "DISABLED: Release TypeScript"
+name: Release ducjs
 
 on:
   workflow_dispatch:
-    # Keeping only manual trigger option
-  # Removed automatic triggers to disable workflow
-  # push:
-  #   branches:
-  #     - main
-  #     - next
-  #   paths:
-  #     - 'packages/ducjs/**'
-  #     - 'turbo.json'
-  #     - 'package.json'
-  # repository_dispatch:
-  #   types: [trigger-ts-release]
+  push:
+    branches:
+      - main
+      - next
+    paths:
+      - 'packages/ducjs/**'
+      - 'turbo.json'
+      - 'package.json'
+  repository_dispatch:
+    types: [trigger-ducjs-release]
 
 permissions:
   contents: write
@@ -24,10 +19,10 @@ permissions:
   pull-requests: write
 
 jobs:
-  release_duc_ts:
+  release_ducjs:
     runs-on: ubuntu-latest
     concurrency:
-      group: release-ts
+      group: release-ducjs
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
@@ -53,8 +48,7 @@ jobs:
         run: npm install -g npm@latest
       - run: bun install
       - name: Replace workspace dependencies
-        run: |
-          sed -i 's/"workspace:\*"/"*"/g' packages/ducjs/package.json
+        run: sed -i 's/"workspace:\*"/"*"/g' packages/ducjs/package.json
       - name: Build
         run: bun ducjs:build
       - name: Release
@@ -63,4 +57,4 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_LEGACY_PEER_DEPS: "true"
         run: npx semantic-release --ci
-        working-directory: ./packages/ducjs 
+        working-directory: ./packages/ducjs
