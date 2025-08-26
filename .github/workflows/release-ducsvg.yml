@@ -1,16 +1,17 @@
-name: Release Python
+name: Release ducsvg
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
       - next
     paths:
-      - 'packages/ducpy/**'
+      - 'packages/ducsvg/**'
       - 'turbo.json'
       - 'package.json'
   repository_dispatch:
-    types: [trigger-py-release]
+    types: [trigger-ducsvg-release]
 
 permissions:
   contents: write
@@ -18,13 +19,11 @@ permissions:
   pull-requests: write
 
 jobs:
-  release_duc_py:
+  release_ducsvg:
     runs-on: ubuntu-latest
     concurrency:
-      group: release-py
+      group: release-ducsvg
       cancel-in-progress: false
-    outputs:
-      release_status: ${{ steps.release.outputs.status }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,6 +34,8 @@ jobs:
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
+      - name: Pull latest changes from origin/main
+        run: git pull --rebase origin main
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -43,26 +44,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
-      - name: Install Monorepo Dependencies
-        run: bun install
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-        
+      - name: Update npm
+        run: npm install -g npm@latest
+      - run: bun install
+      - name: Replace workspace dependencies
+        run: sed -i 's/"workspace:\*"/"*"/g' packages/ducsvg/package.json
+      - name: Build
+        run: bun ducsvg:build
       - name: Release
-        id: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          if bunx semantic-release --ci; then
-            echo "status=success" >> $GITHUB_OUTPUT
-          else
-            echo "status=failure" >> $GITHUB_OUTPUT
-          fi
-        working-directory: ./packages/ducpy 
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_LEGACY_PEER_DEPS: "true"
+        run: npx semantic-release --ci
+        working-directory: ./packages/ducsvg
