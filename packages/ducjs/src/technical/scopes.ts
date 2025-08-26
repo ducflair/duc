@@ -6,7 +6,6 @@ import { GeometricPoint } from "ducjs/types/geometryTypes";
 export type UnitSystem = ValueOf<typeof UNIT_SYSTEM>;
 export type ZoomDirection = 'up' | 'down' | 'neutral';
 
-// Constants
 export const MIN_ZOOM = 1e-32;
 export const MAX_ZOOM = 1e32;
 export const NEUTRAL_SCOPE: SupportedMeasures = "m";

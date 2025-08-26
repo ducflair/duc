@@ -1,8 +1,7 @@
 {
   "name": "ducsvg",
-  "private": true,
   "version": "0.0.0-development",
-  "license": "MIT",
+  "description": "Adapter for converting duc CAD documents to SVG. Built on top of ducjs.",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,15 +12,61 @@
       "types": "./dist/index.d.ts"
     },
     "./*": {
-      "import": ["./dist/*.js", "./dist/*/index.js"],
-      "require": ["./dist/*.js", "./dist/*/index.js"],
-      "types": ["./dist/*.d.ts", "./dist/*/index.d.ts"]
+      "import": [
+        "./dist/*.js",
+        "./dist/*/index.js"
+      ],
+      "require": [
+        "./dist/*.js",
+        "./dist/*/index.js"
+      ],
+      "types": [
+        "./dist/*.d.ts",
+        "./dist/*/index.d.ts"
+      ]
     }
   },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "semantic-release": "semantic-release"
+  },
+  "author": "Ducflair",
+  "license": "MIT",
   "dependencies": {
     "ducjs": "workspace:^"
   },
-  "scripts": {
-    "build": "tsc"
-  }
+  "devDependencies": {
+    "semantic-release": "^24.1.2",
+    "typescript": "^5.8.3"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ducflair/duc.git",
+    "directory": "packages/ducsvg"
+  },
+  "homepage": "https://duc.ducflair.com/",
+  "bugs": {
+    "url": "https://github.com/ducflair/duc/issues"
+  },
+  "keywords": [
+    "CAD",
+    "2D",
+    "Design",
+    "TypeScript",
+    "Ducflair",
+    "Duc",
+    "SVG",
+    "Renderer",
+    "Converter",
+    "Export"
+  ]
 }
