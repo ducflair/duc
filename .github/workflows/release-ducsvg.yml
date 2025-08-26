@@ -47,14 +47,19 @@ jobs:
       - name: Update npm
         run: npm install -g npm@latest
       - run: bun install
-      - name: Replace workspace dependencies
-        run: sed -i -E 's/"workspace:[^\"]*"/"*"/g' packages/ducsvg/package.json
-      - name: Build
+      - name: Build (with dependencies)
         run: bun ducsvg:build
+      - name: Replace workspace dependencies (repo-wide, post-build)
+        run: |
+          find . -type f -name package.json \
+            -not -path "./node_modules/*" \
+            -not -path "./.git/*" \
+            -print0 | xargs -0 -I {} sed -i -E 's/"workspace:[^\"]*"/"*"/g' {}
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_LEGACY_PEER_DEPS: "true"
+          NPM_CONFIG_WORKSPACES: "false"
         run: npx semantic-release --ci
         working-directory: ./packages/ducsvg
