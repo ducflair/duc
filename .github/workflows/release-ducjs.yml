@@ -48,7 +48,7 @@ jobs:
         run: npm install -g npm@latest
       - run: bun install
       - name: Replace workspace dependencies
-        run: sed -i 's/"workspace:\*"/"*"/g' packages/ducjs/package.json
+        run: sed -i -E 's/"workspace:[^\"]*"/"*"/g' packages/ducjs/package.json
       - name: Build
         run: bun ducjs:build
       - name: Release
