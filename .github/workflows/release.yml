@@ -5,6 +5,15 @@ on:
     branches:
       - main
       - next
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to trigger (ducjs, ducsvg, ducpy, ducrs, web, all)'
+        required: true
+      force:
+        description: 'Force trigger even if no changes detected'
+        required: false
+        default: 'true'
 
 permissions:
   contents: write
@@ -19,6 +28,7 @@ jobs:
       ducjs_changed: ${{ steps.filter.outputs.ducjs }}
       ducpy_changed: ${{ steps.filter.outputs.ducpy }}
       ducrs_changed: ${{ steps.filter.outputs.ducrs }}
+      ducsvg_changed: ${{ steps.filter.outputs.ducsvg }}
       web_changed: ${{ steps.filter.outputs.web }}
       commit_message: ${{ github.event.head_commit.message }}
     steps:
@@ -36,11 +46,12 @@ jobs:
               - 'packages/ducpy/**'
             ducrs:
               - 'packages/ducrs/**'
+            ducsvg:
+              - 'packages/ducsvg/**'
             web:
               - 'apps/web/**'
 
-  # Trigger TypeScript release workflow
-  trigger_ts_release:
+  trigger_ducjs_release:
     needs: paths
     runs-on: ubuntu-latest
     if: |
@@ -50,10 +61,22 @@ jobs:
       - name: Trigger TypeScript Release
         uses: peter-evans/repository-dispatch@v3
         with:
-          event-type: trigger-ts-release
+          event-type: trigger-ducjs-release
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  # Trigger Python release workflow
+  trigger_ducsvg_release:
+    needs: paths
+    runs-on: ubuntu-latest
+    if: |
+      needs.paths.outputs.ducsvg_changed == 'true' ||
+      contains(needs.paths.outputs.commit_message, '(ducsvg)')
+    steps:
+      - name: Trigger ducsvg Release
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-ducsvg-release
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   trigger_py_release:
     needs: paths
     runs-on: ubuntu-latest
@@ -73,7 +96,6 @@ jobs:
         id: status
         run: echo "result=success" >> $GITHUB_OUTPUT
 
-  # Trigger Rust release workflow
   trigger_rs_release:
     needs: paths
     runs-on: ubuntu-latest
@@ -87,7 +109,6 @@ jobs:
           event-type: trigger-rs-release
           token: ${{ secrets.GITHUB_TOKEN }}
           
-  # Trigger web deployment after releases
   trigger_web_deploy:
     needs: [paths, trigger_py_release]
     runs-on: ubuntu-latest
@@ -104,3 +125,48 @@ jobs:
           event-type: trigger-web-deployment
           token: ${{ secrets.GITHUB_TOKEN }}
           client-payload: '{"source": "release-coordinator", "web_changed": "${{ needs.paths.outputs.web_changed }}", "release_success": "true"}'
+
+  # Manual trigger for a specific package (runs only on workflow_dispatch)
+  manual_trigger:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger ducjs (manual)
+        if: ${{ github.event.inputs.package == 'ducjs' || github.event.inputs.package == 'all' }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-ducjs-release
+          token: ${{ secrets.GITHUB_TOKEN }}
+          client-payload: '{"source": "release-coordinator-manual", "force": true}'
+
+      - name: Trigger ducsvg (manual)
+        if: ${{ github.event.inputs.package == 'ducsvg' || github.event.inputs.package == 'all' }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-ducsvg-release
+          token: ${{ secrets.GITHUB_TOKEN }}
+          client-payload: '{"source": "release-coordinator-manual", "force": true}'
+
+      - name: Trigger ducpy (manual)
+        if: ${{ github.event.inputs.package == 'ducpy' || github.event.inputs.package == 'all' }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-py-release
+          token: ${{ secrets.GITHUB_TOKEN }}
+          client-payload: '{"source": "release-coordinator-manual", "force": true}'
+
+      - name: Trigger ducrs (manual)
+        if: ${{ github.event.inputs.package == 'ducrs' || github.event.inputs.package == 'all' }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-rs-release
+          token: ${{ secrets.GITHUB_TOKEN }}
+          client-payload: '{"source": "release-coordinator-manual", "force": true}'
+
+      - name: Trigger web deployment (manual)
+        if: ${{ github.event.inputs.package == 'web' || github.event.inputs.package == 'all' }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-web-deployment
+          token: ${{ secrets.GITHUB_TOKEN }}
+          client-payload: '{"source": "release-coordinator-manual", "web_changed": "true", "release_success": "true", "force": true}'
