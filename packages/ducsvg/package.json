@@ -35,7 +35,7 @@
   "author": "Ducflair",
   "license": "MIT",
   "dependencies": {
-    "ducjs": "workspace:^"
+    "ducjs": "workspace:*"
   },
   "devDependencies": {
     "semantic-release": "^24.1.2",
