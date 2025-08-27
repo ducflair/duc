@@ -2,8 +2,14 @@ name: Release Python
 
 on:
   workflow_dispatch:
-  repository_dispatch:
-    types: [trigger-py-release]
+  push:
+    branches:
+      - main
+      - next
+    paths:
+      - 'packages/ducpy/**'
+      - 'turbo.json'
+      - 'package.json'
 
 permissions:
   contents: write
@@ -59,3 +65,11 @@ jobs:
             echo "status=failure" >> $GITHUB_OUTPUT
           fi
         working-directory: ./packages/ducpy 
+      - name: Notify web deployment
+        if: steps.release.outputs.status == 'success'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-web-deployment
+          token: ${{ secrets.GITHUB_TOKEN }}
+          client-payload: |
+            {"source": "release-ducpy", "web_changed": "false", "success": "true"}
