@@ -138,6 +138,11 @@ export type ElementsConfig = {
   ) => OrderedDucElement[];
   refreshDimensions?: boolean;
   repairBindings?: boolean;
+  /** 
+   * Optional list of element ids that should bypass normal validation
+   * during restore and be passed through as-is to `restoreElements`.
+   */
+  passThroughElementIds?: string[];
 };
 
 export const restore = (
