@@ -6,7 +6,6 @@
     <a href="https://www.npmjs.com/package/ducsvg"><img src="https://shields.io/badge/NPM-cc3534?logo=Npm&logoColor=white&style=round-square" alt="NPM" /></a>
     <a href="https://www.npmjs.com/package/ducsvg"><img src="https://img.shields.io/npm/v/ducsvg/latest?style=round-square&label=latest%20stable" alt="NPM ducsvg@latest release" /></a>
     <a href="https://www.npmtrends.com/ducsvg"><img src="https://img.shields.io/npm/dm/ducsvg?style=round-square&color=salmon" alt="Downloads" /></a>
-    <img src="https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=fff&style=round-square" alt="TypeScript" />
   </p>
 </p>
 
