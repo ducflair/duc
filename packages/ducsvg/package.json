@@ -34,11 +34,10 @@
   },
   "author": "Ducflair",
   "license": "MIT",
-  "peerDependencies": {
-    "ducjs": "^1.0.0"
+  "dependencies": {
+    "ducjs": "workspace:^"
   },
   "devDependencies": {
-    "ducjs": "workspace:^",
     "semantic-release": "^24.1.2",
     "typescript": "^5.8.3"
   },
