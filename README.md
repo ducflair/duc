@@ -17,9 +17,12 @@
     <a href="https://github.com/ducflair/duc/blob/main/packages/ducsvg">
       <img src="https://shields.io/badge/SVG-FFB13B?logo=SVG&logoColor=000&style=round-square" alt="SVG" />
     </a>
-    <!-- <a href="https://github.com/ducflair/duc/blob/main/packages/ducpdf">
+    <a href="https://github.com/ducflair/duc/blob/main/packages/ducpdf">
       <img src="https://shields.io/badge/PDF-ffde57?logo=libreoffice&logoColor=646464&style=round-square" alt="PDF" />
-    </a> -->
+    </a>
+    <a href="https://github.com/ducflair/duc/blob/main/packages/ducdxf">
+      <img src="https://shields.io/badge/DXF-E51050?logo=libreoffice&logoColor=fff&style=round-square" alt="DXF" />
+    </a>
   </p>
 
 </p>
