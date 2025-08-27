@@ -1,14 +1,7 @@
 name: Release Python
 
 on:
-  push:
-    branches:
-      - main
-      - next
-    paths:
-      - 'packages/ducpy/**'
-      - 'turbo.json'
-      - 'package.json'
+  workflow_dispatch:
   repository_dispatch:
     types: [trigger-py-release]
 
