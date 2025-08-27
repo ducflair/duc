@@ -2,8 +2,12 @@ name: Release ducjs
 
 on:
   workflow_dispatch:
-  repository_dispatch:
-    types: [trigger-ducjs-release]
+  push:
+    branches: [main, next]
+    paths:
+      - 'packages/ducjs/**'
+      - 'turbo.json'
+      - 'package.json'
 
 permissions:
   contents: write
