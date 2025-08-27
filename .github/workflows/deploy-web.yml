@@ -3,11 +3,7 @@ name: Deploy Website
 concurrency: Website Production
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'apps/web/**'
+  workflow_dispatch:
   repository_dispatch:
     types: [trigger-web-deployment]
 
