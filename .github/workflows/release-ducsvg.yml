@@ -47,8 +47,10 @@ jobs:
       - name: Update npm
         run: npm install -g npm@latest
       - run: bun install
-      - name: Build
-        run: bun ducsvg:build
+      - name: Build all packages
+        run: |
+          bun ducjs:build
+          bun ducsvg:build
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
