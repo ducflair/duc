@@ -1,8 +1,16 @@
 module.exports = {
   branches: ["main", { name: "next", prerelease: true }],
   plugins: [
-    "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
+    [
+      require.resolve('../../scripts/semrel-path-filter.cjs'),
+      {
+        // relative to repo root
+        path: 'packages/ducsvg',
+        // pass through any analyzer/notes options you like
+        analyzer: { preset: 'conventionalcommits' },
+        notes: { preset: 'conventionalcommits' },
+      },
+    ],
     [
       "@semantic-release/exec",
       {

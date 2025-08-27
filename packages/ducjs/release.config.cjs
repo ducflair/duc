@@ -1,16 +1,25 @@
 module.exports = {
   branches: ["main", { name: "next", prerelease: true }],
   plugins: [
-    "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
+    [
+      require.resolve("../../scripts/semrel-path-filter.cjs"),
+      {
+        // relative to repo root
+        path: "packages/ducjs",
+        // pass through any analyzer/notes options you like
+        analyzer: { preset: "conventionalcommits" },
+        notes: { preset: "conventionalcommits" },
+      },
+    ],
     [
       "@semantic-release/exec",
       {
-        prepareCmd: "node ../../scripts/semrel-set-version.js packages/ducjs ${nextRelease.version}",
-        publishCmd: "bun publish"
-      }
+        prepareCmd:
+          "node ../../scripts/semrel-set-version.js packages/ducjs ${nextRelease.version}",
+        publishCmd: "bun publish",
+      },
     ],
-    "@semantic-release/github"
+    "@semantic-release/github",
   ],
-  tagFormat: "ducjs@${version}"
+  tagFormat: "ducjs@${version}",
 };
