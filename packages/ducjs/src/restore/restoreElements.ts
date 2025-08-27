@@ -1563,10 +1563,16 @@ export const restoreElements = (
         restoredBlocks,
         opts?.localState
       );
-      const isEditing = false; // TODO: Handle editingLinearElement properly
+      // Allow forced pass-through for specific element ids
+      const isPassThrough =
+        Array.isArray(opts?.passThroughElementIds) &&
+        migratedElement &&
+        migratedElement.id &&
+        opts!.passThroughElementIds!.includes(migratedElement.id);
+
       if (
         migratedElement &&
-        (!isInvisiblySmallElement(migratedElement) || isEditing)
+        (isPassThrough || !isInvisiblySmallElement(migratedElement))
       ) {
         if (existingIds.has(migratedElement.id)) {
           migratedElement = { ...migratedElement, id: randomId() };

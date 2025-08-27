@@ -2433,7 +2433,8 @@ export const DUC_SCHEMA_VERSION =
 
 export const serializeDuc = async (
   data: ImportedDataState,
-  useScopedValues: boolean = false
+  useScopedValues: boolean = false,
+  passThroughElementIds: string[] = [],
 ): Promise<Uint8Array> => {
   const builder = new flatbuffers.Builder(1024);
 
@@ -2442,6 +2443,7 @@ export const serializeDuc = async (
     {
       refreshDimensions: false,
       syncInvalidIndices: (elements) => elements as OrderedDucElement[],
+      passThroughElementIds
     }
   );
 
