@@ -6,7 +6,7 @@ module.exports = {
     [
       "@semantic-release/exec",
       {
-        prepareCmd: "node ./scripts/prepare-ducsvg-publish.js"
+        prepareCmd: "node ./scripts/prepare-ducsvg-publish.js && rm -f package-lock.json bun.lockb"
       }
     ],
     [
