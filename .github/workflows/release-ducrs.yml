@@ -2,18 +2,9 @@ name: Release Rust
 
 on:
   workflow_dispatch:
-    # Keeping only manual trigger option
-  # Removed automatic triggers to disable workflow
-  # push:
-  #   branches:
-  #     - main
-  #     - next
-  #   paths:
-  #     - 'packages/ducrs/**'
-  #     - 'turbo.json'
-  #     - 'package.json'
+  # Rust is disabled for now
   # repository_dispatch:
-  #   types: [trigger-rs-release]
+  #   types: [trigger-ducrs-release]
   
 
 permissions:
