@@ -2,8 +2,12 @@ name: Release ducsvg
 
 on:
   workflow_dispatch:
-  repository_dispatch:
-    types: [trigger-ducsvg-release]
+  push:
+    branches: [main, next]
+    paths:
+      - 'packages/ducsvg/**'
+      - 'turbo.json'
+      - 'package.json'
 
 permissions:
   contents: write
