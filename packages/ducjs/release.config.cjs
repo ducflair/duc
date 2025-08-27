@@ -6,17 +6,11 @@ module.exports = {
     [
       "@semantic-release/exec",
       {
-        prepareCmd: "rm -f package-lock.json bun.lockb"
+        prepareCmd: "node ../../scripts/semrel-set-version.js packages/ducjs ${nextRelease.version}",
+        publishCmd: "bun publish"
       }
     ],
-    [
-      "@semantic-release/npm",
-      {
-        pkgRoot: ".",
-        tarballDir: "dist"
-      }
-    ],
-    "@semantic-release/github",
+    "@semantic-release/github"
   ],
   tagFormat: "ducjs@${version}"
 };
