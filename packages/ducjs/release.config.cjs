@@ -4,13 +4,13 @@ module.exports = {
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
-      "@semantic-release/npm",
+      "@semantic-release/exec",
       {
-        pkgRoot: ".",
-        tarballDir: "dist"
+        prepareCmd: "node ../../scripts/semrel-set-version.js packages/ducjs ${nextRelease.version}",
+        publishCmd: "bun publish"
       }
     ],
-    "@semantic-release/github",
+    "@semantic-release/github"
   ],
   tagFormat: "ducjs@${version}"
 };

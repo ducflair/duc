@@ -3,9 +3,7 @@ name: Release ducsvg
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-      - next
+    branches: [main, next]
     paths:
       - 'packages/ducsvg/**'
       - 'turbo.json'
@@ -40,21 +38,19 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "lts/*"
-      - name: Update npm
-        run: npm install -g npm@latest
-      - run: bun install
-      - name: Replace workspace dependencies
-        run: sed -i 's/"workspace:\*"/"*"/g' packages/ducsvg/package.json
+      - name: Install deps
+        run: bun install --frozen-lockfile
       - name: Build
-        run: bun ducsvg:build
+        run: |
+          bun ducjs:build
+          bun ducsvg:build
+      - name: Configure npm auth for publish
+        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_LEGACY_PEER_DEPS: "true"
-        run: npx semantic-release --ci
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
         working-directory: ./packages/ducsvg
+        run: npx semantic-release --ci

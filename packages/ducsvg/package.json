@@ -41,32 +41,14 @@
     "semantic-release": "^24.1.2",
     "typescript": "^5.8.3"
   },
-  "files": [
-    "dist",
-    "README.md"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
+  "files": ["dist", "README.md"],
+  "publishConfig": { "access": "public" },
   "repository": {
     "type": "git",
     "url": "https://github.com/ducflair/duc.git",
     "directory": "packages/ducsvg"
   },
   "homepage": "https://duc.ducflair.com/",
-  "bugs": {
-    "url": "https://github.com/ducflair/duc/issues"
-  },
-  "keywords": [
-    "CAD",
-    "2D",
-    "Design",
-    "TypeScript",
-    "Ducflair",
-    "Duc",
-    "SVG",
-    "Renderer",
-    "Converter",
-    "Export"
-  ]
+  "bugs": { "url": "https://github.com/ducflair/duc/issues" },
+  "keywords": ["CAD","2D","Design","TypeScript","Ducflair","Duc","SVG","Renderer","Converter","Export"]
 }
