@@ -4,6 +4,12 @@ module.exports = {
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
+      "@semantic-release/exec",
+      {
+        prepareCmd: "rm -f package-lock.json bun.lockb"
+      }
+    ],
+    [
       "@semantic-release/npm",
       {
         pkgRoot: ".",
