@@ -39,9 +39,7 @@ jobs:
       - name: Install deps
         run: bun install --frozen-lockfile
       - name: Build
-        run: |
-          bun ducjs:build
-          bun ducsvg:build
+        run: bun ducsvg:build
       - name: Configure npm auth for publish
         run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
         env:
