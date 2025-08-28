@@ -1,12 +1,10 @@
 module.exports = {
-  branches: ["main", { name: "next", prerelease: true }],
+  branches: ["main", { name: "next", prerelease: true }, { name: "dev", prerelease: true }],
   plugins: [
     [
       require.resolve("../../scripts/semrel-path-filter.cjs"),
       {
-        // relative to repo root
         path: "packages/ducpdf",
-        // pass through any analyzer/notes options you like
         analyzer: { preset: "conventionalcommits" },
         notes: { preset: "conventionalcommits" },
       },
