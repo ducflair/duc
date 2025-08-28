@@ -3,7 +3,7 @@ name: Release ducsvg
 on:
   workflow_dispatch:
   push:
-    branches: [main, next]
+    branches: [main, next, dev]
     paths:
       - 'packages/ducsvg/**'
       - 'package.json'
@@ -29,8 +29,8 @@ jobs:
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-      - name: Pull latest changes from origin/main
-        run: git pull --rebase origin main
+      - name: Pull latest changes from origin branch
+        run:  git pull --rebase origin ${{ github.ref_name }}
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -45,9 +45,21 @@ jobs:
         run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Determine release mode
+        id: release-mode
+        run: |
+          if [ "${{ github.ref_name }}" = "dev" ]; then
+            echo "mode=--dry-run" >> $GITHUB_OUTPUT
+            echo "Running in DRY-RUN mode on dev branch"
+          else
+            echo "mode=--ci" >> $GITHUB_OUTPUT
+            echo "Running in PRODUCTION mode on ${{ github.ref_name }} branch"
+          fi
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          DEBUG: "semantic-release:*"
         working-directory: ./packages/ducsvg
-        run: npx semantic-release --ci
+        run: npx semantic-release ${{ steps.release-mode.outputs.mode }}
