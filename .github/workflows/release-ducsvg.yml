@@ -40,7 +40,7 @@ jobs:
       - name: Build
         run: bun ducsvg:build
       - name: Prepare publish folder
-        run: node .scripts/fix-workspace-deps.mjs packages/ducsvg/package.json
+        run: node scripts/fix-workspace-deps.mjs packages/ducsvg/package.json
       - name: Configure npm auth for publish
         run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
         env:

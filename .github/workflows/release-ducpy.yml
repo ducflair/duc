@@ -16,7 +16,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  release_duc_py:
+  release_ducpy:
     runs-on: ubuntu-latest
     concurrency:
       group: release-ducpy
