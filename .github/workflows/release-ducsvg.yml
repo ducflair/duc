@@ -29,8 +29,6 @@ jobs:
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-      - name: Pull latest changes from origin branch
-        run:  git pull --rebase origin ${{ github.ref_name }}
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -39,8 +37,10 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Build
         run: bun ducsvg:build
-      - name: Prepare publish folder
+
+      - name: Prepare workspace dependencies for publish
         run: node scripts/fix-workspace-deps.mjs packages/ducsvg/package.json
+        
       - name: Configure npm auth for publish
         run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
         env:
@@ -60,6 +60,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          DEBUG: "semantic-release:*"
+          # DEBUG: "semantic-release:*" # For verbose logging
         working-directory: ./packages/ducsvg
         run: npx semantic-release ${{ steps.release-mode.outputs.mode }}
