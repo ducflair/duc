@@ -35,7 +35,7 @@ module.exports = {
     context.logger.log(`[path-filter] ${filtered.length}/${context.commits.length} commits affect "${pkgPath}"`);
     if (filtered.length === 0) return null;
 
-    const analyze = require('@semantic-release/commit-analyzer');
+    const { analyzeCommits: analyze } = await import('@semantic-release/commit-analyzer');
     return analyze(analyzer, { ...context, commits: filtered });
   },
 
@@ -43,7 +43,7 @@ module.exports = {
     const { path: pkgPath, notes = {} } = pluginConfig;
     const filtered = await filterCommitsByPath(context.commits, pkgPath);
 
-    const genNotes = require('@semantic-release/release-notes-generator');
+    const { generateNotes: genNotes } = await import('@semantic-release/release-notes-generator');
     return genNotes(notes, { ...context, commits: filtered });
   },
 };
