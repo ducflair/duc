@@ -1,4 +1,3 @@
-// scripts/semrel-path-filter.cjs
 'use strict';
 
 const { execSync } = require('node:child_process');
