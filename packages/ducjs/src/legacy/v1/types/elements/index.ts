@@ -15,11 +15,11 @@ import {
   ELEMENT_SUBSET,
   BEZIER_MIRRORING,
   FREEDRAW_EASINGS,
-} from "ducjs/legacy/v1/utils/constants";
-import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "ducjs/legacy/v1/types/utility-types";
-import { SupportedMeasures } from "ducjs/legacy/v1/utils/measurements";
-import { PrecisionValue } from "ducjs/legacy/v1/types";
-import { Percentage, Radian, GeometricPoint } from "ducjs/legacy/v1/types/geometryTypes";
+} from "../../utils/constants";
+import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "../utility-types";
+import { SupportedMeasures } from "../../utils/measurements";
+import { PrecisionValue } from "..";
+import { Percentage, Radian, GeometricPoint } from "../geometryTypes";
 
 export type ChartType = "bar" | "line";
 export type FontFamilyKeys = keyof typeof FONT_FAMILY;

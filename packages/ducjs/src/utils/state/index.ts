@@ -2,14 +2,14 @@ export * from "./grid";
 
 
 
-import { PRUNING_LEVEL, TEXT_ALIGN } from "ducjs/flatbuffers/duc";
-import { PREDEFINED_STANDARDS } from "ducjs/technical";
+import { PRUNING_LEVEL, TEXT_ALIGN } from "../../flatbuffers/duc";
+import { PREDEFINED_STANDARDS } from "../../technical";
 import {
   getPrecisionValueFromRaw,
   getScaledZoomValueForScope,
   getScopedZoomValue,
   NEUTRAL_SCOPE,
-} from "ducjs/technical/scopes";
+} from "../../technical/scopes";
 import {
   DucGlobalState,
   DucLocalState,
@@ -17,16 +17,16 @@ import {
   ScaleFactor,
   Scope,
   Zoom,
-} from "ducjs/types";
+} from "../../types";
 import {
   COLOR_PALETTE,
   DEFAULT_ELEMENT_PROPS,
   DEFAULT_FONT_FAMILY,
   DEFAULT_FONT_SIZE,
-} from "ducjs/utils/constants";
-import { getNormalizedZoom } from "ducjs/utils/normalize";
-import { isFiniteNumber } from "ducjs/utils";
-import { isValidPrecisionScopeValue } from "ducjs/restore/restoreDataState";
+} from "../constants";
+import { getNormalizedZoom } from "../normalize";
+import { isFiniteNumber } from "..";
+import { isValidPrecisionScopeValue } from "../../restore/restoreDataState";
 
 // appState
 

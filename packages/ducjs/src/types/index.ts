@@ -2,9 +2,9 @@ export * from "./elements";
 export * from "./geometryTypes";
 export * from "./utility-types";
 
-import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "ducjs/flatbuffers/duc";
-import { SupportedMeasures } from "ducjs/technical/scopes";
-import { Standard } from "ducjs/technical/standards";
+import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "../flatbuffers/duc";
+import { SupportedMeasures } from "../technical/scopes";
+import { Standard } from "../technical/standards";
 import {
   DucBindableElement,
   DucBlock,
@@ -24,14 +24,14 @@ import {
   LineHead,
   NonDeleted,
   TextAlign,
-} from "ducjs/types/elements";
+} from "./elements";
 import {
   GeometricPoint,
   Percentage,
   Radian,
   ScaleFactor,
-} from "ducjs/types/geometryTypes";
-import { MakeBrand, MaybePromise, ValueOf } from "ducjs/types/utility-types";
+} from "./geometryTypes";
+import { MakeBrand, MaybePromise, ValueOf } from "./utility-types";
 import type {
   GRID_DISPLAY_TYPE,
   GRID_TYPE,
@@ -40,7 +40,7 @@ import type {
   SNAP_MARKER_SHAPE,
   SNAP_MODE,
   SNAP_OVERRIDE_BEHAVIOR,
-} from "ducjs/utils/constants";
+} from "../utils/constants";
 
 /**
  * Root data structure for the stored data state

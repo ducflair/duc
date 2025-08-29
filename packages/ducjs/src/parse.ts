@@ -82,16 +82,16 @@ import {
   _DucLinearElementBase as _DucLinearElementBaseFb,
   _DucStackBase as _DucStackBaseFb,
   _DucStackElementBase as _DucStackElementBaseFb
-} from "ducjs/flatbuffers/duc";
-import { parseDucFlatBuffers as parseDucFlatBuffersV1 } from 'ducjs/legacy/v1/parse';
-import { RestoredDataState, restore } from "ducjs/restore";
+} from "./flatbuffers/duc";
+import { parseDucFlatBuffers as parseDucFlatBuffersV1 } from './legacy/v1/parse';
+import { RestoredDataState, restore } from "./restore";
 import {
   AngularUnitsFormat,
   DimensionUnitsFormat,
   Standard,
   StandardUnits,
   _UnitSystemBase
-} from "ducjs/technical";
+} from "./technical";
 import {
   CustomHatchPattern,
   DatumReference,
@@ -191,7 +191,7 @@ import {
   _DucLinearElementBase,
   _DucStackBase,
   _DucStackElementBase
-} from "ducjs/types";
+} from "./types";
 import * as flatbuffers from "flatbuffers";
 
 

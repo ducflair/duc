@@ -10,8 +10,8 @@ import {
   TEXT_FLOW_DIRECTION,
   VERTICAL_ALIGN,
   VIEWPORT_SHADE_PLOT,
-} from "ducjs/flatbuffers/duc";
-import { RawValue, Scope } from "ducjs/types";
+} from "../../flatbuffers/duc";
+import { RawValue, Scope } from "../../types";
 import {
   _DucElementBase,
   DucArrowElement,
@@ -43,9 +43,9 @@ import {
   LineHead,
   NonDeleted,
   ViewportScale,
-} from "ducjs/types/elements";
-import { Merge, Mutable } from "ducjs/types/utility-types";
-import { getUpdatedTimestamp, getZoom } from "ducjs/utils";
+} from "../../types/elements";
+import { Merge, Mutable } from "../../types/utility-types";
+import { getUpdatedTimestamp, getZoom } from "..";
 import {
   DEFAULT_ELEMENT_PROPS,
   DEFAULT_ELLIPSE_ELEMENT,
@@ -56,17 +56,17 @@ import {
   DEFAULT_POLYGON_SIDES,
   DEFAULT_TEXT_ALIGN,
   DEFAULT_VERTICAL_ALIGN,
-} from "ducjs/utils/constants";
-import { getDefaultStackProperties, getDefaultTableData, getDefaultTextStyle } from "ducjs/utils/elements";
+} from "../constants";
+import { getDefaultStackProperties, getDefaultTableData, getDefaultTextStyle } from "./";
 import {
   getFontString,
   getTextElementPositionOffsets,
   measureText,
-} from "ducjs/utils/elements/textElement";
-import { randomId, randomInteger } from "ducjs/utils/math/random";
-import { normalizeText } from "ducjs/utils/normalize";
-import { getPrecisionValueFromRaw } from "ducjs/technical/scopes";
-import { Radian, ScaleFactor } from "ducjs/types/geometryTypes";
+} from "./textElement";
+import { randomId, randomInteger } from "../math/random";
+import { normalizeText } from "../normalize";
+import { getPrecisionValueFromRaw } from "../../technical/scopes";
+import { Radian, ScaleFactor } from "../../types/geometryTypes";
 
 export const newElementWith = <TElement extends DucElement>(
   element: TElement,

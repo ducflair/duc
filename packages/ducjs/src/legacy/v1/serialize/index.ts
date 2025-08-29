@@ -1,17 +1,17 @@
 import * as flatbuffers from 'flatbuffers';
 import {
   ExportedDataState,
-} from 'ducjs/legacy/v1/duc';
-import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, MIME_TYPES } from 'ducjs/legacy/v1/utils/constants';
-import { DucBlock, DucElement, DucGroup, OrderedDucElement } from 'ducjs/legacy/v1/types/elements';
-import { BinaryFiles, RendererState, DucState } from 'ducjs/legacy/v1/types';
-import { serializeDucElement } from 'ducjs/legacy/v1/serialize/serializeElementFromDuc';
-import { serializeAppState } from 'ducjs/legacy/v1/serialize/serializeAppStateFromDuc';
-import { serializeBinaryFiles } from 'ducjs/legacy/v1/serialize/serializeBinaryFilesFromDuc';
-import { restore, ExtendedAppStateRestorer, noopExtendedAppStateRestorer } from 'ducjs/legacy/v1/utils/restore';
-import { serializeRendererState } from 'ducjs/legacy/v1/serialize/serializeRendererStateFromDuc';
-import { serializeDucBlock } from 'ducjs/legacy/v1/serialize/serializeBlockFromDuc';
-import { serializeDucGroup } from 'ducjs/legacy/v1/serialize/serializeGroupFromDuc';
+} from '../duc';
+import { DEFAULT_FILENAME, EXPORT_DATA_TYPES, MIME_TYPES } from '../utils/constants';
+import { DucBlock, DucElement, DucGroup, OrderedDucElement } from '../types/elements';
+import { BinaryFiles, RendererState, DucState } from '../types';
+import { serializeDucElement } from './serializeElementFromDuc';
+import { serializeAppState } from './serializeAppStateFromDuc';
+import { serializeBinaryFiles } from './serializeBinaryFilesFromDuc';
+import { restore, ExtendedAppStateRestorer, noopExtendedAppStateRestorer } from '../utils/restore';
+import { serializeRendererState } from './serializeRendererStateFromDuc';
+import { serializeDucBlock } from './serializeBlockFromDuc';
+import { serializeDucGroup } from './serializeGroupFromDuc';
 
 export const DUC_SCHEMA_VERSION = process.env.DUC_SCHEMA_VERSION || "0.0.0";
 

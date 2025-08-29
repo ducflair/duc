@@ -1,7 +1,7 @@
-import { GridSettings, RawValue, ScopedValue, SnapSettings } from "ducjs/legacy/v1/types";
-import { DucElement, DucEllipseElement, DucFreeDrawElement, DucTextElement, ElementBackground, ElementStroke, FontFamilyValues } from "ducjs/legacy/v1/types/elements";
-import { Percentage, Radian } from "ducjs/legacy/v1/types/geometryTypes";
-import { MAX_ZOOM, MIN_ZOOM, NEUTRAL_SCOPE } from "ducjs/legacy/v1/utils/scopes";
+import { GridSettings, RawValue, ScopedValue, SnapSettings } from "../types";
+import { DucElement, DucEllipseElement, DucFreeDrawElement, DucTextElement, ElementBackground, ElementStroke, FontFamilyValues } from "../types/elements";
+import { Percentage, Radian } from "../types/geometryTypes";
+import { MAX_ZOOM, MIN_ZOOM, NEUTRAL_SCOPE } from "./scopes";
 
 
 export const COLOR_PALETTE = {

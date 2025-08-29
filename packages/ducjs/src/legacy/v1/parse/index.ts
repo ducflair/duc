@@ -1,17 +1,17 @@
 import { FileSystemHandle } from 'browser-fs-access';
 import * as flatbuffers from 'flatbuffers';
-import { restore, ExtendedAppStateRestorer } from 'ducjs/legacy/v1/utils/restore';
-import { DucElement, DucBlock, DucGroup, OrderedDucElement } from 'ducjs/legacy/v1/types/elements';
-import { BinaryFiles, DucState } from 'ducjs/legacy/v1/types';
+import { restore, ExtendedAppStateRestorer } from '../utils/restore';
+import { DucElement, DucBlock, DucGroup, OrderedDucElement } from '../types/elements';
+import { BinaryFiles, DucState } from '../types';
 import {
   ExportedDataState
-} from 'ducjs/legacy/v1/duc';
-import { parseAppStateFromBinary } from 'ducjs/legacy/v1/parse/parseAppStateFromBinary';
-import { parseBinaryFilesFromBinary } from 'ducjs/legacy/v1/parse/parseBinaryFilesFromBinary';
-import { parseElementFromBinary } from 'ducjs/legacy/v1/parse/parseElementFromBinary';
-import { parseRendererStateFromBinary } from 'ducjs/legacy/v1/parse/parseRendererStateFromBinary';
-import { parseBlockFromBinary } from 'ducjs/legacy/v1/parse/parseBlockFromBinary';
-import { parseGroupFromBinary } from 'ducjs/legacy/v1/parse/parseGroupFromBinary';
+} from '../duc';
+import { parseAppStateFromBinary } from './parseAppStateFromBinary';
+import { parseBinaryFilesFromBinary } from './parseBinaryFilesFromBinary';
+import { parseElementFromBinary } from './parseElementFromBinary';
+import { parseRendererStateFromBinary } from './parseRendererStateFromBinary';
+import { parseBlockFromBinary } from './parseBlockFromBinary';
+import { parseGroupFromBinary } from './parseGroupFromBinary';
 
 export const parseDucFlatBuffers = async (
   blob: Blob | File, 

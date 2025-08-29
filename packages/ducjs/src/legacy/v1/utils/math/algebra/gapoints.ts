@@ -1,7 +1,7 @@
-import * as GA from "ducjs/legacy/v1/utils/math/algebra/ga";
-import * as GALine from "ducjs/legacy/v1/utils/math/algebra/galines";
-import type { Point, Line } from "ducjs/legacy/v1/utils/math/algebra/ga";
-import { join } from "ducjs/legacy/v1/utils/math/algebra/ga";
+import * as GA from "./ga";
+import * as GALine from "./galines";
+import type { Point, Line } from "./ga";
+import { join } from "./ga";
 
 export const from = ([x, y]: readonly [number, number]): Point => [
   0,

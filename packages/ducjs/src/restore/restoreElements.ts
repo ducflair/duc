@@ -21,7 +21,7 @@ import {
   restorePrecisionValue,
   validateBackground,
   validateStroke
-} from "ducjs/restore/restoreDataState";
+} from "./restoreDataState";
 import {
   getPrecisionValueFromRaw,
   getPrecisionValueFromScoped,
@@ -30,7 +30,7 @@ import {
   getScopedZoomValue,
   NEUTRAL_SCOPE,
   ScaleFactors,
-} from "ducjs/technical/scopes";
+} from "../technical/scopes";
 import {
   _DucElementBase,
   _DucStackElementBase,
@@ -91,7 +91,7 @@ import {
   Scope,
   TextColumn,
   ViewportScale,
-} from "ducjs/types";
+} from "../types";
 import {
   arrayToMap,
   bumpVersion,
@@ -120,7 +120,7 @@ import {
   randomId,
   refreshTextDimensions,
   validateClosedPath,
-} from "ducjs/utils";
+} from "../utils";
 
 import {
   AXIS,
@@ -144,7 +144,7 @@ import {
   TOLERANCE_ZONE_TYPE,
   VERTICAL_ALIGN,
   VIEWPORT_SHADE_PLOT,
-} from "ducjs/flatbuffers/duc";
+} from "../flatbuffers/duc";
 import tinycolor from "tinycolor2";
 
 const restoreElementWithProperties = <

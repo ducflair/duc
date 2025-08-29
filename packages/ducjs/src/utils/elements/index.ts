@@ -5,20 +5,20 @@ export * from "./textElement";
 export * from "./frameElement";
 export * from "./viewportElement";
 
-import { LINE_SPACING_TYPE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION } from "ducjs/flatbuffers/duc";
-import { Scope, RawValue } from "ducjs/types";
-import { _DucStackBase, _DucStackElementBase, DucElement, DucNonSelectionElement, DucStackLikeElement, DucTableColumn, DucTableElement, DucTableRow, DucTextContainer, DucTextElement, DucTextStyle, ElementConstructorOpts, ElementsMap, NonDeleted } from "ducjs/types/elements";
-import { isFreeDrawElement, isLinearElement } from "ducjs/types/elements/typeChecks";
-import { GeometricPoint, Percentage, Radian, ScaleFactor, TuplePoint } from "ducjs/types/geometryTypes";
-import { Mutable } from "ducjs/types/utility-types";
-import { getUpdatedTimestamp } from "ducjs/utils";
-import { getElementAbsoluteCoords, getResizedElementAbsoluteCoords } from "ducjs/utils/bounds";
-import { DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_TEXT_ALIGN, DEFAULT_VERTICAL_ALIGN, FONT_FAMILY } from "ducjs/utils/constants";
-import { getBoundTextMaxWidth, getFontString, getTextElementPositionOffsets, measureText, wrapText } from "ducjs/utils/elements/textElement";
-import { adjustXYWithRotation } from "ducjs/utils/math";
-import { randomInteger } from "ducjs/utils/math/random";
-import { normalizeText } from "ducjs/utils/normalize";
-import { getPrecisionValueFromRaw } from "ducjs/technical/scopes";
+import { LINE_SPACING_TYPE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION } from "../../flatbuffers/duc";
+import { Scope, RawValue } from "../../types";
+import { _DucStackBase, _DucStackElementBase, DucElement, DucNonSelectionElement, DucStackLikeElement, DucTableColumn, DucTableElement, DucTableRow, DucTextContainer, DucTextElement, DucTextStyle, ElementConstructorOpts, ElementsMap, NonDeleted } from "../../types/elements";
+import { isFreeDrawElement, isLinearElement } from "../../types/elements/typeChecks";
+import { GeometricPoint, Percentage, Radian, ScaleFactor, TuplePoint } from "../../types/geometryTypes";
+import { Mutable } from "../../types/utility-types";
+import { getUpdatedTimestamp } from "..";
+import { getElementAbsoluteCoords, getResizedElementAbsoluteCoords } from "../bounds";
+import { DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_TEXT_ALIGN, DEFAULT_VERTICAL_ALIGN, FONT_FAMILY } from "../constants";
+import { getBoundTextMaxWidth, getFontString, getTextElementPositionOffsets, measureText, wrapText } from "./textElement";
+import { adjustXYWithRotation } from "../math";
+import { randomInteger } from "../math/random";
+import { normalizeText } from "../normalize";
+import { getPrecisionValueFromRaw } from "../../technical/scopes";
 
 /**
  * Returns a default DucTextStyle object for the given scope.

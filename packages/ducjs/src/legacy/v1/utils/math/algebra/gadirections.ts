@@ -1,5 +1,5 @@
-import * as GA from "ducjs/legacy/v1/utils/math/algebra/ga";
-import type { Line, Direction, Point } from "ducjs/legacy/v1/utils/math/algebra/ga";
+import * as GA from "./ga";
+import type { Line, Direction, Point } from "./ga";
 
 /**
  * A direction is stored as an array `[0, 0, 0, 0, y, x, 0, 0]` representing

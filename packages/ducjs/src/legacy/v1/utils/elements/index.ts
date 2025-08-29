@@ -1,16 +1,16 @@
-import { Scope, RawValue } from "ducjs/legacy/v1/types";
-import { _DucStackBase, DucElement, DucTableElement, DucTextContainer, DucTextElement, ElementsMap, NonDeleted } from "ducjs/legacy/v1/types/elements";
-import { isFreeDrawElement, isLinearElement } from "ducjs/legacy/v1/types/elements/typeChecks";
-import { GeometricPoint, Percentage, TuplePoint } from "ducjs/legacy/v1/types/geometryTypes";
-import { Mutable } from "ducjs/legacy/v1/types/utility-types";
-import { getUpdatedTimestamp } from "ducjs/legacy/v1/utils";
-import { getElementAbsoluteCoords, getResizedElementAbsoluteCoords } from "ducjs/legacy/v1/utils/bounds";
-import { DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_SIZE, TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/legacy/v1/utils/constants";
-import { getBoundTextMaxWidth, getFontString, getTextElementPositionOffsets, measureText, wrapText } from "ducjs/legacy/v1/utils/elements/textElement";
-import { adjustXYWithRotation } from "ducjs/legacy/v1/utils/math";
-import { randomInteger } from "ducjs/legacy/v1/utils/math/random";
-import { normalizeText } from "ducjs/legacy/v1/utils/normalize";
-import { getPrecisionValueFromRaw } from "ducjs/legacy/v1/utils/scopes";
+import { Scope, RawValue } from "../../types";
+import { _DucStackBase, DucElement, DucTableElement, DucTextContainer, DucTextElement, ElementsMap, NonDeleted } from "../../types/elements";
+import { isFreeDrawElement, isLinearElement } from "../../types/elements/typeChecks";
+import { GeometricPoint, Percentage, TuplePoint } from "../../types/geometryTypes";
+import { Mutable } from "../../types/utility-types";
+import { getUpdatedTimestamp } from "..";
+import { getElementAbsoluteCoords, getResizedElementAbsoluteCoords } from "../bounds";
+import { DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_SIZE, TEXT_ALIGN, VERTICAL_ALIGN } from "../constants";
+import { getBoundTextMaxWidth, getFontString, getTextElementPositionOffsets, measureText, wrapText } from "./textElement";
+import { adjustXYWithRotation } from "../math";
+import { randomInteger } from "../math/random";
+import { normalizeText } from "../normalize";
+import { getPrecisionValueFromRaw } from "../scopes";
 
 /**
  * Mutates element, bumping `version`, `versionNonce`, and `updated`.
