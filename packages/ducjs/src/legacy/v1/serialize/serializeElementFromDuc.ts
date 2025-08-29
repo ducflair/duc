@@ -21,9 +21,9 @@ import {
   StrokeSides as BinStrokeSides,
   StrokeStyle as BinStrokeStyle,
   TilingProperties as BinTilingProperties
-} from 'ducjs/legacy/v1/duc';
-import { isLinearElement } from 'ducjs/legacy/v1/types/elements/typeChecks';
-import type { DucLine, DucLineReference, DucPath, DucPoint } from 'ducjs/legacy/v1/types/elements';
+} from '../duc';
+import { isLinearElement } from '../types/elements/typeChecks';
+import type { DucLine, DucLineReference, DucPath, DucPoint } from '../types/elements';
 import {
   DucArrowElement,
   DucDocElement,
@@ -42,8 +42,8 @@ import {
   StrokeSides,
   StrokeStyle,
   TilingProperties
-} from 'ducjs/legacy/v1/types/elements';
-import { ensureFiniteNumber, getPrecisionValueField } from 'ducjs/legacy/v1/serialize/serializationUtils';
+} from '../types/elements';
+import { ensureFiniteNumber, getPrecisionValueField } from './serializationUtils';
 import * as flatbuffers from 'flatbuffers';
 
 export const serializeDucElement = (

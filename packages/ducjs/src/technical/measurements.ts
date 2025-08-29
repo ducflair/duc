@@ -1,10 +1,10 @@
-import { DucElement } from "ducjs/types/elements";
+import { DucElement } from "../types/elements";
 import {
   calculateScope,
   CombinedMeasure,
   getTranslationFactor,
   SupportedMeasures
-} from "ducjs/technical/scopes";
+} from "./scopes";
 
 
 

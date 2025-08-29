@@ -12,7 +12,7 @@ import {
   SVG_NS,
 } from "ducjs";
 import { LINE_HEAD, STROKE_PLACEMENT } from "ducjs/flatbuffers/duc";
-import { applyStyles, FrameRendering, PartialDucState } from "ducsvg/ducToSvg";
+import { applyStyles, FrameRendering, PartialDucState } from "../ducToSvg";
 
 // This file will contain the new, robust SVG rendering logic for linear elements,
 // ported from the Rust implementation.

@@ -1,7 +1,7 @@
-import type { ElementOrToolType } from "ducjs/types";
-import type { MarkNonNullable } from "ducjs/types/utility-types";
-import { assertNever } from "ducjs/utils";
-import { Bounds, LineSegment, TuplePoint } from "ducjs/types/geometryTypes";
+import type { ElementOrToolType } from "..";
+import type { MarkNonNullable } from "../utility-types";
+import { assertNever } from "../../utils";
+import { Bounds, LineSegment, TuplePoint } from "../geometryTypes";
 import type {
   DucArrowElement,
   DucBindableElement,
@@ -28,7 +28,7 @@ import type {
   DucBlockInstanceElement,
   NonDeleted,
   DucIframeLikeElement
-} from "ducjs/types/elements";
+} from "./";
 
 export const isInitializedImageElement = (
   element: DucElement | null,

@@ -1,5 +1,5 @@
-import type { BinaryFiles, LibraryItem, LibraryItems, LibraryItems_anyVersion, PrecisionValue, RawValue, RendererState, Scope, ScopedValue } from "ducjs/legacy/v1/types";
-import { DucState } from "ducjs/legacy/v1/types";
+import type { BinaryFiles, LibraryItem, LibraryItems, LibraryItems_anyVersion, PrecisionValue, RawValue, RendererState, Scope, ScopedValue } from "../types";
+import { DucState } from "../types";
 import type {
   BezierMirroring,
   DucBlock,
@@ -39,21 +39,21 @@ import type {
   StrokeStyle,
   TextAlign,
   VerticalAlign
-} from "ducjs/legacy/v1/types/elements";
+} from "../types/elements";
 import {
   isElbowArrow,
   isLinearElement,
   isTextElement
-} from "ducjs/legacy/v1/types/elements/typeChecks";
-import { Percentage, Radian } from "ducjs/legacy/v1/types/geometryTypes";
-import type { MarkOptional, Mutable, ValueOf } from "ducjs/legacy/v1/types/utility-types";
+} from "../types/elements/typeChecks";
+import { Percentage, Radian } from "../types/geometryTypes";
+import type { MarkOptional, Mutable, ValueOf } from "../types/utility-types";
 import {
   arrayToMap,
   getUpdatedTimestamp,
   isFiniteNumber,
   updateActiveTool,
-} from "ducjs/legacy/v1/utils";
-import { getContainerElement } from "ducjs/legacy/v1/utils/bounds";
+} from "./";
+import { getContainerElement } from "./bounds";
 import {
   BEZIER_MIRRORING,
   BLENDING,
@@ -82,27 +82,27 @@ import {
   TEXT_ALIGN,
   VERSIONS,
   VERTICAL_ALIGN
-} from "ducjs/legacy/v1/utils/constants";
+} from "./constants";
 import {
   bumpVersion, getDefaultStackProperties, getNonDeletedElements,
   isInvisiblySmallElement, migratePoints
-} from "ducjs/legacy/v1/utils/elements";
-import { getNormalizedPoints, mergeOverlappingPoints, validateClosedPath } from "ducjs/legacy/v1/utils/elements/linearElement";
-import { detectLineHeight, refreshTextDimensions } from "ducjs/legacy/v1/utils/elements/textElement";
-import { getSizeFromPoints } from "ducjs/legacy/v1/utils/math";
-import { randomId } from "ducjs/legacy/v1/utils/math/random";
-import { getPrecisionScope, ScaleFactors, SupportedMeasures } from "ducjs/legacy/v1/utils/measurements";
+} from "./elements";
+import { getNormalizedPoints, mergeOverlappingPoints, validateClosedPath } from "./elements/linearElement";
+import { detectLineHeight, refreshTextDimensions } from "./elements/textElement";
+import { getSizeFromPoints } from "./math";
+import { randomId } from "./math/random";
+import { getPrecisionScope, ScaleFactors, SupportedMeasures } from "./measurements";
 import {
   getNormalizedDimensions,
   getNormalizedGridSize,
   getNormalizedGridStep,
   getNormalizedZoom,
   normalizeFixedPoint,
-} from "ducjs/legacy/v1/utils/normalize";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScaledZoomValueForScope, getScopedBezierPointFromDucPoint, getScopedZoomValue, NEUTRAL_SCOPE } from "ducjs/legacy/v1/utils/scopes";
-import { DESIGN_STANDARD, DesignStandard } from "ducjs/legacy/v1/utils/standards";
-import { getDefaultDucState } from "ducjs/legacy/v1/utils/state";
-import { normalizeLink } from "ducjs/legacy/v1/utils/url";
+} from "./normalize";
+import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScaledZoomValueForScope, getScopedBezierPointFromDucPoint, getScopedZoomValue, NEUTRAL_SCOPE } from "./scopes";
+import { DESIGN_STANDARD, DesignStandard } from "./standards";
+import { getDefaultDucState } from "./state";
+import { normalizeLink } from "./url";
 import tinycolor from "tinycolor2";
 
 type RestoredDucState = Omit<
