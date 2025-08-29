@@ -1,4 +1,4 @@
-import { ScopedValue } from "ducjs/legacy/v1/types";
+import { ScopedValue } from "./";
 
 /**
  * x and y position of top left corner, x and y position of bottom right corner

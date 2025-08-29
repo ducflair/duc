@@ -16,9 +16,9 @@ import {
   PointBinding as BinPointBinding,
   StrokeSides as BinStrokeSides,
   TilingProperties as BinTilingProperties
-} from 'ducjs/legacy/v1/duc';
-import { SupportedMeasures } from 'ducjs/legacy/v1/utils/measurements';
-import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/legacy/v1/utils/scopes';
+} from '../duc';
+import { SupportedMeasures } from '../utils/measurements';
+import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from '../utils/scopes';
 import {
   BezierMirroring,
   Blending,
@@ -64,10 +64,10 @@ import {
   TextAlign,
   TilingProperties,
   VerticalAlign
-} from 'ducjs/legacy/v1/types/elements';
-import { RawValue } from 'ducjs/legacy/v1/types';
-import { DEFAULT_ELEMENT_PROPS, FREEDRAW_EASINGS } from 'ducjs/legacy/v1/utils/constants';
-import { Percentage, Radian } from 'ducjs/legacy/v1/types/geometryTypes';
+} from '../types/elements';
+import { RawValue } from '../types';
+import { DEFAULT_ELEMENT_PROPS, FREEDRAW_EASINGS } from '../utils/constants';
+import { Percentage, Radian } from '../types/geometryTypes';
 import tinycolor from 'tinycolor2';
 
 export const parsePoint = (point: BinPoint | null, elementScope: SupportedMeasures): DucPoint | null => {

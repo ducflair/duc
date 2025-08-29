@@ -7,7 +7,7 @@
      cast to number at the final write site (e.g. pv.value).
    - Keep args strongly typed. Never use any for function args.
 */
-import * as Duc from "ducjs/flatbuffers/duc";
+import * as Duc from "./flatbuffers/duc";
 import * as flatbuffers from "flatbuffers";
 
 import {
@@ -108,10 +108,10 @@ import {
   TrackingLineStyle,
   VersionBase,
   VersionGraph
-} from "ducjs/types";
+} from "./types";
 
-import { restore } from "ducjs/restore";
-import { encodeFunctionString, EXPORT_DATA_TYPES } from "ducjs/utils";
+import { restore } from "./restore";
+import { encodeFunctionString, EXPORT_DATA_TYPES } from "./utils";
 
 /**
  * Basic helpers
@@ -1845,7 +1845,7 @@ function writeUcs(b: flatbuffers.Builder, u: DucUcs): number {
 /**
  * Standards
  */
-import type { Standard, StandardOverrides, StandardStyles, StandardUnits, StandardValidation, StandardViewSettings } from "ducjs/technical/standards";
+import type { Standard, StandardOverrides, StandardStyles, StandardUnits, StandardValidation, StandardViewSettings } from "./technical/standards";
 
 function serializeStandardOverrides(b: flatbuffers.Builder, o: StandardOverrides, usv: boolean): number {
   const activeGrid = o.activeGridSettingsId ? Duc.StandardOverrides.createActiveGridSettingsIdVector(b, o.activeGridSettingsId.map(id => b.createString(id))) : undefined;
