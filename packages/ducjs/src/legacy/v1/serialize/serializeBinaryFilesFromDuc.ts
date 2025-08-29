@@ -1,7 +1,7 @@
 import * as flatbuffers from 'flatbuffers';
-import { BinaryFileData, BinaryFilesEntry, BinaryFiles as BinBinaryFiles } from 'ducjs/legacy/v1/duc';
-import { BinaryFiles as BinaryFilesType } from 'ducjs/legacy/v1/types';
-import { ensureFiniteNumber } from 'ducjs/legacy/v1/serialize/serializationUtils'; // Import shared helper
+import { BinaryFileData, BinaryFilesEntry, BinaryFiles as BinBinaryFiles } from '../duc';
+import { BinaryFiles as BinaryFilesType } from '../types';
+import { ensureFiniteNumber } from './serializationUtils'; // Import shared helper
 
 // Helper function to convert a DataURL (base64 string) to Uint8Array
 const dataURLToUint8Array = (dataURL: string): Uint8Array => {

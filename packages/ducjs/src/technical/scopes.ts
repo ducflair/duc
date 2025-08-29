@@ -1,7 +1,7 @@
-import { UNIT_SYSTEM } from "ducjs/flatbuffers/duc";
-import { PrecisionValue, RawValue, ScaledZoom, Scope, ScopedValue, ScopedZoomValue, ValueOf } from "ducjs/types";
-import { DucPoint } from "ducjs/types/elements";
-import { GeometricPoint } from "ducjs/types/geometryTypes";
+import { UNIT_SYSTEM } from "../flatbuffers/duc";
+import { PrecisionValue, RawValue, ScaledZoom, Scope, ScopedValue, ScopedZoomValue, ValueOf } from "../types";
+import { DucPoint } from "../types/elements";
+import { GeometricPoint } from "../types/geometryTypes";
 
 export type UnitSystem = ValueOf<typeof UNIT_SYSTEM>;
 export type ZoomDirection = 'up' | 'down' | 'neutral';

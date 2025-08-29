@@ -1,5 +1,5 @@
-import { AXIS } from "ducjs/flatbuffers/duc";
-import { ScopedValue, ValueOf } from "ducjs/types";
+import { AXIS } from "../flatbuffers/duc";
+import { ScopedValue, ValueOf } from "./";
 
 /**
  * Axis such as X, Y, Z

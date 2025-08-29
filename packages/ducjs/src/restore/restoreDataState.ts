@@ -13,20 +13,20 @@ import {
   STROKE_SIDE_PREFERENCE,
   TEXT_ALIGN,
   VERTICAL_ALIGN,
-} from "ducjs/flatbuffers/duc";
-import { restoreElements } from "ducjs/restore/restoreElements";
+} from "../flatbuffers/duc";
+import { restoreElements } from "./restoreElements";
 import {
   isStandardIdPresent,
   restoreStandards,
-} from "ducjs/restore/restoreStandards";
-import { getPrecisionScope } from "ducjs/technical/measurements";
+} from "./restoreStandards";
+import { getPrecisionScope } from "../technical/measurements";
 import {
   getPrecisionValueFromRaw,
   getPrecisionValueFromScoped,
   NEUTRAL_SCOPE,
   ScaleFactors
-} from "ducjs/technical/scopes";
-import { PREDEFINED_STANDARDS, Standard } from "ducjs/technical/standards";
+} from "../technical/scopes";
+import { PREDEFINED_STANDARDS, Standard } from "../technical/standards";
 import type {
   Checkpoint,
   Delta,
@@ -41,8 +41,8 @@ import type {
   Scope,
   ScopedValue,
   VersionGraph,
-} from "ducjs/types";
-import { DucLocalState } from "ducjs/types";
+} from "../types";
+import { DucLocalState } from "../types";
 import type {
   _DucStackBase,
   BezierMirroring,
@@ -69,9 +69,9 @@ import type {
   StrokeStyle,
   TextAlign,
   VerticalAlign,
-} from "ducjs/types/elements";
-import { Percentage, Radian } from "ducjs/types/geometryTypes";
-import { ValueOf } from "ducjs/types/utility-types";
+} from "../types/elements";
+import { Percentage, Radian } from "../types/geometryTypes";
+import { ValueOf } from "../types/utility-types";
 import {
   base64ToUint8Array,
   getDefaultGlobalState,
@@ -80,7 +80,7 @@ import {
   isEncodedFunctionString,
   isFiniteNumber,
   reviveEncodedFunction,
-} from "ducjs/utils";
+} from "../utils";
 import {
   DEFAULT_ELEMENT_PROPS,
   DEFAULT_POLYGON_SIDES,
@@ -90,8 +90,8 @@ import {
   MAX_ZOOM_STEP,
   MIN_ZOOM_STEP,
   VERSIONS,
-} from "ducjs/utils/constants";
-import { getDefaultStackProperties } from "ducjs/utils/elements";
+} from "../utils/constants";
+import { getDefaultStackProperties } from "../utils/elements";
 import tinycolor from "tinycolor2";
 
 export type RestoredLocalState = Omit<

@@ -1,10 +1,10 @@
 import * as flatbuffers from 'flatbuffers';
-import { DucBindableElement, NonDeleted } from 'ducjs/legacy/v1/types/elements';
-import { HANDLE_TYPE } from 'ducjs/legacy/v1/utils/constants';
-import { AppState as BinAppState, LinearElementEditor, PointerDownState, SegmentMidpointState, SimplePoint } from 'ducjs/legacy/v1/duc';
-import { ensureFiniteNumber, getPrecisionValueField } from 'ducjs/legacy/v1/serialize/serializationUtils';
-import { serializeDucPoint, serializeElementBackground, serializeElementStroke } from 'ducjs/legacy/v1/serialize/serializeElementFromDuc';
-import { DucState, PrecisionValue, SuggestedPointBinding } from 'ducjs/legacy/v1/types';
+import { DucBindableElement, NonDeleted } from '../types/elements';
+import { HANDLE_TYPE } from '../utils/constants';
+import { AppState as BinAppState, LinearElementEditor, PointerDownState, SegmentMidpointState, SimplePoint } from '../duc';
+import { ensureFiniteNumber, getPrecisionValueField } from './serializationUtils';
+import { serializeDucPoint, serializeElementBackground, serializeElementStroke } from './serializeElementFromDuc';
+import { DucState, PrecisionValue, SuggestedPointBinding } from '../types';
 
 const serializeAppState = (builder: flatbuffers.Builder, appState: Partial<DucState>, forRenderer: boolean): flatbuffers.Offset => {
   const nameOffset = appState.name ? builder.createString(appState.name) : undefined;

@@ -1,4 +1,4 @@
-import { ActiveTool, DucState, ToolType } from "ducjs/legacy/v1/types";
+import { ActiveTool, DucState, ToolType } from "../types";
 
 /**
  * supply `null` as message if non-never value is valid, you just need to

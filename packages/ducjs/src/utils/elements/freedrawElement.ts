@@ -1,5 +1,5 @@
-import { DucFreeDrawElement } from "ducjs/types/elements";
-import { med } from "ducjs/utils/math";
+import { DucFreeDrawElement } from "../../types/elements";
+import { med } from "../math";
 import type { StrokeOptions } from "perfect-freehand";
 import { getStroke } from "perfect-freehand";
 

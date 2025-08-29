@@ -1,5 +1,5 @@
 {
-  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.importModuleSpecifier": "relative",
   "svg.preview.background": "dark-transparent",
   "cSpell.words": ["presigner"],
   "editor.tabSize": 2,

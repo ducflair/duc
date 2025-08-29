@@ -1,5 +1,5 @@
 import * as flatbuffers from 'flatbuffers';
-import { RendererState } from 'ducjs/legacy/v1/duc';
+import { RendererState } from '../duc';
 
 export const parseRendererStateFromBinary = (
   rendererState: RendererState | null,
