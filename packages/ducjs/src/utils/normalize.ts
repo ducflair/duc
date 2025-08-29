@@ -1,7 +1,7 @@
-import { MAX_ZOOM, MIN_ZOOM } from "ducjs/utils/constants";
-import { clamp, round } from "ducjs/utils/math";
-import type { NormalizedZoomValue, ScopedValue } from "ducjs/types";
-import { DucElement, FixedPoint } from "ducjs/types/elements";
+import { MAX_ZOOM, MIN_ZOOM } from "./constants";
+import { clamp, round } from "./math";
+import type { NormalizedZoomValue, ScopedValue } from "../types";
+import { DucElement, FixedPoint } from "../types/elements";
 
 export const getNormalizedZoom = (zoom: number): NormalizedZoomValue => {
   return clamp(zoom, MIN_ZOOM, MAX_ZOOM) as NormalizedZoomValue;

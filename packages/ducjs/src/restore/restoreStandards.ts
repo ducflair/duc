@@ -5,25 +5,25 @@ import {
   GRID_DISPLAY_TYPE,
   GRID_TYPE,
   UNIT_SYSTEM,
-} from "ducjs/flatbuffers/duc";
+} from "../flatbuffers/duc";
 import {
   isValidBoolean,
   isValidEnumValue,
   isValidRadianValue,
   isValidString,
   restorePrecisionValue
-} from "ducjs/restore/restoreDataState";
+} from "./restoreDataState";
 import {
   NEUTRAL_SCOPE,
   ScaleFactors
-} from "ducjs/technical";
-import { PREDEFINED_STANDARDS, Standard, StandardOverrides, StandardStyles, StandardUnits, StandardValidation, StandardViewSettings } from "ducjs/technical/standards";
+} from "../technical";
+import { PREDEFINED_STANDARDS, Standard, StandardOverrides, StandardStyles, StandardUnits, StandardValidation, StandardViewSettings } from "../technical/standards";
 import {
   GridSettings,
   GridStyle,
   Identifier,
   Scope
-} from "ducjs/types";
+} from "../types";
 
 
 

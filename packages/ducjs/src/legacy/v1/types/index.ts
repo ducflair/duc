@@ -12,13 +12,13 @@ import {
   LineHead,
   NonDeleted,
   TextAlign
-} from "ducjs/legacy/v1/types/elements";
-import { GeometricPoint, Percentage, Radian } from "ducjs/legacy/v1/types/geometryTypes";
-import { MakeBrand, MaybePromise, ValueOf } from "ducjs/legacy/v1/types/utility-types";
-import type { ANTI_ALIASING, GRID_DISPLAY_TYPE, GRID_TYPE, IMAGE_MIME_TYPES, MIME_TYPES, OBJECT_SNAP_MODE, SNAP_MARKER_SHAPE, SNAP_MODE, SNAP_OVERRIDE_BEHAVIOR } from "ducjs/legacy/v1/utils/constants";
-import { LinearElementEditor } from "ducjs/legacy/v1/utils/elements/linearElement";
-import { SupportedMeasures } from "ducjs/legacy/v1/utils/measurements";
-import { DesignStandard } from "ducjs/legacy/v1/utils/standards";
+} from "./elements";
+import { GeometricPoint, Percentage, Radian } from "./geometryTypes";
+import { MakeBrand, MaybePromise, ValueOf } from "./utility-types";
+import type { ANTI_ALIASING, GRID_DISPLAY_TYPE, GRID_TYPE, IMAGE_MIME_TYPES, MIME_TYPES, OBJECT_SNAP_MODE, SNAP_MARKER_SHAPE, SNAP_MODE, SNAP_OVERRIDE_BEHAVIOR } from "../utils/constants";
+import { LinearElementEditor } from "../utils/elements/linearElement";
+import { SupportedMeasures } from "../utils/measurements";
+import { DesignStandard } from "../utils/standards";
 
 
 export type Scope = SupportedMeasures;

@@ -1,1 +1,1 @@
-export * from "ducjs/legacy/v1";
+export * from "./v1";

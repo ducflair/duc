@@ -1,5 +1,5 @@
-import { DucElement, DucElementsIncludingDeleted, DucFrameLikeElement, ElementsMap } from "ducjs/types/elements";
-import { isFrameLikeElement } from "ducjs/types/elements/typeChecks";
+import { DucElement, DucElementsIncludingDeleted, DucFrameLikeElement, ElementsMap } from "../../types/elements";
+import { isFrameLikeElement } from "../../types/elements/typeChecks";
 
 export const getContainingFrame = (
   element: DucElement,

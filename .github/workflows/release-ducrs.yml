@@ -6,6 +6,7 @@ on:
   #   branches:
   #     - main
   #     - next
+  #     - dev
   #   paths:
   #     - 'packages/ducrs/**'
   #     - 'package.json'
@@ -47,9 +48,20 @@ jobs:
       - name: Install cargo-edit
         run: cargo install cargo-edit
 
+      - name: Determine release mode
+        id: release-mode
+        run: |
+          if [ "${{ github.ref_name }}" = "dev" ]; then
+            echo "mode=--dry-run" >> $GITHUB_OUTPUT
+            echo "Running in DRY-RUN mode on dev branch"
+          else
+            echo "mode=--ci" >> $GITHUB_OUTPUT
+            echo "Running in PRODUCTION mode on ${{ github.ref_name }} branch"
+          fi
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: npx semantic-release --ci
+        run: npx semantic-release ${{ steps.release-mode.outputs.mode }}
         working-directory: ./packages/ducrs

@@ -1,11 +1,11 @@
-import type { PrecisionValue, RawValue, Scope, ScopedValue } from "ducjs/legacy/v1/types";
-import type { DucBindableElement, DucElement, DucLine, DucLinearElement, DucPoint, DucTextElementWithContainer, ElementsMap, NonDeleted } from "ducjs/legacy/v1/types/elements";
-import { Bounds, GeometricPoint } from "ducjs/legacy/v1/types/geometryTypes";
-import type { ValueOf } from "ducjs/legacy/v1/types/utility-types";
-import { ElementAbsoluteCoords, getBoundTextElement, getElementAbsoluteCoords, getElementPointsCoords } from "ducjs/legacy/v1/utils/bounds";
-import { HANDLE_TYPE, LINE_CONFIRM_THRESHOLD } from "ducjs/legacy/v1/utils/constants";
-import { centerPoint, getBezierXY, getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, rotate, rotatePoint, getControlPointsForBezierCurve, mapIntervalToBezierT } from "ducjs/legacy/v1/utils/math";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint } from "ducjs/legacy/v1/utils/scopes";
+import type { PrecisionValue, RawValue, Scope, ScopedValue } from "../../types";
+import type { DucBindableElement, DucElement, DucLine, DucLinearElement, DucPoint, DucTextElementWithContainer, ElementsMap, NonDeleted } from "../../types/elements";
+import { Bounds, GeometricPoint } from "../../types/geometryTypes";
+import type { ValueOf } from "../../types/utility-types";
+import { ElementAbsoluteCoords, getBoundTextElement, getElementAbsoluteCoords, getElementPointsCoords } from "../bounds";
+import { HANDLE_TYPE, LINE_CONFIRM_THRESHOLD } from "../constants";
+import { centerPoint, getBezierXY, getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, rotate, rotatePoint, getControlPointsForBezierCurve, mapIntervalToBezierT } from "../math";
+import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint } from "../scopes";
 
 type SV = ScopedValue;
 

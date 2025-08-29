@@ -1,4 +1,4 @@
-import { ValueOf } from "ducjs/legacy/v1/types/utility-types";
+import { ValueOf } from "../types/utility-types";
 
 export const DESIGN_STANDARD = {
   DUC: 10,    // DUC (default)

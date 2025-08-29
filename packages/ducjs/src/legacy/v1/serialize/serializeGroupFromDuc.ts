@@ -1,9 +1,9 @@
 import * as flatbuffers from 'flatbuffers';
 import {
   DucGroup as BinDucGroup,
-} from 'ducjs/legacy/v1/duc';
+} from '../duc';
 import { serializeElementStroke, serializeElementBackground } from './serializeElementFromDuc';
-import { DucGroup } from 'ducjs/legacy/v1/types/elements';
+import { DucGroup } from '../types/elements';
 
 export const serializeDucGroup = (
   builder: flatbuffers.Builder,

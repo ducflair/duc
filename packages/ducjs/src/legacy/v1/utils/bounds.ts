@@ -1,12 +1,12 @@
-import { Scope, ScopedValue } from "ducjs/legacy/v1/types";
-import { DucElement, DucFreeDrawElement, DucLine, DucLinearElement, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap } from "ducjs/legacy/v1/types/elements";
-import { Bounds } from "ducjs/legacy/v1/types/geometryTypes";
-import { getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, rescaleLines, rescalePoints } from "ducjs/legacy/v1/utils/math";
-import { GeometricPoint } from "ducjs/legacy/v1/types/geometryTypes";
-import { rotate } from "ducjs/legacy/v1/utils/math";
-import { LinearElementEditor } from "ducjs/legacy/v1/duc";
-import { isFreeDrawElement, isLinearElement, isTextElement, isArrowElement } from "ducjs/legacy/v1/types/elements/typeChecks";
-import { getBoundTextElementPosition, getLinearElementAbsoluteCoords } from "ducjs/legacy/v1/utils/elements/linearElement";
+import { Scope, ScopedValue } from "../types";
+import { DucElement, DucFreeDrawElement, DucLine, DucLinearElement, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap } from "../types/elements";
+import { Bounds } from "../types/geometryTypes";
+import { getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, rescaleLines, rescalePoints } from "./math";
+import { GeometricPoint } from "../types/geometryTypes";
+import { rotate } from "./math";
+import { LinearElementEditor } from "../duc";
+import { isFreeDrawElement, isLinearElement, isTextElement, isArrowElement } from "../types/elements/typeChecks";
+import { getBoundTextElementPosition, getLinearElementAbsoluteCoords } from "./elements/linearElement";
 
 type SV = ScopedValue;
 

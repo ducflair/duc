@@ -8,17 +8,17 @@ import type {
   RawValue,
   ScopedZoomValue,
   Zoom
-} from "ducjs/types";
-import { Scope, ScopedValue } from "ducjs/types";
-import type { DucElement, DucLine, DucLinearElement, DucLinearLikeElement, DucLineReference, DucPoint, NonDeleted } from "ducjs/types/elements";
-import type { Bounds, GeometricPoint, GeometricVector, Percentage, Radian } from "ducjs/types/geometryTypes";
-import { Heading } from "ducjs/types/geometryTypes";
-import { Mutable } from "ducjs/types/utility-types";
+} from "../../types";
+import { Scope, ScopedValue } from "../../types";
+import type { DucElement, DucLine, DucLinearElement, DucLinearLikeElement, DucLineReference, DucPoint, NonDeleted } from "../../types/elements";
+import type { Bounds, GeometricPoint, GeometricVector, Percentage, Radian } from "../../types/geometryTypes";
+import { Heading } from "../../types/geometryTypes";
+import { Mutable } from "../../types/utility-types";
 import {
   LINE_CONFIRM_THRESHOLD
-} from "ducjs/utils/constants";
-import { pointFrom } from "ducjs/utils/math/geometry";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint, SupportedMeasures } from "ducjs/technical/scopes";
+} from "../constants";
+import { pointFrom } from "./geometry";
+import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint, SupportedMeasures } from "../../technical/scopes";
 
 type SV = ScopedValue;
 

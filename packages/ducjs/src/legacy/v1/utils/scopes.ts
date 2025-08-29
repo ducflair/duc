@@ -1,6 +1,6 @@
-import { PrecisionValue, RawValue, ScaledZoom, Scope, ScopedValue, ScopedZoomValue } from "ducjs/legacy/v1/types";
-import { DucPoint } from "ducjs/legacy/v1/types/elements";
-import { GeometricPoint } from "ducjs/legacy/v1/types/geometryTypes";
+import { PrecisionValue, RawValue, ScaledZoom, Scope, ScopedValue, ScopedZoomValue } from "../types";
+import { DucPoint } from "../types/elements";
+import { GeometricPoint } from "../types/geometryTypes";
 
 export type UnitSystem = 'metric' | 'imperial';
 export type ZoomDirection = 'up' | 'down' | 'neutral';
