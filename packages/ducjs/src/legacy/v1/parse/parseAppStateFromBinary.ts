@@ -1,17 +1,17 @@
-import { AppState as BinAppState } from 'ducjs/legacy/v1/duc';
-import { parseElementBinBackground, parseElementBinStroke, parsePoint } from 'ducjs/legacy/v1/parse/parseElementFromBinary';
-import { SupportedMeasures } from 'ducjs/legacy/v1/utils/measurements';
-import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from 'ducjs/legacy/v1/utils/scopes';
-import { DesignStandard } from 'ducjs/legacy/v1/utils/standards';
+import { AppState as BinAppState } from '../duc';
+import { parseElementBinBackground, parseElementBinStroke, parsePoint } from './parseElementFromBinary';
+import { SupportedMeasures } from '../utils/measurements';
+import { getPrecisionValueFromRaw, NEUTRAL_SCOPE } from '../utils/scopes';
+import { DesignStandard } from '../utils/standards';
 import {
   ElementSubset,
   LineHead,
   PointerType,
   TextAlign
-} from 'ducjs/legacy/v1/types/elements';
-import { LinearElementEditor } from 'ducjs/legacy/v1/utils/elements/linearElement';
-import { AntiAliasing, DucState, NormalizedZoomValue, PrecisionValue, RawValue, Zoom } from 'ducjs/legacy/v1/types';
-import { HANDLE_TYPE } from 'ducjs/legacy/v1/utils/constants';
+} from '../types/elements';
+import { LinearElementEditor } from '../utils/elements/linearElement';
+import { AntiAliasing, DucState, NormalizedZoomValue, PrecisionValue, RawValue, Zoom } from '../types';
+import { HANDLE_TYPE } from '../utils/constants';
 
 export const parseAppStateFromBinary = (appStateBin: BinAppState | null, v: number): Partial<DucState> => {
   if (!appStateBin) return {};

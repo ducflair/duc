@@ -50,7 +50,7 @@ import {
   uint8ArrayToBase64
 } from "ducjs";
 import { TEXT_ALIGN } from "ducjs/flatbuffers/duc";
-import { renderLinearElementToSvg } from "ducsvg/utils/linearElementToSvg";
+import { renderLinearElementToSvg } from "./utils/linearElementToSvg";
 
 
 export type PartialDucState = Partial<DucLocalState & DucGlobalState>;

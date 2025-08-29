@@ -1,5 +1,5 @@
-import * as GA from "ducjs/legacy/v1/utils/math/algebra/ga";
-import type { Line, Point } from "ducjs/legacy/v1/utils/math/algebra/ga";
+import * as GA from "./ga";
+import type { Line, Point } from "./ga";
 
 /**
  * A line is stored as an array `[0, c, a, b, 0, 0, 0, 0]` representing:

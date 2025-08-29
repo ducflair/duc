@@ -1,8 +1,8 @@
-import { DucState, RawValue } from "ducjs/legacy/v1/types";
-import { ANTI_ALIASING, COLOR_PALETTE, DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_GRID_SIZE, DEFAULT_GRID_STEP, TEXT_ALIGN } from "ducjs/legacy/v1/utils/constants";
-import { getNormalizedZoom } from "ducjs/legacy/v1/utils/normalize";
-import { getPrecisionValueFromRaw, getScaledZoomValueForScope, getScopedZoomValue, NEUTRAL_SCOPE } from "ducjs/legacy/v1/utils/scopes";
-import { DESIGN_STANDARD } from "ducjs/legacy/v1/utils/standards";
+import { DucState, RawValue } from "../../types";
+import { ANTI_ALIASING, COLOR_PALETTE, DEFAULT_ELEMENT_PROPS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_GRID_SIZE, DEFAULT_GRID_STEP, TEXT_ALIGN } from "../constants";
+import { getNormalizedZoom } from "../normalize";
+import { getPrecisionValueFromRaw, getScaledZoomValueForScope, getScopedZoomValue, NEUTRAL_SCOPE } from "../scopes";
+import { DESIGN_STANDARD } from "../standards";
 
 
 export const getDefaultDucState = (): Omit<

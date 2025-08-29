@@ -1,4 +1,4 @@
-import { DucElement } from "ducjs/legacy/v1/types/elements";
+import { DucElement } from "../types/elements";
 import {
   calculateScope,
   CombinedMeasure,
@@ -9,7 +9,7 @@ import {
   metricMeasures,
   ScaleFactors,
   SupportedMeasures
-} from "ducjs/legacy/v1/utils/scopes";
+} from "./scopes";
 
 export { imperialMeasures, metricMeasures, ScaleFactors };
 export type { CombinedMeasure, ImperialMeasure, MetricMeasure, SupportedMeasures };

@@ -1,6 +1,6 @@
-import * as GA from "ducjs/legacy/v1/utils/math/algebra/ga";
-import type { Line, Direction, Point, Transform } from "ducjs/legacy/v1/utils/math/algebra/ga";
-import * as GADirection from "ducjs/legacy/v1/utils/math/algebra/gadirections";
+import * as GA from "./ga";
+import type { Line, Direction, Point, Transform } from "./ga";
+import * as GADirection from "./gadirections";
 
 /**
  * TODO: docs

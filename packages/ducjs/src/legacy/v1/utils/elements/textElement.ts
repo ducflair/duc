@@ -1,15 +1,15 @@
-import { DucState, RawValue, Scope, ScopedValue } from "ducjs/legacy/v1/types";
-import { DucElement, DucElementType, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap, FontFamilyValues, FontString, NonDeletedDucElement } from "ducjs/legacy/v1/types/elements";
-import { isArrowElement, isBoundToContainer, isTextElement } from "ducjs/legacy/v1/types/elements/typeChecks";
-import { GeometricPoint } from "ducjs/legacy/v1/types/geometryTypes";
-import { ExtractSetType } from "ducjs/legacy/v1/types/utility-types";
-import { getContainerElement, getElementAbsoluteCoords, getResizedElementAbsoluteCoords } from "ducjs/legacy/v1/utils/bounds";
-import { ARROW_LABEL_FONT_SIZE_TO_MIN_WIDTH_RATIO, ARROW_LABEL_WIDTH_FRACTION, BOUND_TEXT_PADDING, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, FONT_FAMILY, TEXT_ALIGN, VERTICAL_ALIGN, WINDOWS_EMOJI_FALLBACK_FONT } from "ducjs/legacy/v1/utils/constants";
-import { getBoundTextElementPosition, getPointGlobalCoordinates, getPointsGlobalCoordinates, getSegmentMidPoint } from "ducjs/legacy/v1/utils/elements/linearElement";
-import { adjustXYWithRotation } from "ducjs/legacy/v1/utils/math";
-import { normalizeText } from "ducjs/legacy/v1/utils/normalize";
-import { SupportedMeasures, getPrecisionValueFromRaw, getScopedBezierPointFromDucPoint } from "ducjs/legacy/v1/utils/scopes";
-import { DucPoint } from "ducjs/legacy/v1/types/elements";
+import { DucState, RawValue, Scope, ScopedValue } from "../../types";
+import { DucElement, DucElementType, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap, FontFamilyValues, FontString, NonDeletedDucElement } from "../../types/elements";
+import { isArrowElement, isBoundToContainer, isTextElement } from "../../types/elements/typeChecks";
+import { GeometricPoint } from "../../types/geometryTypes";
+import { ExtractSetType } from "../../types/utility-types";
+import { getContainerElement, getElementAbsoluteCoords, getResizedElementAbsoluteCoords } from "../bounds";
+import { ARROW_LABEL_FONT_SIZE_TO_MIN_WIDTH_RATIO, ARROW_LABEL_WIDTH_FRACTION, BOUND_TEXT_PADDING, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, FONT_FAMILY, TEXT_ALIGN, VERTICAL_ALIGN, WINDOWS_EMOJI_FALLBACK_FONT } from "../constants";
+import { getBoundTextElementPosition, getPointGlobalCoordinates, getPointsGlobalCoordinates, getSegmentMidPoint } from "./linearElement";
+import { adjustXYWithRotation } from "../math";
+import { normalizeText } from "../normalize";
+import { SupportedMeasures, getPrecisionValueFromRaw, getScopedBezierPointFromDucPoint } from "../scopes";
+import { DucPoint } from "../../types/elements";
 
 export const computeBoundTextPosition = (
   container: DucElement,
