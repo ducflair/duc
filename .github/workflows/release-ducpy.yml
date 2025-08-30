@@ -55,7 +55,7 @@ jobs:
 
       - name: Setup release environment
         id: setup-release-environment
-        uses: ./.github/actions/simulate-main-environment.yml
+        uses: ./.github/actions/simulate-main-environment
         with:
           current-branch: ${{ github.ref_name }}
           package-name: ducpy
