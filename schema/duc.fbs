@@ -994,7 +994,7 @@ table _DucElementBase {
   region_ids: [string];
   /** The layer the element belongs to */
   layer_id: string;
-  /** The frame the element belongs to */
+  /** The frame or plot the element belongs to */
   frame_id: string;
   
   /**
