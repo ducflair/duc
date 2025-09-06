@@ -5,7 +5,8 @@
   "editor.tabSize": 2,
   "editor.detectIndentation": false,
   "rust-analyzer.linkedProjects": [
-    "packages/ducrs/Cargo.toml"
+    "packages/ducrs/Cargo.toml",
+    "packages/ducpdf/src/duc2pdf/Cargo.toml"
   ],
   "rust-analyzer.files.exclude": [
     "packages/ducrs/src/duc_generated.rs"
