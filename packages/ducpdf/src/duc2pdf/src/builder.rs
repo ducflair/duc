@@ -1,6 +1,9 @@
 use crate::{ConversionOptions, ConversionResult, ConversionError, ConversionMode, 
           validate_coordinates, validate_coordinates_with_scale, calculate_required_scale, MM_TO_PDF_UNITS};
-use duc::types::{ExportedDataState, DucBlock, DucExternalFileEntry, Standard, DucPlotElement, DucElementEnum};
+use crate::streaming::stream_elements::ElementStreamer;
+use crate::utils::style_resolver::StyleResolver;
+use crate::streaming::stream_resources::ResourceStreamer;
+use duc::types::{ExportedDataState, DucBlock, DucExternalFileEntry, Standard, DucPlotElement, DucElementEnum, ElementWrapper};
 use hipdf::lopdf::{Document, Object, Dictionary, Stream};
 use hipdf::ocg::{OCGManager, Layer};
 use hipdf::blocks::BlockManager;
@@ -34,6 +37,8 @@ pub struct DucToPdfBuilder {
     block_manager: BlockManager,
     hatching_manager: HatchingManager,
     pdf_embedder: PdfEmbedder,
+    element_streamer: ElementStreamer,
+    resource_streamer: ResourceStreamer,
     page_ids: Vec<u32>, // Track page object IDs for pages tree
 }
 
@@ -74,6 +79,9 @@ impl DucToPdfBuilder {
             active_standard,
         };
         
+        // Initialize style resolver
+        let style_resolver = StyleResolver::new(context.active_standard.clone());
+        
         Ok(Self {
             context,
             document,
@@ -81,6 +89,8 @@ impl DucToPdfBuilder {
             block_manager: BlockManager::new(),
             hatching_manager: HatchingManager::new(),
             pdf_embedder: PdfEmbedder::new(),
+            element_streamer: ElementStreamer::new(style_resolver),
+            resource_streamer: ResourceStreamer::new(),
             page_ids: Vec::new(),
         })
     }
@@ -339,8 +349,55 @@ impl DucToPdfBuilder {
             self.ocg_manager.add_layer(layer_obj);
         }
         
-        // Initialize layers in the document
+        // Initialize layers in the document with proper OCG structure
         self.ocg_manager.initialize(&mut self.document);
+        
+        // Set up OCG properties in the document catalog
+        self.setup_ocg_properties()?;
+        
+        Ok(())
+    }
+    
+    /// Setup OCG properties in the document
+    fn setup_ocg_properties(&mut self) -> ConversionResult<()> {
+        // For now, create a basic OCG structure
+        // TODO: Implement proper OCG reference collection when hipdf API supports it
+        
+        // Create OCG properties dictionary
+        let mut ocg_props = Dictionary::new();
+        
+        // Create empty OCGs array for now
+        let ocg_refs: Vec<Object> = Vec::new();
+        
+        if !ocg_refs.is_empty() {
+            // Set OCGs array
+            ocg_props.set("OCGs", Object::Array(ocg_refs));
+            
+            // Create default configuration
+            let mut default_config = Dictionary::new();
+            default_config.set("BaseState", Object::Name("ON".as_bytes().to_vec()));
+            default_config.set("ON", Object::Array(vec![])); // Will be populated with visible layers
+            default_config.set("OFF", Object::Array(vec![])); // Will be populated with hidden layers
+            
+            // Add default configuration to OCG properties
+            let config_id = self.document.add_object(Object::Dictionary(default_config));
+            ocg_props.set("OCProperties", Object::Array(vec![Object::Reference(config_id)]));
+            
+            // Store OCG properties in document
+            let ocg_props_id = self.document.add_object(Object::Dictionary(ocg_props));
+            
+            // Set OCG properties in document catalog
+            match self.document.catalog_mut() {
+                Ok(catalog) => {
+                    catalog.set("OCProperties", Object::Reference(ocg_props_id));
+                }
+                Err(_) => {
+                    // If catalog is not available, store in trailer
+                    self.document.trailer.set("OCProperties", Object::Reference(ocg_props_id));
+                }
+            }
+        }
+        
         Ok(())
     }
     
@@ -449,8 +506,8 @@ impl DucToPdfBuilder {
         let page_width = width * MM_TO_PDF_UNITS;
         let page_height = height * MM_TO_PDF_UNITS;
         
-        // Create content stream with actual content
-        let content_stream = self.create_content_stream_for_bounds(bounds)?;
+        // Create content stream using modular element streaming
+        let content_stream = self.create_modular_content_stream(bounds)?;
         let content_id = self.document.add_object(Object::Stream(content_stream));
         
         // Create page dictionary
@@ -467,11 +524,164 @@ impl DucToPdfBuilder {
         page.set("UserUnit", Object::Real(25.4 / 72.0));
         page.set("Contents", Object::Reference(content_id));
         
+        // Add OCG properties to the page if we have layers
+        if !self.context.exported_data.layers.is_empty() {
+            self.add_page_ocg_properties(&mut page)?;
+        }
+        
         // Add page to document and track ID
         let page_id = self.document.add_object(Object::Dictionary(page));
         self.page_ids.push(page_id.0); // Extract the object ID from the ObjectId
         
         Ok(())
+    }
+    
+    /// Create modular content stream using the element streamer with layer support
+    fn create_modular_content_stream(&mut self, bounds: (f64, f64, f64, f64)) -> ConversionResult<Stream> {
+        let (x, y, width, height) = self.apply_scale_bounds(bounds.0, bounds.1, bounds.2, bounds.3);
+        
+        let mut content = String::new();
+        
+        // Start graphics state
+        content.push_str("q\n");
+        
+        // Apply coordinate transformation for bounds
+        content.push_str(&format!("{} {} translate\n", x, y));
+        
+        // Handle layered content using hipdf LayerContentBuilder
+        if !self.context.exported_data.layers.is_empty() {
+            // Stream elements by layer using LayerContentBuilder
+            let all_operations = self.stream_elements_by_layer(bounds)?;
+            
+            // Convert operations to content stream text
+            for op in all_operations {
+                content.push_str(&self.operation_to_string(&op));
+                content.push('\n');
+            }
+        } else {
+            // No layers, use the original streaming approach
+            let operations = self.element_streamer.stream_elements_within_bounds(
+                &self.context.exported_data.elements,
+                bounds,
+                &mut self.resource_streamer,
+                &mut self.block_manager,
+                &mut self.hatching_manager,
+                &mut self.pdf_embedder,
+                &self.ocg_manager,
+            )?;
+            
+            // Convert operations to content stream text
+            for op in operations {
+                content.push_str(&self.operation_to_string(&op));
+                content.push('\n');
+            }
+        }
+        
+        // End graphics state
+        content.push_str("Q\n");
+        
+        let content_bytes = content.into_bytes();
+        let mut stream_dict = Dictionary::new();
+        stream_dict.set("Length", Object::Integer(content_bytes.len() as i64));
+        
+        Ok(Stream::new(stream_dict, content_bytes))
+    }
+    
+    /// Stream elements organized by layers using LayerContentBuilder
+    fn stream_elements_by_layer(&mut self, bounds: (f64, f64, f64, f64)) -> ConversionResult<Vec<hipdf::lopdf::content::Operation>> {
+        use hipdf::lopdf::content::Operation;
+        
+        let mut all_operations = Vec::new();
+        
+        // First, stream elements that don't belong to any layer
+        let unlayered_elements: Vec<ElementWrapper> = self.context.exported_data.elements
+            .iter()
+            .filter(|element_wrapper| {
+                let base = crate::builder::DucToPdfBuilder::get_element_base(&element_wrapper.element);
+                base.layer_id.is_none()
+            })
+            .cloned()
+            .collect();
+        
+        if !unlayered_elements.is_empty() {
+            let unlayered_ops = self.element_streamer.stream_elements_within_bounds(
+                &unlayered_elements,
+                bounds,
+                &mut self.resource_streamer,
+                &mut self.block_manager,
+                &mut self.hatching_manager,
+                &mut self.pdf_embedder,
+                &self.ocg_manager,
+            )?;
+            all_operations.extend(unlayered_ops);
+        }
+        
+        // Then stream each layer separately
+        for layer in &self.context.exported_data.layers {
+            let layer_ops = self.element_streamer.build_layer_content(
+                &layer.id,
+                &self.context.exported_data.elements,
+                bounds,
+                &mut self.resource_streamer,
+                &mut self.block_manager,
+                &mut self.hatching_manager,
+                &mut self.pdf_embedder,
+                &self.ocg_manager,
+            )?;
+            
+            all_operations.extend(layer_ops);
+        }
+        
+        Ok(all_operations)
+    }
+    
+    /// Add OCG properties to page
+    fn add_page_ocg_properties(&mut self, page: &mut Dictionary) -> ConversionResult<()> {
+        // Create optional content configuration dictionary
+        let mut oc_config = Dictionary::new();
+        oc_config.set("OCGs", Object::Array(vec![])); // Will be populated with layer references
+        
+        // Add the OCG configuration to the page
+        if let Ok(ocg_dict) = self.document.get_object((2, 0)) {
+            if let Object::Dictionary(_) = ocg_dict {
+                page.set("OCProperties", Object::Reference((2, 0)));
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Convert PDF operation to string representation
+    fn operation_to_string(&self, op: &hipdf::lopdf::content::Operation) -> String {
+        let mut result = String::new();
+        
+        // Add operands
+        for operand in &op.operands {
+            match operand {
+                Object::Real(val) => result.push_str(&format!("{} ", val)),
+                Object::Integer(val) => result.push_str(&format!("{} ", val)),
+                Object::Name(name) => result.push_str(&format!("/{} ", String::from_utf8_lossy(name))),
+                Object::String(str_lit, _) => result.push_str(&format!("({}) ", String::from_utf8_lossy(str_lit))),
+                Object::Array(arr) => {
+                    result.push('[');
+                    for item in arr {
+                        match item {
+                            Object::Real(val) => result.push_str(&format!("{} ", val)),
+                            Object::Integer(val) => result.push_str(&format!("{} ", val)),
+                            _ => result.push_str("? "),
+                        }
+                    }
+                    result.push(']');
+                    result.push(' ');
+                }
+                _ => result.push_str("? "),
+            }
+        }
+        
+        // Add operator
+        result.push_str(&String::from_utf8_lossy(op.operator.as_bytes()));
+        
+        result
     }
     
     /// Calculate overall bounds of all elements
@@ -499,130 +709,7 @@ impl DucToPdfBuilder {
         (min_x, min_y, width, height)
     }
     
-    /// Create content stream for specified bounds
-    fn create_content_stream_for_bounds(&self, bounds: (f64, f64, f64, f64)) -> ConversionResult<Stream> {
-        let (x, y, width, height) = self.apply_scale_bounds(bounds.0, bounds.1, bounds.2, bounds.3);
         
-        let mut content = String::new();
-        
-        // Start graphics state
-        content.push_str("q\n");
-        
-        // Add a debug border to show the bounds
-        content.push_str(&format!("0.5 w\n")); // Line width
-        content.push_str(&format!("0 0 1 RG\n")); // Blue color for border
-        content.push_str(&format!("{} {} {} {} re\n", x, y, width, height));
-        content.push_str("S\n"); // Stroke the rectangle
-        
-        // Process DUC elements within these bounds
-        self.add_duc_elements_to_content(&mut content, bounds)?;
-        
-        // End graphics state
-        content.push_str("Q\n");
-        
-        let content_bytes = content.into_bytes();
-        let mut stream_dict = Dictionary::new();
-        stream_dict.set("Length", Object::Integer(content_bytes.len() as i64));
-        
-        Ok(Stream::new(stream_dict, content_bytes))
-    }
-    
-    /// Add DUC elements to content stream
-    fn add_duc_elements_to_content(&self, content: &mut String, bounds: (f64, f64, f64, f64)) -> ConversionResult<()> {
-        let (bounds_x, bounds_y, bounds_width, bounds_height) = bounds;
-        let bounds_max_x = bounds_x + bounds_width;
-        let bounds_max_y = bounds_y + bounds_height;
-        
-        // Iterate through all elements and render those within bounds
-        for element_wrapper in &self.context.exported_data.elements {
-            let base = Self::get_element_base(&element_wrapper.element);
-            
-            // Check if element intersects with bounds
-            let elem_max_x = base.x + base.width;
-            let elem_max_y = base.y + base.height;
-            
-            let intersects = !(base.x > bounds_max_x || elem_max_x < bounds_x || 
-                              base.y > bounds_max_y || elem_max_y < bounds_y);
-            
-            if intersects {
-                // Apply scaling to element coordinates
-                let scaled_x = self.apply_scale(base.x);
-                let scaled_y = self.apply_scale(base.y);
-                let scaled_width = self.apply_scale(base.width);
-                let scaled_height = self.apply_scale(base.height);
-                
-                // Render element based on its type
-                match &element_wrapper.element {
-                    DucElementEnum::DucRectangleElement(_) => {
-                        self.add_rectangle_element(content, scaled_x, scaled_y, scaled_width, scaled_height)?;
-                    }
-                    DucElementEnum::DucEllipseElement(_) => {
-                        self.add_ellipse_element(content, scaled_x, scaled_y, scaled_width, scaled_height)?;
-                    }
-                    DucElementEnum::DucTextElement(text_elem) => {
-                        self.add_text_element(content, text_elem, scaled_x, scaled_y)?;
-                    }
-                    DucElementEnum::DucLinearElement(_) => {
-                        self.add_line_element(content, scaled_x, scaled_y, scaled_width, scaled_height)?;
-                    }
-                    _ => {
-                        // For other element types, draw a placeholder rectangle
-                        self.add_placeholder_element(content, scaled_x, scaled_y, scaled_width, scaled_height)?;
-                    }
-                }
-            }
-        }
-        
-        Ok(())
-    }
-    
-    /// Add rectangle element to content
-    fn add_rectangle_element(&self, content: &mut String, x: f64, y: f64, width: f64, height: f64) -> ConversionResult<()> {
-        content.push_str("0.2 w\n"); // Line width
-        content.push_str("0 0 0 RG\n"); // Black color
-        content.push_str(&format!("{} {} {} {} re\n", x, y, width, height));
-        content.push_str("S\n"); // Stroke
-        Ok(())
-    }
-    
-    /// Add ellipse element to content (approximated with rectangle for now)
-    fn add_ellipse_element(&self, content: &mut String, x: f64, y: f64, width: f64, height: f64) -> ConversionResult<()> {
-        content.push_str("0.2 w\n"); // Line width
-        content.push_str("0 0.5 0 RG\n"); // Green color for ellipses
-        content.push_str(&format!("{} {} {} {} re\n", x, y, width, height));
-        content.push_str("S\n"); // Stroke
-        Ok(())
-    }
-    
-    /// Add text element to content
-    fn add_text_element(&self, content: &mut String, _text_elem: &duc::types::DucTextElement, x: f64, y: f64) -> ConversionResult<()> {
-        // For now, just draw a small marker for text
-        content.push_str("0.1 w\n"); // Line width
-        content.push_str("1 0 0 RG\n"); // Red color for text markers
-        content.push_str(&format!("{} {} 5 5 re\n", x, y));
-        content.push_str("S\n"); // Stroke
-        Ok(())
-    }
-    
-    /// Add line element to content
-    fn add_line_element(&self, content: &mut String, x: f64, y: f64, width: f64, height: f64) -> ConversionResult<()> {
-        content.push_str("0.3 w\n"); // Line width
-        content.push_str("0.5 0 0.5 RG\n"); // Purple color for lines
-        content.push_str(&format!("{} {} m\n", x, y)); // Move to start
-        content.push_str(&format!("{} {} l\n", x + width, y + height)); // Line to end
-        content.push_str("S\n"); // Stroke
-        Ok(())
-    }
-    
-    /// Add placeholder element for unsupported types
-    fn add_placeholder_element(&self, content: &mut String, x: f64, y: f64, width: f64, height: f64) -> ConversionResult<()> {
-        content.push_str("0.1 w\n"); // Line width
-        content.push_str("0.7 0.7 0.7 RG\n"); // Gray color for placeholders
-        content.push_str(&format!("{} {} {} {} re\n", x, y, width, height));
-        content.push_str("S\n"); // Stroke
-        Ok(())
-    }
-    
     /// Phase 4: Finalization
     fn phase4_finalization(mut self) -> ConversionResult<Vec<u8>> {
         // Create Pages tree
