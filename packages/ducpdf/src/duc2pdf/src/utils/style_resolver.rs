@@ -1,10 +1,13 @@
 
+use crate::{ConversionResult, ConversionError};
 use duc::types::{
-    Standard, DucElementStylesBase, ElementBackground, ElementStroke, DucElementEnum
+    Standard, DucElementStylesBase, ElementBackground, ElementStroke, DucHatchStyle, DucElementEnum
 };
 use duc::generated::duc::{
-    ELEMENT_CONTENT_PREFERENCE, STROKE_PREFERENCE, STROKE_CAP, STROKE_JOIN
+    ELEMENT_CONTENT_PREFERENCE, STROKE_PREFERENCE, STROKE_CAP, STROKE_JOIN, HATCH_STYLE
 };
+use hipdf::hatching::{HatchingManager, HatchStyle};
+use hipdf::lopdf::{content::Operation, Object};
 use std::collections::HashMap;
 
 /// Style resolution context for resolving element styles
@@ -98,6 +101,7 @@ pub struct ResolvedBackground {
     pub color: String,
     pub opacity: f64,
     pub visible: bool,
+    pub hatch: Option<DucHatchStyle>,
 }
 
 #[derive(Debug, Clone)]
@@ -228,7 +232,15 @@ impl ResolvedBackground {
             color: bg.content.src.clone(),
             opacity: bg.content.opacity,
             visible: bg.content.visible,
+            hatch: bg.content.hatch.clone(),
         }
+    }
+}
+
+impl StyleResolver {
+    /// Resolve a single background element
+    pub fn resolve_background(&self, bg: &ElementBackground) -> Option<ResolvedBackground> {
+        Some(ResolvedBackground::from_element_background(bg))
     }
 }
 
@@ -244,5 +256,106 @@ impl ResolvedStroke {
             dash_pattern: stroke.style.dash.clone(),
             visible: stroke.content.visible,
         }
+    }
+}
+
+// Hatching pattern management
+impl StyleResolver {
+    /// Apply hatching pattern to element with dimensions
+    pub fn apply_hatching_pattern_with_dims(&self, backgrounds: &[ElementBackground], hatching_manager: &mut HatchingManager, ops: &mut Vec<Operation>, width: f64, height: f64) -> ConversionResult<()> {
+        use crate::ConversionError;
+        
+        for background in backgrounds {
+            if let Some(resolved_bg) = self.resolve_background(background) {
+                if let Some(hatch_style) = resolved_bg.hatch {
+                    // Use hipdf::hatching::CustomPattern for custom hatching
+                    let _pattern_id = self.create_custom_hatching_pattern(&hatch_style, hatching_manager, width, height)?;
+                    
+                    // Apply the hatching pattern
+                    ops.push(Operation::new("% Custom hatching pattern applied", vec![]));
+                    ops.push(Operation::new("% Hatching pattern info", vec![]));
+                    ops.push(Operation::new(&format!("% Pattern: {}, Scale: {}, Angle: {}", 
+                        hatch_style.pattern_name, hatch_style.pattern_scale, hatch_style.pattern_angle), vec![]));
+                    
+                    // Create rectangle for the hatched area
+                    ops.push(Operation::new("re", vec![
+                        Object::Real(0.0), Object::Real(0.0), 
+                        Object::Real(width as f32), Object::Real(height as f32)
+                    ]));
+                    ops.push(Operation::new("f", vec![])); // Fill with hatching pattern
+                }
+            }
+        }
+        Ok(())
+    }
+    
+    /// Create custom hatching pattern using hipdf::hatching::CustomPattern
+    fn create_custom_hatching_pattern(&self, hatch_style: &DucHatchStyle, hatching_manager: &mut HatchingManager, width: f64, height: f64) -> ConversionResult<String> {
+        use crate::ConversionError;
+        
+        if let Some(_custom_pattern) = &hatch_style.custom_pattern {
+            // TODO: Implement custom pattern creation using hipdf::hatching::CustomPattern
+            // For now, fall back to predefined pattern
+            return self.create_predefined_hatch_pattern(hatch_style, width, height);
+        }
+        
+        // Use predefined hatch style
+        self.create_predefined_hatch_pattern(hatch_style, width, height)
+    }
+    
+    /// Create predefined hatch pattern
+    fn create_predefined_hatch_pattern(&self, hatch_style: &DucHatchStyle, width: f64, height: f64) -> ConversionResult<String> {
+        use hipdf::hatching::HatchStyle as HipdfHatchStyle;
+        use crate::ConversionError;
+        
+        let _scaled_width = width * hatch_style.pattern_scale as f64;
+        let _scaled_height = height * hatch_style.pattern_scale as f64;
+        
+        // Convert DucHatchStyle to hipdf HatchStyle
+        let hipdf_style = match hatch_style.hatch_style {
+            HATCH_STYLE::NORMAL => HipdfHatchStyle::DiagonalRight,
+            HATCH_STYLE::OUTER => HipdfHatchStyle::Cross,
+            HATCH_STYLE::IGNORE => {
+                // No hatching pattern for ignore
+                return Ok("no_hatch".to_string());
+            },
+            _ => HipdfHatchStyle::DiagonalRight, // Default fallback
+        };
+        
+        let pattern_id = format!("{:?}_{}_{}", hipdf_style, hatch_style.pattern_scale, hatch_style.pattern_angle);
+        
+        // TODO: Use hipdf hatching manager to create the actual pattern
+        // For now, return the pattern ID
+        Ok(pattern_id)
+    }
+    
+    /// Convert DucHatchStyle to hipdf HatchStyle
+    pub fn convert_duc_hatch_to_hipdf(&self, duc_hatch: &DucHatchStyle) -> ConversionResult<HatchStyle> {
+        use crate::ConversionError;
+        
+        match duc_hatch.hatch_style {
+            HATCH_STYLE::NORMAL => Ok(HatchStyle::DiagonalRight), // Use diagonal as default for normal
+            HATCH_STYLE::OUTER => Ok(HatchStyle::DiagonalLeft),  // Use different pattern for outer
+            HATCH_STYLE::IGNORE => {
+                // Check if there's a custom pattern
+                if duc_hatch.custom_pattern.is_some() {
+                    Ok(HatchStyle::Cross)
+                } else {
+                    Ok(HatchStyle::DiagonalRight) // Default fallback
+                }
+            },
+            _ => Ok(HatchStyle::DiagonalRight), // Default fallback for any other values
+        }
+    }
+    
+    /// Check if backgrounds contain hatching patterns
+    pub fn has_hatching(&self, backgrounds: &[ElementBackground]) -> bool {
+        backgrounds.iter().any(|bg| {
+            if let Some(resolved_bg) = self.resolve_background(bg) {
+                resolved_bg.hatch.is_some()
+            } else {
+                false
+            }
+        })
     }
 }
