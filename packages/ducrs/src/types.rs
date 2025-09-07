@@ -280,7 +280,7 @@ pub struct BoundElement {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucElementBase {
     pub id: String,
-    pub styles: DucElementStylesBase,
+    pub styles: Option<DucElementStylesBase>, // Some elements may organize styles differently
     pub x: f64,
     pub y: f64,
     pub width: f64,
@@ -1581,8 +1581,8 @@ pub struct ExportedDataState {
     pub regions: Vec<DucRegion>,
     pub layers: Vec<DucLayer>,
     pub standards: Vec<Standard>,
-    pub duc_local_state: DucLocalState,
-    pub duc_global_state: DucGlobalState,
+    pub duc_local_state: Option<DucLocalState>,
+    pub duc_global_state: Option<DucGlobalState>,
     pub external_files: Option<Vec<DucExternalFileEntry>>,
     pub version_graph: Option<VersionGraph>,
 }
