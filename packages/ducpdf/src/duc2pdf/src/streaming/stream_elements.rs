@@ -1,4 +1,3 @@
-
 // Leverage style resolver from utils to first get the adequate style for the element
 
 // Then, based on the element type, stream the adequate PDF commands to represent it:
@@ -28,3 +27,604 @@
 
 
 
+
+
+use crate::{ConversionResult, ConversionError};
+use crate::utils::style_resolver::{StyleResolver, ResolvedStyles};
+use duc::types::{
+    DucElementEnum, DucRectangleElement, DucTextElement, DucBlockInstanceElement,
+    DucPolygonElement, DucEllipseElement, DucLinearElement, DucTableElement,
+    DucMermaidElement, DucFreeDrawElement, DucPdfElement, DucImageElement,
+    DucFrameElement, DucPlotElement
+};
+use hipdf::lopdf::content::Operation;
+use hipdf::lopdf::Object;
+use bigcolor::BigColor;
+use std::collections::HashMap;
+
+/// Element streaming context for rendering DUC elements to PDF
+pub struct ElementStreamer {
+    style_resolver: StyleResolver,
+    /// Cache for external resources (images, SVGs, PDFs, etc.)
+    resource_cache: HashMap<String, u32>, // id -> object_id mapping
+}
+
+impl ElementStreamer {
+    /// Create new element streamer
+    pub fn new(style_resolver: StyleResolver) -> Self {
+        Self { 
+            style_resolver,
+            resource_cache: HashMap::new(),
+        }
+    }
+    
+    /// Set resource cache for external resources
+    pub fn set_resource_cache(&mut self, cache: HashMap<String, u32>) {
+        self.resource_cache = cache;
+    }
+    
+    /// Stream a single element to PDF content operations
+    pub fn stream_element(&self, element: &DucElementEnum) -> ConversionResult<Vec<Operation>> {
+        let mut operations = Vec::new();
+        
+        // Save graphics state
+        operations.push(Operation::new("q", vec![]));
+        
+        // Apply transformation (position, rotation)
+        let base = crate::builder::DucToPdfBuilder::get_element_base(element);
+        if base.x != 0.0 || base.y != 0.0 || base.angle != 0.0 {
+            let transform_ops = self.create_transformation_matrix(base.x, base.y, base.angle);
+            operations.extend(transform_ops);
+        }
+        
+        // Resolve styles
+        let styles = self.style_resolver.resolve_styles(element, None);
+        
+        // Apply styles
+        let style_ops = self.apply_styles(&styles)?;
+        operations.extend(style_ops);
+        
+        // Render element based on type
+        let element_ops = match element {
+            DucElementEnum::DucRectangleElement(rect) => self.stream_rectangle(rect)?,
+            DucElementEnum::DucPolygonElement(polygon) => self.stream_polygon(polygon)?,
+            DucElementEnum::DucEllipseElement(ellipse) => self.stream_ellipse(ellipse)?,
+            DucElementEnum::DucTextElement(text) => self.stream_text(text)?,
+            DucElementEnum::DucLinearElement(linear) => self.stream_linear(linear)?,
+            DucElementEnum::DucTableElement(table) => self.stream_table(table)?,
+            DucElementEnum::DucMermaidElement(mermaid) => self.stream_mermaid(mermaid)?,
+            DucElementEnum::DucFreeDrawElement(freedraw) => self.stream_freedraw(freedraw)?,
+            DucElementEnum::DucPdfElement(pdf) => self.stream_pdf_element(pdf)?,
+            DucElementEnum::DucImageElement(image) => self.stream_image(image)?,
+            DucElementEnum::DucBlockInstanceElement(block_instance) => self.stream_block_instance(block_instance)?,
+            DucElementEnum::DucFrameElement(frame) => self.stream_frame(frame)?,
+            DucElementEnum::DucPlotElement(plot) => self.stream_plot(plot)?,
+            
+            // Ignored elements (as per specifications)
+            DucElementEnum::DucEmbeddableElement(_) => vec![], // Ignore
+            DucElementEnum::DucXRayElement(_) => vec![], // Ignore
+            DucElementEnum::DucArrowElement(_) => vec![], // Ignore
+            
+            // WIP elements (placeholder comments for now)
+            DucElementEnum::DucLeaderElement(_) => {
+                vec![Operation::new("% DucLeaderElement - WIP", vec![])]
+            },
+            DucElementEnum::DucDimensionElement(_) => {
+                vec![Operation::new("% DucDimensionElement - WIP", vec![])]
+            },
+            DucElementEnum::DucFeatureControlFrameElement(_) => {
+                vec![Operation::new("% DucFeatureControlFrameElement - WIP", vec![])]
+            },
+            DucElementEnum::DucViewportElement(_) => {
+                vec![Operation::new("% DucViewportElement - WIP", vec![])]
+            },
+            DucElementEnum::DucDocElement(_) => {
+                vec![Operation::new("% DucDocElement - WIP", vec![])]
+            },
+            DucElementEnum::DucParametricElement(_) => {
+                vec![Operation::new("% DucParametricElement - WIP", vec![])]
+            }
+        };
+        operations.extend(element_ops);
+        
+        // Restore graphics state
+        operations.push(Operation::new("Q", vec![]));
+        
+        Ok(operations)
+    }
+    
+    /// Create transformation matrix operations
+    fn create_transformation_matrix(&self, x: f64, y: f64, angle: f64) -> Vec<Operation> {
+        let mut ops = Vec::new();
+        
+        if x != 0.0 || y != 0.0 {
+            // Translate
+            ops.push(Operation::new("cm", vec![
+                Object::Real(1.0),
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(1.0),
+                Object::Real(x as f32),
+                Object::Real(y as f32),
+            ]));
+        }
+        
+        if angle != 0.0 {
+            // Rotate (angle in radians)
+            let cos_a = angle.cos();
+            let sin_a = angle.sin();
+            ops.push(Operation::new("cm", vec![
+                Object::Real(cos_a as f32),
+                Object::Real(sin_a as f32),
+                Object::Real(-sin_a as f32),
+                Object::Real(cos_a as f32),
+                Object::Real(0.0),
+                Object::Real(0.0),
+            ]));
+        }
+        
+        ops
+    }
+    
+    /// Apply resolved styles to PDF operations
+    fn apply_styles(&self, styles: &ResolvedStyles) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        // Apply opacity
+        if styles.opacity < 1.0 {
+            ops.push(Operation::new("gs", vec![Object::Name(format!("GS{}", (styles.opacity * 100.0) as i32).into_bytes())]));
+        }
+        
+        // Apply stroke styles
+        if let Some(stroke) = styles.stroke.first() {
+            if stroke.visible {
+                // Set stroke color (simplified - assumes RGB hex color)
+                if let Ok(color) = self.parse_color(&stroke.color) {
+                    ops.push(Operation::new("RG", vec![
+                        Object::Real(color.0),
+                        Object::Real(color.1), 
+                        Object::Real(color.2),
+                    ]));
+                }
+                
+                // Set line width
+                ops.push(Operation::new("w", vec![Object::Real(stroke.width as f32)]));
+                
+                // Set dash pattern if present
+                if let Some(dash) = &stroke.dash_pattern {
+                    let dash_objects: Vec<Object> = dash.iter().map(|&d| Object::Real(d as f32)).collect();
+                    ops.push(Operation::new("d", vec![
+                        Object::Array(dash_objects),
+                        Object::Real(0.0), // Phase
+                    ]));
+                }
+            }
+        }
+        
+        // Apply fill styles
+        if let Some(background) = styles.background.first() {
+            if background.visible {
+                // Set fill color
+                if let Ok(color) = self.parse_color(&background.color) {
+                    ops.push(Operation::new("rg", vec![
+                        Object::Real(color.0),
+                        Object::Real(color.1),
+                        Object::Real(color.2),
+                    ]));
+                }
+            }
+        }
+        
+        Ok(ops)
+    }
+    
+    /// Parse color string to RGB values using bigcolor
+    fn parse_color(&self, color_str: &str) -> Result<(f32, f32, f32), ConversionError> {
+        let color = BigColor::new(color_str);
+        let rgb = color.to_rgb();
+        Ok((rgb.r as f32 / 255.0, rgb.g as f32 / 255.0, rgb.b as f32 / 255.0))
+    }
+    
+    /// Stream rectangle element
+    fn stream_rectangle(&self, rect: &DucRectangleElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        // Create rectangle path
+        ops.push(Operation::new("re", vec![
+            Object::Real(0.0), // x (relative to current transformation)
+            Object::Real(0.0), // y
+            Object::Real(rect.base.width as f32),
+            Object::Real(rect.base.height as f32),
+        ]));
+        
+        // Fill and/or stroke
+        if let Some(styles) = &rect.base.styles {
+            if !styles.background.is_empty() && !styles.stroke.is_empty() {
+                ops.push(Operation::new("B", vec![])); // Fill and stroke
+            } else if !styles.background.is_empty() {
+                ops.push(Operation::new("f", vec![])); // Fill only
+            } else if !styles.stroke.is_empty() {
+                ops.push(Operation::new("S", vec![])); // Stroke only
+            }
+        }
+        
+        Ok(ops)
+    }
+    
+    /// Stream text element
+    fn stream_text(&self, text: &DucTextElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        // Begin text object
+        ops.push(Operation::new("BT", vec![]));
+        
+        // Set font and size (simplified)
+        ops.push(Operation::new("Tf", vec![
+            Object::Name("F1".as_bytes().to_vec()),
+            Object::Real(text.style.font_size as f32),
+        ]));
+        
+        // Set text position (relative to current transformation)
+        ops.push(Operation::new("Td", vec![
+            Object::Real(0.0),
+            Object::Real(0.0),
+        ]));
+        
+        // Output text
+        let resolved_text = self.style_resolver.resolve_dynamic_fields(&text.text, &DucElementEnum::DucTextElement(text.clone()));
+        ops.push(Operation::new("Tj", vec![Object::string_literal(resolved_text.as_str())]));
+        
+        // End text object
+        ops.push(Operation::new("ET", vec![]));
+        
+        Ok(ops)
+    }
+    
+    /// Stream block instance element
+    fn stream_block_instance(&self, _block_instance: &DucBlockInstanceElement) -> ConversionResult<Vec<Operation>> {
+        // This would use the block manager to render the block instance
+        // For now, return empty operations
+        Ok(vec![])
+    }
+    
+    /// Stream polygon element
+    fn stream_polygon(&self, polygon: &DucPolygonElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        // Generate a regular polygon with the specified number of sides
+        let sides = polygon.sides.max(3); // Minimum 3 sides
+        let center_x = polygon.base.width as f32 / 2.0;
+        let center_y = polygon.base.height as f32 / 2.0;
+        let radius = center_x.min(center_y);
+        
+        let angle_step = 2.0 * std::f32::consts::PI / sides as f32;
+        
+        // Start at the first vertex
+        let first_x = center_x + radius * (0.0_f32).cos();
+        let first_y = center_y + radius * (0.0_f32).sin();
+        ops.push(Operation::new("m", vec![
+            Object::Real(first_x),
+            Object::Real(first_y),
+        ]));
+        
+        // Draw lines to other vertices
+        for i in 1..sides {
+            let angle = i as f32 * angle_step;
+            let x = center_x + radius * angle.cos();
+            let y = center_y + radius * angle.sin();
+            ops.push(Operation::new("l", vec![
+                Object::Real(x),
+                Object::Real(y),
+            ]));
+        }
+        
+        // Close the path
+        ops.push(Operation::new("h", vec![]));
+        
+        // Fill and/or stroke
+        if let Some(styles) = &polygon.base.styles {
+            if !styles.background.is_empty() && !styles.stroke.is_empty() {
+                ops.push(Operation::new("B", vec![])); // Fill and stroke
+            } else if !styles.background.is_empty() {
+                ops.push(Operation::new("f", vec![])); // Fill only
+            } else if !styles.stroke.is_empty() {
+                ops.push(Operation::new("S", vec![])); // Stroke only
+            }
+        }
+        
+        Ok(ops)
+    }
+    
+    /// Stream ellipse element
+    fn stream_ellipse(&self, ellipse: &DucEllipseElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        let rx = ellipse.base.width as f32 / 2.0;
+        let ry = ellipse.base.height as f32 / 2.0;
+        let cx = rx;
+        let cy = ry;
+        
+        // Approximate ellipse using Bézier curves (4 curves for full ellipse)
+        let kappa = 0.5522848; // Magic number for Bézier approximation of circle
+        let kx = kappa * rx;
+        let ky = kappa * ry;
+        
+        // Start at rightmost point
+        ops.push(Operation::new("m", vec![
+            Object::Real(cx + rx),
+            Object::Real(cy),
+        ]));
+        
+        // Top right curve
+        ops.push(Operation::new("c", vec![
+            Object::Real(cx + rx), Object::Real(cy + ky),
+            Object::Real(cx + kx), Object::Real(cy + ry),
+            Object::Real(cx), Object::Real(cy + ry),
+        ]));
+        
+        // Top left curve  
+        ops.push(Operation::new("c", vec![
+            Object::Real(cx - kx), Object::Real(cy + ry),
+            Object::Real(cx - rx), Object::Real(cy + ky),
+            Object::Real(cx - rx), Object::Real(cy),
+        ]));
+        
+        // Bottom left curve
+        ops.push(Operation::new("c", vec![
+            Object::Real(cx - rx), Object::Real(cy - ky),
+            Object::Real(cx - kx), Object::Real(cy - ry),
+            Object::Real(cx), Object::Real(cy - ry),
+        ]));
+        
+        // Bottom right curve
+        ops.push(Operation::new("c", vec![
+            Object::Real(cx + kx), Object::Real(cy - ry),
+            Object::Real(cx + rx), Object::Real(cy - ky),
+            Object::Real(cx + rx), Object::Real(cy),
+        ]));
+        
+        // Fill and/or stroke
+        if let Some(styles) = &ellipse.base.styles {
+            if !styles.background.is_empty() && !styles.stroke.is_empty() {
+                ops.push(Operation::new("B", vec![])); // Fill and stroke
+            } else if !styles.background.is_empty() {
+                ops.push(Operation::new("f", vec![])); // Fill only
+            } else if !styles.stroke.is_empty() {
+                ops.push(Operation::new("S", vec![])); // Stroke only
+            }
+        }
+        
+        Ok(ops)
+    }
+    
+    /// Stream linear element (lines)
+    fn stream_linear(&self, linear: &DucLinearElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        // Get points from the linear element
+        if !linear.linear_base.points.is_empty() {
+            // Move to first point
+            let first = &linear.linear_base.points[0];
+            ops.push(Operation::new("m", vec![
+                Object::Real(first.x as f32),
+                Object::Real(first.y as f32),
+            ]));
+            
+            // Draw lines to subsequent points
+            for point in &linear.linear_base.points[1..] {
+                ops.push(Operation::new("l", vec![
+                    Object::Real(point.x as f32),
+                    Object::Real(point.y as f32),
+                ]));
+            }
+            
+            // Stroke the path
+            ops.push(Operation::new("S", vec![]));
+        }
+        
+        Ok(ops)
+    }
+    
+    /// Stream table element
+    fn stream_table(&self, table: &DucTableElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        // This is a complex element that would require:
+        // 1. Calculate cell positions and sizes
+        // 2. Draw cell borders
+        // 3. Draw cell content (text, etc.)
+        // For now, create a placeholder rectangle
+        
+        ops.push(Operation::new("re", vec![
+            Object::Real(0.0),
+            Object::Real(0.0),
+            Object::Real(table.base.width as f32),
+            Object::Real(table.base.height as f32),
+        ]));
+        
+        ops.push(Operation::new("S", vec![])); // Stroke outline
+        
+        // TODO: Implement full table rendering with cells, borders, content
+        ops.push(Operation::new("% TODO: Implement full table rendering", vec![]));
+        
+        Ok(ops)
+    }
+    
+    /// Stream mermaid element (uses SVG from resources)
+    fn stream_mermaid(&self, mermaid: &DucMermaidElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        if let Some(svg_path) = &mermaid.svg_path {
+            if let Some(&svg_object_id) = self.resource_cache.get(svg_path) {
+                // Use XObject for the SVG
+                ops.push(Operation::new("Do", vec![
+                    Object::Name(format!("SVG{}", svg_object_id).into_bytes()),
+                ]));
+            } else {
+                // SVG not found in cache, create placeholder
+                ops.push(Operation::new("% Mermaid SVG not found in cache", vec![]));
+                ops.push(Operation::new("re", vec![
+                    Object::Real(0.0),
+                    Object::Real(0.0),
+                    Object::Real(mermaid.base.width as f32),
+                    Object::Real(mermaid.base.height as f32),
+                ]));
+                ops.push(Operation::new("S", vec![]));
+            }
+        }
+        
+        Ok(ops)
+    }
+    
+    /// Stream freedraw element (uses SVG from resources)
+    fn stream_freedraw(&self, freedraw: &DucFreeDrawElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        if let Some(svg_path) = &freedraw.svg_path {
+            if let Some(&svg_object_id) = self.resource_cache.get(svg_path) {
+                // Use XObject for the SVG
+                ops.push(Operation::new("Do", vec![
+                    Object::Name(format!("SVG{}", svg_object_id).into_bytes()),
+                ]));
+            } else {
+                // SVG not found in cache, create placeholder
+                ops.push(Operation::new("% Freedraw SVG not found in cache", vec![]));
+                ops.push(Operation::new("re", vec![
+                    Object::Real(0.0),
+                    Object::Real(0.0),
+                    Object::Real(freedraw.base.width as f32),
+                    Object::Real(freedraw.base.height as f32),
+                ]));
+                ops.push(Operation::new("S", vec![]));
+            }
+        }
+        
+        Ok(ops)
+    }
+    
+    /// Stream PDF element (embedded PDF)
+    fn stream_pdf_element(&self, pdf: &DucPdfElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        // Use hipdf::embed_pdf functionality
+        if let Some(file_id) = &pdf.file_id {
+            if let Some(&pdf_object_id) = self.resource_cache.get(file_id) {
+                // Use XObject for the embedded PDF
+                ops.push(Operation::new("Do", vec![
+                    Object::Name(format!("PDF{}", pdf_object_id).into_bytes()),
+                ]));
+            } else {
+                // PDF not found in cache, create placeholder
+                ops.push(Operation::new("% Embedded PDF not found in cache", vec![]));
+                ops.push(Operation::new("re", vec![
+                    Object::Real(0.0),
+                    Object::Real(0.0),
+                    Object::Real(pdf.base.width as f32),
+                    Object::Real(pdf.base.height as f32),
+                ]));
+                ops.push(Operation::new("S", vec![]));
+            }
+        }
+        
+        Ok(ops)
+    }
+    
+    /// Stream image element
+    fn stream_image(&self, image: &DucImageElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        if let Some(file_id) = &image.file_id {
+            if let Some(&image_object_id) = self.resource_cache.get(file_id) {
+                // Use XObject for the image
+                ops.push(Operation::new("Do", vec![
+                    Object::Name(format!("IMG{}", image_object_id).into_bytes()),
+                ]));
+            } else {
+                // Image not found in cache, create placeholder
+                ops.push(Operation::new("% Image not found in cache", vec![]));
+                ops.push(Operation::new("re", vec![
+                    Object::Real(0.0),
+                    Object::Real(0.0),
+                    Object::Real(image.base.width as f32),
+                    Object::Real(image.base.height as f32),
+                ]));
+                ops.push(Operation::new("S", vec![]));
+            }
+        }
+        
+        Ok(ops)
+    }
+    
+    /// Stream frame element (StackLike - needs clipping consideration)
+    fn stream_frame(&self, frame: &DucFrameElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        // Save graphics state for clipping
+        ops.push(Operation::new("q", vec![]));
+        
+        // Set clipping rectangle if needed
+        if frame.stack_element_base.clip {
+            ops.push(Operation::new("re", vec![
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(frame.stack_element_base.base.width as f32),
+                Object::Real(frame.stack_element_base.base.height as f32),
+            ]));
+            ops.push(Operation::new("W", vec![])); // Set clipping path
+            ops.push(Operation::new("n", vec![])); // End path without filling/stroking
+        }
+        
+        // Draw frame border if it has stroke styles
+        if let Some(styles) = &frame.stack_element_base.base.styles {
+            if !styles.stroke.is_empty() {
+                ops.push(Operation::new("re", vec![
+                    Object::Real(0.0),
+                    Object::Real(0.0),
+                    Object::Real(frame.stack_element_base.base.width as f32),
+                    Object::Real(frame.stack_element_base.base.height as f32),
+                ]));
+                ops.push(Operation::new("S", vec![]));
+            }
+        }
+        
+        // TODO: Stream child elements within the frame
+        ops.push(Operation::new("% TODO: Stream frame child elements", vec![]));
+        
+        // Restore graphics state
+        ops.push(Operation::new("Q", vec![]));
+        
+        Ok(ops)
+    }
+    
+    /// Stream plot element (StackLike - handle crop vs plots mode)
+    fn stream_plot(&self, plot: &DucPlotElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        
+        // Check if this is a plot stack element (based on stack_base.is_plot)
+        if plot.stack_element_base.stack_base.is_plot {
+            // Handle as actual plot page - this would be handled differently
+            // at the page level, not at the element level
+            ops.push(Operation::new("% Plot page - handled at page level", vec![]));
+        } else {
+            // Handle as cropped rectangle with clipping
+            ops.push(Operation::new("q", vec![])); // Save state
+            
+            // Set clipping rectangle
+            ops.push(Operation::new("re", vec![
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(plot.stack_element_base.base.width as f32),
+                Object::Real(plot.stack_element_base.base.height as f32),
+            ]));
+            ops.push(Operation::new("W", vec![])); // Set clipping path
+            ops.push(Operation::new("n", vec![])); // End path
+            
+            // TODO: Stream child elements within the clipping bounds
+            ops.push(Operation::new("% TODO: Stream plot child elements", vec![]));
+            
+            ops.push(Operation::new("Q", vec![])); // Restore state
+        }
+        
+        Ok(ops)
+    }
+}

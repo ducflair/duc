@@ -423,7 +423,7 @@ fn serialize_duc_element_base<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     base: &types::DucElementBase,
 ) -> WIPOffset<fb::_DucElementBase<'bldr>> {
-    let styles_offset = serialize_duc_element_styles_base(builder, &base.styles);
+    let styles_offset = base.styles.as_ref().map(|s| serialize_duc_element_styles_base(builder, s));
     let id_offset = builder.create_string(&base.id);
     let scope_offset = builder.create_string(&base.scope);
     let label_offset = Some(builder.create_string(&base.label));
@@ -448,7 +448,7 @@ fn serialize_duc_element_base<'bldr>(
         builder,
         &fb::_DucElementBaseArgs {
             id: Some(id_offset),
-            styles: Some(styles_offset),
+            styles: styles_offset,
             x: base.x,
             y: base.y,
             width: base.width,
@@ -3603,8 +3603,8 @@ fn serialize_exported_data_state<'bldr>(
         .collect();
     let standards_vec = builder.create_vector(&standards_offsets);
 
-    let duc_local_state_offset = serialize_duc_local_state(builder, &state.duc_local_state);
-    let duc_global_state_offset = serialize_duc_global_state(builder, &state.duc_global_state);
+    let duc_local_state_offset = state.duc_local_state.as_ref().map(|s| serialize_duc_local_state(builder, s));
+    let duc_global_state_offset = state.duc_global_state.as_ref().map(|s| serialize_duc_global_state(builder, s));
 
     let external_files_vec = state.external_files.as_ref().map(|v| {
         let offsets: Vec<_> = v.iter().map(|f| serialize_duc_external_file_entry(builder, f)).collect();
@@ -3631,8 +3631,8 @@ fn serialize_exported_data_state<'bldr>(
             regions: Some(regions_vec),
             layers: Some(layers_vec),
             standards: Some(standards_vec),
-            duc_local_state: Some(duc_local_state_offset),
-            duc_global_state: Some(duc_global_state_offset),
+            duc_local_state: duc_local_state_offset,
+            duc_global_state: duc_global_state_offset,
             external_files: external_files_vec,
             version_graph: version_graph_offset,
         },
