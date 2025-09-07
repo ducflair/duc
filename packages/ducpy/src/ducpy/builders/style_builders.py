@@ -155,22 +155,25 @@ def create_hatch_content(
     )
 
 
-def create_background(content: ElementContentBase) -> ElementBackground:
+def create_background(content: Optional[ElementContentBase] = None) -> ElementBackground:
     """
     Create element background from content.
     
     Args:
         content: Content created by create_solid_content, create_image_content, etc.
+                 If None, creates a default solid white background.
         
     Returns:
         ElementBackground: Background with the specified content
     """
+    if content is None:
+        content = create_solid_content("#FFFFFF", opacity=1.0, visible=True)
     return ElementBackground(content=content)
 
 
 def create_stroke(
-    content: ElementContentBase,
-    width: float,
+    content: Optional[ElementContentBase] = None,
+    width: float = 1.0,
     placement: STROKE_PLACEMENT = STROKE_PLACEMENT.INSIDE,
     style: Optional[StrokeStyle] = None,
     sides: Optional[StrokeSides] = None
@@ -180,6 +183,7 @@ def create_stroke(
     
     Args:
         content: Content created by create_solid_content, etc.
+                 If None, creates a default solid black stroke.
         width: Stroke width
         placement: Where to place the stroke (INSIDE, CENTER, OUTSIDE)
         style: Custom stroke style (defaults to solid)
@@ -188,6 +192,9 @@ def create_stroke(
     Returns:
         ElementStroke: Stroke with the specified content and properties
     """
+    if content is None:
+        content = create_solid_content("#000000", opacity=1.0, visible=True)
+    
     if style is None:
         style = StrokeStyle(
             dash=[],
@@ -236,8 +243,8 @@ def create_simple_styles(
     """
     return DucElementStylesBase(
         roundness=roundness,
-        background=backgrounds or [],
-        stroke=strokes or [],
+        background=backgrounds or [create_background()],
+        stroke=strokes or [create_stroke()],
         opacity=opacity,
         blending=blending
     )
