@@ -1,5 +1,5 @@
 
-use crate::{ConversionResult, ConversionError};
+use crate::ConversionResult;
 use duc::types::{
     Standard, DucElementStylesBase, ElementBackground, ElementStroke, DucHatchStyle, DucElementEnum
 };
@@ -263,7 +263,7 @@ impl ResolvedStroke {
 impl StyleResolver {
     /// Apply hatching pattern to element with dimensions
     pub fn apply_hatching_pattern_with_dims(&self, backgrounds: &[ElementBackground], hatching_manager: &mut HatchingManager, ops: &mut Vec<Operation>, width: f64, height: f64) -> ConversionResult<()> {
-        use crate::ConversionError;
+        
         
         for background in backgrounds {
             if let Some(resolved_bg) = self.resolve_background(background) {
@@ -290,8 +290,8 @@ impl StyleResolver {
     }
     
     /// Create custom hatching pattern using hipdf::hatching::CustomPattern
-    fn create_custom_hatching_pattern(&self, hatch_style: &DucHatchStyle, hatching_manager: &mut HatchingManager, width: f64, height: f64) -> ConversionResult<String> {
-        use crate::ConversionError;
+    fn create_custom_hatching_pattern(&self, hatch_style: &DucHatchStyle, _hatching_manager: &mut HatchingManager, width: f64, height: f64) -> ConversionResult<String> {
+        
         
         if let Some(_custom_pattern) = &hatch_style.custom_pattern {
             // TODO: Implement custom pattern creation using hipdf::hatching::CustomPattern
@@ -306,7 +306,7 @@ impl StyleResolver {
     /// Create predefined hatch pattern
     fn create_predefined_hatch_pattern(&self, hatch_style: &DucHatchStyle, width: f64, height: f64) -> ConversionResult<String> {
         use hipdf::hatching::HatchStyle as HipdfHatchStyle;
-        use crate::ConversionError;
+        
         
         let _scaled_width = width * hatch_style.pattern_scale as f64;
         let _scaled_height = height * hatch_style.pattern_scale as f64;
@@ -331,7 +331,7 @@ impl StyleResolver {
     
     /// Convert DucHatchStyle to hipdf HatchStyle
     pub fn convert_duc_hatch_to_hipdf(&self, duc_hatch: &DucHatchStyle) -> ConversionResult<HatchStyle> {
-        use crate::ConversionError;
+        
         
         match duc_hatch.hatch_style {
             HATCH_STYLE::NORMAL => Ok(HatchStyle::DiagonalRight), // Use diagonal as default for normal

@@ -343,7 +343,7 @@ impl ResourceStreamer {
             return Ok(operations);
         }
         
-        let object_id = match resource_info.object_id {
+        let _object_id = match resource_info.object_id {
             Some(id) => id,
             None => {
                 // No object ID - log comment and return empty operations
@@ -365,8 +365,8 @@ impl ResourceStreamer {
             Object::Real(height as f32), Object::Real(x as f32), Object::Real(y as f32)
         ]));
         
-        // Place the XObject
-        operations.push(Operation::new("Do", vec![Object::Name(format!("XObject{}", object_id).into_bytes())]));
+        // Place the image XObject using the resource ID as the name
+        operations.push(Operation::new("Do", vec![Object::Name(format!("Img{}", resource_id).into_bytes())]));
         
         // Restore graphics state
         operations.push(Operation::new("Q", vec![]));
@@ -376,6 +376,7 @@ impl ResourceStreamer {
     
     /// Stream PDF resource as PDF operations
     pub fn stream_pdf_resource(&self, resource_id: &str, x: f64, y: f64, width: f64, height: f64) -> ConversionResult<Vec<hipdf::lopdf::content::Operation>> {
+        
         
         // If resource is not found, return empty operations (graceful handling)
         let resource_info = match self.resource_cache.get(resource_id) {
@@ -395,35 +396,34 @@ impl ResourceStreamer {
             return Ok(operations);
         }
         
-        // Check if PDF embedder is available
-        if self.pdf_embedder.is_none() {
-            let mut operations = Vec::new();
-            operations.push(Operation::new("% PDF embedder not initialized", vec![]));
-            return Ok(operations);
-        }
+        // Get the XObject ID from the resource cache
+        let xobject_id = match resource_info.object_id {
+            Some(id) => id,
+            None => {
+                // No object ID - log comment and return empty operations
+                let mut operations = Vec::new();
+                operations.push(Operation::new(&format!("% PDF resource {} has no object ID", resource_id), vec![]));
+                return Ok(operations);
+            }
+        };
         
-        // Check if document is available
-        if self.document.is_none() {
-            let mut operations = Vec::new();
-            operations.push(Operation::new("% PDF document not initialized", vec![]));
-            return Ok(operations);
-        }
+        // Create the PDF operations to place the XObject
+        let mut operations = Vec::new();
         
-        let _embed_id = format!("pdf_{}", resource_id);
-        // For now, create placeholder operations since hipdf API might be different
-        let operations = vec![
-            hipdf::lopdf::content::Operation::new("q", vec![]),
-            hipdf::lopdf::content::Operation::new("cm", vec![
-                Object::Real(width as f32), Object::Real(0.0), Object::Real(0.0),
-                Object::Real(height as f32), Object::Real(x as f32), Object::Real(y as f32)
-            ]),
-            hipdf::lopdf::content::Operation::new("re", vec![
-                Object::Real(0.0), Object::Real(0.0), Object::Real(1.0), Object::Real(1.0)
-            ]),
-            hipdf::lopdf::content::Operation::new("f", vec![]),
-            hipdf::lopdf::content::Operation::new("Q", vec![]),
-            hipdf::lopdf::content::Operation::new("% PDF embedded content", vec![]),
-        ];
+        // Save graphics state
+        operations.push(Operation::new("q", vec![]));
+        
+        // Apply transformation matrix for positioning and scaling
+        operations.push(Operation::new("cm", vec![
+            Object::Real(width as f32), Object::Real(0.0), Object::Real(0.0),
+            Object::Real(height as f32), Object::Real(x as f32), Object::Real(y as f32)
+        ]));
+        
+        // Place the PDF XObject
+        operations.push(Operation::new("Do", vec![Object::Name(format!("XObject{}", xobject_id).into_bytes())]));
+        
+        // Restore graphics state
+        operations.push(Operation::new("Q", vec![]));
         
         Ok(operations)
     }
