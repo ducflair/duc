@@ -58,3 +58,16 @@ impl SvgToPdfConverter {
         Ok(())
     }
 }
+
+/// Convert SVG data to PDF bytes
+pub fn svg_to_pdf(svg_data: &[u8]) -> ConversionResult<Vec<u8>> {
+    // Parse SVG using usvg
+    let svg_tree = usvg::Tree::from_data(svg_data, &usvg::Options::default())
+        .map_err(|e| ConversionError::ResourceLoadError(format!("Failed to parse SVG: {}", e)))?;
+    
+    // Convert SVG to PDF operations with proper parameters  
+    let pdf_content = svg2pdf::to_pdf(&svg_tree, svg2pdf::ConversionOptions::default(), svg2pdf::PageOptions::default())
+        .map_err(|e| ConversionError::ResourceLoadError(format!("SVG to PDF conversion failed: {}", e)))?;
+    
+    Ok(pdf_content)
+}
