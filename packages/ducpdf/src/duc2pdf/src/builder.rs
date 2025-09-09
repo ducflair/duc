@@ -282,11 +282,9 @@ impl DucToPdfBuilder {
                 match file_data.mime_type.to_lowercase().as_str() {
                     "image/svg+xml" | "application/svg+xml" => {
                         // Handle SVG files using svg_to_pdf utility
-                        let object_id = self.process_svg_file(&file_entry)?;
-                        self.context
-                            .resource_cache
-                            .svg_objects
-                            .insert(file_data.id.clone(), object_id);
+                        self.process_svg_file(&file_entry)?;
+                        // SVG files are stored as embedded_pdfs since they're converted to PDF
+                        // (already stored in process_svg_file, no need to duplicate here)
                     }
                     "image/png" | "image/jpeg" | "image/jpg" | "image/gif" => {
                         // Handle image files
@@ -322,7 +320,7 @@ impl DucToPdfBuilder {
         Ok(())
     }
 
-    /// Process SVG file and convert to PDF XObject
+    /// Process SVG file and convert to PDF for later embedding
     fn process_svg_file(&mut self, file_entry: &DucExternalFileEntry) -> ConversionResult<u32> {
         let svg_data = &file_entry.value.data;
 
@@ -331,10 +329,9 @@ impl DucToPdfBuilder {
             ConversionError::ResourceLoadError(format!("SVG to PDF conversion failed: {}", e))
         })?;
 
-        // Load the PDF bytes and embed as XObject
+        // Load the PDF bytes for later embedding (don't embed now, save for when image elements reference it)
         let embed_id = format!("svg_{}", file_entry.key);
-        let source_pdf = self
-            .pdf_embedder
+        self.pdf_embedder
             .load_pdf_from_bytes(&pdf_bytes, &embed_id)
             .map_err(|e| {
                 ConversionError::ResourceLoadError(format!(
@@ -343,35 +340,13 @@ impl DucToPdfBuilder {
                 ))
             })?;
 
-        // Create embedding options
-        use hipdf::embed_pdf::{EmbedOptions, PageRange};
-        let options = EmbedOptions::new()
-            .at_position(0.0, 0.0)
-            .with_scale(1.0)
-            .with_page_range(PageRange::Single(0));
+        // Store as embedded PDF (not regular image) so stream_image can detect it's an SVG-converted PDF
+        self.context
+            .resource_cache
+            .embedded_pdfs
+            .insert(file_entry.key.clone(), 0); // 0 as placeholder, will be updated when embedded
 
-        // Embed the PDF
-        let result = self
-            .pdf_embedder
-            .embed_pdf(&mut self.document, &source_pdf, &options)
-            .map_err(|e| {
-                ConversionError::ResourceLoadError(format!("Failed to embed SVG as PDF: {}", e))
-            })?;
-
-        // Store the XObject reference
-        let mut object_id = 0u32;
-        for (name, obj_ref) in result.xobject_resources {
-            if let Object::Reference(id) = obj_ref {
-                object_id = id.0;
-                self.context
-                    .resource_cache
-                    .xobject_names
-                    .insert(file_entry.key.clone(), name);
-                break;
-            }
-        }
-
-        Ok(object_id)
+        Ok(0) // Return placeholder, actual embedding happens during streaming
     }
 
     /// Process image file
@@ -731,8 +706,6 @@ impl DucToPdfBuilder {
             } else if let Some(&obj_id) = self.context.resource_cache.embedded_pdfs.get(resource_id)
             {
                 xobject_dict.set(xobject_name.clone(), Object::Reference((obj_id, 0)));
-            } else if let Some(&obj_id) = self.context.resource_cache.svg_objects.get(resource_id) {
-                xobject_dict.set(xobject_name.clone(), Object::Reference((obj_id, 0)));
             }
         }
 
@@ -767,22 +740,6 @@ impl DucToPdfBuilder {
                     .insert(resource_id.clone(), name);
             }
         }
-        for (resource_id, &obj_id) in &self.context.resource_cache.svg_objects {
-            if !self
-                .context
-                .resource_cache
-                .xobject_names
-                .contains_key(resource_id)
-            {
-                let name = format!("XObj{}", obj_id);
-                xobject_dict.set(name.clone(), Object::Reference((obj_id, 0)));
-                self.context
-                    .resource_cache
-                    .xobject_names
-                    .insert(resource_id.clone(), name);
-            }
-        }
-
         if !xobject_dict.is_empty() {
             resources.set("XObject", Object::Dictionary(xobject_dict));
         }
@@ -826,6 +783,8 @@ impl DucToPdfBuilder {
         // Make resource names available to the element streamer
         self.element_streamer
             .set_resource_cache(self.context.resource_cache.xobject_names.clone());
+        self.element_streamer
+            .set_embedded_pdfs(self.context.resource_cache.embedded_pdfs.clone());
 
         if !self.context.exported_data.layers.is_empty() {
             // Stream elements by layer using LayerContentBuilder
@@ -913,6 +872,8 @@ impl DucToPdfBuilder {
         // Pass updated resource cache to element streamer
         self.element_streamer
             .set_resource_cache(self.context.resource_cache.xobject_names.clone());
+        self.element_streamer
+            .set_embedded_pdfs(self.context.resource_cache.embedded_pdfs.clone());
 
         // Stream unlayered elements first
         let unlayered_elements: Vec<ElementWrapper> = self
