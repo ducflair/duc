@@ -27,7 +27,7 @@ def test_csp_pdf_image_elements(test_output_dir):
     assets_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets")
     pdf_bytes = open(os.path.join(assets_dir, "test.pdf"), "rb").read()
     svg_bytes = open(os.path.join(assets_dir, "hawaii.svg"), "rb").read()
-    png_bytes = open(os.path.join(assets_dir, "rect.png"), "rb").read()
+    png_bytes = open(os.path.join(assets_dir, "dot.png"), "rb").read()
     jpeg_bytes = open(os.path.join(assets_dir, "test.jpg"), "rb").read()
     
     # Create external files
@@ -90,7 +90,7 @@ def test_csp_pdf_image_elements(test_output_dir):
     png_element = (duc.ElementBuilder()
         .at_position(650, 100)
         .with_size(250, 200)
-        .with_label("PNG Image Element")
+        .with_label("PNG Image Element (DOT)")
         .with_styles(duc.create_simple_styles())
         .build_image_element()
         .with_file_id("test_png")
@@ -173,10 +173,10 @@ def test_csp_pdf_image_elements(test_output_dir):
     assert svg_el.element.base.height == 200
     
     # Check PNG element
-    png_el = next(el for el in parsed_elements if hasattr(el.element, 'base') and el.element.base.label == "PNG Image Element")
+    png_el = next(el for el in parsed_elements if hasattr(el.element, 'base') and el.element.base.label == "PNG Image Element (DOT)")
     assert png_el.element.base.width == 250
     assert png_el.element.base.height == 200
-    
+
     # Check JPEG element
     jpeg_el = next(el for el in parsed_elements if hasattr(el.element, 'base') and el.element.base.label == "JPEG Image Element")
     assert jpeg_el.element.base.width == 250
