@@ -36,6 +36,7 @@ use duc::types::{
 use hipdf::blocks::BlockManager;
 use hipdf::embed_pdf::PdfEmbedder;
 use hipdf::hatching::HatchingManager;
+use hipdf::images::ImageManager;
 use hipdf::lopdf::content::Operation;
 use hipdf::lopdf::{Object, Document};
 use hipdf::ocg::OCGManager;
@@ -46,6 +47,8 @@ pub struct ElementStreamer {
     style_resolver: StyleResolver,
     /// Cache for external resources (images, SVGs, PDFs, etc.)
     resource_cache: HashMap<String, String>, // resource_id -> XObject name
+    /// Cache for image IDs from ImageManager
+    images: HashMap<String, u32>, // file_id -> image_id
     /// Newly embedded XObject resources produced while streaming (name -> reference)
     new_xobjects: Vec<(String, Object)>,
     /// Reference to embedded PDFs to check if file is SVG-converted PDF
@@ -58,6 +61,7 @@ impl ElementStreamer {
         Self {
             style_resolver,
             resource_cache: HashMap::new(),
+            images: HashMap::new(),
             new_xobjects: Vec::new(),
             embedded_pdfs: HashMap::new(),
         }
@@ -68,7 +72,12 @@ impl ElementStreamer {
         self.resource_cache = cache;
     }
 
-    /// Set embedded PDFs cache to identify SVG-converted PDFs
+    /// Add image ID to cache
+    pub fn add_image(&mut self, file_id: String, image_id: u32) {
+        self.images.insert(file_id, image_id);
+    }
+
+    /// Set embedded PDF cache
     pub fn set_embedded_pdfs(&mut self, embedded_pdfs: HashMap<String, u32>) {
         self.embedded_pdfs = embedded_pdfs;
     }
@@ -82,6 +91,7 @@ impl ElementStreamer {
         block_manager: &mut BlockManager,
         hatching_manager: &mut HatchingManager,
         pdf_embedder: &mut PdfEmbedder,
+        image_manager: &mut ImageManager,
         ocg_manager: &OCGManager,
         document: &mut Document,
     ) -> ConversionResult<Vec<Operation>> {
@@ -174,6 +184,7 @@ impl ElementStreamer {
                 block_manager,
                 hatching_manager,
                 pdf_embedder,
+                image_manager,
             )?;
 
             println!(
@@ -205,6 +216,7 @@ impl ElementStreamer {
         block_manager: &mut BlockManager,
         hatching_manager: &mut HatchingManager,
         pdf_embedder: &mut PdfEmbedder,
+        image_manager: &mut ImageManager,
     ) -> ConversionResult<Vec<Operation>> {
         let mut operations = Vec::new();
 
@@ -245,7 +257,7 @@ impl ElementStreamer {
             }
             DucElementEnum::DucPdfElement(pdf) => self.stream_pdf_element(pdf, document, pdf_embedder)?,
             DucElementEnum::DucImageElement(image) => {
-                self.stream_image(image, document, pdf_embedder, resource_streamer)?
+                self.stream_image(image, document, pdf_embedder, image_manager, resource_streamer)?
             }
             DucElementEnum::DucBlockInstanceElement(block_instance) => {
                 self.stream_block_instance(block_instance, block_manager)?
@@ -1095,6 +1107,7 @@ impl ElementStreamer {
         image: &DucImageElement,
         document: &mut Document,
         pdf_embedder: &mut PdfEmbedder,
+        image_manager: &mut ImageManager,
         _resource_streamer: &mut ResourceStreamer,
     ) -> ConversionResult<Vec<Operation>> {
         use hipdf::embed_pdf::{EmbedOptions, PageRange};
@@ -1147,11 +1160,23 @@ impl ElementStreamer {
                     }
                 }
             } else {
-                // Regular image (PNG, JPEG, etc.) - use XObject approach
-                if let Some(xobject_name) = self.resource_cache.get(file_id) {
+                if let Some(image_id) = self.images.get(file_id) {
+                    // Create a temporary resource dictionary to get the image name
+                    let mut temp_resources = hipdf::lopdf::Dictionary::new();
+                    let image_name = image_manager.add_to_resources(&mut temp_resources, (*image_id, 0));
+                    
+                    // Add the image to our new_xobjects so it gets added to page resources
+                    if let Ok(xobj_dict) = temp_resources.get(b"XObject")
+                        .and_then(|obj| obj.as_dict()) {
+                        if let Ok(image_obj) = xobj_dict.get(image_name.as_bytes()) {
+                            self.new_xobjects.push((image_name.clone(), image_obj.clone()));
+                        }
+                    }
+                    
+                    // Draw the image with proper positioning and scaling
                     ops.push(Operation::new("q", vec![])); // Save graphics state
-
-                    // Scale to fit the element dimensions
+                    
+                    // Position and scale
                     ops.push(Operation::new(
                         "cm",
                         vec![
@@ -1159,17 +1184,17 @@ impl ElementStreamer {
                             Object::Real(0.0),
                             Object::Real(0.0),
                             Object::Real(image.base.height as f32),
-                            Object::Real(0.0),
-                            Object::Real(0.0),
+                            Object::Real(image.base.x as f32),
+                            Object::Real(image.base.y as f32),
                         ],
                     ));
-
-                    // Draw the image XObject
+                    
+                    // Draw the image
                     ops.push(Operation::new(
                         "Do",
-                        vec![Object::Name(xobject_name.as_bytes().to_vec())],
+                        vec![Object::Name(image_name.as_bytes().to_vec())],
                     ));
-
+                    
                     ops.push(Operation::new("Q", vec![])); // Restore graphics state
                 } else {
                     // Fallback placeholder
@@ -1177,8 +1202,8 @@ impl ElementStreamer {
                     ops.push(Operation::new(
                         "re",
                         vec![
-                            Object::Real(0.0),
-                            Object::Real(0.0),
+                            Object::Real(image.base.x as f32),
+                            Object::Real(image.base.y as f32),
                             Object::Real(image.base.width as f32),
                             Object::Real(image.base.height as f32),
                         ],

@@ -13,6 +13,7 @@ use duc::types::{
 use hipdf::blocks::BlockManager;
 use hipdf::embed_pdf::PdfEmbedder;
 use hipdf::hatching::HatchingManager;
+use hipdf::images::{Image, ImageManager};
 use hipdf::lopdf::{Dictionary, Document, Object, Stream};
 use hipdf::ocg::OCGManager;
 use std::collections::HashMap;
@@ -44,6 +45,7 @@ pub struct DucToPdfBuilder {
     block_manager: BlockManager,
     hatching_manager: HatchingManager,
     pdf_embedder: PdfEmbedder,
+    image_manager: ImageManager,
     element_streamer: ElementStreamer,
     resource_streamer: ResourceStreamer,
     page_ids: Vec<u32>,
@@ -102,6 +104,7 @@ impl DucToPdfBuilder {
             block_manager: BlockManager::new(),
             hatching_manager: HatchingManager::new(),
             pdf_embedder: PdfEmbedder::new(),
+            image_manager: ImageManager::new(),
             element_streamer: ElementStreamer::new(style_resolver),
             resource_streamer: ResourceStreamer::new(),
             page_ids: Vec::new(),
@@ -287,12 +290,13 @@ impl DucToPdfBuilder {
                         // (already stored in process_svg_file, no need to duplicate here)
                     }
                     "image/png" | "image/jpeg" | "image/jpg" | "image/gif" => {
-                        // Handle image files
+                        // Handle image files using hipdf::images
                         let object_id = self.process_image_file(&file_entry)?;
                         self.context
                             .resource_cache
                             .images
                             .insert(file_data.id.clone(), object_id);
+                        self.element_streamer.add_image(file_entry.key.clone(), object_id);
                     }
                     "application/pdf" => {
                         // Handle embedded PDF files
@@ -349,57 +353,49 @@ impl DucToPdfBuilder {
         Ok(0) // Return placeholder, actual embedding happens during streaming
     }
 
-    /// Process image file
+    /// Process image file using hipdf::images for quality preservation
     fn process_image_file(&mut self, file_entry: &DucExternalFileEntry) -> ConversionResult<u32> {
         let image_data = &file_entry.value.data;
         let mime_type = &file_entry.value.mime_type;
 
-        // Create image XObject based on MIME type
-        let mut image_dict = Dictionary::new();
-        image_dict.set("Type", Object::Name("XObject".as_bytes().to_vec()));
-        image_dict.set("Subtype", Object::Name("Image".as_bytes().to_vec()));
-
-        match mime_type.to_lowercase().as_str() {
-            "image/png" => {
-                image_dict.set("Filter", Object::Name("FlateDecode".as_bytes().to_vec()));
-                image_dict.set("ColorSpace", Object::Name("DeviceRGB".as_bytes().to_vec()));
-                image_dict.set("BitsPerComponent", Object::Integer(8));
-                // PNG might have alpha channel
-                image_dict.set("SMaskInData", Object::Integer(1));
+        // Create a temporary file for hipdf::images to load
+        // In production, we might want to use a more efficient approach
+        let temp_file = format!("/tmp/duc_image_{}.{}", 
+            file_entry.key, 
+            match mime_type.to_lowercase().as_str() {
+                "image/png" => "png",
+                "image/jpeg" | "image/jpg" => "jpg",
+                _ => return Err(ConversionError::ResourceLoadError(format!(
+                    "Unsupported image type: {}", mime_type
+                )))
             }
-            "image/jpeg" | "image/jpg" => {
-                image_dict.set("Filter", Object::Name("DCTDecode".as_bytes().to_vec()));
-                image_dict.set("ColorSpace", Object::Name("DeviceRGB".as_bytes().to_vec()));
-                image_dict.set("BitsPerComponent", Object::Integer(8));
-            }
-            _ => {
-                return Err(ConversionError::ResourceLoadError(format!(
-                    "Unsupported image type: {}",
-                    mime_type
-                )));
-            }
-        }
+        );
 
-        // For now, use default dimensions - in production these should be parsed from image data
-        image_dict.set("Width", Object::Integer(100));
-        image_dict.set("Height", Object::Integer(100));
+        // Write image data to temporary file
+        std::fs::write(&temp_file, image_data).map_err(|e| {
+            ConversionError::ResourceLoadError(format!("Failed to write temp image file: {}", e))
+        })?;
 
-        // Create image stream with the actual image data (JPEG supported; PNG embedding requires decoding)
-        let stream = Stream::new(image_dict, image_data.to_vec());
-        let (object_id, _) = self.document.add_object(Object::Stream(stream));
+        // Load image using hipdf::images for perfect quality preservation
+        let image = Image::from_file(&temp_file).map_err(|e| {
+            ConversionError::ResourceLoadError(format!("Failed to load image: {}", e))
+        })?;
+
+        // Clean up temporary file
+        let _ = std::fs::remove_file(&temp_file);
+
+        // Embed the image with perfect quality preservation
+        let (image_id, _generation) = self.image_manager.embed_image(&mut self.document, image).map_err(|e| {
+            ConversionError::ResourceLoadError(format!("Failed to embed image: {}", e))
+        })?;
 
         // Store the image ID in the resource cache
         self.context
             .resource_cache
             .images
-            .insert(file_entry.key.clone(), object_id);
-        // Also assign an XObject name so content can reference it
-        self.context
-            .resource_cache
-            .xobject_names
-            .insert(file_entry.key.clone(), format!("Im{}", object_id));
+            .insert(file_entry.key.clone(), image_id);
 
-        Ok(object_id)
+        Ok(image_id)
     }
 
     /// Process PDF file for embedding
@@ -804,6 +800,7 @@ impl DucToPdfBuilder {
                 &mut self.block_manager,
                 &mut self.hatching_manager,
                 &mut self.pdf_embedder,
+                &mut self.image_manager,
                 &self.ocg_manager,
                 &mut self.document,
             )?;
@@ -898,6 +895,7 @@ impl DucToPdfBuilder {
                 &mut self.block_manager,
                 &mut self.hatching_manager,
                 &mut self.pdf_embedder,
+                &mut self.image_manager,
                 &self.ocg_manager,
                 &mut self.document,
             )?;
@@ -964,6 +962,7 @@ impl DucToPdfBuilder {
                     &mut self.block_manager,
                     &mut self.hatching_manager,
                     &mut self.pdf_embedder,
+                    &mut self.image_manager,
                     &self.ocg_manager,
                     &mut self.document,
                 )?;

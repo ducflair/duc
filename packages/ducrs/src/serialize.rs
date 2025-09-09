@@ -2401,9 +2401,9 @@ fn serialize_duc_local_state<'bldr>(
     let active_grid_settings_vec = state.active_grid_settings.as_ref().and_then(|v| serialize_vec_of_strings(builder, v));
     let active_snap_settings_offset = state.active_snap_settings.as_ref().map(|s| builder.create_string(s));
     let current_item_stroke_offset =
-        serialize_element_stroke(builder, &state.current_item_stroke);
+        serialize_element_stroke(builder, state.current_item_stroke.as_ref().unwrap());
     let current_item_background_offset =
-        serialize_element_background(builder, &state.current_item_background);
+        serialize_element_background(builder, state.current_item_background.as_ref().unwrap());
     let current_item_font_family_offset = builder.create_string(&state.current_item_font_family);
     let current_item_start_line_head_offset = state.current_item_start_line_head.as_ref().map(|h| serialize_duc_head(builder, h));
     let current_item_end_line_head_offset = state.current_item_end_line_head.as_ref().map(|h| serialize_duc_head(builder, h));
