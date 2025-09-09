@@ -48,6 +48,7 @@ pub struct DucToPdfBuilder {
     resource_streamer: ResourceStreamer,
     page_ids: Vec<u32>,
     layer_refs: HashMap<String, Object>, // layer_id -> OCG reference
+    layer_prop_names: HashMap<String, String>, // layer_id -> Properties name (e.g., OCG_1)
 }
 
 impl DucToPdfBuilder {
@@ -105,6 +106,7 @@ impl DucToPdfBuilder {
             resource_streamer: ResourceStreamer::new(),
             page_ids: Vec::new(),
             layer_refs: HashMap::new(),
+            layer_prop_names: HashMap::new(),
         })
     }
 
@@ -447,13 +449,23 @@ impl DucToPdfBuilder {
     }
 
     /// Embed a PDF for a specific element
-    fn embed_pdf_for_element(&mut self, file_id: &str, _width: f64, _height: f64) -> ConversionResult<()> {
+    fn embed_pdf_for_element(
+        &mut self,
+        file_id: &str,
+        _width: f64,
+        _height: f64,
+    ) -> ConversionResult<()> {
         use hipdf::embed_pdf::{EmbedOptions, MultiPageLayout};
 
         let embed_id = format!("pdf_{}", file_id);
 
         // Check if already embedded
-        if self.context.resource_cache.xobject_names.contains_key(file_id) {
+        if self
+            .context
+            .resource_cache
+            .xobject_names
+            .contains_key(file_id)
+        {
             return Ok(());
         }
 
@@ -516,6 +528,7 @@ impl DucToPdfBuilder {
     fn setup_layers(&mut self) -> ConversionResult<()> {
         // We will create OCG dictionaries manually and attach OCProperties at catalog creation.
         // Create OCG references for each layer and keep them in layer_refs.
+        let mut counter: usize = 1;
         for layer in &self.context.exported_data.layers {
             let layer_name = if !layer.stack_base.label.is_empty() {
                 &layer.stack_base.label
@@ -527,9 +540,27 @@ impl DucToPdfBuilder {
             ocg_dict.set("Type", Object::Name("OCG".as_bytes().to_vec()));
             ocg_dict.set("Name", Object::string_literal(layer_name.as_str()));
 
+            // Add Intent to specify this is for View (layer visibility)
+            ocg_dict.set(
+                "Intent",
+                Object::Array(vec![Object::Name("View".as_bytes().to_vec())]),
+            );
+
+            // Add Usage dictionary for better layer behavior
+            let mut usage_dict = Dictionary::new();
+            let mut view_dict = Dictionary::new();
+            view_dict.set("ViewState", Object::Name("ON".as_bytes().to_vec()));
+            usage_dict.set("View", Object::Dictionary(view_dict));
+            ocg_dict.set("Usage", Object::Dictionary(usage_dict));
+
             let ocg_id = self.document.add_object(Object::Dictionary(ocg_dict));
             self.layer_refs
                 .insert(layer.id.clone(), Object::Reference(ocg_id));
+
+            // Also generate a Properties name for this layer (used in BDC with /OC <<>> refs)
+            let prop_name = format!("OCG_{}", counter);
+            self.layer_prop_names.insert(layer.id.clone(), prop_name);
+            counter += 1;
         }
 
         Ok(())
@@ -756,7 +787,21 @@ impl DucToPdfBuilder {
             resources.set("XObject", Object::Dictionary(xobject_dict));
         }
 
-        // No need to add Properties for OCG when using inline property dictionaries in BDC
+        // Add Properties for OCG, mapping property names to OCG references
+        if !self.layer_refs.is_empty() {
+            let mut properties = Dictionary::new();
+            for layer in &self.context.exported_data.layers {
+                if let (Some(ocg_ref), Some(prop_name)) = (
+                    self.layer_refs.get(&layer.id),
+                    self.layer_prop_names.get(&layer.id),
+                ) {
+                    properties.set(prop_name.as_str(), ocg_ref.clone());
+                }
+            }
+            if !properties.is_empty() {
+                resources.set("Properties", Object::Dictionary(properties));
+            }
+        }
 
         Ok(resources)
     }
@@ -830,13 +875,21 @@ impl DucToPdfBuilder {
         let mut all_operations = Vec::new();
 
         // Pre-process PDF elements to ensure they're embedded
-        let pdf_elements: Vec<_> = self.context.exported_data.elements.iter().filter_map(|element_wrapper| {
-            if let DucElementEnum::DucPdfElement(pdf_elem) = &element_wrapper.element {
-                pdf_elem.file_id.as_ref().map(|file_id| (file_id.clone(), pdf_elem.base.width, pdf_elem.base.height))
-            } else {
-                None
-            }
-        }).collect();
+        let pdf_elements: Vec<_> =
+            self.context
+                .exported_data
+                .elements
+                .iter()
+                .filter_map(|element_wrapper| {
+                    if let DucElementEnum::DucPdfElement(pdf_elem) = &element_wrapper.element {
+                        pdf_elem.file_id.as_ref().map(|file_id| {
+                            (file_id.clone(), pdf_elem.base.width, pdf_elem.base.height)
+                        })
+                    } else {
+                        None
+                    }
+                })
+                .collect();
         for (file_id, width, height) in pdf_elements {
             self.embed_pdf_for_element(&file_id, width, height)?;
         }
@@ -854,7 +907,8 @@ impl DucToPdfBuilder {
             .filter(|element_wrapper| {
                 let base =
                     crate::builder::DucToPdfBuilder::get_element_base(&element_wrapper.element);
-                base.layer_id.is_none()
+                let is_unlayered = base.layer_id.is_none();
+                is_unlayered
             })
             .cloned()
             .collect();
@@ -882,22 +936,45 @@ impl DucToPdfBuilder {
                 .filter(|element_wrapper| {
                     let base =
                         crate::builder::DucToPdfBuilder::get_element_base(&element_wrapper.element);
-                    base.layer_id
+                    let matches = base
+                        .layer_id
                         .as_ref()
-                        .map_or(false, |layer_id| layer_id == &layer.id)
+                        .map_or(false, |layer_id| layer_id == &layer.id);
+
+                    if matches {
+                        // Additional bounds check for this specific content stream
+                        let (bounds_x, bounds_y, bounds_width, bounds_height) = bounds;
+                        let bounds_max_x = bounds_x + bounds_width;
+                        let bounds_max_y = bounds_y + bounds_height;
+                        let elem_max_x = base.x + base.width;
+                        let elem_max_y = base.y + base.height;
+
+                        let intersects = !(base.x > bounds_max_x
+                            || elem_max_x < bounds_x
+                            || base.y > bounds_max_y
+                            || elem_max_y < bounds_y);
+
+                        if intersects {
+                            // Element intersects this content stream bounds
+                        }
+                        intersects
+                    } else {
+                        false
+                    }
                 })
                 .cloned()
                 .collect();
 
             if !layer_elements.is_empty() {
-                // Begin marked content for layer using inline property list dictionary
-                if let Some(ocg_ref) = self.layer_refs.get(&layer.id).cloned() {
-                    let mut prop = Dictionary::new();
-                    // Use correct key /OC per PDF spec
-                    prop.set("OC", ocg_ref);
+                // Begin marked content for layer using Properties name reference
+                if let Some(prop_name) = self.layer_prop_names.get(&layer.id) {
                     all_operations.push(Operation::new(
                         "BDC",
-                        vec![Object::Name(b"OC".to_vec()), Object::Dictionary(prop)],
+                        vec![
+                            Object::Name(b"OC".to_vec()),
+                            // Use a name object that matches the Properties key (e.g., /OCG_1)
+                            Object::Name(prop_name.as_bytes().to_vec()),
+                        ],
                     ));
                 }
 
@@ -937,7 +1014,7 @@ impl DucToPdfBuilder {
                 Object::Real(v) => format!("{}", v),
                 Object::Name(n) => format!("/{}", String::from_utf8_lossy(n)),
                 Object::String(s, _) => format!("({})", String::from_utf8_lossy(s)),
-                Object::Reference((id, gen)) => format!("{} {} R", id, gen),
+                Object::Reference((id, gen)) => format!("{} {} R ", id, gen),
                 Object::Array(arr) => {
                     let parts: Vec<String> = arr.iter().map(obj_to_str).collect();
                     format!("[{}]", parts.join(" "))
@@ -1014,7 +1091,7 @@ impl DucToPdfBuilder {
     fn create_pages_tree(&mut self) -> ConversionResult<()> {
         if self.page_ids.is_empty() {
             return Err(ConversionError::PdfGenerationError(
-                "No pages created".to_string(),
+                "No pages created ".to_string(),
             ));
         }
 
@@ -1058,7 +1135,7 @@ impl DucToPdfBuilder {
             Ok(obj) => obj.clone(),
             Err(_) => {
                 return Err(ConversionError::PdfGenerationError(
-                    "Pages not found in trailer".to_string(),
+                    "Pages not found in trailer ".to_string(),
                 ))
             }
         };
@@ -1088,6 +1165,28 @@ impl DucToPdfBuilder {
 
             let mut d_dict = Dictionary::new();
             d_dict.set("BaseState", Object::Name("ON".as_bytes().to_vec()));
+
+            // Add Order array to define layer display order
+            let mut order_array = Vec::new();
+            for layer in &self.context.exported_data.layers {
+                if let Some(ocg_ref) = self.layer_refs.get(&layer.id) {
+                    order_array.push(ocg_ref.clone());
+                }
+            }
+            d_dict.set("Order", Object::Array(order_array));
+
+            // Add AS (Automatic State) array for better viewer support
+            let mut as_array = Vec::new();
+            let mut as_dict = Dictionary::new();
+            as_dict.set("Event", Object::Name("View".as_bytes().to_vec()));
+            as_dict.set("OCGs", Object::Array(ocgs_array.clone()));
+            as_dict.set(
+                "Category",
+                Object::Array(vec![Object::Name("View".as_bytes().to_vec())]),
+            );
+            as_array.push(Object::Dictionary(as_dict));
+            d_dict.set("AS", Object::Array(as_array));
+
             if !on_array.is_empty() {
                 d_dict.set("ON", Object::Array(on_array));
             }
