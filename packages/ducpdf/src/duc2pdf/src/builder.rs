@@ -846,6 +846,7 @@ impl DucToPdfBuilder {
                 &mut self.hatching_manager,
                 &mut self.pdf_embedder,
                 &self.ocg_manager,
+                &mut self.document,
             )?;
 
             // Convert operations to content stream text
@@ -857,6 +858,21 @@ impl DucToPdfBuilder {
 
         // End graphics state
         content.push_str("Q\n");
+
+        // Register any new XObjects (embedded PDFs) collected during streaming so create_page_resources can include them.
+        for (name, obj_ref) in self.element_streamer.drain_new_xobjects() {
+            if let Object::Reference((id, _gen)) = obj_ref {
+                // Store under embedded_pdfs using name as key if not already stored
+                self.context
+                    .resource_cache
+                    .embedded_pdfs
+                    .insert(name.clone(), id);
+                self.context
+                    .resource_cache
+                    .xobject_names
+                    .insert(name.clone(), name.clone());
+            }
+        }
 
         let content_bytes = content.into_bytes();
         let mut stream_dict = Dictionary::new();
@@ -922,6 +938,7 @@ impl DucToPdfBuilder {
                 &mut self.hatching_manager,
                 &mut self.pdf_embedder,
                 &self.ocg_manager,
+                &mut self.document,
             )?;
             all_operations.extend(ops);
         }
@@ -987,6 +1004,7 @@ impl DucToPdfBuilder {
                     &mut self.hatching_manager,
                     &mut self.pdf_embedder,
                     &self.ocg_manager,
+                    &mut self.document,
                 )?;
                 all_operations.extend(layer_ops);
 

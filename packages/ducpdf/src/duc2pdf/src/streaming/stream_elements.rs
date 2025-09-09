@@ -37,7 +37,7 @@ use hipdf::blocks::BlockManager;
 use hipdf::embed_pdf::PdfEmbedder;
 use hipdf::hatching::HatchingManager;
 use hipdf::lopdf::content::Operation;
-use hipdf::lopdf::Object;
+use hipdf::lopdf::{Object, Document};
 use hipdf::ocg::OCGManager;
 use std::collections::HashMap;
 
@@ -46,6 +46,8 @@ pub struct ElementStreamer {
     style_resolver: StyleResolver,
     /// Cache for external resources (images, SVGs, PDFs, etc.)
     resource_cache: HashMap<String, String>, // resource_id -> XObject name
+    /// Newly embedded XObject resources produced while streaming (name -> reference)
+    new_xobjects: Vec<(String, Object)>,
 }
 
 impl ElementStreamer {
@@ -54,6 +56,7 @@ impl ElementStreamer {
         Self {
             style_resolver,
             resource_cache: HashMap::new(),
+            new_xobjects: Vec::new(),
         }
     }
 
@@ -64,7 +67,7 @@ impl ElementStreamer {
 
     /// Stream elements within specified bounds
     pub fn stream_elements_within_bounds(
-        &self,
+        &mut self,
         elements: &[ElementWrapper],
         bounds: (f64, f64, f64, f64),
         resource_streamer: &mut ResourceStreamer,
@@ -72,6 +75,7 @@ impl ElementStreamer {
         hatching_manager: &mut HatchingManager,
         pdf_embedder: &mut PdfEmbedder,
         ocg_manager: &OCGManager,
+        document: &mut Document,
     ) -> ConversionResult<Vec<Operation>> {
         let mut all_operations = Vec::new();
         let (bounds_x, bounds_y, bounds_width, bounds_height) = bounds;
@@ -126,7 +130,7 @@ impl ElementStreamer {
         //     "DEBUG: Starting to stream {} filtered elements",
         //     filtered_elements.len()
         // );
-        for element_wrapper in filtered_elements {
+    for element_wrapper in filtered_elements {
             let base = Self::get_element_base(&element_wrapper.element);
             // println!(
             //     "DEBUG: Streaming element {} with layer_id: {:?}",
@@ -157,6 +161,7 @@ impl ElementStreamer {
             // Stream the element
             let element_ops = self.stream_element_with_resources(
                 &element_wrapper.element,
+                document,
                 resource_streamer,
                 block_manager,
                 hatching_manager,
@@ -185,8 +190,9 @@ impl ElementStreamer {
 
     /// Stream a single element with resource managers
     fn stream_element_with_resources(
-        &self,
+        &mut self,
         element: &DucElementEnum,
+        document: &mut Document,
         resource_streamer: &mut ResourceStreamer,
         block_manager: &mut BlockManager,
         hatching_manager: &mut HatchingManager,
@@ -194,22 +200,24 @@ impl ElementStreamer {
     ) -> ConversionResult<Vec<Operation>> {
         let mut operations = Vec::new();
 
-        // Save graphics state
-        operations.push(Operation::new("q", vec![]));
+        // Special handling: PDF elements will be embedded via hipdf::embed_pdf which already manages transformations.
+        let is_pdf = matches!(element, DucElementEnum::DucPdfElement(_));
+        if !is_pdf {
+            // Save graphics state
+            operations.push(Operation::new("q", vec![]));
 
-        // Apply transformation (position, rotation)
-        let base = Self::get_element_base(element);
-        if base.x != 0.0 || base.y != 0.0 || base.angle != 0.0 {
-            let transform_ops = self.create_transformation_matrix(base.x, base.y, base.angle);
-            operations.extend(transform_ops);
+            // Apply transformation (position, rotation)
+            let base = Self::get_element_base(element);
+            if base.x != 0.0 || base.y != 0.0 || base.angle != 0.0 {
+                let transform_ops = self.create_transformation_matrix(base.x, base.y, base.angle);
+                operations.extend(transform_ops);
+            }
+
+            // Resolve and apply styles (skip for PDFs)
+            let styles = self.style_resolver.resolve_styles(element, None);
+            let style_ops = self.apply_styles(&styles)?;
+            operations.extend(style_ops);
         }
-
-        // Resolve styles
-        let styles = self.style_resolver.resolve_styles(element, None);
-
-        // Apply styles
-        let style_ops = self.apply_styles(&styles)?;
-        operations.extend(style_ops);
 
         // Render element based on type using appropriate managers
         let element_ops = match element {
@@ -227,7 +235,7 @@ impl ElementStreamer {
             DucElementEnum::DucFreeDrawElement(freedraw) => {
                 self.stream_freedraw(freedraw, resource_streamer)?
             }
-            DucElementEnum::DucPdfElement(pdf) => self.stream_pdf_element(pdf, pdf_embedder)?,
+            DucElementEnum::DucPdfElement(pdf) => self.stream_pdf_element(pdf, document, pdf_embedder)?,
             DucElementEnum::DucImageElement(image) => {
                 self.stream_image(image, resource_streamer)?
             }
@@ -267,8 +275,10 @@ impl ElementStreamer {
         };
         operations.extend(element_ops);
 
-        // Restore graphics state
-        operations.push(Operation::new("Q", vec![]));
+        if !is_pdf {
+            // Restore graphics state for non-PDF elements
+            operations.push(Operation::new("Q", vec![]));
+        }
 
         Ok(operations)
     }
@@ -308,77 +318,6 @@ impl ElementStreamer {
             return Ok(true);
         }
         Ok(true)
-    }
-
-    /// Build layer content using proper OCG marked content sequences
-    pub fn build_layer_content(
-        &self,
-        layer_id: &str,
-        elements: &[ElementWrapper],
-        _bounds: (f64, f64, f64, f64),
-        resource_streamer: &mut ResourceStreamer,
-        block_manager: &mut BlockManager,
-        hatching_manager: &mut HatchingManager,
-        pdf_embedder: &mut PdfEmbedder,
-        _ocg_manager: &OCGManager,
-    ) -> ConversionResult<Vec<Operation>> {
-        let mut layer_ops = Vec::new();
-
-        // Begin marked content sequence for this layer (property dictionary form)
-        let prop = Object::Dictionary(hipdf::lopdf::Dictionary::new());
-        layer_ops.push(Operation::new(
-            "BDC",
-            vec![Object::Name("OC".as_bytes().to_vec()), prop],
-        ));
-
-        layer_ops.push(Operation::new(
-            &format!("% Layer content: {}", layer_id),
-            vec![],
-        ));
-
-        // Filter elements that belong to this layer
-        let layer_elements: Vec<_> = elements
-            .iter()
-            .filter(|element_wrapper| {
-                let base = Self::get_element_base(&element_wrapper.element);
-                base.layer_id.as_ref().map_or(false, |id| id == layer_id)
-            })
-            .filter(|element_wrapper| {
-                let base = Self::get_element_base(&element_wrapper.element);
-
-                // Apply visibility, deletion, and plot filters
-                base.is_visible && !base.is_deleted && base.is_plot
-            })
-            .collect();
-
-        // Stream elements in z-index order
-        let mut sorted_elements = layer_elements;
-        sorted_elements.sort_by(|a, b| {
-            let base_a = Self::get_element_base(&a.element);
-            let base_b = Self::get_element_base(&b.element);
-            base_a
-                .z_index
-                .partial_cmp(&base_b.z_index)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
-
-        // Add each element to the layer
-        for element_wrapper in sorted_elements {
-            let element_ops = self.stream_element_with_resources(
-                &element_wrapper.element,
-                resource_streamer,
-                block_manager,
-                hatching_manager,
-                pdf_embedder,
-            )?;
-
-            layer_ops.extend(element_ops);
-        }
-
-        // End marked content sequence for this layer
-        layer_ops.push(Operation::new("EMC", vec![]));
-
-        Ok(layer_ops)
     }
 
     /// Handle frame clipping for elements
@@ -1063,72 +1002,84 @@ impl ElementStreamer {
 
     /// Stream PDF element (embedded PDF)
     fn stream_pdf_element(
-        &self,
+        &mut self,
         pdf: &DucPdfElement,
-        _pdf_embedder: &mut PdfEmbedder,
+        document: &mut Document,
+        pdf_embedder: &mut PdfEmbedder,
     ) -> ConversionResult<Vec<Operation>> {
+        use hipdf::embed_pdf::{EmbedOptions, PageRange};
         let mut ops = Vec::new();
 
-        if let Some(file_id) = &pdf.file_id {
-            // Check if we have this PDF in the resource cache
-            if let Some(xobject_name) = self.resource_cache.get(file_id) {
-                ops.push(Operation::new("% Embedded PDF", vec![]));
-                ops.push(Operation::new("q", vec![])); // Save graphics state
+        // Validate file id
+        let file_id = if let Some(fid) = &pdf.file_id { fid.clone() } else {
+            ops.push(Operation::new("% PDF element without file_id", vec![]));
+            // Placeholder rectangle
+            ops.push(Operation::new(
+                "re",
+                vec![
+                    Object::Real(pdf.base.x as f32),
+                    Object::Real(pdf.base.y as f32),
+                    Object::Real(pdf.base.width as f32),
+                    Object::Real(pdf.base.height as f32),
+                ],
+            ));
+            ops.push(Operation::new("S", vec![]));
+            return Ok(ops);
+        };
 
-                // Scale the PDF to fit the element dimensions
-                // The PDF XObject is embedded at unit size, so we scale it to element size
-                ops.push(Operation::new(
-                    "cm",
-                    vec![
-                        Object::Real(pdf.base.width as f32),  // Scale X to element width
-                        Object::Real(0.0),                    // No rotation
-                        Object::Real(0.0),                    // No skew
-                        Object::Real(pdf.base.height as f32), // Scale Y to element height
-                        Object::Real(0.0), // X position (relative to element transform)
-                        Object::Real(0.0), // Y position (relative to element transform)
-                    ],
-                ));
+        let embed_id = format!("pdf_{}", file_id);
 
-                // Draw the PDF XObject
-                ops.push(Operation::new(
-                    "Do",
-                    vec![Object::Name(xobject_name.as_bytes().to_vec())],
-                ));
+        // Build embed options mirroring the provided test syntax.
+        // We place at absolute coordinates (element base x, y) and preserve aspect ratio inside bounds width/height.
+        // Use zero-based first page (hipdf appears to use zero-based internally; prior Single(1) caused OOB on single-page PDFs)
+        let options = EmbedOptions {
+            page_range: Some(PageRange::Single(0)),
+            position: (pdf.base.x as f32, pdf.base.y as f32),
+            max_width: Some(pdf.base.width as f32),
+            max_height: Some(pdf.base.height as f32),
+            preserve_aspect_ratio: true,
+            ..Default::default()
+        };
 
-                ops.push(Operation::new("Q", vec![])); // Restore graphics state
-            } else {
-                // PDF not found in cache - create placeholder
+        // Perform embedding (the PDF must have been previously loaded with this id during resource processing)
+        match pdf_embedder.embed_pdf(document, &embed_id, &options) {
+            Ok(result) => {
+                // Record XObject resources so the builder can add them to page resources later
+                for (name, obj_ref) in result.xobject_resources.iter() {
+                    // Track mapping (use file id to map to XObject name for resource assembly)
+                    self.resource_cache.insert(file_id.clone(), name.clone());
+                    self.new_xobjects.push((name.clone(), obj_ref.clone()));
+                }
+                // Append the operations generated by embedder (already includes positioning & clipping if any)
+                ops.extend(result.operations);
+            }
+            Err(e) => {
                 ops.push(Operation::new(
-                    &format!("% PDF not found in cache: {}", file_id),
+                    &format!("% Failed to embed PDF {}: {}", embed_id, e),
                     vec![],
                 ));
+                // Fallback placeholder
                 ops.push(Operation::new(
                     "re",
                     vec![
-                        Object::Real(0.0),
-                        Object::Real(0.0),
+                        Object::Real(pdf.base.x as f32),
+                        Object::Real(pdf.base.y as f32),
                         Object::Real(pdf.base.width as f32),
                         Object::Real(pdf.base.height as f32),
                     ],
                 ));
                 ops.push(Operation::new("S", vec![]));
             }
-        } else {
-            // No file_id specified
-            ops.push(Operation::new("% PDF element without file_id", vec![]));
-            ops.push(Operation::new(
-                "re",
-                vec![
-                    Object::Real(0.0),
-                    Object::Real(0.0),
-                    Object::Real(pdf.base.width as f32),
-                    Object::Real(pdf.base.height as f32),
-                ],
-            ));
-            ops.push(Operation::new("S", vec![]));
         }
 
         Ok(ops)
+    }
+
+    /// Drain newly embedded XObject resources (name, reference) collected during streaming
+    pub fn drain_new_xobjects(&mut self) -> Vec<(String, Object)> {
+        let mut taken = Vec::new();
+        std::mem::swap(&mut self.new_xobjects, &mut taken);
+        taken
     }
     /// Stream image element
     fn stream_image(
