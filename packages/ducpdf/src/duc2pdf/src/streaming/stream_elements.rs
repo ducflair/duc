@@ -85,19 +85,29 @@ impl ElementStreamer {
                 let base = Self::get_element_base(&element_wrapper.element);
 
                 // Apply visibility, deletion, and plot filters
-                base.is_visible && !base.is_deleted && base.is_plot
+                let visible = base.is_visible && !base.is_deleted && base.is_plot;
+                // if !visible {
+                //     println!("DEBUG: Element {} filtered out - is_visible: {}, is_deleted: {}, is_plot: {}", 
+                //         base.id, base.is_visible, base.is_deleted, base.is_plot);
+                // }
+                visible
             })
             .filter(|element_wrapper| {
                 let base = Self::get_element_base(&element_wrapper.element);
 
                 // Check if element intersects with bounds
-                let elem_max_x = base.x + base.width;
-                let elem_max_y = base.y + base.height;
+                // Skip bounds check for elements that belong to a layer (to allow layer testing)
+                if base.layer_id.is_some() {
+                    true
+                } else {
+                    let elem_max_x = base.x + base.width;
+                    let elem_max_y = base.y + base.height;
 
-                !(base.x > bounds_max_x
-                    || elem_max_x < bounds_x
-                    || base.y > bounds_max_y
-                    || elem_max_y < bounds_y)
+                    !(base.x > bounds_max_x
+                        || elem_max_x < bounds_x
+                        || base.y > bounds_max_y
+                        || elem_max_y < bounds_y)
+                }
             })
             .collect();
 
@@ -112,8 +122,16 @@ impl ElementStreamer {
         });
 
         // Stream elements in z-index order
+        // println!(
+        //     "DEBUG: Starting to stream {} filtered elements",
+        //     filtered_elements.len()
+        // );
         for element_wrapper in filtered_elements {
             let base = Self::get_element_base(&element_wrapper.element);
+            // println!(
+            //     "DEBUG: Streaming element {} with layer_id: {:?}",
+            //     base.id, base.layer_id
+            // );
 
             // Apply layer visibility if the element has layer information
             if let Some(layer_id) = &base.layer_id {
@@ -145,6 +163,11 @@ impl ElementStreamer {
                 pdf_embedder,
             )?;
 
+            println!(
+                "DEBUG: Element {} generated {} operations",
+                base.id,
+                element_ops.len()
+            );
             all_operations.extend(element_ops);
 
             // Restore graphics state if clipping was applied
@@ -429,8 +452,6 @@ impl ElementStreamer {
 
         Ok(ops)
     }
-
-
 
     /// Create transformation matrix operations
     fn create_transformation_matrix(&self, x: f64, y: f64, angle: f64) -> Vec<Operation> {
@@ -1039,8 +1060,6 @@ impl ElementStreamer {
 
         Ok(ops)
     }
-
-
 
     /// Stream PDF element (embedded PDF)
     fn stream_pdf_element(
