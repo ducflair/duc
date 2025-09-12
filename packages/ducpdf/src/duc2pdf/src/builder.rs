@@ -3,11 +3,11 @@ use crate::streaming::stream_resources::ResourceStreamer;
 use crate::utils::style_resolver::StyleResolver;
 use crate::utils::svg_to_pdf::svg_to_pdf;
 use crate::{
-    calculate_required_scale, validate_coordinates, validate_coordinates_with_scale,
+    calculate_required_scale, validate_coordinates_with_scale,
     ConversionError, ConversionMode, ConversionOptions, ConversionResult, MM_TO_PDF_UNITS,
 };
 use duc::types::{
-    DucBlock, DucElementEnum, DucExternalFileEntry, DucPlotElement, ElementWrapper,
+    DucBlock, DucElementEnum, DucExternalFileEntry, ElementWrapper,
     ExportedDataState, Standard,
 };
 use hipdf::blocks::BlockManager;
@@ -61,8 +61,8 @@ impl DucToPdfBuilder {
     ) -> ConversionResult<Self> {
         let document = Document::with_version("1.7");
 
-        let crop_bounds = match &options.mode {
-            ConversionMode::Crop { clip_bounds } => Some(*clip_bounds),
+        let crop_offset = match &options.mode {
+            ConversionMode::Crop { offset_x, offset_y, .. } => Some((*offset_x, *offset_y)),
             ConversionMode::Plot => None,
         };
 
@@ -70,11 +70,11 @@ impl DucToPdfBuilder {
             Self::validate_all_coordinates_with_scale(
                 &exported_data,
                 Some(user_scale),
-                crop_bounds,
+                crop_offset,
             )?;
             user_scale
         } else {
-            let required_scale = calculate_required_scale(&exported_data, crop_bounds);
+            let required_scale = calculate_required_scale(&exported_data, crop_offset);
             if required_scale < 1.0 {
                 println!(
                     "🔧 Auto-scaling applied: {:.6} ({}:1)",
@@ -145,30 +145,50 @@ impl DucToPdfBuilder {
     fn validate_all_coordinates_with_scale(
         data: &ExportedDataState,
         scale: Option<f64>,
-        crop_bounds: Option<(f64, f64, f64, f64)>,
+        crop_offset: Option<(f64, f64)>,
     ) -> ConversionResult<()> {
-        // If crop bounds are specified, only validate the crop area
-        if let Some((cx, cy, cw, ch)) = crop_bounds {
-            validate_coordinates_with_scale(cx, cy, scale)?;
-            validate_coordinates_with_scale(cx + cw, cy + ch, scale)?;
+        // If crop offset is specified, only validate coordinates after applying the offset
+        if let Some((offset_x_mm, offset_y_mm)) = crop_offset {
+            // Assume all coordinates are already in millimeters
+            
+            // With crop offset, we're adjusting the viewport, so we need to validate 
+            // that all elements when adjusted by the offset are still within bounds
+            for element_wrapper in &data.elements {
+                let base = Self::get_element_base(&element_wrapper.element);
+                
+                // Assume all coordinates are already in millimeters
+                let (x_mm, y_mm, width_mm, height_mm) = (base.x, base.y, base.width, base.height);
+                
+                let adjusted_x = x_mm - offset_x_mm;
+                let adjusted_y = y_mm - offset_y_mm;
+                
+                // CRITICAL: Validate that coordinates don't exceed limits
+                let final_scale = validate_coordinates_with_scale(adjusted_x, adjusted_y, scale)?;
+                let final_scale2 = validate_coordinates_with_scale(adjusted_x + width_mm, adjusted_y + height_mm, scale)?;
+                
+                // If auto-scaling was applied, ensure we use the most restrictive scale
+                if scale.is_none() && (final_scale < 1.0 || final_scale2 < 1.0) {
+                    let required_scale = final_scale.min(final_scale2);
+                    if required_scale < 1.0 {
+                        return Err(ConversionError::InvalidDucData(format!(
+                            "Crop specifications result in coordinates that exceed PDF limits. Required scale: {:.6}", 
+                            required_scale
+                        )));
+                    }
+                }
+            }
             return Ok(());
         }
 
-        // Otherwise validate all elements
+        // Otherwise validate all elements - assume all coordinates are in millimeters
         for element_wrapper in &data.elements {
             let base = Self::get_element_base(&element_wrapper.element);
-            validate_coordinates_with_scale(base.x, base.y, scale)?;
-            validate_coordinates_with_scale(base.x + base.width, base.y + base.height, scale)?;
-        }
-        Ok(())
-    }
-
-    /// Validate coordinates for all elements in the DUC data (legacy function)
-    fn validate_all_coordinates(data: &ExportedDataState) -> ConversionResult<()> {
-        for element_wrapper in &data.elements {
-            let base = Self::get_element_base(&element_wrapper.element);
-            validate_coordinates(base.x, base.y)?;
-            validate_coordinates(base.x + base.width, base.y + base.height)?;
+            
+            // Assume all coordinates are already in millimeters
+            let (x_mm, y_mm, width_mm, height_mm) = (base.x, base.y, base.width, base.height);
+            
+            validate_coordinates_with_scale(x_mm, y_mm, scale)?;
+            validate_coordinates_with_scale(x_mm + width_mm, y_mm + height_mm, scale)?;
         }
         Ok(())
     }
@@ -254,12 +274,31 @@ impl DucToPdfBuilder {
         info.set("Creator", Object::string_literal("DUC to PDF Converter"));
         info.set("Producer", Object::string_literal("ducpdf"));
 
-        // Set version info
+        // Set version info with scale information
+        let scale_info = if self.context.scale < 1.0 {
+            format!(
+                "Scale: 1:{}",
+                (1.0 / self.context.scale).round() as i32
+            )
+        } else if self.context.scale > 1.0 {
+            format!(
+                "Scale: {}:1",
+                self.context.scale.round() as i32
+            )
+        } else {
+            "Scale: 1:1".to_string()
+        };
+
         let keywords = format!(
-            "DUC version: {}, Source: {}",
-            self.context.exported_data.version, self.context.exported_data.source
+            "DUC version: {}, Source: {}, {}",
+            self.context.exported_data.version, 
+            self.context.exported_data.source,
+            scale_info
         );
         info.set("Keywords", Object::string_literal(keywords.as_str()));
+        
+        // Add scale as a custom metadata field for better discoverability
+        info.set("Scale", Object::string_literal(scale_info.as_str()));
 
         let info_id = self.document.add_object(Object::Dictionary(info));
         self.document
@@ -543,8 +582,8 @@ impl DucToPdfBuilder {
             ConversionMode::Plot => {
                 self.generate_plot_pages()?;
             }
-            ConversionMode::Crop { clip_bounds } => {
-                self.generate_crop_page(*clip_bounds)?;
+            ConversionMode::Crop { offset_x, offset_y, width, height } => {
+                self.generate_crop_page(*offset_x, *offset_y, *width, *height)?;
             }
         }
         Ok(())
@@ -553,6 +592,7 @@ impl DucToPdfBuilder {
     /// Generate pages for plot mode (one page per plot element)
     fn generate_plot_pages(&mut self) -> ConversionResult<()> {
         // Collect plot element bounds to avoid borrowing issues
+        // Extract plot bounds and convert to millimeters
         let plot_bounds: Vec<(f64, f64, f64, f64)> = self
             .context
             .exported_data
@@ -560,12 +600,10 @@ impl DucToPdfBuilder {
             .iter()
             .filter_map(|elem| {
                 if let DucElementEnum::DucPlotElement(plot) = &elem.element {
-                    Some((
-                        plot.stack_element_base.base.x,
-                        plot.stack_element_base.base.y,
-                        plot.stack_element_base.base.width,
-                        plot.stack_element_base.base.height,
-                    ))
+                    let base = &plot.stack_element_base.base;
+                    
+                    // Assume all coordinates are already in millimeters
+                    Some((base.x, base.y, base.width, base.height))
                 } else {
                     None
                 }
@@ -584,10 +622,100 @@ impl DucToPdfBuilder {
         Ok(())
     }
 
-    /// Generate a single page for crop mode
-    fn generate_crop_page(&mut self, clip_bounds: (f64, f64, f64, f64)) -> ConversionResult<()> {
-        self.create_page_with_clipping(clip_bounds)?;
+    /// Generate a single page for crop mode by adjusting scroll position and optionally limiting dimensions
+    fn generate_crop_page(&mut self, offset_x: f64, offset_y: f64, width: Option<f64>, height: Option<f64>) -> ConversionResult<()> {
+        // Modify the local state to apply the scroll offset
+        self.apply_crop_offset_to_local_state(offset_x, offset_y);
+        
+        // Calculate the bounds of all elements
+        let overall_bounds = self.calculate_overall_bounds();
+        
+        // If width/height are specified, create a crop bounds that limits the visible area
+        let crop_bounds = if let (Some(w_mm), Some(h_mm)) = (width, height) {
+            // Assume all dimensions are already in millimeters
+            
+            // CRITICAL: Validate that the crop dimensions don't exceed PDF limits
+            use crate::MAX_COORDINATE_MM;
+            
+            // Check if crop dimensions would exceed limits
+            if w_mm > MAX_COORDINATE_MM || h_mm > MAX_COORDINATE_MM {
+                return Err(ConversionError::InvalidDucData(format!(
+                    "Crop dimensions ({}x{} mm) exceed PDF limits (max {} mm per dimension)", 
+                    w_mm, h_mm, MAX_COORDINATE_MM
+                )));
+            }
+            
+            // For crop mode with dimensions, the page should be exactly the specified dimensions
+            // The scroll offset is handled in the content stream transformation, not the page bounds
+            let current_scroll_x = self.context.exported_data.duc_local_state
+                .as_ref()
+                .map(|ls| ls.scroll_x)
+                .unwrap_or(0.0);
+            let current_scroll_y = self.context.exported_data.duc_local_state
+                .as_ref()
+                .map(|ls| ls.scroll_y)
+                .unwrap_or(0.0);
+            
+            println!("🔧 Applied crop dimensions: {}x{} mm at offset ({}, {})", 
+                w_mm, h_mm, offset_x, offset_y);
+            println!("🔧 Crop window bounds: x=[{:.2}, {:.2}], y=[{:.2}, {:.2}]", 
+                -current_scroll_x, -current_scroll_x + w_mm, -current_scroll_y, -current_scroll_y + h_mm);
+            
+            // Page bounds should simply be the crop dimensions starting from origin
+            (0.0, 0.0, w_mm, h_mm)
+        } else {
+            // Use overall bounds if no crop dimensions specified
+            overall_bounds
+        };
+        
+        self.create_page_with_crop_bounds(crop_bounds, width.is_some() && height.is_some())?;
         Ok(())
+    }
+
+    /// Apply crop offset to the local state scroll position
+    /// Note: offset_x and offset_y are expected to be in millimeters
+    fn apply_crop_offset_to_local_state(&mut self, offset_x_mm: f64, offset_y_mm: f64) {
+        // Assume all coordinates are already in millimeters
+        
+        if let Some(ref mut local_state) = self.context.exported_data.duc_local_state {
+            // Apply the offset to scroll position to effectively "move" the drawing
+            local_state.scroll_x += offset_x_mm;
+            local_state.scroll_y += offset_y_mm;
+            
+            println!("🔧 Applied crop offset: scroll_x={}, scroll_y={} (mm)", 
+                local_state.scroll_x, local_state.scroll_y);
+        } else {
+            // If no local state exists, create one with the offset
+            let new_local_state = duc::types::DucLocalState {
+                scope: "mm".to_string(), // Always use mm for internal processing
+                active_standard_id: "default".to_string(),
+                scroll_x: offset_x_mm,
+                scroll_y: offset_y_mm,
+                zoom: 1.0,
+                active_grid_settings: None,
+                active_snap_settings: None,
+                is_binding_enabled: false,
+                current_item_stroke: None,
+                current_item_background: None,
+                current_item_opacity: 1.0,
+                current_item_font_family: "Arial".to_string(),
+                current_item_font_size: 12.0,
+                current_item_text_align: Default::default(),
+                current_item_start_line_head: None,
+                current_item_end_line_head: None,
+                current_item_roundness: 0.0,
+                pen_mode: false,
+                view_mode_enabled: false,
+                objects_snap_mode_enabled: false,
+                grid_mode_enabled: false,
+                outline_mode_enabled: false,
+                manual_save_mode: false,
+            };
+            
+            self.context.exported_data.duc_local_state = Some(new_local_state);
+            println!("🔧 Created new local state with crop offset: scroll_x={}, scroll_y={} (mm)", 
+                offset_x_mm, offset_y_mm);
+        }
     }
 
     /// Create a single page with all elements (when no plots are defined)
@@ -598,36 +726,9 @@ impl DucToPdfBuilder {
         Ok(())
     }
 
-    /// Create a page for a specific plot element
-    fn create_page_for_plot(&mut self, plot_element: &DucPlotElement) -> ConversionResult<()> {
-        let bounds = (
-            plot_element.stack_element_base.base.x,
-            plot_element.stack_element_base.base.y,
-            plot_element.stack_element_base.base.width,
-            plot_element.stack_element_base.base.height,
-        );
-        self.create_page_with_bounds(bounds)?;
-        Ok(())
-    }
-
-    /// Create a page with clipping bounds
-    fn create_page_with_clipping(
-        &mut self,
-        clip_bounds: (f64, f64, f64, f64),
-    ) -> ConversionResult<()> {
-        self.create_page_with_bounds(clip_bounds)?;
-        // Add clipping path - this will be implemented in streaming phase
-        Ok(())
-    }
-
     /// Apply scaling to coordinates
     fn apply_scale(&self, value: f64) -> f64 {
         value * self.context.scale
-    }
-
-    /// Apply scaling to a point (x, y)
-    fn apply_scale_point(&self, x: f64, y: f64) -> (f64, f64) {
-        (self.apply_scale(x), self.apply_scale(y))
     }
 
     /// Apply scaling to bounds (x, y, width, height)
@@ -649,6 +750,48 @@ impl DucToPdfBuilder {
         let page_height = height * MM_TO_PDF_UNITS;
 
         // Create content stream
+        let content_stream = self.create_modular_content_stream(bounds)?;
+        let content_id = self.document.add_object(Object::Stream(content_stream));
+
+        // Setup page resources including XObjects
+        let resources = self.create_page_resources()?;
+
+        // Create page dictionary
+        let mut page = Dictionary::new();
+        page.set("Type", Object::Name("Page".as_bytes().to_vec()));
+        page.set(
+            "MediaBox",
+            Object::Array(vec![
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(page_width as f32),
+                Object::Real(page_height as f32),
+            ]),
+        );
+
+        page.set("UserUnit", Object::Real(25.4 / 72.0));
+        page.set("Contents", Object::Reference(content_id));
+        page.set("Resources", Object::Dictionary(resources));
+
+        let page_id = self.document.add_object(Object::Dictionary(page));
+        self.page_ids.push(page_id.0);
+
+        Ok(())
+    }
+
+    /// Create a page with crop bounds, optionally preserving exact dimensions without scaling
+    fn create_page_with_crop_bounds(&mut self, bounds: (f64, f64, f64, f64), preserve_exact_dimensions: bool) -> ConversionResult<()> {
+        let (page_width, page_height) = if preserve_exact_dimensions {
+            // For crop mode with explicit dimensions, use the exact dimensions without scaling
+            let (_x, _y, width, height) = bounds;
+            (width * MM_TO_PDF_UNITS, height * MM_TO_PDF_UNITS)
+        } else {
+            // For other modes, apply scaling as usual
+            let (_x, _y, width, height) = self.apply_scale_bounds(bounds.0, bounds.1, bounds.2, bounds.3);
+            (width * MM_TO_PDF_UNITS, height * MM_TO_PDF_UNITS)
+        };
+
+        // Create content stream (always pass original bounds for content positioning)
         let content_stream = self.create_modular_content_stream(bounds)?;
         let content_id = self.document.add_object(Object::Stream(content_stream));
 
@@ -796,6 +939,7 @@ impl DucToPdfBuilder {
             let operations = self.element_streamer.stream_elements_within_bounds(
                 &self.context.exported_data.elements,
                 bounds,
+                self.context.exported_data.duc_local_state.as_ref(),
                 &mut self.resource_streamer,
                 &mut self.block_manager,
                 &mut self.hatching_manager,
@@ -891,6 +1035,7 @@ impl DucToPdfBuilder {
             let ops = self.element_streamer.stream_elements_within_bounds(
                 &unlayered_elements,
                 bounds,
+                self.context.exported_data.duc_local_state.as_ref(),
                 &mut self.resource_streamer,
                 &mut self.block_manager,
                 &mut self.hatching_manager,
@@ -958,6 +1103,7 @@ impl DucToPdfBuilder {
                 let layer_ops = self.element_streamer.stream_elements_within_bounds(
                     &layer_elements,
                     bounds,
+                    self.context.exported_data.duc_local_state.as_ref(),
                     &mut self.resource_streamer,
                     &mut self.block_manager,
                     &mut self.hatching_manager,
@@ -1024,10 +1170,10 @@ impl DucToPdfBuilder {
         result
     }
 
-    /// Calculate overall bounds of all elements
+    /// Calculate overall bounds of all elements in millimeters
     fn calculate_overall_bounds(&self) -> (f64, f64, f64, f64) {
         if self.context.exported_data.elements.is_empty() {
-            return (0.0, 0.0, 210.0, 297.0); // A4 default
+            return (0.0, 0.0, 210.0, 297.0); // A4 default in mm
         }
 
         let mut min_x = f64::INFINITY;
@@ -1037,10 +1183,14 @@ impl DucToPdfBuilder {
 
         for element_wrapper in &self.context.exported_data.elements {
             let base = Self::get_element_base(&element_wrapper.element);
-            min_x = min_x.min(base.x);
-            min_y = min_y.min(base.y);
-            max_x = max_x.max(base.x + base.width);
-            max_y = max_y.max(base.y + base.height);
+            
+            // Assume all coordinates are already in millimeters
+            let (x_mm, y_mm, width_mm, height_mm) = (base.x, base.y, base.width, base.height);
+            
+            min_x = min_x.min(x_mm);
+            min_y = min_y.min(y_mm);
+            max_x = max_x.max(x_mm + width_mm);
+            max_y = max_y.max(y_mm + height_mm);
         }
 
         let width = max_x - min_x;

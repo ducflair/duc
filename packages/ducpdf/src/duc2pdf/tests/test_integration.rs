@@ -100,7 +100,10 @@ mod integration_tests {
         let options = ConversionOptions {
             scale: None, // Allow auto-scaling
             mode: ConversionMode::Crop {
-                clip_bounds: (0.0, 0.0, 100.0, 100.0),
+                offset_x: 0.0,
+                offset_y: 0.0,
+                width: None,
+                height: None,
             },
             metadata_title: Some("Basic CROP Test".to_string()),
             metadata_author: Some("DUC2PDF Test Suite".to_string()),
@@ -204,11 +207,18 @@ mod integration_tests {
             ("extreme_negative", (-50000.0, -50000.0, 1000.0, 1000.0), false), // Should exceed bounds
         ];
 
-        for (test_name, (x, y, width, height), should_succeed) in boundary_tests {
+        for (test_name, (x, y, _width, _height), should_succeed) in boundary_tests {
+            // Convert bounds to offset (negative of the bounds origin)
+            let offset_x = -x;
+            let offset_y = -y;
+            
             let options = ConversionOptions {
                 scale: None, // Allow auto-scaling
             mode: ConversionMode::Crop {
-                    clip_bounds: (x, y, width, height),
+                    offset_x,
+                    offset_y,
+                    width: None,
+                    height: None,
                 },
                 metadata_title: Some(format!("Bounds Test - {}", test_name)),
                 metadata_author: Some("DUC2PDF Test Suite".to_string()),
@@ -319,7 +329,10 @@ mod integration_tests {
         let crop_options = ConversionOptions {
             scale: None, // Allow auto-scaling
             mode: ConversionMode::Crop {
-                clip_bounds: (0.0, 0.0, 500.0, 500.0),
+                offset_x: 0.0,
+                offset_y: 0.0,
+                width: None,
+                height: None,
             },
             metadata_title: Some("Mode Switch Test - CROP".to_string()),
             ..Default::default()

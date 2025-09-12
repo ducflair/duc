@@ -82,11 +82,12 @@ impl ElementStreamer {
         self.embedded_pdfs = embedded_pdfs;
     }
 
-    /// Stream elements within specified bounds
+    /// Stream elements within specified bounds with local state for scroll positioning
     pub fn stream_elements_within_bounds(
         &mut self,
         elements: &[ElementWrapper],
         bounds: (f64, f64, f64, f64),
+        local_state: Option<&duc::types::DucLocalState>,
         resource_streamer: &mut ResourceStreamer,
         block_manager: &mut BlockManager,
         hatching_manager: &mut HatchingManager,
@@ -179,6 +180,7 @@ impl ElementStreamer {
             // Stream the element
             let element_ops = self.stream_element_with_resources(
                 &element_wrapper.element,
+                local_state,
                 document,
                 resource_streamer,
                 block_manager,
@@ -207,10 +209,11 @@ impl ElementStreamer {
         Ok(all_operations)
     }
 
-    /// Stream a single element with resource managers
+    /// Stream a single element with resource managers and local state
     fn stream_element_with_resources(
         &mut self,
         element: &DucElementEnum,
+        local_state: Option<&duc::types::DucLocalState>,
         document: &mut Document,
         resource_streamer: &mut ResourceStreamer,
         block_manager: &mut BlockManager,
@@ -226,10 +229,10 @@ impl ElementStreamer {
             // Save graphics state
             operations.push(Operation::new("q", vec![]));
 
-            // Apply transformation (position, rotation)
+            // Apply transformation (position, rotation) with scroll offset
             let base = Self::get_element_base(element);
             if base.x != 0.0 || base.y != 0.0 || base.angle != 0.0 {
-                let transform_ops = self.create_transformation_matrix(base.x, base.y, base.angle);
+                let transform_ops = self.create_transformation_matrix_with_scroll(base.x, base.y, base.angle, local_state);
                 operations.extend(transform_ops);
             }
 
@@ -412,7 +415,7 @@ impl ElementStreamer {
         Ok(ops)
     }
 
-    /// Create transformation matrix operations
+    /// Create transformation matrix operations with scroll offset
     fn create_transformation_matrix(&self, x: f64, y: f64, angle: f64) -> Vec<Operation> {
         let mut ops = Vec::new();
 
@@ -449,6 +452,21 @@ impl ElementStreamer {
         }
 
         ops
+    }
+
+    /// Create transformation matrix operations with scroll offset applied
+    fn create_transformation_matrix_with_scroll(&self, x: f64, y: f64, angle: f64, local_state: Option<&duc::types::DucLocalState>) -> Vec<Operation> {
+        let (scroll_x, scroll_y) = if let Some(state) = local_state {
+            (state.scroll_x, state.scroll_y)
+        } else {
+            (0.0, 0.0)
+        };
+
+        // Apply scroll offset to the coordinates
+        let adjusted_x = x + scroll_x;
+        let adjusted_y = y + scroll_y;
+
+        self.create_transformation_matrix(adjusted_x, adjusted_y, angle)
     }
 
     /// Apply resolved styles to PDF operations

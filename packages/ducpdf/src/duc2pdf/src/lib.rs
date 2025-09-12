@@ -12,7 +12,12 @@ pub const MM_TO_PDF_UNITS: f64 = 72.0 / 25.4; // Convert mm to PDF units (1 inch
 #[derive(Debug)]
 pub enum ConversionMode {
     Plot,
-    Crop { clip_bounds: (f64, f64, f64, f64) }, // (x, y, width, height)
+    Crop { 
+        offset_x: f64, 
+        offset_y: f64, 
+        width: Option<f64>,  // Optional crop width in mm (None = use full viewport)
+        height: Option<f64>, // Optional crop height in mm (None = use full viewport)
+    },
 }
 
 #[derive(Debug)]
@@ -90,7 +95,7 @@ pub fn validate_coordinates_with_scale(x: f64, y: f64, scale: Option<f64>) -> Co
     Ok(scale.unwrap_or(1.0))
 }
 
-/// Calculate bounding box for DUC data
+/// Calculate bounding box for DUC data in millimeters
 pub fn calculate_bounding_box(data: &duc::types::ExportedDataState) -> (f64, f64, f64, f64) {
     if data.elements.is_empty() {
         return (0.0, 0.0, 0.0, 0.0);
@@ -127,36 +132,42 @@ pub fn calculate_bounding_box(data: &duc::types::ExportedDataState) -> (f64, f64
             duc::types::DucElementEnum::DucParametricElement(elem) => &elem.base,
         };
         
-        min_x = min_x.min(base.x);
-        min_y = min_y.min(base.y);
-        max_x = max_x.max(base.x + base.width);
-        max_y = max_y.max(base.y + base.height);
+        // Assume all coordinates are already in millimeters
+        let (x_mm, y_mm, width_mm, height_mm) = (base.x, base.y, base.width, base.height);
+        
+        min_x = min_x.min(x_mm);
+        min_y = min_y.min(y_mm);
+        max_x = max_x.max(x_mm + width_mm);
+        max_y = max_y.max(y_mm + height_mm);
     }
     
     (min_x, min_y, max_x - min_x, max_y - min_y)
 }
 
 /// Calculate required scale to fit content within safe bounds
-pub fn calculate_required_scale(data: &duc::types::ExportedDataState, crop_bounds: Option<(f64, f64, f64, f64)>) -> f64 {
-    let (min_x, min_y, width, height) = if let Some((cx, cy, cw, ch)) = crop_bounds {
-        // Use crop bounds
-        (cx, cy, cw, ch)
+pub fn calculate_required_scale(data: &duc::types::ExportedDataState, crop_offset: Option<(f64, f64)>) -> f64 {
+    let (min_x, min_y, width, height) = calculate_bounding_box(data);
+    
+    // Apply offset if cropping - assume coordinates are already in millimeters
+    let (effective_min_x, effective_min_y) = if let Some((offset_x_mm, offset_y_mm)) = crop_offset {
+        // With offset, we're essentially moving the viewport, so adjust the bounding box accordingly
+        (min_x - offset_x_mm, min_y - offset_y_mm)
     } else {
-        // Use full bounding box
-        calculate_bounding_box(data)
+        (min_x, min_y)
     };
     
-    let max_x = min_x + width;
-    let max_y = min_y + height;
+    let max_x = effective_min_x + width;
+    let max_y = effective_min_y + height;
     
     // Find the maximum coordinate in any direction
-    let max_coord = min_x.abs().max(min_y.abs()).max(max_x.abs()).max(max_y.abs());
+    let max_coord = effective_min_x.abs().max(effective_min_y.abs()).max(max_x.abs()).max(max_y.abs());
     
+    // CRITICAL: Always check coordinate limits
     if max_coord <= MAX_COORDINATE_MM {
         return 1.0; // No scaling needed
     }
     
-    // Calculate scale with 5% safety margin
+    // Calculate scale with 5% safety margin to ensure coordinates stay within limits
     MAX_COORDINATE_MM / max_coord * 0.95
 }
 
@@ -205,14 +216,35 @@ pub fn convert_duc_to_pdf_rs(duc_data: &[u8]) -> Vec<u8> {
 /// Conversion function with crop mode
 pub fn convert_duc_to_pdf_crop(
     duc_data: &[u8],
-    clip_x: f64,
-    clip_y: f64,
-    clip_width: f64,
-    clip_height: f64,
+    offset_x: f64,
+    offset_y: f64,
 ) -> ConversionResult<Vec<u8>> {
     let options = ConversionOptions {
         mode: ConversionMode::Crop {
-            clip_bounds: (clip_x, clip_y, clip_width, clip_height),
+            offset_x,
+            offset_y,
+            width: None,
+            height: None,
+        },
+        ..Default::default()
+    };
+    convert_duc_to_pdf_with_options(duc_data, options)
+}
+
+/// Conversion function with crop mode and specific dimensions
+pub fn convert_duc_to_pdf_crop_with_dimensions(
+    duc_data: &[u8],
+    offset_x: f64,
+    offset_y: f64,
+    width: f64,
+    height: f64,
+) -> ConversionResult<Vec<u8>> {
+    let options = ConversionOptions {
+        mode: ConversionMode::Crop {
+            offset_x,
+            offset_y,
+            width: Some(width),
+            height: Some(height),
         },
         ..Default::default()
     };
