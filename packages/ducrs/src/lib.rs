@@ -11,6 +11,7 @@ pub mod generated {
 pub mod parse;
 pub mod serialize;
 pub mod types;
+pub mod units;
 
 #[cfg(test)]
 mod tests {
