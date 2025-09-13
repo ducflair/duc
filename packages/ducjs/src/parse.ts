@@ -949,7 +949,6 @@ function parseParametricElement(element: DucParametricElementFb): DucParametricE
 export function parseTextStyle(style: DucTextStyleFb): DucTextStyle {
   const lineSpacing = style.lineSpacing()!;
   return {
-    ...parseElementStylesBase(style.baseStyle()!),
     isLtr: style.isLtr(),
     fontFamily: style.fontFamily()! as any, // For now will use as any because this will be a string in the future
     bigFontFamily: style.bigFontFamily()!,
@@ -980,7 +979,6 @@ export function parseTableCellStyle(style: DucTableCellStyleFb): DucTableCellSty
 
 export function parseTableStyle(style: DucTableStyleFb): DucTableStyle {
   return {
-    ...parseElementStylesBase(style.baseStyle()!),
     flowDirection: style.flowDirection()!,
     headerRowStyle: parseTableCellStyle(style.headerRowStyle()!),
     dataRowStyle: parseTableCellStyle(style.dataRowStyle()!),
@@ -989,28 +987,23 @@ export function parseTableStyle(style: DucTableStyleFb): DucTableStyle {
 }
 
 export function parsePlotStyle(style: DucPlotStyleFb): DucPlotStyle {
-  return {
-    ...parseElementStylesBase(style.baseStyle()!),
-  };
+  return {};
 }
 
 export function parseViewportStyle(style: DucViewportStyleFb): DucViewportStyle {
   return {
-    ...parseElementStylesBase(style.baseStyle()!),
     scaleIndicatorVisible: style.scaleIndicatorVisible(),
   };
 }
 
 export function parseXRayStyle(style: DucXRayStyleFb): DucXRayStyle {
   return {
-    ...parseElementStylesBase(style.baseStyle()!),
     color: style.color()!,
   };
 }
 
 export function parseLeaderStyle(style: DucLeaderStyleFb): DucLeaderStyle {
   return {
-    ...parseElementStylesBase(style.baseStyle()!),
     headsOverride: style.headsOverrideLength() > 0 ? [parseHead(style.headsOverride(0)!), parseHead(style.headsOverride(1)!)] : undefined,
     dogleg: style.dogleg() ? toPrecisionValue(style.dogleg()) : undefined,
     textStyle: parseTextStyle(style.textStyle()!),
@@ -1063,7 +1056,6 @@ export function parseDimensionStyle(style: DucDimensionStyleFb): DucDimensionSty
 export function parseFeatureControlFrameStyle(style: DucFeatureControlFrameStyleFb): DucFeatureControlFrameStyle {
   const layout = style.layout()!;
   return {
-    ...parseElementStylesBase(style.baseStyle()!),
     textStyle: parseTextStyle(style.textStyle()!),
     layout: {
       padding: toPrecisionValue(layout.padding()),

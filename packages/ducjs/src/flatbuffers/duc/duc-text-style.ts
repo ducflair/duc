@@ -7,7 +7,6 @@ import * as flatbuffers from 'flatbuffers';
 import { LineSpacing } from '../duc/line-spacing';
 import { TEXT_ALIGN } from '../duc/text-align';
 import { VERTICAL_ALIGN } from '../duc/vertical-align';
-import { _DucElementStylesBase } from '../duc/duc-element-styles-base';
 
 
 export class DucTextStyle {
@@ -26,11 +25,6 @@ static getRootAsDucTextStyle(bb:flatbuffers.ByteBuffer, obj?:DucTextStyle):DucTe
 static getSizePrefixedRootAsDucTextStyle(bb:flatbuffers.ByteBuffer, obj?:DucTextStyle):DucTextStyle {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new DucTextStyle()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-}
-
-baseStyle(obj?:_DucElementStylesBase):_DucElementStylesBase|null {
-  const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new _DucElementStylesBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 isLtr():boolean {
@@ -104,10 +98,6 @@ isBackwards():boolean {
 
 static startDucTextStyle(builder:flatbuffers.Builder) {
   builder.startObject(14);
-}
-
-static addBaseStyle(builder:flatbuffers.Builder, baseStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(0, baseStyleOffset, 0);
 }
 
 static addIsLtr(builder:flatbuffers.Builder, isLtr:boolean) {

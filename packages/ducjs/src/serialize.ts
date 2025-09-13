@@ -653,12 +653,10 @@ function writeLineSpacing(b: flatbuffers.Builder, ls: DucTextStyle["lineSpacing"
 }
 
 function writeTextStyle(b: flatbuffers.Builder, s: DucTextStyle, usv: boolean): number {
-  const base = writeStylesBase(b, s, usv);
   const lineSpacing = writeLineSpacing(b, s.lineSpacing, usv);
   const fontFamily = str(b, s.fontFamily.toString());
   const bigFont = str(b, s.bigFontFamily);
   Duc.DucTextStyle.startDucTextStyle(b);
-  if (base) Duc.DucTextStyle.addBaseStyle(b, base);
   Duc.DucTextStyle.addIsLtr(b, s.isLtr);
   if (fontFamily) Duc.DucTextStyle.addFontFamily(b, fontFamily);
   if (bigFont) Duc.DucTextStyle.addBigFontFamily(b, bigFont);
@@ -958,10 +956,8 @@ function writePlotLayout(b: flatbuffers.Builder, l: PlotLayout, usv: boolean): n
 
 function writePlot(b: flatbuffers.Builder, e: DucPlotElement, usv: boolean): number {
   const stackBase = writeStackElementBase(b, e as unknown as any, usv);
-  const baseStyle = writeStylesBase(b, e, usv);
   const plotStyle = (() => {
     Duc.DucPlotStyle.startDucPlotStyle(b);
-    if (baseStyle) Duc.DucPlotStyle.addBaseStyle(b, baseStyle);
     return Duc.DucPlotStyle.endDucPlotStyle(b);
   })();
   const layout = writePlotLayout(b, e.layout, usv);
@@ -989,9 +985,7 @@ function writeView(b: flatbuffers.Builder, v: DucView, usv: boolean): number {
 }
 
 function writeViewportStyle(b: flatbuffers.Builder, s: DucViewportStyle, usv: boolean): number {
-  const base = writeStylesBase(b, s, usv);
   Duc.DucViewportStyle.startDucViewportStyle(b);
-  if (base) Duc.DucViewportStyle.addBaseStyle(b, base);
   Duc.DucViewportStyle.addScaleIndicatorVisible(b, s.scaleIndicatorVisible);
   return Duc.DucViewportStyle.endDucViewportStyle(b);
 }
@@ -1016,10 +1010,8 @@ function writeViewport(b: flatbuffers.Builder, e: DucViewportElement, usv: boole
 }
 
 function writeXRayStyle(b: flatbuffers.Builder, s: DucXRayStyle, usv: boolean): number {
-  const base = writeStylesBase(b, s, usv);
   const color = b.createString(s.color);
   Duc.DucXRayStyle.startDucXRayStyle(b);
-  if (base) Duc.DucXRayStyle.addBaseStyle(b, base);
   Duc.DucXRayStyle.addColor(b, color);
   return Duc.DucXRayStyle.endDucXRayStyle(b);
 }
@@ -1072,11 +1064,9 @@ function writeLeaderContent(b: flatbuffers.Builder, c: LeaderContent | null, usv
 }
 
 function writeLeaderStyle(b: flatbuffers.Builder, s: DucLeaderStyle, usv: boolean): number {
-  const base = writeStylesBase(b, s, usv);
   const text = writeTextStyle(b, s.textStyle, usv);
   const heads = s.headsOverride ? Duc.DucLeaderStyle.createHeadsOverrideVector(b, s.headsOverride.map((h) => writeHead(b, h, usv)!)) : undefined;
   Duc.DucLeaderStyle.startDucLeaderStyle(b);
-  if (base) Duc.DucLeaderStyle.addBaseStyle(b, base);
   if (heads) Duc.DucLeaderStyle.addHeadsOverride(b, heads);
   if (s.dogleg !== undefined) Duc.DucLeaderStyle.addDogleg(b, getPrecisionValue(s.dogleg, usv));
   Duc.DucLeaderStyle.addTextStyle(b, text);
@@ -1300,7 +1290,6 @@ function writeFcfDatumDefinition(b: flatbuffers.Builder, d: DucFeatureControlFra
 }
 
 function writeFcfStyle(b: flatbuffers.Builder, s: DucFeatureControlFrameStyle, usv: boolean): number {
-  const base = writeStylesBase(b, s, usv);
   const text = writeTextStyle(b, s.textStyle, usv);
   const layout = (() => {
     Duc.FCFLayoutStyle.startFCFLayoutStyle(b);
@@ -1320,7 +1309,6 @@ function writeFcfStyle(b: flatbuffers.Builder, s: DucFeatureControlFrameStyle, u
     return Duc.FCFDatumStyle.endFCFDatumStyle(b);
   })();
   Duc.DucFeatureControlFrameStyle.startDucFeatureControlFrameStyle(b);
-  if (base) Duc.DucFeatureControlFrameStyle.addBaseStyle(b, base);
   Duc.DucFeatureControlFrameStyle.addTextStyle(b, text);
   Duc.DucFeatureControlFrameStyle.addLayout(b, layout);
   Duc.DucFeatureControlFrameStyle.addSymbols(b, sym);
@@ -1438,7 +1426,9 @@ function writeTableCellStyle(b: flatbuffers.Builder, s: DucTableCellStyle, usv: 
   Duc.Margins.addLeft(b, getPrecisionValue(s.margins.left, usv));
   const margins = Duc.Margins.endMargins(b);
   Duc.DucTableCellStyle.startDucTableCellStyle(b);
-  if (base) Duc.DucTableCellStyle.addBaseStyle(b, base);
+  if (base) {
+    Duc.DucTableCellStyle.addBaseStyle(b, base);
+  }
   Duc.DucTableCellStyle.addTextStyle(b, text);
   Duc.DucTableCellStyle.addMargins(b, margins);
   Duc.DucTableCellStyle.addAlignment(b, s.alignment);
@@ -1446,12 +1436,10 @@ function writeTableCellStyle(b: flatbuffers.Builder, s: DucTableCellStyle, usv: 
 }
 
 function writeTableStyle(b: flatbuffers.Builder, s: DucTableStyle, usv: boolean): number {
-  const base = writeStylesBase(b, s, usv);
   const header = writeTableCellStyle(b, s.headerRowStyle, usv);
   const dataRow = writeTableCellStyle(b, s.dataRowStyle, usv);
   const dataCol = writeTableCellStyle(b, s.dataColumnStyle, usv);
   Duc.DucTableStyle.startDucTableStyle(b);
-  if (base) Duc.DucTableStyle.addBaseStyle(b, base);
   Duc.DucTableStyle.addFlowDirection(b, s.flowDirection);
   Duc.DucTableStyle.addHeaderRowStyle(b, header);
   Duc.DucTableStyle.addDataRowStyle(b, dataRow);
