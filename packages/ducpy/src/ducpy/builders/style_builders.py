@@ -336,7 +336,6 @@ def create_text_style(
     line_spacing = LineSpacing(value=line_spacing_value, type=line_spacing_type)
     
     return DucTextStyle(
-        base_style=base_style,
         is_ltr=is_ltr,
         font_family=font_family,
         big_font_family=font_family,  # Use same font for big text
@@ -517,7 +516,6 @@ def create_table_style(
         flow_direction = TABLE_FLOW_DIRECTION.DOWN
 
     return DucTableStyle(
-        base_style=base_style,
         header_row_style=header_row_style,
         data_row_style=data_row_style,
         data_column_style=data_column_style,

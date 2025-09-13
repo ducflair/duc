@@ -2456,28 +2456,6 @@ const restoreTextStyle = (
 ): DucTextStyle => {
   const defaultLineHeight = 1.15 as number & { _brand: "unitlessLineHeight" };
   return {
-    // Base styles
-    ...(style?.background
-      ? { background: style.background.map(validateBackground) }
-      : { background: [DEFAULT_ELEMENT_PROPS.background] }),
-    ...(style?.stroke
-      ? {
-        stroke: style.stroke.map((s) =>
-          validateStroke(s, NEUTRAL_SCOPE, currentScope)
-        ),
-      }
-      : { stroke: [DEFAULT_ELEMENT_PROPS.stroke] }),
-    roundness: restorePrecisionValue(
-      style?.roundness,
-      NEUTRAL_SCOPE,
-      currentScope,
-      DEFAULT_ELEMENT_PROPS.roundness.value
-    ),
-    opacity: isValidPercentageValue(
-      style?.opacity,
-      DEFAULT_ELEMENT_PROPS.opacity
-    ),
-    blending: isValidBlendingValue(style?.blending),
     // Text-specific styles
     isLtr: isValidBoolean(style?.isLtr, true),
     fontFamily: getFontFamilyByName(style?.fontFamily as unknown as string),

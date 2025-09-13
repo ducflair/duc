@@ -4,9 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { _DucElementStylesBase } from '../duc/duc-element-styles-base';
-
-
 export class DucPlotStyle {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -25,17 +22,8 @@ static getSizePrefixedRootAsDucPlotStyle(bb:flatbuffers.ByteBuffer, obj?:DucPlot
   return (obj || new DucPlotStyle()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-baseStyle(obj?:_DucElementStylesBase):_DucElementStylesBase|null {
-  const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new _DucElementStylesBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
 static startDucPlotStyle(builder:flatbuffers.Builder) {
   builder.startObject(1);
-}
-
-static addBaseStyle(builder:flatbuffers.Builder, baseStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(0, baseStyleOffset, 0);
 }
 
 static endDucPlotStyle(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -43,9 +31,8 @@ static endDucPlotStyle(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createDucPlotStyle(builder:flatbuffers.Builder, baseStyleOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createDucPlotStyle(builder:flatbuffers.Builder):flatbuffers.Offset {
   DucPlotStyle.startDucPlotStyle(builder);
-  DucPlotStyle.addBaseStyle(builder, baseStyleOffset);
   return DucPlotStyle.endDucPlotStyle(builder);
 }
 }
