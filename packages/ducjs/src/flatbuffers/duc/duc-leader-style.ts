@@ -8,7 +8,6 @@ import { BLOCK_ATTACHMENT } from '../duc/block-attachment';
 import { DucHead } from '../duc/duc-head';
 import { DucTextStyle } from '../duc/duc-text-style';
 import { VERTICAL_ALIGN } from '../duc/vertical-align';
-import { _DucElementStylesBase } from '../duc/duc-element-styles-base';
 
 
 export class DucLeaderStyle {
@@ -27,11 +26,6 @@ static getRootAsDucLeaderStyle(bb:flatbuffers.ByteBuffer, obj?:DucLeaderStyle):D
 static getSizePrefixedRootAsDucLeaderStyle(bb:flatbuffers.ByteBuffer, obj?:DucLeaderStyle):DucLeaderStyle {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new DucLeaderStyle()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-}
-
-baseStyle(obj?:_DucElementStylesBase):_DucElementStylesBase|null {
-  const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new _DucElementStylesBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 headsOverride(index: number, obj?:DucHead):DucHead|null {
@@ -66,10 +60,6 @@ blockAttachment():BLOCK_ATTACHMENT|null {
 
 static startDucLeaderStyle(builder:flatbuffers.Builder) {
   builder.startObject(6);
-}
-
-static addBaseStyle(builder:flatbuffers.Builder, baseStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(0, baseStyleOffset, 0);
 }
 
 static addHeadsOverride(builder:flatbuffers.Builder, headsOverrideOffset:flatbuffers.Offset) {

@@ -6,7 +6,6 @@ import * as flatbuffers from 'flatbuffers';
 
 import { DucTableCellStyle } from '../duc/duc-table-cell-style';
 import { TABLE_FLOW_DIRECTION } from '../duc/table-flow-direction';
-import { _DucElementStylesBase } from '../duc/duc-element-styles-base';
 
 
 export class DucTableStyle {
@@ -25,11 +24,6 @@ static getRootAsDucTableStyle(bb:flatbuffers.ByteBuffer, obj?:DucTableStyle):Duc
 static getSizePrefixedRootAsDucTableStyle(bb:flatbuffers.ByteBuffer, obj?:DucTableStyle):DucTableStyle {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new DucTableStyle()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-}
-
-baseStyle(obj?:_DucElementStylesBase):_DucElementStylesBase|null {
-  const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new _DucElementStylesBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 flowDirection():TABLE_FLOW_DIRECTION|null {
@@ -54,10 +48,6 @@ dataColumnStyle(obj?:DucTableCellStyle):DucTableCellStyle|null {
 
 static startDucTableStyle(builder:flatbuffers.Builder) {
   builder.startObject(5);
-}
-
-static addBaseStyle(builder:flatbuffers.Builder, baseStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(0, baseStyleOffset, 0);
 }
 
 static addFlowDirection(builder:flatbuffers.Builder, flowDirection:TABLE_FLOW_DIRECTION) {

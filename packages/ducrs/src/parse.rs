@@ -422,7 +422,6 @@ fn parse_line_spacing(spacing: fb::LineSpacing) -> ParseResult<types::LineSpacin
 
 fn parse_duc_text_style(style: fb::DucTextStyle) -> ParseResult<types::DucTextStyle> {
     Ok(types::DucTextStyle {
-        base_style: parse_duc_element_styles_base(style.base_style().ok_or("Missing DucTextStyle.base_style")?)?,
         is_ltr: style.is_ltr(),
         font_family: style.font_family().map(|s| s.to_string()).ok_or("Missing DucTextStyle.font_family")?,
         big_font_family: style.big_font_family().map(|s| s.to_string()).ok_or("Missing DucTextStyle.big_font_family")?,
@@ -450,7 +449,6 @@ fn parse_duc_table_cell_style(style: fb::DucTableCellStyle) -> ParseResult<types
 
 fn parse_duc_table_style(style: fb::DucTableStyle) -> ParseResult<types::DucTableStyle> {
     Ok(types::DucTableStyle {
-        base_style: parse_duc_element_styles_base(style.base_style().ok_or("Missing DucTableStyle.base_style")?)?,
         flow_direction: style.flow_direction().expect("Missing DucTableStyle.flow_direction"),
         header_row_style: parse_duc_table_cell_style(style.header_row_style().ok_or("Missing DucTableStyle.header_row_style")?)?,
         data_row_style: parse_duc_table_cell_style(style.data_row_style().ok_or("Missing DucTableStyle.data_row_style")?)?,
@@ -464,7 +462,6 @@ fn parse_duc_leader_style(style: fb::DucLeaderStyle) -> ParseResult<types::DucLe
         .map(|v| v.iter().map(parse_duc_head).collect::<ParseResult<Vec<_>>>())
         .transpose()?;
     Ok(types::DucLeaderStyle {
-        base_style: parse_duc_element_styles_base(style.base_style().ok_or("Missing DucLeaderStyle.base_style")?)?,
         heads_override,
         dogleg: Some(style.dogleg()),
         text_style: parse_duc_text_style(style.text_style().ok_or("Missing DucLeaderStyle.text_style")?)?,
@@ -552,7 +549,6 @@ fn parse_fcf_datum_style(style: fb::FCFDatumStyle) -> ParseResult<types::FCFDatu
 
 fn parse_duc_feature_control_frame_style(style: fb::DucFeatureControlFrameStyle) -> ParseResult<types::DucFeatureControlFrameStyle> {
     Ok(types::DucFeatureControlFrameStyle {
-        base_style: parse_duc_element_styles_base(style.base_style().ok_or("Missing DucFeatureControlFrameStyle.base_style")?)?,
         text_style: parse_duc_text_style(style.text_style().ok_or("Missing DucFeatureControlFrameStyle.text_style")?)?,
         layout: parse_fcf_layout_style(style.layout().ok_or("Missing DucFeatureControlFrameStyle.layout")?)?,
         symbols: parse_fcf_symbol_style(style.symbols().ok_or("Missing DucFeatureControlFrameStyle.symbols")?)?,
@@ -598,20 +594,17 @@ fn parse_duc_doc_style(style: fb::DucDocStyle) -> ParseResult<types::DucDocStyle
 
 fn parse_duc_viewport_style(style: fb::DucViewportStyle) -> ParseResult<types::DucViewportStyle> {
     Ok(types::DucViewportStyle {
-        base_style: parse_duc_element_styles_base(style.base_style().ok_or("Missing DucViewportStyle.base_style")?)?,
         scale_indicator_visible: style.scale_indicator_visible(),
     })
 }
 
-fn parse_duc_plot_style(style: fb::DucPlotStyle) -> ParseResult<types::DucPlotStyle> {
+fn parse_duc_plot_style(_style: fb::DucPlotStyle) -> ParseResult<types::DucPlotStyle> {
     Ok(types::DucPlotStyle {
-        base_style: parse_duc_element_styles_base(style.base_style().ok_or("Missing DucPlotStyle.base_style")?)?,
     })
 }
 
 fn parse_duc_xray_style(style: fb::DucXRayStyle) -> ParseResult<types::DucXRayStyle> {
     Ok(types::DucXRayStyle {
-        base_style: parse_duc_element_styles_base(style.base_style().ok_or("Missing DucXRayStyle.base_style")?)?,
         color: style.color().ok_or("Missing DucXRayStyle.color")?.to_string(),
     })
 }
