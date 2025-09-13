@@ -10,7 +10,17 @@ use duc2pdf::{ConversionOptions, ConversionMode, convert_duc_to_pdf_with_options
 mod crop_conversion_tests {
     use super::*;
 
-    const ASSETS_DIR: &str = "tests/assets";
+    fn get_assets_dir() -> String {
+    // Use environment variable if set, otherwise use relative path
+    if let Ok(path) = std::env::var("DUC_ASSETS_DIR") {
+        path
+    } else {
+        // Rust tests run from the crate directory, so we need to adjust the path
+        let current_dir = std::env::current_dir().unwrap();
+        let assets_path = current_dir.join("../../../../assets/testing/duc-files");
+        assets_path.to_string_lossy().to_string()
+    }
+}
     const OUTPUT_DIR: &str = "tests/output/crop";
 
     /// Setup function to ensure output directory exists
@@ -36,7 +46,9 @@ mod crop_conversion_tests {
 
     /// Helper function to load DUC file data
     fn load_duc_file(filename: &str) -> Vec<u8> {
-        let file_path = Path::new(ASSETS_DIR).join(filename);
+        let assets_dir = get_assets_dir();
+        let file_path = Path::new(&assets_dir).join(filename);
+        assert!(file_path.exists(), "Asset file not found: {}", file_path.display());
         fs::read(&file_path)
             .unwrap_or_else(|_| panic!("Failed to read DUC file: {}", file_path.display()))
     }
