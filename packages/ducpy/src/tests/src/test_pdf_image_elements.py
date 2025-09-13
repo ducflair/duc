@@ -12,23 +12,22 @@ import pytest
 import ducpy as duc
 
 
-def test_csp_pdf_image_elements(test_output_dir):
+def test_csp_pdf_image_elements(test_output_dir, load_test_asset):
     """
     CSP test for PDF and Image elements:
     - Create: DucPdfElement with pdf file and DucImageElements with svg, png, and jpeg files
     - Serialize: Save to DUC file
     - Parse: Load the saved file
     """
-    
+
     # === CREATE ===
     print("🔨 CREATE: Creating PDF and Image elements...")
-    
-    # Load assets
-    assets_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets")
-    pdf_bytes = open(os.path.join(assets_dir, "test.pdf"), "rb").read()
-    svg_bytes = open(os.path.join(assets_dir, "hawaii.svg"), "rb").read()
-    png_bytes = open(os.path.join(assets_dir, "dot.png"), "rb").read()
-    jpeg_bytes = open(os.path.join(assets_dir, "test.jpg"), "rb").read()
+
+    # Load assets using the shared fixture
+    pdf_bytes = load_test_asset("test.pdf")
+    svg_bytes = load_test_asset("hawaii.svg")
+    png_bytes = load_test_asset("dot.png")
+    jpeg_bytes = load_test_asset("test.jpg")
     
     # Create external files
     pdf_file = (duc.StateBuilder()

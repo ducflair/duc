@@ -9,14 +9,25 @@ use duc2pdf::{ConversionOptions, ConversionMode, convert_duc_to_pdf_with_options
 mod integration_tests {
     use super::*;
 
-    const ASSETS_DIR: &str = "tests/assets";
+    fn get_assets_dir() -> String {
+    // Use environment variable if set, otherwise use relative path
+    if let Ok(path) = std::env::var("DUC_ASSETS_DIR") {
+        path
+    } else {
+        // Rust tests run from the crate directory, so we need to adjust the path
+        let current_dir = std::env::current_dir().unwrap();
+        let assets_path = current_dir.join("../../../../assets/testing/duc-files");
+        assets_path.to_string_lossy().to_string()
+    }
+}
     const OUTPUT_DIR: &str = "tests/output";
 
     /// Load a DUC file from the assets directory
     fn load_duc_file(filename: &str) -> Vec<u8> {
-        let asset_path = Path::new(ASSETS_DIR).join(filename);
+        let assets_dir = get_assets_dir();
+        let asset_path = Path::new(&assets_dir).join(filename);
         assert!(asset_path.exists(), "Asset file not found: {}", asset_path.display());
-        
+
         fs::read(&asset_path)
             .unwrap_or_else(|_| panic!("Failed to read asset file: {}", asset_path.display()))
     }
