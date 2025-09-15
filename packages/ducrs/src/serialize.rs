@@ -447,10 +447,7 @@ fn serialize_duc_element_base<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     base: &types::DucElementBase,
 ) -> WIPOffset<fb::_DucElementBase<'bldr>> {
-    let styles_offset = base
-        .styles
-        .as_ref()
-        .map(|s| serialize_duc_element_styles_base(builder, s));
+    let styles_offset = Some(serialize_duc_element_styles_base(builder, &base.styles));
     let id_offset = builder.create_string(&base.id);
     let scope_offset = builder.create_string(&base.scope);
     let label_offset = Some(builder.create_string(&base.label));

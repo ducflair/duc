@@ -556,38 +556,25 @@ impl ElementStreamer {
         let mut ops = Vec::new();
 
         // Handle filling and stroking with hatching support
-        if let Some(styles) = &rect.base.styles {
-            let has_background = !styles.background.is_empty();
-            let has_stroke = !styles.stroke.is_empty();
+        let styles = &rect.base.styles;
+        let has_background = !styles.background.is_empty();
+        let has_stroke = !styles.stroke.is_empty();
 
-            // Check for hatching patterns in backgrounds
-            let has_hatching = self.style_resolver.has_hatching(&styles.background);
+        // Check for hatching patterns in backgrounds
+        let has_hatching = self.style_resolver.has_hatching(&styles.background);
 
-            if has_hatching {
-                // Use style resolver for hatching pattern filling
-                self.style_resolver.apply_hatching_pattern_with_dims(
-                    &styles.background,
-                    hatching_manager,
-                    &mut ops,
-                    rect.base.width,
-                    rect.base.height,
-                )?;
+        if has_hatching {
+            // Use style resolver for hatching pattern filling
+            self.style_resolver.apply_hatching_pattern_with_dims(
+                &styles.background,
+                hatching_manager,
+                &mut ops,
+                rect.base.width,
+                rect.base.height,
+            )?;
 
-                // Create rectangle path for stroking if needed
-                if has_stroke {
-                    ops.push(Operation::new(
-                        "re",
-                        vec![
-                            Object::Real(0.0), // x (relative to current transformation)
-                            Object::Real(0.0), // y
-                            Object::Real(rect.base.width as f32),
-                            Object::Real(rect.base.height as f32),
-                        ],
-                    ));
-                    ops.push(Operation::new("S", vec![])); // Stroke after hatching
-                }
-            } else {
-                // Create rectangle path
+            // Create rectangle path for stroking if needed
+            if has_stroke {
                 ops.push(Operation::new(
                     "re",
                     vec![
@@ -597,18 +584,10 @@ impl ElementStreamer {
                         Object::Real(rect.base.height as f32),
                     ],
                 ));
-
-                // Standard fill and stroke
-                if has_background && has_stroke {
-                    ops.push(Operation::new("B", vec![])); // Fill and stroke
-                } else if has_background {
-                    ops.push(Operation::new("f", vec![])); // Fill only
-                } else if has_stroke {
-                    ops.push(Operation::new("S", vec![])); // Stroke only
-                }
+                ops.push(Operation::new("S", vec![])); // Stroke after hatching
             }
         } else {
-            // No styles, just create rectangle path
+            // Create rectangle path
             ops.push(Operation::new(
                 "re",
                 vec![
@@ -618,7 +597,15 @@ impl ElementStreamer {
                     Object::Real(rect.base.height as f32),
                 ],
             ));
-            ops.push(Operation::new("S", vec![])); // Stroke only
+
+            // Standard fill and stroke
+            if has_background && has_stroke {
+                ops.push(Operation::new("B", vec![])); // Fill and stroke
+            } else if has_background {
+                ops.push(Operation::new("f", vec![])); // Fill only
+            } else if has_stroke {
+                ops.push(Operation::new("S", vec![])); // Stroke only
+            }
         }
 
         Ok(ops)
@@ -723,14 +710,13 @@ impl ElementStreamer {
         ops.push(Operation::new("h", vec![]));
 
         // Fill and/or stroke
-        if let Some(styles) = &polygon.base.styles {
-            if !styles.background.is_empty() && !styles.stroke.is_empty() {
-                ops.push(Operation::new("B", vec![])); // Fill and stroke
-            } else if !styles.background.is_empty() {
-                ops.push(Operation::new("f", vec![])); // Fill only
-            } else if !styles.stroke.is_empty() {
-                ops.push(Operation::new("S", vec![])); // Stroke only
-            }
+        let styles = &polygon.base.styles;
+        if !styles.background.is_empty() && !styles.stroke.is_empty() {
+            ops.push(Operation::new("B", vec![])); // Fill and stroke
+        } else if !styles.background.is_empty() {
+            ops.push(Operation::new("f", vec![])); // Fill only
+        } else if !styles.stroke.is_empty() {
+            ops.push(Operation::new("S", vec![])); // Stroke only
         }
 
         Ok(ops)
@@ -809,14 +795,13 @@ impl ElementStreamer {
         ));
 
         // Fill and/or stroke
-        if let Some(styles) = &ellipse.base.styles {
-            if !styles.background.is_empty() && !styles.stroke.is_empty() {
-                ops.push(Operation::new("B", vec![])); // Fill and stroke
-            } else if !styles.background.is_empty() {
-                ops.push(Operation::new("f", vec![])); // Fill only
-            } else if !styles.stroke.is_empty() {
-                ops.push(Operation::new("S", vec![])); // Stroke only
-            }
+        let styles = &ellipse.base.styles;
+        if !styles.background.is_empty() && !styles.stroke.is_empty() {
+            ops.push(Operation::new("B", vec![])); // Fill and stroke
+        } else if !styles.background.is_empty() {
+            ops.push(Operation::new("f", vec![])); // Fill only
+        } else if !styles.stroke.is_empty() {
+            ops.push(Operation::new("S", vec![])); // Stroke only
         }
 
         Ok(ops)
@@ -1264,19 +1249,18 @@ impl ElementStreamer {
         }
 
         // Draw frame border if it has stroke styles
-        if let Some(styles) = &frame.stack_element_base.base.styles {
-            if !styles.stroke.is_empty() {
-                ops.push(Operation::new(
-                    "re",
-                    vec![
-                        Object::Real(0.0),
-                        Object::Real(0.0),
-                        Object::Real(frame.stack_element_base.base.width as f32),
-                        Object::Real(frame.stack_element_base.base.height as f32),
-                    ],
-                ));
-                ops.push(Operation::new("S", vec![]));
-            }
+        let styles = &frame.stack_element_base.base.styles;
+        if !styles.stroke.is_empty() {
+            ops.push(Operation::new(
+                "re",
+                vec![
+                    Object::Real(0.0),
+                    Object::Real(0.0),
+                    Object::Real(frame.stack_element_base.base.width as f32),
+                    Object::Real(frame.stack_element_base.base.height as f32),
+                ],
+            ));
+            ops.push(Operation::new("S", vec![]));
         }
 
         // TODO: Stream child elements within the frame

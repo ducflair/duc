@@ -45,17 +45,10 @@ impl StyleResolver {
     /// 4. Element styles
     pub fn resolve_styles(&self, element: &DucElementEnum, plot_standard_override: Option<&String>) -> ResolvedStyles {
         let base = crate::builder::DucToPdfBuilder::get_element_base(element);
-        let mut resolved = if let Some(styles) = &base.styles {
-            let mut r = ResolvedStyles::from_base_styles(styles);
-            r.apply_base_styles(styles);
+        let mut resolved = {
+            let mut r = ResolvedStyles::from_base_styles(&base.styles);
+            r.apply_base_styles(&base.styles);
             r
-        } else {
-            ResolvedStyles {
-                background: Vec::new(),
-                stroke: Vec::new(),
-                opacity: 1.0,
-                roundness: 0.0,
-            }
         };
         
         // Apply parent overrides if any
