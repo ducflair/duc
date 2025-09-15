@@ -330,12 +330,8 @@ impl DucToPdfBuilder {
                     }
                     "image/png" | "image/jpeg" | "image/jpg" | "image/gif" => {
                         // Handle image files using hipdf::images
-                        let object_id = self.process_image_file(&file_entry)?;
-                        self.context
-                            .resource_cache
-                            .images
-                            .insert(file_data.id.clone(), object_id);
-                        self.element_streamer.add_image(file_entry.key.clone(), object_id);
+                        let _object_id = self.process_image_file(&file_entry)?;
+                        // Note: image ID and element streamer registration happens in process_image_file
                     }
                     "application/pdf" => {
                         // Handle embedded PDF files
@@ -395,36 +391,18 @@ impl DucToPdfBuilder {
     /// Process image file using hipdf::images for quality preservation
     fn process_image_file(&mut self, file_entry: &DucExternalFileEntry) -> ConversionResult<u32> {
         let image_data = &file_entry.value.data;
-        let mime_type = &file_entry.value.mime_type;
+        let _mime_type = &file_entry.value.mime_type;
 
-        // Create a temporary file for hipdf::images to load
-        // In production, we might want to use a more efficient approach
-        let temp_file = format!("/tmp/duc_image_{}.{}", 
-            file_entry.key, 
-            match mime_type.to_lowercase().as_str() {
-                "image/png" => "png",
-                "image/jpeg" | "image/jpg" => "jpg",
-                _ => return Err(ConversionError::ResourceLoadError(format!(
-                    "Unsupported image type: {}", mime_type
-                )))
-            }
-        );
-
-        // Write image data to temporary file
-        std::fs::write(&temp_file, image_data).map_err(|e| {
-            ConversionError::ResourceLoadError(format!("Failed to write temp image file: {}", e))
-        })?;
-
-        // Load image using hipdf::images for perfect quality preservation
-        let image = Image::from_file(&temp_file).map_err(|e| {
+        // Create image directly from bytes (WASM-compatible)
+        let image = Image::from_bytes(
+            image_data.clone(), 
+            Some(file_entry.key.clone())
+        ).map_err(|e| {
             ConversionError::ResourceLoadError(format!("Failed to load image: {}", e))
         })?;
 
-        // Clean up temporary file
-        let _ = std::fs::remove_file(&temp_file);
-
-        // Embed the image with perfect quality preservation
-        let (image_id, _generation) = self.image_manager.embed_image(&mut self.document, image).map_err(|e| {
+        // Embed the image with perfect quality preservation using hipdf::images
+        let image_id = self.image_manager.embed_image(&mut self.document, image).map_err(|e| {
             ConversionError::ResourceLoadError(format!("Failed to embed image: {}", e))
         })?;
 
@@ -432,9 +410,12 @@ impl DucToPdfBuilder {
         self.context
             .resource_cache
             .images
-            .insert(file_entry.key.clone(), image_id);
+            .insert(file_entry.key.clone(), image_id.0);
 
-        Ok(image_id)
+        // Pass the image to the element streamer for streaming operations
+        self.element_streamer.add_image(file_entry.key.clone(), image_id.0);
+
+        Ok(image_id.0)
     }
 
     /// Process PDF file for embedding
@@ -835,55 +816,23 @@ impl DucToPdfBuilder {
         font_dict.set("F1", Object::Reference(font_id));
         resources.set("Font", Object::Dictionary(font_dict));
 
-        // Add XObject resources for images, PDFs, and SVGs
-        let mut xobject_dict = Dictionary::new();
+        // Collect any XObjects (images, embedded PDFs, SVG-converted PDFs) produced during streaming
+        // and add them to the page resources under the exact names used in the content stream.
+        let mut xobject_dict = if let Ok(Object::Dictionary(dict)) = resources.get(b"XObject") {
+            dict.clone()
+        } else {
+            Dictionary::new()
+        };
 
-        // Add cached resources to XObject dictionary (prefer provided names)
-        for (resource_id, xobject_name) in &self.context.resource_cache.xobject_names {
-            if let Some(&obj_id) = self.context.resource_cache.images.get(resource_id) {
-                xobject_dict.set(xobject_name.clone(), Object::Reference((obj_id, 0)));
-            } else if let Some(&obj_id) = self.context.resource_cache.embedded_pdfs.get(resource_id)
-            {
-                xobject_dict.set(xobject_name.clone(), Object::Reference((obj_id, 0)));
-            }
+        for (name, obj_ref) in self.element_streamer.drain_new_xobjects() {
+            xobject_dict.set(name, obj_ref);
         }
 
-        // Also register any resources that have object IDs but no name mapping yet
-        for (resource_id, &obj_id) in &self.context.resource_cache.images {
-            if !self
-                .context
-                .resource_cache
-                .xobject_names
-                .contains_key(resource_id)
-            {
-                let name = format!("Im{}", obj_id);
-                xobject_dict.set(name.clone(), Object::Reference((obj_id, 0)));
-                self.context
-                    .resource_cache
-                    .xobject_names
-                    .insert(resource_id.clone(), name);
-            }
-        }
-        for (resource_id, &obj_id) in &self.context.resource_cache.embedded_pdfs {
-            if !self
-                .context
-                .resource_cache
-                .xobject_names
-                .contains_key(resource_id)
-            {
-                let name = format!("XObj{}", obj_id);
-                xobject_dict.set(name.clone(), Object::Reference((obj_id, 0)));
-                self.context
-                    .resource_cache
-                    .xobject_names
-                    .insert(resource_id.clone(), name);
-            }
-        }
         if !xobject_dict.is_empty() {
             resources.set("XObject", Object::Dictionary(xobject_dict));
         }
 
-        // Add Properties for OCG, mapping property names to OCG references
+        // Add Properties for OCG (layer support)
         if !self.layer_refs.is_empty() {
             let mut properties = Dictionary::new();
             for layer in &self.context.exported_data.layers {
@@ -958,21 +907,6 @@ impl DucToPdfBuilder {
 
         // End graphics state
         content.push_str("Q\n");
-
-        // Register any new XObjects (embedded PDFs) collected during streaming so create_page_resources can include them.
-        for (name, obj_ref) in self.element_streamer.drain_new_xobjects() {
-            if let Object::Reference((id, _gen)) = obj_ref {
-                // Store under embedded_pdfs using name as key if not already stored
-                self.context
-                    .resource_cache
-                    .embedded_pdfs
-                    .insert(name.clone(), id);
-                self.context
-                    .resource_cache
-                    .xobject_names
-                    .insert(name.clone(), name.clone());
-            }
-        }
 
         let content_bytes = content.into_bytes();
         let mut stream_dict = Dictionary::new();

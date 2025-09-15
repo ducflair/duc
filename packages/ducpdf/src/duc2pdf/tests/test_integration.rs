@@ -1,4 +1,3 @@
-use std::fs;
 use std::path::Path;
 use duc2pdf::{ConversionOptions, ConversionMode, convert_duc_to_pdf_with_options};
 
@@ -20,59 +19,13 @@ mod integration_tests {
         assets_path.to_string_lossy().to_string()
     }
 }
-    const OUTPUT_DIR: &str = "tests/output";
-
     /// Load a DUC file from the assets directory
     fn load_duc_file(filename: &str) -> Vec<u8> {
         let assets_dir = get_assets_dir();
         let asset_path = Path::new(&assets_dir).join(filename);
         assert!(asset_path.exists(), "Asset file not found: {}", asset_path.display());
-
-        fs::read(&asset_path)
+        std::fs::read(&asset_path)
             .unwrap_or_else(|_| panic!("Failed to read asset file: {}", asset_path.display()))
-    }
-
-    /// Setup function to ensure output directory exists
-    fn setup_output_dir() {
-        let output_path = Path::new(OUTPUT_DIR);
-        if !output_path.exists() {
-            fs::create_dir_all(output_path).expect("Failed to create output directory");
-        }
-        
-        // Verify the directory is writable
-        let test_file_path = output_path.join("test_write.tmp");
-        fs::write(&test_file_path, b"test")
-            .unwrap_or_else(|_| panic!("Output directory is not writable: {}", output_path.display()));
-        
-        if test_file_path.exists() {
-            if let Err(e) = fs::remove_file(&test_file_path) {
-                eprintln!("Warning: Failed to clean up test file in output directory {}: {}", output_path.display(), e);
-            }
-        }
-        
-        println!("✅ Output directory verified: {}", output_path.display());
-    }
-
-    /// Helper function to save PDF output
-    fn save_pdf_output(filename: &str, pdf_data: &[u8]) {
-        let output_path = Path::new(OUTPUT_DIR).join(filename);
-        fs::write(&output_path, pdf_data)
-            .unwrap_or_else(|_| panic!("Failed to write PDF file: {}", output_path.display()));
-        
-        // Verify the file was actually created and has the expected content
-        assert!(output_path.exists(), "PDF file was not created: {}", output_path.display());
-        
-        let metadata = output_path.metadata()
-            .unwrap_or_else(|_| panic!("Failed to get metadata for PDF file: {}", output_path.display()));
-        let file_size = metadata.len();
-        
-        assert!(file_size > 0, "PDF file is empty: {}", output_path.display());
-        assert_eq!(file_size as usize, pdf_data.len(), "PDF file size mismatch: expected {}, got {}", pdf_data.len(), file_size);
-        
-        // Validate PDF structure - check for required elements
-        validate_pdf_structure(pdf_data, &output_path);
-        
-        println!("✅ Generated PDF: {} ({} bytes)", output_path.display(), file_size);
     }
     
     /// Validate PDF structure to ensure it's a valid, openable PDF
@@ -103,8 +56,6 @@ mod integration_tests {
     /// Test basic CROP mode functionality with empty data
     #[test]
     fn test_crop_mode_basic() {
-        setup_output_dir();
-        
         // Create minimal test data (this will likely fail, but tests the pipeline)
         let test_data = vec![0u8; 64]; // Minimal data to test error handling
         
@@ -123,10 +74,10 @@ mod integration_tests {
 
         match convert_duc_to_pdf_with_options(&test_data, options) {
             Ok(pdf_bytes) => {
-                save_pdf_output("basic_crop_test.pdf", &pdf_bytes);
+                // In-memory validation only; no disk writes
                 assert!(!pdf_bytes.is_empty(), "PDF should not be empty");
-                assert!(pdf_bytes.starts_with(b"%PDF-"), "Should be a valid PDF");
-                println!("✅ Basic CROP mode test passed");
+                validate_pdf_structure(&pdf_bytes, Path::new("memory:basic_crop_test.pdf"));
+                println!("✅ Basic CROP mode test passed (in-memory)");
             }
             Err(e) => {
                 println!("⚠️  Basic CROP mode failed as expected: {}", e);
@@ -139,8 +90,6 @@ mod integration_tests {
     /// Test basic PLOT mode functionality
     #[test]
     fn test_plot_mode_basic() {
-        setup_output_dir();
-        
         // Create minimal test data
         let test_data = vec![0u8; 64];
         
@@ -154,10 +103,10 @@ mod integration_tests {
 
         match convert_duc_to_pdf_with_options(&test_data, options) {
             Ok(pdf_bytes) => {
-                save_pdf_output("basic_plot_test.pdf", &pdf_bytes);
+                // In-memory validation only; no disk writes
                 assert!(!pdf_bytes.is_empty(), "PDF should not be empty");
-                assert!(pdf_bytes.starts_with(b"%PDF-"), "Should be a valid PDF");
-                println!("✅ Basic PLOT mode test passed");
+                validate_pdf_structure(&pdf_bytes, Path::new("memory:basic_plot_test.pdf"));
+                println!("✅ Basic PLOT mode test passed (in-memory)");
             }
             Err(e) => {
                 println!("⚠️  Basic PLOT mode failed as expected: {}", e);
@@ -170,8 +119,6 @@ mod integration_tests {
     /// Test error handling with completely invalid data
     #[test]
     fn test_error_handling() {
-        setup_output_dir();
-        
         let test_cases = vec![
             ("empty_data", vec![]),
             ("random_data", vec![0xFF; 100]),
@@ -188,10 +135,8 @@ mod integration_tests {
             };
 
             match convert_duc_to_pdf_with_options(&test_data, options) {
-                Ok(pdf_bytes) => {
-                    // If it somehow succeeds, save the output for inspection
-                    let filename = format!("error_test_{}.pdf", test_name);
-                    save_pdf_output(&filename, &pdf_bytes);
+                Ok(_pdf_bytes) => {
+                    // If it somehow succeeds, just log; do not write to disk
                     println!("⚠️  Error test {} unexpectedly succeeded", test_name);
                 }
                 Err(e) => {
@@ -205,8 +150,6 @@ mod integration_tests {
     /// Test coordinate validation bounds
     #[test]
     fn test_coordinate_bounds() {
-        setup_output_dir();
-        
         let test_data = vec![0u8; 64];
         
         // Test various coordinate boundary conditions
@@ -239,8 +182,8 @@ mod integration_tests {
             match convert_duc_to_pdf_with_options(&test_data, options) {
                 Ok(pdf_bytes) => {
                     if should_succeed {
-                        let filename = format!("bounds_test_{}.pdf", test_name);
-                        save_pdf_output(&filename, &pdf_bytes);
+                        // In-memory validation only
+                        validate_pdf_structure(&pdf_bytes, Path::new("memory:bounds_test.pdf"));
                         println!("✅ Bounds test {} succeeded as expected", test_name);
                     } else {
                         println!("⚠️  Bounds test {} succeeded unexpectedly", test_name);
@@ -262,8 +205,6 @@ mod integration_tests {
     /// Test metadata handling
     #[test]
     fn test_metadata_handling() {
-        setup_output_dir();
-        
         let test_data = vec![0u8; 64];
         
         let metadata_tests = vec![
@@ -304,9 +245,9 @@ mod integration_tests {
 
             match convert_duc_to_pdf_with_options(&test_data, options) {
                 Ok(pdf_bytes) => {
-                    let filename = format!("metadata_test_{}.pdf", test_name);
-                    save_pdf_output(&filename, &pdf_bytes);
-                    println!("✅ Metadata test {} succeeded", test_name);
+                    // In-memory validation only
+                    validate_pdf_structure(&pdf_bytes, Path::new("memory:metadata_test.pdf"));
+                    println!("✅ Metadata test {} succeeded (in-memory)", test_name);
                 }
                 Err(e) => {
                     println!("⚠️  Metadata test {} failed: {}", test_name, e);
@@ -322,8 +263,6 @@ mod integration_tests {
     /// Test conversion mode switching
     #[test]
     fn test_mode_switching() {
-        setup_output_dir();
-        
         let test_data = vec![0u8; 64];
         
         // Test PLOT mode
@@ -354,8 +293,9 @@ mod integration_tests {
         // Both should behave consistently (both succeed or both fail in similar ways)
         match (plot_result, crop_result) {
             (Ok(plot_pdf), Ok(crop_pdf)) => {
-                save_pdf_output("mode_switch_plot.pdf", &plot_pdf);
-                save_pdf_output("mode_switch_crop.pdf", &crop_pdf);
+                // In-memory validation only
+                validate_pdf_structure(&plot_pdf, Path::new("memory:mode_switch_plot.pdf"));
+                validate_pdf_structure(&crop_pdf, Path::new("memory:mode_switch_crop.pdf"));
                 println!("✅ Both PLOT and CROP modes succeeded");
                 
                 // Both should produce valid PDFs
@@ -372,11 +312,11 @@ mod integration_tests {
                 assert!(crop_err.to_string().len() > 0);
             }
             (Ok(plot_pdf), Err(crop_err)) => {
-                save_pdf_output("mode_switch_plot_only.pdf", &plot_pdf);
+                validate_pdf_structure(&plot_pdf, Path::new("memory:mode_switch_plot_only.pdf"));
                 println!("⚠️  PLOT succeeded but CROP failed: {}", crop_err);
             }
             (Err(plot_err), Ok(crop_pdf)) => {
-                save_pdf_output("mode_switch_crop_only.pdf", &crop_pdf);
+                validate_pdf_structure(&crop_pdf, Path::new("memory:mode_switch_crop_only.pdf"));
                 println!("⚠️  CROP succeeded but PLOT failed: {}", plot_err);
             }
         }
@@ -385,8 +325,6 @@ mod integration_tests {
     /// Test automatic scaling functionality
     #[test]
     fn test_automatic_scaling() {
-        setup_output_dir();
-        
         // Create test data that should trigger coordinate bounds issues
         let test_data = vec![42u8; 64]; // Simple test data
         
@@ -411,10 +349,9 @@ mod integration_tests {
         // Auto-scaling test
         match convert_duc_to_pdf_with_options(&test_data, auto_scale_options) {
             Ok(pdf_bytes) => {
-                save_pdf_output("auto_scale_test.pdf", &pdf_bytes);
-                assert!(!pdf_bytes.is_empty());
-                assert!(pdf_bytes.starts_with(b"%PDF-"));
-                println!("✅ Auto-scaling conversion succeeded");
+                // In-memory validation only
+                validate_pdf_structure(&pdf_bytes, Path::new("memory:auto_scale_test.pdf"));
+                println!("✅ Auto-scaling conversion succeeded (in-memory)");
             }
             Err(e) => {
                 println!("⚠️  Auto-scaling test failed (this may be expected): {}", e);
@@ -425,10 +362,9 @@ mod integration_tests {
         // User-provided scale test
         match convert_duc_to_pdf_with_options(&test_data, user_scale_options) {
             Ok(pdf_bytes) => {
-                save_pdf_output("user_scale_test.pdf", &pdf_bytes);
-                assert!(!pdf_bytes.is_empty());
-                assert!(pdf_bytes.starts_with(b"%PDF-"));
-                println!("✅ User-provided scale conversion succeeded");
+                // In-memory validation only
+                validate_pdf_structure(&pdf_bytes, Path::new("memory:user_scale_test.pdf"));
+                println!("✅ User-provided scale conversion succeeded (in-memory)");
             }
             Err(e) => {
                 println!("⚠️  User-provided scale test failed (this may be expected): {}", e);
@@ -442,8 +378,6 @@ mod integration_tests {
     /// Test scaling with real DUC file that has coordinate bounds issues
     #[test]
     fn test_scaling_with_bounds_issues() {
-        setup_output_dir();
-        
         let duc_data = load_duc_file("mixed_elements.duc");
         
         // Test 1: No scale provided - should auto-scale
@@ -476,7 +410,7 @@ mod integration_tests {
         // Auto-scale test
         match convert_duc_to_pdf_with_options(&duc_data, auto_scale_options) {
             Ok(pdf_bytes) => {
-                save_pdf_output("real_data_auto_scale.pdf", &pdf_bytes);
+                validate_pdf_structure(&pdf_bytes, Path::new("memory:real_data_auto_scale.pdf"));
                 println!("✅ Real data auto-scaling succeeded, PDF size: {} bytes", pdf_bytes.len());
             }
             Err(e) => {
@@ -488,7 +422,7 @@ mod integration_tests {
         // Insufficient scale test (should fail)
         match convert_duc_to_pdf_with_options(&duc_data, insufficient_scale_options) {
             Ok(pdf_bytes) => {
-                save_pdf_output("real_data_insufficient_scale.pdf", &pdf_bytes);
+                validate_pdf_structure(&pdf_bytes, Path::new("memory:real_data_insufficient_scale.pdf"));
                 println!("✅ Insufficient scale unexpectedly succeeded");
             }
             Err(e) => {
@@ -501,7 +435,7 @@ mod integration_tests {
         // Good scale test
         match convert_duc_to_pdf_with_options(&duc_data, good_scale_options) {
             Ok(pdf_bytes) => {
-                save_pdf_output("real_data_good_scale.pdf", &pdf_bytes);
+                validate_pdf_structure(&pdf_bytes, Path::new("memory:real_data_good_scale.pdf"));
                 println!("✅ Good user scale succeeded, PDF size: {} bytes", pdf_bytes.len());
             }
             Err(e) => {

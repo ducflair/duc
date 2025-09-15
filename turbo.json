@@ -17,6 +17,14 @@
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
+    "ducpdf#test": {
+      "cache": false,
+      "dependsOn": ["ducpdf#build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"],
+      "outputs": [
+        "packages/ducpdf/tests/tests_output/**"
+      ]
+    },
     "ducsvg#build": {
       "cache": false,
       "dependsOn": ["ducjs#build"],
