@@ -278,7 +278,16 @@ fn parse_duc_element_base(base: fb::_DucElementBase) -> ParseResult<types::DucEl
     
     Ok(types::DucElementBase {
         id: base.id().to_string(),
-        styles: base.styles().map(|s| parse_duc_element_styles_base(s)).transpose()?,
+        styles: base.styles()
+            .map(|s| parse_duc_element_styles_base(s))
+            .transpose()?
+            .unwrap_or_else(|| types::DucElementStylesBase {
+                roundness: 0.0,
+                blending: None,
+                background: Vec::new(),
+                stroke: Vec::new(),
+                opacity: 1.0,
+            }),
         x: base.x(),
         y: base.y(),
         width: base.width(),

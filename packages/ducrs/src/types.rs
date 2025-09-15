@@ -287,7 +287,7 @@ pub struct BoundElement {
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucElementBase {
     pub id: String,
-    pub styles: Option<DucElementStylesBase>, // Some elements may organize styles differently
+    pub styles: DucElementStylesBase,
     pub x: f64,
     pub y: f64,
     pub width: f64,

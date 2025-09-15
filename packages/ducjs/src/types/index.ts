@@ -1,6 +1,7 @@
 export * from "./elements";
 export * from "./geometryTypes";
 export * from "./utility-types";
+export * from "./typeChecks";
 
 import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "../flatbuffers/duc";
 import { SupportedMeasures } from "../technical/scopes";
@@ -177,6 +178,7 @@ export type ToolType =
   | "eraser"
   | "hand"
   | "frame"
+  | "plot"
   | "embeddable"
   | "ruler"
   | "lasso"
