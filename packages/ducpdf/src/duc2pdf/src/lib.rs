@@ -250,3 +250,37 @@ pub fn convert_duc_to_pdf_crop_with_dimensions(
     };
     convert_duc_to_pdf_with_options(duc_data, options)
 }
+
+/// WASM binding for crop conversion
+#[wasm_bindgen]
+pub fn convert_duc_to_pdf_crop_wasm(
+    duc_data: &[u8],
+    offset_x: f64,
+    offset_y: f64,
+) -> Vec<u8> {
+    match convert_duc_to_pdf_crop(duc_data, offset_x, offset_y) {
+        Ok(pdf_bytes) => pdf_bytes,
+        Err(e) => {
+            println!("Crop conversion error: {}", e);
+            vec![]
+        }
+    }
+}
+
+/// WASM binding for crop conversion with dimensions
+#[wasm_bindgen]
+pub fn convert_duc_to_pdf_crop_with_dimensions_wasm(
+    duc_data: &[u8],
+    offset_x: f64,
+    offset_y: f64,
+    width: f64,
+    height: f64,
+) -> Vec<u8> {
+    match convert_duc_to_pdf_crop_with_dimensions(duc_data, offset_x, offset_y, width, height) {
+        Ok(pdf_bytes) => pdf_bytes,
+        Err(e) => {
+            println!("Crop with dimensions conversion error: {}", e);
+            vec![]
+        }
+    }
+}
