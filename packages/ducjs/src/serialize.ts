@@ -7,8 +7,8 @@
      cast to number at the final write site (e.g. pv.value).
    - Keep args strongly typed. Never use any for function args.
 */
-import * as Duc from "./flatbuffers/duc";
 import * as flatbuffers from "flatbuffers";
+import * as Duc from "./flatbuffers/duc";
 
 import {
   _DucElementStylesBase,
@@ -110,7 +110,7 @@ import {
   VersionGraph
 } from "./types";
 
-import { restore } from "./restore";
+import { restore, RestoreConfig } from "./restore";
 import { encodeFunctionString, EXPORT_DATA_TYPES } from "./utils";
 
 /**
@@ -2423,6 +2423,7 @@ export const serializeDuc = async (
   data: ImportedDataState,
   useScopedValues: boolean = false,
   passThroughElementIds: string[] = [],
+  restoreConfig: RestoreConfig = {},
 ): Promise<Uint8Array> => {
   const builder = new flatbuffers.Builder(1024);
 
@@ -2432,7 +2433,8 @@ export const serializeDuc = async (
       refreshDimensions: false,
       syncInvalidIndices: (elements) => elements as OrderedDucElement[],
       passThroughElementIds
-    }
+    },
+    restoreConfig
   );
 
   const typeOffset = builder.createString(EXPORT_DATA_TYPES.duc);

@@ -5,8 +5,8 @@ pub mod streaming;
 pub mod builder;
 
 // Coordinate system constants
-pub const MAX_COORDINATE_MM: f64 = 30_000.0; // Safe maximum coordinate in mm
-pub const MIN_PRECISION_MM: f64 = 0.001; // 1 micrometer precision
+pub const MAX_COORDINATE_MM: f64 = 4_800.0; // Safe maximum coordinate in mm
+pub const MIN_PRECISION_MM: f64 = 50.0; // Minimum precision in mm
 pub const MM_TO_PDF_UNITS: f64 = 72.0 / 25.4; // Convert mm to PDF units (1 inch = 25.4mm = 72 points)
 
 #[derive(Debug)]

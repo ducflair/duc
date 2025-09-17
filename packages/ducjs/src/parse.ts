@@ -84,7 +84,7 @@ import {
   _DucStackElementBase as _DucStackElementBaseFb
 } from "./flatbuffers/duc";
 import { parseDucFlatBuffers as parseDucFlatBuffersV1 } from './legacy/v1/parse';
-import { RestoredDataState, restore } from "./restore";
+import { RestoreConfig, RestoredDataState, restore } from "./restore";
 import {
   AngularUnitsFormat,
   DimensionUnitsFormat,
@@ -1715,7 +1715,8 @@ export function parseVersionGraphFromBinary(graph: VersionGraphFb | null): Versi
 // #region ROOT PARSER
 export const parseDuc = async (
   blob: Blob | File,
-  fileHandle: FileSystemHandle | null = null
+  fileHandle: FileSystemHandle | null = null,
+  restoreConfig: RestoreConfig = {},
 ): Promise<RestoredDataState> => {
   const arrayBuffer = await blob.arrayBuffer();
   if (!arrayBuffer || (arrayBuffer as ArrayBuffer).byteLength === 0) {
@@ -1861,6 +1862,7 @@ export const parseDuc = async (
       repairBindings: true,
       refreshDimensions: false,
     },
+    restoreConfig,
   );
 
   return {
