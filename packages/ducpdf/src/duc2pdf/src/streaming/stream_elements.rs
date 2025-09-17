@@ -45,6 +45,8 @@ use std::collections::HashMap;
 /// Element streaming context for rendering DUC elements to PDF
 pub struct ElementStreamer {
     style_resolver: StyleResolver,
+    /// Scale factor for coordinate transformation
+    scale: f64,
     /// Cache for external resources (images, SVGs, PDFs, etc.)
     resource_cache: HashMap<String, String>, // resource_id -> XObject name
     /// Cache for image IDs from ImageManager
@@ -57,9 +59,10 @@ pub struct ElementStreamer {
 
 impl ElementStreamer {
     /// Create new element streamer
-    pub fn new(style_resolver: StyleResolver) -> Self {
+    pub fn new(style_resolver: StyleResolver, scale: f64) -> Self {
         Self {
             style_resolver,
+            scale,
             resource_cache: HashMap::new(),
             images: HashMap::new(),
             new_xobjects: Vec::new(),
@@ -181,6 +184,7 @@ impl ElementStreamer {
             let element_ops = self.stream_element_with_resources(
                 &element_wrapper.element,
                 local_state,
+                elements,
                 document,
                 resource_streamer,
                 block_manager,
@@ -216,6 +220,7 @@ impl ElementStreamer {
         &mut self,
         element: &DucElementEnum,
         local_state: Option<&duc::types::DucLocalState>,
+        elements: &[ElementWrapper],
         document: &mut Document,
         resource_streamer: &mut ResourceStreamer,
         block_manager: &mut BlockManager,
@@ -234,7 +239,23 @@ impl ElementStreamer {
             // Apply transformation (position, rotation) with scroll offset
             let base = Self::get_element_base(element);
             if base.x != 0.0 || base.y != 0.0 || base.angle != 0.0 {
-                let transform_ops = self.create_transformation_matrix_with_scroll(base.x, base.y, base.angle, local_state);
+                let transform_ops = if base.frame_id.is_some() {
+                    // This is a child element of a plot/ frame, use relative positioning
+                    // Find the parent plot element to get its position
+                    if let Some(((parent_x, parent_y, parent_width, parent_height), margins)) = self.find_parent_plot_bounds(element, elements) {
+                        self.create_transformation_matrix_for_plot_child(
+                            base.x, base.y, base.angle, local_state,
+                            parent_x, parent_y, parent_width, parent_height,
+                            margins
+                        )
+                    } else {
+                        // Fallback to regular transformation if parent not found
+                        self.create_transformation_matrix_with_scroll(base.x, base.y, base.angle, local_state)
+                    }
+                } else {
+                    // Regular element, use standard transformation
+                    self.create_transformation_matrix_with_scroll(base.x, base.y, base.angle, local_state)
+                };
                 operations.extend(transform_ops);
             }
 
@@ -336,6 +357,43 @@ impl ElementStreamer {
             DucElementEnum::DucDocElement(elem) => &elem.base,
             DucElementEnum::DucParametricElement(elem) => &elem.base,
         }
+    }
+
+    /// Find the parent plot element bounds for a given element
+    fn find_parent_plot_bounds(
+        &self,
+        element: &DucElementEnum,
+        elements: &[ElementWrapper],
+    ) -> Option<((f64, f64, f64, f64), Option<(f64, f64, f64, f64)>)> {
+        let base = Self::get_element_base(element);
+
+        if let Some(frame_id) = &base.frame_id {
+            // Find the parent plot element by ID
+            for element_wrapper in elements {
+                let wrapper_base = Self::get_element_base(&element_wrapper.element);
+
+                if wrapper_base.id == *frame_id {
+                    // Check if this is a plot element
+                    if let DucElementEnum::DucPlotElement(plot) = &element_wrapper.element {
+                        let plot_base = &plot.stack_element_base.base;
+                        let margins = Some((
+                            plot.layout.margins.left,
+                            plot.layout.margins.top,
+                            plot.layout.margins.right,
+                            plot.layout.margins.bottom
+                        ));
+                        return Some(((plot_base.x, plot_base.y, plot_base.width, plot_base.height), margins));
+                    }
+                    // Also check for frame elements (they can act as containers too)
+                    else if let DucElementEnum::DucFrameElement(frame) = &element_wrapper.element {
+                        let frame_base = &frame.stack_element_base.base;
+                        return Some(((frame_base.x, frame_base.y, frame_base.width, frame_base.height), None));
+                    }
+                }
+            }
+        }
+
+        None
     }
 
     /// Check if layer exists in OCG manager
@@ -473,6 +531,38 @@ impl ElementStreamer {
         let adjusted_y = y + scroll_y;
 
         self.create_transformation_matrix(adjusted_x, adjusted_y, angle)
+    }
+
+    /// Create transformation matrix operations for child elements relative to their parent plot
+    fn create_transformation_matrix_for_plot_child(
+        &self,
+        x: f64,
+        y: f64,
+        angle: f64,
+        _local_state: Option<&duc::types::DucLocalState>, // Scroll not used in plot mode
+        parent_plot_x: f64,
+        parent_plot_y: f64,
+        _parent_plot_width: f64,
+        _parent_plot_height: f64,
+        parent_margins: Option<(f64, f64, f64, f64)> // left, top, right, bottom
+    ) -> Vec<Operation> {
+        // In plot mode, don't apply scroll offset - the plot is the entire page
+        // Transform world coordinates to be relative to the parent plot
+        let relative_x = x - parent_plot_x;
+        let relative_y = y - parent_plot_y;
+
+        // Apply the parent plot's margins to further adjust the position
+        // This accounts for the plot's internal layout spacing
+        let (margin_left, margin_top, _margin_right, _margin_bottom) = parent_margins.unwrap_or((25000.0, 25000.0, 25000.0, 25000.0));
+
+        let final_x = relative_x - margin_left;
+        let final_y = relative_y - margin_top;
+
+        // Apply scale to match the content stream transformation
+        let scaled_x = final_x * self.scale;
+        let scaled_y = final_y * self.scale;
+
+        self.create_transformation_matrix(scaled_x, scaled_y, angle)
     }
 
 

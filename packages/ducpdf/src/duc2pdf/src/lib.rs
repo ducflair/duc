@@ -3,6 +3,7 @@ use wasm_bindgen::prelude::*;
 pub mod utils;
 pub mod streaming;
 pub mod builder;
+pub mod scaling;
 
 // Coordinate system constants
 pub const MAX_COORDINATE_MM: f64 = 4_800.0; // Safe maximum coordinate in mm
@@ -189,13 +190,13 @@ pub fn validate_precision(precision: f64) -> ConversionResult<()> {
 
 /// Main conversion function with options
 pub fn convert_duc_to_pdf_with_options(
-    duc_data: &[u8], 
+    duc_data: &[u8],
     options: ConversionOptions
 ) -> ConversionResult<Vec<u8>> {
     // Parse DUC data
     let exported_data = duc::parse::parse(duc_data)
         .map_err(|e| ConversionError::InvalidDucData(e.to_string()))?;
-    
+
     // Use the builder to convert
     builder::DucToPdfBuilder::new(exported_data, options)?.build()
 }

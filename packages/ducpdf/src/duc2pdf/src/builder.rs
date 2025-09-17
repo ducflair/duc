@@ -2,6 +2,7 @@ use crate::streaming::stream_elements::ElementStreamer;
 use crate::streaming::stream_resources::ResourceStreamer;
 use crate::utils::style_resolver::StyleResolver;
 use crate::utils::svg_to_pdf::svg_to_pdf;
+use crate::scaling::DucDataScaler;
 use crate::{
     calculate_required_scale, validate_coordinates_with_scale,
     ConversionError, ConversionMode, ConversionOptions, ConversionResult, MM_TO_PDF_UNITS,
@@ -56,7 +57,7 @@ pub struct DucToPdfBuilder {
 impl DucToPdfBuilder {
     /// Create a new builder instance
     pub fn new(
-        exported_data: ExportedDataState,
+        mut exported_data: ExportedDataState,
         options: ConversionOptions,
     ) -> ConversionResult<Self> {
         let document = Document::with_version("1.7");
@@ -85,6 +86,11 @@ impl DucToPdfBuilder {
             required_scale
         };
 
+        // Apply scaling to all precision-related fields in the DUC data
+        // This ensures that all dimensions are properly scaled for PDF output
+        // before any processing begins
+        DucDataScaler::scale_exported_data(&mut exported_data, scale);
+
         let active_standard = Self::find_active_standard(&exported_data);
 
         let context = ConversionContext {
@@ -105,7 +111,7 @@ impl DucToPdfBuilder {
             hatching_manager: HatchingManager::new(),
             pdf_embedder: PdfEmbedder::new(),
             image_manager: ImageManager::new(),
-            element_streamer: ElementStreamer::new(style_resolver),
+            element_streamer: ElementStreamer::new(style_resolver, scale),
             resource_streamer: ResourceStreamer::new(),
             page_ids: Vec::new(),
             layer_refs: HashMap::new(),
@@ -582,8 +588,8 @@ impl DucToPdfBuilder {
             .filter_map(|elem| {
                 if let DucElementEnum::DucPlotElement(plot) = &elem.element {
                     let base = &plot.stack_element_base.base;
-                    
-                    // Assume all coordinates are already in millimeters
+
+                    // Extract bounds from already-scaled data (no additional scaling needed)
                     Some((base.x, base.y, base.width, base.height))
                 } else {
                     None
@@ -596,7 +602,8 @@ impl DucToPdfBuilder {
             self.create_single_page_with_all_elements()?;
         } else {
             for bounds in plot_bounds {
-                self.create_page_with_bounds(bounds)?;
+                // Use create_page_with_bounds_no_scale to avoid double scaling
+                self.create_page_with_bounds_no_scale(bounds)?;
             }
         }
 
@@ -722,10 +729,47 @@ impl DucToPdfBuilder {
         )
     }
 
-    /// Create a page with specified bounds
+    /// Create a page with specified bounds (applies scaling)
     fn create_page_with_bounds(&mut self, bounds: (f64, f64, f64, f64)) -> ConversionResult<()> {
         let (_x, _y, width, height) =
             self.apply_scale_bounds(bounds.0, bounds.1, bounds.2, bounds.3);
+
+        let page_width = width * MM_TO_PDF_UNITS;
+        let page_height = height * MM_TO_PDF_UNITS;
+
+        // Create content stream
+        let content_stream = self.create_content_stream(bounds)?;
+        let content_id = self.document.add_object(Object::Stream(content_stream));
+
+        // Setup page resources including XObjects
+        let resources = self.create_page_resources()?;
+
+        // Create page dictionary
+        let mut page = Dictionary::new();
+        page.set("Type", Object::Name("Page".as_bytes().to_vec()));
+        page.set(
+            "MediaBox",
+            Object::Array(vec![
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(page_width as f32),
+                Object::Real(page_height as f32),
+            ]),
+        );
+
+        page.set("UserUnit", Object::Real(25.4 / 72.0));
+        page.set("Contents", Object::Reference(content_id));
+        page.set("Resources", Object::Dictionary(resources));
+
+        let page_id = self.document.add_object(Object::Dictionary(page));
+        self.page_ids.push(page_id.0);
+
+        Ok(())
+    }
+
+    /// Create a page with specified bounds (no additional scaling - for plot mode)
+    fn create_page_with_bounds_no_scale(&mut self, bounds: (f64, f64, f64, f64)) -> ConversionResult<()> {
+        let (_x, _y, width, height) = bounds; // Use bounds directly (already scaled)
 
         let page_width = width * MM_TO_PDF_UNITS;
         let page_height = height * MM_TO_PDF_UNITS;
@@ -865,7 +909,17 @@ impl DucToPdfBuilder {
         content.push_str("q\n");
 
         // Apply coordinate transformation for bounds (cm matrix)
-        content.push_str(&format!("1 0 0 1 {} {} cm\n", x, y));
+        // In plot mode, don't apply translation since each plot page is self-contained
+        match self.context.options.mode {
+            ConversionMode::Plot => {
+                // In plot mode, no translation needed - each plot starts at (0,0)
+                content.push_str("1 0 0 1 0 0 cm\n");
+            }
+            ConversionMode::Crop { .. } => {
+                // In crop mode, apply the translation as before
+                content.push_str(&format!("1 0 0 1 {} {} cm\n", x, y));
+            }
+        }
 
         // Handle layered content using hipdf LayerContentBuilder
         // Make resource names available to the element streamer
@@ -929,7 +983,17 @@ impl DucToPdfBuilder {
         content.push_str("q\n");
 
         // Apply coordinate transformation for bounds (cm matrix)
-        content.push_str(&format!("1 0 0 1 {} {} cm\n", x, y));
+        // In plot mode, don't apply translation since each plot page is self-contained
+        match self.context.options.mode {
+            ConversionMode::Plot => {
+                // In plot mode, no translation needed - each plot starts at (0,0)
+                content.push_str("1 0 0 1 0 0 cm\n");
+            }
+            ConversionMode::Crop { .. } => {
+                // In crop mode, apply the translation as before
+                content.push_str(&format!("1 0 0 1 {} {} cm\n", x, y));
+            }
+        }
 
         // Handle layered content using hipdf LayerContentBuilder
         // Make resource names available to the element streamer
@@ -1338,3 +1402,6 @@ impl DucToPdfBuilder {
         Ok(())
     }
 }
+
+// =============== SCALING UTILITY MODULE ===============
+
