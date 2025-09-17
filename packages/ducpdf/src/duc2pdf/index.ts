@@ -103,14 +103,33 @@ export async function convertDucToPdf(
     // Initialize WASM module
     const wasm = await initWasm();
 
-    // Default to original bytes; attempt to normalize via ducjs but fall back on failure
     let ducBytes = new Uint8Array(ducData);
     try {
       const latestBlob = new Blob([ducBytes]);
       const parsed = await parseDuc(latestBlob);
       if (parsed) {
-        const normalized = traverseAndUpdatePrecisionValues(parsed, 'mm');
-        const serialized = await serializeDuc(normalized);
+        // Extract scope from parsed data - use localState.scope first, fallback to globalState.mainScope
+        const scope = parsed?.localState?.scope || parsed?.globalState?.mainScope || 'mm';
+        // ensure that we are only working with mm on the pdf conversion logic
+        const normalized = traverseAndUpdatePrecisionValues(parsed, 'mm', scope);
+        const serialized = await serializeDuc(
+          {
+            ...normalized,
+            localState: {
+              ...normalized.localState,
+              scope: 'mm',
+            },
+            globalState: {
+              ...normalized.globalState,
+              mainScope: 'mm'
+            }
+          },
+          true, // use scoped values
+          undefined,
+          {
+            forceScope: 'mm'
+          }
+        );
         if (serialized && serialized.length > 0) {
           ducBytes = new Uint8Array(serialized);
         } else {

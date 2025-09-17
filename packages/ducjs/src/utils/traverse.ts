@@ -6,7 +6,21 @@ import { isPrecisionValue } from "../types/typeChecks";
  * Recursively traverses and updates all PrecisionValue fields in an object
  * If providedScope is not specified, it will be detected from the data:
  * - Uses 'scope' or 'mainScope' fields at the root level
- * - For elements in lists with their own 'scope' field, uses that element's scope
+ * - For elements in arrays with their own 'scope' field, uses that element's scope
+ *
+ * This function is particularly useful for converting DUC data between different
+ * measurement scopes, such as when elements need to be converted from their
+ * original scope to a target scope (e.g., 'mm' to 'in').
+ *
+ * When processing arrays of elements (e.g., an 'elements' array), each element
+ * will be processed using its individual scope if available, falling back to
+ * the provided or detected scope.
+ *
+ * @param obj - The object to traverse and update
+ * @param targetScope - The target scope to convert PrecisionValues to
+ * @param providedScope - Optional scope to use if none can be detected
+ * @param visited - Internal WeakSet to prevent circular references
+ * @param detectedScope - Internally tracked scope for the current level
  */
 export const traverseAndUpdatePrecisionValues = (
   obj: any,
@@ -51,20 +65,21 @@ export const traverseAndUpdatePrecisionValues = (
     for (let i = 0; i < obj.length; i++) {
       const element = obj[i];
       let elementScope = currentScope;
-      
-      // Check if this array element has its own scope field
+
+      // Check if this array element has its own scope field (for DucElement types)
+      // This handles arrays of elements where each element can have its own scope
       if (element && typeof element === 'object' && !Array.isArray(element)) {
-        if (element.scope && typeof element.scope === 'string') {
+        // Use the 'in' operator to safely check for the scope property
+        if ('scope' in element && element.scope && typeof element.scope === 'string') {
           elementScope = element.scope as Scope;
         }
       }
-      
+
       newArray[i] = traverseAndUpdatePrecisionValues(
         element,
         targetScope,
-        providedScope, // Pass the original providedScope
+        elementScope,
         visited,
-        elementScope // Pass the detected/element scope
       );
     }
     return newArray;
