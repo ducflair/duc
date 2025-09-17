@@ -730,8 +730,8 @@ impl DucToPdfBuilder {
         let page_width = width * MM_TO_PDF_UNITS;
         let page_height = height * MM_TO_PDF_UNITS;
 
-        // Create content stream with plot-relative coordinates
-        let content_stream = self.create_plot_relative_content_stream(bounds)?;
+        // Create content stream
+        let content_stream = self.create_content_stream(bounds)?;
         let content_id = self.document.add_object(Object::Stream(content_stream));
 
         // Setup page resources including XObjects
@@ -915,8 +915,8 @@ impl DucToPdfBuilder {
         Ok(Stream::new(stream_dict, content_bytes))
     }
 
-    /// Create content stream with plot-relative coordinates for PLOT mode
-    fn create_plot_relative_content_stream(
+    /// Create content stream
+    fn create_content_stream(
         &mut self,
         bounds: (f64, f64, f64, f64),
     ) -> ConversionResult<Stream> {
@@ -939,8 +939,8 @@ impl DucToPdfBuilder {
             .set_embedded_pdfs(self.context.resource_cache.embedded_pdfs.clone());
 
         if !self.context.exported_data.layers.is_empty() {
-            // Stream elements by layer using LayerContentBuilder with plot-relative coordinates
-            let all_operations = self.stream_elements_by_layer_with_plot_offset(bounds)?;
+            // Stream elements by layer using LayerContentBuilder
+            let all_operations = self.stream_elements_by_layer(bounds)?;
 
             // Convert operations to content stream text
             for op in all_operations {
@@ -948,11 +948,10 @@ impl DucToPdfBuilder {
                 content.push('\n');
             }
         } else {
-            // No layers, use the plot-relative streaming approach
-            let operations = self.element_streamer.stream_elements_within_bounds_with_plot_offset(
+            // No layers, use the regular streaming approach
+            let operations = self.element_streamer.stream_elements_within_bounds(
                 &self.context.exported_data.elements,
                 bounds,
-                Some(bounds), // Pass the plot bounds for relative positioning
                 self.context.exported_data.duc_local_state.as_ref(),
                 &mut self.resource_streamer,
                 &mut self.block_manager,
@@ -978,62 +977,6 @@ impl DucToPdfBuilder {
         stream_dict.set("Length", Object::Integer(content_bytes.len() as i64));
 
         Ok(Stream::new(stream_dict, content_bytes))
-    }
-
-    /// Stream elements organized by layers with plot-relative coordinates
-    fn stream_elements_by_layer_with_plot_offset(
-        &mut self,
-        bounds: (f64, f64, f64, f64),
-    ) -> ConversionResult<Vec<hipdf::lopdf::content::Operation>> {
-        let mut all_operations = Vec::new();
-
-        // Pre-process PDF elements to ensure they're embedded
-        let pdf_file_ids: Vec<(String, f64, f64)> =
-            self.context
-                .exported_data
-                .elements
-                .iter()
-                .filter_map(|elem| {
-                    if let DucElementEnum::DucPdfElement(pdf) = &elem.element {
-                        if let Some(file_id) = &pdf.file_id {
-                            Some((file_id.clone(), pdf.base.width, pdf.base.height))
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-        for (file_id, width, height) in pdf_file_ids {
-            self.embed_pdf_for_element(&file_id, width, height)?;
-        }
-
-        // Make resource names available to the element streamer
-        self.element_streamer
-            .set_resource_cache(self.context.resource_cache.xobject_names.clone());
-        self.element_streamer
-            .set_embedded_pdfs(self.context.resource_cache.embedded_pdfs.clone());
-
-        // For now, use a simpler approach - stream all elements with plot-relative coordinates
-        // TODO: Implement proper layer handling with plot-relative coordinates
-        let operations = self.element_streamer.stream_elements_within_bounds_with_plot_offset(
-            &self.context.exported_data.elements,
-            bounds,
-            Some(bounds), // Pass the plot bounds for relative positioning
-            self.context.exported_data.duc_local_state.as_ref(),
-            &mut self.resource_streamer,
-            &mut self.block_manager,
-            &mut self.hatching_manager,
-            &mut self.pdf_embedder,
-            &mut self.image_manager,
-            &self.ocg_manager,
-            &mut self.document,
-        )?;
-        all_operations.extend(operations);
-
-        Ok(all_operations)
     }
 
     /// Stream elements organized by layers
