@@ -112,18 +112,11 @@ export async function convertDucToPdf(
         const scope = parsed?.localState?.scope || parsed?.globalState?.mainScope || 'mm';
         // ensure that we are only working with mm on the pdf conversion logic
         const normalized = traverseAndUpdatePrecisionValues(parsed, 'mm', scope);
+        normalized.localState.scope = 'mm';
+        normalized.globalState.mainScope = 'mm';
+        // Re-serialize the DUC with normalized values and scope set to 'mm'
         const serialized = await serializeDuc(
-          {
-            ...normalized,
-            localState: {
-              ...normalized.localState,
-              scope: 'mm',
-            },
-            globalState: {
-              ...normalized.globalState,
-              mainScope: 'mm'
-            }
-          },
+          normalized,
           true, // use scoped values
           undefined,
           {
