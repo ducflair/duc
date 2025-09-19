@@ -66,6 +66,7 @@ impl DucDataScaler {
             }
             types::DucElementEnum::DucPlotElement(plot) => {
                 Self::scale_element_base(&mut plot.stack_element_base.base, scale);
+                Self::scale_plot_element(plot, scale);
             }
             types::DucElementEnum::DucViewportElement(viewport) => {
                 Self::scale_linear_element_base(&mut viewport.linear_base, scale);
@@ -241,6 +242,15 @@ impl DucDataScaler {
 
         // Scale document text style if it exists
         // Note: Doc style structure may need additional scaling based on actual fields
+    }
+
+    /// Scale plot element fields
+    fn scale_plot_element(plot: &mut types::DucPlotElement, scale: f64) {
+        // Scale plot layout margins
+        plot.layout.margins.left *= scale;
+        plot.layout.margins.top *= scale;
+        plot.layout.margins.right *= scale;
+        plot.layout.margins.bottom *= scale;
     }
 
     /// Scale block data

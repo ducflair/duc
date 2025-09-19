@@ -40,13 +40,12 @@ use hipdf::images::ImageManager;
 use hipdf::lopdf::content::Operation;
 use hipdf::lopdf::{Object, Document};
 use hipdf::ocg::OCGManager;
+use web_sys::console;
 use std::collections::HashMap;
 
 /// Element streaming context for rendering DUC elements to PDF
 pub struct ElementStreamer {
     style_resolver: StyleResolver,
-    /// Scale factor for coordinate transformation
-    scale: f64,
     /// Cache for external resources (images, SVGs, PDFs, etc.)
     resource_cache: HashMap<String, String>, // resource_id -> XObject name
     /// Cache for image IDs from ImageManager
@@ -59,10 +58,9 @@ pub struct ElementStreamer {
 
 impl ElementStreamer {
     /// Create new element streamer
-    pub fn new(style_resolver: StyleResolver, scale: f64) -> Self {
+    pub fn new(style_resolver: StyleResolver) -> Self {
         Self {
             style_resolver,
-            scale,
             resource_cache: HashMap::new(),
             images: HashMap::new(),
             new_xobjects: Vec::new(),
@@ -83,6 +81,11 @@ impl ElementStreamer {
     /// Set embedded PDF cache
     pub fn set_embedded_pdfs(&mut self, embedded_pdfs: HashMap<String, u32>) {
         self.embedded_pdfs = embedded_pdfs;
+    }
+
+    /// Set image cache from resource cache
+    pub fn set_images(&mut self, images: HashMap<String, u32>) {
+        self.images = images;
     }
 
     /// Stream elements within specified bounds with local state for scroll positioning
@@ -176,7 +179,7 @@ impl ElementStreamer {
             // Handle clipping if element has a frame_id
             let has_clipping = base.frame_id.is_some();
             if let Some(frame_id) = &base.frame_id {
-                let clipping_ops = self.handle_frame_clipping(frame_id, elements, bounds)?;
+                let clipping_ops = self.handle_frame_clipping(frame_id, elements, bounds, local_state)?;
                 all_operations.extend(clipping_ops);
             }
 
@@ -230,36 +233,36 @@ impl ElementStreamer {
     ) -> ConversionResult<Vec<Operation>> {
         let mut operations = Vec::new();
 
-        // Special handling: PDF elements will be embedded via hipdf::embed_pdf which already manages transformations.
+        // Save graphics state for all elements (including PDFs)
+        operations.push(Operation::new("q", vec![]));
+
+        // Apply transformation (position, rotation) with scroll offset
+        let base = Self::get_element_base(element);
+        if base.x != 0.0 || base.y != 0.0 || base.angle != 0.0 {
+            let transform_ops = if base.frame_id.is_some() {
+                // This is a child element of a plot/ frame, use relative positioning
+                // Find the parent plot element to get its position
+                if let Some(((parent_x, parent_y, parent_width, parent_height), margins)) = self.find_parent_plot_bounds(element, elements) {
+                    self.create_transformation_matrix_for_plot_child(
+                        base.x, base.y, base.angle, local_state,
+                        parent_x, parent_y, parent_width, parent_height,
+                        margins
+                    )
+                } else {
+                    // Fallback to regular transformation if parent not found
+                    self.create_transformation_matrix_with_scroll(base.x, base.y, base.angle, local_state)
+                }
+            } else {
+                // Regular element, use standard transformation
+                self.create_transformation_matrix_with_scroll(base.x, base.y, base.angle, local_state)
+            };
+            operations.extend(transform_ops);
+        }
+
+        // Special handling: PDF elements - do not apply styles to avoid affecting embedded content
         let is_pdf = matches!(element, DucElementEnum::DucPdfElement(_));
         if !is_pdf {
-            // Save graphics state
-            operations.push(Operation::new("q", vec![]));
-
-            // Apply transformation (position, rotation) with scroll offset
-            let base = Self::get_element_base(element);
-            if base.x != 0.0 || base.y != 0.0 || base.angle != 0.0 {
-                let transform_ops = if base.frame_id.is_some() {
-                    // This is a child element of a plot/ frame, use relative positioning
-                    // Find the parent plot element to get its position
-                    if let Some(((parent_x, parent_y, parent_width, parent_height), margins)) = self.find_parent_plot_bounds(element, elements) {
-                        self.create_transformation_matrix_for_plot_child(
-                            base.x, base.y, base.angle, local_state,
-                            parent_x, parent_y, parent_width, parent_height,
-                            margins
-                        )
-                    } else {
-                        // Fallback to regular transformation if parent not found
-                        self.create_transformation_matrix_with_scroll(base.x, base.y, base.angle, local_state)
-                    }
-                } else {
-                    // Regular element, use standard transformation
-                    self.create_transformation_matrix_with_scroll(base.x, base.y, base.angle, local_state)
-                };
-                operations.extend(transform_ops);
-            }
-
-            // Resolve and apply styles (skip for PDFs)
+            // Resolve and apply styles
             let styles = self.style_resolver.resolve_styles(element, None);
             let style_ops = self.apply_styles(&styles)?;
             operations.extend(style_ops);
@@ -321,10 +324,8 @@ impl ElementStreamer {
         };
         operations.extend(element_ops);
 
-        if !is_pdf {
-            // Restore graphics state for non-PDF elements
-            operations.push(Operation::new("Q", vec![]));
-        }
+        // Restore graphics state for all elements
+        operations.push(Operation::new("Q", vec![]));
 
         Ok(operations)
     }
@@ -411,6 +412,7 @@ impl ElementStreamer {
         frame_id: &str,
         elements: &[ElementWrapper],
         _bounds: (f64, f64, f64, f64),
+        _local_state: Option<&duc::types::DucLocalState>,
     ) -> ConversionResult<Vec<Operation>> {
         let mut ops = Vec::new();
 
@@ -419,52 +421,101 @@ impl ElementStreamer {
             let base = Self::get_element_base(&wrapper.element);
             base.id == frame_id
         }) {
-            if let DucElementEnum::DucFrameElement(frame) = &frame_wrapper.element {
-                if frame.stack_element_base.clip {
-                    // Get frame position and dimensions
-                    let frame_base = &frame.stack_element_base.base;
-                    let x = frame_base.x;
-                    let y = frame_base.y;
-                    let width = frame_base.width;
-                    let height = frame_base.height;
+            match &frame_wrapper.element {
+                DucElementEnum::DucFrameElement(frame) => {
+                    if frame.stack_element_base.clip {
+                        let base = &frame.stack_element_base.base;
+                        let x = base.x;
+                        let y = base.y;
+                        let width = base.width;
+                        let height = base.height;
 
-                    // Create clipping path based on frame bounds
-                    ops.push(Operation::new("q", vec![])); // Save graphics state
-
-                    // Apply frame transformation if needed
-                    if x != 0.0 || y != 0.0 {
+                        // Enter a local coordinate system at the frame origin so that
+                        // subsequent child transforms (which are relative to the frame)
+                        // are evaluated in the same space as the clipping path.
+                        ops.push(Operation::new("q", vec![]));
+                        // Translate to frame origin
                         ops.push(Operation::new(
-                            &format!("% Applying frame transformation: x={}, y={}", x, y),
+                            "cm",
+                            vec![
+                                Object::Real(1.0),
+                                Object::Real(0.0),
+                                Object::Real(0.0),
+                                Object::Real(1.0),
+                                Object::Real(x as f32),
+                                Object::Real(y as f32),
+                            ],
+                        ));
+                        // Define clip rect in the frame-local space
+                        ops.push(Operation::new(
+                            "re",
+                            vec![
+                                Object::Real(0.0),
+                                Object::Real(0.0),
+                                Object::Real(width as f32),
+                                Object::Real(height as f32),
+                            ],
+                        ));
+                        ops.push(Operation::new("W", vec![]));
+                        ops.push(Operation::new("n", vec![]));
+                        ops.push(Operation::new(
+                            &format!(
+                                "% Clipping active for frame (local coords): {} (w={}, h={})",
+                                frame_id, width, height
+                            ),
                             vec![],
                         ));
-                        // Note: In a full implementation, we would apply the frame's transformation matrix here
                     }
-
-                    // Set clipping rectangle
-                    ops.push(Operation::new(
-                        "re",
-                        vec![
-                            Object::Real(x as f32),      // Frame X position
-                            Object::Real(y as f32),      // Frame Y position
-                            Object::Real(width as f32),  // Frame width
-                            Object::Real(height as f32), // Frame height
-                        ],
-                    ));
-                    ops.push(Operation::new("W", vec![])); // Set clipping path
-                    ops.push(Operation::new("n", vec![])); // End path without filling/stroking
-
-                    // Add comment indicating clipping is active
-                    ops.push(Operation::new(
-                        &format!(
-                            "% Clipping active for frame: {} (bounds: x={}, y={}, w={}, h={})",
-                            frame_id, x, y, width, height
-                        ),
-                        vec![],
-                    ));
-
-                    // Note: The graphics state will be restored after the element is streamed
-                    // This ensures nested clipping works correctly
                 }
+                DucElementEnum::DucPlotElement(plot) => {
+                    if plot.stack_element_base.clip {
+                        let base = &plot.stack_element_base.base;
+
+                        // Clip to plot content area (apply margins)
+                        let ml = plot.layout.margins.left;
+                        let mt = plot.layout.margins.top;
+                        let mr = plot.layout.margins.right;
+                        let mb = plot.layout.margins.bottom;
+                        let tx = base.x + ml;
+                        let ty = base.y + mt;
+                        let width = base.width - (ml + mr);
+                        let height = base.height - (mt + mb);
+
+                        ops.push(Operation::new("q", vec![]));
+                        // Translate to plot content origin (after margins)
+                        ops.push(Operation::new(
+                            "cm",
+                            vec![
+                                Object::Real(1.0),
+                                Object::Real(0.0),
+                                Object::Real(0.0),
+                                Object::Real(1.0),
+                                Object::Real(tx as f32),
+                                Object::Real(ty as f32),
+                            ],
+                        ));
+                        // Define clip rect in plot-content-local space
+                        ops.push(Operation::new(
+                            "re",
+                            vec![
+                                Object::Real(0.0),
+                                Object::Real(0.0),
+                                Object::Real(width as f32),
+                                Object::Real(height as f32),
+                            ],
+                        ));
+                        ops.push(Operation::new("W", vec![]));
+                        ops.push(Operation::new("n", vec![]));
+                        ops.push(Operation::new(
+                            &format!(
+                                "% Clipping active for plot (local content): {} (w={}, h={})",
+                                frame_id, width, height
+                            ),
+                            vec![],
+                        ));
+                    }
+                }
+                _ => {}
             }
         } else {
             // Frame not found, add warning
@@ -544,27 +595,25 @@ impl ElementStreamer {
         parent_plot_y: f64,
         _parent_plot_width: f64,
         _parent_plot_height: f64,
-        parent_margins: Option<(f64, f64, f64, f64)> // left, top, right, bottom
+        parent_margins: Option<(f64, f64, f64, f64)>, // left, top, right, bottom
     ) -> Vec<Operation> {
-        // In plot mode, don't apply scroll offset - the plot is the entire page
-        // Transform world coordinates to be relative to the parent plot
-        let relative_x = x - parent_plot_x;
-        let relative_y = y - parent_plot_y;
+        // Elements are authored in absolute world coordinates in the DUC data.
+        // For children of frames/plots we transform them to coordinates relative
+        // to the parent container's origin. The clipping code already translates
+        // to the parent origin (and applies margins for plots), so we must account
+        // for margins to position correctly relative to the clipping area.
 
-        // Apply the parent plot's margins to further adjust the position
-        // This accounts for the plot's internal layout spacing
-        let (margin_left, margin_top, _margin_right, _margin_bottom) = parent_margins.unwrap_or((25000.0, 25000.0, 25000.0, 25000.0));
+        let (relative_x, relative_y) = if let Some((ml, mt, _mr, _mb)) = parent_margins {
+            // Clipping translates to (parent_plot_x + ml, parent_plot_y + mt)
+            // So position relative to that
+            (x - (parent_plot_x + ml), y - (parent_plot_y + mt))
+        } else {
+            // No margins, position relative to parent origin
+            (x - parent_plot_x, y - parent_plot_y)
+        };
 
-        let final_x = relative_x - margin_left;
-        let final_y = relative_y - margin_top;
-
-        // Apply scale to match the content stream transformation
-        let scaled_x = final_x * self.scale;
-        let scaled_y = final_y * self.scale;
-
-        self.create_transformation_matrix(scaled_x, scaled_y, angle)
+        self.create_transformation_matrix(relative_x, relative_y, angle)
     }
-
 
 
     /// Apply resolved styles to PDF operations
@@ -1129,17 +1178,20 @@ impl ElementStreamer {
         pdf_embedder: &mut PdfEmbedder,
     ) -> ConversionResult<Vec<Operation>> {
         use hipdf::embed_pdf::{EmbedOptions, PageRange};
+        
         let mut ops = Vec::new();
 
         // Validate file id
-        let file_id = if let Some(fid) = &pdf.file_id { fid.clone() } else {
+        let file_id = if let Some(fid) = &pdf.file_id { 
+            fid.clone() 
+        } else {
             ops.push(Operation::new("% PDF element without file_id", vec![]));
             // Placeholder rectangle
             ops.push(Operation::new(
                 "re",
                 vec![
-                    Object::Real(pdf.base.x as f32),
-                    Object::Real(pdf.base.y as f32),
+                    Object::Real(0.0),
+                    Object::Real(0.0),
                     Object::Real(pdf.base.width as f32),
                     Object::Real(pdf.base.height as f32),
                 ],
@@ -1150,12 +1202,12 @@ impl ElementStreamer {
 
         let embed_id = format!("pdf_{}", file_id);
 
-        // Build embed options mirroring the provided test syntax.
-        // We place at absolute coordinates (element base x, y) and preserve aspect ratio inside bounds width/height.
-        // Use zero-based first page (hipdf appears to use zero-based internally; prior Single(1) caused OOB on single-page PDFs)
+        // Build embed options. The element transform has already moved to (base.x, base.y),
+        // so we place the embedded PDF at local origin (0,0) and size it to the element bounds.
+        // Use zero-based first page.
         let options = EmbedOptions {
             page_range: Some(PageRange::Single(0)),
-            position: (pdf.base.x as f32, pdf.base.y as f32),
+            position: (0.0, 0.0),
             max_width: Some(pdf.base.width as f32),
             max_height: Some(pdf.base.height as f32),
             preserve_aspect_ratio: true,
@@ -1183,8 +1235,8 @@ impl ElementStreamer {
                 ops.push(Operation::new(
                     "re",
                     vec![
-                        Object::Real(pdf.base.x as f32),
-                        Object::Real(pdf.base.y as f32),
+                        Object::Real(0.0),
+                        Object::Real(0.0),
                         Object::Real(pdf.base.width as f32),
                         Object::Real(pdf.base.height as f32),
                     ],
@@ -1215,6 +1267,13 @@ impl ElementStreamer {
         let mut ops = Vec::new();
 
         if let Some(file_id) = &image.file_id {
+            println!(
+                "🔍 stream_image: file_id={}, size=({}x{}), angle={}",
+                file_id,
+                image.base.width,
+                image.base.height,
+                image.base.angle
+            );
             // Check if this file_id corresponds to an SVG that was converted to PDF
             if self.context_has_embedded_pdf(file_id) {
                 // SVG-PDF handling code
@@ -1222,7 +1281,8 @@ impl ElementStreamer {
                 
                 let options = EmbedOptions {
                     page_range: Some(PageRange::Single(0)), // SVG-PDFs have only one page
-                    position: (image.base.x as f32, image.base.y as f32),
+                    // Element transform has already translated to (base.x, base.y)
+                    position: (0.0, 0.0),
                     max_width: Some(image.base.width as f32),
                     max_height: Some(image.base.height as f32),
                     preserve_aspect_ratio: true,
@@ -1242,11 +1302,13 @@ impl ElementStreamer {
                             &format!("% Failed to embed SVG-PDF {}: {}", embed_id, e),
                             vec![],
                         ));
+                        println!("❌ Failed to embed SVG-PDF {}: {}", embed_id, e);
+                        // Placeholder relative to current transform
                         ops.push(Operation::new(
                             "re",
                             vec![
-                                Object::Real(image.base.x as f32),
-                                Object::Real(image.base.y as f32),
+                                Object::Real(0.0),
+                                Object::Real(0.0),
                                 Object::Real(image.base.width as f32),
                                 Object::Real(image.base.height as f32),
                             ],
@@ -1256,53 +1318,110 @@ impl ElementStreamer {
                 }
             } else {
                 // Regular image (PNG/JPEG) - use image_manager
+                
+                // Try to find the image using the file_id
+                let mut found_image_id = None;
+                
+                // First try direct lookup
                 if let Some(&image_id) = self.images.get(file_id) {
+                    found_image_id = Some(image_id);
+                } else {
+                    // If direct lookup fails, try to find a key that contains the file_id
+                    // This handles cases where the file_id format doesn't match exactly
+                    for (cache_key, &cache_image_id) in &self.images {
+                        if cache_key.contains(file_id) || file_id.contains(cache_key) {
+                            found_image_id = Some(cache_image_id);
+                            break;
+                        }
+                    }
+                }
+                
+                if let Some(image_id) = found_image_id {
                     // Use image_manager to get proper XObject name and add to resources
                     let mut temp_resources = hipdf::lopdf::Dictionary::new();
                     let resource_name = image_manager.add_to_resources(&mut temp_resources, (image_id, 0));
-                    
-                    // Add to new_xobjects so it gets included in page resources
-                    if let Ok(xobj_dict) = temp_resources.get(b"XObject")
-                        .and_then(|obj| obj.as_dict()) {
-                        if let Ok(image_obj) = xobj_dict.get(resource_name.as_bytes()) {
-                            self.new_xobjects.push((resource_name.clone(), image_obj.clone()));
-                        }
-                    }
+                    // Register XObject resource directly using a Reference to the image object id
+                    self.new_xobjects.push((resource_name.clone(), Object::Reference((image_id, 0))));
                     
                     // Use image_manager to draw the image with proper transformations
+                    // Draw at (0,0) since element transform already positioned us
                     ops.extend(hipdf::images::ImageManager::draw_image(
                         &resource_name,
-                        image.base.x as f32,
-                        image.base.y as f32,
+                        0.0,
+                        0.0,
                         image.base.width as f32,
                         image.base.height as f32,
                     ));
                 } else {
-                    // Image not found - create placeholder
+                    // Image not found - create red border placeholder with error text
                     ops.push(Operation::new(
                         &format!("% Image not found: {}", file_id),
                         vec![],
                     ));
+                    
+                    // Set red stroke color (RGB: 1.0, 0.0, 0.0)
+                    ops.push(Operation::new("RG", vec![
+                        Object::Real(1.0), // Red
+                        Object::Real(0.0), // Green  
+                        Object::Real(0.0), // Blue
+                    ]));
+                    
+                    // Draw rectangle with red border
                     ops.push(Operation::new(
                         "re",
                         vec![
-                            Object::Real(image.base.x as f32),
-                            Object::Real(image.base.y as f32),
+                            Object::Real(0.0),
+                            Object::Real(0.0),
                             Object::Real(image.base.width as f32),
                             Object::Real(image.base.height as f32),
                         ],
                     ));
                     ops.push(Operation::new("S", vec![]));
+                    
+                    // Add error text inside the rectangle
+                    ops.push(Operation::new("BT", vec![])); // Begin text
+                    ops.push(Operation::new(
+                        "Tf",
+                        vec![
+                            Object::Name("F1".as_bytes().to_vec()), // Font name
+                            Object::Real(12.0), // Font size
+                        ],
+                    ));
+                    
+                    // Position text at top-left with some padding
+                    ops.push(Operation::new(
+                        "Td",
+                        vec![Object::Real(5.0), Object::Real(image.base.height as f32 - 20.0)],
+                    ));
+                    
+                    // Output error message
+                    let error_msg = format!("Image not found: {}", file_id);
+                    ops.push(Operation::new(
+                        "Tj",
+                        vec![Object::string_literal(error_msg.as_str())],
+                    ));
+                    
+                    ops.push(Operation::new("ET", vec![])); // End text
                 }
             }
         } else {
-            // No file_id - create placeholder
+            // No file_id - create red border placeholder with error text
+            println!("⚠️ Image element without file_id, drawing blue border placeholder rectangle");
             ops.push(Operation::new("% Image element without file_id", vec![]));
+            
+            // Set red stroke color (RGB: 1.0, 0.0, 0.0)
+            ops.push(Operation::new("RG", vec![
+                Object::Real(0.0), // Red
+                Object::Real(0.0), // Green  
+                Object::Real(1.0), // Blue
+            ]));
+            
+            // Draw rectangle with red border
             ops.push(Operation::new(
                 "re",
                 vec![
-                    Object::Real(image.base.x as f32),
-                    Object::Real(image.base.y as f32),
+                    Object::Real(0.0),
+                    Object::Real(0.0),
                     Object::Real(image.base.width as f32),
                     Object::Real(image.base.height as f32),
                 ],
@@ -1315,8 +1434,6 @@ impl ElementStreamer {
 
     /// Helper to check if a file_id corresponds to an embedded PDF (including SVG-converted PDFs)
     fn context_has_embedded_pdf(&self, file_id: &str) -> bool {
-        // Check if this file_id is in the embedded_pdfs cache, indicating it's either
-        // a regular PDF or an SVG that was converted to PDF
         self.embedded_pdfs.contains_key(file_id)
     }
 
