@@ -1278,9 +1278,12 @@ export function parseDictionaryFromBinary(data: ExportedDataStateFb): Dictionary
 export function parseExternalFilesFromBinary(entry: DucExternalFileEntry): DucExternalFiles {
   const fileData = entry.value()!;
   const data = fileData.dataArray();
+  const key = entry.key()!;
+  const id = fileData.id()! as ExternalFileId;
+  
   return {
-    [entry.key()!]: {
-      id: fileData.id()! as ExternalFileId,
+    [key]: {
+      id,
       mimeType: fileData.mimeType()!,
       data,
       created: Number(fileData.created()),
