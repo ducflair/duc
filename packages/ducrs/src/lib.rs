@@ -30,8 +30,8 @@ mod tests {
     fn test_parse_with_logging() {
         init_logging();
 
-        // Try to load a test DUC file from ducpdf tests
-        let test_file_path = Path::new("/Users/jorgesoares/Ducflair/duc/packages/ducpdf/src/duc2pdf/tests/assets/plot_elements.duc");
+        // Try to load a test DUC file from assets folder
+        let test_file_path = Path::new("assets/testing/duc-files/plot_elements.duc");
 
         if test_file_path.exists() {
             match fs::read(test_file_path) {

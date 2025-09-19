@@ -8,7 +8,7 @@ pub mod scaling;
 // Coordinate system constants
 pub const MAX_COORDINATE_MM: f64 = 4_800.0; // Safe maximum coordinate in mm
 pub const MIN_PRECISION_MM: f64 = 50.0; // Minimum precision in mm
-pub const MM_TO_PDF_UNITS: f64 = 72.0 / 25.4; // Convert mm to PDF units (1 inch = 25.4mm = 72 points)
+pub const PDF_USER_UNIT: f32 = 72.0 / 25.4; // Convert mm to PDF units (1 inch = 25.4mm = 72 points)
 
 #[derive(Debug)]
 pub enum ConversionMode {

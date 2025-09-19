@@ -181,7 +181,6 @@ export async function convertDucToPdf(
   }
 }
 
-// Helper function for crop conversion
 export async function convertDucToPdfCrop(
   ducData: Uint8Array,
   offsetX: number,

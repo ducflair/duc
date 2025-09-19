@@ -75,32 +75,35 @@ export const traverseAndUpdatePrecisionValues = (
         }
       }
 
-      newArray[i] = traverseAndUpdatePrecisionValues(
-        element,
-        targetScope,
-        elementScope,
-        visited,
-      );
+      // If the element is a special object (not plain Object), return it as-is
+      if (element && typeof element === 'object' && element.constructor !== Object && !Array.isArray(element)) {
+        newArray[i] = element;
+      } else {
+        newArray[i] = traverseAndUpdatePrecisionValues(
+          element,
+          targetScope,
+          elementScope,
+          visited,
+        );
+      }
     }
     return newArray;
   }
   
   // Handle objects - create a new object with updated values
+  if (obj.constructor !== Object) {
+    return obj;
+  }
   const result: any = {};
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
-      // Skip 'scope' and 'mainScope' fields to avoid updating them
-      if (key === 'scope' || key === 'mainScope') {
-        result[key] = obj[key];
-      } else {
-        result[key] = traverseAndUpdatePrecisionValues(
-          obj[key],
-          targetScope,
-          providedScope, // Pass the original providedScope
-          visited,
-          currentScope // Pass the current detected scope
-        );
-      }
+      result[key] = traverseAndUpdatePrecisionValues(
+        obj[key],
+        targetScope,
+        providedScope,
+        visited,
+        currentScope
+      );
     }
   }
   
