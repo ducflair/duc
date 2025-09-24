@@ -483,11 +483,14 @@ export const restoreLocalState = (
 ): DucLocalState => {
   const defaults = getDefaultLocalState();
   const zoom = getZoom(importedState?.zoom?.value ?? defaults.zoom.value, restoredGlobalState.mainScope, restoredGlobalState.scopeExponentThreshold);
-  const scope = isValidScopeValue(forceScope) ?? isValidPrecisionScopeValue(
-    zoom.value,
-    restoredGlobalState.mainScope,
-    restoredGlobalState.scopeExponentThreshold
-  );
+  const scope = forceScope
+    ? isValidScopeValue(forceScope)
+    : isValidPrecisionScopeValue(
+      zoom.value,
+      restoredGlobalState.mainScope,
+      restoredGlobalState.scopeExponentThreshold
+    );
+
   return {
     ...defaults,
     ...importedState,
