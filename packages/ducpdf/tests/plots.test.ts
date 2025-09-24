@@ -20,6 +20,7 @@ describe('PLOTS mode conversions', () => {
     'override_capabilities.duc',
     'pdf_image_elements.duc',
     'plot_elements.duc',
+    'universal.duc',
   ];
 
   for (const file of assets) {
