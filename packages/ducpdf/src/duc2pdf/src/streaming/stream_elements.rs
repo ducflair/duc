@@ -25,6 +25,7 @@
 
 use crate::streaming::stream_resources::ResourceStreamer;
 use crate::utils::style_resolver::{ResolvedStyles, StyleResolver};
+use crate::scaling::DucDataScaler;
 use crate::{ConversionError, ConversionResult};
 use bigcolor::BigColor;
 use duc::types::{
@@ -40,12 +41,13 @@ use hipdf::images::ImageManager;
 use hipdf::lopdf::content::Operation;
 use hipdf::lopdf::{Object, Document};
 use hipdf::ocg::OCGManager;
-use web_sys::console;
 use std::collections::HashMap;
 
 /// Element streaming context for rendering DUC elements to PDF
 pub struct ElementStreamer {
     style_resolver: StyleResolver,
+    /// Page height for coordinate transformation from top-left to bottom-left origin
+    page_height: f64,
     /// Cache for external resources (images, SVGs, PDFs, etc.)
     resource_cache: HashMap<String, String>, // resource_id -> XObject name
     /// Cache for image IDs from ImageManager
@@ -58,9 +60,10 @@ pub struct ElementStreamer {
 
 impl ElementStreamer {
     /// Create new element streamer
-    pub fn new(style_resolver: StyleResolver) -> Self {
+    pub fn new(style_resolver: StyleResolver, page_height: f64) -> Self {
         Self {
             style_resolver,
+            page_height,
             resource_cache: HashMap::new(),
             images: HashMap::new(),
             new_xobjects: Vec::new(),
@@ -86,6 +89,11 @@ impl ElementStreamer {
     /// Set image cache from resource cache
     pub fn set_images(&mut self, images: HashMap<String, u32>) {
         self.images = images;
+    }
+
+    /// Set page height for coordinate transformation
+    pub fn set_page_height(&mut self, page_height: f64) {
+        self.page_height = page_height;
     }
 
     /// Stream elements within specified bounds with local state for scroll positioning
@@ -581,7 +589,10 @@ impl ElementStreamer {
         let adjusted_x = x + scroll_x;
         let adjusted_y = y + scroll_y;
 
-        self.create_transformation_matrix(adjusted_x, adjusted_y, angle)
+        // Transform y-coordinate from top-left (duc) to bottom-left (PDF) origin
+        let transformed_y = DucDataScaler::transform_point_y_to_pdf_system(adjusted_y, self.page_height);
+
+        self.create_transformation_matrix(adjusted_x, transformed_y, angle)
     }
 
     /// Create transformation matrix operations for child elements relative to their parent plot
@@ -612,7 +623,10 @@ impl ElementStreamer {
             (x - parent_plot_x, y - parent_plot_y)
         };
 
-        self.create_transformation_matrix(relative_x, relative_y, angle)
+        // Transform y-coordinate from top-left (duc) to bottom-left (PDF) origin
+        let transformed_y = DucDataScaler::transform_point_y_to_pdf_system(relative_y, self.page_height);
+
+        self.create_transformation_matrix(relative_x, transformed_y, angle)
     }
 
 

@@ -260,4 +260,15 @@ impl DucDataScaler {
             Self::scale_element(&mut element.element, scale);
         }
     }
+
+    /// Transform y-coordinate from top-left origin (duc) to bottom-left origin (PDF)
+    /// This is used during element placement, not modifying the original data
+    pub fn transform_y_coordinate_to_pdf_system(y: f64, height: f64, page_height: f64) -> f64 {
+        page_height - (y + height)
+    }
+
+    /// Transform a single point y-coordinate from top-left to bottom-left origin
+    pub fn transform_point_y_to_pdf_system(y: f64, page_height: f64) -> f64 {
+        page_height - y
+    }
 }
