@@ -49,8 +49,8 @@ export function reviveEncodedFunction(val: unknown): unknown {
   if (!code) return val;
   try {
     // Wrap in parentheses to handle arrow functions and function declarations uniformly
-    // eslint-disable-next-line no-eval
-    const revived = eval(`(${code})`);
+    // eslint-disable-next-line no-new-func
+    const revived = new Function(`return (${code})`)();
     if (typeof revived === "function") return revived;
     return val;
   } catch {
