@@ -643,8 +643,11 @@ export const getFontFamilyString = ({
 }: {
   fontFamily: FontFamilyValues;
 }) => {
+  // Handle both number and string fontFamily values
+  const fontFamilyNum = typeof fontFamily === 'string' ? parseInt(fontFamily, 10) : fontFamily;
+  
   for (const [fontFamilyString, id] of Object.entries(FONT_FAMILY)) {
-    if (id === fontFamily) {
+    if (id === fontFamilyNum) {
       return `${fontFamilyString}, ${WINDOWS_EMOJI_FALLBACK_FONT}`;
     }
   }
