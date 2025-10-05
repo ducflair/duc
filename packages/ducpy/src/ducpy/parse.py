@@ -2267,6 +2267,9 @@ def parse_duc(blob: IO[bytes]) -> DS_ExportedDataState:
     # Thumbnail bytes
     thumbnail = _read_bytes_from_numpy(data, "ThumbnailLength", "ThumbnailAsNumpy", "Thumbnail")
 
+    # Id field
+    file_id = _s(data.Id()) if data.Id() else None
+
     return DS_ExportedDataState(
         type=_s_req(data.Type()),
         source=_s_req(data.Source()),
@@ -2283,4 +2286,5 @@ def parse_duc(blob: IO[bytes]) -> DS_ExportedDataState:
         duc_global_state=duc_global_state,
         files=files,
         version_graph=version_graph,
+        id=file_id,
     )
