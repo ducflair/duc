@@ -170,7 +170,7 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         from ducpy.builders.style_builders import create_simple_styles
         viewport_style = element_params.get('style')
         if viewport_style is None:
-            viewport_style = DucViewportStyle(base_style=create_simple_styles(), scale_indicator_visible=True)
+            viewport_style = DucViewportStyle(scale_indicator_visible=True)
         specific_element = element_class(
             linear_base=linear_base,
             stack_base=stack_base,
@@ -206,7 +206,7 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         from ducpy.builders.style_builders import create_simple_styles
         plot_style = element_params.get('style')
         if plot_style is None:
-            plot_style = DucPlotStyle(base_style=create_simple_styles())
+            plot_style = DucPlotStyle()
         # Create plot layout
         margins = element_params.get('margins')
         if margins is None:
@@ -234,7 +234,6 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         if leader_style is None:
             text_style = create_text_style()
             leader_style = DucLeaderStyle(
-                base_style=create_simple_styles(),
                 text_style=text_style,
                 text_attachment=VERTICAL_ALIGN.TOP,
                 block_attachment=BLOCK_ATTACHMENT.CENTER_EXTENTS
@@ -362,7 +361,6 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         if fcf_style is None:
             text_style = create_text_style()
             fcf_style = DucFeatureControlFrameStyle(
-                base_style=create_simple_styles(),
                 text_style=text_style,
                 layout=FCFLayoutStyle(padding=2.0, segment_spacing=1.0, row_spacing=1.0),
                 symbols=FCFSymbolStyle(scale=1.0),
@@ -380,7 +378,6 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         # Create xray style
         from ducpy.builders.style_builders import create_simple_styles
         xray_style = DucXRayStyle(
-            base_style=create_simple_styles(),
             color=element_params.get('color', "#FF0000")
         )
         # Create origin and direction points
@@ -1258,21 +1255,17 @@ class TableElementBuilder(ElementSpecificBuilder):
         if style is None:
             from ducpy.builders.style_builders import create_simple_styles, create_text_style
             style = DucTableStyle(
-                base_style=create_simple_styles(),
-                header_row_style=DucTableCellStyle(
-                    base_style=create_simple_styles(),
+                    header_row_style=DucTableCellStyle(
                     text_style=create_text_style(),
                     margins=Margins(top=0.0, right=0.0, bottom=0.0, left=0.0),
                     alignment=TABLE_CELL_ALIGNMENT.MIDDLE_LEFT
                 ),
                 data_row_style=DucTableCellStyle(
-                    base_style=create_simple_styles(),
                     text_style=create_text_style(),
                     margins=Margins(top=0.0, right=0.0, bottom=0.0, left=0.0),
                     alignment=TABLE_CELL_ALIGNMENT.MIDDLE_LEFT
                 ),
                 data_column_style=DucTableCellStyle(
-                    base_style=create_simple_styles(),
                     text_style=create_text_style(),
                     margins=Margins(top=0.0, right=0.0, bottom=0.0, left=0.0),
                     alignment=TABLE_CELL_ALIGNMENT.MIDDLE_LEFT
@@ -1961,7 +1954,6 @@ class LeaderElementBuilder(ElementSpecificBuilder):
             from ducpy.builders.style_builders import create_simple_styles, create_text_style
             text_style = create_text_style()
             leader_style = DucLeaderStyle(
-                base_style=create_simple_styles(),
                 text_style=text_style,
                 text_attachment=VERTICAL_ALIGN.TOP,
                 block_attachment=BLOCK_ATTACHMENT.CENTER_EXTENTS,
@@ -2003,7 +1995,6 @@ class FeatureControlFrameElementBuilder(ElementSpecificBuilder):
         base_params = self.base.__dict__.copy()
         element_params = {
             "style": self.extra.get('style', DucFeatureControlFrameStyle(
-                base_style=create_simple_styles(),
                 text_style=create_text_style(),
                 layout=FCFLayoutStyle(padding=2.0, segment_spacing=1.0, row_spacing=1.0),
                 symbols=FCFSymbolStyle(scale=1.0),

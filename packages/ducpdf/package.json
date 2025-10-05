@@ -6,9 +6,15 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "bun run build:rs && bun run build:ts",
-    "build:rs": "cd rust && wasm-pack build --target web --out-dir ../pkg",
-    "build:ts": "tsc"
+    "build": "bun run build:wasm",
+    "build:rs": "cd src/duc2pdf && cargo build",
+    "build:wasm": "cd src/duc2pdf && wasm-pack build --target web --out-dir ../../../pkg --dev",
+    "build:wasm:prod": "cd src/duc2pdf && wasm-pack build --target web --out-dir ../../../pkg --release",
+    "clean": "rm -rf ../../../pkg && cd src/duc2pdf && cargo clean",
+    "test": "bun run build:wasm && bun test",
+    "test:rs": "cd src/duc2pdf && cargo test",
+    "test:duc2pdf": "cd src/duc2pdf && cargo test",
+    "prebuild": "bun run clean"
   },
   "dependencies": {
     "ducjs": "workspace:^",
@@ -19,4 +25,4 @@
     "wasm-pack": "^0.12.1",
     "@types/node": "^20.12.2"
   }
-} 
+}

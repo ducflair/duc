@@ -8,7 +8,6 @@ import { DucTextStyle } from '../duc/duc-text-style';
 import { FCFDatumStyle } from '../duc/fcfdatum-style';
 import { FCFLayoutStyle } from '../duc/fcflayout-style';
 import { FCFSymbolStyle } from '../duc/fcfsymbol-style';
-import { _DucElementStylesBase } from '../duc/duc-element-styles-base';
 
 
 export class DucFeatureControlFrameStyle {
@@ -27,11 +26,6 @@ static getRootAsDucFeatureControlFrameStyle(bb:flatbuffers.ByteBuffer, obj?:DucF
 static getSizePrefixedRootAsDucFeatureControlFrameStyle(bb:flatbuffers.ByteBuffer, obj?:DucFeatureControlFrameStyle):DucFeatureControlFrameStyle {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
   return (obj || new DucFeatureControlFrameStyle()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-}
-
-baseStyle(obj?:_DucElementStylesBase):_DucElementStylesBase|null {
-  const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new _DucElementStylesBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 textStyle(obj?:DucTextStyle):DucTextStyle|null {
@@ -56,10 +50,6 @@ datumStyle(obj?:FCFDatumStyle):FCFDatumStyle|null {
 
 static startDucFeatureControlFrameStyle(builder:flatbuffers.Builder) {
   builder.startObject(5);
-}
-
-static addBaseStyle(builder:flatbuffers.Builder, baseStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(0, baseStyleOffset, 0);
 }
 
 static addTextStyle(builder:flatbuffers.Builder, textStyleOffset:flatbuffers.Offset) {
