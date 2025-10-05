@@ -4,9 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { _DucElementStylesBase } from '../duc/duc-element-styles-base';
-
-
 export class DucViewportStyle {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -25,11 +22,6 @@ static getSizePrefixedRootAsDucViewportStyle(bb:flatbuffers.ByteBuffer, obj?:Duc
   return (obj || new DucViewportStyle()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-baseStyle(obj?:_DucElementStylesBase):_DucElementStylesBase|null {
-  const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new _DucElementStylesBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
 scaleIndicatorVisible():boolean {
   const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
@@ -37,10 +29,6 @@ scaleIndicatorVisible():boolean {
 
 static startDucViewportStyle(builder:flatbuffers.Builder) {
   builder.startObject(2);
-}
-
-static addBaseStyle(builder:flatbuffers.Builder, baseStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(0, baseStyleOffset, 0);
 }
 
 static addScaleIndicatorVisible(builder:flatbuffers.Builder, scaleIndicatorVisible:boolean) {
@@ -52,9 +40,8 @@ static endDucViewportStyle(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createDucViewportStyle(builder:flatbuffers.Builder, baseStyleOffset:flatbuffers.Offset, scaleIndicatorVisible:boolean):flatbuffers.Offset {
+static createDucViewportStyle(builder:flatbuffers.Builder, scaleIndicatorVisible:boolean):flatbuffers.Offset {
   DucViewportStyle.startDucViewportStyle(builder);
-  DucViewportStyle.addBaseStyle(builder, baseStyleOffset);
   DucViewportStyle.addScaleIndicatorVisible(builder, scaleIndicatorVisible);
   return DucViewportStyle.endDucViewportStyle(builder);
 }

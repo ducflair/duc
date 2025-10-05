@@ -29,17 +29,6 @@ class DucViewportStyle(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # DucViewportStyle
-    def BaseStyle(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc._DucElementStylesBase import _DucElementStylesBase
-            obj = _DucElementStylesBase()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # DucViewportStyle
     def ScaleIndicatorVisible(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
@@ -51,12 +40,6 @@ def DucViewportStyleStart(builder):
 
 def Start(builder):
     DucViewportStyleStart(builder)
-
-def DucViewportStyleAddBaseStyle(builder, baseStyle):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(baseStyle), 0)
-
-def AddBaseStyle(builder, baseStyle):
-    DucViewportStyleAddBaseStyle(builder, baseStyle)
 
 def DucViewportStyleAddScaleIndicatorVisible(builder, scaleIndicatorVisible):
     builder.PrependBoolSlot(1, scaleIndicatorVisible, 0)

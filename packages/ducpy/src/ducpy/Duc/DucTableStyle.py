@@ -29,17 +29,6 @@ class DucTableStyle(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # DucTableStyle
-    def BaseStyle(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc._DucElementStylesBase import _DucElementStylesBase
-            obj = _DucElementStylesBase()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # DucTableStyle
     def FlowDirection(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
@@ -84,12 +73,6 @@ def DucTableStyleStart(builder):
 
 def Start(builder):
     DucTableStyleStart(builder)
-
-def DucTableStyleAddBaseStyle(builder, baseStyle):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(baseStyle), 0)
-
-def AddBaseStyle(builder, baseStyle):
-    DucTableStyleAddBaseStyle(builder, baseStyle)
 
 def DucTableStyleAddFlowDirection(builder, flowDirection):
     builder.PrependUint8Slot(1, flowDirection, None)

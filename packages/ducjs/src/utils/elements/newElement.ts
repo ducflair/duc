@@ -1,3 +1,4 @@
+import { getUpdatedTimestamp, getZoom } from "..";
 import {
   BLOCK_ATTACHMENT,
   COLUMN_TYPE,
@@ -6,15 +7,15 @@ import {
   LINE_SPACING_TYPE,
   PARAMETRIC_SOURCE_TYPE,
   STACKED_TEXT_ALIGN,
-  TEXT_ALIGN,
   TEXT_FLOW_DIRECTION,
   VERTICAL_ALIGN,
-  VIEWPORT_SHADE_PLOT,
+  VIEWPORT_SHADE_PLOT
 } from "../../flatbuffers/duc";
+import { getPrecisionValueFromRaw } from "../../technical/scopes";
 import { RawValue, Scope } from "../../types";
 import {
-  _DucElementBase,
   DucArrowElement,
+  DucBlockInstanceElement,
   DucDimensionElement,
   DucDocElement,
   DucElement,
@@ -33,40 +34,34 @@ import {
   DucPlotElement,
   DucPolygonElement,
   DucTableElement,
-  DucTextContainer,
   DucTextElement,
   DucViewportElement,
   DucXRayElement,
-  DucBlockInstanceElement,
   ElementConstructorOpts,
   ElementUpdate,
-  LineHead,
   NonDeleted,
-  ViewportScale,
+  ViewportScale
 } from "../../types/elements";
+import { Radian, ScaleFactor } from "../../types/geometryTypes";
 import { Merge, Mutable } from "../../types/utility-types";
-import { getUpdatedTimestamp, getZoom } from "..";
 import {
   DEFAULT_ELEMENT_PROPS,
   DEFAULT_ELLIPSE_ELEMENT,
   DEFAULT_FONT_FAMILY,
   DEFAULT_FONT_SIZE,
   DEFAULT_FREEDRAW_ELEMENT,
-  DEFAULT_LINEAR_ELEMENT_STROKE,
   DEFAULT_POLYGON_SIDES,
   DEFAULT_TEXT_ALIGN,
-  DEFAULT_VERTICAL_ALIGN,
+  DEFAULT_VERTICAL_ALIGN
 } from "../constants";
+import { randomId, randomInteger } from "../math/random";
+import { normalizeText } from "../normalize";
 import { getDefaultStackProperties, getDefaultTableData, getDefaultTextStyle } from "./";
 import {
   getFontString,
   getTextElementPositionOffsets,
   measureText,
 } from "./textElement";
-import { randomId, randomInteger } from "../math/random";
-import { normalizeText } from "../normalize";
-import { getPrecisionValueFromRaw } from "../../technical/scopes";
-import { Radian, ScaleFactor } from "../../types/geometryTypes";
 
 export const newElementWith = <TElement extends DucElement>(
   element: TElement,
@@ -199,67 +194,67 @@ export const newFrameElement = (
   currentScope: Scope,
   opts: ElementConstructorOpts,
 ): NonDeleted<DucFrameElement> => ({
-  ..._newElementBase<DucFrameElement>("frame", currentScope, opts),
   ...getDefaultStackProperties(),
-  type: "frame",
   clip: false,
   labelVisible: true,
   standardOverride: null,
+  ..._newElementBase<DucFrameElement>("frame", currentScope, opts),
+  type: "frame",
 });
 
 export const newPlotElement = (
   currentScope: Scope,
   opts: ElementConstructorOpts,
 ): NonDeleted<DucPlotElement> => ({
-    ..._newElementBase<DucPlotElement>("plot", currentScope, opts),
-    ...getDefaultStackProperties(),
-    type: "plot",
-    clip: false,
-    labelVisible: true,
-    standardOverride: null,
-    layout: {
-        margins: {
-            top: getPrecisionValueFromRaw(25 as RawValue, currentScope, currentScope),
-            right: getPrecisionValueFromRaw(25 as RawValue, currentScope, currentScope),
-            bottom: getPrecisionValueFromRaw(25 as RawValue, currentScope, currentScope),
-            left: getPrecisionValueFromRaw(25 as RawValue, currentScope, currentScope),
-        }
-    },
+  ...getDefaultStackProperties(),
+  clip: false,
+  labelVisible: true,
+  standardOverride: null,
+  layout: {
+    margins: {
+      top: getPrecisionValueFromRaw(25 as RawValue, currentScope, currentScope),
+      right: getPrecisionValueFromRaw(25 as RawValue, currentScope, currentScope),
+      bottom: getPrecisionValueFromRaw(25 as RawValue, currentScope, currentScope),
+      left: getPrecisionValueFromRaw(25 as RawValue, currentScope, currentScope),
+    }
+  },
+  ..._newElementBase<DucPlotElement>("plot", currentScope, opts),
+  type: "plot",
 });
 
 export const newViewportElement = (
-    currentScope: Scope,
-    opts: {
-      zoom?: number;
-      scopeExponentThreshold?: number;
-      mainScope?: Scope;
-    } & ElementConstructorOpts,
+  currentScope: Scope,
+  opts: {
+    zoom?: number;
+    scopeExponentThreshold?: number;
+    mainScope?: Scope;
+  } & ElementConstructorOpts,
 ): NonDeleted<DucViewportElement> => ({
-    ..._newElementBase<DucViewportElement>("viewport", currentScope, opts),
-    ...getDefaultStackProperties(),
-    type: "viewport",
-    points: [],
-    lines: [],
-    pathOverrides: [],
-    lastCommittedPoint: null,
-    startBinding: null,
-    endBinding: null,
-    standardOverride: null,
-    view: {
-      scrollX: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
-      scrollY: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
-      zoom: getZoom(opts.zoom ?? 1, opts.mainScope ?? currentScope, opts.scopeExponentThreshold ?? 2),
-      twistAngle: 0 as Radian,
-      centerPoint: {
-        x: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
-        y: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
-      },
-      scope: currentScope,
+  ...getDefaultStackProperties(),
+  points: [],
+  lines: [],
+  pathOverrides: [],
+  lastCommittedPoint: null,
+  startBinding: null,
+  endBinding: null,
+  standardOverride: null,
+  view: {
+    scrollX: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
+    scrollY: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
+    zoom: getZoom(opts.zoom ?? 1, opts.mainScope ?? currentScope, opts.scopeExponentThreshold ?? 2),
+    twistAngle: 0 as Radian,
+    centerPoint: {
+      x: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
+      y: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
     },
-    scale: 1 as ViewportScale,
-    shadePlot: VIEWPORT_SHADE_PLOT.AS_DISPLAYED,
-    frozenGroupIds: [],
-    scaleIndicatorVisible: true,
+    scope: currentScope,
+  },
+  scale: 1 as ViewportScale,
+  shadePlot: VIEWPORT_SHADE_PLOT.AS_DISPLAYED,
+  frozenGroupIds: [],
+  scaleIndicatorVisible: true,
+  ..._newElementBase<DucViewportElement>("viewport", currentScope, opts),
+  type: "viewport",
 });
 
 export const newEllipseElement = (
@@ -310,7 +305,7 @@ export const newTextElement = (
   const textAlign = opts.textAlign || DEFAULT_TEXT_ALIGN;
   const verticalAlign = opts.verticalAlign || DEFAULT_VERTICAL_ALIGN;
   const offsets = getTextElementPositionOffsets({ textAlign, verticalAlign }, metrics);
-  
+
   const x = getPrecisionValueFromRaw(opts.x.value - offsets.x as RawValue, scope, currentScope);
   const y = getPrecisionValueFromRaw(opts.y.value - offsets.y as RawValue, scope, currentScope);
 
@@ -448,26 +443,26 @@ export const newDocElement = (
 });
 
 export const newPdfElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucPdfElement> => ({
-    ..._newElementBase<DucPdfElement>("pdf", currentScope, opts),
-    type: "pdf",
-    fileId: null,
+  fileId: null,
+  ..._newElementBase<DucPdfElement>("pdf", currentScope, opts),
+  type: "pdf",
 });
 
 export const newMermaidElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucMermaidElement> => ({
-    ..._newElementBase<DucMermaidElement>("mermaid", currentScope, opts),
-    type: "mermaid",
-    source: "",
-    theme: undefined,
-    svgPath: null,
+  source: "",
+  theme: undefined,
+  svgPath: null,
+  ..._newElementBase<DucMermaidElement>("mermaid", currentScope, opts),
+  type: "mermaid",
 });
 
 export const newXRayElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucXRayElement> => ({
-    ..._newElementBase<DucXRayElement>("xray", currentScope, opts),
-    type: "xray",
-    origin: { x: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope), y: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope) },
-    direction: { x: getPrecisionValueFromRaw(1 as RawValue, currentScope, currentScope), y: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope) },
-    startFromOrigin: false,
-    color: '#FF00FF'
+  origin: { x: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope), y: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope) },
+  direction: { x: getPrecisionValueFromRaw(1 as RawValue, currentScope, currentScope), y: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope) },
+  startFromOrigin: false,
+  color: '#FF00FF',
+  ..._newElementBase<DucXRayElement>("xray", currentScope, opts),
+  type: "xray",
 });
 
 export const newLeaderElement = (
@@ -475,8 +470,6 @@ export const newLeaderElement = (
   opts: Partial<DucLeaderElement> & ElementConstructorOpts
 ): NonDeleted<DucLeaderElement> => {
   return {
-    ..._newElementBase<DucLeaderElement>("leader", currentScope, opts),
-    type: "leader",
     points: [],
     lines: [],
     pathOverrides: [],
@@ -490,17 +483,18 @@ export const newLeaderElement = (
     blockAttachment: opts.blockAttachment || BLOCK_ATTACHMENT.CENTER_EXTENTS,
     leaderContent: opts.leaderContent ?? null,
     contentAnchor: opts.contentAnchor ??
-      {
-        x: 0,
-        y: 0,
-      },
+    {
+      x: 0,
+      y: 0,
+    },
+    ..._newElementBase<DucLeaderElement>("leader", currentScope, opts),
+    type: "leader",
   };
 };
 
 export const newDimensionElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucDimensionElement> => ({
-    ..._newElementBase<DucDimensionElement>("dimension", currentScope, opts),
-    type: 'dimension',
-    // Default properties for a new dimension element
+  ..._newElementBase<DucDimensionElement>("dimension", currentScope, opts),
+  type: 'dimension',
 } as NonDeleted<DucDimensionElement>);
 
 export const newFeatureControlFrameElement = (
@@ -508,8 +502,6 @@ export const newFeatureControlFrameElement = (
   opts: ElementConstructorOpts
 ): NonDeleted<DucFeatureControlFrameElement> => {
   return {
-    ..._newElementBase<DucFeatureControlFrameElement>("featurecontrolframe", currentScope, opts),
-    type: "featurecontrolframe",
     rows: [],
     leaderElementId: null,
     textStyle: getDefaultTextStyle(currentScope),
@@ -524,6 +516,8 @@ export const newFeatureControlFrameElement = (
     datumStyle: {
       bracketStyle: DATUM_BRACKET_STYLE.SQUARE
     },
+    ..._newElementBase<DucFeatureControlFrameElement>("featurecontrolframe", currentScope, opts),
+    type: "featurecontrolframe",
   };
 };
 
@@ -545,9 +539,9 @@ export const newBlockInstanceElement = (
 });
 
 export const newParametricElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucParametricElement> => ({
-    ..._newElementBase<DucParametricElement>("parametric", currentScope, opts),
-    type: 'parametric',
-    source: { type: PARAMETRIC_SOURCE_TYPE.CODE, code: "" },
+  source: { type: PARAMETRIC_SOURCE_TYPE.CODE, code: "" },
+  ..._newElementBase<DucParametricElement>("parametric", currentScope, opts),
+  type: 'parametric',
 });
 
 // Simplified deep clone for the purpose of cloning DucElement.
@@ -573,7 +567,7 @@ const _deepCopyElement = (val: any, depth: number = 0) => {
         ? Object.create(Object.getPrototypeOf(val))
         : {};
     for (const key in val) {
-      if (val.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(val, key)) {
         // don't copy non-serializable objects like these caches. They'll be
         // populated when the element is rendered.
         if (depth === 0 && (key === "shape" || key === "canvas")) {
