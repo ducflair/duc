@@ -31457,6 +31457,7 @@ impl<'a> ExportedDataState<'a> {
   pub const VT_DUC_GLOBAL_STATE: flatbuffers::VOffsetT = 30;
   pub const VT_EXTERNAL_FILES: flatbuffers::VOffsetT = 32;
   pub const VT_VERSION_GRAPH: flatbuffers::VOffsetT = 34;
+  pub const VT_ID: flatbuffers::VOffsetT = 36;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -31468,6 +31469,7 @@ impl<'a> ExportedDataState<'a> {
     args: &'args ExportedDataStateArgs<'args>
   ) -> flatbuffers::WIPOffset<ExportedDataState<'bldr>> {
     let mut builder = ExportedDataStateBuilder::new(_fbb);
+    if let Some(x) = args.id { builder.add_id(x); }
     if let Some(x) = args.version_graph { builder.add_version_graph(x); }
     if let Some(x) = args.external_files { builder.add_external_files(x); }
     if let Some(x) = args.duc_global_state { builder.add_duc_global_state(x); }
@@ -31600,6 +31602,13 @@ impl<'a> ExportedDataState<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<VersionGraph>>(ExportedDataState::VT_VERSION_GRAPH, None)}
   }
+  #[inline]
+  pub fn id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(ExportedDataState::VT_ID, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for ExportedDataState<'_> {
@@ -31625,6 +31634,7 @@ impl flatbuffers::Verifiable for ExportedDataState<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<DucGlobalState>>("duc_global_state", Self::VT_DUC_GLOBAL_STATE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucExternalFileEntry>>>>("external_files", Self::VT_EXTERNAL_FILES, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<VersionGraph>>("version_graph", Self::VT_VERSION_GRAPH, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, false)?
      .finish();
     Ok(())
   }
@@ -31646,6 +31656,7 @@ pub struct ExportedDataStateArgs<'a> {
     pub duc_global_state: Option<flatbuffers::WIPOffset<DucGlobalState<'a>>>,
     pub external_files: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucExternalFileEntry<'a>>>>>,
     pub version_graph: Option<flatbuffers::WIPOffset<VersionGraph<'a>>>,
+    pub id: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for ExportedDataStateArgs<'a> {
   #[inline]
@@ -31667,6 +31678,7 @@ impl<'a> Default for ExportedDataStateArgs<'a> {
       duc_global_state: None,
       external_files: None,
       version_graph: None,
+      id: None,
     }
   }
 }
@@ -31741,6 +31753,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ExportedDataStateBuilder<'a, 'b
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<VersionGraph>>(ExportedDataState::VT_VERSION_GRAPH, version_graph);
   }
   #[inline]
+  pub fn add_id(&mut self, id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_ID, id);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> ExportedDataStateBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     ExportedDataStateBuilder {
@@ -31774,6 +31790,7 @@ impl core::fmt::Debug for ExportedDataState<'_> {
       ds.field("duc_global_state", &self.duc_global_state());
       ds.field("external_files", &self.external_files());
       ds.field("version_graph", &self.version_graph());
+      ds.field("id", &self.id());
       ds.finish()
   }
 }
