@@ -1,6 +1,7 @@
 export * from "./elements";
 export * from "./geometryTypes";
 export * from "./utility-types";
+export * from "./typeChecks";
 
 import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "../flatbuffers/duc";
 import { SupportedMeasures } from "../technical/scopes";
@@ -70,6 +71,9 @@ export interface ExportedDataState {
 
   /** In case it is needed to embed the version control into the file format */
   versionGraph: VersionGraph | undefined;
+
+  /** Actual file id */
+  id: string | undefined;
 }
 
 export type ExportedDataStateContent = Omit<ExportedDataState, "type" | "version" | "source">;
@@ -177,6 +181,7 @@ export type ToolType =
   | "eraser"
   | "hand"
   | "frame"
+  | "plot"
   | "embeddable"
   | "ruler"
   | "lasso"

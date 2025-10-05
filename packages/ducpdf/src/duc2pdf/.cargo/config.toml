@@ -1,0 +1,3 @@
+# Localize getrandom backend config to this crate only
+[target.wasm32-unknown-unknown]
+rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]

@@ -138,3 +138,4 @@ class ExportedDataState:
     duc_global_state: Optional[DucGlobalState]
     version_graph: Optional[VersionGraph]
     files: Optional[List[DucExternalFileEntry]]
+    id: Optional[str] = None

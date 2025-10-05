@@ -175,8 +175,15 @@ versionGraph(obj?:VersionGraph):VersionGraph|null {
   return offset ? (obj || new VersionGraph()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
+id():string|null
+id(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+id(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 36);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
 static startExportedDataState(builder:flatbuffers.Builder) {
-  builder.startObject(16);
+  builder.startObject(17);
 }
 
 static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
@@ -349,6 +356,10 @@ static startExternalFilesVector(builder:flatbuffers.Builder, numElems:number) {
 
 static addVersionGraph(builder:flatbuffers.Builder, versionGraphOffset:flatbuffers.Offset) {
   builder.addFieldOffset(15, versionGraphOffset, 0);
+}
+
+static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(16, idOffset, 0);
 }
 
 static endExportedDataState(builder:flatbuffers.Builder):flatbuffers.Offset {
