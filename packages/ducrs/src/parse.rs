@@ -2037,5 +2037,6 @@ fn parse_exported_data_state(root: fb::ExportedDataState) -> ParseResult<types::
         }),
         external_files,
         version_graph: root.version_graph().map(parse_version_graph).transpose()?,
+        id: root.id().map(|s| s.to_string()),
     })
 }

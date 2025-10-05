@@ -2620,6 +2620,9 @@ table ExportedDataState {
   
   /** In case it is needed to embed the version control into the file format */
   version_graph: VersionGraph;
+
+  /** Actual file id */
+  id: string;
 }
 
 root_type ExportedDataState;

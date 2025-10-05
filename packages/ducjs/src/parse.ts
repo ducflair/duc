@@ -1859,6 +1859,7 @@ export const parseDuc = async (
       files: parsedFiles,
 
       versionGraph: versionGraph ?? undefined,
+      id: data.id() ?? undefined,
     },
     {
       syncInvalidIndices: (elements) => elements as OrderedDucElement[],
@@ -1881,6 +1882,7 @@ export const parseDuc = async (
     layers: sanitized.layers,
     standards: sanitized.standards,
     versionGraph: sanitized.versionGraph,
+    id: sanitized.id,
   };
 };
 // #endregion

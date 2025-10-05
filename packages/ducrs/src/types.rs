@@ -1575,4 +1575,5 @@ pub struct ExportedDataState {
     pub duc_global_state: Option<DucGlobalState>,
     pub external_files: Option<Vec<DucExternalFileEntry>>,
     pub version_graph: Option<VersionGraph>,
+    pub id: Option<String>,
 }

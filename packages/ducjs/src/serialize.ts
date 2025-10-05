@@ -2498,6 +2498,11 @@ export const serializeDuc = async (
     ? builder.createByteVector(sanitized.thumbnail)
     : null;
 
+  // Serialize id (as string if present)
+  const idOffset = sanitized.id
+    ? builder.createString(sanitized.id)
+    : null;
+
   Duc.ExportedDataState.startExportedDataState(builder);
   Duc.ExportedDataState.addType(builder, typeOffset);
   Duc.ExportedDataState.addVersion(builder, versionOffset);
@@ -2534,6 +2539,9 @@ export const serializeDuc = async (
   }
   if (thumbnailOffset) {
     Duc.ExportedDataState.addThumbnail(builder, thumbnailOffset);
+  }
+  if (idOffset) {
+    Duc.ExportedDataState.addId(builder, idOffset);
   }
   const exportedDataStateOffset = Duc.ExportedDataState.endExportedDataState(builder);
 

@@ -263,7 +263,7 @@ from ducpy.Duc.ExportedDataState import (
     ExportedDataStateAddBlocks, ExportedDataStateAddGroups, ExportedDataStateAddRegions,
     ExportedDataStateAddLayers, ExportedDataStateAddStandards, ExportedDataStateAddDucLocalState,
     ExportedDataStateAddDucGlobalState, ExportedDataStateAddExternalFiles, ExportedDataStateAddVersionGraph,
-    ExportedDataStateEnd, ExportedDataStateStartElementsVector, ExportedDataStateStartBlocksVector,
+    ExportedDataStateAddId, ExportedDataStateEnd, ExportedDataStateStartElementsVector, ExportedDataStateStartBlocksVector,
     ExportedDataStateStartGroupsVector, ExportedDataStateStartRegionsVector, ExportedDataStateStartLayersVector,
     ExportedDataStateStartStandardsVector, ExportedDataStateStartExternalFilesVector,
     ExportedDataStateStartDictionaryVector
@@ -3673,6 +3673,7 @@ def serialize_as_flatbuffers(data_state: DS_ExportedDataState) -> bytes:
         version_offset = builder.CreateString(data_state.version)
         source_offset = builder.CreateString(data_state.source)
         thumbnail_offset = builder.CreateByteVector(data_state.thumbnail) if data_state.thumbnail else 0
+        id_offset = builder.CreateString(data_state.id) if data_state.id else 0
 
         # Build root
         ExportedDataStateStart(builder)
@@ -3694,6 +3695,7 @@ def serialize_as_flatbuffers(data_state: DS_ExportedDataState) -> bytes:
         if duc_global_state_offset: ExportedDataStateAddDucGlobalState(builder, duc_global_state_offset)
         ExportedDataStateAddExternalFiles(builder, files_vec)
         if version_graph_offset: ExportedDataStateAddVersionGraph(builder, version_graph_offset)
+        if id_offset: ExportedDataStateAddId(builder, id_offset)
         exported_data = ExportedDataStateEnd(builder)
 
         builder.Finish(exported_data, b"DUC_")

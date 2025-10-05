@@ -3878,6 +3878,8 @@ fn serialize_exported_data_state<'bldr>(
         .as_ref()
         .map(|vg| serialize_version_graph(builder, vg));
 
+    let id_offset = state.id.as_ref().map(|s| builder.create_string(s));
+
     fb::ExportedDataState::create(
         builder,
         &fb::ExportedDataStateArgs {
@@ -3897,6 +3899,7 @@ fn serialize_exported_data_state<'bldr>(
             duc_global_state: duc_global_state_offset,
             external_files: external_files_vec,
             version_graph: version_graph_offset,
+            id: id_offset,
         },
     )
 }

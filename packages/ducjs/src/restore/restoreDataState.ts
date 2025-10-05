@@ -14,6 +14,7 @@ import {
   TEXT_ALIGN,
   VERTICAL_ALIGN,
 } from "../flatbuffers/duc";
+import { nanoid } from "nanoid";
 import { restoreElements } from "./restoreElements";
 import {
   isStandardIdPresent,
@@ -117,6 +118,7 @@ export type RestoredDataState = {
 
   standards: Standard[];
   versionGraph: VersionGraph | undefined;
+  id: string;
 };
 
 export interface ExportedLibraryData {
@@ -188,6 +190,10 @@ export const restore = (
 
   const restoredVersionGraph = restoreVersionGraph(data?.versionGraph);
 
+  // Generate a new ID if none exists or if it's empty
+  const parsedId = data?.id;
+  const restoredId = (parsedId && parsedId.trim().length > 0) ? parsedId : nanoid();
+
   return {
     dictionary: restoredDictionary,
     thumbnail: isValidUint8Array(data?.thumbnail),
@@ -203,6 +209,7 @@ export const restore = (
     localState: restoredLocalState,
     globalState: restoredGlobalState,
     files: restoreFiles(data?.files),
+    id: restoredId,
   };
 };
 
