@@ -24,6 +24,10 @@
 // And also from the Elements pool: DucFrame, DucViewport and DucPlot
 
 use crate::streaming::stream_resources::ResourceStreamer;
+use crate::streaming::pdf_linear::PdfLinearRenderer;
+use crate::streaming::pdf_stroke::PdfStrokeRenderer;
+use crate::streaming::pdf_background::PdfBackgroundRenderer;
+use crate::streaming::pdf_line_head::PdfLineHeadRenderer;
 use crate::utils::style_resolver::{ResolvedStyles, StyleResolver};
 use crate::scaling::DucDataScaler;
 use crate::{ConversionError, ConversionResult};
@@ -249,23 +253,31 @@ impl ElementStreamer {
 
         // Apply transformation (position, rotation) with scroll offset
         let base = Self::get_element_base(element);
+        let center_override = Self::compute_element_center_override(element);
         if base.x != 0.0 || base.y != 0.0 || base.angle != 0.0 {
             let transform_ops = if base.frame_id.is_some() {
                 // This is a child element of a plot/ frame, use relative positioning
                 // Find the parent plot element to get its position
-                if let Some(((parent_x, parent_y, parent_width, parent_height), margins)) = self.find_parent_plot_bounds(element, elements) {
+                if let Some(((parent_x, parent_y, parent_width, parent_height), margins)) =
+                    self.find_parent_plot_bounds(element, elements)
+                {
                     self.create_transformation_matrix_for_plot_child(
-                        base.x, base.y, base.angle, local_state,
-                        parent_x, parent_y, parent_width, parent_height,
-                        margins
+                        base,
+                        local_state,
+                        parent_x,
+                        parent_y,
+                        parent_width,
+                        parent_height,
+                        margins,
+                        center_override,
                     )
                 } else {
                     // Fallback to regular transformation if parent not found
-                    self.create_transformation_matrix_with_scroll(base.x, base.y, base.angle, local_state)
+                    self.create_transformation_matrix_with_scroll(base, local_state, center_override)
                 }
             } else {
                 // Regular element, use standard transformation
-                self.create_transformation_matrix_with_scroll(base.x, base.y, base.angle, local_state)
+                self.create_transformation_matrix_with_scroll(base, local_state, center_override)
             };
             operations.extend(transform_ops);
         }
@@ -539,14 +551,100 @@ impl ElementStreamer {
         Ok(ops)
     }
 
+    fn compute_element_center_override(element: &DucElementEnum) -> Option<(f64, f64)> {
+        match element {
+            DucElementEnum::DucLinearElement(linear) => {
+                Self::compute_linear_center(&linear.linear_base)
+            }
+            _ => None,
+        }
+    }
 
+    fn compute_linear_center(
+        linear_base: &duc::types::DucLinearElementBase,
+    ) -> Option<(f64, f64)> {
+        if linear_base.points.is_empty() {
+            return None;
+        }
+
+        let mut min_x = f64::INFINITY;
+        let mut min_y = f64::INFINITY;
+        let mut max_x = f64::NEG_INFINITY;
+        let mut max_y = f64::NEG_INFINITY;
+
+        for point in &linear_base.points {
+            let x = point.x;
+            let y = -point.y;
+            if !x.is_finite() || !y.is_finite() {
+                continue;
+            }
+            min_x = min_x.min(x);
+            min_y = min_y.min(y);
+            max_x = max_x.max(x);
+            max_y = max_y.max(y);
+        }
+
+        for line in &linear_base.lines {
+            if let Some(handle) = &line.start.handle {
+                let x = handle.x;
+                let y = -handle.y;
+                if x.is_finite() && y.is_finite() {
+                    min_x = min_x.min(x);
+                    min_y = min_y.min(y);
+                    max_x = max_x.max(x);
+                    max_y = max_y.max(y);
+                }
+            }
+            if let Some(handle) = &line.end.handle {
+                let x = handle.x;
+                let y = -handle.y;
+                if x.is_finite() && y.is_finite() {
+                    min_x = min_x.min(x);
+                    min_y = min_y.min(y);
+                    max_x = max_x.max(x);
+                    max_y = max_y.max(y);
+                }
+            }
+        }
+
+        if !min_x.is_finite() || !min_y.is_finite() || !max_x.is_finite() || !max_y.is_finite() {
+            return None;
+        }
+
+        Some(((min_x + max_x) / 2.0, (min_y + max_y) / 2.0))
+    }
 
     /// Create transformation matrix operations with scroll offset
-    fn create_transformation_matrix(&self, x: f64, y: f64, angle: f64) -> Vec<Operation> {
+    fn create_transformation_matrix(
+        &self,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        angle: f64,
+        center_override: Option<(f64, f64)>,
+    ) -> Vec<Operation> {
         let mut ops = Vec::new();
 
-        if x != 0.0 || y != 0.0 {
-            // Translate
+        // 1. Translate element to its final position
+        ops.push(Operation::new(
+            "cm",
+            vec![
+                Object::Real(1.0),
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(1.0),
+                Object::Real(x as f32),
+                Object::Real(y as f32),
+            ],
+        ));
+
+        // 2. Rotate around the element's local origin (0,0)
+        if angle != 0.0 {
+            let (center_x, center_y) = center_override
+                .unwrap_or((width / 2.0, -height / 2.0));
+
+            // Translate to center for rotation
             ops.push(Operation::new(
                 "cm",
                 vec![
@@ -554,16 +652,15 @@ impl ElementStreamer {
                     Object::Real(0.0),
                     Object::Real(0.0),
                     Object::Real(1.0),
-                    Object::Real(x as f32),
-                    Object::Real(y as f32),
+                    Object::Real(center_x as f32),
+                    Object::Real(center_y as f32),
                 ],
             ));
-        }
 
-        if angle != 0.0 {
-            // Rotate (angle in radians)
-            let cos_a = angle.cos();
-            let sin_a = angle.sin();
+            // Rotate
+            let negated_angle = -angle;
+            let cos_a = negated_angle.cos();
+            let sin_a = negated_angle.sin();
             ops.push(Operation::new(
                 "cm",
                 vec![
@@ -575,13 +672,31 @@ impl ElementStreamer {
                     Object::Real(0.0),
                 ],
             ));
+
+            // Translate back from center
+            ops.push(Operation::new(
+                "cm",
+                vec![
+                    Object::Real(1.0),
+                    Object::Real(0.0),
+                    Object::Real(0.0),
+                    Object::Real(1.0),
+                    Object::Real(-center_x as f32),
+                    Object::Real(-center_y as f32),
+                ],
+            ));
         }
 
         ops
     }
 
     /// Create transformation matrix operations with scroll offset applied
-    fn create_transformation_matrix_with_scroll(&self, x: f64, y: f64, angle: f64, local_state: Option<&duc::types::DucLocalState>) -> Vec<Operation> {
+    fn create_transformation_matrix_with_scroll(
+        &self,
+        base: &duc::types::DucElementBase,
+        local_state: Option<&duc::types::DucLocalState>,
+        center_override: Option<(f64, f64)>,
+    ) -> Vec<Operation> {
         let (scroll_x, scroll_y) = if let Some(state) = local_state {
             (state.scroll_x, state.scroll_y)
         } else {
@@ -589,27 +704,33 @@ impl ElementStreamer {
         };
 
         // Apply scroll offset to the coordinates
-        let adjusted_x = x + scroll_x;
-        let adjusted_y = y + scroll_y;
+        let adjusted_x = base.x + scroll_x;
+        let adjusted_y = base.y + scroll_y;
 
         // Transform y-coordinate from top-left (duc) to bottom-left (PDF) origin
         let transformed_y = DucDataScaler::transform_point_y_to_pdf_system(adjusted_y, self.page_height);
 
-        self.create_transformation_matrix(adjusted_x, transformed_y, angle)
+        self.create_transformation_matrix(
+            adjusted_x,
+            transformed_y,
+            base.width,
+            base.height,
+            base.angle,
+            center_override,
+        )
     }
 
     /// Create transformation matrix operations for child elements relative to their parent plot
     fn create_transformation_matrix_for_plot_child(
         &self,
-        x: f64,
-        y: f64,
-        angle: f64,
+        base: &duc::types::DucElementBase,
         _local_state: Option<&duc::types::DucLocalState>, // Scroll not used in plot mode
         parent_plot_x: f64,
         parent_plot_y: f64,
         _parent_plot_width: f64,
         _parent_plot_height: f64,
         parent_margins: Option<(f64, f64, f64, f64)>, // left, top, right, bottom
+        center_override: Option<(f64, f64)>,
     ) -> Vec<Operation> {
         // Elements are authored in absolute world coordinates in the DUC data.
         // For children of frames/plots we transform them to coordinates relative
@@ -620,16 +741,23 @@ impl ElementStreamer {
         let (relative_x, relative_y) = if let Some((ml, mt, _mr, _mb)) = parent_margins {
             // Clipping translates to (parent_plot_x + ml, parent_plot_y + mt)
             // So position relative to that
-            (x - (parent_plot_x + ml), y - (parent_plot_y + mt))
+            (base.x - (parent_plot_x + ml), base.y - (parent_plot_y + mt))
         } else {
             // No margins, position relative to parent origin
-            (x - parent_plot_x, y - parent_plot_y)
+            (base.x - parent_plot_x, base.y - parent_plot_y)
         };
 
         // Transform y-coordinate from top-left (duc) to bottom-left (PDF) origin
         let transformed_y = DucDataScaler::transform_point_y_to_pdf_system(relative_y, self.page_height);
 
-        self.create_transformation_matrix(relative_x, transformed_y, angle)
+        self.create_transformation_matrix(
+            relative_x,
+            transformed_y,
+            base.width,
+            base.height,
+            base.angle,
+            center_override,
+        )
     }
 
 
@@ -978,30 +1106,8 @@ impl ElementStreamer {
 
     /// Stream linear element (lines)
     fn stream_linear(&self, linear: &DucLinearElement) -> ConversionResult<Vec<Operation>> {
-        let mut ops = Vec::new();
-
-        // Get points from the linear element
-        if !linear.linear_base.points.is_empty() {
-            // Move to first point
-            let first = &linear.linear_base.points[0];
-            ops.push(Operation::new(
-                "m",
-                vec![Object::Real(first.x as f32), Object::Real(first.y as f32)],
-            ));
-
-            // Draw lines to subsequent points
-            for point in &linear.linear_base.points[1..] {
-                ops.push(Operation::new(
-                    "l",
-                    vec![Object::Real(point.x as f32), Object::Real(point.y as f32)],
-                ));
-            }
-
-            // Stroke the path
-            ops.push(Operation::new("S", vec![]));
-        }
-
-        Ok(ops)
+        // Use the dedicated linear renderer module
+        PdfLinearRenderer::stream_linear(linear)
     }
 
     /// Stream table element
@@ -1580,7 +1686,5 @@ impl ElementStreamer {
         Ok(ops)
     }
 
-
-
-
 }
+
