@@ -149,6 +149,19 @@ impl DucDataScaler {
             point.x *= scale;
             point.y *= scale;
         }
+
+        // Scale Bezier handles for each line segment
+        for line in &mut base.lines {
+            if let Some(handle) = line.start.handle.as_mut() {
+                handle.x *= scale;
+                handle.y *= scale;
+            }
+
+            if let Some(handle) = line.end.handle.as_mut() {
+                handle.x *= scale;
+                handle.y *= scale;
+            }
+        }
     }
 
     /// Scale freedraw element specific fields

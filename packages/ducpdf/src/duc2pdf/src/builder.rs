@@ -111,7 +111,7 @@ impl DucToPdfBuilder {
         let mut font_resource_name = String::from("F1"); // Default fallback
         
         // Try to load RobotoMono font from the specified path
-        match Font::from_file("../../../../../../assets/fonts/RobotoMono-Variable.ttf") {
+        match Font::from_file("../../../../../assets/fonts/RobotoMono-Variable.ttf") {
             Ok(font) => {
                 // Successfully loaded font - embed it into the document
                 match font_manager.embed_font(&mut document, font) {
@@ -861,6 +861,15 @@ impl DucToPdfBuilder {
         let mut page = Dictionary::new();
         page.set("Type", Object::Name("Page".as_bytes().to_vec()));
         page.set(
+            "CropBox",
+            Object::Array(vec![
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(page_width as f32),
+                Object::Real(page_height as f32),
+            ]),
+        );
+        page.set(
             "MediaBox",
             Object::Array(vec![
                 Object::Real(0.0),
@@ -902,6 +911,15 @@ impl DucToPdfBuilder {
         // Create page dictionary
         let mut page = Dictionary::new();
         page.set("Type", Object::Name("Page".as_bytes().to_vec()));
+        page.set(
+            "CropBox",
+            Object::Array(vec![
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(page_width as f32),
+                Object::Real(page_height as f32),
+            ]),
+        );
         page.set(
             "MediaBox",
             Object::Array(vec![
