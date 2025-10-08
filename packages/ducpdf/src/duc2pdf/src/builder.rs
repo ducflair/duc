@@ -13,6 +13,7 @@ use duc::types::{
 };
 use hipdf::blocks::BlockManager;
 use hipdf::embed_pdf::PdfEmbedder;
+use hipdf::fonts::{Font, FontManager};
 use hipdf::hatching::HatchingManager;
 use hipdf::images::{Image, ImageManager};
 use hipdf::lopdf::{Dictionary, Document, Object, Stream};
@@ -47,11 +48,13 @@ pub struct DucToPdfBuilder {
     hatching_manager: HatchingManager,
     pdf_embedder: PdfEmbedder,
     image_manager: ImageManager,
+    font_manager: FontManager,
     element_streamer: ElementStreamer,
     resource_streamer: ResourceStreamer,
     page_ids: Vec<u32>,
     layer_refs: HashMap<String, Object>, // layer_id -> OCG reference
     layer_prop_names: HashMap<String, String>, // layer_id -> Properties name (e.g., OCG_1)
+    font_resource_name: String, // Resource name for the embedded font (e.g., "F1")
 }
 
 impl DucToPdfBuilder {
@@ -60,7 +63,7 @@ impl DucToPdfBuilder {
         mut exported_data: ExportedDataState,
         options: ConversionOptions,
     ) -> ConversionResult<Self> {
-        let document = Document::with_version("1.7");
+        let mut document = Document::with_version("1.7");
 
         let crop_offset = match &options.mode {
             ConversionMode::Crop { offset_x, offset_y, .. } => Some((*offset_x, *offset_y)),
@@ -103,6 +106,29 @@ impl DucToPdfBuilder {
 
         let style_resolver = StyleResolver::new(context.active_standard.clone());
 
+        // Initialize font manager and load RobotoMono font
+        let mut font_manager = FontManager::new();
+        let mut font_resource_name = String::from("F1"); // Default fallback
+        
+        // Try to load RobotoMono font from the specified path
+        match Font::from_file("../../../../../../assets/fonts/RobotoMono-Variable.ttf") {
+            Ok(font) => {
+                // Successfully loaded font - embed it into the document
+                match font_manager.embed_font(&mut document, font) {
+                    Ok((_, resource_name)) => {
+                        font_resource_name = resource_name;
+                        println!("✅ Successfully embedded RobotoMono-Variable.ttf as {}", font_resource_name);
+                    }
+                    Err(e) => {
+                        eprintln!("⚠️  Failed to embed RobotoMono font: {}. Using standard font fallback.", e);
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("⚠️  Failed to load RobotoMono-Variable.ttf: {}. Using standard font fallback.", e);
+            }
+        }
+
         Ok(Self {
             context,
             document,
@@ -111,11 +137,13 @@ impl DucToPdfBuilder {
             hatching_manager: HatchingManager::new(),
             pdf_embedder: PdfEmbedder::new(),
             image_manager: ImageManager::new(),
-            element_streamer: ElementStreamer::new(style_resolver, 0.0), // Default height, will be updated per page
+            font_manager,
+            element_streamer: ElementStreamer::new(style_resolver, 0.0, font_resource_name.clone()), // Default height, will be updated per page
             resource_streamer: ResourceStreamer::new(),
             page_ids: Vec::new(),
             layer_refs: HashMap::new(),
             layer_prop_names: HashMap::new(),
+            font_resource_name,
         })
     }
 
@@ -899,15 +927,11 @@ impl DucToPdfBuilder {
     fn create_page_resources(&mut self) -> ConversionResult<Dictionary> {
         let mut resources = Dictionary::new();
 
-        // Add font resources
-        let mut font_obj = Dictionary::new();
-        font_obj.set("Type", Object::Name("Font".as_bytes().to_vec()));
-        font_obj.set("Subtype", Object::Name("Type1".as_bytes().to_vec()));
-        font_obj.set("BaseFont", Object::Name("Helvetica".as_bytes().to_vec()));
-        let font_id = self.document.add_object(Object::Dictionary(font_obj));
-        let mut font_dict = Dictionary::new();
-        font_dict.set("F1", Object::Reference(font_id));
-        resources.set("Font", Object::Dictionary(font_dict));
+        // Add font resources using FontManager
+        // The font manager handles all the complexity of font embedding
+        for (_font, font_id, resource_name) in self.font_manager.fonts() {
+            self.font_manager.add_to_resources(&mut resources, *font_id, resource_name);
+        }
 
         // Collect any XObjects (images, embedded PDFs, SVG-converted PDFs) produced during streaming
         // and add them to the page resources under the exact names used in the content stream.
