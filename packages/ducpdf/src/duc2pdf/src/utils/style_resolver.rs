@@ -341,7 +341,7 @@ impl StyleResolver {
                         "re",
                         vec![
                             Object::Real(0.0),
-                            Object::Real(0.0),
+                            Object::Real(-(height as f32)),
                             Object::Real(width as f32),
                             Object::Real(height as f32),
                         ],
