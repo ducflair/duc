@@ -12,12 +12,39 @@ use duc::types::{
 };
 use hipdf::blocks::BlockManager;
 use hipdf::embed_pdf::PdfEmbedder;
-use hipdf::fonts::{Font, FontManager};
+use hipdf::fonts::{Font, FontManager, StandardFont};
 use hipdf::hatching::HatchingManager;
 use hipdf::images::{Image, ImageManager};
+use hipdf::lopdf::content::{Content, Operation};
 use hipdf::lopdf::{Dictionary, Document, Object, Stream};
 use hipdf::ocg::OCGManager;
 use std::collections::HashMap;
+
+// Logging utilities that work in both WASM and native environments
+macro_rules! log_info {
+    ($($arg:tt)*) => {
+        #[cfg(target_arch = "wasm32")]
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!($($arg)*)));
+
+        #[cfg(not(target_arch = "wasm32"))]
+        println!($($arg)*);
+    };
+}
+
+macro_rules! log_warn {
+    ($($arg:tt)*) => {
+        #[cfg(target_arch = "wasm32")]
+        web_sys::console::warn_1(&wasm_bindgen::JsValue::from_str(&format!($($arg)*)));
+
+        #[cfg(not(target_arch = "wasm32"))]
+        eprintln!($($arg)*);
+    };
+}
+
+const ROBOTO_MONO_FONT_BYTES: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../../../assets/fonts/RobotoMono-Variable.ttf"
+));
 
 /// Resource cache for storing PDF object IDs
 #[derive(Default, Clone)]
@@ -53,7 +80,6 @@ pub struct DucToPdfBuilder {
     page_ids: Vec<u32>,
     layer_refs: HashMap<String, Object>, // layer_id -> OCG reference
     layer_prop_names: HashMap<String, String>, // layer_id -> Properties name (e.g., OCG_1)
-    font_resource_name: String,          // Resource name for the embedded font (e.g., "F1")
 }
 
 impl DucToPdfBuilder {
@@ -81,6 +107,13 @@ impl DucToPdfBuilder {
         } else {
             let required_scale = calculate_required_scale(&exported_data, crop_offset);
             if required_scale < 1.0 {
+                #[cfg(target_arch = "wasm32")]
+                web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+                    "🔧 Auto-scaling applied: {:.6} ({}:1)",
+                    required_scale,
+                    (1.0 / required_scale).round() as i32
+                )));
+                #[cfg(not(target_arch = "wasm32"))]
                 println!(
                     "🔧 Auto-scaling applied: {:.6} ({}:1)",
                     required_scale,
@@ -109,32 +142,8 @@ impl DucToPdfBuilder {
 
         // Initialize font manager and load RobotoMono font
         let mut font_manager = FontManager::new();
-        let mut font_resource_name = String::from("F1"); // Default fallback
-
-        // Try to load RobotoMono font from the specified path
-        match Font::from_file("../../../../../assets/fonts/RobotoMono-Variable.ttf") {
-            Ok(font) => {
-                // Successfully loaded font - embed it into the document
-                match font_manager.embed_font(&mut document, font) {
-                    Ok((_, resource_name)) => {
-                        font_resource_name = resource_name;
-                        println!(
-                            "✅ Successfully embedded RobotoMono-Variable.ttf as {}",
-                            font_resource_name
-                        );
-                    }
-                    Err(e) => {
-                        eprintln!("⚠️  Failed to embed RobotoMono font: {}. Using standard font fallback.", e);
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!(
-                    "⚠️  Failed to load RobotoMono-Variable.ttf: {}. Using standard font fallback.",
-                    e
-                );
-            }
-        }
+        let (primary_font, font_resource_name) =
+            Self::load_primary_font(&mut document, &mut font_manager)?;
 
         Ok(Self {
             context,
@@ -145,13 +154,66 @@ impl DucToPdfBuilder {
             pdf_embedder: PdfEmbedder::new(),
             image_manager: ImageManager::new(),
             font_manager,
-            element_streamer: ElementStreamer::new(style_resolver, 0.0, font_resource_name.clone()), // Default height, will be updated per page
+            element_streamer: ElementStreamer::new(
+                style_resolver,
+                0.0,
+                font_resource_name,
+                primary_font,
+            ), // Default height, will be updated per page
             resource_streamer: ResourceStreamer::new(),
             page_ids: Vec::new(),
             layer_refs: HashMap::new(),
             layer_prop_names: HashMap::new(),
-            font_resource_name,
         })
+    }
+
+    fn load_primary_font(
+        document: &mut Document,
+        font_manager: &mut FontManager,
+    ) -> ConversionResult<(Font, String)> {
+        match Font::from_bytes(
+            ROBOTO_MONO_FONT_BYTES.to_vec(),
+            Some("RobotoMono-Variable.ttf".to_string()),
+        ) {
+            Ok(font) => match font_manager.embed_font(document, font.clone()) {
+                Ok((_, resource_name)) => Ok((font, resource_name)),
+                Err(e) => {
+                    log_warn!(
+                        "⚠️  Failed to embed RobotoMono font: {}. Falling back to standard font.",
+                        e
+                    );
+                    Self::embed_fallback_font(document, font_manager)
+                }
+            },
+            Err(e) => {
+                log_warn!(
+                    "⚠️  Failed to load embedded RobotoMono-Variable.ttf: {}. Falling back to standard font.",
+                    e
+                );
+                Self::embed_fallback_font(document, font_manager)
+            }
+        }
+    }
+
+    /// Embed a standard fallback font when the primary font is unavailable.
+    fn embed_fallback_font(
+        document: &mut Document,
+        font_manager: &mut FontManager,
+    ) -> ConversionResult<(Font, String)> {
+        let fallback_font = Font::standard(StandardFont::Helvetica);
+        let (_, resource_name) = font_manager
+            .embed_font(document, fallback_font.clone())
+            .map_err(|e| {
+                ConversionError::ResourceLoadError(format!(
+                    "Failed to embed fallback Helvetica font: {}",
+                    e
+                ))
+            })?;
+        log_info!(
+            "ℹ️ Using fallback Helvetica font embedded as {}",
+            resource_name
+        );
+        Ok((fallback_font, resource_name))
     }
 
     /// Extract base element from DucElementEnum
@@ -378,7 +440,7 @@ impl DucToPdfBuilder {
                     }
                     _ => {
                         // Skip unknown file types
-                        println!("Warning: Unsupported file type: {}", file_data.mime_type);
+                        log_warn!("Unsupported file type: {}", file_data.mime_type);
                     }
                 }
             }
@@ -450,33 +512,10 @@ impl DucToPdfBuilder {
         let _mime_type = &file_entry.value.mime_type;
 
         // Create image directly from bytes (WASM-compatible)
-        println!(
-            "🧩 Processing image: key='{}' id='{}' mime='{}' bytes={}",
-            file_entry.key,
-            file_entry.value.id,
-            file_entry.value.mime_type,
-            image_data.len()
-        );
         let image =
             Image::from_bytes(image_data.clone(), Some(file_entry.key.clone())).map_err(|e| {
                 ConversionError::ResourceLoadError(format!("Failed to load image: {}", e))
             })?;
-
-        println!(
-            "📸 Image parsed: {}x{} bpc={} format={:?} alpha={} icc={} gamma={:?}",
-            image.metadata.width,
-            image.metadata.height,
-            image.metadata.bits_per_component,
-            image.metadata.format,
-            image.metadata.has_alpha,
-            image
-                .metadata
-                .icc_profile
-                .as_ref()
-                .map(|v| v.len())
-                .unwrap_or(0),
-            image.metadata.gamma
-        );
 
         // Embed the image with perfect quality preservation using hipdf::images
         let image_id = self
@@ -485,11 +524,6 @@ impl DucToPdfBuilder {
             .map_err(|e| {
                 ConversionError::ResourceLoadError(format!("Failed to embed image: {}", e))
             })?;
-
-        println!(
-            "✅ Embedded image: object_id=({} 0 R) -> key='{}', id='{}'",
-            image_id.0, file_entry.key, file_entry.value.id
-        );
 
         // Store the image ID in the resource cache mapped by both key and internal id
         self.context
@@ -827,11 +861,6 @@ impl DucToPdfBuilder {
             // Apply the offset to scroll position to effectively "move" the drawing
             local_state.scroll_x += offset_x_mm;
             local_state.scroll_y += offset_y_mm;
-
-            println!(
-                "🔧 Applied crop offset: scroll_x={}, scroll_y={} (mm)",
-                local_state.scroll_x, local_state.scroll_y
-            );
         } else {
             // If no local state exists, create one with the offset
             let new_local_state = duc::types::DucLocalState {
@@ -861,10 +890,6 @@ impl DucToPdfBuilder {
             };
 
             self.context.exported_data.duc_local_state = Some(new_local_state);
-            println!(
-                "🔧 Created new local state with crop offset: scroll_x={}, scroll_y={} (mm)",
-                offset_x_mm, offset_y_mm
-            );
         }
     }
 
@@ -1041,23 +1066,28 @@ impl DucToPdfBuilder {
     ) -> ConversionResult<Stream> {
         let (x, y, _width, _height) = bounds; // Use bounds directly - data is already scaled by DucDataScaler
 
-        let mut content = String::new();
+        let mut operations = Vec::new();
 
         // Start graphics state
-        content.push_str("q\n");
+        operations.push(Operation::new("q", vec![]));
 
         // Apply coordinate transformation for bounds (cm matrix)
         // In plot mode, translate to position the plot correctly on the page
-        match self.context.options.mode {
-            ConversionMode::Plot => {
-                // In plot mode, translate so the plot starts at (0,0) on the page
-                content.push_str(&format!("1 0 0 1 {} {} cm\n", -x, -y));
-            }
-            ConversionMode::Crop { .. } => {
-                // In crop mode, apply the translation as before
-                content.push_str(&format!("1 0 0 1 {} {} cm\n", x, y));
-            }
-        }
+        let (tx, ty) = match self.context.options.mode {
+            ConversionMode::Plot => (-x, -y),
+            ConversionMode::Crop { .. } => (x, y),
+        };
+        operations.push(Operation::new(
+            "cm",
+            vec![
+                1.0f64.into(),
+                0.0f64.into(),
+                0.0f64.into(),
+                1.0f64.into(),
+                tx.into(),
+                ty.into(),
+            ],
+        ));
 
         // Set page height for coordinate transformation
         let (_x, _y, _width, height) = bounds;
@@ -1078,15 +1108,10 @@ impl DucToPdfBuilder {
         if !self.context.exported_data.layers.is_empty() {
             // Stream elements by layer using LayerContentBuilder
             let all_operations = self.stream_elements_by_layer(bounds)?;
-
-            // Convert operations to content stream text
-            for op in all_operations {
-                content.push_str(&self.operation_to_string(&op));
-                content.push('\n');
-            }
+            operations.extend(all_operations);
         } else {
             // No layers, use the original streaming approach
-            let operations = self.element_streamer.stream_elements_within_bounds(
+            let element_ops = self.element_streamer.stream_elements_within_bounds(
                 &self.context.exported_data.elements,
                 bounds,
                 self.context.exported_data.duc_local_state.as_ref(),
@@ -1098,18 +1123,19 @@ impl DucToPdfBuilder {
                 &self.ocg_manager,
                 &mut self.document,
             )?;
-
-            // Convert operations to content stream text
-            for op in operations {
-                content.push_str(&self.operation_to_string(&op));
-                content.push('\n');
-            }
+            operations.extend(element_ops);
         }
 
         // End graphics state
-        content.push_str("Q\n");
+        operations.push(Operation::new("Q", vec![]));
 
-        let content_bytes = content.into_bytes();
+        let content_bytes = Content { operations }.encode().map_err(|e| {
+            ConversionError::PdfGenerationError(format!(
+                "Failed to encode modular content stream: {}",
+                e
+            ))
+        })?;
+
         let mut stream_dict = Dictionary::new();
         stream_dict.set("Length", Object::Integer(content_bytes.len() as i64));
 
@@ -1120,23 +1146,28 @@ impl DucToPdfBuilder {
     fn create_content_stream(&mut self, bounds: (f64, f64, f64, f64)) -> ConversionResult<Stream> {
         let (x, y, _width, _height) = bounds; // Use bounds directly - data is already scaled by DucDataScaler
 
-        let mut content = String::new();
+        let mut operations = Vec::new();
 
         // Start graphics state
-        content.push_str("q\n");
+        operations.push(Operation::new("q", vec![]));
 
         // Apply coordinate transformation for bounds (cm matrix)
         // In plot mode, translate to position the plot correctly on the page
-        match self.context.options.mode {
-            ConversionMode::Plot => {
-                // In plot mode, translate so the plot starts at (0,0) on the page
-                content.push_str(&format!("1 0 0 1 {} {} cm\n", -x, -y));
-            }
-            ConversionMode::Crop { .. } => {
-                // In crop mode, apply the translation as before
-                content.push_str(&format!("1 0 0 1 {} {} cm\n", x, y));
-            }
-        }
+        let (tx, ty) = match self.context.options.mode {
+            ConversionMode::Plot => (-x, -y),
+            ConversionMode::Crop { .. } => (x, y),
+        };
+        operations.push(Operation::new(
+            "cm",
+            vec![
+                1.0f64.into(),
+                0.0f64.into(),
+                0.0f64.into(),
+                1.0f64.into(),
+                tx.into(),
+                ty.into(),
+            ],
+        ));
 
         // Set page height for coordinate transformation
         let (_x, _y, _width, height) = bounds;
@@ -1157,15 +1188,10 @@ impl DucToPdfBuilder {
         if !self.context.exported_data.layers.is_empty() {
             // Stream elements by layer using LayerContentBuilder
             let all_operations = self.stream_elements_by_layer(bounds)?;
-
-            // Convert operations to content stream text
-            for op in all_operations {
-                content.push_str(&self.operation_to_string(&op));
-                content.push('\n');
-            }
+            operations.extend(all_operations);
         } else {
             // No layers, use the regular streaming approach
-            let operations = self.element_streamer.stream_elements_within_bounds(
+            let element_ops = self.element_streamer.stream_elements_within_bounds(
                 &self.context.exported_data.elements,
                 bounds,
                 self.context.exported_data.duc_local_state.as_ref(),
@@ -1177,18 +1203,16 @@ impl DucToPdfBuilder {
                 &self.ocg_manager,
                 &mut self.document,
             )?;
-
-            // Convert operations to content stream text
-            for op in operations {
-                content.push_str(&self.operation_to_string(&op));
-                content.push('\n');
-            }
+            operations.extend(element_ops);
         }
 
         // End graphics state
-        content.push_str("Q\n");
+        operations.push(Operation::new("Q", vec![]));
 
-        let content_bytes = content.into_bytes();
+        let content_bytes = Content { operations }.encode().map_err(|e| {
+            ConversionError::PdfGenerationError(format!("Failed to encode content stream: {}", e))
+        })?;
+
         let mut stream_dict = Dictionary::new();
         stream_dict.set("Length", Object::Integer(content_bytes.len() as i64));
 
@@ -1336,54 +1360,6 @@ impl DucToPdfBuilder {
         }
 
         Ok(all_operations)
-    }
-
-    /// Convert PDF operation to string representation
-    fn operation_to_string(&self, op: &hipdf::lopdf::content::Operation) -> String {
-        fn obj_to_str(obj: &Object) -> String {
-            match obj {
-                Object::Null => "null".to_string(),
-                Object::Boolean(b) => {
-                    if *b {
-                        "true".into()
-                    } else {
-                        "false".into()
-                    }
-                }
-                Object::Integer(v) => format!("{}", v),
-                Object::Real(v) => format!("{}", v),
-                Object::Name(n) => format!("/{}", String::from_utf8_lossy(n)),
-                Object::String(s, _) => format!("({})", String::from_utf8_lossy(s)),
-                Object::Reference((id, gen)) => format!("{} {} R ", id, gen),
-                Object::Array(arr) => {
-                    let parts: Vec<String> = arr.iter().map(obj_to_str).collect();
-                    format!("[{}]", parts.join(" "))
-                }
-                Object::Dictionary(dict) => {
-                    // Serialize dictionary as << /Key value ... >>
-                    let mut parts = String::new();
-                    parts.push_str("<< ");
-                    for (k, v) in dict.iter() {
-                        parts.push_str(&format!(
-                            "/{} {} ",
-                            String::from_utf8_lossy(k),
-                            obj_to_str(v)
-                        ));
-                    }
-                    parts.push_str(">>");
-                    parts
-                }
-                _ => "?".to_string(),
-            }
-        }
-
-        let mut result = String::new();
-        for operand in &op.operands {
-            result.push_str(&obj_to_str(operand));
-            result.push(' ');
-        }
-        result.push_str(&String::from_utf8_lossy(op.operator.as_bytes()));
-        result
     }
 
     /// Calculate overall bounds of all elements in millimeters
