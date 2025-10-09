@@ -23,29 +23,61 @@
 // layers: [DucLayer];
 // And also from the Elements pool: DucFrame, DucViewport and DucPlot
 
-use crate::streaming::stream_resources::ResourceStreamer;
-use crate::streaming::pdf_linear::PdfLinearRenderer;
-use crate::streaming::pdf_stroke::PdfStrokeRenderer;
-use crate::streaming::pdf_background::PdfBackgroundRenderer;
-use crate::streaming::pdf_line_head::PdfLineHeadRenderer;
-use crate::utils::style_resolver::{ResolvedStyles, StyleResolver};
 use crate::scaling::DucDataScaler;
+use crate::streaming::pdf_linear::PdfLinearRenderer;
+use crate::streaming::stream_resources::ResourceStreamer;
+use crate::utils::style_resolver::{ResolvedStyles, StyleResolver};
+use crate::utils::svg_to_pdf::SvgToPdfConverter;
 use crate::{ConversionError, ConversionResult};
 use bigcolor::BigColor;
+use duc::generated::duc::{BEZIER_MIRRORING, ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN};
 use duc::types::{
     DucBlockInstanceElement, DucElementEnum, DucEllipseElement, DucFrameElement,
-    DucFreeDrawElement, DucImageElement, DucLinearElement, DucMermaidElement, DucPdfElement,
-    DucPlotElement, DucPolygonElement, DucRectangleElement, DucTableElement, DucTextElement,
-    ElementWrapper,
+    DucFreeDrawElement, DucImageElement, DucLine, DucLineReference, DucLinearElement,
+    DucLinearElementBase, DucMermaidElement, DucPath, DucPdfElement, DucPlotElement, DucPoint,
+    DucPolygonElement, DucRectangleElement, DucTableElement, DucTextElement, ElementBackground,
+    ElementContentBase, ElementWrapper, GeometricPoint,
 };
 use hipdf::blocks::BlockManager;
 use hipdf::embed_pdf::PdfEmbedder;
 use hipdf::hatching::HatchingManager;
 use hipdf::images::ImageManager;
 use hipdf::lopdf::content::Operation;
-use hipdf::lopdf::{Object, Document};
+use hipdf::lopdf::{Dictionary, Document, Object};
 use hipdf::ocg::OCGManager;
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
+use std::f64::consts::PI;
+use std::fmt::Write;
+
+const DUC_STANDARD_PRIMARY_COLOR: &str = "oklch(62% 0.15 281)";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct OpacityKey {
+    stroke_thousandths: u16,
+    fill_thousandths: u16,
+}
+
+#[derive(Debug, Clone)]
+struct FreedrawResource {
+    name: String,
+    width: f64,
+    height: f64,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct PointsBounds {
+    min_x: f64,
+    min_y: f64,
+    width: f64,
+    height: f64,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct StyleProfile {
+    use_background_fill: bool,
+    fill_from_stroke: bool,
+    apply_stroke_properties: bool,
+}
 
 /// Element streaming context for rendering DUC elements to PDF
 pub struct ElementStreamer {
@@ -62,11 +94,25 @@ pub struct ElementStreamer {
     embedded_pdfs: HashMap<String, u32>, // file_id -> object_id
     /// Font resource name for text rendering
     font_resource_name: String,
+    /// Whether we should require elements to be marked as "plot" to be rendered
+    render_only_plot_elements: bool,
+    /// Cached ExtGState names keyed by stroke/fill opacity thousandths
+    ext_gstate_cache: HashMap<OpacityKey, String>,
+    /// Stored ExtGState dictionaries keyed by their resource name
+    ext_gstate_definitions: HashMap<String, Dictionary>,
+    /// Names of ExtGStates referenced while streaming the current page
+    current_page_ext_gstates: BTreeSet<String>,
+    /// Cached freedraw vector resources keyed by element id (or svg key)
+    freedraw_resources: HashMap<String, FreedrawResource>,
 }
 
 impl ElementStreamer {
     /// Create new element streamer
-    pub fn new(style_resolver: StyleResolver, page_height: f64, font_resource_name: String) -> Self {
+    pub fn new(
+        style_resolver: StyleResolver,
+        page_height: f64,
+        font_resource_name: String,
+    ) -> Self {
         Self {
             style_resolver,
             page_height,
@@ -75,6 +121,11 @@ impl ElementStreamer {
             new_xobjects: Vec::new(),
             embedded_pdfs: HashMap::new(),
             font_resource_name,
+            render_only_plot_elements: true,
+            ext_gstate_cache: HashMap::new(),
+            ext_gstate_definitions: HashMap::new(),
+            current_page_ext_gstates: BTreeSet::new(),
+            freedraw_resources: HashMap::new(),
         }
     }
 
@@ -103,6 +154,11 @@ impl ElementStreamer {
         self.page_height = page_height;
     }
 
+    /// Control whether only elements flagged as plot should be rendered
+    pub fn set_render_only_plot_elements(&mut self, value: bool) {
+        self.render_only_plot_elements = value;
+    }
+
     /// Stream elements within specified bounds with local state for scroll positioning
     pub fn stream_elements_within_bounds(
         &mut self,
@@ -127,14 +183,7 @@ impl ElementStreamer {
             .iter()
             .filter(|element_wrapper| {
                 let base = Self::get_element_base(&element_wrapper.element);
-
-                // Apply visibility, deletion, and plot filters
-                let visible = base.is_visible && !base.is_deleted && base.is_plot;
-                // if !visible {
-                //     println!("DEBUG: Element {} filtered out - is_visible: {}, is_deleted: {}, is_plot: {}", 
-                //         base.id, base.is_visible, base.is_deleted, base.is_plot);
-                // }
-                visible
+                self.should_render_element(base)
             })
             .filter(|element_wrapper| {
                 let base = Self::get_element_base(&element_wrapper.element);
@@ -170,7 +219,7 @@ impl ElementStreamer {
         //     "DEBUG: Starting to stream {} filtered elements",
         //     filtered_elements.len()
         // );
-    for element_wrapper in filtered_elements {
+        for element_wrapper in filtered_elements {
             let base = Self::get_element_base(&element_wrapper.element);
             // println!(
             //     "DEBUG: Streaming element {} with layer_id: {:?}",
@@ -194,7 +243,8 @@ impl ElementStreamer {
             // Handle clipping if element has a frame_id
             let has_clipping = base.frame_id.is_some();
             if let Some(frame_id) = &base.frame_id {
-                let clipping_ops = self.handle_frame_clipping(frame_id, elements, bounds, local_state)?;
+                let clipping_ops =
+                    self.handle_frame_clipping(frame_id, elements, bounds, local_state)?;
                 all_operations.extend(clipping_ops);
             }
 
@@ -230,8 +280,6 @@ impl ElementStreamer {
 
         Ok(all_operations)
     }
-
-
 
     /// Stream a single element with resource managers and local state
     fn stream_element_with_resources(
@@ -273,7 +321,11 @@ impl ElementStreamer {
                     )
                 } else {
                     // Fallback to regular transformation if parent not found
-                    self.create_transformation_matrix_with_scroll(base, local_state, center_override)
+                    self.create_transformation_matrix_with_scroll(
+                        base,
+                        local_state,
+                        center_override,
+                    )
                 }
             } else {
                 // Regular element, use standard transformation
@@ -283,11 +335,11 @@ impl ElementStreamer {
         }
 
         // Special handling: PDF elements - do not apply styles to avoid affecting embedded content
+        let styles = self.style_resolver.resolve_styles(element, None);
+
         let is_pdf = matches!(element, DucElementEnum::DucPdfElement(_));
         if !is_pdf {
-            // Resolve and apply styles
-            let styles = self.style_resolver.resolve_styles(element, None);
-            let style_ops = self.apply_styles(&styles)?;
+            let style_ops = self.apply_styles(element, &styles)?;
             operations.extend(style_ops);
         }
 
@@ -305,12 +357,18 @@ impl ElementStreamer {
                 self.stream_mermaid(mermaid, resource_streamer)?
             }
             DucElementEnum::DucFreeDrawElement(freedraw) => {
-                self.stream_freedraw(freedraw, resource_streamer)?
+                self.stream_freedraw(freedraw, &styles, document, resource_streamer)?
             }
-            DucElementEnum::DucPdfElement(pdf) => self.stream_pdf_element(pdf, document, pdf_embedder)?,
-            DucElementEnum::DucImageElement(image) => {
-                self.stream_image(image, document, pdf_embedder, image_manager, resource_streamer)?
+            DucElementEnum::DucPdfElement(pdf) => {
+                self.stream_pdf_element(pdf, document, pdf_embedder)?
             }
+            DucElementEnum::DucImageElement(image) => self.stream_image(
+                image,
+                document,
+                pdf_embedder,
+                image_manager,
+                resource_streamer,
+            )?,
             DucElementEnum::DucBlockInstanceElement(block_instance) => {
                 self.stream_block_instance(block_instance, block_manager)?
             }
@@ -353,8 +411,6 @@ impl ElementStreamer {
         Ok(operations)
     }
 
-
-
     /// Get element base (extracted from builder for reuse)
     fn get_element_base(element: &DucElementEnum) -> &duc::types::DucElementBase {
         match element {
@@ -383,6 +439,18 @@ impl ElementStreamer {
         }
     }
 
+    fn should_render_element(&self, base: &duc::types::DucElementBase) -> bool {
+        if !base.is_visible || base.is_deleted {
+            return false;
+        }
+
+        if self.render_only_plot_elements {
+            base.is_plot
+        } else {
+            true
+        }
+    }
+
     /// Find the parent plot element bounds for a given element
     fn find_parent_plot_bounds(
         &self,
@@ -404,14 +472,26 @@ impl ElementStreamer {
                             plot.layout.margins.left,
                             plot.layout.margins.top,
                             plot.layout.margins.right,
-                            plot.layout.margins.bottom
+                            plot.layout.margins.bottom,
                         ));
-                        return Some(((plot_base.x, plot_base.y, plot_base.width, plot_base.height), margins));
+                        return Some((
+                            (plot_base.x, plot_base.y, plot_base.width, plot_base.height),
+                            margins,
+                        ));
                     }
                     // Also check for frame elements (they can act as containers too)
-                    else if let DucElementEnum::DucFrameElement(frame) = &element_wrapper.element {
+                    else if let DucElementEnum::DucFrameElement(frame) = &element_wrapper.element
+                    {
                         let frame_base = &frame.stack_element_base.base;
-                        return Some(((frame_base.x, frame_base.y, frame_base.width, frame_base.height), None));
+                        return Some((
+                            (
+                                frame_base.x,
+                                frame_base.y,
+                                frame_base.width,
+                                frame_base.height,
+                            ),
+                            None,
+                        ));
                     }
                 }
             }
@@ -556,13 +636,23 @@ impl ElementStreamer {
             DucElementEnum::DucLinearElement(linear) => {
                 Self::compute_linear_center(&linear.linear_base)
             }
+            DucElementEnum::DucPolygonElement(polygon) => {
+                // Rotate regular polygons around the centre of the bounding ellipse to keep
+                // inscribed shapes aligned regardless of the number of sides. Odd-sided
+                // polygons are vertically asymmetric when their top vertex is pinned at
+                // 12 o'clock, so using the geometry bounds would introduce an off-centre
+                // pivot and cause drift when an element rotation is applied.
+                Some((polygon.base.width / 2.0, -(polygon.base.height / 2.0)))
+            }
+            DucElementEnum::DucEllipseElement(ellipse) => {
+                let linear = Self::convert_ellipse_to_linear_element(ellipse);
+                Self::compute_linear_center(&linear.linear_base)
+            }
             _ => None,
         }
     }
 
-    fn compute_linear_center(
-        linear_base: &duc::types::DucLinearElementBase,
-    ) -> Option<(f64, f64)> {
+    fn compute_linear_center(linear_base: &duc::types::DucLinearElementBase) -> Option<(f64, f64)> {
         if linear_base.points.is_empty() {
             return None;
         }
@@ -641,8 +731,7 @@ impl ElementStreamer {
 
         // 2. Rotate around the element's local origin (0,0)
         if angle != 0.0 {
-            let (center_x, center_y) = center_override
-                .unwrap_or((width / 2.0, -height / 2.0));
+            let (center_x, center_y) = center_override.unwrap_or((width / 2.0, -height / 2.0));
 
             // Translate to center for rotation
             ops.push(Operation::new(
@@ -708,7 +797,8 @@ impl ElementStreamer {
         let adjusted_y = base.y + scroll_y;
 
         // Transform y-coordinate from top-left (duc) to bottom-left (PDF) origin
-        let transformed_y = DucDataScaler::transform_point_y_to_pdf_system(adjusted_y, self.page_height);
+        let transformed_y =
+            DucDataScaler::transform_point_y_to_pdf_system(adjusted_y, self.page_height);
 
         self.create_transformation_matrix(
             adjusted_x,
@@ -748,7 +838,8 @@ impl ElementStreamer {
         };
 
         // Transform y-coordinate from top-left (duc) to bottom-left (PDF) origin
-        let transformed_y = DucDataScaler::transform_point_y_to_pdf_system(relative_y, self.page_height);
+        let transformed_y =
+            DucDataScaler::transform_point_y_to_pdf_system(relative_y, self.page_height);
 
         self.create_transformation_matrix(
             relative_x,
@@ -760,25 +851,267 @@ impl ElementStreamer {
         )
     }
 
+    fn quantize_opacity(value: f64) -> u16 {
+        let clamped = value.clamp(0.0, 1.0);
+        let quantized = (clamped * 1000.0).round();
+        quantized.max(0.0).min(1000.0) as u16
+    }
 
+    fn ensure_ext_gstate(&mut self, stroke_alpha: f64, fill_alpha: f64) -> Option<String> {
+        let stroke_q = Self::quantize_opacity(stroke_alpha);
+        let fill_q = Self::quantize_opacity(fill_alpha);
+
+        if stroke_q == 1000 && fill_q == 1000 {
+            return None;
+        }
+
+        let key = OpacityKey {
+            stroke_thousandths: stroke_q,
+            fill_thousandths: fill_q,
+        };
+
+        if let Some(existing) = self.ext_gstate_cache.get(&key) {
+            self.current_page_ext_gstates.insert(existing.clone());
+            return Some(existing.clone());
+        }
+
+        let name = format!("GS{:02}", self.ext_gstate_cache.len() + 1);
+        let mut dict = Dictionary::new();
+        dict.set("Type", Object::Name(b"ExtGState".to_vec()));
+
+        if stroke_q < 1000 {
+            dict.set("CA", Object::Real((stroke_q as f32) / 1000.0));
+        }
+        if fill_q < 1000 {
+            dict.set("ca", Object::Real((fill_q as f32) / 1000.0));
+        }
+
+        self.ext_gstate_cache.insert(key, name.clone());
+        self.ext_gstate_definitions
+            .insert(name.clone(), dict.clone());
+        self.current_page_ext_gstates.insert(name.clone());
+        Some(name)
+    }
+
+    /// Prepare streamer for a new page by clearing per-page ExtGState tracking
+    pub fn begin_page(&mut self) {
+        self.current_page_ext_gstates.clear();
+    }
+
+    /// Retrieve ExtGState dictionaries referenced on the current page
+    pub fn take_page_ext_gstates(&mut self) -> Vec<(String, Dictionary)> {
+        let names: Vec<String> = self.current_page_ext_gstates.iter().cloned().collect();
+        self.current_page_ext_gstates.clear();
+
+        let mut result = Vec::new();
+        for name in names {
+            if let Some(dict) = self.ext_gstate_definitions.get(&name) {
+                result.push((name, dict.clone()));
+            }
+        }
+        result
+    }
+
+    fn compute_points_bounds(points: &[DucPoint]) -> Option<PointsBounds> {
+        if points.is_empty() {
+            return None;
+        }
+
+        let mut min_x = f64::MAX;
+        let mut min_y = f64::MAX;
+        let mut max_x = f64::MIN;
+        let mut max_y = f64::MIN;
+
+        for point in points {
+            min_x = min_x.min(point.x);
+            min_y = min_y.min(point.y);
+            max_x = max_x.max(point.x);
+            max_y = max_y.max(point.y);
+        }
+
+        let width = (max_x - min_x).abs();
+        let height = (max_y - min_y).abs();
+
+        Some(PointsBounds {
+            min_x,
+            min_y,
+            width,
+            height,
+        })
+    }
+
+    fn build_svg_path_from_points(points: &[DucPoint]) -> String {
+        let mut data = String::new();
+        if let Some(first) = points.first() {
+            let _ = write!(&mut data, "M{:.6} {:.6}", first.x, first.y);
+            for point in points.iter().skip(1) {
+                let _ = write!(&mut data, " L{:.6} {:.6}", point.x, point.y);
+            }
+        }
+        data
+    }
+
+    fn build_freedraw_svg_document(
+        path_data: &str,
+        bounds: &PointsBounds,
+        stroke_width: f64,
+        stroke_color: &str,
+        cap: STROKE_CAP,
+        join: STROKE_JOIN,
+        dash_pattern: Option<&[f64]>,
+    ) -> String {
+        let viewbox_width = if bounds.width <= 0.0 {
+            1.0
+        } else {
+            bounds.width
+        };
+        let viewbox_height = if bounds.height <= 0.0 {
+            1.0
+        } else {
+            bounds.height
+        };
+
+        let cap_str = match cap {
+            STROKE_CAP::ROUND => "round",
+            STROKE_CAP::SQUARE => "square",
+            _ => "butt",
+        };
+
+        let join_str = match join {
+            STROKE_JOIN::ROUND => "round",
+            STROKE_JOIN::BEVEL => "bevel",
+            _ => "miter",
+        };
+
+        let dash_attr = dash_pattern
+            .filter(|pattern| !pattern.is_empty())
+            .map(|pattern| {
+                let mut buffer = String::new();
+                for (idx, value) in pattern.iter().enumerate() {
+                    if idx > 0 {
+                        buffer.push(' ');
+                    }
+                    let _ = write!(&mut buffer, "{:.6}", value);
+                }
+                buffer
+            });
+
+        let mut svg = String::new();
+        let _ = write!(
+            &mut svg,
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{:.6}\" height=\"{:.6}\" viewBox=\"{:.6} {:.6} {:.6} {:.6}\">",
+            viewbox_width,
+            viewbox_height,
+            bounds.min_x,
+            bounds.min_y,
+            viewbox_width.max(1e-6),
+            viewbox_height.max(1e-6)
+        );
+
+        let _ = write!(
+            &mut svg,
+            "<path d=\"{}\" fill=\"none\" stroke=\"{}\" stroke-width=\"{:.6}\" stroke-linecap=\"{}\" stroke-linejoin=\"{}\"",
+            path_data,
+            stroke_color,
+            stroke_width,
+            cap_str,
+            join_str
+        );
+
+        if let Some(dashes) = dash_attr {
+            let _ = write!(&mut svg, " stroke-dasharray=\"{}\"", dashes);
+        }
+
+        svg.push_str(" /></svg>");
+        svg
+    }
+
+    fn get_or_create_freedraw_resource(
+        &mut self,
+        key: &str,
+        svg_content: &str,
+        document: &mut Document,
+    ) -> ConversionResult<FreedrawResource> {
+        if let Some(existing) = self.freedraw_resources.get(key) {
+            return Ok(existing.clone());
+        }
+
+        let (object_id, width, height) =
+            SvgToPdfConverter::convert_svg_bytes_to_xobject(document, svg_content.as_bytes())?;
+        let name = format!("XFD{}", object_id);
+        self.new_xobjects
+            .push((name.clone(), Object::Reference((object_id, 0))));
+
+        let resource = FreedrawResource {
+            name: name.clone(),
+            width,
+            height,
+        };
+        self.freedraw_resources
+            .insert(key.to_string(), resource.clone());
+        Ok(resource)
+    }
     /// Apply resolved styles to PDF operations
-    fn apply_styles(&self, styles: &ResolvedStyles) -> ConversionResult<Vec<Operation>> {
+    fn apply_styles(
+        &mut self,
+        element: &DucElementEnum,
+        styles: &ResolvedStyles,
+    ) -> ConversionResult<Vec<Operation>> {
         let mut ops = Vec::new();
 
-        // Apply opacity
-        if styles.opacity < 1.0 {
+        let profile = Self::determine_style_profile(element);
+
+        let maybe_background = styles.background.iter().find(|bg| bg.visible);
+        let maybe_stroke = styles.stroke.iter().find(|st| st.visible);
+
+        let element_opacity = styles.opacity.clamp(0.0, 1.0);
+
+        let fill_color = if profile.fill_from_stroke {
+            maybe_stroke
+                .map(|stroke| stroke.color.clone())
+                .or_else(|| maybe_background.map(|bg| bg.color.clone()))
+        } else if profile.use_background_fill {
+            maybe_background.map(|bg| bg.color.clone())
+        } else {
+            None
+        };
+
+        let fill_opacity = if profile.fill_from_stroke {
+            styles.get_combined_stroke_opacity()
+        } else if profile.use_background_fill {
+            styles.get_combined_fill_opacity()
+        } else {
+            element_opacity
+        };
+
+        let stroke_opacity = if profile.apply_stroke_properties {
+            styles.get_combined_stroke_opacity()
+        } else {
+            element_opacity
+        };
+
+        if let Some(gs_name) = self.ensure_ext_gstate(stroke_opacity, fill_opacity) {
             ops.push(Operation::new(
                 "gs",
-                vec![Object::Name(
-                    format!("GS{}", (styles.opacity * 100.0) as i32).into_bytes(),
-                )],
+                vec![Object::Name(gs_name.into_bytes())],
             ));
         }
 
-        // Apply stroke styles
-        if let Some(stroke) = styles.stroke.first() {
-            if stroke.visible {
-                // Set stroke color (simplified - assumes RGB hex color)
+        if let Some(color_str) = &fill_color {
+            if let Ok(color) = self.parse_color(color_str) {
+                ops.push(Operation::new(
+                    "rg",
+                    vec![
+                        Object::Real(color.0),
+                        Object::Real(color.1),
+                        Object::Real(color.2),
+                    ],
+                ));
+            }
+        }
+
+        if let Some(stroke) = maybe_stroke {
+            if profile.apply_stroke_properties || profile.fill_from_stroke {
                 if let Ok(color) = self.parse_color(&stroke.color) {
                     ops.push(Operation::new(
                         "RG",
@@ -789,38 +1122,34 @@ impl ElementStreamer {
                         ],
                     ));
                 }
+            }
 
-                // Set line width
+            if profile.apply_stroke_properties {
                 ops.push(Operation::new("w", vec![Object::Real(stroke.width as f32)]));
 
-                // Set dash pattern if present
-                if let Some(dash) = &stroke.dash_pattern {
-                    let dash_objects: Vec<Object> =
-                        dash.iter().map(|&d| Object::Real(d as f32)).collect();
-                    ops.push(Operation::new(
-                        "d",
-                        vec![
-                            Object::Array(dash_objects),
-                            Object::Real(0.0), // Phase
-                        ],
-                    ));
-                }
-            }
-        }
+                let cap = match stroke.cap {
+                    STROKE_CAP::ROUND => 1,
+                    STROKE_CAP::SQUARE => 2,
+                    _ => 0,
+                };
+                ops.push(Operation::new("J", vec![Object::Integer(i64::from(cap))]));
 
-        // Apply fill styles
-        if let Some(background) = styles.background.first() {
-            if background.visible {
-                // Set fill color
-                if let Ok(color) = self.parse_color(&background.color) {
-                    ops.push(Operation::new(
-                        "rg",
-                        vec![
-                            Object::Real(color.0),
-                            Object::Real(color.1),
-                            Object::Real(color.2),
-                        ],
-                    ));
+                let join = match stroke.join {
+                    STROKE_JOIN::ROUND => 1,
+                    STROKE_JOIN::BEVEL => 2,
+                    _ => 0,
+                };
+                ops.push(Operation::new("j", vec![Object::Integer(i64::from(join))]));
+
+                if let Some(dash) = &stroke.dash_pattern {
+                    if !dash.is_empty() {
+                        let dash_objects: Vec<Object> =
+                            dash.iter().map(|&d| Object::Real(d as f32)).collect();
+                        ops.push(Operation::new(
+                            "d",
+                            vec![Object::Array(dash_objects), Object::Real(0.0)],
+                        ));
+                    }
                 }
             }
         }
@@ -903,6 +1232,49 @@ impl ElementStreamer {
         Ok(ops)
     }
 
+    fn determine_style_profile(element: &DucElementEnum) -> StyleProfile {
+        match element {
+            DucElementEnum::DucRectangleElement(_)
+            | DucElementEnum::DucPolygonElement(_)
+            | DucElementEnum::DucEllipseElement(_)
+            | DucElementEnum::DucLinearElement(_)
+            | DucElementEnum::DucTableElement(_) => StyleProfile {
+                use_background_fill: true,
+                fill_from_stroke: false,
+                apply_stroke_properties: true,
+            },
+            DucElementEnum::DucFrameElement(_)
+            | DucElementEnum::DucPlotElement(_)
+            | DucElementEnum::DucBlockInstanceElement(_)
+            | DucElementEnum::DucLeaderElement(_)
+            | DucElementEnum::DucDimensionElement(_)
+            | DucElementEnum::DucFeatureControlFrameElement(_)
+            | DucElementEnum::DucParametricElement(_) => StyleProfile {
+                use_background_fill: false,
+                fill_from_stroke: false,
+                apply_stroke_properties: true,
+            },
+            DucElementEnum::DucTextElement(_) => StyleProfile {
+                use_background_fill: false,
+                fill_from_stroke: true,
+                apply_stroke_properties: false,
+            },
+            DucElementEnum::DucFreeDrawElement(_)
+            | DucElementEnum::DucImageElement(_)
+            | DucElementEnum::DucMermaidElement(_)
+            | DucElementEnum::DucPdfElement(_)
+            | DucElementEnum::DucEmbeddableElement(_)
+            | DucElementEnum::DucXRayElement(_)
+            | DucElementEnum::DucArrowElement(_)
+            | DucElementEnum::DucViewportElement(_)
+            | DucElementEnum::DucDocElement(_) => StyleProfile {
+                use_background_fill: false,
+                fill_from_stroke: false,
+                apply_stroke_properties: false,
+            },
+        }
+    }
+
     /// Stream text element
     fn stream_text(&self, text: &DucTextElement) -> ConversionResult<Vec<Operation>> {
         let mut ops = Vec::new();
@@ -923,7 +1295,7 @@ impl ElementStreamer {
         // We need to offset Y by the font size to account for text height
         // This ensures text appears where the element's top-left corner is positioned
         let baseline_offset_y = -(text.style.font_size as f32);
-        
+
         // Set text position (relative to current transformation)
         ops.push(Operation::new(
             "Td",
@@ -975,151 +1347,12 @@ impl ElementStreamer {
         Ok(ops)
     }
 
-    /// Stream polygon element
-    fn stream_polygon(&self, polygon: &DucPolygonElement) -> ConversionResult<Vec<Operation>> {
-        let mut ops = Vec::new();
-
-        // Generate a regular polygon with the specified number of sides
-        let sides = polygon.sides.max(3); // Minimum 3 sides
-        let center_x = polygon.base.width as f32 / 2.0;
-        let center_y = polygon.base.height as f32 / 2.0;
-        let radius = center_x.min(center_y);
-
-        let angle_step = 2.0 * std::f32::consts::PI / sides as f32;
-
-        // Start at the first vertex
-        let first_x = center_x + radius * (0.0_f32).cos();
-        let first_y = center_y + radius * (0.0_f32).sin();
-        ops.push(Operation::new(
-            "m",
-            vec![Object::Real(first_x), Object::Real(first_y)],
-        ));
-
-        // Draw lines to other vertices
-        for i in 1..sides {
-            let angle = i as f32 * angle_step;
-            let x = center_x + radius * angle.cos();
-            let y = center_y + radius * angle.sin();
-            ops.push(Operation::new("l", vec![Object::Real(x), Object::Real(y)]));
-        }
-
-        // Close the path
-        ops.push(Operation::new("h", vec![]));
-
-        // Fill and/or stroke
-        let styles = &polygon.base.styles;
-        if !styles.background.is_empty() && !styles.stroke.is_empty() {
-            ops.push(Operation::new("B", vec![])); // Fill and stroke
-        } else if !styles.background.is_empty() {
-            ops.push(Operation::new("f", vec![])); // Fill only
-        } else if !styles.stroke.is_empty() {
-            ops.push(Operation::new("S", vec![])); // Stroke only
-        }
-
-        Ok(ops)
-    }
-
-    /// Stream ellipse element
-    fn stream_ellipse(&self, ellipse: &DucEllipseElement) -> ConversionResult<Vec<Operation>> {
-        let mut ops = Vec::new();
-
-        let rx = ellipse.base.width as f32 / 2.0;
-        let ry = ellipse.base.height as f32 / 2.0;
-        let cx = rx;
-        let cy = ry;
-
-        // Approximate ellipse using Bézier curves (4 curves for full ellipse)
-        let kappa = 0.5522848; // Magic number for Bézier approximation of circle
-        let kx = kappa * rx;
-        let ky = kappa * ry;
-
-        // Start at rightmost point
-        ops.push(Operation::new(
-            "m",
-            vec![Object::Real(cx + rx), Object::Real(cy)],
-        ));
-
-        // Top right curve
-        ops.push(Operation::new(
-            "c",
-            vec![
-                Object::Real(cx + rx),
-                Object::Real(cy + ky),
-                Object::Real(cx + kx),
-                Object::Real(cy + ry),
-                Object::Real(cx),
-                Object::Real(cy + ry),
-            ],
-        ));
-
-        // Top left curve
-        ops.push(Operation::new(
-            "c",
-            vec![
-                Object::Real(cx - kx),
-                Object::Real(cy + ry),
-                Object::Real(cx - rx),
-                Object::Real(cy + ky),
-                Object::Real(cx - rx),
-                Object::Real(cy),
-            ],
-        ));
-
-        // Bottom left curve
-        ops.push(Operation::new(
-            "c",
-            vec![
-                Object::Real(cx - rx),
-                Object::Real(cy - ky),
-                Object::Real(cx - kx),
-                Object::Real(cy - ry),
-                Object::Real(cx),
-                Object::Real(cy - ry),
-            ],
-        ));
-
-        // Bottom right curve
-        ops.push(Operation::new(
-            "c",
-            vec![
-                Object::Real(cx + kx),
-                Object::Real(cy - ry),
-                Object::Real(cx + rx),
-                Object::Real(cy - ky),
-                Object::Real(cx + rx),
-                Object::Real(cy),
-            ],
-        ));
-
-        // Fill and/or stroke
-        let styles = &ellipse.base.styles;
-        if !styles.background.is_empty() && !styles.stroke.is_empty() {
-            ops.push(Operation::new("B", vec![])); // Fill and stroke
-        } else if !styles.background.is_empty() {
-            ops.push(Operation::new("f", vec![])); // Fill only
-        } else if !styles.stroke.is_empty() {
-            ops.push(Operation::new("S", vec![])); // Stroke only
-        }
-
-        Ok(ops)
-    }
-
-    /// Stream linear element (lines)
-    fn stream_linear(&self, linear: &DucLinearElement) -> ConversionResult<Vec<Operation>> {
-        // Use the dedicated linear renderer module
-        PdfLinearRenderer::stream_linear(linear)
-    }
-
     /// Stream table element
     fn stream_table(&self, table: &DucTableElement) -> ConversionResult<Vec<Operation>> {
         let mut ops = Vec::new();
 
-        // This is a complex element that would require:
-        // 1. Calculate cell positions and sizes
-        // 2. Draw cell borders
-        // 3. Draw cell content (text, etc.)
-        // For now, create a placeholder rectangle
-
+        // Placeholder rectangle for the table bounds
+        ops.push(Operation::new("% Table placeholder", vec![]));
         ops.push(Operation::new(
             "re",
             vec![
@@ -1129,10 +1362,7 @@ impl ElementStreamer {
                 Object::Real(table.base.height as f32),
             ],
         ));
-
-        ops.push(Operation::new("S", vec![])); // Stroke outline
-
-        // TODO: Implement full table rendering with cells, borders, content
+        ops.push(Operation::new("S", vec![]));
         ops.push(Operation::new(
             "% TODO: Implement full table rendering",
             vec![],
@@ -1141,11 +1371,420 @@ impl ElementStreamer {
         Ok(ops)
     }
 
+    /// Stream polygon element
+    fn stream_polygon(&self, polygon: &DucPolygonElement) -> ConversionResult<Vec<Operation>> {
+        let linear = Self::convert_polygon_to_linear_element(polygon);
+        PdfLinearRenderer::stream_linear(&linear)
+    }
+
+    fn convert_polygon_to_linear_element(polygon: &DucPolygonElement) -> DucLinearElement {
+        let sides = polygon.sides.max(3);
+        let points = Self::generate_polygon_points(sides, polygon.base.width, polygon.base.height);
+        let mut lines: Vec<DucLine> = Vec::with_capacity(points.len());
+
+        for i in 0..points.len() {
+            let next_i = (i + 1) % points.len();
+            lines.push(DucLine {
+                start: DucLineReference {
+                    index: i as i32,
+                    handle: None,
+                },
+                end: DucLineReference {
+                    index: next_i as i32,
+                    handle: None,
+                },
+            });
+        }
+
+        DucLinearElement {
+            linear_base: DucLinearElementBase {
+                base: polygon.base.clone(),
+                points,
+                lines,
+                path_overrides: Vec::new(),
+                last_committed_point: None,
+                start_binding: None,
+                end_binding: None,
+            },
+            wipeout_below: false,
+        }
+    }
+
+    fn generate_polygon_points(sides: i32, width: f64, height: f64) -> Vec<DucPoint> {
+        let valid_sides = sides.max(3);
+        let cx = width / 2.0;
+        let cy = height / 2.0;
+        let rx = width / 2.0;
+        let ry = height / 2.0;
+
+        (0..valid_sides)
+            .map(|i| {
+                let t = (i as f64) * 2.0 * PI / (valid_sides as f64) - PI / 2.0;
+                DucPoint {
+                    x: cx + rx * t.cos(),
+                    y: cy + ry * t.sin(),
+                    mirroring: None,
+                }
+            })
+            .collect()
+    }
+
+    /// Stream ellipse element
+    fn stream_ellipse(&self, ellipse: &DucEllipseElement) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        let linear = Self::convert_ellipse_to_linear_element(ellipse);
+        ops.extend(PdfLinearRenderer::stream_linear(&linear)?);
+
+        if ellipse.show_aux_crosshair {
+            ops.extend(self.stream_ellipse_crosshair(ellipse)?);
+        }
+
+        Ok(ops)
+    }
+
+    fn stream_ellipse_crosshair(
+        &self,
+        ellipse: &DucEllipseElement,
+    ) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+        let base = &ellipse.base;
+
+        let cx = base.width / 2.0;
+        let cy = base.height / 2.0;
+        let cross_width = base.width * 1.2;
+        let cross_height = base.height * 1.2;
+        let x1 = cx - cross_width / 2.0;
+        let x2 = cx + cross_width / 2.0;
+        let y1 = cy - cross_height / 2.0;
+        let y2 = cy + cross_height / 2.0;
+
+        let (r, g, b) = self.parse_color(DUC_STANDARD_PRIMARY_COLOR)?;
+        ops.push(Operation::new(
+            "RG",
+            vec![Object::Real(r), Object::Real(g), Object::Real(b)],
+        ));
+        ops.push(Operation::new("w", vec![Object::Real(0.5)]));
+        ops.push(Operation::new("J", vec![Object::Integer(1)]));
+        ops.push(Operation::new("j", vec![Object::Integer(1)]));
+
+        ops.push(Operation::new("% Aux crosshair horizontal", vec![]));
+        let (dash_array_h, dash_offset_h) = Self::crosshair_dash_params(cross_width);
+        ops.push(Operation::new(
+            "d",
+            vec![Object::Array(dash_array_h), Object::Real(dash_offset_h)],
+        ));
+        ops.push(Operation::new(
+            "m",
+            vec![Object::Real(x1 as f32), Object::Real(-(cy) as f32)],
+        ));
+        ops.push(Operation::new(
+            "l",
+            vec![Object::Real(x2 as f32), Object::Real(-(cy) as f32)],
+        ));
+        ops.push(Operation::new("S", vec![]));
+
+        ops.push(Operation::new("% Aux crosshair vertical", vec![]));
+        let (dash_array_v, dash_offset_v) = Self::crosshair_dash_params(cross_height);
+        ops.push(Operation::new(
+            "d",
+            vec![Object::Array(dash_array_v), Object::Real(dash_offset_v)],
+        ));
+        ops.push(Operation::new(
+            "m",
+            vec![Object::Real(cx as f32), Object::Real(-y1 as f32)],
+        ));
+        ops.push(Operation::new(
+            "l",
+            vec![Object::Real(cx as f32), Object::Real(-y2 as f32)],
+        ));
+        ops.push(Operation::new("S", vec![]));
+
+        Ok(ops)
+    }
+
+    fn crosshair_dash_params(line_length: f64) -> (Vec<Object>, f32) {
+        const PATTERN: [f64; 4] = [26.0, 6.0, 0.6, 6.0];
+        let dash_array: Vec<Object> = PATTERN
+            .iter()
+            .map(|&value| Object::Real(value as f32))
+            .collect();
+
+        let total: f64 = PATTERN.iter().sum();
+        if line_length <= f64::EPSILON || total <= f64::EPSILON {
+            return (dash_array, 0.0);
+        }
+
+        let main_dash = PATTERN[0];
+        let mut offset = (main_dash / 2.0 - line_length / 2.0) % total;
+        if offset < 0.0 {
+            offset += total;
+        }
+
+        (dash_array, offset as f32)
+    }
+
+    fn convert_ellipse_to_linear_element(element: &DucEllipseElement) -> DucLinearElement {
+        let base = &element.base;
+        let width = base.width;
+        let height = base.height;
+        let ratio_f64 = element.ratio as f64;
+        let start_angle = element.start_angle;
+        let end_angle = element.end_angle;
+
+        let rx = width / 2.0;
+        let ry = height / 2.0;
+        let cx = width / 2.0;
+        let cy = height / 2.0;
+        let epsilon: f64 = 1e-6;
+
+        let sweep_angle = end_angle - start_angle;
+        let is_full_shape = sweep_angle.abs() >= 2.0 * PI - epsilon;
+        let has_hole = ratio_f64 > epsilon && ratio_f64 < 1.0_f64 - epsilon;
+
+        let mut all_points: Vec<DucPoint> = Vec::new();
+        let mut all_lines: Vec<DucLine> = Vec::new();
+        let mut path_overrides: Vec<DucPath> = Vec::new();
+
+        let create_arc = |radius_x: f64, radius_y: f64, s_angle: f64, e_angle: f64| {
+            let mut arc_points = Vec::new();
+            let mut arc_lines = Vec::new();
+            let sweep = e_angle - s_angle;
+            if sweep.abs() < epsilon {
+                return (arc_points, arc_lines);
+            }
+
+            let n_segments = (sweep.abs() / (PI / 2.0)).ceil() as usize;
+            let segment_sweep = sweep / n_segments as f64;
+
+            let n_points = if is_full_shape {
+                n_segments
+            } else {
+                n_segments + 1
+            };
+
+            for i in 0..n_points {
+                let angle = s_angle + (i as f64) * segment_sweep;
+                arc_points.push(DucPoint {
+                    x: cx + radius_x * angle.cos(),
+                    y: cy + radius_y * angle.sin(),
+                    mirroring: Some(BEZIER_MIRRORING::ANGLE_LENGTH),
+                });
+            }
+
+            for i in 0..n_segments {
+                let p0_idx = i;
+                let p3_idx = (i + 1) % n_points;
+
+                let angle0 = s_angle + (i as f64) * segment_sweep;
+                let angle1 = s_angle + ((i + 1) as f64) * segment_sweep;
+
+                let p0_x = cx + radius_x * angle0.cos();
+                let p0_y = cy + radius_y * angle0.sin();
+                let p3_x = cx + radius_x * angle1.cos();
+                let p3_y = cy + radius_y * angle1.sin();
+
+                let k = (4.0 / 3.0) * (segment_sweep / 4.0).tan();
+                let t0_x = -radius_x * angle0.sin();
+                let t0_y = radius_y * angle0.cos();
+                let t1_x = -radius_x * angle1.sin();
+                let t1_y = radius_y * angle1.cos();
+
+                let cp1_x = p0_x + t0_x * k;
+                let cp1_y = p0_y + t0_y * k;
+                let cp2_x = p3_x - t1_x * k;
+                let cp2_y = p3_y - t1_y * k;
+
+                arc_lines.push(DucLine {
+                    start: DucLineReference {
+                        index: p0_idx as i32,
+                        handle: Some(GeometricPoint { x: cp1_x, y: cp1_y }),
+                    },
+                    end: DucLineReference {
+                        index: p3_idx as i32,
+                        handle: Some(GeometricPoint { x: cp2_x, y: cp2_y }),
+                    },
+                });
+            }
+
+            (arc_points, arc_lines)
+        };
+
+        let add_path_to_element = |points_to_add: &Vec<DucPoint>,
+                                   lines_to_add: &Vec<DucLine>,
+                                   all_points: &mut Vec<DucPoint>,
+                                   all_lines: &mut Vec<DucLine>|
+         -> (Vec<i32>, Vec<i32>) {
+            let point_offset = all_points.len() as i32;
+            let line_offset = all_lines.len() as i32;
+            let point_indices: Vec<i32> = (0..points_to_add.len())
+                .map(|i| point_offset + i as i32)
+                .collect();
+            let line_indices: Vec<i32> = (0..lines_to_add.len())
+                .map(|i| line_offset + i as i32)
+                .collect();
+
+            all_points.extend_from_slice(points_to_add);
+
+            for line in lines_to_add {
+                let mut new_line = line.clone();
+                let start_idx = line.start.index as usize;
+                let end_idx = line.end.index as usize;
+                new_line.start.index = point_indices[start_idx];
+                new_line.end.index = point_indices[end_idx];
+                all_lines.push(new_line);
+            }
+
+            (point_indices, line_indices)
+        };
+
+        let (outer_points, outer_lines) = create_arc(rx, ry, start_angle, end_angle);
+        let (outer_indices, _outer_line_indices) =
+            add_path_to_element(&outer_points, &outer_lines, &mut all_points, &mut all_lines);
+
+        if has_hole {
+            let rx_inner = rx * (1.0_f64 - ratio_f64);
+            let ry_inner = ry * (1.0_f64 - ratio_f64);
+            let (inner_points_orig, inner_lines_orig) =
+                create_arc(rx_inner, ry_inner, start_angle, end_angle);
+
+            let inner_points: Vec<DucPoint> = inner_points_orig.into_iter().rev().collect();
+
+            let inner_lines: Vec<DucLine> = inner_lines_orig
+                .into_iter()
+                .rev()
+                .map(|line| {
+                    let num_pts = inner_points.len();
+                    DucLine {
+                        start: DucLineReference {
+                            index: (num_pts as i32 - 1) - line.end.index,
+                            handle: line.end.handle.clone(),
+                        },
+                        end: DucLineReference {
+                            index: (num_pts as i32 - 1) - line.start.index,
+                            handle: line.start.handle.clone(),
+                        },
+                    }
+                })
+                .collect();
+
+            let (inner_indices, inner_line_indices) =
+                add_path_to_element(&inner_points, &inner_lines, &mut all_points, &mut all_lines);
+
+            if is_full_shape {
+                path_overrides.push(DucPath {
+                    line_indices: inner_line_indices,
+                    background: Some(ElementBackground {
+                        content: ElementContentBase {
+                            visible: false,
+                            ..element.base.styles.background.get(0).map_or_else(
+                                || ElementContentBase {
+                                    visible: false,
+                                    preference: Some(ELEMENT_CONTENT_PREFERENCE::SOLID),
+                                    src: String::new(),
+                                    opacity: 0.0,
+                                    tiling: None,
+                                    hatch: None,
+                                    image_filter: None,
+                                },
+                                |bg| bg.content.clone(),
+                            )
+                        },
+                    }),
+                    stroke: None,
+                });
+            } else {
+                let outer_start_idx = outer_indices[0];
+                let outer_end_idx = *outer_indices.last().unwrap();
+                let inner_start_idx = inner_indices[0];
+                let inner_end_idx = *inner_indices.last().unwrap();
+
+                all_points[outer_start_idx as usize].mirroring = Some(BEZIER_MIRRORING::NONE);
+                all_points[outer_end_idx as usize].mirroring = Some(BEZIER_MIRRORING::NONE);
+                all_points[inner_start_idx as usize].mirroring = Some(BEZIER_MIRRORING::NONE);
+                all_points[inner_end_idx as usize].mirroring = Some(BEZIER_MIRRORING::NONE);
+
+                all_lines.push(DucLine {
+                    start: DucLineReference {
+                        index: outer_end_idx,
+                        handle: None,
+                    },
+                    end: DucLineReference {
+                        index: inner_start_idx,
+                        handle: None,
+                    },
+                });
+                all_lines.push(DucLine {
+                    start: DucLineReference {
+                        index: inner_end_idx,
+                        handle: None,
+                    },
+                    end: DucLineReference {
+                        index: outer_start_idx,
+                        handle: None,
+                    },
+                });
+            }
+        } else if !is_full_shape {
+            let center_point = DucPoint {
+                x: cx,
+                y: cy,
+                mirroring: Some(BEZIER_MIRRORING::NONE),
+            };
+            let center_index = all_points.len() as i32;
+            all_points.push(center_point);
+
+            let outer_start_idx = outer_indices[0];
+            let outer_end_idx = *outer_indices.last().unwrap();
+
+            all_points[outer_start_idx as usize].mirroring = Some(BEZIER_MIRRORING::NONE);
+            all_points[outer_end_idx as usize].mirroring = Some(BEZIER_MIRRORING::NONE);
+
+            all_lines.push(DucLine {
+                start: DucLineReference {
+                    index: outer_end_idx,
+                    handle: None,
+                },
+                end: DucLineReference {
+                    index: center_index,
+                    handle: None,
+                },
+            });
+            all_lines.push(DucLine {
+                start: DucLineReference {
+                    index: center_index,
+                    handle: None,
+                },
+                end: DucLineReference {
+                    index: outer_start_idx,
+                    handle: None,
+                },
+            });
+        }
+
+        DucLinearElement {
+            linear_base: DucLinearElementBase {
+                base: base.clone(),
+                points: all_points,
+                lines: all_lines,
+                path_overrides,
+                last_committed_point: None,
+                start_binding: None,
+                end_binding: None,
+            },
+            wipeout_below: false,
+        }
+    }
+
+    /// Stream linear element (lines)
+    fn stream_linear(&self, linear: &DucLinearElement) -> ConversionResult<Vec<Operation>> {
+        PdfLinearRenderer::stream_linear(linear)
+    }
+
     /// Stream mermaid element (uses SVG from resources)
     fn stream_mermaid(
         &self,
         mermaid: &DucMermaidElement,
-        _resource_streamer: &mut ResourceStreamer,
+        resource_streamer: &mut ResourceStreamer,
     ) -> ConversionResult<Vec<Operation>> {
         let mut ops = Vec::new();
 
@@ -1178,8 +1817,7 @@ impl ElementStreamer {
                 // SVG not found in cache, try to stream it directly
                 ops.push(Operation::new("% Mermaid SVG streaming", vec![]));
 
-                // Use the new ResourceStreamer approach
-                match _resource_streamer.stream_svg_resource(
+                match resource_streamer.stream_svg_resource(
                     svg_path,
                     0.0,
                     0.0, // x, y position
@@ -1187,12 +1825,10 @@ impl ElementStreamer {
                     mermaid.base.height,
                 ) {
                     Ok(svg_ops) => {
-                        // Successfully streamed SVG operations
                         ops.extend(svg_ops);
                         ops.push(Operation::new("% SVG successfully embedded", vec![]));
                     }
                     Err(e) => {
-                        // If resource streaming fails, don't try fallback - just error out
                         return Err(ConversionError::ResourceLoadError(format!(
                             "Failed to stream SVG resource {}: {}",
                             svg_path, e
@@ -1218,82 +1854,100 @@ impl ElementStreamer {
         Ok(ops)
     }
 
-    /// Stream freedraw element (uses SVG from resources)
+    /// Stream freedraw element by converting SVG path data into a PDF XObject
     fn stream_freedraw(
-        &self,
+        &mut self,
         freedraw: &DucFreeDrawElement,
+        styles: &ResolvedStyles,
+        document: &mut Document,
         _resource_streamer: &mut ResourceStreamer,
     ) -> ConversionResult<Vec<Operation>> {
         let mut ops = Vec::new();
 
-        if let Some(svg_path) = &freedraw.svg_path {
-            if let Some(xobject_name) = self.resource_cache.get(svg_path) {
-                // Use XObject for the SVG
-                ops.push(Operation::new("% Freedraw SVG from cache", vec![]));
-                ops.push(Operation::new("q", vec![])); // Save graphics state
-
-                // Apply scaling if needed
-                ops.push(Operation::new(
-                    "cm",
-                    vec![
-                        Object::Real(freedraw.base.width as f32),
-                        Object::Real(0.0),
-                        Object::Real(0.0),
-                        Object::Real(freedraw.base.height as f32),
-                        Object::Real(0.0),
-                        Object::Real(0.0),
-                    ],
-                ));
-
-                ops.push(Operation::new(
-                    "Do",
-                    vec![Object::Name(xobject_name.as_bytes().to_vec())],
-                ));
-
-                ops.push(Operation::new("Q", vec![])); // Restore graphics state
-            } else {
-                // SVG not found in cache, try to stream it directly
-                ops.push(Operation::new("% Freedraw SVG streaming", vec![]));
-
-                // Use the new ResourceStreamer approach
-                match _resource_streamer.stream_svg_resource(
-                    svg_path,
-                    0.0,
-                    0.0, // x, y position
-                    freedraw.base.width,
-                    freedraw.base.height,
-                ) {
-                    Ok(svg_ops) => {
-                        // Successfully streamed SVG operations
-                        ops.extend(svg_ops);
-                        ops.push(Operation::new("% SVG successfully embedded", vec![]));
-                    }
-                    Err(e) => {
-                        // If resource streaming fails, don't try fallback - just error out
-                        return Err(ConversionError::ResourceLoadError(format!(
-                            "Failed to stream SVG resource {}: {}",
-                            svg_path, e
-                        )));
-                    }
-                }
-            }
-        } else {
-            // No svg_path, create placeholder
+        if freedraw.points.len() < 2 {
             ops.push(Operation::new(
-                "% Freedraw element without svg_path",
+                "% Freedraw element skipped - insufficient points",
                 vec![],
             ));
-            ops.push(Operation::new(
-                "re",
-                vec![
-                    Object::Real(0.0),
-                    Object::Real(0.0),
-                    Object::Real(freedraw.base.width as f32),
-                    Object::Real(freedraw.base.height as f32),
-                ],
-            ));
-            ops.push(Operation::new("S", vec![]));
+            return Ok(ops);
         }
+
+        let bounds = match Self::compute_points_bounds(&freedraw.points) {
+            Some(b) => b,
+            None => {
+                ops.push(Operation::new(
+                    "% Freedraw element without calculable bounds",
+                    vec![],
+                ));
+                return Ok(ops);
+            }
+        };
+
+        let path_data = if let Some(svg_path) = freedraw
+            .svg_path
+            .as_ref()
+            .filter(|content| !content.trim().is_empty())
+        {
+            svg_path.clone()
+        } else {
+            Self::build_svg_path_from_points(&freedraw.points)
+        };
+
+        let stroke = styles.stroke.iter().find(|stroke| stroke.visible);
+        let stroke_color = stroke
+            .map(|stroke| stroke.color.clone())
+            .unwrap_or_else(|| "#000000".to_string());
+        let stroke_width = stroke
+            .map(|stroke| stroke.width)
+            .unwrap_or_else(|| freedraw.size.max(0.1));
+        let stroke_cap = stroke.map(|stroke| stroke.cap).unwrap_or(STROKE_CAP::ROUND);
+        let stroke_join = stroke
+            .map(|stroke| stroke.join)
+            .unwrap_or(STROKE_JOIN::ROUND);
+        let dash_pattern = stroke.and_then(|stroke| stroke.dash_pattern.clone());
+
+        let svg_content = Self::build_freedraw_svg_document(
+            &path_data,
+            &bounds,
+            stroke_width,
+            &stroke_color,
+            stroke_cap,
+            stroke_join,
+            dash_pattern.as_deref(),
+        );
+
+        let resource_key = freedraw.base.id.clone();
+        let resource =
+            self.get_or_create_freedraw_resource(&resource_key, &svg_content, document)?;
+
+        let scale_x = if resource.width.abs() < f64::EPSILON {
+            1.0
+        } else {
+            freedraw.base.width / resource.width
+        };
+        let scale_y = if resource.height.abs() < f64::EPSILON {
+            1.0
+        } else {
+            freedraw.base.height / resource.height
+        };
+
+        ops.push(Operation::new("q", vec![]));
+        ops.push(Operation::new(
+            "cm",
+            vec![
+                Object::Real(scale_x as f32),
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(scale_y as f32),
+                Object::Real(0.0),
+                Object::Real(0.0),
+            ],
+        ));
+        ops.push(Operation::new(
+            "Do",
+            vec![Object::Name(resource.name.clone().into_bytes())],
+        ));
+        ops.push(Operation::new("Q", vec![]));
 
         Ok(ops)
     }
@@ -1306,12 +1960,12 @@ impl ElementStreamer {
         pdf_embedder: &mut PdfEmbedder,
     ) -> ConversionResult<Vec<Operation>> {
         use hipdf::embed_pdf::{EmbedOptions, PageRange};
-        
+
         let mut ops = Vec::new();
 
         // Validate file id
-        let file_id = if let Some(fid) = &pdf.file_id { 
-            fid.clone() 
+        let file_id = if let Some(fid) = &pdf.file_id {
+            fid.clone()
         } else {
             ops.push(Operation::new("% PDF element without file_id", vec![]));
             // Placeholder rectangle
@@ -1351,7 +2005,7 @@ impl ElementStreamer {
                     self.resource_cache.insert(file_id.clone(), name.clone());
                     self.new_xobjects.push((name.clone(), obj_ref.clone()));
                 }
-                
+
                 // PDF elements need Y-offset correction similar to images
                 // PDF draws from bottom-left, so we need to offset by -height
                 ops.push(Operation::new("q", vec![])); // Save state
@@ -1398,6 +2052,7 @@ impl ElementStreamer {
         std::mem::swap(&mut self.new_xobjects, &mut taken);
         taken
     }
+
     /// Stream image element
     fn stream_image(
         &mut self,
@@ -1413,16 +2068,13 @@ impl ElementStreamer {
         if let Some(file_id) = &image.file_id {
             println!(
                 "🔍 stream_image: file_id={}, size=({}x{}), angle={}",
-                file_id,
-                image.base.width,
-                image.base.height,
-                image.base.angle
+                file_id, image.base.width, image.base.height, image.base.angle
             );
             // Check if this file_id corresponds to an SVG that was converted to PDF
             if self.context_has_embedded_pdf(file_id) {
                 // SVG-PDF handling code
                 let embed_id = format!("svg_{}", file_id);
-                
+
                 let options = EmbedOptions {
                     page_range: Some(PageRange::Single(0)), // SVG-PDFs have only one page
                     // Element transform has already translated to (base.x, base.y)
@@ -1439,7 +2091,7 @@ impl ElementStreamer {
                             self.resource_cache.insert(file_id.clone(), name.clone());
                             self.new_xobjects.push((name.clone(), obj_ref.clone()));
                         }
-                        
+
                         // PDF/SVG elements need Y-offset correction similar to images
                         // PDF draws from bottom-left, so we need to offset by -height
                         ops.push(Operation::new("q", vec![])); // Save state
@@ -1478,10 +2130,10 @@ impl ElementStreamer {
                 }
             } else {
                 // Regular image (PNG/JPEG) - use image_manager
-                
+
                 // Try to find the image using the file_id
                 let mut found_image_id = None;
-                
+
                 // First try direct lookup
                 if let Some(&image_id) = self.images.get(file_id) {
                     found_image_id = Some(image_id);
@@ -1495,14 +2147,16 @@ impl ElementStreamer {
                         }
                     }
                 }
-                
+
                 if let Some(image_id) = found_image_id {
                     // Use image_manager to get proper XObject name and add to resources
                     let mut temp_resources = hipdf::lopdf::Dictionary::new();
-                    let resource_name = image_manager.add_to_resources(&mut temp_resources, (image_id, 0));
+                    let resource_name =
+                        image_manager.add_to_resources(&mut temp_resources, (image_id, 0));
                     // Register XObject resource directly using a Reference to the image object id
-                    self.new_xobjects.push((resource_name.clone(), Object::Reference((image_id, 0))));
-                    
+                    self.new_xobjects
+                        .push((resource_name.clone(), Object::Reference((image_id, 0))));
+
                     // Use image_manager to draw the image with proper transformations
                     // PDF draws images from bottom-left corner, so we need to offset by -height
                     // to make it appear at the correct position (since our transform positions top-left)
@@ -1520,14 +2174,17 @@ impl ElementStreamer {
                         &format!("% Image not found: {}", file_id),
                         vec![],
                     ));
-                    
+
                     // Set red stroke color (RGB: 1.0, 0.0, 0.0)
-                    ops.push(Operation::new("RG", vec![
-                        Object::Real(1.0), // Red
-                        Object::Real(0.0), // Green  
-                        Object::Real(0.0), // Blue
-                    ]));
-                    
+                    ops.push(Operation::new(
+                        "RG",
+                        vec![
+                            Object::Real(1.0), // Red
+                            Object::Real(0.0), // Green
+                            Object::Real(0.0), // Blue
+                        ],
+                    ));
+
                     // Draw rectangle with red border
                     ops.push(Operation::new(
                         "re",
@@ -1539,30 +2196,33 @@ impl ElementStreamer {
                         ],
                     ));
                     ops.push(Operation::new("S", vec![]));
-                    
+
                     // Add error text inside the rectangle
                     ops.push(Operation::new("BT", vec![])); // Begin text
                     ops.push(Operation::new(
                         "Tf",
                         vec![
                             Object::Name("F1".as_bytes().to_vec()), // Font name
-                            Object::Real(12.0), // Font size
+                            Object::Real(12.0),                     // Font size
                         ],
                     ));
-                    
+
                     // Position text at top-left with some padding
                     ops.push(Operation::new(
                         "Td",
-                        vec![Object::Real(5.0), Object::Real(image.base.height as f32 - 20.0)],
+                        vec![
+                            Object::Real(5.0),
+                            Object::Real(image.base.height as f32 - 20.0),
+                        ],
                     ));
-                    
+
                     // Output error message
                     let error_msg = format!("Image not found: {}", file_id);
                     ops.push(Operation::new(
                         "Tj",
                         vec![Object::string_literal(error_msg.as_str())],
                     ));
-                    
+
                     ops.push(Operation::new("ET", vec![])); // End text
                 }
             }
@@ -1570,14 +2230,17 @@ impl ElementStreamer {
             // No file_id - create red border placeholder with error text
             println!("⚠️ Image element without file_id, drawing blue border placeholder rectangle");
             ops.push(Operation::new("% Image element without file_id", vec![]));
-            
+
             // Set red stroke color (RGB: 1.0, 0.0, 0.0)
-            ops.push(Operation::new("RG", vec![
-                Object::Real(0.0), // Red
-                Object::Real(0.0), // Green  
-                Object::Real(1.0), // Blue
-            ]));
-            
+            ops.push(Operation::new(
+                "RG",
+                vec![
+                    Object::Real(0.0), // Red
+                    Object::Real(0.0), // Green
+                    Object::Real(1.0), // Blue
+                ],
+            ));
+
             // Draw rectangle with red border
             ops.push(Operation::new(
                 "re",
@@ -1685,6 +2348,4 @@ impl ElementStreamer {
 
         Ok(ops)
     }
-
 }
-

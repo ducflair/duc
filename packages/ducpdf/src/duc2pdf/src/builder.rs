@@ -1,15 +1,14 @@
+use crate::scaling::DucDataScaler;
 use crate::streaming::stream_elements::ElementStreamer;
 use crate::streaming::stream_resources::ResourceStreamer;
 use crate::utils::style_resolver::StyleResolver;
 use crate::utils::svg_to_pdf::svg_to_pdf;
-use crate::scaling::DucDataScaler;
 use crate::{
-    calculate_required_scale, validate_coordinates_with_scale,
-    ConversionError, ConversionMode, ConversionOptions, ConversionResult, PDF_USER_UNIT,
+    calculate_required_scale, validate_coordinates_with_scale, ConversionError, ConversionMode,
+    ConversionOptions, ConversionResult, PDF_USER_UNIT,
 };
 use duc::types::{
-    DucBlock, DucElementEnum, DucExternalFileEntry, ElementWrapper,
-    ExportedDataState, Standard,
+    DucBlock, DucElementEnum, DucExternalFileEntry, ElementWrapper, ExportedDataState, Standard,
 };
 use hipdf::blocks::BlockManager;
 use hipdf::embed_pdf::PdfEmbedder;
@@ -54,7 +53,7 @@ pub struct DucToPdfBuilder {
     page_ids: Vec<u32>,
     layer_refs: HashMap<String, Object>, // layer_id -> OCG reference
     layer_prop_names: HashMap<String, String>, // layer_id -> Properties name (e.g., OCG_1)
-    font_resource_name: String, // Resource name for the embedded font (e.g., "F1")
+    font_resource_name: String,          // Resource name for the embedded font (e.g., "F1")
 }
 
 impl DucToPdfBuilder {
@@ -66,7 +65,9 @@ impl DucToPdfBuilder {
         let mut document = Document::with_version("1.7");
 
         let crop_offset = match &options.mode {
-            ConversionMode::Crop { offset_x, offset_y, .. } => Some((*offset_x, *offset_y)),
+            ConversionMode::Crop {
+                offset_x, offset_y, ..
+            } => Some((*offset_x, *offset_y)),
             ConversionMode::Plot => None,
         };
 
@@ -109,7 +110,7 @@ impl DucToPdfBuilder {
         // Initialize font manager and load RobotoMono font
         let mut font_manager = FontManager::new();
         let mut font_resource_name = String::from("F1"); // Default fallback
-        
+
         // Try to load RobotoMono font from the specified path
         match Font::from_file("../../../../../assets/fonts/RobotoMono-Variable.ttf") {
             Ok(font) => {
@@ -117,7 +118,10 @@ impl DucToPdfBuilder {
                 match font_manager.embed_font(&mut document, font) {
                     Ok((_, resource_name)) => {
                         font_resource_name = resource_name;
-                        println!("✅ Successfully embedded RobotoMono-Variable.ttf as {}", font_resource_name);
+                        println!(
+                            "✅ Successfully embedded RobotoMono-Variable.ttf as {}",
+                            font_resource_name
+                        );
                     }
                     Err(e) => {
                         eprintln!("⚠️  Failed to embed RobotoMono font: {}. Using standard font fallback.", e);
@@ -125,7 +129,10 @@ impl DucToPdfBuilder {
                 }
             }
             Err(e) => {
-                eprintln!("⚠️  Failed to load RobotoMono-Variable.ttf: {}. Using standard font fallback.", e);
+                eprintln!(
+                    "⚠️  Failed to load RobotoMono-Variable.ttf: {}. Using standard font fallback.",
+                    e
+                );
             }
         }
 
@@ -184,22 +191,26 @@ impl DucToPdfBuilder {
         // If crop offset is specified, only validate coordinates after applying the offset
         if let Some((offset_x_mm, offset_y_mm)) = crop_offset {
             // Assume all coordinates are already in millimeters
-            
-            // With crop offset, we're adjusting the viewport, so we need to validate 
+
+            // With crop offset, we're adjusting the viewport, so we need to validate
             // that all elements when adjusted by the offset are still within bounds
             for element_wrapper in &data.elements {
                 let base = Self::get_element_base(&element_wrapper.element);
-                
+
                 // Assume all coordinates are already in millimeters
                 let (x_mm, y_mm, width_mm, height_mm) = (base.x, base.y, base.width, base.height);
-                
+
                 let adjusted_x = x_mm - offset_x_mm;
                 let adjusted_y = y_mm - offset_y_mm;
-                
+
                 // CRITICAL: Validate that coordinates don't exceed limits
                 let final_scale = validate_coordinates_with_scale(adjusted_x, adjusted_y, scale)?;
-                let final_scale2 = validate_coordinates_with_scale(adjusted_x + width_mm, adjusted_y + height_mm, scale)?;
-                
+                let final_scale2 = validate_coordinates_with_scale(
+                    adjusted_x + width_mm,
+                    adjusted_y + height_mm,
+                    scale,
+                )?;
+
                 // If auto-scaling was applied, ensure we use the most restrictive scale
                 if scale.is_none() && (final_scale < 1.0 || final_scale2 < 1.0) {
                     let required_scale = final_scale.min(final_scale2);
@@ -217,10 +228,10 @@ impl DucToPdfBuilder {
         // Otherwise validate all elements - assume all coordinates are in millimeters
         for element_wrapper in &data.elements {
             let base = Self::get_element_base(&element_wrapper.element);
-            
+
             // Assume all coordinates are already in millimeters
             let (x_mm, y_mm, width_mm, height_mm) = (base.x, base.y, base.width, base.height);
-            
+
             validate_coordinates_with_scale(x_mm, y_mm, scale)?;
             validate_coordinates_with_scale(x_mm + width_mm, y_mm + height_mm, scale)?;
         }
@@ -307,27 +318,19 @@ impl DucToPdfBuilder {
 
         // Set version info with scale information
         let scale_info = if self.context.scale < 1.0 {
-            format!(
-                "Scale: 1:{:.4}",
-                1.0 / self.context.scale
-            )
+            format!("Scale: 1:{:.4}", 1.0 / self.context.scale)
         } else if self.context.scale > 1.0 {
-            format!(
-                "Scale: {:.4}:1",
-                self.context.scale
-            )
+            format!("Scale: {:.4}:1", self.context.scale)
         } else {
             "Scale: 1:1".to_string()
         };
 
         let keywords = format!(
             "DUC version: {}, Source: {}, {}",
-            self.context.exported_data.version, 
-            self.context.exported_data.source,
-            scale_info
+            self.context.exported_data.version, self.context.exported_data.source, scale_info
         );
         info.set("Keywords", Object::string_literal(keywords.as_str()));
-        
+
         // Add scale as a custom metadata field for better discoverability
         info.set("Scale", Object::string_literal(scale_info.as_str()));
 
@@ -338,7 +341,6 @@ impl DucToPdfBuilder {
 
         Ok(())
     }
-
 
     /// Process external files and build resource cache
     fn process_external_files(&mut self) -> ConversionResult<()> {
@@ -455,12 +457,10 @@ impl DucToPdfBuilder {
             file_entry.value.mime_type,
             image_data.len()
         );
-        let image = Image::from_bytes(
-            image_data.clone(), 
-            Some(file_entry.key.clone())
-        ).map_err(|e| {
-            ConversionError::ResourceLoadError(format!("Failed to load image: {}", e))
-        })?;
+        let image =
+            Image::from_bytes(image_data.clone(), Some(file_entry.key.clone())).map_err(|e| {
+                ConversionError::ResourceLoadError(format!("Failed to load image: {}", e))
+            })?;
 
         println!(
             "📸 Image parsed: {}x{} bpc={} format={:?} alpha={} icc={} gamma={:?}",
@@ -469,20 +469,26 @@ impl DucToPdfBuilder {
             image.metadata.bits_per_component,
             image.metadata.format,
             image.metadata.has_alpha,
-            image.metadata.icc_profile.as_ref().map(|v| v.len()).unwrap_or(0),
+            image
+                .metadata
+                .icc_profile
+                .as_ref()
+                .map(|v| v.len())
+                .unwrap_or(0),
             image.metadata.gamma
         );
 
         // Embed the image with perfect quality preservation using hipdf::images
-        let image_id = self.image_manager.embed_image(&mut self.document, image).map_err(|e| {
-            ConversionError::ResourceLoadError(format!("Failed to embed image: {}", e))
-        })?;
+        let image_id = self
+            .image_manager
+            .embed_image(&mut self.document, image)
+            .map_err(|e| {
+                ConversionError::ResourceLoadError(format!("Failed to embed image: {}", e))
+            })?;
 
         println!(
             "✅ Embedded image: object_id=({} 0 R) -> key='{}', id='{}'",
-            image_id.0,
-            file_entry.key,
-            file_entry.value.id
+            image_id.0, file_entry.key, file_entry.value.id
         );
 
         // Store the image ID in the resource cache mapped by both key and internal id
@@ -506,13 +512,14 @@ impl DucToPdfBuilder {
         // but the files are stored with ID keys in the DUC data
         let test_name = match file_entry.value.mime_type.as_str() {
             "image/svg+xml" => "test_svg",
-            "image/png" => "test_png", 
+            "image/png" => "test_png",
             "image/jpeg" => "test_jpeg",
-            _ => ""
+            _ => "",
         };
         if !test_name.is_empty() {
             // Store in both ElementStreamer and resource cache to persist across set_images() calls
-            self.element_streamer.add_image(test_name.to_string(), image_id.0);
+            self.element_streamer
+                .add_image(test_name.to_string(), image_id.0);
             self.context
                 .resource_cache
                 .images
@@ -696,7 +703,12 @@ impl DucToPdfBuilder {
             ConversionMode::Plot => {
                 self.generate_plot_pages()?;
             }
-            ConversionMode::Crop { offset_x, offset_y, width, height } => {
+            ConversionMode::Crop {
+                offset_x,
+                offset_y,
+                width,
+                height,
+            } => {
                 self.generate_crop_page(*offset_x, *offset_y, *width, *height)?;
             }
         }
@@ -738,51 +750,70 @@ impl DucToPdfBuilder {
     }
 
     /// Generate a single page for crop mode by adjusting scroll position and optionally limiting dimensions
-    fn generate_crop_page(&mut self, offset_x: f64, offset_y: f64, width: Option<f64>, height: Option<f64>) -> ConversionResult<()> {
+    fn generate_crop_page(
+        &mut self,
+        offset_x: f64,
+        offset_y: f64,
+        width: Option<f64>,
+        height: Option<f64>,
+    ) -> ConversionResult<()> {
         // Modify the local state to apply the scroll offset
         self.apply_crop_offset_to_local_state(offset_x, offset_y);
-        
+
         // Calculate the bounds of all elements
         let overall_bounds = self.calculate_overall_bounds();
-        
+
         // If width/height are specified, create a crop bounds that limits the visible area
         let crop_bounds = if let (Some(w_mm), Some(h_mm)) = (width, height) {
             // Assume all dimensions are already in millimeters
-            
+
             // CRITICAL: Validate that the crop dimensions don't exceed PDF limits
             use crate::MAX_COORDINATE_MM;
-            
+
             // Check if crop dimensions would exceed limits
             if w_mm > MAX_COORDINATE_MM || h_mm > MAX_COORDINATE_MM {
                 return Err(ConversionError::InvalidDucData(format!(
-                    "Crop dimensions ({}x{} mm) exceed PDF limits (max {} mm per dimension)", 
+                    "Crop dimensions ({}x{} mm) exceed PDF limits (max {} mm per dimension)",
                     w_mm, h_mm, MAX_COORDINATE_MM
                 )));
             }
-            
+
             // For crop mode with dimensions, the page should be exactly the specified dimensions
             // The scroll offset is handled in the content stream transformation, not the page bounds
-            let current_scroll_x = self.context.exported_data.duc_local_state
+            let current_scroll_x = self
+                .context
+                .exported_data
+                .duc_local_state
                 .as_ref()
                 .map(|ls| ls.scroll_x)
                 .unwrap_or(0.0);
-            let current_scroll_y = self.context.exported_data.duc_local_state
+            let current_scroll_y = self
+                .context
+                .exported_data
+                .duc_local_state
                 .as_ref()
                 .map(|ls| ls.scroll_y)
                 .unwrap_or(0.0);
-            
-            println!("🔧 Applied crop dimensions: {}x{} mm at offset ({}, {})", 
-                w_mm, h_mm, offset_x, offset_y);
-            println!("🔧 Crop window bounds: x=[{:.2}, {:.2}], y=[{:.2}, {:.2}]", 
-                -current_scroll_x, -current_scroll_x + w_mm, -current_scroll_y, -current_scroll_y + h_mm);
-            
+
+            println!(
+                "🔧 Applied crop dimensions: {}x{} mm at offset ({}, {})",
+                w_mm, h_mm, offset_x, offset_y
+            );
+            println!(
+                "🔧 Crop window bounds: x=[{:.2}, {:.2}], y=[{:.2}, {:.2}]",
+                -current_scroll_x,
+                -current_scroll_x + w_mm,
+                -current_scroll_y,
+                -current_scroll_y + h_mm
+            );
+
             // Page bounds should simply be the crop dimensions starting from origin
             (0.0, 0.0, w_mm, h_mm)
         } else {
             // Use overall bounds if no crop dimensions specified
             overall_bounds
         };
-  
+
         self.create_page_with_crop_bounds(crop_bounds, width.is_some() && height.is_some())?;
         Ok(())
     }
@@ -791,14 +822,16 @@ impl DucToPdfBuilder {
     /// Note: offset_x and offset_y are expected to be in millimeters
     fn apply_crop_offset_to_local_state(&mut self, offset_x_mm: f64, offset_y_mm: f64) {
         // Assume all coordinates are already in millimeters
-        
+
         if let Some(ref mut local_state) = self.context.exported_data.duc_local_state {
             // Apply the offset to scroll position to effectively "move" the drawing
             local_state.scroll_x += offset_x_mm;
             local_state.scroll_y += offset_y_mm;
-            
-            println!("🔧 Applied crop offset: scroll_x={}, scroll_y={} (mm)", 
-                local_state.scroll_x, local_state.scroll_y);
+
+            println!(
+                "🔧 Applied crop offset: scroll_x={}, scroll_y={} (mm)",
+                local_state.scroll_x, local_state.scroll_y
+            );
         } else {
             // If no local state exists, create one with the offset
             let new_local_state = duc::types::DucLocalState {
@@ -826,10 +859,12 @@ impl DucToPdfBuilder {
                 outline_mode_enabled: false,
                 manual_save_mode: false,
             };
-            
+
             self.context.exported_data.duc_local_state = Some(new_local_state);
-            println!("🔧 Created new local state with crop offset: scroll_x={}, scroll_y={} (mm)", 
-                offset_x_mm, offset_y_mm);
+            println!(
+                "🔧 Created new local state with crop offset: scroll_x={}, scroll_y={} (mm)",
+                offset_x_mm, offset_y_mm
+            );
         }
     }
 
@@ -840,8 +875,6 @@ impl DucToPdfBuilder {
         self.create_page_with_bounds(bounds)?;
         Ok(())
     }
-
-
 
     /// Create a page with specified bounds (no additional scaling - data is already scaled)
     fn create_page_with_bounds(&mut self, bounds: (f64, f64, f64, f64)) -> ConversionResult<()> {
@@ -890,7 +923,11 @@ impl DucToPdfBuilder {
     }
 
     /// Create a page with crop bounds, optionally preserving exact dimensions without scaling
-    fn create_page_with_crop_bounds(&mut self, bounds: (f64, f64, f64, f64), preserve_exact_dimensions: bool) -> ConversionResult<()> {
+    fn create_page_with_crop_bounds(
+        &mut self,
+        bounds: (f64, f64, f64, f64),
+        preserve_exact_dimensions: bool,
+    ) -> ConversionResult<()> {
         let (page_width, page_height) = if preserve_exact_dimensions {
             // For crop mode with explicit dimensions, use the exact dimensions without scaling
             let (_x, _y, width, height) = bounds;
@@ -940,7 +977,6 @@ impl DucToPdfBuilder {
         Ok(())
     }
 
-
     /// Create page resources including XObjects and Properties
     fn create_page_resources(&mut self) -> ConversionResult<Dictionary> {
         let mut resources = Dictionary::new();
@@ -948,7 +984,8 @@ impl DucToPdfBuilder {
         // Add font resources using FontManager
         // The font manager handles all the complexity of font embedding
         for (_font, font_id, resource_name) in self.font_manager.fonts() {
-            self.font_manager.add_to_resources(&mut resources, *font_id, resource_name);
+            self.font_manager
+                .add_to_resources(&mut resources, *font_id, resource_name);
         }
 
         // Collect any XObjects (images, embedded PDFs, SVG-converted PDFs) produced during streaming
@@ -965,6 +1002,17 @@ impl DucToPdfBuilder {
 
         if !xobject_dict.is_empty() {
             resources.set("XObject", Object::Dictionary(xobject_dict));
+        }
+
+        // Add ExtGState resources for opacity control
+        let ext_gstates = self.element_streamer.take_page_ext_gstates();
+        if !ext_gstates.is_empty() {
+            let mut extgstate_dict = Dictionary::new();
+            for (name, gstate_dict) in ext_gstates {
+                let (gstate_id, _) = self.document.add_object(Object::Dictionary(gstate_dict));
+                extgstate_dict.set(name, Object::Reference((gstate_id, 0)));
+            }
+            resources.set("ExtGState", Object::Dictionary(extgstate_dict));
         }
 
         // Add Properties for OCG (layer support)
@@ -1024,6 +1072,9 @@ impl DucToPdfBuilder {
         self.element_streamer
             .set_images(self.context.resource_cache.images.clone());
 
+        // Reset per-page ExtGState tracking before streaming
+        self.element_streamer.begin_page();
+
         if !self.context.exported_data.layers.is_empty() {
             // Stream elements by layer using LayerContentBuilder
             let all_operations = self.stream_elements_by_layer(bounds)?;
@@ -1066,10 +1117,7 @@ impl DucToPdfBuilder {
     }
 
     /// Create content stream
-    fn create_content_stream(
-        &mut self,
-        bounds: (f64, f64, f64, f64),
-    ) -> ConversionResult<Stream> {
+    fn create_content_stream(&mut self, bounds: (f64, f64, f64, f64)) -> ConversionResult<Stream> {
         let (x, y, _width, _height) = bounds; // Use bounds directly - data is already scaled by DucDataScaler
 
         let mut content = String::new();
@@ -1102,6 +1150,9 @@ impl DucToPdfBuilder {
             .set_embedded_pdfs(self.context.resource_cache.embedded_pdfs.clone());
         self.element_streamer
             .set_images(self.context.resource_cache.images.clone());
+
+        // Reset per-page ExtGState tracking before streaming
+        self.element_streamer.begin_page();
 
         if !self.context.exported_data.layers.is_empty() {
             // Stream elements by layer using LayerContentBuilder
@@ -1348,10 +1399,10 @@ impl DucToPdfBuilder {
 
         for element_wrapper in &self.context.exported_data.elements {
             let base = Self::get_element_base(&element_wrapper.element);
-            
+
             // Assume all coordinates are already in millimeters
             let (x_mm, y_mm, width_mm, height_mm) = (base.x, base.y, base.width, base.height);
-            
+
             min_x = min_x.min(x_mm);
             min_y = min_y.min(y_mm);
             max_x = max_x.max(x_mm + width_mm);
