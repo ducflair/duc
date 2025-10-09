@@ -7,6 +7,8 @@ use std::path::Path;
 #[cfg(test)]
 mod integration_tests {
     use super::*;
+    use duc::types::DucEllipseElement;
+    use hipdf::fonts::{Font, StandardFont};
 
     fn get_assets_dir() -> String {
         // Use environment variable if set, otherwise use relative path
@@ -500,13 +502,11 @@ mod integration_tests {
 
         println!("🔧 Real data scaling tests completed");
     }
-
-        use super::*;
-    use crate::streaming::pdf_linear::PdfLinearRenderer;
-    use crate::utils::style_resolver::StyleResolver;
     use duc::generated::duc::{
         ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN, STROKE_PREFERENCE,
     };
+    use duc2pdf::streaming::stream_elements::ElementStreamer;
+    use duc2pdf::utils::style_resolver::StyleResolver;
     use std::f64::consts::PI;
 
     fn sample_element_base() -> duc::types::DucElementBase {
@@ -597,15 +597,27 @@ mod integration_tests {
     #[test]
     fn full_circle_generates_pdf_ops() {
         let ellipse = sample_ellipse(false);
-        let linear = ElementStreamer::convert_ellipse_to_linear_element(&ellipse);
-        let ops = PdfLinearRenderer::stream_linear(&linear).expect("streaming ellipse");
-        assert!(!ops.is_empty(), "Expected ellipse path operations");
+        let streamer = ElementStreamer::new(
+            StyleResolver::new(None),
+            1000.0,
+            "F1".to_string(),
+            Font::standard(StandardFont::Helvetica),
+        );
+        let ops = streamer
+            .stream_ellipse(&ellipse)
+            .expect("stream ellipse without crosshair");
+        assert!(!ops.is_empty(), "Expected ellipse operations");
     }
 
     #[test]
     fn crosshair_operations_are_emitted() {
         let ellipse = sample_ellipse(true);
-        let streamer = ElementStreamer::new(StyleResolver::new(None), 1000.0, "F1".to_string());
+        let streamer = ElementStreamer::new(
+            StyleResolver::new(None),
+            1000.0,
+            "F1".to_string(),
+            Font::standard(StandardFont::Helvetica),
+        );
         let ops = streamer
             .stream_ellipse(&ellipse)
             .expect("stream ellipse with crosshair");
@@ -621,7 +633,12 @@ mod integration_tests {
     #[test]
     fn plot_filter_respects_flag() {
         let base = sample_element_base();
-        let mut streamer = ElementStreamer::new(StyleResolver::new(None), 1000.0, "F1".to_string());
+        let mut streamer = ElementStreamer::new(
+            StyleResolver::new(None),
+            1000.0,
+            "F1".to_string(),
+            Font::standard(StandardFont::Helvetica),
+        );
         assert!(streamer.should_render_element(&base));
 
         streamer.set_render_only_plot_elements(true);

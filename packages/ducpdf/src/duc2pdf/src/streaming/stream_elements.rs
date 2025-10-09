@@ -40,6 +40,7 @@ use duc::types::{
 };
 use hipdf::blocks::BlockManager;
 use hipdf::embed_pdf::PdfEmbedder;
+use hipdf::fonts::Font;
 use hipdf::hatching::HatchingManager;
 use hipdf::images::ImageManager;
 use hipdf::lopdf::content::Operation;
@@ -94,6 +95,8 @@ pub struct ElementStreamer {
     embedded_pdfs: HashMap<String, u32>, // file_id -> object_id
     /// Font resource name for text rendering
     font_resource_name: String,
+    /// Active font used for text rendering and encoding
+    text_font: Font,
     /// Whether we should require elements to be marked as "plot" to be rendered
     render_only_plot_elements: bool,
     /// Cached ExtGState names keyed by stroke/fill opacity thousandths
@@ -112,6 +115,7 @@ impl ElementStreamer {
         style_resolver: StyleResolver,
         page_height: f64,
         font_resource_name: String,
+        text_font: Font,
     ) -> Self {
         Self {
             style_resolver,
@@ -121,12 +125,19 @@ impl ElementStreamer {
             new_xobjects: Vec::new(),
             embedded_pdfs: HashMap::new(),
             font_resource_name,
-            render_only_plot_elements: true,
+            text_font,
+            render_only_plot_elements: false,
             ext_gstate_cache: HashMap::new(),
             ext_gstate_definitions: HashMap::new(),
             current_page_ext_gstates: BTreeSet::new(),
             freedraw_resources: HashMap::new(),
         }
+    }
+
+    /// Update the active font used for text rendering
+    pub fn set_text_font(&mut self, font_resource_name: String, font: Font) {
+        self.font_resource_name = font_resource_name;
+        self.text_font = font;
     }
 
     /// Set resource cache for external resources
@@ -215,16 +226,8 @@ impl ElementStreamer {
         });
 
         // Stream elements in z-index order
-        // println!(
-        //     "DEBUG: Starting to stream {} filtered elements",
-        //     filtered_elements.len()
-        // );
         for element_wrapper in filtered_elements {
             let base = Self::get_element_base(&element_wrapper.element);
-            // println!(
-            //     "DEBUG: Streaming element {} with layer_id: {:?}",
-            //     base.id, base.layer_id
-            // );
 
             // Apply layer visibility if the element has layer information
             if let Some(layer_id) = &base.layer_id {
@@ -261,11 +264,6 @@ impl ElementStreamer {
                 image_manager,
             )?;
 
-            println!(
-                "DEBUG: Element {} generated {} operations",
-                base.id,
-                element_ops.len()
-            );
             all_operations.extend(element_ops);
 
             // Restore graphics state if clipping was applied
@@ -439,7 +437,7 @@ impl ElementStreamer {
         }
     }
 
-    fn should_render_element(&self, base: &duc::types::DucElementBase) -> bool {
+    pub fn should_render_element(&self, base: &duc::types::DucElementBase) -> bool {
         if !base.is_visible || base.is_deleted {
             return false;
         }
@@ -1277,44 +1275,68 @@ impl ElementStreamer {
 
     /// Stream text element
     fn stream_text(&self, text: &DucTextElement) -> ConversionResult<Vec<Operation>> {
-        let mut ops = Vec::new();
+        use duc::generated::duc::TEXT_ALIGN;
+        use hipdf::fonts::utils::{create_text_block, TextAlign, WrapStrategy};
 
-        // Begin text object
-        ops.push(Operation::new("BT", vec![]));
-
-        // Set font and size using the font resource name from FontManager
-        ops.push(Operation::new(
-            "Tf",
-            vec![
-                Object::Name(self.font_resource_name.as_bytes().to_vec()),
-                Object::Real(text.style.font_size as f32),
-            ],
-        ));
-
-        // PDF text is drawn from the baseline, not the top-left corner
-        // We need to offset Y by the font size to account for text height
-        // This ensures text appears where the element's top-left corner is positioned
-        let baseline_offset_y = -(text.style.font_size as f32);
-
-        // Set text position (relative to current transformation)
-        ops.push(Operation::new(
-            "Td",
-            vec![Object::Real(0.0), Object::Real(baseline_offset_y)],
-        ));
-
-        // Output text
         let resolved_text = self
             .style_resolver
             .resolve_dynamic_fields(&text.text, &DucElementEnum::DucTextElement(text.clone()));
-        ops.push(Operation::new(
-            "Tj",
-            vec![Object::string_literal(resolved_text.as_str())],
-        ));
 
-        // End text object
-        ops.push(Operation::new("ET", vec![]));
+        // Determine text alignment
+        let align = match text.style.text_align {
+            TEXT_ALIGN::LEFT => TextAlign::Left,
+            TEXT_ALIGN::CENTER => TextAlign::Center,
+            TEXT_ALIGN::RIGHT => TextAlign::Right,
+            _ => TextAlign::Left,
+        };
 
-        Ok(ops)
+        // Calculate line height from style
+        let line_height = text.style.font_size as f32 * text.style.line_height;
+
+        // Determine wrapping strategy
+        let wrap_strategy = if text.auto_resize {
+            // If auto-resize is true, we might not want to wrap
+            WrapStrategy::Word
+        } else {
+            WrapStrategy::Hybrid
+        };
+
+        // For text positioning in the element's local coordinate system:
+        // (0, 0) is at the top-left corner of the element after transformation
+        // PDF text is positioned by baseline, which needs to be below the top
+        // We want the top of the text to align with the top of the bounding box,
+        // so the baseline should be at approximately font_size distance from top
+
+        // However, PDF's internal text coordinate system has Y going up from baseline
+        // So we need to negate to work in our top-down coordinate system
+        let text_start_y = -(text.style.font_size as f32);
+
+        // Use the max width from the element's bounding box (unless auto_resize is true)
+        let max_width = if text.auto_resize {
+            None
+        } else {
+            Some(text.base.width as f32)
+        };
+
+        // Use the max height from the element's bounding box
+        let max_height = Some(text.base.height as f32);
+
+        // Create multi-line text block with proper wrapping
+        let operations = create_text_block(
+            &self.font_resource_name,
+            &self.text_font,
+            &resolved_text,
+            0.0,
+            text_start_y,
+            text.style.font_size as f32,
+            max_width,
+            max_height,
+            line_height,
+            align,
+            wrap_strategy,
+        );
+
+        Ok(operations)
     }
 
     /// Stream block instance element
@@ -1430,7 +1452,7 @@ impl ElementStreamer {
     }
 
     /// Stream ellipse element
-    fn stream_ellipse(&self, ellipse: &DucEllipseElement) -> ConversionResult<Vec<Operation>> {
+    pub fn stream_ellipse(&self, ellipse: &DucEllipseElement) -> ConversionResult<Vec<Operation>> {
         let mut ops = Vec::new();
         let linear = Self::convert_ellipse_to_linear_element(ellipse);
         ops.extend(PdfLinearRenderer::stream_linear(&linear)?);
@@ -1523,7 +1545,7 @@ impl ElementStreamer {
         (dash_array, offset as f32)
     }
 
-    fn convert_ellipse_to_linear_element(element: &DucEllipseElement) -> DucLinearElement {
+    pub fn convert_ellipse_to_linear_element(element: &DucEllipseElement) -> DucLinearElement {
         let base = &element.base;
         let width = base.width;
         let height = base.height;
@@ -2066,10 +2088,6 @@ impl ElementStreamer {
         let mut ops = Vec::new();
 
         if let Some(file_id) = &image.file_id {
-            println!(
-                "🔍 stream_image: file_id={}, size=({}x{}), angle={}",
-                file_id, image.base.width, image.base.height, image.base.angle
-            );
             // Check if this file_id corresponds to an SVG that was converted to PDF
             if self.context_has_embedded_pdf(file_id) {
                 // SVG-PDF handling code
@@ -2227,11 +2245,10 @@ impl ElementStreamer {
                 }
             }
         } else {
-            // No file_id - create red border placeholder with error text
-            println!("⚠️ Image element without file_id, drawing blue border placeholder rectangle");
+            // No file_id - create blue border placeholder
             ops.push(Operation::new("% Image element without file_id", vec![]));
 
-            // Set red stroke color (RGB: 1.0, 0.0, 0.0)
+            // Set blue stroke color (RGB: 0.0, 0.0, 1.0)
             ops.push(Operation::new(
                 "RG",
                 vec![
@@ -2241,7 +2258,7 @@ impl ElementStreamer {
                 ],
             ));
 
-            // Draw rectangle with red border
+            // Draw rectangle with blue border
             ops.push(Operation::new(
                 "re",
                 vec![
