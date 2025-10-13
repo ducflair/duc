@@ -2,19 +2,41 @@
   "name": "ducpdf",
   "version": "0.1.0",
   "description": "Library for converting between PDF and DUC formats.",
-  "private": true,
+  "private": false,
+  "type": "module",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./pkg": {
+      "types": "./pkg/duc2pdf.d.ts",
+      "import": "./pkg/duc2pdf.js",
+      "default": "./pkg/duc2pdf.js"
+    }
+  },
+  "files": [
+    "dist",
+    "pkg",
+    "src"
+  ],
   "scripts": {
-    "build": "bun run build:wasm",
+    "build": "bun run build:wasm && bun run copy:wasm-to-dist && bun run build:ts",
+    "build:ts": "tsc -p tsconfig.json",
     "build:rs": "cd src/duc2pdf && cargo build",
     "build:wasm": "cd src/duc2pdf && wasm-pack build --target web --out-dir ../../../pkg --dev",
     "build:wasm:prod": "cd src/duc2pdf && wasm-pack build --target web --out-dir ../../../pkg --release",
-    "clean": "rm -rf ../../../pkg && cd src/duc2pdf && cargo clean",
+    "copy:wasm-to-dist": "mkdir -p dist && cp ../pkg/duc2pdf_bg.wasm dist/ && cp ../pkg/duc2pdf.js dist/ && cp ../pkg/duc2pdf.d.ts dist/ && cp ../pkg/duc2pdf_bg.wasm.d.ts dist/",
+    "clean": "rm -rf dist pkg && cd src/duc2pdf && cargo clean",
     "test": "bun run build:wasm && bun test",
     "test:rs": "cd src/duc2pdf && cargo test",
     "test:duc2pdf": "cd src/duc2pdf && cargo test",
-    "prebuild": "bun run clean"
+    "prebuild": "bun run clean",
+    "prepack": "bun run build"
   },
   "dependencies": {
     "ducjs": "workspace:^",
