@@ -1197,7 +1197,7 @@ impl ElementStreamer {
                 ops.push(Operation::new(
                     "re",
                     vec![
-                        Object::Real(0.0), // x (relative to current transformation)
+                        Object::Real(0.0),                        // x (relative to current transformation)
                         Object::Real(-(rect.base.height as f32)), // y (flip to keep origin at top-left)
                         Object::Real(rect.base.width as f32),
                         Object::Real(rect.base.height as f32),
@@ -1210,7 +1210,7 @@ impl ElementStreamer {
             ops.push(Operation::new(
                 "re",
                 vec![
-                    Object::Real(0.0), // x (relative to current transformation)
+                    Object::Real(0.0),                        // x (relative to current transformation)
                     Object::Real(-(rect.base.height as f32)), // y (flip to keep origin at top-left)
                     Object::Real(rect.base.width as f32),
                     Object::Real(rect.base.height as f32),

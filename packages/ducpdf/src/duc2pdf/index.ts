@@ -1,4 +1,4 @@
-import { parseDuc, serializeDuc, traverseAndUpdatePrecisionValues } from 'ducjs';
+import { ExportedDataState, getFreeDrawSvgPath, isFreeDrawElement, parseDuc, serializeDuc, traverseAndUpdatePrecisionValues } from 'ducjs';
 
 let wasmModule: any = null;
 let wasmInitPromise: Promise<any> | null = null;
@@ -110,10 +110,25 @@ export async function convertDucToPdf(
       if (parsed) {
         // Extract scope from parsed data - use localState.scope first, fallback to globalState.mainScope
         const scope = parsed?.localState?.scope || parsed?.globalState?.mainScope || 'mm';
+
         // ensure that we are only working with mm on the pdf conversion logic
-        const normalized = traverseAndUpdatePrecisionValues(parsed, 'mm', scope);
+        const normalized: ExportedDataState = traverseAndUpdatePrecisionValues(parsed, 'mm', scope);
         normalized.localState.scope = 'mm';
         normalized.globalState.mainScope = 'mm';
+
+        // Process elements before serialization
+        let normalizedElements = normalized.elements || [];
+        normalizedElements = normalizedElements.map(element => {
+          if (element && isFreeDrawElement(element)) {
+            const svgPath = getFreeDrawSvgPath(element);
+            if (svgPath) {
+              return Object.assign({}, element, { svgPath });
+            }
+          }
+          return element;
+        });
+        normalized.elements = normalizedElements;
+
         // Re-serialize the DUC with normalized values and scope set to 'mm'
         const serialized = await serializeDuc(
           normalized,
