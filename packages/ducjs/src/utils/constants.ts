@@ -52,8 +52,8 @@ export const MIME_TYPES = {
   // image-encoded excalidraw data
   "excalidraw.svg": "image/svg+xml",
   "excalidraw.png": "image/png",
-  // binary
   binary: "application/octet-stream",
+  pdf: "application/pdf",
   // image
   ...IMAGE_MIME_TYPES,
 } as const;
