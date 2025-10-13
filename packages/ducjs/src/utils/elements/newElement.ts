@@ -212,10 +212,10 @@ export const newPlotElement = (
   standardOverride: null,
   layout: {
     margins: {
-      top: getPrecisionValueFromRaw(25 as RawValue, currentScope, currentScope),
-      right: getPrecisionValueFromRaw(25 as RawValue, currentScope, currentScope),
-      bottom: getPrecisionValueFromRaw(25 as RawValue, currentScope, currentScope),
-      left: getPrecisionValueFromRaw(25 as RawValue, currentScope, currentScope),
+      top: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
+      right: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
+      bottom: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
+      left: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
     }
   },
   ..._newElementBase<DucPlotElement>("plot", currentScope, opts),

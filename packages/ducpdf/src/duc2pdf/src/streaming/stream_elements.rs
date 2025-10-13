@@ -27,7 +27,6 @@ use crate::scaling::DucDataScaler;
 use crate::streaming::pdf_linear::PdfLinearRenderer;
 use crate::streaming::stream_resources::ResourceStreamer;
 use crate::utils::style_resolver::{ResolvedStyles, StyleResolver};
-use crate::utils::svg_to_pdf::SvgToPdfConverter;
 use crate::{ConversionError, ConversionResult};
 use bigcolor::BigColor;
 use duc::generated::duc::{BEZIER_MIRRORING, ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN};
@@ -48,7 +47,7 @@ use hipdf::lopdf::{Dictionary, Document, Object};
 use hipdf::ocg::OCGManager;
 use std::collections::{BTreeSet, HashMap};
 use std::f64::consts::PI;
-use std::fmt::Write;
+use wasm_bindgen::JsValue;
 
 const DUC_STANDARD_PRIMARY_COLOR: &str = "oklch(62% 0.15 281)";
 
@@ -56,21 +55,6 @@ const DUC_STANDARD_PRIMARY_COLOR: &str = "oklch(62% 0.15 281)";
 struct OpacityKey {
     stroke_thousandths: u16,
     fill_thousandths: u16,
-}
-
-#[derive(Debug, Clone)]
-struct FreedrawResource {
-    name: String,
-    width: f64,
-    height: f64,
-}
-
-#[derive(Debug, Clone, Copy)]
-struct PointsBounds {
-    min_x: f64,
-    min_y: f64,
-    width: f64,
-    height: f64,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -105,8 +89,6 @@ pub struct ElementStreamer {
     ext_gstate_definitions: HashMap<String, Dictionary>,
     /// Names of ExtGStates referenced while streaming the current page
     current_page_ext_gstates: BTreeSet<String>,
-    /// Cached freedraw vector resources keyed by element id (or svg key)
-    freedraw_resources: HashMap<String, FreedrawResource>,
 }
 
 impl ElementStreamer {
@@ -130,7 +112,6 @@ impl ElementStreamer {
             ext_gstate_cache: HashMap::new(),
             ext_gstate_definitions: HashMap::new(),
             current_page_ext_gstates: BTreeSet::new(),
-            freedraw_resources: HashMap::new(),
         }
     }
 
@@ -355,7 +336,7 @@ impl ElementStreamer {
                 self.stream_mermaid(mermaid, resource_streamer)?
             }
             DucElementEnum::DucFreeDrawElement(freedraw) => {
-                self.stream_freedraw(freedraw, &styles, document, resource_streamer)?
+                self.stream_freedraw(freedraw, &styles, document, pdf_embedder, resource_streamer)?
             }
             DucElementEnum::DucPdfElement(pdf) => {
                 self.stream_pdf_element(pdf, document, pdf_embedder)?
@@ -910,145 +891,6 @@ impl ElementStreamer {
         result
     }
 
-    fn compute_points_bounds(points: &[DucPoint]) -> Option<PointsBounds> {
-        if points.is_empty() {
-            return None;
-        }
-
-        let mut min_x = f64::MAX;
-        let mut min_y = f64::MAX;
-        let mut max_x = f64::MIN;
-        let mut max_y = f64::MIN;
-
-        for point in points {
-            min_x = min_x.min(point.x);
-            min_y = min_y.min(point.y);
-            max_x = max_x.max(point.x);
-            max_y = max_y.max(point.y);
-        }
-
-        let width = (max_x - min_x).abs();
-        let height = (max_y - min_y).abs();
-
-        Some(PointsBounds {
-            min_x,
-            min_y,
-            width,
-            height,
-        })
-    }
-
-    fn build_svg_path_from_points(points: &[DucPoint]) -> String {
-        let mut data = String::new();
-        if let Some(first) = points.first() {
-            let _ = write!(&mut data, "M{:.6} {:.6}", first.x, first.y);
-            for point in points.iter().skip(1) {
-                let _ = write!(&mut data, " L{:.6} {:.6}", point.x, point.y);
-            }
-        }
-        data
-    }
-
-    fn build_freedraw_svg_document(
-        path_data: &str,
-        bounds: &PointsBounds,
-        stroke_width: f64,
-        stroke_color: &str,
-        cap: STROKE_CAP,
-        join: STROKE_JOIN,
-        dash_pattern: Option<&[f64]>,
-    ) -> String {
-        let viewbox_width = if bounds.width <= 0.0 {
-            1.0
-        } else {
-            bounds.width
-        };
-        let viewbox_height = if bounds.height <= 0.0 {
-            1.0
-        } else {
-            bounds.height
-        };
-
-        let cap_str = match cap {
-            STROKE_CAP::ROUND => "round",
-            STROKE_CAP::SQUARE => "square",
-            _ => "butt",
-        };
-
-        let join_str = match join {
-            STROKE_JOIN::ROUND => "round",
-            STROKE_JOIN::BEVEL => "bevel",
-            _ => "miter",
-        };
-
-        let dash_attr = dash_pattern
-            .filter(|pattern| !pattern.is_empty())
-            .map(|pattern| {
-                let mut buffer = String::new();
-                for (idx, value) in pattern.iter().enumerate() {
-                    if idx > 0 {
-                        buffer.push(' ');
-                    }
-                    let _ = write!(&mut buffer, "{:.6}", value);
-                }
-                buffer
-            });
-
-        let mut svg = String::new();
-        let _ = write!(
-            &mut svg,
-            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{:.6}\" height=\"{:.6}\" viewBox=\"{:.6} {:.6} {:.6} {:.6}\">",
-            viewbox_width,
-            viewbox_height,
-            bounds.min_x,
-            bounds.min_y,
-            viewbox_width.max(1e-6),
-            viewbox_height.max(1e-6)
-        );
-
-        let _ = write!(
-            &mut svg,
-            "<path d=\"{}\" fill=\"none\" stroke=\"{}\" stroke-width=\"{:.6}\" stroke-linecap=\"{}\" stroke-linejoin=\"{}\"",
-            path_data,
-            stroke_color,
-            stroke_width,
-            cap_str,
-            join_str
-        );
-
-        if let Some(dashes) = dash_attr {
-            let _ = write!(&mut svg, " stroke-dasharray=\"{}\"", dashes);
-        }
-
-        svg.push_str(" /></svg>");
-        svg
-    }
-
-    fn get_or_create_freedraw_resource(
-        &mut self,
-        key: &str,
-        svg_content: &str,
-        document: &mut Document,
-    ) -> ConversionResult<FreedrawResource> {
-        if let Some(existing) = self.freedraw_resources.get(key) {
-            return Ok(existing.clone());
-        }
-
-        let (object_id, width, height) =
-            SvgToPdfConverter::convert_svg_bytes_to_xobject(document, svg_content.as_bytes())?;
-        let name = format!("XFD{}", object_id);
-        self.new_xobjects
-            .push((name.clone(), Object::Reference((object_id, 0))));
-
-        let resource = FreedrawResource {
-            name: name.clone(),
-            width,
-            height,
-        };
-        self.freedraw_resources
-            .insert(key.to_string(), resource.clone());
-        Ok(resource)
-    }
     /// Apply resolved styles to PDF operations
     fn apply_styles(
         &mut self,
@@ -1880,96 +1722,73 @@ impl ElementStreamer {
     fn stream_freedraw(
         &mut self,
         freedraw: &DucFreeDrawElement,
-        styles: &ResolvedStyles,
+        _styles: &ResolvedStyles,
         document: &mut Document,
+        pdf_embedder: &mut PdfEmbedder,
         _resource_streamer: &mut ResourceStreamer,
     ) -> ConversionResult<Vec<Operation>> {
+        use hipdf::embed_pdf::{EmbedOptions, PageRange};
+
         let mut ops = Vec::new();
 
-        if freedraw.points.len() < 2 {
+        // Check if this Freedraw element has an embedded PDF (from svg_path processing)
+        let has_embedded_pdf = self.context_has_embedded_pdf(&freedraw.base.id);
+
+        if has_embedded_pdf {
+            // Use embedded PDF from svg_path conversion
+            let embed_id = format!("freedraw_{}", freedraw.base.id);
+
+            let options = EmbedOptions {
+                page_range: Some(PageRange::Single(0)), // Freedraw SVG-PDFs have only one page
+                // Element transform has already translated to (base.x, base.y)
+                position: (0.0, 0.0),
+                max_width: Some(freedraw.base.width as f32),
+                max_height: Some(freedraw.base.height as f32),
+                preserve_aspect_ratio: true,
+                ..Default::default()
+            };
+
+            match pdf_embedder.embed_pdf(document, &embed_id, &options) {
+                Ok(result) => {
+                    for (name, obj_ref) in result.xobject_resources.iter() {
+                        self.resource_cache.insert(freedraw.base.id.clone(), name.clone());
+                        self.new_xobjects.push((name.clone(), obj_ref.clone()));
+                    }
+
+                    // PDF draws from bottom-left, so we need to offset by -height
+                    ops.push(Operation::new("q", vec![])); // Save state
+                    ops.push(Operation::new(
+                        "cm",
+                        vec![
+                            Object::Real(1.0),
+                            Object::Real(0.0),
+                            Object::Real(0.0),
+                            Object::Real(1.0),
+                            Object::Real(0.0),
+                            Object::Real(-(freedraw.base.height as f32)),
+                        ],
+                    ));
+                    ops.extend(result.operations);
+                    ops.push(Operation::new("Q", vec![])); // Restore state
+                }
+                Err(e) => {
+                    web_sys::console::log_1(&JsValue::from_str(&format!(
+                        "Failed to embed Freedraw SVG-PDF {}: {}",
+                        embed_id, e
+                    )));
+                    // No fallback - just log the error
+                    ops.push(Operation::new(
+                        &format!("% Failed to embed Freedraw SVG-PDF {}: {}", embed_id, e),
+                        vec![],
+                    ));
+                }
+            }
+        } else {
             ops.push(Operation::new(
-                "% Freedraw element skipped - insufficient points",
+                &format!("% No embedded PDF for Freedraw element {}", freedraw.base.id),
                 vec![],
             ));
-            return Ok(ops);
         }
-
-        let bounds = match Self::compute_points_bounds(&freedraw.points) {
-            Some(b) => b,
-            None => {
-                ops.push(Operation::new(
-                    "% Freedraw element without calculable bounds",
-                    vec![],
-                ));
-                return Ok(ops);
-            }
-        };
-
-        let path_data = if let Some(svg_path) = freedraw
-            .svg_path
-            .as_ref()
-            .filter(|content| !content.trim().is_empty())
-        {
-            svg_path.clone()
-        } else {
-            Self::build_svg_path_from_points(&freedraw.points)
-        };
-
-        let stroke = styles.stroke.iter().find(|stroke| stroke.visible);
-        let stroke_color = stroke
-            .map(|stroke| stroke.color.clone())
-            .unwrap_or_else(|| "#000000".to_string());
-        let stroke_width = stroke
-            .map(|stroke| stroke.width)
-            .unwrap_or_else(|| freedraw.size.max(0.1));
-        let stroke_cap = stroke.map(|stroke| stroke.cap).unwrap_or(STROKE_CAP::ROUND);
-        let stroke_join = stroke
-            .map(|stroke| stroke.join)
-            .unwrap_or(STROKE_JOIN::ROUND);
-        let dash_pattern = stroke.and_then(|stroke| stroke.dash_pattern.clone());
-
-        let svg_content = Self::build_freedraw_svg_document(
-            &path_data,
-            &bounds,
-            stroke_width,
-            &stroke_color,
-            stroke_cap,
-            stroke_join,
-            dash_pattern.as_deref(),
-        );
-
-        let resource_key = freedraw.base.id.clone();
-        let resource =
-            self.get_or_create_freedraw_resource(&resource_key, &svg_content, document)?;
-
-        let scale_x = if resource.width.abs() < f64::EPSILON {
-            1.0
-        } else {
-            freedraw.base.width / resource.width
-        };
-        let scale_y = if resource.height.abs() < f64::EPSILON {
-            1.0
-        } else {
-            freedraw.base.height / resource.height
-        };
-
-        ops.push(Operation::new("q", vec![]));
-        ops.push(Operation::new(
-            "cm",
-            vec![
-                Object::Real(scale_x as f32),
-                Object::Real(0.0),
-                Object::Real(0.0),
-                Object::Real(scale_y as f32),
-                Object::Real(0.0),
-                Object::Real(0.0),
-            ],
-        ));
-        ops.push(Operation::new(
-            "Do",
-            vec![Object::Name(resource.name.clone().into_bytes())],
-        ));
-        ops.push(Operation::new("Q", vec![]));
 
         Ok(ops)
     }
