@@ -179,6 +179,51 @@ impl DucDataScaler {
             point.x *= scale;
             point.y *= scale;
         }
+
+        // Scale SVG path if present
+        if let Some(ref mut svg_path) = freedraw.svg_path {
+            *svg_path = Self::scale_svg_path(svg_path, scale);
+        }
+    }
+
+    /// Scale SVG path data by a given scale factor
+    /// This applies the scale to all numeric values in the path
+    fn scale_svg_path(path_data: &str, scale: f64) -> String {
+        let mut result = String::new();
+        let mut current_number = String::new();
+        let mut in_number = false;
+        
+        for ch in path_data.chars() {
+            if ch.is_ascii_digit() || ch == '.' || (ch == '-' && !in_number) {
+                // Part of a number
+                current_number.push(ch);
+                in_number = true;
+            } else {
+                // Not part of a number
+                if in_number {
+                    // We just finished a number, scale it
+                    if let Ok(num) = current_number.parse::<f64>() {
+                        result.push_str(&format!("{}", num * scale));
+                    } else {
+                        result.push_str(&current_number);
+                    }
+                    current_number.clear();
+                    in_number = false;
+                }
+                result.push(ch);
+            }
+        }
+        
+        // Don't forget the last number if path ends with one
+        if in_number {
+            if let Ok(num) = current_number.parse::<f64>() {
+                result.push_str(&format!("{}", num * scale));
+            } else {
+                result.push_str(&current_number);
+            }
+        }
+        
+        result
     }
 
     /// Scale table element fields

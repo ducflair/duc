@@ -343,6 +343,9 @@ impl DucToPdfBuilder {
         // Process blocks
         self.process_blocks()?;
 
+        // Process Freedraw elements with SVG paths
+        self.process_freedraw_elements()?;
+
         // Setup layers (OCGs)
         self.setup_layers()?;
 
@@ -686,6 +689,97 @@ impl DucToPdfBuilder {
     fn process_single_block(&mut self, _block: &DucBlock) -> ConversionResult<()> {
         // Create a Block using hipdf::blocks
         // For now, this is a placeholder
+        Ok(())
+    }
+
+    /// Calculate bounding box from freedraw points
+    /// Much simpler than parsing SVG path data
+    fn calculate_freedraw_bbox(points: &[duc::types::DucPoint]) -> Option<(f64, f64, f64, f64)> {
+        if points.is_empty() {
+            return None;
+        }
+
+        let mut min_x = f64::INFINITY;
+        let mut min_y = f64::INFINITY;
+        let mut max_x = f64::NEG_INFINITY;
+        let mut max_y = f64::NEG_INFINITY;
+
+        for point in points {
+            min_x = min_x.min(point.x);
+            max_x = max_x.max(point.x);
+            min_y = min_y.min(point.y);
+            max_y = max_y.max(point.y);
+        }
+
+        // Check if we found any valid coordinates
+        if min_x.is_finite() && min_y.is_finite() && max_x.is_finite() && max_y.is_finite() {
+            Some((min_x, min_y, max_x, max_y))
+        } else {
+            None
+        }
+    }
+
+    /// Process Freedraw elements with SVG paths
+    fn process_freedraw_elements(&mut self) -> ConversionResult<()> {
+        for element_wrapper in &self.context.exported_data.elements {
+            if let DucElementEnum::DucFreeDrawElement(freedraw) = &element_wrapper.element {
+                if let Some(svg_path) = &freedraw.svg_path {
+                    if !svg_path.trim().is_empty() {
+                        // Extract stroke color and opacity from element's styles
+                        // Match the renderer's approach: use first visible stroke
+                        let (stroke_color, stroke_opacity) = if let Some(stroke_obj) = freedraw.base.styles.stroke.iter().find(|s| s.content.visible) {
+                            (stroke_obj.content.src.clone(), stroke_obj.content.opacity)
+                        } else {
+                            // Fallback to black with full opacity if no visible stroke
+                            ("rgb(0, 0, 0)".to_string(), 1.0)
+                        };
+
+                        // Calculate bounding box from freedraw points (much simpler!)
+                        let svg_document = if let Some((min_x, min_y, max_x, max_y)) = Self::calculate_freedraw_bbox(&freedraw.points) {
+                            let width = max_x - min_x;
+                            let height = max_y - min_y;
+                            
+                            // Create SVG with explicit viewBox for proper bounds
+                            format!(
+                                r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{} {} {} {}" width="{}" height="{}"><path d="{}" fill="{}" fill-opacity="{}" /></svg>"#,
+                                min_x, min_y, width, height, width, height, svg_path, stroke_color, stroke_opacity
+                            )
+                        } else {
+                            // Fallback to document without viewBox if bbox calculation fails
+                            format!(
+                                r#"<svg xmlns="http://www.w3.org/2000/svg"><path d="{}" fill="{}" fill-opacity="{}" /></svg>"#,
+                                svg_path, stroke_color, stroke_opacity
+                            )
+                        };
+
+                        // Convert SVG content to PDF
+                        match svg_to_pdf(svg_document.as_bytes()) {
+                            Ok(pdf_bytes) => {
+                                // Load the PDF bytes for later embedding
+                                let embed_id = format!("freedraw_{}", freedraw.base.id);
+                                match self.pdf_embedder.load_pdf_from_bytes(&pdf_bytes, &embed_id) {
+                                    Ok(_) => {
+                                        // Store in resource cache
+                                        self.context
+                                            .resource_cache
+                                            .embedded_pdfs
+                                            .insert(freedraw.base.id.clone(), 0); // 0 as placeholder, will be updated when embedded
+                                    }
+                                    Err(e) => {
+                                        // Log error but continue processing other elements
+                                        log_warn!("Warning: Failed to load converted Freedraw SVG PDF for {}: {}", freedraw.base.id, e);
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                // Log error but continue processing other elements
+                                log_warn!("Warning: SVG to PDF conversion failed for Freedraw element {}: {}", freedraw.base.id, e);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         Ok(())
     }
 
