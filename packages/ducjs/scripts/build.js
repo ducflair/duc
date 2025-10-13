@@ -27,6 +27,22 @@ function main() {
   
   console.log(`Building with DUC_SCHEMA_VERSION: ${version}`);
   
+  // Clean previous build artifacts
+  const distDir = path.join(manifestDir, '..', 'dist');
+  const tsbuildinfo = path.join(manifestDir, '..', 'tsconfig.tsbuildinfo');
+  
+  try {
+    fs.rmSync(distDir, { recursive: true, force: true });
+  } catch (error) {
+    console.log('No dist directory to clean or error:', error.message);
+  }
+  
+  try {
+    fs.unlinkSync(tsbuildinfo);
+  } catch (error) {
+    console.log('No tsconfig.tsbuildinfo to remove or error:', error.message);
+  }
+  
   // Set environment variable and run TypeScript compiler
   const env = { ...process.env, DUC_SCHEMA_VERSION: version };
   
