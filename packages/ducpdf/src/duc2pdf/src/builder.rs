@@ -1,6 +1,9 @@
 use crate::scaling::DucDataScaler;
 use crate::streaming::stream_elements::ElementStreamer;
 use crate::streaming::stream_resources::ResourceStreamer;
+use crate::utils::freedraw_bounds::{
+    calculate_freedraw_bbox, format_number, FreeDrawBounds, UNIT_EPSILON as FREEDRAW_EPSILON,
+};
 use crate::utils::style_resolver::StyleResolver;
 use crate::utils::svg_to_pdf::svg_to_pdf;
 use crate::{
@@ -54,6 +57,7 @@ pub struct ResourceCache {
     pub embedded_pdfs: HashMap<String, u32>,
     pub svg_objects: HashMap<String, u32>,
     pub xobject_names: HashMap<String, String>, // resource_id -> XObject name mapping
+    pub freedraw_bboxes: HashMap<String, FreeDrawBounds>, // freedraw_id -> cached bounding box
 }
 
 /// Context for PDF conversion
@@ -711,33 +715,6 @@ impl DucToPdfBuilder {
         Ok(())
     }
 
-    /// Calculate bounding box from freedraw points
-    /// Much simpler than parsing SVG path data
-    fn calculate_freedraw_bbox(points: &[duc::types::DucPoint]) -> Option<(f64, f64, f64, f64)> {
-        if points.is_empty() {
-            return None;
-        }
-
-        let mut min_x = f64::INFINITY;
-        let mut min_y = f64::INFINITY;
-        let mut max_x = f64::NEG_INFINITY;
-        let mut max_y = f64::NEG_INFINITY;
-
-        for point in points {
-            min_x = min_x.min(point.x);
-            max_x = max_x.max(point.x);
-            min_y = min_y.min(point.y);
-            max_y = max_y.max(point.y);
-        }
-
-        // Check if we found any valid coordinates
-        if min_x.is_finite() && min_y.is_finite() && max_x.is_finite() && max_y.is_finite() {
-            Some((min_x, min_y, max_x, max_y))
-        } else {
-            None
-        }
-    }
-
     /// Process Freedraw elements with SVG paths
     fn process_freedraw_elements(&mut self) -> ConversionResult<()> {
         for element_wrapper in &self.context.exported_data.elements {
@@ -759,31 +736,47 @@ impl DucToPdfBuilder {
                             ("rgb(0, 0, 0)".to_string(), 1.0)
                         };
 
-                        // Calculate bounding box from freedraw points (much simpler!)
-                        let svg_document = if let Some((min_x, min_y, max_x, max_y)) =
-                            Self::calculate_freedraw_bbox(&freedraw.points)
-                        {
-                            let width = max_x - min_x;
-                            let height = max_y - min_y;
+                        // Calculate bounding box using the SVG path when available for accurate bounds
+                        let svg_document = if let Some(bounds) = calculate_freedraw_bbox(freedraw) {
+                            // Cache the calculated bounding box for later use in stream_freedraw
+                            self.context
+                                .resource_cache
+                                .freedraw_bboxes
+                                .insert(freedraw.base.id.clone(), bounds);
 
-                            // Create SVG with explicit viewBox for proper bounds
+                            let mut width = bounds.width();
+                            let mut height = bounds.height();
+
+                            if width < FREEDRAW_EPSILON {
+                                width = freedraw.base.width.max(FREEDRAW_EPSILON);
+                            }
+                            if height < FREEDRAW_EPSILON {
+                                height = freedraw.base.height.max(FREEDRAW_EPSILON);
+                            }
+
+                            let width_str = format_number(width);
+                            let height_str = format_number(height);
+                            let translate_x = format_number(-bounds.min_x);
+                            let translate_y = format_number(-bounds.min_y);
+
+                            // Normalize the path so the viewport starts at (0,0)
                             format!(
-                                r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{} {} {} {}" width="{}" height="{}"><path d="{}" fill="{}" fill-opacity="{}" /></svg>"#,
-                                min_x,
-                                min_y,
-                                width,
-                                height,
-                                width,
-                                height,
-                                svg_path,
-                                stroke_color,
-                                stroke_opacity
+                                r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}"><g transform="translate({tx} {ty})"><path d="{path}" fill="{fill}" fill-opacity="{opacity}" /></g></svg>"#,
+                                width = width_str,
+                                height = height_str,
+                                tx = translate_x,
+                                ty = translate_y,
+                                path = svg_path,
+                                fill = stroke_color.as_str(),
+                                opacity = stroke_opacity,
                             )
                         } else {
                             // Fallback to document without viewBox if bbox calculation fails
                             format!(
                                 r#"<svg xmlns="http://www.w3.org/2000/svg"><path d="{}" fill="{}" fill-opacity="{}" /></svg>"#,
-                                svg_path, stroke_color, stroke_opacity
+                                svg_path,
+                                stroke_color.as_str(),
+                                stroke_opacity
                             )
                         };
 
@@ -1260,6 +1253,8 @@ impl DucToPdfBuilder {
             .set_embedded_pdfs(self.context.resource_cache.embedded_pdfs.clone());
         self.element_streamer
             .set_images(self.context.resource_cache.images.clone());
+        self.element_streamer
+            .set_freedraw_bboxes(self.context.resource_cache.freedraw_bboxes.clone());
 
         // Reset per-page ExtGState tracking before streaming
         self.element_streamer.begin_page();
@@ -1357,6 +1352,8 @@ impl DucToPdfBuilder {
             .set_embedded_pdfs(self.context.resource_cache.embedded_pdfs.clone());
         self.element_streamer
             .set_images(self.context.resource_cache.images.clone());
+        self.element_streamer
+            .set_freedraw_bboxes(self.context.resource_cache.freedraw_bboxes.clone());
 
         // === Phase 1: Stream unlayered elements ===
         // These elements don't belong to any layer and render first

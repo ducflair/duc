@@ -26,6 +26,7 @@
 use crate::scaling::DucDataScaler;
 use crate::streaming::pdf_linear::PdfLinearRenderer;
 use crate::streaming::stream_resources::ResourceStreamer;
+use crate::utils::freedraw_bounds::{calculate_freedraw_bbox, FreeDrawBounds};
 use crate::utils::style_resolver::{ResolvedStyles, StyleResolver};
 use crate::{ConversionError, ConversionResult};
 use bigcolor::BigColor;
@@ -87,6 +88,8 @@ pub struct ElementStreamer {
     new_xobjects: Vec<(String, Object)>,
     /// Reference to embedded PDFs to check if file is SVG-converted PDF
     embedded_pdfs: HashMap<String, u32>, // file_id -> object_id
+    /// Cache for freedraw bounding boxes calculated during preprocessing
+    freedraw_bboxes: HashMap<String, FreeDrawBounds>, // freedraw_id -> cached bounding box
     /// Font resource name for text rendering
     font_resource_name: String,
     /// Active font used for text rendering and encoding
@@ -124,6 +127,7 @@ impl ElementStreamer {
             images: HashMap::new(),
             new_xobjects: Vec::new(),
             embedded_pdfs: HashMap::new(),
+            freedraw_bboxes: HashMap::new(),
             font_resource_name,
             text_font,
             render_only_plot_elements: false,
@@ -160,6 +164,11 @@ impl ElementStreamer {
     /// Set image cache from resource cache
     pub fn set_images(&mut self, images: HashMap<String, u32>) {
         self.images = images;
+    }
+
+    /// Set freedraw bounding box cache from preprocessing
+    pub fn set_freedraw_bboxes(&mut self, freedraw_bboxes: HashMap<String, FreeDrawBounds>) {
+        self.freedraw_bboxes = freedraw_bboxes;
     }
 
     /// Set page height for coordinate transformation
@@ -625,7 +634,7 @@ impl ElementStreamer {
                         // Calculate stroke width if present (inset clipping to prevent stroke from being clipped)
                         let stroke_inset = if let Some(stroke) = base.styles.stroke.first() {
                             if stroke.content.visible {
-                                stroke.width / 2.0  // Inset by half stroke width so stroke extends outward
+                                stroke.width / 2.0 // Inset by half stroke width so stroke extends outward
                             } else {
                                 0.0
                             }
@@ -639,13 +648,13 @@ impl ElementStreamer {
                         if is_plot_mode {
                             let x = base.x;
                             let y = base.y;
-                            
+
                             // Transform frame position to PDF coordinates
                             let plot_y = self.page_origin.1;
                             let pdf_x = x;
                             let pdf_y = self.page_height - y + (2.0 * plot_y);
 
-                            // Translate to frame origin in PDF coordinates so plot children 
+                            // Translate to frame origin in PDF coordinates so plot children
                             // remain in the same coordinate space as the clipping region.
                             ops.push(Operation::new(
                                 "cm",
@@ -658,7 +667,7 @@ impl ElementStreamer {
                                     Object::Real(pdf_y as f32),
                                 ],
                             ));
-                            
+
                             // Inset clipping rect by stroke width to prevent border clipping
                             ops.push(Operation::new(
                                 "re",
@@ -1034,10 +1043,10 @@ impl ElementStreamer {
             // pdf_y = page_height - parent_y + (2.0 * plot_y)
             // So child elements need to be positioned relative to the frame's origin at (0, 0)
             // in the transformed coordinate system
-            
+
             let translation_x = base.x - parent_x;
-            let translation_y = -(base.y - parent_y);  // Negative because PDF Y increases downward
-            
+            let translation_y = -(base.y - parent_y); // Negative because PDF Y increases downward
+
             (translation_x, translation_y)
         } else {
             // For plot parents with margins/clipping
@@ -1972,6 +1981,7 @@ impl ElementStreamer {
         pdf_embedder: &mut PdfEmbedder,
         _resource_streamer: &mut ResourceStreamer,
     ) -> ConversionResult<Vec<Operation>> {
+        use crate::utils::freedraw_bounds::calculate_freedraw_bbox;
         use hipdf::embed_pdf::{EmbedOptions, PageRange};
 
         let mut ops = Vec::new();
@@ -1983,10 +1993,28 @@ impl ElementStreamer {
             // Use embedded PDF from svg_path conversion
             let embed_id = format!("freedraw_{}", freedraw.base.id);
 
+            // Use cached bounding box to get the offset that was applied during SVG creation
+            // The SVG was normalized with translate(-min_x, -min_y), so we need to account for this
+            let bbox_offset = if let Some(bounds) = self.freedraw_bboxes.get(&freedraw.base.id) {
+                (bounds.min_x as f32, bounds.min_y as f32)
+            } else {
+                // Fallback: calculate if not cached (shouldn't happen in normal flow)
+                web_sys::console::log_1(&JsValue::from_str(&format!(
+                    "Warning: No cached bounding box found for freedraw {}, calculating fallback",
+                    freedraw.base.id
+                )));
+                if let Some(bounds) = calculate_freedraw_bbox(freedraw) {
+                    (bounds.min_x as f32, bounds.min_y as f32)
+                } else {
+                    (0.0, 0.0)
+                }
+            };
+
             let options = EmbedOptions {
                 page_range: Some(PageRange::Single(0)), // Freedraw SVG-PDFs have only one page
                 // Element transform has already translated to (base.x, base.y)
-                position: (0.0, 0.0),
+                // But we need to offset by the bounding box min values because the SVG was normalized
+                position: (bbox_offset.0, -bbox_offset.1),
                 max_width: Some(freedraw.base.width as f32),
                 max_height: Some(freedraw.base.height as f32),
                 preserve_aspect_ratio: true,
@@ -2353,7 +2381,7 @@ impl ElementStreamer {
 
         // Note: Clipping is handled in handle_frame_clipping for child elements
         // This function only renders the frame border if present
-        
+
         // Draw frame border if it has stroke styles
         let styles = &frame.stack_element_base.base.styles;
         if !styles.stroke.is_empty() {

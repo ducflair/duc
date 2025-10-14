@@ -192,7 +192,7 @@ impl DucDataScaler {
         let mut result = String::new();
         let mut current_number = String::new();
         let mut in_number = false;
-        
+
         for ch in path_data.chars() {
             if ch.is_ascii_digit() || ch == '.' || (ch == '-' && !in_number) {
                 // Part of a number
@@ -213,7 +213,7 @@ impl DucDataScaler {
                 result.push(ch);
             }
         }
-        
+
         // Don't forget the last number if path ends with one
         if in_number {
             if let Ok(num) = current_number.parse::<f64>() {
@@ -222,7 +222,7 @@ impl DucDataScaler {
                 result.push_str(&current_number);
             }
         }
-        
+
         result
     }
 
