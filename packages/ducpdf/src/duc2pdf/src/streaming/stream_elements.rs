@@ -45,7 +45,7 @@ use hipdf::images::ImageManager;
 use hipdf::lopdf::content::Operation;
 use hipdf::lopdf::{Dictionary, Document, Object};
 use hipdf::ocg::OCGManager;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::f64::consts::PI;
 use wasm_bindgen::JsValue;
 
@@ -64,11 +64,21 @@ struct StyleProfile {
     apply_stroke_properties: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StreamMode {
+    Crop,
+    Plot,
+}
+
 /// Element streaming context for rendering DUC elements to PDF
 pub struct ElementStreamer {
     style_resolver: StyleResolver,
     /// Page height for coordinate transformation from top-left to bottom-left origin
     page_height: f64,
+    /// Absolute origin of the current page prior to page-level transformation (bounds.x, bounds.y)
+    page_origin: (f64, f64),
+    /// Page-level translation applied in the content stream
+    page_translation: (f64, f64),
     /// Cache for external resources (images, SVGs, PDFs, etc.)
     resource_cache: HashMap<String, String>, // resource_id -> XObject name
     /// Cache for image IDs from ImageManager
@@ -89,6 +99,12 @@ pub struct ElementStreamer {
     ext_gstate_definitions: HashMap<String, Dictionary>,
     /// Names of ExtGStates referenced while streaming the current page
     current_page_ext_gstates: BTreeSet<String>,
+    /// Active streaming mode for the current page
+    current_mode: StreamMode,
+    /// Plot identifier for the current page when in plot mode
+    current_plot_id: Option<String>,
+    /// Allowed element identifiers constrained by the current page context
+    allowed_element_ids: Option<HashSet<String>>,
 }
 
 impl ElementStreamer {
@@ -102,6 +118,8 @@ impl ElementStreamer {
         Self {
             style_resolver,
             page_height,
+            page_origin: (0.0, 0.0),
+            page_translation: (0.0, 0.0),
             resource_cache: HashMap::new(),
             images: HashMap::new(),
             new_xobjects: Vec::new(),
@@ -112,6 +130,9 @@ impl ElementStreamer {
             ext_gstate_cache: HashMap::new(),
             ext_gstate_definitions: HashMap::new(),
             current_page_ext_gstates: BTreeSet::new(),
+            current_mode: StreamMode::Crop,
+            current_plot_id: None,
+            allowed_element_ids: None,
         }
     }
 
@@ -146,15 +167,49 @@ impl ElementStreamer {
         self.page_height = page_height;
     }
 
+    /// Record the page origin (bounds.x, bounds.y) for the current content stream
+    pub fn set_page_origin(&mut self, origin_x: f64, origin_y: f64) {
+        self.page_origin = (origin_x, origin_y);
+    }
+
+    /// Record the page-level translation applied in the content stream
+    pub fn set_page_translation(&mut self, tx: f64, ty: f64) {
+        self.page_translation = (tx, ty);
+    }
+
     /// Control whether only elements flagged as plot should be rendered
     pub fn set_render_only_plot_elements(&mut self, value: bool) {
         self.render_only_plot_elements = value;
+    }
+
+    /// Configure the streamer for the current page context
+    pub fn set_page_context(
+        &mut self,
+        is_plot_mode: bool,
+        active_plot_id: Option<&str>,
+        allowed_element_ids: Option<HashSet<String>>,
+    ) {
+        self.current_mode = if is_plot_mode {
+            StreamMode::Plot
+        } else {
+            StreamMode::Crop
+        };
+        self.current_plot_id = active_plot_id.map(|id| id.to_string());
+        self.allowed_element_ids = allowed_element_ids;
+    }
+
+    /// Reset the streamer context after finishing a page
+    pub fn clear_page_context(&mut self) {
+        self.current_mode = StreamMode::Crop;
+        self.current_plot_id = None;
+        self.allowed_element_ids = None;
     }
 
     /// Stream elements within specified bounds with local state for scroll positioning
     pub fn stream_elements_within_bounds(
         &mut self,
         elements: &[ElementWrapper],
+        all_elements: &[ElementWrapper],
         bounds: (f64, f64, f64, f64),
         local_state: Option<&duc::types::DucLocalState>,
         resource_streamer: &mut ResourceStreamer,
@@ -166,33 +221,58 @@ impl ElementStreamer {
         document: &mut Document,
     ) -> ConversionResult<Vec<Operation>> {
         let mut all_operations = Vec::new();
+        let is_plot_mode = matches!(self.current_mode, StreamMode::Plot);
         let (bounds_x, bounds_y, bounds_width, bounds_height) = bounds;
         let bounds_max_x = bounds_x + bounds_width;
         let bounds_max_y = bounds_y + bounds_height;
+        let (scroll_x, scroll_y) = if let Some(state) = local_state {
+            (state.scroll_x, state.scroll_y)
+        } else {
+            (0.0, 0.0)
+        };
 
         // Filter and sort elements by z-index and visibility criteria
         let mut filtered_elements: Vec<_> = elements
             .iter()
             .filter(|element_wrapper| {
                 let base = Self::get_element_base(&element_wrapper.element);
-                self.should_render_element(base)
+
+                if !self.should_render_element(base) {
+                    return false;
+                }
+
+                if !is_plot_mode {
+                    return true;
+                }
+
+                if let Some(allowed_ids) = &self.allowed_element_ids {
+                    allowed_ids.contains(base.id.as_str())
+                } else {
+                    true
+                }
             })
             .filter(|element_wrapper| {
+                if is_plot_mode {
+                    return true;
+                }
+
                 let base = Self::get_element_base(&element_wrapper.element);
 
-                // Check if element intersects with bounds
-                // Skip bounds check for elements that belong to a layer (to allow layer testing)
+                // CROP mode: check bounds intersection with scroll offset applied
                 if base.layer_id.is_some() {
-                    true
-                } else {
-                    let elem_max_x = base.x + base.width;
-                    let elem_max_y = base.y + base.height;
-
-                    !(base.x > bounds_max_x
-                        || elem_max_x < bounds_x
-                        || base.y > bounds_max_y
-                        || elem_max_y < bounds_y)
+                    return true;
                 }
+
+                // let elem_min_x = base.x + scroll_x;
+                // let elem_min_y = base.y + scroll_y;
+                // let elem_max_x = elem_min_x + base.width;
+                // let elem_max_y = elem_min_y + base.height;
+
+                // !(elem_min_x > bounds_max_x
+                //     || elem_max_x < bounds_x
+                //     || elem_min_y > bounds_max_y
+                //     || elem_max_y < bounds_y)
+                true
             })
             .collect();
 
@@ -225,18 +305,21 @@ impl ElementStreamer {
             }
 
             // Handle clipping if element has a frame_id
-            let has_clipping = base.frame_id.is_some();
+            let mut clip_applied = false;
             if let Some(frame_id) = &base.frame_id {
-                let clipping_ops =
-                    self.handle_frame_clipping(frame_id, elements, bounds, local_state)?;
-                all_operations.extend(clipping_ops);
+                let (clipping_ops, clip_active) =
+                    self.handle_frame_clipping(frame_id, all_elements, bounds, local_state)?;
+                if !clipping_ops.is_empty() {
+                    all_operations.extend(clipping_ops);
+                }
+                clip_applied = clip_active;
             }
 
             // Stream the element
             let element_ops = self.stream_element_with_resources(
                 &element_wrapper.element,
                 local_state,
-                elements,
+                all_elements,
                 document,
                 resource_streamer,
                 block_manager,
@@ -248,7 +331,7 @@ impl ElementStreamer {
             all_operations.extend(element_ops);
 
             // Restore graphics state if clipping was applied
-            if has_clipping {
+            if clip_applied {
                 all_operations.push(Operation::new("Q", vec![])); // Restore graphics state
                 all_operations.push(Operation::new("% Clipping state restored", vec![]));
             }
@@ -265,7 +348,7 @@ impl ElementStreamer {
         &mut self,
         element: &DucElementEnum,
         local_state: Option<&duc::types::DucLocalState>,
-        elements: &[ElementWrapper],
+        all_elements: &[ElementWrapper],
         document: &mut Document,
         resource_streamer: &mut ResourceStreamer,
         block_manager: &mut BlockManager,
@@ -274,6 +357,7 @@ impl ElementStreamer {
         image_manager: &mut ImageManager,
     ) -> ConversionResult<Vec<Operation>> {
         let mut operations = Vec::new();
+        let is_plot_mode = matches!(self.current_mode, StreamMode::Plot);
 
         // Save graphics state for all elements (including PDFs)
         operations.push(Operation::new("q", vec![]));
@@ -282,33 +366,42 @@ impl ElementStreamer {
         let base = Self::get_element_base(element);
         let center_override = Self::compute_element_center_override(element);
         if base.x != 0.0 || base.y != 0.0 || base.angle != 0.0 {
-            let transform_ops = if base.frame_id.is_some() {
+            let transform_ops = if is_plot_mode && base.frame_id.is_some() {
                 // This is a child element of a plot/ frame, use relative positioning
                 // Find the parent plot element to get its position
-                if let Some(((parent_x, parent_y, parent_width, parent_height), margins)) =
-                    self.find_parent_plot_bounds(element, elements)
+                if let Some((
+                    (parent_x, parent_y, parent_width, parent_height),
+                    margins,
+                    clip_active,
+                    is_frame_parent,
+                )) = self.find_parent_plot_bounds(element, all_elements)
                 {
                     self.create_transformation_matrix_for_plot_child(
                         base,
-                        local_state,
                         parent_x,
                         parent_y,
                         parent_width,
                         parent_height,
                         margins,
+                        clip_active,
+                        is_frame_parent,
                         center_override,
                     )
                 } else {
                     // Fallback to regular transformation if parent not found
                     self.create_transformation_matrix_with_scroll(
                         base,
-                        local_state,
+                        if is_plot_mode { None } else { local_state },
                         center_override,
                     )
                 }
             } else {
                 // Regular element, use standard transformation
-                self.create_transformation_matrix_with_scroll(base, local_state, center_override)
+                self.create_transformation_matrix_with_scroll(
+                    base,
+                    if is_plot_mode { None } else { local_state },
+                    center_override,
+                )
             };
             operations.extend(transform_ops);
         }
@@ -434,13 +527,18 @@ impl ElementStreamer {
     fn find_parent_plot_bounds(
         &self,
         element: &DucElementEnum,
-        elements: &[ElementWrapper],
-    ) -> Option<((f64, f64, f64, f64), Option<(f64, f64, f64, f64)>)> {
+        all_elements: &[ElementWrapper],
+    ) -> Option<(
+        (f64, f64, f64, f64),
+        Option<(f64, f64, f64, f64)>,
+        bool,
+        bool, // is_frame_parent
+    )> {
         let base = Self::get_element_base(element);
 
         if let Some(frame_id) = &base.frame_id {
             // Find the parent plot element by ID
-            for element_wrapper in elements {
+            for element_wrapper in all_elements {
                 let wrapper_base = Self::get_element_base(&element_wrapper.element);
 
                 if wrapper_base.id == *frame_id {
@@ -456,6 +554,8 @@ impl ElementStreamer {
                         return Some((
                             (plot_base.x, plot_base.y, plot_base.width, plot_base.height),
                             margins,
+                            plot.stack_element_base.clip,
+                            false, // This is a plot parent
                         ));
                     }
                     // Also check for frame elements (they can act as containers too)
@@ -470,6 +570,8 @@ impl ElementStreamer {
                                 frame_base.height,
                             ),
                             None,
+                            frame.stack_element_base.clip,
+                            true, // This is a frame parent
                         ));
                     }
                 }
@@ -492,14 +594,24 @@ impl ElementStreamer {
     fn handle_frame_clipping(
         &self,
         frame_id: &str,
-        elements: &[ElementWrapper],
+        all_elements: &[ElementWrapper],
         _bounds: (f64, f64, f64, f64),
-        _local_state: Option<&duc::types::DucLocalState>,
-    ) -> ConversionResult<Vec<Operation>> {
+        local_state: Option<&duc::types::DucLocalState>,
+    ) -> ConversionResult<(Vec<Operation>, bool)> {
         let mut ops = Vec::new();
+        let mut clip_applied = false;
 
         // Find the frame element by ID
-        if let Some(frame_wrapper) = elements.iter().find(|wrapper| {
+        let is_plot_mode = matches!(self.current_mode, StreamMode::Plot);
+        let (scroll_x, scroll_y) = if is_plot_mode {
+            (0.0, 0.0)
+        } else if let Some(state) = local_state {
+            (state.scroll_x, state.scroll_y)
+        } else {
+            (0.0, 0.0)
+        };
+
+        if let Some(frame_wrapper) = all_elements.iter().find(|wrapper| {
             let base = Self::get_element_base(&wrapper.element);
             base.id == frame_id
         }) {
@@ -507,94 +619,173 @@ impl ElementStreamer {
                 DucElementEnum::DucFrameElement(frame) => {
                     if frame.stack_element_base.clip {
                         let base = &frame.stack_element_base.base;
-                        let x = base.x;
-                        let y = base.y;
                         let width = base.width;
                         let height = base.height;
 
-                        // Enter a local coordinate system at the frame origin so that
-                        // subsequent child transforms (which are relative to the frame)
-                        // are evaluated in the same space as the clipping path.
+                        // Calculate stroke width if present (inset clipping to prevent stroke from being clipped)
+                        let stroke_inset = if let Some(stroke) = base.styles.stroke.first() {
+                            if stroke.content.visible {
+                                stroke.width / 2.0  // Inset by half stroke width so stroke extends outward
+                            } else {
+                                0.0
+                            }
+                        } else {
+                            0.0
+                        };
+
                         ops.push(Operation::new("q", vec![]));
-                        // Translate to frame origin
-                        ops.push(Operation::new(
-                            "cm",
-                            vec![
-                                Object::Real(1.0),
-                                Object::Real(0.0),
-                                Object::Real(0.0),
-                                Object::Real(1.0),
-                                Object::Real(x as f32),
-                                Object::Real(y as f32),
-                            ],
-                        ));
-                        // Define clip rect in the frame-local space
-                        ops.push(Operation::new(
-                            "re",
-                            vec![
-                                Object::Real(0.0),
-                                Object::Real(0.0),
-                                Object::Real(width as f32),
-                                Object::Real(height as f32),
-                            ],
-                        ));
-                        ops.push(Operation::new("W", vec![]));
-                        ops.push(Operation::new("n", vec![]));
-                        ops.push(Operation::new(
-                            &format!(
-                                "% Clipping active for frame (local coords): {} (w={}, h={})",
-                                frame_id, width, height
-                            ),
-                            vec![],
-                        ));
+                        clip_applied = true;
+
+                        if is_plot_mode {
+                            let x = base.x;
+                            let y = base.y;
+                            
+                            // Transform frame position to PDF coordinates
+                            let plot_y = self.page_origin.1;
+                            let pdf_x = x;
+                            let pdf_y = self.page_height - y + (2.0 * plot_y);
+
+                            // Translate to frame origin in PDF coordinates so plot children 
+                            // remain in the same coordinate space as the clipping region.
+                            ops.push(Operation::new(
+                                "cm",
+                                vec![
+                                    Object::Real(1.0),
+                                    Object::Real(0.0),
+                                    Object::Real(0.0),
+                                    Object::Real(1.0),
+                                    Object::Real(pdf_x as f32),
+                                    Object::Real(pdf_y as f32),
+                                ],
+                            ));
+                            
+                            // Inset clipping rect by stroke width to prevent border clipping
+                            ops.push(Operation::new(
+                                "re",
+                                vec![
+                                    Object::Real(stroke_inset as f32),
+                                    Object::Real(-(stroke_inset as f32)),
+                                    Object::Real((width - 2.0 * stroke_inset) as f32),
+                                    Object::Real(-(height - 2.0 * stroke_inset) as f32),
+                                ],
+                            ));
+                            ops.push(Operation::new("W", vec![]));
+                            ops.push(Operation::new("n", vec![]));
+                            ops.push(Operation::new(
+                                &format!(
+                                    "% Clipping active for frame (PDF coords): {} at ({}, {}) (w={}, h={}, inset={})",
+                                    frame_id, pdf_x, pdf_y, width, height, stroke_inset
+                                ),
+                                vec![],
+                            ));
+                        } else {
+                            let clip_x = base.x + scroll_x + stroke_inset;
+                            let clip_y = base.y + scroll_y + stroke_inset;
+                            let clip_width = width - 2.0 * stroke_inset;
+                            let clip_height = height - 2.0 * stroke_inset;
+                            let pdf_y = DucDataScaler::transform_y_coordinate_to_pdf_system(
+                                clip_y,
+                                clip_height,
+                                self.page_height,
+                            );
+
+                            ops.push(Operation::new(
+                                "re",
+                                vec![
+                                    Object::Real(clip_x as f32),
+                                    Object::Real(pdf_y as f32),
+                                    Object::Real(clip_width as f32),
+                                    Object::Real(clip_height as f32),
+                                ],
+                            ));
+                            ops.push(Operation::new("W", vec![]));
+                            ops.push(Operation::new("n", vec![]));
+                            ops.push(Operation::new(
+                                &format!(
+                                    "% Clipping active for frame (absolute coords): {} (w={}, h={}, inset={})",
+                                    frame_id, width, height, stroke_inset
+                                ),
+                                vec![],
+                            ));
+                        }
                     }
                 }
                 DucElementEnum::DucPlotElement(plot) => {
                     if plot.stack_element_base.clip {
                         let base = &plot.stack_element_base.base;
 
-                        // Clip to plot content area (apply margins)
                         let ml = plot.layout.margins.left;
                         let mt = plot.layout.margins.top;
                         let mr = plot.layout.margins.right;
                         let mb = plot.layout.margins.bottom;
-                        let tx = base.x + ml;
-                        let ty = base.y + mt;
                         let width = base.width - (ml + mr);
                         let height = base.height - (mt + mb);
 
                         ops.push(Operation::new("q", vec![]));
-                        // Translate to plot content origin (after margins)
-                        ops.push(Operation::new(
-                            "cm",
-                            vec![
-                                Object::Real(1.0),
-                                Object::Real(0.0),
-                                Object::Real(0.0),
-                                Object::Real(1.0),
-                                Object::Real(tx as f32),
-                                Object::Real(ty as f32),
-                            ],
-                        ));
-                        // Define clip rect in plot-content-local space
-                        ops.push(Operation::new(
-                            "re",
-                            vec![
-                                Object::Real(0.0),
-                                Object::Real(0.0),
-                                Object::Real(width as f32),
-                                Object::Real(height as f32),
-                            ],
-                        ));
-                        ops.push(Operation::new("W", vec![]));
-                        ops.push(Operation::new("n", vec![]));
-                        ops.push(Operation::new(
-                            &format!(
-                                "% Clipping active for plot (local content): {} (w={}, h={})",
-                                frame_id, width, height
-                            ),
-                            vec![],
-                        ));
+                        clip_applied = true;
+
+                        if is_plot_mode {
+                            let tx = base.x + ml;
+                            let ty = base.y + mt;
+
+                            // Translate to plot content origin (after margins)
+                            ops.push(Operation::new(
+                                "cm",
+                                vec![
+                                    Object::Real(1.0),
+                                    Object::Real(0.0),
+                                    Object::Real(0.0),
+                                    Object::Real(1.0),
+                                    Object::Real(tx as f32),
+                                    Object::Real(ty as f32),
+                                ],
+                            ));
+                            ops.push(Operation::new(
+                                "re",
+                                vec![
+                                    Object::Real(0.0),
+                                    Object::Real(0.0),
+                                    Object::Real(width as f32),
+                                    Object::Real(height as f32),
+                                ],
+                            ));
+                            ops.push(Operation::new("W", vec![]));
+                            ops.push(Operation::new("n", vec![]));
+                            ops.push(Operation::new(
+                                &format!(
+                                    "% Clipping active for plot (local content): {} (w={}, h={})",
+                                    frame_id, width, height
+                                ),
+                                vec![],
+                            ));
+                        } else {
+                            let clip_x = base.x + ml + scroll_x;
+                            let clip_y = base.y + mt + scroll_y;
+                            let pdf_y = DucDataScaler::transform_y_coordinate_to_pdf_system(
+                                clip_y,
+                                height,
+                                self.page_height,
+                            );
+
+                            ops.push(Operation::new(
+                                "re",
+                                vec![
+                                    Object::Real(clip_x as f32),
+                                    Object::Real(pdf_y as f32),
+                                    Object::Real(width as f32),
+                                    Object::Real(height as f32),
+                                ],
+                            ));
+                            ops.push(Operation::new("W", vec![]));
+                            ops.push(Operation::new("n", vec![]));
+                            ops.push(Operation::new(
+                                &format!(
+                                    "% Clipping active for plot (absolute content): {} (w={}, h={})",
+                                    frame_id, width, height
+                                ),
+                                vec![],
+                            ));
+                        }
                     }
                 }
                 _ => {}
@@ -607,7 +798,7 @@ impl ElementStreamer {
             ));
         }
 
-        Ok(ops)
+        Ok((ops, clip_applied))
     }
 
     fn compute_element_center_override(element: &DucElementEnum) -> Option<(f64, f64)> {
@@ -793,41 +984,95 @@ impl ElementStreamer {
     fn create_transformation_matrix_for_plot_child(
         &self,
         base: &duc::types::DucElementBase,
-        _local_state: Option<&duc::types::DucLocalState>, // Scroll not used in plot mode
-        parent_plot_x: f64,
-        parent_plot_y: f64,
-        _parent_plot_width: f64,
-        _parent_plot_height: f64,
-        parent_margins: Option<(f64, f64, f64, f64)>, // left, top, right, bottom
+        parent_x: f64,
+        parent_y: f64,
+        parent_width: f64,
+        parent_height: f64,
+        parent_margins: Option<(f64, f64, f64, f64)>,
+        parent_clip_active: bool,
+        is_frame_parent: bool,
         center_override: Option<(f64, f64)>,
     ) -> Vec<Operation> {
-        // Elements are authored in absolute world coordinates in the DUC data.
-        // For children of frames/plots we transform them to coordinates relative
-        // to the parent container's origin. The clipping code already translates
-        // to the parent origin (and applies margins for plots), so we must account
-        // for margins to position correctly relative to the clipping area.
-
-        let (relative_x, relative_y) = if let Some((ml, mt, _mr, _mb)) = parent_margins {
-            // Clipping translates to (parent_plot_x + ml, parent_plot_y + mt)
-            // So position relative to that
-            (base.x - (parent_plot_x + ml), base.y - (parent_plot_y + mt))
-        } else {
-            // No margins, position relative to parent origin
-            (base.x - parent_plot_x, base.y - parent_plot_y)
-        };
-
-        // Transform y-coordinate from top-left (duc) to bottom-left (PDF) origin
-        let transformed_y =
-            DucDataScaler::transform_point_y_to_pdf_system(relative_y, self.page_height);
+        let (translation_x, translation_y) = self.compute_plot_child_translation(
+            base,
+            parent_x,
+            parent_y,
+            parent_width,
+            parent_height,
+            parent_margins,
+            parent_clip_active,
+            is_frame_parent,
+        );
 
         self.create_transformation_matrix(
-            relative_x,
-            transformed_y,
+            translation_x,
+            translation_y,
             base.width,
             base.height,
             base.angle,
             center_override,
         )
+    }
+
+    fn compute_plot_child_translation(
+        &self,
+        base: &duc::types::DucElementBase,
+        parent_x: f64,
+        parent_y: f64,
+        _parent_width: f64,
+        _parent_height: f64,
+        parent_margins: Option<(f64, f64, f64, f64)>,
+        parent_clip_active: bool,
+        is_frame_parent: bool,
+    ) -> (f64, f64) {
+        let plot_y = self.page_origin.1;
+
+        if is_frame_parent && parent_clip_active {
+            // For frame parents with clipping in PLOT mode:
+            // The clipping has already translated to (pdf_x, pdf_y) where:
+            // pdf_x = parent_x
+            // pdf_y = page_height - parent_y + (2.0 * plot_y)
+            // So child elements need to be positioned relative to the frame's origin at (0, 0)
+            // in the transformed coordinate system
+            
+            let translation_x = base.x - parent_x;
+            let translation_y = -(base.y - parent_y);  // Negative because PDF Y increases downward
+            
+            (translation_x, translation_y)
+        } else {
+            // For plot parents with margins/clipping
+            let (ml, mt, _mr, _mb) = if parent_clip_active {
+                parent_margins.unwrap_or((0.0, 0.0, 0.0, 0.0))
+            } else {
+                (0.0, 0.0, 0.0, 0.0)
+            };
+
+            let clip_translation_x = if parent_clip_active {
+                parent_x + ml
+            } else {
+                0.0
+            };
+
+            let clip_translation_y = if parent_clip_active {
+                parent_y + mt
+            } else {
+                0.0
+            };
+
+            // For plot children, use the existing logic
+            // The global page transformation has already been applied in create_content_stream
+            // which translates by (-bounds_x, -bounds_y) where bounds are the plot bounds
+            // So we need to compute the child's position relative to the already-translated plot position
+            let translation_x = base.x - clip_translation_x;
+
+            // For Y coordinate, we need to account for:
+            // 1. PDF coordinate system (Y increases downward)
+            // 2. Page height transformation
+            // 3. Global page translation that was already applied
+            let translation_y = self.page_height - base.y + (2.0 * plot_y) - clip_translation_y;
+
+            (translation_x, translation_y)
+        }
     }
 
     fn quantize_opacity(value: f64) -> u16 {
@@ -1197,8 +1442,8 @@ impl ElementStreamer {
         ops.push(Operation::new(
             "re",
             vec![
-                Object::Real(0.0),
-                Object::Real(0.0),
+                Object::Real(0.0), // x (relative to current transformation)
+                Object::Real(-(block_instance.base.height as f32)), // y (flip to keep origin at top-left)
                 Object::Real(block_instance.base.width as f32),
                 Object::Real(block_instance.base.height as f32),
             ],
@@ -1220,8 +1465,8 @@ impl ElementStreamer {
         ops.push(Operation::new(
             "re",
             vec![
-                Object::Real(0.0),
-                Object::Real(0.0),
+                Object::Real(0.0),                         // x (relative to current transformation)
+                Object::Real(-(table.base.height as f32)), // y (flip to keep origin at top-left)
                 Object::Real(table.base.width as f32),
                 Object::Real(table.base.height as f32),
             ],
@@ -1707,7 +1952,7 @@ impl ElementStreamer {
                 "re",
                 vec![
                     Object::Real(0.0),
-                    Object::Real(0.0),
+                    Object::Real(-(mermaid.base.height as f32)),
                     Object::Real(mermaid.base.width as f32),
                     Object::Real(mermaid.base.height as f32),
                 ],
@@ -1751,7 +1996,8 @@ impl ElementStreamer {
             match pdf_embedder.embed_pdf(document, &embed_id, &options) {
                 Ok(result) => {
                     for (name, obj_ref) in result.xobject_resources.iter() {
-                        self.resource_cache.insert(freedraw.base.id.clone(), name.clone());
+                        self.resource_cache
+                            .insert(freedraw.base.id.clone(), name.clone());
                         self.new_xobjects.push((name.clone(), obj_ref.clone()));
                     }
 
@@ -1785,7 +2031,10 @@ impl ElementStreamer {
             }
         } else {
             ops.push(Operation::new(
-                &format!("% No embedded PDF for Freedraw element {}", freedraw.base.id),
+                &format!(
+                    "% No embedded PDF for Freedraw element {}",
+                    freedraw.base.id
+                ),
                 vec![],
             ));
         }
@@ -1814,7 +2063,7 @@ impl ElementStreamer {
                 "re",
                 vec![
                     Object::Real(0.0),
-                    Object::Real(0.0),
+                    Object::Real(-(pdf.base.height as f32)),
                     Object::Real(pdf.base.width as f32),
                     Object::Real(pdf.base.height as f32),
                 ],
@@ -1875,7 +2124,7 @@ impl ElementStreamer {
                     "re",
                     vec![
                         Object::Real(0.0),
-                        Object::Real(0.0),
+                        Object::Real(-(pdf.base.height as f32)),
                         Object::Real(pdf.base.width as f32),
                         Object::Real(pdf.base.height as f32),
                     ],
@@ -1957,7 +2206,7 @@ impl ElementStreamer {
                             "re",
                             vec![
                                 Object::Real(0.0),
-                                Object::Real(0.0),
+                                Object::Real(-(image.base.height as f32)),
                                 Object::Real(image.base.width as f32),
                                 Object::Real(image.base.height as f32),
                             ],
@@ -2027,7 +2276,7 @@ impl ElementStreamer {
                         "re",
                         vec![
                             Object::Real(0.0),
-                            Object::Real(0.0),
+                            Object::Real(-(image.base.height as f32)),
                             Object::Real(image.base.width as f32),
                             Object::Real(image.base.height as f32),
                         ],
@@ -2082,7 +2331,7 @@ impl ElementStreamer {
                 "re",
                 vec![
                     Object::Real(0.0),
-                    Object::Real(0.0),
+                    Object::Real(-(image.base.height as f32)),
                     Object::Real(image.base.width as f32),
                     Object::Real(image.base.height as f32),
                 ],
@@ -2102,47 +2351,33 @@ impl ElementStreamer {
     fn stream_frame(&self, frame: &DucFrameElement) -> ConversionResult<Vec<Operation>> {
         let mut ops = Vec::new();
 
-        // Save graphics state for clipping
-        ops.push(Operation::new("q", vec![]));
-
-        // Set clipping rectangle if needed
-        if frame.stack_element_base.clip {
-            ops.push(Operation::new(
-                "re",
-                vec![
-                    Object::Real(0.0),
-                    Object::Real(0.0),
-                    Object::Real(frame.stack_element_base.base.width as f32),
-                    Object::Real(frame.stack_element_base.base.height as f32),
-                ],
-            ));
-            ops.push(Operation::new("W", vec![])); // Set clipping path
-            ops.push(Operation::new("n", vec![])); // End path without filling/stroking
-        }
-
+        // Note: Clipping is handled in handle_frame_clipping for child elements
+        // This function only renders the frame border if present
+        
         // Draw frame border if it has stroke styles
         let styles = &frame.stack_element_base.base.styles;
         if !styles.stroke.is_empty() {
+            // Draw rectangle at element bounds
+            // The clipping inset in handle_frame_clipping ensures the stroke won't be clipped
             ops.push(Operation::new(
                 "re",
                 vec![
                     Object::Real(0.0),
                     Object::Real(0.0),
                     Object::Real(frame.stack_element_base.base.width as f32),
-                    Object::Real(frame.stack_element_base.base.height as f32),
+                    Object::Real(-(frame.stack_element_base.base.height as f32)),
                 ],
             ));
             ops.push(Operation::new("S", vec![]));
         }
 
-        // TODO: Stream child elements within the frame
+        // Stream child elements within the frame's coordinate system
+        // Note: The actual child elements will be streamed by the main streaming loop
+        // with proper coordinate transformation based on their frame_id
         ops.push(Operation::new(
-            "% TODO: Stream frame child elements",
+            "% Frame element - child elements will be streamed with frame-relative positioning",
             vec![],
         ));
-
-        // Restore graphics state
-        ops.push(Operation::new("Q", vec![]));
 
         Ok(ops)
     }

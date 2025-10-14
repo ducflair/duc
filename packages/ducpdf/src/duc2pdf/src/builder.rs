@@ -18,7 +18,7 @@ use hipdf::images::{Image, ImageManager};
 use hipdf::lopdf::content::{Content, Operation};
 use hipdf::lopdf::{Dictionary, Document, Object, Stream};
 use hipdf::ocg::OCGManager;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 // Logging utilities that work in both WASM and native environments
 macro_rules! log_info {
@@ -616,6 +616,25 @@ impl DucToPdfBuilder {
         Ok(0)
     }
 
+    fn collect_plot_element_ids(&self, plot_id: &str) -> HashSet<String> {
+        let mut allowed = HashSet::new();
+        let mut stack = vec![plot_id.to_string()];
+        allowed.insert(plot_id.to_string());
+
+        while let Some(current_id) = stack.pop() {
+            for element_wrapper in &self.context.exported_data.elements {
+                let base = DucToPdfBuilder::get_element_base(&element_wrapper.element);
+                if let Some(parent_id) = &base.frame_id {
+                    if parent_id == &current_id && allowed.insert(base.id.clone()) {
+                        stack.push(base.id.clone());
+                    }
+                }
+            }
+        }
+
+        allowed
+    }
+
     /// Embed a PDF for a specific element
     fn embed_pdf_for_element(
         &mut self,
@@ -727,7 +746,13 @@ impl DucToPdfBuilder {
                     if !svg_path.trim().is_empty() {
                         // Extract stroke color and opacity from element's styles
                         // Match the renderer's approach: use first visible stroke
-                        let (stroke_color, stroke_opacity) = if let Some(stroke_obj) = freedraw.base.styles.stroke.iter().find(|s| s.content.visible) {
+                        let (stroke_color, stroke_opacity) = if let Some(stroke_obj) = freedraw
+                            .base
+                            .styles
+                            .stroke
+                            .iter()
+                            .find(|s| s.content.visible)
+                        {
                             (stroke_obj.content.src.clone(), stroke_obj.content.opacity)
                         } else {
                             // Fallback to black with full opacity if no visible stroke
@@ -735,14 +760,24 @@ impl DucToPdfBuilder {
                         };
 
                         // Calculate bounding box from freedraw points (much simpler!)
-                        let svg_document = if let Some((min_x, min_y, max_x, max_y)) = Self::calculate_freedraw_bbox(&freedraw.points) {
+                        let svg_document = if let Some((min_x, min_y, max_x, max_y)) =
+                            Self::calculate_freedraw_bbox(&freedraw.points)
+                        {
                             let width = max_x - min_x;
                             let height = max_y - min_y;
-                            
+
                             // Create SVG with explicit viewBox for proper bounds
                             format!(
                                 r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{} {} {} {}" width="{}" height="{}"><path d="{}" fill="{}" fill-opacity="{}" /></svg>"#,
-                                min_x, min_y, width, height, width, height, svg_path, stroke_color, stroke_opacity
+                                min_x,
+                                min_y,
+                                width,
+                                height,
+                                width,
+                                height,
+                                svg_path,
+                                stroke_color,
+                                stroke_opacity
                             )
                         } else {
                             // Fallback to document without viewBox if bbox calculation fails
@@ -763,7 +798,8 @@ impl DucToPdfBuilder {
                                         self.context
                                             .resource_cache
                                             .embedded_pdfs
-                                            .insert(freedraw.base.id.clone(), 0); // 0 as placeholder, will be updated when embedded
+                                            .insert(freedraw.base.id.clone(), 0);
+                                        // 0 as placeholder, will be updated when embedded
                                     }
                                     Err(e) => {
                                         // Log error but continue processing other elements
@@ -845,9 +881,7 @@ impl DucToPdfBuilder {
 
     /// Generate pages for plot mode (one page per plot element)
     fn generate_plot_pages(&mut self) -> ConversionResult<()> {
-        // Collect plot element bounds to avoid borrowing issues
-        // Extract plot bounds and convert to millimeters
-        let plot_bounds: Vec<(f64, f64, f64, f64)> = self
+        let plot_entries: Vec<(String, (f64, f64, f64, f64))> = self
             .context
             .exported_data
             .elements
@@ -855,22 +889,18 @@ impl DucToPdfBuilder {
             .filter_map(|elem| {
                 if let DucElementEnum::DucPlotElement(plot) = &elem.element {
                     let base = &plot.stack_element_base.base;
-
-                    // Extract bounds from already-scaled data (no additional scaling needed)
-                    Some((base.x, base.y, base.width, base.height))
+                    Some((base.id.clone(), (base.x, base.y, base.width, base.height)))
                 } else {
                     None
                 }
             })
             .collect();
 
-        if plot_bounds.is_empty() {
-            // No plot elements, create a single page with all elements
+        if plot_entries.is_empty() {
             self.create_single_page_with_all_elements()?;
         } else {
-            for bounds in plot_bounds {
-                // Use create_page_with_bounds (data is already scaled globally)
-                self.create_page_with_bounds(bounds)?;
+            for (plot_id, bounds) in plot_entries {
+                self.create_page_with_bounds(bounds, Some(plot_id.as_str()))?;
             }
         }
 
@@ -953,15 +983,15 @@ impl DucToPdfBuilder {
 
         if let Some(ref mut local_state) = self.context.exported_data.duc_local_state {
             // Apply the offset to scroll position to effectively "move" the drawing
-            local_state.scroll_x += offset_x_mm;
-            local_state.scroll_y += offset_y_mm;
+            local_state.scroll_x -= offset_x_mm;
+            local_state.scroll_y -= offset_y_mm;
         } else {
             // If no local state exists, create one with the offset
             let new_local_state = duc::types::DucLocalState {
                 scope: "mm".to_string(), // Always use mm for internal processing
                 active_standard_id: "default".to_string(),
-                scroll_x: offset_x_mm,
-                scroll_y: offset_y_mm,
+                scroll_x: -offset_x_mm,
+                scroll_y: -offset_y_mm,
                 zoom: 1.0,
                 active_grid_settings: None,
                 active_snap_settings: None,
@@ -991,19 +1021,23 @@ impl DucToPdfBuilder {
     fn create_single_page_with_all_elements(&mut self) -> ConversionResult<()> {
         // Calculate bounding box of all elements
         let bounds = self.calculate_overall_bounds();
-        self.create_page_with_bounds(bounds)?;
+        self.create_page_with_bounds(bounds, None)?;
         Ok(())
     }
 
     /// Create a page with specified bounds (no additional scaling - data is already scaled)
-    fn create_page_with_bounds(&mut self, bounds: (f64, f64, f64, f64)) -> ConversionResult<()> {
+    fn create_page_with_bounds(
+        &mut self,
+        bounds: (f64, f64, f64, f64),
+        active_plot_id: Option<&str>,
+    ) -> ConversionResult<()> {
         let (_x, _y, width, height) = bounds; // Use bounds directly (already scaled)
 
         let page_width = width;
         let page_height = height;
 
         // Create content stream
-        let content_stream = self.create_content_stream(bounds)?;
+        let content_stream = self.create_content_stream(bounds, active_plot_id)?;
         let content_id = self.document.add_object(Object::Stream(content_stream));
 
         // Setup page resources including XObjects
@@ -1058,7 +1092,7 @@ impl DucToPdfBuilder {
         };
 
         // Create content stream
-        let content_stream = self.create_content_stream(bounds)?;
+        let content_stream = self.create_content_stream(bounds, None)?;
         let content_id = self.document.add_object(Object::Stream(content_stream));
 
         // Setup page resources including XObjects
@@ -1153,39 +1187,73 @@ impl DucToPdfBuilder {
         Ok(resources)
     }
 
-    /// Create content stream
-    fn create_content_stream(&mut self, bounds: (f64, f64, f64, f64)) -> ConversionResult<Stream> {
-        let (x, y, _width, _height) = bounds; // Use bounds directly - data is already scaled by DucDataScaler
+    /// Create content stream with consistent transformation scope
+    fn create_content_stream(
+        &mut self,
+        bounds: (f64, f64, f64, f64),
+        active_plot_id: Option<&str>,
+    ) -> ConversionResult<Stream> {
+        let (x, y, _width, height) = bounds; // Use bounds directly - data is already scaled by DucDataScaler
 
         let mut operations = Vec::new();
 
-        // Start graphics state
+        // === CRITICAL: Single unified graphics state for entire page ===
+        // All transformations must be applied once at the top level and persist
+        // throughout the entire content stream to avoid fragmentation issues
+
+        // Save graphics state once for the entire page
         operations.push(Operation::new("q", vec![]));
 
-        // Apply coordinate transformation for bounds (cm matrix)
-        // In plot mode, translate to position the plot correctly on the page
+        // Get zoom value from local state if available
+        let zoom = self
+            .context
+            .exported_data
+            .duc_local_state
+            .as_ref()
+            .map(|ls| ls.zoom)
+            .unwrap_or(1.0);
+
+        let apply_zoom = matches!(self.context.options.mode, ConversionMode::Crop { .. });
+
+        // Step 1: Apply zoom transformation FIRST (affects all subsequent operations)
+        // This must be applied before coordinate translation to ensure consistent scaling
+        if apply_zoom && (zoom != 1.0) {
+            operations.push(Operation::new(
+                "cm",
+                vec![
+                    Object::Real(zoom as f32),
+                    Object::Real(0.0),
+                    Object::Real(0.0),
+                    Object::Real(zoom as f32),
+                    Object::Real(0.0),
+                    Object::Real(0.0),
+                ],
+            ));
+        }
+
+        // Step 2: Apply coordinate transformation for bounds positioning
+        // This translation is applied AFTER zoom, so it's also affected by zoom
         let (tx, ty) = match self.context.options.mode {
             ConversionMode::Plot => (-x, -y),
-            ConversionMode::Crop { .. } => (x, y),
+            ConversionMode::Crop { .. } => (-x, -y),
         };
+
         operations.push(Operation::new(
             "cm",
             vec![
-                1.0f64.into(),
-                0.0f64.into(),
-                0.0f64.into(),
-                1.0f64.into(),
-                tx.into(),
-                ty.into(),
+                Object::Real(1.0),
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(1.0),
+                Object::Real(tx as f32),
+                Object::Real(ty as f32),
             ],
         ));
 
-        // Set page height for coordinate transformation
-        let (_x, _y, _width, height) = bounds;
+        // Configure element streamer for this page
         self.element_streamer.set_page_height(height);
-
-        // Handle layered content using hipdf LayerContentBuilder
-        // Make resource names available to the element streamer
+        self.element_streamer.set_page_origin(x, y);
+        self.element_streamer.set_page_translation(tx, ty);
         self.element_streamer
             .set_resource_cache(self.context.resource_cache.xobject_names.clone());
         self.element_streamer
@@ -1196,13 +1264,23 @@ impl DucToPdfBuilder {
         // Reset per-page ExtGState tracking before streaming
         self.element_streamer.begin_page();
 
-        if !self.context.exported_data.layers.is_empty() {
-            // Stream elements by layer using LayerContentBuilder
-            let all_operations = self.stream_elements_by_layer(bounds)?;
-            operations.extend(all_operations);
+        let is_plot_mode = matches!(self.context.options.mode, ConversionMode::Plot);
+        let allowed_ids = if is_plot_mode {
+            active_plot_id.map(|plot_id| self.collect_plot_element_ids(plot_id))
         } else {
-            // No layers, use the regular streaming approach
-            let element_ops = self.element_streamer.stream_elements_within_bounds(
+            None
+        };
+        self.element_streamer
+            .set_page_context(is_plot_mode, active_plot_id, allowed_ids);
+
+        // Stream all elements - layered or not, they all inherit the same transformation context
+        let element_operations = if !self.context.exported_data.layers.is_empty() {
+            // Stream elements organized by layers with OCG marking
+            self.stream_elements_by_layer(bounds)?
+        } else {
+            // Stream all elements without layer organization
+            self.element_streamer.stream_elements_within_bounds(
+                &self.context.exported_data.elements,
                 &self.context.exported_data.elements,
                 bounds,
                 self.context.exported_data.duc_local_state.as_ref(),
@@ -1213,13 +1291,23 @@ impl DucToPdfBuilder {
                 &mut self.image_manager,
                 &self.ocg_manager,
                 &mut self.document,
-            )?;
-            operations.extend(element_ops);
-        }
+            )?
+        };
 
-        // End graphics state
+        // Add all element operations within the same graphics state
+        operations.extend(element_operations);
+
+        // Restore graphics state once for the entire page
         operations.push(Operation::new("Q", vec![]));
 
+        self.element_streamer.clear_page_context();
+
+        #[cfg(debug_assertions)]
+        {
+            Self::debug_validate_operations(&operations);
+        }
+
+        // Encode the complete content stream
         let content_bytes = Content { operations }.encode().map_err(|e| {
             ConversionError::PdfGenerationError(format!("Failed to encode content stream: {}", e))
         })?;
@@ -1231,6 +1319,8 @@ impl DucToPdfBuilder {
     }
 
     /// Stream elements organized by layers
+    /// This function organizes elements into unlayered and layered groups,
+    /// ensuring all elements are rendered within the same transformation context
     fn stream_elements_by_layer(
         &mut self,
         bounds: (f64, f64, f64, f64),
@@ -1239,7 +1329,7 @@ impl DucToPdfBuilder {
 
         let mut all_operations = Vec::new();
 
-        // Pre-process PDF elements to ensure they're embedded
+        // Pre-process PDF elements to ensure they're embedded before streaming
         let pdf_elements: Vec<_> =
             self.context
                 .exported_data
@@ -1255,11 +1345,12 @@ impl DucToPdfBuilder {
                     }
                 })
                 .collect();
+
         for (file_id, width, height) in pdf_elements {
             self.embed_pdf_for_element(&file_id, width, height)?;
         }
 
-        // Pass updated resource cache to element streamer
+        // Update resource cache after PDF embedding
         self.element_streamer
             .set_resource_cache(self.context.resource_cache.xobject_names.clone());
         self.element_streamer
@@ -1267,7 +1358,8 @@ impl DucToPdfBuilder {
         self.element_streamer
             .set_images(self.context.resource_cache.images.clone());
 
-        // Stream unlayered elements first
+        // === Phase 1: Stream unlayered elements ===
+        // These elements don't belong to any layer and render first
         let unlayered_elements: Vec<ElementWrapper> = self
             .context
             .exported_data
@@ -1276,8 +1368,7 @@ impl DucToPdfBuilder {
             .filter(|element_wrapper| {
                 let base =
                     crate::builder::DucToPdfBuilder::get_element_base(&element_wrapper.element);
-                let is_unlayered = base.layer_id.is_none();
-                is_unlayered
+                base.layer_id.is_none()
             })
             .cloned()
             .collect();
@@ -1285,6 +1376,7 @@ impl DucToPdfBuilder {
         if !unlayered_elements.is_empty() {
             let ops = self.element_streamer.stream_elements_within_bounds(
                 &unlayered_elements,
+                &self.context.exported_data.elements,
                 bounds,
                 self.context.exported_data.duc_local_state.as_ref(),
                 &mut self.resource_streamer,
@@ -1298,7 +1390,8 @@ impl DucToPdfBuilder {
             all_operations.extend(ops);
         }
 
-        // Stream each layer with proper OCG marked content
+        // === Phase 2: Stream layered elements with OCG marking ===
+        // Each layer is wrapped in BDC/EMC markers for proper layer visibility control
         for layer in &self.context.exported_data.layers {
             let layer_elements: Vec<ElementWrapper> = self
                 .context
@@ -1308,66 +1401,67 @@ impl DucToPdfBuilder {
                 .filter(|element_wrapper| {
                     let base =
                         crate::builder::DucToPdfBuilder::get_element_base(&element_wrapper.element);
-                    let matches = base
+
+                    // Check if element belongs to this layer
+                    let belongs_to_layer = base
                         .layer_id
                         .as_ref()
                         .map_or(false, |layer_id| layer_id == &layer.id);
 
-                    if matches {
-                        // Additional bounds check for this specific content stream
-                        let (bounds_x, bounds_y, bounds_width, bounds_height) = bounds;
-                        let bounds_max_x = bounds_x + bounds_width;
-                        let bounds_max_y = bounds_y + bounds_height;
-                        let elem_max_x = base.x + base.width;
-                        let elem_max_y = base.y + base.height;
-
-                        let intersects = !(base.x > bounds_max_x
-                            || elem_max_x < bounds_x
-                            || base.y > bounds_max_y
-                            || elem_max_y < bounds_y);
-
-                        if intersects {
-                            // Element intersects this content stream bounds
-                        }
-                        intersects
-                    } else {
-                        false
+                    if !belongs_to_layer {
+                        return false;
                     }
+
+                    // Verify element intersects with page bounds
+                    let (bounds_x, bounds_y, bounds_width, bounds_height) = bounds;
+                    let bounds_max_x = bounds_x + bounds_width;
+                    let bounds_max_y = bounds_y + bounds_height;
+                    let elem_max_x = base.x + base.width;
+                    let elem_max_y = base.y + base.height;
+
+                    let intersects = !(base.x > bounds_max_x
+                        || elem_max_x < bounds_x
+                        || base.y > bounds_max_y
+                        || elem_max_y < bounds_y);
+
+                    intersects
                 })
                 .cloned()
                 .collect();
 
-            if !layer_elements.is_empty() {
-                // Begin marked content for layer using Properties name reference
-                if let Some(prop_name) = self.layer_prop_names.get(&layer.id) {
-                    all_operations.push(Operation::new(
-                        "BDC",
-                        vec![
-                            Object::Name(b"OC".to_vec()),
-                            // Use a name object that matches the Properties key (e.g., /OCG_1)
-                            Object::Name(prop_name.as_bytes().to_vec()),
-                        ],
-                    ));
-                }
-
-                // Stream layer elements
-                let layer_ops = self.element_streamer.stream_elements_within_bounds(
-                    &layer_elements,
-                    bounds,
-                    self.context.exported_data.duc_local_state.as_ref(),
-                    &mut self.resource_streamer,
-                    &mut self.block_manager,
-                    &mut self.hatching_manager,
-                    &mut self.pdf_embedder,
-                    &mut self.image_manager,
-                    &self.ocg_manager,
-                    &mut self.document,
-                )?;
-                all_operations.extend(layer_ops);
-
-                // End marked content
-                all_operations.push(Operation::new("EMC", vec![]));
+            if layer_elements.is_empty() {
+                continue;
             }
+
+            // Begin marked content for layer (BDC)
+            if let Some(prop_name) = self.layer_prop_names.get(&layer.id) {
+                all_operations.push(Operation::new(
+                    "BDC",
+                    vec![
+                        Object::Name(b"OC".to_vec()),
+                        Object::Name(prop_name.as_bytes().to_vec()),
+                    ],
+                ));
+            }
+
+            // Stream all elements within this layer
+            let layer_ops = self.element_streamer.stream_elements_within_bounds(
+                &layer_elements,
+                &self.context.exported_data.elements,
+                bounds,
+                self.context.exported_data.duc_local_state.as_ref(),
+                &mut self.resource_streamer,
+                &mut self.block_manager,
+                &mut self.hatching_manager,
+                &mut self.pdf_embedder,
+                &mut self.image_manager,
+                &self.ocg_manager,
+                &mut self.document,
+            )?;
+            all_operations.extend(layer_ops);
+
+            // End marked content for layer (EMC)
+            all_operations.push(Operation::new("EMC", vec![]));
         }
 
         Ok(all_operations)
@@ -1541,5 +1635,35 @@ impl DucToPdfBuilder {
             .set("Root", Object::Reference(catalog_id));
 
         Ok(())
+    }
+}
+
+impl DucToPdfBuilder {
+    #[cfg(debug_assertions)]
+    fn debug_validate_operations(operations: &[Operation]) {
+        let mut depth: i32 = 0;
+        let mut min_depth: i32 = 0;
+
+        for op in operations {
+            let name = op.operator.clone();
+            match name.as_str() {
+                "q" => {
+                    depth += 1;
+                }
+                "Q" => {
+                    depth -= 1;
+                    min_depth = min_depth.min(depth);
+                }
+                _ => {}
+            }
+        }
+
+        if depth != 0 || min_depth < 0 {
+            log_warn!(
+                "Graphics state imbalance detected: final depth={}, min depth={}",
+                depth,
+                min_depth
+            );
+        }
     }
 }
