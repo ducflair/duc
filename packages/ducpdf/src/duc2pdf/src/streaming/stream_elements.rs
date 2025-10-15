@@ -272,15 +272,6 @@ impl ElementStreamer {
                     return true;
                 }
 
-                // let elem_min_x = base.x + scroll_x;
-                // let elem_min_y = base.y + scroll_y;
-                // let elem_max_x = elem_min_x + base.width;
-                // let elem_max_y = elem_min_y + base.height;
-
-                // !(elem_min_x > bounds_max_x
-                //     || elem_max_x < bounds_x
-                //     || elem_min_y > bounds_max_y
-                //     || elem_max_y < bounds_y)
                 true
             })
             .collect();

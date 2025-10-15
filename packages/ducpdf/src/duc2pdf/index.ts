@@ -1,4 +1,4 @@
-import { ExportedDataState, getFreeDrawSvgPath, isFreeDrawElement, parseDuc, serializeDuc, traverseAndUpdatePrecisionValues } from 'ducjs';
+import { ExportedDataState, getFreeDrawSvgPath, getNormalizedZoom, isFreeDrawElement, parseDuc, serializeDuc, traverseAndUpdatePrecisionValues } from 'ducjs';
 
 let wasmModule: any = null;
 let wasmInitPromise: Promise<any> | null = null;
@@ -61,6 +61,7 @@ export interface ConversionOptions {
   width?: number;
   height?: number;
   scale?: number;
+  zoom?: number;
   metadata?: {
     title?: string;
     author?: string;
@@ -91,6 +92,9 @@ function validateInput(ducData: Uint8Array, options?: ConversionOptions): void {
     if (options.scale !== undefined && (typeof options.scale !== 'number' || options.scale <= 0)) {
       throw new Error('scale must be a positive number');
     }
+    if (options.zoom !== undefined && (typeof options.zoom !== 'number' || options.zoom <= 0)) {
+      throw new Error('zoom must be a positive number');
+    }
   }
 }
 
@@ -118,6 +122,27 @@ export async function convertDucToPdf(
         normalized.localState.scope = 'mm';
         normalized.globalState.mainScope = 'mm';
 
+        // Apply zoom preference if provided
+        const rawZoom = options?.zoom;
+
+        const localState = normalized.localState;
+        if (rawZoom !== undefined) {
+          const normalizedZoomValue = getNormalizedZoom(rawZoom);
+          const exportZoom = normalizedZoomValue;
+          localState.zoom = {
+            value: exportZoom,
+            scoped: exportZoom as any,
+            scaled: exportZoom as any,
+          };
+        } else if (!normalized.localState?.zoom) {
+          const normalizedZoomValue = getNormalizedZoom(1);
+          localState.zoom = {
+            value: normalizedZoomValue,
+            scoped: normalizedZoomValue as any,
+            scaled: normalizedZoomValue as any,
+          };
+        }
+
         // Process elements before serialization
         let normalizedElements = normalized.elements || [];
         normalizedElements = normalizedElements.map(element => {
@@ -129,6 +154,7 @@ export async function convertDucToPdf(
           }
           return element;
         });
+
         normalized.elements = normalizedElements;
 
         // Re-serialize the DUC with normalized values and scope set to 'mm'
