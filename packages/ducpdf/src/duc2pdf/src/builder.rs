@@ -84,13 +84,14 @@ pub struct DucToPdfBuilder {
     page_ids: Vec<u32>,
     layer_refs: HashMap<String, Object>, // layer_id -> OCG reference
     layer_prop_names: HashMap<String, String>, // layer_id -> Properties name (e.g., OCG_1)
+    page_height: f64, // Current page height for Y-axis coordinate transformations
 }
 
 impl DucToPdfBuilder {
     /// Create a new builder instance
     pub fn new(
         mut exported_data: ExportedDataState,
-        options: ConversionOptions,
+        mut options: ConversionOptions,
     ) -> ConversionResult<Self> {
         let mut document = Document::with_version("1.7");
 
@@ -110,22 +111,25 @@ impl DucToPdfBuilder {
             user_scale
         } else {
             let required_scale = calculate_required_scale(&exported_data, crop_offset);
-            if required_scale < 1.0 {
-                #[cfg(target_arch = "wasm32")]
-                web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-                    "🔧 Auto-scaling applied: {:.6} ({}:1)",
-                    required_scale,
-                    (1.0 / required_scale).round() as i32
-                )));
-                #[cfg(not(target_arch = "wasm32"))]
-                println!(
-                    "🔧 Auto-scaling applied: {:.6} ({}:1)",
-                    required_scale,
-                    (1.0 / required_scale).round() as i32
-                );
-            }
+            // if required_scale < 1.0 {
+            //     #[cfg(target_arch = "wasm32")]
+            //     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            //         "🔧 Auto-scaling applied: {:.6} ({}:1)",
+            //         required_scale,
+            //         (1.0 / required_scale).round() as i32
+            //     )));
+            //     #[cfg(not(target_arch = "wasm32"))]
+            //     println!(
+            //         "🔧 Auto-scaling applied: {:.6} ({}:1)",
+            //         required_scale,
+            //         (1.0 / required_scale).round() as i32
+            //     );
+            // }
             required_scale
         };
+
+        // Apply scaling to options values (crop dimensions, offsets, etc.)
+        Self::scale_conversion_options(&mut options, scale);
 
         // Apply scaling to all precision-related fields in the DUC data
         // This ensures that all dimensions are properly scaled for PDF output
@@ -168,6 +172,7 @@ impl DucToPdfBuilder {
             page_ids: Vec::new(),
             layer_refs: HashMap::new(),
             layer_prop_names: HashMap::new(),
+            page_height: 0.0, // Will be set when pages are created
         })
     }
 
@@ -218,6 +223,30 @@ impl DucToPdfBuilder {
             resource_name
         );
         Ok((fallback_font, resource_name))
+    }
+
+    /// Scale conversion options values by the given scale factor
+    fn scale_conversion_options(options: &mut ConversionOptions, scale: f64) {
+        match &mut options.mode {
+            ConversionMode::Crop {
+                offset_x,
+                offset_y,
+                width,
+                height,
+            } => {
+                *offset_x *= scale;
+                *offset_y *= scale;
+                if let Some(w) = width {
+                    *w *= scale;
+                }
+                if let Some(h) = height {
+                    *h *= scale;
+                }
+            }
+            ConversionMode::Plot => {
+                // No scaling needed for Plot mode
+            }
+        }
     }
 
     /// Extract base element from DucElementEnum
@@ -1029,6 +1058,9 @@ impl DucToPdfBuilder {
         let page_width = width;
         let page_height = height;
 
+        // Set the page height for Y-axis coordinate transformations
+        self.page_height = page_height;
+
         // Create content stream
         let content_stream = self.create_content_stream(bounds, active_plot_id)?;
         let content_id = self.document.add_object(Object::Stream(content_stream));
@@ -1083,6 +1115,9 @@ impl DucToPdfBuilder {
             let (_x, _y, width, height) = bounds;
             (width, height)
         };
+
+        // Set the page height for Y-axis coordinate transformations
+        self.page_height = page_height;
 
         // Create content stream
         let content_stream = self.create_content_stream(bounds, None)?;
@@ -1180,8 +1215,7 @@ impl DucToPdfBuilder {
         Ok(resources)
     }
 
-    /// Create content stream with consistent transformation scope
-    fn create_content_stream(
+fn create_content_stream(
         &mut self,
         bounds: (f64, f64, f64, f64),
         active_plot_id: Option<&str>,
@@ -1210,16 +1244,21 @@ impl DucToPdfBuilder {
 
         // Step 1: Apply zoom transformation FIRST (affects all subsequent operations)
         // This must be applied before coordinate translation to ensure consistent scaling
-        if apply_zoom && (zoom != 1.0) {
+        if apply_zoom && (zoom - 1.0).abs() > f64::EPSILON {
+            // We apply a corrective translation on the Y-axis to ensure scaling happens
+            // relative to the top of the page (y=height), not the bottom (y=0).
+            // This prevents the content from shifting vertically when zoom is not 1.0.
+            let y_translation_for_zoom = height * (1.0 - zoom);
+
             operations.push(Operation::new(
                 "cm",
                 vec![
-                    Object::Real(zoom as f32),
-                    Object::Real(0.0),
-                    Object::Real(0.0),
-                    Object::Real(zoom as f32),
-                    Object::Real(0.0),
-                    Object::Real(0.0),
+                    Object::Real(zoom as f32),                      // scale x
+                    Object::Real(0.0),                              // 0
+                    Object::Real(0.0),                              // 0
+                    Object::Real(zoom as f32),                      // scale y
+                    Object::Real(0.0),                              // translate x
+                    Object::Real(y_translation_for_zoom as f32),    // corrective translate y
                 ],
             ));
         }
@@ -1312,7 +1351,6 @@ impl DucToPdfBuilder {
 
         Ok(Stream::new(stream_dict, content_bytes))
     }
-
     /// Stream elements organized by layers
     /// This function organizes elements into unlayered and layered groups,
     /// ensuring all elements are rendered within the same transformation context
