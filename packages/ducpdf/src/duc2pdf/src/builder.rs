@@ -7,9 +7,10 @@ use crate::utils::freedraw_bounds::{
 use crate::utils::style_resolver::StyleResolver;
 use crate::utils::svg_to_pdf::{svg_to_pdf, svg_to_pdf_with_dimensions};
 use crate::{
-    calculate_required_scale, validate_coordinates_with_scale, ConversionError, ConversionMode,
+    calculate_required_scale, calculate_required_scale_with_crop_dimensions, validate_coordinates_with_scale, ConversionError, ConversionMode,
     ConversionOptions, ConversionResult, PDF_USER_UNIT,
 };
+use bigcolor::BigColor;
 use duc::types::{
     DucBlock, DucElementEnum, DucExternalFileEntry, ElementWrapper, ExportedDataState, Standard,
 };
@@ -89,6 +90,14 @@ pub struct DucToPdfBuilder {
 }
 
 impl DucToPdfBuilder {
+    /// Parse color string to RGB values (0-255) using bigcolor
+    /// Supports various color formats (hex, rgb, named colors, etc.)
+    fn parse_color(&self, color_str: &str) -> Option<(u8, u8, u8)> {
+        let color = BigColor::new(color_str);
+        let rgb = color.to_rgb();
+        Some((rgb.r, rgb.g, rgb.b))
+    }
+
     /// Create a new builder instance
     pub fn new(
         mut exported_data: ExportedDataState,
@@ -111,21 +120,36 @@ impl DucToPdfBuilder {
             )?;
             user_scale
         } else {
-            let required_scale = calculate_required_scale(&exported_data, crop_offset);
+            // Extract crop dimensions for scaling calculation
+            let crop_dimensions = match &options.mode {
+                ConversionMode::Crop { width, height, .. } => (*width, *height),
+                ConversionMode::Plot => (None, None),
+            };
+
+            let required_scale = if crop_dimensions.0.is_some() || crop_dimensions.1.is_some() {
+                // Use the new function that considers both content and crop dimensions
+                calculate_required_scale_with_crop_dimensions(&exported_data, crop_offset, crop_dimensions.0, crop_dimensions.1)
+            } else {
+                // Use the original function for content-only scaling
+                calculate_required_scale(&exported_data, crop_offset)
+            };
+
+            // // Log scaling information for debugging
             // if required_scale < 1.0 {
             //     #[cfg(target_arch = "wasm32")]
             //     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            //         "🔧 Auto-scaling applied: {:.6} ({}:1)",
+            //         "🔧 Auto-scaling applied: {:.6} ({}:1) - crop dimensions considered",
             //         required_scale,
             //         (1.0 / required_scale).round() as i32
             //     )));
             //     #[cfg(not(target_arch = "wasm32"))]
             //     println!(
-            //         "🔧 Auto-scaling applied: {:.6} ({}:1)",
+            //         "🔧 Auto-scaling applied: {:.6} ({}:1) - crop dimensions considered",
             //         required_scale,
             //         (1.0 / required_scale).round() as i32
             //     );
             // }
+
             required_scale
         };
 
@@ -918,7 +942,7 @@ impl DucToPdfBuilder {
 
     /// Generate pages for plot mode (one page per plot element)
     fn generate_plot_pages(&mut self) -> ConversionResult<()> {
-        let plot_entries: Vec<(String, (f64, f64, f64, f64))> = self
+        let plot_entries: Vec<(String, (f64, f64, f64, f64), Option<(String, f64)>)> = self
             .context
             .exported_data
             .elements
@@ -926,7 +950,34 @@ impl DucToPdfBuilder {
             .filter_map(|elem| {
                 if let DucElementEnum::DucPlotElement(plot) = &elem.element {
                     let base = &plot.stack_element_base.base;
-                    Some((base.id.clone(), (base.x, base.y, base.width, base.height)))
+                    
+                    // Skip deleted plot elements
+                    if base.is_deleted {
+                        return None;
+                    }
+                    
+                    // Extract background color and opacity from plot element
+                    // Only use background if it's visible and has a valid color
+                    let background_data = if !base.styles.background.is_empty() {
+                        base.styles.background
+                            .first()
+                            .and_then(|bg| {
+                                // Check if background is visible
+                                if bg.content.visible && !bg.content.src.is_empty() {
+                                    Some((bg.content.src.clone(), bg.content.opacity))
+                                } else {
+                                    None
+                                }
+                            })
+                    } else {
+                        None
+                    };
+                    
+                    Some((
+                        base.id.clone(),
+                        (base.x, base.y, base.width, base.height),
+                        background_data,
+                    ))
                 } else {
                     None
                 }
@@ -936,8 +987,9 @@ impl DucToPdfBuilder {
         if plot_entries.is_empty() {
             self.create_single_page_with_all_elements()?;
         } else {
-            for (plot_id, bounds) in plot_entries {
-                self.create_page_with_bounds(bounds, Some(plot_id.as_str()))?;
+            for (plot_id, bounds, background_data) in plot_entries {
+                let background_with_opacity = background_data.as_ref().map(|(color, opacity)| (color.as_str(), *opacity));
+                self.create_page_with_bounds(bounds, Some(plot_id.as_str()), background_with_opacity)?;
             }
         }
 
@@ -960,19 +1012,6 @@ impl DucToPdfBuilder {
 
         // If width/height are specified, create a crop bounds that limits the visible area
         let crop_bounds = if let (Some(w_mm), Some(h_mm)) = (width, height) {
-            // Assume all dimensions are already in millimeters
-
-            // CRITICAL: Validate that the crop dimensions don't exceed PDF limits
-            use crate::MAX_COORDINATE_MM;
-
-            // Check if crop dimensions would exceed limits
-            if w_mm > MAX_COORDINATE_MM || h_mm > MAX_COORDINATE_MM {
-                return Err(ConversionError::InvalidDucData(format!(
-                    "Crop dimensions ({}x{} mm) exceed PDF limits (max {} mm per dimension)",
-                    w_mm, h_mm, MAX_COORDINATE_MM
-                )));
-            }
-
             // For crop mode with dimensions, the page should be exactly the specified dimensions
             // The scroll offset is handled in the content stream transformation, not the page bounds
             let current_scroll_x = self
@@ -1058,7 +1097,7 @@ impl DucToPdfBuilder {
     fn create_single_page_with_all_elements(&mut self) -> ConversionResult<()> {
         // Calculate bounding box of all elements
         let bounds = self.calculate_overall_bounds();
-        self.create_page_with_bounds(bounds, None)?;
+        self.create_page_with_bounds(bounds, None, None)?;
         Ok(())
     }
 
@@ -1067,6 +1106,7 @@ impl DucToPdfBuilder {
         &mut self,
         bounds: (f64, f64, f64, f64),
         active_plot_id: Option<&str>,
+        page_background_color: Option<(&str, f64)>,
     ) -> ConversionResult<()> {
         let (_x, _y, width, height) = bounds; // Use bounds directly (already scaled)
 
@@ -1077,7 +1117,7 @@ impl DucToPdfBuilder {
         self.page_height = page_height;
 
         // Create content stream
-        let content_stream = self.create_content_stream(bounds, active_plot_id)?;
+        let content_stream = self.create_content_stream(bounds, active_plot_id, page_background_color)?;
         let content_id = self.document.add_object(Object::Stream(content_stream));
 
         // Setup page resources including XObjects
@@ -1134,8 +1174,8 @@ impl DucToPdfBuilder {
         // Set the page height for Y-axis coordinate transformations
         self.page_height = page_height;
 
-        // Create content stream
-        let content_stream = self.create_content_stream(bounds, None)?;
+        // Create content stream (no plot background for crop mode)
+        let content_stream = self.create_content_stream(bounds, None, None)?;
         let content_id = self.document.add_object(Object::Stream(content_stream));
 
         // Setup page resources including XObjects
@@ -1234,8 +1274,9 @@ fn create_content_stream(
         &mut self,
         bounds: (f64, f64, f64, f64),
         active_plot_id: Option<&str>,
+        page_background_color: Option<(&str, f64)>,
     ) -> ConversionResult<Stream> {
-        let (x, y, _width, height) = bounds; // Use bounds directly - data is already scaled by DucDataScaler
+    let (x, y, width, height) = bounds; // Use bounds directly - data is already scaled by DucDataScaler
 
         let mut operations = Vec::new();
 
@@ -1245,6 +1286,72 @@ fn create_content_stream(
 
         // Save graphics state once for the entire page
         operations.push(Operation::new("q", vec![]));
+
+        // Determine which background color to use:
+        // - In PLOT mode: use plot element's background (passed as page_background_color)
+        // - In CROP mode: use crop background option (with full opacity)
+        let background_to_apply = match &self.context.options.mode {
+            ConversionMode::Plot => page_background_color,
+            ConversionMode::Crop { .. } => self.context.options.background_color.as_deref().map(|color| (color, 1.0)),
+        };
+
+        // Add background color if specified
+        if let Some((bg_color, bg_opacity)) = background_to_apply {
+            // Parse the background color using bigcolor
+            if let Some((r, g, b)) = self.parse_color(bg_color) {
+                // Convert RGB to 0-1 range
+                let r_norm = r as f32 / 255.0;
+                let g_norm = g as f32 / 255.0;
+                let b_norm = b as f32 / 255.0;
+                
+                // If opacity is less than 1.0, we need to apply transparency
+                // In PDF, we use the extended graphics state for this
+                if (bg_opacity - 1.0).abs() > f64::EPSILON {
+                    // Apply color with opacity by using RGBA-like approach
+                    // We'll blend with white background assuming transparent backdrop
+                    let alpha = bg_opacity as f32;
+                    let r_blended = r_norm * alpha + (1.0 - alpha);
+                    let g_blended = g_norm * alpha + (1.0 - alpha);
+                    let b_blended = b_norm * alpha + (1.0 - alpha);
+                    
+                    operations.push(Operation::new("rg", vec![
+                        Object::Real(r_blended),
+                        Object::Real(g_blended),
+                        Object::Real(b_blended),
+                    ]));
+                } else {
+                    // Full opacity - use color directly
+                    operations.push(Operation::new("rg", vec![
+                        Object::Real(r_norm),
+                        Object::Real(g_norm),
+                        Object::Real(b_norm),
+                    ]));
+                }
+
+                // Create a filled rectangle covering the entire page
+                // Slightly overscan (1 unit on each side) to prevent aliasing artifacts at edges
+                const OVERSCAN: f32 = 3.0;
+                operations.push(Operation::new("re", vec![
+                    Object::Real(-OVERSCAN),                        // x (start slightly left)
+                    Object::Real(-OVERSCAN),                        // y (start slightly down)
+                    Object::Real(width as f32 + OVERSCAN * 2.0),   // width (extend right)
+                    Object::Real(height as f32 + OVERSCAN * 2.0),  // height (extend up)
+                ]));
+                operations.push(Operation::new("f", vec![])); // Fill the rectangle
+                
+                // Reset fill color to default (black)
+                operations.push(Operation::new("rg", vec![
+                    Object::Real(0.0),
+                    Object::Real(0.0),
+                    Object::Real(0.0),
+                ]));
+            } else {
+                log_warn!(
+                    "⚠️  Failed to parse background color '{}'; skipping background fill.",
+                    bg_color
+                );
+            }
+        }
 
         // Get zoom value from local state if available
         let zoom = self
