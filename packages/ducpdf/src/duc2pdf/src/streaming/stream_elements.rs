@@ -90,6 +90,8 @@ pub struct ElementStreamer {
     embedded_pdfs: HashMap<String, u32>, // file_id -> object_id
     /// Cache for freedraw bounding boxes calculated during preprocessing
     freedraw_bboxes: HashMap<String, FreeDrawBounds>, // freedraw_id -> cached bounding box
+    /// Cache for SVG natural dimensions for scaling calculations
+    svg_dimensions: HashMap<String, (f64, f64)>, // svg_id -> (width, height) in natural SVG units
     /// Font resource name for text rendering
     font_resource_name: String,
     /// Active font used for text rendering and encoding
@@ -128,6 +130,7 @@ impl ElementStreamer {
             new_xobjects: Vec::new(),
             embedded_pdfs: HashMap::new(),
             freedraw_bboxes: HashMap::new(),
+            svg_dimensions: HashMap::new(),
             font_resource_name,
             text_font,
             render_only_plot_elements: false,
@@ -169,6 +172,11 @@ impl ElementStreamer {
     /// Set freedraw bounding box cache from preprocessing
     pub fn set_freedraw_bboxes(&mut self, freedraw_bboxes: HashMap<String, FreeDrawBounds>) {
         self.freedraw_bboxes = freedraw_bboxes;
+    }
+
+    /// Set SVG dimensions cache from preprocessing
+    pub fn set_svg_dimensions(&mut self, svg_dimensions: HashMap<String, (f64, f64)>) {
+        self.svg_dimensions = svg_dimensions;
     }
 
     /// Set page height for coordinate transformation
@@ -2184,9 +2192,6 @@ impl ElementStreamer {
                     page_range: Some(PageRange::Single(0)), // SVG-PDFs have only one page
                     // Element transform has already translated to (base.x, base.y)
                     position: (0.0, 0.0),
-                    max_width: Some(image.base.width as f32),
-                    max_height: Some(image.base.height as f32),
-                    preserve_aspect_ratio: true,
                     ..Default::default()
                 };
 
@@ -2197,20 +2202,38 @@ impl ElementStreamer {
                             self.new_xobjects.push((name.clone(), obj_ref.clone()));
                         }
 
+                        // Calculate scaling factors to stretch SVG to fill element bounds
+                        let (mut scale_x, mut scale_y) = (1.0_f64, 1.0_f64);
+
+                        if let Some(&(svg_width, svg_height)) = self.svg_dimensions.get(file_id) {
+                            if svg_width > 0.0 && svg_height > 0.0 {
+                                scale_x = image.base.width / svg_width;
+                                scale_y = image.base.height / svg_height;
+                            }
+                        } else if let Some(crop) = &image.crop {
+                            if crop.natural_width > 0.0 && crop.natural_height > 0.0 {
+                                scale_x = image.base.width / crop.natural_width;
+                                scale_y = image.base.height / crop.natural_height;
+                            }
+                        }
+
                         // PDF/SVG elements need Y-offset correction similar to images
                         // PDF draws from bottom-left, so we need to offset by -height
                         ops.push(Operation::new("q", vec![])); // Save state
+
+                        // Apply scaling transformation to stretch SVG to fill element bounds
                         ops.push(Operation::new(
                             "cm",
                             vec![
-                                Object::Real(1.0),
+                                Object::Real(scale_x as f32),  // Scale X to fill width
                                 Object::Real(0.0),
                                 Object::Real(0.0),
-                                Object::Real(1.0),
+                                Object::Real(scale_y as f32),  // Scale Y to fill height
                                 Object::Real(0.0),
-                                Object::Real(-(image.base.height as f32)),
+                                Object::Real(-(image.base.height as f32)), // Y-offset correction
                             ],
                         ));
+
                         ops.extend(result.operations);
                         ops.push(Operation::new("Q", vec![])); // Restore state
                     }
