@@ -5,10 +5,25 @@ pub mod scaling;
 pub mod streaming;
 pub mod utils;
 
+mod error_handling;
+
 // Coordinate system constants
 pub const MAX_COORDINATE_MM: f64 = 4_800.0; // Safe maximum coordinate in mm
 pub const MIN_PRECISION_MM: f64 = 50.0; // Minimum precision in mm
 pub const PDF_USER_UNIT: f32 = 72.0 / 25.4; // Convert mm to PDF units (1 inch = 25.4mm = 72 points)
+
+fn normalize_background_color(color: Option<String>) -> Option<String> {
+    color.and_then(|value| {
+        let trimmed = value.trim();
+        if trimmed.is_empty() {
+            None
+        } else if trimmed.eq_ignore_ascii_case("transparent") {
+            None
+        } else {
+            Some(trimmed.to_string())
+        }
+    })
+}
 
 #[derive(Debug)]
 pub enum ConversionMode {
@@ -25,6 +40,7 @@ pub enum ConversionMode {
 pub struct ConversionOptions {
     pub mode: ConversionMode,
     pub scale: Option<f64>, // Optional scale factor (e.g., 1.0/50.0, 1.0/10.0)
+    pub background_color: Option<String>,
     pub metadata_title: Option<String>,
     pub metadata_author: Option<String>,
     pub metadata_subject: Option<String>,
@@ -35,6 +51,7 @@ impl Default for ConversionOptions {
         Self {
             mode: ConversionMode::Plot,
             scale: None, // No scale by default, will auto-scale if needed
+            background_color: None,
             metadata_title: None,
             metadata_author: None,
             metadata_subject: None,
@@ -175,20 +192,51 @@ pub fn calculate_required_scale(
     let max_x = effective_min_x + width;
     let max_y = effective_min_y + height;
 
-    // Find the maximum coordinate in any direction
-    let max_coord = effective_min_x
+    // Find the maximum coordinate in any direction from the DUC content
+    let max_coord_from_content = effective_min_x
         .abs()
         .max(effective_min_y.abs())
         .max(max_x.abs())
         .max(max_y.abs());
 
     // CRITICAL: Always check coordinate limits
-    if max_coord <= MAX_COORDINATE_MM {
-        return 1.0; // No scaling needed
+    if max_coord_from_content <= MAX_COORDINATE_MM {
+        return 1.0; // No scaling needed for content
     }
 
     // Calculate scale with 5% safety margin to ensure coordinates stay within limits
-    MAX_COORDINATE_MM / max_coord * 0.95
+    MAX_COORDINATE_MM / max_coord_from_content * 0.95
+}
+
+/// Calculate required scale to fit both content AND crop dimensions within safe bounds
+pub fn calculate_required_scale_with_crop_dimensions(
+    data: &duc::types::ExportedDataState,
+    crop_offset: Option<(f64, f64)>,
+    crop_width: Option<f64>,
+    crop_height: Option<f64>,
+) -> f64 {
+    // First, calculate scale based on content
+    let content_scale = calculate_required_scale(data, crop_offset);
+
+    // Then, calculate scale based on crop dimensions if provided
+    let crop_scale = if let (Some(width), Some(height)) = (crop_width, crop_height) {
+        // The crop dimensions define the viewport size, so we need to ensure they fit within PDF bounds
+        let max_crop_dimension = width.max(height);
+
+        if max_crop_dimension <= MAX_COORDINATE_MM {
+            None // No scaling needed for crop dimensions
+        } else {
+            Some(MAX_COORDINATE_MM / max_crop_dimension * 0.95) // 5% safety margin
+        }
+    } else {
+        None // No crop dimensions to consider
+    };
+
+    // Use the more restrictive scale (smaller value) to ensure both content and crop dimensions fit
+    match crop_scale {
+        Some(crop_scale) => content_scale.min(crop_scale),
+        None => content_scale,
+    }
 }
 
 /// Validates coordinates are within safe bounds
@@ -212,12 +260,16 @@ pub fn convert_duc_to_pdf_with_options(
     duc_data: &[u8],
     options: ConversionOptions,
 ) -> ConversionResult<Vec<u8>> {
+    let mut normalized_options = options;
+    normalized_options.background_color =
+        normalize_background_color(normalized_options.background_color);
+
     // Parse DUC data
     let exported_data =
         duc::parse::parse(duc_data).map_err(|e| ConversionError::InvalidDucData(e.to_string()))?;
 
     // Use the builder to convert
-    builder::DucToPdfBuilder::new(exported_data, options)?.build()
+    builder::DucToPdfBuilder::new(exported_data, normalized_options)?.build()
 }
 
 /// WASM binding for the main conversion function
@@ -226,9 +278,12 @@ pub fn convert_duc_to_pdf_rs(duc_data: &[u8]) -> Vec<u8> {
     match convert_duc_to_pdf_with_options(duc_data, ConversionOptions::default()) {
         Ok(pdf_bytes) => pdf_bytes,
         Err(e) => {
-            // Log error and return empty vector for WASM compatibility
-            println!("Conversion error: {}", e);
-            vec![]
+            // Log error with context
+            error_handling::log_error_details(&e, duc_data.len(), "Standard conversion (default options)");
+
+            // Create structured error info and convert to WASM bytes
+            let error_info = error_handling::create_error_info(&e, duc_data.len(), None);
+            error_handling::error_to_wasm_bytes(&error_info)
         }
     }
 }
@@ -239,16 +294,7 @@ pub fn convert_duc_to_pdf_crop(
     offset_x: f64,
     offset_y: f64,
 ) -> ConversionResult<Vec<u8>> {
-    let options = ConversionOptions {
-        mode: ConversionMode::Crop {
-            offset_x,
-            offset_y,
-            width: None,
-            height: None,
-        },
-        ..Default::default()
-    };
-    convert_duc_to_pdf_with_options(duc_data, options)
+    convert_duc_to_pdf_crop_with_options(duc_data, offset_x, offset_y, None, None, None)
 }
 
 /// Conversion function with crop mode and specific dimensions
@@ -259,13 +305,32 @@ pub fn convert_duc_to_pdf_crop_with_dimensions(
     width: f64,
     height: f64,
 ) -> ConversionResult<Vec<u8>> {
+    convert_duc_to_pdf_crop_with_options(
+        duc_data,
+        offset_x,
+        offset_y,
+        Some(width),
+        Some(height),
+        None,
+    )
+}
+
+pub fn convert_duc_to_pdf_crop_with_options(
+    duc_data: &[u8],
+    offset_x: f64,
+    offset_y: f64,
+    width: Option<f64>,
+    height: Option<f64>,
+    background_color: Option<String>,
+) -> ConversionResult<Vec<u8>> {
     let options = ConversionOptions {
         mode: ConversionMode::Crop {
             offset_x,
             offset_y,
-            width: Some(width),
-            height: Some(height),
+            width,
+            height,
         },
+        background_color,
         ..Default::default()
     };
     convert_duc_to_pdf_with_options(duc_data, options)
@@ -273,30 +338,61 @@ pub fn convert_duc_to_pdf_crop_with_dimensions(
 
 /// WASM binding for crop conversion
 #[wasm_bindgen]
-pub fn convert_duc_to_pdf_crop_wasm(duc_data: &[u8], offset_x: f64, offset_y: f64) -> Vec<u8> {
-    match convert_duc_to_pdf_crop(duc_data, offset_x, offset_y) {
-        Ok(pdf_bytes) => pdf_bytes,
-        Err(e) => {
-            println!("Crop conversion error: {}", e);
-            vec![]
-        }
-    }
-}
-
-/// WASM binding for crop conversion with dimensions
-#[wasm_bindgen]
-pub fn convert_duc_to_pdf_crop_with_dimensions_wasm(
+pub fn convert_duc_to_pdf_crop_wasm(
     duc_data: &[u8],
     offset_x: f64,
     offset_y: f64,
-    width: f64,
-    height: f64,
+    width: Option<f64>,
+    height: Option<f64>,
+    background_color: Option<String>,
 ) -> Vec<u8> {
-    match convert_duc_to_pdf_crop_with_dimensions(duc_data, offset_x, offset_y, width, height) {
+    // Validate basic inputs first
+    if let Err(validation_error) = error_handling::validate_basic_inputs(
+        duc_data,
+        Some(offset_x),
+        Some(offset_y),
+        width,
+        height,
+    ) {
+        let error_info = error_handling::WasmErrorInfo {
+            error: validation_error.clone(),
+            error_type: "ValidationError".to_string(),
+            details: validation_error,
+            duc_data_length: duc_data.len(),
+            conversion_context: None,
+        };
+        return error_handling::error_to_wasm_bytes(&error_info);
+    }
+
+    let normalized_background = normalize_background_color(background_color);
+
+    match convert_duc_to_pdf_crop_with_options(
+        duc_data,
+        offset_x,
+        offset_y,
+        width,
+        height,
+        normalized_background.clone(),
+    ) {
         Ok(pdf_bytes) => pdf_bytes,
         Err(e) => {
-            println!("Crop with dimensions conversion error: {}", e);
-            vec![]
+            // Log error with context and crop details
+            error_handling::log_error_details(&e, duc_data.len(), "Crop conversion");
+            error_handling::log_crop_details(offset_x, offset_y, width, height);
+
+            // Create structured error info with crop context
+            let crop_options = ConversionOptions {
+                mode: ConversionMode::Crop {
+                    offset_x,
+                    offset_y,
+                    width,
+                    height,
+                },
+                background_color: normalized_background,
+                ..Default::default()
+            };
+            let error_info = error_handling::create_error_info(&e, duc_data.len(), Some(&crop_options));
+            error_handling::error_to_wasm_bytes(&error_info)
         }
     }
 }

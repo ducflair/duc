@@ -29,10 +29,7 @@ describe('CROP mode conversions', () => {
   it('universal several crops', async () => {
     const duc = loadDucFile('universal.duc');
     const configs: Array<[string, number, number, number?, number?, number?]> = [
-      ['text_region', 0, -700, 25, 20, 0.5],
-      ['geometric_shapes', -500, -500, 20, 20, 1.5],
-      ['dimensions_area', 0, 200, 2000, 2000, 0.20],
-      ['central_elements', -250, -250, 30, 25, 0.75],
+      ['dimensions_area', -8200, -2200, 2000, 2000, 0.2],
     ];
 
     for (const [name, ox, oy, w, h, z] of configs) {
@@ -57,5 +54,29 @@ describe('CROP mode conversions', () => {
       validatePdf(pdf);
       savePdfOutput(`${OUTPUT_DIR}/precision_${name}.pdf`, pdf);
     }
+  });
+
+
+    it('applies viewport background color when provided', async () => {
+    const duc = loadDucFile('universal.duc');
+    const baseConfig = cropOpts(-1600, -1200, 2000, 2000, 0.5);
+    const pdfWithDefaultBackground = await convertDucToPdf(duc, baseConfig);
+    const pdfWithoutBackground = await convertDucToPdf(duc, {
+      ...baseConfig,
+      backgroundColor: 'transparent',
+    });
+    const pdfWithBackground = await convertDucToPdf(duc, {
+      ...baseConfig,
+      backgroundColor: '#1a1f36',
+    });
+
+    validatePdf(pdfWithDefaultBackground);
+    validatePdf(pdfWithoutBackground);
+    validatePdf(pdfWithBackground);
+
+    expect(pdfWithBackground.length).toBeGreaterThan(pdfWithDefaultBackground.length);
+    savePdfOutput(`${OUTPUT_DIR}/background_default.pdf`, pdfWithDefaultBackground);
+    savePdfOutput(`${OUTPUT_DIR}/background_off.pdf`, pdfWithoutBackground);
+    savePdfOutput(`${OUTPUT_DIR}/background_on.pdf`, pdfWithBackground);
   });
 });

@@ -29,8 +29,7 @@ async function initWasm(): Promise<any> {
       // Validate that required functions exist on the imported module
       const requiredFunctions = [
         'convert_duc_to_pdf_rs',
-        'convert_duc_to_pdf_crop_wasm',
-        'convert_duc_to_pdf_crop_with_dimensions_wasm'
+        'convert_duc_to_pdf_crop_wasm'
       ];
 
       for (const fnName of requiredFunctions) {
@@ -62,6 +61,7 @@ export interface ConversionOptions {
   height?: number;
   scale?: number;
   zoom?: number;
+  backgroundColor?: string;
   metadata?: {
     title?: string;
     author?: string;
@@ -75,41 +75,66 @@ function validateInput(ducData: Uint8Array, options?: ConversionOptions): void {
     throw new Error('DUC data is required and cannot be empty');
   }
 
-  // Validate options
+  // Validate options - focus on basic validation only since the scaling system handles large values
   if (options) {
-    if (options.offsetX !== undefined && typeof options.offsetX !== 'number') {
-      throw new Error('offsetX must be a number');
+    if (options.offsetX !== undefined) {
+      if (typeof options.offsetX !== 'number' || !Number.isFinite(options.offsetX)) {
+        throw new Error(`offsetX must be a finite number, got: ${options.offsetX}`);
+      }
     }
-    if (options.offsetY !== undefined && typeof options.offsetY !== 'number') {
-      throw new Error('offsetY must be a number');
+    if (options.offsetY !== undefined) {
+      if (typeof options.offsetY !== 'number' || !Number.isFinite(options.offsetY)) {
+        throw new Error(`offsetY must be a finite number, got: ${options.offsetY}`);
+      }
     }
-    if (options.width !== undefined && (typeof options.width !== 'number' || options.width <= 0)) {
-      throw new Error('width must be a positive number');
+    if (options.width !== undefined) {
+      if (typeof options.width !== 'number' || !Number.isFinite(options.width) || options.width <= 0) {
+        throw new Error(`width must be a positive finite number, got: ${options.width}`);
+      }
     }
-    if (options.height !== undefined && (typeof options.height !== 'number' || options.height <= 0)) {
-      throw new Error('height must be a positive number');
+    if (options.height !== undefined) {
+      if (typeof options.height !== 'number' || !Number.isFinite(options.height) || options.height <= 0) {
+        throw new Error(`height must be a positive finite number, got: ${options.height}`);
+      }
     }
-    if (options.scale !== undefined && (typeof options.scale !== 'number' || options.scale <= 0)) {
-      throw new Error('scale must be a positive number');
+    if (options.scale !== undefined) {
+      if (typeof options.scale !== 'number' || !Number.isFinite(options.scale) || options.scale <= 0) {
+        throw new Error(`scale must be a positive finite number, got: ${options.scale}`);
+      }
     }
-    if (options.zoom !== undefined && (typeof options.zoom !== 'number' || options.zoom <= 0)) {
-      throw new Error('zoom must be a positive number');
+    if (options.zoom !== undefined) {
+      if (typeof options.zoom !== 'number' || !Number.isFinite(options.zoom) || options.zoom <= 0) {
+        throw new Error(`zoom must be a positive finite number, got: ${options.zoom}`);
+      }
+    }
+    if (options.backgroundColor !== undefined) {
+      if (typeof options.backgroundColor !== 'string' || options.backgroundColor.trim() === '') {
+        throw new Error(`backgroundColor must be a non-empty string, got: ${options.backgroundColor}`);
+      }
     }
   }
 }
 
 export async function convertDucToPdf(
   ducData: Uint8Array,
-  options?: ConversionOptions
+  options?: ConversionOptions,
+  debugMode: boolean = false
 ): Promise<Uint8Array> {
   try {
     // Validate inputs
     validateInput(ducData, options);
 
+    // Debug logging if enabled
+    if (debugMode) {
+      debugConversionState(ducData, options);
+    }
+
     // Initialize WASM module
     const wasm = await initWasm();
 
     let ducBytes = new Uint8Array(ducData);
+    let viewBackgroundColor;
+
     try {
       const latestBlob = new Blob([ducBytes]);
       const parsed = await parseDuc(latestBlob);
@@ -156,6 +181,7 @@ export async function convertDucToPdf(
         });
 
         normalized.elements = normalizedElements;
+        viewBackgroundColor = normalized.globalState.viewBackgroundColor;
 
         // Re-serialize the DUC with normalized values and scope set to 'mm'
         const serialized = await serializeDuc(
@@ -185,20 +211,19 @@ export async function convertDucToPdf(
       // Use crop mode with offset
       const offsetX = options.offsetX || 0;
       const offsetY = options.offsetY || 0;
+      const backgroundColor = options.backgroundColor ? options.backgroundColor.trim() : viewBackgroundColor;
+      const widthOption = typeof options.width === 'number' ? options.width : undefined;
+      const heightOption = typeof options.height === 'number' ? options.height : undefined;
+      const backgroundOption = backgroundColor === undefined ? undefined : backgroundColor;
 
-      if (options.width !== undefined && options.height !== undefined) {
-        // Crop with specific dimensions
-        result = wasm.convert_duc_to_pdf_crop_with_dimensions_wasm(
-          ducBytes,
-          offsetX,
-          offsetY,
-          options.width,
-          options.height
-        );
-      } else {
-        // Crop with offset only
-        result = wasm.convert_duc_to_pdf_crop_wasm(ducBytes, offsetX, offsetY);
-      }
+      result = wasm.convert_duc_to_pdf_crop_wasm(
+        ducBytes,
+        offsetX,
+        offsetY,
+        widthOption,
+        heightOption,
+        backgroundOption
+      );
     } else {
       // Standard conversion
       result = wasm.convert_duc_to_pdf_rs(ducBytes);
@@ -207,6 +232,60 @@ export async function convertDucToPdf(
     // Check if conversion was successful
     if (!result || result.length === 0) {
       throw new Error('PDF conversion failed - empty result');
+    }
+
+    // Check if the result contains an error message from WASM
+    if (result.length >= 6) {
+      const prefixBytes = result.slice(0, 6);
+      const prefixStr = String.fromCharCode(...prefixBytes);
+
+      if (prefixStr === 'ERROR:') {
+        // Extract and parse the error information
+        const errorBytes = result.slice(6);
+        let errorJson;
+        try {
+          errorJson = JSON.parse(new TextDecoder().decode(errorBytes));
+        } catch (parseError) {
+          // Fallback if JSON parsing fails
+          const errorText = new TextDecoder().decode(errorBytes);
+          throw new Error(`PDF conversion failed: ${errorText}`);
+        }
+
+        // Handle the new structured error format
+        if (errorJson.error_type === 'ValidationError') {
+          console.error('=== DUC to PDF Validation Error ===');
+          console.error('Validation Error:', errorJson.error);
+          console.error('Details:', errorJson.details);
+          throw new Error(`PDF conversion failed: ${errorJson.details}`);
+        }
+
+        // Handle structured conversion errors
+        const detailedError = `PDF conversion failed: ${errorJson.details || errorJson.error}`;
+        console.error('=== DUC to PDF Conversion Error Details ===');
+        console.error('Error Type:', errorJson.error_type);
+        console.error('Error Message:', errorJson.error);
+        console.error('Details:', errorJson.details);
+        console.error('DUC Data Length:', `${errorJson.duc_data_length} bytes`);
+
+        // Log conversion context if available
+        if (errorJson.conversion_context) {
+          console.error('Conversion Context:', errorJson.conversion_context);
+        }
+
+        // Log conversion options for debugging
+        console.error('Conversion Options:', JSON.stringify(options, null, 2));
+
+        // Special handling for scaling-related errors
+        if (errorJson.details.includes('automatic scaling') || errorJson.details.includes('scaling logic')) {
+          console.error('⚠️  Scaling System Alert: This error indicates the automatic scaling system failed.');
+          console.error('   Please investigate the scaling logic in the Rust code:');
+          console.error('   - calculate_required_scale() function');
+          console.error('   - validate_all_coordinates_with_scale() function');
+          console.error('   - DucDataScaler scaling application');
+        }
+
+        throw new Error(detailedError);
+      }
     }
 
     return result;
@@ -264,4 +343,103 @@ export async function getWasmStatus(): Promise<{
 export function resetWasmModule(): void {
   wasmModule = null;
   wasmInitPromise = null;
+}
+
+// Debug function to analyze DUC data before conversion
+export function analyzeDucData(ducData: Uint8Array): {
+  size: number;
+  headerInfo: string;
+  estimatedElements: number;
+  potentialIssues: string[];
+} {
+  const issues: string[] = [];
+  let headerInfo = 'Unknown';
+
+  try {
+    // Basic size check
+    if (ducData.length === 0) {
+      issues.push('DUC data is empty');
+      return {
+        size: 0,
+        headerInfo: 'Empty',
+        estimatedElements: 0,
+        potentialIssues: issues
+      };
+    }
+
+    if (ducData.length < 100) {
+      issues.push(`DUC data is very small (${ducData.length} bytes), may be truncated`);
+    }
+
+    if (ducData.length > 50 * 1024 * 1024) { // 50MB
+      issues.push(`DUC data is very large (${(ducData.length / 1024 / 1024).toFixed(2)}MB), may cause memory issues`);
+    }
+
+    // Try to extract basic info from the binary data
+    const textDecoder = new TextDecoder('utf-8', { fatal: false });
+    const preview = textDecoder.decode(ducData.slice(0, Math.min(200, ducData.length)));
+
+    // Look for common DUC patterns
+    if (preview.includes('duc')) {
+      headerInfo = 'DUC format detected';
+    } else if (preview.includes('{') || preview.includes('[')) {
+      headerInfo = 'JSON-like structure detected';
+    } else {
+      headerInfo = 'Binary format';
+    }
+
+    // Estimate number of elements (rough heuristic)
+    let elementCount = 0;
+    const elementMatches = preview.match(/element/gi);
+    if (elementMatches) {
+      elementCount = elementMatches.length;
+    }
+
+    return {
+      size: ducData.length,
+      headerInfo,
+      estimatedElements: elementCount,
+      potentialIssues: issues
+    };
+  } catch (error) {
+    issues.push(`Error analyzing DUC data: ${error}`);
+    return {
+      size: ducData.length,
+      headerInfo: 'Error analyzing',
+      estimatedElements: 0,
+      potentialIssues: issues
+    };
+  }
+}
+
+// Debug function to log conversion state
+export function debugConversionState(
+  ducData: Uint8Array,
+  options?: ConversionOptions
+): void {
+  console.group('🔍 DUC to PDF Conversion Debug Info');
+
+  const analysis = analyzeDucData(ducData);
+  console.log('📄 DUC Data Analysis:', analysis);
+
+  if (options) {
+    console.log('⚙️ Conversion Options:', {
+      offsetX: options.offsetX,
+      offsetY: options.offsetY,
+      width: options.width,
+      height: options.height,
+      scale: options.scale,
+      zoom: options.zoom,
+      hasMetadata: !!(options.metadata?.title || options.metadata?.author || options.metadata?.subject)
+    });
+  } else {
+    console.log('⚙️ Conversion Options: (default/none)');
+  }
+
+  console.log('🌐 WASM Status:', {
+    initialized: isWasmInitialized(),
+    // Note: We can't easily check the detailed status without async
+  });
+
+  console.groupEnd();
 } 
