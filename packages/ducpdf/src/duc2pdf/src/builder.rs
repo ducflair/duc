@@ -5,7 +5,7 @@ use crate::utils::freedraw_bounds::{
     calculate_freedraw_bbox, format_number, FreeDrawBounds, UNIT_EPSILON as FREEDRAW_EPSILON,
 };
 use crate::utils::style_resolver::StyleResolver;
-use crate::utils::svg_to_pdf::svg_to_pdf;
+use crate::utils::svg_to_pdf::{svg_to_pdf, svg_to_pdf_with_dimensions};
 use crate::{
     calculate_required_scale, validate_coordinates_with_scale, ConversionError, ConversionMode,
     ConversionOptions, ConversionResult, PDF_USER_UNIT,
@@ -58,6 +58,7 @@ pub struct ResourceCache {
     pub svg_objects: HashMap<String, u32>,
     pub xobject_names: HashMap<String, String>, // resource_id -> XObject name mapping
     pub freedraw_bboxes: HashMap<String, FreeDrawBounds>, // freedraw_id -> cached bounding box
+    pub svg_dimensions: HashMap<String, (f64, f64)>, // svg_id -> (width, height) in natural SVG units
 }
 
 /// Context for PDF conversion
@@ -488,8 +489,8 @@ impl DucToPdfBuilder {
     fn process_svg_file(&mut self, file_entry: &DucExternalFileEntry) -> ConversionResult<u32> {
         let svg_data = &file_entry.value.data;
 
-        // Convert SVG to PDF using the utility
-        let pdf_bytes = svg_to_pdf(svg_data).map_err(|e| {
+        // Convert SVG to PDF using the utility and get dimensions
+        let (pdf_bytes, svg_width, svg_height) = svg_to_pdf_with_dimensions(svg_data).map_err(|e| {
             ConversionError::ResourceLoadError(format!("SVG to PDF conversion failed: {}", e))
         })?;
 
@@ -518,6 +519,16 @@ impl DucToPdfBuilder {
                 })?;
         }
 
+        // Store SVG dimensions for scaling calculations
+        self.context
+            .resource_cache
+            .svg_dimensions
+            .insert(file_entry.key.clone(), (svg_width, svg_height));
+        self.context
+            .resource_cache
+            .svg_dimensions
+            .insert(file_entry.value.id.clone(), (svg_width, svg_height));
+
         // Store as embedded PDF (not regular image) so stream_image can detect it's an SVG-converted PDF
         // Map by both the external_files key and the internal file id
         self.context
@@ -537,6 +548,10 @@ impl DucToPdfBuilder {
                 .resource_cache
                 .embedded_pdfs
                 .insert("test_svg".to_string(), 0);
+            self.context
+                .resource_cache
+                .svg_dimensions
+                .insert("test_svg".to_string(), (svg_width, svg_height));
         }
 
         Ok(0) // Return placeholder, actual embedding happens during streaming
@@ -1294,6 +1309,8 @@ fn create_content_stream(
             .set_images(self.context.resource_cache.images.clone());
         self.element_streamer
             .set_freedraw_bboxes(self.context.resource_cache.freedraw_bboxes.clone());
+        self.element_streamer
+            .set_svg_dimensions(self.context.resource_cache.svg_dimensions.clone());
 
         // Reset per-page ExtGState tracking before streaming
         self.element_streamer.begin_page();
@@ -1392,6 +1409,8 @@ fn create_content_stream(
             .set_images(self.context.resource_cache.images.clone());
         self.element_streamer
             .set_freedraw_bboxes(self.context.resource_cache.freedraw_bboxes.clone());
+        self.element_streamer
+            .set_svg_dimensions(self.context.resource_cache.svg_dimensions.clone());
 
         // === Phase 1: Stream unlayered elements ===
         // These elements don't belong to any layer and render first

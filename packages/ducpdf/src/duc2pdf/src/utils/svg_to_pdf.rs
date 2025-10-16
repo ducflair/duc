@@ -110,11 +110,16 @@ impl SvgToPdfConverter {
     }
 }
 
-/// Convert SVG data to PDF bytes
-pub fn svg_to_pdf(svg_data: &[u8]) -> ConversionResult<Vec<u8>> {
+/// Convert SVG data to PDF bytes and return dimensions
+pub fn svg_to_pdf_with_dimensions(svg_data: &[u8]) -> ConversionResult<(Vec<u8>, f64, f64)> {
     // Parse SVG using usvg
     let svg_tree = usvg::Tree::from_data(svg_data, &usvg::Options::default())
         .map_err(|e| ConversionError::ResourceLoadError(format!("Failed to parse SVG: {}", e)))?;
+
+    // Get SVG dimensions
+    let svg_size = svg_tree.size();
+    let width = svg_size.width() as f64;
+    let height = svg_size.height() as f64;
 
     // Convert SVG to PDF operations with proper parameters
     let pdf_content = svg2pdf::to_pdf(
@@ -126,5 +131,11 @@ pub fn svg_to_pdf(svg_data: &[u8]) -> ConversionResult<Vec<u8>> {
         ConversionError::ResourceLoadError(format!("SVG to PDF conversion failed: {}", e))
     })?;
 
+    Ok((pdf_content, width, height))
+}
+
+/// Convert SVG data to PDF bytes
+pub fn svg_to_pdf(svg_data: &[u8]) -> ConversionResult<Vec<u8>> {
+    let (pdf_content, _, _) = svg_to_pdf_with_dimensions(svg_data)?;
     Ok(pdf_content)
 }
