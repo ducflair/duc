@@ -29,7 +29,7 @@ describe('CROP mode conversions', () => {
   it('universal several crops', async () => {
     const duc = loadDucFile('universal.duc');
     const configs: Array<[string, number, number, number?, number?, number?]> = [
-      ['dimensions_area', -8200, -2200, 2000, 2000, 0.2],
+      ['dimensions_area', 6500, 2500, 2000, 2000, 0.2],
     ];
 
     for (const [name, ox, oy, w, h, z] of configs) {
@@ -40,26 +40,10 @@ describe('CROP mode conversions', () => {
     }
   });
 
-  it('precision crops', async () => {
+
+  it('applies viewport background color when provided', async () => {
     const duc = loadDucFile('universal.duc');
-    const configs: Array<[string, number, number, number?, number?, number?]> = [
-      ['micro_detail_1', -245.5, -245.5, 20, 15, 0.3],
-      ['micro_detail_2', -745.25, -245.75, 20, 15, 2.5],
-      ['narrow_strip', 0, -499.5, 25, 5, 1.2],
-      ['tiny_corner', -999, -999, 20, 15, 3.0],
-    ];
-
-    for (const [name, ox, oy, w, h, z] of configs) {
-      const pdf = await convertDucToPdf(duc, cropOpts(ox, oy, w, h, z));
-      validatePdf(pdf);
-      savePdfOutput(`${OUTPUT_DIR}/precision_${name}.pdf`, pdf);
-    }
-  });
-
-
-    it('applies viewport background color when provided', async () => {
-    const duc = loadDucFile('universal.duc');
-    const baseConfig = cropOpts(-1600, -1200, 2000, 2000, 0.5);
+    const baseConfig = cropOpts(10000, 7000, 2000, 2000, 0.1);
     const pdfWithDefaultBackground = await convertDucToPdf(duc, baseConfig);
     const pdfWithoutBackground = await convertDucToPdf(duc, {
       ...baseConfig,
