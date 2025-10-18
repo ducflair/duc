@@ -22,6 +22,7 @@ use hipdf::images::{Image, ImageManager};
 use hipdf::lopdf::content::{Content, Operation};
 use hipdf::lopdf::{Dictionary, Document, Object, Stream};
 use hipdf::ocg::OCGManager;
+use web_sys::console;
 use std::collections::{HashMap, HashSet};
 
 // Logging utilities that work in both WASM and native environments
@@ -1012,33 +1013,10 @@ impl DucToPdfBuilder {
 
         // If width/height are specified, create a crop bounds that limits the visible area
         let crop_bounds = if let (Some(w_mm), Some(h_mm)) = (width, height) {
-            // For crop mode with dimensions, the page should be exactly the specified dimensions
-            // The scroll offset is handled in the content stream transformation, not the page bounds
-            let current_scroll_x = self
-                .context
-                .exported_data
-                .duc_local_state
-                .as_ref()
-                .map(|ls| ls.scroll_x)
-                .unwrap_or(0.0);
-            let current_scroll_y = self
-                .context
-                .exported_data
-                .duc_local_state
-                .as_ref()
-                .map(|ls| ls.scroll_y)
-                .unwrap_or(0.0);
 
             println!(
                 "🔧 Applied crop dimensions: {}x{} mm at offset ({}, {})",
                 w_mm, h_mm, offset_x, offset_y
-            );
-            println!(
-                "🔧 Crop window bounds: x=[{:.2}, {:.2}], y=[{:.2}, {:.2}]",
-                -current_scroll_x,
-                -current_scroll_x + w_mm,
-                -current_scroll_y,
-                -current_scroll_y + h_mm
             );
 
             // Page bounds should simply be the crop dimensions starting from origin
@@ -1059,15 +1037,15 @@ impl DucToPdfBuilder {
 
         if let Some(ref mut local_state) = self.context.exported_data.duc_local_state {
             // Apply the offset to scroll position to effectively "move" the drawing
-            local_state.scroll_x -= offset_x_mm;
-            local_state.scroll_y -= offset_y_mm;
+            local_state.scroll_x = offset_x_mm;
+            local_state.scroll_y = offset_y_mm;
         } else {
             // If no local state exists, create one with the offset
             let new_local_state = duc::types::DucLocalState {
                 scope: "mm".to_string(), // Always use mm for internal processing
                 active_standard_id: "default".to_string(),
-                scroll_x: -offset_x_mm,
-                scroll_y: -offset_y_mm,
+                scroll_x: offset_x_mm,
+                scroll_y: offset_y_mm,
                 zoom: 1.0,
                 active_grid_settings: None,
                 active_snap_settings: None,
