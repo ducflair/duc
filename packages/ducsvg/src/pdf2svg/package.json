@@ -1,0 +1,17 @@
+{
+  "name": "@ducsvg/pdf2svg",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build:types": "tsc --project tsconfig.build.json",
+    "build": "vite build",
+    "test": "bun run vitest"
+  },
+  "author": "Ducflair",
+  "license": "MIT",
+  "dependencies": {
+    "pdfjs-dist": "^2.16.105"
+  }
+}

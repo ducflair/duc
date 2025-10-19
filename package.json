@@ -61,6 +61,7 @@
     "ducrs:test": "turbo run test --filter=ducrs",
     "ducjs:build": "turbo build --filter=ducjs",
     "ducsvg:build": "turbo build --filter=ducsvg",
+    "ducsvg:test": "turbo run test --filter=ducsvg",
     "ducpdf:build": "turbo build --filter=ducpdf",
     "ducpdf:test": "turbo run test --filter=ducpdf",
     "semantic-release": "turbo run semantic-release",
