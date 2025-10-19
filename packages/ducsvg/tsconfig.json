@@ -1,16 +1,25 @@
 {
   "extends": "@duc/tsconfig/base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "outDir": "dist",
     "declaration": true,
     "declarationDir": "dist",
+    "emitDeclarationOnly": true,
+    "composite": false,
     "rootDir": "src",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "paths": {
-      "ducsvg/*": ["src/*"],
-      "ducjs/*": ["../../../packages/ducjs/src/*"]
+      "ducsvg/*": ["./src/*"],
+      "ducjs/*": ["../../../packages/ducjs/src/*"],
+      "ducpdf/*": ["../../../packages/ducpdf/src/*"]
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "pdf2svg",
+    "src/pdf2svg/vendor"
+  ]
 }
