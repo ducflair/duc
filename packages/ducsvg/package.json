@@ -28,27 +28,39 @@
   },
   "sideEffects": false,
   "scripts": {
-    "build": "tsc",
+    "build": "vite build && pwd && tsc --project ./tsconfig.json",
     "check-types": "tsc --noEmit",
-    "semantic-release": "semantic-release"
+    "test": "bun test",
+    "semantic-release": "semantic-release",
+    "sync:pdfjs": "node ./scripts/sync-pdfjs-vendor.mjs",
+    "postinstall": "bun run sync:pdfjs"
   },
   "author": "Ducflair",
   "license": "MIT",
   "dependencies": {
-    "ducjs": "workspace:*"
+    "ducjs": "workspace:*",
+    "ducpdf": "workspace:*",
+    "pdfjs-dist": "^2.16.105"
   },
   "devDependencies": {
+    "@xmldom/xmldom": "^0.8.11",
+    "happy-dom": "^20.0.5",
     "semantic-release": "^24.1.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   },
   "files": ["dist", "README.md"],
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/ducflair/duc.git",
     "directory": "packages/ducsvg"
   },
   "homepage": "https://duc.ducflair.com/",
-  "bugs": { "url": "https://github.com/ducflair/duc/issues" },
-  "keywords": ["CAD","2D","Design","TypeScript","Ducflair","Duc","SVG","Renderer","Converter","Export"]
+  "bugs": {
+    "url": "https://github.com/ducflair/duc/issues"
+  },
+  "keywords": ["CAD", "2D", "Design", "TypeScript", "Ducflair", "Duc", "SVG", "Renderer", "Converter", "Export"]
 }
