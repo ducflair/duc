@@ -10,11 +10,11 @@ module.exports = {
       },
     ],
     [
-      "@semantic-release/npm",
+      "@semantic-release/exec",
       {
-        pkgRoot: ".",
-        tarballDir: "dist",
-      },
+        prepareCmd: "node ../../scripts/semrel-set-version.js packages/ducsvg ${nextRelease.version}",
+        publishCmd: "bun publish"
+      }
     ],
     "@semantic-release/github",
   ],
