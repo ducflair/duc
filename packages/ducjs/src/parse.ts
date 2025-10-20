@@ -83,7 +83,6 @@ import {
   _DucStackBase as _DucStackBaseFb,
   _DucStackElementBase as _DucStackElementBaseFb
 } from "./flatbuffers/duc";
-import { parseDucFlatBuffers as parseDucFlatBuffersV1 } from './legacy/v1/parse';
 import { RestoreConfig, RestoredDataState, restore } from "./restore";
 import {
   AngularUnitsFormat,
@@ -1736,10 +1735,9 @@ export const parseDuc = async (
     throw new Error('Invalid DUC buffer: cannot read root table');
   }
 
-  // TODO: For now don't touch, to be removed on a late duc v2 version
   const legacyVersion = data.versionLegacy();
   if (legacyVersion) {
-    return parseDucFlatBuffersV1(blob, fileHandle) as unknown as RestoredDataState;
+    throw new Error(`Unsupported DUC version: ${legacyVersion}. Please use version ducjs@2.0.1 or lower to support this file.`);
   }
 
   const version = data.version();
