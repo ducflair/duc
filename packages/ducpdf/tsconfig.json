@@ -1,11 +1,10 @@
 {
+  "extends": "../tsconfig/base.json",
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
     "lib": ["ES2020", "DOM"],
-    "moduleResolution": "bundler",
     "rootDir": "./src",
-    "baseUrl": ".",
     "outDir": "dist",
     "declaration": true,
     "declarationMap": true,
@@ -16,7 +15,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "paths": {
-      "ducpdf/*": ["src/*"],
+      "ducpdf/*": ["./src/*"],
       "ducjs/*": ["../ducjs/src/*"]
     }
   },
