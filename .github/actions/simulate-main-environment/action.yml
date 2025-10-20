@@ -27,6 +27,9 @@ runs:
           # This is the DRY-RUN path
           echo "Running DRY-RUN for ${{ inputs.package-name }}: simulating dev→main merge"
           
+          # 0. Stash any uncommitted changes
+          git stash
+          
           # 1. Simulate the main branch environment
           git fetch origin main --tags
           git fetch origin dev
