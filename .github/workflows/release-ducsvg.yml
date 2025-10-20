@@ -34,7 +34,7 @@ jobs:
         with:
           bun-version: "latest"
       - name: Install deps
-        run: bun install --frozen-lockfile
+        run: bun install
       - name: Build
         run: bun ducsvg:build
 
