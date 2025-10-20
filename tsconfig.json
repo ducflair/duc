@@ -11,6 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
+      "@duc/tsconfig/*": ["packages/tsconfig/*"],
       "ducjs": ["packages/ducjs/*"],
       "ducsvg": ["packages/ducsvg/*"],
       "ducpdf": ["packages/ducpdf/*"],
