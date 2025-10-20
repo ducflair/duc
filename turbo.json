@@ -15,6 +15,7 @@
     },
     "ducpdf#build": {
       "cache": false,
+      "dependsOn": ["ducjs#build"],
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
     "ducpdf#test": {
