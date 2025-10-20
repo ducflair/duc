@@ -17,7 +17,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  release_duc_rs:
+  release_ducrs:
     runs-on: ubuntu-latest
     concurrency:
       group: release-ducrs
@@ -32,14 +32,12 @@ jobs:
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "lts/*"
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
+      - name: Install deps
+        run: bun install
       
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -59,5 +57,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: npx semantic-release ${{ steps.setup-release-environment.outputs.release-mode }}
         working-directory: ./packages/ducrs
+        run: npx semantic-release ${{ steps.setup-release-environment.outputs.release-mode }}
