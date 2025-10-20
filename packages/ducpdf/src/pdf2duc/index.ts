@@ -1,4 +1,4 @@
-import * as pdfjs from 'pdfjs-dist';
+// import * as pdfjs from 'pdfjs-dist';
 
 export function convertPdfToDuc(pdfData: Uint8Array): Uint8Array {
     console.log('Converting PDF to DUC...');
