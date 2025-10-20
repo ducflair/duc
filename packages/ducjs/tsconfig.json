@@ -5,9 +5,6 @@
     "declaration": true,
     "declarationDir": "dist",
     "rootDir": "src",
-    "esModuleInterop": true,
-    "module": "ES2020",
-    "moduleResolution": "bundler",
     "paths": {
       "ducjs/*": ["./src/*"]
     }
