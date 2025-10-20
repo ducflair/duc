@@ -54,6 +54,7 @@ export const MIME_TYPES = {
   "excalidraw.png": "image/png",
   binary: "application/octet-stream",
   pdf: "application/pdf",
+  zip: "application/zip",
   // image
   ...IMAGE_MIME_TYPES,
 } as const;
