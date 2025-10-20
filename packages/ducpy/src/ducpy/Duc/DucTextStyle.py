@@ -29,17 +29,6 @@ class DucTextStyle(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # DucTextStyle
-    def BaseStyle(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc._DucElementStylesBase import _DucElementStylesBase
-            obj = _DucElementStylesBase()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # DucTextStyle
     def IsLtr(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
@@ -139,12 +128,6 @@ def DucTextStyleStart(builder):
 
 def Start(builder):
     DucTextStyleStart(builder)
-
-def DucTextStyleAddBaseStyle(builder, baseStyle):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(baseStyle), 0)
-
-def AddBaseStyle(builder, baseStyle):
-    DucTextStyleAddBaseStyle(builder, baseStyle)
 
 def DucTextStyleAddIsLtr(builder, isLtr):
     builder.PrependBoolSlot(1, isLtr, 0)

@@ -277,7 +277,6 @@ class LineSpacing:
 
 @dataclass
 class DucTextStyle:
-    base_style: DucElementStylesBase
     is_ltr: bool
     font_family: str
     big_font_family: str
@@ -301,7 +300,6 @@ class DucTableCellStyle:
 
 @dataclass
 class DucTableStyle:
-    base_style: DucElementStylesBase
     header_row_style: DucTableCellStyle
     data_row_style: DucTableCellStyle
     data_column_style: DucTableCellStyle
@@ -309,7 +307,6 @@ class DucTableStyle:
 
 @dataclass
 class DucLeaderStyle:
-    base_style: DucElementStylesBase
     text_style: DucTextStyle
     text_attachment: VERTICAL_ALIGN
     block_attachment: BLOCK_ATTACHMENT
@@ -373,7 +370,6 @@ class FCFDatumStyle:
 
 @dataclass
 class DucFeatureControlFrameStyle:
-    base_style: DucElementStylesBase
     text_style: DucTextStyle
     layout: FCFLayoutStyle
     symbols: FCFSymbolStyle
@@ -409,16 +405,14 @@ class DucDocStyle:
 
 @dataclass
 class DucViewportStyle:
-    base_style: DucElementStylesBase
     scale_indicator_visible: bool
 
 @dataclass
 class DucPlotStyle:
-    base_style: DucElementStylesBase
+    pass
 
 @dataclass
 class DucXRayStyle:
-    base_style: DucElementStylesBase
     color: str
 
 @dataclass

@@ -4,9 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { _DucElementStylesBase } from '../duc/duc-element-styles-base';
-
-
 export class DucXRayStyle {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -25,11 +22,6 @@ static getSizePrefixedRootAsDucXRayStyle(bb:flatbuffers.ByteBuffer, obj?:DucXRay
   return (obj || new DucXRayStyle()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-baseStyle(obj?:_DucElementStylesBase):_DucElementStylesBase|null {
-  const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new _DucElementStylesBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
 color():string|null
 color(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 color(optionalEncoding?:any):string|Uint8Array|null {
@@ -41,10 +33,6 @@ static startDucXRayStyle(builder:flatbuffers.Builder) {
   builder.startObject(2);
 }
 
-static addBaseStyle(builder:flatbuffers.Builder, baseStyleOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(0, baseStyleOffset, 0);
-}
-
 static addColor(builder:flatbuffers.Builder, colorOffset:flatbuffers.Offset) {
   builder.addFieldOffset(1, colorOffset, 0);
 }
@@ -54,9 +42,8 @@ static endDucXRayStyle(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createDucXRayStyle(builder:flatbuffers.Builder, baseStyleOffset:flatbuffers.Offset, colorOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createDucXRayStyle(builder:flatbuffers.Builder, colorOffset:flatbuffers.Offset):flatbuffers.Offset {
   DucXRayStyle.startDucXRayStyle(builder);
-  DucXRayStyle.addBaseStyle(builder, baseStyleOffset);
   DucXRayStyle.addColor(builder, colorOffset);
   return DucXRayStyle.endDucXRayStyle(builder);
 }

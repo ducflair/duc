@@ -13,10 +13,7 @@
 
 `ducsvg` is a lightweight adapter for rendering `duc` CAD documents to SVG. It’s built on top of `ducjs` and focuses on accurate, standards-compliant SVG output you can embed in browsers or export from Node.js.
 
-- Convert duc files to SVG strings
-- Strongly typed with TypeScript
-
-> A more realistic approach to `ducsvg` would be to use `PDF.js` from mozilla in combination with the `ducpdf` library to convert the duc to PDF and then to SVG so that we have a more modular and robust solution.
+> This library leverages the stable renderer from `ducpdf`, first converting the `duc` document to PDF format before transforming it into SVG using `pdf-into-svg`. This approach ensures high fidelity in the SVG output by utilizing the robust rendering capabilities of the PDF format.
 
 ## Documentation
 
@@ -43,3 +40,4 @@ To ensure smooth releases with semantic-release, please follow [these guidelines
 ---
 
 *The duc format and libraries are constantly evolving, aiming to set new standards in the 2D CAD industry. Be a part of this transformation and help shape the future of design technology!*
+

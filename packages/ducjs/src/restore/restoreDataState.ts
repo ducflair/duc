@@ -14,6 +14,7 @@ import {
   TEXT_ALIGN,
   VERTICAL_ALIGN,
 } from "../flatbuffers/duc";
+import { nanoid } from "nanoid";
 import { restoreElements } from "./restoreElements";
 import {
   isStandardIdPresent,
@@ -117,6 +118,7 @@ export type RestoredDataState = {
 
   standards: Standard[];
   versionGraph: VersionGraph | undefined;
+  id: string;
 };
 
 export interface ExportedLibraryData {
@@ -145,9 +147,14 @@ export type ElementsConfig = {
   passThroughElementIds?: string[];
 };
 
+export type RestoreConfig = {
+  forceScope?: Scope;
+};
+
 export const restore = (
   data: ImportedDataState | null,
-  elementsConfig: ElementsConfig
+  elementsConfig: ElementsConfig,
+  restoreConfig: RestoreConfig = {},
 ): RestoredDataState => {
   const restoredStandards = restoreStandards(data?.standards);
   const restoredDictionary = restoreDictionary(data?.dictionary);
@@ -155,7 +162,8 @@ export const restore = (
   const restoredLocalState = restoreLocalState(
     data?.localState,
     restoredGlobalState,
-    restoredStandards
+    restoredStandards,
+    restoreConfig.forceScope
   );
 
   const restoredElementsConfig = {
@@ -182,6 +190,10 @@ export const restore = (
 
   const restoredVersionGraph = restoreVersionGraph(data?.versionGraph);
 
+  // Generate a new ID if none exists or if it's empty
+  const parsedId = data?.id;
+  const restoredId = (parsedId && parsedId.trim().length > 0) ? parsedId : nanoid();
+
   return {
     dictionary: restoredDictionary,
     thumbnail: isValidUint8Array(data?.thumbnail),
@@ -197,6 +209,7 @@ export const restore = (
     localState: restoredLocalState,
     globalState: restoredGlobalState,
     files: restoreFiles(data?.files),
+    id: restoredId,
   };
 };
 
@@ -420,39 +433,40 @@ export const restoreGlobalState = (
   importedState: Partial<DucGlobalState> = {}
 ): DucGlobalState => {
   const defaults = getDefaultGlobalState();
+
   const linearPrecision = isValidFinitePositiveByteValue(
-    (importedState as any).coordDecimalPlaces,
+    importedState?.displayPrecision?.linear,
     defaults.displayPrecision.linear
   );
   return {
     ...defaults,
-    name: importedState.name ?? defaults.name,
+    name: importedState?.name ?? defaults.name,
     viewBackgroundColor:
-      importedState.viewBackgroundColor ?? defaults.viewBackgroundColor,
+      importedState?.viewBackgroundColor ?? defaults.viewBackgroundColor,
     mainScope:
-      isValidAppStateScopeValue(importedState.mainScope) ?? defaults.mainScope,
+      isValidAppStateScopeValue(importedState?.mainScope) ?? defaults.mainScope,
     scopeExponentThreshold: isValidAppStateScopeExponentThresholdValue(
-      importedState.scopeExponentThreshold,
+      importedState?.scopeExponentThreshold,
       defaults.scopeExponentThreshold
     ),
     dashSpacingScale:
-      importedState.dashSpacingScale ?? defaults.dashSpacingScale,
+      importedState?.dashSpacingScale ?? defaults.dashSpacingScale,
     isDashSpacingAffectedByViewportScale:
-      importedState.isDashSpacingAffectedByViewportScale ??
+      importedState?.isDashSpacingAffectedByViewportScale ??
       defaults.isDashSpacingAffectedByViewportScale,
     dimensionsAssociativeByDefault:
-      importedState.dimensionsAssociativeByDefault ??
+      importedState?.dimensionsAssociativeByDefault ??
       defaults.dimensionsAssociativeByDefault,
     useAnnotativeScaling:
-      importedState.useAnnotativeScaling ?? defaults.useAnnotativeScaling,
+      importedState?.useAnnotativeScaling ?? defaults.useAnnotativeScaling,
     displayPrecision: {
       linear: linearPrecision,
       angular:
-        importedState.displayPrecision?.angular ??
+        importedState?.displayPrecision?.angular ??
         defaults.displayPrecision.angular,
     },
     pruningLevel:
-      importedState.pruningLevel &&
+      importedState?.pruningLevel &&
         Object.values(PRUNING_LEVEL).includes(importedState.pruningLevel)
         ? importedState.pruningLevel
         : PRUNING_LEVEL.BALANCED,
@@ -471,55 +485,59 @@ export const restoreGlobalState = (
 export const restoreLocalState = (
   importedState: Partial<DucLocalState> = {},
   restoredGlobalState: RestoredDataState["globalState"],
-  restoredStandards: RestoredDataState["standards"]
+  restoredStandards: RestoredDataState["standards"],
+  forceScope?: Scope
 ): DucLocalState => {
   const defaults = getDefaultLocalState();
-  const zoom = getZoom(importedState.zoom?.value ?? defaults.zoom.value, restoredGlobalState.mainScope, restoredGlobalState.scopeExponentThreshold);
-  const scope = isValidPrecisionScopeValue(
-    zoom.value,
-    restoredGlobalState.mainScope,
-    restoredGlobalState.scopeExponentThreshold
-  );
+  const zoom = getZoom(importedState?.zoom?.value ?? defaults.zoom.value, restoredGlobalState.mainScope, restoredGlobalState.scopeExponentThreshold);
+  const scope = forceScope
+    ? isValidScopeValue(forceScope)
+    : isValidPrecisionScopeValue(
+      zoom.value,
+      restoredGlobalState.mainScope,
+      restoredGlobalState.scopeExponentThreshold
+    );
+
   return {
     ...defaults,
     ...importedState,
     scope,
     activeStandardId: isValidStandardId(
-      importedState.activeStandardId,
+      importedState?.activeStandardId,
       restoredStandards,
       defaults.activeStandardId
     ),
     isBindingEnabled: isValidBoolean(
-      importedState.isBindingEnabled,
+      importedState?.isBindingEnabled,
       defaults.isBindingEnabled
     ),
-    penMode: isValidBoolean(importedState.penMode, defaults.penMode),
-    scrollX: importedState.scrollX
+    penMode: isValidBoolean(importedState?.penMode, defaults.penMode),
+    scrollX: importedState?.scrollX
       ? restorePrecisionValue(importedState.scrollX, NEUTRAL_SCOPE, scope)
       : getPrecisionValueFromRaw(defaults.scrollX.value, NEUTRAL_SCOPE, scope),
-    scrollY: importedState.scrollY
+    scrollY: importedState?.scrollY
       ? restorePrecisionValue(importedState.scrollY, NEUTRAL_SCOPE, scope)
       : getPrecisionValueFromRaw(defaults.scrollY.value, NEUTRAL_SCOPE, scope),
     zoom,
     activeGridSettings:
-      importedState.activeGridSettings ?? defaults.activeGridSettings,
+      importedState?.activeGridSettings ?? defaults.activeGridSettings,
     activeSnapSettings:
-      importedState.activeSnapSettings ?? defaults.activeSnapSettings,
+      importedState?.activeSnapSettings ?? defaults.activeSnapSettings,
     currentItemStroke:
-      validateStroke(importedState.currentItemStroke, scope, scope) ??
+      validateStroke(importedState?.currentItemStroke, scope, scope) ??
       defaults.currentItemStroke,
     currentItemBackground:
-      validateBackground(importedState.currentItemBackground) ??
+      validateBackground(importedState?.currentItemBackground) ??
       defaults.currentItemBackground,
     currentItemOpacity: isValidPercentageValue(
-      importedState.currentItemOpacity,
+      importedState?.currentItemOpacity,
       defaults.currentItemOpacity
     ),
     currentItemStartLineHead:
-      isValidLineHeadValue(importedState.currentItemStartLineHead) ??
+      isValidLineHeadValue(importedState?.currentItemStartLineHead) ??
       defaults.currentItemStartLineHead,
     currentItemEndLineHead:
-      isValidLineHeadValue(importedState.currentItemEndLineHead) ??
+      isValidLineHeadValue(importedState?.currentItemEndLineHead) ??
       defaults.currentItemEndLineHead,
   };
 };

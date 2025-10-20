@@ -25,13 +25,6 @@ import { getPrecisionValueFromRaw } from "../../technical/scopes";
  */
 export function getDefaultTextStyle(currentScope: Scope): DucTextStyle {
   return {
-    roundness: DEFAULT_ELEMENT_PROPS.roundness,
-    blending: undefined,
-    strokeColor: undefined,
-    backgroundColor: undefined,
-    background: [DEFAULT_ELEMENT_PROPS.background],
-    stroke: [DEFAULT_ELEMENT_PROPS.stroke],
-    opacity: DEFAULT_ELEMENT_PROPS.opacity,
     isLtr: true,
     fontFamily: DEFAULT_FONT_FAMILY,
     bigFontFamily: "sans-serif",
@@ -123,9 +116,10 @@ export const getDefaultTableData = (currentScope: Scope): {
 
   // Base/default styling for cells
   const baseCellStyle: DucTableElement["dataRowStyle"] = {
-    ...DEFAULT_ELEMENT_PROPS,
-    background: [DEFAULT_ELEMENT_PROPS.background],
     stroke: [DEFAULT_ELEMENT_PROPS.stroke],
+    background: [DEFAULT_ELEMENT_PROPS.background],
+    roundness: DEFAULT_ELEMENT_PROPS.roundness,
+    opacity: DEFAULT_ELEMENT_PROPS.opacity,
     textStyle: {
       isLtr: true,
       fontFamily: FONT_FAMILY.Virgil,
@@ -140,10 +134,6 @@ export const getDefaultTableData = (currentScope: Scope): {
       widthFactor: 1 as ScaleFactor,
       isUpsideDown: false,
       isBackwards: false,
-      roundness: DEFAULT_ELEMENT_PROPS.roundness,
-      background: [DEFAULT_ELEMENT_PROPS.background],
-      stroke: [DEFAULT_ELEMENT_PROPS.stroke],
-      opacity: DEFAULT_ELEMENT_PROPS.opacity,
     },
     margins: {
       top: vMargin,
