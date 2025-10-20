@@ -1,26 +1,14 @@
 import { convertDucToPdf, type ConversionOptions } from "ducpdf";
-import { convertPdfToSvg } from "./pdf2svg/src/pdf-to-svg";
-import type { PdfSvgDocument, PdfToSvgOptions } from "./pdf2svg/src/types";
-
-export interface DucToSvgOptions extends ConversionOptions {
-  /** SVG conversion options */
-  svg?: PdfToSvgOptions;
-}
+import { convertPdfToSvg } from "pdf-into-svg";
 
 export const ducToSvg = async (
   ducData: Uint8Array,
-  options?: DucToSvgOptions,
-): Promise<PdfSvgDocument> => {
+  options?: ConversionOptions,
+) => {
   // Convert DUC to PDF first
   const pdfData = await convertDucToPdf(ducData, options);
 
-  // Then convert PDF to SVG
-  const svgOptions = options?.svg || {
-    disableWorker: true,
-    pdf: { fontExtraProperties: true }
-  };
-
-  const svgDocument = await convertPdfToSvg(pdfData, svgOptions);
-
-  return svgDocument;
+  // const svgDocument = await convertPdfToSvg(pdfData, svgOptions);
+  const result = await convertPdfToSvg(pdfData);
+  return result;
 };

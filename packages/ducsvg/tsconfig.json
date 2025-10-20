@@ -7,19 +7,12 @@
     "emitDeclarationOnly": true,
     "composite": false,
     "rootDir": "src",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
     "paths": {
       "ducsvg/*": ["./src/*"],
-      "ducjs/*": ["../../../packages/ducjs/src/*"],
-      "ducpdf/*": ["../../../packages/ducpdf/src/*"]
-    }
+      "ducpdf/*": ["../../packages/ducpdf/src/*"],
+      "ducjs/*": ["../../packages/ducjs/src/*"],
+    },
   },
   "include": ["src/**/*"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "pdf2svg",
-    "src/pdf2svg/vendor"
-  ]
+  "exclude": ["node_modules", "dist"]
 }

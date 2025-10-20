@@ -12,18 +12,9 @@
       "types": "./dist/index.d.ts"
     },
     "./*": {
-      "import": [
-        "./dist/*.js",
-        "./dist/*/index.js"
-      ],
-      "require": [
-        "./dist/*.js",
-        "./dist/*/index.js"
-      ],
-      "types": [
-        "./dist/*.d.ts",
-        "./dist/*/index.d.ts"
-      ]
+      "import": ["./dist/*.js", "./dist/*/index.js"],
+      "require": ["./dist/*.js", "./dist/*/index.js"],
+      "types": ["./dist/*.d.ts", "./dist/*/index.d.ts"]
     }
   },
   "sideEffects": false,
@@ -31,16 +22,14 @@
     "build": "vite build && pwd && tsc --project ./tsconfig.json",
     "check-types": "tsc --noEmit",
     "test": "bun test",
-    "semantic-release": "semantic-release",
-    "sync:pdfjs": "node ./scripts/sync-pdfjs-vendor.mjs",
-    "postinstall": "bun run sync:pdfjs"
+    "semantic-release": "semantic-release"
   },
   "author": "Ducflair",
   "license": "MIT",
   "dependencies": {
     "ducjs": "workspace:*",
     "ducpdf": "workspace:*",
-    "pdfjs-dist": "^2.16.105"
+    "pdf-into-svg": "1.0.1"
   },
   "devDependencies": {
     "@xmldom/xmldom": "^0.8.11",
