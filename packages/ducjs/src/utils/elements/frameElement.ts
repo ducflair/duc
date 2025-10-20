@@ -1,5 +1,5 @@
 import { DucElement, DucElementsIncludingDeleted, DucFrameLikeElement, ElementsMap } from "../../types/elements";
-import { isFrameLikeElement } from "../../types/elements/typeChecks";
+import { isFrameElement, isFrameLikeElement, isPlotElement } from "../../types/elements/typeChecks";
 
 export const getContainingFrame = (
   element: DucElement,
@@ -19,6 +19,25 @@ export const getFrameLikeElements = (
   return allElements.filter((element): element is DucFrameLikeElement =>
     isFrameLikeElement(element),
   );
+};
+
+export const canFrameLikeContainElement = (
+  frame: DucFrameLikeElement,
+  element: DucElement,
+) => {
+  if (frame.id === element.id) {
+    return false;
+  }
+
+  if (isPlotElement(element)) {
+    return false;
+  }
+
+  if (isFrameElement(element)) {
+    return frame.type === "plot";
+  }
+
+  return true;
 };
 
 
