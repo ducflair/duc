@@ -2,14 +2,14 @@ name: Release Rust
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
-  #     - next
-  #     - dev
-  #   paths:
-  #     - 'packages/ducrs/**'
-  #     - 'package.json'
+  push:
+    branches:
+      - main
+      - next
+      - dev
+    paths:
+      - 'packages/ducrs/**'
+      - 'package.json'
 
 permissions:
   contents: write
