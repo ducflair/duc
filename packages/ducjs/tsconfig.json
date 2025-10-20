@@ -1,14 +1,15 @@
 {
   "extends": "@duc/tsconfig/base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "outDir": "dist",
     "declaration": true,
     "declarationDir": "dist",
     "rootDir": "src",
+    "esModuleInterop": true,
+    "module": "ES2020",
     "paths": {
-      "ducjs/*": ["src/*"]
-    },
+      "ducjs/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
