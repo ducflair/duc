@@ -1,6 +1,6 @@
 {
   "name": "ducpdf",
-  "version": "0.1.0",
+  "version": "0.0.0-development",
   "description": "Library for converting between PDF and DUC formats.",
   "private": false,
   "type": "module",
@@ -24,6 +24,20 @@
     "pkg",
     "src"
   ],
+    "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ducflair/duc.git",
+    "directory": "packages/ducpdf"
+  },
+  "author": "Ducflair",
+  "license": "MIT",
+  "homepage": "https://duc.ducflair.com/",
+  "bugs": {
+    "url": "https://github.com/ducflair/duc/issues"
+  },
   "scripts": {
     "build": "bun run build:wasm && bun run copy:wasm-to-dist && bun run build:ts",
     "build:ts": "tsc -p tsconfig.json",
@@ -39,8 +53,7 @@
     "prepack": "bun run build"
   },
   "dependencies": {
-    "ducjs": "workspace:^",
-    "pdfjs-dist": "^4.4.178"
+    "ducjs": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
