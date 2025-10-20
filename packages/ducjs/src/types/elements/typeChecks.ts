@@ -15,6 +15,7 @@ import type {
   DucFreeDrawElement,
   DucImageElement,
   DucLinearElement,
+  DucPlotElement,
   DucTableElement,
   DucPointBinding,
   DucTextContainer,
@@ -78,12 +79,18 @@ export const isFrameElement = (
   return element != null && element.type === "frame";
 };
 
+export const isPlotElement = (
+  element: DucElement | null,
+): element is DucPlotElement => {
+  return element != null && element.type === "plot";
+};
+
 export const isFrameLikeElement = (
   element: DucElement | null,
 ): element is DucFrameLikeElement => {
   return (
     element != null &&
-    (element.type === "frame")
+    (element.type === "frame" || element.type === "plot")
   );
 };
 

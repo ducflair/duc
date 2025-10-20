@@ -83,8 +83,7 @@ import {
   _DucStackBase as _DucStackBaseFb,
   _DucStackElementBase as _DucStackElementBaseFb
 } from "./flatbuffers/duc";
-import { parseDucFlatBuffers as parseDucFlatBuffersV1 } from './legacy/v1/parse';
-import { RestoredDataState, restore } from "./restore";
+import { RestoreConfig, RestoredDataState, restore } from "./restore";
 import {
   AngularUnitsFormat,
   DimensionUnitsFormat,
@@ -949,7 +948,6 @@ function parseParametricElement(element: DucParametricElementFb): DucParametricE
 export function parseTextStyle(style: DucTextStyleFb): DucTextStyle {
   const lineSpacing = style.lineSpacing()!;
   return {
-    ...parseElementStylesBase(style.baseStyle()!),
     isLtr: style.isLtr(),
     fontFamily: style.fontFamily()! as any, // For now will use as any because this will be a string in the future
     bigFontFamily: style.bigFontFamily()!,
@@ -980,7 +978,6 @@ export function parseTableCellStyle(style: DucTableCellStyleFb): DucTableCellSty
 
 export function parseTableStyle(style: DucTableStyleFb): DucTableStyle {
   return {
-    ...parseElementStylesBase(style.baseStyle()!),
     flowDirection: style.flowDirection()!,
     headerRowStyle: parseTableCellStyle(style.headerRowStyle()!),
     dataRowStyle: parseTableCellStyle(style.dataRowStyle()!),
@@ -989,28 +986,23 @@ export function parseTableStyle(style: DucTableStyleFb): DucTableStyle {
 }
 
 export function parsePlotStyle(style: DucPlotStyleFb): DucPlotStyle {
-  return {
-    ...parseElementStylesBase(style.baseStyle()!),
-  };
+  return {};
 }
 
 export function parseViewportStyle(style: DucViewportStyleFb): DucViewportStyle {
   return {
-    ...parseElementStylesBase(style.baseStyle()!),
     scaleIndicatorVisible: style.scaleIndicatorVisible(),
   };
 }
 
 export function parseXRayStyle(style: DucXRayStyleFb): DucXRayStyle {
   return {
-    ...parseElementStylesBase(style.baseStyle()!),
     color: style.color()!,
   };
 }
 
 export function parseLeaderStyle(style: DucLeaderStyleFb): DucLeaderStyle {
   return {
-    ...parseElementStylesBase(style.baseStyle()!),
     headsOverride: style.headsOverrideLength() > 0 ? [parseHead(style.headsOverride(0)!), parseHead(style.headsOverride(1)!)] : undefined,
     dogleg: style.dogleg() ? toPrecisionValue(style.dogleg()) : undefined,
     textStyle: parseTextStyle(style.textStyle()!),
@@ -1063,7 +1055,6 @@ export function parseDimensionStyle(style: DucDimensionStyleFb): DucDimensionSty
 export function parseFeatureControlFrameStyle(style: DucFeatureControlFrameStyleFb): DucFeatureControlFrameStyle {
   const layout = style.layout()!;
   return {
-    ...parseElementStylesBase(style.baseStyle()!),
     textStyle: parseTextStyle(style.textStyle()!),
     layout: {
       padding: toPrecisionValue(layout.padding()),
@@ -1286,9 +1277,12 @@ export function parseDictionaryFromBinary(data: ExportedDataStateFb): Dictionary
 export function parseExternalFilesFromBinary(entry: DucExternalFileEntry): DucExternalFiles {
   const fileData = entry.value()!;
   const data = fileData.dataArray();
+  const key = entry.key()!;
+  const id = fileData.id()! as ExternalFileId;
+  
   return {
-    [entry.key()!]: {
-      id: fileData.id()! as ExternalFileId,
+    [key]: {
+      id,
       mimeType: fileData.mimeType()!,
       data,
       created: Number(fileData.created()),
@@ -1723,7 +1717,8 @@ export function parseVersionGraphFromBinary(graph: VersionGraphFb | null): Versi
 // #region ROOT PARSER
 export const parseDuc = async (
   blob: Blob | File,
-  fileHandle: FileSystemHandle | null = null
+  fileHandle: FileSystemHandle | null = null,
+  restoreConfig: RestoreConfig = {},
 ): Promise<RestoredDataState> => {
   const arrayBuffer = await blob.arrayBuffer();
   if (!arrayBuffer || (arrayBuffer as ArrayBuffer).byteLength === 0) {
@@ -1740,10 +1735,9 @@ export const parseDuc = async (
     throw new Error('Invalid DUC buffer: cannot read root table');
   }
 
-  // TODO: For now don't touch, to be removed on a late duc v2 version
   const legacyVersion = data.versionLegacy();
   if (legacyVersion) {
-    return parseDucFlatBuffersV1(blob, fileHandle) as unknown as RestoredDataState;
+    throw new Error(`Unsupported DUC version: ${legacyVersion}. Please use version ducjs@2.0.1 or lower to support this file.`);
   }
 
   const version = data.version();
@@ -1863,12 +1857,14 @@ export const parseDuc = async (
       files: parsedFiles,
 
       versionGraph: versionGraph ?? undefined,
+      id: data.id() ?? undefined,
     },
     {
       syncInvalidIndices: (elements) => elements as OrderedDucElement[],
       repairBindings: true,
       refreshDimensions: false,
     },
+    restoreConfig,
   );
 
   return {
@@ -1884,6 +1880,7 @@ export const parseDuc = async (
     layers: sanitized.layers,
     standards: sanitized.standards,
     versionGraph: sanitized.versionGraph,
+    id: sanitized.id,
   };
 };
 // #endregion

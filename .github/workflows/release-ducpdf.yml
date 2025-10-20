@@ -1,0 +1,69 @@
+name: Release ducpdf
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, next, dev]
+    paths:
+      - 'packages/ducpdf/**'
+      - 'package.json'
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release_ducpdf:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-ducpdf
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+          persist-credentials: true
+      - name: Set Git User
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+      - name: Install deps
+        run: bun install
+      - name: Build
+        run: bun ducpdf:build
+
+      - name: Prepare workspace dependencies for publish
+        run: node scripts/fix-workspace-deps.mjs packages/ducpdf/package.json
+
+      - name: Configure npm auth for publish
+        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Setup release environment
+        id: setup-release-environment
+        uses: ./.github/actions/simulate-main-environment
+        with:
+          current-branch: ${{ github.ref_name }}
+          package-name: ducpdf
+
+      - name: Release ducpdf package
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # DEBUG: "semantic-release:*" # For verbose logging
+        working-directory: ./packages/ducpdf
+        run: npx semantic-release ${{ steps.setup-release-environment.outputs.release-mode }}
+
+      - name: Release duc2pdf crate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        working-directory: ./packages/ducpdf/src/duc2pdf
+        run: npx semantic-release

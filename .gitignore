@@ -34,3 +34,5 @@ sst.pyi
 
 # flatc
 build_logs
+
+.claude

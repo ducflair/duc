@@ -34,7 +34,7 @@ jobs:
         with:
           bun-version: "latest"
       - name: Install deps
-        run: bun install --frozen-lockfile
+        run: bun install
 
       - name: Build
         run: bun ducjs:build
@@ -46,19 +46,16 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Determine release mode
-        id: release-mode
-        run: |
-          if [ "${{ github.ref_name }}" = "dev" ]; then
-            echo "mode=--dry-run" >> $GITHUB_OUTPUT
-            echo "Running in DRY-RUN mode on dev branch"
-          else
-            echo "mode=--ci" >> $GITHUB_OUTPUT
-            echo "Running in PRODUCTION mode on ${{ github.ref_name }} branch"
-          fi
+      - name: Setup release environment
+        id: setup-release-environment
+        uses: ./.github/actions/simulate-main-environment
+        with:
+          current-branch: ${{ github.ref_name }}
+          package-name: ducjs
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
         working-directory: ./packages/ducjs
-        run: npx semantic-release ${{ steps.release-mode.outputs.mode }}
+        run: npx semantic-release ${{ steps.setup-release-environment.outputs.release-mode }}

@@ -1,12 +1,32 @@
 [package]
-name = "duc2pdf_rs"
-version = "0.1.0"
+name = "duc2pdf"
+version = "0.0.0-development"
 edition = "2021"
+authors = ["Jorge Soares <jorge@ducflair.com>"]
+description = "A library to convert DUC files to PDF format."
+license = "MIT"
+repository = "https://github.com/ducflair/duc/tree/main/packages/ducpdf/src/duc2pdf"
+readme = "README.md"
+keywords = ["duc", "pdf", "cad", "converter"]
+categories = ["graphics", "file-format", "multimedia"]
 
 [lib]
+name = "duc2pdf"
+path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
+[profile.release]
+lto = true
+opt-level = "s"
+
 [dependencies]
-ducrs = { path = "../../ducrs" }
-printpdf = "0.8.2"
-wasm-bindgen = "0.2.92" 
+duc = { path = "../../../ducrs/" }
+hipdf = { version = "1.3.2", features = ["wasm_js"] }
+svg2pdf = "0.13.0"
+wasm-bindgen = "0.2.92"
+chrono = "0.4"
+bigcolor = { version = "1.2.1" }
+web-sys = { version = "0.3", features = ["console"] }
+svgtypes = "0.12"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

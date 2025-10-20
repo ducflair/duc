@@ -23,8 +23,27 @@ import pytest
 import ducpy as duc
 
 def load_asset_bytes(filename):
-    asset_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets")
-    with open(os.path.join(asset_dir, filename), "rb") as f:
+    """Load asset bytes using file extension to determine subdirectory."""
+    _, ext = os.path.splitext(filename.lower())
+    ext = ext[1:]  # Remove the dot
+
+    # Map extensions to subdirectories
+    if ext == "pdf":
+        sub_dir = "pdf-files"
+    elif ext == "svg":
+        sub_dir = "svg-files"
+    elif ext in ["png", "jpg", "jpeg", "gif"]:
+        sub_dir = "image-files"
+    elif ext == "step":
+        sub_dir = "step-files"
+    elif ext == "duc":
+        sub_dir = "duc-files"
+    else:
+        sub_dir = "image-files"  # default
+
+    asset_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "..", "assets", "testing"))
+
+    with open(os.path.join(asset_dir, sub_dir, filename), "rb") as f:
         return f.read()
 
 @pytest.fixture
