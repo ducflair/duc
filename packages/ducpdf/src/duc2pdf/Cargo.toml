@@ -21,10 +21,6 @@ name = "duc2pdf"
 path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
-[profile.release]
-lto = true
-opt-level = "s"
-
 [dependencies]
 duc = "1"
 hipdf = { version = "1.3.2", features = ["wasm_js"] }
