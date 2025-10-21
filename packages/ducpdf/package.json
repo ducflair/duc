@@ -1,6 +1,6 @@
 {
   "name": "ducpdf",
-  "version": "0.0.0-development",
+  "version": "1.1.0",
   "description": "Library for converting between PDF and DUC formats.",
   "private": false,
   "type": "module",
