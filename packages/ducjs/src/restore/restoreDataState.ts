@@ -817,8 +817,9 @@ export const isValidDucHead = (
 ): DucHead | null => {
   if (value === undefined || value === null) return null;
   const type = isValidLineHeadValue(value.type);
+  // blockId can be null - only reject if type is invalid
+  if (type === null) return null;
   const blockId = isValidBlockId(value.blockId, blocks);
-  if (type === null || blockId === null) return null;
   return {
     type,
     blockId,
