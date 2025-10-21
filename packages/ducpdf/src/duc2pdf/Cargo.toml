@@ -9,6 +9,12 @@ repository = "https://github.com/ducflair/duc/tree/main/packages/ducpdf/src/duc2
 readme = "README.md"
 keywords = ["duc", "pdf", "cad", "converter"]
 categories = ["graphics", "file-format", "multimedia"]
+include = [
+  "src/", 
+  "Cargo.toml", 
+  "README.md", 
+  "../../../../assets/fonts/RobotoMono-Variable.ttf"
+]
 
 [lib]
 name = "duc2pdf"
@@ -30,6 +36,3 @@ web-sys = { version = "0.3", features = ["console"] }
 svgtypes = "0.12"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-
-[patch.crates-io]
-duc = { path = "../../../ducrs/" }
