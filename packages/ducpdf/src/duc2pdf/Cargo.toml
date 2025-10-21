@@ -13,7 +13,7 @@ include = [
   "src/", 
   "Cargo.toml", 
   "README.md", 
-  "../../../../assets/fonts/RobotoMono-Variable.ttf"
+  "fonts/RobotoMono-Variable.ttf"
 ]
 
 [lib]

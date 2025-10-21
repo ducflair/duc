@@ -48,7 +48,7 @@ macro_rules! log_warn {
 
 const ROBOTO_MONO_FONT_BYTES: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/../../../../assets/fonts/RobotoMono-Variable.ttf"
+    "/fonts/RobotoMono-Variable.ttf"
 ));
 
 /// Resource cache for storing PDF object IDs
