@@ -8,7 +8,6 @@ license = "MIT"
 repository = "https://github.com/ducflair/duc/tree/main/packages/ducpdf/src/duc2pdf"
 readme = "README.md"
 keywords = ["duc", "pdf", "cad", "converter"]
-categories = ["graphics", "file-format", "multimedia"]
 include = [
   "src/", 
   "Cargo.toml", 
