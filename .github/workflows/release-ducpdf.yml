@@ -46,8 +46,8 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Setup release environment
-        id: setup-release-environment
+      - name: Setup release environment for ducpdf
+        id: setup-release-environment-ducpdf
         uses: ./.github/actions/simulate-main-environment
         with:
           current-branch: ${{ github.ref_name }}
@@ -59,11 +59,18 @@ jobs:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           # DEBUG: "semantic-release:*" # For verbose logging
         working-directory: ./packages/ducpdf
-        run: npx semantic-release ${{ steps.setup-release-environment.outputs.release-mode }}
+        run: npx semantic-release ${{ steps.setup-release-environment-ducpdf.outputs.release-mode }}
+
+      - name: Setup release environment for duc2pdf
+        id: setup-release-environment-duc2pdf
+        uses: ./.github/actions/simulate-main-environment
+        with:
+          current-branch: ${{ github.ref_name }}
+          package-name: duc2pdf
 
       - name: Release duc2pdf crate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         working-directory: ./packages/ducpdf/src/duc2pdf
-        run: npx semantic-release
+        run: npx semantic-release ${{ steps.setup-release-environment-duc2pdf.outputs.release-mode }}
