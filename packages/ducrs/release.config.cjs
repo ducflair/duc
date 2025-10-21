@@ -1,5 +1,3 @@
-//  Follow up on this https://github.com/rust-lang/cargo/issues/9398
-
 module.exports = {
   branches: ["main", { name: "next", prerelease: true }, { name: "dev", prerelease: true }],
   plugins: [
