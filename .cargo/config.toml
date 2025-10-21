@@ -1,0 +1,5 @@
+# Cargo workspace configuration
+# This applies patches only during local development builds
+
+[patch.crates-io]
+duc = { path = "packages/ducrs/" }
