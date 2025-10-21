@@ -2,7 +2,7 @@ module.exports = {
   branches: ["main", { name: "next", prerelease: true }, { name: "dev", prerelease: true }],
   plugins: [
     [
-      require.resolve("../../scripts/semrel-path-filter.cjs"),
+      require.resolve("../../../../scripts/semrel-path-filter.cjs"),
       {
         path: "packages/ducpdf/src/duc2pdf",
         analyzer: { preset: "conventionalcommits" },
