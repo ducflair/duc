@@ -53,6 +53,10 @@ jobs:
           current-branch: ${{ github.ref_name }}
           package-name: duc2pdf
 
+      - name: Update Cargo dependencies
+        working-directory: ./packages/ducpdf/src/duc2pdf
+        run: cargo update
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
