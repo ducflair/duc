@@ -9,6 +9,7 @@ import { Standard } from "../technical/standards";
 import {
   DucBindableElement,
   DucBlock,
+  DucBlockInstance,
   DucElement,
   DucElementType,
   DucGroup,
@@ -62,6 +63,7 @@ export interface ExportedDataState {
   globalState: DucGlobalState;
 
   blocks: readonly DucBlock[];
+  blockInstances: readonly DucBlockInstance[];
   groups: readonly DucGroup[];
   regions: readonly DucRegion[];
   layers: readonly DucLayer[];
@@ -412,8 +414,8 @@ export type LibraryItems_anyVersion = LibraryItems | LibraryItems_v1;
 
 export type LibraryItemsSource =
   | ((
-      currentLibraryItems: LibraryItems
-    ) => MaybePromise<LibraryItems_anyVersion | Blob>)
+    currentLibraryItems: LibraryItems
+  ) => MaybePromise<LibraryItems_anyVersion | Blob>)
   | MaybePromise<LibraryItems_anyVersion | Blob>;
 // -----------------------------------------------------------------------------
 

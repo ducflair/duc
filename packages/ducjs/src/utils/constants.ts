@@ -68,9 +68,9 @@ export const EXPORT_IMAGE_TYPES = {
 export const EXPORT_DATA_TYPES = {
   duc: "duc",
   json: "json",
-  excalidrawClipboard: "excalidraw/clipboard",
+  ducClipboard: "duc/clipboard",
   excalidrawLibrary: "excalidrawlib",
-  excalidrawClipboardWithAPI: "excalidraw-api/clipboard",
+  ducClipboardWithAPI: "duc-api/clipboard",
 } as const;
 
 

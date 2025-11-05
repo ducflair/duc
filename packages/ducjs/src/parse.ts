@@ -4,7 +4,7 @@ import {
   DimensionToleranceStyle as DimensionToleranceStyleFb,
   DucArrowElement as DucArrowElementFb,
   DucBlock as DucBlockFb,
-  DucBlockInstanceElement as DucBlockInstanceElementFb,
+  DucBlockInstance as DucBlockInstanceFb,
   DucCommonStyle as DucCommonStyleFb,
   DucDimensionElement as DucDimensionElementFb,
   DucDimensionStyle as DucDimensionStyleFb,
@@ -98,7 +98,7 @@ import {
   DucArrowElement,
   DucBlock,
   DucBlockAttributeDefinition,
-  DucBlockInstanceElement,
+  DucBlockInstance,
   DucCommonStyle,
   DucDimensionElement,
   DucDimensionStyle,
@@ -192,6 +192,7 @@ import {
   _DucStackElementBase
 } from "./types";
 import * as flatbuffers from "flatbuffers";
+import { nanoid } from 'nanoid';
 
 
 // #region HELPERS & LOW-LEVEL CASTS
@@ -388,6 +389,8 @@ export function parseElementBase(base: _DucElementBaseFb): _DucElementBase {
     isDeleted: base.isDeleted(),
     groupIds: Array.from({ length: base.groupIdsLength() }, (_, i) => base.groupIds(i)!),
     regionIds: Array.from({ length: base.regionIdsLength() }, (_, i) => base.regionIds(i)!),
+    blockIds: Array.from({ length: base.blockIdsLength() }, (_, i) => base.blockIds(i)!),
+    instanceId: base.instanceId(),
     layerId: base.layerId(),
     frameId: base.frameId(),
     boundElements: base.boundElementsLength() > 0 ? Array.from({ length: base.boundElementsLength() }, (_, i) => ({
@@ -686,23 +689,23 @@ function parseFreeDrawElement(element: DucFreeDrawElementFb): DucFreeDrawElement
   };
 }
 
-function parseBlockInstanceElement(element: DucBlockInstanceElementFb): DucBlockInstanceElement {
-  const duplicationArray = element.duplicationArray();
+function parseBlockInstance(instance: DucBlockInstanceFb): DucBlockInstance {
+  const duplicationArray = instance.duplicationArray();
   const attributeValues: Record<string, string> = {};
-  for (let i = 0; i < element.attributeValuesLength(); i++) {
-    const entry = element.attributeValues(i)!;
+  for (let i = 0; i < instance.attributeValuesLength(); i++) {
+    const entry = instance.attributeValues(i)!;
     attributeValues[entry.key()!] = entry.value()!;
   }
   const elementOverrides: Record<string, string> = {};
-  for (let i = 0; i < element.elementOverridesLength(); i++) {
-    const entry = element.elementOverrides(i)!;
+  for (let i = 0; i < instance.elementOverridesLength(); i++) {
+    const entry = instance.elementOverrides(i)!;
     elementOverrides[entry.key()!] = entry.value()!;
   }
 
   return {
-    type: "blockinstance",
-    ...parseElementBase(element.base()!),
-    blockId: element.blockId()!,
+    id: instance.id()!,
+    blockId: instance.blockId()!,
+    version: instance.version(),
     attributeValues: attributeValues,
     elementOverrides: elementOverrides,
     duplicationArray: duplicationArray ? {
@@ -1149,9 +1152,6 @@ export function parseElementFromBinary(wrapper: ElementWrapper): DucElement | nu
     case ElementUnion.DucFreeDrawElement:
       element = wrapper.element(new DucFreeDrawElementFb());
       break;
-    case ElementUnion.DucBlockInstanceElement:
-      element = wrapper.element(new DucBlockInstanceElementFb());
-      break;
     case ElementUnion.DucFrameElement:
       element = wrapper.element(new DucFrameElementFb());
       break;
@@ -1213,8 +1213,6 @@ export function parseElementFromBinary(wrapper: ElementWrapper): DucElement | nu
       return parseArrowElement(element as DucArrowElementFb);
     case ElementUnion.DucFreeDrawElement:
       return parseFreeDrawElement(element as DucFreeDrawElementFb);
-    case ElementUnion.DucBlockInstanceElement:
-      return parseBlockInstanceElement(element as DucBlockInstanceElementFb);
     case ElementUnion.DucFrameElement:
       return parseFrameElement(element as DucFrameElementFb);
     case ElementUnion.DucPlotElement:
@@ -1259,8 +1257,6 @@ export function parseBlockFromBinary(block: DucBlockFb): DucBlock {
     label: block.label()!,
     description: block.description() || undefined,
     version: block.version(),
-    // Filter out any nulls that may arise from malformed entries
-    elements: Array.from({ length: block.elementsLength() }, (_, i) => parseElementFromBinary(block.elements(i)!)).filter(Boolean) as DucElement[],
     attributeDefinitions,
   };
 }
@@ -1279,7 +1275,7 @@ export function parseExternalFilesFromBinary(entry: DucExternalFileEntry): DucEx
   const data = fileData.dataArray();
   const key = entry.key()!;
   const id = fileData.id()! as ExternalFileId;
-  
+
   return {
     [key]: {
       id,
@@ -1783,6 +1779,18 @@ export const parseDuc = async (
     }
   }
 
+  // Parse block instances
+  const blockInstances: DucBlockInstance[] = [];
+  for (let i = 0; i < data.blockInstancesLength(); i++) {
+    const blockInstance = data.blockInstances(i);
+    if (blockInstance) {
+      const parsedBlockInstance = parseBlockInstance(blockInstance);
+      if (parsedBlockInstance) {
+        blockInstances.push(parsedBlockInstance);
+      }
+    }
+  }
+
   // Parse groups
   const groups: DucGroup[] = [];
   for (let i = 0; i < data.groupsLength(); i++) {
@@ -1841,24 +1849,27 @@ export const parseDuc = async (
     }
   }
 
+  const exportData: RestoredDataState = {
+    thumbnail,
+    dictionary,
+    elements: elements as OrderedDucElement[],
+    localState: parsedLocalState!,
+    globalState: parsedGlobalState!,
+    blocks,
+    blockInstances,
+    groups,
+    regions,
+    layers,
+
+    standards,
+    files: parsedFiles,
+
+    versionGraph: versionGraph ?? undefined,
+    id: data.id() ?? nanoid(),
+  };
+
   const sanitized = restore(
-    {
-      thumbnail,
-      dictionary,
-      elements: elements as DucElement[],
-      localState: parsedLocalState!,
-      globalState: parsedGlobalState!,
-      blocks,
-      groups,
-      regions,
-      layers,
-
-      standards,
-      files: parsedFiles,
-
-      versionGraph: versionGraph ?? undefined,
-      id: data.id() ?? undefined,
-    },
+    exportData,
     {
       syncInvalidIndices: (elements) => elements as OrderedDucElement[],
       repairBindings: true,
@@ -1875,6 +1886,7 @@ export const parseDuc = async (
     globalState: sanitized.globalState,
     files: sanitized.files,
     blocks: sanitized.blocks,
+    blockInstances: sanitized.blockInstances,
     groups: sanitized.groups,
     regions: sanitized.regions,
     layers: sanitized.layers,
