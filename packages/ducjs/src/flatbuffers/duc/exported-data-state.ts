@@ -6,6 +6,7 @@ import * as flatbuffers from 'flatbuffers';
 
 import { DictionaryEntry } from '../duc/dictionary-entry';
 import { DucBlock } from '../duc/duc-block';
+import { DucBlockInstance } from '../duc/duc-block-instance';
 import { DucExternalFileEntry } from '../duc/duc-external-file-entry';
 import { DucGlobalState } from '../duc/duc-global-state';
 import { DucGroup } from '../duc/duc-group';
@@ -182,8 +183,18 @@ id(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
+blockInstances(index: number, obj?:DucBlockInstance):DucBlockInstance|null {
+  const offset = this.bb!.__offset(this.bb_pos, 38);
+  return offset ? (obj || new DucBlockInstance()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+blockInstancesLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 38);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
 static startExportedDataState(builder:flatbuffers.Builder) {
-  builder.startObject(17);
+  builder.startObject(18);
 }
 
 static addType(builder:flatbuffers.Builder, typeOffset:flatbuffers.Offset) {
@@ -360,6 +371,22 @@ static addVersionGraph(builder:flatbuffers.Builder, versionGraphOffset:flatbuffe
 
 static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
   builder.addFieldOffset(16, idOffset, 0);
+}
+
+static addBlockInstances(builder:flatbuffers.Builder, blockInstancesOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(17, blockInstancesOffset, 0);
+}
+
+static createBlockInstancesVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startBlockInstancesVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
 }
 
 static endExportedDataState(builder:flatbuffers.Builder):flatbuffers.Offset {
