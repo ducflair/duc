@@ -34,7 +34,6 @@ pub enum ElementType {
     Doc,
     Parametric,
     Embeddable,
-    BlockInstance,
     Pdf,
     Mermaid,
 }
@@ -61,7 +60,6 @@ impl ElementType {
             ElementType::Doc => "doc",
             ElementType::Parametric => "parametric",
             ElementType::Embeddable => "embeddable",
-            ElementType::BlockInstance => "blockinstance",
             ElementType::Pdf => "pdf",
             ElementType::Mermaid => "mermaid",
         }
@@ -89,7 +87,6 @@ pub enum DucElementVariant {
     FeatureControlFrame(DucFeatureControlFrameElement),
     Doc(DucDocElement),
     Parametric(DucParametricElement),
-    BlockInstance(DucBlockInstanceElement),
     Embeddable(DucEmbeddableElement),
     Pdf(DucPdfElement),
     Mermaid(DucMermaidElement),
@@ -116,7 +113,6 @@ impl DucElementVariant {
             DucElementVariant::FeatureControlFrame(elem) => &elem.base,
             DucElementVariant::Doc(elem) => &elem.base,
             DucElementVariant::Parametric(elem) => &elem.base,
-            DucElementVariant::BlockInstance(elem) => &elem.base,
             DucElementVariant::Embeddable(elem) => &elem.base,
             DucElementVariant::Pdf(elem) => &elem.base,
             DucElementVariant::Mermaid(elem) => &elem.base,
@@ -306,7 +302,9 @@ pub struct DucElementBase {
     pub is_annotative: bool,
     pub is_deleted: bool,
     pub group_ids: Vec<String>,
+    pub block_ids: Vec<String>,
     pub region_ids: Vec<String>,
+    pub instance_id: Option<String>,
     pub layer_id: Option<String>,
     pub frame_id: Option<String>,
     pub bound_elements: Option<Vec<BoundElement>>,
@@ -771,15 +769,6 @@ pub struct DucFreeDrawElement {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct DucBlockInstanceElement {
-    pub base: DucElementBase,
-    pub block_id: String,
-    pub element_overrides: Option<Vec<StringValueEntry>>,
-    pub attribute_values: Option<Vec<StringValueEntry>>,
-    pub duplication_array: Option<DucBlockDuplicationArray>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
 pub struct DucFrameElement {
     pub stack_element_base: DucStackElementBase,
 }
@@ -1006,7 +995,6 @@ pub enum DucElementEnum {
     DucLinearElement(DucLinearElement),
     DucArrowElement(DucArrowElement),
     DucFreeDrawElement(DucFreeDrawElement),
-    DucBlockInstanceElement(DucBlockInstanceElement),
     DucFrameElement(DucFrameElement),
     DucPlotElement(DucPlotElement),
     DucViewportElement(DucViewportElement),
@@ -1052,8 +1040,17 @@ pub struct DucBlock {
     pub label: String,
     pub description: Option<String>,
     pub version: i32,
-    pub elements: Vec<ElementWrapper>,
     pub attribute_definitions: Vec<DucBlockAttributeDefinitionEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucBlockInstance {
+    pub id: String,
+    pub block_id: String,
+    pub version: i32,
+    pub element_overrides: Option<Vec<StringValueEntry>>,
+    pub attribute_values: Option<Vec<StringValueEntry>>,
+    pub duplication_array: Option<DucBlockDuplicationArray>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1567,6 +1564,7 @@ pub struct ExportedDataState {
     pub dictionary: Option<Vec<DictionaryEntry>>,
     pub elements: Vec<ElementWrapper>,
     pub blocks: Vec<DucBlock>,
+    pub block_instances: Vec<DucBlockInstance>,
     pub groups: Vec<DucGroup>,
     pub regions: Vec<DucRegion>,
     pub layers: Vec<DucLayer>,

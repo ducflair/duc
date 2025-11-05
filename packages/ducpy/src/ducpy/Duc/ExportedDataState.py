@@ -323,8 +323,33 @@ class ExportedDataState(object):
             return self._tab.String(o + self._tab.Pos)
         return None
 
+    # ExportedDataState
+    def BlockInstances(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(38))
+        if o != 0:
+            x = self._tab.Vector(o)
+            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
+            x = self._tab.Indirect(x)
+            from Duc.DucBlockInstance import DucBlockInstance
+            obj = DucBlockInstance()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # ExportedDataState
+    def BlockInstancesLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(38))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # ExportedDataState
+    def BlockInstancesIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(38))
+        return o == 0
+
 def ExportedDataStateStart(builder):
-    builder.StartObject(17)
+    builder.StartObject(18)
 
 def Start(builder):
     ExportedDataStateStart(builder)
@@ -484,6 +509,18 @@ def ExportedDataStateAddId(builder, id):
 
 def AddId(builder, id):
     ExportedDataStateAddId(builder, id)
+
+def ExportedDataStateAddBlockInstances(builder, blockInstances):
+    builder.PrependUOffsetTRelativeSlot(17, flatbuffers.number_types.UOffsetTFlags.py_type(blockInstances), 0)
+
+def AddBlockInstances(builder, blockInstances):
+    ExportedDataStateAddBlockInstances(builder, blockInstances)
+
+def ExportedDataStateStartBlockInstancesVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartBlockInstancesVector(builder, numElems):
+    return ExportedDataStateStartBlockInstancesVector(builder, numElems)
 
 def ExportedDataStateEnd(builder):
     return builder.EndObject()

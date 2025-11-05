@@ -4,11 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { DucBlockDuplicationArray } from '../duc/duc-block-duplication-array';
-import { StringValueEntry } from '../duc/string-value-entry';
-import { _DucElementBase } from '../duc/duc-element-base';
-
-
 export class DucBlockInstanceElement {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -27,89 +22,8 @@ static getSizePrefixedRootAsDucBlockInstanceElement(bb:flatbuffers.ByteBuffer, o
   return (obj || new DucBlockInstanceElement()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-base(obj?:_DucElementBase):_DucElementBase|null {
-  const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new _DucElementBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
-blockId():string|null
-blockId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-blockId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
-elementOverrides(index: number, obj?:StringValueEntry):StringValueEntry|null {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? (obj || new StringValueEntry()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
-}
-
-elementOverridesLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-}
-
-attributeValues(index: number, obj?:StringValueEntry):StringValueEntry|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
-  return offset ? (obj || new StringValueEntry()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
-}
-
-attributeValuesLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
-  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-}
-
-duplicationArray(obj?:DucBlockDuplicationArray):DucBlockDuplicationArray|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? (obj || new DucBlockDuplicationArray()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
-}
-
 static startDucBlockInstanceElement(builder:flatbuffers.Builder) {
   builder.startObject(5);
-}
-
-static addBase(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(0, baseOffset, 0);
-}
-
-static addBlockId(builder:flatbuffers.Builder, blockIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, blockIdOffset, 0);
-}
-
-static addElementOverrides(builder:flatbuffers.Builder, elementOverridesOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, elementOverridesOffset, 0);
-}
-
-static createElementOverridesVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
-  for (let i = data.length - 1; i >= 0; i--) {
-    builder.addOffset(data[i]!);
-  }
-  return builder.endVector();
-}
-
-static startElementOverridesVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(4, numElems, 4);
-}
-
-static addAttributeValues(builder:flatbuffers.Builder, attributeValuesOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, attributeValuesOffset, 0);
-}
-
-static createAttributeValuesVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
-  for (let i = data.length - 1; i >= 0; i--) {
-    builder.addOffset(data[i]!);
-  }
-  return builder.endVector();
-}
-
-static startAttributeValuesVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(4, numElems, 4);
-}
-
-static addDuplicationArray(builder:flatbuffers.Builder, duplicationArrayOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, duplicationArrayOffset, 0);
 }
 
 static endDucBlockInstanceElement(builder:flatbuffers.Builder):flatbuffers.Offset {

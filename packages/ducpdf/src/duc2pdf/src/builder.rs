@@ -290,7 +290,6 @@ impl DucToPdfBuilder {
             DucElementEnum::DucLinearElement(elem) => &elem.linear_base.base,
             DucElementEnum::DucArrowElement(elem) => &elem.linear_base.base,
             DucElementEnum::DucFreeDrawElement(elem) => &elem.base,
-            DucElementEnum::DucBlockInstanceElement(elem) => &elem.base,
             DucElementEnum::DucFrameElement(elem) => &elem.stack_element_base.base,
             DucElementEnum::DucPlotElement(elem) => &elem.stack_element_base.base,
             DucElementEnum::DucViewportElement(elem) => &elem.linear_base.base,
