@@ -9,6 +9,10 @@
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
+    "ducdxf#build": {
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
     "ducrs#build": {
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
