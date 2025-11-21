@@ -1,10 +1,11 @@
 export * from "./elements";
 export * from "./geometryTypes";
 export * from "./utility-types";
+export * from "./typeChecks";
 
-import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "ducjs/flatbuffers/duc";
-import { SupportedMeasures } from "ducjs/technical/scopes";
-import { Standard } from "ducjs/technical/standards";
+import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "../flatbuffers/duc";
+import { SupportedMeasures } from "../technical/scopes";
+import { Standard } from "../technical/standards";
 import {
   DucBindableElement,
   DucBlock,
@@ -24,14 +25,14 @@ import {
   LineHead,
   NonDeleted,
   TextAlign,
-} from "ducjs/types/elements";
+} from "./elements";
 import {
   GeometricPoint,
   Percentage,
   Radian,
   ScaleFactor,
-} from "ducjs/types/geometryTypes";
-import { MakeBrand, MaybePromise, ValueOf } from "ducjs/types/utility-types";
+} from "./geometryTypes";
+import { MakeBrand, MaybePromise, ValueOf } from "./utility-types";
 import type {
   GRID_DISPLAY_TYPE,
   GRID_TYPE,
@@ -40,7 +41,7 @@ import type {
   SNAP_MARKER_SHAPE,
   SNAP_MODE,
   SNAP_OVERRIDE_BEHAVIOR,
-} from "ducjs/utils/constants";
+} from "../utils/constants";
 
 /**
  * Root data structure for the stored data state
@@ -70,6 +71,9 @@ export interface ExportedDataState {
 
   /** In case it is needed to embed the version control into the file format */
   versionGraph: VersionGraph | undefined;
+
+  /** Actual file id */
+  id: string | undefined;
 }
 
 export type ExportedDataStateContent = Omit<ExportedDataState, "type" | "version" | "source">;
@@ -177,6 +181,7 @@ export type ToolType =
   | "eraser"
   | "hand"
   | "frame"
+  | "plot"
   | "embeddable"
   | "ruler"
   | "lasso"
@@ -249,6 +254,9 @@ export type DucGlobalState = {
     linear: number;
     angular: number;
   };
+
+  /** The level of pruning to the versions from the version graph. */
+  pruningLevel: PruningLevel;
 };
 
 export type DucLocalState = {
@@ -313,6 +321,8 @@ export type DucLocalState = {
    * Wether to disable the fill on all shapes
    */
   outlineModeEnabled: boolean;
+  /** When enabled, the version graph is not updated automatically. The user needs to manually update the graph for new versions to be saved in version control. */
+  manualSaveMode: boolean;
 };
 
 export type NormalizedZoomValue = number & { _brand: "normalizedZoom" };
@@ -746,7 +756,6 @@ export interface VersionGraph {
   checkpoints: Checkpoint[];
   deltas: Delta[];
   metadata: {
-    pruningLevel: PruningLevel;
     lastPruned: number;
     totalSize: number;
   };

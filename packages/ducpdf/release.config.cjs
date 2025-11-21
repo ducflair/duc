@@ -1,16 +1,22 @@
 module.exports = {
-  branches: ["main", { name: "next", prerelease: true }],
+  branches: ["main", { name: "next", prerelease: true }, { name: "dev", prerelease: true }],
   plugins: [
-    "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
     [
-      "@semantic-release/npm",
+      require.resolve("../../scripts/semrel-path-filter.cjs"),
       {
-        pkgRoot: ".",
-        tarballDir: "dist"
+        path: "packages/ducpdf",
+        analyzer: { preset: "conventionalcommits" },
+        notes: { preset: "conventionalcommits" },
+      },
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        prepareCmd: "node ../../scripts/semrel-set-version.js packages/ducsvg ${nextRelease.version}",
+        publishCmd: "bun publish"
       }
     ],
     "@semantic-release/github",
   ],
-  tagFormat: "ducpdf@${version}"
+  tagFormat: "ducpdf@${version}",
 };

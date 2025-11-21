@@ -1,5 +1,14 @@
 use crate::generated::duc::{
-    ANGULAR_UNITS_FORMAT, AXIS, BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION, COLUMN_TYPE, DATUM_BRACKET_STYLE, DECIMAL_SEPARATOR, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, DIMENSION_UNITS_FORMAT, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, GRID_DISPLAY_TYPE, GRID_TYPE, HATCH_STYLE, IMAGE_STATUS, LEADER_CONTENT_TYPE, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, OBJECT_SNAP_MODE, PARAMETRIC_SOURCE_TYPE, PRUNING_LEVEL, SNAP_MARKER_SHAPE, SNAP_MODE, SNAP_OVERRIDE_BEHAVIOR, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FIELD_SOURCE_PROPERTY, TEXT_FIELD_SOURCE_TYPE, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_ZONE_TYPE, UNIT_SYSTEM, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT
+    ANGULAR_UNITS_FORMAT, AXIS, BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION,
+    COLUMN_TYPE, DATUM_BRACKET_STYLE, DECIMAL_SEPARATOR, DIMENSION_FIT_RULE,
+    DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, DIMENSION_UNITS_FORMAT, ELEMENT_CONTENT_PREFERENCE,
+    FEATURE_MODIFIER, GDT_SYMBOL, GRID_DISPLAY_TYPE, GRID_TYPE, HATCH_STYLE, IMAGE_STATUS,
+    LEADER_CONTENT_TYPE, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION,
+    OBJECT_SNAP_MODE, PARAMETRIC_SOURCE_TYPE, PRUNING_LEVEL, SNAP_MARKER_SHAPE, SNAP_MODE,
+    SNAP_OVERRIDE_BEHAVIOR, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT,
+    STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION,
+    TEXT_ALIGN, TEXT_FIELD_SOURCE_PROPERTY, TEXT_FIELD_SOURCE_TYPE, TEXT_FLOW_DIRECTION,
+    TOLERANCE_DISPLAY, TOLERANCE_ZONE_TYPE, UNIT_SYSTEM, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT,
 };
 
 // =============== ENUMS (Custom for Rust convenience) ===============
@@ -27,7 +36,7 @@ pub enum ElementType {
     Embeddable,
     BlockInstance,
     Pdf,
-    Mermaid
+    Mermaid,
 }
 
 impl ElementType {
@@ -173,7 +182,6 @@ pub struct Margins {
     pub left: f64,
 }
 
-
 // =============== STYLING & CONTENT ===============
 
 #[derive(Debug, Clone, PartialEq)]
@@ -267,7 +275,6 @@ pub struct DucElementStylesBase {
     pub stroke: Vec<ElementStroke>,
     pub opacity: f64,
 }
-
 
 // =============== BASE ELEMENT & COMMON ELEMENT COMPONENTS ===============
 
@@ -388,7 +395,6 @@ pub struct DucStackElementBase {
     pub standard_override: Option<String>,
 }
 
-
 // =============== ELEMENT-SPECIFIC STYLES ===============
 
 #[derive(Debug, Clone, PartialEq)]
@@ -399,7 +405,6 @@ pub struct LineSpacing {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucTextStyle {
-    pub base_style: DucElementStylesBase,
     pub is_ltr: bool,
     pub font_family: String,
     pub big_font_family: String,
@@ -425,7 +430,6 @@ pub struct DucTableCellStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucTableStyle {
-    pub base_style: DucElementStylesBase,
     pub flow_direction: TABLE_FLOW_DIRECTION,
     pub header_row_style: DucTableCellStyle,
     pub data_row_style: DucTableCellStyle,
@@ -434,7 +438,6 @@ pub struct DucTableStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucLeaderStyle {
-    pub base_style: DucElementStylesBase,
     pub heads_override: Option<Vec<DucHead>>,
     pub dogleg: Option<f64>,
     pub text_style: DucTextStyle,
@@ -508,7 +511,6 @@ pub struct FCFDatumStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucFeatureControlFrameStyle {
-    pub base_style: DucElementStylesBase,
     pub text_style: DucTextStyle,
     pub layout: FCFLayoutStyle,
     pub symbols: FCFSymbolStyle,
@@ -549,21 +551,16 @@ pub struct DucDocStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucViewportStyle {
-    pub base_style: DucElementStylesBase,
     pub scale_indicator_visible: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct DucPlotStyle {
-    pub base_style: DucElementStylesBase,
-}
+pub struct DucPlotStyle {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucXRayStyle {
-    pub base_style: DucElementStylesBase,
     pub color: String,
 }
-
 
 // =============== ELEMENT DEFINITIONS ===============
 
@@ -772,7 +769,6 @@ pub struct DucFreeDrawElement {
     pub last_committed_point: Option<DucPoint>,
     pub svg_path: Option<String>,
 }
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucBlockInstanceElement {
@@ -994,7 +990,6 @@ pub struct DucParametricElement {
     pub source: ParametricSource,
 }
 
-
 // =============== ELEMENT UNION & WRAPPER ===============
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1027,7 +1022,6 @@ pub enum DucElementEnum {
 pub struct ElementWrapper {
     pub element: DucElementEnum,
 }
-
 
 // =============== BLOCK DEFINITIONS ===============
 #[derive(Debug, Clone, PartialEq)]
@@ -1076,7 +1070,6 @@ pub struct DucBlockAttributeDetails {
     pub position: GeometricPoint,
 }
 
-
 // =============== APP & DOCUMENT STATE ===============
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1091,6 +1084,7 @@ pub struct DucGlobalState {
     pub use_annotative_scaling: bool,
     pub display_precision_linear: i32,
     pub display_precision_angular: i32,
+    pub pruning_level: PRUNING_LEVEL,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1103,8 +1097,8 @@ pub struct DucLocalState {
     pub active_grid_settings: Option<Vec<String>>,
     pub active_snap_settings: Option<String>,
     pub is_binding_enabled: bool,
-    pub current_item_stroke: ElementStroke,
-    pub current_item_background: ElementBackground,
+    pub current_item_stroke: Option<ElementStroke>,
+    pub current_item_background: Option<ElementBackground>,
     pub current_item_opacity: f32,
     pub current_item_font_family: String,
     pub current_item_font_size: f64,
@@ -1117,6 +1111,7 @@ pub struct DucLocalState {
     pub objects_snap_mode_enabled: bool,
     pub grid_mode_enabled: bool,
     pub outline_mode_enabled: bool,
+    pub manual_save_mode: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1145,7 +1140,6 @@ pub struct DucLayer {
     pub readonly: bool,
     pub overrides: Option<DucLayerOverrides>,
 }
-
 
 // =============== STANDARDS & SETTINGS ===============
 
@@ -1496,7 +1490,6 @@ pub struct Standard {
     pub validation: Option<StandardValidation>,
 }
 
-
 // =============== VERSION CONTROL ===============
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1532,7 +1525,6 @@ pub struct Delta {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VersionGraphMetadata {
-    pub pruning_level: PRUNING_LEVEL,
     pub last_pruned: i64,
     pub total_size: i64,
 }
@@ -1545,7 +1537,6 @@ pub struct VersionGraph {
     pub deltas: Vec<Delta>,
     pub metadata: VersionGraphMetadata,
 }
-
 
 // =============== EXTERNAL FILES ===============
 
@@ -1580,8 +1571,9 @@ pub struct ExportedDataState {
     pub regions: Vec<DucRegion>,
     pub layers: Vec<DucLayer>,
     pub standards: Vec<Standard>,
-    pub duc_local_state: DucLocalState,
-    pub duc_global_state: DucGlobalState,
+    pub duc_local_state: Option<DucLocalState>,
+    pub duc_global_state: Option<DucGlobalState>,
     pub external_files: Option<Vec<DucExternalFileEntry>>,
     pub version_graph: Option<VersionGraph>,
+    pub id: Option<String>,
 }

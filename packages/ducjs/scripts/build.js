@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
-const { spawn } = require('child_process');
+import fs from 'fs';
+import path from 'path';
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function getSchemaVersionFromFbs(fbsFilePath) {
   try {
@@ -27,6 +31,22 @@ function main() {
   
   console.log(`Building with DUC_SCHEMA_VERSION: ${version}`);
   
+  // Clean previous build artifacts
+  const distDir = path.join(manifestDir, '..', 'dist');
+  const tsbuildinfo = path.join(manifestDir, '..', 'tsconfig.tsbuildinfo');
+  
+  try {
+    fs.rmSync(distDir, { recursive: true, force: true });
+  } catch (error) {
+    console.log('No dist directory to clean or error:', error.message);
+  }
+  
+  try {
+    fs.unlinkSync(tsbuildinfo);
+  } catch (error) {
+    console.log('No tsconfig.tsbuildinfo to remove or error:', error.message);
+  }
+  
   // Set environment variable and run TypeScript compiler
   const env = { ...process.env, DUC_SCHEMA_VERSION: version };
   
@@ -45,6 +65,4 @@ function main() {
   });
 }
 
-if (require.main === module) {
-  main();
-}
+main();

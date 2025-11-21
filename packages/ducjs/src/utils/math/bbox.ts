@@ -1,6 +1,6 @@
-import { Bounds, LineSegment } from "ducjs/types/geometryTypes";
-import { ScopedValue } from "ducjs/types";
-import { GeometricPoint } from "ducjs/types/geometryTypes";
+import { Bounds, LineSegment } from "../../types/geometryTypes";
+import { ScopedValue } from "../../types";
+import { GeometricPoint } from "../../types/geometryTypes";
 
 
 export function getBBox(line: LineSegment): Bounds {

@@ -10569,7 +10569,6 @@ impl<'a> flatbuffers::Follow<'a> for DucTextStyle<'a> {
 }
 
 impl<'a> DucTextStyle<'a> {
-  pub const VT_BASE_STYLE: flatbuffers::VOffsetT = 4;
   pub const VT_IS_LTR: flatbuffers::VOffsetT = 6;
   pub const VT_FONT_FAMILY: flatbuffers::VOffsetT = 8;
   pub const VT_BIG_FONT_FAMILY: flatbuffers::VOffsetT = 10;
@@ -10602,7 +10601,6 @@ impl<'a> DucTextStyle<'a> {
     builder.add_line_height(args.line_height);
     if let Some(x) = args.big_font_family { builder.add_big_font_family(x); }
     if let Some(x) = args.font_family { builder.add_font_family(x); }
-    if let Some(x) = args.base_style { builder.add_base_style(x); }
     builder.add_is_backwards(args.is_backwards);
     builder.add_is_upside_down(args.is_upside_down);
     if let Some(x) = args.vertical_align { builder.add_vertical_align(x); }
@@ -10612,13 +10610,6 @@ impl<'a> DucTextStyle<'a> {
   }
 
 
-  #[inline]
-  pub fn base_style(&self) -> Option<_DucElementStylesBase<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>(DucTextStyle::VT_BASE_STYLE, None)}
-  }
   #[inline]
   pub fn is_ltr(&self) -> bool {
     // Safety:
@@ -10719,7 +10710,6 @@ impl flatbuffers::Verifiable for DucTextStyle<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>("base_style", Self::VT_BASE_STYLE, false)?
      .visit_field::<bool>("is_ltr", Self::VT_IS_LTR, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("font_family", Self::VT_FONT_FAMILY, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("big_font_family", Self::VT_BIG_FONT_FAMILY, false)?
@@ -10738,7 +10728,6 @@ impl flatbuffers::Verifiable for DucTextStyle<'_> {
   }
 }
 pub struct DucTextStyleArgs<'a> {
-    pub base_style: Option<flatbuffers::WIPOffset<_DucElementStylesBase<'a>>>,
     pub is_ltr: bool,
     pub font_family: Option<flatbuffers::WIPOffset<&'a str>>,
     pub big_font_family: Option<flatbuffers::WIPOffset<&'a str>>,
@@ -10757,7 +10746,6 @@ impl<'a> Default for DucTextStyleArgs<'a> {
   #[inline]
   fn default() -> Self {
     DucTextStyleArgs {
-      base_style: None,
       is_ltr: false,
       font_family: None,
       big_font_family: None,
@@ -10780,10 +10768,6 @@ pub struct DucTextStyleBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTextStyleBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_base_style(&mut self, base_style: flatbuffers::WIPOffset<_DucElementStylesBase<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucElementStylesBase>>(DucTextStyle::VT_BASE_STYLE, base_style);
-  }
   #[inline]
   pub fn add_is_ltr(&mut self, is_ltr: bool) {
     self.fbb_.push_slot::<bool>(DucTextStyle::VT_IS_LTR, is_ltr, false);
@@ -10854,7 +10838,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTextStyleBuilder<'a, 'b, A> 
 impl core::fmt::Debug for DucTextStyle<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("DucTextStyle");
-      ds.field("base_style", &self.base_style());
       ds.field("is_ltr", &self.is_ltr());
       ds.field("font_family", &self.font_family());
       ds.field("big_font_family", &self.big_font_family());
@@ -11035,7 +11018,6 @@ impl<'a> flatbuffers::Follow<'a> for DucTableStyle<'a> {
 }
 
 impl<'a> DucTableStyle<'a> {
-  pub const VT_BASE_STYLE: flatbuffers::VOffsetT = 4;
   pub const VT_FLOW_DIRECTION: flatbuffers::VOffsetT = 6;
   pub const VT_HEADER_ROW_STYLE: flatbuffers::VOffsetT = 8;
   pub const VT_DATA_ROW_STYLE: flatbuffers::VOffsetT = 10;
@@ -11054,19 +11036,11 @@ impl<'a> DucTableStyle<'a> {
     if let Some(x) = args.data_column_style { builder.add_data_column_style(x); }
     if let Some(x) = args.data_row_style { builder.add_data_row_style(x); }
     if let Some(x) = args.header_row_style { builder.add_header_row_style(x); }
-    if let Some(x) = args.base_style { builder.add_base_style(x); }
     if let Some(x) = args.flow_direction { builder.add_flow_direction(x); }
     builder.finish()
   }
 
 
-  #[inline]
-  pub fn base_style(&self) -> Option<_DucElementStylesBase<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>(DucTableStyle::VT_BASE_STYLE, None)}
-  }
   #[inline]
   pub fn flow_direction(&self) -> Option<TABLE_FLOW_DIRECTION> {
     // Safety:
@@ -11104,7 +11078,6 @@ impl flatbuffers::Verifiable for DucTableStyle<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>("base_style", Self::VT_BASE_STYLE, false)?
      .visit_field::<TABLE_FLOW_DIRECTION>("flow_direction", Self::VT_FLOW_DIRECTION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucTableCellStyle>>("header_row_style", Self::VT_HEADER_ROW_STYLE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucTableCellStyle>>("data_row_style", Self::VT_DATA_ROW_STYLE, false)?
@@ -11114,7 +11087,6 @@ impl flatbuffers::Verifiable for DucTableStyle<'_> {
   }
 }
 pub struct DucTableStyleArgs<'a> {
-    pub base_style: Option<flatbuffers::WIPOffset<_DucElementStylesBase<'a>>>,
     pub flow_direction: Option<TABLE_FLOW_DIRECTION>,
     pub header_row_style: Option<flatbuffers::WIPOffset<DucTableCellStyle<'a>>>,
     pub data_row_style: Option<flatbuffers::WIPOffset<DucTableCellStyle<'a>>>,
@@ -11124,7 +11096,6 @@ impl<'a> Default for DucTableStyleArgs<'a> {
   #[inline]
   fn default() -> Self {
     DucTableStyleArgs {
-      base_style: None,
       flow_direction: None,
       header_row_style: None,
       data_row_style: None,
@@ -11138,10 +11109,6 @@ pub struct DucTableStyleBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTableStyleBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_base_style(&mut self, base_style: flatbuffers::WIPOffset<_DucElementStylesBase<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucElementStylesBase>>(DucTableStyle::VT_BASE_STYLE, base_style);
-  }
   #[inline]
   pub fn add_flow_direction(&mut self, flow_direction: TABLE_FLOW_DIRECTION) {
     self.fbb_.push_slot_always::<TABLE_FLOW_DIRECTION>(DucTableStyle::VT_FLOW_DIRECTION, flow_direction);
@@ -11176,7 +11143,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucTableStyleBuilder<'a, 'b, A>
 impl core::fmt::Debug for DucTableStyle<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("DucTableStyle");
-      ds.field("base_style", &self.base_style());
       ds.field("flow_direction", &self.flow_direction());
       ds.field("header_row_style", &self.header_row_style());
       ds.field("data_row_style", &self.data_row_style());
@@ -11200,7 +11166,6 @@ impl<'a> flatbuffers::Follow<'a> for DucLeaderStyle<'a> {
 }
 
 impl<'a> DucLeaderStyle<'a> {
-  pub const VT_BASE_STYLE: flatbuffers::VOffsetT = 4;
   pub const VT_HEADS_OVERRIDE: flatbuffers::VOffsetT = 6;
   pub const VT_DOGLEG: flatbuffers::VOffsetT = 8;
   pub const VT_TEXT_STYLE: flatbuffers::VOffsetT = 10;
@@ -11220,20 +11185,12 @@ impl<'a> DucLeaderStyle<'a> {
     builder.add_dogleg(args.dogleg);
     if let Some(x) = args.text_style { builder.add_text_style(x); }
     if let Some(x) = args.heads_override { builder.add_heads_override(x); }
-    if let Some(x) = args.base_style { builder.add_base_style(x); }
     if let Some(x) = args.block_attachment { builder.add_block_attachment(x); }
     if let Some(x) = args.text_attachment { builder.add_text_attachment(x); }
     builder.finish()
   }
 
 
-  #[inline]
-  pub fn base_style(&self) -> Option<_DucElementStylesBase<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>(DucLeaderStyle::VT_BASE_STYLE, None)}
-  }
   #[inline]
   pub fn heads_override(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucHead<'a>>>> {
     // Safety:
@@ -11278,7 +11235,6 @@ impl flatbuffers::Verifiable for DucLeaderStyle<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>("base_style", Self::VT_BASE_STYLE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucHead>>>>("heads_override", Self::VT_HEADS_OVERRIDE, false)?
      .visit_field::<f64>("dogleg", Self::VT_DOGLEG, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucTextStyle>>("text_style", Self::VT_TEXT_STYLE, false)?
@@ -11289,7 +11245,6 @@ impl flatbuffers::Verifiable for DucLeaderStyle<'_> {
   }
 }
 pub struct DucLeaderStyleArgs<'a> {
-    pub base_style: Option<flatbuffers::WIPOffset<_DucElementStylesBase<'a>>>,
     pub heads_override: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucHead<'a>>>>>,
     pub dogleg: f64,
     pub text_style: Option<flatbuffers::WIPOffset<DucTextStyle<'a>>>,
@@ -11300,7 +11255,6 @@ impl<'a> Default for DucLeaderStyleArgs<'a> {
   #[inline]
   fn default() -> Self {
     DucLeaderStyleArgs {
-      base_style: None,
       heads_override: None,
       dogleg: 0.0,
       text_style: None,
@@ -11315,10 +11269,6 @@ pub struct DucLeaderStyleBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucLeaderStyleBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_base_style(&mut self, base_style: flatbuffers::WIPOffset<_DucElementStylesBase<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucElementStylesBase>>(DucLeaderStyle::VT_BASE_STYLE, base_style);
-  }
   #[inline]
   pub fn add_heads_override(&mut self, heads_override: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<DucHead<'b >>>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucLeaderStyle::VT_HEADS_OVERRIDE, heads_override);
@@ -11357,7 +11307,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucLeaderStyleBuilder<'a, 'b, A
 impl core::fmt::Debug for DucLeaderStyle<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("DucLeaderStyle");
-      ds.field("base_style", &self.base_style());
       ds.field("heads_override", &self.heads_override());
       ds.field("dogleg", &self.dogleg());
       ds.field("text_style", &self.text_style());
@@ -12578,7 +12527,6 @@ impl<'a> flatbuffers::Follow<'a> for DucFeatureControlFrameStyle<'a> {
 }
 
 impl<'a> DucFeatureControlFrameStyle<'a> {
-  pub const VT_BASE_STYLE: flatbuffers::VOffsetT = 4;
   pub const VT_TEXT_STYLE: flatbuffers::VOffsetT = 6;
   pub const VT_LAYOUT: flatbuffers::VOffsetT = 8;
   pub const VT_SYMBOLS: flatbuffers::VOffsetT = 10;
@@ -12598,18 +12546,10 @@ impl<'a> DucFeatureControlFrameStyle<'a> {
     if let Some(x) = args.symbols { builder.add_symbols(x); }
     if let Some(x) = args.layout { builder.add_layout(x); }
     if let Some(x) = args.text_style { builder.add_text_style(x); }
-    if let Some(x) = args.base_style { builder.add_base_style(x); }
     builder.finish()
   }
 
 
-  #[inline]
-  pub fn base_style(&self) -> Option<_DucElementStylesBase<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>(DucFeatureControlFrameStyle::VT_BASE_STYLE, None)}
-  }
   #[inline]
   pub fn text_style(&self) -> Option<DucTextStyle<'a>> {
     // Safety:
@@ -12647,7 +12587,6 @@ impl flatbuffers::Verifiable for DucFeatureControlFrameStyle<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>("base_style", Self::VT_BASE_STYLE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DucTextStyle>>("text_style", Self::VT_TEXT_STYLE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<FCFLayoutStyle>>("layout", Self::VT_LAYOUT, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<FCFSymbolStyle>>("symbols", Self::VT_SYMBOLS, false)?
@@ -12657,7 +12596,6 @@ impl flatbuffers::Verifiable for DucFeatureControlFrameStyle<'_> {
   }
 }
 pub struct DucFeatureControlFrameStyleArgs<'a> {
-    pub base_style: Option<flatbuffers::WIPOffset<_DucElementStylesBase<'a>>>,
     pub text_style: Option<flatbuffers::WIPOffset<DucTextStyle<'a>>>,
     pub layout: Option<flatbuffers::WIPOffset<FCFLayoutStyle<'a>>>,
     pub symbols: Option<flatbuffers::WIPOffset<FCFSymbolStyle<'a>>>,
@@ -12667,7 +12605,6 @@ impl<'a> Default for DucFeatureControlFrameStyleArgs<'a> {
   #[inline]
   fn default() -> Self {
     DucFeatureControlFrameStyleArgs {
-      base_style: None,
       text_style: None,
       layout: None,
       symbols: None,
@@ -12681,10 +12618,6 @@ pub struct DucFeatureControlFrameStyleBuilder<'a: 'b, 'b, A: flatbuffers::Alloca
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucFeatureControlFrameStyleBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_base_style(&mut self, base_style: flatbuffers::WIPOffset<_DucElementStylesBase<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucElementStylesBase>>(DucFeatureControlFrameStyle::VT_BASE_STYLE, base_style);
-  }
   #[inline]
   pub fn add_text_style(&mut self, text_style: flatbuffers::WIPOffset<DucTextStyle<'b >>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucTextStyle>>(DucFeatureControlFrameStyle::VT_TEXT_STYLE, text_style);
@@ -12719,7 +12652,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucFeatureControlFrameStyleBuil
 impl core::fmt::Debug for DucFeatureControlFrameStyle<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("DucFeatureControlFrameStyle");
-      ds.field("base_style", &self.base_style());
       ds.field("text_style", &self.text_style());
       ds.field("layout", &self.layout());
       ds.field("symbols", &self.symbols());
@@ -13335,7 +13267,6 @@ impl<'a> flatbuffers::Follow<'a> for DucViewportStyle<'a> {
 }
 
 impl<'a> DucViewportStyle<'a> {
-  pub const VT_BASE_STYLE: flatbuffers::VOffsetT = 4;
   pub const VT_SCALE_INDICATOR_VISIBLE: flatbuffers::VOffsetT = 6;
 
   #[inline]
@@ -13345,22 +13276,14 @@ impl<'a> DucViewportStyle<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args DucViewportStyleArgs<'args>
+    args: &'args DucViewportStyleArgs
   ) -> flatbuffers::WIPOffset<DucViewportStyle<'bldr>> {
     let mut builder = DucViewportStyleBuilder::new(_fbb);
-    if let Some(x) = args.base_style { builder.add_base_style(x); }
     builder.add_scale_indicator_visible(args.scale_indicator_visible);
     builder.finish()
   }
 
 
-  #[inline]
-  pub fn base_style(&self) -> Option<_DucElementStylesBase<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>(DucViewportStyle::VT_BASE_STYLE, None)}
-  }
   #[inline]
   pub fn scale_indicator_visible(&self) -> bool {
     // Safety:
@@ -13377,21 +13300,18 @@ impl flatbuffers::Verifiable for DucViewportStyle<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>("base_style", Self::VT_BASE_STYLE, false)?
      .visit_field::<bool>("scale_indicator_visible", Self::VT_SCALE_INDICATOR_VISIBLE, false)?
      .finish();
     Ok(())
   }
 }
-pub struct DucViewportStyleArgs<'a> {
-    pub base_style: Option<flatbuffers::WIPOffset<_DucElementStylesBase<'a>>>,
+pub struct DucViewportStyleArgs {
     pub scale_indicator_visible: bool,
 }
-impl<'a> Default for DucViewportStyleArgs<'a> {
+impl<'a> Default for DucViewportStyleArgs {
   #[inline]
   fn default() -> Self {
     DucViewportStyleArgs {
-      base_style: None,
       scale_indicator_visible: false,
     }
   }
@@ -13402,10 +13322,6 @@ pub struct DucViewportStyleBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucViewportStyleBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_base_style(&mut self, base_style: flatbuffers::WIPOffset<_DucElementStylesBase<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucElementStylesBase>>(DucViewportStyle::VT_BASE_STYLE, base_style);
-  }
   #[inline]
   pub fn add_scale_indicator_visible(&mut self, scale_indicator_visible: bool) {
     self.fbb_.push_slot::<bool>(DucViewportStyle::VT_SCALE_INDICATOR_VISIBLE, scale_indicator_visible, false);
@@ -13428,7 +13344,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucViewportStyleBuilder<'a, 'b,
 impl core::fmt::Debug for DucViewportStyle<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("DucViewportStyle");
-      ds.field("base_style", &self.base_style());
       ds.field("scale_indicator_visible", &self.scale_indicator_visible());
       ds.finish()
   }
@@ -13449,7 +13364,6 @@ impl<'a> flatbuffers::Follow<'a> for DucPlotStyle<'a> {
 }
 
 impl<'a> DucPlotStyle<'a> {
-  pub const VT_BASE_STYLE: flatbuffers::VOffsetT = 4;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -13458,21 +13372,13 @@ impl<'a> DucPlotStyle<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args DucPlotStyleArgs<'args>
+    args: &'args DucPlotStyleArgs
   ) -> flatbuffers::WIPOffset<DucPlotStyle<'bldr>> {
     let mut builder = DucPlotStyleBuilder::new(_fbb);
-    if let Some(x) = args.base_style { builder.add_base_style(x); }
     builder.finish()
   }
 
 
-  #[inline]
-  pub fn base_style(&self) -> Option<_DucElementStylesBase<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>(DucPlotStyle::VT_BASE_STYLE, None)}
-  }
 }
 
 impl flatbuffers::Verifiable for DucPlotStyle<'_> {
@@ -13482,19 +13388,16 @@ impl flatbuffers::Verifiable for DucPlotStyle<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>("base_style", Self::VT_BASE_STYLE, false)?
      .finish();
     Ok(())
   }
 }
-pub struct DucPlotStyleArgs<'a> {
-    pub base_style: Option<flatbuffers::WIPOffset<_DucElementStylesBase<'a>>>,
+pub struct DucPlotStyleArgs {
 }
-impl<'a> Default for DucPlotStyleArgs<'a> {
+impl<'a> Default for DucPlotStyleArgs {
   #[inline]
   fn default() -> Self {
     DucPlotStyleArgs {
-      base_style: None,
     }
   }
 }
@@ -13504,10 +13407,6 @@ pub struct DucPlotStyleBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucPlotStyleBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_base_style(&mut self, base_style: flatbuffers::WIPOffset<_DucElementStylesBase<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucElementStylesBase>>(DucPlotStyle::VT_BASE_STYLE, base_style);
-  }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucPlotStyleBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
@@ -13526,7 +13425,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucPlotStyleBuilder<'a, 'b, A> 
 impl core::fmt::Debug for DucPlotStyle<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("DucPlotStyle");
-      ds.field("base_style", &self.base_style());
       ds.finish()
   }
 }
@@ -13546,7 +13444,6 @@ impl<'a> flatbuffers::Follow<'a> for DucXRayStyle<'a> {
 }
 
 impl<'a> DucXRayStyle<'a> {
-  pub const VT_BASE_STYLE: flatbuffers::VOffsetT = 4;
   pub const VT_COLOR: flatbuffers::VOffsetT = 6;
 
   #[inline]
@@ -13560,18 +13457,10 @@ impl<'a> DucXRayStyle<'a> {
   ) -> flatbuffers::WIPOffset<DucXRayStyle<'bldr>> {
     let mut builder = DucXRayStyleBuilder::new(_fbb);
     if let Some(x) = args.color { builder.add_color(x); }
-    if let Some(x) = args.base_style { builder.add_base_style(x); }
     builder.finish()
   }
 
 
-  #[inline]
-  pub fn base_style(&self) -> Option<_DucElementStylesBase<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>(DucXRayStyle::VT_BASE_STYLE, None)}
-  }
   #[inline]
   pub fn color(&self) -> Option<&'a str> {
     // Safety:
@@ -13588,21 +13477,18 @@ impl flatbuffers::Verifiable for DucXRayStyle<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<_DucElementStylesBase>>("base_style", Self::VT_BASE_STYLE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("color", Self::VT_COLOR, false)?
      .finish();
     Ok(())
   }
 }
 pub struct DucXRayStyleArgs<'a> {
-    pub base_style: Option<flatbuffers::WIPOffset<_DucElementStylesBase<'a>>>,
     pub color: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for DucXRayStyleArgs<'a> {
   #[inline]
   fn default() -> Self {
     DucXRayStyleArgs {
-      base_style: None,
       color: None,
     }
   }
@@ -13613,10 +13499,6 @@ pub struct DucXRayStyleBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucXRayStyleBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_base_style(&mut self, base_style: flatbuffers::WIPOffset<_DucElementStylesBase<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucElementStylesBase>>(DucXRayStyle::VT_BASE_STYLE, base_style);
-  }
   #[inline]
   pub fn add_color(&mut self, color: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucXRayStyle::VT_COLOR, color);
@@ -13639,7 +13521,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucXRayStyleBuilder<'a, 'b, A> 
 impl core::fmt::Debug for DucXRayStyle<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("DucXRayStyle");
-      ds.field("base_style", &self.base_style());
       ds.field("color", &self.color());
       ds.finish()
   }
@@ -22773,6 +22654,7 @@ impl<'a> DucGlobalState<'a> {
   pub const VT_USE_ANNOTATIVE_SCALING: flatbuffers::VOffsetT = 18;
   pub const VT_DISPLAY_PRECISION_LINEAR: flatbuffers::VOffsetT = 20;
   pub const VT_DISPLAY_PRECISION_ANGULAR: flatbuffers::VOffsetT = 22;
+  pub const VT_PRUNING_LEVEL: flatbuffers::VOffsetT = 24;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -22790,6 +22672,7 @@ impl<'a> DucGlobalState<'a> {
     if let Some(x) = args.main_scope { builder.add_main_scope(x); }
     if let Some(x) = args.view_background_color { builder.add_view_background_color(x); }
     if let Some(x) = args.name { builder.add_name(x); }
+    if let Some(x) = args.pruning_level { builder.add_pruning_level(x); }
     builder.add_use_annotative_scaling(args.use_annotative_scaling);
     builder.add_dimensions_associative_by_default(args.dimensions_associative_by_default);
     builder.add_scope_exponent_threshold(args.scope_exponent_threshold);
@@ -22868,6 +22751,13 @@ impl<'a> DucGlobalState<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i32>(DucGlobalState::VT_DISPLAY_PRECISION_ANGULAR, Some(0)).unwrap()}
   }
+  #[inline]
+  pub fn pruning_level(&self) -> Option<PRUNING_LEVEL> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<PRUNING_LEVEL>(DucGlobalState::VT_PRUNING_LEVEL, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for DucGlobalState<'_> {
@@ -22887,6 +22777,7 @@ impl flatbuffers::Verifiable for DucGlobalState<'_> {
      .visit_field::<bool>("use_annotative_scaling", Self::VT_USE_ANNOTATIVE_SCALING, false)?
      .visit_field::<i32>("display_precision_linear", Self::VT_DISPLAY_PRECISION_LINEAR, false)?
      .visit_field::<i32>("display_precision_angular", Self::VT_DISPLAY_PRECISION_ANGULAR, false)?
+     .visit_field::<PRUNING_LEVEL>("pruning_level", Self::VT_PRUNING_LEVEL, false)?
      .finish();
     Ok(())
   }
@@ -22902,6 +22793,7 @@ pub struct DucGlobalStateArgs<'a> {
     pub use_annotative_scaling: bool,
     pub display_precision_linear: i32,
     pub display_precision_angular: i32,
+    pub pruning_level: Option<PRUNING_LEVEL>,
 }
 impl<'a> Default for DucGlobalStateArgs<'a> {
   #[inline]
@@ -22917,6 +22809,7 @@ impl<'a> Default for DucGlobalStateArgs<'a> {
       use_annotative_scaling: false,
       display_precision_linear: 0,
       display_precision_angular: 0,
+      pruning_level: None,
     }
   }
 }
@@ -22967,6 +22860,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucGlobalStateBuilder<'a, 'b, A
     self.fbb_.push_slot::<i32>(DucGlobalState::VT_DISPLAY_PRECISION_ANGULAR, display_precision_angular, 0);
   }
   #[inline]
+  pub fn add_pruning_level(&mut self, pruning_level: PRUNING_LEVEL) {
+    self.fbb_.push_slot_always::<PRUNING_LEVEL>(DucGlobalState::VT_PRUNING_LEVEL, pruning_level);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucGlobalStateBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     DucGlobalStateBuilder {
@@ -22994,6 +22891,7 @@ impl core::fmt::Debug for DucGlobalState<'_> {
       ds.field("use_annotative_scaling", &self.use_annotative_scaling());
       ds.field("display_precision_linear", &self.display_precision_linear());
       ds.field("display_precision_angular", &self.display_precision_angular());
+      ds.field("pruning_level", &self.pruning_level());
       ds.finish()
   }
 }
@@ -23035,6 +22933,7 @@ impl<'a> DucLocalState<'a> {
   pub const VT_OBJECTS_SNAP_MODE_ENABLED: flatbuffers::VOffsetT = 42;
   pub const VT_GRID_MODE_ENABLED: flatbuffers::VOffsetT = 44;
   pub const VT_OUTLINE_MODE_ENABLED: flatbuffers::VOffsetT = 46;
+  pub const VT_MANUAL_SAVE_MODE: flatbuffers::VOffsetT = 48;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -23061,6 +22960,7 @@ impl<'a> DucLocalState<'a> {
     if let Some(x) = args.active_grid_settings { builder.add_active_grid_settings(x); }
     if let Some(x) = args.active_standard_id { builder.add_active_standard_id(x); }
     if let Some(x) = args.scope { builder.add_scope(x); }
+    builder.add_manual_save_mode(args.manual_save_mode);
     builder.add_outline_mode_enabled(args.outline_mode_enabled);
     builder.add_grid_mode_enabled(args.grid_mode_enabled);
     builder.add_objects_snap_mode_enabled(args.objects_snap_mode_enabled);
@@ -23226,6 +23126,13 @@ impl<'a> DucLocalState<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<bool>(DucLocalState::VT_OUTLINE_MODE_ENABLED, Some(false)).unwrap()}
   }
+  #[inline]
+  pub fn manual_save_mode(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(DucLocalState::VT_MANUAL_SAVE_MODE, Some(false)).unwrap()}
+  }
 }
 
 impl flatbuffers::Verifiable for DucLocalState<'_> {
@@ -23257,6 +23164,7 @@ impl flatbuffers::Verifiable for DucLocalState<'_> {
      .visit_field::<bool>("objects_snap_mode_enabled", Self::VT_OBJECTS_SNAP_MODE_ENABLED, false)?
      .visit_field::<bool>("grid_mode_enabled", Self::VT_GRID_MODE_ENABLED, false)?
      .visit_field::<bool>("outline_mode_enabled", Self::VT_OUTLINE_MODE_ENABLED, false)?
+     .visit_field::<bool>("manual_save_mode", Self::VT_MANUAL_SAVE_MODE, false)?
      .finish();
     Ok(())
   }
@@ -23284,6 +23192,7 @@ pub struct DucLocalStateArgs<'a> {
     pub objects_snap_mode_enabled: bool,
     pub grid_mode_enabled: bool,
     pub outline_mode_enabled: bool,
+    pub manual_save_mode: bool,
 }
 impl<'a> Default for DucLocalStateArgs<'a> {
   #[inline]
@@ -23311,6 +23220,7 @@ impl<'a> Default for DucLocalStateArgs<'a> {
       objects_snap_mode_enabled: false,
       grid_mode_enabled: false,
       outline_mode_enabled: false,
+      manual_save_mode: false,
     }
   }
 }
@@ -23409,6 +23319,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucLocalStateBuilder<'a, 'b, A>
     self.fbb_.push_slot::<bool>(DucLocalState::VT_OUTLINE_MODE_ENABLED, outline_mode_enabled, false);
   }
   #[inline]
+  pub fn add_manual_save_mode(&mut self, manual_save_mode: bool) {
+    self.fbb_.push_slot::<bool>(DucLocalState::VT_MANUAL_SAVE_MODE, manual_save_mode, false);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucLocalStateBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     DucLocalStateBuilder {
@@ -23448,6 +23362,7 @@ impl core::fmt::Debug for DucLocalState<'_> {
       ds.field("objects_snap_mode_enabled", &self.objects_snap_mode_enabled());
       ds.field("grid_mode_enabled", &self.grid_mode_enabled());
       ds.field("outline_mode_enabled", &self.outline_mode_enabled());
+      ds.field("manual_save_mode", &self.manual_save_mode());
       ds.finish()
   }
 }
@@ -30946,9 +30861,8 @@ impl<'a> flatbuffers::Follow<'a> for VersionGraphMetadata<'a> {
 }
 
 impl<'a> VersionGraphMetadata<'a> {
-  pub const VT_PRUNING_LEVEL: flatbuffers::VOffsetT = 4;
-  pub const VT_LAST_PRUNED: flatbuffers::VOffsetT = 6;
-  pub const VT_TOTAL_SIZE: flatbuffers::VOffsetT = 8;
+  pub const VT_LAST_PRUNED: flatbuffers::VOffsetT = 4;
+  pub const VT_TOTAL_SIZE: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -30962,18 +30876,10 @@ impl<'a> VersionGraphMetadata<'a> {
     let mut builder = VersionGraphMetadataBuilder::new(_fbb);
     builder.add_total_size(args.total_size);
     builder.add_last_pruned(args.last_pruned);
-    if let Some(x) = args.pruning_level { builder.add_pruning_level(x); }
     builder.finish()
   }
 
 
-  #[inline]
-  pub fn pruning_level(&self) -> Option<PRUNING_LEVEL> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<PRUNING_LEVEL>(VersionGraphMetadata::VT_PRUNING_LEVEL, None)}
-  }
   #[inline]
   pub fn last_pruned(&self) -> i64 {
     // Safety:
@@ -30997,7 +30903,6 @@ impl flatbuffers::Verifiable for VersionGraphMetadata<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<PRUNING_LEVEL>("pruning_level", Self::VT_PRUNING_LEVEL, false)?
      .visit_field::<i64>("last_pruned", Self::VT_LAST_PRUNED, false)?
      .visit_field::<i64>("total_size", Self::VT_TOTAL_SIZE, false)?
      .finish();
@@ -31005,7 +30910,6 @@ impl flatbuffers::Verifiable for VersionGraphMetadata<'_> {
   }
 }
 pub struct VersionGraphMetadataArgs {
-    pub pruning_level: Option<PRUNING_LEVEL>,
     pub last_pruned: i64,
     pub total_size: i64,
 }
@@ -31013,7 +30917,6 @@ impl<'a> Default for VersionGraphMetadataArgs {
   #[inline]
   fn default() -> Self {
     VersionGraphMetadataArgs {
-      pruning_level: None,
       last_pruned: 0,
       total_size: 0,
     }
@@ -31025,10 +30928,6 @@ pub struct VersionGraphMetadataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + '
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> VersionGraphMetadataBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_pruning_level(&mut self, pruning_level: PRUNING_LEVEL) {
-    self.fbb_.push_slot_always::<PRUNING_LEVEL>(VersionGraphMetadata::VT_PRUNING_LEVEL, pruning_level);
-  }
   #[inline]
   pub fn add_last_pruned(&mut self, last_pruned: i64) {
     self.fbb_.push_slot::<i64>(VersionGraphMetadata::VT_LAST_PRUNED, last_pruned, 0);
@@ -31055,7 +30954,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> VersionGraphMetadataBuilder<'a,
 impl core::fmt::Debug for VersionGraphMetadata<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("VersionGraphMetadata");
-      ds.field("pruning_level", &self.pruning_level());
       ds.field("last_pruned", &self.last_pruned());
       ds.field("total_size", &self.total_size());
       ds.finish()
@@ -31559,6 +31457,7 @@ impl<'a> ExportedDataState<'a> {
   pub const VT_DUC_GLOBAL_STATE: flatbuffers::VOffsetT = 30;
   pub const VT_EXTERNAL_FILES: flatbuffers::VOffsetT = 32;
   pub const VT_VERSION_GRAPH: flatbuffers::VOffsetT = 34;
+  pub const VT_ID: flatbuffers::VOffsetT = 36;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -31570,6 +31469,7 @@ impl<'a> ExportedDataState<'a> {
     args: &'args ExportedDataStateArgs<'args>
   ) -> flatbuffers::WIPOffset<ExportedDataState<'bldr>> {
     let mut builder = ExportedDataStateBuilder::new(_fbb);
+    if let Some(x) = args.id { builder.add_id(x); }
     if let Some(x) = args.version_graph { builder.add_version_graph(x); }
     if let Some(x) = args.external_files { builder.add_external_files(x); }
     if let Some(x) = args.duc_global_state { builder.add_duc_global_state(x); }
@@ -31702,6 +31602,13 @@ impl<'a> ExportedDataState<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<VersionGraph>>(ExportedDataState::VT_VERSION_GRAPH, None)}
   }
+  #[inline]
+  pub fn id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(ExportedDataState::VT_ID, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for ExportedDataState<'_> {
@@ -31727,6 +31634,7 @@ impl flatbuffers::Verifiable for ExportedDataState<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<DucGlobalState>>("duc_global_state", Self::VT_DUC_GLOBAL_STATE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucExternalFileEntry>>>>("external_files", Self::VT_EXTERNAL_FILES, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<VersionGraph>>("version_graph", Self::VT_VERSION_GRAPH, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, false)?
      .finish();
     Ok(())
   }
@@ -31748,6 +31656,7 @@ pub struct ExportedDataStateArgs<'a> {
     pub duc_global_state: Option<flatbuffers::WIPOffset<DucGlobalState<'a>>>,
     pub external_files: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucExternalFileEntry<'a>>>>>,
     pub version_graph: Option<flatbuffers::WIPOffset<VersionGraph<'a>>>,
+    pub id: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for ExportedDataStateArgs<'a> {
   #[inline]
@@ -31769,6 +31678,7 @@ impl<'a> Default for ExportedDataStateArgs<'a> {
       duc_global_state: None,
       external_files: None,
       version_graph: None,
+      id: None,
     }
   }
 }
@@ -31843,6 +31753,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ExportedDataStateBuilder<'a, 'b
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<VersionGraph>>(ExportedDataState::VT_VERSION_GRAPH, version_graph);
   }
   #[inline]
+  pub fn add_id(&mut self, id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ExportedDataState::VT_ID, id);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> ExportedDataStateBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     ExportedDataStateBuilder {
@@ -31876,6 +31790,7 @@ impl core::fmt::Debug for ExportedDataState<'_> {
       ds.field("duc_global_state", &self.duc_global_state());
       ds.field("external_files", &self.external_files());
       ds.field("version_graph", &self.version_graph());
+      ds.field("id", &self.id());
       ds.finish()
   }
 }

@@ -994,7 +994,7 @@ table _DucElementBase {
   region_ids: [string];
   /** The layer the element belongs to */
   layer_id: string;
-  /** The frame the element belongs to */
+  /** The frame or plot the element belongs to */
   frame_id: string;
   
   /**
@@ -1149,7 +1149,7 @@ table LineSpacing {
 }
 
 table DucTextStyle {
-  base_style: _DucElementStylesBase;
+  base_style: _DucElementStylesBase (deprecated); // use _DucElementStylesBase from _DucElementBase instead.
   /**
    * Whether the text is left-to-right or right-to-left
    */
@@ -1213,7 +1213,7 @@ table DucTableCellStyle {
 }
 
 table DucTableStyle {
-  base_style: _DucElementStylesBase;
+  base_style: _DucElementStylesBase (deprecated); // use _DucElementStylesBase from _DucElementBase instead.
   /** The direction in which new rows are added */
   flow_direction: TABLE_FLOW_DIRECTION = null;
   /** Default style for the header row(s) */
@@ -1225,7 +1225,7 @@ table DucTableStyle {
 }
 
 table DucLeaderStyle {
-  base_style: _DucElementStylesBase;
+  base_style: _DucElementStylesBase (deprecated); // use _DucElementStylesBase from _DucElementBase instead.
   /**
    * Override the heads of the leader
    * The tuple represents [startHead, endHead]
@@ -1328,7 +1328,7 @@ table FCFDatumStyle {
 }
 
 table DucFeatureControlFrameStyle {
-  base_style: _DucElementStylesBase;
+  base_style: _DucElementStylesBase (deprecated); // use _DucElementStylesBase from _DucElementBase instead.
   /** The base text style for numbers and letters within the frame */
   text_style: DucTextStyle;
   /** Layout and spacing properties */
@@ -1381,16 +1381,16 @@ table DucDocStyle {
 }
 
 table DucViewportStyle {
-  base_style: _DucElementStylesBase;
+  base_style: _DucElementStylesBase (deprecated); // use _DucElementStylesBase from _DucElementBase instead.
   scale_indicator_visible: bool;
 }
 
 table DucPlotStyle {
-  base_style: _DucElementStylesBase;
+  base_style: _DucElementStylesBase (deprecated); // use _DucElementStylesBase from _DucElementBase instead.
 }
 
 table DucXRayStyle {
-  base_style: _DucElementStylesBase;
+  base_style: _DucElementStylesBase (deprecated); // use _DucElementStylesBase from _DucElementBase instead.
   /** The color of the x-ray */
   color: string;
 }
@@ -2110,6 +2110,9 @@ table DucGlobalState {
    */
   display_precision_linear: int;
   display_precision_angular: int;
+  
+  /** The level of pruning to the versions from the version graph. */
+  pruning_level: PRUNING_LEVEL = null;
 }
 
 table DucLocalState {
@@ -2152,6 +2155,8 @@ table DucLocalState {
   grid_mode_enabled: bool;
   /** Whether to disable the fill on all shapes */
   outline_mode_enabled: bool;
+  /** When enabled, the version graph is not updated automatically. The user needs to manually update the graph for new versions to be saved in version control. */
+  manual_save_mode: bool;
 }
 
 table DucGroup {
@@ -2540,7 +2545,6 @@ table Delta {
 }
 
 table VersionGraphMetadata {
-  pruning_level: PRUNING_LEVEL = null;
   last_pruned: long;
   total_size: long;
 }
@@ -2616,6 +2620,9 @@ table ExportedDataState {
   
   /** In case it is needed to embed the version control into the file format */
   version_graph: VersionGraph;
+
+  /** Actual file id */
+  id: string;
 }
 
 root_type ExportedDataState;

@@ -6,7 +6,7 @@
     "module": "esnext",
     "lib": ["dom", "dom.iterable", "esnext"],
     "noEmit": false,
-    "composite": true,
+    "composite": false,
     "allowJs": true,
     "skipLibCheck": true,
     "moduleResolution": "bundler",

@@ -316,8 +316,15 @@ class ExportedDataState(object):
             return obj
         return None
 
+    # ExportedDataState
+    def Id(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(36))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
 def ExportedDataStateStart(builder):
-    builder.StartObject(16)
+    builder.StartObject(17)
 
 def Start(builder):
     ExportedDataStateStart(builder)
@@ -471,6 +478,12 @@ def ExportedDataStateAddVersionGraph(builder, versionGraph):
 
 def AddVersionGraph(builder, versionGraph):
     ExportedDataStateAddVersionGraph(builder, versionGraph)
+
+def ExportedDataStateAddId(builder, id):
+    builder.PrependUOffsetTRelativeSlot(16, flatbuffers.number_types.UOffsetTFlags.py_type(id), 0)
+
+def AddId(builder, id):
+    ExportedDataStateAddId(builder, id)
 
 def ExportedDataStateEnd(builder):
     return builder.EndObject()

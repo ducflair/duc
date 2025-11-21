@@ -1,15 +1,15 @@
-import { TEXT_ALIGN, VERTICAL_ALIGN } from "ducjs/flatbuffers/duc";
-import { DucLocalState, RawValue, Scope, ScopedValue } from "ducjs/types";
-import { DucElement, DucElementType, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap, FontFamilyValues, FontString, NonDeletedDucElement } from "ducjs/types/elements";
-import { isArrowElement, isBoundToContainer, isTextElement } from "ducjs/types/elements/typeChecks";
-import { GeometricPoint } from "ducjs/types/geometryTypes";
-import { ExtractSetType } from "ducjs/types/utility-types";
-import { getContainerElement, getElementAbsoluteCoords, getResizedElementAbsoluteCoords } from "ducjs/utils/bounds";
-import { ARROW_LABEL_FONT_SIZE_TO_MIN_WIDTH_RATIO, ARROW_LABEL_WIDTH_FRACTION, BOUND_TEXT_PADDING, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, FONT_FAMILY, WINDOWS_EMOJI_FALLBACK_FONT } from "ducjs/utils/constants";
-import { getBoundTextElementPosition, getPointGlobalCoordinates, getPointsGlobalCoordinates, getSegmentMidPoint } from "ducjs/utils/elements/linearElement";
-import { adjustXYWithRotation } from "ducjs/utils/math";
-import { normalizeText } from "ducjs/utils/normalize";
-import { SupportedMeasures, getPrecisionValueFromRaw, getScopedBezierPointFromDucPoint } from "ducjs/technical/scopes";
+import { TEXT_ALIGN, VERTICAL_ALIGN } from "../../flatbuffers/duc";
+import { DucLocalState, RawValue, Scope, ScopedValue } from "../../types";
+import { DucElement, DucElementType, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap, FontFamilyValues, FontString, NonDeletedDucElement } from "../../types/elements";
+import { isArrowElement, isBoundToContainer, isTextElement } from "../../types/elements/typeChecks";
+import { GeometricPoint } from "../../types/geometryTypes";
+import { ExtractSetType } from "../../types/utility-types";
+import { getContainerElement, getElementAbsoluteCoords, getResizedElementAbsoluteCoords } from "../bounds";
+import { ARROW_LABEL_FONT_SIZE_TO_MIN_WIDTH_RATIO, ARROW_LABEL_WIDTH_FRACTION, BOUND_TEXT_PADDING, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, FONT_FAMILY, WINDOWS_EMOJI_FALLBACK_FONT } from "../constants";
+import { getBoundTextElementPosition, getPointGlobalCoordinates, getPointsGlobalCoordinates, getSegmentMidPoint } from "./linearElement";
+import { adjustXYWithRotation } from "../math";
+import { normalizeText } from "../normalize";
+import { SupportedMeasures, getPrecisionValueFromRaw, getScopedBezierPointFromDucPoint } from "../../technical/scopes";
 
 export const computeBoundTextPosition = (
   container: DucElement,
@@ -643,8 +643,11 @@ export const getFontFamilyString = ({
 }: {
   fontFamily: FontFamilyValues;
 }) => {
+  // Handle both number and string fontFamily values
+  const fontFamilyNum = typeof fontFamily === 'string' ? parseInt(fontFamily, 10) : fontFamily;
+  
   for (const [fontFamilyString, id] of Object.entries(FONT_FAMILY)) {
-    if (id === fontFamily) {
+    if (id === fontFamilyNum) {
       return `${fontFamilyString}, ${WINDOWS_EMOJI_FALLBACK_FONT}`;
     }
   }

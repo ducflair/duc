@@ -3,7 +3,6 @@
 Import usage examples:
     import ducpy as duc
     
-    # Access modules directly:
     duc.classes.SomeClass
     duc.parse.parse_function
     duc.serialize.serialize_function
@@ -38,7 +37,7 @@ if 'Duc' not in sys.modules:
             spec.loader.exec_module(module)
             setattr(duc_module, module_name, module)
 
-# Import modules for direct access
+
 from .utils import *
 from .parse import *
 from .serialize import *

@@ -12,16 +12,16 @@
  * to pure shapes.
  */
 
-import type { DucBindableElement } from "ducjs/types/elements";
+import type { DucBindableElement } from "../../types/elements";
 import {
   addVectors,
   distance2d,
   rotatePoint,
   scaleVector,
   subtractVectors,
-} from "ducjs/utils/math";
-import type { LineSegment } from "ducjs/types/geometryTypes";
-import { crossProduct } from "ducjs/utils/math/bbox";
+} from "./";
+import type { LineSegment } from "../../types/geometryTypes";
+import { crossProduct } from "./bbox";
 import type {
   GeometricPoint,
   Line,
@@ -30,7 +30,7 @@ import type {
   Ellipse,
   Polycurve,
   Polyline,
-} from "ducjs/types/geometryTypes";
+} from "../../types/geometryTypes";
 
 const DEFAULT_THRESHOLD = 10e-5;
 
