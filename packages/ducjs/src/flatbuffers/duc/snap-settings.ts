@@ -69,7 +69,7 @@ isObjectSnapOn():boolean {
 
 activeObjectSnapModes(index: number):OBJECT_SNAP_MODE|null {
   const offset = this.bb!.__offset(this.bb_pos, 18);
-  return offset ? this.bb!.readUint8(this.bb!.__vector(this.bb_pos + offset) + index) : 0;
+  return offset ? this.bb!.readUint8(this.bb!.__vector(this.bb_pos + offset) + index) : null;
 }
 
 activeObjectSnapModesLength():number {
@@ -84,7 +84,7 @@ activeObjectSnapModesArray():Uint8Array|null {
 
 snapPriority(index: number):OBJECT_SNAP_MODE|null {
   const offset = this.bb!.__offset(this.bb_pos, 20);
-  return offset ? this.bb!.readUint8(this.bb!.__vector(this.bb_pos + offset) + index) : 0;
+  return offset ? this.bb!.readUint8(this.bb!.__vector(this.bb_pos + offset) + index) : null;
 }
 
 snapPriorityLength():number {

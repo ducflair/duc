@@ -60,6 +60,8 @@
     "ducrs:test": "turbo run test --filter=ducrs",
     "ducjs:build": "turbo build --filter=ducjs",
     "ducsvg:build": "turbo build --filter=ducsvg",
+    "ducdxf:test": "turbo run test --filter=ducdxf --force",
+    "ducdxf:build": "turbo build --filter=ducdxf",
     "semantic-release": "turbo run semantic-release",
     "sst:build": "bash -c 'bun run sst:clean && sst unlock ${1:+--stage $1} && sst refresh ${1:+--stage $1} && sst deploy ${1:+--stage $1}' --",
     "sst:clean": "bun del-cli \".sst\" \"**/sst-env.d.ts\" \"**/sst.pyi\"",

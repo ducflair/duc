@@ -69,7 +69,7 @@ impl<'a> flatbuffers::Follow<'a> for VERTICAL_ALIGN {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -78,7 +78,7 @@ impl flatbuffers::Push for VERTICAL_ALIGN {
     type Output = VERTICAL_ALIGN;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -158,7 +158,7 @@ impl<'a> flatbuffers::Follow<'a> for TEXT_ALIGN {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -167,7 +167,7 @@ impl flatbuffers::Push for TEXT_ALIGN {
     type Output = TEXT_ALIGN;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -247,7 +247,7 @@ impl<'a> flatbuffers::Follow<'a> for LINE_SPACING_TYPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -256,7 +256,7 @@ impl flatbuffers::Push for LINE_SPACING_TYPE {
     type Output = LINE_SPACING_TYPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -336,7 +336,7 @@ impl<'a> flatbuffers::Follow<'a> for STACKED_TEXT_ALIGN {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -345,7 +345,7 @@ impl flatbuffers::Push for STACKED_TEXT_ALIGN {
     type Output = STACKED_TEXT_ALIGN;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -421,7 +421,7 @@ impl<'a> flatbuffers::Follow<'a> for TEXT_FIELD_SOURCE_TYPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -430,7 +430,7 @@ impl flatbuffers::Push for TEXT_FIELD_SOURCE_TYPE {
     type Output = TEXT_FIELD_SOURCE_TYPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -542,7 +542,7 @@ impl<'a> flatbuffers::Follow<'a> for TEXT_FIELD_SOURCE_PROPERTY {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -551,7 +551,7 @@ impl flatbuffers::Push for TEXT_FIELD_SOURCE_PROPERTY {
     type Output = TEXT_FIELD_SOURCE_PROPERTY;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -631,7 +631,7 @@ impl<'a> flatbuffers::Follow<'a> for STROKE_PLACEMENT {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -640,7 +640,7 @@ impl flatbuffers::Push for STROKE_PLACEMENT {
     type Output = STROKE_PLACEMENT;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -720,7 +720,7 @@ impl<'a> flatbuffers::Follow<'a> for STROKE_WIDTH {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -729,7 +729,7 @@ impl flatbuffers::Push for STROKE_WIDTH {
     type Output = STROKE_WIDTH;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -821,7 +821,7 @@ impl<'a> flatbuffers::Follow<'a> for ELEMENT_CONTENT_PREFERENCE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -830,7 +830,7 @@ impl flatbuffers::Push for ELEMENT_CONTENT_PREFERENCE {
     type Output = ELEMENT_CONTENT_PREFERENCE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -914,7 +914,7 @@ impl<'a> flatbuffers::Follow<'a> for STROKE_PREFERENCE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -923,7 +923,7 @@ impl flatbuffers::Push for STROKE_PREFERENCE {
     type Output = STROKE_PREFERENCE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -1015,7 +1015,7 @@ impl<'a> flatbuffers::Follow<'a> for STROKE_SIDE_PREFERENCE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -1024,7 +1024,7 @@ impl flatbuffers::Push for STROKE_SIDE_PREFERENCE {
     type Output = STROKE_SIDE_PREFERENCE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -1104,7 +1104,7 @@ impl<'a> flatbuffers::Follow<'a> for STROKE_CAP {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -1113,7 +1113,7 @@ impl flatbuffers::Push for STROKE_CAP {
     type Output = STROKE_CAP;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -1193,7 +1193,7 @@ impl<'a> flatbuffers::Follow<'a> for STROKE_JOIN {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -1202,7 +1202,7 @@ impl flatbuffers::Push for STROKE_JOIN {
     type Output = STROKE_JOIN;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -1330,7 +1330,7 @@ impl<'a> flatbuffers::Follow<'a> for LINE_HEAD {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -1339,7 +1339,7 @@ impl flatbuffers::Push for LINE_HEAD {
     type Output = LINE_HEAD;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -1419,7 +1419,7 @@ impl<'a> flatbuffers::Follow<'a> for BEZIER_MIRRORING {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -1428,7 +1428,7 @@ impl flatbuffers::Push for BEZIER_MIRRORING {
     type Output = BEZIER_MIRRORING;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -1504,7 +1504,7 @@ impl<'a> flatbuffers::Follow<'a> for HANDLE_TYPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -1513,7 +1513,7 @@ impl flatbuffers::Push for HANDLE_TYPE {
     type Output = HANDLE_TYPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -1605,7 +1605,7 @@ impl<'a> flatbuffers::Follow<'a> for YOUTUBE_STATES {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<i8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<i8>(buf, loc) };
     Self(b)
   }
 }
@@ -1614,7 +1614,7 @@ impl flatbuffers::Push for YOUTUBE_STATES {
     type Output = YOUTUBE_STATES;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<i8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<i8>(dst, self.0); }
     }
 }
 
@@ -1710,7 +1710,7 @@ impl<'a> flatbuffers::Follow<'a> for BLENDING {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -1719,7 +1719,7 @@ impl flatbuffers::Push for BLENDING {
     type Output = BLENDING;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -1803,7 +1803,7 @@ impl<'a> flatbuffers::Follow<'a> for GRID_DISPLAY_TYPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -1812,7 +1812,7 @@ impl flatbuffers::Push for GRID_DISPLAY_TYPE {
     type Output = GRID_DISPLAY_TYPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -1900,7 +1900,7 @@ impl<'a> flatbuffers::Follow<'a> for GRID_TYPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -1909,7 +1909,7 @@ impl flatbuffers::Push for GRID_TYPE {
     type Output = GRID_TYPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -2057,7 +2057,7 @@ impl<'a> flatbuffers::Follow<'a> for OBJECT_SNAP_MODE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -2066,7 +2066,7 @@ impl flatbuffers::Push for OBJECT_SNAP_MODE {
     type Output = OBJECT_SNAP_MODE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -2142,7 +2142,7 @@ impl<'a> flatbuffers::Follow<'a> for SNAP_MODE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -2151,7 +2151,7 @@ impl flatbuffers::Push for SNAP_MODE {
     type Output = SNAP_MODE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -2231,7 +2231,7 @@ impl<'a> flatbuffers::Follow<'a> for SNAP_OVERRIDE_BEHAVIOR {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -2240,7 +2240,7 @@ impl flatbuffers::Push for SNAP_OVERRIDE_BEHAVIOR {
     type Output = SNAP_OVERRIDE_BEHAVIOR;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -2324,7 +2324,7 @@ impl<'a> flatbuffers::Follow<'a> for SNAP_MARKER_SHAPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -2333,7 +2333,7 @@ impl flatbuffers::Push for SNAP_MARKER_SHAPE {
     type Output = SNAP_MARKER_SHAPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -2437,7 +2437,7 @@ impl<'a> flatbuffers::Follow<'a> for TABLE_CELL_ALIGNMENT {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -2446,7 +2446,7 @@ impl flatbuffers::Push for TABLE_CELL_ALIGNMENT {
     type Output = TABLE_CELL_ALIGNMENT;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -2522,7 +2522,7 @@ impl<'a> flatbuffers::Follow<'a> for TABLE_FLOW_DIRECTION {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -2531,7 +2531,7 @@ impl flatbuffers::Push for TABLE_FLOW_DIRECTION {
     type Output = TABLE_FLOW_DIRECTION;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -2619,7 +2619,7 @@ impl<'a> flatbuffers::Follow<'a> for TOLERANCE_DISPLAY {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -2628,7 +2628,7 @@ impl flatbuffers::Push for TOLERANCE_DISPLAY {
     type Output = TOLERANCE_DISPLAY;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -2748,7 +2748,7 @@ impl<'a> flatbuffers::Follow<'a> for DIMENSION_TYPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -2757,7 +2757,7 @@ impl flatbuffers::Push for DIMENSION_TYPE {
     type Output = DIMENSION_TYPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -2833,7 +2833,7 @@ impl<'a> flatbuffers::Follow<'a> for MARK_ELLIPSE_CENTER {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -2842,7 +2842,7 @@ impl flatbuffers::Push for MARK_ELLIPSE_CENTER {
     type Output = MARK_ELLIPSE_CENTER;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -2926,7 +2926,7 @@ impl<'a> flatbuffers::Follow<'a> for TEXT_FLOW_DIRECTION {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -2935,7 +2935,7 @@ impl flatbuffers::Push for TEXT_FLOW_DIRECTION {
     type Output = TEXT_FLOW_DIRECTION;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -3015,7 +3015,7 @@ impl<'a> flatbuffers::Follow<'a> for COLUMN_TYPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -3024,7 +3024,7 @@ impl flatbuffers::Push for COLUMN_TYPE {
     type Output = COLUMN_TYPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -3172,7 +3172,7 @@ impl<'a> flatbuffers::Follow<'a> for GDT_SYMBOL {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -3181,7 +3181,7 @@ impl flatbuffers::Push for GDT_SYMBOL {
     type Output = GDT_SYMBOL;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -3261,7 +3261,7 @@ impl<'a> flatbuffers::Follow<'a> for MATERIAL_CONDITION {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -3270,7 +3270,7 @@ impl flatbuffers::Push for MATERIAL_CONDITION {
     type Output = MATERIAL_CONDITION;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -3402,7 +3402,7 @@ impl<'a> flatbuffers::Follow<'a> for FEATURE_MODIFIER {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -3411,7 +3411,7 @@ impl flatbuffers::Push for FEATURE_MODIFIER {
     type Output = FEATURE_MODIFIER;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -3499,7 +3499,7 @@ impl<'a> flatbuffers::Follow<'a> for TOLERANCE_ZONE_TYPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -3508,7 +3508,7 @@ impl flatbuffers::Push for TOLERANCE_ZONE_TYPE {
     type Output = TOLERANCE_ZONE_TYPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -3592,7 +3592,7 @@ impl<'a> flatbuffers::Follow<'a> for DATUM_TARGET_TYPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -3601,7 +3601,7 @@ impl flatbuffers::Push for DATUM_TARGET_TYPE {
     type Output = DATUM_TARGET_TYPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -3681,7 +3681,7 @@ impl<'a> flatbuffers::Follow<'a> for TOLERANCE_TYPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -3690,7 +3690,7 @@ impl flatbuffers::Push for TOLERANCE_TYPE {
     type Output = TOLERANCE_TYPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -3770,7 +3770,7 @@ impl<'a> flatbuffers::Follow<'a> for DATUM_BRACKET_STYLE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -3779,7 +3779,7 @@ impl flatbuffers::Push for DATUM_BRACKET_STYLE {
     type Output = DATUM_BRACKET_STYLE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -3867,7 +3867,7 @@ impl<'a> flatbuffers::Follow<'a> for DIMENSION_UNITS_FORMAT {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -3876,7 +3876,7 @@ impl flatbuffers::Push for DIMENSION_UNITS_FORMAT {
     type Output = DIMENSION_UNITS_FORMAT;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -3960,7 +3960,7 @@ impl<'a> flatbuffers::Follow<'a> for DIMENSION_FIT_RULE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -3969,7 +3969,7 @@ impl flatbuffers::Push for DIMENSION_FIT_RULE {
     type Output = DIMENSION_FIT_RULE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -4049,7 +4049,7 @@ impl<'a> flatbuffers::Follow<'a> for DIMENSION_TEXT_PLACEMENT {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -4058,7 +4058,7 @@ impl flatbuffers::Push for DIMENSION_TEXT_PLACEMENT {
     type Output = DIMENSION_TEXT_PLACEMENT;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -4146,7 +4146,7 @@ impl<'a> flatbuffers::Follow<'a> for ANGULAR_UNITS_FORMAT {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -4155,7 +4155,7 @@ impl flatbuffers::Push for ANGULAR_UNITS_FORMAT {
     type Output = ANGULAR_UNITS_FORMAT;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -4231,7 +4231,7 @@ impl<'a> flatbuffers::Follow<'a> for UNIT_SYSTEM {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -4240,7 +4240,7 @@ impl flatbuffers::Push for UNIT_SYSTEM {
     type Output = UNIT_SYSTEM;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -4316,7 +4316,7 @@ impl<'a> flatbuffers::Follow<'a> for DECIMAL_SEPARATOR {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -4325,7 +4325,7 @@ impl flatbuffers::Push for DECIMAL_SEPARATOR {
     type Output = DECIMAL_SEPARATOR;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -4409,7 +4409,7 @@ impl<'a> flatbuffers::Follow<'a> for VIEWPORT_SHADE_PLOT {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -4418,7 +4418,7 @@ impl flatbuffers::Push for VIEWPORT_SHADE_PLOT {
     type Output = VIEWPORT_SHADE_PLOT;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -4498,7 +4498,7 @@ impl<'a> flatbuffers::Follow<'a> for HATCH_STYLE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -4507,7 +4507,7 @@ impl flatbuffers::Push for HATCH_STYLE {
     type Output = HATCH_STYLE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -4587,7 +4587,7 @@ impl<'a> flatbuffers::Follow<'a> for IMAGE_STATUS {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -4596,7 +4596,7 @@ impl flatbuffers::Push for IMAGE_STATUS {
     type Output = IMAGE_STATUS;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -4672,7 +4672,7 @@ impl<'a> flatbuffers::Follow<'a> for BLOCK_ATTACHMENT {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -4681,7 +4681,7 @@ impl flatbuffers::Push for BLOCK_ATTACHMENT {
     type Output = BLOCK_ATTACHMENT;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -4761,7 +4761,7 @@ impl<'a> flatbuffers::Follow<'a> for AXIS {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -4770,7 +4770,7 @@ impl flatbuffers::Push for AXIS {
     type Output = AXIS;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -4850,7 +4850,7 @@ impl<'a> flatbuffers::Follow<'a> for PRUNING_LEVEL {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -4859,7 +4859,7 @@ impl flatbuffers::Push for PRUNING_LEVEL {
     type Output = PRUNING_LEVEL;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -4935,7 +4935,7 @@ impl<'a> flatbuffers::Follow<'a> for PARAMETRIC_SOURCE_TYPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -4944,7 +4944,7 @@ impl flatbuffers::Push for PARAMETRIC_SOURCE_TYPE {
     type Output = PARAMETRIC_SOURCE_TYPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -5020,7 +5020,7 @@ impl<'a> flatbuffers::Follow<'a> for LEADER_CONTENT_TYPE {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -5029,7 +5029,7 @@ impl flatbuffers::Push for LEADER_CONTENT_TYPE {
     type Output = LEADER_CONTENT_TYPE;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -5113,7 +5113,7 @@ impl<'a> flatbuffers::Follow<'a> for BOOLEAN_OPERATION {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -5122,7 +5122,7 @@ impl flatbuffers::Push for BOOLEAN_OPERATION {
     type Output = BOOLEAN_OPERATION;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -5202,7 +5202,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTextDynamicSourceData {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -5211,7 +5211,7 @@ impl flatbuffers::Push for DucTextDynamicSourceData {
     type Output = DucTextDynamicSourceData;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -5293,7 +5293,7 @@ impl<'a> flatbuffers::Follow<'a> for LeaderContentData {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -5302,7 +5302,7 @@ impl flatbuffers::Push for LeaderContentData {
     type Output = LeaderContentData;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -5464,7 +5464,7 @@ impl<'a> flatbuffers::Follow<'a> for Element {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -5473,7 +5473,7 @@ impl flatbuffers::Push for Element {
     type Output = Element;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
@@ -5527,21 +5527,21 @@ impl<'a> flatbuffers::Follow<'a> for GeometricPoint {
   type Inner = &'a GeometricPoint;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    <&'a GeometricPoint>::follow(buf, loc)
+    unsafe { <&'a GeometricPoint>::follow(buf, loc) }
   }
 }
 impl<'a> flatbuffers::Follow<'a> for &'a GeometricPoint {
   type Inner = &'a GeometricPoint;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    flatbuffers::follow_cast_ref::<GeometricPoint>(buf, loc)
+    unsafe { flatbuffers::follow_cast_ref::<GeometricPoint>(buf, loc) }
   }
 }
 impl<'b> flatbuffers::Push for GeometricPoint {
     type Output = GeometricPoint;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        let src = ::core::slice::from_raw_parts(self as *const GeometricPoint as *const u8, <Self as flatbuffers::Push>::size());
+        let src = unsafe { ::core::slice::from_raw_parts(self as *const GeometricPoint as *const u8, <Self as flatbuffers::Push>::size()) };
         dst.copy_from_slice(src);
     }
     #[inline]
@@ -5643,7 +5643,7 @@ impl<'a> flatbuffers::Follow<'a> for DictionaryEntry<'a> {
   type Inner = DictionaryEntry<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -5768,7 +5768,7 @@ impl<'a> flatbuffers::Follow<'a> for StringValueEntry<'a> {
   type Inner = StringValueEntry<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -5893,7 +5893,7 @@ impl<'a> flatbuffers::Follow<'a> for Identifier<'a> {
   type Inner = Identifier<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -6035,7 +6035,7 @@ impl<'a> flatbuffers::Follow<'a> for DucUcs<'a> {
   type Inner = DucUcs<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -6149,7 +6149,7 @@ impl<'a> flatbuffers::Follow<'a> for DucView<'a> {
   type Inner = DucView<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -6331,7 +6331,7 @@ impl<'a> flatbuffers::Follow<'a> for Margins<'a> {
   type Inner = Margins<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -6479,7 +6479,7 @@ impl<'a> flatbuffers::Follow<'a> for TilingProperties<'a> {
   type Inner = TilingProperties<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -6644,7 +6644,7 @@ impl<'a> flatbuffers::Follow<'a> for HatchPatternLine<'a> {
   type Inner = HatchPatternLine<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -6792,7 +6792,7 @@ impl<'a> flatbuffers::Follow<'a> for CustomHatchPattern<'a> {
   type Inner = CustomHatchPattern<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -6923,7 +6923,7 @@ impl<'a> flatbuffers::Follow<'a> for DucHatchStyle<'a> {
   type Inner = DucHatchStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -7122,7 +7122,7 @@ impl<'a> flatbuffers::Follow<'a> for DucImageFilter<'a> {
   type Inner = DucImageFilter<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -7236,7 +7236,7 @@ impl<'a> flatbuffers::Follow<'a> for ElementContentBase<'a> {
   type Inner = ElementContentBase<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -7435,7 +7435,7 @@ impl<'a> flatbuffers::Follow<'a> for StrokeStyle<'a> {
   type Inner = StrokeStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -7634,7 +7634,7 @@ impl<'a> flatbuffers::Follow<'a> for StrokeSides<'a> {
   type Inner = StrokeSides<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -7748,7 +7748,7 @@ impl<'a> flatbuffers::Follow<'a> for ElementStroke<'a> {
   type Inner = ElementStroke<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -7913,7 +7913,7 @@ impl<'a> flatbuffers::Follow<'a> for ElementBackground<'a> {
   type Inner = ElementBackground<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -8010,7 +8010,7 @@ impl<'a> flatbuffers::Follow<'a> for _DucElementStylesBase<'a> {
   type Inner = _DucElementStylesBase<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -8175,7 +8175,7 @@ impl<'a> flatbuffers::Follow<'a> for BoundElement<'a> {
   type Inner = BoundElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -8289,7 +8289,7 @@ impl<'a> flatbuffers::Follow<'a> for _DucElementBase<'a> {
   type Inner = _DucElementBase<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -8856,7 +8856,7 @@ impl<'a> flatbuffers::Follow<'a> for DucPoint<'a> {
   type Inner = DucPoint<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -8987,7 +8987,7 @@ impl<'a> flatbuffers::Follow<'a> for DucHead<'a> {
   type Inner = DucHead<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -9118,7 +9118,7 @@ impl<'a> flatbuffers::Follow<'a> for PointBindingPoint<'a> {
   type Inner = PointBindingPoint<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -9232,7 +9232,7 @@ impl<'a> flatbuffers::Follow<'a> for DucPointBinding<'a> {
   type Inner = DucPointBinding<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -9414,7 +9414,7 @@ impl<'a> flatbuffers::Follow<'a> for DucLineReference<'a> {
   type Inner = DucLineReference<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -9528,7 +9528,7 @@ impl<'a> flatbuffers::Follow<'a> for DucLine<'a> {
   type Inner = DucLine<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -9642,7 +9642,7 @@ impl<'a> flatbuffers::Follow<'a> for DucPath<'a> {
   type Inner = DucPath<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -9773,7 +9773,7 @@ impl<'a> flatbuffers::Follow<'a> for _DucLinearElementBase<'a> {
   type Inner = _DucLinearElementBase<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -9972,7 +9972,7 @@ impl<'a> flatbuffers::Follow<'a> for DucStackLikeStyles<'a> {
   type Inner = DucStackLikeStyles<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -10086,7 +10086,7 @@ impl<'a> flatbuffers::Follow<'a> for _DucStackBase<'a> {
   type Inner = _DucStackBase<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -10285,7 +10285,7 @@ impl<'a> flatbuffers::Follow<'a> for _DucStackElementBase<'a> {
   type Inner = _DucStackElementBase<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -10450,7 +10450,7 @@ impl<'a> flatbuffers::Follow<'a> for LineSpacing<'a> {
   type Inner = LineSpacing<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -10564,7 +10564,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTextStyle<'a> {
   type Inner = DucTextStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -10882,7 +10882,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTableCellStyle<'a> {
   type Inner = DucTableCellStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -11030,7 +11030,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTableStyle<'a> {
   type Inner = DucTableStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -11195,7 +11195,7 @@ impl<'a> flatbuffers::Follow<'a> for DucLeaderStyle<'a> {
   type Inner = DucLeaderStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -11377,7 +11377,7 @@ impl<'a> flatbuffers::Follow<'a> for DimensionToleranceStyle<'a> {
   type Inner = DimensionToleranceStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -11559,7 +11559,7 @@ impl<'a> flatbuffers::Follow<'a> for DimensionFitStyle<'a> {
   type Inner = DimensionFitStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -11690,7 +11690,7 @@ impl<'a> flatbuffers::Follow<'a> for DimensionLineStyle<'a> {
   type Inner = DimensionLineStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -11804,7 +11804,7 @@ impl<'a> flatbuffers::Follow<'a> for DimensionExtLineStyle<'a> {
   type Inner = DimensionExtLineStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -11935,7 +11935,7 @@ impl<'a> flatbuffers::Follow<'a> for DimensionSymbolStyle<'a> {
   type Inner = DimensionSymbolStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -12066,7 +12066,7 @@ impl<'a> flatbuffers::Follow<'a> for DucDimensionStyle<'a> {
   type Inner = DucDimensionStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -12248,7 +12248,7 @@ impl<'a> flatbuffers::Follow<'a> for FCFLayoutStyle<'a> {
   type Inner = FCFLayoutStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -12379,7 +12379,7 @@ impl<'a> flatbuffers::Follow<'a> for FCFSymbolStyle<'a> {
   type Inner = FCFSymbolStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -12476,7 +12476,7 @@ impl<'a> flatbuffers::Follow<'a> for FCFDatumStyle<'a> {
   type Inner = FCFDatumStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -12573,7 +12573,7 @@ impl<'a> flatbuffers::Follow<'a> for DucFeatureControlFrameStyle<'a> {
   type Inner = DucFeatureControlFrameStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -12738,7 +12738,7 @@ impl<'a> flatbuffers::Follow<'a> for ParagraphFormatting<'a> {
   type Inner = ParagraphFormatting<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -12937,7 +12937,7 @@ impl<'a> flatbuffers::Follow<'a> for StackFormatProperties<'a> {
   type Inner = StackFormatProperties<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -13068,7 +13068,7 @@ impl<'a> flatbuffers::Follow<'a> for StackFormat<'a> {
   type Inner = StackFormat<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -13199,7 +13199,7 @@ impl<'a> flatbuffers::Follow<'a> for DucDocStyle<'a> {
   type Inner = DucDocStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -13330,7 +13330,7 @@ impl<'a> flatbuffers::Follow<'a> for DucViewportStyle<'a> {
   type Inner = DucViewportStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -13444,7 +13444,7 @@ impl<'a> flatbuffers::Follow<'a> for DucPlotStyle<'a> {
   type Inner = DucPlotStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -13541,7 +13541,7 @@ impl<'a> flatbuffers::Follow<'a> for DucXRayStyle<'a> {
   type Inner = DucXRayStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -13655,7 +13655,7 @@ impl<'a> flatbuffers::Follow<'a> for DucRectangleElement<'a> {
   type Inner = DucRectangleElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -13752,7 +13752,7 @@ impl<'a> flatbuffers::Follow<'a> for DucPolygonElement<'a> {
   type Inner = DucPolygonElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -13866,7 +13866,7 @@ impl<'a> flatbuffers::Follow<'a> for DucEllipseElement<'a> {
   type Inner = DucEllipseElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -14031,7 +14031,7 @@ impl<'a> flatbuffers::Follow<'a> for DucEmbeddableElement<'a> {
   type Inner = DucEmbeddableElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -14128,7 +14128,7 @@ impl<'a> flatbuffers::Follow<'a> for DucPdfElement<'a> {
   type Inner = DucPdfElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -14242,7 +14242,7 @@ impl<'a> flatbuffers::Follow<'a> for DucMermaidElement<'a> {
   type Inner = DucMermaidElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -14390,7 +14390,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTableColumn<'a> {
   type Inner = DucTableColumn<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -14532,7 +14532,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTableRow<'a> {
   type Inner = DucTableRow<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -14674,7 +14674,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTableCellSpan<'a> {
   type Inner = DucTableCellSpan<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -14788,7 +14788,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTableCell<'a> {
   type Inner = DucTableCell<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -14970,7 +14970,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTableColumnEntry<'a> {
   type Inner = DucTableColumnEntry<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -15095,7 +15095,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTableRowEntry<'a> {
   type Inner = DucTableRowEntry<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -15220,7 +15220,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTableCellEntry<'a> {
   type Inner = DucTableCellEntry<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -15345,7 +15345,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTableAutoSize<'a> {
   type Inner = DucTableAutoSize<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -15459,7 +15459,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTableElement<'a> {
   type Inner = DucTableElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -15692,7 +15692,7 @@ impl<'a> flatbuffers::Follow<'a> for ImageCrop<'a> {
   type Inner = ImageCrop<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -15874,7 +15874,7 @@ impl<'a> flatbuffers::Follow<'a> for DucImageElement<'a> {
   type Inner = DucImageElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -16056,7 +16056,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTextDynamicElementSource<'a> {
   type Inner = DucTextDynamicElementSource<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -16170,7 +16170,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTextDynamicDictionarySource<'a> {
   type Inner = DucTextDynamicDictionarySource<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -16267,7 +16267,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTextDynamicSource<'a> {
   type Inner = DucTextDynamicSource<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -16452,7 +16452,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTextDynamicPart<'a> {
   type Inner = DucTextDynamicPart<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -16600,7 +16600,7 @@ impl<'a> flatbuffers::Follow<'a> for DucTextElement<'a> {
   type Inner = DucTextElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -16799,7 +16799,7 @@ impl<'a> flatbuffers::Follow<'a> for DucLinearElement<'a> {
   type Inner = DucLinearElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -16913,7 +16913,7 @@ impl<'a> flatbuffers::Follow<'a> for DucArrowElement<'a> {
   type Inner = DucArrowElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -17027,7 +17027,7 @@ impl<'a> flatbuffers::Follow<'a> for DucFreeDrawEnds<'a> {
   type Inner = DucFreeDrawEnds<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -17158,7 +17158,7 @@ impl<'a> flatbuffers::Follow<'a> for DucFreeDrawElement<'a> {
   type Inner = DucFreeDrawElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -17459,7 +17459,7 @@ impl<'a> flatbuffers::Follow<'a> for DucBlockAttributeDefinition<'a> {
   type Inner = DucBlockAttributeDefinition<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -17607,7 +17607,7 @@ impl<'a> flatbuffers::Follow<'a> for DucBlockAttributeDefinitionEntry<'a> {
   type Inner = DucBlockAttributeDefinitionEntry<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -17732,7 +17732,7 @@ impl<'a> flatbuffers::Follow<'a> for DucBlock<'a> {
   type Inner = DucBlock<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -17925,7 +17925,7 @@ impl<'a> flatbuffers::Follow<'a> for DucBlockDuplicationArray<'a> {
   type Inner = DucBlockDuplicationArray<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -18073,7 +18073,7 @@ impl<'a> flatbuffers::Follow<'a> for DucBlockInstanceElement<'a> {
   type Inner = DucBlockInstanceElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -18238,7 +18238,7 @@ impl<'a> flatbuffers::Follow<'a> for DucFrameElement<'a> {
   type Inner = DucFrameElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -18335,7 +18335,7 @@ impl<'a> flatbuffers::Follow<'a> for PlotLayout<'a> {
   type Inner = PlotLayout<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -18432,7 +18432,7 @@ impl<'a> flatbuffers::Follow<'a> for DucPlotElement<'a> {
   type Inner = DucPlotElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -18563,7 +18563,7 @@ impl<'a> flatbuffers::Follow<'a> for DucViewportElement<'a> {
   type Inner = DucViewportElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -18779,7 +18779,7 @@ impl<'a> flatbuffers::Follow<'a> for DucXRayElement<'a> {
   type Inner = DucXRayElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -18944,7 +18944,7 @@ impl<'a> flatbuffers::Follow<'a> for LeaderTextBlockContent<'a> {
   type Inner = LeaderTextBlockContent<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -19041,7 +19041,7 @@ impl<'a> flatbuffers::Follow<'a> for LeaderBlockContent<'a> {
   type Inner = LeaderBlockContent<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -19172,7 +19172,7 @@ impl<'a> flatbuffers::Follow<'a> for LeaderContent<'a> {
   type Inner = LeaderContent<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -19357,7 +19357,7 @@ impl<'a> flatbuffers::Follow<'a> for DucLeaderElement<'a> {
   type Inner = DucLeaderElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -19505,7 +19505,7 @@ impl<'a> flatbuffers::Follow<'a> for DimensionDefinitionPoints<'a> {
   type Inner = DimensionDefinitionPoints<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -19670,7 +19670,7 @@ impl<'a> flatbuffers::Follow<'a> for DimensionBindings<'a> {
   type Inner = DimensionBindings<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -19801,7 +19801,7 @@ impl<'a> flatbuffers::Follow<'a> for DimensionBaselineData<'a> {
   type Inner = DimensionBaselineData<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -19898,7 +19898,7 @@ impl<'a> flatbuffers::Follow<'a> for DimensionContinueData<'a> {
   type Inner = DimensionContinueData<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -19995,7 +19995,7 @@ impl<'a> flatbuffers::Follow<'a> for DucDimensionElement<'a> {
   type Inner = DucDimensionElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -20279,7 +20279,7 @@ impl<'a> flatbuffers::Follow<'a> for DatumReference<'a> {
   type Inner = DatumReference<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -20393,7 +20393,7 @@ impl<'a> flatbuffers::Follow<'a> for ToleranceClause<'a> {
   type Inner = ToleranceClause<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -20541,7 +20541,7 @@ impl<'a> flatbuffers::Follow<'a> for FeatureControlFrameSegment<'a> {
   type Inner = FeatureControlFrameSegment<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -20672,7 +20672,7 @@ impl<'a> flatbuffers::Follow<'a> for FCFBetweenModifier<'a> {
   type Inner = FCFBetweenModifier<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -20786,7 +20786,7 @@ impl<'a> flatbuffers::Follow<'a> for FCFProjectedZoneModifier<'a> {
   type Inner = FCFProjectedZoneModifier<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -20883,7 +20883,7 @@ impl<'a> flatbuffers::Follow<'a> for FCFFrameModifiers<'a> {
   type Inner = FCFFrameModifiers<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -21048,7 +21048,7 @@ impl<'a> flatbuffers::Follow<'a> for FCFDatumDefinition<'a> {
   type Inner = FCFDatumDefinition<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -21162,7 +21162,7 @@ impl<'a> flatbuffers::Follow<'a> for FCFSegmentRow<'a> {
   type Inner = FCFSegmentRow<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -21259,7 +21259,7 @@ impl<'a> flatbuffers::Follow<'a> for DucFeatureControlFrameElement<'a> {
   type Inner = DucFeatureControlFrameElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -21441,7 +21441,7 @@ impl<'a> flatbuffers::Follow<'a> for TextColumn<'a> {
   type Inner = TextColumn<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -21555,7 +21555,7 @@ impl<'a> flatbuffers::Follow<'a> for ColumnLayout<'a> {
   type Inner = ColumnLayout<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -21686,7 +21686,7 @@ impl<'a> flatbuffers::Follow<'a> for DucDocElement<'a> {
   type Inner = DucDocElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -21885,7 +21885,7 @@ impl<'a> flatbuffers::Follow<'a> for ParametricSource<'a> {
   type Inner = ParametricSource<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -22016,7 +22016,7 @@ impl<'a> flatbuffers::Follow<'a> for DucParametricElement<'a> {
   type Inner = DucParametricElement<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -22130,7 +22130,7 @@ impl<'a> flatbuffers::Follow<'a> for ElementWrapper<'a> {
   type Inner = ElementWrapper<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -22758,7 +22758,7 @@ impl<'a> flatbuffers::Follow<'a> for DucGlobalState<'a> {
   type Inner = DucGlobalState<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -23008,7 +23008,7 @@ impl<'a> flatbuffers::Follow<'a> for DucLocalState<'a> {
   type Inner = DucLocalState<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -23462,7 +23462,7 @@ impl<'a> flatbuffers::Follow<'a> for DucGroup<'a> {
   type Inner = DucGroup<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -23587,7 +23587,7 @@ impl<'a> flatbuffers::Follow<'a> for DucRegion<'a> {
   type Inner = DucRegion<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -23729,7 +23729,7 @@ impl<'a> flatbuffers::Follow<'a> for DucLayerOverrides<'a> {
   type Inner = DucLayerOverrides<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -23843,7 +23843,7 @@ impl<'a> flatbuffers::Follow<'a> for DucLayer<'a> {
   type Inner = DucLayer<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -24002,7 +24002,7 @@ impl<'a> flatbuffers::Follow<'a> for _UnitSystemBase<'a> {
   type Inner = _UnitSystemBase<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -24150,7 +24150,7 @@ impl<'a> flatbuffers::Follow<'a> for LinearUnitSystem<'a> {
   type Inner = LinearUnitSystem<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -24315,7 +24315,7 @@ impl<'a> flatbuffers::Follow<'a> for AngularUnitSystem<'a> {
   type Inner = AngularUnitSystem<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -24429,7 +24429,7 @@ impl<'a> flatbuffers::Follow<'a> for AlternateUnits<'a> {
   type Inner = AlternateUnits<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -24577,7 +24577,7 @@ impl<'a> flatbuffers::Follow<'a> for PrimaryUnits<'a> {
   type Inner = PrimaryUnits<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -24691,7 +24691,7 @@ impl<'a> flatbuffers::Follow<'a> for StandardUnits<'a> {
   type Inner = StandardUnits<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -24805,7 +24805,7 @@ impl<'a> flatbuffers::Follow<'a> for UnitPrecision<'a> {
   type Inner = UnitPrecision<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -24953,7 +24953,7 @@ impl<'a> flatbuffers::Follow<'a> for StandardOverrides<'a> {
   type Inner = StandardOverrides<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -25322,7 +25322,7 @@ impl<'a> flatbuffers::Follow<'a> for DucCommonStyle<'a> {
   type Inner = DucCommonStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -25436,7 +25436,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedCommonStyle<'a> {
   type Inner = IdentifiedCommonStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -25550,7 +25550,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedStackLikeStyle<'a> {
   type Inner = IdentifiedStackLikeStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -25664,7 +25664,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedTextStyle<'a> {
   type Inner = IdentifiedTextStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -25778,7 +25778,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedDimensionStyle<'a> {
   type Inner = IdentifiedDimensionStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -25892,7 +25892,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedLeaderStyle<'a> {
   type Inner = IdentifiedLeaderStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -26006,7 +26006,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedFCFStyle<'a> {
   type Inner = IdentifiedFCFStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -26120,7 +26120,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedTableStyle<'a> {
   type Inner = IdentifiedTableStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -26234,7 +26234,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedDocStyle<'a> {
   type Inner = IdentifiedDocStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -26348,7 +26348,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedViewportStyle<'a> {
   type Inner = IdentifiedViewportStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -26462,7 +26462,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedHatchStyle<'a> {
   type Inner = IdentifiedHatchStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -26576,7 +26576,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedXRayStyle<'a> {
   type Inner = IdentifiedXRayStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -26690,7 +26690,7 @@ impl<'a> flatbuffers::Follow<'a> for StandardStyles<'a> {
   type Inner = StandardStyles<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -26957,7 +26957,7 @@ impl<'a> flatbuffers::Follow<'a> for GridStyle<'a> {
   type Inner = GridStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -27088,7 +27088,7 @@ impl<'a> flatbuffers::Follow<'a> for PolarGridSettings<'a> {
   type Inner = PolarGridSettings<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -27219,7 +27219,7 @@ impl<'a> flatbuffers::Follow<'a> for IsometricGridSettings<'a> {
   type Inner = IsometricGridSettings<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -27333,7 +27333,7 @@ impl<'a> flatbuffers::Follow<'a> for GridSettings<'a> {
   type Inner = GridSettings<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -27736,7 +27736,7 @@ impl<'a> flatbuffers::Follow<'a> for SnapOverride<'a> {
   type Inner = SnapOverride<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -27850,7 +27850,7 @@ impl<'a> flatbuffers::Follow<'a> for DynamicSnapSettings<'a> {
   type Inner = DynamicSnapSettings<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -27981,7 +27981,7 @@ impl<'a> flatbuffers::Follow<'a> for PolarTrackingSettings<'a> {
   type Inner = PolarTrackingSettings<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -28146,7 +28146,7 @@ impl<'a> flatbuffers::Follow<'a> for TrackingLineStyle<'a> {
   type Inner = TrackingLineStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -28277,7 +28277,7 @@ impl<'a> flatbuffers::Follow<'a> for LayerSnapFilters<'a> {
   type Inner = LayerSnapFilters<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -28391,7 +28391,7 @@ impl<'a> flatbuffers::Follow<'a> for SnapMarkerStyle<'a> {
   type Inner = SnapMarkerStyle<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -28505,7 +28505,7 @@ impl<'a> flatbuffers::Follow<'a> for SnapMarkerStyleEntry<'a> {
   type Inner = SnapMarkerStyleEntry<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -28619,7 +28619,7 @@ impl<'a> flatbuffers::Follow<'a> for SnapMarkerSettings<'a> {
   type Inner = SnapMarkerSettings<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -28767,7 +28767,7 @@ impl<'a> flatbuffers::Follow<'a> for SnapSettings<'a> {
   type Inner = SnapSettings<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -29204,7 +29204,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedGridSettings<'a> {
   type Inner = IdentifiedGridSettings<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -29318,7 +29318,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedSnapSettings<'a> {
   type Inner = IdentifiedSnapSettings<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -29432,7 +29432,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedUcs<'a> {
   type Inner = IdentifiedUcs<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -29546,7 +29546,7 @@ impl<'a> flatbuffers::Follow<'a> for IdentifiedView<'a> {
   type Inner = IdentifiedView<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -29660,7 +29660,7 @@ impl<'a> flatbuffers::Follow<'a> for StandardViewSettings<'a> {
   type Inner = StandardViewSettings<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -29808,7 +29808,7 @@ impl<'a> flatbuffers::Follow<'a> for DimensionValidationRules<'a> {
   type Inner = DimensionValidationRules<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -29939,7 +29939,7 @@ impl<'a> flatbuffers::Follow<'a> for LayerValidationRules<'a> {
   type Inner = LayerValidationRules<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -30036,7 +30036,7 @@ impl<'a> flatbuffers::Follow<'a> for StandardValidation<'a> {
   type Inner = StandardValidation<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -30150,7 +30150,7 @@ impl<'a> flatbuffers::Follow<'a> for Standard<'a> {
   type Inner = Standard<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -30366,7 +30366,7 @@ impl<'a> flatbuffers::Follow<'a> for VersionBase<'a> {
   type Inner = VersionBase<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -30548,7 +30548,7 @@ impl<'a> flatbuffers::Follow<'a> for Checkpoint<'a> {
   type Inner = Checkpoint<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -30679,7 +30679,7 @@ impl<'a> flatbuffers::Follow<'a> for JSONPatchOperation<'a> {
   type Inner = JSONPatchOperation<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -30827,7 +30827,7 @@ impl<'a> flatbuffers::Follow<'a> for Delta<'a> {
   type Inner = Delta<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -30941,7 +30941,7 @@ impl<'a> flatbuffers::Follow<'a> for VersionGraphMetadata<'a> {
   type Inner = VersionGraphMetadata<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -31072,7 +31072,7 @@ impl<'a> flatbuffers::Follow<'a> for VersionGraph<'a> {
   type Inner = VersionGraph<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -31237,7 +31237,7 @@ impl<'a> flatbuffers::Follow<'a> for DucExternalFileData<'a> {
   type Inner = DucExternalFileData<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -31413,7 +31413,7 @@ impl<'a> flatbuffers::Follow<'a> for DucExternalFileEntry<'a> {
   type Inner = DucExternalFileEntry<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -31538,7 +31538,7 @@ impl<'a> flatbuffers::Follow<'a> for ExportedDataState<'a> {
   type Inner = ExportedDataState<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: flatbuffers::Table::new(buf, loc) }
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
@@ -31930,14 +31930,14 @@ pub fn size_prefixed_root_as_exported_data_state_with_opts<'b, 'o>(
 /// # Safety
 /// Callers must trust the given bytes do indeed contain a valid `ExportedDataState`.
 pub unsafe fn root_as_exported_data_state_unchecked(buf: &[u8]) -> ExportedDataState {
-  flatbuffers::root_unchecked::<ExportedDataState>(buf)
+  unsafe { flatbuffers::root_unchecked::<ExportedDataState>(buf) }
 }
 #[inline]
 /// Assumes, without verification, that a buffer of bytes contains a size prefixed ExportedDataState and returns it.
 /// # Safety
 /// Callers must trust the given bytes do indeed contain a valid size prefixed `ExportedDataState`.
 pub unsafe fn size_prefixed_root_as_exported_data_state_unchecked(buf: &[u8]) -> ExportedDataState {
-  flatbuffers::size_prefixed_root_unchecked::<ExportedDataState>(buf)
+  unsafe { flatbuffers::size_prefixed_root_unchecked::<ExportedDataState>(buf) }
 }
 pub const EXPORTED_DATA_STATE_IDENTIFIER: &str = "DUC_";
 
