@@ -9,7 +9,6 @@ from typing import List, Dict, Optional, Union, Any, IO
 import flatbuffers
 from flatbuffers.table import Table
 
-# Dataclasses (authoring model)
 from ducpy.classes.DataStateClass import (
     ExportedDataState as DS_ExportedDataState,
     DictionaryEntry as DS_DictionaryEntry,
@@ -874,7 +873,6 @@ def parse_fbs_line_spacing(obj: FBSLineSpacing) -> Optional[DS_LineSpacing]:
 
 def parse_fbs_duc_text_style(obj: FBSDucTextStyle) -> DS_DucTextStyle:
     return DS_DucTextStyle(
-        base_style=parse_fbs_duc_element_styles_base(obj.BaseStyle()),
         is_ltr=obj.IsLtr(),
         font_family=_s_req(obj.FontFamily()),
         big_font_family=_s_req(obj.BigFontFamily()),
@@ -902,7 +900,6 @@ def parse_fbs_table_style(obj: FBSDucTableStyle) -> Optional[DS_DucTableStyle]:
     if obj is None:
         return None
     return DS_DucTableStyle(
-        base_style=parse_fbs_duc_element_styles_base(obj.BaseStyle()),
         header_row_style=parse_fbs_table_cell_style(obj.HeaderRowStyle()),
         data_row_style=parse_fbs_table_cell_style(obj.DataRowStyle()),
         data_column_style=parse_fbs_table_cell_style(obj.DataColumnStyle()),
@@ -912,7 +909,6 @@ def parse_fbs_table_style(obj: FBSDucTableStyle) -> Optional[DS_DucTableStyle]:
 def parse_fbs_leader_style(obj: "FBSDucLeaderStyle") -> DS_DucLeaderStyle:
     heads = [parse_fbs_duc_head(obj.HeadsOverride(i)) for i in range(obj.HeadsOverrideLength())]
     return DS_DucLeaderStyle(
-        base_style=parse_fbs_duc_element_styles_base(obj.BaseStyle()),
         text_style=parse_fbs_duc_text_style(obj.TextStyle()),
         text_attachment=obj.TextAttachment() if hasattr(obj, "TextAttachment") else None,
         block_attachment=obj.BlockAttachment() if hasattr(obj, "BlockAttachment") else None,
@@ -987,7 +983,6 @@ def parse_fbs_fcf_datum_style(obj: FBSFCFDatumStyle) -> DS_FCFDatumStyle:
 
 def parse_fbs_feature_control_frame_style(obj: FBSDucFeatureControlFrameStyle) -> DS_DucFeatureControlFrameStyle:
     return DS_DucFeatureControlFrameStyle(
-        base_style=parse_fbs_duc_element_styles_base(obj.BaseStyle()),
         text_style=parse_fbs_duc_text_style(obj.TextStyle()),
         layout=parse_fbs_fcf_layout_style(obj.Layout()),
         symbols=parse_fbs_fcf_symbol_style(obj.Symbols()),
@@ -1028,18 +1023,15 @@ def parse_fbs_doc_style(obj: FBSDucDocStyle) -> DS_DucDocStyle:
 
 def parse_fbs_viewport_style(obj: FBSDucViewportStyle) -> DS_DucViewportStyle:
     return DS_DucViewportStyle(
-        base_style=parse_fbs_duc_element_styles_base(obj.BaseStyle()),
         scale_indicator_visible=obj.ScaleIndicatorVisible(),
     )
 
 def parse_fbs_plot_style(obj: FBSDucPlotStyle) -> DS_DucPlotStyle:
     return DS_DucPlotStyle(
-        base_style=parse_fbs_duc_element_styles_base(obj.BaseStyle())
     )
 
 def parse_fbs_xray_style(obj: FBSDucXRayStyle) -> DS_DucXRayStyle:
     return DS_DucXRayStyle(
-        base_style=parse_fbs_duc_element_styles_base(obj.BaseStyle()),
         color=_s_req(obj.Color()),
     )
 
@@ -2120,6 +2112,7 @@ def parse_fbs_duc_global_state(obj) -> Optional[DS_DucGlobalState]:
         use_annotative_scaling=obj.UseAnnotativeScaling(),
         display_precision=dp,
         name=_s(obj.Name()),
+        pruning_level=obj.PruningLevel() if hasattr(obj, "PruningLevel") else PRUNING_LEVEL.BALANCED,
     )
 
 def parse_fbs_duc_local_state(obj) -> Optional[DS_DucLocalState]:
@@ -2149,6 +2142,7 @@ def parse_fbs_duc_local_state(obj) -> Optional[DS_DucLocalState]:
         current_item_roundness=obj.CurrentItemRoundness() if hasattr(obj, "CurrentItemRoundness") else None,
         current_item_start_line_head=parse_fbs_duc_head(obj.CurrentItemStartLineHead()) if obj.CurrentItemStartLineHead() else None,
         current_item_end_line_head=parse_fbs_duc_head(obj.CurrentItemEndLineHead()) if obj.CurrentItemEndLineHead() else None,
+        manual_save_mode=obj.ManualSaveMode() if hasattr(obj, "ManualSaveMode") else None,
     )
 
 # -----------------------------------------------------------------------------
@@ -2226,7 +2220,6 @@ def parse_fbs_version_graph_metadata(obj: FBSVersionGraphMetadata) -> Optional[D
     return DS_VersionGraphMetadata(
         last_pruned=obj.LastPruned(),
         total_size=obj.TotalSize(),
-        pruning_level=obj.PruningLevel() if hasattr(obj, "PruningLevel") else PRUNING_LEVEL.CONSERVATIVE,
     )
 
 def parse_fbs_version_graph(obj: FBSVersionGraph) -> Optional[DS_VersionGraph]:
@@ -2235,7 +2228,7 @@ def parse_fbs_version_graph(obj: FBSVersionGraph) -> Optional[DS_VersionGraph]:
     checkpoints = [parse_fbs_checkpoint(obj.Checkpoints(i)) for i in range(obj.CheckpointsLength())]
     deltas = [parse_fbs_delta(obj.Deltas(i)) for i in range(obj.DeltasLength())]
     metadata = parse_fbs_version_graph_metadata(obj.Metadata()) or DS_VersionGraphMetadata(
-        last_pruned=0, total_size=0, pruning_level=PRUNING_LEVEL.CONSERVATIVE
+        last_pruned=0, total_size=0
     )
     return DS_VersionGraph(
         checkpoints=checkpoints,
@@ -2274,6 +2267,9 @@ def parse_duc(blob: IO[bytes]) -> DS_ExportedDataState:
     # Thumbnail bytes
     thumbnail = _read_bytes_from_numpy(data, "ThumbnailLength", "ThumbnailAsNumpy", "Thumbnail")
 
+    # Id field
+    file_id = _s(data.Id()) if data.Id() else None
+
     return DS_ExportedDataState(
         type=_s_req(data.Type()),
         source=_s_req(data.Source()),
@@ -2290,4 +2286,5 @@ def parse_duc(blob: IO[bytes]) -> DS_ExportedDataState:
         duc_global_state=duc_global_state,
         files=files,
         version_graph=version_graph,
+        id=file_id,
     )

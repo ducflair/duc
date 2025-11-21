@@ -27,7 +27,9 @@ fn serialize_vec_of_strings<'bldr>(
     }
     // Collect in a separate scope to end the iterator borrow before the next builder call.
     let offsets: Vec<WIPOffset<&'bldr str>> = {
-        vec.iter().map(|s| builder.create_string(s.as_str())).collect()
+        vec.iter()
+            .map(|s| builder.create_string(s.as_str()))
+            .collect()
     };
     let v: WIPOffset<flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<&'bldr str>>> =
         builder.create_vector(&offsets);
@@ -59,14 +61,18 @@ fn serialize_duc_point<'bldr>(
 fn serialize_vec_of_duc_points<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     vec: &[types::DucPoint],
-) -> Option<WIPOffset<flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucPoint<'bldr>>>>> {
+) -> Option<WIPOffset<flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucPoint<'bldr>>>>>
+{
     if vec.is_empty() {
         return None;
     }
-    let offsets: Vec<WIPOffset<fb::DucPoint<'bldr>>> =
-        vec.iter().map(|p| serialize_duc_point(builder, p)).collect();
-    let v: WIPOffset<flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucPoint<'bldr>>>> =
-        builder.create_vector(&offsets);
+    let offsets: Vec<WIPOffset<fb::DucPoint<'bldr>>> = vec
+        .iter()
+        .map(|p| serialize_duc_point(builder, p))
+        .collect();
+    let v: WIPOffset<
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucPoint<'bldr>>>,
+    > = builder.create_vector(&offsets);
     Some(v)
 }
 
@@ -195,8 +201,10 @@ fn serialize_hatch_pattern_line<'bldr>(
     line: &types::HatchPatternLine,
 ) -> WIPOffset<fb::HatchPatternLine<'bldr>> {
     let origin_offset = serialize_duc_point(builder, &line.origin);
-    let offset_vec: WIPOffset<flatbuffers::Vector<'bldr, f64>> = builder.create_vector(&line.offset);
-    let dash_pattern_vec: WIPOffset<flatbuffers::Vector<'bldr, f64>> = builder.create_vector(&line.dash_pattern);
+    let offset_vec: WIPOffset<flatbuffers::Vector<'bldr, f64>> =
+        builder.create_vector(&line.offset);
+    let dash_pattern_vec: WIPOffset<flatbuffers::Vector<'bldr, f64>> =
+        builder.create_vector(&line.dash_pattern);
 
     fb::HatchPatternLine::create(
         builder,
@@ -214,18 +222,17 @@ fn serialize_custom_hatch_pattern<'bldr>(
     pattern: &types::CustomHatchPattern,
 ) -> WIPOffset<fb::CustomHatchPattern<'bldr>> {
     let name_offset = builder.create_string(&pattern.name);
-    let description_offset: Option<WIPOffset<&'bldr str>> =
-        pattern.description.as_ref().map(|s| {
-            let off: WIPOffset<&'bldr str> = builder.create_string(s.as_str());
-            off
-        });
+    let description_offset: Option<WIPOffset<&'bldr str>> = pattern.description.as_ref().map(|s| {
+        let off: WIPOffset<&'bldr str> = builder.create_string(s.as_str());
+        off
+    });
     let lines_offsets: Vec<_> = pattern
         .lines
         .iter()
         .map(|l| serialize_hatch_pattern_line(builder, l))
         .collect();
     let lines_vec: WIPOffset<
-        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::HatchPatternLine<'bldr>>>
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::HatchPatternLine<'bldr>>>,
     > = builder.create_vector(&lines_offsets);
 
     fb::CustomHatchPattern::create(
@@ -248,7 +255,10 @@ fn serialize_duc_hatch_style<'bldr>(
         Some(off)
     };
     let pattern_origin_offset = serialize_duc_point(builder, &style.pattern_origin);
-    let custom_pattern_offset = style.custom_pattern.as_ref().map(|cp| serialize_custom_hatch_pattern(builder, cp));
+    let custom_pattern_offset = style
+        .custom_pattern
+        .as_ref()
+        .map(|cp| serialize_custom_hatch_pattern(builder, cp));
 
     fb::DucHatchStyle::create(
         builder,
@@ -282,9 +292,18 @@ fn serialize_element_content_base<'bldr>(
     content: &types::ElementContentBase,
 ) -> WIPOffset<fb::ElementContentBase<'bldr>> {
     let src_offset = builder.create_string(&content.src);
-    let tiling_offset: Option<WIPOffset<fb::TilingProperties>> = content.tiling.as_ref().map(|t| serialize_tiling_properties(builder, t));
-    let hatch_offset: Option<WIPOffset<fb::DucHatchStyle>> = content.hatch.as_ref().map(|h| serialize_duc_hatch_style(builder, h));
-    let image_filter_offset: Option<WIPOffset<fb::DucImageFilter>> = content.image_filter.as_ref().map(|f| serialize_duc_image_filter(builder, f));
+    let tiling_offset: Option<WIPOffset<fb::TilingProperties>> = content
+        .tiling
+        .as_ref()
+        .map(|t| serialize_tiling_properties(builder, t));
+    let hatch_offset: Option<WIPOffset<fb::DucHatchStyle>> = content
+        .hatch
+        .as_ref()
+        .map(|h| serialize_duc_hatch_style(builder, h));
+    let image_filter_offset: Option<WIPOffset<fb::DucImageFilter>> = content
+        .image_filter
+        .as_ref()
+        .map(|f| serialize_duc_image_filter(builder, f));
 
     fb::ElementContentBase::create(
         builder,
@@ -306,8 +325,10 @@ fn serialize_stroke_style<'bldr>(
 ) -> WIPOffset<fb::StrokeStyle<'bldr>> {
     let dash_vec = style.dash.as_ref().map(|v| builder.create_vector(v));
     // Map Option<String> -> Option<WIPOffset<&str>> explicitly for type inference
-    let dash_line_override_offset: Option<WIPOffset<&'bldr str>> =
-        style.dash_line_override.as_ref().map(|s| builder.create_string(s.as_str()));
+    let dash_line_override_offset: Option<WIPOffset<&'bldr str>> = style
+        .dash_line_override
+        .as_ref()
+        .map(|s| builder.create_string(s.as_str()));
 
     fb::StrokeStyle::create(
         builder,
@@ -343,7 +364,10 @@ fn serialize_element_stroke<'bldr>(
 ) -> WIPOffset<fb::ElementStroke<'bldr>> {
     let content_offset = serialize_element_content_base(builder, &stroke.content);
     let style_offset = serialize_stroke_style(builder, &stroke.style);
-    let stroke_sides_offset = stroke.stroke_sides.as_ref().map(|s| serialize_stroke_sides(builder, s));
+    let stroke_sides_offset = stroke
+        .stroke_sides
+        .as_ref()
+        .map(|s| serialize_stroke_sides(builder, s));
 
     fb::ElementStroke::create(
         builder,
@@ -423,7 +447,7 @@ fn serialize_duc_element_base<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     base: &types::DucElementBase,
 ) -> WIPOffset<fb::_DucElementBase<'bldr>> {
-    let styles_offset = serialize_duc_element_styles_base(builder, &base.styles);
+    let styles_offset = Some(serialize_duc_element_styles_base(builder, &base.styles));
     let id_offset = builder.create_string(&base.id);
     let scope_offset = builder.create_string(&base.scope);
     let label_offset = Some(builder.create_string(&base.label));
@@ -439,8 +463,11 @@ fn serialize_duc_element_base<'bldr>(
         .flat_map(|v| v.iter())
         .map(|be| serialize_bound_element(builder, be))
         .collect();
-    let bound_elements_vec =
-        if bound_elements_offsets.is_empty() { None } else { Some(builder.create_vector(&bound_elements_offsets)) };
+    let bound_elements_vec = if bound_elements_offsets.is_empty() {
+        None
+    } else {
+        Some(builder.create_vector(&bound_elements_offsets))
+    };
     let link_offset = base.link.as_ref().map(|s| builder.create_string(s));
     let custom_data_offset = base.custom_data.as_ref().map(|s| builder.create_string(s));
 
@@ -448,7 +475,7 @@ fn serialize_duc_element_base<'bldr>(
         builder,
         &fb::_DucElementBaseArgs {
             id: Some(id_offset),
-            styles: Some(styles_offset),
+            styles: styles_offset,
             x: base.x,
             y: base.y,
             width: base.width,
@@ -483,7 +510,10 @@ fn serialize_duc_head<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     head: &types::DucHead,
 ) -> WIPOffset<fb::DucHead<'bldr>> {
-    let block_id_offset = head.block_id.as_ref().map(|s| builder.create_string(s.as_str()));
+    let block_id_offset = head
+        .block_id
+        .as_ref()
+        .map(|s| builder.create_string(s.as_str()));
     fb::DucHead::create(
         builder,
         &fb::DucHeadArgs {
@@ -512,11 +542,19 @@ fn serialize_duc_point_binding<'bldr>(
     binding: &types::DucPointBinding,
 ) -> WIPOffset<fb::DucPointBinding<'bldr>> {
     let element_id_offset = builder.create_string(&binding.element_id);
-    let fixed_point_built: Option<fb::GeometricPoint> =
-        binding.fixed_point.as_ref().map(|gp| serialize_geometric_point(gp));
+    let fixed_point_built: Option<fb::GeometricPoint> = binding
+        .fixed_point
+        .as_ref()
+        .map(|gp| serialize_geometric_point(gp));
     let fixed_point_ref: Option<&fb::GeometricPoint> = fixed_point_built.as_ref();
-    let point_offset = binding.point.as_ref().map(|p| serialize_point_binding_point(builder, p));
-    let head_offset = binding.head.as_ref().map(|h| serialize_duc_head(builder, h));
+    let point_offset = binding
+        .point
+        .as_ref()
+        .map(|p| serialize_point_binding_point(builder, p));
+    let head_offset = binding
+        .head
+        .as_ref()
+        .map(|h| serialize_duc_head(builder, h));
 
     fb::DucPointBinding::create(
         builder,
@@ -571,8 +609,14 @@ fn serialize_duc_path<'bldr>(
     path: &types::DucPath,
 ) -> WIPOffset<fb::DucPath<'bldr>> {
     let line_indices_vec = builder.create_vector(&path.line_indices);
-    let background_offset = path.background.as_ref().map(|b| serialize_element_background(builder, b));
-    let stroke_offset = path.stroke.as_ref().map(|s| serialize_element_stroke(builder, s));
+    let background_offset = path
+        .background
+        .as_ref()
+        .map(|b| serialize_element_background(builder, b));
+    let stroke_offset = path
+        .stroke
+        .as_ref()
+        .map(|s| serialize_element_stroke(builder, s));
     fb::DucPath::create(
         builder,
         &fb::DucPathArgs {
@@ -594,17 +638,27 @@ fn serialize_duc_linear_element_base<'bldr>(
         .iter()
         .map(|l| serialize_duc_line(builder, l))
         .collect();
-    let lines_vec: WIPOffset<flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucLine<'bldr>>>> =
-        builder.create_vector(&lines_offsets);
+    let lines_vec: WIPOffset<
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucLine<'bldr>>>,
+    > = builder.create_vector(&lines_offsets);
     let path_overrides_offsets: Vec<_> = base
         .path_overrides
         .iter()
         .map(|p| serialize_duc_path(builder, p))
         .collect();
     let path_overrides_vec = builder.create_vector(&path_overrides_offsets);
-    let last_committed_point_offset = base.last_committed_point.as_ref().map(|p| serialize_duc_point(builder, p));
-    let start_binding_offset = base.start_binding.as_ref().map(|b| serialize_duc_point_binding(builder, b));
-    let end_binding_offset = base.end_binding.as_ref().map(|b| serialize_duc_point_binding(builder, b));
+    let last_committed_point_offset = base
+        .last_committed_point
+        .as_ref()
+        .map(|p| serialize_duc_point(builder, p));
+    let start_binding_offset = base
+        .start_binding
+        .as_ref()
+        .map(|b| serialize_duc_point_binding(builder, b));
+    let end_binding_offset = base
+        .end_binding
+        .as_ref()
+        .map(|b| serialize_duc_point_binding(builder, b));
 
     fb::_DucLinearElementBase::create(
         builder,
@@ -699,7 +753,6 @@ fn serialize_duc_text_style<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     style: &types::DucTextStyle,
 ) -> WIPOffset<fb::DucTextStyle<'bldr>> {
-    let base_style_offset = serialize_duc_element_styles_base(builder, &style.base_style);
     let font_family_offset = builder.create_string(&style.font_family);
     let big_font_family_offset = builder.create_string(&style.big_font_family);
     let line_spacing_offset = serialize_line_spacing(builder, &style.line_spacing);
@@ -707,7 +760,6 @@ fn serialize_duc_text_style<'bldr>(
     fb::DucTextStyle::create(
         builder,
         &fb::DucTextStyleArgs {
-            base_style: Some(base_style_offset),
             is_ltr: style.is_ltr,
             font_family: Some(font_family_offset),
             big_font_family: Some(big_font_family_offset),
@@ -748,7 +800,6 @@ fn serialize_duc_table_style<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     style: &types::DucTableStyle,
 ) -> WIPOffset<fb::DucTableStyle<'bldr>> {
-    let base_style_offset = serialize_duc_element_styles_base(builder, &style.base_style);
     let header_row_style_offset = serialize_duc_table_cell_style(builder, &style.header_row_style);
     let data_row_style_offset = serialize_duc_table_cell_style(builder, &style.data_row_style);
     let data_column_style_offset =
@@ -757,7 +808,6 @@ fn serialize_duc_table_style<'bldr>(
     fb::DucTableStyle::create(
         builder,
         &fb::DucTableStyleArgs {
-            base_style: Some(base_style_offset),
             flow_direction: Some(style.flow_direction),
             header_row_style: Some(header_row_style_offset),
             data_row_style: Some(data_row_style_offset),
@@ -770,20 +820,15 @@ fn serialize_duc_leader_style<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     style: &types::DucLeaderStyle,
 ) -> WIPOffset<fb::DucLeaderStyle<'bldr>> {
-    let base_style_offset = serialize_duc_element_styles_base(builder, &style.base_style);
-    let heads_override_vec = style
-        .heads_override
-        .as_ref()
-        .map(|v| {
-            let offsets: Vec<_> = v.iter().map(|h| serialize_duc_head(builder, h)).collect();
-            builder.create_vector(&offsets)
-        });
+    let heads_override_vec = style.heads_override.as_ref().map(|v| {
+        let offsets: Vec<_> = v.iter().map(|h| serialize_duc_head(builder, h)).collect();
+        builder.create_vector(&offsets)
+    });
     let text_style_offset = serialize_duc_text_style(builder, &style.text_style);
 
     fb::DucLeaderStyle::create(
         builder,
         &fb::DucLeaderStyleArgs {
-            base_style: Some(base_style_offset),
             heads_override: heads_override_vec,
             dogleg: style.dogleg.unwrap_or(0.0),
             text_style: Some(text_style_offset),
@@ -797,7 +842,10 @@ fn serialize_dimension_tolerance_style<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     style: &types::DimensionToleranceStyle,
 ) -> WIPOffset<fb::DimensionToleranceStyle<'bldr>> {
-    let text_style_offset = style.text_style.as_ref().map(|t| serialize_duc_text_style(builder, t));
+    let text_style_offset = style
+        .text_style
+        .as_ref()
+        .map(|t| serialize_duc_text_style(builder, t));
 
     fb::DimensionToleranceStyle::create(
         builder,
@@ -859,13 +907,10 @@ fn serialize_dimension_symbol_style<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     style: &types::DimensionSymbolStyle,
 ) -> WIPOffset<fb::DimensionSymbolStyle<'bldr>> {
-    let heads_override_vec = style
-        .heads_override
-        .as_ref()
-        .map(|v| {
-            let offsets: Vec<_> = v.iter().map(|h| serialize_duc_head(builder, h)).collect();
-            builder.create_vector(&offsets)
-        });
+    let heads_override_vec = style.heads_override.as_ref().map(|v| {
+        let offsets: Vec<_> = v.iter().map(|h| serialize_duc_head(builder, h)).collect();
+        builder.create_vector(&offsets)
+    });
     fb::DimensionSymbolStyle::create(
         builder,
         &fb::DimensionSymbolStyleArgs {
@@ -937,7 +982,6 @@ fn serialize_duc_feature_control_frame_style<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     style: &types::DucFeatureControlFrameStyle,
 ) -> WIPOffset<fb::DucFeatureControlFrameStyle<'bldr>> {
-    let base_style_offset = serialize_duc_element_styles_base(builder, &style.base_style);
     let text_style_offset = serialize_duc_text_style(builder, &style.text_style);
     let layout_offset = serialize_fcf_layout_style(builder, &style.layout);
     let symbols_offset = serialize_fcf_symbol_style(builder, &style.symbols);
@@ -946,7 +990,6 @@ fn serialize_duc_feature_control_frame_style<'bldr>(
     fb::DucFeatureControlFrameStyle::create(
         builder,
         &fb::DucFeatureControlFrameStyleArgs {
-            base_style: Some(base_style_offset),
             text_style: Some(text_style_offset),
             layout: Some(layout_offset),
             symbols: Some(symbols_offset),
@@ -1025,11 +1068,9 @@ fn serialize_duc_viewport_style<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     style: &types::DucViewportStyle,
 ) -> WIPOffset<fb::DucViewportStyle<'bldr>> {
-    let base_style_offset = serialize_duc_element_styles_base(builder, &style.base_style);
     fb::DucViewportStyle::create(
         builder,
         &fb::DucViewportStyleArgs {
-            base_style: Some(base_style_offset),
             scale_indicator_visible: style.scale_indicator_visible,
         },
     )
@@ -1037,27 +1078,19 @@ fn serialize_duc_viewport_style<'bldr>(
 
 fn serialize_duc_plot_style<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
-    style: &types::DucPlotStyle,
+    _style: &types::DucPlotStyle,
 ) -> WIPOffset<fb::DucPlotStyle<'bldr>> {
-    let base_style_offset = serialize_duc_element_styles_base(builder, &style.base_style);
-    fb::DucPlotStyle::create(
-        builder,
-        &fb::DucPlotStyleArgs {
-            base_style: Some(base_style_offset),
-        },
-    )
+    fb::DucPlotStyle::create(builder, &fb::DucPlotStyleArgs {})
 }
 
 fn serialize_duc_xray_style<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     style: &types::DucXRayStyle,
 ) -> WIPOffset<fb::DucXRayStyle<'bldr>> {
-    let base_style_offset = serialize_duc_element_styles_base(builder, &style.base_style);
     let color_offset = builder.create_string(&style.color);
     fb::DucXRayStyle::create(
         builder,
         &fb::DucXRayStyleArgs {
-            base_style: Some(base_style_offset),
             color: Some(color_offset),
         },
     )
@@ -1145,8 +1178,14 @@ fn serialize_duc_mermaid_element<'bldr>(
 ) -> WIPOffset<fb::DucMermaidElement<'bldr>> {
     let base_offset = serialize_duc_element_base(builder, &element.base);
     let source_offset = builder.create_string(&element.source);
-    let theme_offset: Option<WIPOffset<&'bldr str>> = element.theme.as_ref().map(|s| builder.create_string(s.as_str()));
-    let svg_path_offset = element.svg_path.as_ref().map(|s| builder.create_string(s.as_str()));
+    let theme_offset: Option<WIPOffset<&'bldr str>> = element
+        .theme
+        .as_ref()
+        .map(|s| builder.create_string(s.as_str()));
+    let svg_path_offset = element
+        .svg_path
+        .as_ref()
+        .map(|s| builder.create_string(s.as_str()));
     fb::DucMermaidElement::create(
         builder,
         &fb::DucMermaidElementArgs {
@@ -1163,8 +1202,10 @@ fn serialize_duc_table_column<'bldr>(
     col: &types::DucTableColumn,
 ) -> WIPOffset<fb::DucTableColumn<'bldr>> {
     let id_offset = builder.create_string(&col.id);
-    let style_overrides_offset =
-        col.style_overrides.as_ref().map(|s| serialize_duc_table_cell_style(builder, s));
+    let style_overrides_offset = col
+        .style_overrides
+        .as_ref()
+        .map(|s| serialize_duc_table_cell_style(builder, s));
     fb::DucTableColumn::create(
         builder,
         &fb::DucTableColumnArgs {
@@ -1180,8 +1221,10 @@ fn serialize_duc_table_row<'bldr>(
     row: &types::DucTableRow,
 ) -> WIPOffset<fb::DucTableRow<'bldr>> {
     let id_offset = builder.create_string(&row.id);
-    let style_overrides_offset =
-        row.style_overrides.as_ref().map(|s| serialize_duc_table_cell_style(builder, s));
+    let style_overrides_offset = row
+        .style_overrides
+        .as_ref()
+        .map(|s| serialize_duc_table_cell_style(builder, s));
     fb::DucTableRow::create(
         builder,
         &fb::DucTableRowArgs {
@@ -1212,9 +1255,14 @@ fn serialize_duc_table_cell<'bldr>(
     let row_id_offset = builder.create_string(&cell.row_id);
     let column_id_offset = builder.create_string(&cell.column_id);
     let data_offset = builder.create_string(&cell.data);
-    let span_offset = cell.span.as_ref().map(|s| serialize_duc_table_cell_span(builder, s));
-    let style_overrides_offset =
-        cell.style_overrides.as_ref().map(|s| serialize_duc_table_cell_style(builder, s));
+    let span_offset = cell
+        .span
+        .as_ref()
+        .map(|s| serialize_duc_table_cell_span(builder, s));
+    let style_overrides_offset = cell
+        .style_overrides
+        .as_ref()
+        .map(|s| serialize_duc_table_cell_style(builder, s));
 
     fb::DucTableCell::create(
         builder,
@@ -1355,8 +1403,14 @@ fn serialize_duc_image_element<'bldr>(
     let base_offset = serialize_duc_element_base(builder, &element.base);
     let file_id_offset = element.file_id.as_ref().map(|s| builder.create_string(s));
     let scale_vec = builder.create_vector(&element.scale);
-    let crop_offset = element.crop.as_ref().map(|c| serialize_image_crop(builder, c));
-    let filter_offset = element.filter.as_ref().map(|f| serialize_duc_image_filter(builder, f));
+    let crop_offset = element
+        .crop
+        .as_ref()
+        .map(|c| serialize_image_crop(builder, c));
+    let filter_offset = element
+        .filter
+        .as_ref()
+        .map(|f| serialize_duc_image_filter(builder, f));
 
     fb::DucImageElement::create(
         builder,
@@ -1429,7 +1483,10 @@ fn serialize_duc_text_dynamic_part<'bldr>(
 ) -> WIPOffset<fb::DucTextDynamicPart<'bldr>> {
     let tag_offset = builder.create_string(&part.tag);
     let source_offset = serialize_duc_text_dynamic_source(builder, &part.source);
-    let formatting_offset = part.formatting.as_ref().map(|f| serialize_primary_units(builder, f));
+    let formatting_offset = part
+        .formatting
+        .as_ref()
+        .map(|f| serialize_primary_units(builder, f));
     let cached_value_offset = builder.create_string(&part.cached_value);
 
     fb::DucTextDynamicPart::create(
@@ -1457,9 +1514,12 @@ fn serialize_duc_text_element<'bldr>(
         .map(|p| serialize_duc_text_dynamic_part(builder, p))
         .collect();
     let dynamic_vec: WIPOffset<
-        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucTextDynamicPart<'bldr>>>
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucTextDynamicPart<'bldr>>>,
     > = builder.create_vector(&dynamic_offsets);
-    let container_id_offset = element.container_id.as_ref().map(|s| builder.create_string(s));
+    let container_id_offset = element
+        .container_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
     // original_text is a required String in types, so always serialize
     let original_text_offset: Option<WIPOffset<&'bldr str>> = {
         let off: WIPOffset<&'bldr str> = builder.create_string(element.original_text.as_str());
@@ -1530,11 +1590,23 @@ fn serialize_duc_free_draw_element<'bldr>(
     let base_offset = serialize_duc_element_base(builder, &element.base);
     let points_vec = serialize_vec_of_duc_points(builder, &element.points);
     let easing_offset = builder.create_string(&element.easing);
-    let start_offset = element.start.as_ref().map(|s| serialize_duc_free_draw_ends(builder, s));
-    let end_offset = element.end.as_ref().map(|e| serialize_duc_free_draw_ends(builder, e));
+    let start_offset = element
+        .start
+        .as_ref()
+        .map(|s| serialize_duc_free_draw_ends(builder, s));
+    let end_offset = element
+        .end
+        .as_ref()
+        .map(|e| serialize_duc_free_draw_ends(builder, e));
     let pressures_vec = builder.create_vector(&element.pressures);
-    let last_committed_point_offset = element.last_committed_point.as_ref().map(|p| serialize_duc_point(builder, p));
-    let svg_path_offset = element.svg_path.as_deref().map(|s| builder.create_string(s));
+    let last_committed_point_offset = element
+        .last_committed_point
+        .as_ref()
+        .map(|p| serialize_duc_point(builder, p));
+    let svg_path_offset = element
+        .svg_path
+        .as_deref()
+        .map(|s| builder.create_string(s));
 
     fb::DucFreeDrawElement::create(
         builder,
@@ -1577,22 +1649,24 @@ fn serialize_duc_block_instance_element<'bldr>(
 ) -> WIPOffset<fb::DucBlockInstanceElement<'bldr>> {
     let base_offset = serialize_duc_element_base(builder, &element.base);
     let block_id_offset = builder.create_string(&element.block_id);
-    let element_overrides_vec = element
-        .element_overrides
+    let element_overrides_vec = element.element_overrides.as_ref().map(|v| {
+        let offsets: Vec<_> = v
+            .iter()
+            .map(|e| serialize_string_value_entry(builder, e))
+            .collect();
+        builder.create_vector(&offsets)
+    });
+    let attribute_values_vec = element.attribute_values.as_ref().map(|v| {
+        let offsets: Vec<_> = v
+            .iter()
+            .map(|a| serialize_string_value_entry(builder, a))
+            .collect();
+        builder.create_vector(&offsets)
+    });
+    let duplication_array_offset = element
+        .duplication_array
         .as_ref()
-        .map(|v| {
-            let offsets: Vec<_> = v.iter().map(|e| serialize_string_value_entry(builder, e)).collect();
-            builder.create_vector(&offsets)
-        });
-    let attribute_values_vec = element
-        .attribute_values
-        .as_ref()
-        .map(|v| {
-            let offsets: Vec<_> = v.iter().map(|a| serialize_string_value_entry(builder, a)).collect();
-            builder.create_vector(&offsets)
-        });
-    let duplication_array_offset =
-        element.duplication_array.as_ref().map(|d| serialize_duc_block_duplication_array(builder, d));
+        .map(|d| serialize_duc_block_duplication_array(builder, d));
 
     fb::DucBlockInstanceElement::create(
         builder,
@@ -1661,7 +1735,10 @@ fn serialize_duc_viewport_element<'bldr>(
     let style_offset = serialize_duc_viewport_style(builder, &element.style);
     let view_offset = serialize_duc_view(builder, &element.view);
     let frozen_group_ids_vec = serialize_vec_of_strings(builder, &element.frozen_group_ids);
-    let standard_override_offset = element.standard_override.as_deref().map(|s| builder.create_string(s));
+    let standard_override_offset = element
+        .standard_override
+        .as_deref()
+        .map(|s| builder.create_string(s));
 
     fb::DucViewportElement::create(
         builder,
@@ -1684,16 +1761,22 @@ fn serialize_duc_xray_element<'bldr>(
 ) -> WIPOffset<fb::DucXRayElement<'bldr>> {
     let base_offset = serialize_duc_element_base(builder, &element.base);
     let style_offset = serialize_duc_xray_style(builder, &element.style);
-    let origin_offset = serialize_duc_point(builder, &types::DucPoint {
-        x: element.origin.x,
-        y: element.origin.y,
-        mirroring: None
-    });
-    let direction_offset = serialize_duc_point(builder, &types::DucPoint {
-        x: element.direction.x,
-        y: element.direction.y,
-        mirroring: None
-    });
+    let origin_offset = serialize_duc_point(
+        builder,
+        &types::DucPoint {
+            x: element.origin.x,
+            y: element.origin.y,
+            mirroring: None,
+        },
+    );
+    let direction_offset = serialize_duc_point(
+        builder,
+        &types::DucPoint {
+            x: element.direction.x,
+            y: element.direction.y,
+            mirroring: None,
+        },
+    );
 
     fb::DucXRayElement::create(
         builder,
@@ -1725,7 +1808,11 @@ fn serialize_leader_block_content<'bldr>(
     content: &types::LeaderBlockContent,
 ) -> WIPOffset<fb::LeaderBlockContent<'bldr>> {
     let block_id_offset = builder.create_string(&content.block_id);
-    let attribute_values_vec: Option<WIPOffset<flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::StringValueEntry<'bldr>>>>> = content
+    let attribute_values_vec: Option<
+        WIPOffset<
+            flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::StringValueEntry<'bldr>>>,
+        >,
+    > = content
         .attribute_values
         .as_ref()
         .map(|vec_entries: &Vec<types::StringValueEntry>| {
@@ -1735,7 +1822,11 @@ fn serialize_leader_block_content<'bldr>(
                 .collect();
             builder.create_vector(&offsets)
         });
-    let element_overrides_vec: Option<WIPOffset<flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::StringValueEntry<'bldr>>>>> = content
+    let element_overrides_vec: Option<
+        WIPOffset<
+            flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::StringValueEntry<'bldr>>>,
+        >,
+    > = content
         .element_overrides
         .as_ref()
         .map(|vec_entries: &Vec<types::StringValueEntry>| {
@@ -1787,7 +1878,10 @@ fn serialize_duc_leader_element<'bldr>(
 ) -> WIPOffset<fb::DucLeaderElement<'bldr>> {
     let linear_base_offset = serialize_duc_linear_element_base(builder, &element.linear_base);
     let style_offset = serialize_duc_leader_style(builder, &element.style);
-    let content_offset = element.content.as_ref().map(|c| serialize_leader_content(builder, c));
+    let content_offset = element
+        .content
+        .as_ref()
+        .map(|c| serialize_leader_content(builder, c));
     let content_anchor = serialize_geometric_point(&element.content_anchor);
 
     fb::DucLeaderElement::create(
@@ -1806,9 +1900,11 @@ fn serialize_dimension_definition_points<'bldr>(
     points: &types::DimensionDefinitionPoints,
 ) -> WIPOffset<fb::DimensionDefinitionPoints<'bldr>> {
     let origin1: fb::GeometricPoint = serialize_geometric_point(&points.origin1);
-    let origin2_built: Option<fb::GeometricPoint> = points.origin2.as_ref().map(serialize_geometric_point);
+    let origin2_built: Option<fb::GeometricPoint> =
+        points.origin2.as_ref().map(serialize_geometric_point);
     let location: fb::GeometricPoint = serialize_geometric_point(&points.location);
-    let center_built: Option<fb::GeometricPoint> = points.center.as_ref().map(serialize_geometric_point);
+    let center_built: Option<fb::GeometricPoint> =
+        points.center.as_ref().map(serialize_geometric_point);
     let jog_built: Option<fb::GeometricPoint> = points.jog.as_ref().map(serialize_geometric_point);
 
     let origin2_ref: Option<&fb::GeometricPoint> = origin2_built.as_ref();
@@ -1831,9 +1927,18 @@ fn serialize_dimension_bindings<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     bindings: &types::DimensionBindings,
 ) -> WIPOffset<fb::DimensionBindings<'bldr>> {
-    let origin1_offset = bindings.origin1.as_ref().map(|b| serialize_duc_point_binding(builder, b));
-    let origin2_offset = bindings.origin2.as_ref().map(|b| serialize_duc_point_binding(builder, b));
-    let center_offset = bindings.center.as_ref().map(|b| serialize_duc_point_binding(builder, b));
+    let origin1_offset = bindings
+        .origin1
+        .as_ref()
+        .map(|b| serialize_duc_point_binding(builder, b));
+    let origin2_offset = bindings
+        .origin2
+        .as_ref()
+        .map(|b| serialize_duc_point_binding(builder, b));
+    let center_offset = bindings
+        .center
+        .as_ref()
+        .map(|b| serialize_duc_point_binding(builder, b));
 
     fb::DimensionBindings::create(
         builder,
@@ -1849,7 +1954,10 @@ fn serialize_dimension_baseline_data<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     data: &types::DimensionBaselineData,
 ) -> WIPOffset<fb::DimensionBaselineData<'bldr>> {
-    let id_offset = data.base_dimension_id.as_deref().map(|s| builder.create_string(s));
+    let id_offset = data
+        .base_dimension_id
+        .as_deref()
+        .map(|s| builder.create_string(s));
     fb::DimensionBaselineData::create(
         builder,
         &fb::DimensionBaselineDataArgs {
@@ -1862,7 +1970,10 @@ fn serialize_dimension_continue_data<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     data: &types::DimensionContinueData,
 ) -> WIPOffset<fb::DimensionContinueData<'bldr>> {
-    let id_offset = data.continue_from_dimension_id.as_deref().map(|s| builder.create_string(s));
+    let id_offset = data
+        .continue_from_dimension_id
+        .as_deref()
+        .map(|s| builder.create_string(s));
     fb::DimensionContinueData::create(
         builder,
         &fb::DimensionContinueDataArgs {
@@ -1879,7 +1990,10 @@ fn serialize_duc_dimension_element<'bldr>(
     let style_offset = serialize_duc_dimension_style(builder, &element.style);
     let definition_points_offset =
         serialize_dimension_definition_points(builder, &element.definition_points);
-    let bindings_offset = element.bindings.as_ref().map(|b| serialize_dimension_bindings(builder, b));
+    let bindings_offset = element
+        .bindings
+        .as_ref()
+        .map(|b| serialize_dimension_bindings(builder, b));
     let text_override_offset = element
         .text_override
         .as_deref()
@@ -1888,8 +2002,10 @@ fn serialize_duc_dimension_element<'bldr>(
         .text_position
         .as_ref()
         .map(serialize_geometric_point);
-    let tolerance_override_offset =
-        element.tolerance_override.as_ref().map(|t| serialize_dimension_tolerance_style(builder, t));
+    let tolerance_override_offset = element
+        .tolerance_override
+        .as_ref()
+        .map(|t| serialize_dimension_tolerance_style(builder, t));
     let baseline_data_offset = element
         .baseline_data
         .as_ref()
@@ -1937,7 +2053,8 @@ fn serialize_tolerance_clause<'bldr>(
     clause: &types::ToleranceClause,
 ) -> WIPOffset<fb::ToleranceClause<'bldr>> {
     let value_offset = builder.create_string(&clause.value);
-    let feature_modifiers_vec = builder.create_vector_from_iter(clause.feature_modifiers.iter().copied());
+    let feature_modifiers_vec =
+        builder.create_vector_from_iter(clause.feature_modifiers.iter().copied());
     fb::ToleranceClause::create(
         builder,
         &fb::ToleranceClauseArgs {
@@ -1959,7 +2076,8 @@ fn serialize_feature_control_frame_segment<'bldr>(
         .iter()
         .map(|d| d.as_ref().map(|dr| serialize_datum_reference(builder, dr)))
         .collect();
-    let datums_vec = builder.create_vector(&datums_offsets.into_iter().flatten().collect::<Vec<_>>());
+    let datums_vec =
+        builder.create_vector(&datums_offsets.into_iter().flatten().collect::<Vec<_>>());
     fb::FeatureControlFrameSegment::create(
         builder,
         &fb::FeatureControlFrameSegmentArgs {
@@ -2001,9 +2119,14 @@ fn serialize_fcf_frame_modifiers<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     modifiers: &types::FCFFrameModifiers,
 ) -> WIPOffset<fb::FCFFrameModifiers<'bldr>> {
-    let between_offset = modifiers.between.as_ref().map(|m| serialize_fcf_between_modifier(builder, m));
-    let projected_zone_offset =
-        modifiers.projected_tolerance_zone.as_ref().map(|m| serialize_fcf_projected_zone_modifier(builder, m));
+    let between_offset = modifiers
+        .between
+        .as_ref()
+        .map(|m| serialize_fcf_between_modifier(builder, m));
+    let projected_zone_offset = modifiers
+        .projected_tolerance_zone
+        .as_ref()
+        .map(|m| serialize_fcf_projected_zone_modifier(builder, m));
     fb::FCFFrameModifiers::create(
         builder,
         &fb::FCFFrameModifiersArgs {
@@ -2021,7 +2144,10 @@ fn serialize_fcf_datum_definition<'bldr>(
     def: &types::FCFDatumDefinition,
 ) -> WIPOffset<fb::FCFDatumDefinition<'bldr>> {
     let letter_offset = builder.create_string(&def.letter);
-    let feature_binding_offset = def.feature_binding.as_ref().map(|b| serialize_duc_point_binding(builder, b));
+    let feature_binding_offset = def
+        .feature_binding
+        .as_ref()
+        .map(|b| serialize_duc_point_binding(builder, b));
     fb::FCFDatumDefinition::create(
         builder,
         &fb::FCFDatumDefinitionArgs {
@@ -2061,7 +2187,10 @@ fn serialize_duc_feature_control_frame_element<'bldr>(
         .map(|r| serialize_fcf_segment_row(builder, r))
         .collect();
     let rows_vec = builder.create_vector(&rows_offsets);
-    let frame_modifiers_offset = element.frame_modifiers.as_ref().map(|m| serialize_fcf_frame_modifiers(builder, m));
+    let frame_modifiers_offset = element
+        .frame_modifiers
+        .as_ref()
+        .map(|m| serialize_fcf_frame_modifiers(builder, m));
     let leader_element_id_offset = element
         .leader_element_id
         .as_ref()
@@ -2130,7 +2259,7 @@ fn serialize_duc_doc_element<'bldr>(
         .map(|p| serialize_duc_text_dynamic_part(builder, p))
         .collect();
     let dynamic_vec: WIPOffset<
-        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucTextDynamicPart<'bldr>>>
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucTextDynamicPart<'bldr>>>,
     > = builder.create_vector(&dynamic_offsets);
     let columns_offset = serialize_column_layout(builder, &element.columns);
 
@@ -2331,15 +2460,19 @@ fn serialize_duc_block<'bldr>(
 ) -> WIPOffset<fb::DucBlock<'bldr>> {
     let id_offset = builder.create_string(&block.id);
     let label_offset = builder.create_string(&block.label);
-    let description_offset: Option<WIPOffset<&'bldr str>> = block.description.as_ref().map(|s| builder.create_string(s.as_str()));
+    let description_offset: Option<WIPOffset<&'bldr str>> = block
+        .description
+        .as_ref()
+        .map(|s| builder.create_string(s.as_str()));
 
     let elements_offsets: Vec<_> = block
         .elements
         .iter()
         .map(|e| serialize_element_wrapper(builder, e))
         .collect();
-    let elements_vec: WIPOffset<flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::ElementWrapper<'bldr>>>> =
-        builder.create_vector(&elements_offsets);
+    let elements_vec: WIPOffset<
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::ElementWrapper<'bldr>>>,
+    > = builder.create_vector(&elements_offsets);
 
     let attribute_definitions_offsets: Vec<_> = block
         .attribute_definitions
@@ -2387,6 +2520,7 @@ fn serialize_duc_global_state<'bldr>(
             use_annotative_scaling: state.use_annotative_scaling,
             display_precision_linear: state.display_precision_linear,
             display_precision_angular: state.display_precision_angular,
+            pruning_level: Some(state.pruning_level),
         },
     )
 }
@@ -2397,15 +2531,27 @@ fn serialize_duc_local_state<'bldr>(
 ) -> WIPOffset<fb::DucLocalState<'bldr>> {
     let scope_offset = builder.create_string(&state.scope);
     let active_standard_id_offset = builder.create_string(&state.active_standard_id);
-    let active_grid_settings_vec = state.active_grid_settings.as_ref().and_then(|v| serialize_vec_of_strings(builder, v));
-    let active_snap_settings_offset = state.active_snap_settings.as_ref().map(|s| builder.create_string(s));
+    let active_grid_settings_vec = state
+        .active_grid_settings
+        .as_ref()
+        .and_then(|v| serialize_vec_of_strings(builder, v));
+    let active_snap_settings_offset = state
+        .active_snap_settings
+        .as_ref()
+        .map(|s| builder.create_string(s));
     let current_item_stroke_offset =
-        serialize_element_stroke(builder, &state.current_item_stroke);
+        serialize_element_stroke(builder, state.current_item_stroke.as_ref().unwrap());
     let current_item_background_offset =
-        serialize_element_background(builder, &state.current_item_background);
+        serialize_element_background(builder, state.current_item_background.as_ref().unwrap());
     let current_item_font_family_offset = builder.create_string(&state.current_item_font_family);
-    let current_item_start_line_head_offset = state.current_item_start_line_head.as_ref().map(|h| serialize_duc_head(builder, h));
-    let current_item_end_line_head_offset = state.current_item_end_line_head.as_ref().map(|h| serialize_duc_head(builder, h));
+    let current_item_start_line_head_offset = state
+        .current_item_start_line_head
+        .as_ref()
+        .map(|h| serialize_duc_head(builder, h));
+    let current_item_end_line_head_offset = state
+        .current_item_end_line_head
+        .as_ref()
+        .map(|h| serialize_duc_head(builder, h));
 
     fb::DucLocalState::create(
         builder,
@@ -2432,6 +2578,7 @@ fn serialize_duc_local_state<'bldr>(
             objects_snap_mode_enabled: state.objects_snap_mode_enabled,
             grid_mode_enabled: state.grid_mode_enabled,
             outline_mode_enabled: state.outline_mode_enabled,
+            manual_save_mode: state.manual_save_mode,
         },
     )
 }
@@ -2488,7 +2635,10 @@ fn serialize_duc_layer<'bldr>(
 ) -> WIPOffset<fb::DucLayer<'bldr>> {
     let id_offset = builder.create_string(&layer.id);
     let stack_base_offset = serialize_duc_stack_base(builder, &layer.stack_base);
-    let overrides_offset = layer.overrides.as_ref().map(|o| serialize_duc_layer_overrides(builder, o));
+    let overrides_offset = layer
+        .overrides
+        .as_ref()
+        .map(|o| serialize_duc_layer_overrides(builder, o));
     fb::DucLayer::create(
         builder,
         &fb::DucLayerArgs {
@@ -2615,22 +2765,70 @@ fn serialize_standard_overrides<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     overrides: &types::StandardOverrides,
 ) -> WIPOffset<fb::StandardOverrides<'bldr>> {
-    let main_scope_offset = overrides.main_scope.as_ref().map(|s| builder.create_string(s));
-    let common_style_id_offset = overrides.common_style_id.as_ref().map(|s| builder.create_string(s));
-    let stack_like_style_id_offset = overrides.stack_like_style_id.as_ref().map(|s| builder.create_string(s));
-    let text_style_id_offset = overrides.text_style_id.as_ref().map(|s| builder.create_string(s));
-    let dimension_style_id_offset = overrides.dimension_style_id.as_ref().map(|s| builder.create_string(s));
-    let leader_style_id_offset = overrides.leader_style_id.as_ref().map(|s| builder.create_string(s));
-    let fcf_style_id_offset = overrides.feature_control_frame_style_id.as_ref().map(|s| builder.create_string(s));
-    let table_style_id_offset = overrides.table_style_id.as_ref().map(|s| builder.create_string(s));
-    let doc_style_id_offset = overrides.doc_style_id.as_ref().map(|s| builder.create_string(s));
-    let viewport_style_id_offset = overrides.viewport_style_id.as_ref().map(|s| builder.create_string(s));
-    let plot_style_id_offset = overrides.plot_style_id.as_ref().map(|s| builder.create_string(s));
-    let hatch_style_id_offset = overrides.hatch_style_id.as_ref().map(|s| builder.create_string(s));
-    let active_grid_settings_id_vec = overrides.active_grid_settings_id.as_ref().and_then(|v| serialize_vec_of_strings(builder, v));
-    let active_snap_settings_id_offset = overrides.active_snap_settings_id.as_ref().map(|s| builder.create_string(s));
-    let dash_line_override_offset = overrides.dash_line_override.as_ref().map(|s| builder.create_string(s));
-    let unit_precision_offset = overrides.unit_precision.as_ref().map(|u| serialize_unit_precision(builder, u));
+    let main_scope_offset = overrides
+        .main_scope
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let common_style_id_offset = overrides
+        .common_style_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let stack_like_style_id_offset = overrides
+        .stack_like_style_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let text_style_id_offset = overrides
+        .text_style_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let dimension_style_id_offset = overrides
+        .dimension_style_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let leader_style_id_offset = overrides
+        .leader_style_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let fcf_style_id_offset = overrides
+        .feature_control_frame_style_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let table_style_id_offset = overrides
+        .table_style_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let doc_style_id_offset = overrides
+        .doc_style_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let viewport_style_id_offset = overrides
+        .viewport_style_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let plot_style_id_offset = overrides
+        .plot_style_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let hatch_style_id_offset = overrides
+        .hatch_style_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let active_grid_settings_id_vec = overrides
+        .active_grid_settings_id
+        .as_ref()
+        .and_then(|v| serialize_vec_of_strings(builder, v));
+    let active_snap_settings_id_offset = overrides
+        .active_snap_settings_id
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let dash_line_override_offset = overrides
+        .dash_line_override
+        .as_ref()
+        .map(|s| builder.create_string(s));
+    let unit_precision_offset = overrides
+        .unit_precision
+        .as_ref()
+        .map(|u| serialize_unit_precision(builder, u));
 
     fb::StandardOverrides::create(
         builder,
@@ -2985,9 +3183,14 @@ fn serialize_grid_settings<'bldr>(
     let origin = serialize_geometric_point(&settings.origin);
     let major_style_offset = serialize_grid_style(builder, &settings.major_style);
     let minor_style_offset = serialize_grid_style(builder, &settings.minor_style);
-    let polar_settings_offset = settings.polar_settings.as_ref().map(|s| serialize_polar_grid_settings(builder, s));
-    let isometric_settings_offset =
-        settings.isometric_settings.as_ref().map(|s| serialize_isometric_grid_settings(builder, s));
+    let polar_settings_offset = settings
+        .polar_settings
+        .as_ref()
+        .map(|s| serialize_polar_grid_settings(builder, s));
+    let isometric_settings_offset = settings
+        .isometric_settings
+        .as_ref()
+        .map(|s| serialize_isometric_grid_settings(builder, s));
 
     fb::GridSettings::create(
         builder,
@@ -3065,7 +3268,10 @@ fn serialize_tracking_line_style<'bldr>(
     style: &types::TrackingLineStyle,
 ) -> WIPOffset<fb::TrackingLineStyle<'bldr>> {
     let color_offset = builder.create_string(&style.color);
-    let dash_pattern_vec = style.dash_pattern.as_ref().map(|v| builder.create_vector(v));
+    let dash_pattern_vec = style
+        .dash_pattern
+        .as_ref()
+        .map(|v| builder.create_vector(v));
     fb::TrackingLineStyle::create(
         builder,
         &fb::TrackingLineStyleArgs {
@@ -3080,8 +3286,14 @@ fn serialize_layer_snap_filters<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     filters: &types::LayerSnapFilters,
 ) -> WIPOffset<fb::LayerSnapFilters<'bldr>> {
-    let include_layers_vec = filters.include_layers.as_ref().and_then(|v| serialize_vec_of_strings(builder, v));
-    let exclude_layers_vec = filters.exclude_layers.as_ref().and_then(|v| serialize_vec_of_strings(builder, v));
+    let include_layers_vec = filters
+        .include_layers
+        .as_ref()
+        .and_then(|v| serialize_vec_of_strings(builder, v));
+    let exclude_layers_vec = filters
+        .exclude_layers
+        .as_ref()
+        .and_then(|v| serialize_vec_of_strings(builder, v));
     fb::LayerSnapFilters::create(
         builder,
         &fb::LayerSnapFiltersArgs {
@@ -3149,19 +3361,33 @@ fn serialize_snap_settings<'bldr>(
     let active_object_snap_modes_vec =
         builder.create_vector_from_iter(settings.active_object_snap_modes.iter().copied());
     let snap_priority_vec = builder.create_vector_from_iter(settings.snap_priority.iter().copied());
-    let tracking_line_style_offset =
-        settings.tracking_line_style.as_ref().map(|s| serialize_tracking_line_style(builder, s));
+    let tracking_line_style_offset = settings
+        .tracking_line_style
+        .as_ref()
+        .map(|s| serialize_tracking_line_style(builder, s));
     let dynamic_snap_offset = serialize_dynamic_snap_settings(builder, &settings.dynamic_snap);
     let temporary_overrides_offsets: Vec<_> = settings
         .temporary_overrides
         .as_ref()
-        .map(|v| v.iter().map(|o| serialize_snap_override(builder, o)).collect())
+        .map(|v| {
+            v.iter()
+                .map(|o| serialize_snap_override(builder, o))
+                .collect()
+        })
         .unwrap_or_else(|| Vec::new());
-    let temporary_overrides_vec = if temporary_overrides_offsets.is_empty() { None } else { Some(builder.create_vector(&temporary_overrides_offsets)) };
-    let layer_snap_filters_offset =
-        settings.layer_snap_filters.as_ref().map(|s| serialize_layer_snap_filters(builder, s));
-    let element_type_filters_vec =
-        settings.element_type_filters.as_ref().and_then(|v| serialize_vec_of_strings(builder, v));
+    let temporary_overrides_vec = if temporary_overrides_offsets.is_empty() {
+        None
+    } else {
+        Some(builder.create_vector(&temporary_overrides_offsets))
+    };
+    let layer_snap_filters_offset = settings
+        .layer_snap_filters
+        .as_ref()
+        .map(|s| serialize_layer_snap_filters(builder, s));
+    let element_type_filters_vec = settings
+        .element_type_filters
+        .as_ref()
+        .and_then(|v| serialize_vec_of_strings(builder, v));
     let snap_markers_offset = serialize_snap_marker_settings(builder, &settings.snap_markers);
 
     fb::SnapSettings::create(
@@ -3314,7 +3540,10 @@ fn serialize_layer_validation_rules<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     rules: &types::LayerValidationRules,
 ) -> WIPOffset<fb::LayerValidationRules<'bldr>> {
-    let prohibited_layer_names_vec = rules.prohibited_layer_names.as_ref().and_then(|v| serialize_vec_of_strings(builder, v));
+    let prohibited_layer_names_vec = rules
+        .prohibited_layer_names
+        .as_ref()
+        .and_then(|v| serialize_vec_of_strings(builder, v));
     fb::LayerValidationRules::create(
         builder,
         &fb::LayerValidationRulesArgs {
@@ -3327,8 +3556,14 @@ fn serialize_standard_validation<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     validation: &types::StandardValidation,
 ) -> WIPOffset<fb::StandardValidation<'bldr>> {
-    let dimension_rules_offset = validation.dimension_rules.as_ref().map(|r| serialize_dimension_validation_rules(builder, r));
-    let layer_rules_offset = validation.layer_rules.as_ref().map(|r| serialize_layer_validation_rules(builder, r));
+    let dimension_rules_offset = validation
+        .dimension_rules
+        .as_ref()
+        .map(|r| serialize_dimension_validation_rules(builder, r));
+    let layer_rules_offset = validation
+        .layer_rules
+        .as_ref()
+        .map(|r| serialize_layer_validation_rules(builder, r));
     fb::StandardValidation::create(
         builder,
         &fb::StandardValidationArgs {
@@ -3344,11 +3579,26 @@ fn serialize_standard<'bldr>(
 ) -> WIPOffset<fb::Standard<'bldr>> {
     let identifier_offset = serialize_identifier(builder, &standard.identifier);
     let version_offset = builder.create_string(&standard.version);
-    let overrides_offset = standard.overrides.as_ref().map(|o| serialize_standard_overrides(builder, o));
-    let styles_offset = standard.styles.as_ref().map(|s| serialize_standard_styles(builder, s));
-    let view_settings_offset = standard.view_settings.as_ref().map(|s| serialize_standard_view_settings(builder, s));
-    let units_offset = standard.units.as_ref().map(|u| serialize_standard_units(builder, u));
-    let validation_offset = standard.validation.as_ref().map(|v| serialize_standard_validation(builder, v));
+    let overrides_offset = standard
+        .overrides
+        .as_ref()
+        .map(|o| serialize_standard_overrides(builder, o));
+    let styles_offset = standard
+        .styles
+        .as_ref()
+        .map(|s| serialize_standard_styles(builder, s));
+    let view_settings_offset = standard
+        .view_settings
+        .as_ref()
+        .map(|s| serialize_standard_view_settings(builder, s));
+    let units_offset = standard
+        .units
+        .as_ref()
+        .map(|u| serialize_standard_units(builder, u));
+    let validation_offset = standard
+        .validation
+        .as_ref()
+        .map(|v| serialize_standard_validation(builder, v));
 
     fb::Standard::create(
         builder,
@@ -3453,7 +3703,6 @@ fn serialize_version_graph_metadata<'bldr>(
     fb::VersionGraphMetadata::create(
         builder,
         &fb::VersionGraphMetadataArgs {
-            pruning_level: Some(meta.pruning_level),
             last_pruned: meta.last_pruned,
             total_size: meta.total_size,
         },
@@ -3550,7 +3799,10 @@ fn serialize_exported_data_state<'bldr>(
     let thumbnail_vec = state.thumbnail.as_ref().map(|v| builder.create_vector(v));
 
     let dictionary_vec = state.dictionary.as_ref().map(|v| {
-        let offsets: Vec<_> = v.iter().map(|e| serialize_dictionary_entry(builder, e)).collect();
+        let offsets: Vec<_> = v
+            .iter()
+            .map(|e| serialize_dictionary_entry(builder, e))
+            .collect();
         builder.create_vector(&offsets)
     });
 
@@ -3559,16 +3811,18 @@ fn serialize_exported_data_state<'bldr>(
         .iter()
         .map(|e| serialize_element_wrapper(builder, e))
         .collect();
-    let elements_vec: WIPOffset<flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::ElementWrapper<'bldr>>>> =
-        builder.create_vector(&elements_offsets);
+    let elements_vec: WIPOffset<
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::ElementWrapper<'bldr>>>,
+    > = builder.create_vector(&elements_offsets);
 
     let blocks_offsets: Vec<_> = state
         .blocks
         .iter()
         .map(|b| serialize_duc_block(builder, b))
         .collect();
-    let blocks_vec: WIPOffset<flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucBlock<'bldr>>>> =
-        builder.create_vector(&blocks_offsets);
+    let blocks_vec: WIPOffset<
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucBlock<'bldr>>>,
+    > = builder.create_vector(&blocks_offsets);
 
     let groups_offsets: Vec<_> = state
         .groups
@@ -3583,7 +3837,7 @@ fn serialize_exported_data_state<'bldr>(
         .map(|r| serialize_duc_region(builder, r))
         .collect();
     let regions_vec: WIPOffset<
-        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucRegion<'bldr>>>
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucRegion<'bldr>>>,
     > = builder.create_vector(&regions_offsets);
 
     let layers_offsets: Vec<_> = state
@@ -3592,7 +3846,7 @@ fn serialize_exported_data_state<'bldr>(
         .map(|l| serialize_duc_layer(builder, l))
         .collect();
     let layers_vec: WIPOffset<
-        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucLayer<'bldr>>>
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucLayer<'bldr>>>,
     > = builder.create_vector(&layers_offsets);
 
     let standards_offsets: Vec<_> = state
@@ -3602,11 +3856,20 @@ fn serialize_exported_data_state<'bldr>(
         .collect();
     let standards_vec = builder.create_vector(&standards_offsets);
 
-    let duc_local_state_offset = serialize_duc_local_state(builder, &state.duc_local_state);
-    let duc_global_state_offset = serialize_duc_global_state(builder, &state.duc_global_state);
+    let duc_local_state_offset = state
+        .duc_local_state
+        .as_ref()
+        .map(|s| serialize_duc_local_state(builder, s));
+    let duc_global_state_offset = state
+        .duc_global_state
+        .as_ref()
+        .map(|s| serialize_duc_global_state(builder, s));
 
     let external_files_vec = state.external_files.as_ref().map(|v| {
-        let offsets: Vec<_> = v.iter().map(|f| serialize_duc_external_file_entry(builder, f)).collect();
+        let offsets: Vec<_> = v
+            .iter()
+            .map(|f| serialize_duc_external_file_entry(builder, f))
+            .collect();
         builder.create_vector(&offsets)
     });
 
@@ -3614,6 +3877,8 @@ fn serialize_exported_data_state<'bldr>(
         .version_graph
         .as_ref()
         .map(|vg| serialize_version_graph(builder, vg));
+
+    let id_offset = state.id.as_ref().map(|s| builder.create_string(s));
 
     fb::ExportedDataState::create(
         builder,
@@ -3630,10 +3895,11 @@ fn serialize_exported_data_state<'bldr>(
             regions: Some(regions_vec),
             layers: Some(layers_vec),
             standards: Some(standards_vec),
-            duc_local_state: Some(duc_local_state_offset),
-            duc_global_state: Some(duc_global_state_offset),
+            duc_local_state: duc_local_state_offset,
+            duc_global_state: duc_global_state_offset,
             external_files: external_files_vec,
             version_graph: version_graph_offset,
+            id: id_offset,
         },
     )
 }

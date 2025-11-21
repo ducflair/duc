@@ -13,20 +13,21 @@ import {
   STROKE_SIDE_PREFERENCE,
   TEXT_ALIGN,
   VERTICAL_ALIGN,
-} from "ducjs/flatbuffers/duc";
-import { restoreElements } from "ducjs/restore/restoreElements";
+} from "../flatbuffers/duc";
+import { nanoid } from "nanoid";
+import { restoreElements } from "./restoreElements";
 import {
   isStandardIdPresent,
   restoreStandards,
-} from "ducjs/restore/restoreStandards";
-import { getPrecisionScope } from "ducjs/technical/measurements";
+} from "./restoreStandards";
+import { getPrecisionScope } from "../technical/measurements";
 import {
   getPrecisionValueFromRaw,
   getPrecisionValueFromScoped,
   NEUTRAL_SCOPE,
   ScaleFactors
-} from "ducjs/technical/scopes";
-import { PREDEFINED_STANDARDS, Standard } from "ducjs/technical/standards";
+} from "../technical/scopes";
+import { PREDEFINED_STANDARDS, Standard } from "../technical/standards";
 import type {
   Checkpoint,
   Delta,
@@ -41,8 +42,8 @@ import type {
   Scope,
   ScopedValue,
   VersionGraph,
-} from "ducjs/types";
-import { DucLocalState } from "ducjs/types";
+} from "../types";
+import { DucLocalState } from "../types";
 import type {
   _DucStackBase,
   BezierMirroring,
@@ -69,9 +70,9 @@ import type {
   StrokeStyle,
   TextAlign,
   VerticalAlign,
-} from "ducjs/types/elements";
-import { Percentage, Radian } from "ducjs/types/geometryTypes";
-import { ValueOf } from "ducjs/types/utility-types";
+} from "../types/elements";
+import { Percentage, Radian } from "../types/geometryTypes";
+import { ValueOf } from "../types/utility-types";
 import {
   base64ToUint8Array,
   getDefaultGlobalState,
@@ -80,7 +81,7 @@ import {
   isEncodedFunctionString,
   isFiniteNumber,
   reviveEncodedFunction,
-} from "ducjs/utils";
+} from "../utils";
 import {
   DEFAULT_ELEMENT_PROPS,
   DEFAULT_POLYGON_SIDES,
@@ -90,8 +91,8 @@ import {
   MAX_ZOOM_STEP,
   MIN_ZOOM_STEP,
   VERSIONS,
-} from "ducjs/utils/constants";
-import { getDefaultStackProperties } from "ducjs/utils/elements";
+} from "../utils/constants";
+import { getDefaultStackProperties } from "../utils/elements";
 import tinycolor from "tinycolor2";
 
 export type RestoredLocalState = Omit<
@@ -117,6 +118,7 @@ export type RestoredDataState = {
 
   standards: Standard[];
   versionGraph: VersionGraph | undefined;
+  id: string;
 };
 
 export interface ExportedLibraryData {
@@ -138,11 +140,21 @@ export type ElementsConfig = {
   ) => OrderedDucElement[];
   refreshDimensions?: boolean;
   repairBindings?: boolean;
+  /** 
+   * Optional list of element ids that should bypass normal validation
+   * during restore and be passed through as-is to `restoreElements`.
+   */
+  passThroughElementIds?: string[];
+};
+
+export type RestoreConfig = {
+  forceScope?: Scope;
 };
 
 export const restore = (
   data: ImportedDataState | null,
-  elementsConfig: ElementsConfig
+  elementsConfig: ElementsConfig,
+  restoreConfig: RestoreConfig = {},
 ): RestoredDataState => {
   const restoredStandards = restoreStandards(data?.standards);
   const restoredDictionary = restoreDictionary(data?.dictionary);
@@ -150,7 +162,8 @@ export const restore = (
   const restoredLocalState = restoreLocalState(
     data?.localState,
     restoredGlobalState,
-    restoredStandards
+    restoredStandards,
+    restoreConfig.forceScope
   );
 
   const restoredElementsConfig = {
@@ -177,6 +190,10 @@ export const restore = (
 
   const restoredVersionGraph = restoreVersionGraph(data?.versionGraph);
 
+  // Generate a new ID if none exists or if it's empty
+  const parsedId = data?.id;
+  const restoredId = (parsedId && parsedId.trim().length > 0) ? parsedId : nanoid();
+
   return {
     dictionary: restoredDictionary,
     thumbnail: isValidUint8Array(data?.thumbnail),
@@ -192,6 +209,7 @@ export const restore = (
     localState: restoredLocalState,
     globalState: restoredGlobalState,
     files: restoreFiles(data?.files),
+    id: restoredId,
   };
 };
 
@@ -415,37 +433,43 @@ export const restoreGlobalState = (
   importedState: Partial<DucGlobalState> = {}
 ): DucGlobalState => {
   const defaults = getDefaultGlobalState();
+
   const linearPrecision = isValidFinitePositiveByteValue(
-    (importedState as any).coordDecimalPlaces,
+    importedState?.displayPrecision?.linear,
     defaults.displayPrecision.linear
   );
   return {
     ...defaults,
-    name: importedState.name ?? defaults.name,
+    name: importedState?.name ?? defaults.name,
     viewBackgroundColor:
-      importedState.viewBackgroundColor ?? defaults.viewBackgroundColor,
+      importedState?.viewBackgroundColor ?? defaults.viewBackgroundColor,
     mainScope:
-      isValidAppStateScopeValue(importedState.mainScope) ?? defaults.mainScope,
+      isValidAppStateScopeValue(importedState?.mainScope) ?? defaults.mainScope,
     scopeExponentThreshold: isValidAppStateScopeExponentThresholdValue(
-      importedState.scopeExponentThreshold,
+      importedState?.scopeExponentThreshold,
       defaults.scopeExponentThreshold
     ),
     dashSpacingScale:
-      importedState.dashSpacingScale ?? defaults.dashSpacingScale,
+      importedState?.dashSpacingScale ?? defaults.dashSpacingScale,
     isDashSpacingAffectedByViewportScale:
-      importedState.isDashSpacingAffectedByViewportScale ??
+      importedState?.isDashSpacingAffectedByViewportScale ??
       defaults.isDashSpacingAffectedByViewportScale,
     dimensionsAssociativeByDefault:
-      importedState.dimensionsAssociativeByDefault ??
+      importedState?.dimensionsAssociativeByDefault ??
       defaults.dimensionsAssociativeByDefault,
     useAnnotativeScaling:
-      importedState.useAnnotativeScaling ?? defaults.useAnnotativeScaling,
+      importedState?.useAnnotativeScaling ?? defaults.useAnnotativeScaling,
     displayPrecision: {
       linear: linearPrecision,
       angular:
-        importedState.displayPrecision?.angular ??
+        importedState?.displayPrecision?.angular ??
         defaults.displayPrecision.angular,
     },
+    pruningLevel:
+      importedState?.pruningLevel &&
+        Object.values(PRUNING_LEVEL).includes(importedState.pruningLevel)
+        ? importedState.pruningLevel
+        : PRUNING_LEVEL.BALANCED,
   };
 };
 
@@ -461,63 +485,60 @@ export const restoreGlobalState = (
 export const restoreLocalState = (
   importedState: Partial<DucLocalState> = {},
   restoredGlobalState: RestoredDataState["globalState"],
-  restoredStandards: RestoredDataState["standards"]
+  restoredStandards: RestoredDataState["standards"],
+  forceScope?: Scope
 ): DucLocalState => {
   const defaults = getDefaultLocalState();
-  const zoom = getZoom(importedState.zoom?.value ?? defaults.zoom.value, restoredGlobalState.mainScope, restoredGlobalState.scopeExponentThreshold);
-  const scope = isValidPrecisionScopeValue(
-    zoom.value,
-    restoredGlobalState.mainScope,
-    restoredGlobalState.scopeExponentThreshold
-  );
+  const zoom = getZoom(importedState?.zoom?.value ?? defaults.zoom.value, restoredGlobalState.mainScope, restoredGlobalState.scopeExponentThreshold);
+  const scope = forceScope
+    ? isValidScopeValue(forceScope)
+    : isValidPrecisionScopeValue(
+      zoom.value,
+      restoredGlobalState.mainScope,
+      restoredGlobalState.scopeExponentThreshold
+    );
+
   return {
     ...defaults,
+    ...importedState,
     scope,
     activeStandardId: isValidStandardId(
-      importedState.activeStandardId,
+      importedState?.activeStandardId,
       restoredStandards,
       defaults.activeStandardId
     ),
     isBindingEnabled: isValidBoolean(
-      importedState.isBindingEnabled,
+      importedState?.isBindingEnabled,
       defaults.isBindingEnabled
     ),
-    penMode: isValidBoolean(importedState.penMode, defaults.penMode),
-    scrollX: importedState.scrollX
+    penMode: isValidBoolean(importedState?.penMode, defaults.penMode),
+    scrollX: importedState?.scrollX
       ? restorePrecisionValue(importedState.scrollX, NEUTRAL_SCOPE, scope)
       : getPrecisionValueFromRaw(defaults.scrollX.value, NEUTRAL_SCOPE, scope),
-    scrollY: importedState.scrollY
+    scrollY: importedState?.scrollY
       ? restorePrecisionValue(importedState.scrollY, NEUTRAL_SCOPE, scope)
       : getPrecisionValueFromRaw(defaults.scrollY.value, NEUTRAL_SCOPE, scope),
     zoom,
     activeGridSettings:
-      importedState.activeGridSettings ?? defaults.activeGridSettings,
+      importedState?.activeGridSettings ?? defaults.activeGridSettings,
     activeSnapSettings:
-      importedState.activeSnapSettings ?? defaults.activeSnapSettings,
+      importedState?.activeSnapSettings ?? defaults.activeSnapSettings,
     currentItemStroke:
-      validateStroke(importedState.currentItemStroke, scope, scope) ??
+      validateStroke(importedState?.currentItemStroke, scope, scope) ??
       defaults.currentItemStroke,
     currentItemBackground:
-      validateBackground(importedState.currentItemBackground) ??
+      validateBackground(importedState?.currentItemBackground) ??
       defaults.currentItemBackground,
     currentItemOpacity: isValidPercentageValue(
-      importedState.currentItemOpacity,
+      importedState?.currentItemOpacity,
       defaults.currentItemOpacity
     ),
     currentItemStartLineHead:
-      isValidLineHeadValue(importedState.currentItemStartLineHead) ??
+      isValidLineHeadValue(importedState?.currentItemStartLineHead) ??
       defaults.currentItemStartLineHead,
     currentItemEndLineHead:
-      isValidLineHeadValue(importedState.currentItemEndLineHead) ??
+      isValidLineHeadValue(importedState?.currentItemEndLineHead) ??
       defaults.currentItemEndLineHead,
-    currentItemFontFamily: defaults.currentItemFontFamily,
-    currentItemFontSize: defaults.currentItemFontSize,
-    currentItemTextAlign: defaults.currentItemTextAlign,
-    currentItemRoundness: defaults.currentItemRoundness,
-    viewModeEnabled: defaults.viewModeEnabled,
-    objectsSnapModeEnabled: defaults.objectsSnapModeEnabled,
-    gridModeEnabled: defaults.gridModeEnabled,
-    outlineModeEnabled: defaults.outlineModeEnabled,
   };
 };
 
@@ -549,14 +570,8 @@ export const restoreVersionGraph = (
       const isManualSave = isValidBoolean(c.isManualSave, false);
       const sizeBytes =
         isFiniteNumber(c.sizeBytes) && c.sizeBytes >= 0 ? c.sizeBytes : 0;
-      let data: Uint8Array;
-      if (c.data instanceof Uint8Array) {
-        data = c.data;
-      } else if (Array.isArray(c.data)) {
-        data = new Uint8Array(c.data);
-      } else if (c.data && typeof c.data === "object") {
-        data = new Uint8Array(Object.values(c.data));
-      } else {
+      const data = isValidUint8Array(c.data);
+      if (!data) {
         continue;
       }
       checkpoints.push({
@@ -619,11 +634,6 @@ export const restoreVersionGraph = (
   }
   const importedMetadata = importedGraph.metadata;
   const metadata: VersionGraph["metadata"] = {
-    pruningLevel:
-      importedMetadata?.pruningLevel &&
-        Object.values(PRUNING_LEVEL).includes(importedMetadata.pruningLevel)
-        ? importedMetadata.pruningLevel
-        : PRUNING_LEVEL.BALANCED,
     lastPruned: isFiniteNumber(importedMetadata?.lastPruned)
       ? importedMetadata.lastPruned
       : 0,

@@ -1,0 +1,48 @@
+# In .github/actions/simulate-main-environment/action.yml
+
+name: 'Setup Release Environment'
+description: 'Determines release mode and simulates the main branch for dry runs.'
+
+inputs:
+  current-branch:
+    description: 'The current branch name (e.g., dev, main)'
+    required: true
+  package-name:
+    description: 'Name of the package being released (for logging)'
+    required: true
+
+outputs:
+  release-mode:
+    description: 'The release mode (--dry-run or --ci)'
+    value: ${{ steps.setup-and-determine-mode.outputs.mode }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Environment and Determine Mode
+      id: setup-and-determine-mode
+      shell: bash
+      run: |
+        if [ "${{ inputs.current-branch }}" = "dev" ]; then
+          # This is the DRY-RUN path
+          echo "Running DRY-RUN for ${{ inputs.package-name }}: simulating dev→main merge"
+          
+          # 0. Stash any uncommitted changes
+          git stash
+          
+          # 1. Simulate the main branch environment
+          git fetch origin main --tags
+          git fetch origin dev
+          git checkout main
+          git merge origin/dev --no-edit
+          echo "✅ Simulation complete. Now on a temporary 'main' branch with 'dev' changes."
+          
+          # 2. Set the output mode
+          echo "mode=--dry-run" >> $GITHUB_OUTPUT
+        else
+          # This is the PRODUCTION path
+          echo "Running PRODUCTION mode for ${{ inputs.package-name }} on ${{ inputs.current-branch }} branch"
+          
+          # Set the output mode
+          echo "mode=--ci" >> $GITHUB_OUTPUT
+        fi

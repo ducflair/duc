@@ -98,8 +98,15 @@ class DucGlobalState(object):
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
+    # DucGlobalState
+    def PruningLevel(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(24))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
+        return None
+
 def DucGlobalStateStart(builder):
-    builder.StartObject(10)
+    builder.StartObject(11)
 
 def Start(builder):
     DucGlobalStateStart(builder)
@@ -163,6 +170,12 @@ def DucGlobalStateAddDisplayPrecisionAngular(builder, displayPrecisionAngular):
 
 def AddDisplayPrecisionAngular(builder, displayPrecisionAngular):
     DucGlobalStateAddDisplayPrecisionAngular(builder, displayPrecisionAngular)
+
+def DucGlobalStateAddPruningLevel(builder, pruningLevel):
+    builder.PrependUint8Slot(10, pruningLevel, None)
+
+def AddPruningLevel(builder, pruningLevel):
+    DucGlobalStateAddPruningLevel(builder, pruningLevel)
 
 def DucGlobalStateEnd(builder):
     return builder.EndObject()

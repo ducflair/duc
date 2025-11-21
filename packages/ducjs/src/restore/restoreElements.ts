@@ -21,7 +21,7 @@ import {
   restorePrecisionValue,
   validateBackground,
   validateStroke
-} from "ducjs/restore/restoreDataState";
+} from "./restoreDataState";
 import {
   getPrecisionValueFromRaw,
   getPrecisionValueFromScoped,
@@ -30,7 +30,7 @@ import {
   getScopedZoomValue,
   NEUTRAL_SCOPE,
   ScaleFactors,
-} from "ducjs/technical/scopes";
+} from "../technical/scopes";
 import {
   _DucElementBase,
   _DucStackElementBase,
@@ -91,7 +91,7 @@ import {
   Scope,
   TextColumn,
   ViewportScale,
-} from "ducjs/types";
+} from "../types";
 import {
   arrayToMap,
   bumpVersion,
@@ -120,7 +120,7 @@ import {
   randomId,
   refreshTextDimensions,
   validateClosedPath,
-} from "ducjs/utils";
+} from "../utils";
 
 import {
   AXIS,
@@ -144,7 +144,7 @@ import {
   TOLERANCE_ZONE_TYPE,
   VERTICAL_ALIGN,
   VIEWPORT_SHADE_PLOT,
-} from "ducjs/flatbuffers/duc";
+} from "../flatbuffers/duc";
 import tinycolor from "tinycolor2";
 
 const restoreElementWithProperties = <
@@ -1563,10 +1563,16 @@ export const restoreElements = (
         restoredBlocks,
         opts?.localState
       );
-      const isEditing = false; // TODO: Handle editingLinearElement properly
+      // Allow forced pass-through for specific element ids
+      const isPassThrough =
+        Array.isArray(opts?.passThroughElementIds) &&
+        migratedElement &&
+        migratedElement.id &&
+        opts!.passThroughElementIds!.includes(migratedElement.id);
+
       if (
         migratedElement &&
-        (!isInvisiblySmallElement(migratedElement) || isEditing)
+        (isPassThrough || !isInvisiblySmallElement(migratedElement))
       ) {
         if (existingIds.has(migratedElement.id)) {
           migratedElement = { ...migratedElement, id: randomId() };
@@ -2450,28 +2456,6 @@ const restoreTextStyle = (
 ): DucTextStyle => {
   const defaultLineHeight = 1.15 as number & { _brand: "unitlessLineHeight" };
   return {
-    // Base styles
-    ...(style?.background
-      ? { background: style.background.map(validateBackground) }
-      : { background: [DEFAULT_ELEMENT_PROPS.background] }),
-    ...(style?.stroke
-      ? {
-        stroke: style.stroke.map((s) =>
-          validateStroke(s, NEUTRAL_SCOPE, currentScope)
-        ),
-      }
-      : { stroke: [DEFAULT_ELEMENT_PROPS.stroke] }),
-    roundness: restorePrecisionValue(
-      style?.roundness,
-      NEUTRAL_SCOPE,
-      currentScope,
-      DEFAULT_ELEMENT_PROPS.roundness.value
-    ),
-    opacity: isValidPercentageValue(
-      style?.opacity,
-      DEFAULT_ELEMENT_PROPS.opacity
-    ),
-    blending: isValidBlendingValue(style?.blending),
     // Text-specific styles
     isLtr: isValidBoolean(style?.isLtr, true),
     fontFamily: getFontFamilyByName(style?.fontFamily as unknown as string),

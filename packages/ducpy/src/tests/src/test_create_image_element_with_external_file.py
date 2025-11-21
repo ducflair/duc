@@ -21,7 +21,7 @@ def test_binary_files_serialization(test_assets_dir, test_output_dir):
     """Test serializing a DUC file with binary image data and external file entry using the builder API."""
     import ducpy as duc
 
-    image_path = os.path.join(test_assets_dir, "infinite-zoom-math.png")
+    image_path = os.path.join(test_assets_dir, "image-files", "infinite-zoom-math.png")
     assert os.path.exists(image_path), f"Test asset not found: {image_path}"
 
     with open(image_path, 'rb') as f:

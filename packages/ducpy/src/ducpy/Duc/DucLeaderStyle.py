@@ -29,17 +29,6 @@ class DucLeaderStyle(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # DucLeaderStyle
-    def BaseStyle(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
-        if o != 0:
-            x = self._tab.Indirect(o + self._tab.Pos)
-            from Duc._DucElementStylesBase import _DucElementStylesBase
-            obj = _DucElementStylesBase()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
-
-    # DucLeaderStyle
     def HeadsOverride(self, j):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
@@ -101,12 +90,6 @@ def DucLeaderStyleStart(builder):
 
 def Start(builder):
     DucLeaderStyleStart(builder)
-
-def DucLeaderStyleAddBaseStyle(builder, baseStyle):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(baseStyle), 0)
-
-def AddBaseStyle(builder, baseStyle):
-    DucLeaderStyleAddBaseStyle(builder, baseStyle)
 
 def DucLeaderStyleAddHeadsOverride(builder, headsOverride):
     builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(headsOverride), 0)

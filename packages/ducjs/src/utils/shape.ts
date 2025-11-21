@@ -1,13 +1,13 @@
-import { BEZIER_MIRRORING } from "ducjs/flatbuffers/duc";
-import { RawValue, Scope, ScopedValue } from "ducjs/types";
-import { DucElement, DucFreeDrawElement, DucLine, DucLinearElement, DucNonSelectionElement, DucPath, DucPoint, NonDeletedDucElement } from "ducjs/types/elements";
-import { isArrowElement, isEllipseElement, isFreeDrawElement, isLinearElement, isPolygonElement } from "ducjs/types/elements/typeChecks";
-import { calculateShapeBounds } from "ducjs/utils/bounds";
-import { getBaseElementProps } from "ducjs/utils/elements";
-import { getNormalizedPoints, mergeOverlappingPoints } from "ducjs/utils/elements/linearElement";
-import { newLinearElement } from "ducjs/utils/elements/newElement";
-import { rotatePoint } from "ducjs/utils/math";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped } from "ducjs/technical/scopes";
+import { BEZIER_MIRRORING } from "../flatbuffers/duc";
+import { RawValue, Scope, ScopedValue } from "../types";
+import { DucElement, DucFreeDrawElement, DucLine, DucLinearElement, DucNonSelectionElement, DucPath, DucPoint, NonDeletedDucElement } from "../types/elements";
+import { isArrowElement, isEllipseElement, isFreeDrawElement, isLinearElement, isPolygonElement } from "../types/elements/typeChecks";
+import { calculateShapeBounds } from "./bounds";
+import { getBaseElementProps } from "./elements";
+import { getNormalizedPoints, mergeOverlappingPoints } from "./elements/linearElement";
+import { newLinearElement } from "./elements/newElement";
+import { rotatePoint } from "./math";
+import { getPrecisionValueFromRaw, getPrecisionValueFromScoped } from "../technical/scopes";
 
 /**
  * Converts a shape (rectangle, polygon, ellipse) to a linear element

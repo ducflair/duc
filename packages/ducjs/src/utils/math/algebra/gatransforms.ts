@@ -1,6 +1,6 @@
-import * as GA from "ducjs/utils/math/algebra/ga";
-import type { GALine, GADirection, GAPoint, GATransform } from "ducjs/utils/math/algebra/ga";
-import * as GADirections from "ducjs/utils/math/algebra/gadirections";
+import * as GA from "./ga";
+import type { GALine, GADirection, GAPoint, GATransform } from "./ga";
+import * as GADirections from "./gadirections";
 
 /**
  * TODO: docs

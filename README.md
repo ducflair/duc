@@ -4,10 +4,25 @@
   <p align="center">2D CAD File Format</p>
   <br/><br/>
     <p align="center" style="align: center;">
-    <a href="https://github.com/ducflair/duc/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-780000" alt="NPM" /></a>
-    <a href="https://www.npmjs.com/package/@ducflair/duc"><img src="https://shields.io/badge/NPM-cc3534?logo=Npm&logoColor=white&style=round-square" alt="NPM" /></a>
-    <a href="https://pypi.org/project/ducflair-duc/"><img src="https://shields.io/badge/Pip-blue?logo=Pypi&logoColor=white&style=round-square" alt="Pip" /></a>
-    <a href="https://crates.io/crates/ducflair-duc/"><img src="https://shields.io/badge/Crates-FFC933?logo=Rust&logoColor=646464&style=round-square" alt="Crates" /></a>
+    <a href="https://github.com/ducflair/duc/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-780000" alt="MIT" /></a>
+    <a href="https://github.com/ducflair/duc/blob/main/packages/ducjs">
+      <img src="https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=fff&style=round-square" alt="TypeScript" />
+    </a>
+    <a href="https://github.com/ducflair/duc/blob/main/packages/ducrs">
+      <img src="https://shields.io/badge/Rust-CE412B?logo=Rust&logoColor=fff&style=round-square" alt="Rust" />
+    </a>
+    <a href="https://github.com/ducflair/duc/blob/main/packages/ducrs">
+      <img src="https://shields.io/badge/Python-ffde57?logo=Python&logoColor=646464&style=round-square" alt="Python" />
+    </a>
+    <a href="https://github.com/ducflair/duc/blob/main/packages/ducsvg">
+      <img src="https://shields.io/badge/SVG-FFB13B?logo=SVG&logoColor=000&style=round-square" alt="SVG" />
+    </a>
+    <a href="https://github.com/ducflair/duc/blob/main/packages/ducpdf">
+      <img src="https://shields.io/badge/PDF-ffde57?logo=libreoffice&logoColor=646464&style=round-square" alt="PDF" />
+    </a>
+    <a href="https://github.com/ducflair/duc/blob/main/packages/ducdxf">
+      <img src="https://shields.io/badge/DXF-E51050?logo=libreoffice&logoColor=fff&style=round-square" alt="DXF" />
+    </a>
   </p>
 
 </p>

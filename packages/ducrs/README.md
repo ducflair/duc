@@ -25,19 +25,6 @@ The `duc` crate offers comprehensive Rust types and helper functions to work eff
 - **Extensible Architecture:** Designed to integrate seamlessly with other `ducflair` packages and your custom tools.
 - **Performance Optimized:** Efficient processing to handle complex CAD data with ease.
 
-## Installation
-
-Install the crate using Cargo:
-
-```bash
-cargo add duc
-```
-
-## Usage
-```rust
-use duc::*;
-```
-
 
 ## Documentation
 
@@ -63,4 +50,3 @@ To ensure smooth releases with semantic-release, please follow [these guidelines
 ---
 
 *The duc format and libraries are constantly evolving, aiming to set new standards in the 2D CAD industry. Be a part of this transformation and help shape the future of design technology!*
-```

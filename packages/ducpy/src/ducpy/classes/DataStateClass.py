@@ -36,6 +36,7 @@ class DucGlobalState:
     use_annotative_scaling: bool
     display_precision: DisplayPrecision
     name: Optional[str]
+    pruning_level: Optional[PRUNING_LEVEL] = None
 
 @dataclass
 class DucLocalState:
@@ -61,6 +62,7 @@ class DucLocalState:
     current_item_roundness: Optional[float]
     current_item_start_line_head: Optional["DucHead"]
     current_item_end_line_head: Optional["DucHead"]
+    manual_save_mode: Optional[bool] = None
 
 @dataclass
 class JSONPatchOperation:
@@ -97,7 +99,6 @@ class Delta(VersionBase):
 class VersionGraphMetadata:
     last_pruned: int
     total_size: int
-    pruning_level: PRUNING_LEVEL
 
 @dataclass
 class VersionGraph:
@@ -137,3 +138,4 @@ class ExportedDataState:
     duc_global_state: Optional[DucGlobalState]
     version_graph: Optional[VersionGraph]
     files: Optional[List[DucExternalFileEntry]]
+    id: Optional[str] = None

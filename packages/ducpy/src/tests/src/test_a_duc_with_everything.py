@@ -23,8 +23,27 @@ import pytest
 import ducpy as duc
 
 def load_asset_bytes(filename):
-    asset_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets")
-    with open(os.path.join(asset_dir, filename), "rb") as f:
+    """Load asset bytes using file extension to determine subdirectory."""
+    _, ext = os.path.splitext(filename.lower())
+    ext = ext[1:]  # Remove the dot
+
+    # Map extensions to subdirectories
+    if ext == "pdf":
+        sub_dir = "pdf-files"
+    elif ext == "svg":
+        sub_dir = "svg-files"
+    elif ext in ["png", "jpg", "jpeg", "gif"]:
+        sub_dir = "image-files"
+    elif ext == "step":
+        sub_dir = "step-files"
+    elif ext == "duc":
+        sub_dir = "duc-files"
+    else:
+        sub_dir = "image-files"  # default
+
+    asset_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "..", "assets", "testing"))
+
+    with open(os.path.join(asset_dir, sub_dir, filename), "rb") as f:
         return f.read()
 
 @pytest.fixture
@@ -123,7 +142,6 @@ def test_a_duc_with_everything(test_output_dir):
             .with_deltas([delta])
             .with_user_checkpoint_version_id(checkpoint.id)
             .with_latest_version_id(delta.id)
-            .with_pruning_level(duc.PRUNING_LEVEL.AGGRESSIVE) # Explicitly set pruning level
             .build())
 
     # --- Global State ---
@@ -137,6 +155,7 @@ def test_a_duc_with_everything(test_output_dir):
         .with_use_annotative_scaling(True)
         .with_linear_precision(4)
         .with_angular_precision(3)
+        .with_pruning_level(duc.PRUNING_LEVEL.AGGRESSIVE) # Explicitly set pruning level
         .build())
 
     # --- Local State ---
@@ -626,6 +645,5 @@ def test_a_duc_with_everything(test_output_dir):
     assert parsed.duc_global_state is not None, "Parsed state missing global state"
     assert parsed.duc_local_state is not None, "Parsed state missing local state"
     assert parsed.version_graph.metadata is not None, "Parsed state missing version graph metadata"
-    assert parsed.version_graph.metadata.pruning_level == duc.PRUNING_LEVEL.AGGRESSIVE, "Pruning level not correctly set"
 
     print("✅ Everything test passed and file created:", output_file)

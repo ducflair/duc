@@ -263,7 +263,7 @@ from ducpy.Duc.ExportedDataState import (
     ExportedDataStateAddBlocks, ExportedDataStateAddGroups, ExportedDataStateAddRegions,
     ExportedDataStateAddLayers, ExportedDataStateAddStandards, ExportedDataStateAddDucLocalState,
     ExportedDataStateAddDucGlobalState, ExportedDataStateAddExternalFiles, ExportedDataStateAddVersionGraph,
-    ExportedDataStateEnd, ExportedDataStateStartElementsVector, ExportedDataStateStartBlocksVector,
+    ExportedDataStateAddId, ExportedDataStateEnd, ExportedDataStateStartElementsVector, ExportedDataStateStartBlocksVector,
     ExportedDataStateStartGroupsVector, ExportedDataStateStartRegionsVector, ExportedDataStateStartLayersVector,
     ExportedDataStateStartStandardsVector, ExportedDataStateStartExternalFilesVector,
     ExportedDataStateStartDictionaryVector
@@ -436,7 +436,7 @@ from ducpy.Duc.LineSpacing import (
     LineSpacingStart, LineSpacingAddValue, LineSpacingAddType, LineSpacingEnd
 )
 from ducpy.Duc.DucTextStyle import (
-    DucTextStyleStart, DucTextStyleAddBaseStyle, DucTextStyleAddIsLtr, DucTextStyleAddFontFamily,
+    DucTextStyleStart, DucTextStyleAddIsLtr, DucTextStyleAddFontFamily,
     DucTextStyleAddBigFontFamily, DucTextStyleAddTextAlign, DucTextStyleAddVerticalAlign,
     DucTextStyleAddLineHeight, DucTextStyleAddLineSpacing, DucTextStyleAddObliqueAngle, DucTextStyleAddFontSize,
     DucTextStyleAddPaperTextHeight, DucTextStyleAddWidthFactor, DucTextStyleAddIsUpsideDown,
@@ -450,11 +450,11 @@ from ducpy.Duc.DucTableCellStyle import (
     DucTableCellStyleAddMargins, DucTableCellStyleAddAlignment, DucTableCellStyleEnd
 )
 from ducpy.Duc.DucTableStyle import (
-    DucTableStyleStart, DucTableStyleAddBaseStyle, DucTableStyleAddFlowDirection,
+    DucTableStyleStart, DucTableStyleAddFlowDirection,
     DucTableStyleAddHeaderRowStyle, DucTableStyleAddDataRowStyle, DucTableStyleAddDataColumnStyle, DucTableStyleEnd
 )
 from ducpy.Duc.DucLeaderStyle import (
-    DucLeaderStyleStart, DucLeaderStyleAddBaseStyle, DucLeaderStyleAddHeadsOverride, DucLeaderStyleAddDogleg,
+    DucLeaderStyleStart, DucLeaderStyleAddHeadsOverride, DucLeaderStyleAddDogleg,
     DucLeaderStyleAddTextStyle, DucLeaderStyleAddTextAttachment, DucLeaderStyleAddBlockAttachment, DucLeaderStyleEnd,
     DucLeaderStyleStartHeadsOverrideVector
 )
@@ -493,7 +493,7 @@ from ducpy.Duc.FCFDatumStyle import (
     FCFDatumStyleStart, FCFDatumStyleAddBracketStyle, FCFDatumStyleEnd
 )
 from ducpy.Duc.DucFeatureControlFrameStyle import (
-    DucFeatureControlFrameStyleStart, DucFeatureControlFrameStyleAddBaseStyle, DucFeatureControlFrameStyleAddTextStyle,
+    DucFeatureControlFrameStyleStart, DucFeatureControlFrameStyleAddTextStyle,
     DucFeatureControlFrameStyleAddLayout, DucFeatureControlFrameStyleAddSymbols, DucFeatureControlFrameStyleAddDatumStyle,
     DucFeatureControlFrameStyleEnd
 )
@@ -515,13 +515,13 @@ from ducpy.Duc.DucDocStyle import (
     DucDocStyleStart, DucDocStyleAddTextStyle, DucDocStyleAddParagraph, DucDocStyleAddStackFormat, DucDocStyleEnd
 )
 from ducpy.Duc.DucViewportStyle import (
-    DucViewportStyleStart, DucViewportStyleAddBaseStyle, DucViewportStyleAddScaleIndicatorVisible, DucViewportStyleEnd
+    DucViewportStyleStart, DucViewportStyleAddScaleIndicatorVisible, DucViewportStyleEnd
 )
 from ducpy.Duc.DucPlotStyle import (
-    DucPlotStyleStart, DucPlotStyleAddBaseStyle, DucPlotStyleEnd
+    DucPlotStyleStart, DucPlotStyleEnd
 )
 from ducpy.Duc.DucXRayStyle import (
-    DucXRayStyleStart, DucXRayStyleAddBaseStyle, DucXRayStyleAddColor, DucXRayStyleEnd
+    DucXRayStyleStart, DucXRayStyleAddColor, DucXRayStyleEnd
 )
 from ducpy.Duc.TilingProperties import (
     TilingPropertiesStart, TilingPropertiesAddSizeInPercent, TilingPropertiesAddAngle, TilingPropertiesAddSpacing,
@@ -664,7 +664,7 @@ from ducpy.Duc.DucFrameElement import (
     DucFrameElementStart, DucFrameElementAddStackElementBase, DucFrameElementEnd
 )
 from ducpy.Duc.DucPlotStyle import (
-    DucPlotStyleStart, DucPlotStyleAddBaseStyle, DucPlotStyleEnd
+    DucPlotStyleStart, DucPlotStyleEnd
 )
 from ducpy.Duc.PlotLayout import (
     PlotLayoutStart, PlotLayoutAddMargins, PlotLayoutEnd
@@ -678,7 +678,7 @@ from ducpy.Duc.DucView import (
     DucViewAddCenterPoint, DucViewAddScope, DucViewEnd
 )
 from ducpy.Duc.DucViewportStyle import (
-    DucViewportStyleStart, DucViewportStyleAddBaseStyle, DucViewportStyleAddScaleIndicatorVisible, DucViewportStyleEnd
+    DucViewportStyleStart, DucViewportStyleAddScaleIndicatorVisible, DucViewportStyleEnd
 )
 from ducpy.Duc.DucViewportElement import (
     DucViewportElementStart, DucViewportElementAddLinearBase, DucViewportElementAddStackBase,
@@ -1316,12 +1316,10 @@ def serialize_fbs_line_spacing(builder: flatbuffers.Builder, ls: Optional[DS_Lin
     return LineSpacingEnd(builder)
 
 def serialize_fbs_duc_text_style(builder: flatbuffers.Builder, style: DS_DucTextStyle) -> int:
-    base_style_offset = serialize_fbs_duc_element_styles_base(builder, style.base_style)
     font_family_offset = builder.CreateString(style.font_family)
     big_font_family_offset = builder.CreateString(style.big_font_family)
     line_spacing_offset = serialize_fbs_line_spacing(builder, style.line_spacing)
     DucTextStyleStart(builder)
-    DucTextStyleAddBaseStyle(builder, base_style_offset)
     DucTextStyleAddIsLtr(builder, style.is_ltr)
     DucTextStyleAddFontFamily(builder, font_family_offset)
     DucTextStyleAddBigFontFamily(builder, big_font_family_offset)
@@ -1355,13 +1353,11 @@ def serialize_fbs_table_cell_style(builder: flatbuffers.Builder, style: DS_DucTa
 def serialize_fbs_table_style(builder: flatbuffers.Builder, style: Optional[DS_DucTableStyle]) -> int:
     if style is None:
         return 0
-    base_style_offset = serialize_fbs_duc_element_styles_base(builder, style.base_style) if style.base_style else 0
     header_row_style_offset = serialize_fbs_table_cell_style(builder, style.header_row_style)
     data_row_style_offset = serialize_fbs_table_cell_style(builder, style.data_row_style)
     data_column_style_offset = serialize_fbs_table_cell_style(builder, style.data_column_style)
     flow_direction = style.flow_direction if style.flow_direction is not None else TABLE_FLOW_DIRECTION.VERTICAL
     DucTableStyleStart(builder)
-    DucTableStyleAddBaseStyle(builder, base_style_offset)
     DucTableStyleAddHeaderRowStyle(builder, header_row_style_offset)
     DucTableStyleAddDataRowStyle(builder, data_row_style_offset)
     DucTableStyleAddDataColumnStyle(builder, data_column_style_offset)
@@ -1369,7 +1365,6 @@ def serialize_fbs_table_style(builder: flatbuffers.Builder, style: Optional[DS_D
     return DucTableStyleEnd(builder)
 
 def serialize_fbs_leader_style(builder: flatbuffers.Builder, style: DS_DucLeaderStyle) -> int:
-    base_style_offset = serialize_fbs_duc_element_styles_base(builder, style.base_style)
     text_style_offset = serialize_fbs_duc_text_style(builder, style.text_style)
     heads_offsets = [serialize_fbs_duc_head(builder, h) for h in (style.heads_override or [])]
     heads_vec = 0
@@ -1379,7 +1374,6 @@ def serialize_fbs_leader_style(builder: flatbuffers.Builder, style: DS_DucLeader
             builder.PrependUOffsetTRelative(off)
         heads_vec = builder.EndVector()
     DucLeaderStyleStart(builder)
-    DucLeaderStyleAddBaseStyle(builder, base_style_offset)
     if heads_vec:
         DucLeaderStyleAddHeadsOverride(builder, heads_vec)
     if style.dogleg is not None:
@@ -1481,13 +1475,11 @@ def serialize_fbs_fcf_datum_style(builder: flatbuffers.Builder, s: DS_FCFDatumSt
     return FCFDatumStyleEnd(builder)
 
 def serialize_fbs_feature_control_frame_style(builder: flatbuffers.Builder, s: DS_DucFeatureControlFrameStyle) -> int:
-    base_style_offset = serialize_fbs_duc_element_styles_base(builder, s.base_style)
     text_style_offset = serialize_fbs_duc_text_style(builder, s.text_style)
     layout_offset = serialize_fbs_fcf_layout_style(builder, s.layout)
     symbols_offset = serialize_fbs_fcf_symbol_style(builder, s.symbols)
     datum_offset = serialize_fbs_fcf_datum_style(builder, s.datum_style)
     DucFeatureControlFrameStyleStart(builder)
-    DucFeatureControlFrameStyleAddBaseStyle(builder, base_style_offset)
     DucFeatureControlFrameStyleAddTextStyle(builder, text_style_offset)
     DucFeatureControlFrameStyleAddLayout(builder, layout_offset)
     DucFeatureControlFrameStyleAddSymbols(builder, symbols_offset)
@@ -1548,23 +1540,17 @@ def serialize_fbs_doc_style(builder: flatbuffers.Builder, s: DS_DucDocStyle) -> 
     return DucDocStyleEnd(builder)
 
 def serialize_fbs_viewport_style(builder: flatbuffers.Builder, s: DS_DucViewportStyle) -> int:
-    base_style_offset = serialize_fbs_duc_element_styles_base(builder, s.base_style)
     DucViewportStyleStart(builder)
-    DucViewportStyleAddBaseStyle(builder, base_style_offset)
     DucViewportStyleAddScaleIndicatorVisible(builder, s.scale_indicator_visible)
     return DucViewportStyleEnd(builder)
 
 def serialize_fbs_plot_style(builder: flatbuffers.Builder, s: DS_DucPlotStyle) -> int:
-    base_style_offset = serialize_fbs_duc_element_styles_base(builder, s.base_style)
     DucPlotStyleStart(builder)
-    DucPlotStyleAddBaseStyle(builder, base_style_offset)
     return DucPlotStyleEnd(builder)
 
 def serialize_fbs_xray_style(builder: flatbuffers.Builder, s: DS_DucXRayStyle) -> int:
-    base_style_offset = serialize_fbs_duc_element_styles_base(builder, s.base_style)
     color_offset = builder.CreateString(s.color)
     DucXRayStyleStart(builder)
-    DucXRayStyleAddBaseStyle(builder, base_style_offset)
     DucXRayStyleAddColor(builder, color_offset)
     return DucXRayStyleEnd(builder)
 
@@ -2612,7 +2598,7 @@ from ducpy.Duc.DucBlock import (
 
 # Global/Local State (vector helpers)
 from ducpy.Duc.DucLocalState import (
-    DucLocalStateStart, DucLocalStateAddScope, DucLocalStateAddActiveStandardId, DucLocalStateAddScrollX,
+    DucLocalStateAddManualSaveMode, DucLocalStateStart, DucLocalStateAddScope, DucLocalStateAddActiveStandardId, DucLocalStateAddScrollX,
     DucLocalStateAddScrollY, DucLocalStateAddZoom, DucLocalStateAddActiveGridSettings, DucLocalStateAddActiveSnapSettings,
     DucLocalStateAddIsBindingEnabled, DucLocalStateAddCurrentItemStroke, DucLocalStateAddCurrentItemBackground,
     DucLocalStateAddCurrentItemOpacity, DucLocalStateAddCurrentItemFontFamily, DucLocalStateAddCurrentItemFontSize,
@@ -2622,7 +2608,7 @@ from ducpy.Duc.DucLocalState import (
     DucLocalStateEnd, DucLocalStateStartActiveGridSettingsVector
 )
 from ducpy.Duc.DucGlobalState import (
-    DucGlobalStateStart, DucGlobalStateAddName, DucGlobalStateAddViewBackgroundColor, DucGlobalStateAddMainScope,
+    DucGlobalStateAddPruningLevel, DucGlobalStateStart, DucGlobalStateAddName, DucGlobalStateAddViewBackgroundColor, DucGlobalStateAddMainScope,
     DucGlobalStateAddDashSpacingScale, DucGlobalStateAddIsDashSpacingAffectedByViewportScale,
     DucGlobalStateAddScopeExponentThreshold, DucGlobalStateAddDimensionsAssociativeByDefault,
     DucGlobalStateAddUseAnnotativeScaling, DucGlobalStateAddDisplayPrecisionLinear,
@@ -2654,7 +2640,7 @@ from ducpy.Duc.Delta import (
     DeltaStart, DeltaAddBase, DeltaAddPatch, DeltaEnd, DeltaStartPatchVector
 )
 from ducpy.Duc.VersionGraphMetadata import (
-    VersionGraphMetadataStart, VersionGraphMetadataAddPruningLevel, VersionGraphMetadataAddLastPruned,
+    VersionGraphMetadataStart, VersionGraphMetadataAddLastPruned,
     VersionGraphMetadataAddTotalSize, VersionGraphMetadataEnd
 )
 from ducpy.Duc.VersionGraph import (
@@ -3432,6 +3418,7 @@ def serialize_fbs_duc_global_state(builder: flatbuffers.Builder, s: Optional[DS_
     if s.display_precision:
         DucGlobalStateAddDisplayPrecisionLinear(builder, s.display_precision.linear)
         DucGlobalStateAddDisplayPrecisionAngular(builder, s.display_precision.angular)
+    if s.pruning_level is not None: DucGlobalStateAddPruningLevel(builder, s.pruning_level)
     return DucGlobalStateEnd(builder)
 
 def serialize_fbs_duc_local_state(builder: flatbuffers.Builder, s: Optional[DS_DucLocalState]) -> int:
@@ -3447,10 +3434,14 @@ def serialize_fbs_duc_local_state(builder: flatbuffers.Builder, s: Optional[DS_D
         active_grid_vec = builder.EndVector()
     active_snap_settings_offset = _str(builder, s.active_snap_settings)
     current_item_stroke_offset = serialize_fbs_element_stroke(builder, s.current_item_stroke) if s.current_item_stroke else 0
+
     current_item_bg_offset = serialize_fbs_element_background(builder, s.current_item_background) if s.current_item_background else 0
+
     current_item_font_family_offset = _str(builder, s.current_item_font_family)
     current_item_start_head_offset = serialize_fbs_duc_head(builder, s.current_item_start_line_head) if s.current_item_start_line_head else 0
+
     current_item_end_head_offset = serialize_fbs_duc_head(builder, s.current_item_end_line_head) if s.current_item_end_line_head else 0
+
 
     DucLocalStateStart(builder)
     DucLocalStateAddScope(builder, scope_offset)
@@ -3460,21 +3451,30 @@ def serialize_fbs_duc_local_state(builder: flatbuffers.Builder, s: Optional[DS_D
     DucLocalStateAddZoom(builder, s.zoom)
     if active_grid_vec: DucLocalStateAddActiveGridSettings(builder, active_grid_vec)
     if active_snap_settings_offset: DucLocalStateAddActiveSnapSettings(builder, active_snap_settings_offset)
+
     DucLocalStateAddIsBindingEnabled(builder, s.is_binding_enabled)
     if current_item_stroke_offset: DucLocalStateAddCurrentItemStroke(builder, current_item_stroke_offset)
     if current_item_bg_offset: DucLocalStateAddCurrentItemBackground(builder, current_item_bg_offset)
     if s.current_item_opacity is not None: DucLocalStateAddCurrentItemOpacity(builder, s.current_item_opacity)
+
     if current_item_font_family_offset: DucLocalStateAddCurrentItemFontFamily(builder, current_item_font_family_offset)
+
     if s.current_item_font_size is not None: DucLocalStateAddCurrentItemFontSize(builder, s.current_item_font_size)
+
     if s.current_item_text_align is not None: DucLocalStateAddCurrentItemTextAlign(builder, s.current_item_text_align)
+
     if current_item_start_head_offset: DucLocalStateAddCurrentItemStartLineHead(builder, current_item_start_head_offset)
+
     if current_item_end_head_offset: DucLocalStateAddCurrentItemEndLineHead(builder, current_item_end_head_offset)
+
     if s.current_item_roundness is not None: DucLocalStateAddCurrentItemRoundness(builder, s.current_item_roundness)
+
     DucLocalStateAddPenMode(builder, s.pen_mode)
     DucLocalStateAddViewModeEnabled(builder, s.view_mode_enabled)
     DucLocalStateAddObjectsSnapModeEnabled(builder, s.objects_snap_mode_enabled)
     DucLocalStateAddGridModeEnabled(builder, s.grid_mode_enabled)
-    DucLocalStateAddOutlineModeEnabled(builder, s.outline_mode_enabled)
+    DucLocalStateAddOutlineModeEnabled(builder, s.outline_mode_enabled);
+    if s.manual_save_mode is not None: DucLocalStateAddManualSaveMode(builder, s.manual_save_mode)
     return DucLocalStateEnd(builder)
 
 # -----------------------------------------------------------------------------
@@ -3559,8 +3559,6 @@ def serialize_fbs_version_graph_metadata(builder: flatbuffers.Builder, m: Option
     if m is None:
         return 0
     VersionGraphMetadataStart(builder)
-    if m.pruning_level is not None:
-        VersionGraphMetadataAddPruningLevel(builder, m.pruning_level)
     VersionGraphMetadataAddLastPruned(builder, m.last_pruned)
     VersionGraphMetadataAddTotalSize(builder, m.total_size)
     return VersionGraphMetadataEnd(builder)
@@ -3582,6 +3580,7 @@ def serialize_fbs_version_graph(builder: flatbuffers.Builder, g: Optional[DS_Ver
 
     metadata_offset = serialize_fbs_version_graph_metadata(builder, g.metadata)
     user_chk_offset = builder.CreateString(g.user_checkpoint_version_id) if g.user_checkpoint_version_id else 0
+
     latest_offset = builder.CreateString(g.latest_version_id) if g.latest_version_id else 0
 
     VersionGraphStart(builder)
@@ -3674,6 +3673,7 @@ def serialize_as_flatbuffers(data_state: DS_ExportedDataState) -> bytes:
         version_offset = builder.CreateString(data_state.version)
         source_offset = builder.CreateString(data_state.source)
         thumbnail_offset = builder.CreateByteVector(data_state.thumbnail) if data_state.thumbnail else 0
+        id_offset = builder.CreateString(data_state.id) if data_state.id else 0
 
         # Build root
         ExportedDataStateStart(builder)
@@ -3695,6 +3695,7 @@ def serialize_as_flatbuffers(data_state: DS_ExportedDataState) -> bytes:
         if duc_global_state_offset: ExportedDataStateAddDucGlobalState(builder, duc_global_state_offset)
         ExportedDataStateAddExternalFiles(builder, files_vec)
         if version_graph_offset: ExportedDataStateAddVersionGraph(builder, version_graph_offset)
+        if id_offset: ExportedDataStateAddId(builder, id_offset)
         exported_data = ExportedDataStateEnd(builder)
 
         builder.Finish(exported_data, b"DUC_")

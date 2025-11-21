@@ -1,0 +1,82 @@
+name: Release Python
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - next
+      - dev
+    paths:
+      - 'packages/ducpy/**'
+      - 'package.json'
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release_ducpy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-ducpy
+      cancel-in-progress: false
+    outputs:
+      release_status: ${{ steps.release.outputs.status }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+          persist-credentials: true
+      - name: Set Git User
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+      - name: Install Monorepo Dependencies
+        run: bun install
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Setup release environment
+        id: setup-release-environment
+        uses: ./.github/actions/simulate-main-environment
+        with:
+          current-branch: ${{ github.ref_name }}
+          package-name: ducpy
+
+      - name: Release
+        id: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          if bunx semantic-release ${{ steps.setup-release-environment.outputs.release-mode }}; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+          fi
+        working-directory: ./packages/ducpy
+      - name: Notify web deployment
+        if: steps.release.outputs.status == 'success'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-web-deployment
+          token: ${{ secrets.GITHUB_TOKEN }}
+          client-payload: |
+            {"source": "release-ducpy", "web_changed": "false", "success": "true"}
