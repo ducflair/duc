@@ -7,8 +7,8 @@
      cast to number at the final write site (e.g. pv.value).
    - Keep args strongly typed. Never use any for function args.
 */
-import * as Duc from "ducjs/flatbuffers/duc";
 import * as flatbuffers from "flatbuffers";
+import * as Duc from "./flatbuffers/duc";
 
 import {
   _DucElementStylesBase,
@@ -108,10 +108,10 @@ import {
   TrackingLineStyle,
   VersionBase,
   VersionGraph
-} from "ducjs/types";
+} from "./types";
 
-import { restore } from "ducjs/restore";
-import { encodeFunctionString, EXPORT_DATA_TYPES } from "ducjs/utils";
+import { restore, RestoreConfig } from "./restore";
+import { encodeFunctionString, EXPORT_DATA_TYPES } from "./utils";
 
 /**
  * Basic helpers
@@ -653,12 +653,10 @@ function writeLineSpacing(b: flatbuffers.Builder, ls: DucTextStyle["lineSpacing"
 }
 
 function writeTextStyle(b: flatbuffers.Builder, s: DucTextStyle, usv: boolean): number {
-  const base = writeStylesBase(b, s, usv);
   const lineSpacing = writeLineSpacing(b, s.lineSpacing, usv);
   const fontFamily = str(b, s.fontFamily.toString());
   const bigFont = str(b, s.bigFontFamily);
   Duc.DucTextStyle.startDucTextStyle(b);
-  if (base) Duc.DucTextStyle.addBaseStyle(b, base);
   Duc.DucTextStyle.addIsLtr(b, s.isLtr);
   if (fontFamily) Duc.DucTextStyle.addFontFamily(b, fontFamily);
   if (bigFont) Duc.DucTextStyle.addBigFontFamily(b, bigFont);
@@ -958,10 +956,8 @@ function writePlotLayout(b: flatbuffers.Builder, l: PlotLayout, usv: boolean): n
 
 function writePlot(b: flatbuffers.Builder, e: DucPlotElement, usv: boolean): number {
   const stackBase = writeStackElementBase(b, e as unknown as any, usv);
-  const baseStyle = writeStylesBase(b, e, usv);
   const plotStyle = (() => {
     Duc.DucPlotStyle.startDucPlotStyle(b);
-    if (baseStyle) Duc.DucPlotStyle.addBaseStyle(b, baseStyle);
     return Duc.DucPlotStyle.endDucPlotStyle(b);
   })();
   const layout = writePlotLayout(b, e.layout, usv);
@@ -989,9 +985,7 @@ function writeView(b: flatbuffers.Builder, v: DucView, usv: boolean): number {
 }
 
 function writeViewportStyle(b: flatbuffers.Builder, s: DucViewportStyle, usv: boolean): number {
-  const base = writeStylesBase(b, s, usv);
   Duc.DucViewportStyle.startDucViewportStyle(b);
-  if (base) Duc.DucViewportStyle.addBaseStyle(b, base);
   Duc.DucViewportStyle.addScaleIndicatorVisible(b, s.scaleIndicatorVisible);
   return Duc.DucViewportStyle.endDucViewportStyle(b);
 }
@@ -1016,10 +1010,8 @@ function writeViewport(b: flatbuffers.Builder, e: DucViewportElement, usv: boole
 }
 
 function writeXRayStyle(b: flatbuffers.Builder, s: DucXRayStyle, usv: boolean): number {
-  const base = writeStylesBase(b, s, usv);
   const color = b.createString(s.color);
   Duc.DucXRayStyle.startDucXRayStyle(b);
-  if (base) Duc.DucXRayStyle.addBaseStyle(b, base);
   Duc.DucXRayStyle.addColor(b, color);
   return Duc.DucXRayStyle.endDucXRayStyle(b);
 }
@@ -1072,11 +1064,9 @@ function writeLeaderContent(b: flatbuffers.Builder, c: LeaderContent | null, usv
 }
 
 function writeLeaderStyle(b: flatbuffers.Builder, s: DucLeaderStyle, usv: boolean): number {
-  const base = writeStylesBase(b, s, usv);
   const text = writeTextStyle(b, s.textStyle, usv);
   const heads = s.headsOverride ? Duc.DucLeaderStyle.createHeadsOverrideVector(b, s.headsOverride.map((h) => writeHead(b, h, usv)!)) : undefined;
   Duc.DucLeaderStyle.startDucLeaderStyle(b);
-  if (base) Duc.DucLeaderStyle.addBaseStyle(b, base);
   if (heads) Duc.DucLeaderStyle.addHeadsOverride(b, heads);
   if (s.dogleg !== undefined) Duc.DucLeaderStyle.addDogleg(b, getPrecisionValue(s.dogleg, usv));
   Duc.DucLeaderStyle.addTextStyle(b, text);
@@ -1300,7 +1290,6 @@ function writeFcfDatumDefinition(b: flatbuffers.Builder, d: DucFeatureControlFra
 }
 
 function writeFcfStyle(b: flatbuffers.Builder, s: DucFeatureControlFrameStyle, usv: boolean): number {
-  const base = writeStylesBase(b, s, usv);
   const text = writeTextStyle(b, s.textStyle, usv);
   const layout = (() => {
     Duc.FCFLayoutStyle.startFCFLayoutStyle(b);
@@ -1320,7 +1309,6 @@ function writeFcfStyle(b: flatbuffers.Builder, s: DucFeatureControlFrameStyle, u
     return Duc.FCFDatumStyle.endFCFDatumStyle(b);
   })();
   Duc.DucFeatureControlFrameStyle.startDucFeatureControlFrameStyle(b);
-  if (base) Duc.DucFeatureControlFrameStyle.addBaseStyle(b, base);
   Duc.DucFeatureControlFrameStyle.addTextStyle(b, text);
   Duc.DucFeatureControlFrameStyle.addLayout(b, layout);
   Duc.DucFeatureControlFrameStyle.addSymbols(b, sym);
@@ -1438,7 +1426,9 @@ function writeTableCellStyle(b: flatbuffers.Builder, s: DucTableCellStyle, usv: 
   Duc.Margins.addLeft(b, getPrecisionValue(s.margins.left, usv));
   const margins = Duc.Margins.endMargins(b);
   Duc.DucTableCellStyle.startDucTableCellStyle(b);
-  if (base) Duc.DucTableCellStyle.addBaseStyle(b, base);
+  if (base) {
+    Duc.DucTableCellStyle.addBaseStyle(b, base);
+  }
   Duc.DucTableCellStyle.addTextStyle(b, text);
   Duc.DucTableCellStyle.addMargins(b, margins);
   Duc.DucTableCellStyle.addAlignment(b, s.alignment);
@@ -1446,12 +1436,10 @@ function writeTableCellStyle(b: flatbuffers.Builder, s: DucTableCellStyle, usv: 
 }
 
 function writeTableStyle(b: flatbuffers.Builder, s: DucTableStyle, usv: boolean): number {
-  const base = writeStylesBase(b, s, usv);
   const header = writeTableCellStyle(b, s.headerRowStyle, usv);
   const dataRow = writeTableCellStyle(b, s.dataRowStyle, usv);
   const dataCol = writeTableCellStyle(b, s.dataColumnStyle, usv);
   Duc.DucTableStyle.startDucTableStyle(b);
-  if (base) Duc.DucTableStyle.addBaseStyle(b, base);
   Duc.DucTableStyle.addFlowDirection(b, s.flowDirection);
   Duc.DucTableStyle.addHeaderRowStyle(b, header);
   Duc.DucTableStyle.addDataRowStyle(b, dataRow);
@@ -1845,7 +1833,7 @@ function writeUcs(b: flatbuffers.Builder, u: DucUcs): number {
 /**
  * Standards
  */
-import type { Standard, StandardOverrides, StandardStyles, StandardUnits, StandardValidation, StandardViewSettings } from "ducjs/technical/standards";
+import type { Standard, StandardOverrides, StandardStyles, StandardUnits, StandardValidation, StandardViewSettings } from "./technical/standards";
 
 function serializeStandardOverrides(b: flatbuffers.Builder, o: StandardOverrides, usv: boolean): number {
   const activeGrid = o.activeGridSettingsId ? Duc.StandardOverrides.createActiveGridSettingsIdVector(b, o.activeGridSettingsId.map(id => b.createString(id))) : undefined;
@@ -2262,7 +2250,6 @@ function serializeDucVersionGraph(b: flatbuffers.Builder, vg: VersionGraph): num
   const checkpoints = Duc.VersionGraph.createCheckpointsVector(b, vg.checkpoints.map(c => serializeCheckpoint(b, c)));
   const deltas = Duc.VersionGraph.createDeltasVector(b, vg.deltas.map(d => serializeDelta(b, d)));
   Duc.VersionGraphMetadata.startVersionGraphMetadata(b);
-  Duc.VersionGraphMetadata.addPruningLevel(b, vg.metadata.pruningLevel);
   Duc.VersionGraphMetadata.addLastPruned(b, BigInt(vg.metadata.lastPruned));
   Duc.VersionGraphMetadata.addTotalSize(b, BigInt(vg.metadata.totalSize));
   const meta = Duc.VersionGraphMetadata.endVersionGraphMetadata(b);
@@ -2290,6 +2277,7 @@ function serializeDucGlobalState(builder: flatbuffers.Builder, state: DucGlobalS
   Duc.DucGlobalState.addDashSpacingScale(builder, state.dashSpacingScale);
   Duc.DucGlobalState.addIsDashSpacingAffectedByViewportScale(builder, state.isDashSpacingAffectedByViewportScale);
   Duc.DucGlobalState.addScopeExponentThreshold(builder, state.scopeExponentThreshold);
+  if (state.pruningLevel) Duc.DucGlobalState.addPruningLevel(builder, state.pruningLevel);
   Duc.DucGlobalState.addDimensionsAssociativeByDefault(builder, state.dimensionsAssociativeByDefault);
   Duc.DucGlobalState.addUseAnnotativeScaling(builder, state.useAnnotativeScaling);
   Duc.DucGlobalState.addDisplayPrecisionLinear(builder, state.displayPrecision.linear);
@@ -2304,29 +2292,33 @@ function serializeDucLocalState(builder: flatbuffers.Builder, state: DucLocalSta
   const activeSnapSettingsOffset = writeString(builder, state.activeSnapSettings);
   const currentItemStrokeOffset = writeElementStroke(builder, state.currentItemStroke, usv);
   const currentItemBackgroundOffset = writeElementBackground(builder, state.currentItemBackground, usv);
-  const currentItemFontFamilyOffset = writeString(builder, state.currentItemFontFamily.toString());
+  const currentItemFontFamilyOffset = state.currentItemFontFamily && writeString(builder, state.currentItemFontFamily.toString());
 
   Duc.DucLocalState.startDucLocalState(builder);
   if (scopeOffset) Duc.DucLocalState.addScope(builder, scopeOffset);
   if (activeStandardIdOffset) Duc.DucLocalState.addActiveStandardId(builder, activeStandardIdOffset);
-  Duc.DucLocalState.addScrollX(builder, getPrecisionValue(state.scrollX, usv));
-  Duc.DucLocalState.addScrollY(builder, getPrecisionValue(state.scrollY, usv));
-  Duc.DucLocalState.addZoom(builder, state.zoom.value);
+  if (state.scrollX) Duc.DucLocalState.addScrollX(builder, getPrecisionValue(state.scrollX, usv));
+  if (state.scrollY) Duc.DucLocalState.addScrollY(builder, getPrecisionValue(state.scrollY, usv));
+  if (state.zoom) Duc.DucLocalState.addZoom(builder, state.zoom.value);
   if (activeGridSettingsVector) Duc.DucLocalState.addActiveGridSettings(builder, activeGridSettingsVector);
   if (activeSnapSettingsOffset) Duc.DucLocalState.addActiveSnapSettings(builder, activeSnapSettingsOffset);
   Duc.DucLocalState.addIsBindingEnabled(builder, state.isBindingEnabled);
   if (currentItemStrokeOffset) Duc.DucLocalState.addCurrentItemStroke(builder, currentItemStrokeOffset);
   if (currentItemBackgroundOffset) Duc.DucLocalState.addCurrentItemBackground(builder, currentItemBackgroundOffset);
+
   Duc.DucLocalState.addCurrentItemOpacity(builder, state.currentItemOpacity);
   if (currentItemFontFamilyOffset) Duc.DucLocalState.addCurrentItemFontFamily(builder, currentItemFontFamilyOffset);
-  Duc.DucLocalState.addCurrentItemFontSize(builder, getPrecisionValue(state.currentItemFontSize, usv));
+
+  if (state.currentItemFontSize) Duc.DucLocalState.addCurrentItemFontSize(builder, getPrecisionValue(state.currentItemFontSize, usv));
   if (state.currentItemTextAlign) Duc.DucLocalState.addCurrentItemTextAlign(builder, state.currentItemTextAlign);
-  Duc.DucLocalState.addCurrentItemRoundness(builder, getPrecisionValue(state.currentItemRoundness, usv));
+
+  if (state.currentItemRoundness) Duc.DucLocalState.addCurrentItemRoundness(builder, getPrecisionValue(state.currentItemRoundness, usv));
   Duc.DucLocalState.addPenMode(builder, state.penMode);
   Duc.DucLocalState.addViewModeEnabled(builder, state.viewModeEnabled);
   Duc.DucLocalState.addObjectsSnapModeEnabled(builder, state.objectsSnapModeEnabled);
   Duc.DucLocalState.addGridModeEnabled(builder, state.gridModeEnabled);
   Duc.DucLocalState.addOutlineModeEnabled(builder, state.outlineModeEnabled);
+  Duc.DucLocalState.addManualSaveMode(builder, state.manualSaveMode);
   return Duc.DucLocalState.endDucLocalState(builder);
 }
 
@@ -2389,7 +2381,6 @@ function serializeDucLayer(builder: flatbuffers.Builder, l: DucLayer, usv: boole
 function serializeExternalFiles(builder: flatbuffers.Builder, files: DucExternalFiles | undefined, usv: boolean): number | undefined {
   if (!files) return undefined;
 
-
   const entries = Object.entries(files).map(([key, value]) => {
     const keyOff = builder.createString(key);
     const mt = builder.createString(value.mimeType);
@@ -2407,6 +2398,7 @@ function serializeExternalFiles(builder: flatbuffers.Builder, files: DucExternal
     if (dataVectorOffset) Duc.DucExternalFileData.addData(builder, dataVectorOffset);
     Duc.DucExternalFileData.addCreated(builder, BigInt(value.created));
     if (value.lastRetrieved !== undefined) Duc.DucExternalFileData.addLastRetrieved(builder, BigInt(value.lastRetrieved));
+
     const dataOff = Duc.DucExternalFileData.endDucExternalFileData(builder);
 
     Duc.DucExternalFileEntry.startDucExternalFileEntry(builder);
@@ -2429,7 +2421,9 @@ export const DUC_SCHEMA_VERSION =
 
 export const serializeDuc = async (
   data: ImportedDataState,
-  useScopedValues: boolean = false
+  useScopedValues: boolean = false,
+  passThroughElementIds: string[] = [],
+  restoreConfig: RestoreConfig = {},
 ): Promise<Uint8Array> => {
   const builder = new flatbuffers.Builder(1024);
 
@@ -2438,11 +2432,14 @@ export const serializeDuc = async (
     {
       refreshDimensions: false,
       syncInvalidIndices: (elements) => elements as OrderedDucElement[],
-    }
+      passThroughElementIds
+    },
+    restoreConfig
   );
 
   const typeOffset = builder.createString(EXPORT_DATA_TYPES.duc);
   const sourceOffset = builder.createString(typeof window !== "undefined" ? window.location.origin : "unknown");
+
   const versionOffset = builder.createString(DUC_SCHEMA_VERSION);
 
   // Serialize elements
@@ -2459,6 +2456,7 @@ export const serializeDuc = async (
 
   // Serialize blocks
   const blocksOffset = Duc.ExportedDataState.createBlocksVector(builder, sanitized.blocks.map(block => writeBlock(builder, block, useScopedValues)));
+
 
   // Serialize groups
   const groupsOffset = sanitized.groups.length > 0
@@ -2500,6 +2498,11 @@ export const serializeDuc = async (
     ? builder.createByteVector(sanitized.thumbnail)
     : null;
 
+  // Serialize id (as string if present)
+  const idOffset = sanitized.id
+    ? builder.createString(sanitized.id)
+    : null;
+
   Duc.ExportedDataState.startExportedDataState(builder);
   Duc.ExportedDataState.addType(builder, typeOffset);
   Duc.ExportedDataState.addVersion(builder, versionOffset);
@@ -2536,6 +2539,9 @@ export const serializeDuc = async (
   }
   if (thumbnailOffset) {
     Duc.ExportedDataState.addThumbnail(builder, thumbnailOffset);
+  }
+  if (idOffset) {
+    Duc.ExportedDataState.addId(builder, idOffset);
   }
   const exportedDataStateOffset = Duc.ExportedDataState.endExportedDataState(builder);
 

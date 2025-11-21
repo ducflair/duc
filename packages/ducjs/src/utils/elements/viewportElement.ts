@@ -1,4 +1,4 @@
-import { AnnotationScale, ViewportScale } from "ducjs/types";
+import { AnnotationScale, ViewportScale } from "../../types";
 
 /**
  * Utility functions to convert between the two scales

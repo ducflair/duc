@@ -3,47 +3,17 @@
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://raw.githubusercontent.com/ducflair/assets/refs/heads/main/src/duc/duc-extended.png" /></a>
   <p align="center">2D CAD File Format</p>
   <p align="center" style="align: center;">
-    <a href="https://www.npmjs.com/package/@ducflair/duc"><img src="https://shields.io/badge/NPM-cc3534?logo=Npm&logoColor=white&style=round-square" alt="NPM" /></a>
-    <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/npm/v/@ducflair/duc/latest?style=round-square&label=latest%20stable" alt="NPM @ducflair/duc@latest release" /></a>
-    <a href="https://www.npmtrends.com/@ducflair/duc"><img src="https://img.shields.io/npm/dm/@ducflair/duc?style=round-square&color=salmon" alt="Downloads" /></a>
+    <a href="https://www.npmjs.com/package/ducjs"><img src="https://shields.io/badge/NPM-cc3534?logo=Npm&logoColor=white&style=round-square" alt="NPM" /></a>
+    <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/npm/v/ducjs/latest?style=round-square&label=latest%20stable" alt="NPM ducjs@latest release" /></a>
+    <a href="https://www.npmtrends.com/ducjs"><img src="https://img.shields.io/npm/dm/ducjs?style=round-square&color=salmon" alt="Downloads" /></a>
     <img src="https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=fff&style=round-square" alt="TypeScript" />
   </p>
 </p>
 
 
-# @ducflair/duc
+# ducjs
 
-The `@ducflair/duc` package provides robust TypeScript definitions and utilities for the `duc` 2D CAD file format, a cornerstone of our advanced design system. Designed for professionals seeking precision and efficiency, this package ensures seamless integration and manipulation of `duc` files within your TypeScript projects.
-
-
-## Introduction
-
-The `@ducflair/duc` package offers comprehensive TypeScript types and helper functions to work effortlessly with the `duc` CAD file format. Built with Flatbuffers and optimized for performance, this package enables you to parse, validate, and manipulate `duc` files with ease.
-
-## Features
-
-- **TypeScript Support:** Strongly-typed interfaces for all aspects of the `duc` file format, ensuring type safety and IntelliSense support.
-- **Utility Functions:** Easy-to-use functions for parsing, validating, and manipulating `duc` files.
-- **Extensible Architecture:** Designed to integrate seamlessly with other `ducflair` packages and your custom tools.
-- **Performance Optimized:** Efficient processing to handle complex CAD data with ease.
-
-## Installation
-
-Install the package using your preferred package manager:
-
-```bash
-# Using Bun
-bun add @ducflair/duc
-
-# Using npm
-npm install @ducflair/duc
-
-# Using Yarn
-yarn add @ducflair/duc
-```
-
-## Usage
-> To be written ...
+The `ducjs` package offers comprehensive TypeScript types and helper functions to work effortlessly with the `duc` CAD file format. Built with Flatbuffers and optimized for performance, this package enables you to parse, validate, and manipulate `duc` files with ease.
 
 ## Documentation
 

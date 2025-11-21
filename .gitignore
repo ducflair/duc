@@ -1,5 +1,6 @@
 # deps
 node_modules
+target
 
 # generated content
 .contentlayer
@@ -34,3 +35,5 @@ sst.pyi
 
 # flatc
 build_logs
+
+.claude

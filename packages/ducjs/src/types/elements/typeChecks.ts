@@ -1,7 +1,7 @@
-import type { ElementOrToolType } from "ducjs/types";
-import type { MarkNonNullable } from "ducjs/types/utility-types";
-import { assertNever } from "ducjs/utils";
-import { Bounds, LineSegment, TuplePoint } from "ducjs/types/geometryTypes";
+import type { ElementOrToolType } from "..";
+import type { MarkNonNullable } from "../utility-types";
+import { assertNever } from "../../utils";
+import { Bounds, LineSegment, TuplePoint } from "../geometryTypes";
 import type {
   DucArrowElement,
   DucBindableElement,
@@ -15,6 +15,7 @@ import type {
   DucFreeDrawElement,
   DucImageElement,
   DucLinearElement,
+  DucPlotElement,
   DucTableElement,
   DucPointBinding,
   DucTextContainer,
@@ -28,7 +29,7 @@ import type {
   DucBlockInstanceElement,
   NonDeleted,
   DucIframeLikeElement
-} from "ducjs/types/elements";
+} from "./";
 
 export const isInitializedImageElement = (
   element: DucElement | null,
@@ -78,12 +79,18 @@ export const isFrameElement = (
   return element != null && element.type === "frame";
 };
 
+export const isPlotElement = (
+  element: DucElement | null,
+): element is DucPlotElement => {
+  return element != null && element.type === "plot";
+};
+
 export const isFrameLikeElement = (
   element: DucElement | null,
 ): element is DucFrameLikeElement => {
   return (
     element != null &&
-    (element.type === "frame")
+    (element.type === "frame" || element.type === "plot")
   );
 };
 

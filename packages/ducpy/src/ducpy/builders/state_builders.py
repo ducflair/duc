@@ -181,6 +181,10 @@ class GlobalStateBuilder(StateSpecificBuilder):
     def with_angular_precision(self, precision: int):
         self.extra["angular_precision"] = precision
         return self
+      
+    def with_pruning_level(self, level: PRUNING_LEVEL):
+        self.extra["pruning_level"] = level
+        return self
 
     def build(self) -> DucGlobalState:
         return create_global_state_from_base(self.base, **self.extra)
@@ -680,10 +684,6 @@ class VersionGraphBuilder(StateSpecificBuilder):
         self.extra["deltas"] = deltas
         return self
 
-    def with_pruning_level(self, level: PRUNING_LEVEL):
-        self.extra["pruning_level"] = level
-        return self
-
     def with_user_checkpoint_version_id(self, version_id: str):
         self.extra["user_checkpoint_version_id"] = version_id
         return self
@@ -836,7 +836,8 @@ def create_local_state_from_base(base: BaseStateParams, **kwargs) -> DucLocalSta
         current_item_text_align=kwargs.get('current_item_text_align', None),
         current_item_roundness=kwargs.get('current_item_roundness', None),
         current_item_start_line_head=kwargs.get('current_item_start_line_head', None),
-        current_item_end_line_head=kwargs.get('current_item_end_line_head', None)
+        current_item_end_line_head=kwargs.get('current_item_end_line_head', None),
+        manual_save_mode=kwargs.get('manual_save_mode', None)
     )
 
 def create_view_from_base(base: BaseStateParams, **kwargs) -> DucView:
@@ -1043,7 +1044,6 @@ def create_version_graph_from_base(base: BaseStateParams, **kwargs) -> VersionGr
     metadata = VersionGraphMetadata(
         last_pruned=int(time.time() * 1000),
         total_size=0,
-        pruning_level=kwargs.get('pruning_level', PRUNING_LEVEL.CONSERVATIVE)
     )
     return VersionGraph(
         checkpoints=kwargs.get('checkpoints', []),

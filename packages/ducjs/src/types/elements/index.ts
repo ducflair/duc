@@ -1,14 +1,14 @@
 export * from "./typeChecks";
 
-import { BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION, COLUMN_TYPE, DATUM_BRACKET_STYLE, DATUM_TARGET_TYPE, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, PARAMETRIC_SOURCE_TYPE, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FIELD_SOURCE_PROPERTY, TEXT_FIELD_SOURCE_TYPE, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_TYPE, TOLERANCE_ZONE_TYPE, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT } from "ducjs/flatbuffers/duc";
-import { Standard, StandardUnits } from "ducjs/technical/standards";
-import { DucView, PrecisionValue, Scope } from "ducjs/types";
-import { Axis, GeometricPoint, Percentage, Radian, ScaleFactor } from "ducjs/types/geometryTypes";
-import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "ducjs/types/utility-types";
+import { BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION, COLUMN_TYPE, DATUM_BRACKET_STYLE, DATUM_TARGET_TYPE, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, PARAMETRIC_SOURCE_TYPE, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FIELD_SOURCE_PROPERTY, TEXT_FIELD_SOURCE_TYPE, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_TYPE, TOLERANCE_ZONE_TYPE, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT } from "../../flatbuffers/duc";
+import { Standard, StandardUnits } from "../../technical/standards";
+import { DucView, PrecisionValue, Scope } from "..";
+import { Axis, GeometricPoint, Percentage, Radian, ScaleFactor } from "../geometryTypes";
+import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "../utility-types";
 import {
   FONT_FAMILY,
   FREEDRAW_EASINGS,
-} from "ducjs/utils/constants";
+} from "../../utils/constants";
 
 
 
@@ -552,7 +552,7 @@ export type DucTableCellStyle = _DucElementStylesBase & {
  * It sets the defaults for rows, columns, and cells, which can be
  * individually overridden.
  */
-export type DucTableStyle = _DucElementStylesBase & {
+export type DucTableStyle = {
   /** The direction in which new rows are added */
   flowDirection: TableFlowDirection;
   /** Default style for the header row(s) */
@@ -688,7 +688,7 @@ export type VerticalAlign = ValueOf<typeof VERTICAL_ALIGN>;
 export type LineSpacingType = ValueOf<typeof LINE_SPACING_TYPE>;
 export type TextFieldSourceProperty = ValueOf<typeof TEXT_FIELD_SOURCE_PROPERTY>;
 
-export type DucTextStyle = _DucElementStylesBase & {
+export type DucTextStyle = {
   /** 
    * Whether the text is left-to-right or right-to-left
    * @default true
@@ -1182,7 +1182,7 @@ export type ViewportShadePlot = ValueOf<typeof VIEWPORT_SHADE_PLOT>;
  * This is the style for the viewport element
  * Grid settings, UCS, Snapping and more can be overridden through the overrideStandard property from the _DucStackElementBase
  */
-export type DucViewportStyle = _DucElementStylesBase & {
+export type DucViewportStyle = {
   scaleIndicatorVisible: boolean;
 };
 export type DucViewportElement = _DucLinearElementBase & _DucStackBase & DucViewportStyle & {
@@ -1219,7 +1219,7 @@ export type PlotLayout = {
     left: PrecisionValue;
   };
 };
-export type DucPlotStyle = _DucElementStylesBase & {};
+export type DucPlotStyle = {};
 /**
  * A DucPlotElement represents a finite layout or "paper space" within the infinite canvas.
  * It serves as a container for viewports and other annotations, defining the final
@@ -1236,7 +1236,7 @@ export type DucPlotElement = _DucStackElementBase & DucPlotStyle & {
 
 //// === XRAY ELEMENTS ===
 
-export type DucXRayStyle = _DucElementStylesBase & {
+export type DucXRayStyle = {
   /**
    * The color of the x-ray
    */
@@ -1262,7 +1262,7 @@ export type BlockAttachment = ValueOf<typeof BLOCK_ATTACHMENT>;
 /**
  * Defines the visual appearance and behavior of a leader.
  */
-export type DucLeaderStyle = _DucElementStylesBase & {
+export type DucLeaderStyle = {
   /**
    * Override the heads of the leader
    * The tuple represents [startHead, endHead]
@@ -1569,7 +1569,7 @@ export type FeatureControlFrameSegment = {
  * Defines the visual appearance of a Feature Control Frame.
  * This can be stored in a style library and reused.
  */
-export type DucFeatureControlFrameStyle = _DucElementStylesBase & {
+export type DucFeatureControlFrameStyle = {
   /** The base text style for numbers and letters within the frame */
   textStyle: DucTextStyle;
 

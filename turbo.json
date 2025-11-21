@@ -17,9 +17,35 @@
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
+    "ducpdf#build": {
+      "cache": false,
+      "dependsOn": ["ducjs#build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    "ducpdf#test": {
+      "cache": false,
+      "dependsOn": ["ducpdf#build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"],
+      "outputs": [
+        "packages/ducpdf/tests/tests_output/**"
+      ]
+    },
     "ducsvg#build": {
       "cache": false,
-      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+      "dependsOn": [
+        "ducjs#build",
+        "ducpdf#build"
+      ],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"],
+      "outputs": ["dist/**"]
+    },
+    "ducsvg#test": {
+      "cache": false,
+      "dependsOn": ["ducsvg#build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"],
+      "outputs": [
+        "packages/ducsvg/tests/output/**"
+      ]
     },
     "semantic-release": {
       "dependsOn": ["build"],

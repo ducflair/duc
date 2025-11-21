@@ -79,7 +79,6 @@ def create_sample_duc_object():
     default_text_style = duc.IdentifiedTextStyle(
         id=duc.create_identifier("default_text_style", "Default Text Style"),
         style=duc.DucTextStyle(
-            base_style=duc.DucElementStylesBase(roundness=0.0, background=[], stroke=[], opacity=1.0),
             is_ltr=True, font_family="Arial", big_font_family="Arial",
             line_height=1.0, line_spacing=duc.LineSpacing(value=1.0, type=duc.LINE_SPACING_TYPE.AT_LEAST),
             oblique_angle=0.0, font_size=12, width_factor=1.0,

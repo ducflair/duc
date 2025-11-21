@@ -1,22 +1,59 @@
 {
   "name": "ducpdf",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "description": "Library for converting between PDF and DUC formats.",
-  "private": true,
+  "private": false,
+  "type": "module",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./pkg": {
+      "types": "./pkg/duc2pdf.d.ts",
+      "import": "./pkg/duc2pdf.js",
+      "default": "./pkg/duc2pdf.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+    "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ducflair/duc.git",
+    "directory": "packages/ducpdf"
+  },
+  "author": "Ducflair",
+  "license": "MIT",
+  "homepage": "https://duc.ducflair.com/",
+  "bugs": {
+    "url": "https://github.com/ducflair/duc/issues"
+  },
   "scripts": {
-    "build": "bun run build:rs && bun run build:ts",
-    "build:rs": "cd rust && wasm-pack build --target web --out-dir ../pkg",
-    "build:ts": "tsc"
+    "build": "bun run clean && bun run build:wasm && bun run copy:wasm-to-dist && bun run build:ts",
+    "build:ts": "tsc -p tsconfig.json",
+    "build:rs": "cd src/duc2pdf && cargo build",
+    "build:wasm": "cd src/duc2pdf && wasm-pack build --target web --out-dir ../../pkg --dev",
+    "build:wasm:prod": "cd src/duc2pdf && wasm-pack build --target web --out-dir ../../pkg --release",
+    "copy:wasm-to-dist": "mkdir -p dist && cp pkg/duc2pdf_bg.wasm dist/ && cp pkg/duc2pdf.js dist/ && cp pkg/duc2pdf.d.ts dist/ && cp pkg/duc2pdf_bg.wasm.d.ts dist/",
+    "clean": "rm -rf dist pkg && cd src/duc2pdf && cargo clean",
+    "test": "bun run build:wasm && bun test",
+    "test:rs": "cd src/duc2pdf && cargo test",
+    "test:duc2pdf": "cd src/duc2pdf && cargo test"
   },
   "dependencies": {
-    "ducjs": "workspace:*",
-    "pdfjs-dist": "^4.4.178"
+    "ducjs": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
     "wasm-pack": "^0.12.1",
     "@types/node": "^20.12.2"
   }
-} 
+}
