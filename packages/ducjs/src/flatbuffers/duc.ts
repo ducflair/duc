@@ -40,6 +40,7 @@ export { DucBlock } from './duc/duc-block';
 export { DucBlockAttributeDefinition } from './duc/duc-block-attribute-definition';
 export { DucBlockAttributeDefinitionEntry } from './duc/duc-block-attribute-definition-entry';
 export { DucBlockDuplicationArray } from './duc/duc-block-duplication-array';
+export { DucBlockInstance } from './duc/duc-block-instance';
 export { DucBlockInstanceElement } from './duc/duc-block-instance-element';
 export { DucCommonStyle } from './duc/duc-common-style';
 export { DucDimensionElement } from './duc/duc-dimension-element';
