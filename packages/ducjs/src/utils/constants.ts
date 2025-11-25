@@ -55,7 +55,15 @@ export const MIME_TYPES = {
   binary: "application/octet-stream",
   pdf: "application/pdf",
   zip: "application/zip",
-  // image
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  csv: "text/csv",
+  markdown: "text/markdown",
+  step: "model/step",
+  stp: "application/step",
+  stl: "model/stl",
   ...IMAGE_MIME_TYPES,
 } as const;
 
@@ -72,6 +80,23 @@ export const EXPORT_DATA_TYPES = {
   excalidrawLibrary: "excalidrawlib",
   ducClipboardWithAPI: "duc-api/clipboard",
 } as const;
+
+export const SUPPORTED_DATA_TYPES = [
+  MIME_TYPES.duc,
+  MIME_TYPES.ducfig,
+  MIME_TYPES.pdf,
+  MIME_TYPES.xls,
+  MIME_TYPES.xlsx,
+  MIME_TYPES.doc,
+  MIME_TYPES.docx,
+  MIME_TYPES.json,
+  MIME_TYPES.csv,
+  MIME_TYPES.markdown,
+  MIME_TYPES.step,
+  MIME_TYPES.stp,
+  MIME_TYPES.stl,
+  ...Object.values(IMAGE_MIME_TYPES),
+]
 
 
 export const VERSIONS = {
