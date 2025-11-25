@@ -212,6 +212,7 @@ export const getBaseElementProps = (element: DucNonSelectionElement): ElementCon
     isAnnotative: element.isAnnotative,
     layerId: element.layerId,
     regionIds: element.regionIds,
+    blockIds: element.blockIds,
     roundness: element.roundness,
     blending: element.blending,
     background: element.background,

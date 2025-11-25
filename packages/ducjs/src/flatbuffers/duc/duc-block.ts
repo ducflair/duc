@@ -5,7 +5,6 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { DucBlockAttributeDefinitionEntry } from '../duc/duc-block-attribute-definition-entry';
-import { ElementWrapper } from '../duc/element-wrapper';
 
 
 export class DucBlock {
@@ -52,28 +51,18 @@ version():number {
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-elements(index: number, obj?:ElementWrapper):ElementWrapper|null {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? (obj || new ElementWrapper()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
-}
-
-elementsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-}
-
 attributeDefinitions(index: number, obj?:DucBlockAttributeDefinitionEntry):DucBlockAttributeDefinitionEntry|null {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
+  const offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? (obj || new DucBlockAttributeDefinitionEntry()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
 attributeDefinitionsLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 14);
+  const offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 static startDucBlock(builder:flatbuffers.Builder) {
-  builder.startObject(6);
+  builder.startObject(5);
 }
 
 static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
@@ -92,24 +81,8 @@ static addVersion(builder:flatbuffers.Builder, version:number) {
   builder.addFieldInt32(3, version, 0);
 }
 
-static addElements(builder:flatbuffers.Builder, elementsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(4, elementsOffset, 0);
-}
-
-static createElementsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
-  for (let i = data.length - 1; i >= 0; i--) {
-    builder.addOffset(data[i]!);
-  }
-  return builder.endVector();
-}
-
-static startElementsVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(4, numElems, 4);
-}
-
 static addAttributeDefinitions(builder:flatbuffers.Builder, attributeDefinitionsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(5, attributeDefinitionsOffset, 0);
+  builder.addFieldOffset(4, attributeDefinitionsOffset, 0);
 }
 
 static createAttributeDefinitionsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -130,13 +103,12 @@ static endDucBlock(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createDucBlock(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, labelOffset:flatbuffers.Offset, descriptionOffset:flatbuffers.Offset, version:number, elementsOffset:flatbuffers.Offset, attributeDefinitionsOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createDucBlock(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, labelOffset:flatbuffers.Offset, descriptionOffset:flatbuffers.Offset, version:number, attributeDefinitionsOffset:flatbuffers.Offset):flatbuffers.Offset {
   DucBlock.startDucBlock(builder);
   DucBlock.addId(builder, idOffset);
   DucBlock.addLabel(builder, labelOffset);
   DucBlock.addDescription(builder, descriptionOffset);
   DucBlock.addVersion(builder, version);
-  DucBlock.addElements(builder, elementsOffset);
   DucBlock.addAttributeDefinitions(builder, attributeDefinitionsOffset);
   return DucBlock.endDucBlock(builder);
 }

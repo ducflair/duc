@@ -724,6 +724,7 @@ def parse_fbs_bound_element(obj: FBSBoundElement) -> DS_BoundElement:
 def parse_fbs_duc_element_base(obj: FBSDucElementBase) -> DS_DucElementBase:
     styles = parse_fbs_duc_element_styles_base(obj.Styles()) if obj.Styles() else None
     group_ids = _read_str_vector(obj, "GroupIdsLength", "GroupIds") if hasattr(obj, "GroupIdsLength") else []
+    block_ids = _read_str_vector(obj, "BlockIdsLength", "BlockIds") if hasattr(obj, "BlockIdsLength") else []
     region_ids = _read_str_vector(obj, "RegionIdsLength", "RegionIds") if hasattr(obj, "RegionIdsLength") else []
     bound_elements = []
     try:
@@ -751,6 +752,7 @@ def parse_fbs_duc_element_base(obj: FBSDucElementBase) -> DS_DucElementBase:
         is_annotative=obj.IsAnnotative() if hasattr(obj, "IsAnnotative") else False,
         is_deleted=obj.IsDeleted() if hasattr(obj, "IsDeleted") else False,
         group_ids=group_ids,
+        block_ids=block_ids,
         region_ids=region_ids,
         z_index=obj.ZIndex() if hasattr(obj, "ZIndex") else 0,
         locked=obj.Locked() if hasattr(obj, "Locked") else False,
@@ -1607,13 +1609,11 @@ def parse_fbs_duc_block_attribute_definition_entry(obj: FBSDucBlockAttributeDefi
     )
 
 def parse_fbs_duc_block(obj: FBSDucBlock) -> DS_DucBlock:
-    elements = [parse_duc_element_wrapper(obj.Elements(i)) for i in range(obj.ElementsLength())]
     attrs = [parse_fbs_duc_block_attribute_definition_entry(obj.AttributeDefinitions(i)) for i in range(obj.AttributeDefinitionsLength())]
     return DS_DucBlock(
         id=_s_req(obj.Id()),
         label=_s_req(obj.Label()),
         version=obj.Version(),
-        elements=elements,
         attribute_definitions=attrs,
         description=_s(obj.Description()),
     )

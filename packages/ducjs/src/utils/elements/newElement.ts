@@ -15,7 +15,6 @@ import { getPrecisionValueFromRaw } from "../../technical/scopes";
 import { RawValue, Scope } from "../../types";
 import {
   DucArrowElement,
-  DucBlockInstanceElement,
   DucDimensionElement,
   DucDocElement,
   DucElement,
@@ -117,6 +116,8 @@ const _newElementBase = <T extends DucElement>(
     height = DEFAULT_ELEMENT_PROPS.height,
     angle = DEFAULT_ELEMENT_PROPS.angle,
     groupIds = DEFAULT_ELEMENT_PROPS.groupIds,
+    blockIds = [],
+    instanceId = null,
     regionIds = [],
     frameId = DEFAULT_ELEMENT_PROPS.frameId,
     layerId = null,
@@ -143,6 +144,8 @@ const _newElementBase = <T extends DucElement>(
     background,
     opacity,
     groupIds,
+    blockIds,
+    instanceId,
     frameId,
     roundness,
     label,
@@ -520,23 +523,6 @@ export const newFeatureControlFrameElement = (
     type: "featurecontrolframe",
   };
 };
-
-export const newBlockInstanceElement = (
-  currentScope: Scope,
-  opts: {
-    blockId: DucBlockInstanceElement["blockId"];
-    elementOverrides?: DucBlockInstanceElement["elementOverrides"];
-    attributeValues?: DucBlockInstanceElement["attributeValues"];
-    duplicationArray?: DucBlockInstanceElement["duplicationArray"];
-  } & ElementConstructorOpts
-): NonDeleted<DucBlockInstanceElement> => ({
-  ..._newElementBase<DucBlockInstanceElement>("blockinstance", currentScope, opts),
-  type: "blockinstance",
-  blockId: opts.blockId,
-  elementOverrides: opts.elementOverrides ?? {},
-  attributeValues: opts.attributeValues ?? {},
-  duplicationArray: opts.duplicationArray ?? null,
-});
 
 export const newParametricElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucParametricElement> => ({
   source: { type: PARAMETRIC_SOURCE_TYPE.CODE, code: "" },

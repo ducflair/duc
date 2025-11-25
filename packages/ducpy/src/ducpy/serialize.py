@@ -373,6 +373,7 @@ from ducpy.Duc.DucPath import (
     DucPathStartLineIndicesVector
 )
 from ducpy.Duc._DucElementBase import (
+    _DucElementBaseAddBlockIds,
     _DucElementBaseStart,
     _DucElementBaseAddId,
     _DucElementBaseAddStyles,
@@ -1109,6 +1110,12 @@ def serialize_fbs_duc_element_base(builder: flatbuffers.Builder, base: DS_DucEle
     for off in reversed(group_ids_offsets):
         builder.PrependUOffsetTRelative(off)
     group_ids_vec = builder.EndVector()
+    
+    block_ids_offsets = [builder.CreateString(b) for b in (base.block_ids or [])]
+    _DucElementBaseStartBlockIdsVector(builder, len(block_ids_offsets))
+    for off in reversed(block_ids_offsets):
+        builder.PrependUOffsetTRelative(off)
+    block_ids_vec = builder.EndVector()
 
     region_ids_offsets = [builder.CreateString(r) for r in (base.region_ids or [])]
     _DucElementBaseStartRegionIdsVector(builder, len(region_ids_offsets))
@@ -1152,6 +1159,7 @@ def serialize_fbs_duc_element_base(builder: flatbuffers.Builder, base: DS_DucEle
     _DucElementBaseAddIsAnnotative(builder, base.is_annotative)
     _DucElementBaseAddIsDeleted(builder, base.is_deleted)
     _DucElementBaseAddGroupIds(builder, group_ids_vec)
+    _DucElementBaseAddBlockIds(builder, block_ids_vec)
     _DucElementBaseAddRegionIds(builder, region_ids_vec)
     if layer_id_offset: _DucElementBaseAddLayerId(builder, layer_id_offset)
     if frame_id_offset: _DucElementBaseAddFrameId(builder, frame_id_offset)
@@ -2591,9 +2599,7 @@ from ducpy.Duc.DucBlockAttributeDefinitionEntry import (
     DucBlockAttributeDefinitionEntryAddValue, DucBlockAttributeDefinitionEntryEnd
 )
 from ducpy.Duc.DucBlock import (
-    DucBlockStart, DucBlockAddId, DucBlockAddLabel, DucBlockAddDescription, DucBlockAddVersion,
-    DucBlockAddElements, DucBlockAddAttributeDefinitions, DucBlockEnd, DucBlockStartElementsVector,
-    DucBlockStartAttributeDefinitionsVector
+    DucBlockStart, DucBlockAddId, DucBlockAddLabel, DucBlockAddDescription, DucBlockAddVersion, DucBlockAddAttributeDefinitions, DucBlockEnd, DucBlockStartAttributeDefinitionsVector
 )
 
 # Global/Local State (vector helpers)
@@ -3334,11 +3340,6 @@ def serialize_fbs_block(builder: flatbuffers.Builder, block: DS_DucBlock) -> int
     id_offset = builder.CreateString(block.id)
     label_offset = builder.CreateString(block.label)
     description_offset = _str(builder, block.description)
-    elements_offsets = [serialize_fbs_element_wrapper(builder, e) for e in (block.elements or [])]
-    DucBlockStartElementsVector(builder, len(elements_offsets))
-    for off in reversed(elements_offsets):
-        builder.PrependUOffsetTRelative(off)
-    elements_vec = builder.EndVector()
 
     attr_offsets = [serialize_fbs_block_attribute_definition_entry(builder, a) for a in (block.attribute_definitions or [])]
     attr_vec = 0
@@ -3354,7 +3355,6 @@ def serialize_fbs_block(builder: flatbuffers.Builder, block: DS_DucBlock) -> int
     if description_offset:
         DucBlockAddDescription(builder, description_offset)
     DucBlockAddVersion(builder, block.version)
-    DucBlockAddElements(builder, elements_vec)
     if attr_vec:
         DucBlockAddAttributeDefinitions(builder, attr_vec)
     return DucBlockEnd(builder)
