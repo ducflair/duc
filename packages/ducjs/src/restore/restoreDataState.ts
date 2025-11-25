@@ -49,6 +49,7 @@ import type {
   BezierMirroring,
   DucBlock,
   DucBlockAttributeDefinition,
+  DucBlockInstance,
   DucElement,
   DucGroup,
   DucHead,
@@ -112,6 +113,8 @@ export type RestoredDataState = {
   files: DucExternalFiles;
 
   blocks: DucBlock[];
+  blockInstances: DucBlockInstance[];
+
   groups: DucGroup[];
   regions: DucRegion[];
   layers: DucLayer[];
@@ -180,6 +183,7 @@ export const restore = (
   const restoredRegions = restoreRegions(data?.regions);
   const restoredGroups = restoreGroups(data?.groups);
   const restoredLayers = restoreLayers(data?.layers, restoredLocalState.scope);
+  const restoredBlockInstances = restoreBlockInstances(data?.blockInstances);
 
   const restoredElements = restoreElements(
     data?.elements,
@@ -199,6 +203,7 @@ export const restore = (
     thumbnail: isValidUint8Array(data?.thumbnail),
     elements: restoredElements,
     blocks: restoredBlocks,
+    blockInstances: restoredBlockInstances,
     groups: restoredGroups,
     regions: restoredRegions,
     layers: restoredLayers,
@@ -404,22 +409,91 @@ export const restoreBlocks = (
           obj.attributeDefinitions && typeof obj.attributeDefinitions === "object"
             ? (obj.attributeDefinitions as Readonly<Record<string, DucBlockAttributeDefinition>>)
             : {},
-        elements: [],
       };
     });
-  partiallyRestoredBlocks.forEach((restoredBlock) => {
-    const originalBlockData = blocks.find((b) => (b as any).id === restoredBlock.id);
-    if (originalBlockData && (originalBlockData as any).elements) {
-      const finalElements = restoreElements(
-        (originalBlockData as any).elements,
-        currentScope,
-        partiallyRestoredBlocks,
-        elementsConfig
-      );
-      restoredBlock.elements = finalElements;
-    }
-  });
   return partiallyRestoredBlocks;
+};
+
+/**
+ * Restores the blockInstances array from imported data, ensuring each item
+ * conforms to the DucBlockInstance type.
+ */
+export const restoreBlockInstances = (
+  blockInstances: unknown,
+): RestoredDataState["blockInstances"] => {
+  if (!Array.isArray(blockInstances)) {
+    return [];
+  }
+  return blockInstances
+    .filter((bi) => {
+      if (!bi || typeof bi !== "object") return false;
+      const obj = bi as Record<string, unknown>;
+      return typeof obj.blockId === "string";
+    })
+    .map((bi): DucBlockInstance => {
+      const obj = bi as Record<string, unknown>;
+      const dupArray = obj.duplicationArray as any;
+      
+      // Handle elementOverrides - it's already a Record<string, string> from parse.ts
+      let elementOverrides: Record<string, string> | undefined;
+      if (obj.elementOverrides && typeof obj.elementOverrides === "object") {
+        if (Array.isArray(obj.elementOverrides)) {
+          // Legacy format: array of {key, value} entries
+          elementOverrides = Object.fromEntries(
+            obj.elementOverrides.map((entry: any) => [
+              typeof entry.key === "string" ? entry.key : "",
+              typeof entry.value === "string" ? entry.value : "",
+            ])
+          );
+        } else {
+          // Current format: already a Record<string, string>
+          elementOverrides = obj.elementOverrides as Record<string, string>;
+        }
+      }
+
+      // Handle attributeValues - same logic
+      let attributeValues: Record<string, string> | undefined;
+      if (obj.attributeValues && typeof obj.attributeValues === "object") {
+        if (Array.isArray(obj.attributeValues)) {
+          // Legacy format: array of {key, value} entries
+          attributeValues = Object.fromEntries(
+            obj.attributeValues.map((entry: any) => [
+              typeof entry.key === "string" ? entry.key : "",
+              typeof entry.value === "string" ? entry.value : "",
+            ])
+          );
+        } else {
+          // Current format: already a Record<string, string>
+          attributeValues = obj.attributeValues as Record<string, string>;
+        }
+      }
+
+      return {
+        id: isValidString(obj.id),
+        blockId: isValidString(obj.blockId),
+        version: isValidNumber(obj.version, 1),
+        elementOverrides,
+        attributeValues,
+        duplicationArray: dupArray && typeof dupArray === "object"
+          ? {
+              rows: typeof dupArray.rows === "number" ? dupArray.rows : 1,
+              cols: typeof dupArray.cols === "number" ? dupArray.cols : 1,
+              rowSpacing: typeof dupArray.rowSpacing === "number" ? dupArray.rowSpacing : 0,
+              colSpacing: typeof dupArray.colSpacing === "number" ? dupArray.colSpacing : 0,
+            }
+          : null,
+      };
+    });
+};
+
+/**
+ * Restores instances from block instances data (alias for restoreBlockInstances)
+ * This method provides a consistent naming convention for instance restoration.
+ */
+export const restoreInstances = (
+  instances: unknown,
+): RestoredDataState["blockInstances"] => {
+  return restoreBlockInstances(instances);
 };
 
 /**
@@ -817,8 +891,9 @@ export const isValidDucHead = (
 ): DucHead | null => {
   if (value === undefined || value === null) return null;
   const type = isValidLineHeadValue(value.type);
+  // blockId can be null - only reject if type is invalid
+  if (type === null) return null;
   const blockId = isValidBlockId(value.blockId, blocks);
-  if (type === null || blockId === null) return null;
   return {
     type,
     blockId,
@@ -1088,6 +1163,30 @@ export const isValidString = (
   if (typeof value !== "string") return defaultValue;
   if (value.trim().length === 0) return defaultValue;
   return value;
+};
+
+/**
+ * Validates a number value.
+ * Returns the number if valid, otherwise returns the provided defaultValue or 0.
+ * Optionally parses numeric strings.
+ */
+export const isValidNumber = (
+  value: any,
+  defaultValue: number = 0,
+  parseStrings: boolean = true
+): number => {
+  if (typeof value === "number" && !isNaN(value) && isFinite(value)) {
+    return value;
+  }
+  
+  if (parseStrings && typeof value === "string") {
+    const parsed = Number(value);
+    if (!isNaN(parsed) && isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  
+  return defaultValue;
 };
 
 export const isValidExternalFileId = (

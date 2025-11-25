@@ -25,7 +25,7 @@ import {
   DucArrowElement,
   DucBlock,
   DucBlockAttributeDefinition,
-  DucBlockInstanceElement,
+  DucBlockInstance,
   DucDimensionElement,
   DucDimensionStyle,
   DucDocElement,
@@ -438,7 +438,9 @@ function writeElementBase(b: flatbuffers.Builder, e: _DucElementStylesBase & _Du
   const desc = str(b, e.description ?? undefined);
   const index = str(b, e.index ?? undefined);
   const groupIds = e.groupIds?.length ? Duc._DucElementBase.createGroupIdsVector(b, e.groupIds.map((g) => b.createString(g))) : undefined;
+  const blockIds = e.blockIds?.length ? Duc._DucElementBase.createBlockIdsVector(b, e.blockIds.map((blockId) => b.createString(blockId))) : undefined;
   const regionIds = e.regionIds?.length ? Duc._DucElementBase.createRegionIdsVector(b, e.regionIds.map((r) => b.createString(r))) : undefined;
+  const instanceId = str(b, e.instanceId ?? undefined);
   const layerId = str(b, e.layerId ?? undefined);
   const frameId = str(b, e.frameId ?? undefined);
   const bound = e.boundElements?.length ? Duc._DucElementBase.createBoundElementsVector(b, e.boundElements.map((x) => writeBoundElement(b, x, usv))) : undefined;
@@ -466,7 +468,9 @@ function writeElementBase(b: flatbuffers.Builder, e: _DucElementStylesBase & _Du
   Duc._DucElementBase.addIsAnnotative(b, e.isAnnotative);
   Duc._DucElementBase.addIsDeleted(b, e.isDeleted);
   if (groupIds) Duc._DucElementBase.addGroupIds(b, groupIds);
+  if (blockIds) Duc._DucElementBase.addBlockIds(b, blockIds);
   if (regionIds) Duc._DucElementBase.addRegionIds(b, regionIds);
+  if (instanceId) Duc._DucElementBase.addInstanceId(b, instanceId);
   if (layerId) Duc._DucElementBase.addLayerId(b, layerId);
   if (frameId) Duc._DucElementBase.addFrameId(b, frameId);
   if (bound) Duc._DucElementBase.addBoundElements(b, bound);
@@ -843,7 +847,6 @@ function writeBlock(b: flatbuffers.Builder, bl: DucBlock, usv: boolean): number 
   const id = b.createString(bl.id);
   const label = b.createString(bl.label);
   const desc = b.createString(bl.description ?? "");
-  const elems = Duc.DucBlock.createElementsVector(b, bl.elements.map((el) => writeElementWrapper(b, el, usv)));
   const defs = Duc.DucBlock.createAttributeDefinitionsVector(
     b,
     Object.entries(bl.attributeDefinitions ?? {}).map(([k, v]) => {
@@ -860,40 +863,40 @@ function writeBlock(b: flatbuffers.Builder, bl: DucBlock, usv: boolean): number 
   Duc.DucBlock.addLabel(b, label);
   Duc.DucBlock.addDescription(b, desc);
   Duc.DucBlock.addVersion(b, bl.version);
-  Duc.DucBlock.addElements(b, elems);
   Duc.DucBlock.addAttributeDefinitions(b, defs);
   return Duc.DucBlock.endDucBlock(b);
 }
 
-function writeBlockInstance(b: flatbuffers.Builder, e: DucBlockInstanceElement, usv: boolean): number {
-  const base = writeElementBase(b, e as unknown as any, usv);
-  const blockId = b.createString(e.blockId);
-  const overrides = Duc.DucBlockInstanceElement.createElementOverridesVector(
+function writeBlockInstance(b: flatbuffers.Builder, i: DucBlockInstance, usv: boolean): number {
+  const id = b.createString(i.id);
+  const blockId = b.createString(i.blockId);
+  const overrides = Duc.DucBlockInstance.createElementOverridesVector(
     b,
-    Object.entries(e.elementOverrides ?? {}).map(([k, v]) => writeStringEntry(b, k, v)),
+    Object.entries(i.elementOverrides ?? {}).map(([k, v]) => writeStringEntry(b, k, v)),
   );
-  const attrs = Duc.DucBlockInstanceElement.createAttributeValuesVector(
+  const attrs = Duc.DucBlockInstance.createAttributeValuesVector(
     b,
-    Object.entries(e.attributeValues ?? {}).map(([k, v]) => writeStringEntry(b, k, v)),
+    Object.entries(i.attributeValues ?? {}).map(([k, v]) => writeStringEntry(b, k, v)),
   );
-  const dup = e.duplicationArray
+  const dup = i.duplicationArray
     ? (() => {
       Duc.DucBlockDuplicationArray.startDucBlockDuplicationArray(b);
-      Duc.DucBlockDuplicationArray.addRows(b, e.duplicationArray.rows);
-      Duc.DucBlockDuplicationArray.addCols(b, e.duplicationArray.cols);
-      Duc.DucBlockDuplicationArray.addRowSpacing(b, getPrecisionValue(e.duplicationArray.rowSpacing, usv));
-      Duc.DucBlockDuplicationArray.addColSpacing(b, getPrecisionValue(e.duplicationArray.colSpacing, usv));
+      Duc.DucBlockDuplicationArray.addRows(b, i.duplicationArray.rows);
+      Duc.DucBlockDuplicationArray.addCols(b, i.duplicationArray.cols);
+      Duc.DucBlockDuplicationArray.addRowSpacing(b, getPrecisionValue(i.duplicationArray.rowSpacing, usv));
+      Duc.DucBlockDuplicationArray.addColSpacing(b, getPrecisionValue(i.duplicationArray.colSpacing, usv));
       return Duc.DucBlockDuplicationArray.endDucBlockDuplicationArray(b);
     })()
     : undefined;
 
-  Duc.DucBlockInstanceElement.startDucBlockInstanceElement(b);
-  Duc.DucBlockInstanceElement.addBase(b, base);
-  Duc.DucBlockInstanceElement.addBlockId(b, blockId);
-  if (overrides) Duc.DucBlockInstanceElement.addElementOverrides(b, overrides);
-  if (attrs) Duc.DucBlockInstanceElement.addAttributeValues(b, attrs);
-  if (dup) Duc.DucBlockInstanceElement.addDuplicationArray(b, dup);
-  return Duc.DucBlockInstanceElement.endDucBlockInstanceElement(b);
+  Duc.DucBlockInstance.startDucBlockInstance(b);
+  Duc.DucBlockInstance.addId(b, id);
+  Duc.DucBlockInstance.addBlockId(b, blockId);
+  Duc.DucBlockInstance.addVersion(b, i.version);
+  if (overrides) Duc.DucBlockInstance.addElementOverrides(b, overrides);
+  if (attrs) Duc.DucBlockInstance.addAttributeValues(b, attrs);
+  if (dup) Duc.DucBlockInstance.addDuplicationArray(b, dup);
+  return Duc.DucBlockInstance.endDucBlockInstance(b);
 }
 
 /**
@@ -1585,10 +1588,6 @@ function writeElementWrapper(b: flatbuffers.Builder, e: DucElement, usv: boolean
     case "table":
       type = Duc.Element.DucTableElement;
       elem = writeTable(b, e, usv);
-      break;
-    case "blockinstance":
-      type = Duc.Element.DucBlockInstanceElement;
-      elem = writeBlockInstance(b, e, usv);
       break;
     case "frame":
       type = Duc.Element.DucFrameElement;
@@ -2455,8 +2454,14 @@ export const serializeDuc = async (
   const externalFilesOffset = serializeExternalFiles(builder, sanitized.files, useScopedValues);
 
   // Serialize blocks
-  const blocksOffset = Duc.ExportedDataState.createBlocksVector(builder, sanitized.blocks.map(block => writeBlock(builder, block, useScopedValues)));
+  const blocksOffset = sanitized.blocks.length > 0
+    ? Duc.ExportedDataState.createBlocksVector(builder, sanitized.blocks.map(block => writeBlock(builder, block, useScopedValues)))
+    : null;
 
+  // Serialize block instances
+  const blockInstancesOffset = sanitized.blockInstances.length > 0
+    ? Duc.ExportedDataState.createBlockInstancesVector(builder, sanitized.blockInstances.map(instance => writeBlockInstance(builder, instance, useScopedValues)))
+    : null;
 
   // Serialize groups
   const groupsOffset = sanitized.groups.length > 0
@@ -2515,6 +2520,9 @@ export const serializeDuc = async (
   }
   if (blocksOffset) {
     Duc.ExportedDataState.addBlocks(builder, blocksOffset);
+  }
+  if (blockInstancesOffset) {
+    Duc.ExportedDataState.addBlockInstances(builder, blockInstancesOffset);
   }
   if (groupsOffset) {
     Duc.ExportedDataState.addGroups(builder, groupsOffset);

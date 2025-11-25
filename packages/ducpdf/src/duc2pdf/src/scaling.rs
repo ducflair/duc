@@ -16,11 +16,6 @@ impl DucDataScaler {
             Self::scale_element(&mut element_wrapper.element, scale);
         }
 
-        // Scale blocks if needed
-        for block in &mut exported_data.blocks {
-            Self::scale_block(block, scale);
-        }
-
         // Scale local state scroll values
         if let Some(ref mut local_state) = exported_data.duc_local_state {
             local_state.scroll_x *= scale;
@@ -92,9 +87,6 @@ impl DucDataScaler {
             }
             types::DucElementEnum::DucParametricElement(parametric) => {
                 Self::scale_element_base(&mut parametric.base, scale);
-            }
-            types::DucElementEnum::DucBlockInstanceElement(block_instance) => {
-                Self::scale_element_base(&mut block_instance.base, scale);
             }
             types::DucElementEnum::DucEmbeddableElement(embeddable) => {
                 Self::scale_element_base(&mut embeddable.base, scale);
@@ -309,14 +301,6 @@ impl DucDataScaler {
         plot.layout.margins.top *= scale;
         plot.layout.margins.right *= scale;
         plot.layout.margins.bottom *= scale;
-    }
-
-    /// Scale block data
-    fn scale_block(block: &mut types::DucBlock, scale: f64) {
-        // Scale block element bases
-        for element in &mut block.elements {
-            Self::scale_element(&mut element.element, scale);
-        }
     }
 
     /// Transform y-coordinate from top-left origin (duc) to bottom-left origin (PDF)

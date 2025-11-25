@@ -150,7 +150,6 @@ pub fn calculate_bounding_box(data: &duc::types::ExportedDataState) -> (f64, f64
             duc::types::DucElementEnum::DucLinearElement(elem) => &elem.linear_base.base,
             duc::types::DucElementEnum::DucArrowElement(elem) => &elem.linear_base.base,
             duc::types::DucElementEnum::DucFreeDrawElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucBlockInstanceElement(elem) => &elem.base,
             duc::types::DucElementEnum::DucFrameElement(elem) => &elem.stack_element_base.base,
             duc::types::DucElementEnum::DucPlotElement(elem) => &elem.stack_element_base.base,
             duc::types::DucElementEnum::DucViewportElement(elem) => &elem.linear_base.base,

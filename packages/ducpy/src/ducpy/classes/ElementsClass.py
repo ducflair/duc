@@ -189,6 +189,7 @@ class DucElementBase:
     is_annotative: bool
     is_deleted: bool
     group_ids: List[str]
+    block_ids: List[str]
     region_ids: List[str]
     z_index: float
     locked: bool
@@ -603,7 +604,6 @@ class DucBlock:
     id: str
     label: str
     version: int
-    elements: List["ElementWrapper"]
     attribute_definitions: List[DucBlockAttributeDefinitionEntry]
     description: Optional[str]
 
@@ -620,9 +620,10 @@ class DucBlockDuplicationArray:
     col_spacing: float
 
 @dataclass
-class DucBlockInstanceElement:
-    base: DucElementBase
+class DucBlockInstance:
+    id: str
     block_id: str
+    version: int
     element_overrides: Optional[List[StringValueEntry]]
     attribute_values: Optional[List[StringValueEntry]]
     duplication_array: Optional[DucBlockDuplicationArray]
@@ -846,7 +847,6 @@ DucElement = Union[
     DucLinearElement,
     DucArrowElement,
     DucFreeDrawElement,
-    DucBlockInstanceElement,
     DucFrameElement,
     DucPlotElement,
     DucViewportElement,
