@@ -600,12 +600,22 @@ class DucBlockAttributeDefinitionEntry:
     value: DucBlockAttributeDefinition
 
 @dataclass
+class DucBlockMetadata:
+    source: str
+    usage_count: int
+    created_at: int
+    updated_at: int
+    localization: Optional[str]
+
+@dataclass
 class DucBlock:
     id: str
     label: str
     version: int
     attribute_definitions: List[DucBlockAttributeDefinitionEntry]
     description: Optional[str]
+    metadata: Optional[DucBlockMetadata]
+    thumbnail: Optional[bytes]
 
 @dataclass
 class StringValueEntry:

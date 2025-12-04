@@ -1,3 +1,5 @@
+import { nanoid } from "nanoid";
+import tinycolor from "tinycolor2";
 import {
   BEZIER_MIRRORING,
   BLENDING,
@@ -14,12 +16,6 @@ import {
   TEXT_ALIGN,
   VERTICAL_ALIGN,
 } from "../flatbuffers/duc";
-import { nanoid } from "nanoid";
-import { restoreElements } from "./restoreElements";
-import {
-  isStandardIdPresent,
-  restoreStandards,
-} from "./restoreStandards";
 import { getPrecisionScope } from "../technical/measurements";
 import {
   getPrecisionValueFromRaw,
@@ -47,6 +43,7 @@ import { DucLocalState } from "../types";
 import type {
   _DucStackBase,
   BezierMirroring,
+  BlockLocalizationMap,
   DucBlock,
   DucBlockAttributeDefinition,
   DucBlockInstance,
@@ -94,7 +91,11 @@ import {
   VERSIONS,
 } from "../utils/constants";
 import { getDefaultStackProperties } from "../utils/elements";
-import tinycolor from "tinycolor2";
+import { restoreElements } from "./restoreElements";
+import {
+  isStandardIdPresent,
+  restoreStandards,
+} from "./restoreStandards";
 
 export type RestoredLocalState = Omit<
   DucLocalState,
@@ -399,6 +400,36 @@ export const restoreBlocks = (
     })
     .map((b) => {
       const obj = b as Record<string, unknown>;
+
+      // Restore metadata if present
+      let metadata: DucBlock["metadata"] | undefined;
+      if (obj.metadata && typeof obj.metadata === "object") {
+        const metadataObj = obj.metadata as Record<string, unknown>;
+        let localization: BlockLocalizationMap | undefined;
+        const localizationValue = metadataObj.localization;
+        
+        // Handle localization - it can be an object directly or a JSON string
+        if (localizationValue && typeof localizationValue === "object") {
+          // Already an object, use it directly
+          localization = localizationValue as BlockLocalizationMap;
+        } else if (typeof localizationValue === "string") {
+          // It's a string, try to parse it as JSON
+          try {
+            localization = JSON.parse(localizationValue);
+          } catch {
+            localization = undefined;
+          }
+        }
+
+        metadata = {
+          source: typeof metadataObj.source === "string" ? metadataObj.source : "",
+          usageCount: typeof metadataObj.usageCount === "number" ? metadataObj.usageCount : 0,
+          createdAt: typeof metadataObj.createdAt === "number" ? metadataObj.createdAt : Date.now(),
+          updatedAt: typeof metadataObj.updatedAt === "number" ? metadataObj.updatedAt : Date.now(),
+          localization,
+        };
+      }
+
       return {
         id: obj.id as string,
         label: typeof obj.label === "string" ? obj.label : "",
@@ -409,6 +440,8 @@ export const restoreBlocks = (
           obj.attributeDefinitions && typeof obj.attributeDefinitions === "object"
             ? (obj.attributeDefinitions as Readonly<Record<string, DucBlockAttributeDefinition>>)
             : {},
+        metadata,
+        thumbnail: isValidUint8Array(obj.thumbnail),
       };
     });
   return partiallyRestoredBlocks;
@@ -433,7 +466,7 @@ export const restoreBlockInstances = (
     .map((bi): DucBlockInstance => {
       const obj = bi as Record<string, unknown>;
       const dupArray = obj.duplicationArray as any;
-      
+
       // Handle elementOverrides - it's already a Record<string, string> from parse.ts
       let elementOverrides: Record<string, string> | undefined;
       if (obj.elementOverrides && typeof obj.elementOverrides === "object") {
@@ -476,11 +509,11 @@ export const restoreBlockInstances = (
         attributeValues,
         duplicationArray: dupArray && typeof dupArray === "object"
           ? {
-              rows: typeof dupArray.rows === "number" ? dupArray.rows : 1,
-              cols: typeof dupArray.cols === "number" ? dupArray.cols : 1,
-              rowSpacing: typeof dupArray.rowSpacing === "number" ? dupArray.rowSpacing : 0,
-              colSpacing: typeof dupArray.colSpacing === "number" ? dupArray.colSpacing : 0,
-            }
+            rows: typeof dupArray.rows === "number" ? dupArray.rows : 1,
+            cols: typeof dupArray.cols === "number" ? dupArray.cols : 1,
+            rowSpacing: typeof dupArray.rowSpacing === "number" ? dupArray.rowSpacing : 0,
+            colSpacing: typeof dupArray.colSpacing === "number" ? dupArray.colSpacing : 0,
+          }
           : null,
       };
     });
@@ -1178,14 +1211,14 @@ export const isValidNumber = (
   if (typeof value === "number" && !isNaN(value) && isFinite(value)) {
     return value;
   }
-  
+
   if (parseStrings && typeof value === "string") {
     const parsed = Number(value);
     if (!isNaN(parsed) && isFinite(parsed)) {
       return parsed;
     }
   }
-  
+
   return defaultValue;
 };
 

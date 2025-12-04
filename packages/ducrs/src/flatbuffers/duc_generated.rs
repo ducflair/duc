@@ -17657,6 +17657,8 @@ impl<'a> DucBlock<'a> {
   pub const VT_DESCRIPTION: flatbuffers::VOffsetT = 8;
   pub const VT_VERSION: flatbuffers::VOffsetT = 10;
   pub const VT_ATTRIBUTE_DEFINITIONS: flatbuffers::VOffsetT = 12;
+  pub const VT_METADATA: flatbuffers::VOffsetT = 14;
+  pub const VT_THUMBNAIL: flatbuffers::VOffsetT = 16;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -17668,6 +17670,8 @@ impl<'a> DucBlock<'a> {
     args: &'args DucBlockArgs<'args>
   ) -> flatbuffers::WIPOffset<DucBlock<'bldr>> {
     let mut builder = DucBlockBuilder::new(_fbb);
+    if let Some(x) = args.thumbnail { builder.add_thumbnail(x); }
+    if let Some(x) = args.metadata { builder.add_metadata(x); }
     if let Some(x) = args.attribute_definitions { builder.add_attribute_definitions(x); }
     builder.add_version(args.version);
     if let Some(x) = args.description { builder.add_description(x); }
@@ -17722,6 +17726,20 @@ impl<'a> DucBlock<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlockAttributeDefinitionEntry>>>>(DucBlock::VT_ATTRIBUTE_DEFINITIONS, None)}
   }
+  #[inline]
+  pub fn metadata(&self) -> Option<DucBlockMetadata<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DucBlockMetadata>>(DucBlock::VT_METADATA, None)}
+  }
+  #[inline]
+  pub fn thumbnail(&self) -> Option<flatbuffers::Vector<'a, u8>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(DucBlock::VT_THUMBNAIL, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for DucBlock<'_> {
@@ -17736,6 +17754,8 @@ impl flatbuffers::Verifiable for DucBlock<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("description", Self::VT_DESCRIPTION, false)?
      .visit_field::<i32>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DucBlockAttributeDefinitionEntry>>>>("attribute_definitions", Self::VT_ATTRIBUTE_DEFINITIONS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DucBlockMetadata>>("metadata", Self::VT_METADATA, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("thumbnail", Self::VT_THUMBNAIL, false)?
      .finish();
     Ok(())
   }
@@ -17746,6 +17766,8 @@ pub struct DucBlockArgs<'a> {
     pub description: Option<flatbuffers::WIPOffset<&'a str>>,
     pub version: i32,
     pub attribute_definitions: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DucBlockAttributeDefinitionEntry<'a>>>>>,
+    pub metadata: Option<flatbuffers::WIPOffset<DucBlockMetadata<'a>>>,
+    pub thumbnail: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
 }
 impl<'a> Default for DucBlockArgs<'a> {
   #[inline]
@@ -17756,6 +17778,8 @@ impl<'a> Default for DucBlockArgs<'a> {
       description: None,
       version: 0,
       attribute_definitions: None,
+      metadata: None,
+      thumbnail: None,
     }
   }
 }
@@ -17786,6 +17810,14 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucBlockBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlock::VT_ATTRIBUTE_DEFINITIONS, attribute_definitions);
   }
   #[inline]
+  pub fn add_metadata(&mut self, metadata: flatbuffers::WIPOffset<DucBlockMetadata<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DucBlockMetadata>>(DucBlock::VT_METADATA, metadata);
+  }
+  #[inline]
+  pub fn add_thumbnail(&mut self, thumbnail: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlock::VT_THUMBNAIL, thumbnail);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucBlockBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     DucBlockBuilder {
@@ -17809,6 +17841,173 @@ impl core::fmt::Debug for DucBlock<'_> {
       ds.field("description", &self.description());
       ds.field("version", &self.version());
       ds.field("attribute_definitions", &self.attribute_definitions());
+      ds.field("metadata", &self.metadata());
+      ds.field("thumbnail", &self.thumbnail());
+      ds.finish()
+  }
+}
+pub enum DucBlockMetadataOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucBlockMetadata<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucBlockMetadata<'a> {
+  type Inner = DucBlockMetadata<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucBlockMetadata<'a> {
+  pub const VT_SOURCE: flatbuffers::VOffsetT = 4;
+  pub const VT_USAGE_COUNT: flatbuffers::VOffsetT = 6;
+  pub const VT_CREATED_AT: flatbuffers::VOffsetT = 8;
+  pub const VT_UPDATED_AT: flatbuffers::VOffsetT = 10;
+  pub const VT_LOCALIZATION: flatbuffers::VOffsetT = 12;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucBlockMetadata { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucBlockMetadataArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucBlockMetadata<'bldr>> {
+    let mut builder = DucBlockMetadataBuilder::new(_fbb);
+    builder.add_updated_at(args.updated_at);
+    builder.add_created_at(args.created_at);
+    if let Some(x) = args.localization { builder.add_localization(x); }
+    builder.add_usage_count(args.usage_count);
+    if let Some(x) = args.source { builder.add_source(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn source(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlockMetadata::VT_SOURCE, None)}
+  }
+  #[inline]
+  pub fn usage_count(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(DucBlockMetadata::VT_USAGE_COUNT, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn created_at(&self) -> i64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i64>(DucBlockMetadata::VT_CREATED_AT, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn updated_at(&self) -> i64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i64>(DucBlockMetadata::VT_UPDATED_AT, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn localization(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlockMetadata::VT_LOCALIZATION, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucBlockMetadata<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("source", Self::VT_SOURCE, false)?
+     .visit_field::<i32>("usage_count", Self::VT_USAGE_COUNT, false)?
+     .visit_field::<i64>("created_at", Self::VT_CREATED_AT, false)?
+     .visit_field::<i64>("updated_at", Self::VT_UPDATED_AT, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("localization", Self::VT_LOCALIZATION, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucBlockMetadataArgs<'a> {
+    pub source: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub usage_count: i32,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub localization: Option<flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for DucBlockMetadataArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucBlockMetadataArgs {
+      source: None,
+      usage_count: 0,
+      created_at: 0,
+      updated_at: 0,
+      localization: None,
+    }
+  }
+}
+
+pub struct DucBlockMetadataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucBlockMetadataBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_source(&mut self, source: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlockMetadata::VT_SOURCE, source);
+  }
+  #[inline]
+  pub fn add_usage_count(&mut self, usage_count: i32) {
+    self.fbb_.push_slot::<i32>(DucBlockMetadata::VT_USAGE_COUNT, usage_count, 0);
+  }
+  #[inline]
+  pub fn add_created_at(&mut self, created_at: i64) {
+    self.fbb_.push_slot::<i64>(DucBlockMetadata::VT_CREATED_AT, created_at, 0);
+  }
+  #[inline]
+  pub fn add_updated_at(&mut self, updated_at: i64) {
+    self.fbb_.push_slot::<i64>(DucBlockMetadata::VT_UPDATED_AT, updated_at, 0);
+  }
+  #[inline]
+  pub fn add_localization(&mut self, localization: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlockMetadata::VT_LOCALIZATION, localization);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucBlockMetadataBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucBlockMetadataBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucBlockMetadata<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucBlockMetadata<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucBlockMetadata");
+      ds.field("source", &self.source());
+      ds.field("usage_count", &self.usage_count());
+      ds.field("created_at", &self.created_at());
+      ds.field("updated_at", &self.updated_at());
+      ds.field("localization", &self.localization());
       ds.finish()
   }
 }
