@@ -5,6 +5,7 @@ import {
   DucArrowElement as DucArrowElementFb,
   DucBlock as DucBlockFb,
   DucBlockInstance as DucBlockInstanceFb,
+  DucBlockMetadata as DucBlockMetadataFb,
   DucCommonStyle as DucCommonStyleFb,
   DucDimensionElement as DucDimensionElementFb,
   DucDimensionStyle as DucDimensionStyleFb,
@@ -92,6 +93,7 @@ import {
   _UnitSystemBase
 } from "./technical";
 import {
+  BlockLocalizationMap,
   CustomHatchPattern,
   DatumReference,
   Dictionary,
@@ -99,6 +101,7 @@ import {
   DucBlock,
   DucBlockAttributeDefinition,
   DucBlockInstance,
+  DucBlockMetadata,
   DucCommonStyle,
   DucDimensionElement,
   DucDimensionStyle,
@@ -1252,12 +1255,41 @@ export function parseBlockFromBinary(block: DucBlockFb): DucBlock {
       isConstant: def.isConstant(),
     };
   }
+
+  // Parse metadata if present
+  let metadata: DucBlockMetadata | undefined;
+  const metadataFb = block.metadata();
+  if (metadataFb) {
+    let localization: BlockLocalizationMap | undefined;
+    const localizationStr = metadataFb.localization();
+    if (localizationStr) {
+      try {
+        localization = JSON.parse(localizationStr);
+      } catch {
+        localization = undefined;
+      }
+    }
+
+    metadata = {
+      source: metadataFb.source()!,
+      usageCount: metadataFb.usageCount(),
+      createdAt: Number(metadataFb.createdAt()),
+      updatedAt: Number(metadataFb.updatedAt()),
+      localization,
+    };
+  }
+
+  // Parse thumbnail if present
+  const thumbnail = block.thumbnailArray();
+
   return {
     id: block.id()!,
     label: block.label()!,
     description: block.description() || undefined,
     version: block.version(),
     attributeDefinitions,
+    metadata,
+    thumbnail: thumbnail || undefined,
   };
 }
 

@@ -1035,12 +1035,23 @@ pub struct DucBlockAttributeDefinitionEntry {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DucBlockMetadata {
+    pub source: String,
+    pub usage_count: i32,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub localization: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DucBlock {
     pub id: String,
     pub label: String,
     pub description: Option<String>,
     pub version: i32,
     pub attribute_definitions: Vec<DucBlockAttributeDefinitionEntry>,
+    pub metadata: Option<DucBlockMetadata>,
+    pub thumbnail: Option<Vec<u8>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

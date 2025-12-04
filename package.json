@@ -50,6 +50,7 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
+    "build:packages": "turbo build --filter=ducjs --filter=ducpy --filter=ducrs --filter=ducsvg --filter=ducpdf",
     "flatc:gen": "bun run flatc:gen:duc",
     "flatc:gen:duc": "cd schema && bash flatc-duc-generate.sh",
     "clean": "bun del-cli \"**/dist\" \".turbo\" \"**/node_modules\" \"**/package-lock.json\" \"**/tsconfig.tsbuildinfo\" \"**/tsconfig.node.tsbuildinfo\" \"**/vite.config.js\"",

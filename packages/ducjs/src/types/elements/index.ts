@@ -1108,6 +1108,9 @@ export type DucBlock = {
 
   /** Block metadata including source, usage count, timestamps, and localization */
   metadata?: DucBlockMetadata;
+
+  /** Cached thumbnail image for the block (webp format) */
+  thumbnail?: Uint8Array;
 };
 
 export type DucBlockInstance = { //Instance of a block definition

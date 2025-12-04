@@ -81,8 +81,46 @@ class DucBlock(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         return o == 0
 
+    # DucBlock
+    def Metadata(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.DucBlockMetadata import DucBlockMetadata
+            obj = DucBlockMetadata()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucBlock
+    def Thumbnail(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        if o != 0:
+            a = self._tab.Vector(o)
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1))
+        return 0
+
+    # DucBlock
+    def ThumbnailAsNumpy(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        if o != 0:
+            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Uint8Flags, o)
+        return 0
+
+    # DucBlock
+    def ThumbnailLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # DucBlock
+    def ThumbnailIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
+        return o == 0
+
 def DucBlockStart(builder):
-    builder.StartObject(5)
+    builder.StartObject(7)
 
 def Start(builder):
     DucBlockStart(builder)
@@ -122,6 +160,24 @@ def DucBlockStartAttributeDefinitionsVector(builder, numElems):
 
 def StartAttributeDefinitionsVector(builder, numElems):
     return DucBlockStartAttributeDefinitionsVector(builder, numElems)
+
+def DucBlockAddMetadata(builder, metadata):
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(metadata), 0)
+
+def AddMetadata(builder, metadata):
+    DucBlockAddMetadata(builder, metadata)
+
+def DucBlockAddThumbnail(builder, thumbnail):
+    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(thumbnail), 0)
+
+def AddThumbnail(builder, thumbnail):
+    DucBlockAddThumbnail(builder, thumbnail)
+
+def DucBlockStartThumbnailVector(builder, numElems):
+    return builder.StartVector(1, numElems, 1)
+
+def StartThumbnailVector(builder, numElems):
+    return DucBlockStartThumbnailVector(builder, numElems)
 
 def DucBlockEnd(builder):
     return builder.EndObject()
