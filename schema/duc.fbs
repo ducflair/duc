@@ -1016,12 +1016,15 @@ table _DucElementBase {
   custom_data: string;
 
   /** 
-   * List of blocks the element belongs to. 
-   * Works hierarchically similar to groupIds
+   * List of blocks this element helps *define*. 
+   * If this is populated, `instanceId` should be null.
    */
   block_ids: [string];
 
-  /** The instance id of the element if it's part of an DucBlockInstance of a DucBlock */
+  /** 
+   * The ID of the `DucBlockInstance` this element belongs to.
+   * If not null, `block_ids` is empty (the relationship to the Block is via the Instance).
+   */
   instance_id: string; 
 }
 
@@ -1674,6 +1677,21 @@ table DucBlockAttributeDefinitionEntry {
   value: DucBlockAttributeDefinition;
 }
 
+/**
+ * Defines the "Blueprint" for a reusable component.
+ * 
+ * **Element Relationship Logic:**
+ * The connection between this Block Definition and `_DucElementBase` depends on the state:
+ * 
+ * 1. **Definition State (Source):** 
+ *    - Elements that define the geometry of this block have this `id` inside their `element.block_ids`.
+ *    - Their `element.instance_id` is `null`.
+ * 
+ * 2. **Instance State (Usage):** 
+ *    - When instantiated via `DucBlockInstance`, the rendered elements have `element.instance_id` set (not null).
+ *    - Crucially, these instance elements have **empty** `element.block_ids`.
+ *    - The relationship is resolved indirectly: `Element.instance_id` -> `DucBlockInstance.block_id` -> `DucBlock.id`.
+ */
 table DucBlock {
   id: string (key);
   label: string;
@@ -1696,21 +1714,14 @@ table DucBlockDuplicationArray {
 table DucBlockInstanceElement {
   base: _DucElementBase (deprecated);
   block_id: string (deprecated);
-  /**
-   * Keys are the element ids of the block instance
-   * Values are the element overrides
-   */
   element_overrides: [StringValueEntry] (deprecated);
-  /**
-   * A record of the actual values for the attributes of this specific instance,
-   * keyed by the attribute tag defined in the DucBlock.
-   */
   attribute_values: [StringValueEntry] (deprecated);
   duplication_array: DucBlockDuplicationArray (deprecated);
 }
 
 table DucBlockInstance {
   id: string;
+  /** The reference to the DucBlock definition this instance is based on */
   block_id: string;
   /**
    * A record of the actual values for the attributes of this specific instance,
