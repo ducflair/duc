@@ -1693,7 +1693,7 @@ table DucBlockAttributeDefinitionEntry {
  *    - The relationship is resolved indirectly: `Element.instance_id` -> `DucBlockInstance.block_id` -> `DucBlock.id`.
  */
 table DucBlock {
-  id: string (key);
+  id: string(key);
   label: string;
   description: string;
   version: int;
@@ -1702,7 +1702,31 @@ table DucBlock {
    * This defines the "slots" for data that each instance can fill.
    */
   attribute_definitions: [DucBlockAttributeDefinitionEntry];
+  metadata: DucBlockMetadata;
+  thumbnail: [ubyte];
 }
+
+table DucBlockMetadata {
+  source: string;
+  usage_count: int;
+  /** Epoch timestamp (ms) of block creation */
+  created_at: long; // Epoch timestamp (ms)
+  /** Epoch timestamp (ms) of last block update */
+  updated_at: long; // Epoch timestamp (ms)
+  /** JSON string to represent localization data
+      * Structure: Record<string, BlockLocalizationEntry>
+      * 
+      * where key string is BCP 47 standard language tag (e.g., "en-US", "fr-FR")
+      * where BlockLocalizationEntry is:
+      * 
+      * {
+      *   title: string;
+      *   description?: string;
+      * }
+   */
+  localization: string;
+}
+
 
 table DucBlockDuplicationArray {
   rows: int;

@@ -5,6 +5,7 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { DucBlockAttributeDefinitionEntry } from '../duc/duc-block-attribute-definition-entry';
+import { DucBlockMetadata } from '../duc/duc-block-metadata';
 
 
 export class DucBlock {
@@ -61,8 +62,28 @@ attributeDefinitionsLength():number {
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
+metadata(obj?:DucBlockMetadata):DucBlockMetadata|null {
+  const offset = this.bb!.__offset(this.bb_pos, 14);
+  return offset ? (obj || new DucBlockMetadata()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+thumbnail(index: number):number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 16);
+  return offset ? this.bb!.readUint8(this.bb!.__vector(this.bb_pos + offset) + index) : 0;
+}
+
+thumbnailLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 16);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+thumbnailArray():Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 16);
+  return offset ? new Uint8Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
+}
+
 static startDucBlock(builder:flatbuffers.Builder) {
-  builder.startObject(5);
+  builder.startObject(7);
 }
 
 static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
@@ -97,19 +118,30 @@ static startAttributeDefinitionsVector(builder:flatbuffers.Builder, numElems:num
   builder.startVector(4, numElems, 4);
 }
 
+static addMetadata(builder:flatbuffers.Builder, metadataOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(5, metadataOffset, 0);
+}
+
+static addThumbnail(builder:flatbuffers.Builder, thumbnailOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(6, thumbnailOffset, 0);
+}
+
+static createThumbnailVector(builder:flatbuffers.Builder, data:number[]|Uint8Array):flatbuffers.Offset {
+  builder.startVector(1, data.length, 1);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addInt8(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startThumbnailVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(1, numElems, 1);
+}
+
 static endDucBlock(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   builder.requiredField(offset, 4) // id
   return offset;
 }
 
-static createDucBlock(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, labelOffset:flatbuffers.Offset, descriptionOffset:flatbuffers.Offset, version:number, attributeDefinitionsOffset:flatbuffers.Offset):flatbuffers.Offset {
-  DucBlock.startDucBlock(builder);
-  DucBlock.addId(builder, idOffset);
-  DucBlock.addLabel(builder, labelOffset);
-  DucBlock.addDescription(builder, descriptionOffset);
-  DucBlock.addVersion(builder, version);
-  DucBlock.addAttributeDefinitions(builder, attributeDefinitionsOffset);
-  return DucBlock.endDucBlock(builder);
-}
 }

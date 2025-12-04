@@ -38,7 +38,7 @@ from ducpy.classes.ElementsClass import (
     DucLinearElement as DS_DucLinearElement,
     DucArrowElement as DS_DucArrowElement,
     DucFreeDrawElement as DS_DucFreeDrawElement,
-    DucBlockInstanceElement as DS_DucBlockInstanceElement,
+    DucBlockInstance as DS_DucBlockInstanceElement,
     DucFrameElement as DS_DucFrameElement,
     DucPlotElement as DS_DucPlotElement,
     DucViewportElement as DS_DucViewportElement,
@@ -49,6 +49,7 @@ from ducpy.classes.ElementsClass import (
     DucDocElement as DS_DucDocElement,
     DucParametricElement as DS_DucParametricElement,
     DucBlock as DS_DucBlock,
+    DucBlockMetadata as DS_DucBlockMetadata,
     DucGroup as DS_DucGroup,
     DucRegion as DS_DucRegion,
     DucLayer as DS_DucLayer,
@@ -347,6 +348,7 @@ from ducpy.Duc.DucDocStyle import DucDocStyle as FBSDucDocStyle
 from ducpy.Duc.ParametricSource import ParametricSource as FBSParametricSource
 
 from ducpy.Duc.DucBlock import DucBlock as FBSDucBlock
+from ducpy.Duc.DucBlockMetadata import DucBlockMetadata as FBSDucBlockMetadata
 from ducpy.Duc.DucBlockAttributeDefinition import DucBlockAttributeDefinition as FBSDucBlockAttributeDefinition
 from ducpy.Duc.DucBlockAttributeDefinitionEntry import DucBlockAttributeDefinitionEntry as FBSDucBlockAttributeDefinitionEntry
 
@@ -1608,14 +1610,34 @@ def parse_fbs_duc_block_attribute_definition_entry(obj: FBSDucBlockAttributeDefi
         value=parse_fbs_duc_block_attribute_definition(obj.Value()),
     )
 
+def parse_fbs_duc_block_metadata(obj: FBSDucBlockMetadata) -> DS_DucBlockMetadata:
+    return DS_DucBlockMetadata(
+        source=_s_req(obj.Source()),
+        usage_count=obj.UsageCount(),
+        created_at=obj.CreatedAt(),
+        updated_at=obj.UpdatedAt(),
+        localization=_s(obj.Localization()),
+    )
+
 def parse_fbs_duc_block(obj: FBSDucBlock) -> DS_DucBlock:
     attrs = [parse_fbs_duc_block_attribute_definition_entry(obj.AttributeDefinitions(i)) for i in range(obj.AttributeDefinitionsLength())]
+
+    metadata = None
+    if hasattr(obj, 'Metadata') and obj.Metadata():
+        metadata = parse_fbs_duc_block_metadata(obj.Metadata())
+
+    thumbnail = None
+    if hasattr(obj, 'Thumbnail') and obj.ThumbnailLength() > 0:
+        thumbnail = obj.ThumbnailAsBytes()
+
     return DS_DucBlock(
         id=_s_req(obj.Id()),
         label=_s_req(obj.Label()),
         version=obj.Version(),
         attribute_definitions=attrs,
         description=_s(obj.Description()),
+        metadata=metadata,
+        thumbnail=thumbnail,
     )
 
 def parse_fbs_duc_group(obj: FBSDucGroup) -> DS_DucGroup:

@@ -2455,6 +2455,28 @@ fn serialize_duc_block_attribute_definition_entry<'bldr>(
     )
 }
 
+pub fn serialize_duc_block_metadata<'bldr>(
+    builder: &mut flatbuffers::FlatBufferBuilder<'bldr>,
+    metadata: &types::DucBlockMetadata,
+) -> WIPOffset<fb::DucBlockMetadata<'bldr>> {
+    let source_offset = builder.create_string(&metadata.source);
+    let localization_offset: Option<WIPOffset<&'bldr str>> = metadata
+        .localization
+        .as_ref()
+        .map(|s| builder.create_string(s.as_str()));
+
+    fb::DucBlockMetadata::create(
+        builder,
+        &fb::DucBlockMetadataArgs {
+            source: Some(source_offset),
+            usage_count: metadata.usage_count,
+            created_at: metadata.created_at,
+            updated_at: metadata.updated_at,
+            localization: localization_offset,
+        },
+    )
+}
+
 fn serialize_duc_block<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     block: &types::DucBlock,
@@ -2473,6 +2495,17 @@ fn serialize_duc_block<'bldr>(
         .collect();
     let attribute_definitions_vec = builder.create_vector(&attribute_definitions_offsets);
 
+    let metadata_offset: Option<WIPOffset<fb::DucBlockMetadata<'bldr>>> = block
+        .metadata
+        .as_ref()
+        .map(|metadata| serialize_duc_block_metadata(builder, metadata));
+
+    let thumbnail_offset = block
+        .thumbnail
+        .as_ref()
+        .filter(|data| !data.is_empty())
+        .map(|data| builder.create_vector(data));
+
     fb::DucBlock::create(
         builder,
         &fb::DucBlockArgs {
@@ -2481,6 +2514,8 @@ fn serialize_duc_block<'bldr>(
             description: description_offset,
             version: block.version,
             attribute_definitions: Some(attribute_definitions_vec),
+            metadata: metadata_offset,
+            thumbnail: thumbnail_offset,
         },
     )
 }

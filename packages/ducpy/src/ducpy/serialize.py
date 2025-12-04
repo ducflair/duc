@@ -51,6 +51,7 @@ from ducpy.classes.ElementsClass import (
     DucDocElement as DS_DucDocElement,
     DucParametricElement as DS_DucParametricElement,
     DucBlock as DS_DucBlock,
+    DucBlockMetadata as DS_DucBlockMetadata,
     DucGroup as DS_DucGroup,
     DucRegion as DS_DucRegion,
     DucLayer as DS_DucLayer,
@@ -2598,8 +2599,11 @@ from ducpy.Duc.DucBlockAttributeDefinitionEntry import (
     DucBlockAttributeDefinitionEntryStart, DucBlockAttributeDefinitionEntryAddKey,
     DucBlockAttributeDefinitionEntryAddValue, DucBlockAttributeDefinitionEntryEnd
 )
+from ducpy.Duc.DucBlockMetadata import (
+    DucBlockMetadataStart, DucBlockMetadataAddSource, DucBlockMetadataAddUsageCount, DucBlockMetadataAddCreatedAt, DucBlockMetadataAddUpdatedAt, DucBlockMetadataAddLocalization, DucBlockMetadataEnd
+)
 from ducpy.Duc.DucBlock import (
-    DucBlockStart, DucBlockAddId, DucBlockAddLabel, DucBlockAddDescription, DucBlockAddVersion, DucBlockAddAttributeDefinitions, DucBlockEnd, DucBlockStartAttributeDefinitionsVector
+    DucBlockStart, DucBlockAddId, DucBlockAddLabel, DucBlockAddDescription, DucBlockAddVersion, DucBlockAddAttributeDefinitions, DucBlockAddMetadata, DucBlockAddThumbnail, DucBlockEnd, DucBlockStartAttributeDefinitionsVector, DucBlockStartThumbnailVector
 )
 
 # Global/Local State (vector helpers)
@@ -3336,6 +3340,19 @@ def serialize_fbs_block_attribute_definition_entry(builder: flatbuffers.Builder,
     DucBlockAttributeDefinitionEntryAddValue(builder, value_offset)
     return DucBlockAttributeDefinitionEntryEnd(builder)
 
+def serialize_fbs_block_metadata(builder: flatbuffers.Builder, metadata: DS_DucBlockMetadata) -> int:
+    source_offset = builder.CreateString(metadata.source)
+    localization_offset = _str(builder, metadata.localization)
+
+    DucBlockMetadataStart(builder)
+    DucBlockMetadataAddSource(builder, source_offset)
+    DucBlockMetadataAddUsageCount(builder, metadata.usage_count)
+    DucBlockMetadataAddCreatedAt(builder, metadata.created_at)
+    DucBlockMetadataAddUpdatedAt(builder, metadata.updated_at)
+    if localization_offset:
+        DucBlockMetadataAddLocalization(builder, localization_offset)
+    return DucBlockMetadataEnd(builder)
+
 def serialize_fbs_block(builder: flatbuffers.Builder, block: DS_DucBlock) -> int:
     id_offset = builder.CreateString(block.id)
     label_offset = builder.CreateString(block.label)
@@ -3349,6 +3366,19 @@ def serialize_fbs_block(builder: flatbuffers.Builder, block: DS_DucBlock) -> int
             builder.PrependUOffsetTRelative(off)
         attr_vec = builder.EndVector()
 
+    # Serialize metadata if present
+    metadata_offset = 0
+    if block.metadata:
+        metadata_offset = serialize_fbs_block_metadata(builder, block.metadata)
+
+    # Serialize thumbnail if present
+    thumbnail_vec = 0
+    if block.thumbnail:
+        DucBlockStartThumbnailVector(builder, len(block.thumbnail))
+        for byte in reversed(block.thumbnail):
+            builder.PrependByte(byte)
+        thumbnail_vec = builder.EndVector()
+
     DucBlockStart(builder)
     DucBlockAddId(builder, id_offset)
     DucBlockAddLabel(builder, label_offset)
@@ -3357,6 +3387,10 @@ def serialize_fbs_block(builder: flatbuffers.Builder, block: DS_DucBlock) -> int
     DucBlockAddVersion(builder, block.version)
     if attr_vec:
         DucBlockAddAttributeDefinitions(builder, attr_vec)
+    if metadata_offset:
+        DucBlockAddMetadata(builder, metadata_offset)
+    if thumbnail_vec:
+        DucBlockAddThumbnail(builder, thumbnail_vec)
     return DucBlockEnd(builder)
 
 def serialize_fbs_group(builder: flatbuffers.Builder, group: DS_DucGroup) -> int:

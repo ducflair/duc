@@ -26,6 +26,7 @@ import {
   DucBlock,
   DucBlockAttributeDefinition,
   DucBlockInstance,
+  DucBlockMetadata,
   DucDimensionElement,
   DucDimensionStyle,
   DucDocElement,
@@ -843,6 +844,21 @@ function writeBlockAttrDef(b: flatbuffers.Builder, d: DucBlockAttributeDefinitio
   return Duc.DucBlockAttributeDefinition.endDucBlockAttributeDefinition(b);
 }
 
+function writeBlockMetadata(b: flatbuffers.Builder, metadata: DucBlockMetadata): number {
+  const source = b.createString(metadata.source);
+  const localization = metadata.localization ? b.createString(JSON.stringify(metadata.localization)) : undefined;
+
+  Duc.DucBlockMetadata.startDucBlockMetadata(b);
+  Duc.DucBlockMetadata.addSource(b, source);
+  Duc.DucBlockMetadata.addUsageCount(b, metadata.usageCount);
+  Duc.DucBlockMetadata.addCreatedAt(b, BigInt(metadata.createdAt));
+  Duc.DucBlockMetadata.addUpdatedAt(b, BigInt(metadata.updatedAt));
+  if (localization) {
+    Duc.DucBlockMetadata.addLocalization(b, localization);
+  }
+  return Duc.DucBlockMetadata.endDucBlockMetadata(b);
+}
+
 function writeBlock(b: flatbuffers.Builder, bl: DucBlock, usv: boolean): number {
   const id = b.createString(bl.id);
   const label = b.createString(bl.label);
@@ -858,12 +874,31 @@ function writeBlock(b: flatbuffers.Builder, bl: DucBlock, usv: boolean): number 
       return Duc.DucBlockAttributeDefinitionEntry.endDucBlockAttributeDefinitionEntry(b);
     }),
   );
+
+  // Write metadata if present
+  let metadataOffset: number | undefined;
+  if (bl.metadata) {
+    metadataOffset = writeBlockMetadata(b, bl.metadata);
+  }
+
+  // Write thumbnail if present
+  let thumbnailOffset: number | undefined;
+  if (bl.thumbnail && bl.thumbnail.length > 0) {
+    thumbnailOffset = Duc.DucBlock.createThumbnailVector(b, bl.thumbnail);
+  }
+
   Duc.DucBlock.startDucBlock(b);
   Duc.DucBlock.addId(b, id);
   Duc.DucBlock.addLabel(b, label);
   Duc.DucBlock.addDescription(b, desc);
   Duc.DucBlock.addVersion(b, bl.version);
   Duc.DucBlock.addAttributeDefinitions(b, defs);
+  if (metadataOffset) {
+    Duc.DucBlock.addMetadata(b, metadataOffset);
+  }
+  if (thumbnailOffset) {
+    Duc.DucBlock.addThumbnail(b, thumbnailOffset);
+  }
   return Duc.DucBlock.endDucBlock(b);
 }
 

@@ -1278,6 +1278,16 @@ fn parse_duc_block_attribute_definition_entry(entry: fb::DucBlockAttributeDefini
     })
 }
 
+fn parse_duc_block_metadata(metadata: fb::DucBlockMetadata) -> ParseResult<types::DucBlockMetadata> {
+    Ok(types::DucBlockMetadata {
+        source: metadata.source().ok_or("Missing DucBlockMetadata.source")?.to_string(),
+        usage_count: metadata.usage_count(),
+        created_at: metadata.created_at(),
+        updated_at: metadata.updated_at(),
+        localization: metadata.localization().map(|s| s.to_string()),
+    })
+}
+
 fn parse_duc_block(block: fb::DucBlock) -> ParseResult<types::DucBlock> {
     let attribute_definitions = if let Some(defs_vec) = block.attribute_definitions() {
         defs_vec.iter().map(parse_duc_block_attribute_definition_entry).collect::<ParseResult<_>>()?
@@ -1285,12 +1295,22 @@ fn parse_duc_block(block: fb::DucBlock) -> ParseResult<types::DucBlock> {
         Vec::new()
     };
 
+    let metadata = if let Some(metadata_fb) = block.metadata() {
+        Some(parse_duc_block_metadata(metadata_fb)?)
+    } else {
+        None
+    };
+
+    let thumbnail = block.thumbnail().map(|data| (0..data.len()).map(|i| data.get(i)).collect::<Vec<_>>());
+
     Ok(types::DucBlock {
         id: block.id().to_string(),
         label: block.label().map(|s| s.to_string()).unwrap_or_default(),
         description: block.description().map(|s| s.to_string()),
         version: block.version(),
         attribute_definitions,
+        metadata,
+        thumbnail,
     })
 }
 
