@@ -1764,6 +1764,24 @@ table DucBlockInstance {
   version: int;
 }
 
+
+table DucBlockCollection {
+  id: string;
+  label: string;
+
+  children: [DucBlockCollectionEntry];
+  metadata: DucBlockMetadata;
+  thumbnail: [ubyte];
+}
+
+table DucBlockCollectionEntry {
+  id: string;
+  /** 
+   * True if pointing to another collection, False if pointing to a block.
+   */
+  is_collection: bool;
+}
+
 table DucFrameElement {
   stack_element_base: _DucStackElementBase;
 }
@@ -2687,6 +2705,7 @@ table ExportedDataState {
   id: string;
 
   blockInstances: [DucBlockInstance];
+  blockCollections: [DucBlockCollection];
 }
 
 root_type ExportedDataState;

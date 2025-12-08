@@ -1138,6 +1138,23 @@ export type DucBlockInstance = { //Instance of a block definition
 };
 
 
+export type DucBlockCollection = {
+  id: string;
+  label: string;
+
+  /** 
+   * True if pointing to another collection, False if pointing to a block.
+   */
+  children: Array<{
+    isCollection: boolean;
+    id: string;
+  }>;
+
+  metadata?: DucBlockMetadata;
+  thumbnail?: Uint8Array;
+};
+
+
 
 
 
