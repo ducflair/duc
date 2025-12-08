@@ -39,6 +39,8 @@ export { DucArrowElement } from './duc/duc-arrow-element';
 export { DucBlock } from './duc/duc-block';
 export { DucBlockAttributeDefinition } from './duc/duc-block-attribute-definition';
 export { DucBlockAttributeDefinitionEntry } from './duc/duc-block-attribute-definition-entry';
+export { DucBlockCollection } from './duc/duc-block-collection';
+export { DucBlockCollectionEntry } from './duc/duc-block-collection-entry';
 export { DucBlockDuplicationArray } from './duc/duc-block-duplication-array';
 export { DucBlockInstance } from './duc/duc-block-instance';
 export { DucBlockInstanceElement } from './duc/duc-block-instance-element';

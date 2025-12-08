@@ -1335,6 +1335,31 @@ fn parse_duc_block_instance(el: fb::DucBlockInstance) -> ParseResult<types::DucB
     })
 }
 
+fn parse_duc_block_collection(el: fb::DucBlockCollection) -> ParseResult<types::DucBlockCollection> {
+    let children = el
+        .children()
+        .map(|v| v.iter().map(parse_duc_block_collection_entry).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
+
+    let metadata = el.metadata().map(parse_duc_block_metadata).transpose()?;
+
+    Ok(types::DucBlockCollection {
+        id: el.id().ok_or("Missing DucBlockCollection.id")?.to_string(),
+        label: el.label().ok_or("Missing DucBlockCollection.label")?.to_string(),
+        children,
+        metadata,
+        thumbnail: el.thumbnail().map(|b| b.bytes().to_vec()),
+    })
+}
+
+fn parse_duc_block_collection_entry(entry: fb::DucBlockCollectionEntry) -> ParseResult<types::DucBlockCollectionEntry> {
+    Ok(types::DucBlockCollectionEntry {
+        id: entry.id().ok_or("Missing DucBlockCollectionEntry.id")?.to_string(),
+        is_collection: entry.is_collection(),
+    })
+}
+
 
 // =============================================================================
 // APP & DOCUMENT STATE
@@ -1965,6 +1990,13 @@ fn parse_exported_data_state(root: fb::ExportedDataState) -> ParseResult<types::
         .transpose()?
         .unwrap_or_default();
 
+    // block_collections is optional: treat missing as empty vec
+    let block_collections = root
+        .blockCollections()
+        .map(|v| v.iter().map(parse_duc_block_collection).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
+
     // groups optional
     let groups = root
         .groups()
@@ -2007,6 +2039,7 @@ fn parse_exported_data_state(root: fb::ExportedDataState) -> ParseResult<types::
         elements,
         blocks,
         block_instances,
+        block_collections,
         groups,
         regions,
         layers,
