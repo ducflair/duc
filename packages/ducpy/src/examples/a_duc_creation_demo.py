@@ -207,8 +207,10 @@ def create_sample_duc_object():
 
     # Create a simple DUC object
     duc_object = ExportedDataState(
-        duc_global_state=global_state, # Corrected argument name
-        duc_local_state=local_state,   # Corrected argument name
+        type="duc_example",
+        version="1.0.0",
+        source="a_duc_creation_demo.py",
+        thumbnail=b"",
         elements=elements,
         standards=[standard],
         files=[],
@@ -217,11 +219,11 @@ def create_sample_duc_object():
         layers=[],
         regions=[],
         blocks=[],
-        dictionary={}, # Add missing required argument
-        type="", # Add missing required argument
-        version="", # Add missing required argument
-        source="", # Add missing required argument
-        thumbnail=b"" # Add missing required argument
+        block_instances=[],
+        block_collections=[],
+        dictionary={},
+        duc_global_state=global_state, # Corrected argument name
+        duc_local_state=local_state   # Corrected argument name
     )
 
     print("Sample DUC object created successfully!")
