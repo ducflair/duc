@@ -200,6 +200,7 @@ class DucElementBase:
     frame_id: Optional[str]
     bound_elements: Optional[List[BoundElement]]
     custom_data: Optional[Dict[str, Any]]
+    instance_id: Optional[str] = None
 
 @dataclass
 class DucHead:
@@ -637,6 +638,20 @@ class DucBlockInstance:
     element_overrides: Optional[List[StringValueEntry]]
     attribute_values: Optional[List[StringValueEntry]]
     duplication_array: Optional[DucBlockDuplicationArray]
+
+
+@dataclass
+class DucBlockCollectionEntry:
+    id: str
+    is_collection: bool
+
+@dataclass
+class DucBlockCollection:
+    id: str
+    label: str
+    children: List[DucBlockCollectionEntry]
+    metadata: Optional[DucBlockMetadata]
+    thumbnail: Optional[bytes]
 
 @dataclass
 class DucFrameElement:
