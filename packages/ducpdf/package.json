@@ -22,7 +22,7 @@
   "files": [
     "dist"
   ],
-    "publishConfig": {
+  "publishConfig": {
     "access": "public"
   },
   "repository": {
@@ -40,8 +40,7 @@
     "build": "bun run clean && bun run build:wasm && bun run copy:wasm-to-dist && bun run build:ts",
     "build:ts": "tsc -p tsconfig.json",
     "build:rs": "cd src/duc2pdf && cargo build",
-    "build:wasm": "cd src/duc2pdf && wasm-pack build --target web --out-dir ../../pkg --dev",
-    "build:wasm:prod": "cd src/duc2pdf && wasm-pack build --target web --out-dir ../../pkg --release",
+    "build:wasm": "cd src/duc2pdf && wasm-pack build --target web --out-dir ../../pkg --release",
     "copy:wasm-to-dist": "mkdir -p dist && cp pkg/duc2pdf_bg.wasm dist/ && cp pkg/duc2pdf.js dist/ && cp pkg/duc2pdf.d.ts dist/ && cp pkg/duc2pdf_bg.wasm.d.ts dist/",
     "clean": "rm -rf dist pkg && cd src/duc2pdf && cargo clean",
     "test": "bun run build:wasm && bun test",

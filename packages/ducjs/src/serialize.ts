@@ -25,7 +25,9 @@ import {
   DucArrowElement,
   DucBlock,
   DucBlockAttributeDefinition,
+  DucBlockCollection,
   DucBlockInstance,
+  DucBlockMetadata,
   DucDimensionElement,
   DucDimensionStyle,
   DucDocElement,
@@ -276,7 +278,7 @@ function writeStylesBase(b: flatbuffers.Builder, s: _DucElementStylesBase | unde
   const bgArrRaw = s.background;
   const stArrRaw = s.stroke;
 
-  if(bgArrRaw === undefined || stArrRaw === undefined) {
+  if (bgArrRaw === undefined || stArrRaw === undefined) {
     return null;
   }
 
@@ -605,9 +607,9 @@ function writeFreeDraw(b: flatbuffers.Builder, e: DucFreeDrawElement, usv: boole
 
   const pointsVec = e.points && e.points.length
     ? Duc.DucFreeDrawElement.createPointsVector(
-        b,
-        e.points.map((p) => writeDucPoint(b, p, usv)!).filter((v): v is number => v !== undefined)
-      )
+      b,
+      e.points.map((p) => writeDucPoint(b, p, usv)!).filter((v): v is number => v !== undefined)
+    )
     : Duc.DucFreeDrawElement.createPointsVector(b, []);
 
   const pressuresVec = e.pressures && e.pressures.length
@@ -843,6 +845,21 @@ function writeBlockAttrDef(b: flatbuffers.Builder, d: DucBlockAttributeDefinitio
   return Duc.DucBlockAttributeDefinition.endDucBlockAttributeDefinition(b);
 }
 
+function writeBlockMetadata(b: flatbuffers.Builder, metadata: DucBlockMetadata): number {
+  const source = b.createString(metadata.source);
+  const localization = metadata.localization ? b.createString(JSON.stringify(metadata.localization)) : undefined;
+
+  Duc.DucBlockMetadata.startDucBlockMetadata(b);
+  Duc.DucBlockMetadata.addSource(b, source);
+  Duc.DucBlockMetadata.addUsageCount(b, metadata.usageCount);
+  Duc.DucBlockMetadata.addCreatedAt(b, BigInt(metadata.createdAt));
+  Duc.DucBlockMetadata.addUpdatedAt(b, BigInt(metadata.updatedAt));
+  if (localization) {
+    Duc.DucBlockMetadata.addLocalization(b, localization);
+  }
+  return Duc.DucBlockMetadata.endDucBlockMetadata(b);
+}
+
 function writeBlock(b: flatbuffers.Builder, bl: DucBlock, usv: boolean): number {
   const id = b.createString(bl.id);
   const label = b.createString(bl.label);
@@ -858,12 +875,31 @@ function writeBlock(b: flatbuffers.Builder, bl: DucBlock, usv: boolean): number 
       return Duc.DucBlockAttributeDefinitionEntry.endDucBlockAttributeDefinitionEntry(b);
     }),
   );
+
+  // Write metadata if present
+  let metadataOffset: number | undefined;
+  if (bl.metadata) {
+    metadataOffset = writeBlockMetadata(b, bl.metadata);
+  }
+
+  // Write thumbnail if present
+  let thumbnailOffset: number | undefined;
+  if (bl.thumbnail && bl.thumbnail.length > 0) {
+    thumbnailOffset = Duc.DucBlock.createThumbnailVector(b, bl.thumbnail);
+  }
+
   Duc.DucBlock.startDucBlock(b);
   Duc.DucBlock.addId(b, id);
   Duc.DucBlock.addLabel(b, label);
   Duc.DucBlock.addDescription(b, desc);
   Duc.DucBlock.addVersion(b, bl.version);
   Duc.DucBlock.addAttributeDefinitions(b, defs);
+  if (metadataOffset) {
+    Duc.DucBlock.addMetadata(b, metadataOffset);
+  }
+  if (thumbnailOffset) {
+    Duc.DucBlock.addThumbnail(b, thumbnailOffset);
+  }
   return Duc.DucBlock.endDucBlock(b);
 }
 
@@ -897,6 +933,59 @@ function writeBlockInstance(b: flatbuffers.Builder, i: DucBlockInstance, usv: bo
   if (attrs) Duc.DucBlockInstance.addAttributeValues(b, attrs);
   if (dup) Duc.DucBlockInstance.addDuplicationArray(b, dup);
   return Duc.DucBlockInstance.endDucBlockInstance(b);
+}
+
+function writeBlockCollection(b: flatbuffers.Builder, c: DucBlockCollection): number {
+  const id = b.createString(c.id);
+  const label = b.createString(c.label);
+
+  // Serialize children array
+  const children = c.children.map(child => {
+    const childId = b.createString(child.id);
+    Duc.DucBlockCollectionEntry.startDucBlockCollectionEntry(b);
+    Duc.DucBlockCollectionEntry.addId(b, childId);
+    Duc.DucBlockCollectionEntry.addIsCollection(b, child.isCollection);
+    return Duc.DucBlockCollectionEntry.endDucBlockCollectionEntry(b);
+  });
+  const childrenOffset = Duc.DucBlockCollection.createChildrenVector(b, children);
+
+  // Serialize metadata if present
+  let metadataOffset: number | undefined;
+  if (c.metadata) {
+    const metadata = c.metadata;
+    let localizationOffset: number | undefined;
+    if (metadata.localization) {
+      // localization is stored as a JSON string
+      const localizationStr = JSON.stringify(metadata.localization);
+      localizationOffset = b.createString(localizationStr);
+    }
+
+    const source = b.createString(metadata.source);
+
+    Duc.DucBlockMetadata.startDucBlockMetadata(b);
+    Duc.DucBlockMetadata.addSource(b, source);
+    Duc.DucBlockMetadata.addUsageCount(b, metadata.usageCount);
+    // Convert to BigInt as expected by FlatBuffers
+    Duc.DucBlockMetadata.addCreatedAt(b, BigInt(metadata.createdAt));
+    Duc.DucBlockMetadata.addUpdatedAt(b, BigInt(metadata.updatedAt));
+    if (localizationOffset) Duc.DucBlockMetadata.addLocalization(b, localizationOffset);
+    metadataOffset = Duc.DucBlockMetadata.endDucBlockMetadata(b);
+  }
+
+  // Serialize thumbnail if present
+  let thumbnailOffset: number | undefined;
+  if (c.thumbnail) {
+    thumbnailOffset = b.createByteVector(c.thumbnail);
+  }
+
+  Duc.DucBlockCollection.startDucBlockCollection(b);
+  Duc.DucBlockCollection.addId(b, id);
+  Duc.DucBlockCollection.addLabel(b, label);
+  Duc.DucBlockCollection.addChildren(b, childrenOffset);
+  if (metadataOffset) Duc.DucBlockCollection.addMetadata(b, metadataOffset);
+  if (thumbnailOffset) Duc.DucBlockCollection.addThumbnail(b, thumbnailOffset);
+
+  return Duc.DucBlockCollection.endDucBlockCollection(b);
 }
 
 /**
@@ -2384,7 +2473,7 @@ function serializeExternalFiles(builder: flatbuffers.Builder, files: DucExternal
     const keyOff = builder.createString(key);
     const mt = builder.createString(value.mimeType);
     const idOff = builder.createString(value.id);
-    
+
     let dataVectorOffset: number | undefined = undefined;
     if (value.data) {
       dataVectorOffset = Duc.DucExternalFileData.createDataVector(builder, value.data);
@@ -2463,6 +2552,11 @@ export const serializeDuc = async (
     ? Duc.ExportedDataState.createBlockInstancesVector(builder, sanitized.blockInstances.map(instance => writeBlockInstance(builder, instance, useScopedValues)))
     : null;
 
+  // Serialize block collections
+  const blockCollectionsOffset = sanitized.blockCollections.length > 0
+    ? Duc.ExportedDataState.createBlockCollectionsVector(builder, sanitized.blockCollections.map(collection => writeBlockCollection(builder, collection)))
+    : null;
+
   // Serialize groups
   const groupsOffset = sanitized.groups.length > 0
     ? Duc.ExportedDataState.createGroupsVector(builder, sanitized.groups.map(group => serializeDucGroup(builder, group, useScopedValues)))
@@ -2523,6 +2617,9 @@ export const serializeDuc = async (
   }
   if (blockInstancesOffset) {
     Duc.ExportedDataState.addBlockInstances(builder, blockInstancesOffset);
+  }
+  if (blockCollectionsOffset) {
+    Duc.ExportedDataState.addBlockCollections(builder, blockCollectionsOffset);
   }
   if (groupsOffset) {
     Duc.ExportedDataState.addGroups(builder, groupsOffset);

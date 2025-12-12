@@ -51,6 +51,8 @@ def create_duc_with_external_files():
         thumbnail=b"",
         elements=[],
         blocks=[],
+        block_instances=[],
+        block_collections=[],
         groups=[],
         regions=[],
         layers=[],

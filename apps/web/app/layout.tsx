@@ -45,12 +45,14 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={robotoMono.className} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
-        <Script
-          defer
-          src="https://duc-analytics.vercel.app/script.js"
-          data-website-id="dbb88890-f4f6-45b1-8970-cb5d7d7b02b6"
-          data-domains="duc.ducflair.com,"
-        />
+        {process.env.NODE_ENV === 'production' && (
+          <Script
+            defer
+            src="https://umami-liart-kappa.vercel.app/script.js"
+            data-website-id="dbb88890-f4f6-45b1-8970-cb5d7d7b02b6"
+            data-domains="duc.ducflair.com,"
+          />
+        )}
         <RootProvider
           search={{
             links: [
