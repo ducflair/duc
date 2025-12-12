@@ -7,14 +7,23 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./*": {
-      "import": ["./dist/*.js", "./dist/*/index.js"],
-      "require": ["./dist/*.js", "./dist/*/index.js"],
-      "types": ["./dist/*.d.ts", "./dist/*/index.d.ts"]
+      "types": [
+        "./dist/*.d.ts",
+        "./dist/*/index.d.ts"
+      ],
+      "import": [
+        "./dist/*.js",
+        "./dist/*/index.js"
+      ],
+      "require": [
+        "./dist/*.js",
+        "./dist/*/index.js"
+      ]
     }
   },
   "sideEffects": false,
@@ -39,7 +48,10 @@
     "vite": "^6.0.0",
     "vitest": "^3.2.4"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -52,5 +64,16 @@
   "bugs": {
     "url": "https://github.com/ducflair/duc/issues"
   },
-  "keywords": ["CAD", "2D", "Design", "TypeScript", "Ducflair", "Duc", "SVG", "Renderer", "Converter", "Export"]
+  "keywords": [
+    "CAD",
+    "2D",
+    "Design",
+    "TypeScript",
+    "Ducflair",
+    "Duc",
+    "SVG",
+    "Renderer",
+    "Converter",
+    "Export"
+  ]
 }
