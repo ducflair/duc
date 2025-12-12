@@ -1685,6 +1685,45 @@ fn serialize_duc_block_instance<'bldr>(
     )
 }
 
+fn serialize_duc_block_collection<'bldr>(
+    builder: &mut FlatBufferBuilder<'bldr>,
+    collection: &types::DucBlockCollection,
+) -> WIPOffset<fb::DucBlockCollection<'bldr>> {
+    let id_offset = builder.create_string(&collection.id);
+    let label_offset = builder.create_string(&collection.label);
+
+    let children_offsets: Vec<_> = collection
+        .children
+        .iter()
+        .map(|child| {
+            let child_id_offset = builder.create_string(&child.id);
+            fb::DucBlockCollectionEntry::create(
+                builder,
+                &fb::DucBlockCollectionEntryArgs {
+                    id: Some(child_id_offset),
+                    is_collection: child.is_collection,
+                },
+            )
+        })
+        .collect();
+    let children_vec = builder.create_vector(&children_offsets);
+
+    let metadata_offset = collection.metadata.as_ref().map(|m| serialize_duc_block_metadata(builder, m));
+
+    let thumbnail_vec = collection.thumbnail.as_ref().map(|v| builder.create_vector(v));
+
+    fb::DucBlockCollection::create(
+        builder,
+        &fb::DucBlockCollectionArgs {
+            id: Some(id_offset),
+            label: Some(label_offset),
+            children: Some(children_vec),
+            metadata: metadata_offset,
+            thumbnail: thumbnail_vec,
+        },
+    )
+}
+
 fn serialize_duc_frame_element<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     element: &types::DucFrameElement,
@@ -2455,6 +2494,28 @@ fn serialize_duc_block_attribute_definition_entry<'bldr>(
     )
 }
 
+pub fn serialize_duc_block_metadata<'bldr>(
+    builder: &mut flatbuffers::FlatBufferBuilder<'bldr>,
+    metadata: &types::DucBlockMetadata,
+) -> WIPOffset<fb::DucBlockMetadata<'bldr>> {
+    let source_offset = builder.create_string(&metadata.source);
+    let localization_offset: Option<WIPOffset<&'bldr str>> = metadata
+        .localization
+        .as_ref()
+        .map(|s| builder.create_string(s.as_str()));
+
+    fb::DucBlockMetadata::create(
+        builder,
+        &fb::DucBlockMetadataArgs {
+            source: Some(source_offset),
+            usage_count: metadata.usage_count,
+            created_at: metadata.created_at,
+            updated_at: metadata.updated_at,
+            localization: localization_offset,
+        },
+    )
+}
+
 fn serialize_duc_block<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     block: &types::DucBlock,
@@ -2473,6 +2534,17 @@ fn serialize_duc_block<'bldr>(
         .collect();
     let attribute_definitions_vec = builder.create_vector(&attribute_definitions_offsets);
 
+    let metadata_offset: Option<WIPOffset<fb::DucBlockMetadata<'bldr>>> = block
+        .metadata
+        .as_ref()
+        .map(|metadata| serialize_duc_block_metadata(builder, metadata));
+
+    let thumbnail_offset = block
+        .thumbnail
+        .as_ref()
+        .filter(|data| !data.is_empty())
+        .map(|data| builder.create_vector(data));
+
     fb::DucBlock::create(
         builder,
         &fb::DucBlockArgs {
@@ -2481,6 +2553,8 @@ fn serialize_duc_block<'bldr>(
             description: description_offset,
             version: block.version,
             attribute_definitions: Some(attribute_definitions_vec),
+            metadata: metadata_offset,
+            thumbnail: thumbnail_offset,
         },
     )
 }
@@ -3824,6 +3898,15 @@ fn serialize_exported_data_state<'bldr>(
         flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucBlockInstance<'bldr>>>,
     > = builder.create_vector(&block_instances_offsets);
 
+    let block_collections_offsets: Vec<_> = state
+        .block_collections
+        .iter()
+        .map(|bc| serialize_duc_block_collection(builder, bc))
+        .collect();
+    let block_collections_vec: WIPOffset<
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucBlockCollection<'bldr>>>,
+    > = builder.create_vector(&block_collections_offsets);
+
     let groups_offsets: Vec<_> = state
         .groups
         .iter()
@@ -3892,6 +3975,7 @@ fn serialize_exported_data_state<'bldr>(
             elements: Some(elements_vec),
             blocks: Some(blocks_vec),
             blockInstances: Some(block_instances_vec),
+            blockCollections: Some(block_collections_vec),
             groups: Some(groups_vec),
             regions: Some(regions_vec),
             layers: Some(layers_vec),

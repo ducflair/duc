@@ -1035,12 +1035,23 @@ pub struct DucBlockAttributeDefinitionEntry {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct DucBlockMetadata {
+    pub source: String,
+    pub usage_count: i32,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub localization: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DucBlock {
     pub id: String,
     pub label: String,
     pub description: Option<String>,
     pub version: i32,
     pub attribute_definitions: Vec<DucBlockAttributeDefinitionEntry>,
+    pub metadata: Option<DucBlockMetadata>,
+    pub thumbnail: Option<Vec<u8>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1051,6 +1062,21 @@ pub struct DucBlockInstance {
     pub element_overrides: Option<Vec<StringValueEntry>>,
     pub attribute_values: Option<Vec<StringValueEntry>>,
     pub duplication_array: Option<DucBlockDuplicationArray>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucBlockCollectionEntry {
+    pub id: String,
+    pub is_collection: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucBlockCollection {
+    pub id: String,
+    pub label: String,
+    pub children: Vec<DucBlockCollectionEntry>,
+    pub metadata: Option<DucBlockMetadata>,
+    pub thumbnail: Option<Vec<u8>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1565,6 +1591,7 @@ pub struct ExportedDataState {
     pub elements: Vec<ElementWrapper>,
     pub blocks: Vec<DucBlock>,
     pub block_instances: Vec<DucBlockInstance>,
+    pub block_collections: Vec<DucBlockCollection>,
     pub groups: Vec<DucGroup>,
     pub regions: Vec<DucRegion>,
     pub layers: Vec<DucLayer>,

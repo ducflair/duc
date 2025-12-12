@@ -4,7 +4,9 @@ import {
   DimensionToleranceStyle as DimensionToleranceStyleFb,
   DucArrowElement as DucArrowElementFb,
   DucBlock as DucBlockFb,
+  DucBlockCollection as DucBlockCollectionFb,
   DucBlockInstance as DucBlockInstanceFb,
+  DucBlockMetadata as DucBlockMetadataFb,
   DucCommonStyle as DucCommonStyleFb,
   DucDimensionElement as DucDimensionElementFb,
   DucDimensionStyle as DucDimensionStyleFb,
@@ -92,13 +94,16 @@ import {
   _UnitSystemBase
 } from "./technical";
 import {
+  BlockLocalizationMap,
   CustomHatchPattern,
   DatumReference,
   Dictionary,
   DucArrowElement,
   DucBlock,
   DucBlockAttributeDefinition,
+  DucBlockCollection,
   DucBlockInstance,
+  DucBlockMetadata,
   DucCommonStyle,
   DucDimensionElement,
   DucDimensionStyle,
@@ -717,6 +722,51 @@ function parseBlockInstance(instance: DucBlockInstanceFb): DucBlockInstance {
   };
 }
 
+// Helper function to parse block metadata from FlatBuffers
+function parseBlockMetadata(metadataFb: DucBlockMetadataFb | null): DucBlockMetadata | undefined {
+  if (!metadataFb) return undefined;
+
+  // localization is a JSON string containing the localization data
+  let localization: BlockLocalizationMap | undefined;
+  const localizationStr = metadataFb.localization();
+  if (localizationStr) {
+    try {
+      localization = JSON.parse(localizationStr);
+    } catch (e) {
+      // If parsing fails, leave localization undefined
+      console.warn('Failed to parse localization JSON:', e);
+    }
+  }
+
+  return {
+    source: metadataFb.source()!,
+    usageCount: metadataFb.usageCount(),
+    createdAt: Number(metadataFb.createdAt()),
+    updatedAt: Number(metadataFb.updatedAt()),
+    localization,
+  };
+}
+
+function parseBlockCollection(collection: DucBlockCollectionFb): DucBlockCollection {
+  const children = Array.from({ length: collection.childrenLength() }, (_, i) => {
+    const child = collection.children(i)!;
+    return {
+      id: child.id()!,
+      isCollection: child.isCollection(),
+    };
+  });
+
+  const metadata = parseBlockMetadata(collection.metadata());
+
+  return {
+    id: collection.id()!,
+    label: collection.label()!,
+    children,
+    metadata,
+    thumbnail: collection.thumbnailArray() || undefined,
+  };
+}
+
 function parseFrameElement(element: DucFrameElementFb): DucFrameElement {
   return {
     type: "frame",
@@ -1252,12 +1302,21 @@ export function parseBlockFromBinary(block: DucBlockFb): DucBlock {
       isConstant: def.isConstant(),
     };
   }
+
+  // Parse metadata if present
+  const metadata = parseBlockMetadata(block.metadata());
+
+  // Parse thumbnail if present
+  const thumbnail = block.thumbnailArray();
+
   return {
     id: block.id()!,
     label: block.label()!,
     description: block.description() || undefined,
     version: block.version(),
     attributeDefinitions,
+    metadata,
+    thumbnail: thumbnail || undefined,
   };
 }
 
@@ -1791,6 +1850,18 @@ export const parseDuc = async (
     }
   }
 
+  // Parse block collections
+  const blockCollections: DucBlockCollection[] = [];
+  for (let i = 0; i < data.blockCollectionsLength(); i++) {
+    const blockCollection = data.blockCollections(i);
+    if (blockCollection) {
+      const parsedBlockCollection = parseBlockCollection(blockCollection);
+      if (parsedBlockCollection) {
+        blockCollections.push(parsedBlockCollection);
+      }
+    }
+  }
+
   // Parse groups
   const groups: DucGroup[] = [];
   for (let i = 0; i < data.groupsLength(); i++) {
@@ -1857,6 +1928,7 @@ export const parseDuc = async (
     globalState: parsedGlobalState!,
     blocks,
     blockInstances,
+    blockCollections,
     groups,
     regions,
     layers,
@@ -1890,6 +1962,7 @@ export const parseDuc = async (
     groups: sanitized.groups,
     regions: sanitized.regions,
     layers: sanitized.layers,
+    blockCollections: sanitized.blockCollections,
     standards: sanitized.standards,
     versionGraph: sanitized.versionGraph,
     id: sanitized.id,
