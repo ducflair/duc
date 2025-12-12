@@ -1016,12 +1016,15 @@ table _DucElementBase {
   custom_data: string;
 
   /** 
-   * List of blocks the element belongs to. 
-   * Works hierarchically similar to groupIds
+   * List of blocks this element helps *define*. 
+   * If this is populated, `instanceId` should be null.
    */
   block_ids: [string];
 
-  /** The instance id of the element if it's part of an DucBlockInstance of a DucBlock */
+  /** 
+   * The ID of the `DucBlockInstance` this element belongs to.
+   * If not null, `block_ids` is empty (the relationship to the Block is via the Instance).
+   */
   instance_id: string; 
 }
 
@@ -1674,8 +1677,23 @@ table DucBlockAttributeDefinitionEntry {
   value: DucBlockAttributeDefinition;
 }
 
+/**
+ * Defines the "Blueprint" for a reusable component.
+ * 
+ * **Element Relationship Logic:**
+ * The connection between this Block Definition and `_DucElementBase` depends on the state:
+ * 
+ * 1. **Definition State (Source):** 
+ *    - Elements that define the geometry of this block have this `id` inside their `element.block_ids`.
+ *    - Their `element.instance_id` is `null`.
+ * 
+ * 2. **Instance State (Usage):** 
+ *    - When instantiated via `DucBlockInstance`, the rendered elements have `element.instance_id` set (not null).
+ *    - Crucially, these instance elements have **empty** `element.block_ids`.
+ *    - The relationship is resolved indirectly: `Element.instance_id` -> `DucBlockInstance.block_id` -> `DucBlock.id`.
+ */
 table DucBlock {
-  id: string (key);
+  id: string(key);
   label: string;
   description: string;
   version: int;
@@ -1684,7 +1702,31 @@ table DucBlock {
    * This defines the "slots" for data that each instance can fill.
    */
   attribute_definitions: [DucBlockAttributeDefinitionEntry];
+  metadata: DucBlockMetadata;
+  thumbnail: [ubyte];
 }
+
+table DucBlockMetadata {
+  source: string;
+  usage_count: int;
+  /** Epoch timestamp (ms) of block creation */
+  created_at: long; // Epoch timestamp (ms)
+  /** Epoch timestamp (ms) of last block update */
+  updated_at: long; // Epoch timestamp (ms)
+  /** JSON string to represent localization data
+      * Structure: Record<string, BlockLocalizationEntry>
+      * 
+      * where key string is BCP 47 standard language tag (e.g., "en-US", "fr-FR")
+      * where BlockLocalizationEntry is:
+      * 
+      * {
+      *   title: string;
+      *   description?: string;
+      * }
+   */
+  localization: string;
+}
+
 
 table DucBlockDuplicationArray {
   rows: int;
@@ -1696,21 +1738,14 @@ table DucBlockDuplicationArray {
 table DucBlockInstanceElement {
   base: _DucElementBase (deprecated);
   block_id: string (deprecated);
-  /**
-   * Keys are the element ids of the block instance
-   * Values are the element overrides
-   */
   element_overrides: [StringValueEntry] (deprecated);
-  /**
-   * A record of the actual values for the attributes of this specific instance,
-   * keyed by the attribute tag defined in the DucBlock.
-   */
   attribute_values: [StringValueEntry] (deprecated);
   duplication_array: DucBlockDuplicationArray (deprecated);
 }
 
 table DucBlockInstance {
   id: string;
+  /** The reference to the DucBlock definition this instance is based on */
   block_id: string;
   /**
    * A record of the actual values for the attributes of this specific instance,
@@ -1727,6 +1762,24 @@ table DucBlockInstance {
 
   /** The version that should match the block_id's version, incremented on each change */
   version: int;
+}
+
+
+table DucBlockCollection {
+  id: string;
+  label: string;
+
+  children: [DucBlockCollectionEntry];
+  metadata: DucBlockMetadata;
+  thumbnail: [ubyte];
+}
+
+table DucBlockCollectionEntry {
+  id: string;
+  /** 
+   * True if pointing to another collection, False if pointing to a block.
+   */
+  is_collection: bool;
 }
 
 table DucFrameElement {
@@ -2652,6 +2705,7 @@ table ExportedDataState {
   id: string;
 
   blockInstances: [DucBlockInstance];
+  blockCollections: [DucBlockCollection];
 }
 
 root_type ExportedDataState;

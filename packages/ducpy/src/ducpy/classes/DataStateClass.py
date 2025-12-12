@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from ducpy.classes.ElementsClass import ElementWrapper
     from ducpy.classes.StandardsClass import Standard
 
-from ducpy.classes.ElementsClass import (DucBlock, DucGroup, DucHead, DucLayer,
+from ducpy.classes.ElementsClass import (DucBlock, DucBlockCollection, DucBlockInstance, DucGroup, DucHead, DucLayer,
                                          DucRegion, ElementBackground,
                                          ElementStroke, ElementWrapper,
                                          GeometricPoint)
@@ -129,6 +129,8 @@ class ExportedDataState:
     thumbnail: bytes
     elements: List[ElementWrapper]
     blocks: List["DucBlock"]
+    block_instances: List["DucBlockInstance"]
+    block_collections: List["DucBlockCollection"]
     groups: List["DucGroup"]
     regions: List["DucRegion"]
     layers: List["DucLayer"]

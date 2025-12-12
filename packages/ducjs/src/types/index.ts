@@ -9,6 +9,7 @@ import { Standard } from "../technical/standards";
 import {
   DucBindableElement,
   DucBlock,
+  DucBlockCollection,
   DucBlockInstance,
   DucElement,
   DucElementType,
@@ -65,6 +66,7 @@ export interface ExportedDataState {
 
   blocks: readonly DucBlock[];
   blockInstances: readonly DucBlockInstance[];
+  blockCollections: readonly DucBlockCollection[];
   groups: readonly DucGroup[];
   regions: readonly DucRegion[];
   layers: readonly DucLayer[];

@@ -1347,14 +1347,31 @@ def create_block(
     attribute_definitions: Optional[List[DucBlockAttributeDefinitionEntry]] = None,
     description: Optional[str] = None
 ) -> DucBlock:
-    """Create a block with elements and attribute definitions."""
+    """Create a block with elements and attribute definitions.
+
+    Note: The elements parameter is for reference only and will not be stored in the block itself.
+    In the DUC format, blocks and elements are stored separately in the ExportedDataState.
+    """
+    import time
+    from ducpy.classes.ElementsClass import DucBlockMetadata
+
+    # Create default metadata
+    metadata = DucBlockMetadata(
+        source="ducpy",
+        usage_count=0,
+        created_at=int(time.time() * 1000),
+        updated_at=int(time.time() * 1000),
+        localization=None
+    )
+
     return DucBlock(
         id=id,
         label=label,
         version=1,
-        elements=elements,
+        description=description,
         attribute_definitions=attribute_definitions or [],
-        description=description
+        metadata=metadata,
+        thumbnail=None
     )
 
 def create_string_value_entry(key: str, value: str) -> StringValueEntry:

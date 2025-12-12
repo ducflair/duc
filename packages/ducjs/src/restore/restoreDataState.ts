@@ -1,3 +1,5 @@
+import { nanoid } from "nanoid";
+import tinycolor from "tinycolor2";
 import {
   BEZIER_MIRRORING,
   BLENDING,
@@ -14,12 +16,6 @@ import {
   TEXT_ALIGN,
   VERTICAL_ALIGN,
 } from "../flatbuffers/duc";
-import { nanoid } from "nanoid";
-import { restoreElements } from "./restoreElements";
-import {
-  isStandardIdPresent,
-  restoreStandards,
-} from "./restoreStandards";
 import { getPrecisionScope } from "../technical/measurements";
 import {
   getPrecisionValueFromRaw,
@@ -47,8 +43,10 @@ import { DucLocalState } from "../types";
 import type {
   _DucStackBase,
   BezierMirroring,
+  BlockLocalizationMap,
   DucBlock,
   DucBlockAttributeDefinition,
+  DucBlockCollection,
   DucBlockInstance,
   DucElement,
   DucGroup,
@@ -94,7 +92,11 @@ import {
   VERSIONS,
 } from "../utils/constants";
 import { getDefaultStackProperties } from "../utils/elements";
-import tinycolor from "tinycolor2";
+import { restoreElements } from "./restoreElements";
+import {
+  isStandardIdPresent,
+  restoreStandards,
+} from "./restoreStandards";
 
 export type RestoredLocalState = Omit<
   DucLocalState,
@@ -114,6 +116,7 @@ export type RestoredDataState = {
 
   blocks: DucBlock[];
   blockInstances: DucBlockInstance[];
+  blockCollections: DucBlockCollection[];
 
   groups: DucGroup[];
   regions: DucRegion[];
@@ -180,6 +183,8 @@ export const restore = (
     restoredElementsConfig
   );
 
+  const restoredBlockCollections = restoreBlockCollections(data?.blockCollections);
+
   const restoredRegions = restoreRegions(data?.regions);
   const restoredGroups = restoreGroups(data?.groups);
   const restoredLayers = restoreLayers(data?.layers, restoredLocalState.scope);
@@ -204,6 +209,7 @@ export const restore = (
     elements: restoredElements,
     blocks: restoredBlocks,
     blockInstances: restoredBlockInstances,
+    blockCollections: restoredBlockCollections,
     groups: restoredGroups,
     regions: restoredRegions,
     layers: restoredLayers,
@@ -399,6 +405,10 @@ export const restoreBlocks = (
     })
     .map((b) => {
       const obj = b as Record<string, unknown>;
+
+      // Restore metadata if present
+      const metadata = restoreBlockMetadata(obj.metadata);
+
       return {
         id: obj.id as string,
         label: typeof obj.label === "string" ? obj.label : "",
@@ -409,9 +419,53 @@ export const restoreBlocks = (
           obj.attributeDefinitions && typeof obj.attributeDefinitions === "object"
             ? (obj.attributeDefinitions as Readonly<Record<string, DucBlockAttributeDefinition>>)
             : {},
+        metadata,
+        thumbnail: isValidUint8Array(obj.thumbnail),
       };
     });
   return partiallyRestoredBlocks;
+};
+
+/**
+ * Restores the blockCollections array.
+ */
+export const restoreBlockCollections = (
+  collections: unknown
+): RestoredDataState["blockCollections"] => {
+  if (!Array.isArray(collections)) {
+    return [];
+  }
+  return collections
+    .filter((c) => {
+      if (!c || typeof c !== "object") return false;
+      const obj = c as Record<string, unknown>;
+      return typeof obj.id === "string";
+    })
+    .map((c) => {
+      const col = c as Record<string, unknown>;
+
+      // Restore metadata using the shared helper
+      const metadata = restoreBlockMetadata(col.metadata);
+
+      return {
+        id: col.id as string,
+        label: typeof col.label === "string" ? col.label : "",
+        description: typeof col.description === "string" ? col.description : undefined,
+        version: typeof col.version === "number" ? col.version : 1,
+        parentId: typeof col.parentId === "string" ? col.parentId : null,
+        children: Array.isArray(col.children)
+          ? (col.children as any[]).filter(
+            (item) =>
+              item &&
+              typeof item === "object" &&
+              typeof item.id === "string" &&
+              typeof item.isCollection === "boolean"
+          )
+          : [],
+        metadata,
+        thumbnail: isValidUint8Array(col.thumbnail),
+      } as DucBlockCollection;
+    });
 };
 
 /**
@@ -433,7 +487,7 @@ export const restoreBlockInstances = (
     .map((bi): DucBlockInstance => {
       const obj = bi as Record<string, unknown>;
       const dupArray = obj.duplicationArray as any;
-      
+
       // Handle elementOverrides - it's already a Record<string, string> from parse.ts
       let elementOverrides: Record<string, string> | undefined;
       if (obj.elementOverrides && typeof obj.elementOverrides === "object") {
@@ -476,14 +530,46 @@ export const restoreBlockInstances = (
         attributeValues,
         duplicationArray: dupArray && typeof dupArray === "object"
           ? {
-              rows: typeof dupArray.rows === "number" ? dupArray.rows : 1,
-              cols: typeof dupArray.cols === "number" ? dupArray.cols : 1,
-              rowSpacing: typeof dupArray.rowSpacing === "number" ? dupArray.rowSpacing : 0,
-              colSpacing: typeof dupArray.colSpacing === "number" ? dupArray.colSpacing : 0,
-            }
+            rows: typeof dupArray.rows === "number" ? dupArray.rows : 1,
+            cols: typeof dupArray.cols === "number" ? dupArray.cols : 1,
+            rowSpacing: typeof dupArray.rowSpacing === "number" ? dupArray.rowSpacing : 0,
+            colSpacing: typeof dupArray.colSpacing === "number" ? dupArray.colSpacing : 0,
+          }
           : null,
       };
     });
+};
+
+/**
+ * Helper function to restore block metadata from unknown data.
+ */
+const restoreBlockMetadata = (metadata: unknown): DucBlock["metadata"] | undefined => {
+  if (!metadata || typeof metadata !== "object") return undefined;
+
+  const metadataObj = metadata as Record<string, unknown>;
+  let localization: BlockLocalizationMap | undefined;
+  const localizationValue = metadataObj.localization;
+
+  // Handle localization - it can be an object directly or a JSON string
+  if (localizationValue && typeof localizationValue === "object") {
+    // Already an object, use it directly
+    localization = localizationValue as BlockLocalizationMap;
+  } else if (typeof localizationValue === "string") {
+    // It's a string, try to parse it as JSON
+    try {
+      localization = JSON.parse(localizationValue);
+    } catch {
+      localization = undefined;
+    }
+  }
+
+  return {
+    source: typeof metadataObj.source === "string" ? metadataObj.source : "",
+    usageCount: typeof metadataObj.usageCount === "number" ? metadataObj.usageCount : 0,
+    createdAt: typeof metadataObj.createdAt === "number" ? metadataObj.createdAt : Date.now(),
+    updatedAt: typeof metadataObj.updatedAt === "number" ? metadataObj.updatedAt : Date.now(),
+    localization,
+  };
 };
 
 /**
@@ -1178,14 +1264,14 @@ export const isValidNumber = (
   if (typeof value === "number" && !isNaN(value) && isFinite(value)) {
     return value;
   }
-  
+
   if (parseStrings && typeof value === "string") {
     const parsed = Number(value);
     if (!isNaN(parsed) && isFinite(parsed)) {
       return parsed;
     }
   }
-  
+
   return defaultValue;
 };
 

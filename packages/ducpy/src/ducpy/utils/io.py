@@ -7,7 +7,7 @@ from typing import List
 # Import the parsing functions
 from ducpy.parse import parse_duc
 from ducpy.serialize import serialize_duc
-from ducpy.classes.ElementsClass import (ElementWrapper, DucBlock, DucGroup, DucRegion, DucLayer)
+from ducpy.classes.ElementsClass import (ElementWrapper, DucBlock, DucGroup, DucRegion, DucLayer, DucBlockInstance)
 from ducpy.classes.DataStateClass import DucExternalFileEntry, DucGlobalState, DucLocalState, ExportedDataState, VersionGraph, DictionaryEntry
 from ducpy.classes.StandardsClass import Standard
 
@@ -21,6 +21,7 @@ def write_duc_file(
   duc_global_state: DucGlobalState = None,
   version_graph: VersionGraph = None,
   blocks: List[DucBlock] = None,
+  block_instances: List[DucBlockInstance] = None,
   groups: List[DucGroup] = None,
   regions: List[DucRegion] = None,
   layers: List[DucLayer] = None,
@@ -39,6 +40,7 @@ def write_duc_file(
       duc_global_state=duc_global_state,
       version_graph=version_graph,
       blocks=blocks,
+      block_instances=block_instances,
       groups=groups,
       regions=regions,
       layers=layers,
