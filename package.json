@@ -68,7 +68,7 @@
     "ducpdf:build": "turbo build --filter=ducpdf",
     "ducpdf:test": "turbo run test --filter=ducpdf",
     "semantic-release": "turbo run semantic-release",
-    "sst:build": "bun sst:wrap 'bun run sst:clean && sst unlock && sst refresh && sst deploy'",
+    "sst:deploy": "bun sst:wrap 'bun run sst:clean && sst unlock && sst refresh && sst deploy'",
     "sst:clean": "bun del-cli \".sst\" \"**/sst-env.d.ts\" \"**/sst.pyi\"",
     "sst:dev": "bun run sst dev",
     "knip:deps": "bun sst:wrap 'bun run sst unlock && sst shell -- bunx knip --dependencies'",
