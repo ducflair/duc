@@ -26,7 +26,6 @@ import type {
   DucNonSelectionElement,
   DucEllipseElement,
   DucPolygonElement,
-  DucBlockInstanceElement,
   NonDeleted,
   DucIframeLikeElement
 } from "./";
@@ -215,12 +214,6 @@ export const isRectanguloidElement = (
   );
 };
 
-export const isBlockInstanceElement = (
-  element?: DucElement | null,
-): element is DucBlockInstanceElement => {
-  return element != null && element.type === "blockinstance";
-};
-
 // TODO: Remove this when proper distance calculation is introduced
 // @see binding.ts:distanceToBindableElement()
 export const isRectangularElement = (
@@ -273,7 +266,6 @@ export const isDucElement = (
     case "dimension":
     case "leader":
     case "doc":
-    case "blockinstance":
     case "selection":
     case "parametric":
     case "featurecontrolframe":
