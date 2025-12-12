@@ -397,7 +397,7 @@ export const getElementPointsCoords = (
   element: DucLinearElement,
   points: readonly DucPoint[],
 ): Bounds => {
-  if (points.length === 0) {
+  if (!points || !Array.isArray(points) || points.length === 0) {
     return [
       element.x.scoped,
       element.y.scoped,

@@ -1,14 +1,14 @@
 export * from "./typeChecks";
 
+import { DucView, PrecisionValue, Scope } from "..";
 import { BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION, COLUMN_TYPE, DATUM_BRACKET_STYLE, DATUM_TARGET_TYPE, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, PARAMETRIC_SOURCE_TYPE, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FIELD_SOURCE_PROPERTY, TEXT_FIELD_SOURCE_TYPE, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_TYPE, TOLERANCE_ZONE_TYPE, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT } from "../../flatbuffers/duc";
 import { Standard, StandardUnits } from "../../technical/standards";
-import { DucView, PrecisionValue, Scope } from "..";
-import { Axis, GeometricPoint, Percentage, Radian, ScaleFactor } from "../geometryTypes";
-import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "../utility-types";
 import {
   FONT_FAMILY,
   FREEDRAW_EASINGS,
 } from "../../utils/constants";
+import { Axis, GeometricPoint, Percentage, Radian, ScaleFactor } from "../geometryTypes";
+import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "../utility-types";
 
 
 
@@ -34,6 +34,7 @@ export type _DucElementStylesBase = {
 
   opacity: Percentage;
 }
+
 /**
  * Base element properties that all elements share
  */
@@ -71,16 +72,29 @@ export type _DucElementBase = Readonly<_DucElementStylesBase & {
   /** Whether the element is deleted */
   isDeleted: boolean;
   /** 
+   * List of regions the element belongs. 
+   * Used to define boolean operations between elements.
+   * Ordered from deepest to shallowest. 
+  */
+  regionIds: readonly RegionId[];
+  /** 
    * List of groups the element belongs to.
    * Ordered from deepest to shallowest. 
    */
   groupIds: readonly GroupId[];
+
   /** 
-   * List of regions the element belongs. 
-   * Used to define boolean operations between elements.
-   * Ordered from deepest to shallowest. 
+   * List of blocks this element helps *define*. 
+   * If this is populated, `instanceId` should be null.
    */
-  regionIds: readonly RegionId[];
+  blockIds: readonly BlockId[];
+
+  /** 
+   * The ID of the `DucBlockInstance` this element belongs to.
+   * If not null, `blockIds` is empty (the relationship to the Block is via the Instance).
+   */
+  instanceId: InstanceId | null;
+
   /** The layer the element belongs to */
   layerId: string | null;
   /** The frame the element belongs to */
@@ -115,6 +129,8 @@ export type Blending = ValueOf<typeof BLENDING>;
 //// //// === GENERIC TYPES ===
 
 export type GroupId = string;
+export type BlockId = string;
+export type InstanceId = string;
 export type LayerId = string;
 export type RegionId = string;
 export type PointerType = "mouse" | "pen" | "touch";
@@ -155,7 +171,6 @@ export type DucElement =
   | DucTableElement
   | DucDocElement
   | DucEllipseElement
-  | DucBlockInstanceElement
   | DucPolygonElement
   | DucParametricElement
   | DucFeatureControlFrameElement
@@ -178,7 +193,7 @@ export type NonDeletedDucElement = NonDeleted<DucElement> & {
   idx?: number;
 };
 
-export type DucBinderElement = 
+export type DucBinderElement =
   | DucLinearElement
   | DucDimensionElement
   | DucFeatureControlFrameElement
@@ -224,8 +239,7 @@ export type RectangularElement =
   | DucFeatureControlFrameElement
   | DucViewportElement
   | DucPlotElement
-  | DucPdfElement
-  | DucBlockInstanceElement;
+  | DucPdfElement;
 
 
 export type DucStackLikeElement =
@@ -233,7 +247,7 @@ export type DucStackLikeElement =
   | DucViewportElement
   | DucFrameElement;
 
-export type DucLinearLikeElement = 
+export type DucLinearLikeElement =
   | DucLinearElement
   | DucViewportElement
   | DucArrowElement;
@@ -254,6 +268,8 @@ export type ElementConstructorOpts = MarkOptional<
   | "height"
   | "angle"
   | "groupIds"
+  | "blockIds"
+  | "instanceId"
   | "frameId"
   | "index"
   | "boundElements"
@@ -433,7 +449,7 @@ export type StrokeStyle = {
   /**
    * Override the dash line into a custom shape
    */
-  dashLineOverride?: DucBlockInstanceElement["id"];
+  dashLineOverride?: InstanceId;
   /**
    * The cap of the dash
    * @default butt
@@ -1015,7 +1031,6 @@ export type DucFreeDrawElement = _DucElementBase & {
 
 //// === BLOCK ELEMENTS ===
 
-
 export type DucBlockDuplicationArray = {
   rows: number;
   cols: number;
@@ -1037,29 +1052,79 @@ export type DucBlockAttributeDefinition = {
   isConstant: boolean;
 };
 
+/** Indicates whether the block belongs to the project, organization or community */
+export type BlockSourceType = string | "organization" | "community";
+
+export interface BlockLocalizationEntry {
+  title: string;
+  description?: string;
+}
+
+/**
+ * A mapping of locale codes to their corresponding localized block metadata.
+ * The keys represent locales in a BCP-47 standard language tag format (e.g., "en-US", "fr-FR").
+ */
+export type BlockLocalizationMap = Record<string, BlockLocalizationEntry>;
+
+export interface DucBlockMetadata {
+  /** Indicates whether the block belongs to the project, organization or community */
+  source: BlockSourceType;
+  /** Total number of times the block was instantiated */
+  usageCount: number;
+  /** Creation timestamp */
+  createdAt: number;
+  /** Last update timestamp */
+  updatedAt: number;
+  /** Localization metadata */
+  localization?: BlockLocalizationMap;
+}
+
+/**
+ * Defines the "Blueprint" for a reusable component.
+ * 
+ * **Element Relationship Logic:**
+ * The connection between this Block Definition and `_DucElementBase` depends on the state:
+ * 
+ * 1. **Definition State (Source):** 
+ *    - Elements that define the geometry of this block have this `id` inside their `element.blockIds`.
+ *    - Their `element.instanceId` is `null`.
+ * 
+ * 2. **Instance State (Usage):** 
+ *    - When instantiated via `DucBlockInstance`, the rendered elements have `element.instanceId` set (not null).
+ *    - Crucially, these instance elements have **empty** `element.blockIds`.
+ *    - The relationship is resolved indirectly: `Element.instanceId` -> `DucBlockInstance.blockId` -> `DucBlock.id`.
+ */
 export type DucBlock = {
-  id: string;
+  id: BlockId;
   label: string;
   description?: string;
   version: number;
-
-  /** An array of all elements that constitute the block's geometry and annotations. */
-  elements: readonly DucElement[];
 
   /**
    * A record of attribute definitions for this block, keyed by their tag.
    * This defines the "slots" for data that each instance can fill.
    */
   attributeDefinitions: Readonly<Record<string, DucBlockAttributeDefinition>>;
+
+  /** Block metadata including source, usage count, timestamps, and localization */
+  metadata?: DucBlockMetadata;
+
+  /** Cached thumbnail image for the block (webp format) */
+  thumbnail?: Uint8Array;
 };
 
-export type DucBlockInstanceElement = _DucElementBase & { //Instance of a block definition
-  type: "blockinstance";
+export type DucBlockInstance = { //Instance of a block definition
+  id: InstanceId;
+  /** The reference to the DucBlock definition this instance is based on */
   blockId: string;
+
+  /** The version that should match the blockId's version, incremented on each change */
+  version: number;
 
   /**
    * Keys are the element ids of the block instance
    * Values are the element overrides
+   * <string, string> <=> <elementId, path to field on the element (via JSON RFC6902 style path)>
    */
   elementOverrides?: Record<string, string>;
 
@@ -1070,6 +1135,23 @@ export type DucBlockInstanceElement = _DucElementBase & { //Instance of a block 
   attributeValues?: Readonly<Record<string, string>>;
 
   duplicationArray: DucBlockDuplicationArray | null;
+};
+
+
+export type DucBlockCollection = {
+  id: string;
+  label: string;
+
+  /** 
+   * True if pointing to another collection, False if pointing to a block.
+   */
+  children: Array<{
+    isCollection: boolean;
+    id: string;
+  }>;
+
+  metadata?: DucBlockMetadata;
+  thumbnail?: Uint8Array;
 };
 
 
@@ -1113,7 +1195,7 @@ export type DucGroup = _DucStackBase & {
 
 export type DucRegion = _DucStackBase & {
   id: RegionId;
-  
+
   /** The boolean operation to apply to all child elements. */
   booleanOperation: BooleanOperation;
 };
@@ -1297,14 +1379,14 @@ export type LeaderContent =
   | {
     type: "block";
     /** The ID of the DucBlock definition to use as content. */
-    blockId: DucBlockInstanceElement["blockId"];
+    blockId: InstanceId;
     /**
      * The attribute values and element overrides for this specific block instance.
-     * This is a subset of the properties from DucBlockInstanceElement.
+     * This is a subset of the properties from DucBlockInstance.
      */
     instanceData: {
-      attributeValues?: DucBlockInstanceElement["attributeValues"];
-      elementOverrides?: DucBlockInstanceElement["elementOverrides"];
+      attributeValues?: DucBlockInstance["attributeValues"];
+      elementOverrides?: DucBlockInstance["elementOverrides"];
     };
   };
 /**
