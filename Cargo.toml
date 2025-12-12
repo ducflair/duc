@@ -5,9 +5,9 @@ members = [
     "packages/ducpdf/src/duc2pdf"
 ]
 
+[workspace.dependencies]
+duc = { version = "1" }
+
 [profile.release]
 lto = true
 opt-level = "s"
-
-[patch.crates-io]
-duc = { path = "packages/ducrs" }

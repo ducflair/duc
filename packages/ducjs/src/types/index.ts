@@ -9,6 +9,8 @@ import { Standard } from "../technical/standards";
 import {
   DucBindableElement,
   DucBlock,
+  DucBlockCollection,
+  DucBlockInstance,
   DucElement,
   DucElementType,
   DucGroup,
@@ -38,6 +40,7 @@ import type {
   GRID_TYPE,
   IMAGE_MIME_TYPES,
   MIME_TYPES,
+  SUPPORTED_DATA_TYPES,
   SNAP_MARKER_SHAPE,
   SNAP_MODE,
   SNAP_OVERRIDE_BEHAVIOR,
@@ -62,6 +65,8 @@ export interface ExportedDataState {
   globalState: DucGlobalState;
 
   blocks: readonly DucBlock[];
+  blockInstances: readonly DucBlockInstance[];
+  blockCollections: readonly DucBlockCollection[];
   groups: readonly DucGroup[];
   regions: readonly DucRegion[];
   layers: readonly DucLayer[];
@@ -412,8 +417,8 @@ export type LibraryItems_anyVersion = LibraryItems | LibraryItems_v1;
 
 export type LibraryItemsSource =
   | ((
-      currentLibraryItems: LibraryItems
-    ) => MaybePromise<LibraryItems_anyVersion | Blob>)
+    currentLibraryItems: LibraryItems
+  ) => MaybePromise<LibraryItems_anyVersion | Blob>)
   | MaybePromise<LibraryItems_anyVersion | Blob>;
 // -----------------------------------------------------------------------------
 

@@ -314,25 +314,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "duc"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1382b2701305b45e39f6e48e6523543c50af931b3976b566e423cb7475540d6b"
-dependencies = [
- "base64 0.21.7",
- "flatbuffers",
- "lazy_static",
- "log",
- "percent-encoding",
-]
-
-[[package]]
 name = "duc2pdf"
 version = "0.0.0-development"
 dependencies = [
  "bigcolor",
  "chrono",
- "duc 1.1.0",
+ "duc",
  "hipdf",
  "serde",
  "serde_json",

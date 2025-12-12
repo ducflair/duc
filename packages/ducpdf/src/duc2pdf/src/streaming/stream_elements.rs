@@ -8,7 +8,7 @@
 // DucEmbeddableElement, DucXRayElement, DucArrowElement: don't stream these, will just ignore them
 // DucPdfElement: will use the hipdf::embed_pdf with combination of the resources we loaded earlier
 // DucImageElement: stream an image using the resources we loaded earlier
-// DucBlockInstanceElement: stream the corresponding block as an instance we loaded earlier using hipdf::blocks
+// DucBlockInstance: stream the corresponding block as an instance we loaded earlier using hipdf::blocks
 // DucFrameElement: stream as a simple rectangle but be careful since we need might need to clip, since this is a StackLike
 // DucPlotElement: IF CROP: stream as a rectangle element but be careful since we need might need to clip, since this is a StackLike ELSE IF PLOTS: each plot element is an actual pdf document page so it is a little different, we grab the size of the plot and then create the page with the respective StackLike content and handling
 
@@ -32,7 +32,7 @@ use crate::{ConversionError, ConversionResult};
 use bigcolor::BigColor;
 use duc::generated::duc::{BEZIER_MIRRORING, ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN};
 use duc::types::{
-    DucBlockInstanceElement, DucElementEnum, DucEllipseElement, DucFrameElement,
+    DucElementEnum, DucEllipseElement, DucFrameElement,
     DucFreeDrawElement, DucImageElement, DucLine, DucLineReference, DucLinearElement,
     DucLinearElementBase, DucMermaidElement, DucPath, DucPdfElement, DucPlotElement, DucPoint,
     DucPolygonElement, DucRectangleElement, DucTableElement, DucTextElement, ElementBackground,
@@ -449,9 +449,6 @@ impl ElementStreamer {
                 image_manager,
                 resource_streamer,
             )?,
-            DucElementEnum::DucBlockInstanceElement(block_instance) => {
-                self.stream_block_instance(block_instance, block_manager)?
-            }
             DucElementEnum::DucFrameElement(frame) => self.stream_frame(frame)?,
             DucElementEnum::DucPlotElement(plot) => self.stream_plot(plot)?,
 
@@ -506,7 +503,6 @@ impl ElementStreamer {
             DucElementEnum::DucLinearElement(elem) => &elem.linear_base.base,
             DucElementEnum::DucArrowElement(elem) => &elem.linear_base.base,
             DucElementEnum::DucFreeDrawElement(elem) => &elem.base,
-            DucElementEnum::DucBlockInstanceElement(elem) => &elem.base,
             DucElementEnum::DucFrameElement(elem) => &elem.stack_element_base.base,
             DucElementEnum::DucPlotElement(elem) => &elem.stack_element_base.base,
             DucElementEnum::DucViewportElement(elem) => &elem.linear_base.base,
@@ -1338,7 +1334,6 @@ impl ElementStreamer {
             },
             DucElementEnum::DucFrameElement(_)
             | DucElementEnum::DucPlotElement(_)
-            | DucElementEnum::DucBlockInstanceElement(_)
             | DucElementEnum::DucLeaderElement(_)
             | DucElementEnum::DucDimensionElement(_)
             | DucElementEnum::DucFeatureControlFrameElement(_)
@@ -1432,36 +1427,6 @@ impl ElementStreamer {
         );
 
         Ok(operations)
-    }
-
-    /// Stream block instance element
-    fn stream_block_instance(
-        &self,
-        block_instance: &DucBlockInstanceElement,
-        _block_manager: &mut BlockManager,
-    ) -> ConversionResult<Vec<Operation>> {
-        let mut ops = Vec::new();
-
-        // Use hipdf::blocks to render the block instance
-        let _block_id = &block_instance.block_id;
-
-        // For now, create a placeholder for the block instance
-        ops.push(Operation::new("% Block Instance", vec![]));
-        ops.push(Operation::new(
-            "re",
-            vec![
-                Object::Real(0.0), // x (relative to current transformation)
-                Object::Real(-(block_instance.base.height as f32)), // y (flip to keep origin at top-left)
-                Object::Real(block_instance.base.width as f32),
-                Object::Real(block_instance.base.height as f32),
-            ],
-        ));
-        ops.push(Operation::new("S", vec![]));
-
-        // TODO: Use block_manager to render actual block content
-        // block_manager.render_block(block_id, &block_instance.attributes)?;
-
-        Ok(ops)
     }
 
     /// Stream table element

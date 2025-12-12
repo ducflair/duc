@@ -14,14 +14,14 @@ if TYPE_CHECKING:
 from ..classes.ElementsClass import (
     DucFreeDrawEnds, DucImageFilter, DucRectangleElement, DucEllipseElement, DucPolygonElement,
     DucElementBase, DucElementStylesBase, ElementWrapper, BoundElement,
-    DucLinearElement, DucLinearElementBase, DucPoint, DucLine, 
+    DucLinearElement, DucLinearElementBase, DucPoint, DucLine,
     DucLineReference, GeometricPoint, DucPointBinding, DucPath, ImageCrop,
     PointBindingPoint, DucHead, ElementStroke, ElementBackground, ElementContentBase, StrokeStyle,
     DucArrowElement, DucTextElement, DucFrameElement, DucPlotElement,
     DucViewportElement, DucStackElementBase, DucStackBase, DucStackLikeStyles,
     PlotLayout, DucView, DucPlotStyle, DucViewportStyle, Margins,
     DucFreeDrawElement, DucImageElement, DucPdfElement, DucParametricElement, ParametricSource, DucBlockAttributeDefinition, DucBlockAttributeDefinitionEntry,
-    DucBlock, DucBlockDuplicationArray, StringValueEntry, DucBlockInstanceElement,
+    DucBlock, DucBlockDuplicationArray, StringValueEntry, DucBlockInstance,
     DucTableColumn, DucTableRow, DucTableCell, DucTableCellSpan, DucTableAutoSize,
     DucTableElement, DucTableStyle, DucTableCellStyle, DucTextStyle, DucLayer, DucLayerOverrides,
     DucRegion, DucDocElement, DucDocStyle, ParagraphFormatting, StackFormat, StackFormatProperties,
@@ -35,7 +35,7 @@ from ..classes.ElementsClass import (
     DucLeaderStyle, BLOCK_ATTACHMENT, DucTableColumnEntry, DucTableRowEntry, DucTableCellEntry
 )
 from .style_builders import create_simple_styles, create_text_style, create_paragraph_formatting, create_stack_format_properties, create_stack_format, create_doc_style, create_text_column, create_column_layout
-from ducpy.utils import generate_random_id, DEFAULT_SCOPE, DEFAULT_STROKE_COLOR, DEFAULT_FILL_COLOR
+from ducpy.utils import generate_random_id, DEFAULT_SCOPE, DEFAULT_STROKE_COLOR, DEFAULT_FILL_COLOR, DEFAULT_STROKE_WIDTH
 from ducpy.utils.rand_utils import random_versioning
 from ducpy.Duc.BOOLEAN_OPERATION import BOOLEAN_OPERATION
 from ducpy.Duc.TABLE_CELL_ALIGNMENT import TABLE_CELL_ALIGNMENT
@@ -58,6 +58,8 @@ from ducpy.Duc.VIEWPORT_SHADE_PLOT import VIEWPORT_SHADE_PLOT
 from ducpy.Duc.IMAGE_STATUS import IMAGE_STATUS
 from ducpy.Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
 from ducpy.Duc.STROKE_PLACEMENT import STROKE_PLACEMENT
+from ducpy.Duc.STROKE_CAP import STROKE_CAP
+from ducpy.Duc.STROKE_JOIN import STROKE_JOIN
 from ducpy.Duc.MARK_ELLIPSE_CENTER import MARK_ELLIPSE_CENTER
 from ducpy.Duc.DIMENSION_FIT_RULE import DIMENSION_FIT_RULE
 from ducpy.Duc.DIMENSION_TEXT_PLACEMENT import DIMENSION_TEXT_PLACEMENT
@@ -82,6 +84,55 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
     base_params.setdefault('version', versioning['version'])
     base_params.setdefault('version_nonce', versioning['version_nonce'])
     base_params.setdefault('updated', versioning['updated'])
+
+    # Set required list fields with defaults
+    base_params.setdefault('group_ids', [])
+    base_params.setdefault('block_ids', [])
+    base_params.setdefault('block_ids', [])
+    base_params.setdefault('region_ids', [])
+    base_params.setdefault('instance_id', None)
+
+    # Set required optional fields with defaults
+    base_params.setdefault('styles', DucElementStylesBase(
+        roundness=0.0,
+        stroke=[ElementStroke(
+            content=ElementContentBase(
+                preference=None,
+                src="",
+                visible=True,
+                opacity=1.0,
+                tiling=None,
+                hatch=None,
+                image_filter=DucImageFilter(brightness=1.0, contrast=1.0)
+            ),
+            width=DEFAULT_STROKE_WIDTH,
+            style=StrokeStyle(
+                preference=STROKE_PREFERENCE.SOLID,
+                dash=None,
+                dash_line_override=None,
+                cap=None,
+                join=None,
+                dash_cap=None,
+                miter_limit=None
+            ),
+            placement=STROKE_PLACEMENT.CENTER,
+            stroke_sides=None
+        )],
+        background=[ElementBackground(
+            content=ElementContentBase(
+                preference=None,
+                src="",
+                visible=True,
+                opacity=1.0,
+                tiling=None,
+                hatch=None,
+                image_filter=DucImageFilter(brightness=1.0, contrast=1.0)
+            )
+        )],
+        opacity=1.0,
+        blending=None
+    ))
+
     base_element = DucElementBase(**base_params)
     
     # Handle special cases for different element types
@@ -495,6 +546,7 @@ class BaseElementParams:
     is_annotative: bool = False
     is_deleted: bool = False
     index: Optional[int] = None
+    instance_id: Optional[str] = None
 
 class ElementBuilder:
     def __init__(
@@ -550,6 +602,10 @@ class ElementBuilder:
 
     def with_visible(self, is_visible: bool):
         self.base.is_visible = is_visible
+        return self
+
+    def with_instance_id(self, instance_id: str):
+        self.base.instance_id = instance_id
         return self
 
     def with_z_index(self, z_index: float):
@@ -706,8 +762,6 @@ class ElementBuilder:
     def build_feature_control_frame_element(self):
         return FeatureControlFrameElementBuilder(self.base, self.extra)
 
-    def build_block_instance_element(self):
-        return BlockInstanceElementBuilder(self.base, self.extra)
 
     def build_mermaid_element(self):
         return MermaidElementBuilder(self.base, self.extra)
@@ -2013,38 +2067,7 @@ class FeatureControlFrameElementBuilder(ElementSpecificBuilder):
         )
 
 
-# Block instance element builder
-class BlockInstanceElementBuilder(ElementSpecificBuilder):
-    def with_block_id(self, block_id: str):
-        self.extra["block_id"] = block_id
-        return self
 
-    def with_element_overrides(self, element_overrides: Optional[List[StringValueEntry]]):
-        self.extra["element_overrides"] = element_overrides
-        return self
-
-    def with_attribute_values(self, attribute_values: Optional[List[StringValueEntry]]):
-        self.extra["attribute_values"] = attribute_values
-        return self
-
-    def with_duplication_array(self, duplication_array: Optional[DucBlockDuplicationArray]):
-        self.extra["duplication_array"] = duplication_array
-        return self
-
-    def build(self) -> ElementWrapper:
-        base_params = self.base.__dict__.copy()
-        element_params = {
-            "block_id": self.extra.get('block_id', ''),
-            "element_overrides": self.extra.get('element_overrides'),
-            "attribute_values": self.extra.get('attribute_values'),
-            "duplication_array": self.extra.get('duplication_array')
-        }
-        return _create_element_wrapper(
-            DucBlockInstanceElement,
-            base_params,
-            element_params,
-            self.extra.get('explicit_properties_override')
-        )
 
 
 # Mermaid element builder

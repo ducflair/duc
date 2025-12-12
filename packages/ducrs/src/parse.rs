@@ -306,7 +306,9 @@ fn parse_duc_element_base(base: fb::_DucElementBase) -> ParseResult<types::DucEl
         is_annotative: base.is_annotative(),
         is_deleted: base.is_deleted(),
         group_ids: parse_vec_of_strings(base.group_ids()),
+        block_ids: parse_vec_of_strings(base.block_ids()),
         region_ids: parse_vec_of_strings(base.region_ids()),
+        instance_id: base.instance_id().map(|s| s.to_string()),
         layer_id: base.layer_id().map(|s| s.to_string()),
         frame_id: base.frame_id().map(|s| s.to_string()),
         bound_elements,
@@ -882,26 +884,6 @@ fn parse_duc_block_duplication_array(array: fb::DucBlockDuplicationArray) -> Par
     })
 }
 
-fn parse_duc_block_instance_element(el: fb::DucBlockInstanceElement) -> ParseResult<types::DucBlockInstanceElement> {
-    let element_overrides = el
-        .element_overrides()
-        .map(|v| v.iter().map(parse_string_value_entry).collect::<ParseResult<Vec<_>>>())
-        .transpose()?
-        .unwrap_or_default();
-    let attribute_values = el
-        .attribute_values()
-        .map(|v| v.iter().map(parse_string_value_entry).collect::<ParseResult<Vec<_>>>())
-        .transpose()?
-        .unwrap_or_default();
-    Ok(types::DucBlockInstanceElement {
-        base: parse_duc_element_base(el.base().ok_or("Missing DucBlockInstanceElement.base")?)?,
-        block_id: el.block_id().ok_or("Missing DucBlockInstanceElement.block_id")?.to_string(),
-        element_overrides: Some(element_overrides),
-        attribute_values: Some(attribute_values),
-        duplication_array: el.duplication_array().map(parse_duc_block_duplication_array).transpose()?,
-    })
-}
-
 fn parse_duc_frame_element(el: fb::DucFrameElement) -> ParseResult<types::DucFrameElement> {
     Ok(types::DucFrameElement {
         stack_element_base: parse_duc_stack_element_base(el.stack_element_base().ok_or("Missing DucFrameElement.stack_element_base")?)?,
@@ -1234,10 +1216,6 @@ fn parse_element_wrapper(wrapper: fb::ElementWrapper) -> ParseResult<types::Elem
             let el = wrapper.element_as_duc_free_draw_element().ok_or("Mismatched element type")?;
             types::DucElementEnum::DucFreeDrawElement(parse_duc_free_draw_element(el)?)
         },
-        fb::Element::DucBlockInstanceElement => {
-            let el = wrapper.element_as_duc_block_instance_element().ok_or("Mismatched element type")?;
-            types::DucElementEnum::DucBlockInstanceElement(parse_duc_block_instance_element(el)?)
-        },
         fb::Element::DucFrameElement => {
             let el = wrapper.element_as_duc_frame_element().ok_or("Mismatched element type")?;
             types::DucElementEnum::DucFrameElement(parse_duc_frame_element(el)?)
@@ -1300,26 +1278,85 @@ fn parse_duc_block_attribute_definition_entry(entry: fb::DucBlockAttributeDefini
     })
 }
 
-fn parse_duc_block(block: fb::DucBlock) -> ParseResult<types::DucBlock> {
-    let elements = if let Some(elements_vec) = block.elements() {
-        elements_vec.iter().map(parse_element_wrapper).collect::<ParseResult<_>>()?
-    } else {
-        Vec::new()
-    };
+fn parse_duc_block_metadata(metadata: fb::DucBlockMetadata) -> ParseResult<types::DucBlockMetadata> {
+    Ok(types::DucBlockMetadata {
+        source: metadata.source().ok_or("Missing DucBlockMetadata.source")?.to_string(),
+        usage_count: metadata.usage_count(),
+        created_at: metadata.created_at(),
+        updated_at: metadata.updated_at(),
+        localization: metadata.localization().map(|s| s.to_string()),
+    })
+}
 
+fn parse_duc_block(block: fb::DucBlock) -> ParseResult<types::DucBlock> {
     let attribute_definitions = if let Some(defs_vec) = block.attribute_definitions() {
         defs_vec.iter().map(parse_duc_block_attribute_definition_entry).collect::<ParseResult<_>>()?
     } else {
         Vec::new()
     };
 
+    let metadata = if let Some(metadata_fb) = block.metadata() {
+        Some(parse_duc_block_metadata(metadata_fb)?)
+    } else {
+        None
+    };
+
+    let thumbnail = block.thumbnail().map(|data| (0..data.len()).map(|i| data.get(i)).collect::<Vec<_>>());
+
     Ok(types::DucBlock {
         id: block.id().to_string(),
         label: block.label().map(|s| s.to_string()).unwrap_or_default(),
         description: block.description().map(|s| s.to_string()),
         version: block.version(),
-        elements,
         attribute_definitions,
+        metadata,
+        thumbnail,
+    })
+}
+
+fn parse_duc_block_instance(el: fb::DucBlockInstance) -> ParseResult<types::DucBlockInstance> {
+    let element_overrides = el
+        .element_overrides()
+        .map(|v| v.iter().map(parse_string_value_entry).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
+    let attribute_values = el
+        .attribute_values()
+        .map(|v| v.iter().map(parse_string_value_entry).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
+    Ok(types::DucBlockInstance {
+        id: el.id().ok_or("Missing DucBlockInstance.id")?.to_string(),
+        block_id: el.block_id().ok_or("Missing DucBlockInstance.block_id")?.to_string(),
+        version: el.version(),
+        element_overrides: Some(element_overrides),
+        attribute_values: Some(attribute_values),
+        duplication_array: el.duplication_array().map(parse_duc_block_duplication_array).transpose()?,
+    })
+}
+
+fn parse_duc_block_collection(el: fb::DucBlockCollection) -> ParseResult<types::DucBlockCollection> {
+    let children = el
+        .children()
+        .map(|v| v.iter().map(parse_duc_block_collection_entry).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
+
+    let metadata = el.metadata().map(parse_duc_block_metadata).transpose()?;
+
+    Ok(types::DucBlockCollection {
+        id: el.id().ok_or("Missing DucBlockCollection.id")?.to_string(),
+        label: el.label().ok_or("Missing DucBlockCollection.label")?.to_string(),
+        children,
+        metadata,
+        thumbnail: el.thumbnail().map(|b| b.bytes().to_vec()),
+    })
+}
+
+fn parse_duc_block_collection_entry(entry: fb::DucBlockCollectionEntry) -> ParseResult<types::DucBlockCollectionEntry> {
+    Ok(types::DucBlockCollectionEntry {
+        id: entry.id().ok_or("Missing DucBlockCollectionEntry.id")?.to_string(),
+        is_collection: entry.is_collection(),
     })
 }
 
@@ -1945,7 +1982,21 @@ fn parse_exported_data_state(root: fb::ExportedDataState) -> ParseResult<types::
         .map(|v| v.iter().map(parse_duc_block).collect::<ParseResult<Vec<_>>>())
         .transpose()?
         .unwrap_or_default();
-    
+
+    // block_instances is optional: treat missing as empty vec
+    let block_instances = root
+        .blockInstances()
+        .map(|v| v.iter().map(parse_duc_block_instance).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
+
+    // block_collections is optional: treat missing as empty vec
+    let block_collections = root
+        .blockCollections()
+        .map(|v| v.iter().map(parse_duc_block_collection).collect::<ParseResult<Vec<_>>>())
+        .transpose()?
+        .unwrap_or_default();
+
     // groups optional
     let groups = root
         .groups()
@@ -1987,6 +2038,8 @@ fn parse_exported_data_state(root: fb::ExportedDataState) -> ParseResult<types::
         dictionary,
         elements,
         blocks,
+        block_instances,
+        block_collections,
         groups,
         regions,
         layers,

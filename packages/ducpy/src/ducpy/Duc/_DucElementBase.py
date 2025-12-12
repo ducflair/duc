@@ -272,8 +272,35 @@ class _DucElementBase(object):
             return self._tab.String(o + self._tab.Pos)
         return None
 
+    # _DucElementBase
+    def BlockIds(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(60))
+        if o != 0:
+            a = self._tab.Vector(o)
+            return self._tab.String(a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
+        return ""
+
+    # _DucElementBase
+    def BlockIdsLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(60))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # _DucElementBase
+    def BlockIdsIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(60))
+        return o == 0
+
+    # _DucElementBase
+    def InstanceId(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(62))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
 def _DucElementBaseStart(builder):
-    builder.StartObject(28)
+    builder.StartObject(30)
 
 def Start(builder):
     _DucElementBaseStart(builder)
@@ -463,6 +490,24 @@ def _DucElementBaseAddCustomData(builder, customData):
 
 def AddCustomData(builder, customData):
     _DucElementBaseAddCustomData(builder, customData)
+
+def _DucElementBaseAddBlockIds(builder, blockIds):
+    builder.PrependUOffsetTRelativeSlot(28, flatbuffers.number_types.UOffsetTFlags.py_type(blockIds), 0)
+
+def AddBlockIds(builder, blockIds):
+    _DucElementBaseAddBlockIds(builder, blockIds)
+
+def _DucElementBaseStartBlockIdsVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+def StartBlockIdsVector(builder, numElems):
+    return _DucElementBaseStartBlockIdsVector(builder, numElems)
+
+def _DucElementBaseAddInstanceId(builder, instanceId):
+    builder.PrependUOffsetTRelativeSlot(29, flatbuffers.number_types.UOffsetTFlags.py_type(instanceId), 0)
+
+def AddInstanceId(builder, instanceId):
+    _DucElementBaseAddInstanceId(builder, instanceId)
 
 def _DucElementBaseEnd(builder):
     return builder.EndObject()
