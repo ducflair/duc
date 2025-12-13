@@ -4,8 +4,8 @@ module.exports = {
     [
       require.resolve('../../scripts/semrel-path-filter.cjs'),
       {
-        path: "packages/ducsvg",
         paths: [
+          "packages/ducsvg",
           "packages/ducpdf",
           "packages/ducjs",
           "packages/ducrs",
