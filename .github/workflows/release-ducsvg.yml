@@ -34,8 +34,6 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
-      - name: Use latest npm
-        run: npm install -g npm@latest
       - name: Install deps
         run: bun install
       - name: Build
