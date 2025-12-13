@@ -12,6 +12,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  id-token: write
 
 jobs:
   release_ducjs:
@@ -41,11 +42,6 @@ jobs:
       - name: Prepare workspace dependencies for publish
         run: node scripts/fix-workspace-deps.mjs packages/ducjs/package.json
 
-      - name: Configure npm auth for publish
-        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Setup release environment
         id: setup-release-environment
         uses: ./.github/actions/simulate-main-environment
@@ -53,9 +49,9 @@ jobs:
           current-branch: ${{ github.ref_name }}
           package-name: ducjs
 
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
         working-directory: ./packages/ducjs
         run: npx semantic-release ${{ steps.setup-release-environment.outputs.release-mode }}
