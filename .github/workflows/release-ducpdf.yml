@@ -36,6 +36,8 @@ jobs:
           bun-version: "latest"
       - name: Install deps
         run: bun install
+      - name: Use latest npm
+        run: npm install -g npm@latest
       - name: Build
         run: bun ducpdf:build
 
