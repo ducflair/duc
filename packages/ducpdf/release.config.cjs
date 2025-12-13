@@ -19,7 +19,13 @@ module.exports = {
         prepareCmd: "node ../../scripts/semrel-set-version.js packages/ducpdf ${nextRelease.version}",
       }
     ],
-    "@semantic-release/npm",
+    [
+      "@semantic-release/npm",
+      {
+        npmPublish: true,
+        provenance: true,  // Required for OIDC
+      },
+    ],
     "@semantic-release/github",
   ],
   tagFormat: "ducpdf@${version}",
