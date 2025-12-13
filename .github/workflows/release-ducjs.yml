@@ -30,8 +30,6 @@ jobs:
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-      - name: Use latest npm
-        run: npm install -g npm@latest
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
