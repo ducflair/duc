@@ -12,14 +12,31 @@ function normalizePrefix(p) {
   return p.replace(/\\/g, '/').replace(/\/+$/, '') + '/';
 }
 
-async function filterCommitsByPath(commits, pkgPath) {
-  if (!pkgPath) return commits;
-  const prefix = normalizePrefix(pkgPath);
+/**
+ * Normalize paths config to an array of prefixes
+ * Supports `paths` (array) option
+ */
+function normalizePaths(pluginConfig) {
+  const { paths } = pluginConfig;
+
+  // Ensure paths is an array
+  const allPaths = Array.isArray(paths) ? paths : [];
+
+  // Remove duplicates and normalize
+  return [...new Set(allPaths)].map(normalizePrefix);
+}
+
+async function filterCommitsByPaths(commits, prefixes) {
+  if (!prefixes || prefixes.length === 0) return commits;
   const filtered = [];
 
   for (const c of commits) {
     const files = gitChangedFiles(c.hash);
-    if (files.some(f => f.replace(/\\/g, '/').startsWith(prefix))) {
+    // Check if any file matches any of the prefixes
+    if (files.some(f => {
+      const normalizedFile = f.replace(/\\/g, '/');
+      return prefixes.some(prefix => normalizedFile.startsWith(prefix));
+    })) {
       filtered.push(c);
     }
   }
@@ -28,10 +45,12 @@ async function filterCommitsByPath(commits, pkgPath) {
 
 module.exports = {
   analyzeCommits: async (pluginConfig = {}, context) => {
-    const { path: pkgPath, analyzer = {} } = pluginConfig;
-    const filtered = await filterCommitsByPath(context.commits, pkgPath);
+    const { analyzer = {} } = pluginConfig;
+    const prefixes = normalizePaths(pluginConfig);
+    const filtered = await filterCommitsByPaths(context.commits, prefixes);
 
-    context.logger.log(`[path-filter] ${filtered.length}/${context.commits.length} commits affect "${pkgPath}"`);
+    const pathsDisplay = prefixes.map(p => p.slice(0, -1)).join(', ');
+    context.logger.log(`[path-filter] ${filtered.length}/${context.commits.length} commits affect "${pathsDisplay}"`);
     if (filtered.length === 0) return null;
 
     const { analyzeCommits: analyze } = await import('@semantic-release/commit-analyzer');
@@ -39,8 +58,9 @@ module.exports = {
   },
 
   generateNotes: async (pluginConfig = {}, context) => {
-    const { path: pkgPath, notes = {} } = pluginConfig;
-    const filtered = await filterCommitsByPath(context.commits, pkgPath);
+    const { notes = {} } = pluginConfig;
+    const prefixes = normalizePaths(pluginConfig);
+    const filtered = await filterCommitsByPaths(context.commits, prefixes);
 
     const { generateNotes: genNotes } = await import('@semantic-release/release-notes-generator');
     return genNotes(notes, { ...context, commits: filtered });

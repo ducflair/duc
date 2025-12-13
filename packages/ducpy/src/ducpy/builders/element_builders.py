@@ -88,7 +88,6 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
     # Set required list fields with defaults
     base_params.setdefault('group_ids', [])
     base_params.setdefault('block_ids', [])
-    base_params.setdefault('block_ids', [])
     base_params.setdefault('region_ids', [])
     base_params.setdefault('instance_id', None)
 
