@@ -4,7 +4,9 @@ module.exports = {
     [
       require.resolve("../../scripts/semrel-path-filter.cjs"),
       {
-        path: "packages/ducrs",
+        paths: [
+          "packages/ducrs"
+        ],
         analyzer: { preset: "conventionalcommits" },
         notes: { preset: "conventionalcommits" },
       },
