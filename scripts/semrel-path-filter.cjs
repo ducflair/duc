@@ -14,21 +14,13 @@ function normalizePrefix(p) {
 
 /**
  * Normalize paths config to an array of prefixes
- * Supports both `path` (string) and `paths` (array) options
+ * Supports `paths` (array) option
  */
 function normalizePaths(pluginConfig) {
-  const { path, paths } = pluginConfig;
+  const { paths } = pluginConfig;
 
-  // Combine both options - paths array takes precedence but path is also included
-  const allPaths = [];
-
-  if (path) {
-    allPaths.push(path);
-  }
-
-  if (Array.isArray(paths)) {
-    allPaths.push(...paths);
-  }
+  // Ensure paths is an array
+  const allPaths = Array.isArray(paths) ? paths : [];
 
   // Remove duplicates and normalize
   return [...new Set(allPaths)].map(normalizePrefix);
