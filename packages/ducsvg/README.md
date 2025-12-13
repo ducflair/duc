@@ -15,6 +15,8 @@
 
 > This library leverages the stable renderer from `ducpdf`, first converting the `duc` document to PDF format before transforming it into SVG using `pdf-into-svg`. This approach ensures high fidelity in the SVG output by utilizing the robust rendering capabilities of the PDF format.
 
+> 💡 Maybe in the future we could refactor `ducpdf` to leverage the growing library [`hayro_svg`](https://docs.rs/hayro-svg/latest/hayro_svg/) to convert PDF to SVG more seamlessly instead of using `pdf-into-svg` (C# library). Reference: [hayro project](https://github.com/LaurenzV/hayro?tab=readme-ov-file)
+
 ## Documentation
 
 For detailed documentation, including all available types and utility functions, visit our [Documentation](https://duc.ducflair.com).
