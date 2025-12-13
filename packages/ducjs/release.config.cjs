@@ -4,9 +4,7 @@ module.exports = {
     [
       require.resolve("../../scripts/semrel-path-filter.cjs"),
       {
-        paths: [
-          "packages/ducjs"
-        ],
+        paths: ["packages/ducjs"],
         analyzer: { preset: "conventionalcommits" },
         notes: { preset: "conventionalcommits" },
       },
@@ -14,11 +12,10 @@ module.exports = {
     [
       "@semantic-release/exec",
       {
-        prepareCmd:
-          "node ../../scripts/semrel-set-version.js packages/ducjs ${nextRelease.version}",
-        publishCmd: "bun publish --provenance",
+        prepareCmd: "node ../../scripts/semrel-set-version.js packages/ducjs ${nextRelease.version}",
       },
     ],
+    "@semantic-release/npm",
     "@semantic-release/github",
   ],
   tagFormat: "ducjs@${version}",
