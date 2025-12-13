@@ -17,7 +17,7 @@ module.exports = {
       "@semantic-release/exec",
       {
         prepareCmd: "node ../../scripts/semrel-set-version.js packages/ducpdf ${nextRelease.version}",
-        publishCmd: "bun publish"
+        publishCmd: "bun publish --provenance"
       }
     ],
     "@semantic-release/github",

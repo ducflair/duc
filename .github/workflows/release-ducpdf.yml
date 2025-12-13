@@ -12,6 +12,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  id-token: write
 
 jobs:
   release_ducpdf:
@@ -41,11 +42,6 @@ jobs:
       - name: Prepare workspace dependencies for publish
         run: node scripts/fix-workspace-deps.mjs packages/ducpdf/package.json
 
-      - name: Configure npm auth for publish
-        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Setup release environment for ducpdf
         id: setup-release-environment-ducpdf
         uses: ./.github/actions/simulate-main-environment
@@ -56,7 +52,6 @@ jobs:
       - name: Release ducpdf package
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           # DEBUG: "semantic-release:*" # For verbose logging
         working-directory: ./packages/ducpdf
         run: npx semantic-release ${{ steps.setup-release-environment-ducpdf.outputs.release-mode }}
