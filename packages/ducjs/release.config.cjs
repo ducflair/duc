@@ -13,13 +13,7 @@ module.exports = {
       "@semantic-release/exec",
       {
         prepareCmd: "node ../../scripts/semrel-set-version.js packages/ducjs ${nextRelease.version}",
-      },
-    ],
-    [
-      "@semantic-release/npm",
-      {
-        provenance: true,
-        verifyConditions: false
+        publishCmd: "npm publish",
       },
     ],
     "@semantic-release/github",
