@@ -33,11 +33,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "lts/*"
+          node-version: 20.x
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
+      # npm 11.5.1 or later must be installed for OIDC to work
+      - name: Update npm
+        run: npm install -g npm@latest
+
+
       - name: Install deps
         run: bun install
 
