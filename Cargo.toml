@@ -6,8 +6,6 @@ members = [
     "packages/ducsvg/src/pdf2svg",
 ]
 
-[workspace.dependencies]
-duc = { version = "1" }
 
 [profile.release]
 lto = true
