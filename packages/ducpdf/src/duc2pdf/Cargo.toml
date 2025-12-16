@@ -21,6 +21,7 @@ path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+# Local dev: uses path. Publish: release script updates to crates.io version
 duc = { version = "0.0.0-development", path = "../../../ducrs" }
 hipdf = { version = "1.3.2", features = ["wasm_js"] }
 svg2pdf = "0.13.0"
