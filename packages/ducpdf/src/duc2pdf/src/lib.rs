@@ -278,7 +278,11 @@ pub fn convert_duc_to_pdf_rs(duc_data: &[u8]) -> Vec<u8> {
         Ok(pdf_bytes) => pdf_bytes,
         Err(e) => {
             // Log error with context
-            error_handling::log_error_details(&e, duc_data.len(), "Standard conversion (default options)");
+            error_handling::log_error_details(
+                &e,
+                duc_data.len(),
+                "Standard conversion (default options)",
+            );
 
             // Create structured error info and convert to WASM bytes
             let error_info = error_handling::create_error_info(&e, duc_data.len(), None);
@@ -390,7 +394,8 @@ pub fn convert_duc_to_pdf_crop_wasm(
                 background_color: normalized_background,
                 ..Default::default()
             };
-            let error_info = error_handling::create_error_info(&e, duc_data.len(), Some(&crop_options));
+            let error_info =
+                error_handling::create_error_info(&e, duc_data.len(), Some(&crop_options));
             error_handling::error_to_wasm_bytes(&error_info)
         }
     }
