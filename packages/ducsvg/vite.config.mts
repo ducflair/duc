@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   build: {
+    emptyOutDir: false,
     lib: {
       entry: 'src/index.ts',
       name: 'DucSvg',
@@ -13,13 +14,11 @@ export default defineConfig({
     rollupOptions: {
       // Externalize dependencies that have WASM runtimes or shouldn't be bundled
       external: [
-        'pdf-into-svg',  // Uses .NET Blazor WASM - can't be bundled
         'ducpdf',        // Uses Rust WASM - let consuming app handle
         'ducjs',         // Workspace dependency
       ],
       output: {
         globals: {
-          'pdf-into-svg': 'PdfIntoSvg',
           'ducpdf': 'DucPdf',
           'ducjs': 'DucJs',
         },
