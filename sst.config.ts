@@ -15,7 +15,7 @@ export default $config({
       protect: ["production"].includes(input?.stage),
       home: "aws",
       aws: {
-        region: "us-east-2",
+        region,
       },
       cloudflare: "5.41.0",
     };
@@ -38,7 +38,7 @@ export default $config({
       // vpc
       domain: domainName && {
         name: domainName,
-        dns: sst.cloudflare.dns(),
+        dns: sst.cloudflare.dns({ proxy: true }),
       },
       path: "apps/web",
       link: [
@@ -62,7 +62,7 @@ export default $config({
       },
       domain: domainName && {
         name: `python.${domainName}`,
-        dns: sst.cloudflare.dns(),
+        dns: sst.cloudflare.dns({ proxy: true }),
       },
     });
   },

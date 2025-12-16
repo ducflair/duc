@@ -109,7 +109,6 @@
       "dependencies": {
         "ducjs": "workspace:*",
         "ducpdf": "workspace:*",
-        "pdf-into-svg": "1.0.1",
       },
       "devDependencies": {
         "@xmldom/xmldom": "^0.8.11",
@@ -1403,8 +1402,6 @@
     "pathe": ["pathe@2.0.3", "", {}, "sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w=="],
 
     "pathval": ["pathval@2.0.1", "", {}, "sha512-//nshmD55c46FuFw26xV/xFAaB5HF9Xdap7HJBBnrKdAd6/GxDBaNA1870O79+9ueg61cZLSVc+OaFlfmObYVQ=="],
-
-    "pdf-into-svg": ["pdf-into-svg@1.0.1", "", {}, "sha512-O5y1KiFz5+QYLVIoO64kY8m7QOhfTyexgZysze5jJqkBZ1uqWQTLucmOSBGqphJhdkL+1zQdRMDlM5icHEQfCA=="],
 
     "perfect-freehand": ["perfect-freehand@1.2.2", "", {}, "sha512-eh31l019WICQ03pkF3FSzHxB8n07ItqIQ++G5UV8JX0zVOXzgTGCqnRR0jJ2h9U8/2uW4W4mtGJELt9kEV0CFQ=="],
 
