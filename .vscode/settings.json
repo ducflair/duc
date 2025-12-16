@@ -6,7 +6,8 @@
   "editor.detectIndentation": false,
   "rust-analyzer.linkedProjects": [
     "packages/ducrs/Cargo.toml",
-    "packages/ducpdf/src/duc2pdf/Cargo.toml"
+    "packages/ducpdf/src/duc2pdf/Cargo.toml",
+    "packages/ducsvg/src/pdf2svg/Cargo.toml"
   ],
   "rust-analyzer.files.exclude": [
     "packages/ducrs/src/duc_generated.rs"
