@@ -2,7 +2,8 @@
 resolver = "2"
 members = [
     "packages/ducrs",
-    "packages/ducpdf/src/duc2pdf"
+    "packages/ducpdf/src/duc2pdf",
+    "packages/ducsvg/src/pdf2svg",
 ]
 
 [workspace.dependencies]

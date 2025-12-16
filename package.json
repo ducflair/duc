@@ -51,7 +51,7 @@
   "scripts": {
     "build": "turbo build",
     "build:packages": "turbo build --filter=ducjs --filter=ducpy --filter=ducrs --filter=ducsvg --filter=ducpdf",
-    "sst:wrap": "bash -c 'CMD=\"$1\"; shift; [ -n \"$1\" ] && [ \"$1\" != \"_\" ] && export SST_STAGE=\"$1\"; eval \"$CMD\"' _",
+    "sst:shell": "bash -c 'CMD=\"$1\"; shift; [ -n \"$1\" ] && [ \"$1\" != \"_\" ] && export SST_STAGE=\"$1\"; eval \"$CMD\"' _",
     "flatc:gen": "bun run flatc:gen:duc",
     "flatc:gen:duc": "cd schema && bash flatc-duc-generate.sh",
     "clean": "bun del-cli \"**/dist\" \".turbo\" \"**/node_modules\" \"**/package-lock.json\" \"**/tsconfig.tsbuildinfo\" \"**/tsconfig.node.tsbuildinfo\" \"**/vite.config.js\"",
@@ -68,11 +68,11 @@
     "ducpdf:build": "turbo build --filter=ducpdf",
     "ducpdf:test": "turbo run test --filter=ducpdf",
     "semantic-release": "turbo run semantic-release",
-    "sst:deploy": "bun sst:wrap 'bun run sst:clean && sst unlock && sst refresh && sst deploy'",
+    "sst:deploy": "bun sst:shell 'bun run sst:clean && sst unlock && sst refresh && sst deploy'",
     "sst:clean": "bun del-cli \".sst\" \"**/sst-env.d.ts\" \"**/sst.pyi\"",
     "sst:dev": "bun run sst dev",
-    "knip:deps": "bun sst:wrap 'bun run sst unlock && sst shell -- bunx knip --dependencies'",
-    "knip": "bun sst:wrap 'bun run sst unlock && sst shell -- bunx knip'"
+    "knip:deps": "bun sst:shell 'bun run sst unlock && sst shell -- bunx knip --dependencies'",
+    "knip": "bun sst:shell 'bun run sst unlock && sst shell -- bunx knip'"
   },
   "workspaces": [
     "apps/*",
