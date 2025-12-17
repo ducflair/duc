@@ -24,10 +24,11 @@ export default defineConfig({
     rollupOptions: {
       // Externalize dependencies that have WASM runtimes or shouldn't be bundled
       external: [
-        'ducpdf',         // Uses Rust WASM - let consuming app handle
-        'ducjs',          // Workspace dependency
-        /pdf2svg/,        // Externalize pdf2svg wasm bindings to prevent inline base64 bundling
-        /\.wasm$/,        // Don't bundle WASM files inline
+        'ducpdf',
+        'ducjs',
+        '/pdf2svg/pkg/',
+        /pdf2svg-wasm(\.js)?$/,
+        /\.wasm$/,
       ],
       output: {
         globals: {
