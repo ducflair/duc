@@ -14,7 +14,7 @@ async function initWasm(): Promise<any> {
     try {
       // Dynamically import the WASM JS bindings
       const wasmBindings: any = await import('../wasm');
-      
+
       // The wasm-pack generated module exports a default init function
       // that handles loading the WASM file using import.meta.url
       // This is the same pattern used by duc_renderer_bin

@@ -2,24 +2,30 @@
   "name": "ducsvg",
   "version": "0.0.0-development",
   "description": "Adapter for converting duc CAD documents to SVG. Built on top of ducjs.",
+  "private": false,
+  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     },
-    "./*": {
-      "import": ["./dist/*.js", "./dist/*/index.js"],
-      "require": ["./dist/*.js", "./dist/*/index.js"],
-      "types": ["./dist/*.d.ts", "./dist/*/index.d.ts"]
+    "./pkg": {
+      "types": "./pkg/pdf2svg.d.ts",
+      "import": "./pkg/pdf2svg.js",
+      "default": "./pkg/pdf2svg.js"
     }
   },
   "sideEffects": false,
   "scripts": {
-    "build": "vite build && pwd && tsc --project ./tsconfig.json",
+    "build": "bun run clean && bun run build:wasm && bun run copy:wasm-to-dist && bun run build:ts",
+    "build:ts": "vite build && pwd && tsc -p tsconfig.json",
+    "build:wasm": "cd src/pdf2svg && wasm-pack build --target web --out-dir ../../pkg --release",
+    "copy:wasm-to-dist": "mkdir -p dist && cp pkg/pdf2svg_bg.wasm dist/ && cp pkg/pdf2svg.js dist/pdf2svg-wasm.js && cp pkg/pdf2svg.d.ts dist/pdf2svg-wasm.d.ts && cp pkg/pdf2svg_bg.wasm.d.ts dist/",
+    "clean": "rm -rf dist pkg && cd src/pdf2svg && cargo clean",
     "check-types": "tsc --noEmit",
     "test": "bun test",
     "semantic-release": "semantic-release"
@@ -28,8 +34,7 @@
   "license": "MIT",
   "dependencies": {
     "ducjs": "workspace:*",
-    "ducpdf": "workspace:*",
-    "pdf-into-svg": "1.0.1"
+    "ducpdf": "workspace:*"
   },
   "devDependencies": {
     "@xmldom/xmldom": "^0.8.11",
@@ -37,9 +42,13 @@
     "semantic-release": "^24.1.2",
     "typescript": "^5.8.3",
     "vite": "^6.0.0",
+    "vite-plugin-compression": "^0.5.1",
     "vitest": "^3.2.4"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -52,5 +61,16 @@
   "bugs": {
     "url": "https://github.com/ducflair/duc/issues"
   },
-  "keywords": ["CAD", "2D", "Design", "TypeScript", "Ducflair", "Duc", "SVG", "Renderer", "Converter", "Export"]
+  "keywords": [
+    "CAD",
+    "2D",
+    "Design",
+    "TypeScript",
+    "Ducflair",
+    "Duc",
+    "SVG",
+    "Renderer",
+    "Converter",
+    "Export"
+  ]
 }

@@ -4,7 +4,9 @@ import {
   DimensionToleranceStyle as DimensionToleranceStyleFb,
   DucArrowElement as DucArrowElementFb,
   DucBlock as DucBlockFb,
-  DucBlockInstanceElement as DucBlockInstanceElementFb,
+  DucBlockCollection as DucBlockCollectionFb,
+  DucBlockInstance as DucBlockInstanceFb,
+  DucBlockMetadata as DucBlockMetadataFb,
   DucCommonStyle as DucCommonStyleFb,
   DucDimensionElement as DucDimensionElementFb,
   DucDimensionStyle as DucDimensionStyleFb,
@@ -92,13 +94,16 @@ import {
   _UnitSystemBase
 } from "./technical";
 import {
+  BlockLocalizationMap,
   CustomHatchPattern,
   DatumReference,
   Dictionary,
   DucArrowElement,
   DucBlock,
   DucBlockAttributeDefinition,
-  DucBlockInstanceElement,
+  DucBlockCollection,
+  DucBlockInstance,
+  DucBlockMetadata,
   DucCommonStyle,
   DucDimensionElement,
   DucDimensionStyle,
@@ -192,6 +197,7 @@ import {
   _DucStackElementBase
 } from "./types";
 import * as flatbuffers from "flatbuffers";
+import { nanoid } from 'nanoid';
 
 
 // #region HELPERS & LOW-LEVEL CASTS
@@ -388,6 +394,8 @@ export function parseElementBase(base: _DucElementBaseFb): _DucElementBase {
     isDeleted: base.isDeleted(),
     groupIds: Array.from({ length: base.groupIdsLength() }, (_, i) => base.groupIds(i)!),
     regionIds: Array.from({ length: base.regionIdsLength() }, (_, i) => base.regionIds(i)!),
+    blockIds: Array.from({ length: base.blockIdsLength() }, (_, i) => base.blockIds(i)!),
+    instanceId: base.instanceId(),
     layerId: base.layerId(),
     frameId: base.frameId(),
     boundElements: base.boundElementsLength() > 0 ? Array.from({ length: base.boundElementsLength() }, (_, i) => ({
@@ -686,23 +694,23 @@ function parseFreeDrawElement(element: DucFreeDrawElementFb): DucFreeDrawElement
   };
 }
 
-function parseBlockInstanceElement(element: DucBlockInstanceElementFb): DucBlockInstanceElement {
-  const duplicationArray = element.duplicationArray();
+function parseBlockInstance(instance: DucBlockInstanceFb): DucBlockInstance {
+  const duplicationArray = instance.duplicationArray();
   const attributeValues: Record<string, string> = {};
-  for (let i = 0; i < element.attributeValuesLength(); i++) {
-    const entry = element.attributeValues(i)!;
+  for (let i = 0; i < instance.attributeValuesLength(); i++) {
+    const entry = instance.attributeValues(i)!;
     attributeValues[entry.key()!] = entry.value()!;
   }
   const elementOverrides: Record<string, string> = {};
-  for (let i = 0; i < element.elementOverridesLength(); i++) {
-    const entry = element.elementOverrides(i)!;
+  for (let i = 0; i < instance.elementOverridesLength(); i++) {
+    const entry = instance.elementOverrides(i)!;
     elementOverrides[entry.key()!] = entry.value()!;
   }
 
   return {
-    type: "blockinstance",
-    ...parseElementBase(element.base()!),
-    blockId: element.blockId()!,
+    id: instance.id()!,
+    blockId: instance.blockId()!,
+    version: instance.version(),
     attributeValues: attributeValues,
     elementOverrides: elementOverrides,
     duplicationArray: duplicationArray ? {
@@ -711,6 +719,51 @@ function parseBlockInstanceElement(element: DucBlockInstanceElementFb): DucBlock
       rowSpacing: toPrecisionValue(duplicationArray.rowSpacing()),
       colSpacing: toPrecisionValue(duplicationArray.colSpacing()),
     } : null,
+  };
+}
+
+// Helper function to parse block metadata from FlatBuffers
+function parseBlockMetadata(metadataFb: DucBlockMetadataFb | null): DucBlockMetadata | undefined {
+  if (!metadataFb) return undefined;
+
+  // localization is a JSON string containing the localization data
+  let localization: BlockLocalizationMap | undefined;
+  const localizationStr = metadataFb.localization();
+  if (localizationStr) {
+    try {
+      localization = JSON.parse(localizationStr);
+    } catch (e) {
+      // If parsing fails, leave localization undefined
+      console.warn('Failed to parse localization JSON:', e);
+    }
+  }
+
+  return {
+    source: metadataFb.source()!,
+    usageCount: metadataFb.usageCount(),
+    createdAt: Number(metadataFb.createdAt()),
+    updatedAt: Number(metadataFb.updatedAt()),
+    localization,
+  };
+}
+
+function parseBlockCollection(collection: DucBlockCollectionFb): DucBlockCollection {
+  const children = Array.from({ length: collection.childrenLength() }, (_, i) => {
+    const child = collection.children(i)!;
+    return {
+      id: child.id()!,
+      isCollection: child.isCollection(),
+    };
+  });
+
+  const metadata = parseBlockMetadata(collection.metadata());
+
+  return {
+    id: collection.id()!,
+    label: collection.label()!,
+    children,
+    metadata,
+    thumbnail: collection.thumbnailArray() || undefined,
   };
 }
 
@@ -1149,9 +1202,6 @@ export function parseElementFromBinary(wrapper: ElementWrapper): DucElement | nu
     case ElementUnion.DucFreeDrawElement:
       element = wrapper.element(new DucFreeDrawElementFb());
       break;
-    case ElementUnion.DucBlockInstanceElement:
-      element = wrapper.element(new DucBlockInstanceElementFb());
-      break;
     case ElementUnion.DucFrameElement:
       element = wrapper.element(new DucFrameElementFb());
       break;
@@ -1213,8 +1263,6 @@ export function parseElementFromBinary(wrapper: ElementWrapper): DucElement | nu
       return parseArrowElement(element as DucArrowElementFb);
     case ElementUnion.DucFreeDrawElement:
       return parseFreeDrawElement(element as DucFreeDrawElementFb);
-    case ElementUnion.DucBlockInstanceElement:
-      return parseBlockInstanceElement(element as DucBlockInstanceElementFb);
     case ElementUnion.DucFrameElement:
       return parseFrameElement(element as DucFrameElementFb);
     case ElementUnion.DucPlotElement:
@@ -1254,14 +1302,21 @@ export function parseBlockFromBinary(block: DucBlockFb): DucBlock {
       isConstant: def.isConstant(),
     };
   }
+
+  // Parse metadata if present
+  const metadata = parseBlockMetadata(block.metadata());
+
+  // Parse thumbnail if present
+  const thumbnail = block.thumbnailArray();
+
   return {
     id: block.id()!,
     label: block.label()!,
     description: block.description() || undefined,
     version: block.version(),
-    // Filter out any nulls that may arise from malformed entries
-    elements: Array.from({ length: block.elementsLength() }, (_, i) => parseElementFromBinary(block.elements(i)!)).filter(Boolean) as DucElement[],
     attributeDefinitions,
+    metadata,
+    thumbnail: thumbnail || undefined,
   };
 }
 
@@ -1279,7 +1334,7 @@ export function parseExternalFilesFromBinary(entry: DucExternalFileEntry): DucEx
   const data = fileData.dataArray();
   const key = entry.key()!;
   const id = fileData.id()! as ExternalFileId;
-  
+
   return {
     [key]: {
       id,
@@ -1783,6 +1838,30 @@ export const parseDuc = async (
     }
   }
 
+  // Parse block instances
+  const blockInstances: DucBlockInstance[] = [];
+  for (let i = 0; i < data.blockInstancesLength(); i++) {
+    const blockInstance = data.blockInstances(i);
+    if (blockInstance) {
+      const parsedBlockInstance = parseBlockInstance(blockInstance);
+      if (parsedBlockInstance) {
+        blockInstances.push(parsedBlockInstance);
+      }
+    }
+  }
+
+  // Parse block collections
+  const blockCollections: DucBlockCollection[] = [];
+  for (let i = 0; i < data.blockCollectionsLength(); i++) {
+    const blockCollection = data.blockCollections(i);
+    if (blockCollection) {
+      const parsedBlockCollection = parseBlockCollection(blockCollection);
+      if (parsedBlockCollection) {
+        blockCollections.push(parsedBlockCollection);
+      }
+    }
+  }
+
   // Parse groups
   const groups: DucGroup[] = [];
   for (let i = 0; i < data.groupsLength(); i++) {
@@ -1841,24 +1920,28 @@ export const parseDuc = async (
     }
   }
 
+  const exportData: RestoredDataState = {
+    thumbnail,
+    dictionary,
+    elements: elements as OrderedDucElement[],
+    localState: parsedLocalState!,
+    globalState: parsedGlobalState!,
+    blocks,
+    blockInstances,
+    blockCollections,
+    groups,
+    regions,
+    layers,
+
+    standards,
+    files: parsedFiles,
+
+    versionGraph: versionGraph ?? undefined,
+    id: data.id() ?? nanoid(),
+  };
+
   const sanitized = restore(
-    {
-      thumbnail,
-      dictionary,
-      elements: elements as DucElement[],
-      localState: parsedLocalState!,
-      globalState: parsedGlobalState!,
-      blocks,
-      groups,
-      regions,
-      layers,
-
-      standards,
-      files: parsedFiles,
-
-      versionGraph: versionGraph ?? undefined,
-      id: data.id() ?? undefined,
-    },
+    exportData,
     {
       syncInvalidIndices: (elements) => elements as OrderedDucElement[],
       repairBindings: true,
@@ -1875,9 +1958,11 @@ export const parseDuc = async (
     globalState: sanitized.globalState,
     files: sanitized.files,
     blocks: sanitized.blocks,
+    blockInstances: sanitized.blockInstances,
     groups: sanitized.groups,
     regions: sanitized.regions,
     layers: sanitized.layers,
+    blockCollections: sanitized.blockCollections,
     standards: sanitized.standards,
     versionGraph: sanitized.versionGraph,
     id: sanitized.id,

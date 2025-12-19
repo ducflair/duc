@@ -2,12 +2,11 @@
 resolver = "2"
 members = [
     "packages/ducrs",
-    "packages/ducpdf/src/duc2pdf"
+    "packages/ducpdf/src/duc2pdf",
+    "packages/ducsvg/src/pdf2svg",
 ]
+
 
 [profile.release]
 lto = true
 opt-level = "s"
-
-[patch.crates-io]
-duc = { path = "packages/ducrs" }

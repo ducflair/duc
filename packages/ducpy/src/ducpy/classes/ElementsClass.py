@@ -189,6 +189,7 @@ class DucElementBase:
     is_annotative: bool
     is_deleted: bool
     group_ids: List[str]
+    block_ids: List[str]
     region_ids: List[str]
     z_index: float
     locked: bool
@@ -199,6 +200,7 @@ class DucElementBase:
     frame_id: Optional[str]
     bound_elements: Optional[List[BoundElement]]
     custom_data: Optional[Dict[str, Any]]
+    instance_id: Optional[str] = None
 
 @dataclass
 class DucHead:
@@ -599,13 +601,22 @@ class DucBlockAttributeDefinitionEntry:
     value: DucBlockAttributeDefinition
 
 @dataclass
+class DucBlockMetadata:
+    source: str
+    usage_count: int
+    created_at: int
+    updated_at: int
+    localization: Optional[str]
+
+@dataclass
 class DucBlock:
     id: str
     label: str
     version: int
-    elements: List["ElementWrapper"]
     attribute_definitions: List[DucBlockAttributeDefinitionEntry]
     description: Optional[str]
+    metadata: Optional[DucBlockMetadata]
+    thumbnail: Optional[bytes]
 
 @dataclass
 class StringValueEntry:
@@ -620,12 +631,27 @@ class DucBlockDuplicationArray:
     col_spacing: float
 
 @dataclass
-class DucBlockInstanceElement:
-    base: DucElementBase
+class DucBlockInstance:
+    id: str
     block_id: str
+    version: int
     element_overrides: Optional[List[StringValueEntry]]
     attribute_values: Optional[List[StringValueEntry]]
     duplication_array: Optional[DucBlockDuplicationArray]
+
+
+@dataclass
+class DucBlockCollectionEntry:
+    id: str
+    is_collection: bool
+
+@dataclass
+class DucBlockCollection:
+    id: str
+    label: str
+    children: List[DucBlockCollectionEntry]
+    metadata: Optional[DucBlockMetadata]
+    thumbnail: Optional[bytes]
 
 @dataclass
 class DucFrameElement:
@@ -846,7 +872,6 @@ DucElement = Union[
     DucLinearElement,
     DucArrowElement,
     DucFreeDrawElement,
-    DucBlockInstanceElement,
     DucFrameElement,
     DucPlotElement,
     DucViewportElement,
