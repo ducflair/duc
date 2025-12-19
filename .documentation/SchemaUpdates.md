@@ -1,4 +1,4 @@
-these are the files you must change from the duc repo of the @scopture-monolith/scopture-monolith.code-workspace :
+these are the files you must change from the duc repo:
 
 on the typescript side:
 @duc/packages/ducjs/src/types/index.ts 

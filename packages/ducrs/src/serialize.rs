@@ -454,7 +454,9 @@ fn serialize_duc_element_base<'bldr>(
     let description_offset = base.description.as_ref().map(|s| builder.create_string(s));
     let index_offset = base.index.as_ref().map(|s| builder.create_string(s));
     let group_ids_vec = serialize_vec_of_strings(builder, &base.group_ids);
+    let block_ids_vec = serialize_vec_of_strings(builder, &base.block_ids);
     let region_ids_vec = serialize_vec_of_strings(builder, &base.region_ids);
+    let instance_id_offset = base.instance_id.as_ref().map(|s| builder.create_string(s));
     let layer_id_offset = base.layer_id.as_ref().map(|s| builder.create_string(s));
     let frame_id_offset = base.frame_id.as_ref().map(|s| builder.create_string(s));
     let bound_elements_offsets: Vec<_> = base
@@ -494,7 +496,9 @@ fn serialize_duc_element_base<'bldr>(
             is_annotative: base.is_annotative,
             is_deleted: base.is_deleted,
             group_ids: group_ids_vec,
+            block_ids: block_ids_vec,
             region_ids: region_ids_vec,
+            instance_id: instance_id_offset,
             layer_id: layer_id_offset,
             frame_id: frame_id_offset,
             bound_elements: bound_elements_vec,
@@ -1643,39 +1647,79 @@ fn serialize_duc_block_duplication_array<'bldr>(
     )
 }
 
-fn serialize_duc_block_instance_element<'bldr>(
+
+fn serialize_duc_block_instance<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
-    element: &types::DucBlockInstanceElement,
-) -> WIPOffset<fb::DucBlockInstanceElement<'bldr>> {
-    let base_offset = serialize_duc_element_base(builder, &element.base);
-    let block_id_offset = builder.create_string(&element.block_id);
-    let element_overrides_vec = element.element_overrides.as_ref().map(|v| {
+    instance: &types::DucBlockInstance,
+) -> WIPOffset<fb::DucBlockInstance<'bldr>> {
+    let id_offset = builder.create_string(&instance.id);
+    let block_id_offset = builder.create_string(&instance.block_id);
+    let element_overrides_vec = instance.element_overrides.as_ref().map(|v| {
         let offsets: Vec<_> = v
             .iter()
             .map(|e| serialize_string_value_entry(builder, e))
             .collect();
         builder.create_vector(&offsets)
     });
-    let attribute_values_vec = element.attribute_values.as_ref().map(|v| {
+    let attribute_values_vec = instance.attribute_values.as_ref().map(|v| {
         let offsets: Vec<_> = v
             .iter()
             .map(|a| serialize_string_value_entry(builder, a))
             .collect();
         builder.create_vector(&offsets)
     });
-    let duplication_array_offset = element
+    let duplication_array_offset = instance
         .duplication_array
         .as_ref()
         .map(|d| serialize_duc_block_duplication_array(builder, d));
-
-    fb::DucBlockInstanceElement::create(
+    fb::DucBlockInstance::create(
         builder,
-        &fb::DucBlockInstanceElementArgs {
-            base: Some(base_offset),
+        &fb::DucBlockInstanceArgs {
+            id: Some(id_offset),
             block_id: Some(block_id_offset),
+            version: instance.version,
             element_overrides: element_overrides_vec,
             attribute_values: attribute_values_vec,
             duplication_array: duplication_array_offset,
+        },
+    )
+}
+
+fn serialize_duc_block_collection<'bldr>(
+    builder: &mut FlatBufferBuilder<'bldr>,
+    collection: &types::DucBlockCollection,
+) -> WIPOffset<fb::DucBlockCollection<'bldr>> {
+    let id_offset = builder.create_string(&collection.id);
+    let label_offset = builder.create_string(&collection.label);
+
+    let children_offsets: Vec<_> = collection
+        .children
+        .iter()
+        .map(|child| {
+            let child_id_offset = builder.create_string(&child.id);
+            fb::DucBlockCollectionEntry::create(
+                builder,
+                &fb::DucBlockCollectionEntryArgs {
+                    id: Some(child_id_offset),
+                    is_collection: child.is_collection,
+                },
+            )
+        })
+        .collect();
+    let children_vec = builder.create_vector(&children_offsets);
+
+    let metadata_offset = collection.metadata.as_ref().map(|m| serialize_duc_block_metadata(builder, m));
+
+    let thumbnail_vec = collection.thumbnail.as_ref().map(|v| builder.create_vector(v));
+
+    fb::DucBlockCollection::create(
+        builder,
+        &fb::DucBlockCollectionArgs {
+            id: Some(id_offset),
+            label: Some(label_offset),
+            children: Some(children_vec),
+            metadata: metadata_offset,
+            thumbnail: thumbnail_vec,
         },
     )
 }
@@ -2365,10 +2409,6 @@ fn serialize_element_wrapper<'bldr>(
             fb::Element::DucFreeDrawElement,
             serialize_duc_free_draw_element(builder, e).as_union_value(),
         ),
-        types::DucElementEnum::DucBlockInstanceElement(e) => (
-            fb::Element::DucBlockInstanceElement,
-            serialize_duc_block_instance_element(builder, e).as_union_value(),
-        ),
         types::DucElementEnum::DucFrameElement(e) => (
             fb::Element::DucFrameElement,
             serialize_duc_frame_element(builder, e).as_union_value(),
@@ -2454,6 +2494,28 @@ fn serialize_duc_block_attribute_definition_entry<'bldr>(
     )
 }
 
+pub fn serialize_duc_block_metadata<'bldr>(
+    builder: &mut flatbuffers::FlatBufferBuilder<'bldr>,
+    metadata: &types::DucBlockMetadata,
+) -> WIPOffset<fb::DucBlockMetadata<'bldr>> {
+    let source_offset = builder.create_string(&metadata.source);
+    let localization_offset: Option<WIPOffset<&'bldr str>> = metadata
+        .localization
+        .as_ref()
+        .map(|s| builder.create_string(s.as_str()));
+
+    fb::DucBlockMetadata::create(
+        builder,
+        &fb::DucBlockMetadataArgs {
+            source: Some(source_offset),
+            usage_count: metadata.usage_count,
+            created_at: metadata.created_at,
+            updated_at: metadata.updated_at,
+            localization: localization_offset,
+        },
+    )
+}
+
 fn serialize_duc_block<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     block: &types::DucBlock,
@@ -2465,21 +2527,23 @@ fn serialize_duc_block<'bldr>(
         .as_ref()
         .map(|s| builder.create_string(s.as_str()));
 
-    let elements_offsets: Vec<_> = block
-        .elements
-        .iter()
-        .map(|e| serialize_element_wrapper(builder, e))
-        .collect();
-    let elements_vec: WIPOffset<
-        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::ElementWrapper<'bldr>>>,
-    > = builder.create_vector(&elements_offsets);
-
     let attribute_definitions_offsets: Vec<_> = block
         .attribute_definitions
         .iter()
         .map(|ad| serialize_duc_block_attribute_definition_entry(builder, ad))
         .collect();
     let attribute_definitions_vec = builder.create_vector(&attribute_definitions_offsets);
+
+    let metadata_offset: Option<WIPOffset<fb::DucBlockMetadata<'bldr>>> = block
+        .metadata
+        .as_ref()
+        .map(|metadata| serialize_duc_block_metadata(builder, metadata));
+
+    let thumbnail_offset = block
+        .thumbnail
+        .as_ref()
+        .filter(|data| !data.is_empty())
+        .map(|data| builder.create_vector(data));
 
     fb::DucBlock::create(
         builder,
@@ -2488,8 +2552,9 @@ fn serialize_duc_block<'bldr>(
             label: Some(label_offset),
             description: description_offset,
             version: block.version,
-            elements: Some(elements_vec),
             attribute_definitions: Some(attribute_definitions_vec),
+            metadata: metadata_offset,
+            thumbnail: thumbnail_offset,
         },
     )
 }
@@ -3824,6 +3889,24 @@ fn serialize_exported_data_state<'bldr>(
         flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucBlock<'bldr>>>,
     > = builder.create_vector(&blocks_offsets);
 
+    let block_instances_offsets: Vec<_> = state
+        .block_instances
+        .iter()
+        .map(|bi| serialize_duc_block_instance(builder, bi))
+        .collect();
+    let block_instances_vec: WIPOffset<
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucBlockInstance<'bldr>>>,
+    > = builder.create_vector(&block_instances_offsets);
+
+    let block_collections_offsets: Vec<_> = state
+        .block_collections
+        .iter()
+        .map(|bc| serialize_duc_block_collection(builder, bc))
+        .collect();
+    let block_collections_vec: WIPOffset<
+        flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucBlockCollection<'bldr>>>,
+    > = builder.create_vector(&block_collections_offsets);
+
     let groups_offsets: Vec<_> = state
         .groups
         .iter()
@@ -3891,6 +3974,8 @@ fn serialize_exported_data_state<'bldr>(
             dictionary: dictionary_vec,
             elements: Some(elements_vec),
             blocks: Some(blocks_vec),
+            blockInstances: Some(block_instances_vec),
+            blockCollections: Some(block_collections_vec),
             groups: Some(groups_vec),
             regions: Some(regions_vec),
             layers: Some(layers_vec),

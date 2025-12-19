@@ -1,0 +1,15 @@
+{
+  "recommendations": [ 
+    "rust-lang.rust-analyzer",
+    "streetsidesoftware.code-spell-checker",
+    "gaborv.flatbuffers",
+    "PKief.material-icon-theme",
+    "bradlc.vscode-tailwindcss",
+    "ducflair.duc",
+    "tamasfe.even-better-toml",
+    "ms-toolsai.jupyter",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "jock.svg",
+  ]
+}
