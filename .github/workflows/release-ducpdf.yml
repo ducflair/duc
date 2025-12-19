@@ -12,6 +12,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  id-token: write
 
 jobs:
   release_ducpdf:
@@ -29,10 +30,19 @@ jobs:
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
+      # npm 11.5.1 or later must be installed for OIDC to work
+      - name: Update npm
+        run: npm install -g npm@latest
+
+
       - name: Install deps
         run: bun install
       - name: Build
@@ -41,11 +51,6 @@ jobs:
       - name: Prepare workspace dependencies for publish
         run: node scripts/fix-workspace-deps.mjs packages/ducpdf/package.json
 
-      - name: Configure npm auth for publish
-        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Setup release environment for ducpdf
         id: setup-release-environment-ducpdf
         uses: ./.github/actions/simulate-main-environment
@@ -53,10 +58,11 @@ jobs:
           current-branch: ${{ github.ref_name }}
           package-name: ducpdf
 
-      - name: Release ducpdf package
+      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
+        run: npm audit signatures
+      - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           # DEBUG: "semantic-release:*" # For verbose logging
         working-directory: ./packages/ducpdf
         run: npx semantic-release ${{ steps.setup-release-environment-ducpdf.outputs.release-mode }}

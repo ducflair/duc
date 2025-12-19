@@ -203,8 +203,27 @@ customData(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
+blockIds(index: number):string
+blockIds(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
+blockIds(index: number,optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 60);
+  return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
+}
+
+blockIdsLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 60);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+}
+
+instanceId():string|null
+instanceId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+instanceId(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 62);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
 static start_DucElementBase(builder:flatbuffers.Builder) {
-  builder.startObject(28);
+  builder.startObject(30);
 }
 
 static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
@@ -353,6 +372,26 @@ static addLocked(builder:flatbuffers.Builder, locked:boolean) {
 
 static addCustomData(builder:flatbuffers.Builder, customDataOffset:flatbuffers.Offset) {
   builder.addFieldOffset(27, customDataOffset, 0);
+}
+
+static addBlockIds(builder:flatbuffers.Builder, blockIdsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(28, blockIdsOffset, 0);
+}
+
+static createBlockIdsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startBlockIdsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
+static addInstanceId(builder:flatbuffers.Builder, instanceIdOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(29, instanceIdOffset, 0);
 }
 
 static end_DucElementBase(builder:flatbuffers.Builder):flatbuffers.Offset {

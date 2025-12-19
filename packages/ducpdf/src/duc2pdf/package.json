@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "cargo build --release",
+    "build:wasm": "wasm-pack build --release --target web",
     "test": "cargo test",
     "semantic-release": "semantic-release"
   },

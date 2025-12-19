@@ -1,4 +1,5 @@
 import pytest
+import ezdxf
 import os
 import sys
 
@@ -67,8 +68,6 @@ def test_xclip_dxf_to_duc_conversion(assets_dir, output_dir):
     # d) Validate that key structures from the DXF were converted.
     assert parsed_duc.duc_global_state is not None, \
         "Parsed state missing global state"
-
-    
 
     # Log results to the console for clarity when running tests
     print(f"\n✅ Conversion test passed for '{os.path.basename(dxf_input_path)}'.")

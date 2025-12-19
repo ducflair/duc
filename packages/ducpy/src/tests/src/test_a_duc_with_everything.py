@@ -423,26 +423,6 @@ def test_a_duc_with_everything(test_output_dir):
         .with_segments([fcf_row])
         .build())
 
-    # Block definition and instance
-    block_elements = [
-        duc.ElementBuilder().at_position(0, 0).with_size(30, 30).with_label("BlockRect").build_rectangle().build(),
-        duc.ElementBuilder().at_position(5, 5).with_size(20, 10).with_label("BlockText").build_text_element().with_text("BlockText").build(),
-    ]
-    block_attr_defs = [
-        duc.create_block_attribute_definition_entry(key="PN", tag="PartNumber", default_value="PN-001"),
-        duc.create_block_attribute_definition_entry(key="REV", tag="Revision", default_value="A"),
-    ]
-    block = duc.create_block(id="block1", label="TestBlock", elements=block_elements, attribute_definitions=block_attr_defs)
-    elements.append(duc.ElementBuilder()
-        .at_position(600, 700)
-        .with_size(40, 40)
-        .with_label("BlockInstance")
-        .with_styles(duc.create_simple_styles())
-        .with_z_index(19.0)
-        .build_block_instance_element()
-        .with_block_id("block1")
-        .with_attribute_values([duc.create_string_value_entry("PN", "PN-002"), duc.create_string_value_entry("REV", "B")])
-        .build())
 
     # Mermaid element
     elements.append(duc.ElementBuilder()
@@ -610,7 +590,8 @@ def test_a_duc_with_everything(test_output_dir):
         file_path=output_file,
         name="EverythingTest",
         elements=elements,
-        blocks=[block],
+
+        blocks=[],
         groups=groups,
         regions=regions,
         layers=layers,
@@ -632,8 +613,8 @@ def test_a_duc_with_everything(test_output_dir):
     assert parsed is not None, "Parsed state is None"
     assert parsed.elements is not None, "Parsed state missing elements"
     element_count = len(parsed.elements)
-    if element_count < 33: # Updated from 21 to 33 elements
-        pytest.fail(f"Not all elements present: found {element_count}, expected at least 33")
+    if element_count < 32: # Updated from 33 to 32 elements
+        pytest.fail(f"Not all elements present: found {element_count}, expected at least 32")
     assert parsed.blocks is not None, "Parsed state missing blocks"
     assert parsed.layers is not None, "Parsed state missing layers"
     assert parsed.regions is not None, "Parsed state missing regions"

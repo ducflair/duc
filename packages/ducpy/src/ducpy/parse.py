@@ -26,6 +26,7 @@ from ducpy.classes.DataStateClass import (
 )
 from ducpy.classes.ElementsClass import (
     ElementWrapper as DS_ElementWrapper,
+    DucBlockCollectionEntry as DS_DucBlockCollectionEntry,
     DucRectangleElement as DS_DucRectangleElement,
     DucPolygonElement as DS_DucPolygonElement,
     DucEllipseElement as DS_DucEllipseElement,
@@ -38,7 +39,7 @@ from ducpy.classes.ElementsClass import (
     DucLinearElement as DS_DucLinearElement,
     DucArrowElement as DS_DucArrowElement,
     DucFreeDrawElement as DS_DucFreeDrawElement,
-    DucBlockInstanceElement as DS_DucBlockInstanceElement,
+    DucBlockInstance as DS_DucBlockInstance,
     DucFrameElement as DS_DucFrameElement,
     DucPlotElement as DS_DucPlotElement,
     DucViewportElement as DS_DucViewportElement,
@@ -49,6 +50,8 @@ from ducpy.classes.ElementsClass import (
     DucDocElement as DS_DucDocElement,
     DucParametricElement as DS_DucParametricElement,
     DucBlock as DS_DucBlock,
+    DucBlockCollection as DS_DucBlockCollection,
+    DucBlockMetadata as DS_DucBlockMetadata,
     DucGroup as DS_DucGroup,
     DucRegion as DS_DucRegion,
     DucLayer as DS_DucLayer,
@@ -347,6 +350,9 @@ from ducpy.Duc.DucDocStyle import DucDocStyle as FBSDucDocStyle
 from ducpy.Duc.ParametricSource import ParametricSource as FBSParametricSource
 
 from ducpy.Duc.DucBlock import DucBlock as FBSDucBlock
+from ducpy.Duc.DucBlockCollection import DucBlockCollection as FBSDucBlockCollection
+from ducpy.Duc.DucBlockCollectionEntry import DucBlockCollectionEntry as FBSDucBlockCollectionEntry
+from ducpy.Duc.DucBlockMetadata import DucBlockMetadata as FBSDucBlockMetadata
 from ducpy.Duc.DucBlockAttributeDefinition import DucBlockAttributeDefinition as FBSDucBlockAttributeDefinition
 from ducpy.Duc.DucBlockAttributeDefinitionEntry import DucBlockAttributeDefinitionEntry as FBSDucBlockAttributeDefinitionEntry
 
@@ -724,6 +730,7 @@ def parse_fbs_bound_element(obj: FBSBoundElement) -> DS_BoundElement:
 def parse_fbs_duc_element_base(obj: FBSDucElementBase) -> DS_DucElementBase:
     styles = parse_fbs_duc_element_styles_base(obj.Styles()) if obj.Styles() else None
     group_ids = _read_str_vector(obj, "GroupIdsLength", "GroupIds") if hasattr(obj, "GroupIdsLength") else []
+    block_ids = _read_str_vector(obj, "BlockIdsLength", "BlockIds") if hasattr(obj, "BlockIdsLength") else []
     region_ids = _read_str_vector(obj, "RegionIdsLength", "RegionIds") if hasattr(obj, "RegionIdsLength") else []
     bound_elements = []
     try:
@@ -751,6 +758,7 @@ def parse_fbs_duc_element_base(obj: FBSDucElementBase) -> DS_DucElementBase:
         is_annotative=obj.IsAnnotative() if hasattr(obj, "IsAnnotative") else False,
         is_deleted=obj.IsDeleted() if hasattr(obj, "IsDeleted") else False,
         group_ids=group_ids,
+        block_ids=block_ids,
         region_ids=region_ids,
         z_index=obj.ZIndex() if hasattr(obj, "ZIndex") else 0,
         locked=obj.Locked() if hasattr(obj, "Locked") else False,
@@ -761,6 +769,7 @@ def parse_fbs_duc_element_base(obj: FBSDucElementBase) -> DS_DucElementBase:
         frame_id=_s(obj.FrameId()) if hasattr(obj, "FrameId") else None,
         bound_elements=bound_elements if bound_elements else None,
         custom_data=custom_data,
+        instance_id=_s(obj.InstanceId()) if hasattr(obj, "InstanceId") else None,
     )
 
 def parse_fbs_duc_head(obj: FBSDucHead) -> DS_DucHead:
@@ -1606,16 +1615,86 @@ def parse_fbs_duc_block_attribute_definition_entry(obj: FBSDucBlockAttributeDefi
         value=parse_fbs_duc_block_attribute_definition(obj.Value()),
     )
 
+def parse_fbs_duc_block_metadata(obj: FBSDucBlockMetadata) -> DS_DucBlockMetadata:
+    return DS_DucBlockMetadata(
+        source=_s_req(obj.Source()),
+        usage_count=obj.UsageCount(),
+        created_at=obj.CreatedAt(),
+        updated_at=obj.UpdatedAt(),
+        localization=_s(obj.Localization()),
+    )
+
 def parse_fbs_duc_block(obj: FBSDucBlock) -> DS_DucBlock:
-    elements = [parse_duc_element_wrapper(obj.Elements(i)) for i in range(obj.ElementsLength())]
     attrs = [parse_fbs_duc_block_attribute_definition_entry(obj.AttributeDefinitions(i)) for i in range(obj.AttributeDefinitionsLength())]
+
+    metadata = None
+    if hasattr(obj, 'Metadata') and obj.Metadata():
+        metadata = parse_fbs_duc_block_metadata(obj.Metadata())
+
+    thumbnail = None
+    if hasattr(obj, 'Thumbnail') and obj.ThumbnailLength() > 0:
+        thumbnail = obj.ThumbnailAsBytes()
+
     return DS_DucBlock(
         id=_s_req(obj.Id()),
         label=_s_req(obj.Label()),
         version=obj.Version(),
-        elements=elements,
         attribute_definitions=attrs,
         description=_s(obj.Description()),
+        metadata=metadata,
+        thumbnail=thumbnail,
+    )
+
+def parse_fbs_duc_block_instance(el: FBSDucBlockInstance) -> DS_DucBlockInstance:
+    if not el:
+        return None
+        
+    elem_overrides_len = el.ElementOverridesLength()
+    elem_overrides = []
+    for i in range(elem_overrides_len):
+        entry = el.ElementOverrides(i)
+        elem_overrides.append(parse_fbs_string_value_entry(entry))
+
+    attr_values_len = el.AttributeValuesLength()
+    attr_values = []
+    for i in range(attr_values_len):
+        entry = el.AttributeValues(i)
+        attr_values.append(parse_fbs_string_value_entry(entry))
+        
+    duplication_array = parse_fbs_block_duplication_array(el.DuplicationArray()) if el.DuplicationArray() else None
+    
+    return DS_DucBlockInstance(
+        id=el.Id().decode('utf-8') if el.Id() else "",
+        block_id=el.BlockId().decode('utf-8') if el.BlockId() else "",
+        element_overrides=elem_overrides,
+        attribute_values=attr_values,
+        duplication_array=duplication_array,
+        version=el.Version()
+    )
+
+def parse_fbs_duc_block_collection_entry(obj: FBSDucBlockCollectionEntry) -> "DS_DucBlockCollectionEntry":
+    return DS_DucBlockCollectionEntry(
+        id=_s_req(obj.Id()),
+        is_collection=obj.IsCollection(),
+    )
+
+def parse_fbs_duc_block_collection(obj: FBSDucBlockCollection) -> DS_DucBlockCollection:
+    children = [parse_fbs_duc_block_collection_entry(obj.Children(i)) for i in range(obj.ChildrenLength())]
+
+    metadata = None
+    if hasattr(obj, 'Metadata') and obj.Metadata():
+        metadata = parse_fbs_duc_block_metadata(obj.Metadata())
+
+    thumbnail = None
+    if hasattr(obj, 'Thumbnail') and obj.ThumbnailLength() > 0:
+        thumbnail = obj.ThumbnailAsBytes()
+
+    return DS_DucBlockCollection(
+        id=_s_req(obj.Id()),
+        label=_s_req(obj.Label()),
+        children=children,
+        metadata=metadata,
+        thumbnail=thumbnail,
     )
 
 def parse_fbs_duc_group(obj: FBSDucGroup) -> DS_DucGroup:
@@ -2249,6 +2328,8 @@ def parse_duc(blob: IO[bytes]) -> DS_ExportedDataState:
     # Top-level collections
     elements: List[DS_ElementWrapper] = [parse_duc_element_wrapper(data.Elements(i)) for i in range(data.ElementsLength())]
     blocks: List[DS_DucBlock] = [parse_fbs_duc_block(data.Blocks(i)) for i in range(data.BlocksLength())]
+    block_instances: List[DS_DucBlockInstance] = [parse_fbs_duc_block_instance(data.BlockInstances(i)) for i in range(data.BlockInstancesLength())]
+    block_collections: List[DS_DucBlockCollection] = [parse_fbs_duc_block_collection(data.BlockCollections(i)) for i in range(data.BlockCollectionsLength())]
     groups: List[DS_DucGroup] = [parse_fbs_duc_group(data.Groups(i)) for i in range(data.GroupsLength())]
     regions: List[DS_DucRegion] = [parse_fbs_duc_region(data.Regions(i)) for i in range(data.RegionsLength())]
     layers: List[DS_DucLayer] = [parse_fbs_duc_layer(data.Layers(i)) for i in range(data.LayersLength())]
@@ -2278,6 +2359,8 @@ def parse_duc(blob: IO[bytes]) -> DS_ExportedDataState:
         dictionary=dictionary,
         elements=elements,
         blocks=blocks,
+        block_instances=block_instances,
+        block_collections=block_collections,
         groups=groups,
         regions=regions,
         layers=layers,

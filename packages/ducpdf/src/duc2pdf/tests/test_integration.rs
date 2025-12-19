@@ -108,6 +108,7 @@ mod integration_tests {
             metadata_title: Some("Basic CROP Test".to_string()),
             metadata_author: Some("DUC2PDF Test Suite".to_string()),
             metadata_subject: Some("Basic CROP Mode Testing".to_string()),
+            background_color: Some("#FFFFFF".to_string()),
         };
 
         match convert_duc_to_pdf_with_options(&test_data, options) {
@@ -137,6 +138,7 @@ mod integration_tests {
             metadata_title: Some("Basic PLOT Test".to_string()),
             metadata_author: Some("DUC2PDF Test Suite".to_string()),
             metadata_subject: Some("Basic PLOT Mode Testing".to_string()),
+            background_color: Some("#FFFFFF".to_string()),
         };
 
         match convert_duc_to_pdf_with_options(&test_data, options) {
@@ -170,6 +172,7 @@ mod integration_tests {
                 metadata_title: Some(format!("Error Test - {}", test_name)),
                 metadata_author: Some("DUC2PDF Test Suite".to_string()),
                 metadata_subject: Some("Error handling validation".to_string()),
+                background_color: Some("oklch(0.55 0.04 257)".to_string()),
             };
 
             match convert_duc_to_pdf_with_options(&test_data, options) {
@@ -222,6 +225,7 @@ mod integration_tests {
                 metadata_title: Some(format!("Bounds Test - {}", test_name)),
                 metadata_author: Some("DUC2PDF Test Suite".to_string()),
                 metadata_subject: Some("Coordinate bounds testing".to_string()),
+                background_color: Some("".to_string()),
             };
 
             match convert_duc_to_pdf_with_options(&test_data, options) {
@@ -283,6 +287,7 @@ mod integration_tests {
                 metadata_title: title,
                 metadata_author: author,
                 metadata_subject: subject,
+                background_color: Some("transparent".to_string()),
             };
 
             match convert_duc_to_pdf_with_options(&test_data, options) {
@@ -379,6 +384,7 @@ mod integration_tests {
             metadata_title: Some("Auto-scaling Test".to_string()),
             metadata_author: Some("DUC2PDF Test Suite".to_string()),
             metadata_subject: Some("Automatic Scaling Testing".to_string()),
+            background_color: Some("transparent".to_string()),
         };
 
         // Test with user-provided scale
@@ -388,6 +394,7 @@ mod integration_tests {
             metadata_title: Some("User Scale Test".to_string()),
             metadata_author: Some("DUC2PDF Test Suite".to_string()),
             metadata_subject: Some("User-provided Scaling Testing".to_string()),
+            background_color: Some("transparent".to_string()),
         };
 
         // Auto-scaling test
@@ -434,6 +441,7 @@ mod integration_tests {
             metadata_title: Some("Auto-scale Real Data".to_string()),
             metadata_author: Some("DUC2PDF Test Suite".to_string()),
             metadata_subject: Some("Auto-scaling with real DUC data".to_string()),
+            background_color: Some("transparent".to_string()),
         };
 
         // Test 2: User provides scale but it's still too large
@@ -443,6 +451,7 @@ mod integration_tests {
             metadata_title: Some("Insufficient Scale Test".to_string()),
             metadata_author: Some("DUC2PDF Test Suite".to_string()),
             metadata_subject: Some("Scale still exceeds bounds".to_string()),
+            background_color: Some("oklch(0.55 0.04 257)".to_string()),
         };
 
         // Test 3: User provides appropriate scale
@@ -452,6 +461,7 @@ mod integration_tests {
             metadata_title: Some("Good Scale Test".to_string()),
             metadata_author: Some("DUC2PDF Test Suite".to_string()),
             metadata_subject: Some("Appropriate user-provided scale".to_string()),
+            background_color: Some("oklch(0.55 0.04 257)".to_string()),
         };
 
         // Auto-scale test
@@ -532,6 +542,7 @@ mod integration_tests {
             is_deleted: false,
             group_ids: vec![],
             region_ids: vec![],
+            
             layer_id: None,
             frame_id: None,
             bound_elements: None,
@@ -539,6 +550,8 @@ mod integration_tests {
             link: None,
             locked: false,
             custom_data: None,
+            block_ids: vec![],
+            instance_id: None,
         }
     }
 

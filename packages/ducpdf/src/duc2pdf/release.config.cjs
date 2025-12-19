@@ -4,7 +4,10 @@ module.exports = {
     [
       require.resolve("../../../../scripts/semrel-path-filter.cjs"),
       {
-        path: "packages/ducpdf/src/duc2pdf",
+        paths: [
+          "packages/ducpdf/src/duc2pdf",
+          "packages/ducrs",
+        ],
         analyzer: { preset: "conventionalcommits" },
         notes: { preset: "conventionalcommits" },
       },
@@ -15,9 +18,12 @@ module.exports = {
     [
       "@semantic-release/exec",
       {
-        // Prepare step: Set the crate version and build the project
+        // Prepare step: 
+        // 1. Update duc dependency to use crates.io version (not development)
+        // 2. Set the crate version 
+        // 3. Build the project
         prepareCmd:
-          "cargo set-version ${nextRelease.version} && cargo build --release",
+          "node ../../../../scripts/cargo-set-duc-dep-version.js . 2 && cargo set-version ${nextRelease.version} && cargo build --release",
 
         // Publish step: Publish the crate to crates.io
         publishCmd:

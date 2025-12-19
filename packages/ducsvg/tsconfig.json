@@ -23,6 +23,8 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "pkg",
+    "dist",
+    "src/pdf2svg/src"
   ]
 }

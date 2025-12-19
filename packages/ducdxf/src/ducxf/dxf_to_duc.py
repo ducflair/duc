@@ -22,6 +22,8 @@ import ezdxf.enums
 
 from ducpy.Duc.DIMENSION_UNITS_FORMAT import DIMENSION_UNITS_FORMAT
 from ducpy.Duc.ANGULAR_UNITS_FORMAT import ANGULAR_UNITS_FORMAT
+from ducpy.Duc.DECIMAL_SEPARATOR import DECIMAL_SEPARATOR
+from ducpy.Duc.UNIT_SYSTEM import UNIT_SYSTEM
 
 # A comprehensive mapping of AutoCAD Color Index (ACI) to HEX values.
 ACI_TO_HEX = {
@@ -60,12 +62,46 @@ def get_hex_from_aci(aci):
     """Converts an ACI color index to a HEX string with a fallback."""
     return ACI_TO_HEX.get(aci, "#FFFFFF") # Default to white
 
-def convert_header(header):
+def convert_header(header, doc):
     
     # Extract units and view information from the header
     units = header.get("$INSUNITS", 0)  # Default to unitless
     linear_units_dxf = header.get("$LUNITS", 1) # Default to scientific
     angular_units_dxf = header.get("$AUNITS", 0) # Default to decimal degrees
+    measurement = header.get("$MEASUREMENT", 0)  # 0=English/Imperial, 1=Metric
+    
+    # Get the Standard dimension style for precision and suppression settings
+    dimstyle = doc.dimstyles.get('Standard')
+    if dimstyle:
+        # Precision is stored in dimension style DIMTDEC (linear unit decimal places)
+        precision = dimstyle.dxf.get('dimtdec', 2)  # Default to 2 decimal places
+        
+        # DIMTZIN is a bitfield controlling suppressions
+        # Bit 0: suppress trailing zeros
+        # Bit 1: suppress trailing inches
+        # Bit 2: suppress leading zeros
+        # Bit 3: suppress feet designation
+        # Bit 4: suppress inches designation
+        dimtzin = dimstyle.dxf.get('dimtzin', 0)
+        suppress_trailing_zeros = bool(dimtzin & (1 << 0))
+        suppress_leading_zeros = bool(dimtzin & (1 << 2))
+        suppress_zero_feet = bool(dimtzin & (1 << 3))
+        suppress_zero_inches = bool(dimtzin & (1 << 4))
+        
+        # Decimal separator from DIMDSEP (integer code: 46 = '.', 44 = ',')
+        dimdsep_code = dimstyle.dxf.get('dimdsep', 46)
+        decimal_sep = DECIMAL_SEPARATOR.COMMA if dimdsep_code == 44 else DECIMAL_SEPARATOR.DOT
+    else:
+        # Fallback defaults
+        precision = 2
+        suppress_trailing_zeros = False
+        suppress_leading_zeros = False
+        suppress_zero_feet = False
+        suppress_zero_inches = False
+        decimal_sep = DECIMAL_SEPARATOR.DOT
+    
+    # Determine unit system from $MEASUREMENT or $INSUNITS
+    unit_system = UNIT_SYSTEM.METRIC if measurement == 1 else UNIT_SYSTEM.IMPERIAL
 
     duc_global_state = (duc.StateBuilder().build_global_state()
         .with_main_scope(INSUNITS_TO_DUC_UNITS[units])
@@ -73,10 +109,24 @@ def convert_header(header):
         .build())
     
     linear_units = duc.create_linear_unit_system(
+        precision=precision,
+        suppress_leading_zeros=suppress_leading_zeros,
+        suppress_trailing_zeros=suppress_trailing_zeros,
+        system=unit_system,
+        suppress_zero_feet=suppress_zero_feet,
+        suppress_zero_inches=suppress_zero_inches,
         format=LUNITS_TO_DUC[linear_units_dxf],
-
+        decimal_separator=decimal_sep,
     )
+    
+    # Angular precision (DIMALTTD in dimension style for angular decimal places)
+    angular_precision = dimstyle.dxf.get('dimalttd', 2) if dimstyle else 2
+    
     angular_units = duc.create_angular_unit_system(
+        precision=angular_precision,
+        suppress_leading_zeros=suppress_leading_zeros,
+        suppress_trailing_zeros=suppress_trailing_zeros,
+        system=unit_system,
         format=AUNITS_TO_DUC[angular_units_dxf],
     )
 
@@ -95,7 +145,7 @@ def convert_dxf_to_duc(dxf_path, duc_path):
         duc_path: Path for the output DUC file.
     """
     print(f"Loading DXF file: {dxf_path}")
-    try:
+    try: 
         doc = ezdxf.readfile(dxf_path)
     except (IOError, ezdxf.DXFStructureError) as e:
         print(f"Error loading DXF file: {e}")
@@ -109,7 +159,7 @@ def convert_dxf_to_duc(dxf_path, duc_path):
 
     # 1. Convert Header
     header = doc.header
-    duc_global_state = convert_header(header)
+    duc_global_state = convert_header(header, doc)
 
     # 2. Convert Tables (Layers, Styles)
     
@@ -136,6 +186,7 @@ def convert_dxf_to_duc(dxf_path, duc_path):
 
     # 5. Serialize to DUC file
     print(f"Writing DUC file to: {duc_path}")
+    duc_local_state = duc.StateBuilder().build_local_state().build()
     duc.write_duc_file(
         file_path=duc_path,
         name=os.path.splitext(os.path.basename(dxf_path))[0],
