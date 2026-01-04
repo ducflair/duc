@@ -36,6 +36,18 @@ fn serialize_vec_of_strings<'bldr>(
     Some(v)
 }
 
+/// Helper function to compress a string using zlib compression
+/// Returns the compressed byte vector
+fn compress_string(s: &str) -> Vec<u8> {
+    use flate2::write::ZlibEncoder;
+    use flate2::Compression;
+    use std::io::Write;
+
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+    encoder.write_all(s.as_bytes()).unwrap();
+    encoder.finish().unwrap()
+}
+
 // =============================================================================
 // UTILITY & GEOMETRY TYPES
 // =============================================================================
@@ -471,7 +483,12 @@ fn serialize_duc_element_base<'bldr>(
         Some(builder.create_vector(&bound_elements_offsets))
     };
     let link_offset = base.link.as_ref().map(|s| builder.create_string(s));
-    let custom_data_offset = base.custom_data.as_ref().map(|s| builder.create_string(s));
+
+    // Compress custom_data JSON and create byte vector
+    let custom_data_offset = base.custom_data.as_ref().map(|s| {
+        let compressed = compress_string(s);
+        builder.create_vector::<u8>(&compressed)
+    });
 
     fb::_DucElementBase::create(
         builder,
@@ -2499,10 +2516,15 @@ pub fn serialize_duc_block_metadata<'bldr>(
     metadata: &types::DucBlockMetadata,
 ) -> WIPOffset<fb::DucBlockMetadata<'bldr>> {
     let source_offset = builder.create_string(&metadata.source);
-    let localization_offset: Option<WIPOffset<&'bldr str>> = metadata
+
+    // Compress localization JSON and create byte vector
+    let localization_offset = metadata
         .localization
         .as_ref()
-        .map(|s| builder.create_string(s.as_str()));
+        .map(|s| {
+            let compressed = compress_string(s);
+            builder.create_vector::<u8>(&compressed)
+        });
 
     fb::DucBlockMetadata::create(
         builder,
@@ -3746,17 +3768,19 @@ fn serialize_delta<'bldr>(
     delta: &types::Delta,
 ) -> WIPOffset<fb::Delta<'bldr>> {
     let base_offset = serialize_version_base(builder, &delta.base);
-    let patch_offsets: Vec<_> = delta
-        .patch
-        .iter()
-        .map(|p| serialize_json_patch_operation(builder, p))
-        .collect();
-    let patch_vec = builder.create_vector(&patch_offsets);
+
+    // Serialize patch as compressed JSON data
+    let patch_json = serde_json::to_string(&delta.patch).unwrap();
+    let patch_compressed = compress_string(&patch_json);
+    let patch_vec = builder.create_vector::<u8>(&patch_compressed);
+    let size_bytes = patch_compressed.len() as i64;
+
     fb::Delta::create(
         builder,
         &fb::DeltaArgs {
             base: Some(base_offset),
             patch: Some(patch_vec),
+            size_bytes,
         },
     )
 }
