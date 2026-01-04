@@ -40,32 +40,41 @@ class Delta(object):
         return None
 
     # Delta
-    def Patch(self, j):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+    def SizeBytes(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
-            x = self._tab.Vector(o)
-            x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
-            x = self._tab.Indirect(x)
-            from Duc.JSONPatchOperation import JSONPatchOperation
-            obj = JSONPatchOperation()
-            obj.Init(self._tab.Bytes, x)
-            return obj
-        return None
+            return self._tab.Get(flatbuffers.number_types.Int64Flags, o + self._tab.Pos)
+        return 0
+
+    # Delta
+    def Patch(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            a = self._tab.Vector(o)
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1))
+        return 0
+
+    # Delta
+    def PatchAsNumpy(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Uint8Flags, o)
+        return 0
 
     # Delta
     def PatchLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # Delta
     def PatchIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         return o == 0
 
 def DeltaStart(builder):
-    builder.StartObject(2)
+    builder.StartObject(4)
 
 def Start(builder):
     DeltaStart(builder)
@@ -76,14 +85,20 @@ def DeltaAddBase(builder, base):
 def AddBase(builder, base):
     DeltaAddBase(builder, base)
 
+def DeltaAddSizeBytes(builder, sizeBytes):
+    builder.PrependInt64Slot(2, sizeBytes, 0)
+
+def AddSizeBytes(builder, sizeBytes):
+    DeltaAddSizeBytes(builder, sizeBytes)
+
 def DeltaAddPatch(builder, patch):
-    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(patch), 0)
+    builder.PrependUOffsetTRelativeSlot(3, flatbuffers.number_types.UOffsetTFlags.py_type(patch), 0)
 
 def AddPatch(builder, patch):
     DeltaAddPatch(builder, patch)
 
 def DeltaStartPatchVector(builder, numElems):
-    return builder.StartVector(4, numElems, 4)
+    return builder.StartVector(1, numElems, 1)
 
 def StartPatchVector(builder, numElems):
     return DeltaStartPatchVector(builder, numElems)
