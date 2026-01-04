@@ -8321,9 +8321,9 @@ impl<'a> _DucElementBase<'a> {
   pub const VT_Z_INDEX: flatbuffers::VOffsetT = 52;
   pub const VT_LINK: flatbuffers::VOffsetT = 54;
   pub const VT_LOCKED: flatbuffers::VOffsetT = 56;
-  pub const VT_CUSTOM_DATA: flatbuffers::VOffsetT = 58;
   pub const VT_BLOCK_IDS: flatbuffers::VOffsetT = 60;
   pub const VT_INSTANCE_ID: flatbuffers::VOffsetT = 62;
+  pub const VT_CUSTOM_DATA: flatbuffers::VOffsetT = 64;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -8341,9 +8341,9 @@ impl<'a> _DucElementBase<'a> {
     builder.add_width(args.width);
     builder.add_y(args.y);
     builder.add_x(args.x);
+    if let Some(x) = args.custom_data { builder.add_custom_data(x); }
     if let Some(x) = args.instance_id { builder.add_instance_id(x); }
     if let Some(x) = args.block_ids { builder.add_block_ids(x); }
-    if let Some(x) = args.custom_data { builder.add_custom_data(x); }
     if let Some(x) = args.link { builder.add_link(x); }
     builder.add_z_index(args.z_index);
     if let Some(x) = args.bound_elements { builder.add_bound_elements(x); }
@@ -8569,13 +8569,6 @@ impl<'a> _DucElementBase<'a> {
     unsafe { self._tab.get::<bool>(_DucElementBase::VT_LOCKED, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn custom_data(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(_DucElementBase::VT_CUSTOM_DATA, None)}
-  }
-  #[inline]
   pub fn block_ids(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
     // Safety:
     // Created from valid Table for this object
@@ -8588,6 +8581,13 @@ impl<'a> _DucElementBase<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(_DucElementBase::VT_INSTANCE_ID, None)}
+  }
+  #[inline]
+  pub fn custom_data(&self) -> Option<flatbuffers::Vector<'a, u8>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(_DucElementBase::VT_CUSTOM_DATA, None)}
   }
 }
 
@@ -8625,9 +8625,9 @@ impl flatbuffers::Verifiable for _DucElementBase<'_> {
      .visit_field::<f32>("z_index", Self::VT_Z_INDEX, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("link", Self::VT_LINK, false)?
      .visit_field::<bool>("locked", Self::VT_LOCKED, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("custom_data", Self::VT_CUSTOM_DATA, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("block_ids", Self::VT_BLOCK_IDS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("instance_id", Self::VT_INSTANCE_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("custom_data", Self::VT_CUSTOM_DATA, false)?
      .finish();
     Ok(())
   }
@@ -8660,9 +8660,9 @@ pub struct _DucElementBaseArgs<'a> {
     pub z_index: f32,
     pub link: Option<flatbuffers::WIPOffset<&'a str>>,
     pub locked: bool,
-    pub custom_data: Option<flatbuffers::WIPOffset<&'a str>>,
     pub block_ids: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
     pub instance_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub custom_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
 }
 impl<'a> Default for _DucElementBaseArgs<'a> {
   #[inline]
@@ -8695,9 +8695,9 @@ impl<'a> Default for _DucElementBaseArgs<'a> {
       z_index: 0.0,
       link: None,
       locked: false,
-      custom_data: None,
       block_ids: None,
       instance_id: None,
+      custom_data: None,
     }
   }
 }
@@ -8816,16 +8816,16 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> _DucElementBaseBuilder<'a, 'b, 
     self.fbb_.push_slot::<bool>(_DucElementBase::VT_LOCKED, locked, false);
   }
   #[inline]
-  pub fn add_custom_data(&mut self, custom_data: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_CUSTOM_DATA, custom_data);
-  }
-  #[inline]
   pub fn add_block_ids(&mut self, block_ids: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_BLOCK_IDS, block_ids);
   }
   #[inline]
   pub fn add_instance_id(&mut self, instance_id: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_INSTANCE_ID, instance_id);
+  }
+  #[inline]
+  pub fn add_custom_data(&mut self, custom_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_CUSTOM_DATA, custom_data);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> _DucElementBaseBuilder<'a, 'b, A> {
@@ -8873,9 +8873,9 @@ impl core::fmt::Debug for _DucElementBase<'_> {
       ds.field("z_index", &self.z_index());
       ds.field("link", &self.link());
       ds.field("locked", &self.locked());
-      ds.field("custom_data", &self.custom_data());
       ds.field("block_ids", &self.block_ids());
       ds.field("instance_id", &self.instance_id());
+      ds.field("custom_data", &self.custom_data());
       ds.finish()
   }
 }
@@ -17866,7 +17866,7 @@ impl<'a> DucBlockMetadata<'a> {
   pub const VT_USAGE_COUNT: flatbuffers::VOffsetT = 6;
   pub const VT_CREATED_AT: flatbuffers::VOffsetT = 8;
   pub const VT_UPDATED_AT: flatbuffers::VOffsetT = 10;
-  pub const VT_LOCALIZATION: flatbuffers::VOffsetT = 12;
+  pub const VT_LOCALIZATION: flatbuffers::VOffsetT = 14;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -17916,11 +17916,11 @@ impl<'a> DucBlockMetadata<'a> {
     unsafe { self._tab.get::<i64>(DucBlockMetadata::VT_UPDATED_AT, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn localization(&self) -> Option<&'a str> {
+  pub fn localization(&self) -> Option<flatbuffers::Vector<'a, u8>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlockMetadata::VT_LOCALIZATION, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(DucBlockMetadata::VT_LOCALIZATION, None)}
   }
 }
 
@@ -17935,7 +17935,7 @@ impl flatbuffers::Verifiable for DucBlockMetadata<'_> {
      .visit_field::<i32>("usage_count", Self::VT_USAGE_COUNT, false)?
      .visit_field::<i64>("created_at", Self::VT_CREATED_AT, false)?
      .visit_field::<i64>("updated_at", Self::VT_UPDATED_AT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("localization", Self::VT_LOCALIZATION, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("localization", Self::VT_LOCALIZATION, false)?
      .finish();
     Ok(())
   }
@@ -17945,7 +17945,7 @@ pub struct DucBlockMetadataArgs<'a> {
     pub usage_count: i32,
     pub created_at: i64,
     pub updated_at: i64,
-    pub localization: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub localization: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
 }
 impl<'a> Default for DucBlockMetadataArgs<'a> {
   #[inline]
@@ -17982,7 +17982,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucBlockMetadataBuilder<'a, 'b,
     self.fbb_.push_slot::<i64>(DucBlockMetadata::VT_UPDATED_AT, updated_at, 0);
   }
   #[inline]
-  pub fn add_localization(&mut self, localization: flatbuffers::WIPOffset<&'b  str>) {
+  pub fn add_localization(&mut self, localization: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlockMetadata::VT_LOCALIZATION, localization);
   }
   #[inline]
@@ -31340,7 +31340,8 @@ impl<'a> flatbuffers::Follow<'a> for Delta<'a> {
 
 impl<'a> Delta<'a> {
   pub const VT_BASE: flatbuffers::VOffsetT = 4;
-  pub const VT_PATCH: flatbuffers::VOffsetT = 6;
+  pub const VT_SIZE_BYTES: flatbuffers::VOffsetT = 8;
+  pub const VT_PATCH: flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -31352,6 +31353,7 @@ impl<'a> Delta<'a> {
     args: &'args DeltaArgs<'args>
   ) -> flatbuffers::WIPOffset<Delta<'bldr>> {
     let mut builder = DeltaBuilder::new(_fbb);
+    builder.add_size_bytes(args.size_bytes);
     if let Some(x) = args.patch { builder.add_patch(x); }
     if let Some(x) = args.base { builder.add_base(x); }
     builder.finish()
@@ -31366,11 +31368,18 @@ impl<'a> Delta<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<VersionBase>>(Delta::VT_BASE, None)}
   }
   #[inline]
-  pub fn patch(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<JSONPatchOperation<'a>>>> {
+  pub fn size_bytes(&self) -> i64 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<JSONPatchOperation>>>>(Delta::VT_PATCH, None)}
+    unsafe { self._tab.get::<i64>(Delta::VT_SIZE_BYTES, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn patch(&self) -> Option<flatbuffers::Vector<'a, u8>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(Delta::VT_PATCH, None)}
   }
 }
 
@@ -31382,20 +31391,23 @@ impl flatbuffers::Verifiable for Delta<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<VersionBase>>("base", Self::VT_BASE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<JSONPatchOperation>>>>("patch", Self::VT_PATCH, false)?
+     .visit_field::<i64>("size_bytes", Self::VT_SIZE_BYTES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("patch", Self::VT_PATCH, false)?
      .finish();
     Ok(())
   }
 }
 pub struct DeltaArgs<'a> {
     pub base: Option<flatbuffers::WIPOffset<VersionBase<'a>>>,
-    pub patch: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<JSONPatchOperation<'a>>>>>,
+    pub size_bytes: i64,
+    pub patch: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
 }
 impl<'a> Default for DeltaArgs<'a> {
   #[inline]
   fn default() -> Self {
     DeltaArgs {
       base: None,
+      size_bytes: 0,
       patch: None,
     }
   }
@@ -31411,7 +31423,11 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DeltaBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<VersionBase>>(Delta::VT_BASE, base);
   }
   #[inline]
-  pub fn add_patch(&mut self, patch: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<JSONPatchOperation<'b >>>>) {
+  pub fn add_size_bytes(&mut self, size_bytes: i64) {
+    self.fbb_.push_slot::<i64>(Delta::VT_SIZE_BYTES, size_bytes, 0);
+  }
+  #[inline]
+  pub fn add_patch(&mut self, patch: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Delta::VT_PATCH, patch);
   }
   #[inline]
@@ -31433,6 +31449,7 @@ impl core::fmt::Debug for Delta<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("Delta");
       ds.field("base", &self.base());
+      ds.field("size_bytes", &self.size_bytes());
       ds.field("patch", &self.patch());
       ds.finish()
   }
