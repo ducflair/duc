@@ -563,8 +563,13 @@ const restoreBlockMetadata = (metadata: unknown): DucBlock["metadata"] | undefin
     }
   }
 
+  const rawSource = metadataObj.source;
+  const source = typeof rawSource === "string" && rawSource.trim().length
+    ? rawSource.trim()
+    : undefined;
+
   return {
-    source: typeof metadataObj.source === "string" ? metadataObj.source : "",
+    ...(source ? { source } : {}),
     usageCount: typeof metadataObj.usageCount === "number" ? metadataObj.usageCount : 0,
     createdAt: typeof metadataObj.createdAt === "number" ? metadataObj.createdAt : Date.now(),
     updatedAt: typeof metadataObj.updatedAt === "number" ? metadataObj.updatedAt : Date.now(),
