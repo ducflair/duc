@@ -1,11 +1,13 @@
 import { FileSystemHandle } from 'browser-fs-access';
 import { decompressSync, strFromU8 } from 'fflate';
+import * as flatbuffers from "flatbuffers";
+import { nanoid } from 'nanoid';
 import {
   CustomHatchPattern as CustomHatchPatternFb,
   DimensionToleranceStyle as DimensionToleranceStyleFb,
   DucArrowElement as DucArrowElementFb,
-  DucBlock as DucBlockFb,
   DucBlockCollection as DucBlockCollectionFb,
+  DucBlock as DucBlockFb,
   DucBlockInstance as DucBlockInstanceFb,
   DucBlockMetadata as DucBlockMetadataFb,
   DucCommonStyle as DucCommonStyleFb,
@@ -117,7 +119,6 @@ import {
   DucFeatureControlFrameElement,
   DucFeatureControlFrameStyle,
   DucFrameElement,
-  DucFreeDrawEasing,
   DucFreeDrawElement,
   DucGlobalState,
   DucGroup,
@@ -169,6 +170,7 @@ import {
   GeometricPoint,
   GridSettings,
   HatchPatternLine,
+  JSONPatch,
   LeaderContent,
   LineHead,
   NormalizedZoomValue,
@@ -191,15 +193,12 @@ import {
   VersionGraph,
   ViewportScale,
   Zoom,
-  JSONPatch,
   _DucElementBase,
   _DucElementStylesBase,
   _DucLinearElementBase,
   _DucStackBase,
   _DucStackElementBase
 } from "./types";
-import * as flatbuffers from "flatbuffers";
-import { nanoid } from 'nanoid';
 
 
 // #region HELPERS & LOW-LEVEL CASTS
@@ -751,8 +750,13 @@ function parseBlockMetadata(metadataFb: DucBlockMetadataFb | null): DucBlockMeta
   // localization is now binary JSON data (Uint8Array)
   const localization = parseBinaryToJson(metadataFb.localizationArray()) as BlockLocalizationMap | undefined;
 
+  const rawSource = metadataFb.source();
+  const source = typeof rawSource === "string" && rawSource.trim().length
+    ? rawSource.trim()
+    : undefined;
+
   return {
-    source: metadataFb.source()!,
+    ...(source ? { source } : {}),
     usageCount: metadataFb.usageCount(),
     createdAt: Number(metadataFb.createdAt()),
     updatedAt: Number(metadataFb.updatedAt()),

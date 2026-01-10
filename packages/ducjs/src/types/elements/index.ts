@@ -1052,8 +1052,10 @@ export type DucBlockAttributeDefinition = {
   isConstant: boolean;
 };
 
-/** Indicates whether the block belongs to the project, organization or community */
-export type BlockSourceType = string | "organization" | "community";
+/**
+ * Indicates the source drawing of a block.
+ */
+export type BlockSource = string;
 
 export interface BlockLocalizationEntry {
   title: string;
@@ -1067,8 +1069,8 @@ export interface BlockLocalizationEntry {
 export type BlockLocalizationMap = Record<string, BlockLocalizationEntry>;
 
 export interface DucBlockMetadata {
-  /** Indicates whether the block belongs to the project, organization or community */
-  source: BlockSourceType;
+  /** Drawing id this block originates from */
+  source?: BlockSource;
   /** Total number of times the block was instantiated */
   usageCount: number;
   /** Creation timestamp */
