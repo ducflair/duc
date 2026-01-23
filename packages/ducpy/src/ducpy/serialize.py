@@ -6,6 +6,7 @@ This module provides the main serialization function that leverages all comprehe
 import flatbuffers
 import logging
 import json
+import gzip
 from typing import List, Dict, Union, Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -1148,7 +1149,13 @@ def serialize_fbs_duc_element_base(builder: flatbuffers.Builder, base: DS_DucEle
 
     custom_data_offset = 0
     if base.custom_data:
-        custom_data_offset = builder.CreateString(json.dumps(base.custom_data))
+        # Compress JSON and create byte vector for custom_data
+        json_str = json.dumps(base.custom_data)
+        compressed = gzip.compress(json_str.encode("utf-8"))
+        _DucElementBaseStartCustomDataVector(builder, len(compressed))
+        for i in reversed(range(len(compressed))):
+            builder.PrependByte(compressed[i])
+        custom_data_offset = builder.EndVector(len(compressed))
 
     instance_id_offset = 0
     if base.instance_id:
@@ -2669,7 +2676,7 @@ from ducpy.Duc.JSONPatchOperation import (
     JSONPatchOperationAddValue, JSONPatchOperationEnd
 )
 from ducpy.Duc.Delta import (
-    DeltaStart, DeltaAddBase, DeltaAddPatch, DeltaEnd, DeltaStartPatchVector
+    DeltaStart, DeltaAddBase, DeltaAddPatch, DeltaAddSizeBytes, DeltaEnd, DeltaStartPatchVector
 )
 from ducpy.Duc.VersionGraphMetadata import (
     VersionGraphMetadataStart, VersionGraphMetadataAddLastPruned,
@@ -3364,7 +3371,16 @@ def serialize_fbs_block_attribute_definition_entry(builder: flatbuffers.Builder,
 
 def serialize_fbs_block_metadata(builder: flatbuffers.Builder, metadata: DS_DucBlockMetadata) -> int:
     source_offset = builder.CreateString(metadata.source)
-    localization_offset = _str(builder, metadata.localization)
+
+    # Compress localization JSON and create byte vector
+    localization_offset = 0
+    if metadata.localization:
+        json_str = json.dumps(metadata.localization)
+        compressed = gzip.compress(json_str.encode("utf-8"))
+        DucBlockMetadataStartLocalizationVector(builder, len(compressed))
+        for i in reversed(range(len(compressed))):
+            builder.PrependByte(compressed[i])
+        localization_offset = builder.EndVector(len(compressed))
 
     DucBlockMetadataStart(builder)
     DucBlockMetadataAddSource(builder, source_offset)
@@ -3645,14 +3661,28 @@ def serialize_fbs_json_patch_operation(builder: flatbuffers.Builder, op: DS_JSON
 
 def serialize_fbs_delta(builder: flatbuffers.Builder, d: DS_Delta) -> int:
     base_offset = serialize_fbs_version_base(builder, d)
-    patch_offsets = [serialize_fbs_json_patch_operation(builder, p) for p in (d.patch or [])]
-    DeltaStartPatchVector(builder, len(patch_offsets))
-    for off in reversed(patch_offsets):
-        builder.PrependUOffsetTRelative(off)
-    patch_vec = builder.EndVector()
+
+    # Convert JSONPatchOperation dataclasses to dicts for JSON serialization
+    from dataclasses import asdict, is_dataclass
+    patch_list = []
+    for op in (d.patch or []):
+        if is_dataclass(op):
+            patch_list.append(asdict(op))
+        else:
+            # Already a dict (from parsed data)
+            patch_list.append(op)
+    json_str = json.dumps(patch_list)
+    compressed = gzip.compress(json_str.encode("utf-8"))
+    DeltaStartPatchVector(builder, len(compressed))
+    for i in reversed(range(len(compressed))):
+        builder.PrependByte(compressed[i])
+    patch_vec = builder.EndVector(len(compressed))
+    size_bytes = len(compressed)
+
     DeltaStart(builder)
     DeltaAddBase(builder, base_offset)
     DeltaAddPatch(builder, patch_vec)
+    DeltaAddSizeBytes(builder, size_bytes)
     return DeltaEnd(builder)
 
 def serialize_fbs_version_graph_metadata(builder: flatbuffers.Builder, m: Optional[DS_VersionGraphMetadata]) -> int:
