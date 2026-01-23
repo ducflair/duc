@@ -1,10 +1,13 @@
 import { FileSystemHandle } from 'browser-fs-access';
+import { decompressSync, strFromU8 } from 'fflate';
+import * as flatbuffers from "flatbuffers";
+import { nanoid } from 'nanoid';
 import {
   CustomHatchPattern as CustomHatchPatternFb,
   DimensionToleranceStyle as DimensionToleranceStyleFb,
   DucArrowElement as DucArrowElementFb,
-  DucBlock as DucBlockFb,
   DucBlockCollection as DucBlockCollectionFb,
+  DucBlock as DucBlockFb,
   DucBlockInstance as DucBlockInstanceFb,
   DucBlockMetadata as DucBlockMetadataFb,
   DucCommonStyle as DucCommonStyleFb,
@@ -116,7 +119,6 @@ import {
   DucFeatureControlFrameElement,
   DucFeatureControlFrameStyle,
   DucFrameElement,
-  DucFreeDrawEasing,
   DucFreeDrawElement,
   DucGlobalState,
   DucGroup,
@@ -168,6 +170,7 @@ import {
   GeometricPoint,
   GridSettings,
   HatchPatternLine,
+  JSONPatch,
   LeaderContent,
   LineHead,
   NormalizedZoomValue,
@@ -196,8 +199,6 @@ import {
   _DucStackBase,
   _DucStackElementBase
 } from "./types";
-import * as flatbuffers from "flatbuffers";
-import { nanoid } from 'nanoid';
 
 
 // #region HELPERS & LOW-LEVEL CASTS
@@ -215,7 +216,27 @@ const toZoom = (value: number): Zoom => ({
 } as Zoom);
 // #endregion
 
+// Helper function to parse binary JSON data (Uint8Array) to object
+// The data is zlib-compressed JSON (new format) or plain JSON string (legacy format)
+function parseBinaryToJson(binaryData: Uint8Array | null): Record<string, any> | undefined {
+  if (!binaryData || binaryData.length === 0) return undefined;
 
+  // Try new format: zlib-compressed binary JSON
+  try {
+    const decompressed = decompressSync(binaryData);
+    const text = strFromU8(decompressed);
+    return JSON.parse(text);
+  } catch (e) {
+    // Fall back to legacy format: plain JSON string (for old file compatibility)
+    try {
+      const text = new TextDecoder().decode(binaryData);
+      return JSON.parse(text);
+    } catch (e2) {
+      console.warn('Failed to parse binary JSON (tried both compressed and legacy formats):', e2);
+      return undefined;
+    }
+  }
+}
 
 // #region GEOMETRY & UTILITY PARSERS
 export function parseGeometricPoint(point: GeometricPointFb): GeometricPoint {
@@ -405,7 +426,7 @@ export function parseElementBase(base: _DucElementBaseFb): _DucElementBase {
     zIndex: base.zIndex(),
     link: base.link(),
     locked: base.locked(),
-    customData: base.customData() ? JSON.parse(base.customData()!) : undefined,
+    customData: parseBinaryToJson(base.customDataArray()),
     ...parsedStyles,
   } as _DucElementBase;
 }
@@ -726,20 +747,16 @@ function parseBlockInstance(instance: DucBlockInstanceFb): DucBlockInstance {
 function parseBlockMetadata(metadataFb: DucBlockMetadataFb | null): DucBlockMetadata | undefined {
   if (!metadataFb) return undefined;
 
-  // localization is a JSON string containing the localization data
-  let localization: BlockLocalizationMap | undefined;
-  const localizationStr = metadataFb.localization();
-  if (localizationStr) {
-    try {
-      localization = JSON.parse(localizationStr);
-    } catch (e) {
-      // If parsing fails, leave localization undefined
-      console.warn('Failed to parse localization JSON:', e);
-    }
-  }
+  // localization is now binary JSON data (Uint8Array)
+  const localization = parseBinaryToJson(metadataFb.localizationArray()) as BlockLocalizationMap | undefined;
+
+  const rawSource = metadataFb.source();
+  const source = typeof rawSource === "string" && rawSource.trim().length
+    ? rawSource.trim()
+    : undefined;
 
   return {
-    source: metadataFb.source()!,
+    ...(source ? { source } : {}),
     usageCount: metadataFb.usageCount(),
     createdAt: Number(metadataFb.createdAt()),
     updatedAt: Number(metadataFb.updatedAt()),
@@ -1747,15 +1764,7 @@ export function parseVersionGraphFromBinary(graph: VersionGraphFb | null): Versi
         description: base.description() || undefined,
         isManualSave: base.isManualSave(),
         userId: base.userId() || undefined,
-        patch: Array.from({ length: d.patchLength() }, (_, j) => {
-          const p = d.patch(j)!;
-          return {
-            op: p.op()!,
-            path: p.path()!,
-            from: p.from() || undefined,
-            value: p.value() ? JSON.parse(p.value()!) : undefined,
-          };
-        }),
+        patch: parseBinaryToJson(d.patchArray()) as JSONPatch,
       };
     }),
     metadata: {

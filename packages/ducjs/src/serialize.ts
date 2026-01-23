@@ -9,6 +9,7 @@
 */
 import * as flatbuffers from "flatbuffers";
 import * as Duc from "./flatbuffers/duc";
+import { zlibSync, strToU8 } from "fflate";
 
 import {
   _DucElementStylesBase,
@@ -118,7 +119,7 @@ import { encodeFunctionString, EXPORT_DATA_TYPES } from "./utils";
 /**
  * Basic helpers
  */
-const str = (b: flatbuffers.Builder, v: string | null | undefined): number | undefined =>
+const str = (b: flatbuffers.Builder, v: string | Uint8Array | null | undefined): number | undefined =>
   v == null ? undefined : b.createString(v);
 
 function writeString(builder: flatbuffers.Builder, str: string | null | undefined): number | undefined {
@@ -447,7 +448,7 @@ function writeElementBase(b: flatbuffers.Builder, e: _DucElementStylesBase & _Du
   const frameId = str(b, e.frameId ?? undefined);
   const bound = e.boundElements?.length ? Duc._DucElementBase.createBoundElementsVector(b, e.boundElements.map((x) => writeBoundElement(b, x, usv))) : undefined;
   const link = str(b, e.link ?? undefined);
-  const custom = e.customData != null ? str(b, JSON.stringify(e.customData)) : undefined;
+  const custom = e.customData != null ? Duc._DucElementBase.createCustomDataVector(b, zlibSync(strToU8(JSON.stringify(e.customData)))) : undefined;
 
   Duc._DucElementBase.start_DucElementBase(b);
   if (id) Duc._DucElementBase.addId(b, id);
@@ -847,7 +848,7 @@ function writeBlockAttrDef(b: flatbuffers.Builder, d: DucBlockAttributeDefinitio
 
 function writeBlockMetadata(b: flatbuffers.Builder, metadata: DucBlockMetadata): number {
   const source = b.createString(metadata.source);
-  const localization = metadata.localization ? b.createString(JSON.stringify(metadata.localization)) : undefined;
+  const localization = metadata.localization ? Duc.DucBlockMetadata.createLocalizationVector(b, zlibSync(strToU8(JSON.stringify(metadata.localization)))) : undefined;
 
   Duc.DucBlockMetadata.startDucBlockMetadata(b);
   Duc.DucBlockMetadata.addSource(b, source);
@@ -955,9 +956,9 @@ function writeBlockCollection(b: flatbuffers.Builder, c: DucBlockCollection): nu
     const metadata = c.metadata;
     let localizationOffset: number | undefined;
     if (metadata.localization) {
-      // localization is stored as a JSON string
-      const localizationStr = JSON.stringify(metadata.localization);
-      localizationOffset = b.createString(localizationStr);
+      // localization is stored as compressed binary JSON data
+      const localizationBin = zlibSync(strToU8(JSON.stringify(metadata.localization)));
+      localizationOffset = Duc.DucBlockMetadata.createLocalizationVector(b, localizationBin);
     }
 
     const source = b.createString(metadata.source);
@@ -2306,29 +2307,20 @@ function serializeCheckpoint(b: flatbuffers.Builder, c: Checkpoint): number {
   return Duc.Checkpoint.endCheckpoint(b);
 }
 
-function writeJsonPatch(b: flatbuffers.Builder, p: JSONPatch): number {
-  const ops = p.map((op) => {
-    const opStr = b.createString(op.op);
-    const pathStr = b.createString(op.path);
-    const fromStr = op.from !== undefined ? b.createString(op.from) : undefined;
-    const valueStr = op.value !== undefined ? b.createString(JSON.stringify(op.value)) : undefined;
-
-    Duc.JSONPatchOperation.startJSONPatchOperation(b);
-    Duc.JSONPatchOperation.addOp(b, opStr);
-    Duc.JSONPatchOperation.addPath(b, pathStr);
-    if (fromStr) Duc.JSONPatchOperation.addFrom(b, fromStr);
-    if (valueStr) Duc.JSONPatchOperation.addValue(b, valueStr);
-    return Duc.JSONPatchOperation.endJSONPatchOperation(b);
-  });
-  return Duc.Delta.createPatchVector(b, ops);
+function writeJsonPatch(b: flatbuffers.Builder, p: JSONPatch): { offset: number; sizeBytes: number } {
+  // Compress the JSON patch data
+  const patchData = zlibSync(strToU8(JSON.stringify(p)));
+  const offset = Duc.Delta.createPatchVector(b, patchData);
+  return { offset, sizeBytes: patchData.length };
 }
 
 function serializeDelta(b: flatbuffers.Builder, d: Delta): number {
   const base = serializeVersionBase(b, d);
-  const patch = writeJsonPatch(b, d.patch);
+  const { offset: patch, sizeBytes } = writeJsonPatch(b, d.patch);
   Duc.Delta.startDelta(b);
   Duc.Delta.addBase(b, base);
   Duc.Delta.addPatch(b, patch);
+  Duc.Delta.addSizeBytes(b, BigInt(sizeBytes));
   return Duc.Delta.endDelta(b);
 }
 
