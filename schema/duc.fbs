@@ -1012,9 +1012,7 @@ table _DucElementBase {
   link: string;
   locked: bool;
   
-  /** Contains a JSON string of custom key-value data. */
-  custom_data: string;
-
+  custom_data_string: string (deprecated);
   /** 
    * List of blocks this element helps *define*. 
    * If this is populated, `instanceId` should be null.
@@ -1026,6 +1024,9 @@ table _DucElementBase {
    * If not null, `block_ids` is empty (the relationship to the Block is via the Instance).
    */
   instance_id: string; 
+
+  /** Contains a JSON of custom key-value data. */
+  custom_data: [ubyte];
 }
 
 table DucPoint {
@@ -1724,7 +1725,9 @@ table DucBlockMetadata {
       *   description?: string;
       * }
    */
-  localization: string;
+  localization_string: string (deprecated);
+  localization: [ubyte];
+  
 }
 
 
@@ -2621,7 +2624,11 @@ table JSONPatchOperation {
 
 table Delta {
   base: VersionBase;
-  patch: [JSONPatchOperation];
+  patch_string: [JSONPatchOperation] (deprecated);
+  size_bytes: long;
+  
+  /** Compressed binary data for the delta (zlib). When present, patch is ignored. */
+  patch: [ubyte];
 }
 
 table VersionGraphMetadata {

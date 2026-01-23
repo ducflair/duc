@@ -47,6 +47,31 @@ fn parse_vec_of_required_strings(vec: Option<flatbuffers::Vector<'_, flatbuffers
     }
 }
 
+/// Helper function to parse binary JSON data to a JSON string
+/// Expects zlib-compressed JSON
+/// Returns None if the data is empty or parsing fails
+fn parse_binary_json_to_string(vec: Option<flatbuffers::Vector<'_, u8>>) -> Option<String> {
+    match vec {
+        Some(v) if v.len() > 0 => {
+            // Collect the bytes into a Vec<u8>
+            let data: Vec<u8> = (0..v.len()).map(|i| v.get(i)).collect();
+
+            // Parse zlib-compressed JSON
+            use flate2::read::ZlibDecoder;
+            use std::io::Read;
+
+            let mut d = ZlibDecoder::new(data.as_slice());
+            let mut decompressed = Vec::new();
+            if d.read_to_end(&mut decompressed).is_ok() {
+                String::from_utf8(decompressed).ok()
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
+}
+
 
 // =============================================================================
 // UTILITY & GEOMETRY TYPES
@@ -315,7 +340,7 @@ fn parse_duc_element_base(base: fb::_DucElementBase) -> ParseResult<types::DucEl
         z_index: base.z_index(),
         link: base.link().map(|s| s.to_string()),
         locked: base.locked(),
-        custom_data: base.custom_data().map(|s| s.to_string()),
+        custom_data: parse_binary_json_to_string(base.custom_data()),
     })
 }
 
@@ -1284,7 +1309,7 @@ fn parse_duc_block_metadata(metadata: fb::DucBlockMetadata) -> ParseResult<types
         usage_count: metadata.usage_count(),
         created_at: metadata.created_at(),
         updated_at: metadata.updated_at(),
-        localization: metadata.localization().map(|s| s.to_string()),
+        localization: parse_binary_json_to_string(metadata.localization()),
     })
 }
 
@@ -1909,8 +1934,14 @@ fn parse_json_patch_operation(op: fb::JSONPatchOperation) -> ParseResult<types::
 }
 
 fn parse_delta(delta: fb::Delta) -> ParseResult<types::Delta> {
-    let patch_vec = delta.patch().ok_or("Missing Delta.patch")?;
-    let patch = patch_vec.iter().map(parse_json_patch_operation).collect::<ParseResult<_>>()?;
+    // patch is now zlib-compressed JSON data
+    let patch_json = parse_binary_json_to_string(delta.patch())
+        .ok_or("Failed to parse delta patch")?;
+
+    // Parse the JSON string into a vector of JSONPatchOperation
+    let patch: Vec<types::JSONPatchOperation> = serde_json::from_str(&patch_json)
+        .map_err(|_| "Failed to parse delta patch JSON")?;
+
     Ok(types::Delta {
         base: parse_version_base(delta.base().ok_or("Missing Delta.base")?)?,
         patch,
