@@ -55,6 +55,14 @@ export const arrayToMap = <T extends { id: string } | string>(
   }, new Map());
 };
 
+export function omitKeys<T extends Record<string, unknown>, K extends keyof T>(
+  obj: T,
+  keys: K[]
+): Omit<T, K> {
+  const result = { ...obj };
+  keys.forEach(key => delete result[key]);
+  return result;
+}
 
 const RS_LTR_CHARS =
   "A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02B8\u0300-\u0590\u0800-\u1FFF" +

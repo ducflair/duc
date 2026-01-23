@@ -34,7 +34,7 @@ import {
   Radian,
   ScaleFactor,
 } from "./geometryTypes";
-import { MakeBrand, MaybePromise, ValueOf } from "./utility-types";
+import { MakeBrand, MarkOptional, MaybePromise, ValueOf } from "./utility-types";
 import type {
   GRID_DISPLAY_TYPE,
   GRID_TYPE,
@@ -82,6 +82,7 @@ export interface ExportedDataState {
 }
 
 export type ExportedDataStateContent = Omit<ExportedDataState, "type" | "version" | "source">;
+export type BaseExportedDataState = MarkOptional<ExportedDataStateContent, "elements" | "localState" | "versionGraph">;
 
 /**
  * A version of the data state where all fields are optional.
