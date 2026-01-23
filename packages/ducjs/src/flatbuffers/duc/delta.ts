@@ -4,7 +4,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { JSONPatchOperation } from '../duc/jsonpatch-operation';
 import { VersionBase } from '../duc/version-base';
 
 
@@ -31,38 +30,52 @@ base(obj?:VersionBase):VersionBase|null {
   return offset ? (obj || new VersionBase()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-patch(index: number, obj?:JSONPatchOperation):JSONPatchOperation|null {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? (obj || new JSONPatchOperation()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+sizeBytes():bigint {
+  const offset = this.bb!.__offset(this.bb_pos, 8);
+  return offset ? this.bb!.readInt64(this.bb_pos + offset) : BigInt('0');
+}
+
+patch(index: number):number|null {
+  const offset = this.bb!.__offset(this.bb_pos, 10);
+  return offset ? this.bb!.readUint8(this.bb!.__vector(this.bb_pos + offset) + index) : 0;
 }
 
 patchLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
+  const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
+patchArray():Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 10);
+  return offset ? new Uint8Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
+}
+
 static startDelta(builder:flatbuffers.Builder) {
-  builder.startObject(2);
+  builder.startObject(4);
 }
 
 static addBase(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset) {
   builder.addFieldOffset(0, baseOffset, 0);
 }
 
-static addPatch(builder:flatbuffers.Builder, patchOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, patchOffset, 0);
+static addSizeBytes(builder:flatbuffers.Builder, sizeBytes:bigint) {
+  builder.addFieldInt64(2, sizeBytes, BigInt('0'));
 }
 
-static createPatchVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
+static addPatch(builder:flatbuffers.Builder, patchOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(3, patchOffset, 0);
+}
+
+static createPatchVector(builder:flatbuffers.Builder, data:number[]|Uint8Array):flatbuffers.Offset {
+  builder.startVector(1, data.length, 1);
   for (let i = data.length - 1; i >= 0; i--) {
-    builder.addOffset(data[i]!);
+    builder.addInt8(data[i]!);
   }
   return builder.endVector();
 }
 
 static startPatchVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(4, numElems, 4);
+  builder.startVector(1, numElems, 1);
 }
 
 static endDelta(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -70,9 +83,10 @@ static endDelta(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createDelta(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset, patchOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createDelta(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset, sizeBytes:bigint, patchOffset:flatbuffers.Offset):flatbuffers.Offset {
   Delta.startDelta(builder);
   Delta.addBase(builder, baseOffset);
+  Delta.addSizeBytes(builder, sizeBytes);
   Delta.addPatch(builder, patchOffset);
   return Delta.endDelta(builder);
 }
