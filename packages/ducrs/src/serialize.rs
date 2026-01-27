@@ -3743,25 +3743,6 @@ fn serialize_checkpoint<'bldr>(
     )
 }
 
-fn serialize_json_patch_operation<'bldr>(
-    builder: &mut FlatBufferBuilder<'bldr>,
-    op: &types::JSONPatchOperation,
-) -> WIPOffset<fb::JSONPatchOperation<'bldr>> {
-    let op_offset = builder.create_string(&op.op);
-    let path_offset = builder.create_string(&op.path);
-    // 'from' is optional in JSON Patch; convert Option<String> -> Option<&str> then map to FB string
-    let from_offset = op.from.as_deref().map(|s| builder.create_string(s));
-    let value_offset = op.value.as_ref().map(|s| builder.create_string(s));
-    fb::JSONPatchOperation::create(
-        builder,
-        &fb::JSONPatchOperationArgs {
-            op: Some(op_offset),
-            path: Some(path_offset),
-            from: from_offset,
-            value: value_offset,
-        },
-    )
-}
 
 fn serialize_delta<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
