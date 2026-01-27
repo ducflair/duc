@@ -1924,14 +1924,6 @@ fn parse_checkpoint(checkpoint: fb::Checkpoint) -> ParseResult<types::Checkpoint
     })
 }
 
-fn parse_json_patch_operation(op: fb::JSONPatchOperation) -> ParseResult<types::JSONPatchOperation> {
-    Ok(types::JSONPatchOperation {
-        op: op.op().ok_or("Missing JSONPatchOperation.op")?.to_string(),
-        path: op.path().ok_or("Missing JSONPatchOperation.path")?.to_string(),
-        from: op.from().map(|s| s.to_string()),
-        value: op.value().map(|s| s.to_string()),
-    })
-}
 
 fn parse_delta(delta: fb::Delta) -> ParseResult<types::Delta> {
     // patch is now zlib-compressed JSON data

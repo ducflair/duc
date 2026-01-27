@@ -920,8 +920,17 @@ function writeBlockInstance(b: flatbuffers.Builder, i: DucBlockInstance, usv: bo
       Duc.DucBlockDuplicationArray.startDucBlockDuplicationArray(b);
       Duc.DucBlockDuplicationArray.addRows(b, i.duplicationArray.rows);
       Duc.DucBlockDuplicationArray.addCols(b, i.duplicationArray.cols);
-      Duc.DucBlockDuplicationArray.addRowSpacing(b, getPrecisionValue(i.duplicationArray.rowSpacing, usv));
-      Duc.DucBlockDuplicationArray.addColSpacing(b, getPrecisionValue(i.duplicationArray.colSpacing, usv));
+
+      const rSpacing = typeof i.duplicationArray.rowSpacing === 'number'
+        ? i.duplicationArray.rowSpacing
+        : getPrecisionValue(i.duplicationArray.rowSpacing, usv);
+
+      const cSpacing = typeof i.duplicationArray.colSpacing === 'number'
+        ? i.duplicationArray.colSpacing
+        : getPrecisionValue(i.duplicationArray.colSpacing, usv);
+
+      Duc.DucBlockDuplicationArray.addRowSpacing(b, rSpacing);
+      Duc.DucBlockDuplicationArray.addColSpacing(b, cSpacing);
       return Duc.DucBlockDuplicationArray.endDucBlockDuplicationArray(b);
     })()
     : undefined;
