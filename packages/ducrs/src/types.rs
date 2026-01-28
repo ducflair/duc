@@ -1036,7 +1036,7 @@ pub struct DucBlockAttributeDefinitionEntry {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucBlockMetadata {
-    pub source: String,
+    pub source: Option<String>,
     pub usage_count: i32,
     pub created_at: i64,
     pub updated_at: i64,
@@ -1537,7 +1537,7 @@ pub struct JSONPatchOperation {
     pub op: String,
     pub path: String,
     pub from: Option<String>,
-    pub value: Option<String>,
+    pub value: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

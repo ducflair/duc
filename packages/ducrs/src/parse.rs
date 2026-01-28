@@ -53,20 +53,22 @@ fn parse_vec_of_required_strings(vec: Option<flatbuffers::Vector<'_, flatbuffers
 fn parse_binary_json_to_string(vec: Option<flatbuffers::Vector<'_, u8>>) -> Option<String> {
     match vec {
         Some(v) if v.len() > 0 => {
-            // Collect the bytes into a Vec<u8>
             let data: Vec<u8> = (0..v.len()).map(|i| v.get(i)).collect();
 
-            // Parse zlib-compressed JSON
             use flate2::read::ZlibDecoder;
             use std::io::Read;
 
             let mut d = ZlibDecoder::new(data.as_slice());
             let mut decompressed = Vec::new();
+
             if d.read_to_end(&mut decompressed).is_ok() {
-                String::from_utf8(decompressed).ok()
-            } else {
-                None
+                if let Ok(text) = String::from_utf8(decompressed) {
+                    return Some(text);
+                }
             }
+
+            // Fallback to legacy format: plain JSON string (for old file compatibility)
+            String::from_utf8(data).ok()
         }
         _ => None,
     }
@@ -1304,8 +1306,12 @@ fn parse_duc_block_attribute_definition_entry(entry: fb::DucBlockAttributeDefini
 }
 
 fn parse_duc_block_metadata(metadata: fb::DucBlockMetadata) -> ParseResult<types::DucBlockMetadata> {
+    let source = metadata.source()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+
     Ok(types::DucBlockMetadata {
-        source: metadata.source().ok_or("Missing DucBlockMetadata.source")?.to_string(),
+        source,
         usage_count: metadata.usage_count(),
         created_at: metadata.created_at(),
         updated_at: metadata.updated_at(),

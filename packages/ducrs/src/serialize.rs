@@ -2515,7 +2515,7 @@ pub fn serialize_duc_block_metadata<'bldr>(
     builder: &mut flatbuffers::FlatBufferBuilder<'bldr>,
     metadata: &types::DucBlockMetadata,
 ) -> WIPOffset<fb::DucBlockMetadata<'bldr>> {
-    let source_offset = builder.create_string(&metadata.source);
+    let source_offset = metadata.source.as_ref().map(|s| builder.create_string(s));
 
     // Compress localization JSON and create byte vector
     let localization_offset = metadata
@@ -2529,7 +2529,7 @@ pub fn serialize_duc_block_metadata<'bldr>(
     fb::DucBlockMetadata::create(
         builder,
         &fb::DucBlockMetadataArgs {
-            source: Some(source_offset),
+            source: source_offset,
             usage_count: metadata.usage_count,
             created_at: metadata.created_at,
             updated_at: metadata.updated_at,
