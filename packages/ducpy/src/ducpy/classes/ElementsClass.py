@@ -439,9 +439,18 @@ class DucEmbeddableElement:
     base: DucElementBase
 
 @dataclass
+class DocumentGridConfig:
+    columns: int
+    gap_x: float
+    gap_y: float
+    align_items: DOCUMENT_GRID_ALIGN_ITEMS
+    first_page_alone: bool
+
+@dataclass
 class DucPdfElement:
     base: DucElementBase
     file_id: Optional[str]
+    grid_config: DocumentGridConfig
 
 @dataclass
 class DucMermaidElement:
@@ -817,7 +826,9 @@ class DucDocElement:
     columns: ColumnLayout
     auto_resize: bool
     flow_direction: TEXT_FLOW_DIRECTION
-    
+    file_id: Optional[str]
+    grid_config: DocumentGridConfig
+
 
 @dataclass
 class DucCommonStyle:
@@ -834,6 +845,13 @@ class ParametricSource:
 class DucParametricElement:
     base: DucElementBase
     source: ParametricSource
+
+@dataclass
+class DucModelElement:
+    base: DucElementBase
+    source: str
+    svg_path: Optional[str]
+    file_ids: List[str]
 
 @dataclass
 class DucGroup:
@@ -880,7 +898,8 @@ DucElement = Union[
     DucDimensionElement,
     DucFeatureControlFrameElement,
     DucDocElement,
-    DucParametricElement
+    DucParametricElement,
+    DucModelElement
 ]
 
 @dataclass

@@ -18,4 +18,4 @@ on the python side:
 
 And then run the build (or test commands if available) for each from @duc/package.json 
 
-and in case you need to check the fbs schema: @duc/schema/duc.fbs 
+and in case you need to check the fbs schema or what changed (changes may be git staged): @duc/schema/duc.fbs 
