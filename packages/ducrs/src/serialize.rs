@@ -1184,11 +1184,13 @@ fn serialize_duc_pdf_element<'bldr>(
 ) -> WIPOffset<fb::DucPdfElement<'bldr>> {
     let base_offset = serialize_duc_element_base(builder, &element.base);
     let file_id_offset = element.file_id.as_deref().map(|s| builder.create_string(s));
+    let grid_config_offset = serialize_document_grid_config(builder, &element.grid_config);
     fb::DucPdfElement::create(
         builder,
         &fb::DucPdfElementArgs {
             base: Some(base_offset),
             file_id: file_id_offset,
+            grid_config: Some(grid_config_offset),
         },
     )
 }
@@ -2307,6 +2309,22 @@ fn serialize_column_layout<'bldr>(
     )
 }
 
+fn serialize_document_grid_config<'bldr>(
+    builder: &mut FlatBufferBuilder<'bldr>,
+    config: &types::DocumentGridConfig,
+) -> WIPOffset<fb::DocumentGridConfig<'bldr>> {
+    fb::DocumentGridConfig::create(
+        builder,
+        &fb::DocumentGridConfigArgs {
+            columns: config.columns,
+            gap_x: config.gap_x,
+            gap_y: config.gap_y,
+            align_items: Some(config.align_items.into()),
+            first_page_alone: config.first_page_alone,
+        },
+    )
+}
+
 fn serialize_duc_doc_element<'bldr>(
     builder: &mut FlatBufferBuilder<'bldr>,
     element: &types::DucDocElement,
@@ -2323,6 +2341,8 @@ fn serialize_duc_doc_element<'bldr>(
         flatbuffers::Vector<'bldr, flatbuffers::ForwardsUOffset<fb::DucTextDynamicPart<'bldr>>>,
     > = builder.create_vector(&dynamic_offsets);
     let columns_offset = serialize_column_layout(builder, &element.columns);
+    let file_id_offset = element.file_id.as_deref().map(|s| builder.create_string(s));
+    let grid_config_offset = serialize_document_grid_config(builder, &element.grid_config);
 
     fb::DucDocElement::create(
         builder,
@@ -2334,6 +2354,8 @@ fn serialize_duc_doc_element<'bldr>(
             flow_direction: Some(element.flow_direction),
             columns: Some(columns_offset),
             auto_resize: element.auto_resize,
+            file_id: file_id_offset,
+            grid_config: Some(grid_config_offset),
         },
     )
 }
@@ -2365,6 +2387,30 @@ fn serialize_duc_parametric_element<'bldr>(
         &fb::DucParametricElementArgs {
             base: Some(base_offset),
             source: Some(source_offset),
+        },
+    )
+}
+
+fn serialize_duc_model_element<'bldr>(
+    builder: &mut FlatBufferBuilder<'bldr>,
+    element: &types::DucModelElement,
+) -> WIPOffset<fb::DucModelElement<'bldr>> {
+    let base_offset = serialize_duc_element_base(builder, &element.base);
+    let source_offset = builder.create_string(&element.source);
+    let svg_path_offset = element.svg_path.as_deref().map(|s| builder.create_string(s));
+    let file_id_offsets: Vec<_> = element.file_ids.iter().map(|s| builder.create_string(s)).collect();
+    let file_ids_vec = if !file_id_offsets.is_empty() {
+        Some(builder.create_vector(&file_id_offsets))
+    } else {
+        None
+    };
+    fb::DucModelElement::create(
+        builder,
+        &fb::DucModelElementArgs {
+            base: Some(base_offset),
+            source: Some(source_offset),
+            svg_path: svg_path_offset,
+            file_ids: file_ids_vec,
         },
     )
 }
@@ -2461,6 +2507,10 @@ fn serialize_element_wrapper<'bldr>(
         types::DucElementEnum::DucParametricElement(e) => (
             fb::Element::DucParametricElement,
             serialize_duc_parametric_element(builder, e).as_union_value(),
+        ),
+        types::DucElementEnum::DucModelElement(e) => (
+            fb::Element::DucModelElement,
+            serialize_duc_model_element(builder, e).as_union_value(),
         ),
     };
 

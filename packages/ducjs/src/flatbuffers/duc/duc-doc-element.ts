@@ -5,6 +5,7 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { ColumnLayout } from '../duc/column-layout';
+import { DocumentGridConfig } from '../duc/document-grid-config';
 import { DucDocStyle } from '../duc/duc-doc-style';
 import { DucTextDynamicPart } from '../duc/duc-text-dynamic-part';
 import { TEXT_FLOW_DIRECTION } from '../duc/text-flow-direction';
@@ -71,8 +72,20 @@ autoResize():boolean {
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
+gridConfig(obj?:DocumentGridConfig):DocumentGridConfig|null {
+  const offset = this.bb!.__offset(this.bb_pos, 18);
+  return offset ? (obj || new DocumentGridConfig()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+fileId():string|null
+fileId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+fileId(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 20);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
 static startDucDocElement(builder:flatbuffers.Builder) {
-  builder.startObject(7);
+  builder.startObject(9);
 }
 
 static addBase(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset) {
@@ -113,6 +126,14 @@ static addColumns(builder:flatbuffers.Builder, columnsOffset:flatbuffers.Offset)
 
 static addAutoResize(builder:flatbuffers.Builder, autoResize:boolean) {
   builder.addFieldInt8(6, +autoResize, +false);
+}
+
+static addGridConfig(builder:flatbuffers.Builder, gridConfigOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(7, gridConfigOffset, 0);
+}
+
+static addFileId(builder:flatbuffers.Builder, fileIdOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(8, fileIdOffset, 0);
 }
 
 static endDucDocElement(builder:flatbuffers.Builder):flatbuffers.Offset {
