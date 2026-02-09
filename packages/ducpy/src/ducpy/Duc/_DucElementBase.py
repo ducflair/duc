@@ -266,13 +266,6 @@ class _DucElementBase(object):
         return False
 
     # _DucElementBase
-    def CustomData(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(58))
-        if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
-
-    # _DucElementBase
     def BlockIds(self, j):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(60))
         if o != 0:
@@ -299,8 +292,35 @@ class _DucElementBase(object):
             return self._tab.String(o + self._tab.Pos)
         return None
 
+    # _DucElementBase
+    def CustomData(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(64))
+        if o != 0:
+            a = self._tab.Vector(o)
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1))
+        return 0
+
+    # _DucElementBase
+    def CustomDataAsNumpy(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(64))
+        if o != 0:
+            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Uint8Flags, o)
+        return 0
+
+    # _DucElementBase
+    def CustomDataLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(64))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # _DucElementBase
+    def CustomDataIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(64))
+        return o == 0
+
 def _DucElementBaseStart(builder):
-    builder.StartObject(30)
+    builder.StartObject(31)
 
 def Start(builder):
     _DucElementBaseStart(builder)
@@ -485,12 +505,6 @@ def _DucElementBaseAddLocked(builder, locked):
 def AddLocked(builder, locked):
     _DucElementBaseAddLocked(builder, locked)
 
-def _DucElementBaseAddCustomData(builder, customData):
-    builder.PrependUOffsetTRelativeSlot(27, flatbuffers.number_types.UOffsetTFlags.py_type(customData), 0)
-
-def AddCustomData(builder, customData):
-    _DucElementBaseAddCustomData(builder, customData)
-
 def _DucElementBaseAddBlockIds(builder, blockIds):
     builder.PrependUOffsetTRelativeSlot(28, flatbuffers.number_types.UOffsetTFlags.py_type(blockIds), 0)
 
@@ -508,6 +522,18 @@ def _DucElementBaseAddInstanceId(builder, instanceId):
 
 def AddInstanceId(builder, instanceId):
     _DucElementBaseAddInstanceId(builder, instanceId)
+
+def _DucElementBaseAddCustomData(builder, customData):
+    builder.PrependUOffsetTRelativeSlot(30, flatbuffers.number_types.UOffsetTFlags.py_type(customData), 0)
+
+def AddCustomData(builder, customData):
+    _DucElementBaseAddCustomData(builder, customData)
+
+def _DucElementBaseStartCustomDataVector(builder, numElems):
+    return builder.StartVector(1, numElems, 1)
+
+def StartCustomDataVector(builder, numElems):
+    return _DucElementBaseStartCustomDataVector(builder, numElems)
 
 def _DucElementBaseEnd(builder):
     return builder.EndObject()

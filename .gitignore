@@ -37,3 +37,6 @@ sst.pyi
 build_logs
 
 .claude
+
+
+tsconfig.tsbuildinfo

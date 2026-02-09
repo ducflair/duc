@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import gzip
 from typing import List, Dict, Optional, Union, Any, IO
 
 import flatbuffers
@@ -49,12 +50,14 @@ from ducpy.classes.ElementsClass import (
     DucFeatureControlFrameElement as DS_DucFeatureControlFrameElement,
     DucDocElement as DS_DucDocElement,
     DucParametricElement as DS_DucParametricElement,
+    DucModelElement as DS_DucModelElement,
     DucBlock as DS_DucBlock,
     DucBlockCollection as DS_DucBlockCollection,
     DucBlockMetadata as DS_DucBlockMetadata,
     DucGroup as DS_DucGroup,
     DucRegion as DS_DucRegion,
     DucLayer as DS_DucLayer,
+    DocumentGridConfig as DS_DocumentGridConfig,
     ElementBackground as DS_ElementBackground,
     ElementStroke as DS_ElementStroke,
     GeometricPoint as DS_GeometricPoint,
@@ -260,6 +263,8 @@ from ducpy.Duc.DucDimensionElement import DucDimensionElement as FBSDucDimension
 from ducpy.Duc.DucFeatureControlFrameElement import DucFeatureControlFrameElement as FBSDucFeatureControlFrameElement
 from ducpy.Duc.DucDocElement import DucDocElement as FBSDucDocElement
 from ducpy.Duc.DucParametricElement import DucParametricElement as FBSDucParametricElement
+from ducpy.Duc.DucModelElement import DucModelElement as FBSDucModelElement
+from ducpy.Duc.DocumentGridConfig import DocumentGridConfig as FBSDocumentGridConfig
 
 from ducpy.Duc.ElementContentBase import ElementContentBase as FBSElementContentBase
 from ducpy.Duc.ElementStroke import ElementStroke as FBSElementStroke
@@ -492,6 +497,16 @@ def _json_or_none(s: Optional[bytes]) -> Optional[Dict[str, Any]]:
         return None
     try:
         return json.loads(s.decode("utf-8"))
+    except Exception:
+        return None
+
+def _binary_json_or_none(data: Optional[bytes]) -> Optional[Any]:
+    """Parse gzip-compressed binary JSON data."""
+    if not data:
+        return None
+    try:
+        decompressed = gzip.decompress(data)
+        return json.loads(decompressed.decode("utf-8"))
     except Exception:
         return None
 
@@ -738,7 +753,11 @@ def parse_fbs_duc_element_base(obj: FBSDucElementBase) -> DS_DucElementBase:
             bound_elements = [parse_fbs_bound_element(obj.BoundElements(i)) for i in range(obj.BoundElementsLength())]
     except Exception:
         pass
-    custom_data = _json_or_none(obj.CustomData()) if hasattr(obj, "CustomData") else None
+    # custom_data is now binary compressed JSON
+    custom_data = None
+    if hasattr(obj, "CustomData") and not obj.CustomDataIsNone():
+        custom_data_bytes = _read_bytes_from_numpy(obj, "CustomDataLength", "CustomDataAsNumpy", "CustomData")
+        custom_data = _binary_json_or_none(custom_data_bytes)
     return DS_DucElementBase(
         id=_s_req(obj.Id()) if hasattr(obj, "Id") else "",
         styles=styles,
@@ -1073,10 +1092,33 @@ def parse_fbs_embeddable(obj: FBSDucEmbeddableElement) -> DS_DucEmbeddableElemen
         base=parse_fbs_duc_element_base(obj.Base())
     )
 
+def parse_fbs_document_grid_config(obj: FBSDocumentGridConfig) -> DS_DocumentGridConfig:
+    return DS_DocumentGridConfig(
+        columns=obj.Columns(),
+        gap_x=obj.GapX(),
+        gap_y=obj.GapY(),
+        align_items=obj.AlignItems(),
+        first_page_alone=obj.FirstPageAlone(),
+    )
+
 def parse_fbs_pdf(obj: FBSDucPdfElement) -> DS_DucPdfElement:
+    grid_config = obj.GridConfig()
+    if grid_config:
+        grid_config_obj = FBSDocumentGridConfig()
+        grid_config_obj.Init(obj.TableBytes, grid_config)
+        parsed_grid_config = parse_fbs_document_grid_config(grid_config_obj)
+    else:
+        parsed_grid_config = DS_DocumentGridConfig(
+            columns=1,
+            gap_x=0.0,
+            gap_y=0.0,
+            align_items=0,
+            first_page_alone=False,
+        )
     return DS_DucPdfElement(
         base=parse_fbs_duc_element_base(obj.Base()),
         file_id=_s(obj.FileId()),
+        grid_config=parsed_grid_config,
     )
 
 def parse_fbs_mermaid(obj: FBSDucMermaidElement) -> DS_DucMermaidElement:
@@ -1497,6 +1539,19 @@ def parse_fbs_column_layout(obj: FBSColumnLayout) -> DS_ColumnLayout:
 
 def parse_fbs_doc(obj: FBSDucDocElement) -> DS_DucDocElement:
     dynamics = [parse_fbs_text_dynamic_part(obj.Dynamic(i)) for i in range(obj.DynamicLength())]
+    grid_config = obj.GridConfig()
+    if grid_config:
+        grid_config_obj = FBSDocumentGridConfig()
+        grid_config_obj.Init(obj.TableBytes, grid_config)
+        parsed_grid_config = parse_fbs_document_grid_config(grid_config_obj)
+    else:
+        parsed_grid_config = DS_DocumentGridConfig(
+            columns=1,
+            gap_x=0.0,
+            gap_y=0.0,
+            align_items=0,
+            first_page_alone=False,
+        )
     return DS_DucDocElement(
         base=parse_fbs_duc_element_base(obj.Base()),
         style=parse_fbs_doc_style(obj.Style()),
@@ -1505,6 +1560,8 @@ def parse_fbs_doc(obj: FBSDucDocElement) -> DS_DucDocElement:
         columns=parse_fbs_column_layout(obj.Columns()),
         auto_resize=obj.AutoResize(),
         flow_direction=obj.FlowDirection() if hasattr(obj, "FlowDirection") else None,
+        file_id=_s(obj.FileId()),
+        grid_config=parsed_grid_config,
     )
 
 def parse_fbs_parametric_source(obj: FBSParametricSource) -> DS_ParametricSource:
@@ -1519,6 +1576,16 @@ def parse_fbs_parametric(obj: FBSDucParametricElement) -> DS_DucParametricElemen
         base=parse_fbs_duc_element_base(obj.Base()),
         source=parse_fbs_parametric_source(obj.Source())
     )
+
+def parse_fbs_model(obj: FBSDucModelElement) -> DS_DucModelElement:
+    file_ids = [obj.FileIds(i) for i in range(obj.FileIdsLength())] if obj.FileIdsLength() > 0 else []
+    return DS_DucModelElement(
+        base=parse_fbs_duc_element_base(obj.Base()),
+        source=_s_req(obj.Source()),
+        svg_path=_s(obj.SvgPath()),
+        file_ids=file_ids,
+    )
+
 
 # =============================================================================
 # Element union and wrapper
@@ -1572,6 +1639,8 @@ def parse_duc_element_wrapper(obj: FBSElementWrapper) -> DS_ElementWrapper:
         x = FBSDucDocElement(); x.Init(tbl.Bytes, tbl.Pos); el = parse_fbs_doc(x)
     elif typ == FBS_Element.Element.DucParametricElement:
         x = FBSDucParametricElement(); x.Init(tbl.Bytes, tbl.Pos); el = parse_fbs_parametric(x)
+    elif typ == FBS_Element.Element.DucModelElement:
+        x = FBSDucModelElement(); x.Init(tbl.Bytes, tbl.Pos); el = parse_fbs_model(x)
     else:
         raise ValueError(f"Unknown Element union type: {typ}")
 
@@ -1616,12 +1685,18 @@ def parse_fbs_duc_block_attribute_definition_entry(obj: FBSDucBlockAttributeDefi
     )
 
 def parse_fbs_duc_block_metadata(obj: FBSDucBlockMetadata) -> DS_DucBlockMetadata:
+    # localization is now binary compressed JSON
+    localization = None
+    if hasattr(obj, "Localization") and not obj.LocalizationIsNone():
+        localization_bytes = _read_bytes_from_numpy(obj, "LocalizationLength", "LocalizationAsNumpy", "Localization")
+        localization = _binary_json_or_none(localization_bytes)
+
     return DS_DucBlockMetadata(
         source=_s_req(obj.Source()),
         usage_count=obj.UsageCount(),
         created_at=obj.CreatedAt(),
         updated_at=obj.UpdatedAt(),
-        localization=_s(obj.Localization()),
+        localization=localization,
     )
 
 def parse_fbs_duc_block(obj: FBSDucBlock) -> DS_DucBlock:
@@ -2286,7 +2361,9 @@ def parse_fbs_json_patch_operation(obj: FBSJSONPatchOperation) -> DS_JSONPatchOp
 def parse_fbs_delta(obj: FBSDelta) -> DS_Delta:
     base = obj.Base()
     base_kwargs = _parse_version_base_kwargs(base)
-    patch = [parse_fbs_json_patch_operation(obj.Patch(i)) for i in range(obj.PatchLength())]
+    # patch is now binary compressed JSON data
+    patch_bytes = _read_bytes_from_numpy(obj, "PatchLength", "PatchAsNumpy", "Patch")
+    patch = _binary_json_or_none(patch_bytes) or []
     return DS_Delta(
         type="delta",
         patch=patch,

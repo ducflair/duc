@@ -26,3 +26,4 @@ class Element(object):
     DucFeatureControlFrameElement = 20
     DucDocElement = 21
     DucParametricElement = 22
+    DucModelElement = 23

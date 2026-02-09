@@ -1,6 +1,13 @@
 use wasm_bindgen::prelude::*;
 
 pub mod builder;
+
+// Initialize logger for WASM
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(start)]
+pub fn init_logger() {
+    console_log::init_with_level(log::Level::Info).expect("Failed to initialize logger");
+}
 pub mod scaling;
 pub mod streaming;
 pub mod utils;
