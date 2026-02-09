@@ -37,6 +37,7 @@ import {
   BezierMirroring,
   DatumReference,
   DimensionDefinitionPoints,
+  DocumentGridConfig,
   DucBinderElement,
   DucDimensionElement,
   DucDimensionStyle,
@@ -53,7 +54,7 @@ import {
   DucLine,
   DucLinearElement,
   DucLocalState,
-  DucParametricElement,
+  DucModelElement,
   DucPath,
   DucPlotElement,
   DucPoint,
@@ -81,7 +82,6 @@ import {
   Mutable,
   NonDeleted,
   OrderedDucElement,
-  ParametricElementSource,
   Percentage,
   PlotLayout,
   PrecisionValue,
@@ -864,7 +864,10 @@ const restoreElement = (
     case "pdf":
       return restoreElementWithProperties(
         element,
-        { fileId: (isValidString(element.fileId) as ExternalFileId) || null },
+        {
+          fileId: (isValidString(element.fileId) as ExternalFileId) || null,
+          gridConfig: restoreDocumentGridConfig((element as any).gridConfig),
+        },
         localState
       );
     case "mermaid":
@@ -948,6 +951,8 @@ const restoreElement = (
             : TEXT_FLOW_DIRECTION.TOP_TO_BOTTOM,
           columns: restoreTextColumns(docElement.columns, currentScope),
           autoResize: isValidBooleanValue(docElement.autoResize, true),
+          fileId: (isValidString(docElement.fileId) as ExternalFileId) || null,
+          gridConfig: restoreDocumentGridConfig(docElement.gridConfig),
         },
         localState
       );
@@ -977,25 +982,15 @@ const restoreElement = (
       );
     }
 
-    case "parametric": {
-      const parametricElement = element as DucParametricElement;
-      let source: ParametricElementSource;
-
-      if (parametricElement.source?.type === PARAMETRIC_SOURCE_TYPE.FILE) {
-        source = {
-          type: PARAMETRIC_SOURCE_TYPE.FILE,
-          fileId: isValidString(parametricElement.source?.fileId) as ExternalFileId,
-        };
-      } else {
-        source = {
-          type: PARAMETRIC_SOURCE_TYPE.CODE,
-          code: isValidString(parametricElement.source?.code),
-        };
-      }
-
+    case "model": {
+      const modelElement = element as DucModelElement;
       return restoreElementWithProperties(
-        parametricElement,
-        { source },
+        modelElement,
+        {
+          source: isValidString(modelElement.source),
+          fileIds: modelElement.fileIds || [],
+          svgPath: modelElement.svgPath || null,
+        },
         localState,
         globalState
       );
@@ -1945,6 +1940,30 @@ const restoreTextColumns = (columns: any, currentScope: Scope) => {
       : COLUMN_TYPE.NO_COLUMNS,
     definitions,
     autoHeight: isValidBooleanValue(columns.autoHeight, true),
+  };
+};
+
+const restoreDocumentGridConfig = (
+  gridConfig: any
+): DocumentGridConfig => {
+  if (!gridConfig || typeof gridConfig !== "object") {
+    return {
+      columns: 1,
+      gapX: 0,
+      gapY: 0,
+      alignItems: "start",
+      firstPageAlone: false,
+    };
+  }
+
+  return {
+    columns: typeof gridConfig.columns === "number" ? gridConfig.columns : 1,
+    gapX: typeof gridConfig.gapX === "number" ? gridConfig.gapX : 0,
+    gapY: typeof gridConfig.gapY === "number" ? gridConfig.gapY : 0,
+    alignItems: (typeof gridConfig.alignItems === "string" && ["start", "center", "end"].includes(gridConfig.alignItems))
+      ? gridConfig.alignItems
+      : "start",
+    firstPageAlone: typeof gridConfig.firstPageAlone === "boolean" ? gridConfig.firstPageAlone : false,
   };
 };
 

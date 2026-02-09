@@ -23,6 +23,7 @@ import {
   Delta,
   Dictionary,
   DimensionDefinitionPoints,
+  DocumentGridConfig,
   DucArrowElement,
   DucBlock,
   DucBlockAttributeDefinition,
@@ -56,7 +57,7 @@ import {
   DucLineReference,
   DucLocalState,
   DucMermaidElement,
-  DucParametricElement,
+  DucModelElement,
   DucPath,
   DucPdfElement,
   DucPlotElement,
@@ -96,7 +97,6 @@ import {
   LayerSnapFilters,
   LeaderContent,
   OrderedDucElement,
-  ParametricElementSource,
   PlotLayout,
   PolarGridSettings,
   PolarTrackingSettings,
@@ -813,6 +813,22 @@ function writeColumnLayout(b: flatbuffers.Builder, c: DucDocElement["columns"], 
   return Duc.ColumnLayout.endColumnLayout(b);
 }
 
+function writeDocumentGridConfig(b: flatbuffers.Builder, config: DocumentGridConfig, usv: boolean): number {
+  Duc.DocumentGridConfig.startDocumentGridConfig(b);
+  Duc.DocumentGridConfig.addColumns(b, config.columns);
+  Duc.DocumentGridConfig.addGapX(b, config.gapX);
+  Duc.DocumentGridConfig.addGapY(b, config.gapY);
+  const alignItems = (() => {
+    if (config.alignItems === 'start') return Duc.DOCUMENT_GRID_ALIGN_ITEMS.START;
+    if (config.alignItems === 'center') return Duc.DOCUMENT_GRID_ALIGN_ITEMS.CENTER;
+    if (config.alignItems === 'end') return Duc.DOCUMENT_GRID_ALIGN_ITEMS.END;
+    return Duc.DOCUMENT_GRID_ALIGN_ITEMS.START;
+  })();
+  Duc.DocumentGridConfig.addAlignItems(b, alignItems);
+  Duc.DocumentGridConfig.addFirstPageAlone(b, config.firstPageAlone);
+  return Duc.DocumentGridConfig.endDocumentGridConfig(b);
+}
+
 function writeText(b: flatbuffers.Builder, e: DucTextElement, usv: boolean): number {
   const base = writeElementBase(b, e as unknown as any, usv);
   const style = writeTextStyle(b, e, usv);
@@ -920,8 +936,17 @@ function writeBlockInstance(b: flatbuffers.Builder, i: DucBlockInstance, usv: bo
       Duc.DucBlockDuplicationArray.startDucBlockDuplicationArray(b);
       Duc.DucBlockDuplicationArray.addRows(b, i.duplicationArray.rows);
       Duc.DucBlockDuplicationArray.addCols(b, i.duplicationArray.cols);
-      Duc.DucBlockDuplicationArray.addRowSpacing(b, getPrecisionValue(i.duplicationArray.rowSpacing, usv));
-      Duc.DucBlockDuplicationArray.addColSpacing(b, getPrecisionValue(i.duplicationArray.colSpacing, usv));
+
+      const rSpacing = typeof i.duplicationArray.rowSpacing === 'number'
+        ? i.duplicationArray.rowSpacing
+        : getPrecisionValue(i.duplicationArray.rowSpacing, usv);
+
+      const cSpacing = typeof i.duplicationArray.colSpacing === 'number'
+        ? i.duplicationArray.colSpacing
+        : getPrecisionValue(i.duplicationArray.colSpacing, usv);
+
+      Duc.DucBlockDuplicationArray.addRowSpacing(b, rSpacing);
+      Duc.DucBlockDuplicationArray.addColSpacing(b, cSpacing);
       return Duc.DucBlockDuplicationArray.endDucBlockDuplicationArray(b);
     })()
     : undefined;
@@ -1443,6 +1468,8 @@ function writeDoc(b: flatbuffers.Builder, e: DucDocElement, usv: boolean): numbe
     Duc.ColumnLayout.addAutoHeight(b, col.autoHeight);
     return Duc.ColumnLayout.endColumnLayout(b);
   })();
+  const fileId = e.fileId ? b.createString(e.fileId) : undefined;
+  const gridConfig = writeDocumentGridConfig(b, e.gridConfig, usv);
   Duc.DucDocElement.startDucDocElement(b);
   Duc.DucDocElement.addBase(b, base);
   Duc.DucDocElement.addStyle(b, style);
@@ -1451,38 +1478,22 @@ function writeDoc(b: flatbuffers.Builder, e: DucDocElement, usv: boolean): numbe
   Duc.DucDocElement.addFlowDirection(b, e.flowDirection);
   Duc.DucDocElement.addColumns(b, columns);
   Duc.DucDocElement.addAutoResize(b, e.autoResize);
+  if (fileId) Duc.DucDocElement.addFileId(b, fileId);
+  Duc.DucDocElement.addGridConfig(b, gridConfig);
   return Duc.DucDocElement.endDucDocElement(b);
 }
 
 /**
- * Parametric, PDF, Mermaid, Embeddable
+ * PDF, Mermaid, Embeddable
  */
-function writeParametricSource(b: flatbuffers.Builder, s: ParametricElementSource, usv: boolean): number {
-  Duc.ParametricSource.startParametricSource(b);
-  Duc.ParametricSource.addType(b, s.type);
-  if (s.type === Duc.PARAMETRIC_SOURCE_TYPE.CODE) {
-    Duc.ParametricSource.addCode(b, b.createString(s.code));
-  } else {
-    Duc.ParametricSource.addFileId(b, b.createString(s.fileId));
-  }
-  return Duc.ParametricSource.endParametricSource(b);
-}
-
-function writeParametric(b: flatbuffers.Builder, e: DucParametricElement, usv: boolean): number {
-  const base = writeElementBase(b, e as unknown as any, usv);
-  const src = writeParametricSource(b, e.source, usv);
-  Duc.DucParametricElement.startDucParametricElement(b);
-  Duc.DucParametricElement.addBase(b, base);
-  Duc.DucParametricElement.addSource(b, src);
-  return Duc.DucParametricElement.endDucParametricElement(b);
-}
-
 function writePdf(b: flatbuffers.Builder, e: DucPdfElement, usv: boolean): number {
   const base = writeElementBase(b, e as unknown as any, usv);
-  const fileId = b.createString(e.fileId);
+  const fileId = e.fileId ? b.createString(e.fileId) : undefined;
+  const gridConfig = writeDocumentGridConfig(b, e.gridConfig, usv);
   Duc.DucPdfElement.startDucPdfElement(b);
   Duc.DucPdfElement.addBase(b, base);
-  Duc.DucPdfElement.addFileId(b, fileId);
+  if (fileId) Duc.DucPdfElement.addFileId(b, fileId);
+  Duc.DucPdfElement.addGridConfig(b, gridConfig);
   return Duc.DucPdfElement.endDucPdfElement(b);
 }
 
@@ -1497,6 +1508,19 @@ function writeMermaid(b: flatbuffers.Builder, e: DucMermaidElement, usv: boolean
   if (theme) Duc.DucMermaidElement.addTheme(b, theme);
   if (svg) Duc.DucMermaidElement.addSvgPath(b, svg);
   return Duc.DucMermaidElement.endDucMermaidElement(b);
+}
+
+function writeModel(b: flatbuffers.Builder, e: DucModelElement, usv: boolean): number {
+  const base = writeElementBase(b, e as unknown as any, usv);
+  const src = b.createString(e.source);
+  const svg = e.svgPath ? b.createString(e.svgPath) : undefined;
+  const fileIds = e.fileIds?.length ? Duc.DucModelElement.createFileIdsVector(b, e.fileIds.map((id) => b.createString(id))) : undefined;
+  Duc.DucModelElement.startDucModelElement(b);
+  Duc.DucModelElement.addBase(b, base);
+  Duc.DucModelElement.addSource(b, src);
+  if (svg) Duc.DucModelElement.addSvgPath(b, svg);
+  if (fileIds) Duc.DucModelElement.addFileIds(b, fileIds);
+  return Duc.DucModelElement.endDucModelElement(b);
 }
 
 function writeEmbeddable(b: flatbuffers.Builder, e: DucEmbeddableElement, usv: boolean): number {
@@ -1711,9 +1735,9 @@ function writeElementWrapper(b: flatbuffers.Builder, e: DucElement, usv: boolean
       type = Duc.Element.DucDocElement;
       elem = writeDoc(b, e, usv);
       break;
-    case "parametric":
-      type = Duc.Element.DucParametricElement;
-      elem = writeParametric(b, e, usv);
+    case "model":
+      type = Duc.Element.DucModelElement;
+      elem = writeModel(b, e, usv);
       break;
     case "embeddable":
       type = Duc.Element.DucEmbeddableElement;

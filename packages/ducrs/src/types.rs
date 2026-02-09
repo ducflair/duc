@@ -1,7 +1,8 @@
 use crate::generated::duc::{
     ANGULAR_UNITS_FORMAT, AXIS, BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION,
     COLUMN_TYPE, DATUM_BRACKET_STYLE, DECIMAL_SEPARATOR, DIMENSION_FIT_RULE,
-    DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, DIMENSION_UNITS_FORMAT, ELEMENT_CONTENT_PREFERENCE,
+    DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, DIMENSION_UNITS_FORMAT, DOCUMENT_GRID_ALIGN_ITEMS,
+    ELEMENT_CONTENT_PREFERENCE,
     FEATURE_MODIFIER, GDT_SYMBOL, GRID_DISPLAY_TYPE, GRID_TYPE, HATCH_STYLE, IMAGE_STATUS,
     LEADER_CONTENT_TYPE, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION,
     OBJECT_SNAP_MODE, PARAMETRIC_SOURCE_TYPE, PRUNING_LEVEL, SNAP_MARKER_SHAPE, SNAP_MODE,
@@ -33,6 +34,7 @@ pub enum ElementType {
     FeatureControlFrame,
     Doc,
     Parametric,
+    Model,
     Embeddable,
     Pdf,
     Mermaid,
@@ -59,6 +61,7 @@ impl ElementType {
             ElementType::FeatureControlFrame => "featurecontrolframe",
             ElementType::Doc => "doc",
             ElementType::Parametric => "parametric",
+            ElementType::Model => "model",
             ElementType::Embeddable => "embeddable",
             ElementType::Pdf => "pdf",
             ElementType::Mermaid => "mermaid",
@@ -87,6 +90,7 @@ pub enum DucElementVariant {
     FeatureControlFrame(DucFeatureControlFrameElement),
     Doc(DucDocElement),
     Parametric(DucParametricElement),
+    Model(DucModelElement),
     Embeddable(DucEmbeddableElement),
     Pdf(DucPdfElement),
     Mermaid(DucMermaidElement),
@@ -113,6 +117,7 @@ impl DucElementVariant {
             DucElementVariant::FeatureControlFrame(elem) => &elem.base,
             DucElementVariant::Doc(elem) => &elem.base,
             DucElementVariant::Parametric(elem) => &elem.base,
+            DucElementVariant::Model(elem) => &elem.base,
             DucElementVariant::Embeddable(elem) => &elem.base,
             DucElementVariant::Pdf(elem) => &elem.base,
             DucElementVariant::Mermaid(elem) => &elem.base,
@@ -587,10 +592,50 @@ pub struct DucEmbeddableElement {
     pub base: DucElementBase,
 }
 
+/// Configuration for PDF grid layout
+#[derive(Debug, Clone, PartialEq)]
+pub struct DocumentGridConfig {
+    pub columns: i32,
+    pub gap_x: f64,
+    pub gap_y: f64,
+    pub align_items: DocumentGridAlignItems,
+    pub first_page_alone: bool,
+}
+
+/// Vertical alignment for document grid layout
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DocumentGridAlignItems {
+    Start,
+    Center,
+    End,
+}
+
+impl From<DOCUMENT_GRID_ALIGN_ITEMS> for DocumentGridAlignItems {
+    fn from(value: DOCUMENT_GRID_ALIGN_ITEMS) -> Self {
+        match value {
+            DOCUMENT_GRID_ALIGN_ITEMS::START => DocumentGridAlignItems::Start,
+            DOCUMENT_GRID_ALIGN_ITEMS::CENTER => DocumentGridAlignItems::Center,
+            DOCUMENT_GRID_ALIGN_ITEMS::END => DocumentGridAlignItems::End,
+            _ => DocumentGridAlignItems::Start,
+        }
+    }
+}
+
+impl From<DocumentGridAlignItems> for DOCUMENT_GRID_ALIGN_ITEMS {
+    fn from(value: DocumentGridAlignItems) -> Self {
+        match value {
+            DocumentGridAlignItems::Start => DOCUMENT_GRID_ALIGN_ITEMS::START,
+            DocumentGridAlignItems::Center => DOCUMENT_GRID_ALIGN_ITEMS::CENTER,
+            DocumentGridAlignItems::End => DOCUMENT_GRID_ALIGN_ITEMS::END,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucPdfElement {
     pub base: DucElementBase,
     pub file_id: Option<String>,
+    pub grid_config: DocumentGridConfig,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -964,6 +1009,8 @@ pub struct DucDocElement {
     pub flow_direction: TEXT_FLOW_DIRECTION,
     pub columns: ColumnLayout,
     pub auto_resize: bool,
+    pub file_id: Option<String>,
+    pub grid_config: DocumentGridConfig,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -971,6 +1018,14 @@ pub struct ParametricSource {
     pub source_type: PARAMETRIC_SOURCE_TYPE,
     pub code: String,
     pub file_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DucModelElement {
+    pub base: DucElementBase,
+    pub source: String,
+    pub svg_path: Option<String>,
+    pub file_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1004,6 +1059,7 @@ pub enum DucElementEnum {
     DucFeatureControlFrameElement(DucFeatureControlFrameElement),
     DucDocElement(DucDocElement),
     DucParametricElement(DucParametricElement),
+    DucModelElement(DucModelElement),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1036,7 +1092,7 @@ pub struct DucBlockAttributeDefinitionEntry {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DucBlockMetadata {
-    pub source: String,
+    pub source: Option<String>,
     pub usage_count: i32,
     pub created_at: i64,
     pub updated_at: i64,
@@ -1537,7 +1593,7 @@ pub struct JSONPatchOperation {
     pub op: String,
     pub path: String,
     pub from: Option<String>,
-    pub value: Option<String>,
+    pub value: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -53,20 +53,22 @@ fn parse_vec_of_required_strings(vec: Option<flatbuffers::Vector<'_, flatbuffers
 fn parse_binary_json_to_string(vec: Option<flatbuffers::Vector<'_, u8>>) -> Option<String> {
     match vec {
         Some(v) if v.len() > 0 => {
-            // Collect the bytes into a Vec<u8>
             let data: Vec<u8> = (0..v.len()).map(|i| v.get(i)).collect();
 
-            // Parse zlib-compressed JSON
             use flate2::read::ZlibDecoder;
             use std::io::Read;
 
             let mut d = ZlibDecoder::new(data.as_slice());
             let mut decompressed = Vec::new();
+
             if d.read_to_end(&mut decompressed).is_ok() {
-                String::from_utf8(decompressed).ok()
-            } else {
-                None
+                if let Ok(text) = String::from_utf8(decompressed) {
+                    return Some(text);
+                }
             }
+
+            // Fallback to legacy format: plain JSON string (for old file compatibility)
+            String::from_utf8(data).ok()
         }
         _ => None,
     }
@@ -679,9 +681,26 @@ fn parse_duc_embeddable_element(el: fb::DucEmbeddableElement) -> ParseResult<typ
 }
 
 fn parse_duc_pdf_element(el: fb::DucPdfElement) -> ParseResult<types::DucPdfElement> {
+    let grid_config = el.grid_config();
     Ok(types::DucPdfElement {
         base: parse_duc_element_base(el.base().ok_or("Missing DucPdfElement.base")?)?,
         file_id: el.file_id().map(|s| s.to_string()),
+        grid_config: match grid_config {
+            Some(gc) => types::DocumentGridConfig {
+                columns: gc.columns(),
+                gap_x: gc.gap_x(),
+                gap_y: gc.gap_y(),
+                align_items: gc.align_items().map(|a| a.into()).unwrap_or(types::DocumentGridAlignItems::Start),
+                first_page_alone: gc.first_page_alone(),
+            },
+            None => types::DocumentGridConfig {
+                columns: 1,
+                gap_x: 0.0,
+                gap_y: 0.0,
+                align_items: types::DocumentGridAlignItems::Start,
+                first_page_alone: false,
+            },
+        },
     })
 }
 
@@ -1161,6 +1180,7 @@ fn parse_duc_doc_element(el: fb::DucDocElement) -> ParseResult<types::DucDocElem
         .map(|v| v.iter().map(parse_duc_text_dynamic_part).collect::<ParseResult<Vec<_>>>())
         .transpose()?
         .unwrap_or_default();
+    let grid_config = el.grid_config();
     Ok(types::DucDocElement {
         base: parse_duc_element_base(el.base().ok_or("Missing DucDocElement.base")?)?,
         style: parse_duc_doc_style(el.style().ok_or("Missing DucDocElement.style")?)?,
@@ -1169,6 +1189,23 @@ fn parse_duc_doc_element(el: fb::DucDocElement) -> ParseResult<types::DucDocElem
         flow_direction: el.flow_direction().expect("Missing DucDocElement.flow_direction"),
         columns: parse_column_layout(el.columns().ok_or("Missing DucDocElement.columns")?)?,
         auto_resize: el.auto_resize(),
+        file_id: el.file_id().map(|s| s.to_string()),
+        grid_config: match grid_config {
+            Some(gc) => types::DocumentGridConfig {
+                columns: gc.columns(),
+                gap_x: gc.gap_x(),
+                gap_y: gc.gap_y(),
+                align_items: gc.align_items().map(|a| a.into()).unwrap_or(types::DocumentGridAlignItems::Start),
+                first_page_alone: gc.first_page_alone(),
+            },
+            None => types::DocumentGridConfig {
+                columns: 1,
+                gap_x: 0.0,
+                gap_y: 0.0,
+                align_items: types::DocumentGridAlignItems::Start,
+                first_page_alone: false,
+            },
+        },
     })
 }
 
@@ -1184,6 +1221,18 @@ fn parse_duc_parametric_element(el: fb::DucParametricElement) -> ParseResult<typ
     Ok(types::DucParametricElement {
         base: parse_duc_element_base(el.base().ok_or("Missing DucParametricElement.base")?)?,
         source: parse_parametric_source(el.source().ok_or("Missing DucParametricElement.source")?)?,
+    })
+}
+
+fn parse_duc_model_element(el: fb::DucModelElement) -> ParseResult<types::DucModelElement> {
+    let file_ids = el.file_ids()
+        .map(|v| v.iter().map(|s| s.to_string()).collect::<Vec<_>>())
+        .unwrap_or_default();
+    Ok(types::DucModelElement {
+        base: parse_duc_element_base(el.base().ok_or("Missing DucModelElement.base")?)?,
+        source: el.source().ok_or("Missing DucModelElement.source")?.to_string(),
+        svg_path: el.svg_path().map(|s| s.to_string()),
+        file_ids,
     })
 }
 
@@ -1277,6 +1326,10 @@ fn parse_element_wrapper(wrapper: fb::ElementWrapper) -> ParseResult<types::Elem
             let el = wrapper.element_as_duc_parametric_element().ok_or("Mismatched element type")?;
             types::DucElementEnum::DucParametricElement(parse_duc_parametric_element(el)?)
         },
+        fb::Element::DucModelElement => {
+            let el = wrapper.element_as_duc_model_element().ok_or("Mismatched element type")?;
+            types::DucElementEnum::DucModelElement(parse_duc_model_element(el)?)
+        },
         _ => return Err("Unknown element type in wrapper"),
     };
     Ok(types::ElementWrapper { element: element_enum })
@@ -1304,8 +1357,12 @@ fn parse_duc_block_attribute_definition_entry(entry: fb::DucBlockAttributeDefini
 }
 
 fn parse_duc_block_metadata(metadata: fb::DucBlockMetadata) -> ParseResult<types::DucBlockMetadata> {
+    let source = metadata.source()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+
     Ok(types::DucBlockMetadata {
-        source: metadata.source().ok_or("Missing DucBlockMetadata.source")?.to_string(),
+        source,
         usage_count: metadata.usage_count(),
         created_at: metadata.created_at(),
         updated_at: metadata.updated_at(),
@@ -1924,14 +1981,6 @@ fn parse_checkpoint(checkpoint: fb::Checkpoint) -> ParseResult<types::Checkpoint
     })
 }
 
-fn parse_json_patch_operation(op: fb::JSONPatchOperation) -> ParseResult<types::JSONPatchOperation> {
-    Ok(types::JSONPatchOperation {
-        op: op.op().ok_or("Missing JSONPatchOperation.op")?.to_string(),
-        path: op.path().ok_or("Missing JSONPatchOperation.path")?.to_string(),
-        from: op.from().map(|s| s.to_string()),
-        value: op.value().map(|s| s.to_string()),
-    })
-}
 
 fn parse_delta(delta: fb::Delta) -> ParseResult<types::Delta> {
     // patch is now zlib-compressed JSON data

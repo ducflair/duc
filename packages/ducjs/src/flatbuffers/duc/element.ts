@@ -15,6 +15,7 @@ import { DucImageElement } from '../duc/duc-image-element';
 import { DucLeaderElement } from '../duc/duc-leader-element';
 import { DucLinearElement } from '../duc/duc-linear-element';
 import { DucMermaidElement } from '../duc/duc-mermaid-element';
+import { DucModelElement } from '../duc/duc-model-element';
 import { DucParametricElement } from '../duc/duc-parametric-element';
 import { DucPdfElement } from '../duc/duc-pdf-element';
 import { DucPlotElement } from '../duc/duc-plot-element';
@@ -49,13 +50,14 @@ export enum Element {
   DucDimensionElement = 19,
   DucFeatureControlFrameElement = 20,
   DucDocElement = 21,
-  DucParametricElement = 22
+  DucParametricElement = 22,
+  DucModelElement = 23
 }
 
 export function unionToElement(
   type: Element,
-  accessor: (obj:DucArrowElement|DucBlockInstanceElement|DucDimensionElement|DucDocElement|DucEllipseElement|DucEmbeddableElement|DucFeatureControlFrameElement|DucFrameElement|DucFreeDrawElement|DucImageElement|DucLeaderElement|DucLinearElement|DucMermaidElement|DucParametricElement|DucPdfElement|DucPlotElement|DucPolygonElement|DucRectangleElement|DucTableElement|DucTextElement|DucViewportElement|DucXRayElement) => DucArrowElement|DucBlockInstanceElement|DucDimensionElement|DucDocElement|DucEllipseElement|DucEmbeddableElement|DucFeatureControlFrameElement|DucFrameElement|DucFreeDrawElement|DucImageElement|DucLeaderElement|DucLinearElement|DucMermaidElement|DucParametricElement|DucPdfElement|DucPlotElement|DucPolygonElement|DucRectangleElement|DucTableElement|DucTextElement|DucViewportElement|DucXRayElement|null
-): DucArrowElement|DucBlockInstanceElement|DucDimensionElement|DucDocElement|DucEllipseElement|DucEmbeddableElement|DucFeatureControlFrameElement|DucFrameElement|DucFreeDrawElement|DucImageElement|DucLeaderElement|DucLinearElement|DucMermaidElement|DucParametricElement|DucPdfElement|DucPlotElement|DucPolygonElement|DucRectangleElement|DucTableElement|DucTextElement|DucViewportElement|DucXRayElement|null {
+  accessor: (obj:DucArrowElement|DucBlockInstanceElement|DucDimensionElement|DucDocElement|DucEllipseElement|DucEmbeddableElement|DucFeatureControlFrameElement|DucFrameElement|DucFreeDrawElement|DucImageElement|DucLeaderElement|DucLinearElement|DucMermaidElement|DucModelElement|DucParametricElement|DucPdfElement|DucPlotElement|DucPolygonElement|DucRectangleElement|DucTableElement|DucTextElement|DucViewportElement|DucXRayElement) => DucArrowElement|DucBlockInstanceElement|DucDimensionElement|DucDocElement|DucEllipseElement|DucEmbeddableElement|DucFeatureControlFrameElement|DucFrameElement|DucFreeDrawElement|DucImageElement|DucLeaderElement|DucLinearElement|DucMermaidElement|DucModelElement|DucParametricElement|DucPdfElement|DucPlotElement|DucPolygonElement|DucRectangleElement|DucTableElement|DucTextElement|DucViewportElement|DucXRayElement|null
+): DucArrowElement|DucBlockInstanceElement|DucDimensionElement|DucDocElement|DucEllipseElement|DucEmbeddableElement|DucFeatureControlFrameElement|DucFrameElement|DucFreeDrawElement|DucImageElement|DucLeaderElement|DucLinearElement|DucMermaidElement|DucModelElement|DucParametricElement|DucPdfElement|DucPlotElement|DucPolygonElement|DucRectangleElement|DucTableElement|DucTextElement|DucViewportElement|DucXRayElement|null {
   switch(Element[type]) {
     case 'NONE': return null; 
     case 'DucRectangleElement': return accessor(new DucRectangleElement())! as DucRectangleElement;
@@ -80,15 +82,16 @@ export function unionToElement(
     case 'DucFeatureControlFrameElement': return accessor(new DucFeatureControlFrameElement())! as DucFeatureControlFrameElement;
     case 'DucDocElement': return accessor(new DucDocElement())! as DucDocElement;
     case 'DucParametricElement': return accessor(new DucParametricElement())! as DucParametricElement;
+    case 'DucModelElement': return accessor(new DucModelElement())! as DucModelElement;
     default: return null;
   }
 }
 
 export function unionListToElement(
   type: Element, 
-  accessor: (index: number, obj:DucArrowElement|DucBlockInstanceElement|DucDimensionElement|DucDocElement|DucEllipseElement|DucEmbeddableElement|DucFeatureControlFrameElement|DucFrameElement|DucFreeDrawElement|DucImageElement|DucLeaderElement|DucLinearElement|DucMermaidElement|DucParametricElement|DucPdfElement|DucPlotElement|DucPolygonElement|DucRectangleElement|DucTableElement|DucTextElement|DucViewportElement|DucXRayElement) => DucArrowElement|DucBlockInstanceElement|DucDimensionElement|DucDocElement|DucEllipseElement|DucEmbeddableElement|DucFeatureControlFrameElement|DucFrameElement|DucFreeDrawElement|DucImageElement|DucLeaderElement|DucLinearElement|DucMermaidElement|DucParametricElement|DucPdfElement|DucPlotElement|DucPolygonElement|DucRectangleElement|DucTableElement|DucTextElement|DucViewportElement|DucXRayElement|null, 
+  accessor: (index: number, obj:DucArrowElement|DucBlockInstanceElement|DucDimensionElement|DucDocElement|DucEllipseElement|DucEmbeddableElement|DucFeatureControlFrameElement|DucFrameElement|DucFreeDrawElement|DucImageElement|DucLeaderElement|DucLinearElement|DucMermaidElement|DucModelElement|DucParametricElement|DucPdfElement|DucPlotElement|DucPolygonElement|DucRectangleElement|DucTableElement|DucTextElement|DucViewportElement|DucXRayElement) => DucArrowElement|DucBlockInstanceElement|DucDimensionElement|DucDocElement|DucEllipseElement|DucEmbeddableElement|DucFeatureControlFrameElement|DucFrameElement|DucFreeDrawElement|DucImageElement|DucLeaderElement|DucLinearElement|DucMermaidElement|DucModelElement|DucParametricElement|DucPdfElement|DucPlotElement|DucPolygonElement|DucRectangleElement|DucTableElement|DucTextElement|DucViewportElement|DucXRayElement|null, 
   index: number
-): DucArrowElement|DucBlockInstanceElement|DucDimensionElement|DucDocElement|DucEllipseElement|DucEmbeddableElement|DucFeatureControlFrameElement|DucFrameElement|DucFreeDrawElement|DucImageElement|DucLeaderElement|DucLinearElement|DucMermaidElement|DucParametricElement|DucPdfElement|DucPlotElement|DucPolygonElement|DucRectangleElement|DucTableElement|DucTextElement|DucViewportElement|DucXRayElement|null {
+): DucArrowElement|DucBlockInstanceElement|DucDimensionElement|DucDocElement|DucEllipseElement|DucEmbeddableElement|DucFeatureControlFrameElement|DucFrameElement|DucFreeDrawElement|DucImageElement|DucLeaderElement|DucLinearElement|DucMermaidElement|DucModelElement|DucParametricElement|DucPdfElement|DucPlotElement|DucPolygonElement|DucRectangleElement|DucTableElement|DucTextElement|DucViewportElement|DucXRayElement|null {
   switch(Element[type]) {
     case 'NONE': return null; 
     case 'DucRectangleElement': return accessor(index, new DucRectangleElement())! as DucRectangleElement;
@@ -113,6 +116,7 @@ export function unionListToElement(
     case 'DucFeatureControlFrameElement': return accessor(index, new DucFeatureControlFrameElement())! as DucFeatureControlFrameElement;
     case 'DucDocElement': return accessor(index, new DucDocElement())! as DucDocElement;
     case 'DucParametricElement': return accessor(index, new DucParametricElement())! as DucParametricElement;
+    case 'DucModelElement': return accessor(index, new DucModelElement())! as DucModelElement;
     default: return null;
   }
 }

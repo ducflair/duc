@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid';
 import {
   CustomHatchPattern as CustomHatchPatternFb,
   DimensionToleranceStyle as DimensionToleranceStyleFb,
+  DOCUMENT_GRID_ALIGN_ITEMS,
   DucArrowElement as DucArrowElementFb,
   DucBlockCollection as DucBlockCollectionFb,
   DucBlock as DucBlockFb,
@@ -36,7 +37,7 @@ import {
   DucLinearElement as DucLinearElementFb,
   DucLocalState as DucLocalStateFb,
   DucMermaidElement as DucMermaidElementFb,
-  DucParametricElement as DucParametricElementFb,
+  DucModelElement as DucModelElementFb,
   DucPath as DucPathFb,
   DucPdfElement as DucPdfElementFb,
   DucPlotElement as DucPlotElementFb,
@@ -60,6 +61,7 @@ import {
   DucViewportStyle as DucViewportStyleFb,
   DucXRayElement as DucXRayElementFb,
   DucXRayStyle as DucXRayStyleFb,
+  DocumentGridConfig as DocumentGridConfigFb,
   ElementBackground as ElementBackgroundFb,
   ElementContentBase as ElementContentBaseFb,
   ElementStroke as ElementStrokeFb,
@@ -101,6 +103,7 @@ import {
   CustomHatchPattern,
   DatumReference,
   Dictionary,
+  DocumentGridConfig,
   DucArrowElement,
   DucBlock,
   DucBlockAttributeDefinition,
@@ -134,7 +137,7 @@ import {
   DucLinearElement,
   DucLocalState,
   DucMermaidElement,
-  DucParametricElement,
+  DucModelElement,
   DucPath,
   DucPdfElement,
   DucPlotElement,
@@ -176,7 +179,6 @@ import {
   NormalizedZoomValue,
   ObjectSnapMode,
   OrderedDucElement,
-  ParametricElementSource,
   Percentage,
   PlotLayout,
   PrecisionValue,
@@ -260,6 +262,22 @@ export function parseMargins(margins: MarginsFb): PlotLayout["margins"] {
     right: toPrecisionValue(margins.right()),
     bottom: toPrecisionValue(margins.bottom()),
     left: toPrecisionValue(margins.left()),
+  };
+}
+
+export function parseDocumentGridConfig(gridConfig: DocumentGridConfigFb): DocumentGridConfig {
+  return {
+    columns: gridConfig.columns(),
+    gapX: gridConfig.gapX(),
+    gapY: gridConfig.gapY(),
+    alignItems: (() => {
+      const align = gridConfig.alignItems();
+      if (align === DOCUMENT_GRID_ALIGN_ITEMS.START) return 'start';
+      if (align === DOCUMENT_GRID_ALIGN_ITEMS.CENTER) return 'center';
+      if (align === DOCUMENT_GRID_ALIGN_ITEMS.END) return 'end';
+      return 'start';
+    })(),
+    firstPageAlone: gridConfig.firstPageAlone(),
   };
 }
 
@@ -546,10 +564,18 @@ function parseEmbeddableElement(element: DucEmbeddableElementFb): DucEmbeddableE
 }
 
 function parsePdfElement(element: DucPdfElementFb): DucPdfElement {
+  const gridConfig = element.gridConfig();
   return {
     type: "pdf",
     ...parseElementBase(element.base()!),
     fileId: element.fileId() as ExternalFileId | null,
+    gridConfig: gridConfig ? parseDocumentGridConfig(gridConfig) : {
+      columns: 1,
+      gapX: 0,
+      gapY: 0,
+      alignItems: 'start',
+      firstPageAlone: false,
+    },
   };
 }
 
@@ -976,6 +1002,7 @@ function parseDocElement(element: DucDocElementFb): DucDocElement {
     });
   }
   const columns = element.columns()!;
+  const gridConfig = element.gridConfig();
   return {
     type: "doc",
     ...parseElementBase(element.base()!),
@@ -995,19 +1022,24 @@ function parseDocElement(element: DucDocElementFb): DucDocElement {
       autoHeight: columns.autoHeight(),
     },
     autoResize: element.autoResize(),
+    fileId: element.fileId() as ExternalFileId | null,
+    gridConfig: gridConfig ? parseDocumentGridConfig(gridConfig) : {
+      columns: 1,
+      gapX: 0,
+      gapY: 0,
+      alignItems: 'start',
+      firstPageAlone: false,
+    },
   };
 }
 
-function parseParametricElement(element: DucParametricElementFb): DucParametricElement {
-  const source = element.source()!;
+function parseModelElement(element: DucModelElementFb): DucModelElement {
   return {
-    type: "parametric",
+    type: "model",
     ...parseElementBase(element.base()!),
-    source: {
-      type: source.type(),
-      code: source.code()!,
-      fileId: source.fileId()!,
-    } as ParametricElementSource,
+    source: element.source()!,
+    svgPath: element.svgPath(),
+    fileIds: Array.from({ length: element.fileIdsLength() }, (_, i) => element.fileIds(i)!) as ExternalFileId[],
   };
 }
 // #endregion
@@ -1243,8 +1275,8 @@ export function parseElementFromBinary(wrapper: ElementWrapper): DucElement | nu
     case ElementUnion.DucDocElement:
       element = wrapper.element(new DucDocElementFb());
       break;
-    case ElementUnion.DucParametricElement:
-      element = wrapper.element(new DucParametricElementFb());
+    case ElementUnion.DucModelElement:
+      element = wrapper.element(new DucModelElementFb());
       break;
     default:
       return null;
@@ -1296,8 +1328,8 @@ export function parseElementFromBinary(wrapper: ElementWrapper): DucElement | nu
       return parseFeatureControlFrameElement(element as DucFeatureControlFrameElementFb);
     case ElementUnion.DucDocElement:
       return parseDocElement(element as DucDocElementFb);
-    case ElementUnion.DucParametricElement:
-      return parseParametricElement(element as DucParametricElementFb);
+    case ElementUnion.DucModelElement:
+      return parseModelElement(element as DucModelElementFb);
     default:
       return null;
   }
