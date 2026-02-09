@@ -26,7 +26,7 @@
 use crate::scaling::DucDataScaler;
 use crate::streaming::pdf_linear::PdfLinearRenderer;
 use crate::streaming::stream_resources::ResourceStreamer;
-use crate::utils::freedraw_bounds::{calculate_freedraw_bbox, FreeDrawBounds};
+use crate::utils::freedraw_bounds::FreeDrawBounds;
 use crate::utils::style_resolver::{ResolvedStyles, StyleResolver};
 use crate::{ConversionError, ConversionResult};
 use bigcolor::BigColor;
@@ -36,9 +36,9 @@ use duc::types::{
     DucFreeDrawElement, DucImageElement, DucLine, DucLineReference, DucLinearElement,
     DucLinearElementBase, DucMermaidElement, DucPath, DucPdfElement, DucPlotElement, DucPoint,
     DucPolygonElement, DucRectangleElement, DucTableElement, DucTextElement, ElementBackground,
-    ElementContentBase, ElementWrapper, GeometricPoint,
+    ElementContentBase, ElementWrapper, GeometricPoint, DucBlockInstance, DucBlockDuplicationArray,
 };
-use hipdf::blocks::BlockManager;
+
 use hipdf::embed_pdf::PdfEmbedder;
 use hipdf::fonts::Font;
 use hipdf::hatching::HatchingManager;
@@ -96,6 +96,8 @@ pub struct ElementStreamer {
     font_resource_name: String,
     /// Active font used for text rendering and encoding
     text_font: Font,
+    /// Map of block instances for looking up duplication arrays
+    block_instances: HashMap<String, DucBlockInstance>,
     /// Whether we should require elements to be marked as "plot" to be rendered
     render_only_plot_elements: bool,
     /// Cached ExtGState names keyed by stroke/fill opacity thousandths
@@ -119,6 +121,7 @@ impl ElementStreamer {
         page_height: f64,
         font_resource_name: String,
         text_font: Font,
+        block_instances: HashMap<String, DucBlockInstance>,
     ) -> Self {
         Self {
             style_resolver,
@@ -133,6 +136,7 @@ impl ElementStreamer {
             svg_dimensions: HashMap::new(),
             font_resource_name,
             text_font,
+            block_instances,
             render_only_plot_elements: false,
             ext_gstate_cache: HashMap::new(),
             ext_gstate_definitions: HashMap::new(),
@@ -141,6 +145,93 @@ impl ElementStreamer {
             current_plot_id: None,
             allowed_element_ids: None,
         }
+    }
+
+    /// Calculate duplication offsets for block instance grid rendering
+    /// Returns a vector of (x_offset, y_offset) tuples for each grid position
+    /// The first offset is always (0.0, 0.0) representing the original position
+    pub fn get_duplication_offsets(
+        duplication_array: &DucBlockDuplicationArray,
+        element_width: f64,
+        element_height: f64,
+    ) -> Vec<(f64, f64)> {
+        if duplication_array.row_spacing.is_nan() || duplication_array.col_spacing.is_nan() {
+
+             log::warn!(
+                "Duplication array has NaN spacing! row_spacing: {}, col_spacing: {}",
+                duplication_array.row_spacing,
+                duplication_array.col_spacing
+            );
+        }
+
+        let rows = duplication_array.rows.max(1) as usize;
+        let cols = duplication_array.cols.max(1) as usize;
+        let row_spacing = duplication_array.row_spacing;
+        let col_spacing = duplication_array.col_spacing;
+
+        let stride_x = element_width + col_spacing;
+        let stride_y = element_height + row_spacing;
+
+        let mut offsets = Vec::with_capacity(rows * cols);
+        for row in 0..rows {
+            for col in 0..cols {
+                let x_offset = col as f64 * stride_x;
+                let y_offset = row as f64 * stride_y;
+                offsets.push((x_offset, y_offset));
+            }
+        }
+        offsets
+    }
+
+    /// Get duplication offsets for an element by looking up its block instance
+    /// Returns None if element has no instance_id or no duplication array
+    pub fn get_element_duplication_offsets(
+        &self,
+        element: &DucElementEnum,
+    ) -> Option<Vec<(f64, f64)>> {
+        let base = Self::get_element_base(element);
+        let instance_id = base.instance_id.as_ref()?;
+
+        // Look up the block instance from self.block_instances
+        if let Some(block_instance) = self.block_instances.get(instance_id) {
+            if let Some(dup_array) = &block_instance.duplication_array {
+                // Only return offsets if there's more than one copy to render
+                if dup_array.rows > 1 || dup_array.cols > 1 {
+
+                    // Attempt to extract dimensions from the element
+                    // This allows "gap" spacing: offset = index * (size + spacing)
+                    let (width, height) = match element {
+                        DucElementEnum::DucRectangleElement(r) => (r.base.width, r.base.height),
+                        DucElementEnum::DucEllipseElement(e) => (e.base.width, e.base.height),
+                        DucElementEnum::DucImageElement(i) => (i.base.width, i.base.height),
+                        DucElementEnum::DucFrameElement(f) => (f.stack_element_base.base.width, f.stack_element_base.base.height),
+                        DucElementEnum::DucPlotElement(p) => (p.stack_element_base.base.width, p.stack_element_base.base.height),
+                        DucElementEnum::DucTableElement(t) => (t.base.width, t.base.height),
+                        DucElementEnum::DucDocElement(d) => (d.base.width, d.base.height),
+                        DucElementEnum::DucEmbeddableElement(e) => (e.base.width, e.base.height),
+                        DucElementEnum::DucPolygonElement(p) => (p.base.width, p.base.height),
+                        DucElementEnum::DucTextElement(t) => (t.base.width, t.base.height),
+                        DucElementEnum::DucFreeDrawElement(f) => (f.base.width, f.base.height),
+                        DucElementEnum::DucLinearElement(l) => (l.linear_base.base.width, l.linear_base.base.height),
+                        DucElementEnum::DucArrowElement(a) => (a.linear_base.base.width, a.linear_base.base.height),
+                        DucElementEnum::DucViewportElement(v) => (v.linear_base.base.width, v.linear_base.base.height),
+                        DucElementEnum::DucXRayElement(x) => (x.base.width, x.base.height),
+                        DucElementEnum::DucLeaderElement(l) => (l.linear_base.base.width, l.linear_base.base.height),
+                        DucElementEnum::DucDimensionElement(d) => (d.base.width, d.base.height),
+                        DucElementEnum::DucFeatureControlFrameElement(f) => (f.base.width, f.base.height),
+                        DucElementEnum::DucParametricElement(p) => (p.base.width, p.base.height),
+                        DucElementEnum::DucPdfElement(p) => (p.base.width, p.base.height),
+                        DucElementEnum::DucMermaidElement(m) => (m.base.width, m.base.height),
+                        DucElementEnum::DucModelElement(m) => (m.base.width, m.base.height),
+                    };
+
+                    return Some(Self::get_duplication_offsets(dup_array, width, height));
+                }
+            }
+        } else {
+             log::info!("Element refers to instance {} which is missing from block_instances!", instance_id);
+        }
+        None
     }
 
     /// Update the active font used for text rendering
@@ -230,7 +321,7 @@ impl ElementStreamer {
         bounds: (f64, f64, f64, f64),
         local_state: Option<&duc::types::DucLocalState>,
         resource_streamer: &mut ResourceStreamer,
-        block_manager: &mut BlockManager,
+
         hatching_manager: &mut HatchingManager,
         pdf_embedder: &mut PdfEmbedder,
         image_manager: &mut ImageManager,
@@ -239,14 +330,9 @@ impl ElementStreamer {
     ) -> ConversionResult<Vec<Operation>> {
         let mut all_operations = Vec::new();
         let is_plot_mode = matches!(self.current_mode, StreamMode::Plot);
-        let (bounds_x, bounds_y, bounds_width, bounds_height) = bounds;
-        let bounds_max_x = bounds_x + bounds_width;
-        let bounds_max_y = bounds_y + bounds_height;
-        let (scroll_x, scroll_y) = if let Some(state) = local_state {
-            (state.scroll_x, state.scroll_y)
-        } else {
-            (0.0, 0.0)
-        };
+        let (_bounds_x, _bounds_y, _bounds_width, _bounds_height) = bounds;
+
+
 
         // Filter and sort elements by z-index and visibility criteria
         let mut filtered_elements: Vec<_> = elements
@@ -323,20 +409,28 @@ impl ElementStreamer {
                 clip_applied = clip_active;
             }
 
-            // Stream the element
-            let element_ops = self.stream_element_with_resources(
-                &element_wrapper.element,
-                local_state,
-                all_elements,
-                document,
-                resource_streamer,
-                block_manager,
-                hatching_manager,
-                pdf_embedder,
-                image_manager,
-            )?;
+            // Get duplication offsets (default to single (0,0) if none)
+            let offsets = self
+                .get_element_duplication_offsets(&element_wrapper.element)
+                .unwrap_or_else(|| vec![(0.0, 0.0)]);
 
-            all_operations.extend(element_ops);
+            for (x_off, y_off) in offsets {
+                // Stream the element with duplication offset applied AFTER its own transform
+                // so the offset is not rotated or scaled by the element transform.
+                let element_ops = self.stream_element_with_resources(
+                    &element_wrapper.element,
+                    local_state,
+                    all_elements,
+                    document,
+                    resource_streamer,
+                    hatching_manager,
+                    pdf_embedder,
+                    image_manager,
+                    Some((x_off, y_off)),
+                )?;
+
+                all_operations.extend(element_ops);
+            }
 
             // Restore graphics state if clipping was applied
             if clip_applied {
@@ -359,10 +453,11 @@ impl ElementStreamer {
         all_elements: &[ElementWrapper],
         document: &mut Document,
         resource_streamer: &mut ResourceStreamer,
-        block_manager: &mut BlockManager,
+
         hatching_manager: &mut HatchingManager,
         pdf_embedder: &mut PdfEmbedder,
         image_manager: &mut ImageManager,
+        duplication_offset: Option<(f64, f64)>,
     ) -> ConversionResult<Vec<Operation>> {
         let mut operations = Vec::new();
         let is_plot_mode = matches!(self.current_mode, StreamMode::Plot);
@@ -412,6 +507,24 @@ impl ElementStreamer {
                 )
             };
             operations.extend(transform_ops);
+        }
+
+        // Apply duplication offset AFTER the element's own transform so it is not rotated
+        // or scaled by the element transform. PDF Y axis is inverted, so negate Y.
+        if let Some((x_off, y_off)) = duplication_offset {
+            if x_off != 0.0 || y_off != 0.0 {
+                operations.push(Operation::new(
+                    "cm",
+                    vec![
+                        Object::Real(1.0),
+                        Object::Real(0.0),
+                        Object::Real(0.0),
+                        Object::Real(1.0),
+                        Object::Real(x_off as f32),
+                        Object::Real((-y_off) as f32),
+                    ],
+                ));
+            }
         }
 
         // Special handling: PDF elements - do not apply styles to avoid affecting embedded content
@@ -479,6 +592,9 @@ impl ElementStreamer {
             DucElementEnum::DucParametricElement(_) => {
                 vec![Operation::new("% DucParametricElement - WIP", vec![])]
             }
+            DucElementEnum::DucModelElement(_) => {
+                vec![Operation::new("% DucModelElement - WIP", vec![])]
+            }
         };
         operations.extend(element_ops);
 
@@ -512,6 +628,7 @@ impl ElementStreamer {
             DucElementEnum::DucFeatureControlFrameElement(elem) => &elem.base,
             DucElementEnum::DucDocElement(elem) => &elem.base,
             DucElementEnum::DucParametricElement(elem) => &elem.base,
+            DucElementEnum::DucModelElement(elem) => &elem.base,
         }
     }
 
@@ -1360,6 +1477,7 @@ impl ElementStreamer {
                 fill_from_stroke: false,
                 apply_stroke_properties: false,
             },
+            &DucElementEnum::DucModelElement(_) => todo!(),
         }
     }
 

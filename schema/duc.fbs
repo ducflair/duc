@@ -12,6 +12,7 @@
  * - **DONT CHANGE FIELD TYPES**: Modifying a field's type can lead to incompatibilities. If necessary, add a new field with the desired type and depreciate the old one.
  * - **BE CAREFUL WITH DEFAULT VALUES**: Changing default values can cause inconsistencies when reading older data. It's best to set appropriate defaults initially and avoid altering them.
  * - **STRING or TABLE CANNOT FALLBACK TO NULL**: these fields cannot be null. They already have a default null value.
+ * - **DEFINE JSON FIELDS AS UBYTE ARRAY**: On our architecture of the fbs file, we always store JSON as a zlib compressed binary ([ubyte]) to save space and improve performance.**
  */
 
 namespace Duc;
@@ -702,11 +703,16 @@ enum PRUNING_LEVEL:ubyte {
   AGGRESSIVE = 30
 }
 
+// deprecated
 enum PARAMETRIC_SOURCE_TYPE:ubyte {
-  /** Parametric element defined by executable code. */
   CODE = 10,
-  /** Parametric element defined by a file. */
   FILE = 11
+}
+
+enum DOCUMENT_GRID_ALIGN_ITEMS:ubyte {
+  START = 10,
+  CENTER = 11,
+  END = 12
 }
 
 enum LEADER_CONTENT_TYPE:ubyte {
@@ -1436,9 +1442,24 @@ table DucEmbeddableElement {
   base: _DucElementBase;
 }
 
+table DocumentGridConfig {
+  /** 1 = single, 2 = two-up, n = grid */
+  columns: int;
+  /** horizontal spacing (px) */
+  gap_x: double;
+  /** vertical spacing (px) */
+  gap_y: double;
+  /** vertical alignment within row */
+  align_items: DOCUMENT_GRID_ALIGN_ITEMS = null;
+  /** cover page behavior for 2+ columns */
+  first_page_alone: bool;
+}
+
 table DucPdfElement {
   base: _DucElementBase;
-  file_id: string; // ExternalFileId
+  file_id: string;
+  /** Configuration for rendering the document in a grid layout */
+  grid_config: DocumentGridConfig;
 }
 
 table DucMermaidElement {
@@ -2067,10 +2088,8 @@ table DucDocElement {
   base: _DucElementBase;
   style: DucDocStyle;
   /**
-   * The content of the document, stored as a Markdown string.
-   * This approach allows a rich text editor to manage the complex
-   * inline formatting (bold, italic, colors, hyperlinks, etc.) while keeping the
-   * core data structure simple and clean.
+   * The content of the document, stored as a code string.
+   * This approach allows to use a rich text editor that can compile to PDF using Typst code
    *
    * It can also contain wildcards like `{@fieldname}` for dynamic data insertion.
    * Example: "This is **bold text** and this is a {color:red}red word{/color}."
@@ -2078,7 +2097,7 @@ table DucDocElement {
    * It can also contain zero or more placeholders in the format `{{tag}}`.
    * Example: "This document was last saved on {{SaveDate}} by {{Author}}."
    */
-  text: string; // Markdown
+  text: string;
   /**
    * An array of metadata objects that define the behavior of the placeholders
    * found in the `text` property. If this is empty, the text is treated
@@ -2095,23 +2114,33 @@ table DucDocElement {
    * - `false`: Text wraps or is clipped to fit the element's fixed bounds.
    */
   auto_resize: bool;
+  /** Configuration for rendering the document in a grid layout */
+  grid_config: DocumentGridConfig;
+  /** External file reference */
+  file_id: string;
 }
 
+// deprecated
 table ParametricSource {
-  /**
-   * The geometry is defined by executable code.
-   * The geometry is loaded from a static 3D file.
-   */
   type: PARAMETRIC_SOURCE_TYPE = null;
-  code: string; // Used if type is CODE
-  /** A reference to the imported file in the DucExternalFiles collection. */
-  file_id: string; // Used if type is FILE
+  code: string;
+  file_id: string;
 }
 
+// deprecated
 table DucParametricElement {
   base: _DucElementBase;
-  /** Defines the source of the 3D geometry (either from code or a file). */
   source: ParametricSource;
+}
+
+table DucModelElement {
+  base: _DucElementBase;
+  /** Defines the source of the model using build123d python code */
+  source: string;
+  /** The last known SVG path representation of the 3D model for quick rendering on the canvas */
+  svg_path: string;
+  /** Possibly connected external files, such as STEP, STL or other reference models */
+  file_ids: [string];
 }
 
 /**
@@ -2127,7 +2156,7 @@ union Element {
   DucEllipseElement,
   DucEmbeddableElement,
   DucPdfElement,
-  DucMermaidElement,
+  DucMermaidElement, // deprecated
   DucTableElement,
   DucImageElement,
   DucTextElement,
@@ -2143,7 +2172,8 @@ union Element {
   DucDimensionElement,
   DucFeatureControlFrameElement,
   DucDocElement,
-  DucParametricElement
+  DucParametricElement, // deprecated
+  DucModelElement
 }
 
 /** A wrapper to hold an element from the union. */

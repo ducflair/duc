@@ -28,7 +28,7 @@ import {
   DucLeaderElement,
   DucLinearElement,
   DucMermaidElement,
-  DucParametricElement,
+  DucModelElement,
   DucPdfElement,
   DucPlotElement,
   DucPolygonElement,
@@ -427,6 +427,8 @@ export const newDocElement = (
   flowDirection: opts.flowDirection || TEXT_FLOW_DIRECTION.TOP_TO_BOTTOM,
   columns: opts.columns || { type: COLUMN_TYPE.NO_COLUMNS, definitions: [], autoHeight: true },
   autoResize: opts.autoResize ?? true,
+  fileId: null,
+  gridConfig: { columns: 1, gapX: 0, gapY: 0, alignItems: 'start', firstPageAlone: false },
   // DucDocStyle properties
   isLtr: opts.isLtr ?? true,
   fontFamily: opts.fontFamily || DEFAULT_FONT_FAMILY,
@@ -447,6 +449,7 @@ export const newDocElement = (
 
 export const newPdfElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucPdfElement> => ({
   fileId: null,
+  gridConfig: { columns: 1, gapX: 0, gapY: 0, alignItems: 'start', firstPageAlone: false },
   ..._newElementBase<DucPdfElement>("pdf", currentScope, opts),
   type: "pdf",
 });
@@ -524,10 +527,12 @@ export const newFeatureControlFrameElement = (
   };
 };
 
-export const newParametricElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucParametricElement> => ({
-  source: { type: PARAMETRIC_SOURCE_TYPE.CODE, code: "" },
-  ..._newElementBase<DucParametricElement>("parametric", currentScope, opts),
-  type: 'parametric',
+export const newParametricElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucModelElement> => ({
+  source: "",
+  svgPath: null,
+  fileIds: [],
+  ..._newElementBase<DucModelElement>("model", currentScope, opts),
+  type: 'model',
 });
 
 // Simplified deep clone for the purpose of cloning DucElement.
