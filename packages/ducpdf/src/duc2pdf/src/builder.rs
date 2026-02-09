@@ -14,7 +14,7 @@ use bigcolor::BigColor;
 use duc::types::{
     DucBlock, DucElementEnum, DucExternalFileEntry, ElementWrapper, ExportedDataState, Standard,
 };
-use hipdf::blocks::BlockManager;
+
 use hipdf::embed_pdf::PdfEmbedder;
 use hipdf::fonts::{Font, FontManager, StandardFont};
 use hipdf::hatching::HatchingManager;
@@ -22,7 +22,7 @@ use hipdf::images::{Image, ImageManager};
 use hipdf::lopdf::content::{Content, Operation};
 use hipdf::lopdf::{Dictionary, Document, Object, Stream};
 use hipdf::ocg::OCGManager;
-use web_sys::console;
+
 use std::collections::{HashMap, HashSet};
 
 // Logging utilities that work in both WASM and native environments
@@ -77,7 +77,7 @@ pub struct DucToPdfBuilder {
     context: ConversionContext,
     document: Document,
     ocg_manager: OCGManager,
-    block_manager: BlockManager,
+
     hatching_manager: HatchingManager,
     pdf_embedder: PdfEmbedder,
     image_manager: ImageManager,
@@ -190,7 +190,7 @@ impl DucToPdfBuilder {
             context,
             document,
             ocg_manager: OCGManager::new(),
-            block_manager: BlockManager::new(),
+
             hatching_manager: HatchingManager::new(),
             pdf_embedder: PdfEmbedder::new(),
             image_manager: ImageManager::new(),
@@ -307,6 +307,7 @@ impl DucToPdfBuilder {
             DucElementEnum::DucFeatureControlFrameElement(elem) => &elem.base,
             DucElementEnum::DucDocElement(elem) => &elem.base,
             DucElementEnum::DucParametricElement(elem) => &elem.base,
+            DucElementEnum::DucModelElement(elem) => &elem.base,
         }
     }
 
@@ -1428,7 +1429,6 @@ fn create_content_stream(
                 bounds,
                 self.context.exported_data.duc_local_state.as_ref(),
                 &mut self.resource_streamer,
-                &mut self.block_manager,
                 &mut self.hatching_manager,
                 &mut self.pdf_embedder,
                 &mut self.image_manager,
@@ -1535,7 +1535,6 @@ fn create_content_stream(
                 bounds,
                 self.context.exported_data.duc_local_state.as_ref(),
                 &mut self.resource_streamer,
-                &mut self.block_manager,
                 &mut self.hatching_manager,
                 &mut self.pdf_embedder,
                 &mut self.image_manager,
@@ -1638,7 +1637,6 @@ fn create_content_stream(
                 bounds,
                 self.context.exported_data.duc_local_state.as_ref(),
                 &mut self.resource_streamer,
-                &mut self.block_manager,
                 &mut self.hatching_manager,
                 &mut self.pdf_embedder,
                 &mut self.image_manager,
