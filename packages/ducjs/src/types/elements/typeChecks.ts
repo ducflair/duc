@@ -267,7 +267,7 @@ export const isDucElement = (
     case "leader":
     case "doc":
     case "selection":
-    case "parametric":
+    case "model":
     case "featurecontrolframe":
     case "viewport":
     case "plot":

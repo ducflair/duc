@@ -46,8 +46,19 @@ class DucPdfElement(object):
             return self._tab.String(o + self._tab.Pos)
         return None
 
+    # DucPdfElement
+    def GridConfig(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.DocumentGridConfig import DocumentGridConfig
+            obj = DocumentGridConfig()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
 def DucPdfElementStart(builder):
-    builder.StartObject(2)
+    builder.StartObject(3)
 
 def Start(builder):
     DucPdfElementStart(builder)
@@ -63,6 +74,12 @@ def DucPdfElementAddFileId(builder, fileId):
 
 def AddFileId(builder, fileId):
     DucPdfElementAddFileId(builder, fileId)
+
+def DucPdfElementAddGridConfig(builder, gridConfig):
+    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(gridConfig), 0)
+
+def AddGridConfig(builder, gridConfig):
+    DucPdfElementAddGridConfig(builder, gridConfig)
 
 def DucPdfElementEnd(builder):
     return builder.EndObject()

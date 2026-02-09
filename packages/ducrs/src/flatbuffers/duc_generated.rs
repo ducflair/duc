@@ -4974,6 +4974,95 @@ impl<'a> flatbuffers::Verifiable for PARAMETRIC_SOURCE_TYPE {
 
 impl flatbuffers::SimpleToVerifyInSlice for PARAMETRIC_SOURCE_TYPE {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_DOCUMENT_GRID_ALIGN_ITEMS: u8 = 10;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_DOCUMENT_GRID_ALIGN_ITEMS: u8 = 12;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_DOCUMENT_GRID_ALIGN_ITEMS: [DOCUMENT_GRID_ALIGN_ITEMS; 3] = [
+  DOCUMENT_GRID_ALIGN_ITEMS::START,
+  DOCUMENT_GRID_ALIGN_ITEMS::CENTER,
+  DOCUMENT_GRID_ALIGN_ITEMS::END,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct DOCUMENT_GRID_ALIGN_ITEMS(pub u8);
+#[allow(non_upper_case_globals)]
+impl DOCUMENT_GRID_ALIGN_ITEMS {
+  pub const START: Self = Self(10);
+  pub const CENTER: Self = Self(11);
+  pub const END: Self = Self(12);
+
+  pub const ENUM_MIN: u8 = 10;
+  pub const ENUM_MAX: u8 = 12;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::START,
+    Self::CENTER,
+    Self::END,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::START => Some("START"),
+      Self::CENTER => Some("CENTER"),
+      Self::END => Some("END"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for DOCUMENT_GRID_ALIGN_ITEMS {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for DOCUMENT_GRID_ALIGN_ITEMS {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for DOCUMENT_GRID_ALIGN_ITEMS {
+    type Output = DOCUMENT_GRID_ALIGN_ITEMS;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
+    }
+}
+
+impl flatbuffers::EndianScalar for DOCUMENT_GRID_ALIGN_ITEMS {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for DOCUMENT_GRID_ALIGN_ITEMS {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for DOCUMENT_GRID_ALIGN_ITEMS {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_LEADER_CONTENT_TYPE: u8 = 10;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_LEADER_CONTENT_TYPE: u8 = 11;
@@ -5336,10 +5425,10 @@ pub struct LeaderContentDataUnionTableOffset {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_ELEMENT: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MAX_ELEMENT: u8 = 22;
+pub const ENUM_MAX_ELEMENT: u8 = 23;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_ELEMENT: [Element; 23] = [
+pub const ENUM_VALUES_ELEMENT: [Element; 24] = [
   Element::NONE,
   Element::DucRectangleElement,
   Element::DucPolygonElement,
@@ -5363,6 +5452,7 @@ pub const ENUM_VALUES_ELEMENT: [Element; 23] = [
   Element::DucFeatureControlFrameElement,
   Element::DucDocElement,
   Element::DucParametricElement,
+  Element::DucModelElement,
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -5393,9 +5483,10 @@ impl Element {
   pub const DucFeatureControlFrameElement: Self = Self(20);
   pub const DucDocElement: Self = Self(21);
   pub const DucParametricElement: Self = Self(22);
+  pub const DucModelElement: Self = Self(23);
 
   pub const ENUM_MIN: u8 = 0;
-  pub const ENUM_MAX: u8 = 22;
+  pub const ENUM_MAX: u8 = 23;
   pub const ENUM_VALUES: &'static [Self] = &[
     Self::NONE,
     Self::DucRectangleElement,
@@ -5420,6 +5511,7 @@ impl Element {
     Self::DucFeatureControlFrameElement,
     Self::DucDocElement,
     Self::DucParametricElement,
+    Self::DucModelElement,
   ];
   /// Returns the variant's name or "" if unknown.
   pub fn variant_name(self) -> Option<&'static str> {
@@ -5447,6 +5539,7 @@ impl Element {
       Self::DucFeatureControlFrameElement => Some("DucFeatureControlFrameElement"),
       Self::DucDocElement => Some("DucDocElement"),
       Self::DucParametricElement => Some("DucParametricElement"),
+      Self::DucModelElement => Some("DucModelElement"),
       _ => None,
     }
   }
@@ -8321,9 +8414,9 @@ impl<'a> _DucElementBase<'a> {
   pub const VT_Z_INDEX: flatbuffers::VOffsetT = 52;
   pub const VT_LINK: flatbuffers::VOffsetT = 54;
   pub const VT_LOCKED: flatbuffers::VOffsetT = 56;
-  pub const VT_CUSTOM_DATA: flatbuffers::VOffsetT = 58;
   pub const VT_BLOCK_IDS: flatbuffers::VOffsetT = 60;
   pub const VT_INSTANCE_ID: flatbuffers::VOffsetT = 62;
+  pub const VT_CUSTOM_DATA: flatbuffers::VOffsetT = 64;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -8341,9 +8434,9 @@ impl<'a> _DucElementBase<'a> {
     builder.add_width(args.width);
     builder.add_y(args.y);
     builder.add_x(args.x);
+    if let Some(x) = args.custom_data { builder.add_custom_data(x); }
     if let Some(x) = args.instance_id { builder.add_instance_id(x); }
     if let Some(x) = args.block_ids { builder.add_block_ids(x); }
-    if let Some(x) = args.custom_data { builder.add_custom_data(x); }
     if let Some(x) = args.link { builder.add_link(x); }
     builder.add_z_index(args.z_index);
     if let Some(x) = args.bound_elements { builder.add_bound_elements(x); }
@@ -8569,13 +8662,6 @@ impl<'a> _DucElementBase<'a> {
     unsafe { self._tab.get::<bool>(_DucElementBase::VT_LOCKED, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn custom_data(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(_DucElementBase::VT_CUSTOM_DATA, None)}
-  }
-  #[inline]
   pub fn block_ids(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
     // Safety:
     // Created from valid Table for this object
@@ -8588,6 +8674,13 @@ impl<'a> _DucElementBase<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(_DucElementBase::VT_INSTANCE_ID, None)}
+  }
+  #[inline]
+  pub fn custom_data(&self) -> Option<flatbuffers::Vector<'a, u8>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(_DucElementBase::VT_CUSTOM_DATA, None)}
   }
 }
 
@@ -8625,9 +8718,9 @@ impl flatbuffers::Verifiable for _DucElementBase<'_> {
      .visit_field::<f32>("z_index", Self::VT_Z_INDEX, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("link", Self::VT_LINK, false)?
      .visit_field::<bool>("locked", Self::VT_LOCKED, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("custom_data", Self::VT_CUSTOM_DATA, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("block_ids", Self::VT_BLOCK_IDS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("instance_id", Self::VT_INSTANCE_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("custom_data", Self::VT_CUSTOM_DATA, false)?
      .finish();
     Ok(())
   }
@@ -8660,9 +8753,9 @@ pub struct _DucElementBaseArgs<'a> {
     pub z_index: f32,
     pub link: Option<flatbuffers::WIPOffset<&'a str>>,
     pub locked: bool,
-    pub custom_data: Option<flatbuffers::WIPOffset<&'a str>>,
     pub block_ids: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
     pub instance_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub custom_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
 }
 impl<'a> Default for _DucElementBaseArgs<'a> {
   #[inline]
@@ -8695,9 +8788,9 @@ impl<'a> Default for _DucElementBaseArgs<'a> {
       z_index: 0.0,
       link: None,
       locked: false,
-      custom_data: None,
       block_ids: None,
       instance_id: None,
+      custom_data: None,
     }
   }
 }
@@ -8816,16 +8909,16 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> _DucElementBaseBuilder<'a, 'b, 
     self.fbb_.push_slot::<bool>(_DucElementBase::VT_LOCKED, locked, false);
   }
   #[inline]
-  pub fn add_custom_data(&mut self, custom_data: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_CUSTOM_DATA, custom_data);
-  }
-  #[inline]
   pub fn add_block_ids(&mut self, block_ids: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_BLOCK_IDS, block_ids);
   }
   #[inline]
   pub fn add_instance_id(&mut self, instance_id: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_INSTANCE_ID, instance_id);
+  }
+  #[inline]
+  pub fn add_custom_data(&mut self, custom_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(_DucElementBase::VT_CUSTOM_DATA, custom_data);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> _DucElementBaseBuilder<'a, 'b, A> {
@@ -8873,9 +8966,9 @@ impl core::fmt::Debug for _DucElementBase<'_> {
       ds.field("z_index", &self.z_index());
       ds.field("link", &self.link());
       ds.field("locked", &self.locked());
-      ds.field("custom_data", &self.custom_data());
       ds.field("block_ids", &self.block_ids());
       ds.field("instance_id", &self.instance_id());
+      ds.field("custom_data", &self.custom_data());
       ds.finish()
   }
 }
@@ -14032,6 +14125,171 @@ impl core::fmt::Debug for DucEmbeddableElement<'_> {
       ds.finish()
   }
 }
+pub enum DocumentGridConfigOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DocumentGridConfig<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DocumentGridConfig<'a> {
+  type Inner = DocumentGridConfig<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DocumentGridConfig<'a> {
+  pub const VT_COLUMNS: flatbuffers::VOffsetT = 4;
+  pub const VT_GAP_X: flatbuffers::VOffsetT = 6;
+  pub const VT_GAP_Y: flatbuffers::VOffsetT = 8;
+  pub const VT_ALIGN_ITEMS: flatbuffers::VOffsetT = 10;
+  pub const VT_FIRST_PAGE_ALONE: flatbuffers::VOffsetT = 12;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DocumentGridConfig { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DocumentGridConfigArgs
+  ) -> flatbuffers::WIPOffset<DocumentGridConfig<'bldr>> {
+    let mut builder = DocumentGridConfigBuilder::new(_fbb);
+    builder.add_gap_y(args.gap_y);
+    builder.add_gap_x(args.gap_x);
+    builder.add_columns(args.columns);
+    builder.add_first_page_alone(args.first_page_alone);
+    if let Some(x) = args.align_items { builder.add_align_items(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn columns(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(DocumentGridConfig::VT_COLUMNS, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn gap_x(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DocumentGridConfig::VT_GAP_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn gap_y(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DocumentGridConfig::VT_GAP_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn align_items(&self) -> Option<DOCUMENT_GRID_ALIGN_ITEMS> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<DOCUMENT_GRID_ALIGN_ITEMS>(DocumentGridConfig::VT_ALIGN_ITEMS, None)}
+  }
+  #[inline]
+  pub fn first_page_alone(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(DocumentGridConfig::VT_FIRST_PAGE_ALONE, Some(false)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for DocumentGridConfig<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<i32>("columns", Self::VT_COLUMNS, false)?
+     .visit_field::<f64>("gap_x", Self::VT_GAP_X, false)?
+     .visit_field::<f64>("gap_y", Self::VT_GAP_Y, false)?
+     .visit_field::<DOCUMENT_GRID_ALIGN_ITEMS>("align_items", Self::VT_ALIGN_ITEMS, false)?
+     .visit_field::<bool>("first_page_alone", Self::VT_FIRST_PAGE_ALONE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DocumentGridConfigArgs {
+    pub columns: i32,
+    pub gap_x: f64,
+    pub gap_y: f64,
+    pub align_items: Option<DOCUMENT_GRID_ALIGN_ITEMS>,
+    pub first_page_alone: bool,
+}
+impl<'a> Default for DocumentGridConfigArgs {
+  #[inline]
+  fn default() -> Self {
+    DocumentGridConfigArgs {
+      columns: 0,
+      gap_x: 0.0,
+      gap_y: 0.0,
+      align_items: None,
+      first_page_alone: false,
+    }
+  }
+}
+
+pub struct DocumentGridConfigBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DocumentGridConfigBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_columns(&mut self, columns: i32) {
+    self.fbb_.push_slot::<i32>(DocumentGridConfig::VT_COLUMNS, columns, 0);
+  }
+  #[inline]
+  pub fn add_gap_x(&mut self, gap_x: f64) {
+    self.fbb_.push_slot::<f64>(DocumentGridConfig::VT_GAP_X, gap_x, 0.0);
+  }
+  #[inline]
+  pub fn add_gap_y(&mut self, gap_y: f64) {
+    self.fbb_.push_slot::<f64>(DocumentGridConfig::VT_GAP_Y, gap_y, 0.0);
+  }
+  #[inline]
+  pub fn add_align_items(&mut self, align_items: DOCUMENT_GRID_ALIGN_ITEMS) {
+    self.fbb_.push_slot_always::<DOCUMENT_GRID_ALIGN_ITEMS>(DocumentGridConfig::VT_ALIGN_ITEMS, align_items);
+  }
+  #[inline]
+  pub fn add_first_page_alone(&mut self, first_page_alone: bool) {
+    self.fbb_.push_slot::<bool>(DocumentGridConfig::VT_FIRST_PAGE_ALONE, first_page_alone, false);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DocumentGridConfigBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DocumentGridConfigBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DocumentGridConfig<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DocumentGridConfig<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DocumentGridConfig");
+      ds.field("columns", &self.columns());
+      ds.field("gap_x", &self.gap_x());
+      ds.field("gap_y", &self.gap_y());
+      ds.field("align_items", &self.align_items());
+      ds.field("first_page_alone", &self.first_page_alone());
+      ds.finish()
+  }
+}
 pub enum DucPdfElementOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -14050,6 +14308,7 @@ impl<'a> flatbuffers::Follow<'a> for DucPdfElement<'a> {
 impl<'a> DucPdfElement<'a> {
   pub const VT_BASE: flatbuffers::VOffsetT = 4;
   pub const VT_FILE_ID: flatbuffers::VOffsetT = 6;
+  pub const VT_GRID_CONFIG: flatbuffers::VOffsetT = 8;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -14061,6 +14320,7 @@ impl<'a> DucPdfElement<'a> {
     args: &'args DucPdfElementArgs<'args>
   ) -> flatbuffers::WIPOffset<DucPdfElement<'bldr>> {
     let mut builder = DucPdfElementBuilder::new(_fbb);
+    if let Some(x) = args.grid_config { builder.add_grid_config(x); }
     if let Some(x) = args.file_id { builder.add_file_id(x); }
     if let Some(x) = args.base { builder.add_base(x); }
     builder.finish()
@@ -14081,6 +14341,13 @@ impl<'a> DucPdfElement<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucPdfElement::VT_FILE_ID, None)}
   }
+  #[inline]
+  pub fn grid_config(&self) -> Option<DocumentGridConfig<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DocumentGridConfig>>(DucPdfElement::VT_GRID_CONFIG, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for DucPdfElement<'_> {
@@ -14092,6 +14359,7 @@ impl flatbuffers::Verifiable for DucPdfElement<'_> {
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<_DucElementBase>>("base", Self::VT_BASE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("file_id", Self::VT_FILE_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DocumentGridConfig>>("grid_config", Self::VT_GRID_CONFIG, false)?
      .finish();
     Ok(())
   }
@@ -14099,6 +14367,7 @@ impl flatbuffers::Verifiable for DucPdfElement<'_> {
 pub struct DucPdfElementArgs<'a> {
     pub base: Option<flatbuffers::WIPOffset<_DucElementBase<'a>>>,
     pub file_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub grid_config: Option<flatbuffers::WIPOffset<DocumentGridConfig<'a>>>,
 }
 impl<'a> Default for DucPdfElementArgs<'a> {
   #[inline]
@@ -14106,6 +14375,7 @@ impl<'a> Default for DucPdfElementArgs<'a> {
     DucPdfElementArgs {
       base: None,
       file_id: None,
+      grid_config: None,
     }
   }
 }
@@ -14122,6 +14392,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucPdfElementBuilder<'a, 'b, A>
   #[inline]
   pub fn add_file_id(&mut self, file_id: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucPdfElement::VT_FILE_ID, file_id);
+  }
+  #[inline]
+  pub fn add_grid_config(&mut self, grid_config: flatbuffers::WIPOffset<DocumentGridConfig<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DocumentGridConfig>>(DucPdfElement::VT_GRID_CONFIG, grid_config);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucPdfElementBuilder<'a, 'b, A> {
@@ -14143,6 +14417,7 @@ impl core::fmt::Debug for DucPdfElement<'_> {
     let mut ds = f.debug_struct("DucPdfElement");
       ds.field("base", &self.base());
       ds.field("file_id", &self.file_id());
+      ds.field("grid_config", &self.grid_config());
       ds.finish()
   }
 }
@@ -17866,7 +18141,7 @@ impl<'a> DucBlockMetadata<'a> {
   pub const VT_USAGE_COUNT: flatbuffers::VOffsetT = 6;
   pub const VT_CREATED_AT: flatbuffers::VOffsetT = 8;
   pub const VT_UPDATED_AT: flatbuffers::VOffsetT = 10;
-  pub const VT_LOCALIZATION: flatbuffers::VOffsetT = 12;
+  pub const VT_LOCALIZATION: flatbuffers::VOffsetT = 14;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -17916,11 +18191,11 @@ impl<'a> DucBlockMetadata<'a> {
     unsafe { self._tab.get::<i64>(DucBlockMetadata::VT_UPDATED_AT, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn localization(&self) -> Option<&'a str> {
+  pub fn localization(&self) -> Option<flatbuffers::Vector<'a, u8>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucBlockMetadata::VT_LOCALIZATION, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(DucBlockMetadata::VT_LOCALIZATION, None)}
   }
 }
 
@@ -17935,7 +18210,7 @@ impl flatbuffers::Verifiable for DucBlockMetadata<'_> {
      .visit_field::<i32>("usage_count", Self::VT_USAGE_COUNT, false)?
      .visit_field::<i64>("created_at", Self::VT_CREATED_AT, false)?
      .visit_field::<i64>("updated_at", Self::VT_UPDATED_AT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("localization", Self::VT_LOCALIZATION, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("localization", Self::VT_LOCALIZATION, false)?
      .finish();
     Ok(())
   }
@@ -17945,7 +18220,7 @@ pub struct DucBlockMetadataArgs<'a> {
     pub usage_count: i32,
     pub created_at: i64,
     pub updated_at: i64,
-    pub localization: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub localization: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
 }
 impl<'a> Default for DucBlockMetadataArgs<'a> {
   #[inline]
@@ -17982,7 +18257,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucBlockMetadataBuilder<'a, 'b,
     self.fbb_.push_slot::<i64>(DucBlockMetadata::VT_UPDATED_AT, updated_at, 0);
   }
   #[inline]
-  pub fn add_localization(&mut self, localization: flatbuffers::WIPOffset<&'b  str>) {
+  pub fn add_localization(&mut self, localization: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucBlockMetadata::VT_LOCALIZATION, localization);
   }
   #[inline]
@@ -22171,6 +22446,8 @@ impl<'a> DucDocElement<'a> {
   pub const VT_FLOW_DIRECTION: flatbuffers::VOffsetT = 12;
   pub const VT_COLUMNS: flatbuffers::VOffsetT = 14;
   pub const VT_AUTO_RESIZE: flatbuffers::VOffsetT = 16;
+  pub const VT_GRID_CONFIG: flatbuffers::VOffsetT = 18;
+  pub const VT_FILE_ID: flatbuffers::VOffsetT = 20;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -22182,6 +22459,8 @@ impl<'a> DucDocElement<'a> {
     args: &'args DucDocElementArgs<'args>
   ) -> flatbuffers::WIPOffset<DucDocElement<'bldr>> {
     let mut builder = DucDocElementBuilder::new(_fbb);
+    if let Some(x) = args.file_id { builder.add_file_id(x); }
+    if let Some(x) = args.grid_config { builder.add_grid_config(x); }
     if let Some(x) = args.columns { builder.add_columns(x); }
     if let Some(x) = args.dynamic { builder.add_dynamic(x); }
     if let Some(x) = args.text { builder.add_text(x); }
@@ -22242,6 +22521,20 @@ impl<'a> DucDocElement<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<bool>(DucDocElement::VT_AUTO_RESIZE, Some(false)).unwrap()}
   }
+  #[inline]
+  pub fn grid_config(&self) -> Option<DocumentGridConfig<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<DocumentGridConfig>>(DucDocElement::VT_GRID_CONFIG, None)}
+  }
+  #[inline]
+  pub fn file_id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucDocElement::VT_FILE_ID, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for DucDocElement<'_> {
@@ -22258,6 +22551,8 @@ impl flatbuffers::Verifiable for DucDocElement<'_> {
      .visit_field::<TEXT_FLOW_DIRECTION>("flow_direction", Self::VT_FLOW_DIRECTION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<ColumnLayout>>("columns", Self::VT_COLUMNS, false)?
      .visit_field::<bool>("auto_resize", Self::VT_AUTO_RESIZE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<DocumentGridConfig>>("grid_config", Self::VT_GRID_CONFIG, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("file_id", Self::VT_FILE_ID, false)?
      .finish();
     Ok(())
   }
@@ -22270,6 +22565,8 @@ pub struct DucDocElementArgs<'a> {
     pub flow_direction: Option<TEXT_FLOW_DIRECTION>,
     pub columns: Option<flatbuffers::WIPOffset<ColumnLayout<'a>>>,
     pub auto_resize: bool,
+    pub grid_config: Option<flatbuffers::WIPOffset<DocumentGridConfig<'a>>>,
+    pub file_id: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for DucDocElementArgs<'a> {
   #[inline]
@@ -22282,6 +22579,8 @@ impl<'a> Default for DucDocElementArgs<'a> {
       flow_direction: None,
       columns: None,
       auto_resize: false,
+      grid_config: None,
+      file_id: None,
     }
   }
 }
@@ -22320,6 +22619,14 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucDocElementBuilder<'a, 'b, A>
     self.fbb_.push_slot::<bool>(DucDocElement::VT_AUTO_RESIZE, auto_resize, false);
   }
   #[inline]
+  pub fn add_grid_config(&mut self, grid_config: flatbuffers::WIPOffset<DocumentGridConfig<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<DocumentGridConfig>>(DucDocElement::VT_GRID_CONFIG, grid_config);
+  }
+  #[inline]
+  pub fn add_file_id(&mut self, file_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucDocElement::VT_FILE_ID, file_id);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucDocElementBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     DucDocElementBuilder {
@@ -22344,6 +22651,8 @@ impl core::fmt::Debug for DucDocElement<'_> {
       ds.field("flow_direction", &self.flow_direction());
       ds.field("columns", &self.columns());
       ds.field("auto_resize", &self.auto_resize());
+      ds.field("grid_config", &self.grid_config());
+      ds.field("file_id", &self.file_id());
       ds.finish()
   }
 }
@@ -22589,6 +22898,154 @@ impl core::fmt::Debug for DucParametricElement<'_> {
     let mut ds = f.debug_struct("DucParametricElement");
       ds.field("base", &self.base());
       ds.field("source", &self.source());
+      ds.finish()
+  }
+}
+pub enum DucModelElementOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct DucModelElement<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for DucModelElement<'a> {
+  type Inner = DucModelElement<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: flatbuffers::Table::new(buf, loc) }
+  }
+}
+
+impl<'a> DucModelElement<'a> {
+  pub const VT_BASE: flatbuffers::VOffsetT = 4;
+  pub const VT_SOURCE: flatbuffers::VOffsetT = 6;
+  pub const VT_SVG_PATH: flatbuffers::VOffsetT = 8;
+  pub const VT_FILE_IDS: flatbuffers::VOffsetT = 10;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    DucModelElement { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args DucModelElementArgs<'args>
+  ) -> flatbuffers::WIPOffset<DucModelElement<'bldr>> {
+    let mut builder = DucModelElementBuilder::new(_fbb);
+    if let Some(x) = args.file_ids { builder.add_file_ids(x); }
+    if let Some(x) = args.svg_path { builder.add_svg_path(x); }
+    if let Some(x) = args.source { builder.add_source(x); }
+    if let Some(x) = args.base { builder.add_base(x); }
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn base(&self) -> Option<_DucElementBase<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<_DucElementBase>>(DucModelElement::VT_BASE, None)}
+  }
+  #[inline]
+  pub fn source(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucModelElement::VT_SOURCE, None)}
+  }
+  #[inline]
+  pub fn svg_path(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(DucModelElement::VT_SVG_PATH, None)}
+  }
+  #[inline]
+  pub fn file_ids(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(DucModelElement::VT_FILE_IDS, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for DucModelElement<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<_DucElementBase>>("base", Self::VT_BASE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("source", Self::VT_SOURCE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("svg_path", Self::VT_SVG_PATH, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("file_ids", Self::VT_FILE_IDS, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct DucModelElementArgs<'a> {
+    pub base: Option<flatbuffers::WIPOffset<_DucElementBase<'a>>>,
+    pub source: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub svg_path: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub file_ids: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
+}
+impl<'a> Default for DucModelElementArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    DucModelElementArgs {
+      base: None,
+      source: None,
+      svg_path: None,
+      file_ids: None,
+    }
+  }
+}
+
+pub struct DucModelElementBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DucModelElementBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_base(&mut self, base: flatbuffers::WIPOffset<_DucElementBase<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_DucElementBase>>(DucModelElement::VT_BASE, base);
+  }
+  #[inline]
+  pub fn add_source(&mut self, source: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucModelElement::VT_SOURCE, source);
+  }
+  #[inline]
+  pub fn add_svg_path(&mut self, svg_path: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucModelElement::VT_SVG_PATH, svg_path);
+  }
+  #[inline]
+  pub fn add_file_ids(&mut self, file_ids: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DucModelElement::VT_FILE_IDS, file_ids);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DucModelElementBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    DucModelElementBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<DucModelElement<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for DucModelElement<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("DucModelElement");
+      ds.field("base", &self.base());
+      ds.field("source", &self.source());
+      ds.field("svg_path", &self.svg_path());
+      ds.field("file_ids", &self.file_ids());
       ds.finish()
   }
 }
@@ -22971,6 +23428,21 @@ impl<'a> ElementWrapper<'a> {
     }
   }
 
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn element_as_duc_model_element(&self) -> Option<DucModelElement<'a>> {
+    if self.element_type() == Element::DucModelElement {
+      self.element().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { DucModelElement::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
 }
 
 impl flatbuffers::Verifiable for ElementWrapper<'_> {
@@ -23004,6 +23476,7 @@ impl flatbuffers::Verifiable for ElementWrapper<'_> {
           Element::DucFeatureControlFrameElement => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucFeatureControlFrameElement>>("Element::DucFeatureControlFrameElement", pos),
           Element::DucDocElement => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucDocElement>>("Element::DucDocElement", pos),
           Element::DucParametricElement => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucParametricElement>>("Element::DucParametricElement", pos),
+          Element::DucModelElement => v.verify_union_variant::<flatbuffers::ForwardsUOffset<DucModelElement>>("Element::DucModelElement", pos),
           _ => Ok(()),
         }
      })?
@@ -23207,6 +23680,13 @@ impl core::fmt::Debug for ElementWrapper<'_> {
         },
         Element::DucParametricElement => {
           if let Some(x) = self.element_as_duc_parametric_element() {
+            ds.field("element", &x)
+          } else {
+            ds.field("element", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Element::DucModelElement => {
+          if let Some(x) = self.element_as_duc_model_element() {
             ds.field("element", &x)
           } else {
             ds.field("element", &"InvalidFlatbuffer: Union discriminant does not match value.")
@@ -31340,7 +31820,8 @@ impl<'a> flatbuffers::Follow<'a> for Delta<'a> {
 
 impl<'a> Delta<'a> {
   pub const VT_BASE: flatbuffers::VOffsetT = 4;
-  pub const VT_PATCH: flatbuffers::VOffsetT = 6;
+  pub const VT_SIZE_BYTES: flatbuffers::VOffsetT = 8;
+  pub const VT_PATCH: flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -31352,6 +31833,7 @@ impl<'a> Delta<'a> {
     args: &'args DeltaArgs<'args>
   ) -> flatbuffers::WIPOffset<Delta<'bldr>> {
     let mut builder = DeltaBuilder::new(_fbb);
+    builder.add_size_bytes(args.size_bytes);
     if let Some(x) = args.patch { builder.add_patch(x); }
     if let Some(x) = args.base { builder.add_base(x); }
     builder.finish()
@@ -31366,11 +31848,18 @@ impl<'a> Delta<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<VersionBase>>(Delta::VT_BASE, None)}
   }
   #[inline]
-  pub fn patch(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<JSONPatchOperation<'a>>>> {
+  pub fn size_bytes(&self) -> i64 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<JSONPatchOperation>>>>(Delta::VT_PATCH, None)}
+    unsafe { self._tab.get::<i64>(Delta::VT_SIZE_BYTES, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn patch(&self) -> Option<flatbuffers::Vector<'a, u8>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(Delta::VT_PATCH, None)}
   }
 }
 
@@ -31382,20 +31871,23 @@ impl flatbuffers::Verifiable for Delta<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<VersionBase>>("base", Self::VT_BASE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<JSONPatchOperation>>>>("patch", Self::VT_PATCH, false)?
+     .visit_field::<i64>("size_bytes", Self::VT_SIZE_BYTES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("patch", Self::VT_PATCH, false)?
      .finish();
     Ok(())
   }
 }
 pub struct DeltaArgs<'a> {
     pub base: Option<flatbuffers::WIPOffset<VersionBase<'a>>>,
-    pub patch: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<JSONPatchOperation<'a>>>>>,
+    pub size_bytes: i64,
+    pub patch: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
 }
 impl<'a> Default for DeltaArgs<'a> {
   #[inline]
   fn default() -> Self {
     DeltaArgs {
       base: None,
+      size_bytes: 0,
       patch: None,
     }
   }
@@ -31411,7 +31903,11 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DeltaBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<VersionBase>>(Delta::VT_BASE, base);
   }
   #[inline]
-  pub fn add_patch(&mut self, patch: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<JSONPatchOperation<'b >>>>) {
+  pub fn add_size_bytes(&mut self, size_bytes: i64) {
+    self.fbb_.push_slot::<i64>(Delta::VT_SIZE_BYTES, size_bytes, 0);
+  }
+  #[inline]
+  pub fn add_patch(&mut self, patch: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Delta::VT_PATCH, patch);
   }
   #[inline]
@@ -31433,6 +31929,7 @@ impl core::fmt::Debug for Delta<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("Delta");
       ds.field("base", &self.base());
+      ds.field("size_bytes", &self.size_bytes());
       ds.field("patch", &self.patch());
       ds.finish()
   }
