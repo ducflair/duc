@@ -56,8 +56,7 @@ pub struct ResourceStreamer {
     resource_cache: HashMap<String, ResourceInfo>,
     /// PDF document reference for embedding
     document: Option<Document>,
-    /// SVG to PDF converter
-    svg_converter: SvgToPdfConverter,
+
     /// PDF embedder
     pdf_embedder: Option<PdfEmbedder>,
     /// Block manager for reusable content
@@ -74,7 +73,7 @@ impl ResourceStreamer {
         Self {
             resource_cache: HashMap::new(),
             document: None,
-            svg_converter: SvgToPdfConverter,
+
             pdf_embedder: None,
             block_manager: None,
             hatching_manager: None,
@@ -153,7 +152,7 @@ impl ResourceStreamer {
         let xobject_id = SvgToPdfConverter::convert_file_entry_to_xobject(document, file_entry)?;
 
         // Get SVG dimensions from the converted XObject
-        let (width, height) = self.get_svg_dimensions(file_entry);
+        let (width, height) = (100.0, 100.0);
 
         Ok(ResourceInfo {
             id: file_entry.key.clone(),
@@ -207,9 +206,7 @@ impl ResourceStreamer {
 
         // Load PDF data
         let pdf_data = &file_entry.value.data;
-        let pdf_doc = Document::load_from(std::io::Cursor::new(pdf_data)).map_err(|e| {
-            ConversionError::ResourceLoadError(format!("Failed to load PDF: {}", e))
-        })?;
+
 
         // Embed PDF using hipdf
         let embed_id = format!("pdf_{}", file_entry.key);
@@ -220,7 +217,7 @@ impl ResourceStreamer {
             })?;
 
         // Get PDF dimensions from first page
-        let (width, height) = self.get_pdf_dimensions(&pdf_doc)?;
+        let (width, height) = (100.0, 100.0);
 
         Ok(ResourceInfo {
             id: file_entry.key.clone(),
@@ -285,30 +282,11 @@ impl ResourceStreamer {
         Ok(object_id)
     }
 
-    /// Get SVG dimensions
-    fn get_svg_dimensions(&self, _file_entry: &DucExternalFileEntry) -> (f64, f64) {
-        // Parse SVG to get dimensions
-        // For now, return default dimensions
-        (100.0, 100.0)
-    }
 
-    /// Get image dimensions from raw data
-    fn get_image_dimensions(
-        &self,
-        _image_data: &[u8],
-        _resource_type: &ResourceType,
-    ) -> ConversionResult<(f64, f64)> {
-        // Parse image to get dimensions
-        // For now, return default dimensions
-        Ok((100.0, 100.0))
-    }
 
-    /// Get PDF dimensions from first page
-    fn get_pdf_dimensions(&self, _pdf_doc: &Document) -> ConversionResult<(f64, f64)> {
-        // Parse PDF to get page dimensions
-        // For now, return default dimensions
-        Ok((100.0, 100.0))
-    }
+
+
+
 
     /// Stream SVG resource as PDF operations
     pub fn stream_svg_resource(

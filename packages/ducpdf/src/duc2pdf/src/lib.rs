@@ -166,6 +166,7 @@ pub fn calculate_bounding_box(data: &duc::types::ExportedDataState) -> (f64, f64
             duc::types::DucElementEnum::DucFeatureControlFrameElement(elem) => &elem.base,
             duc::types::DucElementEnum::DucDocElement(elem) => &elem.base,
             duc::types::DucElementEnum::DucParametricElement(elem) => &elem.base,
+            duc::types::DucElementEnum::DucModelElement(elem) => &elem.base,
         };
 
         // Assume all coordinates are already in millimeters
