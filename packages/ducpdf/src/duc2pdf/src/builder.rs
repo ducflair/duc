@@ -179,6 +179,13 @@ impl DucToPdfBuilder {
         let (primary_font, font_resource_name) =
             Self::load_primary_font(&mut document, &mut font_manager)?;
 
+        // Create block instances map for duplication support
+        let block_instances: HashMap<String, duc::types::DucBlockInstance> = context.exported_data
+            .block_instances
+            .iter()
+            .map(|bi| (bi.id.clone(), bi.clone()))
+            .collect();
+
         Ok(Self {
             context,
             document,
@@ -193,6 +200,7 @@ impl DucToPdfBuilder {
                 0.0,
                 font_resource_name,
                 primary_font,
+                block_instances,
             ), // Default height, will be updated per page
             resource_streamer: ResourceStreamer::new(),
             page_ids: Vec::new(),
@@ -1496,6 +1504,15 @@ fn create_content_stream(
         self.element_streamer
             .set_svg_dimensions(self.context.resource_cache.svg_dimensions.clone());
 
+        let is_plot_mode = matches!(self.context.options.mode, ConversionMode::Plot);
+        let (scroll_x, scroll_y) = if is_plot_mode {
+            (0.0, 0.0)
+        } else if let Some(state) = &self.context.exported_data.duc_local_state {
+            (state.scroll_x, state.scroll_y)
+        } else {
+            (0.0, 0.0)
+        };
+
         // === Phase 1: Stream unlayered elements ===
         // These elements don't belong to any layer and render first
         let unlayered_elements: Vec<ElementWrapper> = self
@@ -1550,17 +1567,49 @@ fn create_content_stream(
                         return false;
                     }
 
-                    // Verify element intersects with page bounds
+                    // Verify element (including duplications) intersects with page bounds
                     let (bounds_x, bounds_y, bounds_width, bounds_height) = bounds;
                     let bounds_max_x = bounds_x + bounds_width;
                     let bounds_max_y = bounds_y + bounds_height;
-                    let elem_max_x = base.x + base.width;
-                    let elem_max_y = base.y + base.height;
 
-                    let intersects = !(base.x > bounds_max_x
-                        || elem_max_x < bounds_x
-                        || base.y > bounds_max_y
-                        || elem_max_y < bounds_y);
+                    let offsets = self
+                        .element_streamer
+                        .get_element_duplication_offsets(&element_wrapper.element)
+                        .unwrap_or_else(|| vec![(0.0, 0.0)]);
+
+                    let mut intersects = false;
+                    for (x_off, y_off) in offsets {
+                        let elem_x = base.x + scroll_x + x_off;
+                        let elem_y = base.y + scroll_y + y_off;
+                        let elem_max_x = elem_x + base.width;
+                        let elem_max_y = elem_y + base.height;
+
+                        let this_intersects = !(elem_x > bounds_max_x
+                            || elem_max_x < bounds_x
+                            || elem_y > bounds_max_y
+                            || elem_max_y < bounds_y);
+
+                        if this_intersects {
+                            intersects = true;
+                            break;
+                        }
+                    }
+
+                    if !intersects {
+                        let base_id = &base.id;
+                        let instance_id = base.instance_id.as_deref().unwrap_or("<none>");
+                        log_info!(
+                            "Skipping layered element '{}' (instance {}) - no duplicated instance intersects bounds. bounds=({},{},{},{}) scroll=({}, {})",
+                            base_id,
+                            instance_id,
+                            bounds_x,
+                            bounds_y,
+                            bounds_width,
+                            bounds_height,
+                            scroll_x,
+                            scroll_y
+                        );
+                    }
 
                     intersects
                 })

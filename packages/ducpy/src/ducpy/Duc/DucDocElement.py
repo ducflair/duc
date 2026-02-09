@@ -107,8 +107,26 @@ class DucDocElement(object):
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
+    # DucDocElement
+    def GridConfig(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
+        if o != 0:
+            x = self._tab.Indirect(o + self._tab.Pos)
+            from Duc.DocumentGridConfig import DocumentGridConfig
+            obj = DocumentGridConfig()
+            obj.Init(self._tab.Bytes, x)
+            return obj
+        return None
+
+    # DucDocElement
+    def FileId(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(20))
+        if o != 0:
+            return self._tab.String(o + self._tab.Pos)
+        return None
+
 def DucDocElementStart(builder):
-    builder.StartObject(7)
+    builder.StartObject(9)
 
 def Start(builder):
     DucDocElementStart(builder)
@@ -160,6 +178,18 @@ def DucDocElementAddAutoResize(builder, autoResize):
 
 def AddAutoResize(builder, autoResize):
     DucDocElementAddAutoResize(builder, autoResize)
+
+def DucDocElementAddGridConfig(builder, gridConfig):
+    builder.PrependUOffsetTRelativeSlot(7, flatbuffers.number_types.UOffsetTFlags.py_type(gridConfig), 0)
+
+def AddGridConfig(builder, gridConfig):
+    DucDocElementAddGridConfig(builder, gridConfig)
+
+def DucDocElementAddFileId(builder, fileId):
+    builder.PrependUOffsetTRelativeSlot(8, flatbuffers.number_types.UOffsetTFlags.py_type(fileId), 0)
+
+def AddFileId(builder, fileId):
+    DucDocElementAddFileId(builder, fileId)
 
 def DucDocElementEnd(builder):
     return builder.EndObject()

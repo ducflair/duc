@@ -57,14 +57,34 @@ class DucBlockMetadata(object):
         return 0
 
     # DucBlockMetadata
-    def Localization(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+    def Localization(self, j):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
-            return self._tab.String(o + self._tab.Pos)
-        return None
+            a = self._tab.Vector(o)
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1))
+        return 0
+
+    # DucBlockMetadata
+    def LocalizationAsNumpy(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        if o != 0:
+            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Uint8Flags, o)
+        return 0
+
+    # DucBlockMetadata
+    def LocalizationLength(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        if o != 0:
+            return self._tab.VectorLen(o)
+        return 0
+
+    # DucBlockMetadata
+    def LocalizationIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        return o == 0
 
 def DucBlockMetadataStart(builder):
-    builder.StartObject(5)
+    builder.StartObject(6)
 
 def Start(builder):
     DucBlockMetadataStart(builder)
@@ -94,10 +114,16 @@ def AddUpdatedAt(builder, updatedAt):
     DucBlockMetadataAddUpdatedAt(builder, updatedAt)
 
 def DucBlockMetadataAddLocalization(builder, localization):
-    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(localization), 0)
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(localization), 0)
 
 def AddLocalization(builder, localization):
     DucBlockMetadataAddLocalization(builder, localization)
+
+def DucBlockMetadataStartLocalizationVector(builder, numElems):
+    return builder.StartVector(1, numElems, 1)
+
+def StartLocalizationVector(builder, numElems):
+    return DucBlockMetadataStartLocalizationVector(builder, numElems)
 
 def DucBlockMetadataEnd(builder):
     return builder.EndObject()

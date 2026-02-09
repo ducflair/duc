@@ -188,7 +188,7 @@ export const restore = (
   const restoredRegions = restoreRegions(data?.regions);
   const restoredGroups = restoreGroups(data?.groups);
   const restoredLayers = restoreLayers(data?.layers, restoredLocalState.scope);
-  const restoredBlockInstances = restoreBlockInstances(data?.blockInstances);
+  const restoredBlockInstances = restoreBlockInstances(data?.blockInstances, restoredLocalState.scope);
 
   const restoredElements = restoreElements(
     data?.elements,
@@ -474,6 +474,7 @@ export const restoreBlockCollections = (
  */
 export const restoreBlockInstances = (
   blockInstances: unknown,
+  currentScope: Scope,
 ): RestoredDataState["blockInstances"] => {
   if (!Array.isArray(blockInstances)) {
     return [];
@@ -532,8 +533,8 @@ export const restoreBlockInstances = (
           ? {
             rows: typeof dupArray.rows === "number" ? dupArray.rows : 1,
             cols: typeof dupArray.cols === "number" ? dupArray.cols : 1,
-            rowSpacing: typeof dupArray.rowSpacing === "number" ? dupArray.rowSpacing : 0,
-            colSpacing: typeof dupArray.colSpacing === "number" ? dupArray.colSpacing : 0,
+            rowSpacing: restorePrecisionValue(dupArray.rowSpacing, NEUTRAL_SCOPE, currentScope),
+            colSpacing: restorePrecisionValue(dupArray.colSpacing, NEUTRAL_SCOPE, currentScope),
           }
           : null,
       };
@@ -563,23 +564,18 @@ const restoreBlockMetadata = (metadata: unknown): DucBlock["metadata"] | undefin
     }
   }
 
+  const rawSource = metadataObj.source;
+  const source = typeof rawSource === "string" && rawSource.trim().length
+    ? rawSource.trim()
+    : undefined;
+
   return {
-    source: typeof metadataObj.source === "string" ? metadataObj.source : "",
+    ...(source ? { source } : {}),
     usageCount: typeof metadataObj.usageCount === "number" ? metadataObj.usageCount : 0,
     createdAt: typeof metadataObj.createdAt === "number" ? metadataObj.createdAt : Date.now(),
     updatedAt: typeof metadataObj.updatedAt === "number" ? metadataObj.updatedAt : Date.now(),
     localization,
   };
-};
-
-/**
- * Restores instances from block instances data (alias for restoreBlockInstances)
- * This method provides a consistent naming convention for instance restoration.
- */
-export const restoreInstances = (
-  instances: unknown,
-): RestoredDataState["blockInstances"] => {
-  return restoreBlockInstances(instances);
 };
 
 /**

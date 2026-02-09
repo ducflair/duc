@@ -172,7 +172,7 @@ export type DucElement =
   | DucDocElement
   | DucEllipseElement
   | DucPolygonElement
-  | DucParametricElement
+  | DucModelElement
   | DucFeatureControlFrameElement
   | DucLeaderElement
   | DucDimensionElement
@@ -180,8 +180,7 @@ export type DucElement =
   | DucPlotElement
   | DucXRayElement
   | DucPdfElement
-  | DucMermaidElement;
-
+  | DucMermaidElement
 
 export type DucElementTypes = DucElement["type"];
 
@@ -523,9 +522,23 @@ export type DucEmbeddableElement = _DucElementBase & {
   type: "embeddable";
 };
 
+/**
+ * Configuration for PDF grid layout
+ */
+export type DocumentGridConfig = {
+  columns: number;              // 1 = single, 2 = two-up, n = grid
+  gapX: number;                 // horizontal spacing (px)
+  gapY: number;                 // vertical spacing (px)
+  alignItems: 'start' | 'center' | 'end';  // vertical alignment within row
+  firstPageAlone: boolean;      // cover page behavior for 2+ columns
+}
+
 export type DucPdfElement = _DucElementBase & {
   type: "pdf";
   fileId: ExternalFileId | null;
+
+  /** Configuration for rendering the document in a grid layout */
+  gridConfig: DocumentGridConfig;
 };
 
 export type DucMermaidElement = _DucElementBase & {
@@ -1052,8 +1065,10 @@ export type DucBlockAttributeDefinition = {
   isConstant: boolean;
 };
 
-/** Indicates whether the block belongs to the project, organization or community */
-export type BlockSourceType = string | "organization" | "community";
+/**
+ * Indicates the source drawing of a block.
+ */
+export type BlockSource = string;
 
 export interface BlockLocalizationEntry {
   title: string;
@@ -1067,8 +1082,8 @@ export interface BlockLocalizationEntry {
 export type BlockLocalizationMap = Record<string, BlockLocalizationEntry>;
 
 export interface DucBlockMetadata {
-  /** Indicates whether the block belongs to the project, organization or community */
-  source: BlockSourceType;
+  /** Drawing id this block originates from */
+  source?: BlockSource;
   /** Total number of times the block was instantiated */
   usageCount: number;
   /** Creation timestamp */
@@ -1800,10 +1815,8 @@ export type DucDocElement = _DucElementBase & DucDocStyle & {
   type: "doc";
 
   /** 
-   * The content of the document, stored as a Markdown string.
-   * This approach allows a rich text editor (like Tiptap) to manage the complex
-   * inline formatting (bold, italic, colors, hyperlinks, etc.) while keeping the
-   * core data structure simple and clean.
+   * The content of the document, stored as a code string.
+   * This approach allows to use a rich text editor that can compile to PDF using Typst code
    * 
    * It can also contain wildcards like `{@fieldname}` for dynamic data insertion.
    * Example: "This is **bold text** and this is a {color:red}red word{/color}."
@@ -1812,6 +1825,12 @@ export type DucDocElement = _DucElementBase & DucDocStyle & {
    * Example: "This document was last saved on {{SaveDate}} by {{Author}}."
    */
   text: string;
+  fileId: ExternalFileId | null;
+
+
+  /** Configuration for rendering the document in a grid layout */
+  gridConfig: DocumentGridConfig;
+
 
   /**
    * An array of metadata objects that define the behavior of the placeholders
@@ -1855,33 +1874,22 @@ export type DucDocElement = _DucElementBase & DucDocStyle & {
 
 
 
-//// === 3D Parametric Element ===
+//// === 3D Model Element ===
+// TODO: Add camera and view config
 
 /**
- * Defines the source of the 3D geometry for a Parametric Element.
- * The geometry is either generated from live code or loaded from an external file.
- */
-export type ParametricElementSource =
-  | {
-    /** The geometry is defined by executable Replicad code. */
-    type: PARAMETRIC_SOURCE_TYPE.CODE;
-    /** The JavaScript code that generates the Replicad model. */
-    code: string;
-  }
-  | {
-    /** The geometry is loaded from a static 3D file. */
-    type: PARAMETRIC_SOURCE_TYPE.FILE;
-    /** A reference to the imported file in the DucExternalFiles collection. */
-    fileId: ExternalFileId;
-  };
-/**
- * An element that embeds a 3D model on the 2D canvas, defined either by
- * parametric Replicad code or by an imported 3D file (e.g., STEP, STL).
+ * An element that embeds a 3D model on the 2D canvas, defined by build123d python code.
  * It includes its own 3D view and display controls.
  */
-export type DucParametricElement = _DucElementBase & {
-  type: "parametric";
+export type DucModelElement = _DucElementBase & {
+  type: "model";
 
-  /** Defines the source of the 3D geometry (either from code or a file). */
-  source: ParametricElementSource;
+  /** Defines the source of the model using build123d python code */
+  source: string;
+
+  /** The last known SVG path representation of the 3D model for quick rendering on the canvas */
+  svgPath: string | null;
+
+  /** Possibly connected external files, such as STEP, STL or other reference models */
+  fileIds: ExternalFileId[];
 };

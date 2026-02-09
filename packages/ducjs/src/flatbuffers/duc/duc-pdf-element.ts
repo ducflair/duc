@@ -4,6 +4,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { DocumentGridConfig } from '../duc/document-grid-config';
 import { _DucElementBase } from '../duc/duc-element-base';
 
 
@@ -37,8 +38,13 @@ fileId(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
+gridConfig(obj?:DocumentGridConfig):DocumentGridConfig|null {
+  const offset = this.bb!.__offset(this.bb_pos, 8);
+  return offset ? (obj || new DocumentGridConfig()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
 static startDucPdfElement(builder:flatbuffers.Builder) {
-  builder.startObject(2);
+  builder.startObject(3);
 }
 
 static addBase(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset) {
@@ -49,15 +55,13 @@ static addFileId(builder:flatbuffers.Builder, fileIdOffset:flatbuffers.Offset) {
   builder.addFieldOffset(1, fileIdOffset, 0);
 }
 
+static addGridConfig(builder:flatbuffers.Builder, gridConfigOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(2, gridConfigOffset, 0);
+}
+
 static endDucPdfElement(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   return offset;
 }
 
-static createDucPdfElement(builder:flatbuffers.Builder, baseOffset:flatbuffers.Offset, fileIdOffset:flatbuffers.Offset):flatbuffers.Offset {
-  DucPdfElement.startDucPdfElement(builder);
-  DucPdfElement.addBase(builder, baseOffset);
-  DucPdfElement.addFileId(builder, fileIdOffset);
-  return DucPdfElement.endDucPdfElement(builder);
-}
 }
