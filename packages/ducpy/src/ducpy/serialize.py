@@ -51,6 +51,7 @@ from ducpy.classes.ElementsClass import (
     DucFeatureControlFrameElement as DS_DucFeatureControlFrameElement,
     DucDocElement as DS_DucDocElement,
     DucParametricElement as DS_DucParametricElement,
+    DucModelElement as DS_DucModelElement,
     DucBlock as DS_DucBlock,
     DucBlockCollection as DS_DucBlockCollection,
     DucBlockCollectionEntry as DS_DucBlockCollectionEntry,
@@ -58,6 +59,7 @@ from ducpy.classes.ElementsClass import (
     DucGroup as DS_DucGroup,
     DucRegion as DS_DucRegion,
     DucLayer as DS_DucLayer,
+    DocumentGridConfig as DS_DocumentGridConfig,
     ElementBackground as DS_ElementBackground,
     ElementStroke as DS_ElementStroke,
     GeometricPoint as DS_GeometricPoint,
@@ -571,7 +573,11 @@ from ducpy.Duc.DucEmbeddableElement import (
     DucEmbeddableElementStart, DucEmbeddableElementAddBase, DucEmbeddableElementEnd
 )
 from ducpy.Duc.DucPdfElement import (
-    DucPdfElementStart, DucPdfElementAddBase, DucPdfElementAddFileId, DucPdfElementEnd
+    DucPdfElementStart, DucPdfElementAddBase, DucPdfElementAddFileId, DucPdfElementAddGridConfig, DucPdfElementEnd
+)
+from ducpy.Duc.DocumentGridConfig import (
+    DocumentGridConfigStart, DocumentGridConfigAddColumns, DocumentGridConfigAddGapX, DocumentGridConfigAddGapY,
+    DocumentGridConfigAddAlignItems, DocumentGridConfigAddFirstPageAlone, DocumentGridConfigEnd
 )
 from ducpy.Duc.DucMermaidElement import (
     DucMermaidElementStart, DucMermaidElementAddBase, DucMermaidElementAddSource, DucMermaidElementAddTheme,
@@ -785,8 +791,12 @@ from ducpy.Duc.ColumnLayout import (
 )
 from ducpy.Duc.DucDocElement import (
     DucDocElementStart, DucDocElementAddBase, DucDocElementAddStyle, DucDocElementAddText, DucDocElementAddDynamic,
-    DucDocElementAddFlowDirection, DucDocElementAddColumns, DucDocElementAddAutoResize, DucDocElementEnd,
-    DucDocElementStartDynamicVector
+    DucDocElementAddFlowDirection, DucDocElementAddColumns, DucDocElementAddAutoResize, DucDocElementAddGridConfig,
+    DucDocElementAddFileId, DucDocElementEnd, DucDocElementStartDynamicVector
+)
+from ducpy.Duc.DucModelElement import (
+    DucModelElementStart, DucModelElementAddBase, DucModelElementAddSource, DucModelElementAddSvgPath,
+    DucModelElementAddFileIds, DucModelElementStartFileIdsVector, DucModelElementEnd
 )
 from ducpy.Duc.ParametricSource import (
     ParametricSourceStart, ParametricSourceAddType, ParametricSourceAddCode, ParametricSourceAddFileId,
@@ -1619,13 +1629,24 @@ def serialize_fbs_embeddable(builder: flatbuffers.Builder, el: DS_DucEmbeddableE
     DucEmbeddableElementAddBase(builder, base_offset)
     return DucEmbeddableElementEnd(builder)
 
+def serialize_fbs_document_grid_config(builder: flatbuffers.Builder, config: DS_DocumentGridConfig) -> int:
+    DocumentGridConfigStart(builder)
+    DocumentGridConfigAddColumns(builder, config.columns)
+    DocumentGridConfigAddGapX(builder, config.gap_x)
+    DocumentGridConfigAddGapY(builder, config.gap_y)
+    DocumentGridConfigAddAlignItems(builder, config.align_items)
+    DocumentGridConfigAddFirstPageAlone(builder, config.first_page_alone)
+    return DocumentGridConfigEnd(builder)
+
 def serialize_fbs_pdf(builder: flatbuffers.Builder, el: DS_DucPdfElement) -> int:
     base_offset = serialize_fbs_duc_element_base(builder, el.base)
     file_id_offset = _str(builder, el.file_id)
+    grid_config_offset = serialize_fbs_document_grid_config(builder, el.grid_config)
     DucPdfElementStart(builder)
     DucPdfElementAddBase(builder, base_offset)
     if file_id_offset:
         DucPdfElementAddFileId(builder, file_id_offset)
+    DucPdfElementAddGridConfig(builder, grid_config_offset)
     return DucPdfElementEnd(builder)
 
 def serialize_fbs_mermaid(builder: flatbuffers.Builder, el: DS_DucMermaidElement) -> int:
@@ -2287,6 +2308,8 @@ def serialize_fbs_doc(builder: flatbuffers.Builder, el: DS_DucDocElement) -> int
             builder.PrependUOffsetTRelative(off)
         dyn_vec = builder.EndVector()
     columns_offset = serialize_fbs_column_layout(builder, el.columns)
+    file_id_offset = _str(builder, el.file_id)
+    grid_config_offset = serialize_fbs_document_grid_config(builder, el.grid_config)
     DucDocElementStart(builder)
     DucDocElementAddBase(builder, base_offset)
     DucDocElementAddStyle(builder, style_offset)
@@ -2296,6 +2319,9 @@ def serialize_fbs_doc(builder: flatbuffers.Builder, el: DS_DucDocElement) -> int
         DucDocElementAddFlowDirection(builder, el.flow_direction)
     DucDocElementAddColumns(builder, columns_offset)
     DucDocElementAddAutoResize(builder, el.auto_resize)
+    if file_id_offset:
+        DucDocElementAddFileId(builder, file_id_offset)
+    DucDocElementAddGridConfig(builder, grid_config_offset)
     return DucDocElementEnd(builder)
 
 def serialize_fbs_parametric_source(builder: flatbuffers.Builder, s: DS_ParametricSource) -> int:
@@ -2317,6 +2343,25 @@ def serialize_fbs_parametric(builder: flatbuffers.Builder, el: DS_DucParametricE
     DucParametricElementAddBase(builder, base_offset)
     DucParametricElementAddSource(builder, source_offset)
     return DucParametricElementEnd(builder)
+
+def serialize_fbs_model(builder: flatbuffers.Builder, el: DS_DucModelElement) -> int:
+    base_offset = serialize_fbs_duc_element_base(builder, el.base)
+    source_offset = builder.CreateString(el.source)
+    svg_offset = _str(builder, el.svg_path)
+    file_ids_vec = 0
+    if el.file_ids:
+        DucModelElementStartFileIdsVector(builder, len(el.file_ids))
+        for fid in reversed(el.file_ids):
+            builder.PrependUOffsetTRelative(builder.CreateString(fid))
+        file_ids_vec = builder.EndVector()
+    DucModelElementStart(builder)
+    DucModelElementAddBase(builder, base_offset)
+    DucModelElementAddSource(builder, source_offset)
+    if svg_offset:
+        DucModelElementAddSvgPath(builder, svg_offset)
+    if file_ids_vec:
+        DucModelElementAddFileIds(builder, file_ids_vec)
+    return DucModelElementEnd(builder)
 
 # =============================================================================
 # Element union and wrapper
@@ -2344,6 +2389,7 @@ ELEMENT_TYPE_MAP = {
     DS_DucFeatureControlFrameElement: FBS_Element.DucFeatureControlFrameElement,
     DS_DucDocElement: FBS_Element.DucDocElement,
     DS_DucParametricElement: FBS_Element.DucParametricElement,
+    DS_DucModelElement: FBS_Element.DucModelElement,
 }
 
 
@@ -2369,6 +2415,7 @@ ELEMENT_SERIALIZER_MAP = {
     DS_DucFeatureControlFrameElement: serialize_fbs_feature_control_frame,
     DS_DucDocElement: serialize_fbs_doc,
     DS_DucParametricElement: serialize_fbs_parametric,
+    DS_DucModelElement: serialize_fbs_model,
 }
 
 def serialize_fbs_dimension(builder: flatbuffers.Builder, el: DS_DucDimensionElement) -> int:

@@ -16,6 +16,14 @@ impl DucDataScaler {
             Self::scale_element(&mut element_wrapper.element, scale);
         }
 
+        // Scale block instance duplication arrays
+        for block_instance in &mut exported_data.block_instances {
+            if let Some(ref mut duplication) = block_instance.duplication_array {
+                duplication.row_spacing *= scale;
+                duplication.col_spacing *= scale;
+            }
+        }
+
         // Scale local state scroll values
         if let Some(ref mut local_state) = exported_data.duc_local_state {
             local_state.scroll_x *= scale;
@@ -96,6 +104,9 @@ impl DucDataScaler {
             }
             types::DucElementEnum::DucMermaidElement(mermaid) => {
                 Self::scale_element_base(&mut mermaid.base, scale);
+            }
+            types::DucElementEnum::DucModelElement(model) => {
+                Self::scale_element_base(&mut model.base, scale);
             }
         }
     }

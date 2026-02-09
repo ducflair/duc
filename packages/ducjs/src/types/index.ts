@@ -1,11 +1,18 @@
 export * from "./elements";
 export * from "./geometryTypes";
-export * from "./utility-types";
 export * from "./typeChecks";
+export * from "./utility-types";
 
 import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "../flatbuffers/duc";
 import { SupportedMeasures } from "../technical/scopes";
 import { Standard } from "../technical/standards";
+import type {
+  GRID_DISPLAY_TYPE,
+  GRID_TYPE,
+  SNAP_MARKER_SHAPE,
+  SNAP_MODE,
+  SNAP_OVERRIDE_BEHAVIOR
+} from "../utils/constants";
 import {
   DucBindableElement,
   DucBlock,
@@ -35,16 +42,6 @@ import {
   ScaleFactor,
 } from "./geometryTypes";
 import { MakeBrand, MarkOptional, MaybePromise, ValueOf } from "./utility-types";
-import type {
-  GRID_DISPLAY_TYPE,
-  GRID_TYPE,
-  IMAGE_MIME_TYPES,
-  MIME_TYPES,
-  SUPPORTED_DATA_TYPES,
-  SNAP_MARKER_SHAPE,
-  SNAP_MODE,
-  SNAP_OVERRIDE_BEHAVIOR,
-} from "../utils/constants";
 
 /**
  * Root data structure for the stored data state
@@ -192,7 +189,9 @@ export type ToolType =
   | "ruler"
   | "lasso"
   | "laser"
-  | "table";
+  | "table"
+  | "doc"
+  | "pdf";
 
 export type ElementOrToolType = DucElementType | ToolType | "custom";
 
