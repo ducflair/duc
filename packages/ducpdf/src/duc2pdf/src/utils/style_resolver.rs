@@ -199,24 +199,7 @@ impl ResolvedStyles {
         }
     }
 
-    /// Apply element styles base (helper method)
-    fn apply_element_styles_base(&mut self, styles: &DucElementStylesBase) {
-        // Apply opacity and roundness
-        self.opacity = styles.opacity;
-        self.roundness = styles.roundness;
 
-        // Merge backgrounds (later ones override earlier ones)
-        for bg in &styles.background {
-            self.background
-                .push(ResolvedBackground::from_element_background(bg));
-        }
-
-        // Merge strokes
-        for stroke in &styles.stroke {
-            self.stroke
-                .push(ResolvedStroke::from_element_stroke(stroke));
-        }
-    }
 
     /// Resolve dynamic fields in text elements with comprehensive field support
     pub fn resolve_dynamic_fields(&self, text: &str, element: &DucElementEnum) -> String {

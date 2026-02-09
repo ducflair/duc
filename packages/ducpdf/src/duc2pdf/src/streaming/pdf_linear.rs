@@ -325,7 +325,7 @@ impl PdfLinearRenderer {
     ) -> ConversionResult<Vec<Operation>> {
         let mut ops = Vec::new();
 
-        let (p0_x, p0_y) = Self::transform_point_to_pdf(start_point);
+
         let (p3_x, p3_y) = Self::transform_point_to_pdf(end_point);
 
         match (start_handle, end_handle) {
@@ -362,7 +362,7 @@ impl PdfLinearRenderer {
             // Quadratic curve (single handle) - convert to cubic
             _ if start_handle.is_some() || end_handle.is_some() => {
                 if let Some(h) = start_handle.as_ref().or(end_handle.as_ref()) {
-                    let (c_x, c_y) = Self::transform_handle_to_pdf(h);
+
 
                     // Convert quadratic to cubic using original coordinates, then transform the result.
                     // cp1 = p0 + 2/3 * (c - p0)
