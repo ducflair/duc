@@ -26,6 +26,20 @@ const cropOpts = (
 };
 
 describe('CROP mode conversions', () => {
+  it('multiple blocks crops', async () => {
+    const duc = loadDucFile('multiple_blocks.duc');
+    const configs: Array<[string, number, number, number?, number?, number?]> = [
+      ['dimensions_area', 6500, 2500, 6000, 1400, 0.2],
+    ];
+
+    for (const [name, ox, oy, w, h, z] of configs) {
+      const pdf = await convertDucToPdf(duc, cropOpts(ox, oy, w, h, z));
+      validatePdf(pdf);
+      savePdfOutput(`${OUTPUT_DIR}/multiple_blocks_${name}.pdf`, pdf);
+      expect(pdf.length).toBeGreaterThan(100);
+    }
+  });
+
   it('universal several crops', async () => {
     const duc = loadDucFile('universal.duc');
     const configs: Array<[string, number, number, number?, number?, number?]> = [

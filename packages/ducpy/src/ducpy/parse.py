@@ -50,12 +50,14 @@ from ducpy.classes.ElementsClass import (
     DucFeatureControlFrameElement as DS_DucFeatureControlFrameElement,
     DucDocElement as DS_DucDocElement,
     DucParametricElement as DS_DucParametricElement,
+    DucModelElement as DS_DucModelElement,
     DucBlock as DS_DucBlock,
     DucBlockCollection as DS_DucBlockCollection,
     DucBlockMetadata as DS_DucBlockMetadata,
     DucGroup as DS_DucGroup,
     DucRegion as DS_DucRegion,
     DucLayer as DS_DucLayer,
+    DocumentGridConfig as DS_DocumentGridConfig,
     ElementBackground as DS_ElementBackground,
     ElementStroke as DS_ElementStroke,
     GeometricPoint as DS_GeometricPoint,
@@ -261,6 +263,8 @@ from ducpy.Duc.DucDimensionElement import DucDimensionElement as FBSDucDimension
 from ducpy.Duc.DucFeatureControlFrameElement import DucFeatureControlFrameElement as FBSDucFeatureControlFrameElement
 from ducpy.Duc.DucDocElement import DucDocElement as FBSDucDocElement
 from ducpy.Duc.DucParametricElement import DucParametricElement as FBSDucParametricElement
+from ducpy.Duc.DucModelElement import DucModelElement as FBSDucModelElement
+from ducpy.Duc.DocumentGridConfig import DocumentGridConfig as FBSDocumentGridConfig
 
 from ducpy.Duc.ElementContentBase import ElementContentBase as FBSElementContentBase
 from ducpy.Duc.ElementStroke import ElementStroke as FBSElementStroke
@@ -1088,10 +1092,33 @@ def parse_fbs_embeddable(obj: FBSDucEmbeddableElement) -> DS_DucEmbeddableElemen
         base=parse_fbs_duc_element_base(obj.Base())
     )
 
+def parse_fbs_document_grid_config(obj: FBSDocumentGridConfig) -> DS_DocumentGridConfig:
+    return DS_DocumentGridConfig(
+        columns=obj.Columns(),
+        gap_x=obj.GapX(),
+        gap_y=obj.GapY(),
+        align_items=obj.AlignItems(),
+        first_page_alone=obj.FirstPageAlone(),
+    )
+
 def parse_fbs_pdf(obj: FBSDucPdfElement) -> DS_DucPdfElement:
+    grid_config = obj.GridConfig()
+    if grid_config:
+        grid_config_obj = FBSDocumentGridConfig()
+        grid_config_obj.Init(obj.TableBytes, grid_config)
+        parsed_grid_config = parse_fbs_document_grid_config(grid_config_obj)
+    else:
+        parsed_grid_config = DS_DocumentGridConfig(
+            columns=1,
+            gap_x=0.0,
+            gap_y=0.0,
+            align_items=0,
+            first_page_alone=False,
+        )
     return DS_DucPdfElement(
         base=parse_fbs_duc_element_base(obj.Base()),
         file_id=_s(obj.FileId()),
+        grid_config=parsed_grid_config,
     )
 
 def parse_fbs_mermaid(obj: FBSDucMermaidElement) -> DS_DucMermaidElement:
@@ -1512,6 +1539,19 @@ def parse_fbs_column_layout(obj: FBSColumnLayout) -> DS_ColumnLayout:
 
 def parse_fbs_doc(obj: FBSDucDocElement) -> DS_DucDocElement:
     dynamics = [parse_fbs_text_dynamic_part(obj.Dynamic(i)) for i in range(obj.DynamicLength())]
+    grid_config = obj.GridConfig()
+    if grid_config:
+        grid_config_obj = FBSDocumentGridConfig()
+        grid_config_obj.Init(obj.TableBytes, grid_config)
+        parsed_grid_config = parse_fbs_document_grid_config(grid_config_obj)
+    else:
+        parsed_grid_config = DS_DocumentGridConfig(
+            columns=1,
+            gap_x=0.0,
+            gap_y=0.0,
+            align_items=0,
+            first_page_alone=False,
+        )
     return DS_DucDocElement(
         base=parse_fbs_duc_element_base(obj.Base()),
         style=parse_fbs_doc_style(obj.Style()),
@@ -1520,6 +1560,8 @@ def parse_fbs_doc(obj: FBSDucDocElement) -> DS_DucDocElement:
         columns=parse_fbs_column_layout(obj.Columns()),
         auto_resize=obj.AutoResize(),
         flow_direction=obj.FlowDirection() if hasattr(obj, "FlowDirection") else None,
+        file_id=_s(obj.FileId()),
+        grid_config=parsed_grid_config,
     )
 
 def parse_fbs_parametric_source(obj: FBSParametricSource) -> DS_ParametricSource:
@@ -1534,6 +1576,16 @@ def parse_fbs_parametric(obj: FBSDucParametricElement) -> DS_DucParametricElemen
         base=parse_fbs_duc_element_base(obj.Base()),
         source=parse_fbs_parametric_source(obj.Source())
     )
+
+def parse_fbs_model(obj: FBSDucModelElement) -> DS_DucModelElement:
+    file_ids = [obj.FileIds(i) for i in range(obj.FileIdsLength())] if obj.FileIdsLength() > 0 else []
+    return DS_DucModelElement(
+        base=parse_fbs_duc_element_base(obj.Base()),
+        source=_s_req(obj.Source()),
+        svg_path=_s(obj.SvgPath()),
+        file_ids=file_ids,
+    )
+
 
 # =============================================================================
 # Element union and wrapper
@@ -1587,6 +1639,8 @@ def parse_duc_element_wrapper(obj: FBSElementWrapper) -> DS_ElementWrapper:
         x = FBSDucDocElement(); x.Init(tbl.Bytes, tbl.Pos); el = parse_fbs_doc(x)
     elif typ == FBS_Element.Element.DucParametricElement:
         x = FBSDucParametricElement(); x.Init(tbl.Bytes, tbl.Pos); el = parse_fbs_parametric(x)
+    elif typ == FBS_Element.Element.DucModelElement:
+        x = FBSDucModelElement(); x.Init(tbl.Bytes, tbl.Pos); el = parse_fbs_model(x)
     else:
         raise ValueError(f"Unknown Element union type: {typ}")
 
