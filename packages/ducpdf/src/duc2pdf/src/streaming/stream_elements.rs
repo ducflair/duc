@@ -26,7 +26,7 @@
 use crate::scaling::DucDataScaler;
 use crate::streaming::pdf_linear::PdfLinearRenderer;
 use crate::streaming::stream_resources::ResourceStreamer;
-use crate::utils::freedraw_bounds::{calculate_freedraw_bbox, FreeDrawBounds};
+use crate::utils::freedraw_bounds::FreeDrawBounds;
 use crate::utils::style_resolver::{ResolvedStyles, StyleResolver};
 use crate::{ConversionError, ConversionResult};
 use bigcolor::BigColor;
@@ -38,7 +38,7 @@ use duc::types::{
     DucPolygonElement, DucRectangleElement, DucTableElement, DucTextElement, ElementBackground,
     ElementContentBase, ElementWrapper, GeometricPoint, DucBlockInstance, DucBlockDuplicationArray,
 };
-use hipdf::blocks::BlockManager;
+
 use hipdf::embed_pdf::PdfEmbedder;
 use hipdf::fonts::Font;
 use hipdf::hatching::HatchingManager;
@@ -156,7 +156,7 @@ impl ElementStreamer {
         element_height: f64,
     ) -> Vec<(f64, f64)> {
         if duplication_array.row_spacing.is_nan() || duplication_array.col_spacing.is_nan() {
-             #[cfg(feature = "verbose_logs")]
+
              log::warn!(
                 "Duplication array has NaN spacing! row_spacing: {}, col_spacing: {}",
                 duplication_array.row_spacing,
@@ -222,6 +222,7 @@ impl ElementStreamer {
                         DucElementEnum::DucParametricElement(p) => (p.base.width, p.base.height),
                         DucElementEnum::DucPdfElement(p) => (p.base.width, p.base.height),
                         DucElementEnum::DucMermaidElement(m) => (m.base.width, m.base.height),
+                        DucElementEnum::DucModelElement(m) => (m.base.width, m.base.height),
                     };
 
                     return Some(Self::get_duplication_offsets(dup_array, width, height));
@@ -320,7 +321,7 @@ impl ElementStreamer {
         bounds: (f64, f64, f64, f64),
         local_state: Option<&duc::types::DucLocalState>,
         resource_streamer: &mut ResourceStreamer,
-        block_manager: &mut BlockManager,
+
         hatching_manager: &mut HatchingManager,
         pdf_embedder: &mut PdfEmbedder,
         image_manager: &mut ImageManager,
@@ -329,14 +330,9 @@ impl ElementStreamer {
     ) -> ConversionResult<Vec<Operation>> {
         let mut all_operations = Vec::new();
         let is_plot_mode = matches!(self.current_mode, StreamMode::Plot);
-        let (bounds_x, bounds_y, bounds_width, bounds_height) = bounds;
-        let bounds_max_x = bounds_x + bounds_width;
-        let bounds_max_y = bounds_y + bounds_height;
-        let (scroll_x, scroll_y) = if let Some(state) = local_state {
-            (state.scroll_x, state.scroll_y)
-        } else {
-            (0.0, 0.0)
-        };
+        let (_bounds_x, _bounds_y, _bounds_width, _bounds_height) = bounds;
+
+
 
         // Filter and sort elements by z-index and visibility criteria
         let mut filtered_elements: Vec<_> = elements
@@ -427,7 +423,6 @@ impl ElementStreamer {
                     all_elements,
                     document,
                     resource_streamer,
-                    block_manager,
                     hatching_manager,
                     pdf_embedder,
                     image_manager,
@@ -458,7 +453,7 @@ impl ElementStreamer {
         all_elements: &[ElementWrapper],
         document: &mut Document,
         resource_streamer: &mut ResourceStreamer,
-        block_manager: &mut BlockManager,
+
         hatching_manager: &mut HatchingManager,
         pdf_embedder: &mut PdfEmbedder,
         image_manager: &mut ImageManager,
@@ -597,6 +592,9 @@ impl ElementStreamer {
             DucElementEnum::DucParametricElement(_) => {
                 vec![Operation::new("% DucParametricElement - WIP", vec![])]
             }
+            DucElementEnum::DucModelElement(_) => {
+                vec![Operation::new("% DucModelElement - WIP", vec![])]
+            }
         };
         operations.extend(element_ops);
 
@@ -630,6 +628,7 @@ impl ElementStreamer {
             DucElementEnum::DucFeatureControlFrameElement(elem) => &elem.base,
             DucElementEnum::DucDocElement(elem) => &elem.base,
             DucElementEnum::DucParametricElement(elem) => &elem.base,
+            DucElementEnum::DucModelElement(elem) => &elem.base,
         }
     }
 
@@ -1478,6 +1477,7 @@ impl ElementStreamer {
                 fill_from_stroke: false,
                 apply_stroke_properties: false,
             },
+            &DucElementEnum::DucModelElement(_) => todo!(),
         }
     }
 

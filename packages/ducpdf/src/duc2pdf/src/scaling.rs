@@ -105,6 +105,9 @@ impl DucDataScaler {
             types::DucElementEnum::DucMermaidElement(mermaid) => {
                 Self::scale_element_base(&mut mermaid.base, scale);
             }
+            types::DucElementEnum::DucModelElement(model) => {
+                Self::scale_element_base(&mut model.base, scale);
+            }
         }
     }
 
