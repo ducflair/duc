@@ -20,10 +20,16 @@ from ezdxf.math import OCS
 import ducpy as duc
 import ezdxf.enums
 
+from ducpy.Duc.STROKE_PLACEMENT import STROKE_PLACEMENT
+from ducpy.Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
 from ducpy.Duc.DIMENSION_UNITS_FORMAT import DIMENSION_UNITS_FORMAT
 from ducpy.Duc.ANGULAR_UNITS_FORMAT import ANGULAR_UNITS_FORMAT
 from ducpy.Duc.DECIMAL_SEPARATOR import DECIMAL_SEPARATOR
+from ducpy.Duc.STROKE_CAP import STROKE_CAP
+from ducpy.Duc.STROKE_JOIN import STROKE_JOIN
+from ducpy.Duc.STROKE_SIDE_PREFERENCE import STROKE_SIDE_PREFERENCE
 from ducpy.Duc.UNIT_SYSTEM import UNIT_SYSTEM
+from .common import LinetypeConverter
 
 # A comprehensive mapping of AutoCAD Color Index (ACI) to HEX values.
 ACI_TO_HEX = {
@@ -63,6 +69,21 @@ def get_hex_from_aci(aci):
     return ACI_TO_HEX.get(aci, "#FFFFFF") # Default to white
 
 def convert_header(header, doc):
+    """
+    Convert DXF header variables to DUC global and local states.
+    
+    Returns:
+        tuple: (duc_global_state, duc_local_state, conversion_context)
+               conversion_context contains:
+                 - current_layer: name of the current layer
+                 - current_dimstyle: name of the current dimension style
+                 - current_mleaderstyle: name of the current multileader style
+                 - celtscale: current entity linetype scale
+                 - standard_units: StandardUnits for use in Standards creation
+                 - current_textstyle_name: name of the current text style
+                 - font_family: extracted font family from text style
+                 - font_size: extracted font size from text style
+    """
     
     # Extract units and view information from the header
     units = header.get("$INSUNITS", 0)  # Default to unitless
@@ -71,7 +92,13 @@ def convert_header(header, doc):
     measurement = header.get("$MEASUREMENT", 0)  # 0=English/Imperial, 1=Metric
     
     # Get the Standard dimension style for precision and suppression settings
-    dimstyle = doc.dimstyles.get('Standard')
+    dimstyle = None
+    try:
+        dimstyle = doc.dimstyles.get('Standard')
+    except:
+        # Standard dimstyle might not exist, will use defaults
+        pass
+    
     if dimstyle:
         # Precision is stored in dimension style DIMTDEC (linear unit decimal places)
         precision = dimstyle.dxf.get('dimtdec', 2)  # Default to 2 decimal places
@@ -103,10 +130,9 @@ def convert_header(header, doc):
     # Determine unit system from $MEASUREMENT or $INSUNITS
     unit_system = UNIT_SYSTEM.METRIC if measurement == 1 else UNIT_SYSTEM.IMPERIAL
 
-    duc_global_state = (duc.StateBuilder().build_global_state()
-        .with_main_scope(INSUNITS_TO_DUC_UNITS[units])
-        .with_dash_spacing_scale(header.get("$LTSCALE", 1.0))
-        .build())
+    # ============================================================================
+    # UNIT SYSTEMS - Create linear and angular unit systems
+    # ============================================================================
     
     linear_units = duc.create_linear_unit_system(
         precision=precision,
@@ -132,8 +158,318 @@ def convert_header(header, doc):
 
     primary_units = duc.create_primary_units(linear=linear_units, angular=angular_units)
     standard_units = duc.create_standard_units(primary_units=primary_units, alternate_units=None)
+    
+    # ============================================================================
+    # GLOBAL STATE - Drawing-wide settings
+    # ============================================================================
+    
+    # $LTSCALE: Global linetype scale
+    ltscale = header.get("$LTSCALE", 1.0)
+    
+    # $CANNOSCALE: Current annotation scale (handle annotative scaling)
+    # This is stored as a string like "1:1" or "1:2" 
+    cannoscale = header.get("$CANNOSCALE", None)
+    use_annotative = cannoscale is not None
+    
+    duc_global_state = (duc.StateBuilder().build_global_state()
+        .with_main_scope(INSUNITS_TO_DUC_UNITS[units])
+        .with_dash_spacing_scale(ltscale)
+        .with_use_annotative_scaling(use_annotative)
+        .build())
+    
+    # ============================================================================
+    # LOCAL STATE - Session/user settings
+    # ============================================================================
+    
+    # $FILLMODE: Fill mode (1=on, 0=off) - maps to outline_mode_enabled (inverse)
+    fillmode = header.get("$FILLMODE", 1)
+    outline_mode = not bool(fillmode)  # Inverse: fillmode=1 means fills are shown, outline_mode=False
+    
+    # $TEXTSTYLE: Current text style
+    current_textstyle_name = header.get("$TEXTSTYLE", "Standard")
+    # Get the actual text style from the document
+    font_family = "Arial"  # Default fallback
+    font_size = 2.5  # Default fallback
+    if current_textstyle_name in doc.styles:
+        textstyle = doc.styles.get(current_textstyle_name)
+        # DXF text styles store font information
+        if hasattr(textstyle.dxf, 'font'):
+            font_family = textstyle.dxf.font
+        if hasattr(textstyle.dxf, 'height') and textstyle.dxf.height > 0:
+            font_size = textstyle.dxf.height
+    
+    # $CLAYER: Current layer name
+    current_layer = header.get("$CLAYER", "0")
+    
+    # $DIMSTYLE: Current dimension style
+    current_dimstyle = header.get("$DIMSTYLE", "Standard")
+    
+    # $MLEADERSTYLE: Current multileader style (DXF R2007+)
+    current_mleaderstyle = header.get("$MLEADERSTYLE", "Standard")
+    
+    # $CELTSCALE: Current entity linetype scale
+    # This affects individual entities, not stored in global/local state
+    # but will be used when converting entities
+    celtscale = header.get("$CELTSCALE", 1.0)
+    
+    duc_local_state = (duc.StateBuilder().build_local_state()
+        .with_scope(INSUNITS_TO_DUC_UNITS[units])
+        .with_outline_mode_enabled(outline_mode)
+        .build())
+    
+    # Store conversion context for use when converting entities and styles
+    conversion_context = {
+        'current_layer': current_layer,
+        'current_dimstyle': current_dimstyle,
+        'current_mleaderstyle': current_mleaderstyle,
+        'celtscale': celtscale,
+        'standard_units': standard_units,
+        'current_textstyle_name': current_textstyle_name,
+        'font_family': font_family,
+        'font_size': font_size,
+    }
       
-    return duc_global_state
+    return duc_global_state, duc_local_state, conversion_context
+
+
+def linetype_to_dash_pattern(linetype_name):
+    """
+    Convert DXF linetype name to DUC stroke dash pattern.
+    
+    Args:
+        linetype_name: Name of the DXF linetype
+        
+    Returns:
+        list: Dash pattern as [dash, gap, dash, gap, ...] or empty list for solid
+    """
+    linetype_name = linetype_name.upper()
+    
+    # Common AutoCAD linetypes
+    LINETYPE_PATTERNS = {
+        'CONTINUOUS': [],
+        'BYLAYER': [],
+        'BYBLOCK': [],
+        'DASHED': [5.0, 2.5],
+        'DASHDOT': [5.0, 2.5, 0.5, 2.5],
+        'DASHDOTX2': [10.0, 5.0, 1.0, 5.0],
+        'DASHED2': [10.0, 5.0],
+        'DASHEDX2': [10.0, 5.0],
+        'DOT': [0.5, 2.5],
+        'DOTX2': [1.0, 5.0],
+        'HIDDEN': [2.5, 1.25],
+        'HIDDENX2': [5.0, 2.5],
+        'PHANTOM': [12.5, 2.5, 2.5, 2.5, 2.5, 2.5],
+        'PHANTOMX2': [25.0, 5.0, 5.0, 5.0, 5.0, 5.0],
+        'CENTER': [12.5, 2.5, 2.5, 2.5],
+        'CENTERX2': [25.0, 5.0, 5.0, 5.0],
+        'DIVIDE': [12.5, 2.5, 2.5, 2.5, 2.5, 2.5],
+        'DIVIDEX2': [25.0, 5.0, 5.0, 5.0, 5.0, 5.0],
+        'BORDER': [12.5, 2.5, 12.5, 2.5, 2.5, 2.5],
+        'BORDERX2': [25.0, 5.0, 25.0, 5.0, 5.0, 5.0],
+    }
+    
+    return LINETYPE_PATTERNS.get(linetype_name, [])  # Default to solid/continuous
+
+
+def lineweight_to_width(lineweight):
+    """
+    Convert DXF lineweight to DUC stroke width in mm.
+    
+    Args:
+        lineweight: DXF lineweight value (in 1/100 mm, or special values)
+                   -1 = BYLAYER, -2 = BYBLOCK, -3 = DEFAULT
+                   
+    Returns:
+        float: Stroke width in mm, or None for special values
+    """
+    if lineweight < 0:
+        # Special values: -1 (BYLAYER), -2 (BYBLOCK), -3 (DEFAULT)
+        return None
+    
+    # Convert from 1/100 mm to mm
+    return lineweight / 100.0
+
+
+def convert_layers(doc):
+    """
+    Convert DXF layer table to DUC layers.
+    
+    Args:
+        doc: ezdxf document with layer table
+        
+    Returns:
+        list: List of DucLayer objects
+    """
+    duc_layers = []
+    
+    for layer in doc.layers:
+        # Get layer properties
+        layer_name = layer.dxf.name
+        
+        # State flags
+        is_on = layer.is_on()
+        is_frozen = layer.is_frozen()
+        is_locked = layer.is_locked()
+        is_plot = not layer.dxf.get('plot', 1) == 0  # 0 = no plot, 1 = plot (default)
+        is_visible = is_on and not is_frozen
+        
+        # Color: Try RGB first, fall back to ACI
+        color_hex = "#FFFFFF"  # Default white
+        if layer.rgb:
+            r, g, b = layer.rgb
+            color_hex = f"#{r:02X}{g:02X}{b:02X}"
+        else:
+            aci_color = layer.get_color()
+            color_hex = get_hex_from_aci(aci_color)
+        
+        # Transparency: 0.0 = opaque, 1.0 = fully transparent
+        transparency = layer.transparency if hasattr(layer, 'transparency') else 0.0
+        opacity = 1.0 - transparency
+        
+        # Linetype and dash pattern
+        linetype = layer.dxf.linetype if hasattr(layer.dxf, 'linetype') else 'CONTINUOUS'
+        dash_pattern = linetype_to_dash_pattern(linetype)
+        
+        # Lineweight
+        lineweight = layer.dxf.get('lineweight', -1)
+        stroke_width = lineweight_to_width(lineweight)
+        if stroke_width is None:
+            stroke_width = 0.25  # Default to 0.25mm
+        
+        # Build DucLayer using ducpy builders
+        duc_layer = (
+            duc.StateBuilder()
+            .with_id(layer_name)  # Use layer name as ID
+            .build_layer()
+            .with_label(layer_name)
+            .with_is_visible(is_visible)
+            .with_is_plot(is_plot)
+            .with_locked(is_locked)
+            .with_opacity(opacity)
+            .with_stroke_color(color_hex)
+            .with_background_color("#FFFFFF")  # Default background
+            .build()
+        )
+        
+        # Note: dash_pattern and stroke_width would need to be applied
+        # during element creation, as layer overrides in DUC only store
+        # basic stroke/background, not all stroke properties
+        
+        duc_layers.append(duc_layer)
+    
+    return duc_layers
+
+
+def convert_linetypes(doc):
+    """
+    Convert DXF linetype table to DUC common styles with stroke patterns.
+    
+    Args:
+        doc: ezdxf document with linetype table
+        
+    Returns:
+        list: List of IdentifiedCommonStyle objects for use in StandardStyles
+    """
+    linetype_styles = []
+    
+    for linetype in doc.linetypes:
+        linetype_name = linetype.dxf.name
+        
+        # Skip special linetypes that shouldn't be converted to styles
+        if linetype_name.upper() in ['BYLAYER', 'BYBLOCK', 'CONTINUOUS']:
+            continue
+        
+        # Get linetype properties
+        description = linetype.dxf.get('description', '')
+        
+        # Get pattern data
+        # In ezdxf, the pattern is accessed via pattern_tags
+        pattern = []
+        if hasattr(linetype, 'pattern_tags'):
+            # Extract pattern from tags
+            for tag in linetype.pattern_tags.tags:
+                if tag[0] == 49:  # Dash/dot/gap length
+                    pattern.append(tag[1])
+                elif tag[0] == 74:  # Complex linetype flag
+                    # This indicates a complex linetype with text/shapes
+                    pass
+        
+        # If no pattern found, try to get it from the simple pattern attribute
+        if not pattern and hasattr(linetype.dxf, 'pattern'):
+            pattern = list(linetype.dxf.pattern) if linetype.dxf.pattern else []
+        
+        # Parse the pattern using our converter
+        parsed = LinetypeConverter.parse_dxf_pattern(pattern)
+        dash_pattern = parsed["dash_pattern"]
+        is_complex = parsed["is_complex"]
+        
+        # Determine stroke preference based on pattern
+        if not dash_pattern or len(dash_pattern) == 0:
+            stroke_preference = STROKE_PREFERENCE.SOLID
+        else:
+            stroke_preference = getattr(STROKE_PREFERENCE, "DASHED", STROKE_PREFERENCE.SOLID)
+        
+        # Create stroke style with dash pattern
+        stroke_style = duc.StrokeStyle(
+            dash=dash_pattern,
+            dash_line_override="",  # Could be used for complex linetypes in future
+            preference=stroke_preference,
+            cap=STROKE_CAP.BUTT,  # DXF typically uses butt caps
+            join=STROKE_JOIN.MITER,
+            dash_cap=STROKE_CAP.BUTT,
+            miter_limit=4.0
+        )
+        
+        # Create stroke sides (all sides by default)
+        stroke_sides = duc.StrokeSides(
+            values=[],
+            preference=STROKE_SIDE_PREFERENCE.ALL
+        )
+        
+        # Create solid black stroke content
+        stroke_content = duc.create_solid_content("#000000", opacity=1.0, visible=True)
+        
+        # Create element stroke
+        element_stroke = duc.ElementStroke(
+            content=stroke_content,
+            width=1.0,  # Default width, can be overridden per element
+            style=stroke_style,
+            stroke_sides=stroke_sides,
+            placement=STROKE_PLACEMENT.CENTER
+        )
+        
+        # Create transparent background
+        background_content = duc.create_solid_content("#FFFFFF", opacity=0.0, visible=False)
+        element_background = duc.ElementBackground(content=background_content)
+        
+        # Create common style
+        common_style = duc.DucCommonStyle(
+            background=element_background,
+            stroke=element_stroke
+        )
+        
+        # Create identifier for the style
+        style_id = duc.create_identifier(
+            id=f"linetype_{linetype_name.lower()}",
+            name=linetype_name,
+            description=description or LinetypeConverter.pattern_to_description(linetype_name, pattern)
+        )
+        
+        # Create identified common style
+        identified_style = duc.IdentifiedCommonStyle(
+            id=style_id,
+            style=common_style
+        )
+        
+        linetype_styles.append(identified_style)
+        
+        # Log conversion info
+        if is_complex:
+            print(f"  ⚠ Linetype '{linetype_name}': Complex pattern simplified (text/shapes not fully supported)")
+        else:
+            print(f"  ✓ Linetype '{linetype_name}': Converted with {len(dash_pattern)} pattern elements")
+    
+    return linetype_styles
 
 
 def convert_dxf_to_duc(dxf_path, duc_path):
@@ -156,12 +492,19 @@ def convert_dxf_to_duc(dxf_path, duc_path):
     elements = []
     duc_layers = []
     duc_blocks = []
+    linetype_styles = []
 
     # 1. Convert Header
     header = doc.header
-    duc_global_state = convert_header(header, doc)
+    duc_global_state, duc_local_state, conversion_context = convert_header(header, doc)
 
-    # 2. Convert Tables (Layers, Styles)
+    # 2. Convert Tables (Layers, Styles, Linetypes)
+    print("\nConverting layers...")
+    duc_layers = convert_layers(doc)
+    
+    print("\nConverting linetypes...")
+    linetype_styles = convert_linetypes(doc)
+    print(f"Converted {len(linetype_styles)} linetypes to stroke styles")
     
     # 3. Convert Blocks
     
@@ -185,8 +528,36 @@ def convert_dxf_to_duc(dxf_path, duc_path):
         elements.append(placeholder_element)
 
     # 5. Serialize to DUC file
-    print(f"Writing DUC file to: {duc_path}")
-    duc_local_state = duc.StateBuilder().build_local_state().build()
+    print(f"\nWriting DUC file to: {duc_path}")
+    
+    # Create standard with linetype styles
+    standards = []
+    if linetype_styles:
+        standard_styles = duc.create_standard_styles(
+            common_styles=linetype_styles,
+            text_styles=[],
+            dimension_styles=[],
+            leader_styles=[],
+            feature_control_frame_styles=[],
+            table_styles=[],
+            doc_styles=[],
+            viewport_styles=[],
+            hatch_styles=[],
+            xray_styles=[]
+        )
+        
+        # Create a standard that contains these styles
+        standard = (duc.StateBuilder()
+            .build_standard()
+            .with_id("dxf_linetypes")
+            .with_name("DXF Linetypes")
+            .with_description("Linetype styles converted from DXF")
+            .with_units(conversion_context['standard_units'])
+            .with_styles(standard_styles)
+            .build())
+        
+        standards.append(standard)
+    
     duc.write_duc_file(
         file_path=duc_path,
         name=os.path.splitext(os.path.basename(dxf_path))[0],
@@ -194,7 +565,8 @@ def convert_dxf_to_duc(dxf_path, duc_path):
         blocks=duc_blocks,
         layers=duc_layers,
         duc_global_state=duc_global_state,
-        duc_local_state=duc_local_state
+        duc_local_state=duc_local_state,
+        standards=standards
     )
     print("✅ Conversion complete.")
 

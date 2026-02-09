@@ -12,4 +12,7 @@
   "rust-analyzer.files.exclude": [
     "packages/ducrs/src/duc_generated.rs"
   ],
+  "python.analysis.extraPaths": [
+    "./packages/ducpy/src"
+  ],
 }
