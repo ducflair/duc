@@ -114,6 +114,103 @@ class ElementTypeMapping:
         return ElementTypeMapping.DXF_TO_DUC.get(dxf_type, "draw")  # Default to freehand drawing
 
 # Linetype conversion utilities
+class TextStyleConverter:
+    """Utilities for converting between DXF text styles and DUC text styles."""
+    
+    # DXF generation flags bit masks
+    FLAG_BACKWARDS = 4      # Bit 2: Text is backwards (mirrored)
+    FLAG_UPSIDE_DOWN = 16   # Bit 4: Text is upside down
+    FLAG_VERTICAL = 32      # Bit 5: Vertical text
+    
+    @staticmethod
+    def parse_font_name(font_file: str) -> str:
+        """
+        Parse font file name to extract font family.
+        
+        DXF stores font as file name (e.g., 'arial.ttf', 'romans.shx')
+        Convert to font family name for DUC.
+        
+        Args:
+            font_file: Font file name from DXF
+        
+        Returns:
+            Font family name suitable for DUC
+        """
+        if not font_file:
+            return "Arial"  # Default fallback
+        
+        # Remove file extension
+        font_name = font_file.lower()
+        for ext in ['.ttf', '.shx', '.otf', '.fon']:
+            if font_name.endswith(ext):
+                font_name = font_name[:-len(ext)]
+                break
+        
+        # Map common DXF/SHX font names to standard font families
+        font_mapping = {
+            'monotxt': 'Courier New',
+            'txt': 'Arial',
+            'romans': 'Times New Roman',
+            'romand': 'Times New Roman',
+            'romanc': 'Times New Roman',
+            'romant': 'Times New Roman',
+            'italic': 'Times New Roman',
+            'italict': 'Times New Roman',
+            'scriptc': 'Brush Script MT',
+            'scripts': 'Script MT',
+            'arial': 'Arial',
+            'times': 'Times New Roman',
+            'courier': 'Courier New',
+            'verdana': 'Verdana',
+            'tahoma': 'Tahoma',
+            'gothic': 'Century Gothic',
+            'simplex': 'Arial',
+            'complex': 'Arial',
+        }
+        
+        # Check for mapped font
+        for key, value in font_mapping.items():
+            if key in font_name:
+                return value
+        
+        # Return capitalized font name if no mapping found
+        return font_name.capitalize() if font_name else "Arial"
+    
+    @staticmethod
+    def parse_generation_flags(flags: int) -> dict:
+        """
+        Parse DXF text generation flags.
+        
+        Args:
+            flags: Integer bitfield from DXF
+        
+        Returns:
+            dict with:
+                - is_backwards: bool
+                - is_upside_down: bool
+                - is_vertical: bool
+        """
+        return {
+            'is_backwards': bool(flags & TextStyleConverter.FLAG_BACKWARDS),
+            'is_upside_down': bool(flags & TextStyleConverter.FLAG_UPSIDE_DOWN),
+            'is_vertical': bool(flags & TextStyleConverter.FLAG_VERTICAL)
+        }
+    
+    @staticmethod
+    def degrees_to_radians(degrees: float) -> float:
+        """
+        Convert degrees to radians.
+        
+        Args:
+            degrees: Angle in degrees
+        
+        Returns:
+            Angle in radians
+        """
+        import math
+        return math.radians(degrees)
+
+
 class LinetypeConverter:
     """Utilities for converting between DXF linetypes and DUC stroke styles."""
     

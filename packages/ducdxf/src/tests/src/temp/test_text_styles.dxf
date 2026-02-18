@@ -553,7 +553,7 @@ $SPLINESEGS
   9
 $HANDSEED
   5
-38
+3D
   9
 $SURFTAB1
  70
@@ -933,11 +933,11 @@ $PSTYLEMODE
   9
 $FINGERPRINTGUID
   2
-{E57B8980-39E0-4BA6-8355-87A035804872}
+{0D47D2DB-F4EC-4DAC-9A22-85AFC01BF34E}
   9
 $VERSIONGUID
   2
-{0498F136-74C9-455D-957B-9F5876B452A2}
+{4AA73297-C0B2-47E4-B759-C0E1279C4FF3}
   9
 $EXTNAMES
 290
@@ -1473,7 +1473,7 @@ LTYPE
 100
 AcDbSymbolTable
  70
-6
+3
   0
 LTYPE
   5
@@ -1540,92 +1540,6 @@ Continuous
 0
  40
 0.0
-  0
-LTYPE
-  5
-2F
-330
-2
-100
-AcDbSymbolTableRecord
-100
-AcDbLinetypeTableRecord
-  2
-CUSTOM_DASHED
- 70
-0
-  3
-Custom Dashed ---- ---- ---- ----
- 72
-65
- 73
-1
- 40
-0.5
- 49
--0.25
- 74
-0
-  0
-LTYPE
-  5
-30
-330
-2
-100
-AcDbSymbolTableRecord
-100
-AcDbLinetypeTableRecord
-  2
-CUSTOM_DASHDOT
- 70
-0
-  3
-Custom DashDot ---- . ---- .
- 72
-65
- 73
-3
- 40
-0.5
- 49
--0.1
- 74
-0
- 49
-0.0
- 74
-0
- 49
--0.1
- 74
-0
-  0
-LTYPE
-  5
-31
-330
-2
-100
-AcDbSymbolTableRecord
-100
-AcDbLinetypeTableRecord
-  2
-CUSTOM_COMPLEX
- 70
-0
-  3
-Complex with spacing ----  ----  ----
- 72
-65
- 73
-1
- 40
-1.0
- 49
--0.5
- 74
-0
   0
 ENDTAB
   0
@@ -1703,7 +1617,7 @@ STYLE
 100
 AcDbSymbolTable
  70
-1
+7
   0
 STYLE
   5
@@ -1730,6 +1644,174 @@ Standard
 2.5
   3
 txt
+  4
+
+  0
+STYLE
+  5
+2F
+330
+5
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+TITLE
+ 70
+0
+ 40
+24.0
+ 41
+1.0
+ 50
+0.0
+ 71
+0
+ 42
+2.5
+  3
+arial.ttf
+  4
+
+  0
+STYLE
+  5
+30
+330
+5
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+ITALIC_TEXT
+ 70
+0
+ 40
+12.0
+ 41
+1.0
+ 50
+15.0
+ 71
+0
+ 42
+2.5
+  3
+times.ttf
+  4
+
+  0
+STYLE
+  5
+31
+330
+5
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+CONDENSED
+ 70
+0
+ 40
+0.0
+ 41
+0.7
+ 50
+0.0
+ 71
+0
+ 42
+2.5
+  3
+arial.ttf
+  4
+
+  0
+STYLE
+  5
+32
+330
+5
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+BACKWARDS
+ 70
+4
+ 40
+10.0
+ 41
+1.0
+ 50
+0.0
+ 71
+0
+ 42
+2.5
+  3
+arial.ttf
+  4
+
+  0
+STYLE
+  5
+33
+330
+5
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+UPSIDEDOWN
+ 70
+16
+ 40
+10.0
+ 41
+1.0
+ 50
+0.0
+ 71
+0
+ 42
+2.5
+  3
+arial.ttf
+  4
+
+  0
+STYLE
+  5
+34
+330
+5
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+ROMANS
+ 70
+0
+ 40
+0.0
+ 41
+1.0
+ 50
+0.0
+ 71
+0
+ 42
+2.5
+  3
+romans.shx
   4
 
   0
@@ -1791,7 +1873,7 @@ ACAD
   0
 APPID
   5
-35
+3A
 330
 3
 100
@@ -1805,7 +1887,7 @@ HATCHBACKGROUNDCOLOR
   0
 APPID
   5
-36
+3B
 330
 3
 100
@@ -2113,83 +2195,165 @@ SECTION
   2
 ENTITIES
   0
-LINE
+TEXT
   5
-32
+35
 330
 17
 100
 AcDbEntity
   8
 0
-  6
-CUSTOM_DASHED
 100
-AcDbLine
+AcDbText
  10
 0.0
  20
 0.0
  30
 0.0
+ 40
+2.5
+  1
+Sample text in TITLE
+  7
+TITLE
  11
-10.0
+0.0
  21
 0.0
  31
 0.0
+100
+AcDbText
   0
-LINE
+TEXT
   5
-33
+36
 330
 17
 100
 AcDbEntity
   8
 0
-  6
-CUSTOM_DASHDOT
 100
-AcDbLine
+AcDbText
  10
 0.0
  20
-2.0
+15.0
  30
 0.0
+ 40
+2.5
+  1
+Sample text in ITALIC_TEXT
+  7
+ITALIC_TEXT
  11
-10.0
+0.0
  21
-2.0
+15.0
  31
 0.0
+100
+AcDbText
   0
-LINE
+TEXT
   5
-34
+37
 330
 17
 100
 AcDbEntity
   8
 0
-  6
-CUSTOM_COMPLEX
 100
-AcDbLine
+AcDbText
  10
 0.0
  20
-4.0
+30.0
  30
 0.0
- 11
+ 40
 10.0
+  1
+Sample text in CONDENSED
+  7
+CONDENSED
+ 11
+0.0
  21
-4.0
+30.0
  31
 0.0
+100
+AcDbText
+  0
+TEXT
+  5
+38
+330
+17
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+0.0
+ 20
+45.0
+ 30
+0.0
+ 40
+2.5
+  1
+Sample text in BACKWARDS
+  7
+BACKWARDS
+ 11
+0.0
+ 21
+45.0
+ 31
+0.0
+100
+AcDbText
+  0
+TEXT
+  5
+39
+330
+17
+100
+AcDbEntity
+  8
+0
+100
+AcDbText
+ 10
+0.0
+ 20
+60.0
+ 30
+0.0
+ 40
+10.0
+  1
+Sample text in ROMANS
+  7
+ROMANS
+ 11
+0.0
+ 21
+60.0
+ 31
+0.0
+100
+AcDbText
   0
 ENDSEC
   0
@@ -3181,7 +3345,7 @@ CREATED_BY_EZDXF
   3
 WRITTEN_BY_EZDXF
 350
-37
+3C
   0
 DICTIONARYVAR
   5
@@ -3193,11 +3357,11 @@ DictionaryVariables
 280
 0
   1
-1.4.2 @ 2026-02-09T21:16:39.099203+00:00
+1.4.2 @ 2026-02-09T21:16:39.120029+00:00
   0
 DICTIONARYVAR
   5
-37
+3C
 330
 2D
 100
@@ -3205,7 +3369,7 @@ DictionaryVariables
 280
 0
   1
-1.4.2 @ 2026-02-09T21:16:39.100156+00:00
+1.4.2 @ 2026-02-09T21:16:39.121163+00:00
   0
 ENDSEC
   0
