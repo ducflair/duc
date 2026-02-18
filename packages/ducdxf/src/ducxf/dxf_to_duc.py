@@ -21,6 +21,8 @@ import ducpy as duc
 import ezdxf.enums
 
 from ducpy.Duc.STROKE_PLACEMENT import STROKE_PLACEMENT
+from ducpy.Duc.TEXT_ALIGN import TEXT_ALIGN
+from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
 from ducpy.Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
 from ducpy.Duc.DIMENSION_UNITS_FORMAT import DIMENSION_UNITS_FORMAT
 from ducpy.Duc.ANGULAR_UNITS_FORMAT import ANGULAR_UNITS_FORMAT
@@ -29,7 +31,7 @@ from ducpy.Duc.STROKE_CAP import STROKE_CAP
 from ducpy.Duc.STROKE_JOIN import STROKE_JOIN
 from ducpy.Duc.STROKE_SIDE_PREFERENCE import STROKE_SIDE_PREFERENCE
 from ducpy.Duc.UNIT_SYSTEM import UNIT_SYSTEM
-from .common import LinetypeConverter
+from .common import LinetypeConverter, TextStyleConverter
 
 # A comprehensive mapping of AutoCAD Color Index (ACI) to HEX values.
 ACI_TO_HEX = {
@@ -472,6 +474,125 @@ def convert_linetypes(doc):
     return linetype_styles
 
 
+def convert_text_styles(doc):
+    """
+    Convert DXF text style table to DUC text styles.
+    
+    Args:
+        doc: ezdxf document with text styles table
+        
+    Returns:
+        list: List of IdentifiedTextStyle objects for use in StandardStyles
+    """
+    text_styles = []
+    
+    for text_style in doc.styles:
+        style_name = text_style.dxf.name
+        
+        # Skip special built-in styles if they have default values
+        # But we still want to convert Standard style if it has custom properties
+        
+        # Get text style properties from DXF
+        font_file = text_style.dxf.get('font', '')
+        big_font = text_style.dxf.get('bigfont', '')
+        fixed_height = text_style.dxf.get('height', 0.0)
+        width_factor = text_style.dxf.get('width', 1.0)
+        oblique_angle_deg = text_style.dxf.get('oblique', 0.0)
+        generation_flags = text_style.dxf.get('flags', 0)
+        
+        # Parse font name to get font family
+        font_family = TextStyleConverter.parse_font_name(font_file)
+        big_font_family = TextStyleConverter.parse_font_name(big_font) if big_font else font_family
+        
+        # Parse generation flags
+        flags = TextStyleConverter.parse_generation_flags(generation_flags)
+        is_backwards = flags['is_backwards']
+        is_upside_down = flags['is_upside_down']
+        is_vertical = flags['is_vertical']
+        
+        # Convert oblique angle from degrees to radians
+        oblique_angle_rad = TextStyleConverter.degrees_to_radians(oblique_angle_deg)
+        
+        # Determine font size
+        # In DXF, height=0 means variable height (defined per text entity)
+        # For style definition, use a default size if height is 0
+        font_size = fixed_height if fixed_height > 0 else 12.0
+        
+        # Create DUC text style using builder
+        duc_text_style = duc.create_text_style(
+            font_family=font_family,
+            font_size=font_size,
+            is_ltr=True,  # DXF doesn't have explicit LTR/RTL at style level
+            text_align=TEXT_ALIGN.LEFT,  # Default alignment
+            vertical_align=VERTICAL_ALIGN.BOTTOM,  # Default vertical alignment
+            line_height=1.2,  # Standard line height
+            oblique_angle=oblique_angle_rad,
+            width_factor=width_factor,
+            is_upside_down=is_upside_down,
+            is_backwards=is_backwards,
+            paper_text_height=None  # Not used in DXF STYLE table
+        )
+        
+        # Update big_font_family if different
+        if big_font_family != font_family:
+            duc_text_style.big_font_family = big_font_family
+        
+        # Create identifier for the style
+        description_parts = []
+        if font_file:
+            description_parts.append(f"Font: {font_file}")
+        if big_font:
+            description_parts.append(f"Big Font: {big_font}")
+        if fixed_height > 0:
+            description_parts.append(f"Height: {fixed_height}")
+        if width_factor != 1.0:
+            description_parts.append(f"Width: {width_factor}")
+        if oblique_angle_deg != 0:
+            description_parts.append(f"Oblique: {oblique_angle_deg}°")
+        if is_backwards or is_upside_down or is_vertical:
+            flags_desc = []
+            if is_backwards:
+                flags_desc.append("backwards")
+            if is_upside_down:
+                flags_desc.append("upside-down")
+            if is_vertical:
+                flags_desc.append("vertical")
+            description_parts.append(f"Flags: {', '.join(flags_desc)}")
+        
+        description = "; ".join(description_parts) if description_parts else f"Text style {style_name}"
+        
+        style_id = duc.create_identifier(
+            id=f"textstyle_{style_name.lower().replace(' ', '_')}",
+            name=style_name,
+            description=description
+        )
+        
+        # Create identified text style
+        identified_style = duc.IdentifiedTextStyle(
+            id=style_id,
+            style=duc_text_style
+        )
+        
+        text_styles.append(identified_style)
+        
+        # Log conversion info
+        flags_info = ""
+        if is_backwards or is_upside_down or is_vertical:
+            flag_list = []
+            if is_backwards:
+                flag_list.append("backwards")
+            if is_upside_down:
+                flag_list.append("upside-down")
+            if is_vertical:
+                flag_list.append("vertical")
+            flags_info = f" [{', '.join(flag_list)}]"
+        
+        height_info = f", height={fixed_height}" if fixed_height > 0 else ""
+        print(f"  ✓ Text style '{style_name}': {font_family}{height_info}{flags_info}")
+    
+    return text_styles
+
+
 def convert_dxf_to_duc(dxf_path, duc_path):
     """
     Main conversion orchestration function.
@@ -493,6 +614,7 @@ def convert_dxf_to_duc(dxf_path, duc_path):
     duc_layers = []
     duc_blocks = []
     linetype_styles = []
+    text_styles = []
 
     # 1. Convert Header
     header = doc.header
@@ -505,6 +627,10 @@ def convert_dxf_to_duc(dxf_path, duc_path):
     print("\nConverting linetypes...")
     linetype_styles = convert_linetypes(doc)
     print(f"Converted {len(linetype_styles)} linetypes to stroke styles")
+    
+    print("\nConverting text styles...")
+    text_styles = convert_text_styles(doc)
+    print(f"Converted {len(text_styles)} text styles")
     
     # 3. Convert Blocks
     
@@ -530,12 +656,12 @@ def convert_dxf_to_duc(dxf_path, duc_path):
     # 5. Serialize to DUC file
     print(f"\nWriting DUC file to: {duc_path}")
     
-    # Create standard with linetype styles
+    # Create standard with linetype and text styles
     standards = []
-    if linetype_styles:
+    if linetype_styles or text_styles:
         standard_styles = duc.create_standard_styles(
             common_styles=linetype_styles,
-            text_styles=[],
+            text_styles=text_styles,
             dimension_styles=[],
             leader_styles=[],
             feature_control_frame_styles=[],
@@ -549,9 +675,9 @@ def convert_dxf_to_duc(dxf_path, duc_path):
         # Create a standard that contains these styles
         standard = (duc.StateBuilder()
             .build_standard()
-            .with_id("dxf_linetypes")
-            .with_name("DXF Linetypes")
-            .with_description("Linetype styles converted from DXF")
+            .with_id("dxf_styles")
+            .with_name("DXF Styles")
+            .with_description("Linetype and text styles converted from DXF")
             .with_units(conversion_context['standard_units'])
             .with_styles(standard_styles)
             .build())
