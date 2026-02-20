@@ -300,7 +300,7 @@ export const newTextElement = (
   } & Partial<DucTextElement> & ElementConstructorOpts,
 ): NonDeleted<DucTextElement> => {
   const scope = opts.scope ?? currentScope;
-  const fontFamily = opts.fontFamily || DEFAULT_FONT_FAMILY;
+  const fontFamily = opts.fontFamily || (DEFAULT_FONT_FAMILY as string);
   const fontSize = opts.fontSize || getPrecisionValueFromRaw(DEFAULT_FONT_SIZE as RawValue, scope, currentScope);
   const lineHeight = opts.lineHeight || (1.2 as DucTextElement["lineHeight"]);
   const text = normalizeText(opts.text);
