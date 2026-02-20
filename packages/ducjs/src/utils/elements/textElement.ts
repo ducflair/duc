@@ -5,7 +5,7 @@ import { isArrowElement, isBoundToContainer, isTextElement } from "../../types/e
 import { GeometricPoint } from "../../types/geometryTypes";
 import { ExtractSetType } from "../../types/utility-types";
 import { getContainerElement, getElementAbsoluteCoords, getResizedElementAbsoluteCoords } from "../bounds";
-import { ARROW_LABEL_FONT_SIZE_TO_MIN_WIDTH_RATIO, ARROW_LABEL_WIDTH_FRACTION, BOUND_TEXT_PADDING, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, FONT_FAMILY, WINDOWS_EMOJI_FALLBACK_FONT } from "../constants";
+import { ARROW_LABEL_FONT_SIZE_TO_MIN_WIDTH_RATIO, ARROW_LABEL_WIDTH_FRACTION, BOUND_TEXT_PADDING, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, FONT_FAMILY, LEGACY_FONT_ID_TO_NAME, WINDOWS_EMOJI_FALLBACK_FONT } from "../constants";
 import { getBoundTextElementPosition, getPointGlobalCoordinates, getPointsGlobalCoordinates, getSegmentMidPoint } from "./linearElement";
 import { adjustXYWithRotation } from "../math";
 import { normalizeText } from "../normalize";
@@ -641,17 +641,23 @@ export const getTextFromElements = (
 export const getFontFamilyString = ({
   fontFamily,
 }: {
-  fontFamily: FontFamilyValues;
+  fontFamily: FontFamilyValues | string;
 }) => {
-  // Handle both number and string fontFamily values
-  const fontFamilyNum = typeof fontFamily === 'string' ? parseInt(fontFamily, 10) : fontFamily;
-  
-  for (const [fontFamilyString, id] of Object.entries(FONT_FAMILY)) {
-    if (id === fontFamilyNum) {
-      return `${fontFamilyString}, ${WINDOWS_EMOJI_FALLBACK_FONT}`;
-    }
+  // Handle legacy numeric font IDs from old files
+  if (typeof fontFamily === "number") {
+    const name = LEGACY_FONT_ID_TO_NAME[fontFamily];
+    if (name) return `${name}, ${WINDOWS_EMOJI_FALLBACK_FONT}`;
+    return WINDOWS_EMOJI_FALLBACK_FONT;
   }
-  return WINDOWS_EMOJI_FALLBACK_FONT;
+
+  // Handle stringified numeric IDs (e.g. "10")
+  const parsed = Number(fontFamily);
+  if (!Number.isNaN(parsed) && LEGACY_FONT_ID_TO_NAME[parsed]) {
+    return `${LEGACY_FONT_ID_TO_NAME[parsed]}, ${WINDOWS_EMOJI_FALLBACK_FONT}`;
+  }
+
+  // New path: fontFamily is already a string name
+  return `${fontFamily}, ${WINDOWS_EMOJI_FALLBACK_FONT}`;
 };
 
 /** returns fontSize+fontFamily string for assignment to DOM elements */
@@ -660,7 +666,7 @@ export const getFontString = ({
   fontFamily,
 }: {
   fontSize: DucTextElement["fontSize"];
-  fontFamily: FontFamilyValues;
+  fontFamily: FontFamilyValues | string;
 }) => {
   return `${fontSize.scoped}px ${getFontFamilyString({ fontFamily })}` as FontString;
 };

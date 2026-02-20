@@ -127,24 +127,38 @@ export const DEFAULT_PROPORTIONAL_RADIUS = 0.25;
 export const DEFAULT_ADAPTIVE_RADIUS = 32;
 
 /**
- * // TODO: shouldn't be really `const`, likely neither have integers as values, due to value for the custom fonts, which should likely be some hash.
+ * Font family identifiers. Values are the actual CSS font-family names
+ * so they can be passed directly to Google Fonts / Canvas2D.
  *
- * Let's think this through and consider:
- * - https://developer.mozilla.org/en-US/docs/Web/CSS/generic-family
- * - https://drafts.csswg.org/css-fonts-4/#font-family-prop
- * - https://learn.microsoft.com/en-us/typography/opentype/spec/ibmfc
+ * For backward compatibility with old files that stored numeric IDs,
+ * use `LEGACY_FONT_ID_TO_NAME` to resolve them.
  */
 export const FONT_FAMILY = {
-  Virgil: 1,
-  Helvetica: 2,
-  Cascadia: 3,
-  // leave 4 unused as it was historically used for Assistant (which we don't use anymore) or custom font (Obsidian)
-  Excalifont: 5,
-  Nunito: 6,
-  "Lilita One": 7,
-  "Comic Shanns": 8,
-  "Liberation Sans": 9,
-  "Roboto Mono": 10,
+  Virgil: "Virgil",
+  Helvetica: "Helvetica",
+  Cascadia: "Cascadia",
+  Excalifont: "Excalifont",
+  Nunito: "Nunito",
+  "Lilita One": "Lilita One",
+  "Comic Shanns": "Comic Shanns",
+  "Liberation Sans": "Liberation Sans",
+  "Roboto Mono": "Roboto Mono",
+} as const;
+
+/**
+ * Reverse mapping from legacy numeric font IDs to font family names.
+ * Used when loading old .duc files that encoded fontFamily as a number.
+ */
+export const LEGACY_FONT_ID_TO_NAME: Record<number, string> = {
+  1: "Virgil",
+  2: "Helvetica",
+  3: "Cascadia",
+  5: "Excalifont",
+  6: "Nunito",
+  7: "Lilita One",
+  8: "Comic Shanns",
+  9: "Liberation Sans",
+  10: "Roboto Mono",
 };
 
 export const WINDOWS_EMOJI_FALLBACK_FONT = "Segoe UI Emoji";
@@ -152,7 +166,7 @@ export const WINDOWS_EMOJI_FALLBACK_FONT = "Segoe UI Emoji";
 export const DEFAULT_VERSION = "{version}";
 export const MIN_FONT_SIZE = 1;
 export const DEFAULT_FONT_SIZE = 20;
-export const DEFAULT_FONT_FAMILY: FontFamilyValues = FONT_FAMILY["Roboto Mono"];
+export const DEFAULT_FONT_FAMILY: FontFamilyValues = FONT_FAMILY["Roboto Mono"] as FontFamilyValues;
 export const DEFAULT_TEXT_ALIGN: DucTextElement["textAlign"] = TEXT_ALIGN.LEFT;
 export const DEFAULT_VERTICAL_ALIGN: DucTextElement["verticalAlign"] = VERTICAL_ALIGN.TOP;
 export const DEFAULT_LINE_HEIGHT = 1;
