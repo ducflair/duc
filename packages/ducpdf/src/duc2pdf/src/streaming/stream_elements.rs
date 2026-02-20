@@ -92,10 +92,12 @@ pub struct ElementStreamer {
     freedraw_bboxes: HashMap<String, FreeDrawBounds>, // freedraw_id -> cached bounding box
     /// Cache for SVG natural dimensions for scaling calculations
     svg_dimensions: HashMap<String, (f64, f64)>, // svg_id -> (width, height) in natural SVG units
-    /// Font resource name for text rendering
+    /// Font resource name for text rendering (fallback/primary)
     font_resource_name: String,
-    /// Active font used for text rendering and encoding
+    /// Active font used for text rendering and encoding (fallback/primary)
     text_font: Font,
+    /// Map of font family name → (Font, resource_name) for per-element font selection
+    font_map: HashMap<String, (Font, String)>,
     /// Map of block instances for looking up duplication arrays
     block_instances: HashMap<String, DucBlockInstance>,
     /// Whether we should require elements to be marked as "plot" to be rendered
@@ -122,6 +124,7 @@ impl ElementStreamer {
         font_resource_name: String,
         text_font: Font,
         block_instances: HashMap<String, DucBlockInstance>,
+        font_map: HashMap<String, (Font, String)>,
     ) -> Self {
         Self {
             style_resolver,
@@ -136,6 +139,7 @@ impl ElementStreamer {
             svg_dimensions: HashMap::new(),
             font_resource_name,
             text_font,
+            font_map,
             block_instances,
             render_only_plot_elements: false,
             ext_gstate_cache: HashMap::new(),
@@ -1483,12 +1487,19 @@ impl ElementStreamer {
 
     /// Stream text element
     fn stream_text(&self, text: &DucTextElement) -> ConversionResult<Vec<Operation>> {
-        use duc::generated::duc::TEXT_ALIGN;
+        use duc::generated::duc::{TEXT_ALIGN, VERTICAL_ALIGN};
         use hipdf::fonts::utils::{create_text_block, TextAlign, WrapStrategy};
 
         let resolved_text = self
             .style_resolver
             .resolve_dynamic_fields(&text.text, &DucElementEnum::DucTextElement(text.clone()));
+
+        // Resolve font for this element: look up font_map by family, fallback to primary
+        let (active_font, active_resource_name) = self
+            .font_map
+            .get(&text.style.font_family)
+            .map(|(f, r)| (f, r.as_str()))
+            .unwrap_or((&self.text_font, &self.font_resource_name));
 
         // Determine text alignment
         let align = match text.style.text_align {
@@ -1503,40 +1514,60 @@ impl ElementStreamer {
 
         // Determine wrapping strategy
         let wrap_strategy = if text.auto_resize {
-            // If auto-resize is true, we might not want to wrap
             WrapStrategy::Word
         } else {
             WrapStrategy::Hybrid
         };
 
-        // For text positioning in the element's local coordinate system:
-        // (0, 0) is at the top-left corner of the element after transformation
-        // PDF text is positioned by baseline, which needs to be below the top
-        // We want the top of the text to align with the top of the bounding box,
-        // so the baseline should be at approximately font_size distance from top
+        let font_size = text.style.font_size as f32;
+        let element_height = text.base.height as f32;
 
-        // However, PDF's internal text coordinate system has Y going up from baseline
-        // So we need to negate to work in our top-down coordinate system
-        let text_start_y = -(text.style.font_size as f32);
+        // Estimate total text height for vertical alignment
+        let line_count = {
+            let max_w = if text.auto_resize { None } else { Some(text.base.width as f32) };
+            let paragraphs: Vec<&str> = resolved_text.split('\n').collect();
+            let mut count = 0usize;
+            for para in &paragraphs {
+                if para.is_empty() {
+                    count += 1;
+                } else if let Some(w) = max_w {
+                    let wrapped = hipdf::fonts::utils::wrap_text(active_font, para, w, font_size, wrap_strategy);
+                    count += wrapped.len().max(1);
+                } else {
+                    count += 1;
+                }
+            }
+            count
+        };
+        let total_text_height = font_size + (line_count.saturating_sub(1) as f32) * line_height;
 
-        // Use the max width from the element's bounding box (unless auto_resize is true)
+        // Apply vertical alignment
+        let text_start_y = match text.style.vertical_align {
+            VERTICAL_ALIGN::MIDDLE => {
+                -(font_size + (element_height - total_text_height) / 2.0)
+            }
+            VERTICAL_ALIGN::BOTTOM => {
+                -(element_height)
+            }
+            // TOP or default
+            _ => -font_size,
+        };
+
         let max_width = if text.auto_resize {
             None
         } else {
             Some(text.base.width as f32)
         };
 
-        // Use the max height from the element's bounding box
         let max_height = Some(text.base.height as f32);
 
-        // Create multi-line text block with proper wrapping
         let operations = create_text_block(
-            &self.font_resource_name,
-            &self.text_font,
+            active_resource_name,
+            active_font,
             &resolved_text,
             0.0,
             text_start_y,
-            text.style.font_size as f32,
+            font_size,
             max_width,
             max_height,
             line_height,
