@@ -1,15 +1,15 @@
 import { TEXT_ALIGN, VERTICAL_ALIGN } from "../../flatbuffers/duc";
+import { SupportedMeasures, getPrecisionValueFromRaw, getScopedBezierPointFromDucPoint } from "../../technical/scopes";
 import { DucLocalState, RawValue, Scope, ScopedValue } from "../../types";
 import { DucElement, DucElementType, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap, FontFamilyValues, FontString, NonDeletedDucElement } from "../../types/elements";
 import { isArrowElement, isBoundToContainer, isTextElement } from "../../types/elements/typeChecks";
 import { GeometricPoint } from "../../types/geometryTypes";
 import { ExtractSetType } from "../../types/utility-types";
 import { getContainerElement, getElementAbsoluteCoords, getResizedElementAbsoluteCoords } from "../bounds";
-import { ARROW_LABEL_FONT_SIZE_TO_MIN_WIDTH_RATIO, ARROW_LABEL_WIDTH_FRACTION, BOUND_TEXT_PADDING, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, FONT_FAMILY, LEGACY_FONT_ID_TO_NAME, WINDOWS_EMOJI_FALLBACK_FONT } from "../constants";
-import { getBoundTextElementPosition, getPointGlobalCoordinates, getPointsGlobalCoordinates, getSegmentMidPoint } from "./linearElement";
+import { ARROW_LABEL_FONT_SIZE_TO_MIN_WIDTH_RATIO, ARROW_LABEL_WIDTH_FRACTION, BOUND_TEXT_PADDING, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, LEGACY_FONT_ID_TO_NAME, WINDOWS_EMOJI_FALLBACK_FONT } from "../constants";
 import { adjustXYWithRotation } from "../math";
 import { normalizeText } from "../normalize";
-import { SupportedMeasures, getPrecisionValueFromRaw, getScopedBezierPointFromDucPoint } from "../../technical/scopes";
+import { getBoundTextElementPosition, getPointGlobalCoordinates, getPointsGlobalCoordinates, getSegmentMidPoint } from "./linearElement";
 
 export const computeBoundTextPosition = (
   container: DucElement,
@@ -73,10 +73,20 @@ export const measureText = (
     // lines would be stripped from computation
     .map((x) => x || " ")
     .join("\n");
-  const fontSize = getPrecisionValueFromRaw(parseFloat(font) as RawValue, currentScope, currentScope);
+  const parsedFontSize = parseFloat(font);
+  // Guard: if font string produced an unparseable size (NaN) or zero,
+  // fall back to DEFAULT_FONT_SIZE so measurements are never degenerate.
+  const safeFontSize = (Number.isFinite(parsedFontSize) && parsedFontSize > 0)
+    ? parsedFontSize
+    : DEFAULT_FONT_SIZE;
+  const fontSize = getPrecisionValueFromRaw(safeFontSize as RawValue, currentScope, currentScope);
   const height = getTextHeight(text, fontSize, lineHeight);
   const width = getTextWidth(text, font);
-  return { width, height };
+
+  // Defensive: ensure we never return 0 or NaN dimensions
+  const safeWidth = (Number.isFinite(width) && width > 0) ? width : 1 as RawValue;
+  const safeHeight = (Number.isFinite(height) && height > 0) ? height : (safeFontSize * lineHeight) as RawValue;
+  return { width: safeWidth, height: safeHeight };
 };
 
 /**
@@ -144,17 +154,17 @@ const getLineWidth = (
     // fallback to advance width if the actual width is zero, i.e. on text editing start
     // or when actual width does not respect whitespace chars, i.e. spaces
     // otherwise actual width should always be bigger
-    return Math.max(actualWidth, advanceWidth) as RawValue;
+    return Math.ceil(Math.max(actualWidth, advanceWidth)) as RawValue;
   }
 
   // since in test env the canvas measureText algo
   // doesn't measure text and instead just returns number of
   // characters hence we assume that each letteris 10px
   if (isTestEnv) {
-    return advanceWidth * 10 as RawValue;
+    return Math.ceil(advanceWidth * 10) as RawValue;
   }
 
-  return advanceWidth as RawValue;
+  return Math.ceil(advanceWidth) as RawValue;
 };
 
 export const getTextWidth = (
@@ -713,6 +723,20 @@ export const refreshTextDimensions = (
     );
   }
   const dimensions = getAdjustedDimensions(textElement, elementsMap, text, currentScope);
+
+  // Defensive minimums — ensure height is always at least one line.
+  // Use negated >= to also catch NaN (NaN < x is always false).
+  const rawMinLineHeight = textElement.fontSize.value * textElement.lineHeight;
+  const minLineHeight = (Number.isFinite(rawMinLineHeight) && rawMinLineHeight > 0)
+    ? rawMinLineHeight
+    : DEFAULT_FONT_SIZE * textElement.lineHeight;
+  if (!(dimensions.height >= minLineHeight)) {
+    dimensions.height = minLineHeight as RawValue;
+  }
+  if (!(dimensions.width > 0)) {
+    dimensions.width = (textElement.autoResize ? 1 : textElement.width.value) as RawValue;
+  }
+
   return { text, ...dimensions };
 };
 
