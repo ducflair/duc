@@ -4,7 +4,22 @@ import type { ExportedDataState } from 'ducjs';
 const BUNDLED_FONTS = new Set(['Roboto Mono']);
 
 // Metadata JSON URL (small file, cacheable via CDN)
-const GOOGLE_FONTS_METADATA_URL = 'https://cdn.jsdelivr.net/npm/google-font-metadata@latest/data/google-fonts-v1.json';
+const GOOGLE_FONTS_METADATA_URL = 'https://cdn.jsdelivr.net/npm/google-font-metadata@6/data/google-fonts-v1.json';
+
+const TRUSTED_FONT_DOMAINS = new Set([
+  'fonts.gstatic.com',
+  'fonts.googleapis.com',
+  'cdn.jsdelivr.net',
+]);
+
+function isTrustedFontUrl(urlStr: string): boolean {
+  try {
+    const url = new URL(urlStr);
+    return url.protocol === 'https:' && TRUSTED_FONT_DOMAINS.has(url.hostname);
+  } catch {
+    return false;
+  }
+}
 
 // In-memory cache for the metadata JSON (fetched once per session)
 let metadataCache: Record<string, GoogleFontV1Entry> | null = null;
@@ -129,7 +144,7 @@ export async function fetchFontsForDuc(
   const results = await Promise.allSettled(
     toFetch.map(async (family) => {
       const ttfUrl = getTrueTypeUrl(metadata, family);
-      if (!ttfUrl) return { family, bytes: null as Uint8Array | null };
+      if (!ttfUrl || !isTrustedFontUrl(ttfUrl)) return { family, bytes: null as Uint8Array | null };
       try {
         const res = await fetch(ttfUrl);
         if (!res.ok) return { family, bytes: null };
