@@ -1,80 +1,122 @@
 """
 Helper functions for creating DUC elements with a user-friendly API.
 """
-from math import pi
-from typing import List, Optional, Union, TYPE_CHECKING, Any, Dict
-import uuid
-import time
-from dataclasses import dataclass, field
-import numpy as np
 import math
+import time
+import uuid
+from dataclasses import dataclass, field
+from math import pi
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+
+import numpy as np
 
 if TYPE_CHECKING:
     from ..classes.StandardsClass import Standard
-from ..classes.ElementsClass import (
-    DucFreeDrawEnds, DucImageFilter, DucRectangleElement, DucEllipseElement, DucPolygonElement,
-    DucElementBase, DucElementStylesBase, ElementWrapper, BoundElement,
-    DucLinearElement, DucLinearElementBase, DucPoint, DucLine,
-    DucLineReference, GeometricPoint, DucPointBinding, DucPath, ImageCrop,
-    PointBindingPoint, DucHead, ElementStroke, ElementBackground, ElementContentBase, StrokeStyle,
-    DucArrowElement, DucTextElement, DucFrameElement, DucPlotElement,
-    DucViewportElement, DucStackElementBase, DucStackBase, DucStackLikeStyles,
-    PlotLayout, DucView, DucPlotStyle, DucViewportStyle, Margins,
-    DucFreeDrawElement, DucImageElement, DucPdfElement, DucParametricElement, ParametricSource, DucBlockAttributeDefinition, DucBlockAttributeDefinitionEntry,
-    DucBlock, DucBlockDuplicationArray, StringValueEntry, DucBlockInstance,
-    DucTableColumn, DucTableRow, DucTableCell, DucTableCellSpan, DucTableAutoSize,
-    DucTableElement, DucTableStyle, DucTableCellStyle, DucTextStyle, DucLayer, DucLayerOverrides,
-    DucRegion, DucDocElement, DucDocStyle, ParagraphFormatting, StackFormat, StackFormatProperties,
-    TextColumn, ColumnLayout, DucTextDynamicPart, DucDimensionElement, DucDimensionStyle,
-    DimensionDefinitionPoints, DimensionBindings, DimensionLineStyle, DimensionExtLineStyle,
-    DimensionSymbolStyle, DimensionToleranceStyle, DimensionFitStyle, DimensionBaselineData,
-    DimensionContinueData, DucLeaderElement, LeaderContent, LeaderTextBlockContent, LeaderBlockContent,
-    DucFeatureControlFrameElement, ToleranceClause, FeatureControlFrameSegment, DatumReference,
-    FCFFrameModifiers, FCFBetweenModifier, FCFProjectedZoneModifier, FCFDatumDefinition, FCFSegmentRow,
-    DucMermaidElement, DucEmbeddableElement, DucXRayElement, DucXRayStyle, FCFLayoutStyle, FCFSymbolStyle, FCFDatumStyle, DucFeatureControlFrameStyle,
-    DucLeaderStyle, BLOCK_ATTACHMENT, DucTableColumnEntry, DucTableRowEntry, DucTableCellEntry
-)
-from .style_builders import create_simple_styles, create_text_style, create_paragraph_formatting, create_stack_format_properties, create_stack_format, create_doc_style, create_text_column, create_column_layout
-from ducpy.utils import generate_random_id, DEFAULT_SCOPE, DEFAULT_STROKE_COLOR, DEFAULT_FILL_COLOR, DEFAULT_STROKE_WIDTH
-from ducpy.utils.rand_utils import random_versioning
-from ducpy.Duc.BOOLEAN_OPERATION import BOOLEAN_OPERATION
-from ducpy.Duc.TABLE_CELL_ALIGNMENT import TABLE_CELL_ALIGNMENT
-from ducpy.Duc.TABLE_FLOW_DIRECTION import TABLE_FLOW_DIRECTION
-from ducpy.Duc.TEXT_ALIGN import TEXT_ALIGN
-from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
-from ducpy.Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
-from ducpy.Duc.TEXT_FLOW_DIRECTION import TEXT_FLOW_DIRECTION
-from ducpy.Duc.COLUMN_TYPE import COLUMN_TYPE
-from ducpy.Duc.STACKED_TEXT_ALIGN import STACKED_TEXT_ALIGN
-from ducpy.Duc.DIMENSION_TYPE import DIMENSION_TYPE
-from ducpy.Duc.AXIS import AXIS
-from ducpy.Duc.GDT_SYMBOL import GDT_SYMBOL
-from ducpy.Duc.LEADER_CONTENT_TYPE import LEADER_CONTENT_TYPE
-from ducpy.Duc.TOLERANCE_ZONE_TYPE import TOLERANCE_ZONE_TYPE
-from ducpy.Duc.MATERIAL_CONDITION import MATERIAL_CONDITION
-from ducpy.Duc.FEATURE_MODIFIER import FEATURE_MODIFIER
-from ducpy.Duc.PARAMETRIC_SOURCE_TYPE import PARAMETRIC_SOURCE_TYPE
-from ducpy.Duc.VIEWPORT_SHADE_PLOT import VIEWPORT_SHADE_PLOT
-from ducpy.Duc.IMAGE_STATUS import IMAGE_STATUS
-from ducpy.Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
-from ducpy.Duc.STROKE_PLACEMENT import STROKE_PLACEMENT
-from ducpy.Duc.STROKE_CAP import STROKE_CAP
-from ducpy.Duc.STROKE_JOIN import STROKE_JOIN
-from ducpy.Duc.MARK_ELLIPSE_CENTER import MARK_ELLIPSE_CENTER
-from ducpy.Duc.DIMENSION_FIT_RULE import DIMENSION_FIT_RULE
-from ducpy.Duc.DIMENSION_TEXT_PLACEMENT import DIMENSION_TEXT_PLACEMENT
-from ducpy.Duc.TOLERANCE_DISPLAY import TOLERANCE_DISPLAY
-from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
-from ducpy.Duc.BLOCK_ATTACHMENT import BLOCK_ATTACHMENT
 
 import random
 import time
+
+from ducpy.Duc.AXIS import AXIS
+from ducpy.Duc.BLOCK_ATTACHMENT import BLOCK_ATTACHMENT
+from ducpy.Duc.BOOLEAN_OPERATION import BOOLEAN_OPERATION
+from ducpy.Duc.COLUMN_TYPE import COLUMN_TYPE
+from ducpy.Duc.DIMENSION_FIT_RULE import DIMENSION_FIT_RULE
+from ducpy.Duc.DIMENSION_TEXT_PLACEMENT import DIMENSION_TEXT_PLACEMENT
+from ducpy.Duc.DIMENSION_TYPE import DIMENSION_TYPE
+from ducpy.Duc.FEATURE_MODIFIER import FEATURE_MODIFIER
+from ducpy.Duc.GDT_SYMBOL import GDT_SYMBOL
+from ducpy.Duc.IMAGE_STATUS import IMAGE_STATUS
+from ducpy.Duc.LEADER_CONTENT_TYPE import LEADER_CONTENT_TYPE
+from ducpy.Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
+from ducpy.Duc.MARK_ELLIPSE_CENTER import MARK_ELLIPSE_CENTER
+from ducpy.Duc.MATERIAL_CONDITION import MATERIAL_CONDITION
+from ducpy.Duc.PARAMETRIC_SOURCE_TYPE import PARAMETRIC_SOURCE_TYPE
+from ducpy.Duc.STACKED_TEXT_ALIGN import STACKED_TEXT_ALIGN
+from ducpy.Duc.STROKE_CAP import STROKE_CAP
+from ducpy.Duc.STROKE_JOIN import STROKE_JOIN
+from ducpy.Duc.STROKE_PLACEMENT import STROKE_PLACEMENT
+from ducpy.Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
+from ducpy.Duc.TABLE_CELL_ALIGNMENT import TABLE_CELL_ALIGNMENT
+from ducpy.Duc.TABLE_FLOW_DIRECTION import TABLE_FLOW_DIRECTION
+from ducpy.Duc.TEXT_ALIGN import TEXT_ALIGN
+from ducpy.Duc.TEXT_FLOW_DIRECTION import TEXT_FLOW_DIRECTION
+from ducpy.Duc.TOLERANCE_DISPLAY import TOLERANCE_DISPLAY
+from ducpy.Duc.TOLERANCE_ZONE_TYPE import TOLERANCE_ZONE_TYPE
+from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
+from ducpy.Duc.VIEWPORT_SHADE_PLOT import VIEWPORT_SHADE_PLOT
+from ducpy.utils import (DEFAULT_FILL_COLOR, DEFAULT_SCOPE,
+                         DEFAULT_STROKE_COLOR, DEFAULT_STROKE_WIDTH,
+                         generate_random_id)
+from ducpy.utils.rand_utils import random_versioning
+
+from ..classes.ElementsClass import (BLOCK_ATTACHMENT, BoundElement,
+                                     ColumnLayout, DatumReference,
+                                     DimensionBaselineData, DimensionBindings,
+                                     DimensionContinueData,
+                                     DimensionDefinitionPoints,
+                                     DimensionExtLineStyle, DimensionFitStyle,
+                                     DimensionLineStyle, DimensionSymbolStyle,
+                                     DimensionToleranceStyle,
+                                     DocumentGridConfig, DucArrowElement,
+                                     DucBlock, DucBlockAttributeDefinition,
+                                     DucBlockAttributeDefinitionEntry,
+                                     DucBlockDuplicationArray,
+                                     DucBlockInstance, DucDimensionElement,
+                                     DucDimensionStyle, DucDocElement,
+                                     DucDocStyle, DucElementBase,
+                                     DucElementStylesBase, DucEllipseElement,
+                                     DucEmbeddableElement,
+                                     DucFeatureControlFrameElement,
+                                     DucFeatureControlFrameStyle,
+                                     DucFrameElement, DucFreeDrawElement,
+                                     DucFreeDrawEnds, DucHead, DucImageElement,
+                                     DucImageFilter, DucLayer,
+                                     DucLayerOverrides, DucLeaderElement,
+                                     DucLeaderStyle, DucLine, DucLinearElement,
+                                     DucLinearElementBase, DucLineReference,
+                                     DucMermaidElement, DucParametricElement,
+                                     DucPath, DucPdfElement, DucPlotElement,
+                                     DucPlotStyle, DucPoint, DucPointBinding,
+                                     DucPolygonElement, DucRectangleElement,
+                                     DucRegion, DucStackBase,
+                                     DucStackElementBase, DucStackLikeStyles,
+                                     DucTableAutoSize, DucTableCell,
+                                     DucTableCellEntry, DucTableCellSpan,
+                                     DucTableCellStyle, DucTableColumn,
+                                     DucTableColumnEntry, DucTableElement,
+                                     DucTableRow, DucTableRowEntry,
+                                     DucTableStyle, DucTextDynamicPart,
+                                     DucTextElement, DucTextStyle, DucView,
+                                     DucViewportElement, DucViewportStyle,
+                                     DucXRayElement, DucXRayStyle,
+                                     ElementBackground, ElementContentBase,
+                                     ElementStroke, ElementWrapper,
+                                     FCFBetweenModifier, FCFDatumDefinition,
+                                     FCFDatumStyle, FCFFrameModifiers,
+                                     FCFLayoutStyle, FCFProjectedZoneModifier,
+                                     FCFSegmentRow, FCFSymbolStyle,
+                                     FeatureControlFrameSegment,
+                                     GeometricPoint, ImageCrop,
+                                     LeaderBlockContent, LeaderContent,
+                                     LeaderTextBlockContent, Margins,
+                                     ParagraphFormatting, ParametricSource,
+                                     PlotLayout, PointBindingPoint,
+                                     StackFormat, StackFormatProperties,
+                                     StringValueEntry, StrokeStyle, TextColumn,
+                                     ToleranceClause)
+from .style_builders import (create_column_layout, create_doc_style,
+                             create_paragraph_formatting, create_simple_styles,
+                             create_stack_format,
+                             create_stack_format_properties,
+                             create_text_column, create_text_style)
+
 
 def _create_element_wrapper(element_class, base_params, element_params, explicit_properties_override=None):
     """Helper function to create an ElementWrapper with the given parameters."""
     # Create the base DucElementBase
     from ducpy.utils import generate_random_id
     from ducpy.utils.rand_utils import random_versioning
+
     # Generate ID if not provided
     if not base_params.get('id'):
         base_params['id'] = generate_random_id()
@@ -279,7 +321,8 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
             end_binding=element_params.get('end_binding')
         )
         # Create leader style
-        from ducpy.builders.style_builders import create_simple_styles, create_text_style
+        from ducpy.builders.style_builders import (create_simple_styles,
+                                                   create_text_style)
         leader_style = element_params.get('style')
         if leader_style is None:
             text_style = create_text_style()
@@ -300,7 +343,10 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         )
     elif element_class == DucDocElement:
         # Create doc style
-        from ducpy.builders.style_builders import create_simple_styles, create_text_style, create_paragraph_formatting, create_stack_format
+        from ducpy.builders.style_builders import (create_paragraph_formatting,
+                                                   create_simple_styles,
+                                                   create_stack_format,
+                                                   create_text_style)
         doc_style = element_params.get('style')
         if doc_style is None:
             text_style = create_text_style()
@@ -314,9 +360,17 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         # Create column layout
         columns_layout = element_params.get('columns')
         if columns_layout is None:
-            from ducpy.builders.style_builders import create_text_column, create_column_layout
+            from ducpy.builders.style_builders import (create_column_layout,
+                                                       create_text_column)
             text_column = create_text_column(width=100.0)
             columns_layout = create_column_layout(definitions=[text_column])
+        default_grid_config = DocumentGridConfig(
+            columns=1,
+            gap_x=0.0,
+            gap_y=0.0,
+            align_items=0,
+            first_page_alone=False,
+        )
         specific_element = element_class(
             base=base_element,
             style=doc_style,
@@ -324,11 +378,16 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
             dynamic=element_params.get('dynamic', []),
             columns=columns_layout,
             auto_resize=element_params.get('auto_resize', False),
-            flow_direction=element_params.get('flow_direction')
+            flow_direction=element_params.get('flow_direction'),
+            file_id=element_params.get('file_id'),
+            grid_config=element_params.get('grid_config', default_grid_config),
         )
     elif element_class == DucDimensionElement:
         # Create dimension style
-        from ducpy.builders.style_builders import create_simple_styles, create_text_style, create_solid_content, create_stroke
+        from ducpy.builders.style_builders import (create_simple_styles,
+                                                   create_solid_content,
+                                                   create_stroke,
+                                                   create_text_style)
         dimension_style = element_params.get('style')
         if dimension_style is None:
             text_style = create_text_style()
@@ -406,7 +465,8 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         )
     elif element_class == DucFeatureControlFrameElement:
         # Create feature control frame style
-        from ducpy.builders.style_builders import create_simple_styles, create_text_style
+        from ducpy.builders.style_builders import (create_simple_styles,
+                                                   create_text_style)
         fcf_style = element_params.get('style')
         if fcf_style is None:
             text_style = create_text_style()
@@ -1108,10 +1168,22 @@ class PdfElementBuilder(ElementSpecificBuilder):
         self.extra["file_id"] = file_id
         return self
 
+    def with_grid_config(self, grid_config: DocumentGridConfig):
+        self.extra["grid_config"] = grid_config
+        return self
+
     def build(self) -> ElementWrapper:
         base_params = self.base.__dict__.copy()
+        default_grid_config = DocumentGridConfig(
+            columns=1,
+            gap_x=0.0,
+            gap_y=0.0,
+            align_items=0,
+            first_page_alone=False,
+        )
         element_params = {
             "file_id": self.extra.get('file_id'),
+            "grid_config": self.extra.get('grid_config', default_grid_config),
         }
         return _create_element_wrapper(
             DucPdfElement,
@@ -1306,7 +1378,8 @@ class TableElementBuilder(ElementSpecificBuilder):
         # Ensure style is always set
         style = self.extra.get('style')
         if style is None:
-            from ducpy.builders.style_builders import create_simple_styles, create_text_style
+            from ducpy.builders.style_builders import (create_simple_styles,
+                                                       create_text_style)
             style = DucTableStyle(
                     header_row_style=DucTableCellStyle(
                     text_style=create_text_style(),
@@ -2004,7 +2077,8 @@ class LeaderElementBuilder(ElementSpecificBuilder):
         # Create leader style with default dogleg
         leader_style = element_params.get('style')
         if leader_style is None:
-            from ducpy.builders.style_builders import create_simple_styles, create_text_style
+            from ducpy.builders.style_builders import (create_simple_styles,
+                                                       create_text_style)
             text_style = create_text_style()
             leader_style = DucLeaderStyle(
                 text_style=text_style,
