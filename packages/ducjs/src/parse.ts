@@ -279,6 +279,7 @@ export function parseDocumentGridConfig(gridConfig: DocumentGridConfigFb): Docum
       return 'start';
     })(),
     firstPageAlone: gridConfig.firstPageAlone(),
+    scale: gridConfig.scale(),
   };
 }
 
@@ -576,6 +577,7 @@ function parsePdfElement(element: DucPdfElementFb): DucPdfElement {
       gapY: 0,
       alignItems: 'start',
       firstPageAlone: false,
+      scale: 1,
     },
   };
 }
@@ -1030,6 +1032,7 @@ function parseDocElement(element: DucDocElementFb): DucDocElement {
       gapY: 0,
       alignItems: 'start',
       firstPageAlone: false,
+      scale: 1,
     },
   };
 }

@@ -531,6 +531,7 @@ export type DocumentGridConfig = {
   gapY: number;                 // vertical spacing (px)
   alignItems: 'start' | 'center' | 'end';  // vertical alignment within row
   firstPageAlone: boolean;      // cover page behavior for 2+ columns
+  scale: number;                // drawing units / real world units
 }
 
 export type DucPdfElement = _DucElementBase & {

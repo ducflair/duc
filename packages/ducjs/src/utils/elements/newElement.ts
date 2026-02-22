@@ -437,7 +437,7 @@ export const newDocElement = (
   columns: opts.columns || { type: COLUMN_TYPE.NO_COLUMNS, definitions: [], autoHeight: true },
   autoResize: opts.autoResize ?? true,
   fileId: null,
-  gridConfig: { columns: 1, gapX: 0, gapY: 0, alignItems: 'start', firstPageAlone: false },
+  gridConfig: { columns: 1, gapX: 0, gapY: 0, alignItems: 'start', firstPageAlone: false, scale: 1 },
   // DucDocStyle properties
   isLtr: opts.isLtr ?? true,
   fontFamily: opts.fontFamily || DEFAULT_FONT_FAMILY,
@@ -458,7 +458,7 @@ export const newDocElement = (
 
 export const newPdfElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucPdfElement> => ({
   fileId: null,
-  gridConfig: { columns: 1, gapX: 0, gapY: 0, alignItems: 'start', firstPageAlone: false },
+  gridConfig: { columns: 1, gapX: 0, gapY: 0, alignItems: 'start', firstPageAlone: false, scale: 1 },
   ..._newElementBase<DucPdfElement>("pdf", currentScope, opts),
   type: "pdf",
 });

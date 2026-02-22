@@ -14146,6 +14146,7 @@ impl<'a> DocumentGridConfig<'a> {
   pub const VT_GAP_Y: flatbuffers::VOffsetT = 8;
   pub const VT_ALIGN_ITEMS: flatbuffers::VOffsetT = 10;
   pub const VT_FIRST_PAGE_ALONE: flatbuffers::VOffsetT = 12;
+  pub const VT_SCALE: flatbuffers::VOffsetT = 14;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -14157,6 +14158,7 @@ impl<'a> DocumentGridConfig<'a> {
     args: &'args DocumentGridConfigArgs
   ) -> flatbuffers::WIPOffset<DocumentGridConfig<'bldr>> {
     let mut builder = DocumentGridConfigBuilder::new(_fbb);
+    builder.add_scale(args.scale);
     builder.add_gap_y(args.gap_y);
     builder.add_gap_x(args.gap_x);
     builder.add_columns(args.columns);
@@ -14201,6 +14203,13 @@ impl<'a> DocumentGridConfig<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<bool>(DocumentGridConfig::VT_FIRST_PAGE_ALONE, Some(false)).unwrap()}
   }
+  #[inline]
+  pub fn scale(&self) -> f64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f64>(DocumentGridConfig::VT_SCALE, Some(0.0)).unwrap()}
+  }
 }
 
 impl flatbuffers::Verifiable for DocumentGridConfig<'_> {
@@ -14215,6 +14224,7 @@ impl flatbuffers::Verifiable for DocumentGridConfig<'_> {
      .visit_field::<f64>("gap_y", Self::VT_GAP_Y, false)?
      .visit_field::<DOCUMENT_GRID_ALIGN_ITEMS>("align_items", Self::VT_ALIGN_ITEMS, false)?
      .visit_field::<bool>("first_page_alone", Self::VT_FIRST_PAGE_ALONE, false)?
+     .visit_field::<f64>("scale", Self::VT_SCALE, false)?
      .finish();
     Ok(())
   }
@@ -14225,6 +14235,7 @@ pub struct DocumentGridConfigArgs {
     pub gap_y: f64,
     pub align_items: Option<DOCUMENT_GRID_ALIGN_ITEMS>,
     pub first_page_alone: bool,
+    pub scale: f64,
 }
 impl<'a> Default for DocumentGridConfigArgs {
   #[inline]
@@ -14235,6 +14246,7 @@ impl<'a> Default for DocumentGridConfigArgs {
       gap_y: 0.0,
       align_items: None,
       first_page_alone: false,
+      scale: 0.0,
     }
   }
 }
@@ -14265,6 +14277,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DocumentGridConfigBuilder<'a, '
     self.fbb_.push_slot::<bool>(DocumentGridConfig::VT_FIRST_PAGE_ALONE, first_page_alone, false);
   }
   #[inline]
+  pub fn add_scale(&mut self, scale: f64) {
+    self.fbb_.push_slot::<f64>(DocumentGridConfig::VT_SCALE, scale, 0.0);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> DocumentGridConfigBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     DocumentGridConfigBuilder {
@@ -14287,6 +14303,7 @@ impl core::fmt::Debug for DocumentGridConfig<'_> {
       ds.field("gap_y", &self.gap_y());
       ds.field("align_items", &self.align_items());
       ds.field("first_page_alone", &self.first_page_alone());
+      ds.field("scale", &self.scale());
       ds.finish()
   }
 }

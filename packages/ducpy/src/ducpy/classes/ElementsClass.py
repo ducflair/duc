@@ -446,6 +446,7 @@ class DocumentGridConfig:
     gap_y: float
     align_items: DOCUMENT_GRID_ALIGN_ITEMS
     first_page_alone: bool
+    scale: float
 
 @dataclass
 class DucPdfElement:

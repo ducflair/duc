@@ -2321,6 +2321,7 @@ fn serialize_document_grid_config<'bldr>(
             gap_y: config.gap_y,
             align_items: Some(config.align_items.into()),
             first_page_alone: config.first_page_alone,
+            scale: config.scale,
         },
     )
 }

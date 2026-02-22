@@ -826,6 +826,7 @@ function writeDocumentGridConfig(b: flatbuffers.Builder, config: DocumentGridCon
   })();
   Duc.DocumentGridConfig.addAlignItems(b, alignItems);
   Duc.DocumentGridConfig.addFirstPageAlone(b, config.firstPageAlone);
+  Duc.DocumentGridConfig.addScale(b, config.scale);
   return Duc.DocumentGridConfig.endDocumentGridConfig(b);
 }
 

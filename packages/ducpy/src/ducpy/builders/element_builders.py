@@ -322,7 +322,7 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         )
         # Create leader style
         from ducpy.builders.style_builders import (create_simple_styles,
-                                                   create_text_style)
+                                                    create_text_style)
         leader_style = element_params.get('style')
         if leader_style is None:
             text_style = create_text_style()
@@ -341,12 +341,13 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
             content_anchor=content_anchor,
             content=element_params.get('content')
         )
+
     elif element_class == DucDocElement:
         # Create doc style
         from ducpy.builders.style_builders import (create_paragraph_formatting,
-                                                   create_simple_styles,
-                                                   create_stack_format,
-                                                   create_text_style)
+                                                        create_simple_styles,
+                                                        create_stack_format,
+                                                        create_text_style)
         doc_style = element_params.get('style')
         if doc_style is None:
             text_style = create_text_style()
@@ -361,7 +362,7 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         columns_layout = element_params.get('columns')
         if columns_layout is None:
             from ducpy.builders.style_builders import (create_column_layout,
-                                                       create_text_column)
+                                                           create_text_column)
             text_column = create_text_column(width=100.0)
             columns_layout = create_column_layout(definitions=[text_column])
         default_grid_config = DocumentGridConfig(
@@ -370,6 +371,7 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
             gap_y=0.0,
             align_items=0,
             first_page_alone=False,
+            scale=1.0,
         )
         specific_element = element_class(
             base=base_element,
@@ -1180,6 +1182,7 @@ class PdfElementBuilder(ElementSpecificBuilder):
             gap_y=0.0,
             align_items=0,
             first_page_alone=False,
+            scale=1.0,
         )
         element_params = {
             "file_id": self.extra.get('file_id'),
