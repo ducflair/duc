@@ -23,7 +23,7 @@ async function initWasm(): Promise<any> {
 
       // The wasm-pack generated module exports a default init function
       // that handles loading the WASM file using import.meta.url
-      // This is the same pattern used by duc_renderer_bin
+      // Standard wasm-pack init pattern
       if (typeof wasmBindings.default === 'function') {
         // Call the init function - it will automatically fetch the WASM file
         // using import.meta.url to resolve the path correctly
