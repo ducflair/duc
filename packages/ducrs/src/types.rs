@@ -600,6 +600,7 @@ pub struct DocumentGridConfig {
     pub gap_y: f64,
     pub align_items: DocumentGridAlignItems,
     pub first_page_alone: bool,
+    pub scale: f64,
 }
 
 /// Vertical alignment for document grid layout

@@ -1957,6 +1957,7 @@ const restoreDocumentGridConfig = (
       gapY: 0,
       alignItems: "start",
       firstPageAlone: false,
+      scale: 1,
     };
   }
 
@@ -1968,6 +1969,7 @@ const restoreDocumentGridConfig = (
       ? gridConfig.alignItems
       : "start",
     firstPageAlone: typeof gridConfig.firstPageAlone === "boolean" ? gridConfig.firstPageAlone : false,
+    scale: typeof gridConfig.scale === "number" ? gridConfig.scale : 1,
   };
 };
 

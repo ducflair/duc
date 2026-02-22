@@ -1236,6 +1236,7 @@ def parse_fbs_document_grid_config(obj: FBSDocumentGridConfig) -> DS_DocumentGri
         gap_y=obj.GapY(),
         align_items=obj.AlignItems(),
         first_page_alone=obj.FirstPageAlone(),
+        scale=obj.Scale(),
     )
 
 def parse_fbs_pdf(obj: FBSDucPdfElement) -> DS_DucPdfElement:
@@ -1249,6 +1250,7 @@ def parse_fbs_pdf(obj: FBSDucPdfElement) -> DS_DucPdfElement:
             gap_y=0.0,
             align_items=0,
             first_page_alone=False,
+            scale=1.0,
         )
     return DS_DucPdfElement(
         base=parse_fbs_duc_element_base(obj.Base()),
@@ -1686,6 +1688,7 @@ def parse_fbs_doc(obj: FBSDucDocElement) -> DS_DucDocElement:
             gap_y=0.0,
             align_items=0,
             first_page_alone=False,
+            scale=1.0,
         )
     return DS_DucDocElement(
         base=parse_fbs_duc_element_base(obj.Base()),
