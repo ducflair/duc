@@ -692,6 +692,7 @@ fn parse_duc_pdf_element(el: fb::DucPdfElement) -> ParseResult<types::DucPdfElem
                 gap_y: gc.gap_y(),
                 align_items: gc.align_items().map(|a| a.into()).unwrap_or(types::DocumentGridAlignItems::Start),
                 first_page_alone: gc.first_page_alone(),
+                scale: gc.scale(),
             },
             None => types::DocumentGridConfig {
                 columns: 1,
@@ -699,6 +700,7 @@ fn parse_duc_pdf_element(el: fb::DucPdfElement) -> ParseResult<types::DucPdfElem
                 gap_y: 0.0,
                 align_items: types::DocumentGridAlignItems::Start,
                 first_page_alone: false,
+                scale: 1.0,
             },
         },
     })
@@ -1197,6 +1199,7 @@ fn parse_duc_doc_element(el: fb::DucDocElement) -> ParseResult<types::DucDocElem
                 gap_y: gc.gap_y(),
                 align_items: gc.align_items().map(|a| a.into()).unwrap_or(types::DocumentGridAlignItems::Start),
                 first_page_alone: gc.first_page_alone(),
+                scale: gc.scale(),
             },
             None => types::DocumentGridConfig {
                 columns: 1,
@@ -1204,6 +1207,7 @@ fn parse_duc_doc_element(el: fb::DucDocElement) -> ParseResult<types::DucDocElem
                 gap_y: 0.0,
                 align_items: types::DocumentGridAlignItems::Start,
                 first_page_alone: false,
+                scale: 1.0,
             },
         },
     })
