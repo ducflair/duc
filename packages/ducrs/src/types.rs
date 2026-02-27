@@ -1,20 +1,855 @@
-use crate::generated::duc::{
-    ANGULAR_UNITS_FORMAT, AXIS, BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION,
-    COLUMN_TYPE, DATUM_BRACKET_STYLE, DECIMAL_SEPARATOR, DIMENSION_FIT_RULE,
-    DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, DIMENSION_UNITS_FORMAT, DOCUMENT_GRID_ALIGN_ITEMS,
-    ELEMENT_CONTENT_PREFERENCE,
-    FEATURE_MODIFIER, GDT_SYMBOL, GRID_DISPLAY_TYPE, GRID_TYPE, HATCH_STYLE, IMAGE_STATUS,
-    LEADER_CONTENT_TYPE, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION,
-    OBJECT_SNAP_MODE, PARAMETRIC_SOURCE_TYPE, PRUNING_LEVEL, SNAP_MARKER_SHAPE, SNAP_MODE,
-    SNAP_OVERRIDE_BEHAVIOR, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT,
-    STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION,
-    TEXT_ALIGN, TEXT_FIELD_SOURCE_PROPERTY, TEXT_FIELD_SOURCE_TYPE, TEXT_FLOW_DIRECTION,
-    TOLERANCE_DISPLAY, TOLERANCE_ZONE_TYPE, UNIT_SYSTEM, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT,
-};
+/**
+ * Aligns text vertically within its bounding box.
+ */
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum VERTICAL_ALIGN {
+    /** Aligns text to the top of its bounding box. */
+    TOP = 10,
+    /** Aligns text to the middle of its bounding box. */
+    MIDDLE = 11,
+    /** Aligns text to the bottom of its bounding box. */
+    BOTTOM = 12,
+}
 
-// =============== ENUMS (Custom for Rust convenience) ===============
+/**
+ * Aligns text horizontally within its bounding box.
+ */
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum TEXT_ALIGN {
+    /** Aligns text to the left of its bounding box. */
+    LEFT = 10,
+    /** Centers text horizontally within its bounding box. */
+    CENTER = 11,
+    /** Aligns text to the right of its bounding box. */
+    RIGHT = 12,
+}
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+/**
+ * Determines how line spacing is interpreted.
+ */
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum LINE_SPACING_TYPE {
+    /**
+     * The line spacing is the larger of the `value` or the tallest character's natural height.
+     * This ensures text doesn't overlap but respects a minimum spacing.
+     */
+    AT_LEAST = 10,
+    /**
+     * Forces the line spacing to the specified `value`, even if characters
+     * (especially tall ones like ascenders/descenders or special symbols) overlap.
+     * Useful for precise layout control where overlapping might be acceptable or handled externally.
+     */
+    EXACTLY = 11,
+    /**
+     * The base line height (often derived from the font's intrinsic metrics and font size)
+     * is multiplied by the `value` (e.g., a `value` of 1.5 would mean 150% of the base line height).
+     * This is very common for relative spacing.
+     */
+    MULTIPLE = 12,
+}
+
+/**
+ * Placement of stroke relative to the element boundary.
+ */
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum STROKE_PLACEMENT {
+    /** Places the stroke inside the element's boundary. */
+    INSIDE = 10,
+    /** Centers the stroke on the element's boundary. */
+    CENTER = 11,
+    /** Places the stroke outside the element's boundary. */
+    OUTSIDE = 12,
+}
+
+/**
+ * Preferred stroke rendering style.
+ */
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum STROKE_PREFERENCE {
+    /** Renders the stroke as a continuous solid line. */
+    SOLID = 10,
+    /** Renders the stroke as a series of dashes. */
+    DASHED = 11,
+    /** Renders the stroke as a series of dots. */
+    DOTTED = 12,
+    /** Renders the stroke using a custom pattern. */
+    CUSTOM = 13,
+}
+
+/**
+ * Applies stroke to specific sides of an element.
+ */
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum STROKE_SIDE_PREFERENCE {
+    /** Applies the stroke to the top side. */
+    TOP = 10,
+    /** Applies the stroke to the bottom side. */
+    BOTTOM = 11,
+    /** Applies the stroke to the left side. */
+    LEFT = 12,
+    /** Applies the stroke to the right side. */
+    RIGHT = 13,
+    /** Applies the stroke to custom-defined sides. */
+    CUSTOM = 14,
+    /** Applies the stroke to all sides. */
+    ALL = 15,
+}
+
+/**
+ * Shape used at the end of stroked segments.
+ */
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum STROKE_CAP {
+    /** A butt cap cuts off the line at the endpoint. */
+    BUTT = 10,
+    /** A round cap adds a rounded end to the line. */
+    ROUND = 11,
+    /** A square cap adds a square end to the line. */
+    SQUARE = 12,
+}
+
+/**
+ * Join style for adjacent stroked segments.
+ */
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum STROKE_JOIN {
+    /** A miter join creates a sharp corner. */
+    MITER = 10,
+    /** A round join creates a rounded corner. */
+    ROUND = 11,
+    /** A bevel join creates a flattened corner. */
+    BEVEL = 12,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum LINE_HEAD {
+    /** An arrow-shaped line end. */
+    ARROW = 10,
+    /** A bar-shaped line end. */
+    BAR = 11,
+    /** A circular line end. */
+    CIRCLE = 12,
+    /** An outlined circular line end. */
+    CIRCLE_OUTLINED = 13,
+    /** A triangle-shaped line end. */
+    TRIANGLE = 14,
+    /** An outlined triangle-shaped line end. */
+    TRIANGLE_OUTLINED = 15,
+    /** A diamond-shaped line end. */
+    DIAMOND = 16,
+    /** An outlined diamond-shaped line end. */
+    DIAMOND_OUTLINED = 17,
+    /** A cross-shaped line end. */
+    CROSS = 18,
+    /** An open arrow-shaped line end. */
+    OPEN_ARROW = 19,
+    /** A reversed arrow-shaped line end. */
+    REVERSED_ARROW = 20,
+    /** A reversed triangle-shaped line end. */
+    REVERSED_TRIANGLE = 21,
+    /** A reversed outlined triangle-shaped line end. */
+    REVERSED_TRIANGLE_OUTLINED = 22,
+    /** A cone-shaped line end. */
+    CONE = 23,
+    /** A half-cone shaped line end. */
+    HALF_CONE = 24,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum BEZIER_MIRRORING {
+    /** No mirroring of Bezier handles. */
+    NONE = 10,
+    /** Bezier handles mirror their angle. */
+    ANGLE = 11,
+    /** Bezier handles mirror both their angle and length. */
+    ANGLE_LENGTH = 12,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum BLENDING {
+    /** Multiplies the colors of overlapping elements. */
+    MULTIPLY = 11,
+    /** Screens the colors of overlapping elements. */
+    SCREEN = 12,
+    /** Overlays the colors of overlapping elements. */
+    OVERLAY = 13,
+    /** Darkens the colors of overlapping elements. */
+    DARKEN = 14,
+    /** Lightens the colors of overlapping elements. */
+    LIGHTEN = 15,
+    /** Calculates the difference between the colors of overlapping elements. */
+    DIFFERENCE = 16,
+    /** Calculates the exclusion of the colors of overlapping elements. */
+    EXCLUSION = 17,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum ELEMENT_CONTENT_PREFERENCE {
+    /** Fills the element with a solid color. */
+    SOLID = 12,
+    /** Fills the element with a solid color or gradient (similar to FILL). */
+    FILL = 14,
+    /** Scales the content to fit within the element's bounds, maintaining aspect ratio. */
+    FIT = 15,
+    /** Tiles the content within the element's bounds. */
+    TILE = 16,
+    /** Stretches the content to fill the element's bounds, potentially distorting aspect ratio. */
+    STRETCH = 17,
+    /** Fills the element with a hatch pattern. */
+    HATCH = 18,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum HATCH_STYLE {
+    /** Normal hatch, fills closed boundaries. */
+    NORMAL = 10,
+    /** Outermost boundary only, ignores internal islands. */
+    OUTER = 11,
+    /** Ignores internal structures when hatching. */
+    IGNORE = 12,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum IMAGE_STATUS {
+    /** Image is pending upload/saving. */
+    PENDING = 10,
+    /** Image is saved and available. */
+    SAVED = 11,
+    /** An error occurred with the image. */
+    ERROR = 12,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum PRUNING_LEVEL {
+    /** Conservative pruning, retains more history. */
+    CONSERVATIVE = 10,
+    /** Balanced pruning, optimizes between history and size. */
+    BALANCED = 20,
+    /** Aggressive pruning, retains less history for smaller size. */
+    AGGRESSIVE = 30,
+}
+
+/**
+ * Defines the types of boolean operations that can be performed.
+ */
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[repr(i32)]
+pub enum BOOLEAN_OPERATION {
+    /** Combines all child shapes into a single shape. */
+    UNION = 10,
+    /** Subtracts all subsequent shapes from the first shape. Order is critical. */
+    SUBTRACT = 11,
+    /** Creates a shape from the overlapping areas of all child shapes. */
+    INTERSECT = 12,
+    /** Creates a shape from the non-overlapping areas (XOR). */
+    EXCLUDE = 13,
+}
+
+// =============== UTILITY & GEOMETRY TYPES ===============
+
+/** A generic key-value pair for string dictionaries. */
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DictionaryEntry {
+    pub key: String,
+    pub value: String,
+}
+
+/** A generic key-value pair for more complex structures like DucBlock attribute values. */
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StringValueEntry {
+    pub key: String,
+    pub value: String,
+}
+
+/** A high-precision 2D point in the World Coordinate System. */
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GeometricPoint {
+    pub x: f64,
+    pub y: f64,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucPoint {
+    pub x: f64,
+    pub y: f64,
+    /** Only meaningful if the point is referenced in exactly two lines */
+    pub mirroring: Option<BEZIER_MIRRORING>,
+}
+
+/** Represents margins for layouts and cells. */
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Margins {
+    pub top: f64,
+    pub right: f64,
+    pub bottom: f64,
+    pub left: f64,
+}
+
+// =============== 3D VIEWER STATE ===============
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Viewer3DClipPlane {
+    pub enabled: bool,
+    pub value: f64,
+    pub normal: Option<[f64; 3]>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Viewer3DMaterial {
+    pub metalness: f32,
+    pub roughness: f32,
+    pub default_opacity: f32,
+    /** Packed RGB color (e.g. 0xFFFFFF) */
+    pub edge_color: u32,
+    pub ambient_intensity: f32,
+    pub direct_intensity: f32,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Viewer3DZebra {
+    pub active: bool,
+    pub stripe_count: i32,
+    pub stripe_direction: f64,
+    /** Available: "blackwhite" | "colorful" | "grayscale" */
+    pub color_scheme: String,
+    pub opacity: f32,
+    /** Available: "reflection" | "normal" */
+    pub mapping_mode: String,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Viewer3DCamera {
+    /** Available: "orbit" | "trackball" */
+    pub control: String,
+    pub ortho: bool,
+    /** Available: "Z" | "Y" */
+    pub up: String,
+    pub position: [f64; 3],
+    /** Camera rotation as quaternion [x, y, z, w] — avoids gimbal lock, better for interpolation */
+    pub quaternion: [f64; 4],
+    /** The point the camera orbits around / looks at */
+    pub target: [f64; 3],
+    pub zoom: f64,
+    pub pan_speed: f32,
+    pub rotate_speed: f32,
+    pub zoom_speed: f32,
+    pub holroyd: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Viewer3DGridPlanes {
+    pub xy: bool,
+    pub xz: bool,
+    pub yz: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type", content = "value", rename_all = "camelCase")]
+pub enum Viewer3DGrid {
+    /** All planes share the same visibility flag */
+    Uniform(bool),
+    /** Per-plane visibility control */
+    PerPlane(Viewer3DGridPlanes),
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Viewer3DDisplay {
+    pub wireframe: bool,
+    pub transparent: bool,
+    pub black_edges: bool,
+    pub grid: Viewer3DGrid,
+    /** Whether to show the XYZ axes indicator */
+    pub axes_visible: bool,
+    /** If true, axes are positioned at world origin (0,0,0); if false, at object center */
+    pub axes_at_origin: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Viewer3DClipping {
+    pub x: Viewer3DClipPlane,
+    pub y: Viewer3DClipPlane,
+    pub z: Viewer3DClipPlane,
+    pub intersection: bool,
+    pub show_planes: bool,
+    pub object_color_caps: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Viewer3DExplode {
+    pub active: bool,
+    pub value: f64,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Viewer3DState {
+    pub camera: Viewer3DCamera,
+    pub display: Viewer3DDisplay,
+    pub material: Viewer3DMaterial,
+    pub clipping: Viewer3DClipping,
+    pub explode: Viewer3DExplode,
+    pub zebra: Viewer3DZebra,
+}
+
+// =============== STYLING & CONTENT ===============
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TilingProperties {
+    pub size_in_percent: f32,
+    pub angle: f64,
+    pub spacing: Option<f64>,
+    pub offset_x: Option<f64>,
+    pub offset_y: Option<f64>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HatchPatternLine {
+    /** Line angle in radians */
+    pub angle: f64,
+    /** Line origin point */
+    pub origin: DucPoint,
+    /** Offset between parallel lines [x, y] */
+    pub offset: Vec<f64>,
+    /** Dash pattern (empty array = solid line) */
+    pub dash_pattern: Vec<f64>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomHatchPattern {
+    /** Pattern name */
+    pub name: String,
+    /** Pattern description */
+    pub description: Option<String>,
+    /** Pattern line definitions */
+    pub lines: Vec<HatchPatternLine>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucHatchStyle {
+    /** Default hatch style */
+    pub hatch_style: HATCH_STYLE,
+    /** Pattern name (for predefined) or reference to custom pattern */
+    pub pattern_name: String,
+    /** Pattern scale factor */
+    pub pattern_scale: f32,
+    /** Pattern rotation angle */
+    pub pattern_angle: f64,
+    /** Pattern origin point */
+    pub pattern_origin: DucPoint,
+    /** Double pattern (second pattern at 90 degrees) */
+    pub pattern_double: bool,
+    pub custom_pattern: Option<CustomHatchPattern>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucImageFilter {
+    pub brightness: f32,
+    pub contrast: f32,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ElementContentBase {
+    pub preference: Option<ELEMENT_CONTENT_PREFERENCE>,
+    /** Can be a color, gradient, image, DucBlock, (fileId or url), frame element's content `@el/${elementId}` */
+    pub src: String,
+    pub visible: bool,
+    pub opacity: f64,
+    pub tiling: Option<TilingProperties>,
+    pub hatch: Option<DucHatchStyle>,
+    pub image_filter: Option<DucImageFilter>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StrokeStyle {
+    pub preference: Option<STROKE_PREFERENCE>,
+    pub cap: Option<STROKE_CAP>,
+    pub join: Option<STROKE_JOIN>,
+    pub dash: Option<Vec<f64>>,
+    /** Override the dash line into a custom shape (DucBlockInstance id) */
+    pub dash_line_override: Option<String>,
+    pub dash_cap: Option<STROKE_CAP>,
+    pub miter_limit: Option<f64>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StrokeSides {
+    pub preference: Option<STROKE_SIDE_PREFERENCE>,
+    /** [0, 1] for x and y || [0, 1, 2, 3] for top, bottom, left, right */
+    pub values: Option<Vec<f64>>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ElementStroke {
+    pub content: ElementContentBase,
+    pub width: f64,
+    pub style: StrokeStyle,
+    pub placement: Option<STROKE_PLACEMENT>,
+    pub stroke_sides: Option<StrokeSides>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ElementBackground {
+    pub content: ElementContentBase,
+}
+
+/** Base style properties shared by many elements. */
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucElementStylesBase {
+    pub roundness: f64,
+    pub blending: Option<BLENDING>,
+    pub background: Vec<ElementBackground>,
+    pub stroke: Vec<ElementStroke>,
+    pub opacity: f64,
+}
+
+// =============== BASE ELEMENT & COMMON ELEMENT COMPONENTS ===============
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BoundElement {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub element_type: String,
+}
+
+/** The foundational table for all scene elements, containing common properties. */
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucElementBase {
+    pub id: String,
+    #[serde(flatten)]
+    pub styles: DucElementStylesBase,
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+    pub angle: f64,
+    /**
+     * The scope where the element is currently.
+     * mm, cm, m, in, ft, yd, mi, etc...
+     */
+    pub scope: String,
+    pub label: String,
+    pub description: Option<String>,
+    pub is_visible: bool,
+    /**
+     * Random integer used to seed shape generation.
+     * Doesn't differ across renders.
+     */
+    pub seed: i32,
+    /**
+     * Integer that is sequentially incremented on each change. Used to reconcile
+     * elements during collaboration or when saving to server.
+     */
+    pub version: i32,
+    /**
+     * Random integer that is regenerated on each change.
+     * Used for deterministic reconciliation of updates during collaboration,
+     * in case the versions (see above) are identical.
+     */
+    pub version_nonce: i32,
+    /** Epoch timestamp (ms) of last element update */
+    pub updated: i64,
+    /**
+     * String in a fractional form defined by https://github.com/rocicorp/fractional-indexing.
+     * Used for ordering in multiplayer scenarios, such as during reconciliation or undo / redo.
+     * Could be null for new elements which were not yet assigned to the scene.
+     */
+    pub index: Option<String>,
+    /** Whether the element is a plot (i.e. visible on plotting) */
+    pub is_plot: bool,
+    /** Whether the element is deleted */
+    pub is_deleted: bool,
+    /**
+     * List of groups the element belongs to.
+     * Ordered from deepest to shallowest.
+     */
+    pub group_ids: Vec<String>,
+    /**
+     * List of blocks this element helps *define*.
+     * If this is populated, `instance_id` should be null.
+     */
+    pub block_ids: Vec<String>,
+    /**
+     * List of regions the element belongs to.
+     * Used to define boolean operations between elements.
+     * Ordered from deepest to shallowest.
+     */
+    pub region_ids: Vec<String>,
+    /**
+     * The ID of the `DucBlockInstance` this element belongs to.
+     * If not null, `block_ids` is empty (the relationship to the Block is via the Instance).
+     */
+    pub instance_id: Option<String>,
+    /** The layer the element belongs to */
+    pub layer_id: Option<String>,
+    /** The frame or plot the element belongs to */
+    pub frame_id: Option<String>,
+    /**
+     * Other elements that are bound to this element.
+     * If we mutate this element, the bound elements will be updated automatically
+     * for transform properties like x, y, angle, etc.
+     */
+    pub bound_elements: Option<Vec<BoundElement>>,
+    /**
+     * z-index of the element in the scene.
+     * Explicit stacking order, higher values are rendered on top.
+     */
+    pub z_index: f32,
+    pub link: Option<String>,
+    pub locked: bool,
+    /** Contains a JSON of custom key-value data. */
+    pub custom_data: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucHead {
+    #[serde(rename = "type")]
+    pub head_type: Option<LINE_HEAD>,
+    /** If the head is a block, this is the id of the block */
+    pub block_id: Option<String>,
+    pub size: f64,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PointBindingPoint {
+    /** The index of the target point within the element. */
+    pub index: i32,
+    /**
+     * The offset from the point. Ranges from -1 to 1: 0 corresponds to the actual point.
+     * -1 and 1 represent the percentage of the distance between the point at `index`
+     * and the previous or next point in the points array, respectively.
+     */
+    pub offset: f64,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucPointBinding {
+    pub element_id: String,
+    /**
+     * Determines where along the edge of the bound element the arrow endpoint should attach.
+     * This value ranges from -1 to 1: -1 → Attaches to the far left/top; 0 → Attaches to the center; 1 → Attaches to the far right/bottom.
+     * Focus ensures that the arrow dynamically adjusts as the bound element moves, resizes, or rotates.
+     */
+    pub focus: f32,
+    /** The gap distance between the bound element and the binding element. */
+    pub gap: f64,
+    /**
+     * Represents a fixed point inside the bound element, defined as a normalized coordinate.
+     * This value is an array [x, y], where: x (0.0 - 1.0) → Horizontal position; y (0.0 - 1.0) → Vertical position.
+     * If null, focus is used. If set, it overrides focus.
+     */
+    pub fixed_point: Option<GeometricPoint>,
+    pub point: Option<PointBindingPoint>,
+    /** The head of the line. */
+    pub head: Option<DucHead>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucLineReference {
+    /** Index of the point in the points array */
+    pub index: i32,
+    /** Bezier handle of the point on the line segment */
+    pub handle: Option<GeometricPoint>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucLine {
+    pub start: DucLineReference,
+    pub end: DucLineReference,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucPath {
+    pub line_indices: Vec<i32>,
+    /** Override the background and stroke from the base if different than null */
+    pub background: Option<ElementBackground>,
+    /** Override the background and stroke from the base if different than null */
+    pub stroke: Option<ElementStroke>,
+}
+
+/** The base for linear elements like lines and arrows. */
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucLinearElementBase {
+    #[serde(flatten)]
+    pub base: DucElementBase,
+    pub points: Vec<DucPoint>,
+    pub lines: Vec<DucLine>,
+    pub path_overrides: Vec<DucPath>,
+    pub last_committed_point: Option<DucPoint>,
+    pub start_binding: Option<DucPointBinding>,
+    pub end_binding: Option<DucPointBinding>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucStackLikeStyles {
+    pub opacity: f64,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucStackBase {
+    pub label: String,
+    pub description: Option<String>,
+    pub is_collapsed: bool,
+    pub is_plot: bool,
+    pub is_visible: bool,
+    pub locked: bool,
+    #[serde(flatten)]
+    pub styles: DucStackLikeStyles,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucStackElementBase {
+    #[serde(flatten)]
+    pub base: DucElementBase,
+    pub stack_base: DucStackBase,
+    pub clip: bool,
+    pub label_visible: bool,
+}
+
+// =============== ELEMENT-SPECIFIC STYLES ===============
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LineSpacing {
+    /**
+     * The numerical value for the line spacing. Its interpretation depends on the `type` property.
+     * Can also be interpreted as ScaleFactor.
+     */
+    pub value: f64,
+    /**
+     * Determines how the line spacing factor is applied.
+     */
+    #[serde(rename = "type")]
+    pub line_type: Option<LINE_SPACING_TYPE>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucTextStyle {
+    /**
+     * Whether the text is left-to-right or right-to-left.
+     */
+    pub is_ltr: bool,
+    /** The primary font family to use for the text, in CSS font-family format */
+    pub font_family: String,
+    /**
+     * Fallback font family, in CSS font-family format, for broader compatibility across all systems and languages.
+     * Useful for emojis, non-latin characters, etc.
+     */
+    pub big_font_family: String,
+    /** Horizontal alignment of the text within its bounding box */
+    pub text_align: TEXT_ALIGN,
+    /** Vertical alignment of the text within its bounding box */
+    pub vertical_align: VERTICAL_ALIGN,
+    /**
+     * Unitless line height multiplier (follows W3C standard).
+     * Actual line height in drawing units = fontSize x lineHeight.
+     */
+    pub line_height: f32,
+    /** Defines the line spacing properties for text. */
+    pub line_spacing: LineSpacing,
+    /**
+     * Italic angle in radians for oblique text rendering.
+     * Positive values slant right, negative values slant left.
+     */
+    pub oblique_angle: f64,
+    /**
+     * Text height in drawing units (primary size parameter).
+     * This determines the height of capital letters.
+     */
+    pub font_size: f64,
+    /**
+     * Character width as a ratio of text height.
+     * Controls horizontal spacing and character proportions.
+     */
+    pub width_factor: f32,
+    pub is_upside_down: bool,
+    /** Render backwards/mirrored */
+    pub is_backwards: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucTableStyle {}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucDocStyle {}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucPlotStyle {}
+
+// =============== ELEMENT DEFINITIONS ===============
+
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum ElementType {
     Rectangle,
     Ellipse,
@@ -27,17 +862,10 @@ pub enum ElementType {
     Image,
     Frame,
     Plot,
-    Viewport,
-    XRay,
-    Leader,
-    Dimension,
-    FeatureControlFrame,
     Doc,
-    Parametric,
     Model,
     Embeddable,
     Pdf,
-    Mermaid,
 }
 
 impl ElementType {
@@ -54,23 +882,17 @@ impl ElementType {
             ElementType::Image => "image",
             ElementType::Frame => "frame",
             ElementType::Plot => "plot",
-            ElementType::Viewport => "viewport",
-            ElementType::XRay => "xray",
-            ElementType::Leader => "leader",
-            ElementType::Dimension => "dimension",
-            ElementType::FeatureControlFrame => "featurecontrolframe",
             ElementType::Doc => "doc",
-            ElementType::Parametric => "parametric",
             ElementType::Model => "model",
             ElementType::Embeddable => "embeddable",
             ElementType::Pdf => "pdf",
-            ElementType::Mermaid => "mermaid",
         }
     }
 }
 
 // Element variant enum that wraps all element types
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum DucElementVariant {
     Rectangle(DucRectangleElement),
     Ellipse(DucEllipseElement),
@@ -83,17 +905,10 @@ pub enum DucElementVariant {
     FreeDraw(DucFreeDrawElement),
     Table(DucTableElement),
     Plot(DucPlotElement),
-    Viewport(DucViewportElement),
-    XRay(DucXRayElement),
-    Leader(DucLeaderElement),
-    Dimension(DucDimensionElement),
-    FeatureControlFrame(DucFeatureControlFrameElement),
     Doc(DucDocElement),
-    Parametric(DucParametricElement),
     Model(DucModelElement),
     Embeddable(DucEmbeddableElement),
     Pdf(DucPdfElement),
-    Mermaid(DucMermaidElement),
 }
 
 impl DucElementVariant {
@@ -110,476 +925,76 @@ impl DucElementVariant {
             DucElementVariant::FreeDraw(elem) => &elem.base,
             DucElementVariant::Table(elem) => &elem.base,
             DucElementVariant::Plot(elem) => &elem.stack_element_base.base,
-            DucElementVariant::Viewport(elem) => &elem.linear_base.base,
-            DucElementVariant::XRay(elem) => &elem.base,
-            DucElementVariant::Leader(elem) => &elem.linear_base.base,
-            DucElementVariant::Dimension(elem) => &elem.base,
-            DucElementVariant::FeatureControlFrame(elem) => &elem.base,
             DucElementVariant::Doc(elem) => &elem.base,
-            DucElementVariant::Parametric(elem) => &elem.base,
             DucElementVariant::Model(elem) => &elem.base,
             DucElementVariant::Embeddable(elem) => &elem.base,
             DucElementVariant::Pdf(elem) => &elem.base,
-            DucElementVariant::Mermaid(elem) => &elem.base,
         }
     }
 }
 
-// =============== UTILITY & GEOMETRY TYPES ===============
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DictionaryEntry {
-    pub key: String,
-    pub value: String,
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type")]
+pub enum DucElementEnum {
+    #[serde(rename = "rectangle")]
+    DucRectangleElement(DucRectangleElement),
+    #[serde(rename = "polygon")]
+    DucPolygonElement(DucPolygonElement),
+    #[serde(rename = "ellipse")]
+    DucEllipseElement(DucEllipseElement),
+    #[serde(rename = "embeddable")]
+    DucEmbeddableElement(DucEmbeddableElement),
+    #[serde(rename = "pdf")]
+    DucPdfElement(DucPdfElement),
+    #[serde(rename = "table")]
+    DucTableElement(DucTableElement),
+    #[serde(rename = "image")]
+    DucImageElement(DucImageElement),
+    #[serde(rename = "text")]
+    DucTextElement(DucTextElement),
+    #[serde(rename = "line")]
+    DucLinearElement(DucLinearElement),
+    #[serde(rename = "arrow")]
+    DucArrowElement(DucArrowElement),
+    #[serde(rename = "freedraw")]
+    DucFreeDrawElement(DucFreeDrawElement),
+    #[serde(rename = "frame")]
+    DucFrameElement(DucFrameElement),
+    #[serde(rename = "plot")]
+    DucPlotElement(DucPlotElement),
+    #[serde(rename = "doc")]
+    DucDocElement(DucDocElement),
+    #[serde(rename = "model")]
+    DucModelElement(DucModelElement),
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct StringValueEntry {
-    pub key: String,
-    pub value: String,
+/** A wrapper to hold an element from the union. */
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(transparent)]
+pub struct ElementWrapper {
+    pub element: DucElementEnum,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Identifier {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct GeometricPoint {
-    pub x: f64,
-    pub y: f64,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucUcs {
-    pub origin: GeometricPoint,
-    pub angle: f64,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucPoint {
-    pub x: f64,
-    pub y: f64,
-    pub mirroring: Option<BEZIER_MIRRORING>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucView {
-    pub scroll_x: f64,
-    pub scroll_y: f64,
-    pub zoom: f64,
-    pub twist_angle: f64,
-    pub center_point: DucPoint,
-    pub scope: String,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Margins {
-    pub top: f64,
-    pub right: f64,
-    pub bottom: f64,
-    pub left: f64,
-}
-
-// =============== STYLING & CONTENT ===============
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct TilingProperties {
-    pub size_in_percent: f32,
-    pub angle: f64,
-    pub spacing: Option<f64>,
-    pub offset_x: Option<f64>,
-    pub offset_y: Option<f64>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct HatchPatternLine {
-    pub angle: f64,
-    pub origin: DucPoint,
-    pub offset: Vec<f64>,
-    pub dash_pattern: Vec<f64>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct CustomHatchPattern {
-    pub name: String,
-    pub description: Option<String>,
-    pub lines: Vec<HatchPatternLine>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucHatchStyle {
-    pub hatch_style: HATCH_STYLE,
-    pub pattern_name: String,
-    pub pattern_scale: f32,
-    pub pattern_angle: f64,
-    pub pattern_origin: DucPoint,
-    pub pattern_double: bool,
-    pub custom_pattern: Option<CustomHatchPattern>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucImageFilter {
-    pub brightness: f32,
-    pub contrast: f32,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct ElementContentBase {
-    pub preference: Option<ELEMENT_CONTENT_PREFERENCE>,
-    pub src: String,
-    pub visible: bool,
-    pub opacity: f64,
-    pub tiling: Option<TilingProperties>,
-    pub hatch: Option<DucHatchStyle>,
-    pub image_filter: Option<DucImageFilter>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct StrokeStyle {
-    pub preference: Option<STROKE_PREFERENCE>,
-    pub cap: Option<STROKE_CAP>,
-    pub join: Option<STROKE_JOIN>,
-    pub dash: Option<Vec<f64>>,
-    pub dash_line_override: Option<String>,
-    pub dash_cap: Option<STROKE_CAP>,
-    pub miter_limit: Option<f64>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct StrokeSides {
-    pub preference: Option<STROKE_SIDE_PREFERENCE>,
-    pub values: Option<Vec<f64>>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct ElementStroke {
-    pub content: ElementContentBase,
-    pub width: f64,
-    pub style: StrokeStyle,
-    pub placement: Option<STROKE_PLACEMENT>,
-    pub stroke_sides: Option<StrokeSides>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct ElementBackground {
-    pub content: ElementContentBase,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucElementStylesBase {
-    pub roundness: f64,
-    pub blending: Option<BLENDING>,
-    pub background: Vec<ElementBackground>,
-    pub stroke: Vec<ElementStroke>,
-    pub opacity: f64,
-}
-
-// =============== BASE ELEMENT & COMMON ELEMENT COMPONENTS ===============
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct BoundElement {
-    pub id: String,
-    pub element_type: String, // Renamed 'type' to 'element_type' to avoid keyword conflict
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucElementBase {
-    pub id: String,
-    pub styles: DucElementStylesBase,
-    pub x: f64,
-    pub y: f64,
-    pub width: f64,
-    pub height: f64,
-    pub angle: f64,
-    pub scope: String,
-    pub label: String,
-    pub description: Option<String>,
-    pub is_visible: bool,
-    pub seed: i32,
-    pub version: i32,
-    pub version_nonce: i32,
-    pub updated: i64,
-    pub index: Option<String>,
-    pub is_plot: bool,
-    pub is_annotative: bool,
-    pub is_deleted: bool,
-    pub group_ids: Vec<String>,
-    pub block_ids: Vec<String>,
-    pub region_ids: Vec<String>,
-    pub instance_id: Option<String>,
-    pub layer_id: Option<String>,
-    pub frame_id: Option<String>,
-    pub bound_elements: Option<Vec<BoundElement>>,
-    pub z_index: f32,
-    pub link: Option<String>,
-    pub locked: bool,
-    pub custom_data: Option<String>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucHead {
-    pub head_type: Option<LINE_HEAD>, // Renamed 'type' to 'head_type' to avoid keyword conflict
-    pub block_id: Option<String>,
-    pub size: f64,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct PointBindingPoint {
-    pub index: i32,
-    pub offset: f64,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucPointBinding {
-    pub element_id: String,
-    pub focus: f32,
-    pub gap: f64,
-    pub fixed_point: Option<GeometricPoint>,
-    pub point: Option<PointBindingPoint>,
-    pub head: Option<DucHead>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucLineReference {
-    pub index: i32,
-    pub handle: Option<GeometricPoint>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucLine {
-    pub start: DucLineReference,
-    pub end: DucLineReference,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucPath {
-    pub line_indices: Vec<i32>,
-    pub background: Option<ElementBackground>,
-    pub stroke: Option<ElementStroke>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucLinearElementBase {
-    pub base: DucElementBase,
-    pub points: Vec<DucPoint>,
-    pub lines: Vec<DucLine>,
-    pub path_overrides: Vec<DucPath>,
-    pub last_committed_point: Option<DucPoint>,
-    pub start_binding: Option<DucPointBinding>,
-    pub end_binding: Option<DucPointBinding>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucStackLikeStyles {
-    pub opacity: f64,
-    pub labeling_color: String,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucStackBase {
-    pub label: String,
-    pub description: Option<String>,
-    pub is_collapsed: bool,
-    pub is_plot: bool,
-    pub is_visible: bool,
-    pub locked: bool,
-    pub styles: DucStackLikeStyles,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucStackElementBase {
-    pub base: DucElementBase,
-    pub stack_base: DucStackBase,
-    pub clip: bool,
-    pub label_visible: bool,
-    pub standard_override: Option<String>,
-}
-
-// =============== ELEMENT-SPECIFIC STYLES ===============
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct LineSpacing {
-    pub value: f64,
-    pub line_type: Option<LINE_SPACING_TYPE>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTextStyle {
-    pub is_ltr: bool,
-    pub font_family: String,
-    pub big_font_family: String,
-    pub text_align: TEXT_ALIGN,
-    pub vertical_align: VERTICAL_ALIGN,
-    pub line_height: f32,
-    pub line_spacing: LineSpacing,
-    pub oblique_angle: f64,
-    pub font_size: f64,
-    pub paper_text_height: Option<f64>,
-    pub width_factor: f32,
-    pub is_upside_down: bool,
-    pub is_backwards: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTableCellStyle {
-    pub base_style: DucElementStylesBase,
-    pub text_style: DucTextStyle,
-    pub margins: Margins,
-    pub alignment: Option<TABLE_CELL_ALIGNMENT>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTableStyle {
-    pub flow_direction: TABLE_FLOW_DIRECTION,
-    pub header_row_style: DucTableCellStyle,
-    pub data_row_style: DucTableCellStyle,
-    pub data_column_style: DucTableCellStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucLeaderStyle {
-    pub heads_override: Option<Vec<DucHead>>,
-    pub dogleg: Option<f64>,
-    pub text_style: DucTextStyle,
-    pub text_attachment: VERTICAL_ALIGN,
-    pub block_attachment: BLOCK_ATTACHMENT,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DimensionToleranceStyle {
-    pub enabled: bool,
-    pub display_method: TOLERANCE_DISPLAY,
-    pub upper_value: f64,
-    pub lower_value: f64,
-    pub precision: i32,
-    pub text_style: Option<DucTextStyle>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DimensionFitStyle {
-    pub rule: DIMENSION_FIT_RULE,
-    pub text_placement: DIMENSION_TEXT_PLACEMENT,
-    pub force_text_inside: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DimensionLineStyle {
-    pub stroke: ElementStroke,
-    pub text_gap: f64,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DimensionExtLineStyle {
-    pub stroke: ElementStroke,
-    pub overshoot: f64,
-    pub offset: f64,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DimensionSymbolStyle {
-    pub heads_override: Option<Vec<DucHead>>,
-    pub center_mark_type: MARK_ELLIPSE_CENTER,
-    pub center_mark_size: f64,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucDimensionStyle {
-    pub dim_line: DimensionLineStyle,
-    pub ext_line: DimensionExtLineStyle,
-    pub text_style: DucTextStyle,
-    pub symbols: DimensionSymbolStyle,
-    pub tolerance: DimensionToleranceStyle,
-    pub fit: DimensionFitStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct FCFLayoutStyle {
-    pub padding: f64,
-    pub segment_spacing: f64,
-    pub row_spacing: f64,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct FCFSymbolStyle {
-    pub scale: f32,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct FCFDatumStyle {
-    pub bracket_style: DATUM_BRACKET_STYLE,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucFeatureControlFrameStyle {
-    pub text_style: DucTextStyle,
-    pub layout: FCFLayoutStyle,
-    pub symbols: FCFSymbolStyle,
-    pub datum_style: FCFDatumStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct ParagraphFormatting {
-    pub first_line_indent: f64,
-    pub hanging_indent: f64,
-    pub left_indent: f64,
-    pub right_indent: f64,
-    pub space_before: f64,
-    pub space_after: f64,
-    pub tab_stops: Vec<f64>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct StackFormatProperties {
-    pub upper_scale: f64,
-    pub lower_scale: f64,
-    pub alignment: STACKED_TEXT_ALIGN,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct StackFormat {
-    pub auto_stack: bool,
-    pub stack_chars: Vec<String>,
-    pub properties: StackFormatProperties,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucDocStyle {
-    pub text_style: DucTextStyle,
-    pub paragraph: ParagraphFormatting,
-    pub stack_format: StackFormat,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucViewportStyle {
-    pub scale_indicator_visible: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucPlotStyle {}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucXRayStyle {
-    pub color: String,
-}
-
-// =============== ELEMENT DEFINITIONS ===============
-
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucRectangleElement {
+    #[serde(flatten)]
     pub base: DucElementBase,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucPolygonElement {
+    #[serde(flatten)]
     pub base: DucElementBase,
+    /** Number of sides of the polygon */
     pub sides: i32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucEllipseElement {
+    #[serde(flatten)]
     pub base: DucElementBase,
     pub ratio: f32,
     pub start_angle: f64,
@@ -587,134 +1002,63 @@ pub struct DucEllipseElement {
     pub show_aux_crosshair: bool,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucEmbeddableElement {
+    #[serde(flatten)]
     pub base: DucElementBase,
 }
 
-/// Configuration for PDF grid layout
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DocumentGridConfig {
+    /** 1 = single, 2 = two-up, n = grid */
     pub columns: i32,
+    /** Horizontal spacing (px) */
     pub gap_x: f64,
+    /** Vertical spacing (px) */
     pub gap_y: f64,
-    pub align_items: DocumentGridAlignItems,
+    /** Cover page behavior for 2+ columns */
     pub first_page_alone: bool,
+    /**
+     * The scale factor of the element (Drawing Units / Real World Units).
+     * The scale factor is strictly a ratio and is unitless.
+     * Example: 1:300 => 0.00333, 1:1 => 1.0, 5:1 => 5.0
+     */
     pub scale: f64,
 }
 
-/// Vertical alignment for document grid layout
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum DocumentGridAlignItems {
-    Start,
-    Center,
-    End,
-}
-
-impl From<DOCUMENT_GRID_ALIGN_ITEMS> for DocumentGridAlignItems {
-    fn from(value: DOCUMENT_GRID_ALIGN_ITEMS) -> Self {
-        match value {
-            DOCUMENT_GRID_ALIGN_ITEMS::START => DocumentGridAlignItems::Start,
-            DOCUMENT_GRID_ALIGN_ITEMS::CENTER => DocumentGridAlignItems::Center,
-            DOCUMENT_GRID_ALIGN_ITEMS::END => DocumentGridAlignItems::End,
-            _ => DocumentGridAlignItems::Start,
-        }
-    }
-}
-
-impl From<DocumentGridAlignItems> for DOCUMENT_GRID_ALIGN_ITEMS {
-    fn from(value: DocumentGridAlignItems) -> Self {
-        match value {
-            DocumentGridAlignItems::Start => DOCUMENT_GRID_ALIGN_ITEMS::START,
-            DocumentGridAlignItems::Center => DOCUMENT_GRID_ALIGN_ITEMS::CENTER,
-            DocumentGridAlignItems::End => DOCUMENT_GRID_ALIGN_ITEMS::END,
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucPdfElement {
+    #[serde(flatten)]
     pub base: DucElementBase,
     pub file_id: Option<String>,
     pub grid_config: DocumentGridConfig,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucMermaidElement {
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucDocElement {
+    #[serde(flatten)]
     pub base: DucElementBase,
-    pub source: String,
-    pub theme: Option<String>,
-    pub svg_path: Option<String>,
+    pub style: DucDocStyle,
+    pub text: String,
+    pub grid_config: DocumentGridConfig,
+    pub file_id: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTableColumn {
-    pub id: String,
-    pub width: f64,
-    pub style_overrides: Option<DucTableCellStyle>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTableRow {
-    pub id: String,
-    pub height: f64,
-    pub style_overrides: Option<DucTableCellStyle>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTableCellSpan {
-    pub columns: i32,
-    pub rows: i32,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTableCell {
-    pub row_id: String,
-    pub column_id: String,
-    pub data: String,
-    pub span: Option<DucTableCellSpan>,
-    pub locked: bool,
-    pub style_overrides: Option<DucTableCellStyle>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTableAutoSize {
-    pub columns: bool,
-    pub rows: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTableColumnEntry {
-    pub key: String,
-    pub value: DucTableColumn,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTableRowEntry {
-    pub key: String,
-    pub value: DucTableRow,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTableCellEntry {
-    pub key: String,
-    pub value: DucTableCell,
-}
-
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucTableElement {
+    #[serde(flatten)]
     pub base: DucElementBase,
     pub style: DucTableStyle,
-    pub column_order: Vec<String>,
-    pub row_order: Vec<String>,
-    pub columns: Vec<DucTableColumnEntry>,
-    pub rows: Vec<DucTableRowEntry>,
-    pub cells: Vec<DucTableCellEntry>,
-    pub header_row_count: i32,
-    pub auto_size: DucTableAutoSize,
+    pub file_id: Option<String>, // Source of truth is the linked xlsx file
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ImageCrop {
     pub x: f64,
     pub y: f64,
@@ -724,360 +1068,136 @@ pub struct ImageCrop {
     pub natural_height: f64,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucImageElement {
+    #[serde(flatten)]
     pub base: DucElementBase,
     pub file_id: Option<String>,
     pub status: IMAGE_STATUS,
+    /** X and Y scale factors, used for image axis flipping */
+    #[serde(rename = "scaleFlip")]
     pub scale: Vec<f64>,
     pub crop: Option<ImageCrop>,
     pub filter: Option<DucImageFilter>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTextDynamicElementSource {
-    pub element_id: String,
-    pub property: Option<TEXT_FIELD_SOURCE_PROPERTY>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTextDynamicDictionarySource {
-    pub key: String,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum DucTextDynamicSourceData {
-    DucTextDynamicElementSource(DucTextDynamicElementSource),
-    DucTextDynamicDictionarySource(DucTextDynamicDictionarySource),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTextDynamicSource {
-    pub text_source_type: Option<TEXT_FIELD_SOURCE_TYPE>,
-    pub source: DucTextDynamicSourceData,
-    pub formatting: Option<PrimaryUnits>,
-    pub cached_value: String,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucTextDynamicPart {
-    pub tag: String,
-    pub source: DucTextDynamicSource,
-    pub formatting: Option<PrimaryUnits>,
-    pub cached_value: String,
-}
-
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucTextElement {
+    #[serde(flatten)]
     pub base: DucElementBase,
     pub style: DucTextStyle,
+    /**
+     * The display text, which can contain zero or more placeholders in the
+     * format `{{tag}}`. Each tag corresponds to an object in the `dynamic` array.
+     */
     pub text: String,
-    pub dynamic: Vec<DucTextDynamicPart>,
+    /**
+     * Text sizing behavior:
+     * - `true`: Width adjusts to fit text content (single line or natural wrapping)
+     * - `false`: Text wraps to fit within the element's fixed width
+     */
     pub auto_resize: bool,
+    /** The ID of an element that this text is contained within (e.g., for labels on shapes) */
     pub container_id: Option<String>,
+    /** A non-rendered, original version of the text, e.g., before finishing writing the text */
     pub original_text: String,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucLinearElement {
+    #[serde(flatten)]
     pub linear_base: DucLinearElementBase,
+    /**
+     * If true, the element's shape will wipe out the content below the element.
+     */
     pub wipeout_below: bool,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucArrowElement {
+    #[serde(flatten)]
     pub linear_base: DucLinearElementBase,
     pub elbowed: bool,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucFreeDrawEnds {
     pub cap: bool,
     pub taper: f32,
     pub easing: String,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucFreeDrawElement {
+    #[serde(flatten)]
     pub base: DucElementBase,
     pub points: Vec<DucPoint>,
     pub size: f64,
     pub thinning: f32,
     pub smoothing: f32,
     pub streamline: f32,
+    /** Key that maps to an easing function */
     pub easing: String,
     pub start: Option<DucFreeDrawEnds>,
     pub end: Option<DucFreeDrawEnds>,
     pub pressures: Vec<f32>,
     pub simulate_pressure: bool,
     pub last_committed_point: Option<DucPoint>,
+    /** Optional cached SVG string */
     pub svg_path: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucFrameElement {
+    #[serde(flatten)]
     pub stack_element_base: DucStackElementBase,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PlotLayout {
+    /** Margins inset from the edge of the paper. */
     pub margins: Margins,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucPlotElement {
+    #[serde(flatten)]
     pub stack_element_base: DucStackElementBase,
     pub style: DucPlotStyle,
+    /** The layout definition for this plot, including paper size and margins. */
     pub layout: PlotLayout,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucViewportElement {
-    pub linear_base: DucLinearElementBase,
-    pub stack_base: DucStackBase,
-    pub style: DucViewportStyle,
-    pub view: DucView,
-    pub scale: f32,
-    pub shade_plot: VIEWPORT_SHADE_PLOT,
-    pub frozen_group_ids: Vec<String>,
-    pub standard_override: Option<String>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucXRayElement {
-    pub base: DucElementBase,
-    pub style: DucXRayStyle,
-    pub origin: GeometricPoint,
-    pub direction: GeometricPoint,
-    pub start_from_origin: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct LeaderTextBlockContent {
-    pub text: String,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct LeaderBlockContent {
-    pub block_id: String,
-    pub attribute_values: Option<Vec<StringValueEntry>>,
-    pub element_overrides: Option<Vec<StringValueEntry>>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum LeaderContentData {
-    LeaderTextBlockContent(LeaderTextBlockContent),
-    LeaderBlockContent(LeaderBlockContent),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct LeaderContent {
-    pub leader_content_type: LEADER_CONTENT_TYPE,
-    pub content: LeaderContentData,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucLeaderElement {
-    pub linear_base: DucLinearElementBase,
-    pub style: DucLeaderStyle,
-    pub content: Option<LeaderContent>,
-    pub content_anchor: GeometricPoint,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DimensionDefinitionPoints {
-    pub origin1: GeometricPoint,
-    pub origin2: Option<GeometricPoint>,
-    pub location: GeometricPoint,
-    pub center: Option<GeometricPoint>,
-    pub jog: Option<GeometricPoint>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DimensionBindings {
-    pub origin1: Option<DucPointBinding>,
-    pub origin2: Option<DucPointBinding>,
-    pub center: Option<DucPointBinding>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DimensionBaselineData {
-    pub base_dimension_id: Option<String>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DimensionContinueData {
-    pub continue_from_dimension_id: Option<String>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucDimensionElement {
-    pub base: DucElementBase,
-    pub style: DucDimensionStyle,
-    pub dimension_type: DIMENSION_TYPE,
-    pub definition_points: DimensionDefinitionPoints,
-    pub oblique_angle: f32,
-    pub ordinate_axis: Option<AXIS>,
-    pub bindings: Option<DimensionBindings>,
-    pub text_override: Option<String>,
-    pub text_position: Option<GeometricPoint>,
-    pub tolerance_override: Option<DimensionToleranceStyle>,
-    pub baseline_data: Option<DimensionBaselineData>,
-    pub continue_data: Option<DimensionContinueData>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DatumReference {
-    pub letters: String,
-    pub modifier: Option<MATERIAL_CONDITION>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct ToleranceClause {
-    pub value: String,
-    pub zone_type: Option<TOLERANCE_ZONE_TYPE>,
-    pub feature_modifiers: Vec<FEATURE_MODIFIER>,
-    pub material_condition: Option<MATERIAL_CONDITION>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct FeatureControlFrameSegment {
-    pub symbol: GDT_SYMBOL,
-    pub tolerance: ToleranceClause,
-    pub datums: Vec<Option<DatumReference>>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct FCFBetweenModifier {
-    pub start: String,
-    pub end: String,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct FCFProjectedZoneModifier {
-    pub value: f64,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct FCFFrameModifiers {
-    pub all_around: bool,
-    pub all_over: bool,
-    pub continuous_feature: bool,
-    pub between: Option<FCFBetweenModifier>,
-    pub projected_tolerance_zone: Option<FCFProjectedZoneModifier>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct FCFDatumDefinition {
-    pub letter: String,
-    pub feature_binding: Option<DucPointBinding>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct FCFSegmentRow {
-    pub segments: Vec<FeatureControlFrameSegment>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucFeatureControlFrameElement {
-    pub base: DucElementBase,
-    pub style: DucFeatureControlFrameStyle,
-    pub rows: Vec<FCFSegmentRow>,
-    pub frame_modifiers: Option<FCFFrameModifiers>,
-    pub leader_element_id: Option<String>,
-    pub datum_definition: Option<FCFDatumDefinition>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct TextColumn {
-    pub width: f64,
-    pub gutter: f64,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct ColumnLayout {
-    pub column_type: COLUMN_TYPE,
-    pub definitions: Vec<TextColumn>,
-    pub auto_height: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucDocElement {
-    pub base: DucElementBase,
-    pub style: DucDocStyle,
-    pub text: String,
-    pub dynamic: Vec<DucTextDynamicPart>,
-    pub flow_direction: TEXT_FLOW_DIRECTION,
-    pub columns: ColumnLayout,
-    pub auto_resize: bool,
-    pub file_id: Option<String>,
-    pub grid_config: DocumentGridConfig,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct ParametricSource {
-    pub source_type: PARAMETRIC_SOURCE_TYPE,
-    pub code: String,
-    pub file_id: Option<String>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucModelElement {
+    #[serde(flatten)]
     pub base: DucElementBase,
-    pub source: String,
+    /* The specific type of 3D model, e.g., "PYTHON", "DXF", "IFC", "STL", "OBJ", "STEP", etc. */
+    pub model_type: Option<String>,
+    /** Defines the source code of the model using build123d python code */
+    pub code: Option<String>,
+    /** The last known SVG path representation of the 3D model for quick rendering on the canvas */
     pub svg_path: Option<String>,
+    /** Possibly connected external files, such as STEP, STL, DXF, etc. */
     pub file_ids: Vec<String>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucParametricElement {
-    pub base: DucElementBase,
-    pub source: ParametricSource,
-}
-
-// =============== ELEMENT UNION & WRAPPER ===============
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum DucElementEnum {
-    DucRectangleElement(DucRectangleElement),
-    DucPolygonElement(DucPolygonElement),
-    DucEllipseElement(DucEllipseElement),
-    DucEmbeddableElement(DucEmbeddableElement),
-    DucPdfElement(DucPdfElement),
-    DucMermaidElement(DucMermaidElement),
-    DucTableElement(DucTableElement),
-    DucImageElement(DucImageElement),
-    DucTextElement(DucTextElement),
-    DucLinearElement(DucLinearElement),
-    DucArrowElement(DucArrowElement),
-    DucFreeDrawElement(DucFreeDrawElement),
-    DucFrameElement(DucFrameElement),
-    DucPlotElement(DucPlotElement),
-    DucViewportElement(DucViewportElement),
-    DucXRayElement(DucXRayElement),
-    DucLeaderElement(DucLeaderElement),
-    DucDimensionElement(DucDimensionElement),
-    DucFeatureControlFrameElement(DucFeatureControlFrameElement),
-    DucDocElement(DucDocElement),
-    DucParametricElement(DucParametricElement),
-    DucModelElement(DucModelElement),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct ElementWrapper {
-    pub element: DucElementEnum,
+    /** The last known 3D viewer state for the model */
+    pub viewer_state: Option<Viewer3DState>,
 }
 
 // =============== BLOCK DEFINITIONS ===============
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucBlockAttributeDefinition {
-    pub tag: String,
-    pub prompt: Option<String>,
-    pub default_value: String,
-    pub is_constant: bool,
-}
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucBlockDuplicationArray {
     pub rows: i32,
     pub cols: i32,
@@ -1085,98 +1205,128 @@ pub struct DucBlockDuplicationArray {
     pub col_spacing: f64,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucBlockAttributeDefinitionEntry {
-    pub key: String,
-    pub value: DucBlockAttributeDefinition,
-}
-
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucBlockMetadata {
     pub source: Option<String>,
     pub usage_count: i32,
+    /** Epoch timestamp (ms) of block creation */
     pub created_at: i64,
+    /** Epoch timestamp (ms) of last block update */
     pub updated_at: i64,
+    /**
+     * JSON string to represent localization data.
+     * Structure: Record<string, BlockLocalizationEntry>
+     *
+     * where key string is BCP 47 standard language tag (e.g., "en-US", "fr-FR")
+     * where BlockLocalizationEntry is:
+     *
+     * {
+     *   title: string;
+     *   description?: string;
+     * }
+     */
     pub localization: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucBlock {
     pub id: String,
     pub label: String,
     pub description: Option<String>,
     pub version: i32,
-    pub attribute_definitions: Vec<DucBlockAttributeDefinitionEntry>,
     pub metadata: Option<DucBlockMetadata>,
+    #[serde(with = "serde_bytes", default, skip_serializing_if = "Option::is_none")]
     pub thumbnail: Option<Vec<u8>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucBlockInstance {
     pub id: String,
+    /** The reference to the DucBlock definition this instance is based on */
     pub block_id: String,
+    /** The version that should match the block_id's version, incremented on each change */
     pub version: i32,
     pub element_overrides: Option<Vec<StringValueEntry>>,
-    pub attribute_values: Option<Vec<StringValueEntry>>,
     pub duplication_array: Option<DucBlockDuplicationArray>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucBlockCollectionEntry {
     pub id: String,
+    /**
+     * True if pointing to another collection, False if pointing to a block.
+     */
     pub is_collection: bool,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucBlockCollection {
     pub id: String,
     pub label: String,
     pub children: Vec<DucBlockCollectionEntry>,
     pub metadata: Option<DucBlockMetadata>,
+    #[serde(with = "serde_bytes", default, skip_serializing_if = "Option::is_none")]
     pub thumbnail: Option<Vec<u8>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucBlockAttribute {
-    pub name: String,
-    pub details: DucBlockAttributeDetails,
+// =============== GROUPS & REGIONS ===============
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucGroup {
+    pub id: String,
+    #[serde(flatten)]
+    pub stack_base: DucStackBase,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucBlockAttributeDetails {
-    pub tag: String,
-    pub default_value: String,
-    pub prompt: String,
-    pub position: GeometricPoint,
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucRegion {
+    pub id: String,
+    #[serde(flatten)]
+    pub stack_base: DucStackBase,
+    /** The boolean operation to apply to all child elements. */
+    pub boolean_operation: BOOLEAN_OPERATION,
 }
 
 // =============== APP & DOCUMENT STATE ===============
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucGlobalState {
+    /** The name of the drawing */
     pub name: Option<String>,
+    /** The background color of the drawing */
     pub view_background_color: String,
+    /** The master unit system for the entire drawing, used for block/file insertion scaling. */
     pub main_scope: String,
-    pub dash_spacing_scale: f32,
-    pub is_dash_spacing_affected_by_viewport_scale: bool,
+    /**
+     * Exponent threshold for determining when to change measurement scope (up or down).
+     * This value defines a +/- tolerance range around the exponent of the current scope.
+     */
     pub scope_exponent_threshold: i8,
-    pub dimensions_associative_by_default: bool,
-    pub use_annotative_scaling: bool,
-    pub display_precision_linear: i32,
-    pub display_precision_angular: i32,
+    /** The level of pruning to the versions from the version graph. */
     pub pruning_level: PRUNING_LEVEL,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucLocalState {
+    /**
+     * The current scope of the design.
+     * mm, cm, m, in, ft, yd, mi, etc...
+     */
     pub scope: String,
-    pub active_standard_id: String,
     pub scroll_x: f64,
     pub scroll_y: f64,
     pub zoom: f64,
-    pub active_grid_settings: Option<Vec<String>>,
-    pub active_snap_settings: Option<String>,
     pub is_binding_enabled: bool,
+    /** Current item is usually a quick access state to apply as default to certain things when drawing */
     pub current_item_stroke: Option<ElementStroke>,
     pub current_item_background: Option<ElementBackground>,
     pub current_item_opacity: f32,
@@ -1186,393 +1336,46 @@ pub struct DucLocalState {
     pub current_item_start_line_head: Option<DucHead>,
     pub current_item_end_line_head: Option<DucHead>,
     pub current_item_roundness: f64,
+    /** Pen mode is enabled, creates a better experience for drawing with a pen */
     pub pen_mode: bool,
+    /** In view mode the user is not allowed to edit the canvas. */
     pub view_mode_enabled: bool,
+    /** Object snapping on the environment is enabled */
     pub objects_snap_mode_enabled: bool,
+    /** Available grids are visible */
     pub grid_mode_enabled: bool,
+    /** Whether to disable the fill on all shapes */
     pub outline_mode_enabled: bool,
+    /**
+     * When enabled, the version graph is not updated automatically.
+     * The user needs to manually update the graph for new versions to be saved in version control.
+     */
     pub manual_save_mode: bool,
+    pub decimal_places: i32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucGroup {
-    pub id: String,
-    pub stack_base: DucStackBase,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucRegion {
-    pub id: String,
-    pub stack_base: DucStackBase,
-    pub boolean_operation: BOOLEAN_OPERATION,
-}
-
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucLayerOverrides {
     pub stroke: ElementStroke,
     pub background: ElementBackground,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucLayer {
     pub id: String,
+    #[serde(flatten)]
     pub stack_base: DucStackBase,
     pub readonly: bool,
+    /** A container for the default styling properties that elements on this layer will inherit */
     pub overrides: Option<DucLayerOverrides>,
-}
-
-// =============== STANDARDS & SETTINGS ===============
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct UnitSystemBase {
-    pub system: UNIT_SYSTEM,
-    pub format: Option<String>,
-    pub precision: i32,
-    pub suppress_leading_zeros: bool,
-    pub suppress_trailing_zeros: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct LinearUnitSystem {
-    pub base: UnitSystemBase,
-    pub format: DIMENSION_UNITS_FORMAT,
-    pub decimal_separator: DECIMAL_SEPARATOR,
-    pub suppress_zero_feet: bool,
-    pub suppress_zero_inches: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct AngularUnitSystem {
-    pub base: UnitSystemBase,
-    pub format: ANGULAR_UNITS_FORMAT,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct AlternateUnits {
-    pub base: UnitSystemBase,
-    pub format: DIMENSION_UNITS_FORMAT,
-    pub is_visible: bool,
-    pub multiplier: f32,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct PrimaryUnits {
-    pub linear: LinearUnitSystem,
-    pub angular: AngularUnitSystem,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct StandardUnits {
-    pub primary_units: PrimaryUnits,
-    pub alternate_units: AlternateUnits,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct UnitPrecision {
-    pub linear: Option<i32>,
-    pub angular: Option<i32>,
-    pub area: Option<i32>,
-    pub volume: Option<i32>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct StandardOverrides {
-    pub main_scope: Option<String>,
-    pub elements_stroke_width_override: Option<f64>,
-    pub common_style_id: Option<String>,
-    pub stack_like_style_id: Option<String>,
-    pub text_style_id: Option<String>,
-    pub dimension_style_id: Option<String>,
-    pub leader_style_id: Option<String>,
-    pub feature_control_frame_style_id: Option<String>,
-    pub table_style_id: Option<String>,
-    pub doc_style_id: Option<String>,
-    pub viewport_style_id: Option<String>,
-    pub plot_style_id: Option<String>,
-    pub hatch_style_id: Option<String>,
-    pub active_grid_settings_id: Option<Vec<String>>,
-    pub active_snap_settings_id: Option<String>,
-    pub dash_line_override: Option<String>,
-    pub unit_precision: Option<UnitPrecision>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucCommonStyle {
-    pub background: ElementBackground,
-    pub stroke: ElementStroke,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedCommonStyle {
-    pub id: Identifier,
-    pub style: DucCommonStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedStackLikeStyle {
-    pub id: Identifier,
-    pub style: DucStackLikeStyles,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedTextStyle {
-    pub id: Identifier,
-    pub style: DucTextStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedDimensionStyle {
-    pub id: Identifier,
-    pub style: DucDimensionStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedLeaderStyle {
-    pub id: Identifier,
-    pub style: DucLeaderStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedFCFStyle {
-    pub id: Identifier,
-    pub style: DucFeatureControlFrameStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedTableStyle {
-    pub id: Identifier,
-    pub style: DucTableStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedDocStyle {
-    pub id: Identifier,
-    pub style: DucDocStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedViewportStyle {
-    pub id: Identifier,
-    pub style: DucViewportStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedHatchStyle {
-    pub id: Identifier,
-    pub style: DucHatchStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedXRayStyle {
-    pub id: Identifier,
-    pub style: DucXRayStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct StandardStyles {
-    pub common_styles: Vec<IdentifiedCommonStyle>,
-    pub stack_like_styles: Vec<IdentifiedStackLikeStyle>,
-    pub text_styles: Vec<IdentifiedTextStyle>,
-    pub dimension_styles: Vec<IdentifiedDimensionStyle>,
-    pub leader_styles: Vec<IdentifiedLeaderStyle>,
-    pub feature_control_frame_styles: Vec<IdentifiedFCFStyle>,
-    pub table_styles: Vec<IdentifiedTableStyle>,
-    pub doc_styles: Vec<IdentifiedDocStyle>,
-    pub viewport_styles: Vec<IdentifiedViewportStyle>,
-    pub hatch_styles: Vec<IdentifiedHatchStyle>,
-    pub xray_styles: Vec<IdentifiedXRayStyle>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct GridStyle {
-    pub color: String,
-    pub opacity: f64,
-    pub dash_pattern: Vec<f64>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct PolarGridSettings {
-    pub radial_divisions: i32,
-    pub radial_spacing: f64,
-    pub show_labels: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IsometricGridSettings {
-    pub left_angle: f64,
-    pub right_angle: f64,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct GridSettings {
-    pub grid_type: GRID_TYPE,
-    pub readonly: bool,
-    pub display_type: GRID_DISPLAY_TYPE,
-    pub is_adaptive: bool,
-    pub x_spacing: f64,
-    pub y_spacing: f64,
-    pub subdivisions: i32,
-    pub origin: GeometricPoint,
-    pub rotation: f64,
-    pub follow_ucs: bool,
-    pub major_style: GridStyle,
-    pub minor_style: GridStyle,
-    pub show_minor: bool,
-    pub min_zoom: f64,
-    pub max_zoom: f64,
-    pub auto_hide: bool,
-    pub polar_settings: Option<PolarGridSettings>,
-    pub isometric_settings: Option<IsometricGridSettings>,
-    pub enable_snapping: bool,
-    pub construction_snap_enabled: bool,
-    pub snap_to_grid_intersections: Option<bool>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct SnapOverride {
-    pub key: String,
-    pub behavior: Option<SNAP_OVERRIDE_BEHAVIOR>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DynamicSnapSettings {
-    pub enabled_during_drag: bool,
-    pub enabled_during_rotation: bool,
-    pub enabled_during_scale: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct PolarTrackingSettings {
-    pub enabled: bool,
-    pub angles: Vec<f64>,
-    pub increment_angle: Option<f64>,
-    pub track_from_last_point: bool,
-    pub show_polar_coordinates: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct TrackingLineStyle {
-    pub color: String,
-    pub opacity: f64,
-    pub dash_pattern: Option<Vec<f64>>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct LayerSnapFilters {
-    pub include_layers: Option<Vec<String>>,
-    pub exclude_layers: Option<Vec<String>>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct SnapMarkerStyle {
-    pub shape: SNAP_MARKER_SHAPE,
-    pub color: String,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct SnapMarkerStyleEntry {
-    pub key: OBJECT_SNAP_MODE,
-    pub value: SnapMarkerStyle,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct SnapMarkerSettings {
-    pub enabled: bool,
-    pub size: i32,
-    pub duration: Option<i32>,
-    pub styles: Vec<SnapMarkerStyleEntry>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct SnapSettings {
-    pub readonly: bool,
-    pub twist_angle: f64,
-    pub snap_tolerance: i32,
-    pub object_snap_aperture: i32,
-    pub is_ortho_mode_on: bool,
-    pub polar_tracking: PolarTrackingSettings,
-    pub is_object_snap_on: bool,
-    pub active_object_snap_modes: Vec<OBJECT_SNAP_MODE>,
-    pub snap_priority: Vec<OBJECT_SNAP_MODE>,
-    pub show_tracking_lines: bool,
-    pub tracking_line_style: Option<TrackingLineStyle>,
-    pub dynamic_snap: DynamicSnapSettings,
-    pub temporary_overrides: Option<Vec<SnapOverride>>,
-    pub incremental_distance: Option<f64>,
-    pub magnetic_strength: Option<f64>,
-    pub layer_snap_filters: Option<LayerSnapFilters>,
-    pub element_type_filters: Option<Vec<String>>,
-    pub snap_mode: SNAP_MODE,
-    pub snap_markers: SnapMarkerSettings,
-    pub construction_snap_enabled: bool,
-    pub snap_to_grid_intersections: Option<bool>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedGridSettings {
-    pub id: Identifier,
-    pub settings: GridSettings,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedSnapSettings {
-    pub id: Identifier,
-    pub settings: SnapSettings,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedUcs {
-    pub id: Identifier,
-    pub ucs: DucUcs,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IdentifiedView {
-    pub id: Identifier,
-    pub view: DucView,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct StandardViewSettings {
-    pub views: Vec<IdentifiedView>,
-    pub ucs: Vec<IdentifiedUcs>,
-    pub grid_settings: Vec<IdentifiedGridSettings>,
-    pub snap_settings: Vec<IdentifiedSnapSettings>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DimensionValidationRules {
-    pub min_text_height: Option<f64>,
-    pub max_text_height: Option<f64>,
-    pub allowed_precisions: Vec<i32>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct LayerValidationRules {
-    pub prohibited_layer_names: Option<Vec<String>>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct StandardValidation {
-    pub dimension_rules: Option<DimensionValidationRules>,
-    pub layer_rules: Option<LayerValidationRules>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Standard {
-    pub identifier: Identifier,
-    pub version: String,
-    pub readonly: bool,
-    pub overrides: Option<StandardOverrides>,
-    pub styles: Option<StandardStyles>,
-    pub view_settings: Option<StandardViewSettings>,
-    pub units: Option<StandardUnits>,
-    pub validation: Option<StandardValidation>,
 }
 
 // =============== VERSION CONTROL ===============
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VersionBase {
     pub id: String,
     pub parent_id: Option<String>,
@@ -1582,55 +1385,113 @@ pub struct VersionBase {
     pub user_id: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Checkpoint {
+    #[serde(flatten)]
     pub base: VersionBase,
+    pub version_number: i64,
+    pub schema_version: i32,
+    pub is_schema_boundary: bool,
+    #[serde(with = "serde_bytes")]
     pub data: Vec<u8>,
     pub size_bytes: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct JSONPatchOperation {
-    pub op: String,
-    pub path: String,
-    pub from: Option<String>,
-    pub value: Option<serde_json::Value>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct Delta {
+    #[serde(flatten)]
     pub base: VersionBase,
-    pub patch: Vec<JSONPatchOperation>,
+    pub version_number: i64,
+    pub schema_version: i32,
+    pub base_checkpoint_id: String,
+    /** Compressed binary data for the delta (zlib). When present, patch_string is ignored. */
+    #[serde(with = "serde_bytes")]
+    pub payload: Vec<u8>,
+    pub size_bytes: i64,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SchemaMigration {
+    pub from_schema_version: i32,
+    pub to_schema_version: i32,
+    pub migration_name: String,
+    pub migration_checksum: Option<String>,
+    pub applied_at: i64,
+    pub boundary_checkpoint_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VersionChain {
+    pub id: String,
+    pub schema_version: i32,
+    pub start_version: i64,
+    pub end_version: Option<i64>,
+    pub migration: Option<SchemaMigration>,
+    pub root_checkpoint_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VersionGraphMetadata {
+    pub current_version: i64,
+    pub current_schema_version: i32,
+    pub chain_count: i32,
     pub last_pruned: i64,
     pub total_size: i64,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VersionGraph {
+    /** The ID of the user-designated checkpoint version. */
     pub user_checkpoint_version_id: String,
+    /** The ID of the latest version in the graph. */
     pub latest_version_id: String,
+    pub chains: Vec<VersionChain>,
+    /** An array of all checkpoint versions. */
     pub checkpoints: Vec<Checkpoint>,
+    /** An array of all delta versions (patches). */
     pub deltas: Vec<Delta>,
     pub metadata: VersionGraphMetadata,
 }
 
 // =============== EXTERNAL FILES ===============
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct DucExternalFileData {
-    pub mime_type: String,
+/// Lightweight metadata for an external file (no data blob).
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExternalFileMetadata {
     pub id: String,
-    pub data: Vec<u8>,
+    pub mime_type: String,
     pub created: i64,
     pub last_retrieved: Option<i64>,
     pub version: Option<i32>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucExternalFileData {
+    pub mime_type: String,
+    pub id: String,
+    /** The actual file content bytes. */
+    #[serde(with = "serde_bytes")]
+    pub data: Vec<u8>,
+    /** Epoch timestamp in milliseconds when the file was created. */
+    pub created: i64,
+    /**
+     * Epoch timestamp in milliseconds when the file was last retrieved from storage to be loaded onto the scene.
+     * Used to determine whether to delete unused files from storage.
+     */
+    pub last_retrieved: Option<i64>,
+    pub version: Option<i32>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucExternalFileEntry {
     pub key: String,
     pub value: DucExternalFileData,
@@ -1638,13 +1499,19 @@ pub struct DucExternalFileEntry {
 
 // =============== ROOT TYPE ===============
 
-#[derive(Debug, Clone, PartialEq)]
+/** Root data structure for the stored data state */
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExportedDataState {
-    pub data_type: String,
-    pub source: String,
+    /** Actual file id */
+    pub id: Option<String>,
     pub version: String,
+    pub source: String,
+    #[serde(rename = "type")]
+    pub data_type: String,
+    pub dictionary: Option<std::collections::HashMap<String, String>>,
+    #[serde(with = "serde_bytes", default, skip_serializing_if = "Option::is_none")]
     pub thumbnail: Option<Vec<u8>>,
-    pub dictionary: Option<Vec<DictionaryEntry>>,
     pub elements: Vec<ElementWrapper>,
     pub blocks: Vec<DucBlock>,
     pub block_instances: Vec<DucBlockInstance>,
@@ -1652,10 +1519,14 @@ pub struct ExportedDataState {
     pub groups: Vec<DucGroup>,
     pub regions: Vec<DucRegion>,
     pub layers: Vec<DucLayer>,
-    pub standards: Vec<Standard>,
+    /** The user's current session state for a specific project */
+    #[serde(rename = "localState")]
     pub duc_local_state: Option<DucLocalState>,
+    /** Project-wide settings that are saved with the document and shared by all users */
+    #[serde(rename = "globalState")]
     pub duc_global_state: Option<DucGlobalState>,
-    pub external_files: Option<Vec<DucExternalFileEntry>>,
+    /** In case it is needed to embed the version control into the file format */
     pub version_graph: Option<VersionGraph>,
-    pub id: Option<String>,
+    #[serde(rename = "files")]
+    pub external_files: Option<std::collections::HashMap<String, DucExternalFileData>>,
 }

@@ -1,238 +1,157 @@
+import { ensureWasm, wasmGetExternalFile, wasmListExternalFiles } from "./wasm";
+import type { DucExternalFileData, DucExternalFiles } from "./types";
+
+export type LazyFileMetadata = {
+  id: string;
+  mimeType: string;
+  created: number;
+  lastRetrieved?: number;
+  version?: number;
+};
+
 /**
- * LazyExternalFileStore — Zero-copy, on-demand access to external file data from a FlatBuffer.
+ * Provides lazy access to external files embedded inside a `.duc` buffer.
  *
- * Instead of eagerly parsing and copying every external file's binary data into JS memory,
- * this store keeps a reference to the original FlatBuffer Uint8Array and reads file bytes
- * only when explicitly requested. FlatBuffer `dataArray()` returns a zero-copy view
- * (a Uint8Array pointing into the original buffer), so no allocation occurs until the
- * consumer actually needs the data.
- *
- * Memory lifecycle:
- *   1. On parse: only metadata (~200 bytes per file) enters JS heap.
- *   2. On demand: `getFileData(fileId)` reads the zero-copy slice from the buffer.
- *   3. The caller (renderer/worker) uses the data, then lets it GC naturally.
- *   4. If the store is released, the buffer reference is dropped, freeing everything.
- *
- * This is the key to supporting 1000s of external files without RAM bloat.
+ * Instead of loading all file blobs into memory at parse time, this store
+ * keeps a reference to the raw `.duc` buffer and fetches individual files
+ * on demand via WASM calls.
  */
-
-import * as flatbuffers from "flatbuffers";
-import { ExportedDataState as ExportedDataStateFb } from "./flatbuffers/duc";
-import type { DucExternalFileData, DucExternalFileMetadata, DucExternalFiles } from "./types";
-import type { ExternalFileId } from "./types/elements";
-
-export type ExternalFileMetadataMap = Record<string, DucExternalFileMetadata>;
-
-interface LazyFileEntry {
-  metadata: DucExternalFileMetadata;
-  /** Index into the ExportedDataState.externalFiles vector */
-  vectorIndex: number;
-}
-
 export class LazyExternalFileStore {
-  private _buffer: Uint8Array | null;
-  private _byteBuffer: flatbuffers.ByteBuffer | null;
-  private _dataState: ExportedDataStateFb | null;
-
-  /** Map from file id → lazy entry */
-  private _entries = new Map<string, LazyFileEntry>();
-  /** Map from element key → file id (the external_files vector uses element id as key) */
-  private _keyToFileId = new Map<string, string>();
-
-  /**
-   * Files that were added at runtime (e.g. user uploading a new image).
-   * These aren't in the original FlatBuffer so we hold their data directly.
-   */
-  private _runtimeFiles = new Map<string, DucExternalFileData>();
+  private buffer: Uint8Array | null;
+  private metadataCache: Map<string, LazyFileMetadata> | null = null;
+  private runtimeFiles: Map<string, DucExternalFileData> = new Map();
 
   constructor(buffer: Uint8Array) {
-    this._buffer = buffer;
-    this._byteBuffer = new flatbuffers.ByteBuffer(buffer);
-    this._dataState = ExportedDataStateFb.getRootAsExportedDataState(this._byteBuffer);
-    this._indexMetadata();
-    console.info(`[LazyExternalFileStore] indexed ${this._entries.size} files from ${buffer.byteLength} byte buffer, ids: [${[...this._entries.keys()].map(k => k.slice(0, 12)).join(', ')}]`);
+    this.buffer = buffer;
   }
 
-  private _indexMetadata(): void {
-    if (!this._dataState) return;
-
-    const count = this._dataState.externalFilesLength();
-    for (let i = 0; i < count; i++) {
-      const entry = this._dataState.externalFiles(i);
-      if (!entry) continue;
-
-      const key = entry.key();
-      const fileData = entry.value();
-      if (!key || !fileData) continue;
-
-      const id = fileData.id() as ExternalFileId | null;
-      if (!id) continue;
-
-      const metadata: DucExternalFileMetadata = {
-        id,
-        mimeType: fileData.mimeType() || "application/octet-stream",
-        created: Number(fileData.created()),
-        lastRetrieved: Number(fileData.lastRetrieved()) || undefined,
-      };
-
-      const lazyEntry: LazyFileEntry = { metadata, vectorIndex: i };
-      this._entries.set(id, lazyEntry);
-      this._keyToFileId.set(key, id);
-    }
+  get isReleased(): boolean {
+    return this.buffer === null;
   }
 
-  /** Total number of external files */
   get size(): number {
-    return this._entries.size + this._runtimeFiles.size;
+    return this.getMetadataMap().size + this.runtimeFiles.size;
   }
 
-  /** Whether a file with the given id exists */
+  /** Check if a file with this ID exists. */
   has(fileId: string): boolean {
-    return this._entries.has(fileId) || this._runtimeFiles.has(fileId);
+    return this.runtimeFiles.has(fileId) || this.getMetadataMap().has(fileId);
   }
 
-  /** Get metadata only (no binary data copied) — ~200 bytes per file */
-  getMetadata(fileId: string): DucExternalFileMetadata | null {
-    const runtime = this._runtimeFiles.get(fileId);
-    if (runtime) {
-      const { data: _, ...meta } = runtime;
-      return meta;
+  /** Get metadata (without data blob) for a specific file. */
+  getMetadata(fileId: string): LazyFileMetadata | undefined {
+    const rt = this.runtimeFiles.get(fileId);
+    if (rt) {
+      return {
+        id: rt.id,
+        mimeType: rt.mimeType,
+        created: rt.created,
+        lastRetrieved: rt.lastRetrieved,
+        version: rt.version,
+      };
     }
-    return this._entries.get(fileId)?.metadata ?? null;
+    return this.getMetadataMap().get(fileId);
   }
 
-  /** Get all metadata entries (for UI listing, etc.) */
-  getAllMetadata(): ExternalFileMetadataMap {
-    const result: ExternalFileMetadataMap = {};
-
-    for (const [id, entry] of this._entries) {
-      result[id] = entry.metadata;
+  /** Get metadata for all files. */
+  getAllMetadata(): LazyFileMetadata[] {
+    const result: LazyFileMetadata[] = [];
+    for (const meta of this.getMetadataMap().values()) {
+      result.push(meta);
     }
-    for (const [id, file] of this._runtimeFiles) {
-      const { data: _, ...meta } = file;
-      result[id] = meta;
+    for (const [id, data] of this.runtimeFiles) {
+      if (!this.getMetadataMap().has(id)) {
+        result.push({
+          id: data.id,
+          mimeType: data.mimeType,
+          created: data.created,
+          lastRetrieved: data.lastRetrieved,
+          version: data.version,
+        });
+      }
     }
-
     return result;
   }
 
-  /**
-   * Get full file data (metadata + binary bytes) ON DEMAND.
-   *
-   * For files from the original FlatBuffer, this returns a zero-copy Uint8Array
-   * view into the original buffer — no allocation for the file bytes themselves.
-   * The view is valid as long as this store hasn't been released.
-   *
-   * For runtime-added files, returns the data directly.
-   */
+  /** Fetch the full file data (including blob) for a specific file. */
   getFileData(fileId: string): DucExternalFileData | null {
-    const runtime = this._runtimeFiles.get(fileId);
-    if (runtime) return runtime;
+    const rt = this.runtimeFiles.get(fileId);
+    if (rt) return rt;
 
-    const entry = this._entries.get(fileId);
-    if (!entry || !this._dataState) return null;
-
-    const fbEntry = this._dataState.externalFiles(entry.vectorIndex);
-    if (!fbEntry) return null;
-
-    const fileData = fbEntry.value();
-    if (!fileData) return null;
-
-    const data = fileData.dataArray();
-    if (!data) return null;
-
-    return {
-      ...entry.metadata,
-      data,
-    };
+    if (!this.buffer) return null;
+    const result = wasmGetExternalFile(this.buffer, fileId);
+    if (!result) return null;
+    return result as DucExternalFileData;
   }
 
-  /**
-   * Get a detached copy of the file data (allocates new ArrayBuffer).
-   * Use this when you need to transfer data to a worker or keep it beyond store lifetime.
-   */
+  /** Fetch file data and return a copy of the data buffer (safe for transfer). */
   getFileDataCopy(fileId: string): DucExternalFileData | null {
-    const fileDataRef = this.getFileData(fileId);
-    if (!fileDataRef) return null;
-
+    const data = this.getFileData(fileId);
+    if (!data) return null;
     return {
-      ...fileDataRef,
-      data: new Uint8Array(fileDataRef.data),
+      ...data,
+      data: new Uint8Array(data.data),
     };
   }
 
-  /**
-   * Add a file at runtime (user upload, paste, etc.).
-   * These files are held in memory since they aren't in the FlatBuffer.
-   */
-  addRuntimeFile(fileData: DucExternalFileData): void {
-    this._runtimeFiles.set(fileData.id, fileData);
+  /** Add a file at runtime (not persisted in .duc until next serialize). */
+  addRuntimeFile(fileId: string, data: DucExternalFileData): void {
+    this.runtimeFiles.set(fileId, data);
   }
 
-  /** Remove a runtime-added file */
-  removeRuntimeFile(fileId: string): void {
-    this._runtimeFiles.delete(fileId);
+  /** Remove a runtime file. */
+  removeRuntimeFile(fileId: string): boolean {
+    return this.runtimeFiles.delete(fileId);
   }
 
-  /**
-   * Export all files as a standard DucExternalFiles record.
-   * This COPIES all file data eagerly — use only for serialization.
-   */
+  /** Export all files eagerly as a DucExternalFiles record. */
   toExternalFiles(): DucExternalFiles {
     const result: DucExternalFiles = {};
 
-    for (const [key, fileId] of this._keyToFileId) {
-      const fileData = this.getFileData(fileId);
-      if (fileData) {
-        result[key] = fileData;
+    if (this.buffer) {
+      const metas = this.getMetadataMap();
+      for (const [id] of metas) {
+        const data = this.getFileData(id);
+        if (data) {
+          result[id] = data;
+        }
       }
     }
 
-    for (const [id, file] of this._runtimeFiles) {
-      result[id] = file;
+    for (const [id, data] of this.runtimeFiles) {
+      result[id] = data;
     }
 
     return result;
   }
 
-  /**
-   * Merge runtime files from the given DucExternalFiles map.
-   * Only adds files not already present in the store.
-   */
+  /** Merge files from another source (only adds missing). */
   mergeFiles(files: DucExternalFiles): void {
-    for (const [_key, fileData] of Object.entries(files)) {
-      if (!this.has(fileData.id)) {
-        this.addRuntimeFile(fileData);
+    for (const [id, data] of Object.entries(files)) {
+      if (!this.has(id)) {
+        this.runtimeFiles.set(id, data);
       }
     }
   }
 
-  /** Estimated RAM usage for metadata only (not counting the backing buffer) */
-  get estimatedMetadataBytes(): number {
-    let bytes = 0;
-    for (const [, entry] of this._entries) {
-      bytes += 200 + entry.metadata.id.length * 2 + entry.metadata.mimeType.length * 2;
-    }
-    for (const [, file] of this._runtimeFiles) {
-      bytes += 200 + (file.data?.byteLength ?? 0);
-    }
-    return bytes;
-  }
-
-  /**
-   * Release the FlatBuffer reference. After this, only runtime-added files remain accessible.
-   * Call this when switching documents or when the store is no longer needed.
-   */
+  /** Release the underlying buffer to free memory. */
   release(): void {
-    this._buffer = null;
-    this._byteBuffer = null;
-    this._dataState = null;
-    this._entries.clear();
-    this._keyToFileId.clear();
+    this.buffer = null;
+    this.metadataCache = null;
   }
 
-  /** Whether the store has been released */
-  get isReleased(): boolean {
-    return this._buffer === null;
+  private getMetadataMap(): Map<string, LazyFileMetadata> {
+    if (!this.metadataCache) {
+      this.metadataCache = new Map();
+      if (this.buffer) {
+        const metas = wasmListExternalFiles(this.buffer) as LazyFileMetadata[];
+        if (metas) {
+          for (const meta of metas) {
+            this.metadataCache.set(meta.id, meta);
+          }
+        }
+      }
+    }
+    return this.metadataCache;
   }
 }

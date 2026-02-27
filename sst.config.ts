@@ -54,16 +54,5 @@ export default $config({
       },
     });
 
-    // Host the Python generated docs
-    new sst.aws.StaticSite("MyPythonDocs", {
-      build: {
-        command: "bun ducpy:docs:build",
-        output: "packages/ducpy/docs/_build/html",
-      },
-      domain: domainName && {
-        name: `python.${domainName}`,
-        dns: sst.cloudflare.dns({ proxy: true }),
-      },
-    });
   },
 });

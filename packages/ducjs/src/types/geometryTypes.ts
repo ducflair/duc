@@ -1,4 +1,4 @@
-import { AXIS } from "../flatbuffers/duc";
+import { AXIS } from "../enums";
 import { ScopedValue, ValueOf } from "./";
 
 /**

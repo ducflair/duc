@@ -1,7 +1,8 @@
 import os
 import sys
-import pytest
+
 import ducpy as duc
+import pytest
 
 
 def test_serialize_two_rectangles():
@@ -58,7 +59,66 @@ def test_serialize_two_rectangles():
         f.write(serialized_bytes)
 
     print(f"Successfully serialized two rectangle elements to: {output_file_path}")
-    print(f"You can now test this file with: flatc --json -o <output_json_dir> schema/duc.fbs -- {output_file_path}")
+
+def test_two_rectangles_via_sql(test_output_dir):
+    """Create two styled rectangles using raw SQL, export to .duc file."""
+    from ducpy.builders.sql_builder import DucSQL
+
+    output_file = os.path.join(test_output_dir, "test_two_rectangles_sql.duc")
+
+    with DucSQL.new() as db:
+        # Rectangle 1 — red fill
+        db.sql(
+            "INSERT INTO elements "
+            "(id, element_type, x, y, width, height, angle, label, z_index, opacity) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "r1", "rectangle", 10, 20, 100, 50, 2.0, "Rectangle 1", 1.0, 1.0,
+        )
+        db.sql(
+            "INSERT INTO backgrounds (owner_type, owner_id, src, opacity) VALUES (?,?,?,?)",
+            "element", "r1", "#FF0000", 1.0,
+        )
+
+        # Rectangle 2 — green fill + black stroke
+        db.sql(
+            "INSERT INTO elements "
+            "(id, element_type, x, y, width, height, angle, label, z_index, opacity) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "r2", "rectangle", 150, 100, 80, 40, 0.0, "Rectangle 2", 2.0, 0.5,
+        )
+        db.sql(
+            "INSERT INTO backgrounds (owner_type, owner_id, src, opacity) VALUES (?,?,?,?)",
+            "element", "r2", "#00FF00", 0.5,
+        )
+        db.sql(
+            "INSERT INTO strokes (owner_type, owner_id, src, width) VALUES (?,?,?,?)",
+            "element", "r2", "#000000", 2.0,
+        )
+
+        # Verify
+        elems = db.sql("SELECT * FROM elements ORDER BY z_index")
+        assert len(elems) == 2
+        assert elems[0]["label"] == "Rectangle 1"
+        assert elems[1]["label"] == "Rectangle 2"
+
+        bg1 = db.sql("SELECT src FROM backgrounds WHERE owner_id = ?", "r1")[0]
+        assert bg1["src"] == "#FF0000"
+
+        stroke2 = db.sql("SELECT width FROM strokes WHERE owner_id = ?", "r2")[0]
+        assert stroke2["width"] == 2.0
+
+        db.save(output_file)
+
+    assert os.path.exists(output_file) and os.path.getsize(output_file) > 0
+
+    # Re-open and verify roundtrip
+    with DucSQL(output_file) as db2:
+        assert len(db2.sql("SELECT * FROM elements")) == 2
+
+
+# Legacy builder/native serialization test now covered by SQL-first variant.
+test_serialize_two_rectangles = test_two_rectangles_via_sql
+
 
 if __name__ == "__main__":
     # Allow running the test directly for quick checks, e.g., during development
