@@ -1,3 +1,5 @@
+# ducjs
+
 <p align="center">
   <br/>
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://raw.githubusercontent.com/ducflair/assets/refs/heads/main/src/duc/duc-extended.png" /></a>
@@ -9,9 +11,6 @@
     <img src="https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=fff&style=round-square" alt="TypeScript" />
   </p>
 </p>
-
-
-# ducjs
 
 The `ducjs` package offers comprehensive TypeScript types and helper functions to work effortlessly with the `duc` CAD file format. Built with SQLite and optimized for performance, this package enables you to parse, validate, and manipulate `duc` files with ease.
 
