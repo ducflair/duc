@@ -151,7 +151,6 @@ pub fn calculate_bounding_box(data: &duc::types::ExportedDataState) -> (f64, f64
             duc::types::DucElementEnum::DucEllipseElement(elem) => &elem.base,
             duc::types::DucElementEnum::DucEmbeddableElement(elem) => &elem.base,
             duc::types::DucElementEnum::DucPdfElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucMermaidElement(elem) => &elem.base,
             duc::types::DucElementEnum::DucTableElement(elem) => &elem.base,
             duc::types::DucElementEnum::DucImageElement(elem) => &elem.base,
             duc::types::DucElementEnum::DucTextElement(elem) => &elem.base,
@@ -160,13 +159,7 @@ pub fn calculate_bounding_box(data: &duc::types::ExportedDataState) -> (f64, f64
             duc::types::DucElementEnum::DucFreeDrawElement(elem) => &elem.base,
             duc::types::DucElementEnum::DucFrameElement(elem) => &elem.stack_element_base.base,
             duc::types::DucElementEnum::DucPlotElement(elem) => &elem.stack_element_base.base,
-            duc::types::DucElementEnum::DucViewportElement(elem) => &elem.linear_base.base,
-            duc::types::DucElementEnum::DucXRayElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucLeaderElement(elem) => &elem.linear_base.base,
-            duc::types::DucElementEnum::DucDimensionElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucFeatureControlFrameElement(elem) => &elem.base,
             duc::types::DucElementEnum::DucDocElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucParametricElement(elem) => &elem.base,
             duc::types::DucElementEnum::DucModelElement(elem) => &elem.base,
         };
 

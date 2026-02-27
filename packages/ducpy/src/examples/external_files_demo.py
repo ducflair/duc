@@ -5,6 +5,7 @@ Example demonstrating the creation and management of external files within a DUC
 import ducpy as duc
 from ducpy.classes.DataStateClass import ExportedDataState
 
+
 def create_duc_with_external_files():
     """
     Creates a DUC object and adds multiple external file entries to it
@@ -40,7 +41,6 @@ def create_duc_with_external_files():
     # 3. Create Local State (minimal for this example)
     local_state = (duc.StateBuilder()
         .build_local_state()
-        .with_active_standard_id("default")
         .build())
 
     # 4. Assemble into an ExportedDataState (DUC object)
@@ -56,7 +56,6 @@ def create_duc_with_external_files():
         groups=[],
         regions=[],
         layers=[],
-        standards=[],
         dictionary={},
         duc_local_state=local_state,
         duc_global_state=global_state,

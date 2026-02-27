@@ -1,64 +1,51 @@
-import { getUpdatedTimestamp, getZoom } from "..";
+import { getUpdatedTimestamp } from "..";
 import {
-    BLOCK_ATTACHMENT,
-    COLUMN_TYPE,
-    DATUM_BRACKET_STYLE,
-    IMAGE_STATUS,
-    LINE_SPACING_TYPE,
-    STACKED_TEXT_ALIGN,
-    TEXT_FLOW_DIRECTION,
-    VERTICAL_ALIGN,
-    VIEWPORT_SHADE_PLOT
-} from "../../flatbuffers/duc";
+  IMAGE_STATUS,
+  LINE_SPACING_TYPE,
+} from "../../enums";
+
 import { getPrecisionValueFromRaw } from "../../technical/scopes";
 import { RawValue, Scope } from "../../types";
 import {
-    DucArrowElement,
-    DucDimensionElement,
-    DucDocElement,
-    DucElement,
-    DucEllipseElement,
-    DucEmbeddableElement,
-    DucFeatureControlFrameElement,
-    DucFrameElement,
-    DucFreeDrawElement,
-    DucGenericElement,
-    DucImageElement,
-    DucLeaderElement,
-    DucLinearElement,
-    DucMermaidElement,
-    DucModelElement,
-    DucPdfElement,
-    DucPlotElement,
-    DucPolygonElement,
-    DucTableElement,
-    DucTextElement,
-    DucViewportElement,
-    DucXRayElement,
-    ElementConstructorOpts,
-    ElementUpdate,
-    NonDeleted,
-    ViewportScale
+  DucArrowElement,
+  DucDocElement,
+  DucElement,
+  DucEllipseElement,
+  DucEmbeddableElement,
+  DucFrameElement,
+  DucFreeDrawElement,
+  DucGenericElement,
+  DucImageElement,
+  DucLinearElement,
+  DucModelElement,
+  DucPdfElement,
+  DucPlotElement,
+  DucPolygonElement,
+  DucTableElement,
+  DucTextElement,
+  ElementConstructorOpts,
+  ElementUpdate,
+  NonDeleted
 } from "../../types/elements";
 import { Radian, ScaleFactor } from "../../types/geometryTypes";
 import { Merge, Mutable } from "../../types/utility-types";
 import {
-    DEFAULT_ELEMENT_PROPS,
-    DEFAULT_ELLIPSE_ELEMENT,
-    DEFAULT_FONT_FAMILY,
-    DEFAULT_FONT_SIZE,
-    DEFAULT_FREEDRAW_ELEMENT,
-    DEFAULT_POLYGON_SIDES,
-    DEFAULT_TEXT_ALIGN,
-    DEFAULT_VERTICAL_ALIGN
+  DEFAULT_ELEMENT_PROPS,
+  DEFAULT_ELLIPSE_ELEMENT,
+  DEFAULT_FONT_FAMILY,
+  DEFAULT_FONT_SIZE,
+  DEFAULT_FREEDRAW_ELEMENT,
+  DEFAULT_POLYGON_SIDES,
+  DEFAULT_TEXT_ALIGN,
+  DEFAULT_VERTICAL_ALIGN
 } from "../constants";
 import { randomId, randomInteger } from "../math/random";
 import { normalizeText } from "../normalize";
-import { getDefaultStackProperties, getDefaultTableData, getDefaultTextStyle } from "./";
+import { getDefaultStackProperties } from "./";
 import {
-    getFontString,
-    getTextElementPositionOffsets,
-    measureText,
+  getFontString,
+  getTextElementPositionOffsets,
+  measureText,
 } from "./textElement";
 
 export const newElementWith = <TElement extends DucElement>(
@@ -107,7 +94,6 @@ const _newElementBase = <T extends DucElement>(
     label,
     isVisible = DEFAULT_ELEMENT_PROPS.isVisible,
     isPlot = DEFAULT_ELEMENT_PROPS.isPlot,
-    isAnnotative = DEFAULT_ELEMENT_PROPS.isAnnotative,
     stroke = [DEFAULT_ELEMENT_PROPS.stroke],
     background = [DEFAULT_ELEMENT_PROPS.background],
     opacity = DEFAULT_ELEMENT_PROPS.opacity,
@@ -161,7 +147,6 @@ const _newElementBase = <T extends DucElement>(
     description,
     customData: rest.customData,
     isPlot,
-    isAnnotative,
     regionIds,
     layerId,
   };
@@ -199,7 +184,6 @@ export const newFrameElement = (
   ...getDefaultStackProperties(),
   clip: false,
   labelVisible: true,
-  standardOverride: null,
   ..._newElementBase<DucFrameElement>("frame", currentScope, opts),
   type: "frame",
 });
@@ -211,7 +195,6 @@ export const newPlotElement = (
   ...getDefaultStackProperties(),
   clip: false,
   labelVisible: true,
-  standardOverride: null,
   layout: {
     margins: {
       top: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
@@ -222,41 +205,6 @@ export const newPlotElement = (
   },
   ..._newElementBase<DucPlotElement>("plot", currentScope, opts),
   type: "plot",
-});
-
-export const newViewportElement = (
-  currentScope: Scope,
-  opts: {
-    zoom?: number;
-    scopeExponentThreshold?: number;
-    mainScope?: Scope;
-  } & ElementConstructorOpts,
-): NonDeleted<DucViewportElement> => ({
-  ...getDefaultStackProperties(),
-  points: [],
-  lines: [],
-  pathOverrides: [],
-  lastCommittedPoint: null,
-  startBinding: null,
-  endBinding: null,
-  standardOverride: null,
-  view: {
-    scrollX: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
-    scrollY: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
-    zoom: getZoom(opts.zoom ?? 1, opts.mainScope ?? currentScope, opts.scopeExponentThreshold ?? 2),
-    twistAngle: 0 as Radian,
-    centerPoint: {
-      x: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
-      y: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
-    },
-    scope: currentScope,
-  },
-  scale: 1 as ViewportScale,
-  shadePlot: VIEWPORT_SHADE_PLOT.AS_DISPLAYED,
-  frozenGroupIds: [],
-  scaleIndicatorVisible: true,
-  ..._newElementBase<DucViewportElement>("viewport", currentScope, opts),
-  type: "viewport",
 });
 
 export const newEllipseElement = (
@@ -340,11 +288,9 @@ export const newTextElement = (
     bigFontFamily: opts.bigFontFamily || "sans-serif",
     lineSpacing: opts.lineSpacing || { type: LINE_SPACING_TYPE.MULTIPLE, value: lineHeight as unknown as ScaleFactor },
     obliqueAngle: opts.obliqueAngle || (0 as Radian),
-    paperTextHeight: opts.paperTextHeight,
     widthFactor: opts.widthFactor || (1 as ScaleFactor),
     isUpsideDown: opts.isUpsideDown ?? false,
     isBackwards: opts.isBackwards ?? false,
-    dynamic: opts.dynamic || [],
   };
 };
 
@@ -421,7 +367,7 @@ export const newTableElement = (
   opts: Partial<DucTableElement> & ElementConstructorOpts,
 ): NonDeleted<DucTableElement> => ({
   ..._newElementBase<DucTableElement>("table", currentScope, opts),
-  ...getDefaultTableData(currentScope),
+  fileId: opts.fileId ?? null,
   type: "table",
 });
 
@@ -432,114 +378,29 @@ export const newDocElement = (
   ..._newElementBase<DucDocElement>("doc", currentScope, opts),
   type: "doc",
   text: opts.text || "",
-  dynamic: opts.dynamic || [],
-  flowDirection: opts.flowDirection || TEXT_FLOW_DIRECTION.TOP_TO_BOTTOM,
-  columns: opts.columns || { type: COLUMN_TYPE.NO_COLUMNS, definitions: [], autoHeight: true },
-  autoResize: opts.autoResize ?? true,
-  fileId: null,
-  gridConfig: { columns: 1, gapX: 0, gapY: 0, alignItems: 'start', firstPageAlone: false, scale: 1 },
-  // DucDocStyle properties
-  isLtr: opts.isLtr ?? true,
-  fontFamily: opts.fontFamily || DEFAULT_FONT_FAMILY,
-  bigFontFamily: opts.bigFontFamily || "sans-serif",
-  textAlign: opts.textAlign || DEFAULT_TEXT_ALIGN,
-  verticalAlign: opts.verticalAlign || DEFAULT_VERTICAL_ALIGN,
-  lineHeight: opts.lineHeight || (1.2 as DucTextElement["lineHeight"]),
-  lineSpacing: opts.lineSpacing || { type: LINE_SPACING_TYPE.MULTIPLE, value: 1.2 as ScaleFactor },
-  obliqueAngle: opts.obliqueAngle || (0 as Radian),
-  fontSize: opts.fontSize || getPrecisionValueFromRaw(DEFAULT_FONT_SIZE as RawValue, currentScope, currentScope),
-  paperTextHeight: opts.paperTextHeight,
-  widthFactor: opts.widthFactor || (1 as ScaleFactor),
-  isUpsideDown: opts.isUpsideDown ?? false,
-  isBackwards: opts.isBackwards ?? false,
-  paragraph: opts.paragraph || { firstLineIndent: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope), hangingIndent: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope), leftIndent: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope), rightIndent: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope), spaceBefore: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope), spaceAfter: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope), tabStops: [] },
-  stackFormat: opts.stackFormat || { autoStack: false, stackChars: [], properties: { upperScale: 0.7, lowerScale: 0.7, alignment: STACKED_TEXT_ALIGN.CENTER } },
+  fileId: opts.fileId ?? null,
+  gridConfig: {
+    columns: opts.gridConfig?.columns ?? 1,
+    gapX: opts.gridConfig?.gapX ?? 0,
+    gapY: opts.gridConfig?.gapY ?? 0,
+    firstPageAlone: opts.gridConfig?.firstPageAlone ?? false,
+    scale: opts.gridConfig?.scale ?? 1,
+  },
 });
 
 export const newPdfElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucPdfElement> => ({
   fileId: null,
-  gridConfig: { columns: 1, gapX: 0, gapY: 0, alignItems: 'start', firstPageAlone: false, scale: 1 },
+  gridConfig: { columns: 1, gapX: 0, gapY: 0, firstPageAlone: false, scale: 1 },
   ..._newElementBase<DucPdfElement>("pdf", currentScope, opts),
   type: "pdf",
 });
 
-export const newMermaidElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucMermaidElement> => ({
-  source: "",
-  theme: undefined,
-  svgPath: null,
-  ..._newElementBase<DucMermaidElement>("mermaid", currentScope, opts),
-  type: "mermaid",
-});
-
-export const newXRayElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucXRayElement> => ({
-  origin: { x: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope), y: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope) },
-  direction: { x: getPrecisionValueFromRaw(1 as RawValue, currentScope, currentScope), y: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope) },
-  startFromOrigin: false,
-  color: '#FF00FF',
-  ..._newElementBase<DucXRayElement>("xray", currentScope, opts),
-  type: "xray",
-});
-
-export const newLeaderElement = (
-  currentScope: Scope,
-  opts: Partial<DucLeaderElement> & ElementConstructorOpts
-): NonDeleted<DucLeaderElement> => {
-  return {
-    points: [],
-    lines: [],
-    pathOverrides: [],
-    lastCommittedPoint: null,
-    startBinding: null,
-    endBinding: null,
-    headsOverride: undefined,
-    dogleg: getPrecisionValueFromRaw(10 as RawValue, currentScope, currentScope),
-    textStyle: opts.textStyle || getDefaultTextStyle(currentScope),
-    textAttachment: opts.textAttachment || VERTICAL_ALIGN.TOP,
-    blockAttachment: opts.blockAttachment || BLOCK_ATTACHMENT.CENTER_EXTENTS,
-    leaderContent: opts.leaderContent ?? null,
-    contentAnchor: opts.contentAnchor ??
-    {
-      x: 0,
-      y: 0,
-    },
-    ..._newElementBase<DucLeaderElement>("leader", currentScope, opts),
-    type: "leader",
-  };
-};
-
-export const newDimensionElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucDimensionElement> => ({
-  ..._newElementBase<DucDimensionElement>("dimension", currentScope, opts),
-  type: 'dimension',
-} as NonDeleted<DucDimensionElement>);
-
-export const newFeatureControlFrameElement = (
-  currentScope: Scope,
-  opts: ElementConstructorOpts
-): NonDeleted<DucFeatureControlFrameElement> => {
-  return {
-    rows: [],
-    leaderElementId: null,
-    textStyle: getDefaultTextStyle(currentScope),
-    layout: {
-      padding: getPrecisionValueFromRaw(4 as RawValue, currentScope, currentScope),
-      segmentSpacing: getPrecisionValueFromRaw(4 as RawValue, currentScope, currentScope),
-      rowSpacing: getPrecisionValueFromRaw(2 as RawValue, currentScope, currentScope),
-    },
-    symbols: {
-      scale: 1,
-    },
-    datumStyle: {
-      bracketStyle: DATUM_BRACKET_STYLE.SQUARE
-    },
-    ..._newElementBase<DucFeatureControlFrameElement>("featurecontrolframe", currentScope, opts),
-    type: "featurecontrolframe",
-  };
-};
-
-export const newParametricElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucModelElement> => ({
-  source: "",
+export const newModelElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucModelElement> => ({
+  modelType: null,
+  code: null,
   svgPath: null,
   fileIds: [],
+  viewerState: null,
   ..._newElementBase<DucModelElement>("model", currentScope, opts),
   type: 'model',
 });

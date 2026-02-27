@@ -3,16 +3,8 @@ export * from "./geometryTypes";
 export * from "./typeChecks";
 export * from "./utility-types";
 
-import { OBJECT_SNAP_MODE, PRUNING_LEVEL } from "../flatbuffers/duc";
+import { PRUNING_LEVEL } from "../enums";
 import { SupportedMeasures } from "../technical/scopes";
-import { Standard } from "../technical/standards";
-import type {
-  GRID_DISPLAY_TYPE,
-  GRID_TYPE,
-  SNAP_MARKER_SHAPE,
-  SNAP_MODE,
-  SNAP_OVERRIDE_BEHAVIOR
-} from "../utils/constants";
 import {
   DucBindableElement,
   DucBlock,
@@ -39,9 +31,8 @@ import {
   GeometricPoint,
   Percentage,
   Radian,
-  ScaleFactor,
 } from "./geometryTypes";
-import { MakeBrand, MarkOptional, MaybePromise, ValueOf } from "./utility-types";
+import { MarkOptional, MaybePromise, ValueOf } from "./utility-types";
 
 /**
  * Root data structure for the stored data state
@@ -67,8 +58,6 @@ export interface ExportedDataState {
   groups: readonly DucGroup[];
   regions: readonly DucRegion[];
   layers: readonly DucLayer[];
-  standards: readonly Standard[];
-
   files: DucExternalFiles | undefined;
 
   /** In case it is needed to embed the version control into the file format */
@@ -215,50 +204,10 @@ export type DucGlobalState = {
   mainScope: Scope;
 
   /**
-   * The global linetype scale for the entire drawing.
-   */
-  dashSpacingScale: ScaleFactor;
-
-  /**
-   * Governs if linetype scale is affected by paper space viewport scale.
-   */
-  isDashSpacingAffectedByViewportScale: boolean;
-
-  /**
    * Exponent threshold for determining when to change measurement scope (up or down).
    * This value defines a +/- tolerance range around the exponent of the current scope.
-   * A scope change is triggered if the exponent of *either* the calculated real viewport width
-   * or the calculated real viewport height falls outside this tolerance range relative to the current scope's exponent.
-   *
-   * Example scenario:
-   *   appState.scopeExponentThreshold = 2
-   *   appState.scope = "mm" // (approximately 1e-3 relative to reference unit (meter))
-   *   appState.zoom = dynamic value representing the current zoom level
-   *
-   * The real viewport size is calculated as: viewportSize * zoom
-   *
-   * This system ensures measurements remain representable with appropriate precision
-   * as users zoom in and out, automatically adjusting between units like mm, μm, nm, etc.
    */
   scopeExponentThreshold: number;
-
-  /**
-   * A rule for whether newly created dimensions should be associative by default.
-   */
-  dimensionsAssociativeByDefault: boolean;
-
-  /**
-   * A fundamental choice for the drawing's scaling architecture.
-   */
-  useAnnotativeScaling: boolean;
-  /**
-   * Default display precision for various unit types. The user can override
-   * this temporarily in their session state (DucState).
-   */
-  displayPrecision: {
-    linear: number;
-    angular: number;
-  };
 
   /** The level of pruning to the versions from the version graph. */
   pruningLevel: PruningLevel;
@@ -270,18 +219,10 @@ export type DucLocalState = {
    * mm, cm, m, in, ft, yd, mi, etc...
    */
   scope: Scope;
-  /** The active standard for the design */
-  activeStandardId: Standard["id"];
 
   scrollX: PrecisionValue;
   scrollY: PrecisionValue;
   zoom: Zoom;
-
-  /**
-   * list of active grids ordered by z index, most on top is first
-   * */
-  activeGridSettings: Identifier["id"][] | null;
-  activeSnapSettings: Identifier["id"] | null;
 
   isBindingEnabled: boolean;
 
@@ -295,16 +236,6 @@ export type DucLocalState = {
   currentItemStartLineHead: LineHead | null;
   currentItemEndLineHead: LineHead | null;
   currentItemRoundness: DucElement["roundness"];
-
-  /**
-   * grid cell px size
-   * @deprecated use activeGridSettings instead
-   * */
-  gridSize: number;
-  /**
-   * @deprecated use activeGridSettings instead
-   * */
-  gridStep: number;
 
   /**
    * Pen mode is enabled, creates a better experience for drawing with a pen
@@ -328,6 +259,7 @@ export type DucLocalState = {
   outlineModeEnabled: boolean;
   /** When enabled, the version graph is not updated automatically. The user needs to manually update the graph for new versions to be saved in version control. */
   manualSaveMode: boolean;
+  decimalPlaces: number;
 };
 
 export type NormalizedZoomValue = number & { _brand: "normalizedZoom" };
@@ -439,300 +371,8 @@ export type ElementsPendingErasure = Set<DucElement["id"]>;
 
 export type PendingDucElements = DucElement[];
 
-export type GridDisplayType = ValueOf<typeof GRID_DISPLAY_TYPE>;
-export type GridType = ValueOf<typeof GRID_TYPE>;
-
-/**
- * Unified grid styling (works for lines, dots, crosses)
- */
-export type GridStyle = {
-  color: string;
-  opacity: Percentage;
-  dashPattern: number[]; // for dashed lines
-};
-
-/**
- * Polar grid specific settings
- */
-export type PolarGridSettings = {
-  /** Number of radial divisions (spokes) */
-  radialDivisions: number;
-  /** Radial spacing between concentric circles */
-  radialSpacing: PrecisionValue;
-  /** Whether to show angle labels */
-  showLabels: boolean;
-};
-
-/**
- * Isometric grid specific settings
- */
-export type IsometricGridSettings = {
-  /** Left plane angle (typically 30 degrees) */
-  leftAngle: Radian;
-  /** Right plane angle (typically 30 degrees) */
-  rightAngle: Radian;
-};
-
-/**
- * Grid settings configuration
- */
-export type GridSettings = {
-  /** Grid coordinate system type */
-  type: GridType;
-
-  /** Whether this grid is read-only */
-  readonly: boolean;
-
-  /** How the grid is displayed */
-  displayType: GridDisplayType;
-
-  /**
-   * Whether the grid spacing is adaptive (changes with zoom level) or fixed.
-   */
-  isAdaptive: boolean;
-
-  /** Spacing between major grid lines along X-axis */
-  xSpacing: PrecisionValue;
-
-  /** Spacing between major grid lines along Y-axis */
-  ySpacing: PrecisionValue;
-
-  /** Number of minor divisions between major lines */
-  subdivisions: number;
-
-  /** Grid origin point */
-  origin: GeometricPoint;
-
-  /** Grid rotation angle */
-  rotation: Radian;
-
-  /** Whether grid follows the active UCS */
-  followUCS: boolean;
-
-  /** Major grid line/dot styling */
-  majorStyle: GridStyle;
-
-  /** Minor grid line/dot styling */
-  minorStyle: GridStyle;
-
-  /** Show minor subdivisions */
-  showMinor: boolean;
-
-  /** Minimum zoom level where grid becomes visible */
-  minZoom: number;
-
-  /** Maximum zoom level where grid remains visible */
-  maxZoom: number;
-
-  /** Whether to auto-hide when too dense */
-  autoHide: boolean;
-
-  /** Polar grid settings (when type is POLAR) */
-  polarSettings?: PolarGridSettings;
-
-  /** Isometric grid settings (when type is ISOMETRIC) */
-  isometricSettings?: IsometricGridSettings;
-
-  /** Whether this grid affects snapping */
-  enableSnapping: boolean;
-};
-
-export type ObjectSnapMode = ValueOf<typeof OBJECT_SNAP_MODE>;
-export type SnapOverrideBehavior = ValueOf<typeof SNAP_OVERRIDE_BEHAVIOR>;
-export type SnapMarkerShape = ValueOf<typeof SNAP_MARKER_SHAPE>;
-export type SnapMode = ValueOf<typeof SNAP_MODE>;
-
-/**
- * Temporary snap override settings
- */
-export type SnapOverride = {
-  key: string; // keyboard key
-  behavior: SnapOverrideBehavior;
-};
-
-/**
- * Dynamic snap behavior configuration
- */
-export type DynamicSnapSettings = {
-  enabledDuringDrag: boolean;
-  enabledDuringRotation: boolean;
-  enabledDuringScale: boolean;
-};
-
-/**
- * Polar tracking configuration
- */
-export type PolarTrackingSettings = {
-  enabled: boolean;
-  angles: Radian[];
-  /**
-   * Additional increment angle for polar tracking
-   */
-  incrementAngle?: Radian;
-  /**
-   * Whether to track from last point or from base
-   */
-  trackFromLastPoint: boolean;
-  /**
-   * Display polar distance and angle
-   */
-  showPolarCoordinates: boolean;
-};
-
-/**
- * Tracking line display settings
- */
-export type TrackingLineStyle = {
-  color: string;
-  opacity: Percentage;
-  dashPattern?: number[];
-};
-
-/**
- * Layer-specific snap filters
- */
-export type LayerSnapFilters = {
-  includeLayers?: string[];
-  excludeLayers?: string[];
-};
-
-/**
- * Snap marker configuration for each snap mode
- */
-export type SnapMarkerStyle = {
-  shape: SnapMarkerShape;
-  color: string;
-};
-
-/**
- * Visual feedback settings for snap markers
- */
-export type SnapMarkerSettings = {
-  enabled: boolean;
-  size: number;
-  duration?: number; // for temporary markers (ms)
-  styles: Record<ObjectSnapMode, SnapMarkerStyle>;
-};
-
-/**
- * Defines the properties of the drawing snap mode.
- */
-export type SnapSettings = {
-  /** Whether this snap settings is read-only */
-  readonly: boolean;
-
-  /**
-   * The snap angle for rotated snap grids (e.g., for isometric snapping).
-   * In radians. Default is 0.
-   */
-  twistAngle: Radian;
-
-  /**
-   * Snap tolerance in pixels - how close cursor must be to trigger snap
-   */
-  snapTolerance: number;
-
-  /**
-   * Aperture size for object snap detection (in pixels)
-   */
-  objectSnapAperture: number;
-
-  /**
-   * Whether orthogonal mode is enabled (constrains to 0/90 degrees)
-   */
-  isOrthoModeOn: boolean;
-
-  /**
-   * Polar tracking configuration
-   */
-  polarTracking: PolarTrackingSettings;
-
-  /**
-   * Whether object snap (Osnap) is enabled.
-   * Osnap allows snapping to geometric points on existing objects.
-   */
-  isObjectSnapOn: boolean;
-
-  /**
-   * Set of active object snap modes
-   */
-  activeObjectSnapModes: ObjectSnapMode[];
-
-  /**
-   * Priority order when multiple snaps are available at cursor position
-   */
-  snapPriority: ObjectSnapMode[];
-
-  /**
-   * Whether to show tracking lines/vectors
-   */
-  showTrackingLines: boolean;
-
-  /**
-   * Tracking line display settings
-   */
-  trackingLineStyle?: TrackingLineStyle;
-
-  /**
-   * Snap behavior during element creation/modification
-   */
-  dynamicSnap: DynamicSnapSettings;
-
-  /**
-   * Temporary snap override settings (e.g., holding shift)
-   */
-  temporaryOverrides?: SnapOverride[];
-
-  /**
-   * Incremental snap distance (for relative movements)
-   */
-  incrementalDistance?: number;
-
-  /**
-   * Magnetic snap strength (0-100)
-   */
-  magneticStrength?: number;
-
-  /**
-   * Layer-specific snap settings
-   */
-  layerSnapFilters?: LayerSnapFilters;
-
-  /**
-   * Element type filters for object snap
-   */
-  elementTypeFilters?: DucElementType[];
-
-  /**
-   * Running object snap vs single pick mode
-   */
-  snapMode: SnapMode;
-
-  /**
-   * Visual feedback settings
-   */
-  snapMarkers: SnapMarkerSettings;
-
-  /**
-   * Construction/guide line snapping
-   */
-  constructionSnapEnabled: boolean;
-
-  /**
-   * Snap to grid intersections only
-   */
-  snapToGridIntersections?: boolean;
-};
-
-/** Runtime gridSize value. Null indicates disabled grid. */
-export type NullableGridSize =
-  | (DucLocalState["gridSize"] & MakeBrand<"NullableGridSize">)
-  | null;
-
 //// VERSION CONTROL
 export type VersionId = string;
-/** JSON Patch RFC6902 */
-export type JSONPatch = Array<{ op: string; path: string; from?: string; value?: any }>;
 export type PruningLevel = ValueOf<typeof PRUNING_LEVEL>;
 
 export interface VersionBase {
@@ -746,22 +386,54 @@ export interface VersionBase {
 
 export interface Checkpoint extends VersionBase {
   type: "checkpoint";
+  versionNumber: number;
+  schemaVersion: number;
+  isSchemaBoundary: boolean;
   data: Uint8Array;
   sizeBytes: number;
 }
 
 export interface Delta extends VersionBase {
   type: "delta";
-  patch: JSONPatch;
+  versionNumber: number;
+  schemaVersion: number;
+  baseCheckpointId: VersionId;
+  /** Compressed binary data for the delta (zlib). */
+  payload: Uint8Array;
+  sizeBytes: number;
+}
+
+export interface SchemaMigration {
+  fromSchemaVersion: number;
+  toSchemaVersion: number;
+  migrationName: string;
+  migrationChecksum?: string;
+  appliedAt: number;
+  boundaryCheckpointId?: string;
+}
+
+export interface VersionChain {
+  id: string;
+  schemaVersion: number;
+  startVersion: number;
+  endVersion?: number;
+  migration?: SchemaMigration;
+  rootCheckpointId?: string;
+}
+
+export interface VersionGraphMetadata {
+  currentVersion: number;
+  currentSchemaVersion: number;
+  chainCount: number;
+  lastPruned: number;
+  totalSize: number;
 }
 
 export interface VersionGraph {
   userCheckpointVersionId: VersionId;
   latestVersionId: VersionId;
+  chains: VersionChain[];
   checkpoints: Checkpoint[];
   deltas: Delta[];
-  metadata: {
-    lastPruned: number;
-    totalSize: number;
-  };
+  metadata: VersionGraphMetadata;
 }

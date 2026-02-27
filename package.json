@@ -18,7 +18,7 @@
     "postcss": "^8.5.6",
     "semantic-release": "^24.2.9",
     "tailwindcss": "^4.1.17",
-    "turbo": "^2.6.3",
+    "turbo": "^2.8.11",
     "typescript": "^5.9.3"
   },
   "dependencies": {
@@ -50,13 +50,13 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
-    "build:packages": "turbo build --filter=ducjs --filter=ducpy --filter=ducrs --filter=ducsvg --filter=ducpdf",
+    "packages:build": "turbo build --filter=ducjs --filter=ducpy --filter=ducrs --filter=ducsvg --filter=ducpdf",
+    "packages:test": "turbo test --filter=ducjs --filter=ducpy --filter=ducrs --filter=ducsvg --filter=ducpdf",
     "sst:shell": "bash -c 'CMD=\"$1\"; shift; [ -n \"$1\" ] && [ \"$1\" != \"_\" ] && export SST_STAGE=\"$1\"; eval \"$CMD\"' _",
-    "flatc:gen": "bun run flatc:gen:duc",
-    "flatc:gen:duc": "cd schema && bash flatc-duc-generate.sh",
     "clean": "bun del-cli \"**/dist\" \".turbo\" \"**/node_modules\" \"**/package-lock.json\" \"**/tsconfig.tsbuildinfo\" \"**/tsconfig.node.tsbuildinfo\" \"**/vite.config.js\"",
     "docs:dev": "turbo dev --filter=@duc/docs",
     "docs:build": "turbo build --filter=@duc/docs",
+    "ducpy:docs:dev": "turbo run dev:docs --filter=ducpy",
     "ducpy:docs:build": "turbo run gen:docs --filter=ducpy",
     "ducpy:test": "turbo run test --filter=ducpy --force",
     "ducpy:build": "bun turbo run build --filter=ducpy -- ${1}",

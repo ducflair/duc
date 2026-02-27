@@ -2,31 +2,28 @@
 This module provides high-level functions for reading and writing DUC files.
 """
 import os
-from typing import List
+from typing import Any, List, Optional
 
-# Import the parsing functions
-from ducpy.parse import parse_duc
+from ducpy.parse import DucData, parse_duc
 from ducpy.serialize import serialize_duc
-from ducpy.classes.ElementsClass import (ElementWrapper, DucBlock, DucGroup, DucRegion, DucLayer, DucBlockInstance)
-from ducpy.classes.DataStateClass import DucExternalFileEntry, DucGlobalState, DucLocalState, ExportedDataState, VersionGraph, DictionaryEntry
-from ducpy.classes.StandardsClass import Standard
+
 
 def write_duc_file(
   file_path: str,
   name: str,
-  thumbnail: bytes = None,
-  dictionary: List[DictionaryEntry] = None,
-  elements: List[ElementWrapper] = None,
-  duc_local_state: DucLocalState = None,
-  duc_global_state: DucGlobalState = None,
-  version_graph: VersionGraph = None,
-  blocks: List[DucBlock] = None,
-  block_instances: List[DucBlockInstance] = None,
-  groups: List[DucGroup] = None,
-  regions: List[DucRegion] = None,
-  layers: List[DucLayer] = None,
-  external_files: List[DucExternalFileEntry] = None,
-  standards: List[Standard] = None,
+  thumbnail: Optional[bytes] = None,
+  dictionary: Optional[list] = None,
+  elements: Optional[list] = None,
+  duc_local_state: Any = None,
+  duc_global_state: Any = None,
+  version_graph: Any = None,
+  blocks: Optional[list] = None,
+  block_instances: Optional[list] = None,
+  block_collections: Optional[list] = None,
+  groups: Optional[list] = None,
+  regions: Optional[list] = None,
+  layers: Optional[list] = None,
+  external_files: Optional[list] = None,
 ):
     """
     Serializes an ExportedDataState object to a .duc file.
@@ -45,14 +42,12 @@ def write_duc_file(
       regions=regions,
       layers=layers,
       external_files=external_files,
-      standards=standards,
     )
     with open(file_path, "wb") as f:
         f.write(serialized_data)
 
-def read_duc_file(file_path: str) -> ExportedDataState:
+def read_duc_file(file_path: str) -> DucData:
     """
-    Parses a .duc file into an ExportedDataState object.
+    Parses a .duc file into a DucData dict with attribute access.
     """
-    with open(file_path, "rb") as f:
-        return parse_duc(f)
+    return parse_duc(file_path)

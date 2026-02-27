@@ -109,3 +109,67 @@ export const traverseAndUpdatePrecisionValues = (
   
   return result;
 };
+
+/**
+ * Traverses an object and normalizes it for serialization in `targetScope`.
+ *
+ * - Converts all PrecisionValue fields so `scoped` is in `targetScope`
+ * - Rewrites PrecisionValue `value` from the computed `scoped` value
+ * - Rewrites `scope` / `mainScope` string fields to `targetScope`
+ */
+export const normalizeForSerializationScope = <T>(
+  obj: T,
+  targetScope: Scope,
+  providedScope?: Scope,
+): T => {
+  const converted = traverseAndUpdatePrecisionValues(
+    obj,
+    targetScope,
+    providedScope,
+  );
+
+  return rewriteScopeAndPrecisionValues(converted, targetScope);
+};
+
+const rewriteScopeAndPrecisionValues = <T>(
+  obj: T,
+  targetScope: Scope,
+  visited = new WeakSet<object>(),
+): T => {
+  if (obj == null || typeof obj !== "object") return obj;
+
+  if (isPrecisionValue(obj)) {
+    return {
+      ...obj,
+      value: obj.scoped,
+    } as T;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) =>
+      rewriteScopeAndPrecisionValues(item, targetScope, visited),
+    ) as T;
+  }
+
+  if (visited.has(obj)) return obj;
+  visited.add(obj);
+
+  if ((obj as any).constructor !== Object) {
+    return obj;
+  }
+
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    if (
+      (key === "scope" || key === "mainScope") &&
+      typeof value === "string"
+    ) {
+      result[key] = targetScope;
+      continue;
+    }
+
+    result[key] = rewriteScopeAndPrecisionValues(value, targetScope, visited);
+  }
+
+  return result as T;
+};

@@ -73,6 +73,29 @@ jobs:
             exit 1
           fi
         working-directory: ./packages/ducpy
+
+      - name: Upload wheels to GitHub release
+        if: steps.release.outputs.status == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the tag created by semantic-release
+          TAG=$(git describe --tags --abbrev=0)
+          echo "Uploading wheels from dist/ to release $TAG"
+
+          # Upload all wheels and source distributions
+          find packages/ducpy/dist -name "*.whl" -o -name "*.tar.gz" | while read file; do
+            echo "Uploading: $file"
+            gh release upload "$TAG" "$file" --clobber
+          done
+
+      - name: Deploy Python documentation
+        if: steps.release.outputs.status == 'success'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-ducpy-docs-deployment
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Notify web deployment
         if: steps.release.outputs.status == 'success'
         uses: peter-evans/repository-dispatch@v3

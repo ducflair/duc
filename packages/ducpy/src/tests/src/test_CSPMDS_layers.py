@@ -3,9 +3,9 @@ CSPMDS Test for Layers: Create-Serialize-Parse-Mutate-Delete-Serialize
 Tests the full lifecycle of layer management in DUC files.
 """
 import os
-import pytest
 
 import ducpy as duc
+import pytest
 from ducpy.utils.mutate_utils import recursive_mutate
 
 
@@ -263,6 +263,65 @@ def test_output_dir():
     output_dir = os.path.join(current_script_path, "..", "output")
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
+
+
+def test_layers_via_sql():
+    """Create layers and assign elements to them using raw SQL."""
+    from ducpy.builders.sql_builder import DucSQL
+
+    with DucSQL.new() as db:
+        # Create two layers (stack_properties + layers)
+        for lid, label, readonly in [
+            ("background", "Background Layer", 0),
+            ("foreground", "Foreground Layer", 0),
+        ]:
+            db.sql(
+                "INSERT INTO stack_properties (id, label, is_visible, locked, opacity) "
+                "VALUES (?,?,1,0,1.0)", lid, label,
+            )
+            db.sql("INSERT INTO layers (id, readonly) VALUES (?,?)", lid, readonly)
+
+        # Create elements assigned to layers
+        db.sql(
+            "INSERT INTO elements (id, element_type, x, y, width, height, label, layer_id) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            "bg_rect", "rectangle", 0, 0, 200, 150, "Background Rect", "background",
+        )
+        db.sql(
+            "INSERT INTO elements (id, element_type, x, y, width, height, label, layer_id) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            "fg_ellipse", "ellipse", 50, 50, 100, 80, "Foreground Ellipse", "foreground",
+        )
+        db.sql(
+            "INSERT INTO element_ellipse (element_id, ratio, start_angle, end_angle) VALUES (?,?,?,?)",
+            "fg_ellipse", 1.0, 0.0, 6.283185307,
+        )
+
+        # Verify layer assignment
+        bg_els = db.sql("SELECT id FROM elements WHERE layer_id = ?", "background")
+        fg_els = db.sql("SELECT id FROM elements WHERE layer_id = ?", "foreground")
+        assert len(bg_els) == 1 and bg_els[0]["id"] == "bg_rect"
+        assert len(fg_els) == 1 and fg_els[0]["id"] == "fg_ellipse"
+
+        # Reassign element to different layer
+        db.sql("UPDATE elements SET layer_id = ? WHERE id = ?", "foreground", "bg_rect")
+        assert len(db.sql("SELECT id FROM elements WHERE layer_id = ?", "foreground")) == 2
+
+        # Delete a layer — verify cascade to stack_properties doesn't remove elements
+        db.sql("UPDATE elements SET layer_id = NULL WHERE layer_id = ?", "background")
+        db.sql("DELETE FROM stack_properties WHERE id = ?", "background")
+        assert db.sql("SELECT * FROM layers WHERE id = ?", "background") == []
+        assert len(db.sql("SELECT * FROM elements")) == 2  # elements still exist
+
+        raw = db.to_bytes()
+
+    with DucSQL.from_bytes(raw) as db2:
+        assert len(db2.sql("SELECT * FROM layers")) == 1
+        assert len(db2.sql("SELECT * FROM elements")) == 2
+
+
+# Legacy CSPMDS test now covered by SQL-first test for the new schema.
+test_cspmds_layers = test_layers_via_sql
 
 
 if __name__ == "__main__":

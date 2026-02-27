@@ -1,4 +1,4 @@
-import { TEXT_ALIGN, VERTICAL_ALIGN } from "../../flatbuffers/duc";
+import { TEXT_ALIGN, VERTICAL_ALIGN } from "../../enums";
 import { SupportedMeasures, getPrecisionValueFromRaw, getScopedBezierPointFromDucPoint } from "../../technical/scopes";
 import { DucLocalState, RawValue, Scope, ScopedValue } from "../../types";
 import { DucElement, DucElementType, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap, FontFamilyValues, FontString, NonDeletedDucElement } from "../../types/elements";
@@ -853,6 +853,6 @@ export const getAdjustedDimensions = (
 
 
 export {
-  getBoundTextElementPosition
+    getBoundTextElementPosition
 };
 
