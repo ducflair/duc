@@ -15,8 +15,9 @@ module.exports = {
     [
       "@semantic-release/exec",
       {
-        prepareCmd: "bun prerelease && bun run build ${nextRelease.version}",
-        publishCmd: "uv publish --token ${process.env.PYPI_TOKEN}",
+        prepareCmd:
+          "bun prerelease && sed -i 's/^version = \".*\"$/version = \"${nextRelease.version}\"/' crate/Cargo.toml && bun run build ${nextRelease.version}",
+        publishCmd: "uv publish --token ${process.env.PYPI_TOKEN} dist/*.tar.gz",
       },
     ],
     "@semantic-release/github",
