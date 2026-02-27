@@ -15,7 +15,7 @@ import {
   STROKE_SIDE_PREFERENCE,
   TEXT_ALIGN,
   VERTICAL_ALIGN,
-} from "../flatbuffers/duc";
+} from "../enums";
 import { getPrecisionScope } from "../technical/measurements";
 import {
   getPrecisionValueFromRaw,
@@ -23,7 +23,6 @@ import {
   NEUTRAL_SCOPE,
   ScaleFactors
 } from "../technical/scopes";
-import { PREDEFINED_STANDARDS, Standard } from "../technical/standards";
 import type {
   Checkpoint,
   Delta,
@@ -31,7 +30,6 @@ import type {
   DucExternalFiles,
   DucGlobalState,
   ImportedDataState,
-  JSONPatch,
   LibraryItems,
   PrecisionValue,
   RawValue,
@@ -45,7 +43,6 @@ import type {
   BezierMirroring,
   BlockLocalizationMap,
   DucBlock,
-  DucBlockAttributeDefinition,
   DucBlockCollection,
   DucBlockInstance,
   DucElement,
@@ -93,10 +90,6 @@ import {
 } from "../utils/constants";
 import { getDefaultStackProperties } from "../utils/elements";
 import { restoreElements } from "./restoreElements";
-import {
-  isStandardIdPresent,
-  restoreStandards,
-} from "./restoreStandards";
 
 export type RestoredLocalState = Omit<
   DucLocalState,
@@ -122,7 +115,6 @@ export type RestoredDataState = {
   regions: DucRegion[];
   layers: DucLayer[];
 
-  standards: Standard[];
   versionGraph: VersionGraph | undefined;
   id: string;
 };
@@ -162,13 +154,11 @@ export const restore = (
   elementsConfig: ElementsConfig,
   restoreConfig: RestoreConfig = {},
 ): RestoredDataState => {
-  const restoredStandards = restoreStandards(data?.standards);
   const restoredDictionary = restoreDictionary(data?.dictionary);
   const restoredGlobalState = restoreGlobalState(data?.globalState);
   const restoredLocalState = restoreLocalState(
     data?.localState,
     restoredGlobalState,
-    restoredStandards,
     restoreConfig.forceScope
   );
 
@@ -214,7 +204,6 @@ export const restore = (
     regions: restoredRegions,
     layers: restoredLayers,
 
-    standards: restoredStandards,
     versionGraph: restoredVersionGraph,
 
     localState: restoredLocalState,
@@ -340,14 +329,15 @@ export const restoreLayers = (
       }
     )
     .map((l): DucLayer => {
+      const overridesSource = l.overrides && typeof l.overrides === "object" ? l.overrides : null;
       return {
         id: l.id as string,
         ...restoreDucStackProperties(l),
         readonly: isValidBoolean(l.readonly, false),
-        overrides: {
-          stroke: validateStroke(l.overrides.stroke, currentScope, currentScope),
-          background: validateBackground(l.overrides.background),
-        },
+        overrides: overridesSource ? {
+          stroke: validateStroke(overridesSource.stroke, currentScope, currentScope),
+          background: validateBackground(overridesSource.background),
+        } : null,
       };
     });
 };
@@ -414,11 +404,6 @@ export const restoreBlocks = (
         label: typeof obj.label === "string" ? obj.label : "",
         description: typeof obj.description === "string" ? obj.description : undefined,
         version: typeof obj.version === "number" ? obj.version : 1,
-        attributes: obj.attributes || undefined,
-        attributeDefinitions:
-          obj.attributeDefinitions && typeof obj.attributeDefinitions === "object"
-            ? (obj.attributeDefinitions as Readonly<Record<string, DucBlockAttributeDefinition>>)
-            : {},
         metadata,
         thumbnail: isValidUint8Array(obj.thumbnail),
       };
@@ -506,29 +491,11 @@ export const restoreBlockInstances = (
         }
       }
 
-      // Handle attributeValues - same logic
-      let attributeValues: Record<string, string> | undefined;
-      if (obj.attributeValues && typeof obj.attributeValues === "object") {
-        if (Array.isArray(obj.attributeValues)) {
-          // Legacy format: array of {key, value} entries
-          attributeValues = Object.fromEntries(
-            obj.attributeValues.map((entry: any) => [
-              typeof entry.key === "string" ? entry.key : "",
-              typeof entry.value === "string" ? entry.value : "",
-            ])
-          );
-        } else {
-          // Current format: already a Record<string, string>
-          attributeValues = obj.attributeValues as Record<string, string>;
-        }
-      }
-
       return {
         id: isValidString(obj.id),
         blockId: isValidString(obj.blockId),
         version: isValidNumber(obj.version, 1),
         elementOverrides,
-        attributeValues,
         duplicationArray: dupArray && typeof dupArray === "object"
           ? {
             rows: typeof dupArray.rows === "number" ? dupArray.rows : 1,
@@ -590,10 +557,6 @@ export const restoreGlobalState = (
 ): DucGlobalState => {
   const defaults = getDefaultGlobalState();
 
-  const linearPrecision = isValidFinitePositiveByteValue(
-    importedState?.displayPrecision?.linear,
-    defaults.displayPrecision.linear
-  );
   return {
     ...defaults,
     name: importedState?.name ?? defaults.name,
@@ -605,22 +568,6 @@ export const restoreGlobalState = (
       importedState?.scopeExponentThreshold,
       defaults.scopeExponentThreshold
     ),
-    dashSpacingScale:
-      importedState?.dashSpacingScale ?? defaults.dashSpacingScale,
-    isDashSpacingAffectedByViewportScale:
-      importedState?.isDashSpacingAffectedByViewportScale ??
-      defaults.isDashSpacingAffectedByViewportScale,
-    dimensionsAssociativeByDefault:
-      importedState?.dimensionsAssociativeByDefault ??
-      defaults.dimensionsAssociativeByDefault,
-    useAnnotativeScaling:
-      importedState?.useAnnotativeScaling ?? defaults.useAnnotativeScaling,
-    displayPrecision: {
-      linear: linearPrecision,
-      angular:
-        importedState?.displayPrecision?.angular ??
-        defaults.displayPrecision.angular,
-    },
     pruningLevel:
       importedState?.pruningLevel &&
         Object.values(PRUNING_LEVEL).includes(importedState.pruningLevel)
@@ -641,11 +588,16 @@ export const restoreGlobalState = (
 export const restoreLocalState = (
   importedState: Partial<DucLocalState> = {},
   restoredGlobalState: RestoredDataState["globalState"],
-  restoredStandards: RestoredDataState["standards"],
   forceScope?: Scope
 ): DucLocalState => {
   const defaults = getDefaultLocalState();
-  const zoom = getZoom(importedState?.zoom?.value ?? defaults.zoom.value, restoredGlobalState.mainScope, restoredGlobalState.scopeExponentThreshold);
+
+  // Rust sends zoom as a plain f64, TS stores it as { value, scoped, scaled }.
+  // Handle both formats.
+  const rawZoom = typeof importedState?.zoom === "number"
+    ? importedState.zoom
+    : importedState?.zoom?.value;
+  const zoom = getZoom(rawZoom ?? defaults.zoom.value, restoredGlobalState.mainScope, restoredGlobalState.scopeExponentThreshold);
   const scope = forceScope
     ? isValidScopeValue(forceScope)
     : isValidPrecisionScopeValue(
@@ -658,36 +610,46 @@ export const restoreLocalState = (
     ...defaults,
     ...importedState,
     scope,
-    activeStandardId: isValidStandardId(
-      importedState?.activeStandardId,
-      restoredStandards,
-      defaults.activeStandardId
-    ),
     isBindingEnabled: isValidBoolean(
       importedState?.isBindingEnabled,
       defaults.isBindingEnabled
     ),
     penMode: isValidBoolean(importedState?.penMode, defaults.penMode),
-    scrollX: importedState?.scrollX
+    scrollX: importedState?.scrollX != null
       ? restorePrecisionValue(importedState.scrollX, NEUTRAL_SCOPE, scope)
       : getPrecisionValueFromRaw(defaults.scrollX.value, NEUTRAL_SCOPE, scope),
-    scrollY: importedState?.scrollY
+    scrollY: importedState?.scrollY != null
       ? restorePrecisionValue(importedState.scrollY, NEUTRAL_SCOPE, scope)
       : getPrecisionValueFromRaw(defaults.scrollY.value, NEUTRAL_SCOPE, scope),
     zoom,
-    activeGridSettings:
-      importedState?.activeGridSettings ?? defaults.activeGridSettings,
-    activeSnapSettings:
-      importedState?.activeSnapSettings ?? defaults.activeSnapSettings,
     currentItemStroke:
       validateStroke(importedState?.currentItemStroke, scope, scope) ??
       defaults.currentItemStroke,
     currentItemBackground:
       validateBackground(importedState?.currentItemBackground) ??
       defaults.currentItemBackground,
+    currentItemFontFamily:
+      typeof importedState?.currentItemFontFamily === "string"
+        ? importedState.currentItemFontFamily
+        : defaults.currentItemFontFamily,
+    currentItemFontSize: restorePrecisionValue(
+      importedState?.currentItemFontSize,
+      scope,
+      scope,
+      defaults.currentItemFontSize.value
+    ),
+    currentItemTextAlign: isValidTextAlignValue(
+      importedState?.currentItemTextAlign
+    ),
     currentItemOpacity: isValidPercentageValue(
       importedState?.currentItemOpacity,
       defaults.currentItemOpacity
+    ),
+    currentItemRoundness: restorePrecisionValue(
+      importedState?.currentItemRoundness,
+      scope,
+      scope,
+      defaults.currentItemRoundness.value
     ),
     currentItemStartLineHead:
       isValidLineHeadValue(importedState?.currentItemStartLineHead) ??
@@ -695,6 +657,30 @@ export const restoreLocalState = (
     currentItemEndLineHead:
       isValidLineHeadValue(importedState?.currentItemEndLineHead) ??
       defaults.currentItemEndLineHead,
+    viewModeEnabled: isValidBoolean(
+      importedState?.viewModeEnabled,
+      defaults.viewModeEnabled
+    ),
+    objectsSnapModeEnabled: isValidBoolean(
+      importedState?.objectsSnapModeEnabled,
+      defaults.objectsSnapModeEnabled
+    ),
+    gridModeEnabled: isValidBoolean(
+      importedState?.gridModeEnabled,
+      defaults.gridModeEnabled
+    ),
+    outlineModeEnabled: isValidBoolean(
+      importedState?.outlineModeEnabled,
+      defaults.outlineModeEnabled
+    ),
+    manualSaveMode: isValidBoolean(
+      importedState?.manualSaveMode,
+      defaults.manualSaveMode
+    ),
+    decimalPlaces: isValidDecimalPlacesValue(
+      importedState?.decimalPlaces,
+      defaults.decimalPlaces
+    ),
   };
 };
 
@@ -711,85 +697,31 @@ export const restoreVersionGraph = (
   if (!userCheckpointVersionId || !latestVersionId) {
     return undefined;
   }
-  const checkpoints: Checkpoint[] = [];
-  if (Array.isArray(importedGraph.checkpoints)) {
-    for (const c of importedGraph.checkpoints) {
-      if (!c || typeof c !== "object" || c.type !== "checkpoint") {
-        continue;
-      }
-      const id = isValidString(c.id);
-      if (!id) {
-        continue;
-      }
-      const parentId = typeof c.parentId === "string" ? c.parentId : null;
-      const timestamp = isFiniteNumber(c.timestamp) ? c.timestamp : 0;
-      const isManualSave = isValidBoolean(c.isManualSave, false);
-      const sizeBytes =
-        isFiniteNumber(c.sizeBytes) && c.sizeBytes >= 0 ? c.sizeBytes : 0;
-      const data = isValidUint8Array(c.data);
-      if (!data) {
-        continue;
-      }
-      checkpoints.push({
-        type: "checkpoint",
-        id,
-        parentId,
-        timestamp,
-        isManualSave,
-        sizeBytes,
-        data,
-        description: isValidString(c.description) || undefined,
-        userId: isValidString(c.userId) || undefined,
-      });
-    }
-  }
-  const deltas: Delta[] = [];
-  if (Array.isArray(importedGraph.deltas)) {
-    for (const d of importedGraph.deltas) {
-      if (!d || typeof d !== "object" || d.type !== "delta") {
-        continue;
-      }
-      const id = isValidString(d.id);
-      if (!id) {
-        continue;
-      }
-      const parentId = typeof d.parentId === "string" ? d.parentId : null;
-      const timestamp = isFiniteNumber(d.timestamp) ? d.timestamp : 0;
-      const isManualSave = isValidBoolean(d.isManualSave, false);
-      if (!Array.isArray(d.patch)) {
-        continue;
-      }
-      const patch: JSONPatch = [];
-      let isPatchValid = true;
-      for (const op of d.patch) {
-        if (
-          !op ||
-          typeof op !== "object" ||
-          !isValidString(op.op) ||
-          !isValidString(op.path)
-        ) {
-          isPatchValid = false;
-          break;
-        }
-        patch.push({ op: op.op, path: op.path, value: op.value });
-      }
-      if (!isPatchValid) {
-        continue;
-      }
-      deltas.push({
-        type: "delta",
-        id,
-        parentId,
-        timestamp,
-        isManualSave,
-        patch,
-        description: isValidString(d.description) || undefined,
-        userId: isValidString(d.userId) || undefined,
-      });
-    }
-  }
+  const checkpoints: Checkpoint[] = Array.isArray(importedGraph.checkpoints)
+    ? importedGraph.checkpoints
+      .map((checkpoint: unknown) => restoreCheckpoint(checkpoint))
+      .filter((checkpoint: Checkpoint | undefined): checkpoint is Checkpoint => Boolean(checkpoint))
+    : [];
+
+  const deltas: Delta[] = Array.isArray(importedGraph.deltas)
+    ? importedGraph.deltas
+      .map((delta: unknown) => restoreDelta(delta))
+      .filter((delta: Delta | undefined): delta is Delta => Boolean(delta))
+    : [];
   const importedMetadata = importedGraph.metadata;
   const metadata: VersionGraph["metadata"] = {
+    currentVersion:
+      isFiniteNumber(importedMetadata?.currentVersion) && importedMetadata.currentVersion >= 0
+        ? importedMetadata.currentVersion
+        : 0,
+    currentSchemaVersion:
+      isFiniteNumber(importedMetadata?.currentSchemaVersion) && importedMetadata.currentSchemaVersion >= 1
+        ? importedMetadata.currentSchemaVersion
+        : 1,
+    chainCount:
+      isFiniteNumber(importedMetadata?.chainCount) && importedMetadata.chainCount >= 1
+        ? importedMetadata.chainCount
+        : 1,
     lastPruned: isFiniteNumber(importedMetadata?.lastPruned)
       ? importedMetadata.lastPruned
       : 0,
@@ -802,9 +734,85 @@ export const restoreVersionGraph = (
   return {
     userCheckpointVersionId,
     latestVersionId,
+    chains: Array.isArray(importedGraph.chains) ? importedGraph.chains : [],
     checkpoints,
     deltas,
     metadata,
+  };
+};
+
+export const restoreCheckpoint = (importedCheckpoint: unknown): Checkpoint | undefined => {
+  if (!importedCheckpoint || typeof importedCheckpoint !== "object") {
+    return undefined;
+  }
+  const checkpoint = importedCheckpoint as Record<string, unknown>;
+  if (checkpoint.type !== "checkpoint") {
+    return undefined;
+  }
+
+  const id = isValidString(checkpoint.id);
+  const data = isValidUint8Array(checkpoint.data);
+  if (!id || !data) {
+    return undefined;
+  }
+
+  return {
+    type: "checkpoint",
+    id,
+    parentId: typeof checkpoint.parentId === "string" ? checkpoint.parentId : null,
+    timestamp: isFiniteNumber(checkpoint.timestamp) ? checkpoint.timestamp : 0,
+    isManualSave: isValidBoolean(checkpoint.isManualSave, false),
+    versionNumber: isFiniteNumber(checkpoint.versionNumber) ? checkpoint.versionNumber : 0,
+    schemaVersion:
+      isFiniteNumber(checkpoint.schemaVersion) && checkpoint.schemaVersion >= 1
+        ? checkpoint.schemaVersion
+        : 1,
+    isSchemaBoundary: isValidBoolean(checkpoint.isSchemaBoundary, false),
+    data,
+    sizeBytes:
+      isFiniteNumber(checkpoint.sizeBytes) && checkpoint.sizeBytes >= 0
+        ? checkpoint.sizeBytes
+        : data.byteLength,
+    description: isValidString(checkpoint.description) || undefined,
+    userId: isValidString(checkpoint.userId) || undefined,
+  };
+};
+
+export const restoreDelta = (importedDelta: unknown): Delta | undefined => {
+  if (!importedDelta || typeof importedDelta !== "object") {
+    return undefined;
+  }
+  const delta = importedDelta as Record<string, unknown>;
+  if (delta.type !== "delta") {
+    return undefined;
+  }
+
+  const id = isValidString(delta.id);
+  const payload = isValidUint8Array(delta.payload);
+  const baseCheckpointId = isValidString(delta.baseCheckpointId);
+  if (!id || !payload || !baseCheckpointId) {
+    return undefined;
+  }
+
+  return {
+    type: "delta",
+    id,
+    parentId: typeof delta.parentId === "string" ? delta.parentId : null,
+    timestamp: isFiniteNumber(delta.timestamp) ? delta.timestamp : 0,
+    isManualSave: isValidBoolean(delta.isManualSave, false),
+    versionNumber: isFiniteNumber(delta.versionNumber) ? delta.versionNumber : 0,
+    schemaVersion:
+      isFiniteNumber(delta.schemaVersion) && delta.schemaVersion >= 1
+        ? delta.schemaVersion
+        : 1,
+    baseCheckpointId,
+    payload,
+    sizeBytes:
+      isFiniteNumber(delta.sizeBytes) && delta.sizeBytes >= 0
+        ? delta.sizeBytes
+        : payload.byteLength,
+    description: isValidString(delta.description) || undefined,
+    userId: isValidString(delta.userId) || undefined,
   };
 };
 
@@ -829,14 +837,7 @@ export const restoreDucStackProperties = (
       defaultStackProperties.isVisible
     ),
     isPlot: isValidBoolean(stack.isPlot, defaultStackProperties.isPlot),
-    opacity: isValidPercentageValue(
-      stack.opacity,
-      defaultStackProperties.opacity
-    ),
-    labelingColor: isValidColor(
-      stack.labelingColor,
-      defaultStackProperties.labelingColor
-    ),
+    opacity: isValidPercentageValue(stack.opacity, defaultStackProperties.opacity),
   };
 };
 
@@ -935,6 +936,22 @@ export const isValidTextAlignValue = (
   if (value === undefined || !Object.values(TEXT_ALIGN).includes(value))
     return DEFAULT_TEXT_ALIGN;
   return value;
+};
+
+export const isValidDecimalPlacesValue = (
+  value: number | undefined,
+  fallback: number
+): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return fallback;
+  }
+
+  const truncated = Math.trunc(value);
+  if (truncated < 0 || truncated > 20) {
+    return fallback;
+  }
+
+  return truncated;
 };
 
 export const isValidScopeValue = (
@@ -1330,20 +1347,6 @@ export const isValidUint8Array = (value: unknown): Uint8Array | undefined => {
   }
 
   return undefined;
-};
-
-/**
- * Validates a Standard id.
- * Returns the id if valid and present in standards, otherwise returns the default DUC standard id.
- */
-export const isValidStandardId = (
-  id: any,
-  standards: Standard[],
-  defaultId: string = PREDEFINED_STANDARDS.DUC
-): string => {
-  const validId = isValidString(id);
-  if (isStandardIdPresent(validId, standards)) return validId;
-  return defaultId;
 };
 
 /**

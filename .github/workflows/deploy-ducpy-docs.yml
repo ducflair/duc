@@ -1,0 +1,69 @@
+name: Deploy Python Docs & Package Index
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [trigger-ducpy-docs-deployment]
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/ducpy/docs/**'
+      - 'packages/ducpy/src/ducpy/**'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Sphinx dependencies
+        run: pip install sphinx furo sphinx-autoapi
+
+      - name: Build Sphinx documentation
+        run: sphinx-build -M html . _build
+        working-directory: packages/ducpy/docs
+
+      - name: Stage site root
+        run: |
+          mkdir -p _site/reference/python
+          cp -r packages/ducpy/docs/_build/html/. _site/reference/python/
+
+      - name: Build PEP 503 Simple Package Index
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # simple/ lands at _site/simple/ → ducflair.github.io/duc/simple/
+        run: python3 scripts/build-ducpy-simple-index.py _site
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
