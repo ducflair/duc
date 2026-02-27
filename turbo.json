@@ -3,10 +3,16 @@
   "tasks": {
     "ducjs#build": {
       "cache": false,
+      "dependsOn": [
+        "ducrs#build"
+      ],
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
     "ducpy#build": {
       "cache": false,
+      "dependsOn": [
+        "ducrs#build"
+      ],
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
     "ducrs#build": {
@@ -53,6 +59,12 @@
     "ducpy#gen:docs": {
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+
+    "ducpy#dev:docs": {
+      "cache": false,
+      "persistent": true,
+      "inputs": ["$TURBO_DEFAULT$"]
     },
 
     "@duc/docs#build": {

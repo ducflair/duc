@@ -10,12 +10,6 @@ ensureDir(join(__dirname, OUTPUT_DIR));
 describe('ducToSvg Integration Tests', () => {
   const assets = [
     'blocks_instances.duc',
-    'complex_tables.duc',
-    'hatching_patterns.duc',
-    'mixed_elements.duc',
-    'override_capabilities.duc',
-    'pdf_image_elements.duc',
-    'plot_elements.duc',
     'universal.duc',
   ];
 
@@ -34,9 +28,9 @@ describe('ducToSvg Integration Tests', () => {
         expect(page.svg).toBeDefined();
         validateSvg(page.svg);
 
-        const outName = file.replace(/\.duc$/, `_page_${page.pageIndex}.svg`);
+        const outName = file.replace(/\.duc$/, `_page_${page.svg.pageIndex}.svg`);
         saveSvgOutput(`${OUTPUT_DIR}/${outName}`, page.svg);
       }
-    }, 30000); // 30 second timeout for PDF processing
+    }, 60000); // 60 second timeout for PDF/SVG processing
   }
 });

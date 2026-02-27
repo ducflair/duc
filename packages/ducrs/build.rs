@@ -1,51 +1,73 @@
 use std::env;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::fs;
 use std::path::PathBuf;
 
-// Function to parse schema version from .fbs file
-fn get_schema_version_from_fbs(fbs_file_path: &PathBuf) -> Result<String, Box<dyn std::error::Error>> {
-    let file = File::open(fbs_file_path)?;
-    let reader = BufReader::new(file);
-    if let Some(line_result) = reader.lines().next() {
-        let line = line_result?;
-        const PREFIX: &str = "// SCHEMA_VERSION=";
-        // Using simple string manipulation
-        if line.starts_with(PREFIX) {
-            let version_str = line.trim_start_matches(PREFIX).trim();
-            return Ok(version_str.to_string());
-        } else if let Some(capt_start) = line.find(PREFIX) { // More flexible check for leading spaces/tabs before comment
-            let version_part = &line[capt_start + PREFIX.len()..];
-            // Take the first part after '=', assuming it's the version string
-            let version_str = version_part.split_whitespace().next().unwrap_or("").trim(); 
-            if !version_str.is_empty() {
-                return Ok(version_str.to_string());
+/// Extract raw `PRAGMA user_version = <N>;` from `duc.sql`.
+fn schema_user_version_from_sql(sql: &str) -> u32 {
+    for line in sql.lines() {
+        let trimmed = line.trim();
+        if let Some(rest) = trimmed.strip_prefix("PRAGMA user_version") {
+            let rest = rest.trim().trim_start_matches('=').trim().trim_end_matches(';').trim();
+            if let Ok(v) = rest.parse::<u32>() {
+                return v;
             }
         }
     }
-    eprintln!("cargo:warning=Could not parse schema version from {:?}. Defaulting to 0.0.0.", fbs_file_path);
-    Ok("0.0.0".to_string())
+    0
+}
+
+/// Convention: 3000000 → "3.0.0" (major * 1_000_000 + minor * 1_000 + patch).
+fn decode_user_version_to_semver(user_version: u32) -> String {
+    let major = user_version / 1_000_000;
+    let minor = (user_version % 1_000_000) / 1_000;
+    let patch = user_version % 1_000;
+    format!("{major}.{minor}.{patch}")
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Get the path to the current crate's manifest (Cargo.toml)
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?);
+    let schema_dir = manifest_dir.join("..").join("..").join("schema");
+    let out_dir = PathBuf::from(env::var("OUT_DIR")?);
 
-    let fbs_path = manifest_dir.join("..").join("..").join("schema").join("duc.fbs");
-
-    match get_schema_version_from_fbs(&fbs_path) {
-        Ok(version) => {
-            println!("cargo:rustc-env=DUC_SCHEMA_VERSION={}", version);
+    // Copy schema files into OUT_DIR so bootstrap.rs can include_str! them
+    // even when the crate is built from an sdist in a temp directory.
+    for name in ["duc.sql", "version_control.sql", "search.sql"] {
+        let src = schema_dir.join(name);
+        let dst = out_dir.join(name);
+        match fs::read_to_string(&src) {
+            Ok(contents) => fs::write(&dst, contents)?,
+            Err(e) => {
+                eprintln!("cargo:warning=Could not read {:?}: {e}. Writing empty stub.", src);
+                fs::write(&dst, "")?;
+            }
         }
-        Err(e) => {
-            eprintln!("cargo:warning=Failed to read or parse schema version from {:?}: {}. Defaulting to 0.0.0.", fbs_path, e);
-            println!("cargo:rustc-env=DUC_SCHEMA_VERSION=0.0.0");
-        }
+        println!("cargo:rerun-if-changed={}", src.display());
     }
 
-    // Tell Cargo to rerun this build script if duc.fbs changes.
-    println!("cargo:rerun-if-changed={}", fbs_path.display());
-    // Also rerun if build.rs itself changes
+    let sql_path = schema_dir.join("duc.sql");
+    let (user_version, semver_version) = match fs::read_to_string(&sql_path) {
+        Ok(sql) => {
+            let uv = schema_user_version_from_sql(&sql);
+            (uv, decode_user_version_to_semver(uv))
+        }
+        Err(e) => {
+            eprintln!("cargo:warning=Could not read {:?}: {e}. Defaulting to 0.0.0.", sql_path);
+            (0, "0.0.0".to_string())
+        }
+    };
+
+    // Semver string for human-readable build metadata.
+    println!("cargo:rustc-env=DUC_SCHEMA_VERSION={semver_version}");
+    // Raw integer for version-control schema comparisons/migrations.
+    println!("cargo:rustc-env=DUC_SCHEMA_USER_VERSION={user_version}");
+
+    // Generate a compile-time Rust literal for the current schema version.
+    // Included by version_control.rs as a true `const i32`.
+    fs::write(
+        out_dir.join("schema_user_version.rs"),
+        format!("{}i32", user_version),
+    )?;
+
     println!("cargo:rerun-if-changed=build.rs");
 
     Ok(())

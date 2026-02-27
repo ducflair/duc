@@ -1,13 +1,13 @@
-export * from "./geometry";
-export * from "./bbox";
 export * from "./algebra";
+export * from "./bbox";
+export * from "./geometry";
 export * from "./random";
 
+import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint, SupportedMeasures } from "../../technical/scopes";
 import type {
-  NullableGridSize,
-  RawValue,
-  ScopedZoomValue,
-  Zoom
+    RawValue,
+    ScopedZoomValue,
+    Zoom
 } from "../../types";
 import { Scope, ScopedValue } from "../../types";
 import type { DucElement, DucLine, DucLinearElement, DucLinearLikeElement, DucLineReference, DucPoint, NonDeleted } from "../../types/elements";
@@ -15,12 +15,12 @@ import type { Bounds, GeometricPoint, GeometricVector, Percentage, Radian } from
 import { Heading } from "../../types/geometryTypes";
 import { Mutable } from "../../types/utility-types";
 import {
-  LINE_CONFIRM_THRESHOLD
+    LINE_CONFIRM_THRESHOLD
 } from "../constants";
 import { pointFrom } from "./geometry";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint, SupportedMeasures } from "../../technical/scopes";
 
 type SV = ScopedValue;
+export type NullableGridSize = number | null;
 
 
 

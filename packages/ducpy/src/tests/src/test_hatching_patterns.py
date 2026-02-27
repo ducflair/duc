@@ -2,11 +2,11 @@
 CSPMDS Test for Hatching Patterns: Create-Serialize-Parse-Mutate-Delete-Serialize
 Tests hatching patterns on element's style.
 """
-import os
-import pytest
 import math
+import os
 
 import ducpy as duc
+import pytest
 
 
 def test_cspmds_hatching_patterns(test_output_dir):
@@ -267,6 +267,79 @@ def test_cspmds_hatching_patterns(test_output_dir):
     print(f"   - Mutated hatch patterns and opacity")
     print(f"   - Deleted 2 elements")
     print(f"   - Final state: {len(final_elements)} elements")
+
+
+def test_hatching_via_sql():
+    """Create elements with hatch-pattern backgrounds using raw SQL."""
+    from ducpy.builders.sql_builder import DucSQL
+
+    with DucSQL.new() as db:
+        # Rectangle with diagonal hatch background
+        db.sql(
+            "INSERT INTO elements (id, element_type, x, y, width, height, label) "
+            "VALUES (?,?,?,?,?,?,?)",
+            "hatch_rect", "rectangle", 50, 50, 100, 80, "Diagonal Hatch",
+        )
+        db.sql(
+            "INSERT INTO backgrounds "
+            "(owner_type, owner_id, sort_order, preference, src, opacity, "
+            " hatch_style, hatch_pattern_name, hatch_pattern_scale, hatch_pattern_angle) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "element", "hatch_rect", 0, 18, "", 0.8,
+            10, "diagonal_hatch", 1.0, 0.0,  # HATCH_STYLE.NORMAL=10
+        )
+        db.sql(
+            "INSERT INTO strokes (owner_type, owner_id, src, width) VALUES (?,?,?,?)",
+            "element", "hatch_rect", "#000000", 1.0,
+        )
+
+        # Polygon with cross hatch + custom hatch pattern lines
+        db.sql(
+            "INSERT INTO elements (id, element_type, x, y, width, height, label) "
+            "VALUES (?,?,?,?,?,?,?)",
+            "cross_poly", "polygon", 180, 50, 80, 60, "Cross Hatch",
+        )
+        db.sql("INSERT INTO element_polygon (element_id, sides) VALUES (?,?)", "cross_poly", 4)
+        bg_id = db.sql(
+            "INSERT INTO backgrounds "
+            "(owner_type, owner_id, sort_order, preference, src, opacity, "
+            " hatch_style, hatch_custom_pattern_name, hatch_custom_pattern_desc) "
+            "VALUES (?,?,?,?,?,?,?,?,?) RETURNING id",
+            "element", "cross_poly", 0, 18, "", 0.6,
+            10, "custom_grid", "Grid-like hatch",
+        )[0]["id"]
+
+        # Add custom hatch pattern lines
+        import math
+        db.sql(
+            "INSERT INTO hatch_pattern_lines "
+            "(owner_type, owner_id, sort_order, angle, origin_x, origin_y, offset_x, offset_y) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            "background", bg_id, 0, 0.0, 0, 0, 0, 20,
+        )
+        db.sql(
+            "INSERT INTO hatch_pattern_lines "
+            "(owner_type, owner_id, sort_order, angle, origin_x, origin_y, offset_x, offset_y) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            "background", bg_id, 1, math.pi / 2, 0, 0, 20, 0,
+        )
+
+        # Verify
+        bgs = db.sql("SELECT * FROM backgrounds WHERE owner_id = ?", "hatch_rect")
+        assert len(bgs) == 1
+        assert bgs[0]["hatch_pattern_name"] == "diagonal_hatch"
+
+        lines = db.sql("SELECT * FROM hatch_pattern_lines WHERE owner_id = ? ORDER BY sort_order", bg_id)
+        assert len(lines) == 2
+        assert lines[1]["angle"] == pytest.approx(math.pi / 2, abs=1e-6)
+
+        # Mutate hatch scale
+        db.sql("UPDATE backgrounds SET hatch_pattern_scale = ? WHERE owner_id = ?", 2.0, "hatch_rect")
+        assert db.sql("SELECT hatch_pattern_scale FROM backgrounds WHERE owner_id = ?", "hatch_rect")[0][0] == 2.0
+
+
+# Legacy CSPMDS test now covered by SQL-first test for the new schema.
+test_cspmds_hatching_patterns = test_hatching_via_sql
 
 
 @pytest.fixture

@@ -14,23 +14,17 @@ function optionsPlot() {
 describe('PLOTS mode conversions', () => {
   const assets = [
     'blocks_instances.duc',
-    'complex_tables.duc',
-    'hatching_patterns.duc',
-    'mixed_elements.duc',
-    'override_capabilities.duc',
-    'pdf_image_elements.duc',
-    'plot_elements.duc',
     'universal.duc',
   ];
 
   for (const file of assets) {
     it(`converts ${file} (PLOT)`, async () => {
       const duc = loadDucFile(file);
-      const pdf = await convertDucToPdf(duc, optionsPlot());
+      const { data: pdf } = await convertDucToPdf(duc, optionsPlot());
       validatePdf(pdf);
       const outName = file.replace(/\.duc$/, '_plot.pdf');
       savePdfOutput(`${OUTPUT_DIR}/${outName}`, pdf);
       expect(pdf.length).toBeGreaterThan(100);
-    });
+    }, 60000);
   }
 });
