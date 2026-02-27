@@ -90,14 +90,20 @@ jobs:
         with:
           version: ${{ steps.pyodide_tooling.outputs.emscripten_version }}
 
+      - name: Setup Rust nightly for Pyodide
+        if: steps.release.outputs.status == 'success'
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: wasm32-unknown-emscripten
+
       - name: Build Pyodide wheel
         if: steps.release.outputs.status == 'success'
         working-directory: ./packages/ducpy
         run: |
-          TAG=$(git describe --tags --abbrev=0)
+          TAG=$(git describe --tags --abbrev=0 --match 'ducpy@*')
           VERSION="${TAG#ducpy@}"
           echo "Building Pyodide wheel for version ${VERSION}"
-          SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION}" pyodide build --outdir dist
+          RUSTUP_TOOLCHAIN=nightly SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION}" pyodide build --outdir dist
 
       - name: Upload wheels to GitHub release
         if: steps.release.outputs.status == 'success'
@@ -105,7 +111,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Get the tag created by semantic-release
-          TAG=$(git describe --tags --abbrev=0)
+          TAG=$(git describe --tags --abbrev=0 --match 'ducpy@*')
           echo "Uploading wheels from dist/ to release $TAG"
 
           # Upload all wheels and source distributions
