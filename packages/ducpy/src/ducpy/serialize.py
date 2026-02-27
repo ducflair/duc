@@ -5,15 +5,55 @@ Serialize DUC data using the Rust native extension (ducpy_native).
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import asdict, is_dataclass
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import ducpy_native
-from ducpy._version import DUC_SCHEMA_VERSION
 from ducpy.utils.convert import (deep_snake_to_camel, snake_to_camel,
                                  to_serializable)
 
 logger = logging.getLogger(__name__)
+
+
+def _decode_user_version_to_semver(user_version: int) -> str:
+    """Decode sqlite-style schema user_version to semver.
+
+    Encoding convention:
+        major * 1_000_000 + minor * 1_000 + patch
+    """
+    if user_version < 0:
+        return "0.0.0"
+
+    major = user_version // 1_000_000
+    minor = (user_version % 1_000_000) // 1_000
+    patch = user_version % 1_000
+    return f"{major}.{minor}.{patch}"
+
+
+def _read_schema_version_fallback() -> str:
+    """Resolve schema version directly from repository `schema/duc.sql`.
+
+    This is used when `ducpy._version` isn't available (for example, in clean
+    CI environments before setup-time generation has run).
+    """
+    try:
+        schema_path = Path(__file__).resolve().parents[4] / "schema" / "duc.sql"
+        content = schema_path.read_text(encoding="utf-8")
+        match = re.search(r"PRAGMA\s+user_version\s*=\s*(\d+)\s*;", content)
+        if match:
+            return _decode_user_version_to_semver(int(match.group(1)))
+    except Exception as exc:  # pragma: no cover - defensive fallback for CI/runtime variance
+        logger.warning("Failed to resolve schema version fallback from duc.sql: %s", exc)
+
+    return "0.0.0"
+
+
+try:
+    from ducpy._version import DUC_SCHEMA_VERSION
+except ModuleNotFoundError:
+    DUC_SCHEMA_VERSION = _read_schema_version_fallback()
 
 # Map Python element class names → Rust serde type tag strings.
 _ELEMENT_CLASS_TO_TYPE: Dict[str, str] = {
