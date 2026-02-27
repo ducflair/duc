@@ -6,7 +6,7 @@ module.exports = {
       {
         paths: [
           "packages/ducpdf/src/duc2pdf",
-          "packages/ducrs",
+          // "packages/ducrs",
         ],
         analyzer: { preset: "conventionalcommits" },
         notes: { preset: "conventionalcommits" },

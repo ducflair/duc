@@ -30,11 +30,11 @@ use crate::utils::freedraw_bounds::FreeDrawBounds;
 use crate::utils::style_resolver::{ResolvedStyles, StyleResolver};
 use crate::{ConversionError, ConversionResult};
 use bigcolor::BigColor;
-use duc::generated::duc::{BEZIER_MIRRORING, ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN};
 use duc::types::{
-    DucElementEnum, DucEllipseElement, DucFrameElement,
+    BEZIER_MIRRORING, ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN, DucElementEnum,
+    DucEllipseElement, DucFrameElement,
     DucFreeDrawElement, DucImageElement, DucLine, DucLineReference, DucLinearElement,
-    DucLinearElementBase, DucMermaidElement, DucPath, DucPdfElement, DucPlotElement, DucPoint,
+    DucLinearElementBase, DucPath, DucPdfElement, DucPlotElement, DucPoint,
     DucPolygonElement, DucRectangleElement, DucTableElement, DucTextElement, ElementBackground,
     ElementContentBase, ElementWrapper, GeometricPoint, DucBlockInstance, DucBlockDuplicationArray,
 };
@@ -218,14 +218,7 @@ impl ElementStreamer {
                         DucElementEnum::DucFreeDrawElement(f) => (f.base.width, f.base.height),
                         DucElementEnum::DucLinearElement(l) => (l.linear_base.base.width, l.linear_base.base.height),
                         DucElementEnum::DucArrowElement(a) => (a.linear_base.base.width, a.linear_base.base.height),
-                        DucElementEnum::DucViewportElement(v) => (v.linear_base.base.width, v.linear_base.base.height),
-                        DucElementEnum::DucXRayElement(x) => (x.base.width, x.base.height),
-                        DucElementEnum::DucLeaderElement(l) => (l.linear_base.base.width, l.linear_base.base.height),
-                        DucElementEnum::DucDimensionElement(d) => (d.base.width, d.base.height),
-                        DucElementEnum::DucFeatureControlFrameElement(f) => (f.base.width, f.base.height),
-                        DucElementEnum::DucParametricElement(p) => (p.base.width, p.base.height),
                         DucElementEnum::DucPdfElement(p) => (p.base.width, p.base.height),
-                        DucElementEnum::DucMermaidElement(m) => (m.base.width, m.base.height),
                         DucElementEnum::DucModelElement(m) => (m.base.width, m.base.height),
                     };
 
@@ -532,7 +525,7 @@ impl ElementStreamer {
         }
 
         // Special handling: PDF elements - do not apply styles to avoid affecting embedded content
-        let styles = self.style_resolver.resolve_styles(element, None);
+        let styles = self.style_resolver.resolve_styles(element);
 
         let is_pdf = matches!(element, DucElementEnum::DucPdfElement(_));
         if !is_pdf {
@@ -550,9 +543,6 @@ impl ElementStreamer {
             DucElementEnum::DucTextElement(text) => self.stream_text(text)?,
             DucElementEnum::DucLinearElement(linear) => self.stream_linear(linear)?,
             DucElementEnum::DucTableElement(table) => self.stream_table(table)?,
-            DucElementEnum::DucMermaidElement(mermaid) => {
-                self.stream_mermaid(mermaid, resource_streamer)?
-            }
             DucElementEnum::DucFreeDrawElement(freedraw) => {
                 self.stream_freedraw(freedraw, &styles, document, pdf_embedder, resource_streamer)?
             }
@@ -571,30 +561,9 @@ impl ElementStreamer {
 
             // Ignored elements (as per specifications)
             DucElementEnum::DucEmbeddableElement(_) => vec![], // Ignore
-            DucElementEnum::DucXRayElement(_) => vec![],       // Ignore
             DucElementEnum::DucArrowElement(_) => vec![],      // Ignore
-
-            // WIP elements (placeholder comments for now)
-            DucElementEnum::DucLeaderElement(_) => {
-                vec![Operation::new("% DucLeaderElement - WIP", vec![])]
-            }
-            DucElementEnum::DucDimensionElement(_) => {
-                vec![Operation::new("% DucDimensionElement - WIP", vec![])]
-            }
-            DucElementEnum::DucFeatureControlFrameElement(_) => {
-                vec![Operation::new(
-                    "% DucFeatureControlFrameElement - WIP",
-                    vec![],
-                )]
-            }
-            DucElementEnum::DucViewportElement(_) => {
-                vec![Operation::new("% DucViewportElement - WIP", vec![])]
-            }
             DucElementEnum::DucDocElement(_) => {
                 vec![Operation::new("% DucDocElement - WIP", vec![])]
-            }
-            DucElementEnum::DucParametricElement(_) => {
-                vec![Operation::new("% DucParametricElement - WIP", vec![])]
             }
             DucElementEnum::DucModelElement(_) => {
                 vec![Operation::new("% DucModelElement - WIP", vec![])]
@@ -616,7 +585,6 @@ impl ElementStreamer {
             DucElementEnum::DucEllipseElement(elem) => &elem.base,
             DucElementEnum::DucEmbeddableElement(elem) => &elem.base,
             DucElementEnum::DucPdfElement(elem) => &elem.base,
-            DucElementEnum::DucMermaidElement(elem) => &elem.base,
             DucElementEnum::DucTableElement(elem) => &elem.base,
             DucElementEnum::DucImageElement(elem) => &elem.base,
             DucElementEnum::DucTextElement(elem) => &elem.base,
@@ -625,13 +593,7 @@ impl ElementStreamer {
             DucElementEnum::DucFreeDrawElement(elem) => &elem.base,
             DucElementEnum::DucFrameElement(elem) => &elem.stack_element_base.base,
             DucElementEnum::DucPlotElement(elem) => &elem.stack_element_base.base,
-            DucElementEnum::DucViewportElement(elem) => &elem.linear_base.base,
-            DucElementEnum::DucXRayElement(elem) => &elem.base,
-            DucElementEnum::DucLeaderElement(elem) => &elem.linear_base.base,
-            DucElementEnum::DucDimensionElement(elem) => &elem.base,
-            DucElementEnum::DucFeatureControlFrameElement(elem) => &elem.base,
             DucElementEnum::DucDocElement(elem) => &elem.base,
-            DucElementEnum::DucParametricElement(elem) => &elem.base,
             DucElementEnum::DucModelElement(elem) => &elem.base,
         }
     }
@@ -1454,11 +1416,7 @@ impl ElementStreamer {
                 apply_stroke_properties: true,
             },
             DucElementEnum::DucFrameElement(_)
-            | DucElementEnum::DucPlotElement(_)
-            | DucElementEnum::DucLeaderElement(_)
-            | DucElementEnum::DucDimensionElement(_)
-            | DucElementEnum::DucFeatureControlFrameElement(_)
-            | DucElementEnum::DucParametricElement(_) => StyleProfile {
+            | DucElementEnum::DucPlotElement(_) => StyleProfile {
                 use_background_fill: false,
                 fill_from_stroke: false,
                 apply_stroke_properties: true,
@@ -1470,24 +1428,25 @@ impl ElementStreamer {
             },
             DucElementEnum::DucFreeDrawElement(_)
             | DucElementEnum::DucImageElement(_)
-            | DucElementEnum::DucMermaidElement(_)
             | DucElementEnum::DucPdfElement(_)
             | DucElementEnum::DucEmbeddableElement(_)
-            | DucElementEnum::DucXRayElement(_)
             | DucElementEnum::DucArrowElement(_)
-            | DucElementEnum::DucViewportElement(_)
             | DucElementEnum::DucDocElement(_) => StyleProfile {
                 use_background_fill: false,
                 fill_from_stroke: false,
                 apply_stroke_properties: false,
             },
-            &DucElementEnum::DucModelElement(_) => todo!(),
+            DucElementEnum::DucModelElement(_) => StyleProfile {
+                use_background_fill: false,
+                fill_from_stroke: false,
+                apply_stroke_properties: false,
+            },
         }
     }
 
     /// Stream text element
     fn stream_text(&self, text: &DucTextElement) -> ConversionResult<Vec<Operation>> {
-        use duc::generated::duc::{TEXT_ALIGN, VERTICAL_ALIGN};
+        use duc::types::{TEXT_ALIGN, VERTICAL_ALIGN};
         use hipdf::fonts::utils::{create_text_block, TextAlign, WrapStrategy};
 
         let resolved_text = self
@@ -1506,7 +1465,6 @@ impl ElementStreamer {
             TEXT_ALIGN::LEFT => TextAlign::Left,
             TEXT_ALIGN::CENTER => TextAlign::Center,
             TEXT_ALIGN::RIGHT => TextAlign::Right,
-            _ => TextAlign::Left,
         };
 
         // Calculate line height from style
@@ -1872,7 +1830,7 @@ impl ElementStreamer {
         let (outer_indices, _outer_line_indices) =
             add_path_to_element(&outer_points, &outer_lines, &mut all_points, &mut all_lines);
 
-        if has_hole {
+        if has_hole && !outer_indices.is_empty() {
             let rx_inner = rx * (1.0_f64 - ratio_f64);
             let ry_inner = ry * (1.0_f64 - ratio_f64);
             let (inner_points_orig, inner_lines_orig) =
@@ -1923,11 +1881,11 @@ impl ElementStreamer {
                     }),
                     stroke: None,
                 });
-            } else {
+            } else if !inner_indices.is_empty() {
                 let outer_start_idx = outer_indices[0];
-                let outer_end_idx = *outer_indices.last().unwrap();
+                let outer_end_idx = *outer_indices.last().unwrap_or(&outer_start_idx);
                 let inner_start_idx = inner_indices[0];
-                let inner_end_idx = *inner_indices.last().unwrap();
+                let inner_end_idx = *inner_indices.last().unwrap_or(&inner_start_idx);
 
                 all_points[outer_start_idx as usize].mirroring = Some(BEZIER_MIRRORING::NONE);
                 all_points[outer_end_idx as usize].mirroring = Some(BEZIER_MIRRORING::NONE);
@@ -1955,7 +1913,7 @@ impl ElementStreamer {
                     },
                 });
             }
-        } else if !is_full_shape {
+        } else if !is_full_shape && !outer_indices.is_empty() {
             let center_point = DucPoint {
                 x: cx,
                 y: cy,
@@ -1965,7 +1923,7 @@ impl ElementStreamer {
             all_points.push(center_point);
 
             let outer_start_idx = outer_indices[0];
-            let outer_end_idx = *outer_indices.last().unwrap();
+            let outer_end_idx = *outer_indices.last().unwrap_or(&outer_start_idx);
 
             all_points[outer_start_idx as usize].mirroring = Some(BEZIER_MIRRORING::NONE);
             all_points[outer_end_idx as usize].mirroring = Some(BEZIER_MIRRORING::NONE);
@@ -2009,80 +1967,6 @@ impl ElementStreamer {
     /// Stream linear element (lines)
     fn stream_linear(&self, linear: &DucLinearElement) -> ConversionResult<Vec<Operation>> {
         PdfLinearRenderer::stream_linear(linear)
-    }
-
-    /// Stream mermaid element (uses SVG from resources)
-    fn stream_mermaid(
-        &self,
-        mermaid: &DucMermaidElement,
-        resource_streamer: &mut ResourceStreamer,
-    ) -> ConversionResult<Vec<Operation>> {
-        let mut ops = Vec::new();
-
-        if let Some(svg_path) = &mermaid.svg_path {
-            if let Some(xobject_name) = self.resource_cache.get(svg_path) {
-                // Use XObject for the SVG
-                ops.push(Operation::new("% Mermaid SVG from cache", vec![]));
-                ops.push(Operation::new("q", vec![])); // Save graphics state
-
-                // Apply scaling if needed
-                ops.push(Operation::new(
-                    "cm",
-                    vec![
-                        Object::Real(mermaid.base.width as f32),
-                        Object::Real(0.0),
-                        Object::Real(0.0),
-                        Object::Real(mermaid.base.height as f32),
-                        Object::Real(0.0),
-                        Object::Real(0.0),
-                    ],
-                ));
-
-                ops.push(Operation::new(
-                    "Do",
-                    vec![Object::Name(xobject_name.as_bytes().to_vec())],
-                ));
-
-                ops.push(Operation::new("Q", vec![])); // Restore graphics state
-            } else {
-                // SVG not found in cache, try to stream it directly
-                ops.push(Operation::new("% Mermaid SVG streaming", vec![]));
-
-                match resource_streamer.stream_svg_resource(
-                    svg_path,
-                    0.0,
-                    0.0, // x, y position
-                    mermaid.base.width,
-                    mermaid.base.height,
-                ) {
-                    Ok(svg_ops) => {
-                        ops.extend(svg_ops);
-                        ops.push(Operation::new("% SVG successfully embedded", vec![]));
-                    }
-                    Err(e) => {
-                        return Err(ConversionError::ResourceLoadError(format!(
-                            "Failed to stream SVG resource {}: {}",
-                            svg_path, e
-                        )));
-                    }
-                }
-            }
-        } else {
-            // No svg_path, create placeholder
-            ops.push(Operation::new("% Mermaid element without svg_path", vec![]));
-            ops.push(Operation::new(
-                "re",
-                vec![
-                    Object::Real(0.0),
-                    Object::Real(-(mermaid.base.height as f32)),
-                    Object::Real(mermaid.base.width as f32),
-                    Object::Real(mermaid.base.height as f32),
-                ],
-            ));
-            ops.push(Operation::new("S", vec![]));
-        }
-
-        Ok(ops)
     }
 
     /// Stream freedraw element by converting SVG path data into a PDF XObject

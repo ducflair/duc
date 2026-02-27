@@ -1,35 +1,35 @@
 import type { ElementOrToolType } from "..";
-import type { MarkNonNullable } from "../utility-types";
 import { assertNever } from "../../utils";
 import { Bounds, LineSegment, TuplePoint } from "../geometryTypes";
+import type { MarkNonNullable } from "../utility-types";
 import type {
-  DucArrowElement,
-  DucBindableElement,
-  DucDocElement,
-  DucElbowArrowElement,
-  DucElement,
-  DucElementType,
-  DucEmbeddableElement,
-  DucFlowchartNodeElement,
-  DucFrameElement,
-  DucFrameLikeElement,
-  DucFreeDrawElement,
-  DucImageElement,
-  DucLinearElement,
-  DucPdfElement,
-  DucPlotElement,
-  DucTableElement,
-  DucPointBinding,
-  DucTextContainer,
-  DucTextElement,
-  DucTextElementWithContainer,
-  FixedPointBinding,
-  InitializedDucImageElement,
-  DucNonSelectionElement,
-  DucEllipseElement,
-  DucPolygonElement,
-  NonDeleted,
-  DucIframeLikeElement
+    DucArrowElement,
+    DucBindableElement,
+    DucDocElement,
+    DucElbowArrowElement,
+    DucElement,
+    DucElementType,
+    DucEllipseElement,
+    DucEmbeddableElement,
+    DucFlowchartNodeElement,
+    DucFrameElement,
+    DucFrameLikeElement,
+    DucFreeDrawElement,
+    DucIframeLikeElement,
+    DucImageElement,
+    DucLinearElement,
+    DucNonSelectionElement,
+    DucPdfElement,
+    DucPlotElement,
+    DucPointBinding,
+    DucPolygonElement,
+    DucTableElement,
+    DucTextContainer,
+    DucTextElement,
+    DucTextElementWithContainer,
+    FixedPointBinding,
+    InitializedDucImageElement,
+    NonDeleted
 } from "./";
 
 export const isInitializedImageElement = (
@@ -279,17 +279,12 @@ export const isDucElement = (
     case "frame":
     case "image":
     case "table":
-    case "dimension":
-    case "leader":
     case "doc":
     case "selection":
     case "model":
-    case "featurecontrolframe":
-    case "viewport":
     case "plot":
-    case "xray":
     case "pdf":
-    case "mermaid": {
+    {
       return true;
     }
     default: {

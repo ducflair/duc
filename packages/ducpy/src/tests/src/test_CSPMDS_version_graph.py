@@ -1,184 +1,84 @@
-"""
-CSPMDS Test for Version Graph: Create-Serialize-Parse-Mutate-Delete-Serialize
-Tests the full lifecycle of version control elements in DUC files.
-"""
-import io
+"""Version graph lifecycle test against the new SQL schema."""
+
 import os
-import pytest
 import time
 
-import ducpy as duc
+from ducpy.builders.sql_builder import DucSQL
 
 
 def test_cspmds_version_graph(test_output_dir):
-    """
-    CSPMDS test for version graph elements:
-    - Create: Create version control elements with checkpoints and deltas
-    - Serialize: Save to DUC file
-    - Parse: Load the saved file
-    - Mutate: Modify version properties
-    - Delete: Remove some version elements
-    - Serialize: Save the final state
-    """
-    
-    # === CREATE ===
-    print("🔨 CREATE: Creating version graph elements...")
-    
-    elements = []
-    
-    # Create base elements for version control using builders API
-    rect1 = (duc.ElementBuilder()
-              .at_position(100, 100)
-              .with_size(80, 60)
-              .with_styles(duc.create_simple_styles())
-              .with_label("Base Rectangle 1")
-              .build_rectangle()
-              .build())
-    
-    rect2 = (duc.ElementBuilder()
-              .at_position(300, 100)
-              .with_size(80, 60)
-              .with_styles(duc.create_simple_styles())
-              .with_label("Base Rectangle 2")
-              .build_rectangle()
-              .build())
-    
-    # Create version graph elements
-    from ducpy.classes.DataStateClass import Checkpoint, Delta, JSONPatchOperation
-    
-    # Create checkpoints
-    checkpoint1 = (duc.StateBuilder().build_checkpoint()
-        .with_id("checkpoint_1")
-        .with_description("Initial state checkpoint")
-        .with_data(b"initial_state_data")
-        .build())
-    
-    checkpoint2 = (duc.StateBuilder().build_checkpoint()
-        .with_id("checkpoint_2") 
-        .with_description("Modified state checkpoint")
-        .with_data(b"modified_state_data")
-        .build())
-    
-    # Create deltas
-    patch_operation1 = duc.create_json_patch_operation(
-        op="replace",
-        path="/elements/0/base/x",
-        value=150.0
-    )
-    
-    delta1 = (duc.StateBuilder()
-              .build_delta()
-              .with_id("delta_1")
-              .with_description("Move rectangle 1")
-              .with_patch([patch_operation1])
-              .build())
-    
-    patch_operation2 = duc.create_json_patch_operation(
-        op="replace", 
-        path="/elements/1/base/y",
-        value=150.0
-    )
-    
-    delta2 = (duc.StateBuilder()
-              .build_delta()
-              .with_id("delta_2")
-              .with_description("Move rectangle 2")
-              .with_patch([patch_operation2])
-              .build())
-    
-    # Create version graph
-    version_graph = (duc.StateBuilder()
-                     .build_version_graph()
-                     .with_checkpoints([checkpoint1, checkpoint2])
-                     .with_deltas([delta1, delta2])
-                     .with_user_checkpoint_version_id("checkpoint_1")
-                     .with_latest_version_id("delta_2")
-                     .build())
-    
-    # Add all elements to the list
-    elements.extend([rect1, rect2])
-    
-    # === SERIALIZE ===
-    print("💾 SERIALIZE: Saving to DUC file...")
-    output_file = os.path.join(test_output_dir, "test_version_graph.duc")
-    serialized_data = duc.serialize_duc(
-        name="VersionGraphTest",
-        elements=elements,
-        version_graph=version_graph
-    )
-    
-    with open(output_file, 'wb') as f:
-        f.write(serialized_data)
-    
-    assert os.path.exists(output_file) and os.path.getsize(output_file) > 0
-    print(f"✅ Serialized {len(elements)} elements and version graph")
-    
-    # === PARSE ===
-    print("📖 PARSE: Loading the saved file...")
-    parsed_data = duc.parse_duc(io.BytesIO(serialized_data))
-    parsed_elements = parsed_data.elements
-    parsed_version_graph = parsed_data.version_graph if hasattr(parsed_data, 'version_graph') else None
-    
-    assert len(parsed_elements) == len(elements)
-    print(f"✅ Parsed {len(parsed_elements)} elements")
-    
-    # === MUTATE ===
-    print("🔧 MUTATE: Modifying version graph elements...")
-    
-    # Mutate element properties
-    for el_wrapper in parsed_elements:
-        duc.mutate_element(el_wrapper, 
-                          x=el_wrapper.element.base.x + 20,
-                          y=el_wrapper.element.base.y + 10)
-    
-    # === DELETE ===
-    print("🗑️ DELETE: Removing some version elements...")
-    
-    # Remove one rectangle
-    elements_to_keep = [el for el in parsed_elements if not (hasattr(el.element, 'label') and "Rectangle 2" in el.element.label)]
-    
-    # === SERIALIZE FINAL ===
-    print("💾 SERIALIZE FINAL: Saving the final state...")
-    final_output_file = os.path.join(test_output_dir, "test_version_graph_final.duc")
-    final_serialized_data = duc.serialize_duc(
-        name="VersionGraphTestFinal",
-        elements=elements_to_keep,
-        version_graph=parsed_version_graph
-    )
-    
-    with open(final_output_file, 'wb') as f:
-        f.write(final_serialized_data)
-    
-    assert os.path.exists(final_output_file) and os.path.getsize(final_output_file) > 0
-    print(f"✅ Final serialized {len(elements_to_keep)} elements")
-    
-    # Verify the final state
-    final_parsed_data = duc.parse_duc(io.BytesIO(final_serialized_data))
-    final_elements = final_parsed_data.elements
-    final_version_graph = final_parsed_data.version_graph if hasattr(final_parsed_data, 'version_graph') else None
-    
-    assert len(final_elements) == len(elements_to_keep)
-    
-    # Count elements by type
-    rectangles = [el for el in final_elements if hasattr(el.element, 'label') and "Rectangle" in el.element.label]
-    
-    print(f"Final elements: {len(final_elements)}")
-    print(f"Rectangles: {len(rectangles)}")
-    
-    # More lenient assertion - just check that we have the right total count
-    assert len(final_elements) >= 1  # Should have at least 1 rectangle
-    
-    print("✅ CSPMDS Version Graph test completed successfully!")
-    print(f"   - Created {len(elements)} initial elements")
-    print(f"   - Created version graph with checkpoints and deltas")
-    print(f"   - Mutated element properties")
-    print(f"   - Deleted 1 rectangle")
-    print(f"   - Final state: {len(final_elements)} elements")
+    output_file = os.path.join(test_output_dir, "cspmds_version_graph_sql.duc")
+    now = int(time.time() * 1000)
 
-@pytest.fixture
-def test_output_dir():
-    """Create a test output directory."""
-    current_script_path = os.path.dirname(os.path.abspath(__file__))
-    output_dir = os.path.join(current_script_path, "..", "output")
-    os.makedirs(output_dir, exist_ok=True)
-    return output_dir
+    if os.path.exists(output_file):
+        os.remove(output_file)
+
+    with DucSQL.new(output_file) as db:
+        db.sql(
+            "INSERT INTO version_chains (id, schema_version, start_version, root_checkpoint_id) "
+            "VALUES (?,?,?,?)",
+            "chain_1", 1, 0, "cp_1",
+        )
+
+        db.sql(
+            "INSERT INTO checkpoints "
+            "(id, parent_id, chain_id, version_number, schema_version, timestamp, description, data, size_bytes) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            "cp_1", None, "chain_1", 1, 1, now, "Initial snapshot", b"state_v1", 8,
+        )
+        db.sql(
+            "INSERT INTO checkpoints "
+            "(id, parent_id, chain_id, version_number, schema_version, timestamp, description, data, size_bytes) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            "cp_2", "cp_1", "chain_1", 2, 1, now + 1, "Second snapshot", b"state_v2", 8,
+        )
+
+        db.sql(
+            "INSERT INTO deltas "
+            "(id, parent_id, base_checkpoint_id, chain_id, delta_sequence, version_number, schema_version, timestamp, description, changeset, size_bytes) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            "d_1", None, "cp_2", "chain_1", 1, 3, 1, now + 2, "move element", b"delta_1", 7,
+        )
+        db.sql(
+            "INSERT INTO deltas "
+            "(id, parent_id, base_checkpoint_id, chain_id, delta_sequence, version_number, schema_version, timestamp, description, changeset, size_bytes) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            "d_2", "d_1", "cp_2", "chain_1", 2, 4, 1, now + 3, "scale element", b"delta_2", 7,
+        )
+
+        db.sql(
+            "UPDATE version_graph "
+            "SET current_version = ?, current_schema_version = ?, user_checkpoint_version_id = ?, latest_version_id = ?, total_size = ? "
+            "WHERE id = 1",
+            4, 1, "cp_2", "d_2", 30,
+        )
+
+        db.sql(
+            "INSERT INTO schema_migrations "
+            "(from_schema_version, to_schema_version, migration_name, migration_sql, applied_at, boundary_checkpoint_id) "
+            "VALUES (?,?,?,?,?,?)",
+            1, 2, "v1_to_v2", "ALTER TABLE elements ADD COLUMN test_col TEXT;", now + 4, "cp_3",
+        )
+        db.sql(
+            "INSERT INTO version_chains (id, schema_version, start_version, root_checkpoint_id) "
+            "VALUES (?,?,?,?)",
+            "chain_2", 2, 5, "cp_3",
+        )
+        db.sql(
+            "INSERT INTO checkpoints "
+            "(id, parent_id, chain_id, version_number, schema_version, timestamp, description, is_schema_boundary, data, size_bytes) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "cp_3", None, "chain_2", 5, 2, now + 5, "Schema boundary", 1, b"state_v3", 8,
+        )
+
+        db.sql("UPDATE deltas SET description = ? WHERE id = ?", "move element updated", "d_1")
+        db.sql("DELETE FROM deltas WHERE id = ?", "d_1")
+
+        assert db.sql("SELECT COUNT(*) AS n FROM checkpoints")[0]["n"] == 3
+        assert db.sql("SELECT COUNT(*) AS n FROM deltas")[0]["n"] == 1
+        assert db.sql("SELECT current_schema_version FROM version_graph")[0]["current_schema_version"] == 1
+        assert db.sql("SELECT COUNT(*) AS n FROM schema_migrations")[0]["n"] == 1
+
+    with DucSQL(output_file) as db2:
+        assert db2.sql("SELECT latest_version_id FROM version_graph")[0]["latest_version_id"] == "d_2"
+        assert db2.sql("SELECT COUNT(*) AS n FROM version_chains")[0]["n"] == 2
