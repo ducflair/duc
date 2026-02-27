@@ -4,11 +4,11 @@ module.exports = {
     [
       require.resolve("../../scripts/semrel-path-filter.cjs"),
       {
-        // paths: [
-        //   "packages/ducpdf",
-        //   "packages/ducjs",
-        //   "packages/ducrs"
-        // ],
+        paths: [
+          "packages/ducpdf",
+          "packages/ducjs",
+          "packages/ducrs"
+        ],
         analyzer: { preset: "conventionalcommits" },
         notes: { preset: "conventionalcommits" },
       },
