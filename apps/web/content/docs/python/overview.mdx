@@ -1,50 +1,108 @@
 ---
 title: "Overview"
-date: 2024-04-22
+date: 2026-02-27
 authors: [jorgedanisc]
-description: "This Library is targeted to provide a set of tools to allow easier manipulation and readability, particularly for Data Related Programming."
+description: "Python library for reading, writing and manipulating .duc CAD files — backed by SQLite."
 ---
-
 
 ## Installation
 
 ```bash
 pip install ducpy
 ```
-or 
+
+or
+
 ```bash
 uv add ducpy
 ```
 
-## Basic Usage
+## How it works
 
-The `ducpy` package provides Python types and utility functions to work with the `duc` CAD file format. Here's a quick overview of how to use it:
+A `.duc` file is a standard **SQLite database**. `ducpy` provides two complementary APIs
+for working with these files:
+
+| API | Best for |
+|-----|----------|
+| **Builders** | Constructing elements programmatically with type-safe Python classes |
+| **DucSQL** | Raw SQL access — batch inserts, complex queries, schema introspection |
+
+## Builders API
+
+Use the fluent builder DSL to create elements, then serialize to bytes or a `.duc` file.
 
 ```python
-# Import the ducpy package
 import ducpy as duc
 
-# Parse a duc file
-with open('example.duc', 'rb') as f:
-    duc_data = duc.parse.parse_duc_flatbuffers(f)
+# Build elements
+rect = (
+    duc.ElementBuilder()
+    .at_position(0, 0)
+    .with_size(100, 50)
+    .with_label("My Rectangle")
+    .with_styles(duc.create_fill_and_stroke_style(
+        fill_content=duc.create_solid_content("#4ECDC4"),
+        stroke_content=duc.create_solid_content("#2C3E50"),
+        stroke_width=2.0,
+    ))
+    .build_rectangle()
+    .build()
+)
 
-# Access elements, app state, and files
-elements = duc_data['elements']
-app_state = duc_data['appState']
-files = duc_data['files']
-
-# Serialize a duc file
-with open('output.duc', 'wb') as f:
-    duc.serialize.serialize_to_flatbuffers(elements, app_state, files, f)
+# Serialize to bytes, then write to disk
+data = duc.serialize_duc(name="my-drawing", elements=[rect])
+with open("output.duc", "wb") as f:
+    f.write(data)
 ```
 
-## Package Structure
+## SQL Builder API
 
-The `ducpy` package is organized into the following main modules:
+For direct, low-level access to the SQLite schema:
 
-- **parse**: Functions for parsing duc files and converting to Python objects
-- **serialize**: Functions for serializing Python objects back to duc format
-- **classes**: Python class definitions for duc entities
-- **utils**: Utility functions for working with duc files
+```python
+from ducpy.builders.sql_builder import DucSQL
 
-Each module provides specific functionality for working with different aspects of the duc file format.
+# Create a brand-new .duc file with the full schema bootstrapped
+with DucSQL.new() as db:
+    db.sql(
+        "INSERT INTO elements (id, element_type, x, y, width, height, label) "
+        "VALUES (?,?,?,?,?,?,?)",
+        "r1", "rectangle", 0, 0, 200, 100, "SQL Rectangle",
+    )
+    db.sql(
+        "INSERT INTO backgrounds (owner_type, owner_id, src, opacity) "
+        "VALUES (?,?,?,?)",
+        "element", "r1", "#FF6B6B", 1.0,
+    )
+    db.save("output.duc")
+
+# Open and query an existing .duc file
+with DucSQL("output.duc") as db:
+    rows = db.sql("SELECT id, label, element_type FROM elements")
+    for row in rows:
+        print(dict(row))
+```
+
+## Parsing an existing file
+
+```python
+import ducpy as duc
+
+with open("drawing.duc", "rb") as f:
+    data = duc.parse_duc(f)
+
+print(f"Elements: {len(data.elements)}")
+print(f"Source: {data.source}")
+```
+
+## Package structure
+
+| Module | Purpose |
+|--------|---------|
+| `builders` | Fluent builders for elements, states, styles |
+| `builders.sql_builder` | `DucSQL` — raw SQLite access |
+| `classes` | Dataclass definitions for all duc entities |
+| `enums` | Integer enum constants matching the schema |
+| `parse` | `parse_duc()`, `parse_duc_lazy()`, `get_external_file()` |
+| `serialize` | `serialize_duc()` |
+| `utils` | Helper utilities |

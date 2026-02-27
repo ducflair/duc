@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'ducxf'
-copyright = '2025, Ducflair'
+copyright = '2026, Ducflair'
 author = 'Ducflair'
 
 # -- General configuration ---------------------------------------------------

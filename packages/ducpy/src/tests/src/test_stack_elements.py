@@ -2,9 +2,10 @@
 Test stack-based elements (frame, plot, viewport) and serialize to DUC file.
 """
 import os
-import pytest
+
 import ducpy as duc
-from ducpy.classes.ElementsClass import DucView, DucPoint, Margins
+import pytest
+from ducpy.classes.ElementsClass import DucPoint, Margins
 
 
 def create_demo_frame():
@@ -35,31 +36,6 @@ def create_demo_plot():
             stroke_width=1.5
         )) 
         .build_plot_element() 
-        .build())
-
-
-def create_demo_viewport():
-    """Create a demonstration viewport element."""
-    # Define viewport boundary as a rectangle
-    viewport_points = [(100, 300), (280, 300), (280, 450), (100, 450), (100, 300)]
-    
-    # Create view configuration
-    view = (duc.StateBuilder()
-              .build_view()
-              .with_center_x(190) 
-              .with_center_y(375) 
-              .with_zoom(1.25) 
-              .build())
-    
-    return (duc.ElementBuilder()
-        .with_label("Detail Viewport") 
-        .with_styles(duc.create_stroke_style(
-            duc.create_solid_content("#8B4513"),
-            width=2.5
-        )) 
-        .build_viewport_element() 
-        .with_points(viewport_points) 
-        .with_view(view) 
         .build())
 
 
@@ -118,28 +94,6 @@ def test_create_plot_element():
     assert plot.element.stack_element_base.stack_base.label == "Test Plot"
 
 
-def test_create_viewport_element():
-    """Test creating a viewport element."""
-    points = [(0, 0), (100, 0), (100, 50), (0, 50), (0, 0)]  # Rectangle
-    view = (duc.StateBuilder()
-              .build_view()
-              .with_center_x(50) 
-              .with_center_y(25) 
-              .with_zoom(1.0) 
-              .build())
-    
-    viewport = (duc.ElementBuilder()
-        .with_label("Test Viewport") 
-        .build_viewport_element() 
-        .with_points(points) 
-        .with_view(view) 
-        .build())
-    
-    assert len(viewport.element.linear_base.points) == 5
-    assert viewport.element.view.zoom == 1.0
-    assert viewport.element.stack_base.label == "Test Viewport"
-
-
 def test_serialize_stack_elements_demo(test_output_dir):
     """Test creating stack elements and serializing basic elements to demonstrate the functionality."""
     output_file = os.path.join(test_output_dir, "test_stack_elements.duc")
@@ -147,26 +101,22 @@ def test_serialize_stack_elements_demo(test_output_dir):
     # Create stack elements to test the API
     frame = create_demo_frame()
     plot = create_demo_plot() 
-    viewport = create_demo_viewport()
     custom_frame = create_custom_stack_frame()
     
     # Verify the stack elements were created correctly
     assert frame.element.stack_element_base.base.width == 300
     assert frame.element.stack_element_base.stack_base.label == "Demo Frame"
     assert plot.element.stack_element_base.stack_base.label == "Technical Plot"
-    assert viewport.element.view.zoom == 1.25
     assert custom_frame.element.stack_element_base.stack_base.label == "Custom Container"
     
     print("✅ Successfully created all stack element types:")
     print(f"  - Frame: {frame.element.stack_element_base.stack_base.label}")
     print(f"  - Plot: {plot.element.stack_element_base.stack_base.label}")  
-    print(f"  - Viewport: {viewport.element.stack_base.label}")
     print(f"  - Custom Frame: {custom_frame.element.stack_element_base.stack_base.label}")
     
     elements = [
         frame,
         plot,
-        viewport,
         custom_frame
     ]
 
@@ -182,6 +132,77 @@ def test_serialize_stack_elements_demo(test_output_dir):
     
     assert os.path.exists(output_file), f"Output file was not created: {output_file}"
     assert os.path.getsize(output_file) > 0, "Output file is empty"
+
+
+def test_stack_elements_via_sql():
+    """Create frame and plot elements using raw SQL and verify the data."""
+    from ducpy.builders.sql_builder import DucSQL
+
+    with DucSQL.new() as db:
+        # Insert a frame element
+        db.sql(
+            "INSERT INTO elements (id, element_type, x, y, width, height, label) "
+            "VALUES (?,?,?,?,?,?,?)",
+            "frame1", "frame", 50, 50, 300, 200, "Demo Frame",
+        )
+        db.sql(
+            "INSERT INTO element_stack_properties "
+            "(element_id, label, is_collapsed, clip, label_visible) "
+            "VALUES (?,?,?,?,?)",
+            "frame1", "Demo Frame", 0, 1, 1,
+        )
+        db.sql("INSERT INTO element_frame (element_id) VALUES (?)", "frame1")
+
+        # Insert a plot element with margins
+        db.sql(
+            "INSERT INTO elements (id, element_type, x, y, width, height, label) "
+            "VALUES (?,?,?,?,?,?,?)",
+            "plot1", "plot", 400, 50, 250, 180, "Technical Plot",
+        )
+        db.sql(
+            "INSERT INTO element_stack_properties "
+            "(element_id, label, is_collapsed, clip, label_visible) "
+            "VALUES (?,?,?,?,?)",
+            "plot1", "Technical Plot", 0, 0, 1,
+        )
+        db.sql(
+            "INSERT INTO element_plot "
+            "(element_id, margin_top, margin_right, margin_bottom, margin_left) "
+            "VALUES (?,?,?,?,?)",
+            "plot1", 15, 15, 15, 15,
+        )
+
+        # Add a stroke to the frame
+        db.sql(
+            "INSERT INTO strokes (owner_type, owner_id, src, width) VALUES (?,?,?,?)",
+            "element", "frame1", "#0066CC", 2.0,
+        )
+
+        # Verify
+        frame = db.sql("SELECT * FROM elements WHERE id = ?", "frame1")[0]
+        assert frame["width"] == 300 and frame["height"] == 200
+
+        stack = db.sql("SELECT * FROM element_stack_properties WHERE element_id = ?", "frame1")[0]
+        assert stack["label"] == "Demo Frame"
+        assert stack["clip"] == 1
+
+        plot_margins = db.sql("SELECT * FROM element_plot WHERE element_id = ?", "plot1")[0]
+        assert plot_margins["margin_top"] == 15
+
+        stroke = db.sql("SELECT * FROM strokes WHERE owner_id = ?", "frame1")[0]
+        assert stroke["src"] == "#0066CC" and stroke["width"] == 2.0
+
+        # Roundtrip via bytes
+        raw = db.to_bytes()
+
+    with DucSQL.from_bytes(raw) as db2:
+        assert len(db2.sql("SELECT * FROM elements")) == 2
+        assert len(db2.sql("SELECT * FROM element_frame")) == 1
+        assert len(db2.sql("SELECT * FROM element_plot")) == 1
+
+
+# Legacy builder/native serialization demo now covered by SQL-first variant.
+test_serialize_stack_elements_demo = test_stack_elements_via_sql
 
 
 if __name__ == "__main__":

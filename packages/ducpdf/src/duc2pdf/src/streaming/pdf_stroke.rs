@@ -7,8 +7,7 @@
 /// - Miter limits
 /// - Path offsetting for stroke placement
 use crate::ConversionResult;
-use duc::generated::duc::{STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT};
-use duc::types::ElementStroke;
+use duc::types::{ElementStroke, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT};
 use hipdf::lopdf::{content::Operation, Object};
 
 pub struct PdfStrokeRenderer;
@@ -31,7 +30,6 @@ impl PdfStrokeRenderer {
                 STROKE_CAP::BUTT => 0,
                 STROKE_CAP::ROUND => 1,
                 STROKE_CAP::SQUARE => 2,
-                _ => 0,
             };
             ops.push(Operation::new("J", vec![Object::Integer(cap_style)]));
         }
@@ -42,7 +40,6 @@ impl PdfStrokeRenderer {
                 STROKE_JOIN::MITER => 0,
                 STROKE_JOIN::ROUND => 1,
                 STROKE_JOIN::BEVEL => 2,
-                _ => 0,
             };
             ops.push(Operation::new("j", vec![Object::Integer(join_style)]));
         }

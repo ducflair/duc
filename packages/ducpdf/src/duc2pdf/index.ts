@@ -1,4 +1,4 @@
-import { ExportedDataState, getFreeDrawSvgPath, getNormalizedZoom, isFreeDrawElement, parseDuc, serializeDuc, traverseAndUpdatePrecisionValues } from 'ducjs';
+import { ExportedDataState, getFreeDrawSvgPath, getNormalizedZoom, isFreeDrawElement, normalizeForSerializationScope, parseDuc, serializeDuc } from 'ducjs';
 import { fetchFontsForDuc } from './fonts';
 
 export interface PdfConversionResult {
@@ -153,7 +153,7 @@ export async function convertDucToPdf(
         const scope = parsed?.localState?.scope || parsed?.globalState?.mainScope || 'mm';
 
         // ensure that we are only working with mm on the pdf conversion logic
-        const normalized: ExportedDataState = traverseAndUpdatePrecisionValues(parsed, 'mm', scope);
+        const normalized: ExportedDataState = normalizeForSerializationScope(parsed as unknown as ExportedDataState, 'mm', scope);
         normalized.localState.scope = 'mm';
         normalized.globalState.mainScope = 'mm';
 
@@ -180,14 +180,15 @@ export async function convertDucToPdf(
 
         // Process elements before serialization
         let normalizedElements = normalized.elements || [];
-        normalizedElements = normalizedElements.map(element => {
+        normalizedElements = normalizedElements.map((element: any) => {
+          let normalizedElement = element;
           if (element && isFreeDrawElement(element)) {
             const svgPath = getFreeDrawSvgPath(element);
             if (svgPath) {
-              return Object.assign({}, element, { svgPath });
+              normalizedElement = Object.assign({}, element, { svgPath });
             }
           }
-          return element;
+          return normalizedElement;
         });
 
         normalized.elements = normalizedElements;
@@ -197,8 +198,7 @@ export async function convertDucToPdf(
         // Re-serialize the DUC with normalized values and scope set to 'mm'
         const serialized = await serializeDuc(
           normalized,
-          true, // use scoped values
-          undefined,
+          { syncInvalidIndices: (elements: readonly any[]) => elements as any },
           {
             forceScope: 'mm'
           }
