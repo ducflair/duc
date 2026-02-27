@@ -1,4 +1,10 @@
 import { ExportedDataState, getFreeDrawSvgPath, getNormalizedZoom, isFreeDrawElement, parseDuc, serializeDuc, traverseAndUpdatePrecisionValues } from 'ducjs';
+import { fetchFontsForDuc } from './fonts';
+
+export interface PdfConversionResult {
+  data: Uint8Array;
+  warnings: string[];
+}
 
 let wasmModule: any = null;
 let wasmInitPromise: Promise<any> | null = null;
@@ -17,7 +23,7 @@ async function initWasm(): Promise<any> {
 
       // The wasm-pack generated module exports a default init function
       // that handles loading the WASM file using import.meta.url
-      // This is the same pattern used by duc_renderer_bin
+      // Standard wasm-pack init pattern
       if (typeof wasmBindings.default === 'function') {
         // Call the init function - it will automatically fetch the WASM file
         // using import.meta.url to resolve the path correctly
@@ -29,7 +35,9 @@ async function initWasm(): Promise<any> {
       // Validate that required functions exist on the imported module
       const requiredFunctions = [
         'convert_duc_to_pdf_rs',
-        'convert_duc_to_pdf_crop_wasm'
+        'convert_duc_to_pdf_crop_wasm',
+        'convert_duc_to_pdf_with_fonts_rs',
+        'convert_duc_to_pdf_crop_with_fonts_wasm'
       ];
 
       for (const fnName of requiredFunctions) {
@@ -119,7 +127,8 @@ export async function convertDucToPdf(
   ducData: Uint8Array,
   options?: ConversionOptions,
   debugMode: boolean = false
-): Promise<Uint8Array> {
+): Promise<PdfConversionResult> {
+  const fontWarnings: string[] = [];
   try {
     // Validate inputs
     validateInput(ducData, options);
@@ -134,6 +143,7 @@ export async function convertDucToPdf(
 
     let ducBytes = new Uint8Array(ducData);
     let viewBackgroundColor;
+    let normalizedData: ExportedDataState | null = null;
 
     try {
       const latestBlob = new Blob([ducBytes]);
@@ -182,6 +192,7 @@ export async function convertDucToPdf(
 
         normalized.elements = normalizedElements;
         viewBackgroundColor = normalized.globalState.viewBackgroundColor;
+        normalizedData = normalized;
 
         // Re-serialize the DUC with normalized values and scope set to 'mm'
         const serialized = await serializeDuc(
@@ -204,8 +215,21 @@ export async function convertDucToPdf(
       console.warn('DUC parse/serialize normalization failed; using original bytes. Reason:', e);
     }
 
+    // Fetch font data for all detected families (falls back gracefully if offline)
+    let fontMap = new Map<string, Uint8Array>();
+    if (normalizedData) {
+      try {
+        const result = await fetchFontsForDuc(normalizedData);
+        fontMap = result.fontMap;
+        fontWarnings.push(...result.warnings);
+      } catch (e) {
+        fontWarnings.push('Font fetching failed. Text will use the default font.');
+      }
+    }
+
     // Call the appropriate WASM function based on options
     let result: Uint8Array;
+    const hasFonts = fontMap.size > 0;
 
     if (options && (options.offsetX !== undefined || options.offsetY !== undefined)) {
       // Use crop mode with offset
@@ -216,17 +240,33 @@ export async function convertDucToPdf(
       const heightOption = typeof options.height === 'number' ? options.height : undefined;
       const backgroundOption = backgroundColor === undefined ? undefined : backgroundColor;
 
-      result = wasm.convert_duc_to_pdf_crop_wasm(
-        ducBytes,
-        offsetX,
-        offsetY,
-        widthOption,
-        heightOption,
-        backgroundOption
-      );
+      if (hasFonts) {
+        result = wasm.convert_duc_to_pdf_crop_with_fonts_wasm(
+          ducBytes,
+          offsetX,
+          offsetY,
+          widthOption,
+          heightOption,
+          backgroundOption,
+          fontMap
+        );
+      } else {
+        result = wasm.convert_duc_to_pdf_crop_wasm(
+          ducBytes,
+          offsetX,
+          offsetY,
+          widthOption,
+          heightOption,
+          backgroundOption
+        );
+      }
     } else {
       // Standard conversion
-      result = wasm.convert_duc_to_pdf_rs(ducBytes);
+      if (hasFonts) {
+        result = wasm.convert_duc_to_pdf_with_fonts_rs(ducBytes, fontMap);
+      } else {
+        result = wasm.convert_duc_to_pdf_rs(ducBytes);
+      }
     }
 
     // Check if conversion was successful
@@ -288,7 +328,7 @@ export async function convertDucToPdf(
       }
     }
 
-    return result;
+    return { data: result, warnings: fontWarnings };
   } catch (error) {
     console.error('DUC to PDF conversion error:', error);
 
@@ -309,7 +349,7 @@ export async function convertDucToPdfCrop(
   offsetY: number,
   width?: number,
   height?: number
-): Promise<Uint8Array> {
+): Promise<PdfConversionResult> {
   return convertDucToPdf(ducData, { offsetX, offsetY, width, height });
 }
 

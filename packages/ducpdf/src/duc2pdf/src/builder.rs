@@ -103,6 +103,7 @@ impl DucToPdfBuilder {
     pub fn new(
         mut exported_data: ExportedDataState,
         mut options: ConversionOptions,
+        font_data: HashMap<String, Vec<u8>>,
     ) -> ConversionResult<Self> {
         let mut document = Document::with_version("1.7");
 
@@ -179,6 +180,34 @@ impl DucToPdfBuilder {
         let (primary_font, font_resource_name) =
             Self::load_primary_font(&mut document, &mut font_manager)?;
 
+        // Embed additional fonts provided by the caller (e.g. Google Fonts fetched from CDN)
+        let mut font_map: HashMap<String, (Font, String)> = HashMap::new();
+        // Register the primary font under its family name (metadata.family is a String)
+        let family = primary_font.metadata.family.clone();
+        if !family.is_empty() {
+            font_map.insert(family, (primary_font.clone(), font_resource_name.clone()));
+        }
+        font_map.insert("Roboto Mono".to_string(), (primary_font.clone(), font_resource_name.clone()));
+
+        for (family_name, ttf_bytes) in font_data {
+            match Font::from_bytes(ttf_bytes, Some(format!("{}.ttf", family_name))) {
+                Ok(font) => {
+                    match font_manager.embed_font(&mut document, font.clone()) {
+                        Ok((_, res_name)) => {
+                            log_info!("Embedded font '{}' as {}", family_name, res_name);
+                            font_map.insert(family_name, (font, res_name));
+                        }
+                        Err(e) => {
+                            log_warn!("Failed to embed font '{}': {}. Will use fallback.", family_name, e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    log_warn!("Failed to parse font '{}': {}. Will use fallback.", family_name, e);
+                }
+            }
+        }
+
         // Create block instances map for duplication support
         let block_instances: HashMap<String, duc::types::DucBlockInstance> = context.exported_data
             .block_instances
@@ -201,6 +230,7 @@ impl DucToPdfBuilder {
                 font_resource_name,
                 primary_font,
                 block_instances,
+                font_map,
             ), // Default height, will be updated per page
             resource_streamer: ResourceStreamer::new(),
             page_ids: Vec::new(),
