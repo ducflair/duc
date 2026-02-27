@@ -577,7 +577,7 @@ from ducpy.Duc.DucPdfElement import (
 )
 from ducpy.Duc.DocumentGridConfig import (
     DocumentGridConfigStart, DocumentGridConfigAddColumns, DocumentGridConfigAddGapX, DocumentGridConfigAddGapY,
-    DocumentGridConfigAddAlignItems, DocumentGridConfigAddFirstPageAlone, DocumentGridConfigEnd
+    DocumentGridConfigAddAlignItems, DocumentGridConfigAddFirstPageAlone, DocumentGridConfigAddScale, DocumentGridConfigEnd
 )
 from ducpy.Duc.DucMermaidElement import (
     DucMermaidElementStart, DucMermaidElementAddBase, DucMermaidElementAddSource, DucMermaidElementAddTheme,
@@ -1636,6 +1636,7 @@ def serialize_fbs_document_grid_config(builder: flatbuffers.Builder, config: DS_
     DocumentGridConfigAddGapY(builder, config.gap_y)
     DocumentGridConfigAddAlignItems(builder, config.align_items)
     DocumentGridConfigAddFirstPageAlone(builder, config.first_page_alone)
+    DocumentGridConfigAddScale(builder, config.scale)
     return DocumentGridConfigEnd(builder)
 
 def serialize_fbs_pdf(builder: flatbuffers.Builder, el: DS_DucPdfElement) -> int:
