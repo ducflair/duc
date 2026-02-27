@@ -35,6 +35,27 @@
         "packages/ducpdf/tests/tests_output/**"
       ]
     },
+    "ducjs#test": {
+      "cache": false,
+      "dependsOn": [
+        "ducjs#build"
+      ],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    "ducpy#test": {
+      "cache": false,
+      "dependsOn": [
+        "ducpy#build"
+      ],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    "ducrs#test": {
+      "cache": false,
+      "dependsOn": [
+        "ducrs#build"
+      ],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
     "ducsvg#build": {
       "cache": false,
       "dependsOn": [
