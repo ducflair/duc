@@ -1,8 +1,8 @@
 ---
 title: "Overview"
-date: 2025-04-20
+date: 2026-02-27
 authors: [jorgedanisc]
-description: "This Library is targeted to interface Rust with the duc format."
+description: "Rust library for reading, writing and manipulating .duc CAD files — backed by SQLite."
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
@@ -11,9 +11,29 @@ import { Callout } from 'fumadocs-ui/components/callout';
   This page is subject to change as the project is still in development.
 </Callout>
 
+## How it works
+
+A `.duc` file is a standard **SQLite database**. `ducrs` wraps it with a typed, idiomatic Rust API.
 
 ## Installation
 
-```bash
+Add the crate to your `Cargo.toml`:
 
+```toml
+[dependencies]
+ducrs = "*"
+```
+
+## Basic Usage
+
+```rust
+use ducrs::DucFile;
+
+fn main() -> anyhow::Result<()> {
+    let doc = DucFile::open("drawing.duc")?;
+    for element in doc.elements()? {
+        println!("{:?}", element);
+    }
+    Ok(())
+}
 ```

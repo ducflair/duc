@@ -1,8 +1,8 @@
-import { ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, OBJECT_SNAP_MODE, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "../flatbuffers/duc";
-import { GridSettings, RawValue, ScopedValue, SnapSettings } from "../types";
+import { ELEMENT_CONTENT_PREFERENCE, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "../enums";
+import { MAX_ZOOM, MIN_ZOOM, NEUTRAL_SCOPE } from "../technical/scopes";
+import { RawValue, ScopedValue } from "../types";
 import { DucElement, DucEllipseElement, DucFreeDrawElement, DucTextElement, ElementBackground, ElementStroke, FontFamilyValues } from "../types/elements";
 import { Percentage, Radian } from "../types/geometryTypes";
-import { MAX_ZOOM, MIN_ZOOM, NEUTRAL_SCOPE } from "../technical/scopes";
 
 
 export const COLOR_PALETTE = {
@@ -290,7 +290,6 @@ export const DEFAULT_FRAME_STYLE: {
 export const DEFAULT_ELEMENT_PROPS: {
   isVisible: DucElement["isVisible"];
   isPlot: DucElement["isPlot"];
-  isAnnotative: DucElement["isAnnotative"];
   stroke: ElementStroke;
   background: ElementBackground;
   roundness: DucElement["roundness"];
@@ -331,7 +330,6 @@ export const DEFAULT_ELEMENT_PROPS: {
   },
   isVisible: true,
   isPlot: true,
-  isAnnotative: false,
   roundness: { value: 0 as RawValue, scoped: 0 as ScopedValue },
   opacity: 1 as Percentage,
   locked: false,
@@ -397,225 +395,6 @@ export const DEFAULT_ELLIPSE_ELEMENT: {
   endAngle: Math.PI * 2 as Radian,
   showAuxCrosshair: false,
 }
-
-
-
-
-/**
- * Grid display types
- */
-export const GRID_DISPLAY_TYPE = {
-  LINES: 10,
-  DOTS: 11,
-  CROSSES: 12,
-  ADAPTIVE: 13, // Changes based on zoom level
-} as const;
-
-/**
- * Grid coordinate system types
- */
-export const GRID_TYPE = {
-  RECTANGULAR: 10,
-  ISOMETRIC: 11,
-  POLAR: 12,
-  TRIANGULAR: 13,
-  CUSTOM: 14,
-} as const;
-
-
-/**
- * Default grid configurations
- */
-export const DEFAULT_GRID_SETTINGS: GridSettings = {
-  readonly: true,
-  isAdaptive: true,
-  type: GRID_TYPE.RECTANGULAR,
-  displayType: GRID_DISPLAY_TYPE.LINES,
-
-  xSpacing: { value: 10 as RawValue, scoped: 10 as ScopedValue },
-  ySpacing: { value: 10 as RawValue, scoped: 10 as ScopedValue },
-  subdivisions: 5,
-
-  origin: { x: 0, y: 0 },
-  rotation: 0 as Radian,
-  followUCS: true,
-
-  majorStyle: {
-    color: "#CCCCCC",
-    opacity: 0.5 as Percentage,
-    dashPattern: [1, 1],
-  },
-  minorStyle: {
-    color: "#EEEEEE",
-    opacity: 0.3 as Percentage,
-    dashPattern: [0.5, 0.5],
-  },
-
-  showMinor: true,
-  minZoom: 0.1,
-  maxZoom: 100,
-  autoHide: true,
-
-  enableSnapping: true,
-};
-
-/**
- * Predefined grid configurations
- */
-export const PREDEFINED_GRIDS = {
-  ARCHITECTURAL_IMPERIAL: "arch-imperial",
-  ARCHITECTURAL_METRIC: "arch-metric",
-  ENGINEERING_IMPERIAL: "eng-imperial",
-  ENGINEERING_METRIC: "eng-metric",
-  ISOMETRIC_30: "iso-30",
-  POLAR_DEGREES: "polar-deg",
-  FINE_DETAIL: "fine-detail",
-} as const;
-
-/**
- * Snap behavior modes
- */
-export const SNAP_MODE = {
-  RUNNING: 10,
-  SINGLE: 11,
-} as const;
-/**
- * Snap override behaviors
- */
-export const SNAP_OVERRIDE_BEHAVIOR = {
-  DISABLE: 10,
-  FORCE_GRID: 11,
-  FORCE_OBJECT: 12,
-} as const;
-
-/**
- * Snap marker shapes
- */
-export const SNAP_MARKER_SHAPE = {
-  SQUARE: 10,
-  CIRCLE: 11,
-  TRIANGLE: 12,
-  X: 13,
-} as const;
-
-
-
-
-/**
- * Default snap settings configuration
- */
-export const DEFAULT_SNAP_SETTINGS: SnapSettings = {
-  readonly: true,
-  twistAngle: 0 as Radian,
-  snapTolerance: 10,
-  objectSnapAperture: 8,
-  isOrthoModeOn: false,
-  polarTracking: {
-    enabled: false,
-    angles: [
-      0 as Radian,
-      Math.PI / 4 as Radian,
-      Math.PI / 2 as Radian,
-      3 * Math.PI / 4 as Radian,
-      Math.PI as Radian,
-      5 * Math.PI / 4 as Radian,
-      3 * Math.PI / 2 as Radian,
-      7 * Math.PI / 4 as Radian
-    ],
-    trackFromLastPoint: true,
-    showPolarCoordinates: true,
-  },
-  isObjectSnapOn: true,
-  activeObjectSnapModes: [
-    OBJECT_SNAP_MODE.ENDPOINT,
-    OBJECT_SNAP_MODE.MIDPOINT,
-    OBJECT_SNAP_MODE.CENTER,
-    OBJECT_SNAP_MODE.INTERSECTION,
-  ],
-  snapPriority: [
-    OBJECT_SNAP_MODE.ENDPOINT,
-    OBJECT_SNAP_MODE.INTERSECTION,
-    OBJECT_SNAP_MODE.MIDPOINT,
-    OBJECT_SNAP_MODE.CENTER,
-    OBJECT_SNAP_MODE.QUADRANT,
-    OBJECT_SNAP_MODE.TANGENT,
-    OBJECT_SNAP_MODE.PERPENDICULAR,
-    OBJECT_SNAP_MODE.NEAREST,
-  ],
-  showTrackingLines: true,
-  trackingLineStyle: {
-    color: "#00FF00",
-    opacity: 0.7 as Percentage,
-    dashPattern: [2, 2],
-  },
-  dynamicSnap: {
-    enabledDuringDrag: true,
-    enabledDuringRotation: true,
-    enabledDuringScale: true,
-  },
-  temporaryOverrides: [
-    { key: "Shift", behavior: SNAP_OVERRIDE_BEHAVIOR.DISABLE },
-    { key: "F9", behavior: SNAP_OVERRIDE_BEHAVIOR.FORCE_GRID },
-  ],
-  magneticStrength: 50,
-  snapMode: SNAP_MODE.RUNNING,
-  snapMarkers: {
-    enabled: true,
-    size: 8,
-    duration: 2000,
-    styles: {
-      [OBJECT_SNAP_MODE.NONE]: { shape: SNAP_MARKER_SHAPE.SQUARE, color: "#FFFFFF" },
-      [OBJECT_SNAP_MODE.ENDPOINT]: { shape: SNAP_MARKER_SHAPE.SQUARE, color: "#FF0000" },
-      [OBJECT_SNAP_MODE.MIDPOINT]: { shape: SNAP_MARKER_SHAPE.TRIANGLE, color: "#00FF00" },
-      [OBJECT_SNAP_MODE.INTERSECTION]: { shape: SNAP_MARKER_SHAPE.X, color: "#FF00FF" },
-      [OBJECT_SNAP_MODE.EXTENSION]: { shape: SNAP_MARKER_SHAPE.CIRCLE, color: "#FFA500" },
-      [OBJECT_SNAP_MODE.PERPENDICULAR]: { shape: SNAP_MARKER_SHAPE.SQUARE, color: "#800080" },
-      [OBJECT_SNAP_MODE.TANGENT]: { shape: SNAP_MARKER_SHAPE.CIRCLE, color: "#008080" },
-      [OBJECT_SNAP_MODE.NEAREST]: { shape: SNAP_MARKER_SHAPE.SQUARE, color: "#808080" },
-      [OBJECT_SNAP_MODE.NODE]: { shape: SNAP_MARKER_SHAPE.CIRCLE, color: "#FFB6C1" },
-      [OBJECT_SNAP_MODE.INSERT]: { shape: SNAP_MARKER_SHAPE.TRIANGLE, color: "#90EE90" },
-      [OBJECT_SNAP_MODE.PARALLEL]: { shape: SNAP_MARKER_SHAPE.SQUARE, color: "#F0E68C" },
-      [OBJECT_SNAP_MODE.APPARENT]: { shape: SNAP_MARKER_SHAPE.X, color: "#DDA0DD" },
-      [OBJECT_SNAP_MODE.FROM]: { shape: SNAP_MARKER_SHAPE.CIRCLE, color: "#20B2AA" },
-      [OBJECT_SNAP_MODE.POINT_FILTER]: { shape: SNAP_MARKER_SHAPE.SQUARE, color: "#F4A460" },
-      [OBJECT_SNAP_MODE.TEMPORARY]: { shape: SNAP_MARKER_SHAPE.CIRCLE, color: "#32CD32" },
-      [OBJECT_SNAP_MODE.BETWEEN_TWO_POINTS]: { shape: SNAP_MARKER_SHAPE.TRIANGLE, color: "#FF6347" },
-      [OBJECT_SNAP_MODE.POINT_ON_CURVE]: { shape: SNAP_MARKER_SHAPE.CIRCLE, color: "#4169E1" },
-      [OBJECT_SNAP_MODE.GEOMETRIC]: { shape: SNAP_MARKER_SHAPE.SQUARE, color: "#DC143C" },
-      [OBJECT_SNAP_MODE.CENTER]: { shape: SNAP_MARKER_SHAPE.CIRCLE, color: "#0000FF" },
-      [OBJECT_SNAP_MODE.QUADRANT]: { shape: SNAP_MARKER_SHAPE.SQUARE, color: "#FFFF00" },
-    },
-  },
-  constructionSnapEnabled: true,
-  snapToGridIntersections: false,
-};
-
-
-export const PAPER_SIZE = {
-  // ISO A Series
-  A0: "A0",
-  A1: "A1", 
-  A2: "A2",
-  A3: "A3",
-  A4: "A4",
-  A5: "A5",
-  
-  // ANSI Series
-  ANSI_A: "ANSI_A", // 8.5 x 11
-  ANSI_B: "ANSI_B", // 11 x 17
-  ANSI_C: "ANSI_C", // 17 x 22
-  ANSI_D: "ANSI_D", // 22 x 34
-  ANSI_E: "ANSI_E", // 34 x 44
-  
-  // Architectural
-  ARCH_A: "ARCH_A", // 9 x 12
-  ARCH_B: "ARCH_B", // 12 x 18
-  ARCH_C: "ARCH_C", // 18 x 24
-  ARCH_D: "ARCH_D", // 24 x 36
-  ARCH_E: "ARCH_E", // 36 x 48
-  
-  CUSTOM: "CUSTOM",
-} as const;
 
 
 export const PREDEFINED_HATCH_PATTERNS = {

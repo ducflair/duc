@@ -1,19 +1,19 @@
-import { HANDLE_TYPE } from "../../flatbuffers/duc";
 import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint } from "../../technical/scopes";
 import type { PrecisionValue, RawValue, Scope, ScopedValue } from "../../types";
-import type { DucArrowElement, DucLine, DucLinearElement, DucLinearLikeElement, DucPoint, DucTextElementWithContainer, ElementsMap, NonDeleted } from "../../types/elements";
+import type { DucLine, DucLinearElement, DucLinearLikeElement, DucPoint, DucTextElementWithContainer, ElementsMap, NonDeleted } from "../../types/elements";
 import { Bounds, GeometricPoint } from "../../types/geometryTypes";
 import type { ValueOf } from "../../types/utility-types";
 import { ElementAbsoluteCoords, getBoundTextElement, getElementAbsoluteCoords, getElementPointsCoords } from "../bounds";
 import { LINE_CONFIRM_THRESHOLD } from "../constants";
 import { centerPoint, getBezierXY, getControlPointsForBezierCurve, getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, mapIntervalToBezierT, rotate, rotatePoint } from "../math";
+import { HANDLE_TYPE } from "../../enums";
 
 type SV = ScopedValue;
 
 export type HandleType = ValueOf<typeof HANDLE_TYPE> | null;
 export type HandleInfo = {
   pointIndex: number;
-  handleType: HandleInfo;
+  handleType: HandleType;
   lineIndex: number;
   handle: DucPoint;
 };

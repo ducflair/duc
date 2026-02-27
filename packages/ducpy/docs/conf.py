@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'ducpy'
-copyright = '2025, Ducflair'
+copyright = '2026, Ducflair'
 author = 'Ducflair'
 
 # -- General configuration ---------------------------------------------------
@@ -26,6 +26,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_theme = "furo"
 html_static_path = ['_static']
+html_baseurl = "https://ducflair.github.io/duc/reference/python/"
 
 extensions.append('autoapi.extension')
 autoapi_dirs = ["../src/ducpy"]

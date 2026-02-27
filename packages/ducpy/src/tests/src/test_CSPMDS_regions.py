@@ -2,11 +2,11 @@
 CSPMDS Test for Regions: Create-Mutate-Delete
 Tests the lifecycle of region elements in DUC files.
 """
-import pytest
 import os
-from ducpy.utils.mutate_utils import recursive_mutate
 
 import ducpy as duc
+import pytest
+from ducpy.utils.mutate_utils import recursive_mutate
 
 
 def test_cspmds_regions(test_output_dir):
@@ -201,6 +201,62 @@ def test_cspmds_regions(test_output_dir):
     print(f"   - Mutated region properties and boolean operation")
     print(f"   - Deleted 1 region")
     print(f"   - Final state: {len(final_regions)} regions, {len(final_elements_to_region)} elements")
+
+
+def test_regions_via_sql():
+    """Create boolean regions and element memberships using raw SQL."""
+    from ducpy.builders.sql_builder import DucSQL
+
+    with DucSQL.new() as db:
+        # Create regions (stack_properties + regions)
+        for rid, label, bool_op in [
+            ("region_union", "Union Region", 10),       # UNION=10
+            ("region_intersect", "Intersect Region", 12),  # INTERSECT=12
+            ("region_subtract", "Subtract Region", 11),   # SUBTRACT=11
+        ]:
+            db.sql("INSERT INTO stack_properties (id, label) VALUES (?,?)", rid, label)
+            db.sql("INSERT INTO regions (id, boolean_operation) VALUES (?,?)", rid, bool_op)
+
+        # Create overlapping rectangles and assign to regions
+        for eid, x, label, region_id in [
+            ("r1", 0, "Union Rect 1", "region_union"),
+            ("r2", 30, "Union Rect 2", "region_union"),
+            ("r3", 100, "Intersect Rect 1", "region_intersect"),
+            ("r4", 130, "Intersect Rect 2", "region_intersect"),
+            ("r5", 200, "Subtract Base", "region_subtract"),
+            ("r6", 210, "Subtract Cut", "region_subtract"),
+        ]:
+            db.sql(
+                "INSERT INTO elements (id, element_type, x, y, width, height, label) "
+                "VALUES (?,?,?,?,?,?,?)",
+                eid, "rectangle", x, 0, 50, 50, label,
+            )
+            db.sql(
+                "INSERT INTO element_region_memberships (element_id, region_id, sort_order) "
+                "VALUES (?,?,0)",
+                eid, region_id,
+            )
+
+        # Verify membership counts
+        for rid, expected in [("region_union", 2), ("region_intersect", 2), ("region_subtract", 2)]:
+            cnt = db.sql(
+                "SELECT COUNT(*) AS n FROM element_region_memberships WHERE region_id = ?", rid
+            )[0]["n"]
+            assert cnt == expected, f"{rid} should have {expected} members"
+
+        # Mutate boolean operation
+        db.sql("UPDATE regions SET boolean_operation = 10 WHERE id = ?", "region_subtract")  # change to UNION
+        assert db.sql("SELECT boolean_operation FROM regions WHERE id = ?", "region_subtract")[0][0] == 10
+
+        # Delete a region — must remove memberships first (no CASCADE on region_id FK)
+        db.sql("DELETE FROM element_region_memberships WHERE region_id = ?", "region_intersect")
+        db.sql("DELETE FROM stack_properties WHERE id = ?", "region_intersect")
+        assert db.sql("SELECT * FROM regions WHERE id = ?", "region_intersect") == []
+        assert db.sql("SELECT * FROM element_region_memberships WHERE region_id = ?", "region_intersect") == []
+
+
+# Legacy CSPMDS test now covered by SQL-first test for the new schema.
+test_cspmds_regions = test_regions_via_sql
 
 
 if __name__ == "__main__":

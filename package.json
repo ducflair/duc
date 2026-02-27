@@ -57,6 +57,7 @@
     "clean": "bun del-cli \"**/dist\" \".turbo\" \"**/node_modules\" \"**/package-lock.json\" \"**/tsconfig.tsbuildinfo\" \"**/tsconfig.node.tsbuildinfo\" \"**/vite.config.js\"",
     "docs:dev": "turbo dev --filter=@duc/docs",
     "docs:build": "turbo build --filter=@duc/docs",
+    "ducpy:docs:dev": "turbo run dev:docs --filter=ducpy",
     "ducpy:docs:build": "turbo run gen:docs --filter=ducpy",
     "ducpy:test": "turbo run test --filter=ducpy --force",
     "ducpy:build": "bun turbo run build --filter=ducpy -- ${1}",
