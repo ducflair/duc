@@ -1,4 +1,5 @@
-import { BEZIER_MIRRORING } from "../flatbuffers/duc";
+import { BEZIER_MIRRORING } from "../enums";
+import { getPrecisionValueFromRaw, getPrecisionValueFromScoped } from "../technical/scopes";
 import { RawValue, Scope, ScopedValue } from "../types";
 import { DucElement, DucFreeDrawElement, DucLine, DucLinearElement, DucNonSelectionElement, DucPath, DucPoint, NonDeletedDucElement } from "../types/elements";
 import { isArrowElement, isEllipseElement, isFreeDrawElement, isLinearElement, isPolygonElement } from "../types/elements/typeChecks";
@@ -7,7 +8,6 @@ import { getBaseElementProps } from "./elements";
 import { getNormalizedPoints, mergeOverlappingPoints } from "./elements/linearElement";
 import { newLinearElement } from "./elements/newElement";
 import { rotatePoint } from "./math";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped } from "../technical/scopes";
 
 /**
  * Converts a shape (rectangle, polygon, ellipse) to a linear element

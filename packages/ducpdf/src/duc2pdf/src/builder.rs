@@ -12,7 +12,7 @@ use crate::{
 };
 use bigcolor::BigColor;
 use duc::types::{
-    DucBlock, DucElementEnum, DucExternalFileEntry, ElementWrapper, ExportedDataState, Standard,
+    DucBlock, DucElementEnum, DucExternalFileEntry, ElementWrapper, ExportedDataState, TEXT_ALIGN,
 };
 
 use hipdf::embed_pdf::PdfEmbedder;
@@ -69,7 +69,6 @@ pub struct ConversionContext {
     pub options: ConversionOptions,
     pub scale: f64,
     pub resource_cache: ResourceCache,
-    pub active_standard: Option<Standard>,
 }
 
 /// Main builder for DUC to PDF conversion
@@ -163,17 +162,14 @@ impl DucToPdfBuilder {
         // before any processing begins
         DucDataScaler::scale_exported_data(&mut exported_data, scale);
 
-        let active_standard = Self::find_active_standard(&exported_data);
-
         let context = ConversionContext {
             exported_data,
             options,
             scale,
             resource_cache: ResourceCache::default(),
-            active_standard,
         };
 
-        let style_resolver = StyleResolver::new(context.active_standard.clone());
+        let style_resolver = StyleResolver::new();
 
         // Initialize font manager and load RobotoMono font
         let mut font_manager = FontManager::new();
@@ -321,7 +317,6 @@ impl DucToPdfBuilder {
             DucElementEnum::DucEllipseElement(elem) => &elem.base,
             DucElementEnum::DucEmbeddableElement(elem) => &elem.base,
             DucElementEnum::DucPdfElement(elem) => &elem.base,
-            DucElementEnum::DucMermaidElement(elem) => &elem.base,
             DucElementEnum::DucTableElement(elem) => &elem.base,
             DucElementEnum::DucImageElement(elem) => &elem.base,
             DucElementEnum::DucTextElement(elem) => &elem.base,
@@ -330,13 +325,7 @@ impl DucToPdfBuilder {
             DucElementEnum::DucFreeDrawElement(elem) => &elem.base,
             DucElementEnum::DucFrameElement(elem) => &elem.stack_element_base.base,
             DucElementEnum::DucPlotElement(elem) => &elem.stack_element_base.base,
-            DucElementEnum::DucViewportElement(elem) => &elem.linear_base.base,
-            DucElementEnum::DucXRayElement(elem) => &elem.base,
-            DucElementEnum::DucLeaderElement(elem) => &elem.linear_base.base,
-            DucElementEnum::DucDimensionElement(elem) => &elem.base,
-            DucElementEnum::DucFeatureControlFrameElement(elem) => &elem.base,
             DucElementEnum::DucDocElement(elem) => &elem.base,
-            DucElementEnum::DucParametricElement(elem) => &elem.base,
             DucElementEnum::DucModelElement(elem) => &elem.base,
         }
     }
@@ -395,24 +384,6 @@ impl DucToPdfBuilder {
             validate_coordinates_with_scale(x_mm + width_mm, y_mm + height_mm, scale)?;
         }
         Ok(())
-    }
-
-    /// Find the active standard from the data
-    fn find_active_standard(data: &ExportedDataState) -> Option<Standard> {
-        // Get active standard from duc_local_state
-        if let Some(local_state) = &data.duc_local_state {
-            let active_std_id = &local_state.active_standard_id;
-            if !active_std_id.is_empty() {
-                return data
-                    .standards
-                    .iter()
-                    .find(|std| &std.identifier.id == active_std_id)
-                    .cloned();
-            }
-        }
-
-        // Fallback to first standard if available
-        data.standards.first().cloned()
     }
 
     /// Build the PDF document
@@ -508,7 +479,11 @@ impl DucToPdfBuilder {
     fn process_external_files(&mut self) -> ConversionResult<()> {
         if let Some(external_files) = &self.context.exported_data.external_files {
             let external_files_clone = external_files.clone();
-            for file_entry in external_files_clone {
+            for (file_key, file_data) in external_files_clone {
+                let file_entry = DucExternalFileEntry {
+                    key: file_key,
+                    value: file_data,
+                };
                 let file_data = &file_entry.value;
                 match file_data.mime_type.to_lowercase().as_str() {
                     "image/svg+xml" | "application/svg+xml" => {
@@ -1081,19 +1056,16 @@ impl DucToPdfBuilder {
             // If no local state exists, create one with the offset
             let new_local_state = duc::types::DucLocalState {
                 scope: "mm".to_string(), // Always use mm for internal processing
-                active_standard_id: "default".to_string(),
                 scroll_x: offset_x_mm,
                 scroll_y: offset_y_mm,
                 zoom: 1.0,
-                active_grid_settings: None,
-                active_snap_settings: None,
                 is_binding_enabled: false,
                 current_item_stroke: None,
                 current_item_background: None,
                 current_item_opacity: 1.0,
                 current_item_font_family: "Arial".to_string(),
                 current_item_font_size: 12.0,
-                current_item_text_align: Default::default(),
+                current_item_text_align: TEXT_ALIGN::LEFT,
                 current_item_start_line_head: None,
                 current_item_end_line_head: None,
                 current_item_roundness: 0.0,
@@ -1103,6 +1075,7 @@ impl DucToPdfBuilder {
                 grid_mode_enabled: false,
                 outline_mode_enabled: false,
                 manual_save_mode: false,
+                decimal_places: 2,
             };
 
             self.context.exported_data.duc_local_state = Some(new_local_state);

@@ -71,39 +71,15 @@ impl DucDataScaler {
                 Self::scale_element_base(&mut plot.stack_element_base.base, scale);
                 Self::scale_plot_element(plot, scale);
             }
-            types::DucElementEnum::DucViewportElement(viewport) => {
-                Self::scale_linear_element_base(&mut viewport.linear_base, scale);
-            }
-            types::DucElementEnum::DucXRayElement(xray) => {
-                Self::scale_element_base(&mut xray.base, scale);
-            }
-            types::DucElementEnum::DucLeaderElement(leader) => {
-                Self::scale_linear_element_base(&mut leader.linear_base, scale);
-                Self::scale_leader_element(leader, scale);
-            }
-            types::DucElementEnum::DucDimensionElement(dimension) => {
-                Self::scale_element_base(&mut dimension.base, scale);
-                Self::scale_dimension_element(dimension, scale);
-            }
-            types::DucElementEnum::DucFeatureControlFrameElement(fcf) => {
-                Self::scale_element_base(&mut fcf.base, scale);
-                Self::scale_fcf_element(fcf, scale);
-            }
             types::DucElementEnum::DucDocElement(doc) => {
                 Self::scale_element_base(&mut doc.base, scale);
                 Self::scale_doc_element(doc, scale);
-            }
-            types::DucElementEnum::DucParametricElement(parametric) => {
-                Self::scale_element_base(&mut parametric.base, scale);
             }
             types::DucElementEnum::DucEmbeddableElement(embeddable) => {
                 Self::scale_element_base(&mut embeddable.base, scale);
             }
             types::DucElementEnum::DucPdfElement(pdf) => {
                 Self::scale_element_base(&mut pdf.base, scale);
-            }
-            types::DucElementEnum::DucMermaidElement(mermaid) => {
-                Self::scale_element_base(&mut mermaid.base, scale);
             }
             types::DucElementEnum::DucModelElement(model) => {
                 Self::scale_element_base(&mut model.base, scale);
@@ -131,10 +107,6 @@ impl DucDataScaler {
     fn scale_text_style(style: &mut types::DucTextStyle, scale: f64) {
         style.font_size *= scale;
         style.line_height *= scale as f32;
-
-        if let Some(ref mut paper_height) = style.paper_text_height {
-            *paper_height *= scale;
-        }
     }
 
     /// Scale linear element base (points, lines, etc.)
@@ -231,78 +203,13 @@ impl DucDataScaler {
 
     /// Scale table element fields
     fn scale_table_element(table: &mut types::DucTableElement, scale: f64) {
-        // Scale column widths
-        for column in &mut table.columns {
-            column.value.width *= scale;
-        }
-    }
-
-    /// Scale leader element fields
-    fn scale_leader_element(_leader: &mut types::DucLeaderElement, _scale: f64) {
-        // Leader element scaling - no specific fields to scale based on current structure
-    }
-
-    /// Scale dimension element fields
-    fn scale_dimension_element(dimension: &mut types::DucDimensionElement, scale: f64) {
-        // Scale text position
-        if let Some(ref mut text_position) = dimension.text_position {
-            text_position.x *= scale;
-            text_position.y *= scale;
-        }
-
-        // Scale definition points
-        dimension.definition_points.origin1.x *= scale;
-        dimension.definition_points.origin1.y *= scale;
-        dimension.definition_points.location.x *= scale;
-        dimension.definition_points.location.y *= scale;
-
-        if let Some(ref mut origin2) = dimension.definition_points.origin2 {
-            origin2.x *= scale;
-            origin2.y *= scale;
-        }
-
-        if let Some(ref mut center) = dimension.definition_points.center {
-            center.x *= scale;
-            center.y *= scale;
-        }
-
-        if let Some(ref mut jog) = dimension.definition_points.jog {
-            jog.x *= scale;
-            jog.y *= scale;
-        }
-
-        // Scale nested text styles
-        Self::scale_text_style(&mut dimension.style.text_style, scale);
-
-        // Scale tolerance text style
-        if let Some(ref mut tolerance) = dimension.tolerance_override {
-            if let Some(ref mut text_style) = tolerance.text_style {
-                Self::scale_text_style(text_style, scale);
-            }
-        }
-    }
-
-    /// Scale feature control frame element fields
-    fn scale_fcf_element(fcf: &mut types::DucFeatureControlFrameElement, scale: f64) {
-        // Scale layout fields
-        fcf.style.layout.padding *= scale;
-        fcf.style.layout.segment_spacing *= scale;
-        fcf.style.layout.row_spacing *= scale;
-
-        // Scale text style
-        Self::scale_text_style(&mut fcf.style.text_style, scale);
+        let _ = (table, scale);
     }
 
     /// Scale document element fields
     fn scale_doc_element(doc: &mut types::DucDocElement, scale: f64) {
-        // Scale column layout
-        for column in &mut doc.columns.definitions {
-            column.width *= scale;
-            column.gutter *= scale;
-        }
-
-        // Scale document text style if it exists
-        // Note: Doc style structure may need additional scaling based on actual fields
+        doc.grid_config.gap_x *= scale;
+        doc.grid_config.gap_y *= scale;
     }
 
     /// Scale plot element fields

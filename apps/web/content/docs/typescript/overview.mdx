@@ -1,8 +1,8 @@
 ---
 title: "Overview"
-date: 2025-04-20
+date: 2026-02-27
 authors: [jorgedanisc]
-description: "This Library is targeted to interface TypeScript with the duc format."
+description: "TypeScript / JavaScript library for reading, writing and manipulating .duc CAD files — backed by SQLite."
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
@@ -11,9 +11,28 @@ import { Callout } from 'fumadocs-ui/components/callout';
   This page is subject to change as the project is still in development.
 </Callout>
 
+## How it works
+
+A `.duc` file is a standard **SQLite database**. `ducjs` compiles to WebAssembly and uses
+an embedded SQLite engine so it works in Node.js, Deno, Bun and the browser without any
+native dependencies.
 
 ## Installation
 
 ```bash
+npm install ducjs
+# or
+bun add ducjs
 
+# or any other JavaScript package manager
+```
+
+## Basic Usage
+
+```ts
+import { DucFile } from 'ducjs';
+
+const doc = await DucFile.open('drawing.duc');
+const elements = await doc.elements();
+console.log(elements);
 ```

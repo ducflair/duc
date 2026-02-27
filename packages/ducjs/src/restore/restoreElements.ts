@@ -1,4 +1,80 @@
 import {
+  getPrecisionValueFromRaw,
+  getPrecisionValueFromScoped,
+  getScopedBezierPointFromDucPoint,
+  NEUTRAL_SCOPE,
+  ScaleFactors
+} from "../technical/scopes";
+import {
+  _DucElementBase,
+  _DucStackElementBase,
+  BezierMirroring,
+  DocumentGridConfig,
+  DucBinderElement,
+  DucDocElement,
+  DucElement,
+  DucFrameElement,
+  DucFreeDrawEasing,
+  DucFreeDrawEnds,
+  DucGlobalState,
+  DucHead,
+  DucLine,
+  DucLinearElement,
+  DucLocalState,
+  DucModelElement,
+  DucPath,
+  DucPlotElement,
+  DucPoint,
+  DucPointBinding,
+  DucSelectionElement,
+  DucTableElement,
+  DucTextElement,
+  DucTextStyle,
+  ExternalFileId,
+  FontFamilyValues,
+  ImportedDataState,
+  isElbowArrow,
+  isLinearElement,
+  isTextElement,
+  Mutable,
+  NonDeleted,
+  OrderedDucElement,
+  Percentage,
+  PlotLayout,
+  PrecisionValue,
+  Radian,
+  RawValue,
+  ScaleFactor,
+  Scope,
+  Viewer3DState,
+} from "../types";
+import {
+  arrayToMap,
+  bumpVersion,
+  DEFAULT_ELEMENT_PROPS,
+  DEFAULT_ELLIPSE_ELEMENT,
+  DEFAULT_FONT_FAMILY,
+  DEFAULT_FONT_SIZE,
+  DEFAULT_FREEDRAW_ELEMENT,
+  detectLineHeight,
+  FONT_FAMILY,
+  getContainerElement,
+  getDefaultTableData,
+  getNormalizedDimensions,
+  getNormalizedPoints,
+  getSizeFromPoints,
+  getUpdatedTimestamp,
+  isInvisiblySmallElement,
+  LINE_CONFIRM_THRESHOLD,
+  mergeOverlappingPoints,
+  migratePoints,
+  normalizeFixedPoint,
+  normalizeLink,
+  randomId,
+  refreshTextDimensions,
+  validateClosedPath
+} from "../utils";
+import {
   ElementsConfig,
   isValidBezierMirroringValue,
   isValidBlendingValue,
@@ -6,7 +82,6 @@ import {
   isValidBoolean as isValidBooleanValue, // Renaming to avoid conflict
   isValidColor,
   isValidDucHead,
-  isValidEnumValue,
   isValidFunction,
   isValidImageScaleValue,
   isValidImageStatusValue,
@@ -22,129 +97,13 @@ import {
   validateBackground,
   validateStroke
 } from "./restoreDataState";
-import {
-  getPrecisionValueFromRaw,
-  getPrecisionValueFromScoped,
-  getScaledZoomValueForScope,
-  getScopedBezierPointFromDucPoint,
-  getScopedZoomValue,
-  NEUTRAL_SCOPE,
-  ScaleFactors,
-} from "../technical/scopes";
-import {
-  _DucElementBase,
-  _DucStackElementBase,
-  BezierMirroring,
-  DatumReference,
-  DimensionDefinitionPoints,
-  DocumentGridConfig,
-  DucBinderElement,
-  DucDimensionElement,
-  DucDimensionStyle,
-  DucDocElement,
-  DucDocStyle,
-  DucElement,
-  DucFeatureControlFrameElement,
-  DucFrameElement,
-  DucFreeDrawEasing,
-  DucFreeDrawEnds,
-  DucGlobalState,
-  DucHead,
-  DucLeaderElement,
-  DucLine,
-  DucLinearElement,
-  DucLocalState,
-  DucModelElement,
-  DucPath,
-  DucPlotElement,
-  DucPoint,
-  DucPointBinding,
-  DucSelectionElement,
-  DucTableCell,
-  DucTableColumn,
-  DucTableElement,
-  DucTableRow,
-  DucTextDynamicPart,
-  DucTextElement,
-  DucTextStyle,
-  DucView,
-  DucViewportElement,
-  DucXRayElement,
-  ElementContentBase,
-  ExternalFileId,
-  FeatureControlFrameSegment,
-  FontFamilyValues,
-  ImportedDataState,
-  isElbowArrow,
-  isLinearElement,
-  isTextElement,
-  LeaderContent,
-  Mutable,
-  NonDeleted,
-  OrderedDucElement,
-  Percentage,
-  PlotLayout,
-  PrecisionValue,
-  Radian,
-  RawValue,
-  ScaleFactor,
-  Scope,
-  TextColumn,
-  ViewportScale,
-} from "../types";
-import {
-  arrayToMap,
-  bumpVersion,
-  DEFAULT_ELEMENT_PROPS,
-  DEFAULT_ELLIPSE_ELEMENT,
-  DEFAULT_FONT_FAMILY,
-  DEFAULT_FONT_SIZE,
-  DEFAULT_FREEDRAW_ELEMENT,
-  detectLineHeight,
-  FONT_FAMILY,
-  getContainerElement,
-  getDefaultLocalState,
-  getDefaultTableData,
-  getNormalizedDimensions,
-  getNormalizedPoints,
-  getNormalizedZoom,
-  getSizeFromPoints,
-  getUpdatedTimestamp,
-  isFiniteNumber,
-  isInvisiblySmallElement,
-  LINE_CONFIRM_THRESHOLD,
-  mergeOverlappingPoints,
-  migratePoints,
-  normalizeFixedPoint,
-  normalizeLink,
-  randomId,
-  refreshTextDimensions,
-  validateClosedPath,
-} from "../utils";
 
 import {
-  AXIS,
-  BLOCK_ATTACHMENT,
-  COLUMN_TYPE,
-  DATUM_BRACKET_STYLE,
-  DIMENSION_FIT_RULE,
-  DIMENSION_TEXT_PLACEMENT,
-  DIMENSION_TYPE,
-  GDT_SYMBOL,
-  LEADER_CONTENT_TYPE,
   LINE_SPACING_TYPE,
-  MARK_ELLIPSE_CENTER,
-  MATERIAL_CONDITION,
-  PARAMETRIC_SOURCE_TYPE,
-  STACKED_TEXT_ALIGN,
-  TABLE_CELL_ALIGNMENT,
-  TABLE_FLOW_DIRECTION,
-  TEXT_FLOW_DIRECTION,
-  TOLERANCE_DISPLAY,
-  TOLERANCE_ZONE_TYPE,
-  VERTICAL_ALIGN,
-  VIEWPORT_SHADE_PLOT,
-} from "../flatbuffers/duc";
+} from "../enums";
+
+const PARAMETRIC_SOURCE_TYPE = { CODE: 10, FILE: 11 } as const;
+
 import tinycolor from "tinycolor2";
 
 const restoreElementWithProperties = <
@@ -233,10 +192,6 @@ const restoreElementWithProperties = <
       DEFAULT_ELEMENT_PROPS.isVisible
     ),
     isPlot: isValidBoolean(_element.isPlot, DEFAULT_ELEMENT_PROPS.isPlot),
-    isAnnotative: isValidBoolean(
-      _element.isAnnotative,
-      DEFAULT_ELEMENT_PROPS.isAnnotative
-    ),
     layerId: _element.layerId ?? null,
     regionIds: Array.isArray(_element.regionIds) ? _element.regionIds : [],
     width: restorePrecisionValue(_element.width, elementScope, currentScope, 0),
@@ -248,6 +203,8 @@ const restoreElementWithProperties = <
     ),
     seed: _element.seed ?? 1,
     groupIds: _element.groupIds ?? [],
+    blockIds: Array.isArray(_element.blockIds) ? _element.blockIds : [],
+    instanceId: _element.instanceId ?? null,
     frameId: _element.frameId ?? null,
     roundness: restorePrecisionValue(
       _element.roundness,
@@ -377,7 +334,6 @@ const restoreElement = (
         {
           // DucTextElement specific
           text,
-          dynamic: restoreTextDynamicParts(element.dynamic),
           autoResize: isValidBooleanValue(element.autoResize, true),
           containerId: element.containerId ?? null,
           originalText: element.originalText || text,
@@ -391,13 +347,6 @@ const restoreElement = (
           lineSpacing: restoredLineSpacing,
           obliqueAngle: isValidRadianValue(element.obliqueAngle, 0 as Radian),
           fontSize: finalFontSize,
-          paperTextHeight: element.paperTextHeight
-            ? restorePrecisionValue(
-              element.paperTextHeight,
-              textElementScope,
-              currentScope
-            )
-            : undefined,
           widthFactor:
             typeof element.widthFactor === "number"
               ? element.widthFactor
@@ -769,101 +718,6 @@ const restoreElement = (
       );
     }
 
-    case "viewport": {
-      const viewportElement = element as DucViewportElement;
-      const elementScope = isValidElementScopeValue(
-        viewportElement.scope,
-        globalState?.mainScope
-      );
-
-      // A viewport has both linear and stack properties
-      const { points, lines } = restoreLinearElementPointsAndLines({
-        points: viewportElement.points as DucPoint[],
-        lines: viewportElement.lines as DucLine[],
-        x: viewportElement.x,
-        y: viewportElement.y,
-        width: viewportElement.width,
-        height: viewportElement.height,
-        elementScope,
-        currentScope,
-        skipNormalization: false, // Viewports are typically non-binding polygons
-      });
-
-      const stackProperties = restoreStackElementProperties(
-        viewportElement,
-        currentScope
-      );
-      const defaults = getDefaultLocalState();
-
-      const zoomValue = getNormalizedZoom(
-        isFiniteNumber(localState?.zoom?.value)
-          ? localState.zoom!.value
-          : defaults.zoom.value
-      );
-      const scopedZoom = getScopedZoomValue(zoomValue, currentScope);
-
-      const view: DucView = {
-        scrollX: restorePrecisionValue(
-          viewportElement.view?.scrollX,
-          NEUTRAL_SCOPE,
-          currentScope,
-          0
-        ),
-        scrollY: restorePrecisionValue(
-          viewportElement.view?.scrollY,
-          NEUTRAL_SCOPE,
-          currentScope,
-          0
-        ),
-        zoom: {
-          value: zoomValue,
-          scoped: scopedZoom,
-          scaled: getScaledZoomValueForScope(scopedZoom, currentScope),
-        },
-        twistAngle: isValidRadianValue(
-          viewportElement.view?.twistAngle,
-          0 as Radian
-        ),
-        centerPoint: restorePoint(
-          viewportElement.view?.centerPoint,
-          NEUTRAL_SCOPE,
-          currentScope
-        )!, // Assuming centerPoint is always present
-        scope: isValidElementScopeValue(
-          viewportElement.view?.scope,
-          globalState?.mainScope
-        ),
-      };
-
-      return restoreElementWithProperties(
-        viewportElement,
-        {
-          ...stackProperties,
-          points,
-          lines,
-          view,
-          scale: (typeof viewportElement.scale === "number"
-            ? viewportElement.scale
-            : 1) as ViewportScale,
-          shadePlot: isValidEnumValue(
-            viewportElement.shadePlot,
-            VIEWPORT_SHADE_PLOT,
-            VIEWPORT_SHADE_PLOT.AS_DISPLAYED
-          ),
-          frozenGroupIds: Array.isArray(viewportElement.frozenGroupIds)
-            ? viewportElement.frozenGroupIds
-            : [],
-          // viewport-specific style
-          scaleIndicatorVisible: isValidBoolean(
-            viewportElement.scaleIndicatorVisible,
-            true
-          ),
-        },
-        localState,
-        globalState
-      );
-    }
-
     // Other elements
     case "pdf":
       return restoreElementWithProperties(
@@ -871,16 +725,6 @@ const restoreElement = (
         {
           fileId: (isValidString(element.fileId) as ExternalFileId) || null,
           gridConfig: restoreDocumentGridConfig((element as any).gridConfig),
-        },
-        localState
-      );
-    case "mermaid":
-      return restoreElementWithProperties(
-        element,
-        {
-          source: isValidString(element.source),
-          theme: isValidString(element.theme) || undefined,
-          svgPath: isValidString(element.svgPath) || null,
         },
         localState
       );
@@ -892,49 +736,8 @@ const restoreElement = (
       return restoreElementWithProperties(
         tableElement,
         {
-          columnOrder: Array.isArray(tableElement.columnOrder)
-            ? tableElement.columnOrder
-            : defaultData.columnOrder,
-          rowOrder: Array.isArray(tableElement.rowOrder)
-            ? tableElement.rowOrder
-            : defaultData.rowOrder,
-          columns: restoreTableColumns(
-            tableElement.columns,
-            currentScope,
-            defaultData.columns
-          ),
-          rows: restoreTableRows(
-            tableElement.rows,
-            currentScope,
-            defaultData.rows
-          ),
-          cells: restoreTableCells(tableElement.cells, defaultData.cells),
-          headerRowCount:
-            typeof tableElement.headerRowCount === "number"
-              ? tableElement.headerRowCount
-              : defaultData.headerRowCount,
-          autoSize: tableElement.autoSize || defaultData.autoSize,
-          // DucTableStyle properties
-          flowDirection: (
-            Object.values(TABLE_FLOW_DIRECTION)
-          ).includes(tableElement.flowDirection)
-            ? tableElement.flowDirection
-            : defaultData.flowDirection,
-          headerRowStyle: restoreTableCellStyle(
-            tableElement.headerRowStyle,
-            currentScope,
-            defaultData.headerRowStyle
-          ),
-          dataRowStyle: restoreTableCellStyle(
-            tableElement.dataRowStyle,
-            currentScope,
-            defaultData.dataRowStyle
-          ),
-          dataColumnStyle: restoreTableCellStyle(
-            tableElement.dataColumnStyle,
-            currentScope,
-            defaultData.dataColumnStyle
-          ),
+          fileId: (isValidString(tableElement.fileId) as ExternalFileId) ||
+            defaultData.fileId,
         },
         localState
       );
@@ -945,44 +748,11 @@ const restoreElement = (
       return restoreElementWithProperties(
         element,
         {
-          ...restoreDocStyleProperties(docElement, currentScope),
           text: isValidString(docElement.text),
-          dynamic: restoreTextDynamicParts(docElement.dynamic),
-          flowDirection: (
-            Object.values(TEXT_FLOW_DIRECTION)
-          ).includes(docElement.flowDirection)
-            ? docElement.flowDirection
-            : TEXT_FLOW_DIRECTION.TOP_TO_BOTTOM,
-          columns: restoreTextColumns(docElement.columns, currentScope),
-          autoResize: isValidBooleanValue(docElement.autoResize, true),
           fileId: (isValidString(docElement.fileId) as ExternalFileId) || null,
           gridConfig: restoreDocumentGridConfig(docElement.gridConfig),
         },
         localState
-      );
-    }
-
-    case "xray": {
-      const xrayElement = element as DucXRayElement;
-      const elementScope = isValidElementScopeValue(
-        xrayElement.scope,
-        globalState?.mainScope
-      );
-
-      return restoreElementWithProperties(
-        xrayElement,
-        {
-          origin: restorePoint(xrayElement.origin, elementScope, currentScope)!,
-          direction: restorePoint(
-            xrayElement.direction,
-            elementScope,
-            currentScope
-          )!,
-          startFromOrigin: isValidBoolean(xrayElement.startFromOrigin, false),
-          color: isValidColor(xrayElement.color, "#FF00FF"),
-        },
-        localState,
-        globalState
       );
     }
 
@@ -991,189 +761,11 @@ const restoreElement = (
       return restoreElementWithProperties(
         modelElement,
         {
-          source: isValidString(modelElement.source),
+          modelType: isValidString(modelElement.modelType) || null,
+          code: isValidString(modelElement.code) || null,
           fileIds: modelElement.fileIds || [],
           svgPath: modelElement.svgPath || null,
-        },
-        localState,
-        globalState
-      );
-    }
-
-    case "featurecontrolframe": {
-      const fcfElement = element as DucFeatureControlFrameElement;
-      const elementScope = isValidElementScopeValue(
-        fcfElement.scope,
-        globalState?.mainScope
-      );
-
-      return restoreElementWithProperties(
-        fcfElement,
-        {
-          // Restore style properties
-          textStyle: restoreTextStyle(fcfElement.textStyle, currentScope),
-          layout: {
-            padding: restorePrecisionValue(
-              fcfElement.layout?.padding,
-              elementScope,
-              currentScope,
-              2
-            ),
-            segmentSpacing: restorePrecisionValue(
-              fcfElement.layout?.segmentSpacing,
-              elementScope,
-              currentScope,
-              2
-            ),
-            rowSpacing: restorePrecisionValue(
-              fcfElement.layout?.rowSpacing,
-              elementScope,
-              currentScope,
-              2
-            ),
-          },
-          symbols: {
-            scale: fcfElement.symbols?.scale ?? 1,
-          },
-          datumStyle: {
-            bracketStyle: isValidEnumValue(
-              fcfElement.datumStyle?.bracketStyle,
-              DATUM_BRACKET_STYLE,
-              DATUM_BRACKET_STYLE.SQUARE
-            ),
-          },
-          // Restore data properties
-          rows: restoreFcfRows(fcfElement.rows),
-          frameModifiers: restoreFcfFrameModifiers(
-            fcfElement.frameModifiers,
-            elementScope,
-            currentScope
-          ),
-          leaderElementId: isValidString(fcfElement.leaderElementId) || null,
-          datumDefinition: restoreFcfDatumDefinition(
-            fcfElement.datumDefinition,
-            elementScope,
-            currentScope,
-            restoredBlocks
-          ),
-        },
-        localState,
-        globalState
-      );
-    }
-
-    case "leader": {
-      const leaderElement = element as DucLeaderElement;
-      const elementScope = isValidElementScopeValue(
-        leaderElement.scope,
-        globalState?.mainScope
-      );
-
-      // A leader is a linear element
-      const { points, lines } = restoreLinearElementPointsAndLines({
-        points: leaderElement.points as DucPoint[],
-        lines: leaderElement.lines as DucLine[],
-        x: leaderElement.x,
-        y: leaderElement.y,
-        width: leaderElement.width,
-        height: leaderElement.height,
-        elementScope,
-        currentScope,
-        skipNormalization: !!(
-          leaderElement.startBinding || leaderElement.endBinding
-        ),
-      });
-
-      return restoreElementWithProperties(
-        leaderElement,
-        {
-          points,
-          lines,
-          // DucLeaderStyle properties
-          headsOverride: restoreHeadsOverride(
-            leaderElement.headsOverride,
-            restoredBlocks,
-            elementScope,
-            currentScope
-          ),
-          dogleg: restorePrecisionValue(
-            leaderElement.dogleg,
-            elementScope,
-            currentScope,
-            10
-          ),
-          textStyle: restoreTextStyle(leaderElement.textStyle, currentScope),
-          textAttachment: isValidEnumValue(
-            leaderElement.textAttachment,
-            VERTICAL_ALIGN,
-            VERTICAL_ALIGN.TOP
-          ),
-          blockAttachment: isValidEnumValue(
-            leaderElement.blockAttachment,
-            BLOCK_ATTACHMENT,
-            BLOCK_ATTACHMENT.CENTER_EXTENTS
-          ),
-          // Leader data
-          leaderContent: restoreLeaderContent(leaderElement.leaderContent),
-          contentAnchor: leaderElement.contentAnchor || { x: 0, y: 0 },
-        },
-        localState,
-        globalState
-      );
-    }
-
-    case "dimension": {
-      const dimElement = element as DucDimensionElement;
-      const elementScope = isValidElementScopeValue(
-        dimElement.scope,
-        globalState?.mainScope
-      );
-
-      return restoreElementWithProperties(
-        dimElement,
-        {
-          // DucDimensionStyle properties
-          ...restoreDimensionStyle(dimElement, currentScope),
-          // Dimension data
-          dimensionType: isValidEnumValue(
-            dimElement.dimensionType,
-            DIMENSION_TYPE,
-            DIMENSION_TYPE.LINEAR
-          ),
-          definitionPoints: restoreDimensionDefinitionPoints(
-            dimElement.definitionPoints
-          ),
-          obliqueAngle: isValidRadianValue(
-            dimElement.obliqueAngle,
-            0 as Radian
-          ),
-          ordinateAxis: isValidEnumValue(dimElement.ordinateAxis, AXIS, null),
-          bindings: restoreDimensionBindings(
-            dimElement.bindings,
-            elementScope,
-            currentScope,
-            restoredBlocks
-          ),
-          textOverride: isValidString(dimElement.textOverride) || null,
-          textPosition: dimElement.textPosition || null,
-          toleranceOverride: restoreDimensionToleranceStyle(
-            dimElement.toleranceOverride,
-            currentScope
-          ),
-          baselineData: dimElement.baselineData
-            ? {
-              baseDimensionId: isValidString(
-                dimElement.baselineData.baseDimensionId
-              ),
-            }
-            : undefined,
-          continueData: dimElement.continueData
-            ? {
-              continueFromDimensionId: isValidString(
-                dimElement.continueData.continueFromDimensionId
-              ),
-            }
-            : undefined,
+          viewerState: (modelElement.viewerState || null) as Viewer3DState | null,
         },
         localState,
         globalState
@@ -1562,6 +1154,13 @@ export const restoreElements = (
         restoredBlocks,
         opts?.localState
       );
+
+      if (!migratedElement) {
+        // element failed to restore — skip
+      } else if (isInvisiblySmallElement(migratedElement)) {
+        // element too small to be visible — will be filtered below
+      }
+
       // Allow forced pass-through for specific element ids
       const isPassThrough =
         Array.isArray(opts?.passThroughElementIds) &&
@@ -1710,22 +1309,6 @@ export const isValidElementScopeValue = (
   return mainScope;
 };
 
-const restoreTextDynamicParts = (
-  dynamic: readonly any[] | undefined
-): DucTextDynamicPart[] => {
-  if (!Array.isArray(dynamic)) {
-    return [];
-  }
-  return dynamic
-    .map((part) => ({
-      tag: isValidString(part.tag),
-      source: part.source, // Assuming source is valid, could be further validated
-      formatting: part.formatting, // Assuming valid
-      cachedValue: isValidString(part.cachedValue),
-    }))
-    .filter((part) => part.tag);
-};
-
 const restoreLineSpacing = (
   lineSpacing: any,
   legacyLineHeight: number,
@@ -1750,203 +1333,6 @@ const restoreLineSpacing = (
   };
 };
 
-const restoreTableCellStyle = (
-  style: any,
-  currentScope: Scope,
-  defaultStyle: any
-) => {
-  if (!style || typeof style !== "object") {
-    return defaultStyle;
-  }
-  return {
-    ...defaultStyle,
-    ...style, // Basic override for now, can be deepened
-    alignment: (Object.values(TABLE_CELL_ALIGNMENT) as string[]).includes(
-      style.alignment
-    )
-      ? style.alignment
-      : defaultStyle.alignment,
-  };
-};
-
-const restoreTableColumns = (
-  columns: any,
-  currentScope: Scope,
-  defaultColumns: any
-): Record<string, DucTableColumn> => {
-  if (!columns || typeof columns !== "object") {
-    return defaultColumns;
-  }
-  const restored: Record<string, DucTableColumn> = {};
-  for (const id in columns) {
-    const col = columns[id];
-    if (col && typeof col === "object" && isValidString(col.id)) {
-      restored[id] = {
-        id: col.id,
-        width: restorePrecisionValue(
-          col.width,
-          currentScope,
-          currentScope,
-          100
-        ),
-        styleOverrides: col.styleOverrides
-          ? restoreTableCellStyle(col.styleOverrides, currentScope, {})
-          : undefined,
-      };
-    }
-  }
-  return restored;
-};
-
-const restoreTableRows = (
-  rows: any,
-  currentScope: Scope,
-  defaultRows: any
-): Record<string, DucTableRow> => {
-  if (!rows || typeof rows !== "object") {
-    return defaultRows;
-  }
-  const restored: Record<string, DucTableRow> = {};
-  for (const id in rows) {
-    const row = rows[id];
-    if (row && typeof row === "object" && isValidString(row.id)) {
-      restored[id] = {
-        id: row.id,
-        height: restorePrecisionValue(
-          row.height,
-          currentScope,
-          currentScope,
-          40
-        ),
-        styleOverrides: row.styleOverrides
-          ? restoreTableCellStyle(row.styleOverrides, currentScope, {})
-          : undefined,
-      };
-    }
-  }
-  return restored;
-};
-
-const restoreTableCells = (
-  cells: any,
-  defaultCells: any
-): Record<string, DucTableCell> => {
-  if (!cells || typeof cells !== "object") {
-    return defaultCells;
-  }
-  const restored: Record<string, DucTableCell> = {};
-  for (const id in cells) {
-    const cell = cells[id];
-    if (
-      cell &&
-      typeof cell === "object" &&
-      isValidString(cell.rowId) &&
-      isValidString(cell.columnId)
-    ) {
-      restored[id] = {
-        rowId: cell.rowId,
-        columnId: cell.columnId,
-        data: isValidString(cell.data),
-        locked: isValidBooleanValue(cell.locked, false),
-        span: cell.span
-          ? {
-            columns:
-              typeof cell.span.columns === "number" ? cell.span.columns : 1,
-            rows: typeof cell.span.rows === "number" ? cell.span.rows : 1,
-          }
-          : undefined,
-        styleOverrides: cell.styleOverrides, // Not deeply restored for now
-      };
-    }
-  }
-  return restored;
-};
-
-const restoreDocStyleProperties = (
-  doc: Partial<DucDocElement>,
-  currentScope: Scope
-): DucDocStyle => {
-  const elementScope = isValidElementScopeValue(doc.scope, currentScope);
-
-  // Use the new helper to restore all properties from DucTextStyle
-  const restoredTextStyle = restoreTextStyle(doc, currentScope);
-
-  // Restore properties specific to DucDocStyle
-  const paragraph: DucDocStyle['paragraph'] = {
-    firstLineIndent: restorePrecisionValue(doc.paragraph?.firstLineIndent, elementScope, currentScope, 0),
-    hangingIndent: restorePrecisionValue(doc.paragraph?.hangingIndent, elementScope, currentScope, 0),
-    leftIndent: restorePrecisionValue(doc.paragraph?.leftIndent, elementScope, currentScope, 0),
-    rightIndent: restorePrecisionValue(doc.paragraph?.rightIndent, elementScope, currentScope, 0),
-    spaceBefore: restorePrecisionValue(doc.paragraph?.spaceBefore, elementScope, currentScope, 0),
-    spaceAfter: restorePrecisionValue(doc.paragraph?.spaceAfter, elementScope, currentScope, 0),
-    tabStops: Array.isArray(doc.paragraph?.tabStops)
-      ? doc.paragraph.tabStops.map(ts => restorePrecisionValue(ts, elementScope, currentScope, 0))
-      : [],
-  };
-
-  const stackFormat: DucDocStyle['stackFormat'] = {
-    autoStack: isValidBoolean(doc.stackFormat?.autoStack, false),
-    stackChars: Array.isArray(doc.stackFormat?.stackChars) ? doc.stackFormat.stackChars.map(String) : [],
-    properties: {
-      upperScale: typeof doc.stackFormat?.properties?.upperScale === 'number' ? doc.stackFormat.properties.upperScale : 0.7,
-      lowerScale: typeof doc.stackFormat?.properties?.lowerScale === 'number' ? doc.stackFormat.properties.lowerScale : 0.7,
-      alignment: isValidEnumValue(doc.stackFormat?.properties?.alignment, STACKED_TEXT_ALIGN, STACKED_TEXT_ALIGN.CENTER),
-    },
-  };
-
-  return {
-    ...restoredTextStyle,
-    paragraph,
-    stackFormat,
-  };
-};
-
-const restoreTextColumns = (columns: any, currentScope: Scope) => {
-  const defaultGutter = getPrecisionValueFromRaw(
-    5 as RawValue,
-    currentScope,
-    currentScope
-  );
-  const defaultWidth = getPrecisionValueFromRaw(
-    100 as RawValue,
-    currentScope,
-    currentScope
-  );
-
-  if (!columns || typeof columns !== "object") {
-    return {
-      type: COLUMN_TYPE.NO_COLUMNS,
-      definitions: [],
-      autoHeight: true,
-    };
-  }
-
-  const definitions: TextColumn[] = Array.isArray(columns.definitions)
-    ? columns.definitions.map((def: any) => ({
-      width: restorePrecisionValue(
-        def?.width,
-        currentScope,
-        currentScope,
-        defaultWidth.value
-      ),
-      gutter: restorePrecisionValue(
-        def?.gutter,
-        currentScope,
-        currentScope,
-        defaultGutter.value
-      ),
-    }))
-    : [];
-
-  return {
-    type: (Object.values(COLUMN_TYPE) as string[]).includes(columns.type)
-      ? columns.type
-      : COLUMN_TYPE.NO_COLUMNS,
-    definitions,
-    autoHeight: isValidBooleanValue(columns.autoHeight, true),
-  };
-};
-
 const restoreDocumentGridConfig = (
   gridConfig: any
 ): DocumentGridConfig => {
@@ -1955,7 +1341,6 @@ const restoreDocumentGridConfig = (
       columns: 1,
       gapX: 0,
       gapY: 0,
-      alignItems: "start",
       firstPageAlone: false,
       scale: 1,
     };
@@ -1965,9 +1350,6 @@ const restoreDocumentGridConfig = (
     columns: typeof gridConfig.columns === "number" ? gridConfig.columns : 1,
     gapX: typeof gridConfig.gapX === "number" ? gridConfig.gapX : 0,
     gapY: typeof gridConfig.gapY === "number" ? gridConfig.gapY : 0,
-    alignItems: (typeof gridConfig.alignItems === "string" && ["start", "center", "end"].includes(gridConfig.alignItems))
-      ? gridConfig.alignItems
-      : "start",
     firstPageAlone: typeof gridConfig.firstPageAlone === "boolean" ? gridConfig.firstPageAlone : false,
     scale: typeof gridConfig.scale === "number" ? gridConfig.scale : 1,
   };
@@ -2180,7 +1562,7 @@ const createHeadOnlyBinding = (
 
 const validateDeprecatedElementContent = (
   color: string,
-  defaultContent: ElementContentBase
+  defaultContent: any
 ) => {
   const oldContent = tinycolor(color);
   return {
@@ -2206,337 +1588,5 @@ const restoreStackElementProperties = (
     ...restoreDucStackProperties(element),
     clip: isValidBooleanValue(element.clip, false),
     labelVisible: isValidBooleanValue(element.labelVisible, true),
-    standardOverride: isValidString(element.standardOverride) || null,
   };
-};
-
-// --- Dimension Restoration Helpers ---
-
-const restoreDimensionStyle = (
-  dim: Partial<DucDimensionElement>,
-  currentScope: Scope
-): DucDimensionStyle => {
-  const defaultTextStyle = restoreTextStyle(undefined, currentScope);
-  return {
-    dimLine: {
-      stroke: dim.dimLine?.stroke
-        ? validateStroke(dim.dimLine.stroke, dim.scope!, currentScope)
-        : DEFAULT_ELEMENT_PROPS.stroke,
-      textGap: restorePrecisionValue(
-        dim.dimLine?.textGap,
-        dim.scope!,
-        currentScope,
-        2
-      ),
-    },
-    extLine: {
-      stroke: dim.extLine?.stroke
-        ? validateStroke(dim.extLine.stroke, dim.scope!, currentScope)
-        : DEFAULT_ELEMENT_PROPS.stroke,
-      overshoot: restorePrecisionValue(
-        dim.extLine?.overshoot,
-        dim.scope!,
-        currentScope,
-        2
-      ),
-      offset: restorePrecisionValue(
-        dim.extLine?.offset,
-        dim.scope!,
-        currentScope,
-        2
-      ),
-    },
-    textStyle: restoreTextStyle(dim.textStyle, currentScope),
-    symbols: {
-      headsOverride: restoreHeadsOverride(
-        dim.symbols?.headsOverride,
-        [],
-        dim.scope!,
-        currentScope
-      ), // Assuming no blocks initially
-      centerMark: {
-        type: isValidEnumValue(
-          dim.symbols?.centerMark?.type,
-          MARK_ELLIPSE_CENTER,
-          MARK_ELLIPSE_CENTER.MARK
-        ),
-        size: restorePrecisionValue(
-          dim.symbols?.centerMark?.size,
-          dim.scope!,
-          currentScope,
-          5
-        ),
-      },
-    },
-    tolerance: restoreDimensionToleranceStyle(
-      dim.tolerance,
-      currentScope,
-      defaultTextStyle
-    ),
-    fit: {
-      rule: isValidEnumValue(
-        dim.fit?.rule,
-        DIMENSION_FIT_RULE,
-        DIMENSION_FIT_RULE.BEST_FIT
-      ),
-      textPlacement: isValidEnumValue(
-        dim.fit?.textPlacement,
-        DIMENSION_TEXT_PLACEMENT,
-        DIMENSION_TEXT_PLACEMENT.BESIDE_LINE
-      ),
-      forceTextInside: isValidBoolean(dim.fit?.forceTextInside, false),
-    },
-  };
-};
-
-const restoreDimensionToleranceStyle = (
-  tol: Partial<DucDimensionStyle["tolerance"]> | undefined,
-  currentScope: Scope,
-  defaultTextStyle?: DucTextStyle
-): DucDimensionStyle["tolerance"] => {
-  return {
-    enabled: isValidBoolean(tol?.enabled, false),
-    displayMethod: isValidEnumValue(
-      tol?.displayMethod,
-      TOLERANCE_DISPLAY,
-      TOLERANCE_DISPLAY.NONE
-    ),
-    upperValue: tol?.upperValue ?? 0,
-    lowerValue: tol?.lowerValue ?? 0,
-    precision: tol?.precision ?? 2,
-    textStyle: tol?.textStyle
-      ? restoreTextStyle(tol.textStyle, currentScope)
-      : defaultTextStyle || restoreTextStyle(undefined, currentScope),
-  };
-};
-
-const restoreDimensionDefinitionPoints = (
-  points: Partial<DimensionDefinitionPoints> | undefined
-): DimensionDefinitionPoints => {
-  return {
-    origin1: points?.origin1 || { x: 0, y: 0 },
-    origin2: points?.origin2,
-    location: points?.location || { x: 0, y: 0 },
-    center: points?.center,
-    jog: points?.jog,
-  };
-};
-
-const restoreDimensionBindings = (
-  bindings: Partial<DucDimensionElement["bindings"]> | undefined,
-  elementScope: Scope,
-  currentScope: Scope,
-  restoredBlocks: RestoredDataState["blocks"]
-): DucDimensionElement["bindings"] | undefined => {
-  if (!bindings) return undefined;
-  return {
-    origin1: bindings.origin1
-      ? repairBinding(
-        undefined,
-        bindings.origin1 ?? null,
-        currentScope,
-        restoredBlocks
-      )
-      : null,
-    origin2: bindings.origin2
-      ? repairBinding(
-        undefined,
-        bindings.origin2 ?? null,
-        currentScope,
-        restoredBlocks
-      )
-      : null,
-    center: bindings.center
-      ? repairBinding(
-        undefined,
-        bindings.center ?? null,
-        currentScope,
-        restoredBlocks
-      )
-      : null,
-  };
-};
-
-// --- Leader Restoration Helpers ---
-
-const restoreLeaderContent = (
-  content: LeaderContent | undefined | null
-): LeaderContent | null => {
-  if (!content) return null;
-  const type = isValidEnumValue(content.type, LEADER_CONTENT_TYPE, null);
-  if (type === LEADER_CONTENT_TYPE.TEXT) {
-    // Only access text if type is "text"
-    if ('text' in content) {
-      return { type: "text", text: isValidString(content.text) };
-    }
-  }
-  if (type === LEADER_CONTENT_TYPE.BLOCK) {
-    // Only access blockId and instanceData if type is "block"
-    if ('blockId' in content && 'instanceData' in content) {
-      return {
-        type: "block",
-        blockId: isValidString(content.blockId),
-        instanceData: {
-          attributeValues: content.instanceData?.attributeValues,
-          elementOverrides: content.instanceData?.elementOverrides,
-        },
-      };
-    }
-  }
-  return null;
-};
-
-// --- FCF Restoration Helpers ---
-
-const restoreFcfRows = (
-  rows: readonly (readonly FeatureControlFrameSegment[])[] | undefined
-): readonly (readonly FeatureControlFrameSegment[])[] => {
-  return rows ? rows.map((row) =>
-    row ? row.map((segment) => ({
-      symbol: isValidEnumValue(
-        segment.symbol,
-        GDT_SYMBOL,
-        GDT_SYMBOL.POSITION
-      ),
-      tolerance: {
-        value: isValidString(segment.tolerance?.value),
-        zoneType: isValidEnumValue(
-          segment.tolerance?.zoneType,
-          TOLERANCE_ZONE_TYPE,
-          undefined
-        ),
-        featureModifiers: Array.isArray(segment.tolerance?.featureModifiers)
-          ? segment.tolerance.featureModifiers
-          : [],
-        materialCondition: isValidEnumValue(
-          segment.tolerance?.materialCondition,
-          MATERIAL_CONDITION,
-          undefined
-        ),
-      },
-      datums: (Array.isArray(segment.datums)
-        ? segment.datums.map((datum) => ({
-          letters: isValidString(datum?.letters),
-          modifier: isValidEnumValue(
-            datum?.modifier,
-            MATERIAL_CONDITION,
-            undefined
-          ),
-        }))
-        : []) as [DatumReference?, DatumReference?, DatumReference?],
-    }))
-      : []
-  ) : [];
-};
-
-const restoreFcfFrameModifiers = (
-  mods: Partial<DucFeatureControlFrameElement["frameModifiers"]> | undefined,
-  elementScope: Scope,
-  currentScope: Scope
-): DucFeatureControlFrameElement["frameModifiers"] | undefined => {
-  if (!mods) return undefined;
-  return {
-    allAround: isValidBoolean(mods.allAround),
-    allOver: isValidBoolean(mods.allOver),
-    continuousFeature: isValidBoolean(mods.continuousFeature),
-    between: mods.between
-      ? {
-        start: isValidString(mods.between.start),
-        end: isValidString(mods.between.end),
-      }
-      : undefined,
-    projectedToleranceZone: mods.projectedToleranceZone
-      ? restorePrecisionValue(
-        mods.projectedToleranceZone.value,
-        elementScope,
-        currentScope
-      )
-      : undefined,
-  };
-};
-
-const restoreFcfDatumDefinition = (
-  def: Partial<DucFeatureControlFrameElement["datumDefinition"]> | undefined,
-  elementScope: Scope,
-  currentScope: Scope,
-  restoredBlocks: RestoredDataState["blocks"]
-): DucFeatureControlFrameElement["datumDefinition"] | undefined => {
-  if (!def || !isValidString(def.letter)) return undefined;
-  return {
-    letter: isValidString(def.letter, ""),
-    featureBinding: repairBinding(
-      undefined,
-      def.featureBinding ?? null,
-      currentScope,
-      restoredBlocks
-    ) ?? undefined,
-  };
-};
-
-// --- Shared & Generic Style Helpers ---
-
-const restoreTextStyle = (
-  style: Partial<DucTextStyle> | undefined,
-  currentScope: Scope
-): DucTextStyle => {
-  const defaultLineHeight = 1.15 as number & { _brand: "unitlessLineHeight" };
-  // Restore condition: if font family is "10", change to DEFAULT_FONT_FAMILY
-  let fontFamily = style?.fontFamily;
-  if (fontFamily === "10") {
-    fontFamily = DEFAULT_FONT_FAMILY;
-  }
-  return {
-    // Text-specific styles
-    isLtr: isValidBoolean(style?.isLtr, true),
-    fontFamily: getFontFamilyByName(fontFamily as unknown as string),
-    bigFontFamily: isValidString(style?.bigFontFamily, "sans-serif"),
-    textAlign: isValidTextAlignValue(style?.textAlign),
-    verticalAlign: isValidVerticalAlignValue(style?.verticalAlign),
-    lineHeight: style?.lineHeight ?? defaultLineHeight,
-    lineSpacing: restoreLineSpacing(
-      style?.lineSpacing,
-      style?.lineHeight ?? defaultLineHeight.valueOf(),
-      currentScope
-    ),
-    obliqueAngle: isValidRadianValue(style?.obliqueAngle, 0 as Radian),
-    fontSize: restorePrecisionValue(
-      style?.fontSize,
-      NEUTRAL_SCOPE,
-      currentScope,
-      DEFAULT_FONT_SIZE
-    ),
-    paperTextHeight: style?.paperTextHeight
-      ? restorePrecisionValue(
-        style.paperTextHeight,
-        NEUTRAL_SCOPE,
-        currentScope
-      )
-      : undefined,
-    widthFactor: style?.widthFactor ?? 1 as ScaleFactor,
-    isUpsideDown: isValidBoolean(style?.isUpsideDown, false),
-    isBackwards: isValidBoolean(style?.isBackwards, false),
-  };
-};
-
-const restoreHeadsOverride = (
-  heads: [DucHead, DucHead] | undefined,
-  restoredBlocks: RestoredDataState["blocks"],
-  elementScope: Scope,
-  currentScope: Scope
-): [DucHead, DucHead] | undefined => {
-  if (!Array.isArray(heads) || heads.length !== 2) return undefined;
-  const startHead = isValidDucHead(
-    heads[0],
-    restoredBlocks,
-    elementScope,
-    currentScope
-  );
-  const endHead = isValidDucHead(
-    heads[1],
-    restoredBlocks,
-    elementScope,
-    currentScope
-  );
-  if (!startHead || !endHead) return undefined;
-  return [startHead, endHead];
 };
