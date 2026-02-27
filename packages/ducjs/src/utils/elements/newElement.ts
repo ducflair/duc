@@ -1,65 +1,64 @@
 import { getUpdatedTimestamp, getZoom } from "..";
 import {
-  BLOCK_ATTACHMENT,
-  COLUMN_TYPE,
-  DATUM_BRACKET_STYLE,
-  IMAGE_STATUS,
-  LINE_SPACING_TYPE,
-  PARAMETRIC_SOURCE_TYPE,
-  STACKED_TEXT_ALIGN,
-  TEXT_FLOW_DIRECTION,
-  VERTICAL_ALIGN,
-  VIEWPORT_SHADE_PLOT
+    BLOCK_ATTACHMENT,
+    COLUMN_TYPE,
+    DATUM_BRACKET_STYLE,
+    IMAGE_STATUS,
+    LINE_SPACING_TYPE,
+    STACKED_TEXT_ALIGN,
+    TEXT_FLOW_DIRECTION,
+    VERTICAL_ALIGN,
+    VIEWPORT_SHADE_PLOT
 } from "../../flatbuffers/duc";
 import { getPrecisionValueFromRaw } from "../../technical/scopes";
 import { RawValue, Scope } from "../../types";
 import {
-  DucArrowElement,
-  DucDimensionElement,
-  DucDocElement,
-  DucElement,
-  DucEllipseElement,
-  DucEmbeddableElement,
-  DucFeatureControlFrameElement,
-  DucFrameElement,
-  DucFreeDrawElement,
-  DucGenericElement,
-  DucImageElement,
-  DucLeaderElement,
-  DucLinearElement,
-  DucMermaidElement,
-  DucModelElement,
-  DucPdfElement,
-  DucPlotElement,
-  DucPolygonElement,
-  DucTableElement,
-  DucTextElement,
-  DucViewportElement,
-  DucXRayElement,
-  ElementConstructorOpts,
-  ElementUpdate,
-  NonDeleted,
-  ViewportScale
+    DucArrowElement,
+    DucDimensionElement,
+    DucDocElement,
+    DucElement,
+    DucEllipseElement,
+    DucEmbeddableElement,
+    DucFeatureControlFrameElement,
+    DucFrameElement,
+    DucFreeDrawElement,
+    DucGenericElement,
+    DucImageElement,
+    DucLeaderElement,
+    DucLinearElement,
+    DucMermaidElement,
+    DucModelElement,
+    DucPdfElement,
+    DucPlotElement,
+    DucPolygonElement,
+    DucTableElement,
+    DucTextElement,
+    DucViewportElement,
+    DucXRayElement,
+    ElementConstructorOpts,
+    ElementUpdate,
+    NonDeleted,
+    ViewportScale
 } from "../../types/elements";
 import { Radian, ScaleFactor } from "../../types/geometryTypes";
 import { Merge, Mutable } from "../../types/utility-types";
 import {
-  DEFAULT_ELEMENT_PROPS,
-  DEFAULT_ELLIPSE_ELEMENT,
-  DEFAULT_FONT_FAMILY,
-  DEFAULT_FONT_SIZE,
-  DEFAULT_FREEDRAW_ELEMENT,
-  DEFAULT_POLYGON_SIDES,
-  DEFAULT_TEXT_ALIGN,
-  DEFAULT_VERTICAL_ALIGN
+    DEFAULT_ELEMENT_PROPS,
+    DEFAULT_ELLIPSE_ELEMENT,
+    DEFAULT_FONT_FAMILY,
+    DEFAULT_FONT_SIZE,
+    DEFAULT_FREEDRAW_ELEMENT,
+    DEFAULT_POLYGON_SIDES,
+    DEFAULT_TEXT_ALIGN,
+    DEFAULT_VERTICAL_ALIGN
 } from "../constants";
 import { randomId, randomInteger } from "../math/random";
 import { normalizeText } from "../normalize";
 import { getDefaultStackProperties, getDefaultTableData, getDefaultTextStyle } from "./";
 import {
-  getFontString,
-  getTextElementPositionOffsets,
-  measureText,
+    getFontString,
+    getTextElementPositionOffsets,
+    measureText,
 } from "./textElement";
 
 export const newElementWith = <TElement extends DucElement>(
@@ -300,7 +299,7 @@ export const newTextElement = (
   } & Partial<DucTextElement> & ElementConstructorOpts,
 ): NonDeleted<DucTextElement> => {
   const scope = opts.scope ?? currentScope;
-  const fontFamily = opts.fontFamily || DEFAULT_FONT_FAMILY;
+  const fontFamily = opts.fontFamily || (DEFAULT_FONT_FAMILY as string);
   const fontSize = opts.fontSize || getPrecisionValueFromRaw(DEFAULT_FONT_SIZE as RawValue, scope, currentScope);
   const lineHeight = opts.lineHeight || (1.2 as DucTextElement["lineHeight"]);
   const text = normalizeText(opts.text);
@@ -308,6 +307,16 @@ export const newTextElement = (
   const textAlign = opts.textAlign || DEFAULT_TEXT_ALIGN;
   const verticalAlign = opts.verticalAlign || DEFAULT_VERTICAL_ALIGN;
   const offsets = getTextElementPositionOffsets({ textAlign, verticalAlign }, metrics);
+
+  // Minimum dimensions: at least 1px wide, at least one line high (NaN-safe)
+  const rawMinLineHeight = fontSize.value * lineHeight;
+  const minLineHeight = (Number.isFinite(rawMinLineHeight) && rawMinLineHeight > 0)
+    ? rawMinLineHeight
+    : DEFAULT_FONT_SIZE * lineHeight;
+  const finalWidth = (Number.isFinite(metrics.width) && metrics.width > 0) ? metrics.width : 1 as RawValue;
+  const finalHeight = (Number.isFinite(metrics.height) && metrics.height > 0)
+    ? Math.max(metrics.height, minLineHeight) as RawValue
+    : minLineHeight as RawValue;
 
   const x = getPrecisionValueFromRaw(opts.x.value - offsets.x as RawValue, scope, currentScope);
   const y = getPrecisionValueFromRaw(opts.y.value - offsets.y as RawValue, scope, currentScope);
@@ -320,8 +329,8 @@ export const newTextElement = (
     fontFamily,
     textAlign,
     verticalAlign,
-    width: getPrecisionValueFromRaw(metrics.width, scope, currentScope),
-    height: getPrecisionValueFromRaw(metrics.height, scope, currentScope),
+    width: getPrecisionValueFromRaw(finalWidth, scope, currentScope),
+    height: getPrecisionValueFromRaw(finalHeight, scope, currentScope),
     containerId: opts.containerId || null,
     originalText: opts.originalText ?? text,
     autoResize: opts.autoResize ?? true,
@@ -428,7 +437,7 @@ export const newDocElement = (
   columns: opts.columns || { type: COLUMN_TYPE.NO_COLUMNS, definitions: [], autoHeight: true },
   autoResize: opts.autoResize ?? true,
   fileId: null,
-  gridConfig: { columns: 1, gapX: 0, gapY: 0, alignItems: 'start', firstPageAlone: false },
+  gridConfig: { columns: 1, gapX: 0, gapY: 0, alignItems: 'start', firstPageAlone: false, scale: 1 },
   // DucDocStyle properties
   isLtr: opts.isLtr ?? true,
   fontFamily: opts.fontFamily || DEFAULT_FONT_FAMILY,
@@ -449,7 +458,7 @@ export const newDocElement = (
 
 export const newPdfElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucPdfElement> => ({
   fileId: null,
-  gridConfig: { columns: 1, gapX: 0, gapY: 0, alignItems: 'start', firstPageAlone: false },
+  gridConfig: { columns: 1, gapX: 0, gapY: 0, alignItems: 'start', firstPageAlone: false, scale: 1 },
   ..._newElementBase<DucPdfElement>("pdf", currentScope, opts),
   type: "pdf",
 });

@@ -4,8 +4,9 @@ import * as flatbuffers from "flatbuffers";
 import { nanoid } from 'nanoid';
 import {
   CustomHatchPattern as CustomHatchPatternFb,
-  DimensionToleranceStyle as DimensionToleranceStyleFb,
   DOCUMENT_GRID_ALIGN_ITEMS,
+  DimensionToleranceStyle as DimensionToleranceStyleFb,
+  DocumentGridConfig as DocumentGridConfigFb,
   DucArrowElement as DucArrowElementFb,
   DucBlockCollection as DucBlockCollectionFb,
   DucBlock as DucBlockFb,
@@ -61,7 +62,6 @@ import {
   DucViewportStyle as DucViewportStyleFb,
   DucXRayElement as DucXRayElementFb,
   DucXRayStyle as DucXRayStyleFb,
-  DocumentGridConfig as DocumentGridConfigFb,
   ElementBackground as ElementBackgroundFb,
   ElementContentBase as ElementContentBaseFb,
   ElementStroke as ElementStrokeFb,
@@ -118,6 +118,7 @@ import {
   DucElement,
   DucEllipseElement,
   DucEmbeddableElement,
+  DucExternalFileMetadata,
   DucExternalFiles,
   DucFeatureControlFrameElement,
   DucFeatureControlFrameStyle,
@@ -278,6 +279,7 @@ export function parseDocumentGridConfig(gridConfig: DocumentGridConfigFb): Docum
       return 'start';
     })(),
     firstPageAlone: gridConfig.firstPageAlone(),
+    scale: gridConfig.scale(),
   };
 }
 
@@ -575,6 +577,7 @@ function parsePdfElement(element: DucPdfElementFb): DucPdfElement {
       gapY: 0,
       alignItems: 'start',
       firstPageAlone: false,
+      scale: 1,
     },
   };
 }
@@ -1029,6 +1032,7 @@ function parseDocElement(element: DucDocElementFb): DucDocElement {
       gapY: 0,
       alignItems: 'start',
       firstPageAlone: false,
+      scale: 1,
     },
   };
 }
@@ -1393,6 +1397,32 @@ export function parseExternalFilesFromBinary(entry: DucExternalFileEntry): DucEx
       lastRetrieved: Number(fileData.lastRetrieved()) || undefined,
     }
   } as DucExternalFiles;
+}
+
+/**
+ * Parse only metadata (no binary data) from an external file entry.
+ * Used by the lazy file store to avoid copying file bytes into JS memory.
+ */
+export function parseExternalFileMetadataFromBinary(entry: DucExternalFileEntry): {
+  key: string;
+  metadata: DucExternalFileMetadata;
+} | null {
+  const fileData = entry.value();
+  const key = entry.key();
+  if (!fileData || !key) return null;
+
+  const id = fileData.id() as ExternalFileId | null;
+  if (!id) return null;
+
+  return {
+    key,
+    metadata: {
+      id,
+      mimeType: fileData.mimeType() || "application/octet-stream",
+      created: Number(fileData.created()),
+      lastRetrieved: Number(fileData.lastRetrieved()) || undefined,
+    },
+  };
 }
 
 export function parseGlobalStateFromBinary(state: DucGlobalStateFb): DucGlobalState {
@@ -1998,6 +2028,219 @@ export const parseDuc = async (
     localState: sanitized.localState,
     globalState: sanitized.globalState,
     files: sanitized.files,
+    blocks: sanitized.blocks,
+    blockInstances: sanitized.blockInstances,
+    groups: sanitized.groups,
+    regions: sanitized.regions,
+    layers: sanitized.layers,
+    blockCollections: sanitized.blockCollections,
+    standards: sanitized.standards,
+    versionGraph: sanitized.versionGraph,
+    id: sanitized.id,
+  };
+};
+// #endregion
+
+// #region LAZY ROOT PARSER
+
+import { LazyExternalFileStore } from "./lazy-files";
+
+export type LazyRestoredDataState = Omit<RestoredDataState, 'files'> & {
+  /** Lazy file store: only metadata is in memory, file bytes are read on-demand from the buffer */
+  lazyFileStore: LazyExternalFileStore;
+  /** Legacy `files` field — always empty. Use lazyFileStore instead. */
+  files: DucExternalFiles;
+};
+
+/**
+ * Parse a .duc binary with lazy external file loading.
+ *
+ * This is identical to `parseDuc` except:
+ *  - External file BYTES are NOT copied into JS memory.
+ *  - Only file metadata (~200 bytes per file) is parsed.
+ *  - A `LazyExternalFileStore` is returned for on-demand data access.
+ *  - The store holds a reference to the original Uint8Array buffer.
+ *
+ * Memory comparison for 500 PDFs averaging 5MB each:
+ *  - parseDuc: files field holds 2.5GB of ArrayBuffer data in JS heap
+ *  - parseDucLazy: ~100KB of metadata + the original buffer (referenced, not copied)
+ *
+ * @param buffer - The raw .duc file bytes (from storage/IndexedDB/filesystem)
+ * @param restoreConfig - Optional restore configuration
+ */
+export const parseDucLazy = async (
+  buffer: Uint8Array,
+  restoreConfig: RestoreConfig = {},
+): Promise<LazyRestoredDataState> => {
+  if (!buffer || buffer.byteLength === 0) {
+    throw new Error('Invalid DUC buffer: empty file');
+  }
+
+  const byteBuffer = new flatbuffers.ByteBuffer(buffer);
+
+  let data: ExportedDataStateFb;
+  try {
+    data = ExportedDataState.getRootAsExportedDataState(byteBuffer);
+  } catch (e) {
+    throw new Error('Invalid DUC buffer: cannot read root table');
+  }
+
+  const legacyVersion = data.versionLegacy();
+  if (legacyVersion) {
+    throw new Error(`Unsupported DUC version: ${legacyVersion}. Please use version ducjs@2.0.1 or lower to support this file.`);
+  }
+
+  const localState = data.ducLocalState();
+  const parsedLocalState = localState && parseLocalStateFromBinary(localState);
+
+  const globalState = data.ducGlobalState();
+  const parsedGlobalState = globalState && parseGlobalStateFromBinary(globalState);
+
+  // Parse elements
+  const elements: Partial<DucElement>[] = [];
+  for (let i = 0; i < data.elementsLength(); i++) {
+    const e = data.elements(i);
+    if (e) {
+      const element = parseElementFromBinary(e);
+      if (element) {
+        elements.push(element);
+      }
+    }
+  }
+
+  // Create lazy file store — only metadata is parsed, no file bytes copied
+  const lazyFileStore = new LazyExternalFileStore(buffer);
+
+  // Parse blocks
+  const blocks: DucBlock[] = [];
+  for (let i = 0; i < data.blocksLength(); i++) {
+    const block = data.blocks(i);
+    if (block) {
+      const parsedBlock = parseBlockFromBinary(block);
+      if (parsedBlock) {
+        blocks.push(parsedBlock as DucBlock);
+      }
+    }
+  }
+
+  // Parse block instances
+  const blockInstances: DucBlockInstance[] = [];
+  for (let i = 0; i < data.blockInstancesLength(); i++) {
+    const blockInstance = data.blockInstances(i);
+    if (blockInstance) {
+      const parsedBlockInstance = parseBlockInstance(blockInstance);
+      if (parsedBlockInstance) {
+        blockInstances.push(parsedBlockInstance);
+      }
+    }
+  }
+
+  // Parse block collections
+  const blockCollections: DucBlockCollection[] = [];
+  for (let i = 0; i < data.blockCollectionsLength(); i++) {
+    const blockCollection = data.blockCollections(i);
+    if (blockCollection) {
+      const parsedBlockCollection = parseBlockCollection(blockCollection);
+      if (parsedBlockCollection) {
+        blockCollections.push(parsedBlockCollection);
+      }
+    }
+  }
+
+  // Parse groups
+  const groups: DucGroup[] = [];
+  for (let i = 0; i < data.groupsLength(); i++) {
+    const group = data.groups(i);
+    if (group) {
+      const parsedGroup = parseGroupFromBinary(group);
+      if (parsedGroup) {
+        groups.push(parsedGroup as DucGroup);
+      }
+    }
+  }
+
+  // Parse dictionary
+  const dictionary = parseDictionaryFromBinary(data);
+
+  // Parse thumbnail
+  const thumbnail = parseThumbnailFromBinary(data);
+
+  // Parse version graph
+  const versionGraphData = data.versionGraph();
+  const versionGraph = parseVersionGraphFromBinary(versionGraphData);
+
+  // Parse regions
+  const regions: DucRegion[] = [];
+  for (let i = 0; i < data.regionsLength(); i++) {
+    const region = data.regions(i);
+    if (region) {
+      const parsedRegion = parseRegionFromBinary(region);
+      if (parsedRegion) {
+        regions.push(parsedRegion);
+      }
+    }
+  }
+
+  // Parse layers
+  const layers: DucLayer[] = [];
+  for (let i = 0; i < data.layersLength(); i++) {
+    const layer = data.layers(i);
+    if (layer) {
+      const parsedLayer = parseLayerFromBinary(layer);
+      if (parsedLayer) {
+        layers.push(parsedLayer);
+      }
+    }
+  }
+
+  // Parse standards
+  const standards: Standard[] = [];
+  for (let i = 0; i < data.standardsLength(); i++) {
+    const standard = data.standards(i);
+    if (standard) {
+      const parsedStandard = parseStandardFromBinary(standard);
+      if (parsedStandard) {
+        standards.push(parsedStandard);
+      }
+    }
+  }
+
+  const exportData: RestoredDataState = {
+    thumbnail,
+    dictionary,
+    elements: elements as OrderedDucElement[],
+    localState: parsedLocalState!,
+    globalState: parsedGlobalState!,
+    blocks,
+    blockInstances,
+    blockCollections,
+    groups,
+    regions,
+    layers,
+    standards,
+    files: {}, // empty — use lazyFileStore
+    versionGraph: versionGraph ?? undefined,
+    id: data.id() ?? nanoid(),
+  };
+
+  const sanitized = restore(
+    exportData,
+    {
+      syncInvalidIndices: (elements) => elements as OrderedDucElement[],
+      repairBindings: true,
+      refreshDimensions: false,
+    },
+    restoreConfig,
+  );
+
+  return {
+    thumbnail: sanitized.thumbnail,
+    dictionary: sanitized.dictionary,
+    elements: sanitized.elements,
+    localState: sanitized.localState,
+    globalState: sanitized.globalState,
+    files: {},
+    lazyFileStore,
     blocks: sanitized.blocks,
     blockInstances: sanitized.blockInstances,
     groups: sanitized.groups,

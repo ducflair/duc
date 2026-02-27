@@ -50,8 +50,13 @@ firstPageAlone():boolean {
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
+scale():number {
+  const offset = this.bb!.__offset(this.bb_pos, 14);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+}
+
 static startDocumentGridConfig(builder:flatbuffers.Builder) {
-  builder.startObject(5);
+  builder.startObject(6);
 }
 
 static addColumns(builder:flatbuffers.Builder, columns:number) {
@@ -74,12 +79,16 @@ static addFirstPageAlone(builder:flatbuffers.Builder, firstPageAlone:boolean) {
   builder.addFieldInt8(4, +firstPageAlone, +false);
 }
 
+static addScale(builder:flatbuffers.Builder, scale:number) {
+  builder.addFieldFloat64(5, scale, 0.0);
+}
+
 static endDocumentGridConfig(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   return offset;
 }
 
-static createDocumentGridConfig(builder:flatbuffers.Builder, columns:number, gapX:number, gapY:number, alignItems:DOCUMENT_GRID_ALIGN_ITEMS|null, firstPageAlone:boolean):flatbuffers.Offset {
+static createDocumentGridConfig(builder:flatbuffers.Builder, columns:number, gapX:number, gapY:number, alignItems:DOCUMENT_GRID_ALIGN_ITEMS|null, firstPageAlone:boolean, scale:number):flatbuffers.Offset {
   DocumentGridConfig.startDocumentGridConfig(builder);
   DocumentGridConfig.addColumns(builder, columns);
   DocumentGridConfig.addGapX(builder, gapX);
@@ -87,6 +96,7 @@ static createDocumentGridConfig(builder:flatbuffers.Builder, columns:number, gap
   if (alignItems !== null)
     DocumentGridConfig.addAlignItems(builder, alignItems);
   DocumentGridConfig.addFirstPageAlone(builder, firstPageAlone);
+  DocumentGridConfig.addScale(builder, scale);
   return DocumentGridConfig.endDocumentGridConfig(builder);
 }
 }

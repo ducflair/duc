@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
 pub mod builder;
@@ -267,16 +268,23 @@ pub fn convert_duc_to_pdf_with_options(
     duc_data: &[u8],
     options: ConversionOptions,
 ) -> ConversionResult<Vec<u8>> {
+    convert_duc_to_pdf_with_fonts_and_options(duc_data, options, HashMap::new())
+}
+
+/// Main conversion function with options and custom font data
+pub fn convert_duc_to_pdf_with_fonts_and_options(
+    duc_data: &[u8],
+    options: ConversionOptions,
+    font_data: HashMap<String, Vec<u8>>,
+) -> ConversionResult<Vec<u8>> {
     let mut normalized_options = options;
     normalized_options.background_color =
         normalize_background_color(normalized_options.background_color);
 
-    // Parse DUC data
     let exported_data =
         duc::parse::parse(duc_data).map_err(|e| ConversionError::InvalidDucData(e.to_string()))?;
 
-    // Use the builder to convert
-    builder::DucToPdfBuilder::new(exported_data, normalized_options)?.build()
+    builder::DucToPdfBuilder::new(exported_data, normalized_options, font_data)?.build()
 }
 
 /// WASM binding for the main conversion function
@@ -392,6 +400,114 @@ pub fn convert_duc_to_pdf_crop_wasm(
             error_handling::log_crop_details(offset_x, offset_y, width, height);
 
             // Create structured error info with crop context
+            let crop_options = ConversionOptions {
+                mode: ConversionMode::Crop {
+                    offset_x,
+                    offset_y,
+                    width,
+                    height,
+                },
+                background_color: normalized_background,
+                ..Default::default()
+            };
+            let error_info =
+                error_handling::create_error_info(&e, duc_data.len(), Some(&crop_options));
+            error_handling::error_to_wasm_bytes(&error_info)
+        }
+    }
+}
+
+/// Deserialize a JS font map (Map<string, Uint8Array>) into a Rust HashMap
+fn deserialize_font_map(font_map_js: JsValue) -> HashMap<String, Vec<u8>> {
+    let mut fonts = HashMap::new();
+    if font_map_js.is_undefined() || font_map_js.is_null() {
+        return fonts;
+    }
+
+    let entries = js_sys::try_iter(&font_map_js)
+        .ok()
+        .flatten();
+
+    if let Some(iter) = entries {
+        for entry_result in iter {
+            if let Ok(entry) = entry_result {
+                let pair = js_sys::Array::from(&entry);
+                if pair.length() == 2 {
+                    let key = pair.get(0);
+                    let value = pair.get(1);
+                    if let Some(family) = key.as_string() {
+                        let bytes = js_sys::Uint8Array::new(&value);
+                        fonts.insert(family, bytes.to_vec());
+                    }
+                }
+            }
+        }
+    }
+    fonts
+}
+
+/// WASM binding for conversion with custom font data
+/// font_map_js: a JS Map<string, Uint8Array> mapping font family names to TTF/OTF bytes
+#[wasm_bindgen]
+pub fn convert_duc_to_pdf_with_fonts_rs(duc_data: &[u8], font_map_js: JsValue) -> Vec<u8> {
+    let font_data = deserialize_font_map(font_map_js);
+    match convert_duc_to_pdf_with_fonts_and_options(duc_data, ConversionOptions::default(), font_data) {
+        Ok(pdf_bytes) => pdf_bytes,
+        Err(e) => {
+            error_handling::log_error_details(&e, duc_data.len(), "Conversion with fonts (default options)");
+            let error_info = error_handling::create_error_info(&e, duc_data.len(), None);
+            error_handling::error_to_wasm_bytes(&error_info)
+        }
+    }
+}
+
+/// WASM binding for crop conversion with custom font data
+#[wasm_bindgen]
+pub fn convert_duc_to_pdf_crop_with_fonts_wasm(
+    duc_data: &[u8],
+    offset_x: f64,
+    offset_y: f64,
+    width: Option<f64>,
+    height: Option<f64>,
+    background_color: Option<String>,
+    font_map_js: JsValue,
+) -> Vec<u8> {
+    if let Err(validation_error) = error_handling::validate_basic_inputs(
+        duc_data,
+        Some(offset_x),
+        Some(offset_y),
+        width,
+        height,
+    ) {
+        let error_info = error_handling::WasmErrorInfo {
+            error: validation_error.clone(),
+            error_type: "ValidationError".to_string(),
+            details: validation_error,
+            duc_data_length: duc_data.len(),
+            conversion_context: None,
+        };
+        return error_handling::error_to_wasm_bytes(&error_info);
+    }
+
+    let normalized_background = normalize_background_color(background_color);
+    let font_data = deserialize_font_map(font_map_js);
+
+    let options = ConversionOptions {
+        mode: ConversionMode::Crop {
+            offset_x,
+            offset_y,
+            width,
+            height,
+        },
+        background_color: normalized_background.clone(),
+        ..Default::default()
+    };
+
+    match convert_duc_to_pdf_with_fonts_and_options(duc_data, options, font_data) {
+        Ok(pdf_bytes) => pdf_bytes,
+        Err(e) => {
+            error_handling::log_error_details(&e, duc_data.len(), "Crop conversion with fonts");
+            error_handling::log_crop_details(offset_x, offset_y, width, height);
             let crop_options = ConversionOptions {
                 mode: ConversionMode::Crop {
                     offset_x,

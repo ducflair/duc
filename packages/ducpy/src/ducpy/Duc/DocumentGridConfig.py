@@ -63,8 +63,15 @@ class DocumentGridConfig(object):
             return bool(self._tab.Get(flatbuffers.number_types.BoolFlags, o + self._tab.Pos))
         return False
 
+    # DocumentGridConfig
+    def Scale(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float64Flags, o + self._tab.Pos)
+        return 0.0
+
 def DocumentGridConfigStart(builder):
-    builder.StartObject(5)
+    builder.StartObject(6)
 
 def Start(builder):
     DocumentGridConfigStart(builder)
@@ -98,6 +105,12 @@ def DocumentGridConfigAddFirstPageAlone(builder, firstPageAlone):
 
 def AddFirstPageAlone(builder, firstPageAlone):
     DocumentGridConfigAddFirstPageAlone(builder, firstPageAlone)
+
+def DocumentGridConfigAddScale(builder, scale):
+    builder.PrependFloat64Slot(5, scale, 0.0)
+
+def AddScale(builder, scale):
+    DocumentGridConfigAddScale(builder, scale)
 
 def DocumentGridConfigEnd(builder):
     return builder.EndObject()
