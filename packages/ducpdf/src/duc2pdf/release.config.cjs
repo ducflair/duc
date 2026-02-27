@@ -23,7 +23,7 @@ module.exports = {
         // 2. Set the crate version 
         // 3. Build the project
         prepareCmd:
-          "node ../../../../scripts/cargo-set-duc-dep-version.js . 2 && cargo set-version ${nextRelease.version} && cargo build --release",
+          "node ../../../../scripts/cargo-set-duc-dep-version.js . 3 && cargo set-version ${nextRelease.version} && cargo build --release",
 
         // Publish step: Publish the crate to crates.io
         publishCmd:
