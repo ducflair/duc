@@ -5,6 +5,7 @@ import { Bounds, LineSegment, TuplePoint } from "../geometryTypes";
 import type {
   DucArrowElement,
   DucBindableElement,
+  DucDocElement,
   DucElbowArrowElement,
   DucElement,
   DucElementType,
@@ -15,6 +16,7 @@ import type {
   DucFreeDrawElement,
   DucImageElement,
   DucLinearElement,
+  DucPdfElement,
   DucPlotElement,
   DucTableElement,
   DucPointBinding,
@@ -40,6 +42,20 @@ export const isImageElement = (
   element: DucElement | null,
 ): element is DucImageElement => {
   return !!element && element.type === "image";
+};
+
+export const isPdfElement = (
+  element: DucElement | null,
+): element is DucPdfElement => {
+  return !!element && element.type === "pdf";
+};
+
+export type DucPdfLikeElement = DucPdfElement | DucDocElement;
+
+export const isPdfLikeElement = (
+  element: DucElement | null,
+): element is DucPdfLikeElement => {
+  return !!element && (element.type === "pdf" || element.type === "doc");
 };
 
 export const isEmbeddableElement = (

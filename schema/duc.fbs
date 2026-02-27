@@ -1453,6 +1453,30 @@ table DocumentGridConfig {
   align_items: DOCUMENT_GRID_ALIGN_ITEMS = null;
   /** cover page behavior for 2+ columns */
   first_page_alone: bool;
+  /**
+   * The scale factor of the element, represented as a single floating-point number.
+   * This is calculated as: (Drawing Units ÷ Real World Units).
+   * 
+   * The scale factor is strictly a ratio and is unitless. 
+   * 
+   * @example
+   * // Reduction (Architecture / Maps) - Drawing is smaller than reality
+   * // 1:300 scale  ->  1 / 300  = 0.00333333
+   * // 1/4" = 1'-0" ->  1 / 48   = 0.02083333 (Imperial 1:48)
+   * 
+   * @example
+   * // Neutral - Drawing is exact real-world size
+   * // 1:1 scale    ->  1 / 1    = 1.0
+   * 
+   * @example
+   * // Enlargement (Machining / Details) - Drawing is bigger than reality
+   * // 5:1 scale    ->  5 / 1    = 5.0
+   * 
+   * @remarks
+   * To calculate the real-world size from a measurement taken on the PDF:
+   * `realWorldSize = pdfMeasurement / scale`
+   */
+  scale: double;
 }
 
 table DucPdfElement {
