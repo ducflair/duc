@@ -32,19 +32,8 @@ function getSvgPathFromStroke(points: number[][]): string {
     .replace(TO_FIXED_PRECISION, "$1");
 }
 
-export function getFreeDrawSvgPath(element: DucFreeDrawElement) {
-  // If input points are empty (should they ever be?) return a dot
-
-  if(element.points.length === 0) {
-    return "";
-  }
-
-  const inputPoints = element.simulatePressure
-    ? element.points.map(({x, y}, i) => [x.scoped, y.scoped, element.pressures[i]])
-    : element.points.map(({x, y}) => [x.scoped, y.scoped]);
-
-  // Consider changing the options for simulated pressure vs real pressure
-  const options: StrokeOptions = {
+function buildStrokeOptions(element: DucFreeDrawElement): StrokeOptions {
+  return {
     size: element.size.scoped,
     simulatePressure: element.simulatePressure,
     thinning: element.thinning,
@@ -53,7 +42,37 @@ export function getFreeDrawSvgPath(element: DucFreeDrawElement) {
     easing: element.easing,
     start: element.start || undefined,
     end: element.end || undefined,
-    last: !!element.lastCommittedPoint, // LastCommittedPoint is added on pointerup
+    last: !!element.lastCommittedPoint,
   };
+}
+
+function buildInputPoints(element: DucFreeDrawElement): number[][] {
+  return element.simulatePressure
+    ? element.points.map(({x, y}, i) => [x.scoped, y.scoped, element.pressures[i]])
+    : element.points.map(({x, y}) => [x.scoped, y.scoped]);
+}
+
+export function getFreeDrawSvgPath(element: DucFreeDrawElement) {
+  if(element.points.length === 0) {
+    return "";
+  }
+
+  const inputPoints = buildInputPoints(element);
+  const options = buildStrokeOptions(element);
   return getSvgPathFromStroke(getStroke(inputPoints, options));
+}
+
+/**
+ * Returns the raw outline polygon points from perfect-freehand.
+ * Each point is [x, y]. The result forms a closed polygon that
+ * represents the visual shape of the freedraw stroke.
+ */
+export function getFreeDrawStrokePoints(element: DucFreeDrawElement): number[][] {
+  if (element.points.length === 0) {
+    return [];
+  }
+
+  const inputPoints = buildInputPoints(element);
+  const options = buildStrokeOptions(element);
+  return getStroke(inputPoints, options);
 }

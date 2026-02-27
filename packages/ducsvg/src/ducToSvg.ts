@@ -12,7 +12,7 @@ export const ducToSvg = async (
   options?: ConversionOptions,
 ): Promise<SvgDocument> => {
   // Step 1: Convert DUC to PDF using the robust ducpdf converter
-  const pdfBytes = await convertDucToPdf(ducData, options);
+  const { data: pdfBytes } = await convertDucToPdf(ducData, options);
 
   // Step 2: Convert PDF to SVG pages using hayro-svg
   const svgDocument = await convertPdfToSvg(pdfBytes);
