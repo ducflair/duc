@@ -50,10 +50,9 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
-    "build:packages": "turbo build --filter=ducjs --filter=ducpy --filter=ducrs --filter=ducsvg --filter=ducpdf",
+    "packages:build": "turbo build --filter=ducjs --filter=ducpy --filter=ducrs --filter=ducsvg --filter=ducpdf",
+    "packages:test": "turbo test --filter=ducjs --filter=ducpy --filter=ducrs --filter=ducsvg --filter=ducpdf",
     "sst:shell": "bash -c 'CMD=\"$1\"; shift; [ -n \"$1\" ] && [ \"$1\" != \"_\" ] && export SST_STAGE=\"$1\"; eval \"$CMD\"' _",
-    "flatc:gen": "bun run flatc:gen:duc",
-    "flatc:gen:duc": "cd schema && bash flatc-duc-generate.sh",
     "clean": "bun del-cli \"**/dist\" \".turbo\" \"**/node_modules\" \"**/package-lock.json\" \"**/tsconfig.tsbuildinfo\" \"**/tsconfig.node.tsbuildinfo\" \"**/vite.config.js\"",
     "docs:dev": "turbo dev --filter=@duc/docs",
     "docs:build": "turbo build --filter=@duc/docs",
