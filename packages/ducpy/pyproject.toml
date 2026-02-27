@@ -33,6 +33,9 @@ build-backend = "maturin"
 manifest-path = "crate/Cargo.toml"
 python-source = "src"
 module-name = "ducpy_native"
+include = [
+    { path = "LICENSE", format = "sdist" }
+]
 
 [tool.setuptools]
 [tool.setuptools.packages.find]
