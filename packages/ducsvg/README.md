@@ -1,3 +1,5 @@
+# ducsvg
+
 <p align="center">
   <br/>
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://raw.githubusercontent.com/ducflair/assets/refs/heads/main/src/duc/duc-extended.png" /></a>
@@ -9,7 +11,6 @@
   </p>
 </p>
 
-# ducsvg
 
 `ducsvg` is a lightweight adapter for rendering `duc` CAD documents to SVG. It’s built on top of `ducjs` and focuses on accurate, standards-compliant SVG output you can embed in browsers or export from Node.js.
 

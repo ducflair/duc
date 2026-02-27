@@ -49,8 +49,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang
 
-      - name: Install wasm-pack
-        run: cargo install wasm-pack --locked
+      - name: Install wasm-pack (pinned 0.14.x)
+        run: cargo install wasm-pack --version 0.14.0 --locked --force
 
       # npm 11.5.1 or later must be installed for OIDC to work
       - name: Update npm
