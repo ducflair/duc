@@ -1,4 +1,4 @@
-# duc2pdf
+# duc2pdf (Rust)
 
 <p align="center">
   <br/>
@@ -80,4 +80,3 @@ To ensure smooth releases with semantic-release, please follow [these guidelines
 ---
 
 *The duc format and libraries are constantly evolving, aiming to set new standards in the 2D CAD industry. Be a part of this transformation and help shape the future of design technology!*
-
