@@ -1,3 +1,5 @@
+# ducpdf
+
 <p align="center">
   <br/>
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://raw.githubusercontent.com/ducflair/assets/refs/heads/main/src/duc/duc-extended.png" /></a>
@@ -8,8 +10,6 @@
     <a href="https://www.npmtrends.com/ducpdf"><img src="https://img.shields.io/npm/dm/ducpdf?style=round-square&color=salmon" alt="Downloads" /></a>
   </p>
 </p>
-
-# ducpdf
 
 `ducpdf` is a lightweight adapter for rendering `duc` CAD documents to PDF. It's built on top of `ducjs` and focuses on accurate, standards-compliant PDF output for professional document sharing and printing.
 
