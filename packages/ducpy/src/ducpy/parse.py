@@ -3,441 +3,575 @@
 
 from __future__ import annotations
 
-import json
 import gzip
-from typing import List, Dict, Optional, Union, Any, IO
+import json
+from typing import IO, Any, Dict, List, Optional, Union
 
 import flatbuffers
-from flatbuffers.table import Table
-
-from ducpy.classes.DataStateClass import (
-    ExportedDataState as DS_ExportedDataState,
-    DictionaryEntry as DS_DictionaryEntry,
-    DucLocalState as DS_DucLocalState,
-    DucGlobalState as DS_DucGlobalState,
-    VersionGraph as DS_VersionGraph,
-    DucExternalFileEntry as DS_DucExternalFileEntry,
-    DucExternalFileData as DS_DucExternalFileData,
-    Checkpoint as DS_Checkpoint,
-    Delta as DS_Delta,
-    VersionBase as DS_VersionBase,
-    JSONPatchOperation as DS_JSONPatchOperation,
-    VersionGraphMetadata as DS_VersionGraphMetadata,
-    DisplayPrecision as DS_DisplayPrecision,
-)
-from ducpy.classes.ElementsClass import (
-    ElementWrapper as DS_ElementWrapper,
-    DucBlockCollectionEntry as DS_DucBlockCollectionEntry,
-    DucRectangleElement as DS_DucRectangleElement,
-    DucPolygonElement as DS_DucPolygonElement,
-    DucEllipseElement as DS_DucEllipseElement,
-    DucEmbeddableElement as DS_DucEmbeddableElement,
-    DucPdfElement as DS_DucPdfElement,
-    DucMermaidElement as DS_DucMermaidElement,
-    DucTableElement as DS_DucTableElement,
-    DucImageElement as DS_DucImageElement,
-    DucTextElement as DS_DucTextElement,
-    DucLinearElement as DS_DucLinearElement,
-    DucArrowElement as DS_DucArrowElement,
-    DucFreeDrawElement as DS_DucFreeDrawElement,
-    DucBlockInstance as DS_DucBlockInstance,
-    DucFrameElement as DS_DucFrameElement,
-    DucPlotElement as DS_DucPlotElement,
-    DucViewportElement as DS_DucViewportElement,
-    DucXRayElement as DS_DucXRayElement,
-    DucLeaderElement as DS_DucLeaderElement,
-    DucDimensionElement as DS_DucDimensionElement,
-    DucFeatureControlFrameElement as DS_DucFeatureControlFrameElement,
-    DucDocElement as DS_DucDocElement,
-    DucParametricElement as DS_DucParametricElement,
-    DucModelElement as DS_DucModelElement,
-    DucBlock as DS_DucBlock,
-    DucBlockCollection as DS_DucBlockCollection,
-    DucBlockMetadata as DS_DucBlockMetadata,
-    DucGroup as DS_DucGroup,
-    DucRegion as DS_DucRegion,
-    DucLayer as DS_DucLayer,
-    DocumentGridConfig as DS_DocumentGridConfig,
-    ElementBackground as DS_ElementBackground,
-    ElementStroke as DS_ElementStroke,
-    GeometricPoint as DS_GeometricPoint,
-    BoundElement as DS_BoundElement,
-    DucPoint as DS_DucPoint,
-    DucHead as DS_DucHead,
-    DucLine as DS_DucLine,
-    DucLineReference as DS_DucLineReference,
-    DucPath as DS_DucPath,
-    DucLinearElementBase as DS_DucLinearElementBase,
-    DucElementBase as DS_DucElementBase,
-    DucElementStylesBase as DS_DucElementStylesBase,
-    ElementContentBase as DS_ElementContentBase,
-    StrokeStyle as DS_StrokeStyle,
-    StrokeSides as DS_StrokeSides,
-    DucStackLikeStyles as DS_DucStackLikeStyles,
-    DucStackBase as DS_DucStackBase,
-    DucStackElementBase as DS_DucStackElementBase,
-    LineSpacing as DS_LineSpacing,
-    DucTextStyle as DS_DucTextStyle,
-    DucTableCellStyle as DS_DucTableCellStyle,
-    DucTableStyle as DS_DucTableStyle,
-    DucLeaderStyle as DS_DucLeaderStyle,
-    DimensionToleranceStyle as DS_DimensionToleranceStyle,
-    DimensionFitStyle as DS_DimensionFitStyle,
-    DimensionLineStyle as DS_DimensionLineStyle,
-    DimensionExtLineStyle as DS_DimensionExtLineStyle,
-    DimensionSymbolStyle as DS_DimensionSymbolStyle,
-    DucDimensionStyle as DS_DucDimensionStyle,
-    FCFLayoutStyle as DS_FCFLayoutStyle,
-    FCFSymbolStyle as DS_FCFSymbolStyle,
-    FCFDatumStyle as DS_FCFDatumStyle,
-    DucFeatureControlFrameStyle as DS_DucFeatureControlFrameStyle,
-    ParagraphFormatting as DS_ParagraphFormatting,
-    StackFormatProperties as DS_StackFormatProperties,
-    StackFormat as DS_StackFormat,
-    DucDocStyle as DS_DucDocStyle,
-    DucViewportStyle as DS_DucViewportStyle,
-    DucPlotStyle as DS_DucPlotStyle,
-    DucXRayStyle as DS_DucXRayStyle,
-    DucTableColumn as DS_DucTableColumn,
-    DucTableRow as DS_DucTableRow,
-    DucTableCell as DS_DucTableCell,
-    DucTableColumnEntry as DS_DucTableColumnEntry,
-    DucTableRowEntry as DS_DucTableRowEntry,
-    DucTableCellEntry as DS_DucTableCellEntry,
-    DucTableCellSpan as DS_DucTableCellSpan,
-    DucTableAutoSize as DS_DucTableAutoSize,
-    ImageCrop as DS_ImageCrop,
-    DucTextDynamicElementSource as DS_DucTextDynamicElementSource,
-    DucTextDynamicDictionarySource as DS_DucTextDynamicDictionarySource,
-    DucTextDynamicSource as DS_DucTextDynamicSource,
-    DucTextDynamicPart as DS_DucTextDynamicPart,
-    PointBindingPoint as DS_PointBindingPoint,
-    DucPointBinding as DS_DucPointBinding,
-    DucFreeDrawEnds as DS_DucFreeDrawEnds,
-    StringValueEntry as DS_StringValueEntry,
-    DucBlockDuplicationArray as DS_DucBlockDuplicationArray,
-    PlotLayout as DS_PlotLayout,
-    LeaderTextBlockContent as DS_LeaderTextBlockContent,
-    LeaderBlockContent as DS_LeaderBlockContent,
-    LeaderContent as DS_LeaderContent,
-    DucBlockAttributeDefinition as DS_DucBlockAttributeDefinition,
-    DucBlockAttributeDefinitionEntry as DS_DucBlockAttributeDefinitionEntry,
-    DimensionDefinitionPoints as DS_DimensionDefinitionPoints,
-    DimensionBindings as DS_DimensionBindings,
-    DimensionBaselineData as DS_DimensionBaselineData,
-    DimensionContinueData as DS_DimensionContinueData,
-    DatumReference as DS_DatumReference,
-    ToleranceClause as DS_ToleranceClause,
-    FeatureControlFrameSegment as DS_FeatureControlFrameSegment,
-    FCFSegmentRow as DS_FCFSegmentRow,
-    FCFBetweenModifier as DS_FCFBetweenModifier,
-    FCFProjectedZoneModifier as DS_FCFProjectedZoneModifier,
-    FCFFrameModifiers as DS_FCFFrameModifiers,
-    FCFDatumDefinition as DS_FCFDatumDefinition,
-    TextColumn as DS_TextColumn,
-    ColumnLayout as DS_ColumnLayout,
-    DucCommonStyle as DS_DucCommonStyle,
-    ParametricSource as DS_ParametricSource,
-    DucLayerOverrides as DS_DucLayerOverrides,
-    DucView as DS_DucView,
-    DucUcs as DS_DucUcs,
-    TilingProperties as DS_TilingProperties,
-    HatchPatternLine as DS_HatchPatternLine,
-    CustomHatchPattern as DS_CustomHatchPattern,
-    DucHatchStyle as DS_DucHatchStyle,
-    DucImageFilter as DS_DucImageFilter,
-)
-from ducpy.classes.StandardsClass import (
-    Standard as DS_Standard,
-    Identifier as DS_Identifier,
-    GridSettings as DS_GridSettings,
-    GridStyle as DS_GridStyle,
-    PolarGridSettings as DS_PolarGridSettings,
-    IsometricGridSettings as DS_IsometricGridSettings,
-    SnapSettings as DS_SnapSettings,
-    SnapOverride as DS_SnapOverride,
-    DynamicSnapSettings as DS_DynamicSnapSettings,
-    PolarTrackingSettings as DS_PolarTrackingSettings,
-    TrackingLineStyle as DS_TrackingLineStyle,
-    LayerSnapFilters as DS_LayerSnapFilters,
-    SnapMarkerStyle as DS_SnapMarkerStyle,
-    SnapMarkerStyleEntry as DS_SnapMarkerStyleEntry,
-    SnapMarkerSettings as DS_SnapMarkerSettings,
-    UnitSystemBase as DS_UnitSystemBase,
-    LinearUnitSystem as DS_LinearUnitSystem,
-    AngularUnitSystem as DS_AngularUnitSystem,
-    AlternateUnits as DS_AlternateUnits,
-    PrimaryUnits as DS_PrimaryUnits,
-    StandardUnits as DS_StandardUnits,
-    UnitPrecision as DS_UnitPrecision,
-    StandardOverrides as DS_StandardOverrides,
-    IdentifiedCommonStyle as DS_IdentifiedCommonStyle,
-    IdentifiedStackLikeStyle as DS_IdentifiedStackLikeStyle,
-    IdentifiedTextStyle as DS_IdentifiedTextStyle,
-    IdentifiedDimensionStyle as DS_IdentifiedDimensionStyle,
-    IdentifiedLeaderStyle as DS_IdentifiedLeaderStyle,
-    IdentifiedFCFStyle as DS_IdentifiedFCFStyle,
-    IdentifiedTableStyle as DS_IdentifiedTableStyle,
-    IdentifiedDocStyle as DS_IdentifiedDocStyle,
-    IdentifiedViewportStyle as DS_IdentifiedViewportStyle,
-    IdentifiedHatchStyle as DS_IdentifiedHatchStyle,
-    IdentifiedXRayStyle as DS_IdentifiedXRayStyle,
-    StandardStyles as DS_StandardStyles,
-    IdentifiedGridSettings as DS_IdentifiedGridSettings,
-    IdentifiedSnapSettings as DS_IdentifiedSnapSettings,
-    IdentifiedUcs as DS_IdentifiedUcs,
-    IdentifiedView as DS_IdentifiedView,
-    StandardViewSettings as DS_StandardViewSettings,
-    DimensionValidationRules as DS_DimensionValidationRules,
-    LayerValidationRules as DS_LayerValidationRules,
-    StandardValidation as DS_StandardValidation,
-)
-
-# Enums (we only need types for Optional typing and constants occasionally)
-from ducpy.Duc.TEXT_ALIGN import TEXT_ALIGN
-from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
+from ducpy.classes.DataStateClass import Checkpoint as DS_Checkpoint
+from ducpy.classes.DataStateClass import Delta as DS_Delta
+from ducpy.classes.DataStateClass import DictionaryEntry as DS_DictionaryEntry
+from ducpy.classes.DataStateClass import \
+    DisplayPrecision as DS_DisplayPrecision
+from ducpy.classes.DataStateClass import \
+    DucExternalFileData as DS_DucExternalFileData
+from ducpy.classes.DataStateClass import \
+    DucExternalFileEntry as DS_DucExternalFileEntry
+from ducpy.classes.DataStateClass import DucGlobalState as DS_DucGlobalState
+from ducpy.classes.DataStateClass import DucLocalState as DS_DucLocalState
+from ducpy.classes.DataStateClass import \
+    ExportedDataState as DS_ExportedDataState
+from ducpy.classes.DataStateClass import \
+    JSONPatchOperation as DS_JSONPatchOperation
+from ducpy.classes.DataStateClass import VersionBase as DS_VersionBase
+from ducpy.classes.DataStateClass import VersionGraph as DS_VersionGraph
+from ducpy.classes.DataStateClass import \
+    VersionGraphMetadata as DS_VersionGraphMetadata
+from ducpy.classes.ElementsClass import BoundElement as DS_BoundElement
+from ducpy.classes.ElementsClass import ColumnLayout as DS_ColumnLayout
+from ducpy.classes.ElementsClass import \
+    CustomHatchPattern as DS_CustomHatchPattern
+from ducpy.classes.ElementsClass import DatumReference as DS_DatumReference
+from ducpy.classes.ElementsClass import \
+    DimensionBaselineData as DS_DimensionBaselineData
+from ducpy.classes.ElementsClass import \
+    DimensionBindings as DS_DimensionBindings
+from ducpy.classes.ElementsClass import \
+    DimensionContinueData as DS_DimensionContinueData
+from ducpy.classes.ElementsClass import \
+    DimensionDefinitionPoints as DS_DimensionDefinitionPoints
+from ducpy.classes.ElementsClass import \
+    DimensionExtLineStyle as DS_DimensionExtLineStyle
+from ducpy.classes.ElementsClass import \
+    DimensionFitStyle as DS_DimensionFitStyle
+from ducpy.classes.ElementsClass import \
+    DimensionLineStyle as DS_DimensionLineStyle
+from ducpy.classes.ElementsClass import \
+    DimensionSymbolStyle as DS_DimensionSymbolStyle
+from ducpy.classes.ElementsClass import \
+    DimensionToleranceStyle as DS_DimensionToleranceStyle
+from ducpy.classes.ElementsClass import \
+    DocumentGridConfig as DS_DocumentGridConfig
+from ducpy.classes.ElementsClass import DucArrowElement as DS_DucArrowElement
+from ducpy.classes.ElementsClass import DucBlock as DS_DucBlock
+from ducpy.classes.ElementsClass import \
+    DucBlockAttributeDefinition as DS_DucBlockAttributeDefinition
+from ducpy.classes.ElementsClass import \
+    DucBlockAttributeDefinitionEntry as DS_DucBlockAttributeDefinitionEntry
+from ducpy.classes.ElementsClass import \
+    DucBlockCollection as DS_DucBlockCollection
+from ducpy.classes.ElementsClass import \
+    DucBlockCollectionEntry as DS_DucBlockCollectionEntry
+from ducpy.classes.ElementsClass import \
+    DucBlockDuplicationArray as DS_DucBlockDuplicationArray
+from ducpy.classes.ElementsClass import DucBlockInstance as DS_DucBlockInstance
+from ducpy.classes.ElementsClass import DucBlockMetadata as DS_DucBlockMetadata
+from ducpy.classes.ElementsClass import DucCommonStyle as DS_DucCommonStyle
+from ducpy.classes.ElementsClass import \
+    DucDimensionElement as DS_DucDimensionElement
+from ducpy.classes.ElementsClass import \
+    DucDimensionStyle as DS_DucDimensionStyle
+from ducpy.classes.ElementsClass import DucDocElement as DS_DucDocElement
+from ducpy.classes.ElementsClass import DucDocStyle as DS_DucDocStyle
+from ducpy.classes.ElementsClass import DucElementBase as DS_DucElementBase
+from ducpy.classes.ElementsClass import \
+    DucElementStylesBase as DS_DucElementStylesBase
+from ducpy.classes.ElementsClass import \
+    DucEllipseElement as DS_DucEllipseElement
+from ducpy.classes.ElementsClass import \
+    DucEmbeddableElement as DS_DucEmbeddableElement
+from ducpy.classes.ElementsClass import \
+    DucFeatureControlFrameElement as DS_DucFeatureControlFrameElement
+from ducpy.classes.ElementsClass import \
+    DucFeatureControlFrameStyle as DS_DucFeatureControlFrameStyle
+from ducpy.classes.ElementsClass import DucFrameElement as DS_DucFrameElement
+from ducpy.classes.ElementsClass import \
+    DucFreeDrawElement as DS_DucFreeDrawElement
+from ducpy.classes.ElementsClass import DucFreeDrawEnds as DS_DucFreeDrawEnds
+from ducpy.classes.ElementsClass import DucGroup as DS_DucGroup
+from ducpy.classes.ElementsClass import DucHatchStyle as DS_DucHatchStyle
+from ducpy.classes.ElementsClass import DucHead as DS_DucHead
+from ducpy.classes.ElementsClass import DucImageElement as DS_DucImageElement
+from ducpy.classes.ElementsClass import DucImageFilter as DS_DucImageFilter
+from ducpy.classes.ElementsClass import DucLayer as DS_DucLayer
+from ducpy.classes.ElementsClass import \
+    DucLayerOverrides as DS_DucLayerOverrides
+from ducpy.classes.ElementsClass import DucLeaderElement as DS_DucLeaderElement
+from ducpy.classes.ElementsClass import DucLeaderStyle as DS_DucLeaderStyle
+from ducpy.classes.ElementsClass import DucLine as DS_DucLine
+from ducpy.classes.ElementsClass import DucLinearElement as DS_DucLinearElement
+from ducpy.classes.ElementsClass import \
+    DucLinearElementBase as DS_DucLinearElementBase
+from ducpy.classes.ElementsClass import DucLineReference as DS_DucLineReference
+from ducpy.classes.ElementsClass import \
+    DucMermaidElement as DS_DucMermaidElement
+from ducpy.classes.ElementsClass import DucModelElement as DS_DucModelElement
+from ducpy.classes.ElementsClass import \
+    DucParametricElement as DS_DucParametricElement
+from ducpy.classes.ElementsClass import DucPath as DS_DucPath
+from ducpy.classes.ElementsClass import DucPdfElement as DS_DucPdfElement
+from ducpy.classes.ElementsClass import DucPlotElement as DS_DucPlotElement
+from ducpy.classes.ElementsClass import DucPlotStyle as DS_DucPlotStyle
+from ducpy.classes.ElementsClass import DucPoint as DS_DucPoint
+from ducpy.classes.ElementsClass import DucPointBinding as DS_DucPointBinding
+from ducpy.classes.ElementsClass import \
+    DucPolygonElement as DS_DucPolygonElement
+from ducpy.classes.ElementsClass import \
+    DucRectangleElement as DS_DucRectangleElement
+from ducpy.classes.ElementsClass import DucRegion as DS_DucRegion
+from ducpy.classes.ElementsClass import DucStackBase as DS_DucStackBase
+from ducpy.classes.ElementsClass import \
+    DucStackElementBase as DS_DucStackElementBase
+from ducpy.classes.ElementsClass import \
+    DucStackLikeStyles as DS_DucStackLikeStyles
+from ducpy.classes.ElementsClass import DucTableAutoSize as DS_DucTableAutoSize
+from ducpy.classes.ElementsClass import DucTableCell as DS_DucTableCell
+from ducpy.classes.ElementsClass import \
+    DucTableCellEntry as DS_DucTableCellEntry
+from ducpy.classes.ElementsClass import DucTableCellSpan as DS_DucTableCellSpan
+from ducpy.classes.ElementsClass import \
+    DucTableCellStyle as DS_DucTableCellStyle
+from ducpy.classes.ElementsClass import DucTableColumn as DS_DucTableColumn
+from ducpy.classes.ElementsClass import \
+    DucTableColumnEntry as DS_DucTableColumnEntry
+from ducpy.classes.ElementsClass import DucTableElement as DS_DucTableElement
+from ducpy.classes.ElementsClass import DucTableRow as DS_DucTableRow
+from ducpy.classes.ElementsClass import DucTableRowEntry as DS_DucTableRowEntry
+from ducpy.classes.ElementsClass import DucTableStyle as DS_DucTableStyle
+from ducpy.classes.ElementsClass import \
+    DucTextDynamicDictionarySource as DS_DucTextDynamicDictionarySource
+from ducpy.classes.ElementsClass import \
+    DucTextDynamicElementSource as DS_DucTextDynamicElementSource
+from ducpy.classes.ElementsClass import \
+    DucTextDynamicPart as DS_DucTextDynamicPart
+from ducpy.classes.ElementsClass import \
+    DucTextDynamicSource as DS_DucTextDynamicSource
+from ducpy.classes.ElementsClass import DucTextElement as DS_DucTextElement
+from ducpy.classes.ElementsClass import DucTextStyle as DS_DucTextStyle
+from ducpy.classes.ElementsClass import DucUcs as DS_DucUcs
+from ducpy.classes.ElementsClass import DucView as DS_DucView
+from ducpy.classes.ElementsClass import \
+    DucViewportElement as DS_DucViewportElement
+from ducpy.classes.ElementsClass import DucViewportStyle as DS_DucViewportStyle
+from ducpy.classes.ElementsClass import DucXRayElement as DS_DucXRayElement
+from ducpy.classes.ElementsClass import DucXRayStyle as DS_DucXRayStyle
+from ducpy.classes.ElementsClass import \
+    ElementBackground as DS_ElementBackground
+from ducpy.classes.ElementsClass import \
+    ElementContentBase as DS_ElementContentBase
+from ducpy.classes.ElementsClass import ElementStroke as DS_ElementStroke
+from ducpy.classes.ElementsClass import ElementWrapper as DS_ElementWrapper
+from ducpy.classes.ElementsClass import \
+    FCFBetweenModifier as DS_FCFBetweenModifier
+from ducpy.classes.ElementsClass import \
+    FCFDatumDefinition as DS_FCFDatumDefinition
+from ducpy.classes.ElementsClass import FCFDatumStyle as DS_FCFDatumStyle
+from ducpy.classes.ElementsClass import \
+    FCFFrameModifiers as DS_FCFFrameModifiers
+from ducpy.classes.ElementsClass import FCFLayoutStyle as DS_FCFLayoutStyle
+from ducpy.classes.ElementsClass import \
+    FCFProjectedZoneModifier as DS_FCFProjectedZoneModifier
+from ducpy.classes.ElementsClass import FCFSegmentRow as DS_FCFSegmentRow
+from ducpy.classes.ElementsClass import FCFSymbolStyle as DS_FCFSymbolStyle
+from ducpy.classes.ElementsClass import \
+    FeatureControlFrameSegment as DS_FeatureControlFrameSegment
+from ducpy.classes.ElementsClass import GeometricPoint as DS_GeometricPoint
+from ducpy.classes.ElementsClass import HatchPatternLine as DS_HatchPatternLine
+from ducpy.classes.ElementsClass import ImageCrop as DS_ImageCrop
+from ducpy.classes.ElementsClass import \
+    LeaderBlockContent as DS_LeaderBlockContent
+from ducpy.classes.ElementsClass import LeaderContent as DS_LeaderContent
+from ducpy.classes.ElementsClass import \
+    LeaderTextBlockContent as DS_LeaderTextBlockContent
+from ducpy.classes.ElementsClass import LineSpacing as DS_LineSpacing
+from ducpy.classes.ElementsClass import \
+    ParagraphFormatting as DS_ParagraphFormatting
+from ducpy.classes.ElementsClass import ParametricSource as DS_ParametricSource
+from ducpy.classes.ElementsClass import PlotLayout as DS_PlotLayout
+from ducpy.classes.ElementsClass import \
+    PointBindingPoint as DS_PointBindingPoint
+from ducpy.classes.ElementsClass import StackFormat as DS_StackFormat
+from ducpy.classes.ElementsClass import \
+    StackFormatProperties as DS_StackFormatProperties
+from ducpy.classes.ElementsClass import StringValueEntry as DS_StringValueEntry
+from ducpy.classes.ElementsClass import StrokeSides as DS_StrokeSides
+from ducpy.classes.ElementsClass import StrokeStyle as DS_StrokeStyle
+from ducpy.classes.ElementsClass import TextColumn as DS_TextColumn
+from ducpy.classes.ElementsClass import TilingProperties as DS_TilingProperties
+from ducpy.classes.ElementsClass import ToleranceClause as DS_ToleranceClause
+from ducpy.classes.StandardsClass import AlternateUnits as DS_AlternateUnits
+from ducpy.classes.StandardsClass import \
+    AngularUnitSystem as DS_AngularUnitSystem
+from ducpy.classes.StandardsClass import \
+    DimensionValidationRules as DS_DimensionValidationRules
+from ducpy.classes.StandardsClass import \
+    DynamicSnapSettings as DS_DynamicSnapSettings
+from ducpy.classes.StandardsClass import GridSettings as DS_GridSettings
+from ducpy.classes.StandardsClass import GridStyle as DS_GridStyle
+from ducpy.classes.StandardsClass import \
+    IdentifiedCommonStyle as DS_IdentifiedCommonStyle
+from ducpy.classes.StandardsClass import \
+    IdentifiedDimensionStyle as DS_IdentifiedDimensionStyle
+from ducpy.classes.StandardsClass import \
+    IdentifiedDocStyle as DS_IdentifiedDocStyle
+from ducpy.classes.StandardsClass import \
+    IdentifiedFCFStyle as DS_IdentifiedFCFStyle
+from ducpy.classes.StandardsClass import \
+    IdentifiedGridSettings as DS_IdentifiedGridSettings
+from ducpy.classes.StandardsClass import \
+    IdentifiedHatchStyle as DS_IdentifiedHatchStyle
+from ducpy.classes.StandardsClass import \
+    IdentifiedLeaderStyle as DS_IdentifiedLeaderStyle
+from ducpy.classes.StandardsClass import \
+    IdentifiedSnapSettings as DS_IdentifiedSnapSettings
+from ducpy.classes.StandardsClass import \
+    IdentifiedStackLikeStyle as DS_IdentifiedStackLikeStyle
+from ducpy.classes.StandardsClass import \
+    IdentifiedTableStyle as DS_IdentifiedTableStyle
+from ducpy.classes.StandardsClass import \
+    IdentifiedTextStyle as DS_IdentifiedTextStyle
+from ducpy.classes.StandardsClass import IdentifiedUcs as DS_IdentifiedUcs
+from ducpy.classes.StandardsClass import IdentifiedView as DS_IdentifiedView
+from ducpy.classes.StandardsClass import \
+    IdentifiedViewportStyle as DS_IdentifiedViewportStyle
+from ducpy.classes.StandardsClass import \
+    IdentifiedXRayStyle as DS_IdentifiedXRayStyle
+from ducpy.classes.StandardsClass import Identifier as DS_Identifier
+from ducpy.classes.StandardsClass import \
+    IsometricGridSettings as DS_IsometricGridSettings
+from ducpy.classes.StandardsClass import \
+    LayerSnapFilters as DS_LayerSnapFilters
+from ducpy.classes.StandardsClass import \
+    LayerValidationRules as DS_LayerValidationRules
+from ducpy.classes.StandardsClass import \
+    LinearUnitSystem as DS_LinearUnitSystem
+from ducpy.classes.StandardsClass import \
+    PolarGridSettings as DS_PolarGridSettings
+from ducpy.classes.StandardsClass import \
+    PolarTrackingSettings as DS_PolarTrackingSettings
+from ducpy.classes.StandardsClass import PrimaryUnits as DS_PrimaryUnits
+from ducpy.classes.StandardsClass import \
+    SnapMarkerSettings as DS_SnapMarkerSettings
+from ducpy.classes.StandardsClass import SnapMarkerStyle as DS_SnapMarkerStyle
+from ducpy.classes.StandardsClass import \
+    SnapMarkerStyleEntry as DS_SnapMarkerStyleEntry
+from ducpy.classes.StandardsClass import SnapOverride as DS_SnapOverride
+from ducpy.classes.StandardsClass import SnapSettings as DS_SnapSettings
+from ducpy.classes.StandardsClass import Standard as DS_Standard
+from ducpy.classes.StandardsClass import \
+    StandardOverrides as DS_StandardOverrides
+from ducpy.classes.StandardsClass import StandardStyles as DS_StandardStyles
+from ducpy.classes.StandardsClass import StandardUnits as DS_StandardUnits
+from ducpy.classes.StandardsClass import \
+    StandardValidation as DS_StandardValidation
+from ducpy.classes.StandardsClass import \
+    StandardViewSettings as DS_StandardViewSettings
+from ducpy.classes.StandardsClass import \
+    TrackingLineStyle as DS_TrackingLineStyle
+from ducpy.classes.StandardsClass import UnitPrecision as DS_UnitPrecision
+from ducpy.classes.StandardsClass import UnitSystemBase as DS_UnitSystemBase
+# Unions for runtime decisions
+from ducpy.Duc import DucTextDynamicSourceData as FBS_DucTextDynamicSourceData
+from ducpy.Duc import Element as FBS_Element
+from ducpy.Duc import LeaderContentData as FBS_LeaderContentData
+from ducpy.Duc._DucElementBase import _DucElementBase as FBSDucElementBase
+from ducpy.Duc._DucElementStylesBase import \
+    _DucElementStylesBase as FBSDucElementStylesBase
+from ducpy.Duc._DucLinearElementBase import \
+    _DucLinearElementBase as FBSDucLinearElementBase
+from ducpy.Duc._DucStackBase import _DucStackBase as FBSDucStackBase
+from ducpy.Duc._DucStackBase import _DucStackBase as FBSDucStackElementBase
+from ducpy.Duc._UnitSystemBase import _UnitSystemBase as FBS_UnitSystemBase
+from ducpy.Duc.AlternateUnits import AlternateUnits as FBSAlternateUnits
+from ducpy.Duc.ANGULAR_UNITS_FORMAT import ANGULAR_UNITS_FORMAT
+from ducpy.Duc.AngularUnitSystem import \
+    AngularUnitSystem as FBSAngularUnitSystem
+from ducpy.Duc.AXIS import AXIS
+from ducpy.Duc.BEZIER_MIRRORING import BEZIER_MIRRORING
+from ducpy.Duc.BLENDING import BLENDING
+from ducpy.Duc.BLOCK_ATTACHMENT import BLOCK_ATTACHMENT
+from ducpy.Duc.BOOLEAN_OPERATION import BOOLEAN_OPERATION
+from ducpy.Duc.BoundElement import BoundElement as FBSBoundElement
+from ducpy.Duc.Checkpoint import Checkpoint as FBSCheckpoint
+from ducpy.Duc.COLUMN_TYPE import COLUMN_TYPE
+from ducpy.Duc.ColumnLayout import ColumnLayout as FBSColumnLayout
+from ducpy.Duc.CustomHatchPattern import \
+    CustomHatchPattern as FBSCustomHatchPattern
+from ducpy.Duc.DatumReference import DatumReference as FBSDatumReference
+from ducpy.Duc.DECIMAL_SEPARATOR import DECIMAL_SEPARATOR
+from ducpy.Duc.Delta import Delta as FBSDelta
+from ducpy.Duc.DIMENSION_FIT_RULE import DIMENSION_FIT_RULE
+from ducpy.Duc.DIMENSION_TEXT_PLACEMENT import DIMENSION_TEXT_PLACEMENT
+from ducpy.Duc.DIMENSION_TYPE import DIMENSION_TYPE
+from ducpy.Duc.DIMENSION_UNITS_FORMAT import DIMENSION_UNITS_FORMAT
+from ducpy.Duc.DimensionBaselineData import \
+    DimensionBaselineData as FBSDimensionBaselineData
+from ducpy.Duc.DimensionBindings import \
+    DimensionBindings as FBSDimensionBindings
+from ducpy.Duc.DimensionContinueData import \
+    DimensionContinueData as FBSDimensionContinueData
+from ducpy.Duc.DimensionDefinitionPoints import \
+    DimensionDefinitionPoints as FBSDimensionDefinitionPoints
+from ducpy.Duc.DimensionExtLineStyle import \
+    DimensionExtLineStyle as FBSDimensionExtLineStyle
+from ducpy.Duc.DimensionFitStyle import \
+    DimensionFitStyle as FBSDimensionFitStyle
+from ducpy.Duc.DimensionLineStyle import \
+    DimensionLineStyle as FBSDimensionLineStyle
+from ducpy.Duc.DimensionSymbolStyle import \
+    DimensionSymbolStyle as FBSDimensionSymbolStyle
+from ducpy.Duc.DimensionToleranceStyle import \
+    DimensionToleranceStyle as FBSDimensionToleranceStyle
+from ducpy.Duc.DimensionValidationRules import \
+    DimensionValidationRules as FBSDimensionValidationRules
+from ducpy.Duc.DocumentGridConfig import \
+    DocumentGridConfig as FBSDocumentGridConfig
+from ducpy.Duc.DucArrowElement import DucArrowElement as FBSDucArrowElement
+from ducpy.Duc.DucBlock import DucBlock as FBSDucBlock
+from ducpy.Duc.DucBlockAttributeDefinition import \
+    DucBlockAttributeDefinition as FBSDucBlockAttributeDefinition
+from ducpy.Duc.DucBlockAttributeDefinitionEntry import \
+    DucBlockAttributeDefinitionEntry as FBSDucBlockAttributeDefinitionEntry
+from ducpy.Duc.DucBlockCollection import \
+    DucBlockCollection as FBSDucBlockCollection
+from ducpy.Duc.DucBlockCollectionEntry import \
+    DucBlockCollectionEntry as FBSDucBlockCollectionEntry
+from ducpy.Duc.DucBlockDuplicationArray import \
+    DucBlockDuplicationArray as FBSDucBlockDuplicationArray
+from ducpy.Duc.DucBlockInstanceElement import \
+    DucBlockInstanceElement as FBSDucBlockInstanceElement
+from ducpy.Duc.DucBlockMetadata import DucBlockMetadata as FBSDucBlockMetadata
+from ducpy.Duc.DucCommonStyle import DucCommonStyle as FBSDucCommonStyle
+from ducpy.Duc.DucDimensionElement import \
+    DucDimensionElement as FBSDucDimensionElement
+from ducpy.Duc.DucDimensionStyle import \
+    DucDimensionStyle as FBSDucDimensionStyle
+from ducpy.Duc.DucDocElement import DucDocElement as FBSDucDocElement
+from ducpy.Duc.DucDocStyle import DucDocStyle as FBSDucDocStyle
+from ducpy.Duc.DucEllipseElement import \
+    DucEllipseElement as FBSDucEllipseElement
+from ducpy.Duc.DucEmbeddableElement import \
+    DucEmbeddableElement as FBSDucEmbeddableElement
+# Version graph and external files
+from ducpy.Duc.DucExternalFileData import \
+    DucExternalFileData as FBSDucExternalFileData
+from ducpy.Duc.DucExternalFileEntry import \
+    DucExternalFileEntry as FBSDucExternalFileEntry
+from ducpy.Duc.DucFeatureControlFrameElement import \
+    DucFeatureControlFrameElement as FBSDucFeatureControlFrameElement
+from ducpy.Duc.DucFeatureControlFrameStyle import \
+    DucFeatureControlFrameStyle as FBSDucFeatureControlFrameStyle
+from ducpy.Duc.DucFrameElement import DucFrameElement as FBSDucFrameElement
+from ducpy.Duc.DucFreeDrawElement import \
+    DucFreeDrawElement as FBSDucFreeDrawElement
+from ducpy.Duc.DucFreeDrawEnds import DucFreeDrawEnds as FBSDucFreeDrawEnds
+from ducpy.Duc.DucGroup import DucGroup as FBSDucGroup
+from ducpy.Duc.DucHatchStyle import DucHatchStyle as FBSDucHatchStyle
+from ducpy.Duc.DucHead import DucHead as FBSDucHead
+from ducpy.Duc.DucImageElement import DucImageElement as FBSDucImageElement
+from ducpy.Duc.DucImageFilter import DucImageFilter as FBSDucImageFilter
+from ducpy.Duc.DucLayer import DucLayer as FBSDucLayer
+from ducpy.Duc.DucLayerOverrides import \
+    DucLayerOverrides as FBSDucLayerOverrides
+from ducpy.Duc.DucLeaderElement import DucLeaderElement as FBSDucLeaderElement
+from ducpy.Duc.DucLeaderStyle import DucLeaderStyle as FBSDucLeaderStyle
+from ducpy.Duc.DucLine import DucLine as FBSDucLine
+from ducpy.Duc.DucLinearElement import DucLinearElement as FBSDucLinearElement
+from ducpy.Duc.DucLineReference import DucLineReference as FBSDucLineReference
+from ducpy.Duc.DucMermaidElement import \
+    DucMermaidElement as FBSDucMermaidElement
+from ducpy.Duc.DucModelElement import DucModelElement as FBSDucModelElement
+from ducpy.Duc.DucParametricElement import \
+    DucParametricElement as FBSDucParametricElement
+from ducpy.Duc.DucPath import DucPath as FBSDucPath
+from ducpy.Duc.DucPdfElement import DucPdfElement as FBSDucPdfElement
+from ducpy.Duc.DucPlotElement import DucPlotElement as FBSDucPlotElement
+from ducpy.Duc.DucPlotStyle import DucPlotStyle as FBSDucPlotStyle
+from ducpy.Duc.DucPoint import DucPoint as FBSDucPoint
+from ducpy.Duc.DucPointBinding import DucPointBinding as FBSDucPointBinding
+from ducpy.Duc.DucPolygonElement import \
+    DucPolygonElement as FBSDucPolygonElement
+from ducpy.Duc.DucRectangleElement import \
+    DucRectangleElement as FBSDucRectangleElement
+from ducpy.Duc.DucRegion import DucRegion as FBSDucRegion
+from ducpy.Duc.DucTableAutoSize import DucTableAutoSize as FBSDucTableAutoSize
+from ducpy.Duc.DucTableCell import DucTableCell as FBSDucTableCell
+from ducpy.Duc.DucTableCellEntry import \
+    DucTableCellEntry as FBSDucTableCellEntry
+from ducpy.Duc.DucTableCellSpan import DucTableCellSpan as FBSDucTableCellSpan
+from ducpy.Duc.DucTableCellStyle import \
+    DucTableCellStyle as FBSDucTableCellStyle
+from ducpy.Duc.DucTableColumn import DucTableColumn as FBSDucTableColumn
+from ducpy.Duc.DucTableColumnEntry import \
+    DucTableColumnEntry as FBSDucTableColumnEntry
+from ducpy.Duc.DucTableElement import DucTableElement as FBSDucTableElement
+from ducpy.Duc.DucTableRow import DucTableRow as FBSDucTableRow
+from ducpy.Duc.DucTableRowEntry import DucTableRowEntry as FBSDucTableRowEntry
+from ducpy.Duc.DucTableStyle import DucTableStyle as FBSDucTableStyle
+from ducpy.Duc.DucTextDynamicDictionarySource import \
+    DucTextDynamicDictionarySource as FBSDucTextDynamicDictionarySource
+from ducpy.Duc.DucTextDynamicElementSource import \
+    DucTextDynamicElementSource as FBSDucTextDynamicElementSource
+from ducpy.Duc.DucTextDynamicPart import \
+    DucTextDynamicPart as FBSDucTextDynamicPart
+from ducpy.Duc.DucTextDynamicSource import \
+    DucTextDynamicSource as FBSDucTextDynamicSource
+from ducpy.Duc.DucTextElement import DucTextElement as FBSDucTextElement
+from ducpy.Duc.DucTextStyle import DucTextStyle as FBSDucTextStyle
+from ducpy.Duc.DucUcs import DucUcs as FBSDucUcs
+from ducpy.Duc.DucView import DucView as FBSDucView
+from ducpy.Duc.DucViewportElement import \
+    DucViewportElement as FBSDucViewportElement
+from ducpy.Duc.DucViewportStyle import DucViewportStyle as FBSDucViewportStyle
+from ducpy.Duc.DucXRayElement import DucXRayElement as FBSDucXRayElement
+from ducpy.Duc.DucXRayStyle import DucXRayStyle as FBSDucXRayStyle
+from ducpy.Duc.DynamicSnapSettings import \
+    DynamicSnapSettings as FBSDynamicSnapSettings
+from ducpy.Duc.ELEMENT_CONTENT_PREFERENCE import ELEMENT_CONTENT_PREFERENCE
+from ducpy.Duc.ElementBackground import \
+    ElementBackground as FBSElementBackground
+from ducpy.Duc.ElementContentBase import \
+    ElementContentBase as FBSElementContentBase
+from ducpy.Duc.ElementStroke import ElementStroke as FBSElementStroke
+from ducpy.Duc.ElementWrapper import ElementWrapper as FBSElementWrapper
+# FlatBuffers generated classes (reading API)
+from ducpy.Duc.ExportedDataState import \
+    ExportedDataState as FBSExportedDataState
+from ducpy.Duc.FCFBetweenModifier import \
+    FCFBetweenModifier as FBSFCFBetweenModifier
+from ducpy.Duc.FCFDatumDefinition import \
+    FCFDatumDefinition as FBSFCFDatumDefinition
+from ducpy.Duc.FCFDatumStyle import FCFDatumStyle as FBSFCFDatumStyle
+from ducpy.Duc.FCFFrameModifiers import \
+    FCFFrameModifiers as FBSFCFFrameModifiers
+from ducpy.Duc.FCFLayoutStyle import FCFLayoutStyle as FBSFCFLayoutStyle
+from ducpy.Duc.FCFProjectedZoneModifier import \
+    FCFProjectedZoneModifier as FBSFCFProjectedZoneModifier
+from ducpy.Duc.FCFSegmentRow import FCFSegmentRow as FBSFCFSegmentRow
+from ducpy.Duc.FCFSymbolStyle import FCFSymbolStyle as FBSFCFSymbolStyle
+from ducpy.Duc.FeatureControlFrameSegment import \
+    FeatureControlFrameSegment as FBSFeatureControlFrameSegment
+from ducpy.Duc.GDT_SYMBOL import GDT_SYMBOL
+from ducpy.Duc.GRID_DISPLAY_TYPE import GRID_DISPLAY_TYPE
+from ducpy.Duc.GRID_TYPE import GRID_TYPE
+from ducpy.Duc.GridSettings import GridSettings as FBSGridSettings
+from ducpy.Duc.GridStyle import GridStyle as FBSGridStyle
+from ducpy.Duc.HATCH_STYLE import HATCH_STYLE
+from ducpy.Duc.HatchPatternLine import HatchPatternLine as FBSHatchPatternLine
+from ducpy.Duc.IdentifiedCommonStyle import \
+    IdentifiedCommonStyle as FBSIdentifiedCommonStyle
+from ducpy.Duc.IdentifiedDimensionStyle import \
+    IdentifiedDimensionStyle as FBSIdentifiedDimensionStyle
+from ducpy.Duc.IdentifiedDocStyle import \
+    IdentifiedDocStyle as FBSIdentifiedDocStyle
+from ducpy.Duc.IdentifiedFCFStyle import \
+    IdentifiedFCFStyle as FBSIdentifiedFCFStyle
+from ducpy.Duc.IdentifiedGridSettings import \
+    IdentifiedGridSettings as FBSIdentifiedGridSettings
+from ducpy.Duc.IdentifiedHatchStyle import \
+    IdentifiedHatchStyle as FBSIdentifiedHatchStyle
+from ducpy.Duc.IdentifiedLeaderStyle import \
+    IdentifiedLeaderStyle as FBSIdentifiedLeaderStyle
+from ducpy.Duc.IdentifiedSnapSettings import \
+    IdentifiedSnapSettings as FBSIdentifiedSnapSettings
+from ducpy.Duc.IdentifiedStackLikeStyle import \
+    IdentifiedStackLikeStyle as FBSIdentifiedStackLikeStyle
+from ducpy.Duc.IdentifiedTableStyle import \
+    IdentifiedTableStyle as FBSIdentifiedTableStyle
+from ducpy.Duc.IdentifiedTextStyle import \
+    IdentifiedTextStyle as FBSIdentifiedTextStyle
+from ducpy.Duc.IdentifiedUcs import IdentifiedUcs as FBSIdentifiedUcs
+from ducpy.Duc.IdentifiedView import IdentifiedView as FBSIdentifiedView
+from ducpy.Duc.IdentifiedViewportStyle import \
+    IdentifiedViewportStyle as FBSIdentifiedViewportStyle
+from ducpy.Duc.IdentifiedXRayStyle import \
+    IdentifiedXRayStyle as FBSIdentifiedXRayStyle
+# Standards FB classes
+from ducpy.Duc.Identifier import Identifier as FBSIdentifier
+from ducpy.Duc.IMAGE_STATUS import IMAGE_STATUS
+from ducpy.Duc.ImageCrop import ImageCrop as FBSImageCrop
+from ducpy.Duc.IsometricGridSettings import \
+    IsometricGridSettings as FBSIsometricGridSettings
+from ducpy.Duc.JSONPatchOperation import \
+    JSONPatchOperation as FBSJSONPatchOperation
+from ducpy.Duc.LayerSnapFilters import LayerSnapFilters as FBSLayerSnapFilters
+from ducpy.Duc.LayerValidationRules import \
+    LayerValidationRules as FBSLayerValidationRules
+from ducpy.Duc.LEADER_CONTENT_TYPE import LEADER_CONTENT_TYPE
+from ducpy.Duc.LeaderBlockContent import \
+    LeaderBlockContent as FBSLeaderBlockContent
+from ducpy.Duc.LeaderContent import LeaderContent as FBSLeaderContent
+from ducpy.Duc.LeaderTextBlockContent import \
+    LeaderTextBlockContent as FBSLeaderTextBlockContent
+from ducpy.Duc.LINE_HEAD import LINE_HEAD
 from ducpy.Duc.LINE_SPACING_TYPE import LINE_SPACING_TYPE
-from ducpy.Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
+from ducpy.Duc.LinearUnitSystem import LinearUnitSystem as FBSLinearUnitSystem
+from ducpy.Duc.LineSpacing import LineSpacing as FBSLineSpacing
+from ducpy.Duc.Margins import Margins as FBSMargins
+from ducpy.Duc.MARK_ELLIPSE_CENTER import MARK_ELLIPSE_CENTER
+from ducpy.Duc.MATERIAL_CONDITION import MATERIAL_CONDITION
+from ducpy.Duc.OBJECT_SNAP_MODE import OBJECT_SNAP_MODE
+from ducpy.Duc.PARAMETRIC_SOURCE_TYPE import PARAMETRIC_SOURCE_TYPE
+from ducpy.Duc.ParametricSource import ParametricSource as FBSParametricSource
+from ducpy.Duc.PlotLayout import PlotLayout as FBSPlotLayout
+from ducpy.Duc.PointBindingPoint import \
+    PointBindingPoint as FBSPointBindingPoint
+from ducpy.Duc.PolarGridSettings import \
+    PolarGridSettings as FBSPolarGridSettings
+from ducpy.Duc.PolarTrackingSettings import \
+    PolarTrackingSettings as FBSPolarTrackingSettings
+from ducpy.Duc.PrimaryUnits import PrimaryUnits as FBSPrimaryUnits
+from ducpy.Duc.PRUNING_LEVEL import PRUNING_LEVEL
+from ducpy.Duc.SNAP_MARKER_SHAPE import SNAP_MARKER_SHAPE
+from ducpy.Duc.SNAP_MODE import SNAP_MODE
+from ducpy.Duc.SNAP_OVERRIDE_BEHAVIOR import SNAP_OVERRIDE_BEHAVIOR
+from ducpy.Duc.SnapMarkerSettings import \
+    SnapMarkerSettings as FBSSnapMarkerSettings
+from ducpy.Duc.SnapMarkerStyle import SnapMarkerStyle as FBSSnapMarkerStyle
+from ducpy.Duc.SnapMarkerStyleEntry import \
+    SnapMarkerStyleEntry as FBSSnapMarkerStyleEntry
+from ducpy.Duc.SnapOverride import SnapOverride as FBSSnapOverride
+from ducpy.Duc.SnapSettings import SnapSettings as FBSSnapSettings
+from ducpy.Duc.Standard import Standard as FBSStandard
+from ducpy.Duc.StandardOverrides import \
+    StandardOverrides as FBSStandardOverrides
+from ducpy.Duc.StandardStyles import StandardStyles as FBSStandardStyles
+from ducpy.Duc.StandardUnits import StandardUnits as FBSStandardUnits
+from ducpy.Duc.StandardValidation import \
+    StandardValidation as FBSStandardValidation
+from ducpy.Duc.StandardViewSettings import \
+    StandardViewSettings as FBSStandardViewSettings
+from ducpy.Duc.StringValueEntry import StringValueEntry as FBSStringValueEntry
 from ducpy.Duc.STROKE_CAP import STROKE_CAP
 from ducpy.Duc.STROKE_JOIN import STROKE_JOIN
 from ducpy.Duc.STROKE_PLACEMENT import STROKE_PLACEMENT
+from ducpy.Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
 from ducpy.Duc.STROKE_SIDE_PREFERENCE import STROKE_SIDE_PREFERENCE
-from ducpy.Duc.ELEMENT_CONTENT_PREFERENCE import ELEMENT_CONTENT_PREFERENCE
-from ducpy.Duc.BLENDING import BLENDING
-from ducpy.Duc.LINE_HEAD import LINE_HEAD
-from ducpy.Duc.BEZIER_MIRRORING import BEZIER_MIRRORING
-from ducpy.Duc.IMAGE_STATUS import IMAGE_STATUS
+from ducpy.Duc.StrokeSides import StrokeSides as FBSStrokeSides
+from ducpy.Duc.StrokeStyle import StrokeStyle as FBSStrokeStyle
 from ducpy.Duc.TABLE_CELL_ALIGNMENT import TABLE_CELL_ALIGNMENT
 from ducpy.Duc.TABLE_FLOW_DIRECTION import TABLE_FLOW_DIRECTION
-from ducpy.Duc.VIEWPORT_SHADE_PLOT import VIEWPORT_SHADE_PLOT
-from ducpy.Duc.HATCH_STYLE import HATCH_STYLE
-from ducpy.Duc.BLOCK_ATTACHMENT import BLOCK_ATTACHMENT
-from ducpy.Duc.TOLERANCE_DISPLAY import TOLERANCE_DISPLAY
-from ducpy.Duc.DIMENSION_FIT_RULE import DIMENSION_FIT_RULE
-from ducpy.Duc.DIMENSION_TEXT_PLACEMENT import DIMENSION_TEXT_PLACEMENT
-from ducpy.Duc.MARK_ELLIPSE_CENTER import MARK_ELLIPSE_CENTER
-from ducpy.Duc.DIMENSION_TYPE import DIMENSION_TYPE
-from ducpy.Duc.AXIS import AXIS
-from ducpy.Duc.GDT_SYMBOL import GDT_SYMBOL
-from ducpy.Duc.MATERIAL_CONDITION import MATERIAL_CONDITION
-from ducpy.Duc.TOLERANCE_ZONE_TYPE import TOLERANCE_ZONE_TYPE
-from ducpy.Duc.COLUMN_TYPE import COLUMN_TYPE
-from ducpy.Duc.TEXT_FLOW_DIRECTION import TEXT_FLOW_DIRECTION
-from ducpy.Duc.PARAMETRIC_SOURCE_TYPE import PARAMETRIC_SOURCE_TYPE
-from ducpy.Duc.LEADER_CONTENT_TYPE import LEADER_CONTENT_TYPE
-from ducpy.Duc.BOOLEAN_OPERATION import BOOLEAN_OPERATION
-from ducpy.Duc.UNIT_SYSTEM import UNIT_SYSTEM
-from ducpy.Duc.DIMENSION_UNITS_FORMAT import DIMENSION_UNITS_FORMAT
-from ducpy.Duc.ANGULAR_UNITS_FORMAT import ANGULAR_UNITS_FORMAT
-from ducpy.Duc.DECIMAL_SEPARATOR import DECIMAL_SEPARATOR
-from ducpy.Duc.GRID_TYPE import GRID_TYPE
-from ducpy.Duc.GRID_DISPLAY_TYPE import GRID_DISPLAY_TYPE
-from ducpy.Duc.OBJECT_SNAP_MODE import OBJECT_SNAP_MODE
-from ducpy.Duc.SNAP_MODE import SNAP_MODE
-from ducpy.Duc.SNAP_OVERRIDE_BEHAVIOR import SNAP_OVERRIDE_BEHAVIOR
-from ducpy.Duc.SNAP_MARKER_SHAPE import SNAP_MARKER_SHAPE
-from ducpy.Duc.PRUNING_LEVEL import PRUNING_LEVEL
-
-# FlatBuffers generated classes (reading API)
-from ducpy.Duc.ExportedDataState import ExportedDataState as FBSExportedDataState
-from ducpy.Duc.ElementWrapper import ElementWrapper as FBSElementWrapper
-from ducpy.Duc.DucRectangleElement import DucRectangleElement as FBSDucRectangleElement
-from ducpy.Duc.DucPolygonElement import DucPolygonElement as FBSDucPolygonElement
-from ducpy.Duc.DucEllipseElement import DucEllipseElement as FBSDucEllipseElement
-from ducpy.Duc.DucEmbeddableElement import DucEmbeddableElement as FBSDucEmbeddableElement
-from ducpy.Duc.DucPdfElement import DucPdfElement as FBSDucPdfElement
-from ducpy.Duc.DucMermaidElement import DucMermaidElement as FBSDucMermaidElement
-from ducpy.Duc.DucTableElement import DucTableElement as FBSDucTableElement
-from ducpy.Duc.DucImageElement import DucImageElement as FBSDucImageElement
-from ducpy.Duc.DucTextElement import DucTextElement as FBSDucTextElement
-from ducpy.Duc.DucLinearElement import DucLinearElement as FBSDucLinearElement
-from ducpy.Duc.DucArrowElement import DucArrowElement as FBSDucArrowElement
-from ducpy.Duc.DucFreeDrawElement import DucFreeDrawElement as FBSDucFreeDrawElement
-from ducpy.Duc.DucBlockInstanceElement import DucBlockInstanceElement as FBSDucBlockInstanceElement
-from ducpy.Duc.DucFrameElement import DucFrameElement as FBSDucFrameElement
-from ducpy.Duc.DucPlotElement import DucPlotElement as FBSDucPlotElement
-from ducpy.Duc.DucViewportElement import DucViewportElement as FBSDucViewportElement
-from ducpy.Duc.DucXRayElement import DucXRayElement as FBSDucXRayElement
-from ducpy.Duc.DucLeaderElement import DucLeaderElement as FBSDucLeaderElement
-from ducpy.Duc.DucDimensionElement import DucDimensionElement as FBSDucDimensionElement
-from ducpy.Duc.DucFeatureControlFrameElement import DucFeatureControlFrameElement as FBSDucFeatureControlFrameElement
-from ducpy.Duc.DucDocElement import DucDocElement as FBSDucDocElement
-from ducpy.Duc.DucParametricElement import DucParametricElement as FBSDucParametricElement
-from ducpy.Duc.DucModelElement import DucModelElement as FBSDucModelElement
-from ducpy.Duc.DocumentGridConfig import DocumentGridConfig as FBSDocumentGridConfig
-
-from ducpy.Duc.ElementContentBase import ElementContentBase as FBSElementContentBase
-from ducpy.Duc.ElementStroke import ElementStroke as FBSElementStroke
-from ducpy.Duc.ElementBackground import ElementBackground as FBSElementBackground
-from ducpy.Duc.StrokeStyle import StrokeStyle as FBSStrokeStyle
-from ducpy.Duc.StrokeSides import StrokeSides as FBSStrokeSides
-from ducpy.Duc._DucElementStylesBase import _DucElementStylesBase as FBSDucElementStylesBase
-from ducpy.Duc._DucElementBase import _DucElementBase as FBSDucElementBase
-from ducpy.Duc.BoundElement import BoundElement as FBSBoundElement
-from ducpy.Duc.DucPoint import DucPoint as FBSDucPoint
-from ducpy.Duc.DucHead import DucHead as FBSDucHead
-from ducpy.Duc.PointBindingPoint import PointBindingPoint as FBSPointBindingPoint
-from ducpy.Duc.DucPointBinding import DucPointBinding as FBSDucPointBinding
-from ducpy.Duc.DucLine import DucLine as FBSDucLine
-from ducpy.Duc.DucLineReference import DucLineReference as FBSDucLineReference
-from ducpy.Duc.DucPath import DucPath as FBSDucPath
-from ducpy.Duc._DucLinearElementBase import _DucLinearElementBase as FBSDucLinearElementBase
-from ducpy.Duc._DucStackBase import _DucStackBase as FBSDucStackBase
-from ducpy.Duc.DucTextStyle import DucTextStyle as FBSDucTextStyle
-from ducpy.Duc.LineSpacing import LineSpacing as FBSLineSpacing
-from ducpy.Duc.Margins import Margins as FBSMargins
-
-from ducpy.Duc.DucTableStyle import DucTableStyle as FBSDucTableStyle
-from ducpy.Duc.DucTableCellStyle import DucTableCellStyle as FBSDucTableCellStyle
-from ducpy.Duc.DucTableColumn import DucTableColumn as FBSDucTableColumn
-from ducpy.Duc.DucTableRow import DucTableRow as FBSDucTableRow
-from ducpy.Duc.DucTableCell import DucTableCell as FBSDucTableCell
-from ducpy.Duc.DucTableCellSpan import DucTableCellSpan as FBSDucTableCellSpan
-from ducpy.Duc.DucTableColumnEntry import DucTableColumnEntry as FBSDucTableColumnEntry
-from ducpy.Duc.DucTableRowEntry import DucTableRowEntry as FBSDucTableRowEntry
-from ducpy.Duc.DucTableCellEntry import DucTableCellEntry as FBSDucTableCellEntry
-from ducpy.Duc.DucTableAutoSize import DucTableAutoSize as FBSDucTableAutoSize
-
-from ducpy.Duc.ImageCrop import ImageCrop as FBSImageCrop
-from ducpy.Duc.DucImageFilter import DucImageFilter as FBSDucImageFilter
-from ducpy.Duc.TilingProperties import TilingProperties as FBSTilingProperties
-from ducpy.Duc.HatchPatternLine import HatchPatternLine as FBSHatchPatternLine
-from ducpy.Duc.CustomHatchPattern import CustomHatchPattern as FBSCustomHatchPattern
-from ducpy.Duc.DucHatchStyle import DucHatchStyle as FBSDucHatchStyle
-
-from ducpy.Duc.DucTextDynamicElementSource import DucTextDynamicElementSource as FBSDucTextDynamicElementSource
-from ducpy.Duc.DucTextDynamicDictionarySource import DucTextDynamicDictionarySource as FBSDucTextDynamicDictionarySource
-from ducpy.Duc.DucTextDynamicSource import DucTextDynamicSource as FBSDucTextDynamicSource
-from ducpy.Duc.DucTextDynamicPart import DucTextDynamicPart as FBSDucTextDynamicPart
-
-from ducpy.Duc.DucFreeDrawEnds import DucFreeDrawEnds as FBSDucFreeDrawEnds
-
-from ducpy.Duc.StringValueEntry import StringValueEntry as FBSStringValueEntry
-from ducpy.Duc.DucBlockDuplicationArray import DucBlockDuplicationArray as FBSDucBlockDuplicationArray
-
-from ducpy.Duc.PlotLayout import PlotLayout as FBSPlotLayout
-from ducpy.Duc.DucPlotStyle import DucPlotStyle as FBSDucPlotStyle
-from ducpy.Duc.DucViewportStyle import DucViewportStyle as FBSDucViewportStyle
-from ducpy.Duc.DucXRayStyle import DucXRayStyle as FBSDucXRayStyle
-
-from ducpy.Duc.LeaderTextBlockContent import LeaderTextBlockContent as FBSLeaderTextBlockContent
-from ducpy.Duc.LeaderBlockContent import LeaderBlockContent as FBSLeaderBlockContent
-from ducpy.Duc.LeaderContent import LeaderContent as FBSLeaderContent
-
-from ducpy.Duc.DimensionDefinitionPoints import DimensionDefinitionPoints as FBSDimensionDefinitionPoints
-from ducpy.Duc.DimensionBindings import DimensionBindings as FBSDimensionBindings
-from ducpy.Duc.DimensionBaselineData import DimensionBaselineData as FBSDimensionBaselineData
-from ducpy.Duc.DimensionContinueData import DimensionContinueData as FBSDimensionContinueData
-
-from ducpy.Duc.DimensionLineStyle import DimensionLineStyle as FBSDimensionLineStyle
-from ducpy.Duc.DimensionExtLineStyle import DimensionExtLineStyle as FBSDimensionExtLineStyle
-from ducpy.Duc.DimensionSymbolStyle import DimensionSymbolStyle as FBSDimensionSymbolStyle
-from ducpy.Duc.DimensionToleranceStyle import DimensionToleranceStyle as FBSDimensionToleranceStyle
-from ducpy.Duc.DucDimensionStyle import DucDimensionStyle as FBSDucDimensionStyle
-
-from ducpy.Duc.DatumReference import DatumReference as FBSDatumReference
-from ducpy.Duc.ToleranceClause import ToleranceClause as FBSToleranceClause
-from ducpy.Duc.FeatureControlFrameSegment import FeatureControlFrameSegment as FBSFeatureControlFrameSegment
-from ducpy.Duc.FCFBetweenModifier import FCFBetweenModifier as FBSFCFBetweenModifier
-from ducpy.Duc.FCFProjectedZoneModifier import FCFProjectedZoneModifier as FBSFCFProjectedZoneModifier
-from ducpy.Duc.FCFFrameModifiers import FCFFrameModifiers as FBSFCFFrameModifiers
-from ducpy.Duc.FCFDatumDefinition import FCFDatumDefinition as FBSFCFDatumDefinition
-from ducpy.Duc.FCFSegmentRow import FCFSegmentRow as FBSFCFSegmentRow
-from ducpy.Duc.DucFeatureControlFrameStyle import DucFeatureControlFrameStyle as FBSDucFeatureControlFrameStyle
-from ducpy.Duc.FCFLayoutStyle import FCFLayoutStyle as FBSFCFLayoutStyle
-from ducpy.Duc.FCFSymbolStyle import FCFSymbolStyle as FBSFCFSymbolStyle
-from ducpy.Duc.FCFDatumStyle import FCFDatumStyle as FBSFCFDatumStyle
-
-from ducpy.Duc.TextColumn import TextColumn as FBSTextColumn
-from ducpy.Duc.ColumnLayout import ColumnLayout as FBSColumnLayout
-from ducpy.Duc.DucDocStyle import DucDocStyle as FBSDucDocStyle
-
-from ducpy.Duc.ParametricSource import ParametricSource as FBSParametricSource
-
-from ducpy.Duc.DucBlock import DucBlock as FBSDucBlock
-from ducpy.Duc.DucBlockCollection import DucBlockCollection as FBSDucBlockCollection
-from ducpy.Duc.DucBlockCollectionEntry import DucBlockCollectionEntry as FBSDucBlockCollectionEntry
-from ducpy.Duc.DucBlockMetadata import DucBlockMetadata as FBSDucBlockMetadata
-from ducpy.Duc.DucBlockAttributeDefinition import DucBlockAttributeDefinition as FBSDucBlockAttributeDefinition
-from ducpy.Duc.DucBlockAttributeDefinitionEntry import DucBlockAttributeDefinitionEntry as FBSDucBlockAttributeDefinitionEntry
-
-from ducpy.Duc.DucGroup import DucGroup as FBSDucGroup
-from ducpy.Duc.DucRegion import DucRegion as FBSDucRegion
-from ducpy.Duc.DucLayer import DucLayer as FBSDucLayer
-from ducpy.Duc.DucLayerOverrides import DucLayerOverrides as FBSDucLayerOverrides
-
-# Standards FB classes
-from ducpy.Duc.Identifier import Identifier as FBSIdentifier
-from ducpy.Duc._UnitSystemBase import _UnitSystemBase as FBS_UnitSystemBase
-from ducpy.Duc.LinearUnitSystem import LinearUnitSystem as FBSLinearUnitSystem
-from ducpy.Duc.AngularUnitSystem import AngularUnitSystem as FBSAngularUnitSystem
-from ducpy.Duc.AlternateUnits import AlternateUnits as FBSAlternateUnits
-from ducpy.Duc.PrimaryUnits import PrimaryUnits as FBSPrimaryUnits
-from ducpy.Duc.StandardUnits import StandardUnits as FBSStandardUnits
-from ducpy.Duc.UnitPrecision import UnitPrecision as FBSUnitPrecision
-from ducpy.Duc.StandardOverrides import StandardOverrides as FBSStandardOverrides
-
-from ducpy.Duc.DucCommonStyle import DucCommonStyle as FBSDucCommonStyle
-from ducpy.Duc.IdentifiedCommonStyle import IdentifiedCommonStyle as FBSIdentifiedCommonStyle
-from ducpy.Duc.IdentifiedStackLikeStyle import IdentifiedStackLikeStyle as FBSIdentifiedStackLikeStyle
-from ducpy.Duc.IdentifiedTextStyle import IdentifiedTextStyle as FBSIdentifiedTextStyle
-from ducpy.Duc.IdentifiedDimensionStyle import IdentifiedDimensionStyle as FBSIdentifiedDimensionStyle
-from ducpy.Duc.IdentifiedLeaderStyle import IdentifiedLeaderStyle as FBSIdentifiedLeaderStyle
-from ducpy.Duc.IdentifiedFCFStyle import IdentifiedFCFStyle as FBSIdentifiedFCFStyle
-from ducpy.Duc.IdentifiedTableStyle import IdentifiedTableStyle as FBSIdentifiedTableStyle
-from ducpy.Duc.IdentifiedDocStyle import IdentifiedDocStyle as FBSIdentifiedDocStyle
-from ducpy.Duc.IdentifiedViewportStyle import IdentifiedViewportStyle as FBSIdentifiedViewportStyle
-from ducpy.Duc.IdentifiedHatchStyle import IdentifiedHatchStyle as FBSIdentifiedHatchStyle
-from ducpy.Duc.IdentifiedXRayStyle import IdentifiedXRayStyle as FBSIdentifiedXRayStyle
-from ducpy.Duc.StandardStyles import StandardStyles as FBSStandardStyles
-
-from ducpy.Duc.GridStyle import GridStyle as FBSGridStyle
-from ducpy.Duc.PolarGridSettings import PolarGridSettings as FBSPolarGridSettings
-from ducpy.Duc.IsometricGridSettings import IsometricGridSettings as FBSIsometricGridSettings
-from ducpy.Duc.GridSettings import GridSettings as FBSGridSettings
-from ducpy.Duc.SnapOverride import SnapOverride as FBSSnapOverride
-from ducpy.Duc.DynamicSnapSettings import DynamicSnapSettings as FBSDynamicSnapSettings
-from ducpy.Duc.PolarTrackingSettings import PolarTrackingSettings as FBSPolarTrackingSettings
-from ducpy.Duc.TrackingLineStyle import TrackingLineStyle as FBSTrackingLineStyle
-from ducpy.Duc.LayerSnapFilters import LayerSnapFilters as FBSLayerSnapFilters
-from ducpy.Duc.SnapMarkerStyle import SnapMarkerStyle as FBSSnapMarkerStyle
-from ducpy.Duc.SnapMarkerStyleEntry import SnapMarkerStyleEntry as FBSSnapMarkerStyleEntry
-from ducpy.Duc.SnapMarkerSettings import SnapMarkerSettings as FBSSnapMarkerSettings
-from ducpy.Duc.SnapSettings import SnapSettings as FBSSnapSettings
-from ducpy.Duc.IdentifiedGridSettings import IdentifiedGridSettings as FBSIdentifiedGridSettings
-from ducpy.Duc.IdentifiedSnapSettings import IdentifiedSnapSettings as FBSIdentifiedSnapSettings
-from ducpy.Duc.IdentifiedUcs import IdentifiedUcs as FBSIdentifiedUcs
-from ducpy.Duc.IdentifiedView import IdentifiedView as FBSIdentifiedView
-from ducpy.Duc.DucUcs import DucUcs as FBSDucUcs
-from ducpy.Duc.DucView import DucView as FBSDucView
-from ducpy.Duc.StandardViewSettings import StandardViewSettings as FBSStandardViewSettings
-from ducpy.Duc.DimensionValidationRules import DimensionValidationRules as FBSDimensionValidationRules
-from ducpy.Duc.LayerValidationRules import LayerValidationRules as FBSLayerValidationRules
-from ducpy.Duc.StandardValidation import StandardValidation as FBSStandardValidation
-from ducpy.Duc.Standard import Standard as FBSStandard
-from ducpy.Duc.DucLeaderStyle import DucLeaderStyle as FBSDucLeaderStyle
-from ducpy.Duc._DucStackBase import _DucStackBase as FBSDucStackElementBase
-from ducpy.Duc.DimensionFitStyle import DimensionFitStyle as FBSDimensionFitStyle
-
-# Version graph and external files
-from ducpy.Duc.DucExternalFileData import DucExternalFileData as FBSDucExternalFileData
-from ducpy.Duc.DucExternalFileEntry import DucExternalFileEntry as FBSDucExternalFileEntry
-
-from ducpy.Duc.VersionBase import VersionBase as FBSVersionBase
-from ducpy.Duc.Checkpoint import Checkpoint as FBSCheckpoint
-from ducpy.Duc.JSONPatchOperation import JSONPatchOperation as FBSJSONPatchOperation
-from ducpy.Duc.Delta import Delta as FBSDelta
-from ducpy.Duc.VersionGraphMetadata import VersionGraphMetadata as FBSVersionGraphMetadata
-from ducpy.Duc.VersionGraph import VersionGraph as FBSVersionGraph
-
-# Unions for runtime decisions
-from ducpy.Duc import Element as FBS_Element
-from ducpy.Duc import LeaderContentData as FBS_LeaderContentData
-from ducpy.Duc import DucTextDynamicSourceData as FBS_DucTextDynamicSourceData
-
+# Enums (we only need types for Optional typing and constants occasionally)
+from ducpy.Duc.TEXT_ALIGN import TEXT_ALIGN
 # Import missing enums
 from ducpy.Duc.TEXT_FIELD_SOURCE_TYPE import TEXT_FIELD_SOURCE_TYPE
-
+from ducpy.Duc.TEXT_FLOW_DIRECTION import TEXT_FLOW_DIRECTION
+from ducpy.Duc.TextColumn import TextColumn as FBSTextColumn
+from ducpy.Duc.TilingProperties import TilingProperties as FBSTilingProperties
+from ducpy.Duc.TOLERANCE_DISPLAY import TOLERANCE_DISPLAY
+from ducpy.Duc.TOLERANCE_ZONE_TYPE import TOLERANCE_ZONE_TYPE
+from ducpy.Duc.ToleranceClause import ToleranceClause as FBSToleranceClause
+from ducpy.Duc.TrackingLineStyle import \
+    TrackingLineStyle as FBSTrackingLineStyle
+from ducpy.Duc.UNIT_SYSTEM import UNIT_SYSTEM
+from ducpy.Duc.UnitPrecision import UnitPrecision as FBSUnitPrecision
+from ducpy.Duc.VersionBase import VersionBase as FBSVersionBase
+from ducpy.Duc.VersionGraph import VersionGraph as FBSVersionGraph
+from ducpy.Duc.VersionGraphMetadata import \
+    VersionGraphMetadata as FBSVersionGraphMetadata
+from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
+from ducpy.Duc.VIEWPORT_SHADE_PLOT import VIEWPORT_SHADE_PLOT
+from flatbuffers.table import Table
 
 # =============================================================================
 # Helpers
@@ -557,7 +691,8 @@ def parse_fbs_duc_point(obj: FBSDucPoint) -> DS_DucPoint:
 def parse_fbs_margins(obj: FBSMargins):
     # This function returns DS_Margins equivalent; but DS dataclasses embed this inside their own types.
     # We'll return a simple structure for margins where used (DucTableCellStyle.margins, PlotLayout.margins).
-    from ducpy.classes.ElementsClass import Margins as DS_Margins  # local import to avoid name shadowing
+    from ducpy.classes.ElementsClass import \
+        Margins as DS_Margins  # local import to avoid name shadowing
     return DS_Margins(
         top=obj.Top(),
         right=obj.Right(),
@@ -580,7 +715,8 @@ def parse_fbs_tiling_properties(obj: FBSTilingProperties) -> Optional[DS_TilingP
     )
 
 def parse_fbs_hatch_pattern_line(obj: FBSHatchPatternLine):
-    from ducpy.classes.ElementsClass import HatchPatternLine as DS_HatchPatternLine
+    from ducpy.classes.ElementsClass import \
+        HatchPatternLine as DS_HatchPatternLine
     origin = parse_fbs_duc_point(obj.Origin())
     offset = _read_double_vector(obj, "OffsetLength", "Offset")
     dash = _read_double_vector(obj, "DashPatternLength", "DashPattern")
@@ -594,7 +730,8 @@ def parse_fbs_hatch_pattern_line(obj: FBSHatchPatternLine):
 def parse_fbs_custom_hatch_pattern(obj: FBSCustomHatchPattern):
     if obj is None:
         return None
-    from ducpy.classes.ElementsClass import CustomHatchPattern as DS_CustomHatchPattern
+    from ducpy.classes.ElementsClass import \
+        CustomHatchPattern as DS_CustomHatchPattern
     lines = [parse_fbs_hatch_pattern_line(obj.Lines(i)) for i in range(obj.LinesLength())]
     return DS_CustomHatchPattern(
         name=_s_req(obj.Name()),
@@ -1099,14 +1236,13 @@ def parse_fbs_document_grid_config(obj: FBSDocumentGridConfig) -> DS_DocumentGri
         gap_y=obj.GapY(),
         align_items=obj.AlignItems(),
         first_page_alone=obj.FirstPageAlone(),
+        scale=obj.Scale(),
     )
 
 def parse_fbs_pdf(obj: FBSDucPdfElement) -> DS_DucPdfElement:
     grid_config = obj.GridConfig()
     if grid_config:
-        grid_config_obj = FBSDocumentGridConfig()
-        grid_config_obj.Init(obj.TableBytes, grid_config)
-        parsed_grid_config = parse_fbs_document_grid_config(grid_config_obj)
+        parsed_grid_config = parse_fbs_document_grid_config(grid_config)
     else:
         parsed_grid_config = DS_DocumentGridConfig(
             columns=1,
@@ -1114,6 +1250,7 @@ def parse_fbs_pdf(obj: FBSDucPdfElement) -> DS_DucPdfElement:
             gap_y=0.0,
             align_items=0,
             first_page_alone=False,
+            scale=1.0,
         )
     return DS_DucPdfElement(
         base=parse_fbs_duc_element_base(obj.Base()),
@@ -1253,7 +1390,9 @@ def parse_fbs_primary_units(obj: FBSPrimaryUnits) -> DS_PrimaryUnits:
     from ducpy.classes.StandardsClass import PrimaryUnits as DS_PrimaryUnits
     linear = None
     if obj.Linear():
-        from ducpy.Duc.LinearUnitSystem import LinearUnitSystem as FBSLinearUnitSystem
+        from ducpy.Duc.LinearUnitSystem import \
+            LinearUnitSystem as FBSLinearUnitSystem
+
         # full parse done later; here we just set to None to avoid circular.
     angular = None
     return DS_PrimaryUnits(linear=linear, angular=angular)
@@ -1541,9 +1680,7 @@ def parse_fbs_doc(obj: FBSDucDocElement) -> DS_DucDocElement:
     dynamics = [parse_fbs_text_dynamic_part(obj.Dynamic(i)) for i in range(obj.DynamicLength())]
     grid_config = obj.GridConfig()
     if grid_config:
-        grid_config_obj = FBSDocumentGridConfig()
-        grid_config_obj.Init(obj.TableBytes, grid_config)
-        parsed_grid_config = parse_fbs_document_grid_config(grid_config_obj)
+        parsed_grid_config = parse_fbs_document_grid_config(grid_config)
     else:
         parsed_grid_config = DS_DocumentGridConfig(
             columns=1,
@@ -1551,6 +1688,7 @@ def parse_fbs_doc(obj: FBSDucDocElement) -> DS_DucDocElement:
             gap_y=0.0,
             align_items=0,
             first_page_alone=False,
+            scale=1.0,
         )
     return DS_DucDocElement(
         base=parse_fbs_duc_element_base(obj.Base()),
@@ -2012,7 +2150,9 @@ def parse_fbs_standard_styles(obj: FBSStandardStyles) -> Optional[DS_StandardSty
 # ------------------------------
 
 # bring DS_DucUcs and DS_DucView into scope
-from ducpy.classes.ElementsClass import DucUcs as DS_DucUcs, DucView as DS_DucView
+from ducpy.classes.ElementsClass import DucUcs as DS_DucUcs
+from ducpy.classes.ElementsClass import DucView as DS_DucView
+
 
 def parse_fbs_duc_ucs(obj: FBSDucUcs) -> DS_DucUcs:
     origin = obj.Origin()

@@ -8,6 +8,7 @@ from ducpy.Duc.BLOCK_ATTACHMENT import BLOCK_ATTACHMENT
 from ducpy.Duc.BOOLEAN_OPERATION import BOOLEAN_OPERATION
 from ducpy.Duc.COLUMN_TYPE import COLUMN_TYPE
 from ducpy.Duc.DATUM_BRACKET_STYLE import DATUM_BRACKET_STYLE
+from ducpy.Duc.DOCUMENT_GRID_ALIGN_ITEMS import DOCUMENT_GRID_ALIGN_ITEMS
 from ducpy.Duc.DIMENSION_FIT_RULE import DIMENSION_FIT_RULE
 from ducpy.Duc.DIMENSION_TEXT_PLACEMENT import DIMENSION_TEXT_PLACEMENT
 from ducpy.Duc.DIMENSION_TYPE import DIMENSION_TYPE
@@ -445,6 +446,7 @@ class DocumentGridConfig:
     gap_y: float
     align_items: DOCUMENT_GRID_ALIGN_ITEMS
     first_page_alone: bool
+    scale: float
 
 @dataclass
 class DucPdfElement:

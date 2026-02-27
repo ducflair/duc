@@ -324,6 +324,10 @@ const restoreElement = (
     case "text": {
       let fontSize: PrecisionValue | number = element.fontSize;
       let fontFamily = element.fontFamily;
+      // Restore condition: if font family is "10", change to DEFAULT_FONT_FAMILY
+      if (fontFamily === "10") {
+        fontFamily = DEFAULT_FONT_FAMILY;
+      }
       if ("font" in element) {
         try {
           const fontParts = String((element as any).font).split(" ");
@@ -1953,6 +1957,7 @@ const restoreDocumentGridConfig = (
       gapY: 0,
       alignItems: "start",
       firstPageAlone: false,
+      scale: 1,
     };
   }
 
@@ -1964,6 +1969,7 @@ const restoreDocumentGridConfig = (
       ? gridConfig.alignItems
       : "start",
     firstPageAlone: typeof gridConfig.firstPageAlone === "boolean" ? gridConfig.firstPageAlone : false,
+    scale: typeof gridConfig.scale === "number" ? gridConfig.scale : 1,
   };
 };
 
@@ -2474,10 +2480,15 @@ const restoreTextStyle = (
   currentScope: Scope
 ): DucTextStyle => {
   const defaultLineHeight = 1.15 as number & { _brand: "unitlessLineHeight" };
+  // Restore condition: if font family is "10", change to DEFAULT_FONT_FAMILY
+  let fontFamily = style?.fontFamily;
+  if (fontFamily === "10") {
+    fontFamily = DEFAULT_FONT_FAMILY;
+  }
   return {
     // Text-specific styles
     isLtr: isValidBoolean(style?.isLtr, true),
-    fontFamily: getFontFamilyByName(style?.fontFamily as unknown as string),
+    fontFamily: getFontFamilyByName(fontFamily as unknown as string),
     bigFontFamily: isValidString(style?.bigFontFamily, "sans-serif"),
     textAlign: isValidTextAlignValue(style?.textAlign),
     verticalAlign: isValidVerticalAlignValue(style?.verticalAlign),

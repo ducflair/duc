@@ -531,6 +531,7 @@ export type DocumentGridConfig = {
   gapY: number;                 // vertical spacing (px)
   alignItems: 'start' | 'center' | 'end';  // vertical alignment within row
   firstPageAlone: boolean;      // cover page behavior for 2+ columns
+  scale: number;                // drawing units / real world units
 }
 
 export type DucPdfElement = _DucElementBase & {
@@ -711,7 +712,8 @@ export type InitializedDucImageElement = MarkNonNullable<
 //// === TEXT ELEMENTS ===
 export type FontFamilyKeys = keyof typeof FONT_FAMILY;
 export type FontFamilyValues = typeof FONT_FAMILY[FontFamilyKeys];
-export type FontString = string & { _brand: "fontString" };
+/** Font family identifier — any valid CSS font-family string (Google Font name, system font, etc.) */
+export type FontString = string;
 export type TextAlign = ValueOf<typeof TEXT_ALIGN>;
 export type VerticalAlign = ValueOf<typeof VERTICAL_ALIGN>;
 export type LineSpacingType = ValueOf<typeof LINE_SPACING_TYPE>;
@@ -727,7 +729,7 @@ export type DucTextStyle = {
   /**
   * The primary font family to use for the text
   */
-  fontFamily: FontFamilyValues;
+  fontFamily: FontString;
   /**
    * Fallback font family for broader compatibility across all systems and languages
    * Useful for emojis, non-latin characters, etc.
