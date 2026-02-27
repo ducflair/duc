@@ -15,7 +15,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Credits
 
-- [ducpy](https://python.duc.ducflair.com/) - Python library for working with DUC files
+- [ducpy](https://ducflair.github.io/duc/reference/python/) - Python library for working with DUC files
 - [ezdxf](https://ezdxf.readthedocs.io/) - Python library for working with DXF files
 
 

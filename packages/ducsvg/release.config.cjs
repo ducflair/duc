@@ -6,9 +6,9 @@ module.exports = {
       {
         paths: [
           "packages/ducsvg",
-          "packages/ducpdf",
-          "packages/ducjs",
-          "packages/ducrs",
+          // "packages/ducpdf",
+          // "packages/ducjs",
+          // "packages/ducrs",
         ],
         analyzer: { preset: "conventionalcommits" },
         notes: { preset: "conventionalcommits" },

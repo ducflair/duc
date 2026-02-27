@@ -1,9 +1,3 @@
-// Re-export the generated FlatBuffers code
-mod flatbuffers;
-pub mod generated {
-    pub use crate::flatbuffers::duc_generated::duc;
-}
-
 #[allow(unused_imports)]
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
@@ -11,7 +5,10 @@ pub mod generated {
 pub mod parse;
 pub mod serialize;
 pub mod types;
-pub mod units;
+
+// SQLite storage layer and high-level document API
+pub mod db;
+pub mod api;
 
 #[cfg(test)]
 mod tests {
@@ -62,5 +59,36 @@ mod tests {
                 Err(e) => println!("❌ Minimal parse failed: {}", e),
             }
         }
+    }
+
+    #[test]
+    fn test_serialize_roundtrip_compressed() {
+        init_logging();
+
+        let test_file_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../assets/testing/duc-files/universal.duc");
+        if !test_file_path.exists() {
+            println!("Skipped — test file not found: {}", test_file_path.display());
+            return;
+        }
+
+        let original = fs::read(test_file_path).expect("read test file");
+        let parsed = crate::parse::parse(&original).expect("parse original");
+
+        let compressed = crate::serialize::serialize(&parsed).expect("serialize");
+
+        assert!(!compressed.is_empty(), "serialized output must not be empty");
+        println!(
+            "original={} bytes, compressed={} bytes ({:.1}%)",
+            original.len(),
+            compressed.len(),
+            compressed.len() as f64 / original.len() as f64 * 100.0
+        );
+
+        let reparsed = crate::parse::parse(&compressed).expect("parse compressed");
+        assert_eq!(parsed.elements.len(), reparsed.elements.len());
+        assert_eq!(parsed.layers.len(), reparsed.layers.len());
+        assert_eq!(parsed.blocks.len(), reparsed.blocks.len());
+        println!("Round-trip OK — {} elements preserved", reparsed.elements.len());
     }
 }

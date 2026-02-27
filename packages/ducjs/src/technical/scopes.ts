@@ -1,4 +1,4 @@
-import { UNIT_SYSTEM } from "../flatbuffers/duc";
+import { UNIT_SYSTEM } from "../enums";
 import { PrecisionValue, RawValue, ScaledZoom, Scope, ScopedValue, ScopedZoomValue, ValueOf } from "../types";
 import { DucPoint } from "../types/elements";
 import { GeometricPoint } from "../types/geometryTypes";

@@ -3,7 +3,7 @@
 /// This module renders line heads (arrows, triangles, etc.) at line endpoints.
 /// It translates the Vello renderer's line head logic to PDF path operations.
 use crate::ConversionResult;
-use duc::generated::duc::LINE_HEAD;
+use duc::types::LINE_HEAD;
 use hipdf::lopdf::{content::Operation, Object};
 use std::f64::consts::PI;
 
@@ -55,7 +55,6 @@ impl PdfLineHeadRenderer {
             LINE_HEAD::DIAMOND | LINE_HEAD::DIAMOND_OUTLINED => -0.6 * line_width,
             LINE_HEAD::BAR => 0.0,
             LINE_HEAD::CONE | LINE_HEAD::HALF_CONE => -0.4 * line_width,
-            _ => 0.0,
         };
 
         // Calculate offset direction
@@ -433,9 +432,6 @@ impl PdfLineHeadRenderer {
                 ops.push(Operation::new("B", vec![]));
             }
 
-            _ => {
-                // Unknown type - render nothing
-            }
         }
 
         Ok(ops)

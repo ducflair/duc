@@ -37,7 +37,6 @@
     "@braintree/sanitize-url": "6.0.2",
     "browser-fs-access": "0.35.0",
     "fflate": "^0.8.2",
-    "flatbuffers": "^24.12.23",
     "nanoid": "5.1.5",
     "perfect-freehand": "1.2.2",
     "tinycolor2": "1.6.0"

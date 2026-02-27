@@ -3,9 +3,9 @@ CSPMDS Test for Local and Global States: Create-Serialize-Parse-Mutate-Delete-Se
 Tests the full lifecycle of state management elements in DUC files.
 """
 import os
-import pytest
 
 import ducpy as duc
+import pytest
 from ducpy.builders import mutate_builder
 
 
@@ -160,6 +160,70 @@ def test_output_dir():
     output_dir = os.path.join(current_script_path, "..", "output")
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
+
+
+def test_local_and_global_states_via_sql():
+    """Create and mutate global/local state using raw SQL."""
+    from ducpy.builders.sql_builder import DucSQL
+
+    with DucSQL.new() as db:
+        # Insert global state
+        db.sql(
+            "INSERT INTO duc_global_state "
+            "(id, name, view_background_color, main_scope, scope_exponent_threshold, pruning_level) "
+            "VALUES (?,?,?,?,?,?)",
+            1, "Test Drawing", "#FFFFFF", "mm", 6, 20,
+        )
+
+        # Insert local state
+        db.sql(
+            "INSERT INTO duc_local_state "
+            "(id, scope, scroll_x, scroll_y, zoom, is_binding_enabled, "
+            "pen_mode, view_mode_enabled, objects_snap_mode_enabled, grid_mode_enabled, "
+            "outline_mode_enabled, decimal_places) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            1, "mm", 0.0, 0.0, 1.0, 1, 0, 0, 1, 1, 0, 2,
+        )
+
+        # Add default current-item stroke/background via local_state owner
+        db.sql(
+            "INSERT INTO backgrounds (owner_type, owner_id, src, opacity) VALUES (?,?,?,?)",
+            "local_state", "1", "#3498db", 1.0,
+        )
+        db.sql(
+            "INSERT INTO strokes (owner_type, owner_id, src, width) VALUES (?,?,?,?)",
+            "local_state", "1", "#000000", 1.0,
+        )
+
+        # Verify
+        gs = db.sql("SELECT * FROM duc_global_state")[0]
+        assert gs["name"] == "Test Drawing"
+        assert gs["main_scope"] == "mm"
+
+        ls = db.sql("SELECT * FROM duc_local_state")[0]
+        assert ls["zoom"] == 1.0
+        assert ls["is_binding_enabled"] == 1
+
+        # Mutate global state
+        db.sql("UPDATE duc_global_state SET main_scope = ?, view_background_color = ? WHERE id = 1", "cm", "#F0F0F0")
+        gs2 = db.sql("SELECT * FROM duc_global_state")[0]
+        assert gs2["main_scope"] == "cm" and gs2["view_background_color"] == "#F0F0F0"
+
+        # Mutate local state
+        db.sql("UPDATE duc_local_state SET zoom = ?, scroll_x = ?, scroll_y = ? WHERE id = 1", 2.5, 100.0, -50.0)
+        ls2 = db.sql("SELECT * FROM duc_local_state")[0]
+        assert ls2["zoom"] == 2.5 and ls2["scroll_x"] == 100.0
+
+        raw = db.to_bytes()
+
+    # Roundtrip
+    with DucSQL.from_bytes(raw) as db2:
+        assert db2.sql("SELECT main_scope FROM duc_global_state")[0][0] == "cm"
+        assert db2.sql("SELECT zoom FROM duc_local_state")[0][0] == 2.5
+
+
+# Legacy CSPMDS test now covered by SQL-first test for the new schema.
+test_cspmds_local_and_global_states = test_local_and_global_states_via_sql
 
 
 if __name__ == "__main__":

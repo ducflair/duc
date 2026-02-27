@@ -13,7 +13,7 @@
 
 # ducjs
 
-The `ducjs` package offers comprehensive TypeScript types and helper functions to work effortlessly with the `duc` CAD file format. Built with Flatbuffers and optimized for performance, this package enables you to parse, validate, and manipulate `duc` files with ease.
+The `ducjs` package offers comprehensive TypeScript types and helper functions to work effortlessly with the `duc` CAD file format. Built with SQLite and optimized for performance, this package enables you to parse, validate, and manipulate `duc` files with ease.
 
 ## Documentation
 
