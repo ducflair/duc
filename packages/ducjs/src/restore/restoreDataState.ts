@@ -223,10 +223,17 @@ export const restoreFiles = (importedFiles: unknown): DucExternalFiles => {
 
   for (const key in files) {
     if (Object.prototype.hasOwnProperty.call(files, key)) {
-      const fileData = files[key];
+      let fileData = files[key];
       if (!fileData || typeof fileData !== "object") {
         continue;
       }
+
+      // Handle the nested DucExternalFileEntry structure { key, value: { ... } }
+      // produced by Rust serde or legacy exports.
+      if ((fileData as any).value && typeof (fileData as any).value === "object") {
+        fileData = (fileData as any).value;
+      }
+
       const id = isValidExternalFileId((fileData as any).id);
       const mimeType = isValidString((fileData as any).mimeType);
       const created = isFiniteNumber((fileData as any).created)
@@ -1311,6 +1318,10 @@ export const isValidExternalFileId = (
 export const isValidUint8Array = (value: unknown): Uint8Array | undefined => {
   if (value instanceof Uint8Array) {
     return value.byteLength > 0 ? value : undefined;
+  }
+
+  if (value instanceof ArrayBuffer) {
+    return value.byteLength > 0 ? new Uint8Array(value) : undefined;
   }
 
   if (typeof value === "string") {

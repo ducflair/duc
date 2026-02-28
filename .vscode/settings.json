@@ -1,9 +1,15 @@
 {
   "typescript.preferences.importModuleSpecifier": "relative",
   "svg.preview.background": "dark-transparent",
-  "cSpell.words": ["presigner"],
+  "cSpell.words": [
+    "presigner"
+  ],
   "editor.tabSize": 2,
   "editor.detectIndentation": false,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "never",
+    "source.fixAll": "never"
+  },
   "rust-analyzer.linkedProjects": [
     "packages/ducrs/Cargo.toml",
     "packages/ducpdf/src/duc2pdf/Cargo.toml",
