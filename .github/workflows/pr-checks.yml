@@ -354,5 +354,6 @@ jobs:
             jq -n --arg body "$(cat /tmp/pr-comment.md)" '{body: $body}' | \
               gh api "repos/${REPO}/issues/${PR_NUMBER}/comments/${COMMENT_ID}" -X PATCH --input -
           else
-            gh pr comment "$PR_NUMBER" --body-file /tmp/pr-comment.md
+            jq -n --arg body "$(cat /tmp/pr-comment.md)" '{body: $body}' | \
+              gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" -X POST --input -
           fi
