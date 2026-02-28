@@ -2,13 +2,25 @@
 Pytest configuration file for the ducxf tests.
 """
 import os
+from pathlib import Path
+
 import pytest
+
+REPO_ROOT = Path(__file__).resolve().parents[4]
+TESTING_ASSETS_DIR = REPO_ROOT / "assets" / "testing"
+DXF_TESTING_ASSETS_DIR = TESTING_ASSETS_DIR / "dxf-files"
 
 
 @pytest.fixture
 def test_assets_dir():
-    """Return the path to the assets directory."""
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
+    """Return the path to the shared testing assets directory."""
+    return str(TESTING_ASSETS_DIR)
+
+
+@pytest.fixture
+def test_dxf_assets_dir():
+    """Return the path to the shared DXF testing assets directory."""
+    return str(DXF_TESTING_ASSETS_DIR)
 
 
 @pytest.fixture

@@ -1,6 +1,7 @@
 # Test files
 dist/
 inputs/
+temp/
 
 # Auto-generated version file
 **/_version.py

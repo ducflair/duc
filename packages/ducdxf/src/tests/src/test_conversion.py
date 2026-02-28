@@ -1,7 +1,7 @@
 import pytest
-import ezdxf
 import os
 import sys
+from pathlib import Path
 
 # Add the project's 'src' directory to the Python path to allow for package imports.
 # This ensures that 'ducxf' can be found when running tests.
@@ -11,11 +11,6 @@ if src_path not in sys.path:
 
 from ducxf.dxf_to_duc import convert_dxf_to_duc
 import ducpy as duc
-
-@pytest.fixture
-def assets_dir():
-    """Returns the absolute path to the test assets directory."""
-    return os.path.join(os.path.dirname(__file__), '..', 'assets')
 
 @pytest.fixture
 def output_dir():
@@ -29,7 +24,7 @@ def output_dir():
     os.makedirs(output_path, exist_ok=True)
     return output_path
 
-def test_xclip_dxf_to_duc_conversion(assets_dir, output_dir):
+def test_xclip_dxf_to_duc_conversion(test_dxf_assets_dir, output_dir):
     """
     Tests the end-to-end conversion of the 'xclip.dxf' file to a .duc file.
     
@@ -41,7 +36,7 @@ def test_xclip_dxf_to_duc_conversion(assets_dir, output_dir):
        (elements, layers, and blocks) from the source DXF.
     """
     # 1. Define input and output paths for the test case
-    dxf_input_path = os.path.join(assets_dir, 'xclip.dxf')
+     dxf_input_path = str(Path(test_dxf_assets_dir) / 'xclip.dxf')
     duc_output_path = os.path.join(output_dir, 'xclip.duc')
 
     # Pre-condition check: Ensure the source DXF file exists before running.
