@@ -22,6 +22,17 @@ You can also install ducpy directly from our package index hosted on GitHub Page
 This is useful for accessing pre-release or platform-specific builds that may not
 yet be published to PyPI.
 
+Direct CDN Access
+-----------------
+
+All wheels are served directly from GitHub Pages, so you can also fetch them via CDN:
+
+.. code-block:: text
+
+   https://cdn.jsdelivr.net/gh/ducflair/duc@gh-pages/simple/ducpy/<wheel-filename>
+
+This is particularly useful for Pyodide and other browser-based Python runtimes.
+
 Browse Packages
 ---------------
 
