@@ -46,17 +46,13 @@ export const imperialMeasures = [
   'th', // Thou
   'mil', // Mils
   'ln', // Line
-  'in-us', // US Survey Inch
   'in', // Inches
   'h',  // Hand
-  'ft-us', // US Survey Feet
   'ft', // Feet
-  'yd-us', // US Survey Yard
   'yd', // Yards
   'rd', // Rods
   'ch', // Chains
   'fur', // Furlongs
-  'mi-us', // US Survey Mile
   'mi', // Miles
   'lea', // Leagues
   'au', // Astronomical Unit
@@ -112,17 +108,13 @@ export const imperialUnits: UnitDefinition[] = [
   { prefix: 'th', unit: 'thou', full: 'thou', exponent: -4.595 },      // log10(0.0000254)
   { prefix: 'mil', unit: 'mil', full: 'mil', exponent: -4.595 },      // log10(0.0000254)
   { prefix: 'ln', unit: 'line', full: 'line', exponent: -2.674 },      // log10(0.00211667)
-  { prefix: 'in-us', unit: 'us-inch', full: 'US Survey Inch', exponent: -1.5951 }, // log10(0.0254000508)
   { prefix: 'in', unit: 'inch', full: 'inch', exponent: -1.595 },      // log10(0.0254)
   { prefix: 'h', unit: 'hand', full: 'hand', exponent: -0.993 },       // log10(0.1016)
-  { prefix: 'ft-us', unit: 'us-foot', full: 'US Survey Foot', exponent: -0.5159 }, // log10(0.3048006096)
   { prefix: 'ft', unit: 'foot', full: 'foot', exponent: -0.516 },      // log10(0.3048)
-  { prefix: 'yd-us', unit: 'us-yard', full: 'US Survey Yard', exponent: -0.0388 }, // log10(0.9144018288)
   { prefix: 'yd', unit: 'yard', full: 'yard', exponent: -0.039 },      // log10(0.9144)
   { prefix: 'rd', unit: 'rod', full: 'rod', exponent: 0.701 },         // log10(5.0292)
   { prefix: 'ch', unit: 'chain', full: 'chain', exponent: 1.304 },     // log10(20.1168)
   { prefix: 'fur', unit: 'furlong', full: 'furlong', exponent: 2.304 }, // log10(201.168)
-  { prefix: 'mi-us', unit: 'us-mile', full: 'US Survey Mile', exponent: 3.2066 }, // log10(1609.3472)
   { prefix: 'mi', unit: 'mile', full: 'mile', exponent: 3.207 },       // log10(1609.344)
   { prefix: 'lea', unit: 'league', full: 'league', exponent: 3.684 },   // log10(4828.032)
   { prefix: 'au', unit: 'au', full: 'Astronomical Unit', exponent: 11.175 }, // log10(1.496e11)
@@ -164,17 +156,13 @@ export const ScaleFactors: { [key in CombinedMeasure]: number } = {
   th: 0.0000254,      // Thou (0.001 inch)
   mil: 0.0000254,     // Mil (same as Thou)
   ln: 0.00211667,     // 1/12 inch
-  'in-us': 0.0254000508, // US Survey Inch
   in: 0.0254,
   h: 0.1016,          // 4 inches
-  'ft-us': 0.3048006096, // US Survey Foot
   ft: 0.3048,
-  'yd-us': 0.9144018288, // US Survey Yard
   yd: 0.9144,
   rd: 5.0292,
   ch: 20.1168,
   fur: 201.168,
-  'mi-us': 1609.34721869, // US Survey Mile
   mi: 1609.344,
   lea: 4828.032,      // 3 miles
   au: 149597870700,    // Astronomical Unit
