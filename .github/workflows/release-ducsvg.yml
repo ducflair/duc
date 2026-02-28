@@ -1,12 +1,8 @@
 name: Release ducsvg
 
 on:
+  workflow_call:
   workflow_dispatch:
-  push:
-    branches: [main, next]
-    paths:
-      - 'packages/ducsvg/**'
-      - 'package.json'
 
 permissions:
   contents: write

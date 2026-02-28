@@ -1,12 +1,8 @@
 name: Release ducpdf
 
 on:
+  workflow_call:
   workflow_dispatch:
-  push:
-    branches: [main, next]
-    paths:
-      - 'packages/ducpdf/**'
-      - 'package.json'
 
 permissions:
   contents: write
