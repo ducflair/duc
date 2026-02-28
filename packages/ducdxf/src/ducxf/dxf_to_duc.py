@@ -11,26 +11,27 @@ DUC file structure, referencing the patterns seen in the
 'test_a_duc_with_everything.py' example for DUC object creation.
 """
 import argparse
-import os
 import math
+import os
+
+import ducpy as duc
 import ezdxf
+import ezdxf.enums
+from ducpy.Duc.ANGULAR_UNITS_FORMAT import ANGULAR_UNITS_FORMAT
+from ducpy.Duc.DECIMAL_SEPARATOR import DECIMAL_SEPARATOR
+from ducpy.Duc.DIMENSION_UNITS_FORMAT import DIMENSION_UNITS_FORMAT
+from ducpy.Duc.STROKE_CAP import STROKE_CAP
+from ducpy.Duc.STROKE_JOIN import STROKE_JOIN
+from ducpy.Duc.STROKE_PLACEMENT import STROKE_PLACEMENT
+from ducpy.Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
+from ducpy.Duc.STROKE_SIDE_PREFERENCE import STROKE_SIDE_PREFERENCE
+from ducpy.Duc.TEXT_ALIGN import TEXT_ALIGN
+from ducpy.Duc.UNIT_SYSTEM import UNIT_SYSTEM
+from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
 from ezdxf.entities import Attrib, Insert
 from ezdxf.enums import MTextLineAlignment
 from ezdxf.math import OCS
-import ducpy as duc
-import ezdxf.enums
 
-from ducpy.Duc.STROKE_PLACEMENT import STROKE_PLACEMENT
-from ducpy.Duc.TEXT_ALIGN import TEXT_ALIGN
-from ducpy.Duc.VERTICAL_ALIGN import VERTICAL_ALIGN
-from ducpy.Duc.STROKE_PREFERENCE import STROKE_PREFERENCE
-from ducpy.Duc.DIMENSION_UNITS_FORMAT import DIMENSION_UNITS_FORMAT
-from ducpy.Duc.ANGULAR_UNITS_FORMAT import ANGULAR_UNITS_FORMAT
-from ducpy.Duc.DECIMAL_SEPARATOR import DECIMAL_SEPARATOR
-from ducpy.Duc.STROKE_CAP import STROKE_CAP
-from ducpy.Duc.STROKE_JOIN import STROKE_JOIN
-from ducpy.Duc.STROKE_SIDE_PREFERENCE import STROKE_SIDE_PREFERENCE
-from ducpy.Duc.UNIT_SYSTEM import UNIT_SYSTEM
 from .common import LinetypeConverter, TextStyleConverter
 
 # A comprehensive mapping of AutoCAD Color Index (ACI) to HEX values.
@@ -46,7 +47,7 @@ INSUNITS_TO_DUC_UNITS = {
     DXF_INSERT_UNITS.Miles: "mi", DXF_INSERT_UNITS.Millimeters: "mm", DXF_INSERT_UNITS.Centimeters: "cm", DXF_INSERT_UNITS.Meters: "m", DXF_INSERT_UNITS.Kilometers: "km",DXF_INSERT_UNITS.Microinches: "µin", 
     DXF_INSERT_UNITS.Mils: "mil", DXF_INSERT_UNITS.Yards: "yd", DXF_INSERT_UNITS.Angstroms: "Å", 
     DXF_INSERT_UNITS.Nanometers: "nm",DXF_INSERT_UNITS.Microns: "µm", DXF_INSERT_UNITS.Decimeters: "dm", 
-    DXF_INSERT_UNITS.Decameters: "dam", DXF_INSERT_UNITS.Hectometers: "hm", DXF_INSERT_UNITS.Gigameters: "Gm", DXF_INSERT_UNITS.AstronomicalUnits: "au", DXF_INSERT_UNITS.Lightyears: "ly", DXF_INSERT_UNITS.Parsecs: "pc", DXF_INSERT_UNITS.USSurveyFeet: "ft-us", DXF_INSERT_UNITS.USSurveyInch: "in-us", DXF_INSERT_UNITS.USSurveyYard: "yd-us", DXF_INSERT_UNITS.USSurveyMile: "mi-us",
+    DXF_INSERT_UNITS.Decameters: "dam", DXF_INSERT_UNITS.Hectometers: "hm", DXF_INSERT_UNITS.Gigameters: "Gm", DXF_INSERT_UNITS.AstronomicalUnits: "au", DXF_INSERT_UNITS.Lightyears: "ly", DXF_INSERT_UNITS.Parsecs: "pc", DXF_INSERT_UNITS.USSurveyFeet: "ft", DXF_INSERT_UNITS.USSurveyInch: "in", DXF_INSERT_UNITS.USSurveyYard: "yd", DXF_INSERT_UNITS.USSurveyMile: "mi",
 }
 
 DXF_LENGTH_UNITS = ezdxf.enums.LengthUnits

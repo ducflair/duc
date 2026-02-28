@@ -1,6 +1,10 @@
 {
   "$schema": "https://v2-8-11.turborepo.dev/schema.json",
   "tasks": {
+    "ducrs#build": {
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
     "ducjs#build": {
       "cache": false,
       "dependsOn": [
@@ -17,10 +21,9 @@
     },
     "ducdxf#build": {
       "cache": false,
-      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
-    },
-    "ducrs#build": {
-      "cache": false,
+      "dependsOn": [
+        "ducpy#build"
+      ],
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
     "ducpdf#build": {
