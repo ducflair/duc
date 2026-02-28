@@ -1,5 +1,5 @@
-import { ensureWasm, wasmGetExternalFile, wasmListExternalFiles } from "./wasm";
 import type { DucExternalFileData, DucExternalFiles } from "./types";
+import { wasmGetExternalFile, wasmListExternalFiles } from "./wasm";
 
 export type LazyFileMetadata = {
   id: string;
@@ -81,7 +81,14 @@ export class LazyExternalFileStore {
     if (!this.buffer) return null;
     const result = wasmGetExternalFile(this.buffer, fileId);
     if (!result) return null;
-    return result as DucExternalFileData;
+
+    // WASM returns DucExternalFileEntry { key, value: DucExternalFileData }.
+    // Unwrap to get the actual file data.
+    const entry = result as any;
+    if (entry.value && typeof entry.value === "object") {
+      return entry.value as DucExternalFileData;
+    }
+    return entry as DucExternalFileData;
   }
 
   /** Fetch file data and return a copy of the data buffer (safe for transfer). */

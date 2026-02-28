@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-"""Build a PEP 503 Simple Repository index for ducpy wheels hosted on GitHub Releases.
+"""Build a PEP 503 Simple Repository index for ducpy with wheels served from GitHub Pages.
 
 This script queries GitHub Releases for all ducpy tags, downloads each wheel/sdist
-to compute SHA256 digests, then generates a lightweight simple index where the
-download links point back to the GitHub Release assets (no wheel files are copied
-into the Pages deployment).
+into the output directory so they are deployed alongside the index on GitHub Pages.
+Links use relative paths, making the wheels directly accessible via CDN (e.g. jsDelivr):
+
+    https://cdn.jsdelivr.net/gh/ducflair/duc@gh-pages/simple/ducpy/<wheel-file>
 
 Usage:
     python3 scripts/build-ducpy-simple-index.py [output_dir]
 
-    output_dir defaults to packages/ducpy/docs/_build/html
+    output_dir defaults to _site (the Pages root used by the deploy workflow)
 """
 
 import hashlib
 import json
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 REPO = "ducflair/duc"
@@ -64,7 +64,6 @@ def build_index(output_dir: Path):
 
     rp_escaped = REQUIRES_PYTHON.replace(">", "&gt;").replace("<", "&lt;")
 
-    # Root index listing available packages
     (simple_dir / "index.html").write_text(
         "<!DOCTYPE html>\n"
         "<html><head><title>Simple Package Index</title></head>\n"
@@ -79,54 +78,51 @@ def build_index(output_dir: Path):
 
     links: list[str] = []
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmp = Path(tmpdir)
-        for tag in tags:
-            assets = get_release_assets(tag)
-            if not assets:
-                continue
-            for asset in assets:
-                name = asset["name"]
-                url = f"https://github.com/{REPO}/releases/download/{tag}/{name}"
+    for tag in tags:
+        assets = get_release_assets(tag)
+        if not assets:
+            continue
+        for asset in assets:
+            name = asset["name"]
+            dest = package_dir / name
 
-                # Download temporarily to compute SHA256
-                dl_path = tmp / name
+            if not dest.exists():
                 dl = subprocess.run(
                     [
                         "gh", "release", "download", tag,
                         "--pattern", name,
-                        "--dir", str(tmp),
+                        "--dir", str(package_dir),
                         "--clobber",
                     ],
                     capture_output=True,
                     text=True,
                 )
+                if dl.returncode != 0:
+                    print(f"  WARNING: failed to download {name} from {tag}", file=sys.stderr)
+                    continue
 
-                sha_fragment = ""
-                if dl.returncode == 0 and dl_path.exists():
-                    sha_fragment = f"#sha256={compute_sha256(dl_path)}"
-                    dl_path.unlink()
+            sha = compute_sha256(dest)
+            links.append(
+                f'<a href="{name}#sha256={sha}" '
+                f'data-requires-python="{rp_escaped}">{name}</a>'
+            )
+            print(f"  {tag}: {name} ({sha[:12]}...)")
 
-                links.append(
-                    f'<a href="{url}{sha_fragment}" '
-                    f'data-requires-python="{rp_escaped}">{name}</a>'
-                )
-                print(f"  {tag}: {name}")
-
-    # Package index with all wheel links
     (package_dir / "index.html").write_text(
         "<!DOCTYPE html>\n"
-        "<html><head><meta charset=\"utf-8\"></head>\n"
-        "<body style=\"margin:0;padding:16px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;\">\n"
-        "<main style=\"display:flex;flex-direction:column;gap:8px;align-items:flex-start;\">\n"
+        '<html><head><meta charset="utf-8"></head>\n'
+        '<body style="margin:0;padding:16px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">\n'
+        '<main style="display:flex;flex-direction:column;gap:8px;align-items:flex-start;">\n'
         + "\n".join(links) + "\n"
         "</main>\n"
         "</body></html>\n"
     )
 
-    print(f"\nGenerated simple index with {len(links)} package(s)")
+    total_size = sum(f.stat().st_size for f in package_dir.iterdir() if f.is_file() and f.name != "index.html")
+    print(f"\nGenerated simple index with {len(links)} package(s) "
+          f"({total_size / 1024 / 1024:.1f} MB of wheels)")
 
 
 if __name__ == "__main__":
-    output_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("packages/ducpy/docs/_build/html")
+    output_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("_site")
     build_index(output_dir)
