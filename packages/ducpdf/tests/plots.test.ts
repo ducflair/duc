@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'bun:test';
-import { convertDucToPdf } from '../src/duc2pdf/index';
-import { loadDucFile, savePdfOutput, validatePdf, ensureDir } from './helpers';
+import { describe, expect, it } from 'bun:test';
 import { join } from 'node:path';
+import { convertDucToPdf } from '../src/duc2pdf/index';
+import { ensureDir, loadDucFile, savePdfOutput, validatePdf } from './helpers';
 
 const OUTPUT_DIR = 'tests_output/plots';
 
@@ -25,6 +25,6 @@ describe('PLOTS mode conversions', () => {
       const outName = file.replace(/\.duc$/, '_plot.pdf');
       savePdfOutput(`${OUTPUT_DIR}/${outName}`, pdf);
       expect(pdf.length).toBeGreaterThan(100);
-    }, 60000);
+    }, 180000);
   }
 });

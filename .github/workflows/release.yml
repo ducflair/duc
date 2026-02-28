@@ -1,0 +1,172 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, next]
+    paths:
+      - 'packages/**'
+      - 'package.json'
+      - 'Cargo.toml'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────
+  # Phase 1: Lightweight release detection (~30s)
+  # Runs semantic-release --dry-run for each package to determine which
+  # ones would get a new version. Skips expensive build/test/release
+  # pipelines for packages with no pending release.
+  # ──────────────────────────────────────────────────────────────────────
+  release-gate:
+    name: Detect Pending Releases
+    runs-on: ubuntu-latest
+    outputs:
+      ducrs: ${{ steps.check.outputs.ducrs }}
+      ducjs: ${{ steps.check.outputs.ducjs }}
+      ducpy: ${{ steps.check.outputs.ducpy }}
+      ducpdf: ${{ steps.check.outputs.ducpdf }}
+      ducsvg: ${{ steps.check.outputs.ducsvg }}
+      duc2pdf: ${{ steps.check.outputs.duc2pdf }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+      - name: Install deps
+        run: bun install
+      - name: Check all packages for pending releases
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          check_release() {
+            local name="$1"
+            local dir="$2"
+            pushd "$dir" > /dev/null
+            local output
+            output=$(npx semantic-release --dry-run 2>&1) || true
+            popd > /dev/null
+            if echo "$output" | grep -q "The next release version is"; then
+              echo "${name}=true" >> "$GITHUB_OUTPUT"
+              echo "📦 ${name}: release pending"
+            else
+              echo "${name}=false" >> "$GITHUB_OUTPUT"
+              echo "⏭️  ${name}: no release"
+            fi
+          }
+
+          check_release "ducrs"  "./packages/ducrs"
+          check_release "ducjs"  "./packages/ducjs"
+          check_release "ducpy"  "./packages/ducpy"
+          check_release "ducpdf" "./packages/ducpdf"
+          check_release "ducsvg" "./packages/ducsvg"
+          check_release "duc2pdf" "./packages/ducpdf/src/duc2pdf"
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Phase 2: Trigger release workflows for packages with pending releases
+  # Each workflow handles its own build, test, and publish steps.
+  # Packages without pending releases are skipped entirely.
+  # ──────────────────────────────────────────────────────────────────────
+  release-ducrs:
+    needs: release-gate
+    if: needs.release-gate.outputs.ducrs == 'true'
+    uses: ./.github/workflows/release-ducrs.yml
+    secrets: inherit
+
+  release-ducjs:
+    needs: release-gate
+    if: needs.release-gate.outputs.ducjs == 'true'
+    uses: ./.github/workflows/release-ducjs.yml
+    secrets: inherit
+
+  release-duc2pdf:
+    needs: release-gate
+    if: needs.release-gate.outputs.duc2pdf == 'true'
+    uses: ./.github/workflows/release-duc2pdf.yml
+    secrets: inherit
+
+  release-ducpy:
+    needs: release-gate
+    if: needs.release-gate.outputs.ducpy == 'true'
+    uses: ./.github/workflows/release-ducpy.yml
+    secrets: inherit
+
+  release-ducpdf:
+    needs: release-gate
+    if: needs.release-gate.outputs.ducpdf == 'true'
+    uses: ./.github/workflows/release-ducpdf.yml
+    secrets: inherit
+
+  release-ducsvg:
+    needs: release-gate
+    if: needs.release-gate.outputs.ducsvg == 'true'
+    uses: ./.github/workflows/release-ducsvg.yml
+    secrets: inherit
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Phase 3: Summary
+  # Single view of all package release outcomes.
+  # ──────────────────────────────────────────────────────────────────────
+  summary:
+    name: Release Summary
+    needs: [release-gate, release-ducrs, release-ducjs, release-ducpy, release-duc2pdf, release-ducpdf, release-ducsvg]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate summary
+        run: |
+          status() {
+            local pending="$1"
+            local result="$2"
+            if [ "$pending" != "true" ]; then
+              echo "⏭️ Skipped"
+            elif [ "$result" = "success" ]; then
+              echo "✅ Released"
+            elif [ "$result" = "failure" ]; then
+              echo "❌ Failed"
+            else
+              echo "⏭️ Skipped"
+            fi
+          }
+
+          {
+            echo "## Release Summary"
+            echo ""
+            echo "| Package | Pending | Result |"
+            echo "|---------|---------|--------|"
+            echo "| ducrs | ${{ needs.release-gate.outputs.ducrs }} | $(status '${{ needs.release-gate.outputs.ducrs }}' '${{ needs.release-ducrs.result }}') |"
+            echo "| ducjs | ${{ needs.release-gate.outputs.ducjs }} | $(status '${{ needs.release-gate.outputs.ducjs }}' '${{ needs.release-ducjs.result }}') |"
+            echo "| ducpy | ${{ needs.release-gate.outputs.ducpy }} | $(status '${{ needs.release-gate.outputs.ducpy }}' '${{ needs.release-ducpy.result }}') |"
+            echo "| duc2pdf | ${{ needs.release-gate.outputs.duc2pdf }} | $(status '${{ needs.release-gate.outputs.duc2pdf }}' '${{ needs.release-duc2pdf.result }}') |"
+            echo "| ducpdf | ${{ needs.release-gate.outputs.ducpdf }} | $(status '${{ needs.release-gate.outputs.ducpdf }}' '${{ needs.release-ducpdf.result }}') |"
+            echo "| ducsvg | ${{ needs.release-gate.outputs.ducsvg }} | $(status '${{ needs.release-gate.outputs.ducsvg }}' '${{ needs.release-ducsvg.result }}') |"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Fail if the gate itself failed
+          if [ "${{ needs.release-gate.result }}" != "success" ]; then
+            echo "### ❌ Release detection failed" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          # Fail if any triggered release job failed
+          RESULTS="${{ needs.release-ducrs.result }} ${{ needs.release-ducjs.result }} ${{ needs.release-ducpy.result }} ${{ needs.release-duc2pdf.result }} ${{ needs.release-ducpdf.result }} ${{ needs.release-ducsvg.result }}"
+          if echo "$RESULTS" | grep -q "failure"; then
+            echo "### ❌ Some releases failed" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          echo "### ✅ All releases completed successfully" >> "$GITHUB_STEP_SUMMARY"

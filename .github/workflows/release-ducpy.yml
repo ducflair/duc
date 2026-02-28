@@ -1,14 +1,8 @@
 name: Release Python
 
 on:
+  workflow_call:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - next
-    paths:
-      - 'packages/ducpy/**'
-      - 'package.json'
 
 permissions:
   contents: write
