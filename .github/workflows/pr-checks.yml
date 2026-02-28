@@ -55,9 +55,9 @@ jobs:
           git config user.email "action@github.com"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20.x
+          node-version: "lts/*"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -188,7 +188,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20.x
 
@@ -352,7 +352,7 @@ jobs:
 
           if [ -n "$COMMENT_ID" ]; then
             jq -n --arg body "$(cat /tmp/pr-comment.md)" '{body: $body}' | \
-              gh api "repos/${REPO}/issues/${PR_NUMBER}/comments/${COMMENT_ID}" -X PATCH --input -
+              gh api "repos/${REPO}/issues/comments/${COMMENT_ID}" -X PATCH --input -
           else
             jq -n --arg body "$(cat /tmp/pr-comment.md)" '{body: $body}' | \
               gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" -X POST --input -
