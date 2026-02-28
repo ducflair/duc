@@ -55,10 +55,6 @@ jobs:
           current-branch: ${{ github.ref_name }}
           package-name: ducpy
 
-      - name: Run tests
-        working-directory: ./packages/ducpy
-        run: bun run test
-
       - name: Release
         id: release
         env:

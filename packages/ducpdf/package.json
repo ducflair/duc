@@ -42,7 +42,7 @@
     "build:rs": "cd src/duc2pdf && cargo build",
     "build:wasm": "node scripts/build-wasm.mjs",
     "copy:wasm-to-dist": "mkdir -p dist && cp pkg/duc2pdf_bg.wasm dist/ && cp pkg/duc2pdf.js dist/ && cp pkg/duc2pdf.d.ts dist/ && cp pkg/duc2pdf_bg.wasm.d.ts dist/",
-    "clean": "rm -rf dist pkg && cd src/duc2pdf && cargo clean",
+    "clean": "rm -rf dist pkg",
     "test": "bun run build:wasm && bun test",
     "test:rs": "cd src/duc2pdf && cargo test",
     "test:duc2pdf": "cd src/duc2pdf && cargo test"

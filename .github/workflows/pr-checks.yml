@@ -22,11 +22,23 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       ducrs: ${{ steps.check.outputs.ducrs }}
+      ducrs_version: ${{ steps.check.outputs.ducrs_version }}
+      ducrs_current: ${{ steps.check.outputs.ducrs_current }}
       ducjs: ${{ steps.check.outputs.ducjs }}
+      ducjs_version: ${{ steps.check.outputs.ducjs_version }}
+      ducjs_current: ${{ steps.check.outputs.ducjs_current }}
       ducpy: ${{ steps.check.outputs.ducpy }}
+      ducpy_version: ${{ steps.check.outputs.ducpy_version }}
+      ducpy_current: ${{ steps.check.outputs.ducpy_current }}
       ducpdf: ${{ steps.check.outputs.ducpdf }}
+      ducpdf_version: ${{ steps.check.outputs.ducpdf_version }}
+      ducpdf_current: ${{ steps.check.outputs.ducpdf_current }}
       ducsvg: ${{ steps.check.outputs.ducsvg }}
+      ducsvg_version: ${{ steps.check.outputs.ducsvg_version }}
+      ducsvg_current: ${{ steps.check.outputs.ducsvg_current }}
       duc2pdf: ${{ steps.check.outputs.duc2pdf }}
+      duc2pdf_version: ${{ steps.check.outputs.duc2pdf_version }}
+      duc2pdf_current: ${{ steps.check.outputs.duc2pdf_current }}
       any_release: ${{ steps.check.outputs.any_release }}
       test_filters: ${{ steps.check.outputs.test_filters }}
       needs_wasm: ${{ steps.check.outputs.needs_wasm }}
@@ -91,14 +103,21 @@ jobs:
             ) || true
             popd > /dev/null
 
-            if echo "$output" | grep -q "The next release version is"; then
+            local version current
+            version=$(echo "$output" | sed -n 's/.*[Tt]he next release version is \([^ ]*\).*/\1/p' | head -1)
+            current=$(echo "$output" | sed -n 's/.*associated with version \([^ ]*\) on branch.*/\1/p' | head -1)
+
+            if [ -n "$version" ]; then
               echo "${name}=true" >> "$GITHUB_OUTPUT"
-              echo "📦 ${name}: release pending"
+              echo "${name}_version=${version}" >> "$GITHUB_OUTPUT"
+              echo "${name}_current=${current}" >> "$GITHUB_OUTPUT"
+              echo "📦 ${name}: ${current:-new} → ${version}"
               return 0
             else
               echo "${name}=false" >> "$GITHUB_OUTPUT"
-              echo "⏭️  ${name}: no release"
-              # Log the actual output for debugging
+              echo "${name}_version=" >> "$GITHUB_OUTPUT"
+              echo "${name}_current=${current}" >> "$GITHUB_OUTPUT"
+              echo "⏭️  ${name}: no release (current: ${current:-none})"
               echo "   ↳ $(echo "$output" | grep -iE 'release|version|skip|branch|error' | head -3)"
               return 1
             fi
@@ -225,21 +244,32 @@ jobs:
       - name: Evaluate results
         run: |
           format_status() {
-            if [ "$1" = "true" ]; then echo "✅ Yes"; else echo "➖ No"; fi
+            local has_release="$1"
+            local current="$2"
+            local next="$3"
+            local cur_display="${current:-–}"
+            if [ -n "$current" ]; then cur_display="\`${current}\`"; fi
+            if [ "$has_release" = "true" ] && [ -n "$next" ]; then
+              echo "${cur_display} | \`${next}\` ✅"
+            elif [ "$has_release" = "true" ]; then
+              echo "${cur_display} | ✅ Yes"
+            else
+              echo "${cur_display} | ➖ No"
+            fi
           }
 
           {
             echo "## PR Check Results"
             echo ""
             echo "### Pending Releases"
-            echo "| Package | Will Release |"
-            echo "|---------|-------------|"
-            echo "| ducrs | $(format_status "${{ needs.release-check.outputs.ducrs }}") |"
-            echo "| ducjs | $(format_status "${{ needs.release-check.outputs.ducjs }}") |"
-            echo "| ducpy | $(format_status "${{ needs.release-check.outputs.ducpy }}") |"
-            echo "| ducpdf | $(format_status "${{ needs.release-check.outputs.ducpdf }}") |"
-            echo "| ducsvg | $(format_status "${{ needs.release-check.outputs.ducsvg }}") |"
-            echo "| duc2pdf | $(format_status "${{ needs.release-check.outputs.duc2pdf }}") |"
+            echo "| Package | Current | Next |"
+            echo "|---------|---------|------|"
+            echo "| ducrs | $(format_status "${{ needs.release-check.outputs.ducrs }}" "${{ needs.release-check.outputs.ducrs_current }}" "${{ needs.release-check.outputs.ducrs_version }}") |"
+            echo "| ducjs | $(format_status "${{ needs.release-check.outputs.ducjs }}" "${{ needs.release-check.outputs.ducjs_current }}" "${{ needs.release-check.outputs.ducjs_version }}") |"
+            echo "| ducpy | $(format_status "${{ needs.release-check.outputs.ducpy }}" "${{ needs.release-check.outputs.ducpy_current }}" "${{ needs.release-check.outputs.ducpy_version }}") |"
+            echo "| ducpdf | $(format_status "${{ needs.release-check.outputs.ducpdf }}" "${{ needs.release-check.outputs.ducpdf_current }}" "${{ needs.release-check.outputs.ducpdf_version }}") |"
+            echo "| ducsvg | $(format_status "${{ needs.release-check.outputs.ducsvg }}" "${{ needs.release-check.outputs.ducsvg_current }}" "${{ needs.release-check.outputs.ducsvg_version }}") |"
+            echo "| duc2pdf | $(format_status "${{ needs.release-check.outputs.duc2pdf }}" "${{ needs.release-check.outputs.duc2pdf_current }}" "${{ needs.release-check.outputs.duc2pdf_version }}") |"
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -264,4 +294,65 @@ jobs:
           else
             echo "### ❌ Tests failed" >> "$GITHUB_STEP_SUMMARY"
             exit 1
+          fi
+
+      - name: Post PR comment
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+          TEST_RESULT="${{ needs.test.result }}"
+          DETECTION="${{ needs.release-check.result }}"
+
+          format_row() {
+            local name="$1"
+            local has_release="$2"
+            local current="$3"
+            local next="$4"
+            local cur_display="–"
+            if [ -n "$current" ]; then cur_display="\`${current}\`"; fi
+            if [ "$has_release" = "true" ]; then
+              local test_icon
+              if [ "$TEST_RESULT" = "success" ]; then
+                test_icon="✅ Passed"
+              elif [ "$TEST_RESULT" = "failure" ]; then
+                test_icon="❌ Failed"
+              else
+                test_icon="⏳ Pending"
+              fi
+              echo "| ${name} | ${cur_display} | \`${next}\` | ${test_icon} |"
+            else
+              echo "| ${name} | ${cur_display} | – | ⏭️ No release |"
+            fi
+          }
+
+          {
+            echo "<!-- duc-release-preview -->"
+            echo "## 📋 Release Preview"
+            echo ""
+            if [ "$DETECTION" != "success" ]; then
+              echo "> ⚠️ Release detection failed — results may be incomplete."
+              echo ""
+            fi
+            echo "| Package | Current | Next | Tests |"
+            echo "|---------|---------|------|-------|"
+            format_row "ducrs" "${{ needs.release-check.outputs.ducrs }}" "${{ needs.release-check.outputs.ducrs_current }}" "${{ needs.release-check.outputs.ducrs_version }}"
+            format_row "ducjs" "${{ needs.release-check.outputs.ducjs }}" "${{ needs.release-check.outputs.ducjs_current }}" "${{ needs.release-check.outputs.ducjs_version }}"
+            format_row "ducpy" "${{ needs.release-check.outputs.ducpy }}" "${{ needs.release-check.outputs.ducpy_current }}" "${{ needs.release-check.outputs.ducpy_version }}"
+            format_row "ducpdf" "${{ needs.release-check.outputs.ducpdf }}" "${{ needs.release-check.outputs.ducpdf_current }}" "${{ needs.release-check.outputs.ducpdf_version }}"
+            format_row "ducsvg" "${{ needs.release-check.outputs.ducsvg }}" "${{ needs.release-check.outputs.ducsvg_current }}" "${{ needs.release-check.outputs.ducsvg_version }}"
+            format_row "duc2pdf" "${{ needs.release-check.outputs.duc2pdf }}" "${{ needs.release-check.outputs.duc2pdf_current }}" "${{ needs.release-check.outputs.duc2pdf_version }}"
+          } > /tmp/pr-comment.md
+
+          # Upsert PR comment (find existing by marker, update or create)
+          COMMENT_ID=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --paginate --jq '.[] | select(.body | contains("<!-- duc-release-preview -->")) | .id' | tail -1 || true)
+
+          if [ -n "$COMMENT_ID" ]; then
+            jq -n --arg body "$(cat /tmp/pr-comment.md)" '{body: $body}' | \
+              gh api "repos/${REPO}/issues/${PR_NUMBER}/comments/${COMMENT_ID}" -X PATCH --input -
+          else
+            gh pr comment "$PR_NUMBER" --body-file /tmp/pr-comment.md
           fi
