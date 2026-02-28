@@ -352,7 +352,7 @@ jobs:
 
           if [ -n "$COMMENT_ID" ]; then
             jq -n --arg body "$(cat /tmp/pr-comment.md)" '{body: $body}' | \
-              gh api "repos/${REPO}/issues/${PR_NUMBER}/comments/${COMMENT_ID}" -X PATCH --input -
+              gh api "repos/${REPO}/issues/comments/${COMMENT_ID}" -X PATCH --input -
           else
             jq -n --arg body "$(cat /tmp/pr-comment.md)" '{body: $body}' | \
               gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" -X POST --input -
