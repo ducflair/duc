@@ -27,9 +27,10 @@ jobs:
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20.x
+          node-version: 24.x
+          registry-url: 'https://registry.npmjs.org'
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -47,10 +48,6 @@ jobs:
 
       - name: Install wasm-pack (pinned 0.14.x)
         run: cargo install wasm-pack --version 0.14.0 --locked --force
-
-      # npm 11.5.1 or later must be installed for OIDC to work
-      - name: Update npm
-        run: npm install -g npm@latest
 
 
       - name: Install deps
