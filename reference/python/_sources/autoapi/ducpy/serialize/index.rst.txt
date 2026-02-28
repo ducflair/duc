@@ -1,0 +1,99 @@
+ducpy.serialize
+===============
+
+.. py:module:: ducpy.serialize
+
+.. autoapi-nested-parse::
+
+   Serialize DUC data using the Rust native extension (ducpy_native).
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   ducpy.serialize.logger
+   ducpy.serialize.DUC_SCHEMA_VERSION
+   ducpy.serialize._ELEMENT_CLASS_TO_TYPE
+   ducpy.serialize._FLATTEN_KEYS
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.serialize._decode_user_version_to_semver
+   ducpy.serialize._read_schema_version_fallback
+   ducpy.serialize._flatten_dict
+   ducpy.serialize._element_to_camel
+   ducpy.serialize._convert_external_files
+   ducpy.serialize._convert_dict_entries
+   ducpy.serialize._convert_list
+   ducpy.serialize.serialize_duc
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:function:: _decode_user_version_to_semver(user_version: int) -> str
+
+   Decode sqlite-style schema user_version to semver.
+
+   Encoding convention:
+       major * 1_000_000 + minor * 1_000 + patch
+
+
+.. py:function:: _read_schema_version_fallback() -> str
+
+   Resolve schema version directly from repository `schema/duc.sql`.
+
+   This is used when `ducpy._version` isn't available (for example, in clean
+   CI environments before setup-time generation has run).
+
+
+.. py:data:: DUC_SCHEMA_VERSION
+   :value: '0.0.0'
+
+
+.. py:data:: _ELEMENT_CLASS_TO_TYPE
+   :type:  Dict[str, str]
+
+.. py:data:: _FLATTEN_KEYS
+
+.. py:function:: _flatten_dict(d: dict) -> dict
+
+   Recursively flatten nested dicts whose key is in ``_FLATTEN_KEYS``.
+
+
+.. py:function:: _element_to_camel(wrapper_or_element: Any) -> dict
+
+   Convert an element (or ElementWrapper) to the camelCase dict Rust expects.
+
+
+.. py:function:: _convert_external_files(entries: Optional[list]) -> Optional[Dict[str, Any]]
+
+   Convert a list of DucExternalFileEntry to a ``{id: data}`` dict.
+
+
+.. py:function:: _convert_dict_entries(entries: Optional[list]) -> Optional[Dict[str, str]]
+
+   Convert a list of DictionaryEntry to a ``{key: value}`` dict.
+
+
+.. py:function:: _convert_list(items: Optional[list]) -> Optional[list]
+
+   Convert a list of dataclass instances to camelCase dicts.
+
+
+.. py:function:: serialize_duc(name: str, thumbnail: Optional[bytes] = None, dictionary: Optional[list] = None, elements: Optional[list] = None, duc_local_state: Any = None, duc_global_state: Any = None, version_graph: Any = None, blocks: Optional[list] = None, block_instances: Optional[list] = None, block_collections: Optional[list] = None, groups: Optional[list] = None, regions: Optional[list] = None, layers: Optional[list] = None, external_files: Optional[list] = None) -> bytes
+
+   Serialize elements to ``.duc`` format.
+   Element instances and state dataclasses are automatically converted to the
+   camelCase dicts expected by the Rust native module.
+
+

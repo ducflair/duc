@@ -1,0 +1,33 @@
+ducpy
+=====
+
+.. py:module:: ducpy
+
+.. autoapi-nested-parse::
+
+   Main module for duc_py package.
+
+   Import usage examples:
+       import ducpy as duc
+       
+       duc.classes.SomeClass
+       duc.parse_duc(source)
+       duc.serialize_duc(name=..., elements=...)
+       duc.utils.some_utility
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/ducpy/builders/index
+   /autoapi/ducpy/classes/index
+   /autoapi/ducpy/enums/index
+   /autoapi/ducpy/parse/index
+   /autoapi/ducpy/serialize/index
+   /autoapi/ducpy/utils/index
+
+

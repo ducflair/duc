@@ -1,0 +1,634 @@
+ducpy.builders.element_builders
+===============================
+
+.. py:module:: ducpy.builders.element_builders
+
+.. autoapi-nested-parse::
+
+   Helper functions for creating DUC elements with a user-friendly API.
+   Only the 15 element types from duc.sql / types.rs are supported.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.builders.element_builders.BaseElementParams
+   ducpy.builders.element_builders.ElementBuilder
+   ducpy.builders.element_builders.ElementSpecificBuilder
+   ducpy.builders.element_builders.RectangleElementBuilder
+   ducpy.builders.element_builders.EllipseElementBuilder
+   ducpy.builders.element_builders.PolygonElementBuilder
+   ducpy.builders.element_builders.LinearElementBuilder
+   ducpy.builders.element_builders.ArrowElementBuilder
+   ducpy.builders.element_builders.ImageElementBuilder
+   ducpy.builders.element_builders.PdfElementBuilder
+   ducpy.builders.element_builders.TextElementBuilder
+   ducpy.builders.element_builders.TableElementBuilder
+   ducpy.builders.element_builders.FrameElementBuilder
+   ducpy.builders.element_builders.PlotElementBuilder
+   ducpy.builders.element_builders.FreeDrawElementBuilder
+   ducpy.builders.element_builders.DocElementBuilder
+   ducpy.builders.element_builders.EmbeddableElementBuilder
+   ducpy.builders.element_builders.ModelElementBuilder
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.builders.element_builders._create_element_wrapper
+   ducpy.builders.element_builders.create_duc_path
+   ducpy.builders.element_builders.create_bound_element
+
+
+Module Contents
+---------------
+
+.. py:function:: _create_element_wrapper(element_class, base_params, element_params, explicit_properties_override=None)
+
+   Helper function to create an ElementWrapper with the given parameters.
+
+
+.. py:class:: BaseElementParams
+
+   .. py:attribute:: x
+      :type:  float
+
+
+   .. py:attribute:: y
+      :type:  float
+
+
+   .. py:attribute:: width
+      :type:  float
+
+
+   .. py:attribute:: height
+      :type:  float
+
+
+   .. py:attribute:: scope
+      :type:  str
+
+
+   .. py:attribute:: angle
+      :type:  float
+      :value: 0.0
+
+
+
+   .. py:attribute:: styles
+      :type:  Optional[ducpy.classes.ElementsClass.DucElementStylesBase]
+      :value: None
+
+
+
+   .. py:attribute:: id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: label
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: locked
+      :type:  bool
+      :value: False
+
+
+
+   .. py:attribute:: is_visible
+      :type:  bool
+      :value: True
+
+
+
+   .. py:attribute:: z_index
+      :type:  float
+      :value: 0.0
+
+
+
+   .. py:attribute:: description
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: group_ids
+      :type:  Optional[List[str]]
+      :value: []
+
+
+
+   .. py:attribute:: region_ids
+      :type:  Optional[List[str]]
+      :value: []
+
+
+
+   .. py:attribute:: layer_id
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: frame_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: bound_elements
+      :type:  Optional[List[ducpy.classes.ElementsClass.BoundElement]]
+      :value: []
+
+
+
+   .. py:attribute:: link
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: custom_data
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: is_plot
+      :type:  bool
+      :value: True
+
+
+
+   .. py:attribute:: is_deleted
+      :type:  bool
+      :value: False
+
+
+
+   .. py:attribute:: index
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: instance_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: ElementBuilder(x: float = 0.0, y: float = 0.0, width: float = 1.0, height: float = 1.0, scope: str = DEFAULT_SCOPE)
+
+   .. py:attribute:: base
+
+
+   .. py:attribute:: extra
+
+
+   .. py:method:: at_position(x: float, y: float)
+
+
+   .. py:method:: with_size(width: float, height: float)
+
+
+   .. py:method:: with_angle(angle: float)
+
+
+   .. py:method:: with_styles(styles: ducpy.classes.ElementsClass.DucElementStylesBase)
+
+
+   .. py:method:: with_id(id: str)
+
+
+   .. py:method:: with_label(label: str)
+
+
+   .. py:method:: with_scope(scope: str)
+
+
+   .. py:method:: with_locked(locked: bool)
+
+
+   .. py:method:: with_visible(is_visible: bool)
+
+
+   .. py:method:: with_instance_id(instance_id: str)
+
+
+   .. py:method:: with_z_index(z_index: float)
+
+
+   .. py:method:: with_description(description: str)
+
+
+   .. py:method:: with_group_ids(group_ids: List[str])
+
+
+   .. py:method:: with_region_ids(region_ids: List[str])
+
+
+   .. py:method:: with_layer_id(layer_id: str)
+
+
+   .. py:method:: with_frame_id(frame_id: str)
+
+
+   .. py:method:: with_bound_elements(bound_elements: List[ducpy.classes.ElementsClass.BoundElement])
+
+
+   .. py:method:: with_bound_element(element_id: str, element_type: str)
+
+
+   .. py:method:: with_link(link: str)
+
+
+   .. py:method:: with_custom_data(custom_data: str)
+
+
+   .. py:method:: with_plot(is_plot: bool)
+
+
+   .. py:method:: with_deleted(is_deleted: bool)
+
+
+   .. py:method:: with_index(index: str)
+
+
+   .. py:method:: with_extra(**kwargs)
+
+
+   .. py:method:: build_rectangle()
+
+
+   .. py:method:: build_ellipse()
+
+
+   .. py:method:: build_polygon()
+
+
+   .. py:method:: build_linear_element()
+
+
+   .. py:method:: build_arrow_element()
+
+
+   .. py:method:: build_image_element()
+
+
+   .. py:method:: build_pdf_element()
+
+
+   .. py:method:: build_text_element()
+
+
+   .. py:method:: build_table_element()
+
+
+   .. py:method:: build_frame_element()
+
+
+   .. py:method:: build_plot_element()
+
+
+   .. py:method:: build_freedraw_element()
+
+
+   .. py:method:: build_doc_element()
+
+
+   .. py:method:: build_embeddable_element()
+
+
+   .. py:method:: build_model_element()
+
+
+.. py:function:: create_duc_path(line_indices: List[int], background: Optional[ducpy.classes.ElementsClass.ElementBackground] = None, stroke: Optional[ducpy.classes.ElementsClass.ElementStroke] = None) -> ducpy.classes.ElementsClass.DucPath
+
+.. py:function:: create_bound_element(element_id: str, element_type: str) -> ducpy.classes.ElementsClass.BoundElement
+
+.. py:class:: ElementSpecificBuilder(base: BaseElementParams, extra: dict)
+
+   .. py:attribute:: base
+
+
+   .. py:attribute:: extra
+
+
+.. py:class:: RectangleElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: EllipseElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_ratio(ratio: float)
+
+
+   .. py:method:: with_start_angle(start_angle: float)
+
+
+   .. py:method:: with_end_angle(end_angle: float)
+
+
+   .. py:method:: with_show_aux_crosshair(show_aux_crosshair: bool)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: PolygonElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_sides(sides: int)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: LinearElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_points(points: List[tuple])
+
+
+   .. py:method:: with_lines(lines: Optional[List[ducpy.classes.ElementsClass.DucLine]])
+
+
+   .. py:method:: with_path_overrides(path_overrides: Optional[List[ducpy.classes.ElementsClass.DucPath]])
+
+
+   .. py:method:: with_last_committed_point(lcp: Optional[ducpy.classes.ElementsClass.DucPoint])
+
+
+   .. py:method:: with_start_binding(sb: Optional[ducpy.classes.ElementsClass.DucPointBinding])
+
+
+   .. py:method:: with_end_binding(eb: Optional[ducpy.classes.ElementsClass.DucPointBinding])
+
+
+   .. py:method:: with_wipeout_below(wipeout_below: bool)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: ArrowElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_points(points: List[tuple])
+
+
+   .. py:method:: with_start_binding(sb: Optional[ducpy.classes.ElementsClass.DucPointBinding])
+
+
+   .. py:method:: with_end_binding(eb: Optional[ducpy.classes.ElementsClass.DucPointBinding])
+
+
+   .. py:method:: with_elbowed(elbowed: bool)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: ImageElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_file_id(file_id: str)
+
+
+   .. py:method:: with_scale(scale: List[float])
+
+
+   .. py:method:: with_status(status: ducpy.enums.IMAGE_STATUS)
+
+
+   .. py:method:: with_crop(crop: Optional[ducpy.classes.ElementsClass.ImageCrop])
+
+
+   .. py:method:: with_filter(f: Optional[ducpy.classes.ElementsClass.DucImageFilter])
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: PdfElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_file_id(file_id: str)
+
+
+   .. py:method:: with_grid_config(grid_config: ducpy.classes.ElementsClass.DocumentGridConfig)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: TextElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_text(text: str)
+
+
+   .. py:method:: with_text_style(text_style: Optional[ducpy.classes.ElementsClass.DucTextStyle])
+
+
+   .. py:method:: with_auto_resize(auto_resize: bool)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: TableElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_file_id(file_id: str)
+
+
+   .. py:method:: with_table_style(style: Optional[ducpy.classes.ElementsClass.DucTableStyle])
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: FrameElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_stack_base(stack_base: Optional[ducpy.classes.ElementsClass.DucStackBase])
+
+
+   .. py:method:: with_clip(clip: bool)
+
+
+   .. py:method:: with_label_visible(label_visible: bool)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: PlotElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_margins(margins: Optional[ducpy.classes.ElementsClass.Margins])
+
+
+   .. py:method:: with_style(style: Optional[ducpy.classes.ElementsClass.DucPlotStyle])
+
+
+   .. py:method:: with_stack_base(stack_base: Optional[ducpy.classes.ElementsClass.DucStackBase])
+
+
+   .. py:method:: with_clip(clip: bool)
+
+
+   .. py:method:: with_label_visible(label_visible: bool)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: FreeDrawElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_points(points: list)
+
+
+   .. py:method:: with_pressures(pressures: list)
+
+
+   .. py:method:: with_size_thickness(size: float)
+
+
+   .. py:method:: with_thinning(thinning: float)
+
+
+   .. py:method:: with_smoothing(smoothing: float)
+
+
+   .. py:method:: with_streamline(streamline: float)
+
+
+   .. py:method:: with_easing(easing: str)
+
+
+   .. py:method:: with_simulate_pressure(simulate_pressure: bool)
+
+
+   .. py:method:: with_start_cap(cap: bool)
+
+
+   .. py:method:: with_start_taper(taper: float)
+
+
+   .. py:method:: with_start_easing(easing: str)
+
+
+   .. py:method:: with_end_cap(cap: bool)
+
+
+   .. py:method:: with_end_taper(taper: float)
+
+
+   .. py:method:: with_end_easing(easing: str)
+
+
+   .. py:method:: with_last_committed_point(lcp: Optional[ducpy.classes.ElementsClass.DucPoint])
+
+
+   .. py:method:: with_svg_path(svg_path: Optional[str])
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: DocElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_text(text: str)
+
+
+   .. py:method:: with_doc_style(style: Optional[ducpy.classes.ElementsClass.DucDocStyle])
+
+
+   .. py:method:: with_file_id(file_id: str)
+
+
+   .. py:method:: with_grid_config(grid_config: ducpy.classes.ElementsClass.DocumentGridConfig)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: EmbeddableElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_link(link: str)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+
+.. py:class:: ModelElementBuilder(base: BaseElementParams, extra: dict)
+
+   Bases: :py:obj:`ElementSpecificBuilder`
+
+
+   .. py:method:: with_model_type(model_type: str)
+
+
+   .. py:method:: with_code(code: str)
+
+
+   .. py:method:: with_svg_path(svg_path: str)
+
+
+   .. py:method:: with_file_ids(file_ids: List[str])
+
+
+   .. py:method:: with_viewer_state(viewer_state)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
+
+

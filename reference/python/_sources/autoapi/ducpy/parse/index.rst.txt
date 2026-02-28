@@ -1,0 +1,117 @@
+ducpy.parse
+===========
+
+.. py:module:: ducpy.parse
+
+.. autoapi-nested-parse::
+
+   Parse .duc files using the Rust native extension (ducpy_native).
+
+   Returns plain dicts with snake_case keys. Attribute-style access is available
+   via DucData wrapper.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   ducpy.parse.logger
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.parse.DucData
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.parse._wrap
+   ducpy.parse._read_bytes
+   ducpy.parse.parse_duc
+   ducpy.parse.parse_duc_lazy
+   ducpy.parse.get_external_file
+   ducpy.parse.list_external_files
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: DucData
+
+   Bases: :py:obj:`dict`
+
+
+   Dict subclass allowing attribute-style access (``data.elements``).
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:method:: __getattr__(key: str) -> Any
+
+
+   .. py:method:: __setattr__(key: str, value: Any) -> None
+
+      Implement setattr(self, name, value).
+
+
+
+   .. py:method:: __delattr__(key: str) -> None
+
+      Implement delattr(self, name).
+
+
+
+.. py:function:: _wrap(obj: Any) -> Any
+
+   Recursively wrap dicts as DucData for attribute access.
+
+
+.. py:function:: _read_bytes(source: Union[bytes, bytearray, BinaryIO, str]) -> bytes
+
+   Accept bytes, a file-like object, or a file path and return raw bytes.
+
+
+.. py:function:: parse_duc(source: Union[bytes, bytearray, BinaryIO, str]) -> DucData
+
+   Parse a ``.duc`` file into a :class:`DucData` dict.
+
+   Parameters
+   ----------
+   source : bytes | file | str
+       Raw bytes, an open binary file, or a path to a ``.duc`` file.
+
+   Returns
+   -------
+   DucData
+       Attribute-accessible dict matching the ExportedDataState schema with
+       snake_case keys.
+
+
+.. py:function:: parse_duc_lazy(source: Union[bytes, bytearray, BinaryIO, str]) -> DucData
+
+   Parse a ``.duc`` file lazily (external file data blobs are omitted).
+
+   Use :func:`get_external_file` or :func:`list_external_files` to retrieve
+   external file data on demand.
+
+
+.. py:function:: get_external_file(source: Union[bytes, bytearray, BinaryIO, str], file_id: str) -> Optional[DucData]
+
+   Fetch a single external file entry from a ``.duc`` buffer.
+
+
+.. py:function:: list_external_files(source: Union[bytes, bytearray, BinaryIO, str]) -> List[DucData]
+
+   List metadata for all external files (without data blobs).
+
+

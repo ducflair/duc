@@ -1,0 +1,72 @@
+ducpy.utils.convert
+===================
+
+.. py:module:: ducpy.utils.convert
+
+.. autoapi-nested-parse::
+
+   Utilities for converting between Python snake_case and Rust/JSON camelCase naming,
+   and for flattening/nesting element structures to match the Rust serde layout.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   ducpy.utils.convert._CAMEL_RE1
+   ducpy.utils.convert._CAMEL_RE2
+   ducpy.utils.convert._SNAKE_TO_CAMEL_OVERRIDES
+   ducpy.utils.convert._FLATTEN_KEYS
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.utils.convert.camel_to_snake
+   ducpy.utils.convert.snake_to_camel
+   ducpy.utils.convert.deep_camel_to_snake
+   ducpy.utils.convert.deep_snake_to_camel
+   ducpy.utils.convert._flatten_dict
+   ducpy.utils.convert.to_serializable
+
+
+Module Contents
+---------------
+
+.. py:data:: _CAMEL_RE1
+
+.. py:data:: _CAMEL_RE2
+
+.. py:function:: camel_to_snake(name: str) -> str
+
+.. py:function:: snake_to_camel(name: str) -> str
+
+.. py:data:: _SNAKE_TO_CAMEL_OVERRIDES
+   :type:  Dict[str, str]
+
+.. py:data:: _FLATTEN_KEYS
+
+.. py:function:: deep_camel_to_snake(obj: Any) -> Any
+
+.. py:function:: deep_snake_to_camel(obj: Any) -> Any
+
+.. py:function:: _flatten_dict(d: dict) -> dict
+
+   Recursively flatten keys that Rust serde #[serde(flatten)] would flatten.
+
+
+.. py:function:: to_serializable(obj: Any) -> Any
+
+   Convert a value to a JSON-serializable form suitable for the Rust native module.
+
+   Handles:
+   - Dataclass instances → dict (recursively)
+   - bytes → list of ints
+   - Nested base/styles/linear_base/stack_element_base → flattened
+   - snake_case keys → camelCase keys
+
+

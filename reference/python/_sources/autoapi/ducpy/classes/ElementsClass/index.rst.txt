@@ -1,0 +1,1614 @@
+ducpy.classes.ElementsClass
+===========================
+
+.. py:module:: ducpy.classes.ElementsClass
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   ducpy.classes.ElementsClass.DucElement
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.classes.ElementsClass.DictionaryEntry
+   ducpy.classes.ElementsClass.StringValueEntry
+   ducpy.classes.ElementsClass.GeometricPoint
+   ducpy.classes.ElementsClass.DucPoint
+   ducpy.classes.ElementsClass.Margins
+   ducpy.classes.ElementsClass.Viewer3DClipPlane
+   ducpy.classes.ElementsClass.Viewer3DMaterial
+   ducpy.classes.ElementsClass.Viewer3DZebra
+   ducpy.classes.ElementsClass.Viewer3DCamera
+   ducpy.classes.ElementsClass.Viewer3DGridPlanes
+   ducpy.classes.ElementsClass.Viewer3DGrid
+   ducpy.classes.ElementsClass.Viewer3DDisplay
+   ducpy.classes.ElementsClass.Viewer3DClipping
+   ducpy.classes.ElementsClass.Viewer3DExplode
+   ducpy.classes.ElementsClass.Viewer3DState
+   ducpy.classes.ElementsClass.TilingProperties
+   ducpy.classes.ElementsClass.HatchPatternLine
+   ducpy.classes.ElementsClass.CustomHatchPattern
+   ducpy.classes.ElementsClass.DucHatchStyle
+   ducpy.classes.ElementsClass.DucImageFilter
+   ducpy.classes.ElementsClass.ElementContentBase
+   ducpy.classes.ElementsClass.StrokeStyle
+   ducpy.classes.ElementsClass.StrokeSides
+   ducpy.classes.ElementsClass.ElementStroke
+   ducpy.classes.ElementsClass.ElementBackground
+   ducpy.classes.ElementsClass.DucElementStylesBase
+   ducpy.classes.ElementsClass.BoundElement
+   ducpy.classes.ElementsClass.DucElementBase
+   ducpy.classes.ElementsClass.DucHead
+   ducpy.classes.ElementsClass.PointBindingPoint
+   ducpy.classes.ElementsClass.DucPointBinding
+   ducpy.classes.ElementsClass.DucLineReference
+   ducpy.classes.ElementsClass.DucLine
+   ducpy.classes.ElementsClass.DucPath
+   ducpy.classes.ElementsClass.DucLinearElementBase
+   ducpy.classes.ElementsClass.DucStackLikeStyles
+   ducpy.classes.ElementsClass.DucStackBase
+   ducpy.classes.ElementsClass.DucStackElementBase
+   ducpy.classes.ElementsClass.LineSpacing
+   ducpy.classes.ElementsClass.DucTextStyle
+   ducpy.classes.ElementsClass.DucTableStyle
+   ducpy.classes.ElementsClass.DucDocStyle
+   ducpy.classes.ElementsClass.DucPlotStyle
+   ducpy.classes.ElementsClass.DucRectangleElement
+   ducpy.classes.ElementsClass.DucPolygonElement
+   ducpy.classes.ElementsClass.DucEllipseElement
+   ducpy.classes.ElementsClass.DucEmbeddableElement
+   ducpy.classes.ElementsClass.DocumentGridConfig
+   ducpy.classes.ElementsClass.DucPdfElement
+   ducpy.classes.ElementsClass.DucDocElement
+   ducpy.classes.ElementsClass.DucTableElement
+   ducpy.classes.ElementsClass.ImageCrop
+   ducpy.classes.ElementsClass.DucImageElement
+   ducpy.classes.ElementsClass.DucTextElement
+   ducpy.classes.ElementsClass.DucLinearElement
+   ducpy.classes.ElementsClass.DucArrowElement
+   ducpy.classes.ElementsClass.DucFreeDrawEnds
+   ducpy.classes.ElementsClass.DucFreeDrawElement
+   ducpy.classes.ElementsClass.DucFrameElement
+   ducpy.classes.ElementsClass.PlotLayout
+   ducpy.classes.ElementsClass.DucPlotElement
+   ducpy.classes.ElementsClass.DucModelElement
+   ducpy.classes.ElementsClass.DucBlockDuplicationArray
+   ducpy.classes.ElementsClass.DucBlockMetadata
+   ducpy.classes.ElementsClass.DucBlock
+   ducpy.classes.ElementsClass.DucBlockInstance
+   ducpy.classes.ElementsClass.DucBlockCollectionEntry
+   ducpy.classes.ElementsClass.DucBlockCollection
+   ducpy.classes.ElementsClass.DucGroup
+   ducpy.classes.ElementsClass.DucRegion
+   ducpy.classes.ElementsClass.DucLayerOverrides
+   ducpy.classes.ElementsClass.DucLayer
+   ducpy.classes.ElementsClass.ElementWrapper
+
+
+Module Contents
+---------------
+
+.. py:class:: DictionaryEntry
+
+   .. py:attribute:: key
+      :type:  str
+
+
+   .. py:attribute:: value
+      :type:  str
+
+
+.. py:class:: StringValueEntry
+
+   .. py:attribute:: key
+      :type:  str
+
+
+   .. py:attribute:: value
+      :type:  str
+
+
+.. py:class:: GeometricPoint
+
+   .. py:attribute:: x
+      :type:  float
+
+
+   .. py:attribute:: y
+      :type:  float
+
+
+.. py:class:: DucPoint
+
+   .. py:attribute:: x
+      :type:  float
+
+
+   .. py:attribute:: y
+      :type:  float
+
+
+   .. py:attribute:: mirroring
+      :type:  Optional[ducpy.enums.BEZIER_MIRRORING]
+      :value: None
+
+
+
+.. py:class:: Margins
+
+   .. py:attribute:: top
+      :type:  float
+
+
+   .. py:attribute:: right
+      :type:  float
+
+
+   .. py:attribute:: bottom
+      :type:  float
+
+
+   .. py:attribute:: left
+      :type:  float
+
+
+.. py:class:: Viewer3DClipPlane
+
+   .. py:attribute:: enabled
+      :type:  bool
+
+
+   .. py:attribute:: value
+      :type:  float
+
+
+   .. py:attribute:: normal
+      :type:  Optional[List[float]]
+      :value: None
+
+
+
+.. py:class:: Viewer3DMaterial
+
+   .. py:attribute:: metalness
+      :type:  float
+
+
+   .. py:attribute:: roughness
+      :type:  float
+
+
+   .. py:attribute:: default_opacity
+      :type:  float
+
+
+   .. py:attribute:: edge_color
+      :type:  int
+
+
+   .. py:attribute:: ambient_intensity
+      :type:  float
+
+
+   .. py:attribute:: direct_intensity
+      :type:  float
+
+
+.. py:class:: Viewer3DZebra
+
+   .. py:attribute:: active
+      :type:  bool
+
+
+   .. py:attribute:: stripe_count
+      :type:  int
+
+
+   .. py:attribute:: stripe_direction
+      :type:  float
+
+
+   .. py:attribute:: color_scheme
+      :type:  str
+
+
+   .. py:attribute:: opacity
+      :type:  float
+
+
+   .. py:attribute:: mapping_mode
+      :type:  str
+
+
+.. py:class:: Viewer3DCamera
+
+   .. py:attribute:: control
+      :type:  str
+
+
+   .. py:attribute:: ortho
+      :type:  bool
+
+
+   .. py:attribute:: up
+      :type:  str
+
+
+   .. py:attribute:: position
+      :type:  List[float]
+
+
+   .. py:attribute:: quaternion
+      :type:  List[float]
+
+
+   .. py:attribute:: target
+      :type:  List[float]
+
+
+   .. py:attribute:: zoom
+      :type:  float
+
+
+   .. py:attribute:: pan_speed
+      :type:  float
+
+
+   .. py:attribute:: rotate_speed
+      :type:  float
+
+
+   .. py:attribute:: zoom_speed
+      :type:  float
+
+
+   .. py:attribute:: holroyd
+      :type:  bool
+
+
+.. py:class:: Viewer3DGridPlanes
+
+   .. py:attribute:: xy
+      :type:  bool
+
+
+   .. py:attribute:: xz
+      :type:  bool
+
+
+   .. py:attribute:: yz
+      :type:  bool
+
+
+.. py:class:: Viewer3DGrid
+
+   Tagged union: {"type": "uniform", "value": bool} or {"type": "perPlane", "value": Viewer3DGridPlanes}
+
+
+   .. py:attribute:: type
+      :type:  str
+
+
+   .. py:attribute:: value
+      :type:  Any
+
+
+.. py:class:: Viewer3DDisplay
+
+   .. py:attribute:: wireframe
+      :type:  bool
+
+
+   .. py:attribute:: transparent
+      :type:  bool
+
+
+   .. py:attribute:: black_edges
+      :type:  bool
+
+
+   .. py:attribute:: grid
+      :type:  Viewer3DGrid
+
+
+   .. py:attribute:: axes_visible
+      :type:  bool
+
+
+   .. py:attribute:: axes_at_origin
+      :type:  bool
+
+
+.. py:class:: Viewer3DClipping
+
+   .. py:attribute:: x
+      :type:  Viewer3DClipPlane
+
+
+   .. py:attribute:: y
+      :type:  Viewer3DClipPlane
+
+
+   .. py:attribute:: z
+      :type:  Viewer3DClipPlane
+
+
+   .. py:attribute:: intersection
+      :type:  bool
+
+
+   .. py:attribute:: show_planes
+      :type:  bool
+
+
+   .. py:attribute:: object_color_caps
+      :type:  bool
+
+
+.. py:class:: Viewer3DExplode
+
+   .. py:attribute:: active
+      :type:  bool
+
+
+   .. py:attribute:: value
+      :type:  float
+
+
+.. py:class:: Viewer3DState
+
+   .. py:attribute:: camera
+      :type:  Viewer3DCamera
+
+
+   .. py:attribute:: display
+      :type:  Viewer3DDisplay
+
+
+   .. py:attribute:: material
+      :type:  Viewer3DMaterial
+
+
+   .. py:attribute:: clipping
+      :type:  Viewer3DClipping
+
+
+   .. py:attribute:: explode
+      :type:  Viewer3DExplode
+
+
+   .. py:attribute:: zebra
+      :type:  Viewer3DZebra
+
+
+.. py:class:: TilingProperties
+
+   .. py:attribute:: size_in_percent
+      :type:  float
+
+
+   .. py:attribute:: angle
+      :type:  float
+
+
+   .. py:attribute:: spacing
+      :type:  Optional[float]
+      :value: None
+
+
+
+   .. py:attribute:: offset_x
+      :type:  Optional[float]
+      :value: None
+
+
+
+   .. py:attribute:: offset_y
+      :type:  Optional[float]
+      :value: None
+
+
+
+.. py:class:: HatchPatternLine
+
+   .. py:attribute:: angle
+      :type:  float
+
+
+   .. py:attribute:: origin
+      :type:  DucPoint
+
+
+   .. py:attribute:: offset
+      :type:  List[float]
+
+
+   .. py:attribute:: dash_pattern
+      :type:  List[float]
+
+
+.. py:class:: CustomHatchPattern
+
+   .. py:attribute:: name
+      :type:  str
+
+
+   .. py:attribute:: lines
+      :type:  List[HatchPatternLine]
+
+
+   .. py:attribute:: description
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: DucHatchStyle
+
+   .. py:attribute:: hatch_style
+      :type:  ducpy.enums.HATCH_STYLE
+
+
+   .. py:attribute:: pattern_name
+      :type:  str
+
+
+   .. py:attribute:: pattern_scale
+      :type:  float
+
+
+   .. py:attribute:: pattern_angle
+      :type:  float
+
+
+   .. py:attribute:: pattern_origin
+      :type:  DucPoint
+
+
+   .. py:attribute:: pattern_double
+      :type:  bool
+
+
+   .. py:attribute:: custom_pattern
+      :type:  Optional[CustomHatchPattern]
+      :value: None
+
+
+
+.. py:class:: DucImageFilter
+
+   .. py:attribute:: brightness
+      :type:  float
+
+
+   .. py:attribute:: contrast
+      :type:  float
+
+
+.. py:class:: ElementContentBase
+
+   .. py:attribute:: src
+      :type:  str
+
+
+   .. py:attribute:: visible
+      :type:  bool
+
+
+   .. py:attribute:: opacity
+      :type:  float
+
+
+   .. py:attribute:: preference
+      :type:  Optional[ducpy.enums.ELEMENT_CONTENT_PREFERENCE]
+      :value: None
+
+
+
+   .. py:attribute:: tiling
+      :type:  Optional[TilingProperties]
+      :value: None
+
+
+
+   .. py:attribute:: hatch
+      :type:  Optional[DucHatchStyle]
+      :value: None
+
+
+
+   .. py:attribute:: image_filter
+      :type:  Optional[DucImageFilter]
+      :value: None
+
+
+
+.. py:class:: StrokeStyle
+
+   .. py:attribute:: preference
+      :type:  Optional[ducpy.enums.STROKE_PREFERENCE]
+      :value: None
+
+
+
+   .. py:attribute:: cap
+      :type:  Optional[ducpy.enums.STROKE_CAP]
+      :value: None
+
+
+
+   .. py:attribute:: join
+      :type:  Optional[ducpy.enums.STROKE_JOIN]
+      :value: None
+
+
+
+   .. py:attribute:: dash
+      :type:  Optional[List[float]]
+      :value: None
+
+
+
+   .. py:attribute:: dash_line_override
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: dash_cap
+      :type:  Optional[ducpy.enums.STROKE_CAP]
+      :value: None
+
+
+
+   .. py:attribute:: miter_limit
+      :type:  Optional[float]
+      :value: None
+
+
+
+.. py:class:: StrokeSides
+
+   .. py:attribute:: preference
+      :type:  Optional[ducpy.enums.STROKE_SIDE_PREFERENCE]
+      :value: None
+
+
+
+   .. py:attribute:: values
+      :type:  Optional[List[float]]
+      :value: None
+
+
+
+.. py:class:: ElementStroke
+
+   .. py:attribute:: content
+      :type:  ElementContentBase
+
+
+   .. py:attribute:: width
+      :type:  float
+
+
+   .. py:attribute:: style
+      :type:  StrokeStyle
+
+
+   .. py:attribute:: placement
+      :type:  Optional[ducpy.enums.STROKE_PLACEMENT]
+      :value: None
+
+
+
+   .. py:attribute:: stroke_sides
+      :type:  Optional[StrokeSides]
+      :value: None
+
+
+
+.. py:class:: ElementBackground
+
+   .. py:attribute:: content
+      :type:  ElementContentBase
+
+
+.. py:class:: DucElementStylesBase
+
+   .. py:attribute:: roundness
+      :type:  float
+
+
+   .. py:attribute:: background
+      :type:  List[ElementBackground]
+
+
+   .. py:attribute:: stroke
+      :type:  List[ElementStroke]
+
+
+   .. py:attribute:: opacity
+      :type:  float
+
+
+   .. py:attribute:: blending
+      :type:  Optional[ducpy.enums.BLENDING]
+      :value: None
+
+
+
+.. py:class:: BoundElement
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: type
+      :type:  str
+
+
+.. py:class:: DucElementBase
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: styles
+      :type:  DucElementStylesBase
+
+
+   .. py:attribute:: x
+      :type:  float
+
+
+   .. py:attribute:: y
+      :type:  float
+
+
+   .. py:attribute:: width
+      :type:  float
+
+
+   .. py:attribute:: height
+      :type:  float
+
+
+   .. py:attribute:: angle
+      :type:  float
+
+
+   .. py:attribute:: scope
+      :type:  str
+
+
+   .. py:attribute:: label
+      :type:  str
+
+
+   .. py:attribute:: is_visible
+      :type:  bool
+
+
+   .. py:attribute:: seed
+      :type:  int
+
+
+   .. py:attribute:: version
+      :type:  int
+
+
+   .. py:attribute:: version_nonce
+      :type:  int
+
+
+   .. py:attribute:: updated
+      :type:  int
+
+
+   .. py:attribute:: is_plot
+      :type:  bool
+
+
+   .. py:attribute:: is_deleted
+      :type:  bool
+
+
+   .. py:attribute:: group_ids
+      :type:  List[str]
+
+
+   .. py:attribute:: block_ids
+      :type:  List[str]
+
+
+   .. py:attribute:: region_ids
+      :type:  List[str]
+
+
+   .. py:attribute:: z_index
+      :type:  float
+
+
+   .. py:attribute:: locked
+      :type:  bool
+
+
+   .. py:attribute:: description
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: index
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: instance_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: layer_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: frame_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: bound_elements
+      :type:  Optional[List[BoundElement]]
+      :value: None
+
+
+
+   .. py:attribute:: link
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: custom_data
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: DucHead
+
+   .. py:attribute:: size
+      :type:  float
+
+
+   .. py:attribute:: type
+      :type:  Optional[ducpy.enums.LINE_HEAD]
+      :value: None
+
+
+
+   .. py:attribute:: block_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: PointBindingPoint
+
+   .. py:attribute:: index
+      :type:  int
+
+
+   .. py:attribute:: offset
+      :type:  float
+
+
+.. py:class:: DucPointBinding
+
+   .. py:attribute:: element_id
+      :type:  str
+
+
+   .. py:attribute:: focus
+      :type:  float
+
+
+   .. py:attribute:: gap
+      :type:  float
+
+
+   .. py:attribute:: fixed_point
+      :type:  Optional[GeometricPoint]
+      :value: None
+
+
+
+   .. py:attribute:: point
+      :type:  Optional[PointBindingPoint]
+      :value: None
+
+
+
+   .. py:attribute:: head
+      :type:  Optional[DucHead]
+      :value: None
+
+
+
+.. py:class:: DucLineReference
+
+   .. py:attribute:: index
+      :type:  int
+
+
+   .. py:attribute:: handle
+      :type:  Optional[GeometricPoint]
+      :value: None
+
+
+
+.. py:class:: DucLine
+
+   .. py:attribute:: start
+      :type:  DucLineReference
+
+
+   .. py:attribute:: end
+      :type:  DucLineReference
+
+
+.. py:class:: DucPath
+
+   .. py:attribute:: line_indices
+      :type:  List[int]
+
+
+   .. py:attribute:: background
+      :type:  Optional[ElementBackground]
+      :value: None
+
+
+
+   .. py:attribute:: stroke
+      :type:  Optional[ElementStroke]
+      :value: None
+
+
+
+.. py:class:: DucLinearElementBase
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+   .. py:attribute:: points
+      :type:  List[DucPoint]
+
+
+   .. py:attribute:: lines
+      :type:  List[DucLine]
+
+
+   .. py:attribute:: path_overrides
+      :type:  List[DucPath]
+
+
+   .. py:attribute:: last_committed_point
+      :type:  Optional[DucPoint]
+      :value: None
+
+
+
+   .. py:attribute:: start_binding
+      :type:  Optional[DucPointBinding]
+      :value: None
+
+
+
+   .. py:attribute:: end_binding
+      :type:  Optional[DucPointBinding]
+      :value: None
+
+
+
+.. py:class:: DucStackLikeStyles
+
+   .. py:attribute:: opacity
+      :type:  float
+
+
+.. py:class:: DucStackBase
+
+   .. py:attribute:: label
+      :type:  str
+
+
+   .. py:attribute:: is_collapsed
+      :type:  bool
+
+
+   .. py:attribute:: is_plot
+      :type:  bool
+
+
+   .. py:attribute:: is_visible
+      :type:  bool
+
+
+   .. py:attribute:: locked
+      :type:  bool
+
+
+   .. py:attribute:: styles
+      :type:  DucStackLikeStyles
+
+
+   .. py:attribute:: description
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: DucStackElementBase
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+   .. py:attribute:: stack_base
+      :type:  DucStackBase
+
+
+   .. py:attribute:: clip
+      :type:  bool
+
+
+   .. py:attribute:: label_visible
+      :type:  bool
+
+
+.. py:class:: LineSpacing
+
+   .. py:attribute:: value
+      :type:  float
+
+
+   .. py:attribute:: type
+      :type:  Optional[ducpy.enums.LINE_SPACING_TYPE]
+      :value: None
+
+
+
+.. py:class:: DucTextStyle
+
+   .. py:attribute:: is_ltr
+      :type:  bool
+
+
+   .. py:attribute:: font_family
+      :type:  str
+
+
+   .. py:attribute:: big_font_family
+      :type:  str
+
+
+   .. py:attribute:: text_align
+      :type:  ducpy.enums.TEXT_ALIGN
+
+
+   .. py:attribute:: vertical_align
+      :type:  ducpy.enums.VERTICAL_ALIGN
+
+
+   .. py:attribute:: line_height
+      :type:  float
+
+
+   .. py:attribute:: line_spacing
+      :type:  LineSpacing
+
+
+   .. py:attribute:: oblique_angle
+      :type:  float
+
+
+   .. py:attribute:: font_size
+      :type:  float
+
+
+   .. py:attribute:: width_factor
+      :type:  float
+
+
+   .. py:attribute:: is_upside_down
+      :type:  bool
+
+
+   .. py:attribute:: is_backwards
+      :type:  bool
+
+
+.. py:class:: DucTableStyle
+
+.. py:class:: DucDocStyle
+
+.. py:class:: DucPlotStyle
+
+.. py:class:: DucRectangleElement
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+.. py:class:: DucPolygonElement
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+   .. py:attribute:: sides
+      :type:  int
+
+
+.. py:class:: DucEllipseElement
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+   .. py:attribute:: ratio
+      :type:  float
+
+
+   .. py:attribute:: start_angle
+      :type:  float
+
+
+   .. py:attribute:: end_angle
+      :type:  float
+
+
+   .. py:attribute:: show_aux_crosshair
+      :type:  bool
+
+
+.. py:class:: DucEmbeddableElement
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+.. py:class:: DocumentGridConfig
+
+   .. py:attribute:: columns
+      :type:  int
+
+
+   .. py:attribute:: gap_x
+      :type:  float
+
+
+   .. py:attribute:: gap_y
+      :type:  float
+
+
+   .. py:attribute:: first_page_alone
+      :type:  bool
+
+
+   .. py:attribute:: scale
+      :type:  float
+
+
+.. py:class:: DucPdfElement
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+   .. py:attribute:: grid_config
+      :type:  DocumentGridConfig
+
+
+   .. py:attribute:: file_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: DucDocElement
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+   .. py:attribute:: style
+      :type:  DucDocStyle
+
+
+   .. py:attribute:: text
+      :type:  str
+
+
+   .. py:attribute:: grid_config
+      :type:  DocumentGridConfig
+
+
+   .. py:attribute:: file_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: DucTableElement
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+   .. py:attribute:: style
+      :type:  DucTableStyle
+
+
+   .. py:attribute:: file_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: ImageCrop
+
+   .. py:attribute:: x
+      :type:  float
+
+
+   .. py:attribute:: y
+      :type:  float
+
+
+   .. py:attribute:: width
+      :type:  float
+
+
+   .. py:attribute:: height
+      :type:  float
+
+
+   .. py:attribute:: natural_width
+      :type:  float
+
+
+   .. py:attribute:: natural_height
+      :type:  float
+
+
+.. py:class:: DucImageElement
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+   .. py:attribute:: status
+      :type:  ducpy.enums.IMAGE_STATUS
+
+
+   .. py:attribute:: scale
+      :type:  List[float]
+
+
+   .. py:attribute:: file_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: crop
+      :type:  Optional[ImageCrop]
+      :value: None
+
+
+
+   .. py:attribute:: filter
+      :type:  Optional[DucImageFilter]
+      :value: None
+
+
+
+.. py:class:: DucTextElement
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+   .. py:attribute:: style
+      :type:  DucTextStyle
+
+
+   .. py:attribute:: text
+      :type:  str
+
+
+   .. py:attribute:: auto_resize
+      :type:  bool
+
+
+   .. py:attribute:: original_text
+      :type:  str
+
+
+   .. py:attribute:: container_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: DucLinearElement
+
+   .. py:attribute:: linear_base
+      :type:  DucLinearElementBase
+
+
+   .. py:attribute:: wipeout_below
+      :type:  bool
+
+
+.. py:class:: DucArrowElement
+
+   .. py:attribute:: linear_base
+      :type:  DucLinearElementBase
+
+
+   .. py:attribute:: elbowed
+      :type:  bool
+
+
+.. py:class:: DucFreeDrawEnds
+
+   .. py:attribute:: cap
+      :type:  bool
+
+
+   .. py:attribute:: taper
+      :type:  float
+
+
+   .. py:attribute:: easing
+      :type:  str
+
+
+.. py:class:: DucFreeDrawElement
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+   .. py:attribute:: points
+      :type:  List[DucPoint]
+
+
+   .. py:attribute:: size
+      :type:  float
+
+
+   .. py:attribute:: thinning
+      :type:  float
+
+
+   .. py:attribute:: smoothing
+      :type:  float
+
+
+   .. py:attribute:: streamline
+      :type:  float
+
+
+   .. py:attribute:: easing
+      :type:  str
+
+
+   .. py:attribute:: pressures
+      :type:  List[float]
+
+
+   .. py:attribute:: simulate_pressure
+      :type:  bool
+
+
+   .. py:attribute:: start
+      :type:  Optional[DucFreeDrawEnds]
+      :value: None
+
+
+
+   .. py:attribute:: end
+      :type:  Optional[DucFreeDrawEnds]
+      :value: None
+
+
+
+   .. py:attribute:: last_committed_point
+      :type:  Optional[DucPoint]
+      :value: None
+
+
+
+   .. py:attribute:: svg_path
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: DucFrameElement
+
+   .. py:attribute:: stack_element_base
+      :type:  DucStackElementBase
+
+
+.. py:class:: PlotLayout
+
+   .. py:attribute:: margins
+      :type:  Margins
+
+
+.. py:class:: DucPlotElement
+
+   .. py:attribute:: stack_element_base
+      :type:  DucStackElementBase
+
+
+   .. py:attribute:: style
+      :type:  DucPlotStyle
+
+
+   .. py:attribute:: layout
+      :type:  PlotLayout
+
+
+.. py:class:: DucModelElement
+
+   .. py:attribute:: base
+      :type:  DucElementBase
+
+
+   .. py:attribute:: file_ids
+      :type:  List[str]
+
+
+   .. py:attribute:: model_type
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: code
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: svg_path
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: viewer_state
+      :type:  Optional[Viewer3DState]
+      :value: None
+
+
+
+.. py:class:: DucBlockDuplicationArray
+
+   .. py:attribute:: rows
+      :type:  int
+
+
+   .. py:attribute:: cols
+      :type:  int
+
+
+   .. py:attribute:: row_spacing
+      :type:  float
+
+
+   .. py:attribute:: col_spacing
+      :type:  float
+
+
+.. py:class:: DucBlockMetadata
+
+   .. py:attribute:: usage_count
+      :type:  int
+
+
+   .. py:attribute:: created_at
+      :type:  int
+
+
+   .. py:attribute:: updated_at
+      :type:  int
+
+
+   .. py:attribute:: source
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: localization
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: DucBlock
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: label
+      :type:  str
+
+
+   .. py:attribute:: version
+      :type:  int
+
+
+   .. py:attribute:: description
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: metadata
+      :type:  Optional[DucBlockMetadata]
+      :value: None
+
+
+
+   .. py:attribute:: thumbnail
+      :type:  Optional[bytes]
+      :value: None
+
+
+
+.. py:class:: DucBlockInstance
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: block_id
+      :type:  str
+
+
+   .. py:attribute:: version
+      :type:  int
+
+
+   .. py:attribute:: element_overrides
+      :type:  Optional[List[StringValueEntry]]
+      :value: None
+
+
+
+   .. py:attribute:: duplication_array
+      :type:  Optional[DucBlockDuplicationArray]
+      :value: None
+
+
+
+.. py:class:: DucBlockCollectionEntry
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: is_collection
+      :type:  bool
+
+
+.. py:class:: DucBlockCollection
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: label
+      :type:  str
+
+
+   .. py:attribute:: children
+      :type:  List[DucBlockCollectionEntry]
+
+
+   .. py:attribute:: metadata
+      :type:  Optional[DucBlockMetadata]
+      :value: None
+
+
+
+   .. py:attribute:: thumbnail
+      :type:  Optional[bytes]
+      :value: None
+
+
+
+.. py:class:: DucGroup
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: stack_base
+      :type:  DucStackBase
+
+
+.. py:class:: DucRegion
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: stack_base
+      :type:  DucStackBase
+
+
+   .. py:attribute:: boolean_operation
+      :type:  ducpy.enums.BOOLEAN_OPERATION
+
+
+.. py:class:: DucLayerOverrides
+
+   .. py:attribute:: stroke
+      :type:  ElementStroke
+
+
+   .. py:attribute:: background
+      :type:  ElementBackground
+
+
+.. py:class:: DucLayer
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: stack_base
+      :type:  DucStackBase
+
+
+   .. py:attribute:: readonly
+      :type:  bool
+
+
+   .. py:attribute:: overrides
+      :type:  Optional[DucLayerOverrides]
+      :value: None
+
+
+
+.. py:data:: DucElement
+
+.. py:class:: ElementWrapper
+
+   .. py:attribute:: element
+      :type:  DucElement
+
+

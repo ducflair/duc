@@ -1,0 +1,141 @@
+ducpy.builders.sql_builder
+==========================
+
+.. py:module:: ducpy.builders.sql_builder
+
+.. autoapi-nested-parse::
+
+   Thin wrapper to open .duc files as SQLite databases and run raw SQL.
+
+   A .duc file is a standard SQLite database. This builder just handles
+   opening/creating/exporting and exposes the raw ``sqlite3.Connection``
+   so you can write whatever SQL you want.
+
+   Usage::
+
+       import ducpy as duc
+
+       # Open existing .duc
+       with duc.DucSQL("drawing.duc") as db:
+           rows = db.sql("SELECT id, label FROM elements WHERE element_type = ?", "rectangle")
+           db.sql("UPDATE elements SET label = ? WHERE id = ?", "new-label", rows[0]["id"])
+
+       # Create new .duc from scratch
+       with duc.DucSQL.new() as db:
+           db.sql("INSERT INTO elements (id, element_type, x, y, width, height) VALUES (?,?,?,?,?,?)",
+                  "r1", "rectangle", 0, 0, 100, 50)
+           db.save("output.duc")
+
+       # From bytes
+       with duc.DucSQL.from_bytes(raw) as db:
+           print(db.sql("SELECT COUNT(*) AS n FROM elements")[0]["n"])
+           modified = db.to_bytes()
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.builders.sql_builder.DucSQL
+
+
+Module Contents
+---------------
+
+.. py:class:: DucSQL(path: Union[str, pathlib.Path])
+
+   Raw SQL access to a ``.duc`` SQLite database.
+
+   Attributes:
+       conn: The underlying :class:`sqlite3.Connection`.
+             Use it directly for cursor-level ops, ``conn.executemany``, etc.
+
+   Open an existing ``.duc`` file.
+
+
+   .. py:attribute:: conn
+      :type:  sqlite3.Connection
+
+
+   .. py:attribute:: _path
+      :type:  Optional[str]
+      :value: ''
+
+
+
+   .. py:attribute:: _temp
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: _closed
+      :value: False
+
+
+
+   .. py:method:: new(path: Union[str, pathlib.Path, None] = None) -> DucSQL
+      :classmethod:
+
+
+      Create a new ``.duc`` database with the full schema bootstrapped.
+
+      Pass a *path* to write to disk, or omit for in-memory.
+
+
+
+   .. py:method:: from_bytes(data: bytes) -> DucSQL
+      :classmethod:
+
+
+      Open a ``.duc`` from raw bytes (temp file, cleaned up on close).
+
+
+
+   .. py:method:: sql(query: str, *args: Any) -> List[sqlite3.Row]
+
+      Run a SQL statement with positional ``?`` params. Returns rows.
+
+
+
+   .. py:method:: sql_dict(query: str, params: dict) -> List[sqlite3.Row]
+
+      Run a SQL statement with named ``:key`` params. Returns rows.
+
+
+
+   .. py:method:: commit() -> None
+
+
+   .. py:method:: rollback() -> None
+
+
+   .. py:method:: save(path: Union[str, pathlib.Path, None] = None) -> None
+
+      Write the database to a file. Omit *path* to save in-place.
+
+
+
+   .. py:method:: to_bytes() -> bytes
+
+      Export the database as raw bytes.
+
+
+
+   .. py:method:: close() -> None
+
+
+   .. py:method:: __enter__() -> DucSQL
+
+
+   .. py:method:: __exit__(*exc: Any) -> None
+
+
+   .. py:method:: __del__() -> None
+
+
+   .. py:method:: __repr__() -> str
+
+

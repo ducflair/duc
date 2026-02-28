@@ -1,0 +1,1271 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../../../genindex.html"><link rel="search" title="Search" href="../../../../search.html"><link rel="next" title="ducpy.builders.style_builders" href="../style_builders/index.html"><link rel="prev" title="ducpy.builders.sql_builder" href="../sql_builder/index.html">
+        <link rel="canonical" href="https://ducflair.github.io/duc/reference/python/autoapi/ducpy/builders/state_builders/index.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>ducpy.builders.state_builders - ducpy documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../../index.html"><div class="brand">ducpy  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../../index.html">
+  
+  <span class="sidebar-brand-text">ducpy  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../../index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../../index.html">ducpy</a><input aria-label="Toggle navigation of ducpy" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3 current has-children"><a class="reference internal" href="../index.html">ducpy.builders</a><input aria-label="Toggle navigation of ducpy.builders" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../block_instance_builder/index.html">ducpy.builders.block_instance_builder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../block_utils/index.html">ducpy.builders.block_utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../element_builders/index.html">ducpy.builders.element_builders</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../mutate_builder/index.html">ducpy.builders.mutate_builder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sql_builder/index.html">ducpy.builders.sql_builder</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">ducpy.builders.state_builders</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../style_builders/index.html">ducpy.builders.style_builders</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../classes/index.html">ducpy.classes</a><input aria-label="Toggle navigation of ducpy.classes" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../classes/DataStateClass/index.html">ducpy.classes.DataStateClass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../classes/ElementsClass/index.html">ducpy.classes.ElementsClass</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../enums/index.html">ducpy.enums</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../parse/index.html">ducpy.parse</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../serialize/index.html">ducpy.serialize</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../utils/index.html">ducpy.utils</a><input aria-label="Toggle navigation of ducpy.utils" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/constants/index.html">ducpy.utils.constants</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/convert/index.html">ducpy.utils.convert</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/io/index.html">ducpy.utils.io</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/mutate_utils/index.html">ducpy.utils.mutate_utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/rand_utils/index.html">ducpy.utils.rand_utils</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../downloads.html">Downloads &amp; Installation</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../../../_sources/autoapi/ducpy/builders/state_builders/index.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-ducpy.builders.state_builders">
+<span id="ducpy-builders-state-builders"></span><h1>ducpy.builders.state_builders<a class="headerlink" href="#module-ducpy.builders.state_builders" title="Link to this heading">¶</a></h1>
+<p>Helper functions for creating DUC state-related objects with a user-friendly API.
+Follows the same hierarchical builder pattern as element_builders.py.
+Only types from types.rs / duc.sql are supported.</p>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseStateParams</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder" title="ducpy.builders.state_builders.StateBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder" title="ducpy.builders.state_builders.StateSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateSpecificBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.GlobalStateBuilder" title="ducpy.builders.state_builders.GlobalStateBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GlobalStateBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder" title="ducpy.builders.state_builders.LocalStateBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LocalStateBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.GroupBuilder" title="ducpy.builders.state_builders.GroupBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GroupBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder" title="ducpy.builders.state_builders.LayerBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LayerBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.RegionBuilder" title="ducpy.builders.state_builders.RegionBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RegionBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.VersionGraphBuilder" title="ducpy.builders.state_builders.VersionGraphBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VersionGraphBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.CheckpointBuilder" title="ducpy.builders.state_builders.CheckpointBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CheckpointBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.DeltaBuilder" title="ducpy.builders.state_builders.DeltaBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeltaBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.ExternalFileBuilder" title="ducpy.builders.state_builders.ExternalFileBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExternalFileBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.StackBaseBuilder" title="ducpy.builders.state_builders.StackBaseBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StackBaseBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.create_global_state_from_base" title="ducpy.builders.state_builders.create_global_state_from_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_global_state_from_base</span></code></a>(...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.create_local_state_from_base" title="ducpy.builders.state_builders.create_local_state_from_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_local_state_from_base</span></code></a>(...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.create_group_from_base" title="ducpy.builders.state_builders.create_group_from_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_group_from_base</span></code></a>(...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.create_layer_from_base" title="ducpy.builders.state_builders.create_layer_from_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_layer_from_base</span></code></a>(...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.create_region_from_base" title="ducpy.builders.state_builders.create_region_from_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_region_from_base</span></code></a>(...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.create_version_graph_from_base" title="ducpy.builders.state_builders.create_version_graph_from_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_version_graph_from_base</span></code></a>(...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.create_checkpoint_from_base" title="ducpy.builders.state_builders.create_checkpoint_from_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_checkpoint_from_base</span></code></a>(...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.create_delta_from_base" title="ducpy.builders.state_builders.create_delta_from_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_delta_from_base</span></code></a>(...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.create_external_file_from_base" title="ducpy.builders.state_builders.create_external_file_from_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_external_file_from_base</span></code></a>(...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.create_stack_base_from_base" title="ducpy.builders.state_builders.create_stack_base_from_base"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_stack_base_from_base</span></code></a>(...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.create_block" title="ducpy.builders.state_builders.create_block"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_block</span></code></a>(→ ducpy.classes.ElementsClass.DucBlock)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.state_builders.create_string_value_entry" title="ducpy.builders.state_builders.create_string_value_entry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_string_value_entry</span></code></a>(...)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.BaseStateParams">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">BaseStateParams</span></span><a class="headerlink" href="#ducpy.builders.state_builders.BaseStateParams" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.BaseStateParams.id">
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.builders.state_builders.BaseStateParams.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.BaseStateParams.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#ducpy.builders.state_builders.BaseStateParams.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.BaseStateParams.description">
+<span class="sig-name descname"><span class="pre">description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#ducpy.builders.state_builders.BaseStateParams.description" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.BaseStateParams.version">
+<span class="sig-name descname"><span class="pre">version</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'1.0'</span></span><a class="headerlink" href="#ducpy.builders.state_builders.BaseStateParams.version" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.BaseStateParams.readonly">
+<span class="sig-name descname"><span class="pre">readonly</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#ducpy.builders.state_builders.BaseStateParams.readonly" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">StateBuilder</span></span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.base">
+<span class="sig-name descname"><span class="pre">base</span></span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.extra" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.with_id">
+<span class="sig-name descname"><span class="pre">with_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.with_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.with_name">
+<span class="sig-name descname"><span class="pre">with_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.with_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.with_description">
+<span class="sig-name descname"><span class="pre">with_description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.with_description" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.with_version">
+<span class="sig-name descname"><span class="pre">with_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.with_version" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.with_readonly">
+<span class="sig-name descname"><span class="pre">with_readonly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">readonly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.with_readonly" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.with_extra">
+<span class="sig-name descname"><span class="pre">with_extra</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.with_extra" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.build_global_state">
+<span class="sig-name descname"><span class="pre">build_global_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.build_global_state" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.build_local_state">
+<span class="sig-name descname"><span class="pre">build_local_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.build_local_state" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.build_group">
+<span class="sig-name descname"><span class="pre">build_group</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.build_group" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.build_layer">
+<span class="sig-name descname"><span class="pre">build_layer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.build_layer" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.build_region">
+<span class="sig-name descname"><span class="pre">build_region</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.build_region" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.build_version_graph">
+<span class="sig-name descname"><span class="pre">build_version_graph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.build_version_graph" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.build_checkpoint">
+<span class="sig-name descname"><span class="pre">build_checkpoint</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.build_checkpoint" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.build_delta">
+<span class="sig-name descname"><span class="pre">build_delta</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.build_delta" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.build_external_file">
+<span class="sig-name descname"><span class="pre">build_external_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.build_external_file" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateBuilder.build_stack_base">
+<span class="sig-name descname"><span class="pre">build_stack_base</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateBuilder.build_stack_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateSpecificBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">StateSpecificBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StateSpecificBuilder" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateSpecificBuilder.base">
+<span class="sig-name descname"><span class="pre">base</span></span><a class="headerlink" href="#ducpy.builders.state_builders.StateSpecificBuilder.base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StateSpecificBuilder.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><a class="headerlink" href="#ducpy.builders.state_builders.StateSpecificBuilder.extra" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GlobalStateBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">GlobalStateBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GlobalStateBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder" title="ducpy.builders.state_builders.StateSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GlobalStateBuilder.with_name">
+<span class="sig-name descname"><span class="pre">with_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GlobalStateBuilder.with_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GlobalStateBuilder.with_view_background_color">
+<span class="sig-name descname"><span class="pre">with_view_background_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GlobalStateBuilder.with_view_background_color" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GlobalStateBuilder.with_main_scope">
+<span class="sig-name descname"><span class="pre">with_main_scope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GlobalStateBuilder.with_main_scope" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GlobalStateBuilder.with_scope_exponent_threshold">
+<span class="sig-name descname"><span class="pre">with_scope_exponent_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GlobalStateBuilder.with_scope_exponent_threshold" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GlobalStateBuilder.with_pruning_level">
+<span class="sig-name descname"><span class="pre">with_pruning_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../enums/index.html#ducpy.enums.PRUNING_LEVEL" title="ducpy.enums.PRUNING_LEVEL"><span class="pre">ducpy.enums.PRUNING_LEVEL</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GlobalStateBuilder.with_pruning_level" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GlobalStateBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DucGlobalState" title="ducpy.classes.DataStateClass.DucGlobalState"><span class="pre">ducpy.classes.DataStateClass.DucGlobalState</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.GlobalStateBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">LocalStateBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder" title="ducpy.builders.state_builders.StateSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_scope">
+<span class="sig-name descname"><span class="pre">with_scope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_scope" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_scroll_x">
+<span class="sig-name descname"><span class="pre">with_scroll_x</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scroll_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_scroll_x" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_scroll_y">
+<span class="sig-name descname"><span class="pre">with_scroll_y</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scroll_y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_scroll_y" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_zoom">
+<span class="sig-name descname"><span class="pre">with_zoom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zoom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_zoom" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_is_binding_enabled">
+<span class="sig-name descname"><span class="pre">with_is_binding_enabled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_is_binding_enabled" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_pen_mode">
+<span class="sig-name descname"><span class="pre">with_pen_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pen_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_pen_mode" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_view_mode_enabled">
+<span class="sig-name descname"><span class="pre">with_view_mode_enabled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_view_mode_enabled" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_objects_snap_mode_enabled">
+<span class="sig-name descname"><span class="pre">with_objects_snap_mode_enabled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_objects_snap_mode_enabled" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_grid_mode_enabled">
+<span class="sig-name descname"><span class="pre">with_grid_mode_enabled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_grid_mode_enabled" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_outline_mode_enabled">
+<span class="sig-name descname"><span class="pre">with_outline_mode_enabled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_outline_mode_enabled" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_manual_save_mode">
+<span class="sig-name descname"><span class="pre">with_manual_save_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_manual_save_mode" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_decimal_places">
+<span class="sig-name descname"><span class="pre">with_decimal_places</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">places</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_decimal_places" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_current_item_opacity">
+<span class="sig-name descname"><span class="pre">with_current_item_opacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opacity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_current_item_opacity" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_current_item_font_family">
+<span class="sig-name descname"><span class="pre">with_current_item_font_family</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">font_family</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_current_item_font_family" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_current_item_font_size">
+<span class="sig-name descname"><span class="pre">with_current_item_font_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">font_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_current_item_font_size" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_current_item_text_align">
+<span class="sig-name descname"><span class="pre">with_current_item_text_align</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text_align</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../enums/index.html#ducpy.enums.TEXT_ALIGN" title="ducpy.enums.TEXT_ALIGN"><span class="pre">ducpy.enums.TEXT_ALIGN</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_current_item_text_align" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.with_current_item_roundness">
+<span class="sig-name descname"><span class="pre">with_current_item_roundness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roundness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.with_current_item_roundness" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LocalStateBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DucLocalState" title="ducpy.classes.DataStateClass.DucLocalState"><span class="pre">ducpy.classes.DataStateClass.DucLocalState</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.LocalStateBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GroupBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">GroupBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GroupBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder" title="ducpy.builders.state_builders.StateSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GroupBuilder.with_label">
+<span class="sig-name descname"><span class="pre">with_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GroupBuilder.with_label" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GroupBuilder.with_is_collapsed">
+<span class="sig-name descname"><span class="pre">with_is_collapsed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_collapsed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GroupBuilder.with_is_collapsed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GroupBuilder.with_is_plot">
+<span class="sig-name descname"><span class="pre">with_is_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_plot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GroupBuilder.with_is_plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GroupBuilder.with_is_visible">
+<span class="sig-name descname"><span class="pre">with_is_visible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_visible</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GroupBuilder.with_is_visible" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GroupBuilder.with_locked">
+<span class="sig-name descname"><span class="pre">with_locked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">locked</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GroupBuilder.with_locked" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GroupBuilder.with_opacity">
+<span class="sig-name descname"><span class="pre">with_opacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opacity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GroupBuilder.with_opacity" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GroupBuilder.with_id">
+<span class="sig-name descname"><span class="pre">with_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.GroupBuilder.with_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.GroupBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucGroup" title="ducpy.classes.ElementsClass.DucGroup"><span class="pre">ducpy.classes.ElementsClass.DucGroup</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.GroupBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LayerBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">LayerBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LayerBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder" title="ducpy.builders.state_builders.StateSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LayerBuilder.with_label">
+<span class="sig-name descname"><span class="pre">with_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LayerBuilder.with_label" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LayerBuilder.with_readonly">
+<span class="sig-name descname"><span class="pre">with_readonly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">readonly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LayerBuilder.with_readonly" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LayerBuilder.with_is_collapsed">
+<span class="sig-name descname"><span class="pre">with_is_collapsed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_collapsed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LayerBuilder.with_is_collapsed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LayerBuilder.with_is_plot">
+<span class="sig-name descname"><span class="pre">with_is_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_plot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LayerBuilder.with_is_plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LayerBuilder.with_is_visible">
+<span class="sig-name descname"><span class="pre">with_is_visible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_visible</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LayerBuilder.with_is_visible" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LayerBuilder.with_locked">
+<span class="sig-name descname"><span class="pre">with_locked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">locked</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LayerBuilder.with_locked" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LayerBuilder.with_opacity">
+<span class="sig-name descname"><span class="pre">with_opacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opacity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LayerBuilder.with_opacity" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LayerBuilder.with_stroke_color">
+<span class="sig-name descname"><span class="pre">with_stroke_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LayerBuilder.with_stroke_color" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LayerBuilder.with_background_color">
+<span class="sig-name descname"><span class="pre">with_background_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LayerBuilder.with_background_color" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LayerBuilder.with_id">
+<span class="sig-name descname"><span class="pre">with_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.LayerBuilder.with_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.LayerBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucLayer" title="ducpy.classes.ElementsClass.DucLayer"><span class="pre">ducpy.classes.ElementsClass.DucLayer</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.LayerBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.RegionBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">RegionBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.RegionBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder" title="ducpy.builders.state_builders.StateSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.RegionBuilder.with_label">
+<span class="sig-name descname"><span class="pre">with_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.RegionBuilder.with_label" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.RegionBuilder.with_boolean_operation">
+<span class="sig-name descname"><span class="pre">with_boolean_operation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../enums/index.html#ducpy.enums.BOOLEAN_OPERATION" title="ducpy.enums.BOOLEAN_OPERATION"><span class="pre">ducpy.enums.BOOLEAN_OPERATION</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.RegionBuilder.with_boolean_operation" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.RegionBuilder.with_is_collapsed">
+<span class="sig-name descname"><span class="pre">with_is_collapsed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_collapsed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.RegionBuilder.with_is_collapsed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.RegionBuilder.with_is_plot">
+<span class="sig-name descname"><span class="pre">with_is_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_plot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.RegionBuilder.with_is_plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.RegionBuilder.with_is_visible">
+<span class="sig-name descname"><span class="pre">with_is_visible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_visible</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.RegionBuilder.with_is_visible" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.RegionBuilder.with_locked">
+<span class="sig-name descname"><span class="pre">with_locked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">locked</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.RegionBuilder.with_locked" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.RegionBuilder.with_opacity">
+<span class="sig-name descname"><span class="pre">with_opacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opacity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.RegionBuilder.with_opacity" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.RegionBuilder.with_id">
+<span class="sig-name descname"><span class="pre">with_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.RegionBuilder.with_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.RegionBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucRegion" title="ducpy.classes.ElementsClass.DucRegion"><span class="pre">ducpy.classes.ElementsClass.DucRegion</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.RegionBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.VersionGraphBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">VersionGraphBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.VersionGraphBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder" title="ducpy.builders.state_builders.StateSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.VersionGraphBuilder.with_checkpoints">
+<span class="sig-name descname"><span class="pre">with_checkpoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.Checkpoint" title="ducpy.classes.DataStateClass.Checkpoint"><span class="pre">ducpy.classes.DataStateClass.Checkpoint</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.VersionGraphBuilder.with_checkpoints" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.VersionGraphBuilder.with_deltas">
+<span class="sig-name descname"><span class="pre">with_deltas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deltas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.Delta" title="ducpy.classes.DataStateClass.Delta"><span class="pre">ducpy.classes.DataStateClass.Delta</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.VersionGraphBuilder.with_deltas" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.VersionGraphBuilder.with_user_checkpoint_version_id">
+<span class="sig-name descname"><span class="pre">with_user_checkpoint_version_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.VersionGraphBuilder.with_user_checkpoint_version_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.VersionGraphBuilder.with_latest_version_id">
+<span class="sig-name descname"><span class="pre">with_latest_version_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.VersionGraphBuilder.with_latest_version_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.VersionGraphBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.VersionGraph" title="ducpy.classes.DataStateClass.VersionGraph"><span class="pre">ducpy.classes.DataStateClass.VersionGraph</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.VersionGraphBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.CheckpointBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">CheckpointBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.CheckpointBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder" title="ducpy.builders.state_builders.StateSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.CheckpointBuilder.with_id">
+<span class="sig-name descname"><span class="pre">with_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.CheckpointBuilder.with_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.CheckpointBuilder.with_parent_id">
+<span class="sig-name descname"><span class="pre">with_parent_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.CheckpointBuilder.with_parent_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.CheckpointBuilder.with_is_manual_save">
+<span class="sig-name descname"><span class="pre">with_is_manual_save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_manual</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.CheckpointBuilder.with_is_manual_save" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.CheckpointBuilder.with_data">
+<span class="sig-name descname"><span class="pre">with_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.CheckpointBuilder.with_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.CheckpointBuilder.with_description">
+<span class="sig-name descname"><span class="pre">with_description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.CheckpointBuilder.with_description" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.CheckpointBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.Checkpoint" title="ducpy.classes.DataStateClass.Checkpoint"><span class="pre">ducpy.classes.DataStateClass.Checkpoint</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.CheckpointBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.DeltaBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">DeltaBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.DeltaBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder" title="ducpy.builders.state_builders.StateSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.DeltaBuilder.with_id">
+<span class="sig-name descname"><span class="pre">with_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.DeltaBuilder.with_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.DeltaBuilder.with_payload">
+<span class="sig-name descname"><span class="pre">with_payload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.DeltaBuilder.with_payload" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.DeltaBuilder.with_parent_id">
+<span class="sig-name descname"><span class="pre">with_parent_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.DeltaBuilder.with_parent_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.DeltaBuilder.with_is_manual_save">
+<span class="sig-name descname"><span class="pre">with_is_manual_save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_manual</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.DeltaBuilder.with_is_manual_save" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.DeltaBuilder.with_description">
+<span class="sig-name descname"><span class="pre">with_description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.DeltaBuilder.with_description" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.DeltaBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.Delta" title="ducpy.classes.DataStateClass.Delta"><span class="pre">ducpy.classes.DataStateClass.Delta</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.DeltaBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.ExternalFileBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">ExternalFileBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.ExternalFileBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder" title="ducpy.builders.state_builders.StateSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.ExternalFileBuilder.with_key">
+<span class="sig-name descname"><span class="pre">with_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.ExternalFileBuilder.with_key" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.ExternalFileBuilder.with_mime_type">
+<span class="sig-name descname"><span class="pre">with_mime_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mime_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.ExternalFileBuilder.with_mime_type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.ExternalFileBuilder.with_data">
+<span class="sig-name descname"><span class="pre">with_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.ExternalFileBuilder.with_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.ExternalFileBuilder.with_last_retrieved">
+<span class="sig-name descname"><span class="pre">with_last_retrieved</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">last_retrieved</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.ExternalFileBuilder.with_last_retrieved" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.ExternalFileBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DucExternalFileEntry" title="ducpy.classes.DataStateClass.DucExternalFileEntry"><span class="pre">ducpy.classes.DataStateClass.DucExternalFileEntry</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.ExternalFileBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StackBaseBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">StackBaseBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StackBaseBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder" title="ducpy.builders.state_builders.StateSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StackBaseBuilder.with_label">
+<span class="sig-name descname"><span class="pre">with_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StackBaseBuilder.with_label" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StackBaseBuilder.with_is_collapsed">
+<span class="sig-name descname"><span class="pre">with_is_collapsed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_collapsed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StackBaseBuilder.with_is_collapsed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StackBaseBuilder.with_is_plot">
+<span class="sig-name descname"><span class="pre">with_is_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_plot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StackBaseBuilder.with_is_plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StackBaseBuilder.with_is_visible">
+<span class="sig-name descname"><span class="pre">with_is_visible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_visible</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StackBaseBuilder.with_is_visible" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StackBaseBuilder.with_locked">
+<span class="sig-name descname"><span class="pre">with_locked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">locked</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StackBaseBuilder.with_locked" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StackBaseBuilder.with_styles">
+<span class="sig-name descname"><span class="pre">with_styles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">styles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucStackLikeStyles" title="ducpy.classes.ElementsClass.DucStackLikeStyles"><span class="pre">ducpy.classes.ElementsClass.DucStackLikeStyles</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.state_builders.StackBaseBuilder.with_styles" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.StackBaseBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucStackBase" title="ducpy.classes.ElementsClass.DucStackBase"><span class="pre">ducpy.classes.ElementsClass.DucStackBase</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.StackBaseBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.create_global_state_from_base">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">create_global_state_from_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DucGlobalState" title="ducpy.classes.DataStateClass.DucGlobalState"><span class="pre">ducpy.classes.DataStateClass.DucGlobalState</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.create_global_state_from_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.create_local_state_from_base">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">create_local_state_from_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DucLocalState" title="ducpy.classes.DataStateClass.DucLocalState"><span class="pre">ducpy.classes.DataStateClass.DucLocalState</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.create_local_state_from_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.create_group_from_base">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">create_group_from_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucGroup" title="ducpy.classes.ElementsClass.DucGroup"><span class="pre">ducpy.classes.ElementsClass.DucGroup</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.create_group_from_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.create_layer_from_base">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">create_layer_from_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucLayer" title="ducpy.classes.ElementsClass.DucLayer"><span class="pre">ducpy.classes.ElementsClass.DucLayer</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.create_layer_from_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.create_region_from_base">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">create_region_from_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucRegion" title="ducpy.classes.ElementsClass.DucRegion"><span class="pre">ducpy.classes.ElementsClass.DucRegion</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.create_region_from_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.create_version_graph_from_base">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">create_version_graph_from_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.VersionGraph" title="ducpy.classes.DataStateClass.VersionGraph"><span class="pre">ducpy.classes.DataStateClass.VersionGraph</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.create_version_graph_from_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.create_checkpoint_from_base">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">create_checkpoint_from_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.Checkpoint" title="ducpy.classes.DataStateClass.Checkpoint"><span class="pre">ducpy.classes.DataStateClass.Checkpoint</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.create_checkpoint_from_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.create_delta_from_base">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">create_delta_from_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.Delta" title="ducpy.classes.DataStateClass.Delta"><span class="pre">ducpy.classes.DataStateClass.Delta</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.create_delta_from_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.create_external_file_from_base">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">create_external_file_from_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DucExternalFileEntry" title="ducpy.classes.DataStateClass.DucExternalFileEntry"><span class="pre">ducpy.classes.DataStateClass.DucExternalFileEntry</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.create_external_file_from_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.create_stack_base_from_base">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">create_stack_base_from_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams" title="ducpy.builders.state_builders.BaseStateParams"><span class="pre">BaseStateParams</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucStackBase" title="ducpy.classes.ElementsClass.DucStackBase"><span class="pre">ducpy.classes.ElementsClass.DucStackBase</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.create_stack_base_from_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.create_block">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">create_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elements</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucBlock" title="ducpy.classes.ElementsClass.DucBlock"><span class="pre">ducpy.classes.ElementsClass.DucBlock</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.create_block" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.state_builders.create_string_value_entry">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.state_builders.</span></span><span class="sig-name descname"><span class="pre">create_string_value_entry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.StringValueEntry" title="ducpy.classes.ElementsClass.StringValueEntry"><span class="pre">ducpy.classes.ElementsClass.StringValueEntry</span></a></span></span><a class="headerlink" href="#ducpy.builders.state_builders.create_string_value_entry" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../style_builders/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">ducpy.builders.style_builders</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../sql_builder/index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">ducpy.builders.sql_builder</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Ducflair
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">ducpy.builders.state_builders</a><ul>
+<li><a class="reference internal" href="#classes">Classes</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#module-contents">Module Contents</a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams"><code class="docutils literal notranslate"><span class="pre">BaseStateParams</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams.id"><code class="docutils literal notranslate"><span class="pre">BaseStateParams.id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams.name"><code class="docutils literal notranslate"><span class="pre">BaseStateParams.name</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams.description"><code class="docutils literal notranslate"><span class="pre">BaseStateParams.description</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams.version"><code class="docutils literal notranslate"><span class="pre">BaseStateParams.version</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.BaseStateParams.readonly"><code class="docutils literal notranslate"><span class="pre">BaseStateParams.readonly</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder"><code class="docutils literal notranslate"><span class="pre">StateBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.base"><code class="docutils literal notranslate"><span class="pre">StateBuilder.base</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.extra"><code class="docutils literal notranslate"><span class="pre">StateBuilder.extra</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.with_id"><code class="docutils literal notranslate"><span class="pre">StateBuilder.with_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.with_name"><code class="docutils literal notranslate"><span class="pre">StateBuilder.with_name()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.with_description"><code class="docutils literal notranslate"><span class="pre">StateBuilder.with_description()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.with_version"><code class="docutils literal notranslate"><span class="pre">StateBuilder.with_version()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.with_readonly"><code class="docutils literal notranslate"><span class="pre">StateBuilder.with_readonly()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.with_extra"><code class="docutils literal notranslate"><span class="pre">StateBuilder.with_extra()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.build_global_state"><code class="docutils literal notranslate"><span class="pre">StateBuilder.build_global_state()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.build_local_state"><code class="docutils literal notranslate"><span class="pre">StateBuilder.build_local_state()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.build_group"><code class="docutils literal notranslate"><span class="pre">StateBuilder.build_group()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.build_layer"><code class="docutils literal notranslate"><span class="pre">StateBuilder.build_layer()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.build_region"><code class="docutils literal notranslate"><span class="pre">StateBuilder.build_region()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.build_version_graph"><code class="docutils literal notranslate"><span class="pre">StateBuilder.build_version_graph()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.build_checkpoint"><code class="docutils literal notranslate"><span class="pre">StateBuilder.build_checkpoint()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.build_delta"><code class="docutils literal notranslate"><span class="pre">StateBuilder.build_delta()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.build_external_file"><code class="docutils literal notranslate"><span class="pre">StateBuilder.build_external_file()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateBuilder.build_stack_base"><code class="docutils literal notranslate"><span class="pre">StateBuilder.build_stack_base()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder"><code class="docutils literal notranslate"><span class="pre">StateSpecificBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder.base"><code class="docutils literal notranslate"><span class="pre">StateSpecificBuilder.base</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StateSpecificBuilder.extra"><code class="docutils literal notranslate"><span class="pre">StateSpecificBuilder.extra</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GlobalStateBuilder"><code class="docutils literal notranslate"><span class="pre">GlobalStateBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GlobalStateBuilder.with_name"><code class="docutils literal notranslate"><span class="pre">GlobalStateBuilder.with_name()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GlobalStateBuilder.with_view_background_color"><code class="docutils literal notranslate"><span class="pre">GlobalStateBuilder.with_view_background_color()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GlobalStateBuilder.with_main_scope"><code class="docutils literal notranslate"><span class="pre">GlobalStateBuilder.with_main_scope()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GlobalStateBuilder.with_scope_exponent_threshold"><code class="docutils literal notranslate"><span class="pre">GlobalStateBuilder.with_scope_exponent_threshold()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GlobalStateBuilder.with_pruning_level"><code class="docutils literal notranslate"><span class="pre">GlobalStateBuilder.with_pruning_level()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GlobalStateBuilder.build"><code class="docutils literal notranslate"><span class="pre">GlobalStateBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_scope"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_scope()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_scroll_x"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_scroll_x()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_scroll_y"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_scroll_y()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_zoom"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_zoom()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_is_binding_enabled"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_is_binding_enabled()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_pen_mode"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_pen_mode()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_view_mode_enabled"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_view_mode_enabled()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_objects_snap_mode_enabled"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_objects_snap_mode_enabled()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_grid_mode_enabled"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_grid_mode_enabled()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_outline_mode_enabled"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_outline_mode_enabled()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_manual_save_mode"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_manual_save_mode()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_decimal_places"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_decimal_places()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_current_item_opacity"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_current_item_opacity()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_current_item_font_family"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_current_item_font_family()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_current_item_font_size"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_current_item_font_size()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_current_item_text_align"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_current_item_text_align()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.with_current_item_roundness"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.with_current_item_roundness()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LocalStateBuilder.build"><code class="docutils literal notranslate"><span class="pre">LocalStateBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GroupBuilder"><code class="docutils literal notranslate"><span class="pre">GroupBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GroupBuilder.with_label"><code class="docutils literal notranslate"><span class="pre">GroupBuilder.with_label()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GroupBuilder.with_is_collapsed"><code class="docutils literal notranslate"><span class="pre">GroupBuilder.with_is_collapsed()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GroupBuilder.with_is_plot"><code class="docutils literal notranslate"><span class="pre">GroupBuilder.with_is_plot()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GroupBuilder.with_is_visible"><code class="docutils literal notranslate"><span class="pre">GroupBuilder.with_is_visible()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GroupBuilder.with_locked"><code class="docutils literal notranslate"><span class="pre">GroupBuilder.with_locked()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GroupBuilder.with_opacity"><code class="docutils literal notranslate"><span class="pre">GroupBuilder.with_opacity()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GroupBuilder.with_id"><code class="docutils literal notranslate"><span class="pre">GroupBuilder.with_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.GroupBuilder.build"><code class="docutils literal notranslate"><span class="pre">GroupBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder"><code class="docutils literal notranslate"><span class="pre">LayerBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder.with_label"><code class="docutils literal notranslate"><span class="pre">LayerBuilder.with_label()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder.with_readonly"><code class="docutils literal notranslate"><span class="pre">LayerBuilder.with_readonly()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder.with_is_collapsed"><code class="docutils literal notranslate"><span class="pre">LayerBuilder.with_is_collapsed()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder.with_is_plot"><code class="docutils literal notranslate"><span class="pre">LayerBuilder.with_is_plot()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder.with_is_visible"><code class="docutils literal notranslate"><span class="pre">LayerBuilder.with_is_visible()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder.with_locked"><code class="docutils literal notranslate"><span class="pre">LayerBuilder.with_locked()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder.with_opacity"><code class="docutils literal notranslate"><span class="pre">LayerBuilder.with_opacity()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder.with_stroke_color"><code class="docutils literal notranslate"><span class="pre">LayerBuilder.with_stroke_color()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder.with_background_color"><code class="docutils literal notranslate"><span class="pre">LayerBuilder.with_background_color()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder.with_id"><code class="docutils literal notranslate"><span class="pre">LayerBuilder.with_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.LayerBuilder.build"><code class="docutils literal notranslate"><span class="pre">LayerBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.RegionBuilder"><code class="docutils literal notranslate"><span class="pre">RegionBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.RegionBuilder.with_label"><code class="docutils literal notranslate"><span class="pre">RegionBuilder.with_label()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.RegionBuilder.with_boolean_operation"><code class="docutils literal notranslate"><span class="pre">RegionBuilder.with_boolean_operation()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.RegionBuilder.with_is_collapsed"><code class="docutils literal notranslate"><span class="pre">RegionBuilder.with_is_collapsed()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.RegionBuilder.with_is_plot"><code class="docutils literal notranslate"><span class="pre">RegionBuilder.with_is_plot()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.RegionBuilder.with_is_visible"><code class="docutils literal notranslate"><span class="pre">RegionBuilder.with_is_visible()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.RegionBuilder.with_locked"><code class="docutils literal notranslate"><span class="pre">RegionBuilder.with_locked()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.RegionBuilder.with_opacity"><code class="docutils literal notranslate"><span class="pre">RegionBuilder.with_opacity()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.RegionBuilder.with_id"><code class="docutils literal notranslate"><span class="pre">RegionBuilder.with_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.RegionBuilder.build"><code class="docutils literal notranslate"><span class="pre">RegionBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.VersionGraphBuilder"><code class="docutils literal notranslate"><span class="pre">VersionGraphBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.VersionGraphBuilder.with_checkpoints"><code class="docutils literal notranslate"><span class="pre">VersionGraphBuilder.with_checkpoints()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.VersionGraphBuilder.with_deltas"><code class="docutils literal notranslate"><span class="pre">VersionGraphBuilder.with_deltas()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.VersionGraphBuilder.with_user_checkpoint_version_id"><code class="docutils literal notranslate"><span class="pre">VersionGraphBuilder.with_user_checkpoint_version_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.VersionGraphBuilder.with_latest_version_id"><code class="docutils literal notranslate"><span class="pre">VersionGraphBuilder.with_latest_version_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.VersionGraphBuilder.build"><code class="docutils literal notranslate"><span class="pre">VersionGraphBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.CheckpointBuilder"><code class="docutils literal notranslate"><span class="pre">CheckpointBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.CheckpointBuilder.with_id"><code class="docutils literal notranslate"><span class="pre">CheckpointBuilder.with_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.CheckpointBuilder.with_parent_id"><code class="docutils literal notranslate"><span class="pre">CheckpointBuilder.with_parent_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.CheckpointBuilder.with_is_manual_save"><code class="docutils literal notranslate"><span class="pre">CheckpointBuilder.with_is_manual_save()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.CheckpointBuilder.with_data"><code class="docutils literal notranslate"><span class="pre">CheckpointBuilder.with_data()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.CheckpointBuilder.with_description"><code class="docutils literal notranslate"><span class="pre">CheckpointBuilder.with_description()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.CheckpointBuilder.build"><code class="docutils literal notranslate"><span class="pre">CheckpointBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.DeltaBuilder"><code class="docutils literal notranslate"><span class="pre">DeltaBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.DeltaBuilder.with_id"><code class="docutils literal notranslate"><span class="pre">DeltaBuilder.with_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.DeltaBuilder.with_payload"><code class="docutils literal notranslate"><span class="pre">DeltaBuilder.with_payload()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.DeltaBuilder.with_parent_id"><code class="docutils literal notranslate"><span class="pre">DeltaBuilder.with_parent_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.DeltaBuilder.with_is_manual_save"><code class="docutils literal notranslate"><span class="pre">DeltaBuilder.with_is_manual_save()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.DeltaBuilder.with_description"><code class="docutils literal notranslate"><span class="pre">DeltaBuilder.with_description()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.DeltaBuilder.build"><code class="docutils literal notranslate"><span class="pre">DeltaBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.ExternalFileBuilder"><code class="docutils literal notranslate"><span class="pre">ExternalFileBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.ExternalFileBuilder.with_key"><code class="docutils literal notranslate"><span class="pre">ExternalFileBuilder.with_key()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.ExternalFileBuilder.with_mime_type"><code class="docutils literal notranslate"><span class="pre">ExternalFileBuilder.with_mime_type()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.ExternalFileBuilder.with_data"><code class="docutils literal notranslate"><span class="pre">ExternalFileBuilder.with_data()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.ExternalFileBuilder.with_last_retrieved"><code class="docutils literal notranslate"><span class="pre">ExternalFileBuilder.with_last_retrieved()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.ExternalFileBuilder.build"><code class="docutils literal notranslate"><span class="pre">ExternalFileBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StackBaseBuilder"><code class="docutils literal notranslate"><span class="pre">StackBaseBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StackBaseBuilder.with_label"><code class="docutils literal notranslate"><span class="pre">StackBaseBuilder.with_label()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StackBaseBuilder.with_is_collapsed"><code class="docutils literal notranslate"><span class="pre">StackBaseBuilder.with_is_collapsed()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StackBaseBuilder.with_is_plot"><code class="docutils literal notranslate"><span class="pre">StackBaseBuilder.with_is_plot()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StackBaseBuilder.with_is_visible"><code class="docutils literal notranslate"><span class="pre">StackBaseBuilder.with_is_visible()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StackBaseBuilder.with_locked"><code class="docutils literal notranslate"><span class="pre">StackBaseBuilder.with_locked()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StackBaseBuilder.with_styles"><code class="docutils literal notranslate"><span class="pre">StackBaseBuilder.with_styles()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.StackBaseBuilder.build"><code class="docutils literal notranslate"><span class="pre">StackBaseBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.create_global_state_from_base"><code class="docutils literal notranslate"><span class="pre">create_global_state_from_base()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.create_local_state_from_base"><code class="docutils literal notranslate"><span class="pre">create_local_state_from_base()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.create_group_from_base"><code class="docutils literal notranslate"><span class="pre">create_group_from_base()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.create_layer_from_base"><code class="docutils literal notranslate"><span class="pre">create_layer_from_base()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.create_region_from_base"><code class="docutils literal notranslate"><span class="pre">create_region_from_base()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.create_version_graph_from_base"><code class="docutils literal notranslate"><span class="pre">create_version_graph_from_base()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.create_checkpoint_from_base"><code class="docutils literal notranslate"><span class="pre">create_checkpoint_from_base()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.create_delta_from_base"><code class="docutils literal notranslate"><span class="pre">create_delta_from_base()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.create_external_file_from_base"><code class="docutils literal notranslate"><span class="pre">create_external_file_from_base()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.create_stack_base_from_base"><code class="docutils literal notranslate"><span class="pre">create_stack_base_from_base()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.create_block"><code class="docutils literal notranslate"><span class="pre">create_block()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.state_builders.create_string_value_entry"><code class="docutils literal notranslate"><span class="pre">create_string_value_entry()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

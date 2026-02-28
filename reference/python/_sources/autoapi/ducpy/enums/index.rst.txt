@@ -1,0 +1,558 @@
+ducpy.enums
+===========
+
+.. py:module:: ducpy.enums
+
+.. autoapi-nested-parse::
+
+   Native enum definitions for DUC types.
+   Source of truth: types.rs / duc.sql
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.enums.VERTICAL_ALIGN
+   ducpy.enums.TEXT_ALIGN
+   ducpy.enums.LINE_SPACING_TYPE
+   ducpy.enums.STROKE_PLACEMENT
+   ducpy.enums.STROKE_PREFERENCE
+   ducpy.enums.STROKE_SIDE_PREFERENCE
+   ducpy.enums.STROKE_CAP
+   ducpy.enums.STROKE_JOIN
+   ducpy.enums.LINE_HEAD
+   ducpy.enums.BEZIER_MIRRORING
+   ducpy.enums.BLENDING
+   ducpy.enums.ELEMENT_CONTENT_PREFERENCE
+   ducpy.enums.HATCH_STYLE
+   ducpy.enums.IMAGE_STATUS
+   ducpy.enums.PRUNING_LEVEL
+   ducpy.enums.BOOLEAN_OPERATION
+
+
+Module Contents
+---------------
+
+.. py:class:: VERTICAL_ALIGN
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: TOP
+      :value: 10
+
+
+
+   .. py:attribute:: MIDDLE
+      :value: 11
+
+
+
+   .. py:attribute:: BOTTOM
+      :value: 12
+
+
+
+.. py:class:: TEXT_ALIGN
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: LEFT
+      :value: 10
+
+
+
+   .. py:attribute:: CENTER
+      :value: 11
+
+
+
+   .. py:attribute:: RIGHT
+      :value: 12
+
+
+
+.. py:class:: LINE_SPACING_TYPE
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: AT_LEAST
+      :value: 10
+
+
+
+   .. py:attribute:: EXACTLY
+      :value: 11
+
+
+
+   .. py:attribute:: MULTIPLE
+      :value: 12
+
+
+
+.. py:class:: STROKE_PLACEMENT
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: INSIDE
+      :value: 10
+
+
+
+   .. py:attribute:: CENTER
+      :value: 11
+
+
+
+   .. py:attribute:: OUTSIDE
+      :value: 12
+
+
+
+.. py:class:: STROKE_PREFERENCE
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: SOLID
+      :value: 10
+
+
+
+   .. py:attribute:: DASHED
+      :value: 11
+
+
+
+   .. py:attribute:: DOTTED
+      :value: 12
+
+
+
+   .. py:attribute:: CUSTOM
+      :value: 13
+
+
+
+.. py:class:: STROKE_SIDE_PREFERENCE
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: TOP
+      :value: 10
+
+
+
+   .. py:attribute:: BOTTOM
+      :value: 11
+
+
+
+   .. py:attribute:: LEFT
+      :value: 12
+
+
+
+   .. py:attribute:: RIGHT
+      :value: 13
+
+
+
+   .. py:attribute:: CUSTOM
+      :value: 14
+
+
+
+   .. py:attribute:: ALL
+      :value: 15
+
+
+
+.. py:class:: STROKE_CAP
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: BUTT
+      :value: 10
+
+
+
+   .. py:attribute:: ROUND
+      :value: 11
+
+
+
+   .. py:attribute:: SQUARE
+      :value: 12
+
+
+
+.. py:class:: STROKE_JOIN
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: MITER
+      :value: 10
+
+
+
+   .. py:attribute:: ROUND
+      :value: 11
+
+
+
+   .. py:attribute:: BEVEL
+      :value: 12
+
+
+
+.. py:class:: LINE_HEAD
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: ARROW
+      :value: 10
+
+
+
+   .. py:attribute:: BAR
+      :value: 11
+
+
+
+   .. py:attribute:: CIRCLE
+      :value: 12
+
+
+
+   .. py:attribute:: CIRCLE_OUTLINED
+      :value: 13
+
+
+
+   .. py:attribute:: TRIANGLE
+      :value: 14
+
+
+
+   .. py:attribute:: TRIANGLE_OUTLINED
+      :value: 15
+
+
+
+   .. py:attribute:: DIAMOND
+      :value: 16
+
+
+
+   .. py:attribute:: DIAMOND_OUTLINED
+      :value: 17
+
+
+
+   .. py:attribute:: CROSS
+      :value: 18
+
+
+
+   .. py:attribute:: OPEN_ARROW
+      :value: 19
+
+
+
+   .. py:attribute:: REVERSED_ARROW
+      :value: 20
+
+
+
+   .. py:attribute:: REVERSED_TRIANGLE
+      :value: 21
+
+
+
+   .. py:attribute:: REVERSED_TRIANGLE_OUTLINED
+      :value: 22
+
+
+
+   .. py:attribute:: CONE
+      :value: 23
+
+
+
+   .. py:attribute:: HALF_CONE
+      :value: 24
+
+
+
+.. py:class:: BEZIER_MIRRORING
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: NONE
+      :value: 10
+
+
+
+   .. py:attribute:: ANGLE
+      :value: 11
+
+
+
+   .. py:attribute:: ANGLE_LENGTH
+      :value: 12
+
+
+
+.. py:class:: BLENDING
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: MULTIPLY
+      :value: 11
+
+
+
+   .. py:attribute:: SCREEN
+      :value: 12
+
+
+
+   .. py:attribute:: OVERLAY
+      :value: 13
+
+
+
+   .. py:attribute:: DARKEN
+      :value: 14
+
+
+
+   .. py:attribute:: LIGHTEN
+      :value: 15
+
+
+
+   .. py:attribute:: DIFFERENCE
+      :value: 16
+
+
+
+   .. py:attribute:: EXCLUSION
+      :value: 17
+
+
+
+.. py:class:: ELEMENT_CONTENT_PREFERENCE
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: SOLID
+      :value: 12
+
+
+
+   .. py:attribute:: FILL
+      :value: 14
+
+
+
+   .. py:attribute:: FIT
+      :value: 15
+
+
+
+   .. py:attribute:: TILE
+      :value: 16
+
+
+
+   .. py:attribute:: STRETCH
+      :value: 17
+
+
+
+   .. py:attribute:: HATCH
+      :value: 18
+
+
+
+.. py:class:: HATCH_STYLE
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: NORMAL
+      :value: 10
+
+
+
+   .. py:attribute:: OUTER
+      :value: 11
+
+
+
+   .. py:attribute:: IGNORE
+      :value: 12
+
+
+
+.. py:class:: IMAGE_STATUS
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: PENDING
+      :value: 10
+
+
+
+   .. py:attribute:: SAVED
+      :value: 11
+
+
+
+   .. py:attribute:: ERROR
+      :value: 12
+
+
+
+.. py:class:: PRUNING_LEVEL
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: CONSERVATIVE
+      :value: 10
+
+
+
+   .. py:attribute:: BALANCED
+      :value: 20
+
+
+
+   .. py:attribute:: AGGRESSIVE
+      :value: 30
+
+
+
+.. py:class:: BOOLEAN_OPERATION
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum where members are also (and must be) ints
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: UNION
+      :value: 10
+
+
+
+   .. py:attribute:: SUBTRACT
+      :value: 11
+
+
+
+   .. py:attribute:: INTERSECT
+      :value: 12
+
+
+
+   .. py:attribute:: EXCLUDE
+      :value: 13
+
+
+

@@ -1,0 +1,468 @@
+ducpy.builders.state_builders
+=============================
+
+.. py:module:: ducpy.builders.state_builders
+
+.. autoapi-nested-parse::
+
+   Helper functions for creating DUC state-related objects with a user-friendly API.
+   Follows the same hierarchical builder pattern as element_builders.py.
+   Only types from types.rs / duc.sql are supported.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.builders.state_builders.BaseStateParams
+   ducpy.builders.state_builders.StateBuilder
+   ducpy.builders.state_builders.StateSpecificBuilder
+   ducpy.builders.state_builders.GlobalStateBuilder
+   ducpy.builders.state_builders.LocalStateBuilder
+   ducpy.builders.state_builders.GroupBuilder
+   ducpy.builders.state_builders.LayerBuilder
+   ducpy.builders.state_builders.RegionBuilder
+   ducpy.builders.state_builders.VersionGraphBuilder
+   ducpy.builders.state_builders.CheckpointBuilder
+   ducpy.builders.state_builders.DeltaBuilder
+   ducpy.builders.state_builders.ExternalFileBuilder
+   ducpy.builders.state_builders.StackBaseBuilder
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.builders.state_builders.create_global_state_from_base
+   ducpy.builders.state_builders.create_local_state_from_base
+   ducpy.builders.state_builders.create_group_from_base
+   ducpy.builders.state_builders.create_layer_from_base
+   ducpy.builders.state_builders.create_region_from_base
+   ducpy.builders.state_builders.create_version_graph_from_base
+   ducpy.builders.state_builders.create_checkpoint_from_base
+   ducpy.builders.state_builders.create_delta_from_base
+   ducpy.builders.state_builders.create_external_file_from_base
+   ducpy.builders.state_builders.create_stack_base_from_base
+   ducpy.builders.state_builders.create_block
+   ducpy.builders.state_builders.create_string_value_entry
+
+
+Module Contents
+---------------
+
+.. py:class:: BaseStateParams
+
+   .. py:attribute:: id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: name
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: description
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: version
+      :type:  str
+      :value: '1.0'
+
+
+
+   .. py:attribute:: readonly
+      :type:  bool
+      :value: False
+
+
+
+.. py:class:: StateBuilder
+
+   .. py:attribute:: base
+
+
+   .. py:attribute:: extra
+
+
+   .. py:method:: with_id(id: str)
+
+
+   .. py:method:: with_name(name: str)
+
+
+   .. py:method:: with_description(description: str)
+
+
+   .. py:method:: with_version(version: str)
+
+
+   .. py:method:: with_readonly(readonly: bool)
+
+
+   .. py:method:: with_extra(**kwargs)
+
+
+   .. py:method:: build_global_state()
+
+
+   .. py:method:: build_local_state()
+
+
+   .. py:method:: build_group()
+
+
+   .. py:method:: build_layer()
+
+
+   .. py:method:: build_region()
+
+
+   .. py:method:: build_version_graph()
+
+
+   .. py:method:: build_checkpoint()
+
+
+   .. py:method:: build_delta()
+
+
+   .. py:method:: build_external_file()
+
+
+   .. py:method:: build_stack_base()
+
+
+.. py:class:: StateSpecificBuilder(base: BaseStateParams, extra: dict)
+
+   .. py:attribute:: base
+
+
+   .. py:attribute:: extra
+
+
+.. py:class:: GlobalStateBuilder(base: BaseStateParams, extra: dict)
+
+   Bases: :py:obj:`StateSpecificBuilder`
+
+
+   .. py:method:: with_name(name: str)
+
+
+   .. py:method:: with_view_background_color(color: str)
+
+
+   .. py:method:: with_main_scope(scope: str)
+
+
+   .. py:method:: with_scope_exponent_threshold(threshold: int)
+
+
+   .. py:method:: with_pruning_level(level: ducpy.enums.PRUNING_LEVEL)
+
+
+   .. py:method:: build() -> ducpy.classes.DataStateClass.DucGlobalState
+
+
+.. py:class:: LocalStateBuilder(base: BaseStateParams, extra: dict)
+
+   Bases: :py:obj:`StateSpecificBuilder`
+
+
+   .. py:method:: with_scope(scope: str)
+
+
+   .. py:method:: with_scroll_x(scroll_x: float)
+
+
+   .. py:method:: with_scroll_y(scroll_y: float)
+
+
+   .. py:method:: with_zoom(zoom: float)
+
+
+   .. py:method:: with_is_binding_enabled(enabled: bool)
+
+
+   .. py:method:: with_pen_mode(pen_mode: bool)
+
+
+   .. py:method:: with_view_mode_enabled(enabled: bool)
+
+
+   .. py:method:: with_objects_snap_mode_enabled(enabled: bool)
+
+
+   .. py:method:: with_grid_mode_enabled(enabled: bool)
+
+
+   .. py:method:: with_outline_mode_enabled(enabled: bool)
+
+
+   .. py:method:: with_manual_save_mode(enabled: bool)
+
+
+   .. py:method:: with_decimal_places(places: int)
+
+
+   .. py:method:: with_current_item_opacity(opacity: float)
+
+
+   .. py:method:: with_current_item_font_family(font_family: str)
+
+
+   .. py:method:: with_current_item_font_size(font_size: float)
+
+
+   .. py:method:: with_current_item_text_align(text_align: ducpy.enums.TEXT_ALIGN)
+
+
+   .. py:method:: with_current_item_roundness(roundness: float)
+
+
+   .. py:method:: build() -> ducpy.classes.DataStateClass.DucLocalState
+
+
+.. py:class:: GroupBuilder(base: BaseStateParams, extra: dict)
+
+   Bases: :py:obj:`StateSpecificBuilder`
+
+
+   .. py:method:: with_label(label: str)
+
+
+   .. py:method:: with_is_collapsed(is_collapsed: bool)
+
+
+   .. py:method:: with_is_plot(is_plot: bool)
+
+
+   .. py:method:: with_is_visible(is_visible: bool)
+
+
+   .. py:method:: with_locked(locked: bool)
+
+
+   .. py:method:: with_opacity(opacity: float)
+
+
+   .. py:method:: with_id(id: str)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.DucGroup
+
+
+.. py:class:: LayerBuilder(base: BaseStateParams, extra: dict)
+
+   Bases: :py:obj:`StateSpecificBuilder`
+
+
+   .. py:method:: with_label(label: str)
+
+
+   .. py:method:: with_readonly(readonly: bool)
+
+
+   .. py:method:: with_is_collapsed(is_collapsed: bool)
+
+
+   .. py:method:: with_is_plot(is_plot: bool)
+
+
+   .. py:method:: with_is_visible(is_visible: bool)
+
+
+   .. py:method:: with_locked(locked: bool)
+
+
+   .. py:method:: with_opacity(opacity: float)
+
+
+   .. py:method:: with_stroke_color(color: str)
+
+
+   .. py:method:: with_background_color(color: str)
+
+
+   .. py:method:: with_id(id: str)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.DucLayer
+
+
+.. py:class:: RegionBuilder(base: BaseStateParams, extra: dict)
+
+   Bases: :py:obj:`StateSpecificBuilder`
+
+
+   .. py:method:: with_label(label: str)
+
+
+   .. py:method:: with_boolean_operation(operation: ducpy.enums.BOOLEAN_OPERATION)
+
+
+   .. py:method:: with_is_collapsed(is_collapsed: bool)
+
+
+   .. py:method:: with_is_plot(is_plot: bool)
+
+
+   .. py:method:: with_is_visible(is_visible: bool)
+
+
+   .. py:method:: with_locked(locked: bool)
+
+
+   .. py:method:: with_opacity(opacity: float)
+
+
+   .. py:method:: with_id(id: str)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.DucRegion
+
+
+.. py:class:: VersionGraphBuilder(base: BaseStateParams, extra: dict)
+
+   Bases: :py:obj:`StateSpecificBuilder`
+
+
+   .. py:method:: with_checkpoints(checkpoints: List[ducpy.classes.DataStateClass.Checkpoint])
+
+
+   .. py:method:: with_deltas(deltas: List[ducpy.classes.DataStateClass.Delta])
+
+
+   .. py:method:: with_user_checkpoint_version_id(version_id: str)
+
+
+   .. py:method:: with_latest_version_id(version_id: str)
+
+
+   .. py:method:: build() -> ducpy.classes.DataStateClass.VersionGraph
+
+
+.. py:class:: CheckpointBuilder(base: BaseStateParams, extra: dict)
+
+   Bases: :py:obj:`StateSpecificBuilder`
+
+
+   .. py:method:: with_id(id: str)
+
+
+   .. py:method:: with_parent_id(parent_id: str)
+
+
+   .. py:method:: with_is_manual_save(is_manual: bool)
+
+
+   .. py:method:: with_data(data: bytes)
+
+
+   .. py:method:: with_description(description: str)
+
+
+   .. py:method:: build() -> ducpy.classes.DataStateClass.Checkpoint
+
+
+.. py:class:: DeltaBuilder(base: BaseStateParams, extra: dict)
+
+   Bases: :py:obj:`StateSpecificBuilder`
+
+
+   .. py:method:: with_id(id: str)
+
+
+   .. py:method:: with_payload(payload: bytes)
+
+
+   .. py:method:: with_parent_id(parent_id: str)
+
+
+   .. py:method:: with_is_manual_save(is_manual: bool)
+
+
+   .. py:method:: with_description(description: str)
+
+
+   .. py:method:: build() -> ducpy.classes.DataStateClass.Delta
+
+
+.. py:class:: ExternalFileBuilder(base: BaseStateParams, extra: dict)
+
+   Bases: :py:obj:`StateSpecificBuilder`
+
+
+   .. py:method:: with_key(key: str)
+
+
+   .. py:method:: with_mime_type(mime_type: str)
+
+
+   .. py:method:: with_data(data: bytes)
+
+
+   .. py:method:: with_last_retrieved(last_retrieved: int)
+
+
+   .. py:method:: build() -> ducpy.classes.DataStateClass.DucExternalFileEntry
+
+
+.. py:class:: StackBaseBuilder(base: BaseStateParams, extra: dict)
+
+   Bases: :py:obj:`StateSpecificBuilder`
+
+
+   .. py:method:: with_label(label: str)
+
+
+   .. py:method:: with_is_collapsed(is_collapsed: bool)
+
+
+   .. py:method:: with_is_plot(is_plot: bool)
+
+
+   .. py:method:: with_is_visible(is_visible: bool)
+
+
+   .. py:method:: with_locked(locked: bool)
+
+
+   .. py:method:: with_styles(styles: ducpy.classes.ElementsClass.DucStackLikeStyles)
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.DucStackBase
+
+
+.. py:function:: create_global_state_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.DataStateClass.DucGlobalState
+
+.. py:function:: create_local_state_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.DataStateClass.DucLocalState
+
+.. py:function:: create_group_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.ElementsClass.DucGroup
+
+.. py:function:: create_layer_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.ElementsClass.DucLayer
+
+.. py:function:: create_region_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.ElementsClass.DucRegion
+
+.. py:function:: create_version_graph_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.DataStateClass.VersionGraph
+
+.. py:function:: create_checkpoint_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.DataStateClass.Checkpoint
+
+.. py:function:: create_delta_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.DataStateClass.Delta
+
+.. py:function:: create_external_file_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.DataStateClass.DucExternalFileEntry
+
+.. py:function:: create_stack_base_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.ElementsClass.DucStackBase
+
+.. py:function:: create_block(id: str, label: str, elements: Optional[List[ducpy.classes.ElementsClass.ElementWrapper]] = None, description: Optional[str] = None) -> ducpy.classes.ElementsClass.DucBlock
+
+.. py:function:: create_string_value_entry(key: str, value: str) -> ducpy.classes.ElementsClass.StringValueEntry
+

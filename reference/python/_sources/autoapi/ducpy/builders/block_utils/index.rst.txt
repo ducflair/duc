@@ -1,0 +1,43 @@
+ducpy.builders.block_utils
+==========================
+
+.. py:module:: ducpy.builders.block_utils
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.builders.block_utils._get_base
+   ducpy.builders.block_utils.instantiate_block
+
+
+Module Contents
+---------------
+
+.. py:function:: _get_base(element)
+
+.. py:function:: instantiate_block(state: ducpy.classes.DataStateClass.ExportedDataState, block_id: str, position_x: float, position_y: float, instance_id: Optional[str] = None) -> ducpy.classes.DataStateClass.DucBlockInstance
+
+   Creates an instance of a block at a specific position.
+
+   This function:
+   1. Creates a DucBlockInstance metadata object.
+   2. Finds all elements associated with the block_id.
+   3. Clones those elements.
+   4. Updates their positions relative to the new insertion point.
+   5. Sets their instance_id.
+   6. Adds the cloned elements and the block instance to the state.
+
+   Args:
+       state: The ExportedDataState object to modify.
+       block_id: The ID of the block to instantiate.
+       position_x: The X coordinate for the instance insertion point.
+       position_y: The Y coordinate for the instance insertion point.
+       instance_id: Optional custom ID for the instance. If None, one is generated.
+       
+   Returns:
+       The created DucBlockInstance object.
+
+

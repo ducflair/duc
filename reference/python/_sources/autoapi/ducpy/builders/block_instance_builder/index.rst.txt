@@ -1,0 +1,49 @@
+ducpy.builders.block_instance_builder
+=====================================
+
+.. py:module:: ducpy.builders.block_instance_builder
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.builders.block_instance_builder.BlockInstanceBuilder
+
+
+Module Contents
+---------------
+
+.. py:class:: BlockInstanceBuilder(id: str, block_id: str, version: int)
+
+   .. py:attribute:: _id
+
+
+   .. py:attribute:: _block_id
+
+
+   .. py:attribute:: _version
+
+
+   .. py:attribute:: _element_overrides
+      :type:  List[ducpy.classes.ElementsClass.StringValueEntry]
+      :value: []
+
+
+
+   .. py:attribute:: _duplication_array
+      :type:  Optional[ducpy.classes.ElementsClass.DucBlockDuplicationArray]
+      :value: None
+
+
+
+   .. py:method:: with_element_override(key: str, value: str) -> BlockInstanceBuilder
+
+
+   .. py:method:: with_duplication_array(rows: int, cols: int, row_spacing: float, col_spacing: float) -> BlockInstanceBuilder
+
+
+   .. py:method:: build() -> ducpy.classes.ElementsClass.DucBlockInstance
+
+

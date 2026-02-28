@@ -1,0 +1,33 @@
+ducpy.utils.io
+==============
+
+.. py:module:: ducpy.utils.io
+
+.. autoapi-nested-parse::
+
+   This module provides high-level functions for reading and writing DUC files.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.utils.io.write_duc_file
+   ducpy.utils.io.read_duc_file
+
+
+Module Contents
+---------------
+
+.. py:function:: write_duc_file(file_path: str, name: str, thumbnail: Optional[bytes] = None, dictionary: Optional[list] = None, elements: Optional[list] = None, duc_local_state: Any = None, duc_global_state: Any = None, version_graph: Any = None, blocks: Optional[list] = None, block_instances: Optional[list] = None, block_collections: Optional[list] = None, groups: Optional[list] = None, regions: Optional[list] = None, layers: Optional[list] = None, external_files: Optional[list] = None)
+
+   Serializes an ExportedDataState object to a .duc file.
+
+
+.. py:function:: read_duc_file(file_path: str) -> ducpy.parse.DucData
+
+   Parses a .duc file into a DucData dict with attribute access.
+
+

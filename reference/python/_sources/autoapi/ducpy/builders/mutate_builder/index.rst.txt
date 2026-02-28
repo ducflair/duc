@@ -1,0 +1,43 @@
+ducpy.builders.mutate_builder
+=============================
+
+.. py:module:: ducpy.builders.mutate_builder
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.builders.mutate_builder.mutate_element
+   ducpy.builders.mutate_builder.mutate_version_graph
+   ducpy.builders.mutate_builder.mutate_checkpoint
+   ducpy.builders.mutate_builder.mutate_delta
+   ducpy.builders.mutate_builder.mutate_global_state
+   ducpy.builders.mutate_builder.mutate_local_state
+   ducpy.builders.mutate_builder.mutate_external_file
+
+
+Module Contents
+---------------
+
+.. py:function:: mutate_element(el, **kwargs)
+
+   Mutate any property of an element (ElementWrapper or direct dataclass instance) using keyword arguments.
+   Recursively traverses all nested dataclasses and sets matching properties.
+   Applies versioning updates (seed, updated, version, version_nonce) to top-level elements or elements with a 'base' attribute.
+   Example: mutate_element(el, x=..., label=..., points=[...], style=..., ...)
+
+
+.. py:function:: mutate_version_graph(graph: ducpy.classes.DataStateClass.VersionGraph, **kwargs)
+
+.. py:function:: mutate_checkpoint(checkpoint: ducpy.classes.DataStateClass.Checkpoint, **kwargs)
+
+.. py:function:: mutate_delta(delta: ducpy.classes.DataStateClass.Delta, **kwargs)
+
+.. py:function:: mutate_global_state(state: ducpy.classes.DataStateClass.DucGlobalState, **kwargs)
+
+.. py:function:: mutate_local_state(state: ducpy.classes.DataStateClass.DucLocalState, **kwargs)
+
+.. py:function:: mutate_external_file(file_entry: ducpy.classes.DataStateClass.DucExternalFileEntry, **kwargs)
+

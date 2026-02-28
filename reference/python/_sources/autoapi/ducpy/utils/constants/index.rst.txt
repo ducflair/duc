@@ -1,0 +1,56 @@
+ducpy.utils.constants
+=====================
+
+.. py:module:: ducpy.utils.constants
+
+.. autoapi-nested-parse::
+
+   Utility constants for DucPy package.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   ducpy.utils.constants.DEFAULT_SCOPE
+   ducpy.utils.constants.DEFAULT_STROKE_COLOR
+   ducpy.utils.constants.DEFAULT_FILL_COLOR
+   ducpy.utils.constants.DEFAULT_TEXT_COLOR
+   ducpy.utils.constants.DEFAULT_STROKE_WIDTH
+   ducpy.utils.constants.DEFAULT_TEXT_SIZE
+   ducpy.utils.constants.DEFAULT_FONT
+
+
+Module Contents
+---------------
+
+.. py:data:: DEFAULT_SCOPE
+   :value: 'mm'
+
+
+.. py:data:: DEFAULT_STROKE_COLOR
+   :value: '#000000'
+
+
+.. py:data:: DEFAULT_FILL_COLOR
+   :value: '#ffffff'
+
+
+.. py:data:: DEFAULT_TEXT_COLOR
+   :value: '#000000'
+
+
+.. py:data:: DEFAULT_STROKE_WIDTH
+   :value: 1.0
+
+
+.. py:data:: DEFAULT_TEXT_SIZE
+   :value: 12.0
+
+
+.. py:data:: DEFAULT_FONT
+   :value: 'Arial'
+
+

@@ -1,0 +1,27 @@
+ducpy.utils.mutate_utils
+========================
+
+.. py:module:: ducpy.utils.mutate_utils
+
+.. autoapi-nested-parse::
+
+   Utility function for recursively mutating dataclass objects.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.utils.mutate_utils.recursive_mutate
+
+
+Module Contents
+---------------
+
+.. py:function:: recursive_mutate(obj, updates)
+
+   Recursively set attributes on dataclass objects matching keys in updates.
+
+

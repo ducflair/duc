@@ -1,0 +1,490 @@
+ducpy.classes.DataStateClass
+============================
+
+.. py:module:: ducpy.classes.DataStateClass
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.classes.DataStateClass.DictionaryEntry
+   ducpy.classes.DataStateClass.DucGlobalState
+   ducpy.classes.DataStateClass.DucLocalState
+   ducpy.classes.DataStateClass.VersionBase
+   ducpy.classes.DataStateClass.Checkpoint
+   ducpy.classes.DataStateClass.Delta
+   ducpy.classes.DataStateClass.SchemaMigration
+   ducpy.classes.DataStateClass.VersionChain
+   ducpy.classes.DataStateClass.VersionGraphMetadata
+   ducpy.classes.DataStateClass.VersionGraph
+   ducpy.classes.DataStateClass.DisplayPrecision
+   ducpy.classes.DataStateClass.DucExternalFileData
+   ducpy.classes.DataStateClass.DucExternalFileEntry
+   ducpy.classes.DataStateClass.ExportedDataState
+
+
+Module Contents
+---------------
+
+.. py:class:: DictionaryEntry
+
+   .. py:attribute:: key
+      :type:  str
+
+
+   .. py:attribute:: value
+      :type:  str
+
+
+.. py:class:: DucGlobalState
+
+   .. py:attribute:: view_background_color
+      :type:  str
+
+
+   .. py:attribute:: main_scope
+      :type:  str
+
+
+   .. py:attribute:: scope_exponent_threshold
+      :type:  int
+
+
+   .. py:attribute:: name
+      :type:  Optional[str]
+
+
+   .. py:attribute:: pruning_level
+      :type:  Optional[ducpy.enums.PRUNING_LEVEL]
+      :value: None
+
+
+
+.. py:class:: DucLocalState
+
+   .. py:attribute:: scope
+      :type:  str
+
+
+   .. py:attribute:: scroll_x
+      :type:  float
+
+
+   .. py:attribute:: scroll_y
+      :type:  float
+
+
+   .. py:attribute:: zoom
+      :type:  float
+
+
+   .. py:attribute:: is_binding_enabled
+      :type:  bool
+
+
+   .. py:attribute:: pen_mode
+      :type:  bool
+
+
+   .. py:attribute:: view_mode_enabled
+      :type:  bool
+
+
+   .. py:attribute:: objects_snap_mode_enabled
+      :type:  bool
+
+
+   .. py:attribute:: grid_mode_enabled
+      :type:  bool
+
+
+   .. py:attribute:: outline_mode_enabled
+      :type:  bool
+
+
+   .. py:attribute:: current_item_stroke
+      :type:  Optional[ducpy.classes.ElementsClass.ElementStroke]
+
+
+   .. py:attribute:: current_item_background
+      :type:  Optional[ducpy.classes.ElementsClass.ElementBackground]
+
+
+   .. py:attribute:: current_item_opacity
+      :type:  Optional[float]
+
+
+   .. py:attribute:: current_item_font_family
+      :type:  Optional[str]
+
+
+   .. py:attribute:: current_item_font_size
+      :type:  Optional[float]
+
+
+   .. py:attribute:: current_item_text_align
+      :type:  Optional[ducpy.enums.TEXT_ALIGN]
+
+
+   .. py:attribute:: current_item_roundness
+      :type:  Optional[float]
+
+
+   .. py:attribute:: current_item_start_line_head
+      :type:  Optional[ducpy.classes.ElementsClass.DucHead]
+
+
+   .. py:attribute:: current_item_end_line_head
+      :type:  Optional[ducpy.classes.ElementsClass.DucHead]
+
+
+   .. py:attribute:: manual_save_mode
+      :type:  Optional[bool]
+      :value: None
+
+
+
+   .. py:attribute:: decimal_places
+      :type:  int
+      :value: 2
+
+
+
+.. py:class:: VersionBase
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: timestamp
+      :type:  int
+
+
+   .. py:attribute:: is_manual_save
+      :type:  bool
+
+
+   .. py:attribute:: parent_id
+      :type:  Optional[str]
+
+
+   .. py:attribute:: description
+      :type:  Optional[str]
+
+
+   .. py:attribute:: user_id
+      :type:  Optional[str]
+
+
+.. py:class:: Checkpoint
+
+   Bases: :py:obj:`VersionBase`
+
+
+   .. py:attribute:: version_number
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: schema_version
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: is_schema_boundary
+      :type:  bool
+      :value: False
+
+
+
+   .. py:attribute:: data
+      :type:  bytes
+      :value: b''
+
+
+
+   .. py:attribute:: size_bytes
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: type
+      :type:  str
+      :value: 'checkpoint'
+
+
+
+.. py:class:: Delta
+
+   Bases: :py:obj:`VersionBase`
+
+
+   .. py:attribute:: version_number
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: schema_version
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: base_checkpoint_id
+      :type:  str
+      :value: ''
+
+
+
+   .. py:attribute:: payload
+      :type:  bytes
+      :value: b''
+
+
+
+   .. py:attribute:: size_bytes
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: type
+      :type:  str
+      :value: 'delta'
+
+
+
+.. py:class:: SchemaMigration
+
+   .. py:attribute:: from_schema_version
+      :type:  int
+
+
+   .. py:attribute:: to_schema_version
+      :type:  int
+
+
+   .. py:attribute:: migration_name
+      :type:  str
+
+
+   .. py:attribute:: applied_at
+      :type:  int
+
+
+   .. py:attribute:: migration_checksum
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: boundary_checkpoint_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: VersionChain
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: schema_version
+      :type:  int
+
+
+   .. py:attribute:: start_version
+      :type:  int
+
+
+   .. py:attribute:: end_version
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: migration
+      :type:  Optional[SchemaMigration]
+      :value: None
+
+
+
+   .. py:attribute:: root_checkpoint_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: VersionGraphMetadata
+
+   .. py:attribute:: current_version
+      :type:  int
+
+
+   .. py:attribute:: current_schema_version
+      :type:  int
+
+
+   .. py:attribute:: chain_count
+      :type:  int
+
+
+   .. py:attribute:: last_pruned
+      :type:  int
+
+
+   .. py:attribute:: total_size
+      :type:  int
+
+
+.. py:class:: VersionGraph
+
+   .. py:attribute:: checkpoints
+      :type:  List[Checkpoint]
+
+
+   .. py:attribute:: deltas
+      :type:  List[Delta]
+
+
+   .. py:attribute:: chains
+      :type:  List[VersionChain]
+
+
+   .. py:attribute:: metadata
+      :type:  VersionGraphMetadata
+
+
+   .. py:attribute:: user_checkpoint_version_id
+      :type:  str
+
+
+   .. py:attribute:: latest_version_id
+      :type:  str
+
+
+.. py:class:: DisplayPrecision
+
+   .. py:attribute:: linear
+      :type:  int
+      :value: 2
+
+
+
+   .. py:attribute:: angular
+      :type:  int
+      :value: 2
+
+
+
+.. py:class:: DucExternalFileData
+
+   .. py:attribute:: mime_type
+      :type:  str
+
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: data
+      :type:  bytes
+
+
+   .. py:attribute:: created
+      :type:  int
+
+
+   .. py:attribute:: last_retrieved
+      :type:  Optional[int]
+
+
+.. py:class:: DucExternalFileEntry
+
+   .. py:attribute:: key
+      :type:  str
+
+
+   .. py:attribute:: value
+      :type:  DucExternalFileData
+
+
+.. py:class:: ExportedDataState
+
+   .. py:attribute:: type
+      :type:  str
+
+
+   .. py:attribute:: version
+      :type:  str
+
+
+   .. py:attribute:: source
+      :type:  str
+
+
+   .. py:attribute:: thumbnail
+      :type:  bytes
+
+
+   .. py:attribute:: elements
+      :type:  List[ducpy.classes.ElementsClass.ElementWrapper]
+
+
+   .. py:attribute:: blocks
+      :type:  List[ducpy.classes.ElementsClass.DucBlock]
+
+
+   .. py:attribute:: block_instances
+      :type:  List[ducpy.classes.ElementsClass.DucBlockInstance]
+
+
+   .. py:attribute:: block_collections
+      :type:  List[ducpy.classes.ElementsClass.DucBlockCollection]
+
+
+   .. py:attribute:: groups
+      :type:  List[ducpy.classes.ElementsClass.DucGroup]
+
+
+   .. py:attribute:: regions
+      :type:  List[ducpy.classes.ElementsClass.DucRegion]
+
+
+   .. py:attribute:: layers
+      :type:  List[ducpy.classes.ElementsClass.DucLayer]
+
+
+   .. py:attribute:: dictionary
+      :type:  Dict[str, str]
+
+
+   .. py:attribute:: duc_local_state
+      :type:  Optional[DucLocalState]
+
+
+   .. py:attribute:: duc_global_state
+      :type:  Optional[DucGlobalState]
+
+
+   .. py:attribute:: version_graph
+      :type:  Optional[VersionGraph]
+
+
+   .. py:attribute:: files
+      :type:  Optional[List[DucExternalFileEntry]]
+
+
+   .. py:attribute:: id
+      :type:  Optional[str]
+      :value: None
+
+
+

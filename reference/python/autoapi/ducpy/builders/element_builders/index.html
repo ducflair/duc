@@ -1,0 +1,1478 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../../../genindex.html"><link rel="search" title="Search" href="../../../../search.html"><link rel="next" title="ducpy.builders.mutate_builder" href="../mutate_builder/index.html"><link rel="prev" title="ducpy.builders.block_utils" href="../block_utils/index.html">
+        <link rel="canonical" href="https://ducflair.github.io/duc/reference/python/autoapi/ducpy/builders/element_builders/index.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>ducpy.builders.element_builders - ducpy documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../../index.html"><div class="brand">ducpy  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../../index.html">
+  
+  <span class="sidebar-brand-text">ducpy  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../../index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../../index.html">ducpy</a><input aria-label="Toggle navigation of ducpy" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3 current has-children"><a class="reference internal" href="../index.html">ducpy.builders</a><input aria-label="Toggle navigation of ducpy.builders" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../block_instance_builder/index.html">ducpy.builders.block_instance_builder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../block_utils/index.html">ducpy.builders.block_utils</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">ducpy.builders.element_builders</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../mutate_builder/index.html">ducpy.builders.mutate_builder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../sql_builder/index.html">ducpy.builders.sql_builder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../state_builders/index.html">ducpy.builders.state_builders</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../style_builders/index.html">ducpy.builders.style_builders</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../classes/index.html">ducpy.classes</a><input aria-label="Toggle navigation of ducpy.classes" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../classes/DataStateClass/index.html">ducpy.classes.DataStateClass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../classes/ElementsClass/index.html">ducpy.classes.ElementsClass</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../enums/index.html">ducpy.enums</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../parse/index.html">ducpy.parse</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../serialize/index.html">ducpy.serialize</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../utils/index.html">ducpy.utils</a><input aria-label="Toggle navigation of ducpy.utils" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/constants/index.html">ducpy.utils.constants</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/convert/index.html">ducpy.utils.convert</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/io/index.html">ducpy.utils.io</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/mutate_utils/index.html">ducpy.utils.mutate_utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/rand_utils/index.html">ducpy.utils.rand_utils</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../downloads.html">Downloads &amp; Installation</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../../../_sources/autoapi/ducpy/builders/element_builders/index.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-ducpy.builders.element_builders">
+<span id="ducpy-builders-element-builders"></span><h1>ducpy.builders.element_builders<a class="headerlink" href="#module-ducpy.builders.element_builders" title="Link to this heading">¶</a></h1>
+<p>Helper functions for creating DUC elements with a user-friendly API.
+Only the 15 element types from duc.sql / types.rs are supported.</p>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseElementParams</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder" title="ducpy.builders.element_builders.ElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.RectangleElementBuilder" title="ducpy.builders.element_builders.RectangleElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RectangleElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.EllipseElementBuilder" title="ducpy.builders.element_builders.EllipseElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EllipseElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.PolygonElementBuilder" title="ducpy.builders.element_builders.PolygonElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PolygonElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.LinearElementBuilder" title="ducpy.builders.element_builders.LinearElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LinearElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.ArrowElementBuilder" title="ducpy.builders.element_builders.ArrowElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ArrowElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.ImageElementBuilder" title="ducpy.builders.element_builders.ImageElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImageElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.PdfElementBuilder" title="ducpy.builders.element_builders.PdfElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PdfElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.TextElementBuilder" title="ducpy.builders.element_builders.TextElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TextElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.TableElementBuilder" title="ducpy.builders.element_builders.TableElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TableElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.FrameElementBuilder" title="ducpy.builders.element_builders.FrameElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FrameElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.PlotElementBuilder" title="ducpy.builders.element_builders.PlotElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PlotElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder" title="ducpy.builders.element_builders.FreeDrawElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FreeDrawElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.DocElementBuilder" title="ducpy.builders.element_builders.DocElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DocElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.EmbeddableElementBuilder" title="ducpy.builders.element_builders.EmbeddableElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EmbeddableElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.ModelElementBuilder" title="ducpy.builders.element_builders.ModelElementBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModelElementBuilder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.element_builders._create_element_wrapper" title="ducpy.builders.element_builders._create_element_wrapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_create_element_wrapper</span></code></a>(element_class, base_params, ...)</p></td>
+<td><p>Helper function to create an ElementWrapper with the given parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.create_duc_path" title="ducpy.builders.element_builders.create_duc_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_duc_path</span></code></a>(→ ducpy.classes.ElementsClass.DucPath)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.element_builders.create_bound_element" title="ducpy.builders.element_builders.create_bound_element"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_bound_element</span></code></a>(...)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders._create_element_wrapper">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">_create_element_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explicit_properties_override</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders._create_element_wrapper" title="Link to this definition">¶</a></dt>
+<dd><p>Helper function to create an ElementWrapper with the given parameters.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">BaseElementParams</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.x">
+<span class="sig-name descname"><span class="pre">x</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.x" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.y">
+<span class="sig-name descname"><span class="pre">y</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.y" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.width">
+<span class="sig-name descname"><span class="pre">width</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.width" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.height">
+<span class="sig-name descname"><span class="pre">height</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.height" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.scope">
+<span class="sig-name descname"><span class="pre">scope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.scope" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.angle">
+<span class="sig-name descname"><span class="pre">angle</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.angle" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.styles">
+<span class="sig-name descname"><span class="pre">styles</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucElementStylesBase" title="ducpy.classes.ElementsClass.DucElementStylesBase"><span class="pre">ducpy.classes.ElementsClass.DucElementStylesBase</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.styles" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.id">
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.label">
+<span class="sig-name descname"><span class="pre">label</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.label" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.locked">
+<span class="sig-name descname"><span class="pre">locked</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.locked" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.is_visible">
+<span class="sig-name descname"><span class="pre">is_visible</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.is_visible" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.z_index">
+<span class="sig-name descname"><span class="pre">z_index</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.z_index" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.description">
+<span class="sig-name descname"><span class="pre">description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.description" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.group_ids">
+<span class="sig-name descname"><span class="pre">group_ids</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.group_ids" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.region_ids">
+<span class="sig-name descname"><span class="pre">region_ids</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.region_ids" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.layer_id">
+<span class="sig-name descname"><span class="pre">layer_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.layer_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.frame_id">
+<span class="sig-name descname"><span class="pre">frame_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.frame_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.bound_elements">
+<span class="sig-name descname"><span class="pre">bound_elements</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.BoundElement" title="ducpy.classes.ElementsClass.BoundElement"><span class="pre">ducpy.classes.ElementsClass.BoundElement</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.bound_elements" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.link">
+<span class="sig-name descname"><span class="pre">link</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.link" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.custom_data">
+<span class="sig-name descname"><span class="pre">custom_data</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.custom_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.is_plot">
+<span class="sig-name descname"><span class="pre">is_plot</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.is_plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.is_deleted">
+<span class="sig-name descname"><span class="pre">is_deleted</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.is_deleted" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.index">
+<span class="sig-name descname"><span class="pre">index</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.index" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.BaseElementParams.instance_id">
+<span class="sig-name descname"><span class="pre">instance_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.builders.element_builders.BaseElementParams.instance_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">ElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">DEFAULT_SCOPE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.base">
+<span class="sig-name descname"><span class="pre">base</span></span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.extra" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.at_position">
+<span class="sig-name descname"><span class="pre">at_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.at_position" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_size">
+<span class="sig-name descname"><span class="pre">with_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_size" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_angle">
+<span class="sig-name descname"><span class="pre">with_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_angle" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_styles">
+<span class="sig-name descname"><span class="pre">with_styles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">styles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucElementStylesBase" title="ducpy.classes.ElementsClass.DucElementStylesBase"><span class="pre">ducpy.classes.ElementsClass.DucElementStylesBase</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_styles" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_id">
+<span class="sig-name descname"><span class="pre">with_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_label">
+<span class="sig-name descname"><span class="pre">with_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_label" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_scope">
+<span class="sig-name descname"><span class="pre">with_scope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_scope" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_locked">
+<span class="sig-name descname"><span class="pre">with_locked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">locked</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_locked" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_visible">
+<span class="sig-name descname"><span class="pre">with_visible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_visible</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_visible" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_instance_id">
+<span class="sig-name descname"><span class="pre">with_instance_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_instance_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_z_index">
+<span class="sig-name descname"><span class="pre">with_z_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_z_index" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_description">
+<span class="sig-name descname"><span class="pre">with_description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_description" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_group_ids">
+<span class="sig-name descname"><span class="pre">with_group_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_group_ids" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_region_ids">
+<span class="sig-name descname"><span class="pre">with_region_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_region_ids" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_layer_id">
+<span class="sig-name descname"><span class="pre">with_layer_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_layer_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_frame_id">
+<span class="sig-name descname"><span class="pre">with_frame_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_frame_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_bound_elements">
+<span class="sig-name descname"><span class="pre">with_bound_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bound_elements</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.BoundElement" title="ducpy.classes.ElementsClass.BoundElement"><span class="pre">ducpy.classes.ElementsClass.BoundElement</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_bound_elements" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_bound_element">
+<span class="sig-name descname"><span class="pre">with_bound_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_bound_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_link">
+<span class="sig-name descname"><span class="pre">with_link</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_link" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_custom_data">
+<span class="sig-name descname"><span class="pre">with_custom_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_custom_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_plot">
+<span class="sig-name descname"><span class="pre">with_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_plot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_plot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_deleted">
+<span class="sig-name descname"><span class="pre">with_deleted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_deleted</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_deleted" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_index">
+<span class="sig-name descname"><span class="pre">with_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_index" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.with_extra">
+<span class="sig-name descname"><span class="pre">with_extra</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.with_extra" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_rectangle">
+<span class="sig-name descname"><span class="pre">build_rectangle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_rectangle" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_ellipse">
+<span class="sig-name descname"><span class="pre">build_ellipse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_ellipse" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_polygon">
+<span class="sig-name descname"><span class="pre">build_polygon</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_polygon" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_linear_element">
+<span class="sig-name descname"><span class="pre">build_linear_element</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_linear_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_arrow_element">
+<span class="sig-name descname"><span class="pre">build_arrow_element</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_arrow_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_image_element">
+<span class="sig-name descname"><span class="pre">build_image_element</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_image_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_pdf_element">
+<span class="sig-name descname"><span class="pre">build_pdf_element</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_pdf_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_text_element">
+<span class="sig-name descname"><span class="pre">build_text_element</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_text_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_table_element">
+<span class="sig-name descname"><span class="pre">build_table_element</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_table_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_frame_element">
+<span class="sig-name descname"><span class="pre">build_frame_element</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_frame_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_plot_element">
+<span class="sig-name descname"><span class="pre">build_plot_element</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_plot_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_freedraw_element">
+<span class="sig-name descname"><span class="pre">build_freedraw_element</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_freedraw_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_doc_element">
+<span class="sig-name descname"><span class="pre">build_doc_element</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_doc_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_embeddable_element">
+<span class="sig-name descname"><span class="pre">build_embeddable_element</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_embeddable_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementBuilder.build_model_element">
+<span class="sig-name descname"><span class="pre">build_model_element</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementBuilder.build_model_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.create_duc_path">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">create_duc_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementBackground" title="ducpy.classes.ElementsClass.ElementBackground"><span class="pre">ducpy.classes.ElementsClass.ElementBackground</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stroke</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementStroke" title="ducpy.classes.ElementsClass.ElementStroke"><span class="pre">ducpy.classes.ElementsClass.ElementStroke</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucPath" title="ducpy.classes.ElementsClass.DucPath"><span class="pre">ducpy.classes.ElementsClass.DucPath</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.create_duc_path" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.create_bound_element">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">create_bound_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.BoundElement" title="ducpy.classes.ElementsClass.BoundElement"><span class="pre">ducpy.classes.ElementsClass.BoundElement</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.create_bound_element" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementSpecificBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">ElementSpecificBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementSpecificBuilder.base">
+<span class="sig-name descname"><span class="pre">base</span></span><a class="headerlink" href="#ducpy.builders.element_builders.ElementSpecificBuilder.base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ElementSpecificBuilder.extra">
+<span class="sig-name descname"><span class="pre">extra</span></span><a class="headerlink" href="#ducpy.builders.element_builders.ElementSpecificBuilder.extra" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.RectangleElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">RectangleElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.RectangleElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.RectangleElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.RectangleElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.EllipseElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">EllipseElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.EllipseElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.EllipseElementBuilder.with_ratio">
+<span class="sig-name descname"><span class="pre">with_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.EllipseElementBuilder.with_ratio" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.EllipseElementBuilder.with_start_angle">
+<span class="sig-name descname"><span class="pre">with_start_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.EllipseElementBuilder.with_start_angle" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.EllipseElementBuilder.with_end_angle">
+<span class="sig-name descname"><span class="pre">with_end_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">end_angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.EllipseElementBuilder.with_end_angle" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.EllipseElementBuilder.with_show_aux_crosshair">
+<span class="sig-name descname"><span class="pre">with_show_aux_crosshair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show_aux_crosshair</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.EllipseElementBuilder.with_show_aux_crosshair" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.EllipseElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.EllipseElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PolygonElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">PolygonElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.PolygonElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PolygonElementBuilder.with_sides">
+<span class="sig-name descname"><span class="pre">with_sides</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.PolygonElementBuilder.with_sides" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PolygonElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.PolygonElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.LinearElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">LinearElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.LinearElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.LinearElementBuilder.with_points">
+<span class="sig-name descname"><span class="pre">with_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.LinearElementBuilder.with_points" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.LinearElementBuilder.with_lines">
+<span class="sig-name descname"><span class="pre">with_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucLine" title="ducpy.classes.ElementsClass.DucLine"><span class="pre">ducpy.classes.ElementsClass.DucLine</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.LinearElementBuilder.with_lines" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.LinearElementBuilder.with_path_overrides">
+<span class="sig-name descname"><span class="pre">with_path_overrides</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_overrides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucPath" title="ducpy.classes.ElementsClass.DucPath"><span class="pre">ducpy.classes.ElementsClass.DucPath</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.LinearElementBuilder.with_path_overrides" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.LinearElementBuilder.with_last_committed_point">
+<span class="sig-name descname"><span class="pre">with_last_committed_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lcp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucPoint" title="ducpy.classes.ElementsClass.DucPoint"><span class="pre">ducpy.classes.ElementsClass.DucPoint</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.LinearElementBuilder.with_last_committed_point" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.LinearElementBuilder.with_start_binding">
+<span class="sig-name descname"><span class="pre">with_start_binding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucPointBinding" title="ducpy.classes.ElementsClass.DucPointBinding"><span class="pre">ducpy.classes.ElementsClass.DucPointBinding</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.LinearElementBuilder.with_start_binding" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.LinearElementBuilder.with_end_binding">
+<span class="sig-name descname"><span class="pre">with_end_binding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucPointBinding" title="ducpy.classes.ElementsClass.DucPointBinding"><span class="pre">ducpy.classes.ElementsClass.DucPointBinding</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.LinearElementBuilder.with_end_binding" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.LinearElementBuilder.with_wipeout_below">
+<span class="sig-name descname"><span class="pre">with_wipeout_below</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wipeout_below</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.LinearElementBuilder.with_wipeout_below" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.LinearElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.LinearElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ArrowElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">ArrowElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ArrowElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ArrowElementBuilder.with_points">
+<span class="sig-name descname"><span class="pre">with_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ArrowElementBuilder.with_points" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ArrowElementBuilder.with_start_binding">
+<span class="sig-name descname"><span class="pre">with_start_binding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucPointBinding" title="ducpy.classes.ElementsClass.DucPointBinding"><span class="pre">ducpy.classes.ElementsClass.DucPointBinding</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ArrowElementBuilder.with_start_binding" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ArrowElementBuilder.with_end_binding">
+<span class="sig-name descname"><span class="pre">with_end_binding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucPointBinding" title="ducpy.classes.ElementsClass.DucPointBinding"><span class="pre">ducpy.classes.ElementsClass.DucPointBinding</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ArrowElementBuilder.with_end_binding" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ArrowElementBuilder.with_elbowed">
+<span class="sig-name descname"><span class="pre">with_elbowed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elbowed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ArrowElementBuilder.with_elbowed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ArrowElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.ArrowElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ImageElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">ImageElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ImageElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ImageElementBuilder.with_file_id">
+<span class="sig-name descname"><span class="pre">with_file_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ImageElementBuilder.with_file_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ImageElementBuilder.with_scale">
+<span class="sig-name descname"><span class="pre">with_scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ImageElementBuilder.with_scale" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ImageElementBuilder.with_status">
+<span class="sig-name descname"><span class="pre">with_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../enums/index.html#ducpy.enums.IMAGE_STATUS" title="ducpy.enums.IMAGE_STATUS"><span class="pre">ducpy.enums.IMAGE_STATUS</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ImageElementBuilder.with_status" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ImageElementBuilder.with_crop">
+<span class="sig-name descname"><span class="pre">with_crop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ImageCrop" title="ducpy.classes.ElementsClass.ImageCrop"><span class="pre">ducpy.classes.ElementsClass.ImageCrop</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ImageElementBuilder.with_crop" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ImageElementBuilder.with_filter">
+<span class="sig-name descname"><span class="pre">with_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucImageFilter" title="ducpy.classes.ElementsClass.DucImageFilter"><span class="pre">ducpy.classes.ElementsClass.DucImageFilter</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ImageElementBuilder.with_filter" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ImageElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.ImageElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PdfElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">PdfElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.PdfElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PdfElementBuilder.with_file_id">
+<span class="sig-name descname"><span class="pre">with_file_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.PdfElementBuilder.with_file_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PdfElementBuilder.with_grid_config">
+<span class="sig-name descname"><span class="pre">with_grid_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DocumentGridConfig" title="ducpy.classes.ElementsClass.DocumentGridConfig"><span class="pre">ducpy.classes.ElementsClass.DocumentGridConfig</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.PdfElementBuilder.with_grid_config" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PdfElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.PdfElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.TextElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">TextElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.TextElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.TextElementBuilder.with_text">
+<span class="sig-name descname"><span class="pre">with_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.TextElementBuilder.with_text" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.TextElementBuilder.with_text_style">
+<span class="sig-name descname"><span class="pre">with_text_style</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text_style</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucTextStyle" title="ducpy.classes.ElementsClass.DucTextStyle"><span class="pre">ducpy.classes.ElementsClass.DucTextStyle</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.TextElementBuilder.with_text_style" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.TextElementBuilder.with_auto_resize">
+<span class="sig-name descname"><span class="pre">with_auto_resize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">auto_resize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.TextElementBuilder.with_auto_resize" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.TextElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.TextElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.TableElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">TableElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.TableElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.TableElementBuilder.with_file_id">
+<span class="sig-name descname"><span class="pre">with_file_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.TableElementBuilder.with_file_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.TableElementBuilder.with_table_style">
+<span class="sig-name descname"><span class="pre">with_table_style</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucTableStyle" title="ducpy.classes.ElementsClass.DucTableStyle"><span class="pre">ducpy.classes.ElementsClass.DucTableStyle</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.TableElementBuilder.with_table_style" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.TableElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.TableElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FrameElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">FrameElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FrameElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FrameElementBuilder.with_stack_base">
+<span class="sig-name descname"><span class="pre">with_stack_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stack_base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucStackBase" title="ducpy.classes.ElementsClass.DucStackBase"><span class="pre">ducpy.classes.ElementsClass.DucStackBase</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FrameElementBuilder.with_stack_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FrameElementBuilder.with_clip">
+<span class="sig-name descname"><span class="pre">with_clip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FrameElementBuilder.with_clip" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FrameElementBuilder.with_label_visible">
+<span class="sig-name descname"><span class="pre">with_label_visible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_visible</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FrameElementBuilder.with_label_visible" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FrameElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.FrameElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PlotElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">PlotElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.PlotElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PlotElementBuilder.with_margins">
+<span class="sig-name descname"><span class="pre">with_margins</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">margins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.Margins" title="ducpy.classes.ElementsClass.Margins"><span class="pre">ducpy.classes.ElementsClass.Margins</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.PlotElementBuilder.with_margins" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PlotElementBuilder.with_style">
+<span class="sig-name descname"><span class="pre">with_style</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucPlotStyle" title="ducpy.classes.ElementsClass.DucPlotStyle"><span class="pre">ducpy.classes.ElementsClass.DucPlotStyle</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.PlotElementBuilder.with_style" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PlotElementBuilder.with_stack_base">
+<span class="sig-name descname"><span class="pre">with_stack_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stack_base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucStackBase" title="ducpy.classes.ElementsClass.DucStackBase"><span class="pre">ducpy.classes.ElementsClass.DucStackBase</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.PlotElementBuilder.with_stack_base" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PlotElementBuilder.with_clip">
+<span class="sig-name descname"><span class="pre">with_clip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.PlotElementBuilder.with_clip" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PlotElementBuilder.with_label_visible">
+<span class="sig-name descname"><span class="pre">with_label_visible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_visible</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.PlotElementBuilder.with_label_visible" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.PlotElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.PlotElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">FreeDrawElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_points">
+<span class="sig-name descname"><span class="pre">with_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_points" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_pressures">
+<span class="sig-name descname"><span class="pre">with_pressures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pressures</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_pressures" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_size_thickness">
+<span class="sig-name descname"><span class="pre">with_size_thickness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_size_thickness" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_thinning">
+<span class="sig-name descname"><span class="pre">with_thinning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thinning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_thinning" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_smoothing">
+<span class="sig-name descname"><span class="pre">with_smoothing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smoothing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_smoothing" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_streamline">
+<span class="sig-name descname"><span class="pre">with_streamline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">streamline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_streamline" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_easing">
+<span class="sig-name descname"><span class="pre">with_easing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">easing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_easing" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_simulate_pressure">
+<span class="sig-name descname"><span class="pre">with_simulate_pressure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulate_pressure</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_simulate_pressure" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_start_cap">
+<span class="sig-name descname"><span class="pre">with_start_cap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_start_cap" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_start_taper">
+<span class="sig-name descname"><span class="pre">with_start_taper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_start_taper" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_start_easing">
+<span class="sig-name descname"><span class="pre">with_start_easing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">easing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_start_easing" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_end_cap">
+<span class="sig-name descname"><span class="pre">with_end_cap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_end_cap" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_end_taper">
+<span class="sig-name descname"><span class="pre">with_end_taper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">taper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_end_taper" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_end_easing">
+<span class="sig-name descname"><span class="pre">with_end_easing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">easing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_end_easing" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_last_committed_point">
+<span class="sig-name descname"><span class="pre">with_last_committed_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lcp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucPoint" title="ducpy.classes.ElementsClass.DucPoint"><span class="pre">ducpy.classes.ElementsClass.DucPoint</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_last_committed_point" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.with_svg_path">
+<span class="sig-name descname"><span class="pre">with_svg_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">svg_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_svg_path" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.FreeDrawElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.DocElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">DocElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.DocElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.DocElementBuilder.with_text">
+<span class="sig-name descname"><span class="pre">with_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.DocElementBuilder.with_text" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.DocElementBuilder.with_doc_style">
+<span class="sig-name descname"><span class="pre">with_doc_style</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucDocStyle" title="ducpy.classes.ElementsClass.DucDocStyle"><span class="pre">ducpy.classes.ElementsClass.DucDocStyle</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.DocElementBuilder.with_doc_style" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.DocElementBuilder.with_file_id">
+<span class="sig-name descname"><span class="pre">with_file_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.DocElementBuilder.with_file_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.DocElementBuilder.with_grid_config">
+<span class="sig-name descname"><span class="pre">with_grid_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DocumentGridConfig" title="ducpy.classes.ElementsClass.DocumentGridConfig"><span class="pre">ducpy.classes.ElementsClass.DocumentGridConfig</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.DocElementBuilder.with_grid_config" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.DocElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.DocElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.EmbeddableElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">EmbeddableElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.EmbeddableElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.EmbeddableElementBuilder.with_link">
+<span class="sig-name descname"><span class="pre">with_link</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.EmbeddableElementBuilder.with_link" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.EmbeddableElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.EmbeddableElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ModelElementBuilder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.element_builders.</span></span><span class="sig-name descname"><span class="pre">ModelElementBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams" title="ducpy.builders.element_builders.BaseElementParams"><span class="pre">BaseElementParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ModelElementBuilder" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder" title="ducpy.builders.element_builders.ElementSpecificBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ModelElementBuilder.with_model_type">
+<span class="sig-name descname"><span class="pre">with_model_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ModelElementBuilder.with_model_type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ModelElementBuilder.with_code">
+<span class="sig-name descname"><span class="pre">with_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ModelElementBuilder.with_code" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ModelElementBuilder.with_svg_path">
+<span class="sig-name descname"><span class="pre">with_svg_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">svg_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ModelElementBuilder.with_svg_path" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ModelElementBuilder.with_file_ids">
+<span class="sig-name descname"><span class="pre">with_file_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ModelElementBuilder.with_file_ids" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ModelElementBuilder.with_viewer_state">
+<span class="sig-name descname"><span class="pre">with_viewer_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">viewer_state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.element_builders.ModelElementBuilder.with_viewer_state" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.element_builders.ModelElementBuilder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../../classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementWrapper" title="ducpy.classes.ElementsClass.ElementWrapper"><span class="pre">ducpy.classes.ElementsClass.ElementWrapper</span></a></span></span><a class="headerlink" href="#ducpy.builders.element_builders.ModelElementBuilder.build" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../mutate_builder/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">ducpy.builders.mutate_builder</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../block_utils/index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">ducpy.builders.block_utils</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Ducflair
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">ducpy.builders.element_builders</a><ul>
+<li><a class="reference internal" href="#classes">Classes</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#module-contents">Module Contents</a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders._create_element_wrapper"><code class="docutils literal notranslate"><span class="pre">_create_element_wrapper()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams"><code class="docutils literal notranslate"><span class="pre">BaseElementParams</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.x"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.x</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.y"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.y</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.width"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.width</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.height"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.height</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.scope"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.scope</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.angle"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.angle</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.styles"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.styles</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.id"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.label"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.label</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.locked"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.locked</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.is_visible"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.is_visible</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.z_index"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.z_index</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.description"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.description</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.group_ids"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.group_ids</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.region_ids"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.region_ids</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.layer_id"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.layer_id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.frame_id"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.frame_id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.bound_elements"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.bound_elements</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.link"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.link</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.custom_data"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.custom_data</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.is_plot"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.is_plot</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.is_deleted"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.is_deleted</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.index"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.index</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.BaseElementParams.instance_id"><code class="docutils literal notranslate"><span class="pre">BaseElementParams.instance_id</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder"><code class="docutils literal notranslate"><span class="pre">ElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.base"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.base</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.extra"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.extra</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.at_position"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.at_position()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_size"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_size()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_angle"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_angle()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_styles"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_styles()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_id"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_label"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_label()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_scope"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_scope()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_locked"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_locked()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_visible"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_visible()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_instance_id"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_instance_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_z_index"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_z_index()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_description"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_description()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_group_ids"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_group_ids()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_region_ids"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_region_ids()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_layer_id"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_layer_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_frame_id"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_frame_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_bound_elements"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_bound_elements()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_bound_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_bound_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_link"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_link()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_custom_data"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_custom_data()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_plot"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_plot()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_deleted"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_deleted()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_index"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_index()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.with_extra"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.with_extra()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_rectangle"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_rectangle()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_ellipse"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_ellipse()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_polygon"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_polygon()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_linear_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_linear_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_arrow_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_arrow_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_image_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_image_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_pdf_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_pdf_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_text_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_text_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_table_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_table_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_frame_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_frame_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_plot_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_plot_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_freedraw_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_freedraw_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_doc_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_doc_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_embeddable_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_embeddable_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementBuilder.build_model_element"><code class="docutils literal notranslate"><span class="pre">ElementBuilder.build_model_element()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.create_duc_path"><code class="docutils literal notranslate"><span class="pre">create_duc_path()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.create_bound_element"><code class="docutils literal notranslate"><span class="pre">create_bound_element()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder"><code class="docutils literal notranslate"><span class="pre">ElementSpecificBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder.base"><code class="docutils literal notranslate"><span class="pre">ElementSpecificBuilder.base</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ElementSpecificBuilder.extra"><code class="docutils literal notranslate"><span class="pre">ElementSpecificBuilder.extra</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.RectangleElementBuilder"><code class="docutils literal notranslate"><span class="pre">RectangleElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.RectangleElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">RectangleElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.EllipseElementBuilder"><code class="docutils literal notranslate"><span class="pre">EllipseElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.EllipseElementBuilder.with_ratio"><code class="docutils literal notranslate"><span class="pre">EllipseElementBuilder.with_ratio()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.EllipseElementBuilder.with_start_angle"><code class="docutils literal notranslate"><span class="pre">EllipseElementBuilder.with_start_angle()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.EllipseElementBuilder.with_end_angle"><code class="docutils literal notranslate"><span class="pre">EllipseElementBuilder.with_end_angle()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.EllipseElementBuilder.with_show_aux_crosshair"><code class="docutils literal notranslate"><span class="pre">EllipseElementBuilder.with_show_aux_crosshair()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.EllipseElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">EllipseElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PolygonElementBuilder"><code class="docutils literal notranslate"><span class="pre">PolygonElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PolygonElementBuilder.with_sides"><code class="docutils literal notranslate"><span class="pre">PolygonElementBuilder.with_sides()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PolygonElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">PolygonElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.LinearElementBuilder"><code class="docutils literal notranslate"><span class="pre">LinearElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.LinearElementBuilder.with_points"><code class="docutils literal notranslate"><span class="pre">LinearElementBuilder.with_points()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.LinearElementBuilder.with_lines"><code class="docutils literal notranslate"><span class="pre">LinearElementBuilder.with_lines()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.LinearElementBuilder.with_path_overrides"><code class="docutils literal notranslate"><span class="pre">LinearElementBuilder.with_path_overrides()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.LinearElementBuilder.with_last_committed_point"><code class="docutils literal notranslate"><span class="pre">LinearElementBuilder.with_last_committed_point()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.LinearElementBuilder.with_start_binding"><code class="docutils literal notranslate"><span class="pre">LinearElementBuilder.with_start_binding()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.LinearElementBuilder.with_end_binding"><code class="docutils literal notranslate"><span class="pre">LinearElementBuilder.with_end_binding()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.LinearElementBuilder.with_wipeout_below"><code class="docutils literal notranslate"><span class="pre">LinearElementBuilder.with_wipeout_below()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.LinearElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">LinearElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ArrowElementBuilder"><code class="docutils literal notranslate"><span class="pre">ArrowElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ArrowElementBuilder.with_points"><code class="docutils literal notranslate"><span class="pre">ArrowElementBuilder.with_points()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ArrowElementBuilder.with_start_binding"><code class="docutils literal notranslate"><span class="pre">ArrowElementBuilder.with_start_binding()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ArrowElementBuilder.with_end_binding"><code class="docutils literal notranslate"><span class="pre">ArrowElementBuilder.with_end_binding()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ArrowElementBuilder.with_elbowed"><code class="docutils literal notranslate"><span class="pre">ArrowElementBuilder.with_elbowed()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ArrowElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">ArrowElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ImageElementBuilder"><code class="docutils literal notranslate"><span class="pre">ImageElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ImageElementBuilder.with_file_id"><code class="docutils literal notranslate"><span class="pre">ImageElementBuilder.with_file_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ImageElementBuilder.with_scale"><code class="docutils literal notranslate"><span class="pre">ImageElementBuilder.with_scale()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ImageElementBuilder.with_status"><code class="docutils literal notranslate"><span class="pre">ImageElementBuilder.with_status()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ImageElementBuilder.with_crop"><code class="docutils literal notranslate"><span class="pre">ImageElementBuilder.with_crop()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ImageElementBuilder.with_filter"><code class="docutils literal notranslate"><span class="pre">ImageElementBuilder.with_filter()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ImageElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">ImageElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PdfElementBuilder"><code class="docutils literal notranslate"><span class="pre">PdfElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PdfElementBuilder.with_file_id"><code class="docutils literal notranslate"><span class="pre">PdfElementBuilder.with_file_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PdfElementBuilder.with_grid_config"><code class="docutils literal notranslate"><span class="pre">PdfElementBuilder.with_grid_config()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PdfElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">PdfElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.TextElementBuilder"><code class="docutils literal notranslate"><span class="pre">TextElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.TextElementBuilder.with_text"><code class="docutils literal notranslate"><span class="pre">TextElementBuilder.with_text()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.TextElementBuilder.with_text_style"><code class="docutils literal notranslate"><span class="pre">TextElementBuilder.with_text_style()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.TextElementBuilder.with_auto_resize"><code class="docutils literal notranslate"><span class="pre">TextElementBuilder.with_auto_resize()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.TextElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">TextElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.TableElementBuilder"><code class="docutils literal notranslate"><span class="pre">TableElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.TableElementBuilder.with_file_id"><code class="docutils literal notranslate"><span class="pre">TableElementBuilder.with_file_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.TableElementBuilder.with_table_style"><code class="docutils literal notranslate"><span class="pre">TableElementBuilder.with_table_style()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.TableElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">TableElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FrameElementBuilder"><code class="docutils literal notranslate"><span class="pre">FrameElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FrameElementBuilder.with_stack_base"><code class="docutils literal notranslate"><span class="pre">FrameElementBuilder.with_stack_base()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FrameElementBuilder.with_clip"><code class="docutils literal notranslate"><span class="pre">FrameElementBuilder.with_clip()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FrameElementBuilder.with_label_visible"><code class="docutils literal notranslate"><span class="pre">FrameElementBuilder.with_label_visible()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FrameElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">FrameElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PlotElementBuilder"><code class="docutils literal notranslate"><span class="pre">PlotElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PlotElementBuilder.with_margins"><code class="docutils literal notranslate"><span class="pre">PlotElementBuilder.with_margins()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PlotElementBuilder.with_style"><code class="docutils literal notranslate"><span class="pre">PlotElementBuilder.with_style()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PlotElementBuilder.with_stack_base"><code class="docutils literal notranslate"><span class="pre">PlotElementBuilder.with_stack_base()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PlotElementBuilder.with_clip"><code class="docutils literal notranslate"><span class="pre">PlotElementBuilder.with_clip()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PlotElementBuilder.with_label_visible"><code class="docutils literal notranslate"><span class="pre">PlotElementBuilder.with_label_visible()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.PlotElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">PlotElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_points"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_points()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_pressures"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_pressures()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_size_thickness"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_size_thickness()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_thinning"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_thinning()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_smoothing"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_smoothing()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_streamline"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_streamline()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_easing"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_easing()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_simulate_pressure"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_simulate_pressure()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_start_cap"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_start_cap()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_start_taper"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_start_taper()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_start_easing"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_start_easing()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_end_cap"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_end_cap()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_end_taper"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_end_taper()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_end_easing"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_end_easing()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_last_committed_point"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_last_committed_point()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.with_svg_path"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.with_svg_path()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.FreeDrawElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">FreeDrawElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.DocElementBuilder"><code class="docutils literal notranslate"><span class="pre">DocElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.DocElementBuilder.with_text"><code class="docutils literal notranslate"><span class="pre">DocElementBuilder.with_text()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.DocElementBuilder.with_doc_style"><code class="docutils literal notranslate"><span class="pre">DocElementBuilder.with_doc_style()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.DocElementBuilder.with_file_id"><code class="docutils literal notranslate"><span class="pre">DocElementBuilder.with_file_id()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.DocElementBuilder.with_grid_config"><code class="docutils literal notranslate"><span class="pre">DocElementBuilder.with_grid_config()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.DocElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">DocElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.EmbeddableElementBuilder"><code class="docutils literal notranslate"><span class="pre">EmbeddableElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.EmbeddableElementBuilder.with_link"><code class="docutils literal notranslate"><span class="pre">EmbeddableElementBuilder.with_link()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.EmbeddableElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">EmbeddableElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ModelElementBuilder"><code class="docutils literal notranslate"><span class="pre">ModelElementBuilder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ModelElementBuilder.with_model_type"><code class="docutils literal notranslate"><span class="pre">ModelElementBuilder.with_model_type()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ModelElementBuilder.with_code"><code class="docutils literal notranslate"><span class="pre">ModelElementBuilder.with_code()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ModelElementBuilder.with_svg_path"><code class="docutils literal notranslate"><span class="pre">ModelElementBuilder.with_svg_path()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ModelElementBuilder.with_file_ids"><code class="docutils literal notranslate"><span class="pre">ModelElementBuilder.with_file_ids()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ModelElementBuilder.with_viewer_state"><code class="docutils literal notranslate"><span class="pre">ModelElementBuilder.with_viewer_state()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.element_builders.ModelElementBuilder.build"><code class="docutils literal notranslate"><span class="pre">ModelElementBuilder.build()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
