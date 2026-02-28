@@ -3,12 +3,13 @@ Comprehensive mutation tests for all DUC element types.
 Covers: property mutation, versioning props, deep/nested mutation, invalid values, sequential mutation.
 """
 
-import pytest
-import time
 import random
+import time
 
 import ducpy as duc
+import pytest
 from ducpy.classes.ElementsClass import *
+
 
 def assert_versioning_changed(before, after):
     assert before.seed != after.seed
@@ -108,3 +109,52 @@ def test_mutate_all_element_types():
             print(f"⚠️ Skipped element type {i+1}: {e}")
 
 print("✅ Mutation API test suite loaded successfully.")
+
+
+def test_mutate_elements_via_sql():
+    """Mutate element properties using raw SQL UPDATE statements."""
+    import time as _time
+
+    from ducpy.builders.sql_builder import DucSQL
+
+    with DucSQL.new() as db:
+        now = int(_time.time() * 1000)
+
+        # Create a rectangle
+        db.sql(
+            "INSERT INTO elements "
+            "(id, element_type, x, y, width, height, label, seed, version, version_nonce, updated) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            "r1", "rectangle", 10, 20, 100, 50, "Rect", 42, 1, 100, now,
+        )
+
+        # Mutate position (like duc.mutate_element does: update x, y, bump version)
+        new_seed = random.randint(0, 2**31)
+        new_nonce = random.randint(0, 2**31)
+        new_ts = int(_time.time() * 1000)
+        db.sql(
+            "UPDATE elements SET x = ?, y = ?, seed = ?, version = version + 1, "
+            "version_nonce = ?, updated = ? WHERE id = ?",
+            20, 30, new_seed, new_nonce, new_ts, "r1",
+        )
+
+        row = db.sql("SELECT * FROM elements WHERE id = ?", "r1")[0]
+        assert row["x"] == 20 and row["y"] == 30
+        assert row["version"] == 2
+        assert row["seed"] == new_seed
+        assert row["updated"] >= now
+
+        # Mutate label
+        db.sql("UPDATE elements SET label = ? WHERE id = ?", "Updated Rect", "r1")
+        assert db.sql("SELECT label FROM elements WHERE id = ?", "r1")[0]["label"] == "Updated Rect"
+
+        # Sequential mutations
+        for i in range(5):
+            db.sql("UPDATE elements SET x = x + 10, version = version + 1 WHERE id = ?", "r1")
+        final = db.sql("SELECT x, version FROM elements WHERE id = ?", "r1")[0]
+        assert final["x"] == 70  # 20 + 5*10
+        assert final["version"] == 7  # 2 + 5
+
+        # Delete element
+        db.sql("UPDATE elements SET is_deleted = 1 WHERE id = ?", "r1")
+        assert db.sql("SELECT is_deleted FROM elements WHERE id = ?", "r1")[0]["is_deleted"] == 1

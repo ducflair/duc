@@ -1,0 +1,256 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────
+  # Phase 1: Lightweight release detection (no builds needed)
+  # Runs semantic-release --dry-run for each package to determine which
+  # ones would get a new version if dev were merged to main.
+  # This avoids running expensive build+test pipelines for packages
+  # that have no pending release.
+  # ──────────────────────────────────────────────────────────────────────
+  release-check:
+    name: Detect Pending Releases
+    runs-on: ubuntu-latest
+    outputs:
+      ducrs: ${{ steps.check.outputs.ducrs }}
+      ducjs: ${{ steps.check.outputs.ducjs }}
+      ducpy: ${{ steps.check.outputs.ducpy }}
+      ducpdf: ${{ steps.check.outputs.ducpdf }}
+      ducsvg: ${{ steps.check.outputs.ducsvg }}
+      duc2pdf: ${{ steps.check.outputs.duc2pdf }}
+      any_release: ${{ steps.check.outputs.any_release }}
+      test_filters: ${{ steps.check.outputs.test_filters }}
+      needs_wasm: ${{ steps.check.outputs.needs_wasm }}
+      needs_python: ${{ steps.check.outputs.needs_python }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Git
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Simulate merge to main
+        run: |
+          git stash || true
+          git fetch origin main --tags
+          git fetch origin ${{ github.head_ref }}
+          git checkout main
+          git merge origin/${{ github.head_ref }} --no-edit
+
+      - name: Check releases for all packages
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FILTERS=""
+          ANY="false"
+          NEEDS_WASM="false"
+          NEEDS_PYTHON="false"
+
+          check_release() {
+            local name="$1"
+            local dir="$2"
+
+            pushd "$dir" > /dev/null
+            local output
+            output=$(npx semantic-release --dry-run 2>&1) || true
+            popd > /dev/null
+
+            if echo "$output" | grep -q "The next release version is"; then
+              echo "${name}=true" >> "$GITHUB_OUTPUT"
+              echo "📦 ${name}: release pending"
+              return 0
+            else
+              echo "${name}=false" >> "$GITHUB_OUTPUT"
+              echo "⏭️  ${name}: no release"
+              return 1
+            fi
+          }
+
+          if check_release "ducrs" "./packages/ducrs"; then
+            FILTERS="${FILTERS:+$FILTERS }--filter=ducrs"
+            ANY="true"
+          fi
+
+          if check_release "ducjs" "./packages/ducjs"; then
+            FILTERS="${FILTERS:+$FILTERS }--filter=ducjs"
+            ANY="true"
+            NEEDS_WASM="true"
+          fi
+
+          if check_release "ducpy" "./packages/ducpy"; then
+            FILTERS="${FILTERS:+$FILTERS }--filter=ducpy"
+            ANY="true"
+            NEEDS_PYTHON="true"
+          fi
+
+          if check_release "ducpdf" "./packages/ducpdf"; then
+            FILTERS="${FILTERS:+$FILTERS }--filter=ducpdf"
+            ANY="true"
+            NEEDS_WASM="true"
+          fi
+
+          if check_release "ducsvg" "./packages/ducsvg"; then
+            FILTERS="${FILTERS:+$FILTERS }--filter=ducsvg"
+            ANY="true"
+            NEEDS_WASM="true"
+          fi
+
+          if check_release "duc2pdf" "./packages/ducpdf/src/duc2pdf"; then
+            FILTERS="${FILTERS:+$FILTERS }--filter=duc2pdf"
+            ANY="true"
+          fi
+
+          echo "test_filters=${FILTERS}" >> "$GITHUB_OUTPUT"
+          echo "any_release=${ANY}" >> "$GITHUB_OUTPUT"
+          echo "needs_wasm=${NEEDS_WASM}" >> "$GITHUB_OUTPUT"
+          echo "needs_python=${NEEDS_PYTHON}" >> "$GITHUB_OUTPUT"
+
+          echo ""
+          echo "═══════════════════════════════"
+          if [ "$ANY" = "true" ]; then
+            echo "📋 Test plan: turbo test ${FILTERS}"
+          else
+            echo "📋 No packages need testing"
+          fi
+          echo "═══════════════════════════════"
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Phase 2: Build & test only packages with pending releases
+  # Uses turbo to orchestrate the dependency graph — if ducsvg needs
+  # testing, turbo automatically builds ducpdf → ducjs → ducrs first.
+  # Toolchains are installed conditionally to save time.
+  # ──────────────────────────────────────────────────────────────────────
+  test:
+    name: Test Affected Packages
+    needs: release-check
+    if: needs.release-check.outputs.any_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install native toolchain for wasm build
+        if: needs.release-check.outputs.needs_wasm == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang
+
+      - name: Install wasm-pack
+        if: needs.release-check.outputs.needs_wasm == 'true'
+        run: cargo install wasm-pack --version 0.14.0 --locked --force
+
+      - name: Setup Python
+        if: needs.release-check.outputs.needs_python == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        if: needs.release-check.outputs.needs_python == 'true'
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run package tests
+        run: bun turbo test ${{ needs.release-check.outputs.test_filters }}
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Phase 3: Summary & gate check
+  # Acts as a single required status check for branch protection.
+  # Produces a step summary visible in the Actions UI.
+  # ──────────────────────────────────────────────────────────────────────
+  results:
+    name: PR Check Results
+    needs: [release-check, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate results
+        run: |
+          format_status() {
+            if [ "$1" = "true" ]; then echo "✅ Yes"; else echo "➖ No"; fi
+          }
+
+          {
+            echo "## PR Check Results"
+            echo ""
+            echo "### Pending Releases"
+            echo "| Package | Will Release |"
+            echo "|---------|-------------|"
+            echo "| ducrs | $(format_status "${{ needs.release-check.outputs.ducrs }}") |"
+            echo "| ducjs | $(format_status "${{ needs.release-check.outputs.ducjs }}") |"
+            echo "| ducpy | $(format_status "${{ needs.release-check.outputs.ducpy }}") |"
+            echo "| ducpdf | $(format_status "${{ needs.release-check.outputs.ducpdf }}") |"
+            echo "| ducsvg | $(format_status "${{ needs.release-check.outputs.ducsvg }}") |"
+            echo "| duc2pdf | $(format_status "${{ needs.release-check.outputs.duc2pdf }}") |"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          RELEASE_CHECK="${{ needs.release-check.result }}"
+          TEST_RESULT="${{ needs.test.result }}"
+          ANY_RELEASE="${{ needs.release-check.outputs.any_release }}"
+
+          if [ "$RELEASE_CHECK" != "success" ]; then
+            echo "### ❌ Release detection failed" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          if [ "$ANY_RELEASE" != "true" ]; then
+            echo "### ✅ No pending releases — tests skipped" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ "$TEST_RESULT" = "success" ]; then
+            echo "### ✅ All tests passed for affected packages" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$TEST_RESULT" = "skipped" ]; then
+            echo "### ⏭️ Tests were skipped" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### ❌ Tests failed" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi

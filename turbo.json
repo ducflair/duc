@@ -1,12 +1,18 @@
 {
-  "$schema": "https://turbo.build/schema.json",
+  "$schema": "https://v2-8-11.turborepo.dev/schema.json",
   "tasks": {
     "ducjs#build": {
       "cache": false,
+      "dependsOn": [
+        "ducrs#build"
+      ],
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
     "ducpy#build": {
       "cache": false,
+      "dependsOn": [
+        "ducrs#build"
+      ],
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
     "ducdxf#build": {
@@ -21,17 +27,49 @@
       "cache": false,
       "dependsOn": [
         "ducjs#build",
-        "ducrs#build"
+        "ducrs#build",
+        "duc2pdf#build"
       ],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    "duc2pdf#build": {
+      "cache": false,
+      "dependsOn": ["ducrs#build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    "duc2pdf#test": {
+      "cache": false,
+      "dependsOn": ["duc2pdf#build"],
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
     "ducpdf#test": {
       "cache": false,
-      "dependsOn": ["ducpdf#build"],
+      "dependsOn": ["ducpdf#build", "duc2pdf#test"],
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"],
       "outputs": [
         "packages/ducpdf/tests/tests_output/**"
       ]
+    },
+    "ducjs#test": {
+      "cache": false,
+      "dependsOn": [
+        "ducjs#build"
+      ],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    "ducpy#test": {
+      "cache": false,
+      "dependsOn": [
+        "ducpy#build"
+      ],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    "ducrs#test": {
+      "cache": false,
+      "dependsOn": [
+        "ducrs#build"
+      ],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
     "ducsvg#build": {
       "cache": false,
@@ -57,6 +95,12 @@
     "ducpy#gen:docs": {
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+
+    "ducpy#dev:docs": {
+      "cache": false,
+      "persistent": true,
+      "inputs": ["$TURBO_DEFAULT$"]
     },
 
     "@duc/docs#build": {

@@ -5,9 +5,9 @@ This demo shows how to create various types of elements using the modern builder
 """
 
 import ducpy as duc
-from ducpy.builders.style_builders import (
-    create_solid_content, create_fill_and_stroke_style, create_simple_styles
-)
+from ducpy.builders.style_builders import (create_fill_and_stroke_style,
+                                           create_simple_styles,
+                                           create_solid_content)
 
 
 def demo_basic_elements():
@@ -144,22 +144,7 @@ def demo_stack_elements():
     print(f"Plot is marked as plot: {plot.element.stack_element_base.stack_base.is_plot}")
     print(f"Plot margins: {plot.element.layout.margins.top}mm")
     
-    # Create a viewport
-    viewport_points = [(0, 0), (80, 0), (80, 60), (0, 60), (0, 0)]
 
-    view = (duc.StateBuilder()
-        .build_view()
-        .with_scroll_x(0).with_scroll_y(0).with_zoom(1.5).with_twist_angle(0)
-        .with_center_x(40).with_center_y(30).with_scope("mm")
-        .build())
-    viewport = (duc.ElementBuilder()
-        .with_label("Detail Viewport")
-        .build_viewport_element()
-        .with_points(viewport_points)
-        .with_view(view).with_view_scale(0.75)
-        .build())
-    print(f"Viewport zoom: {viewport.element.view.zoom}x")
-    print(f"Viewport scale: {viewport.element.scale}")
 
 
 def demo_custom_stack_base():
@@ -174,12 +159,11 @@ def demo_custom_stack_base():
         .build_frame_element()
         .with_stack_base(duc.StateBuilder().build_stack_base()
             .with_is_collapsed(False)
-            .with_styles(duc.DucStackLikeStyles(opacity=0.8, labeling_color="#0066CC"))
+            .with_styles(duc.DucStackLikeStyles(opacity=0.8))
             .build())
         .build())
     
     print(f"Custom stack opacity: {custom_frame.element.stack_element_base.stack_base.styles.opacity}")
-    print(f"Custom stack color: {custom_frame.element.stack_element_base.stack_base.styles.labeling_color}")
 
 
 def main():

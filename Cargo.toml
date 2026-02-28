@@ -2,6 +2,8 @@
 resolver = "2"
 members = [
     "packages/ducrs",
+    "packages/ducjs/crate",
+    "packages/ducpy/crate",
     "packages/ducpdf/src/duc2pdf",
     "packages/ducsvg/src/pdf2svg",
 ]
