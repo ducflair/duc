@@ -79,7 +79,16 @@ jobs:
 
             pushd "$dir" > /dev/null
             local output
-            output=$(npx semantic-release --dry-run 2>&1) || true
+            # Override CI env vars so semantic-release sees a push to main
+            # instead of a PR context (which causes it to skip entirely).
+            output=$(
+              GITHUB_EVENT_NAME=push \
+              GITHUB_REF=refs/heads/main \
+              GITHUB_REF_NAME=main \
+              GITHUB_HEAD_REF= \
+              GITHUB_BASE_REF= \
+              npx semantic-release --dry-run 2>&1
+            ) || true
             popd > /dev/null
 
             if echo "$output" | grep -q "The next release version is"; then
@@ -89,6 +98,8 @@ jobs:
             else
               echo "${name}=false" >> "$GITHUB_OUTPUT"
               echo "⏭️  ${name}: no release"
+              # Log the actual output for debugging
+              echo "   ↳ $(echo "$output" | grep -iE 'release|version|skip|branch|error' | head -3)"
               return 1
             fi
           }
