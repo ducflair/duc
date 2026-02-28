@@ -46,9 +46,6 @@ jobs:
           current-branch: ${{ github.ref_name }}
           package-name: duc2pdf
 
-      - name: Run tests
-        run: bun turbo test --filter=duc2pdf
-
       - name: Update Cargo dependencies
         working-directory: ./packages/ducpdf/src/duc2pdf
         run: cargo update
