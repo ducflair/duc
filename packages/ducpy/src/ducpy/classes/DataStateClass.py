@@ -1,18 +1,16 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Union, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-from ducpy.Duc.PRUNING_LEVEL import PRUNING_LEVEL
-from ducpy.Duc.TEXT_ALIGN import TEXT_ALIGN
+from ducpy.enums import PRUNING_LEVEL, TEXT_ALIGN
 
 if TYPE_CHECKING:
     from ducpy.classes.ElementsClass import ElementWrapper
-    from ducpy.classes.StandardsClass import Standard
 
-from ducpy.classes.ElementsClass import (DucBlock, DucBlockCollection, DucBlockInstance, DucGroup, DucHead, DucLayer,
-                                         DucRegion, ElementBackground,
-                                         ElementStroke, ElementWrapper,
-                                         GeometricPoint)
-from ducpy.classes.StandardsClass import GridSettings, SnapSettings, Standard
+from ducpy.classes.ElementsClass import (DucBlock, DucBlockCollection,
+                                         DucBlockInstance, DucGroup, DucHead,
+                                         DucLayer, DucRegion,
+                                         ElementBackground, ElementStroke,
+                                         ElementWrapper, GeometricPoint)
 
 
 @dataclass
@@ -21,27 +19,16 @@ class DictionaryEntry:
     value: str
 
 @dataclass
-class DisplayPrecision:
-    linear: int
-    angular: int
-
-@dataclass
 class DucGlobalState:
     view_background_color: str
     main_scope: str
-    dash_spacing_scale: float
-    is_dash_spacing_affected_by_viewport_scale: bool
     scope_exponent_threshold: int
-    dimensions_associative_by_default: bool
-    use_annotative_scaling: bool
-    display_precision: DisplayPrecision
     name: Optional[str]
     pruning_level: Optional[PRUNING_LEVEL] = None
 
 @dataclass
 class DucLocalState:
     scope: str
-    active_standard_id: str
     scroll_x: float
     scroll_y: float
     zoom: float
@@ -51,8 +38,6 @@ class DucLocalState:
     objects_snap_mode_enabled: bool
     grid_mode_enabled: bool
     outline_mode_enabled: bool
-    active_grid_settings: Optional[List[str]]
-    active_snap_settings: Optional[str]
     current_item_stroke: Optional["ElementStroke"]
     current_item_background: Optional["ElementBackground"]
     current_item_opacity: Optional[float]
@@ -63,13 +48,7 @@ class DucLocalState:
     current_item_start_line_head: Optional["DucHead"]
     current_item_end_line_head: Optional["DucHead"]
     manual_save_mode: Optional[bool] = None
-
-@dataclass
-class JSONPatchOperation:
-    op: str
-    path: str
-    from_path: Optional[str]
-    value: Any # Value can be any JSON-serializable type
+    decimal_places: int = 2
 
 @dataclass
 class VersionBase:
@@ -82,21 +61,45 @@ class VersionBase:
 
 @dataclass
 class Checkpoint(VersionBase):
-    data: bytes
-    size_bytes: int
-    type: str
+    version_number: int = 0
+    schema_version: int = 0
+    is_schema_boundary: bool = False
+    data: bytes = b''
+    size_bytes: int = 0
+    type: str = 'checkpoint'
 
 @dataclass
 class Delta(VersionBase):
-    patch: List[JSONPatchOperation]
-    type: str
-    
-    def __post_init__(self):
-        if self.patch is None:
-            self.patch = []
+    version_number: int = 0
+    schema_version: int = 0
+    base_checkpoint_id: str = ''
+    payload: bytes = b''
+    size_bytes: int = 0
+    type: str = 'delta'
+
+@dataclass
+class SchemaMigration:
+    from_schema_version: int
+    to_schema_version: int
+    migration_name: str
+    applied_at: int
+    migration_checksum: Optional[str] = None
+    boundary_checkpoint_id: Optional[str] = None
+
+@dataclass
+class VersionChain:
+    id: str
+    schema_version: int
+    start_version: int
+    end_version: Optional[int] = None
+    migration: Optional[SchemaMigration] = None
+    root_checkpoint_id: Optional[str] = None
 
 @dataclass
 class VersionGraphMetadata:
+    current_version: int
+    current_schema_version: int
+    chain_count: int
     last_pruned: int
     total_size: int
 
@@ -104,9 +107,15 @@ class VersionGraphMetadata:
 class VersionGraph:
     checkpoints: List[Checkpoint]
     deltas: List[Delta]
+    chains: List[VersionChain]
     metadata: VersionGraphMetadata
     user_checkpoint_version_id: str
     latest_version_id: str
+
+@dataclass
+class DisplayPrecision:
+    linear: int = 2
+    angular: int = 2
 
 @dataclass
 class DucExternalFileData:
@@ -134,7 +143,6 @@ class ExportedDataState:
     groups: List["DucGroup"]
     regions: List["DucRegion"]
     layers: List["DucLayer"]
-    standards: List[Standard]
     dictionary: Dict[str, str]
     duc_local_state: Optional[DucLocalState]
     duc_global_state: Optional[DucGlobalState]

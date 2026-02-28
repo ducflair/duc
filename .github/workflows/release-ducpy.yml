@@ -1,15 +1,8 @@
 name: Release Python
 
 on:
+  workflow_call:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - next
-      - dev
-    paths:
-      - 'packages/ducpy/**'
-      - 'package.json'
 
 permissions:
   contents: write
@@ -19,6 +12,8 @@ permissions:
 jobs:
   release_ducpy:
     runs-on: ubuntu-latest
+    env:
+      UV_PYTHON: "3.13"
     concurrency:
       group: release-ducpy
       cancel-in-progress: false
@@ -47,7 +42,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.13'
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -60,6 +55,10 @@ jobs:
           current-branch: ${{ github.ref_name }}
           package-name: ducpy
 
+      - name: Run tests
+        working-directory: ./packages/ducpy
+        run: bun run test
+
       - name: Release
         id: release
         env:
@@ -70,8 +69,61 @@ jobs:
             echo "status=success" >> $GITHUB_OUTPUT
           else
             echo "status=failure" >> $GITHUB_OUTPUT
+            exit 1
           fi
         working-directory: ./packages/ducpy
+
+      - name: Install Pyodide build tooling
+        id: pyodide_tooling
+        if: steps.release.outputs.status == 'success'
+        run: |
+          python -m pip install --upgrade pip
+          pip install "pyodide-build>=0.29.2"
+          echo "emscripten_version=$(pyodide config get emscripten_version)" >> $GITHUB_OUTPUT
+
+      - name: Setup Emscripten SDK
+        if: steps.release.outputs.status == 'success'
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: ${{ steps.pyodide_tooling.outputs.emscripten_version }}
+
+      - name: Setup Rust nightly for Pyodide
+        if: steps.release.outputs.status == 'success'
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: wasm32-unknown-emscripten
+
+      - name: Build Pyodide wheel
+        if: steps.release.outputs.status == 'success'
+        working-directory: ./packages/ducpy
+        run: |
+          TAG=$(git describe --tags --abbrev=0 --match 'ducpy@*')
+          VERSION="${TAG#ducpy@}"
+          echo "Building Pyodide wheel for version ${VERSION}"
+          RUSTUP_TOOLCHAIN=nightly SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION}" pyodide build --outdir dist
+
+      - name: Upload wheels to GitHub release
+        if: steps.release.outputs.status == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the tag created by semantic-release
+          TAG=$(git describe --tags --abbrev=0 --match 'ducpy@*')
+          echo "Uploading wheels from dist/ to release $TAG"
+
+          # Upload all wheels and source distributions
+          find packages/ducpy/dist -name "*.whl" -o -name "*.tar.gz" | while read file; do
+            echo "Uploading: $file"
+            gh release upload "$TAG" "$file" --clobber
+          done
+
+      - name: Deploy Python documentation
+        if: steps.release.outputs.status == 'success'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-ducpy-docs-deployment
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Notify web deployment
         if: steps.release.outputs.status == 'success'
         uses: peter-evans/repository-dispatch@v3

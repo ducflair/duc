@@ -1,15 +1,8 @@
 name: Release Rust
 
 on:
+  workflow_call:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - next
-      - dev
-    paths:
-      - 'packages/ducrs/**'
-      - 'package.json'
 
 permissions:
   contents: write
@@ -52,6 +45,9 @@ jobs:
         with:
           current-branch: ${{ github.ref_name }}
           package-name: ducrs
+
+      - name: Run tests
+        run: bun ducrs:test
 
       - name: Release
         env:

@@ -5,7 +5,6 @@ description = "The library for the Duc 2D CAD file format"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "flatbuffers>=25.2.10",
     "nanoid>=2.0.0",
 ]
 
@@ -23,22 +22,24 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://duc.ducflair.com"
 "Source" = "https://github.com/ducflair/duc/tree/main/packages/ducpy"
-"Documentation" = "https://python.duc.ducflair.com"
+"Documentation" = "https://ducflair.github.io/duc/reference/python/"
+"Package Index" = "https://ducflair.github.io/duc/simple/ducpy/"
 
 [build-system]
-requires = ["setuptools>=63.0", "setuptools-scm>=8.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+manifest-path = "crate/Cargo.toml"
+python-source = "src"
+module-name = "ducpy_native"
+include = [
+    { path = "LICENSE", format = "sdist" }
+]
 
 [tool.setuptools]
-# Tells setuptools to find packages in the 'src' directory.
-# This replaces find_packages(where='src') and package_dir={'': 'src'} from setup.py.
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.setuptools_scm]
-version_scheme = "guess-next-dev"
-local_scheme = "node-and-date"
-fallback_version = "0.1.0"
 
 [dependency-groups]
 dev = [

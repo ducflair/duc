@@ -1,33 +1,35 @@
 import type { ElementOrToolType } from "..";
-import type { MarkNonNullable } from "../utility-types";
 import { assertNever } from "../../utils";
 import { Bounds, LineSegment, TuplePoint } from "../geometryTypes";
+import type { MarkNonNullable } from "../utility-types";
 import type {
-  DucArrowElement,
-  DucBindableElement,
-  DucElbowArrowElement,
-  DucElement,
-  DucElementType,
-  DucEmbeddableElement,
-  DucFlowchartNodeElement,
-  DucFrameElement,
-  DucFrameLikeElement,
-  DucFreeDrawElement,
-  DucImageElement,
-  DucLinearElement,
-  DucPlotElement,
-  DucTableElement,
-  DucPointBinding,
-  DucTextContainer,
-  DucTextElement,
-  DucTextElementWithContainer,
-  FixedPointBinding,
-  InitializedDucImageElement,
-  DucNonSelectionElement,
-  DucEllipseElement,
-  DucPolygonElement,
-  NonDeleted,
-  DucIframeLikeElement
+    DucArrowElement,
+    DucBindableElement,
+    DucDocElement,
+    DucElbowArrowElement,
+    DucElement,
+    DucElementType,
+    DucEllipseElement,
+    DucEmbeddableElement,
+    DucFlowchartNodeElement,
+    DucFrameElement,
+    DucFrameLikeElement,
+    DucFreeDrawElement,
+    DucIframeLikeElement,
+    DucImageElement,
+    DucLinearElement,
+    DucNonSelectionElement,
+    DucPdfElement,
+    DucPlotElement,
+    DucPointBinding,
+    DucPolygonElement,
+    DucTableElement,
+    DucTextContainer,
+    DucTextElement,
+    DucTextElementWithContainer,
+    FixedPointBinding,
+    InitializedDucImageElement,
+    NonDeleted
 } from "./";
 
 export const isInitializedImageElement = (
@@ -40,6 +42,20 @@ export const isImageElement = (
   element: DucElement | null,
 ): element is DucImageElement => {
   return !!element && element.type === "image";
+};
+
+export const isPdfElement = (
+  element: DucElement | null,
+): element is DucPdfElement => {
+  return !!element && element.type === "pdf";
+};
+
+export type DucPdfLikeElement = DucPdfElement | DucDocElement;
+
+export const isPdfLikeElement = (
+  element: DucElement | null,
+): element is DucPdfLikeElement => {
+  return !!element && (element.type === "pdf" || element.type === "doc");
 };
 
 export const isEmbeddableElement = (
@@ -263,17 +279,12 @@ export const isDucElement = (
     case "frame":
     case "image":
     case "table":
-    case "dimension":
-    case "leader":
     case "doc":
     case "selection":
     case "model":
-    case "featurecontrolframe":
-    case "viewport":
     case "plot":
-    case "xray":
     case "pdf":
-    case "mermaid": {
+    {
       return true;
     }
     default: {

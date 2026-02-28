@@ -11,7 +11,7 @@
     <a href="https://github.com/ducflair/duc/blob/main/packages/ducrs">
       <img src="https://shields.io/badge/Rust-CE412B?logo=Rust&logoColor=fff&style=round-square" alt="Rust" />
     </a>
-    <a href="https://github.com/ducflair/duc/blob/main/packages/ducrs">
+    <a href="https://github.com/ducflair/duc/blob/main/packages/ducpy">
       <img src="https://shields.io/badge/Python-ffde57?logo=Python&logoColor=646464&style=round-square" alt="Python" />
     </a>
     <a href="https://github.com/ducflair/duc/blob/main/packages/ducsvg">
@@ -57,6 +57,11 @@ Join our growing community to discuss, collaborate, and share insights about the
 
 ## Commit Message Guidelines
 To assure semantic release works, follow [these guidelines](https://semantic-release.gitbook.io/semantic-release#how-does-it-work).
+
+Notes:
+
+- Package names are inferred from the configured semantic-release `paths` (for example, `packages/ducpy` -> `ducpy`).
+- Use lowercase package names to keep it consistent.
 
 ---
 

@@ -1,15 +1,8 @@
 name: Release duc2pdf
 
 on:
+  workflow_call:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - next
-      - dev
-    paths:
-      - 'packages/ducpdf/src/duc2pdf/**'
-      - 'package.json'
 
 permissions:
   contents: write
@@ -52,6 +45,9 @@ jobs:
         with:
           current-branch: ${{ github.ref_name }}
           package-name: duc2pdf
+
+      - name: Run tests
+        run: bun turbo test --filter=duc2pdf
 
       - name: Update Cargo dependencies
         working-directory: ./packages/ducpdf/src/duc2pdf

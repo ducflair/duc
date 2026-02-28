@@ -1,4 +1,4 @@
-# ducpy (Python)
+# ducpy
 
 <p align="center">
   <br/>

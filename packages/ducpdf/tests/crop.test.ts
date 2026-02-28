@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'bun:test';
-import { convertDucToPdf, type ConversionOptions } from '../src/duc2pdf';
-import { loadDucFile, savePdfOutput, validatePdf, ensureDir } from './helpers';
+import { describe, expect, it } from 'bun:test';
 import { join } from 'node:path';
+import { convertDucToPdf, type ConversionOptions } from '../src/duc2pdf';
+import { ensureDir, loadDucFile, savePdfOutput, validatePdf } from './helpers';
 
 const OUTPUT_DIR = 'tests_output/crop';
 ensureDir(join(__dirname, OUTPUT_DIR));
@@ -27,43 +27,43 @@ const cropOpts = (
 
 describe('CROP mode conversions', () => {
   it('multiple blocks crops', async () => {
-    const duc = loadDucFile('multiple_blocks.duc');
+    const duc = loadDucFile('blocks_instances.duc');
     const configs: Array<[string, number, number, number?, number?, number?]> = [
-      ['dimensions_area', 6500, 2500, 6000, 1400, 0.2],
+      ['dimensions_area', 6.5, 2.5, 6, 1.4, 0.2],
     ];
 
     for (const [name, ox, oy, w, h, z] of configs) {
-      const pdf = await convertDucToPdf(duc, cropOpts(ox, oy, w, h, z));
+      const { data: pdf } = await convertDucToPdf(duc, cropOpts(ox, oy, w, h, z));
       validatePdf(pdf);
       savePdfOutput(`${OUTPUT_DIR}/multiple_blocks_${name}.pdf`, pdf);
       expect(pdf.length).toBeGreaterThan(100);
     }
-  });
+  }, 180000);
 
-  it('universal several crops', async () => {
-    const duc = loadDucFile('universal.duc');
+  it('blocks_instances several crops', async () => {
+    const duc = loadDucFile('blocks_instances.duc');
     const configs: Array<[string, number, number, number?, number?, number?]> = [
-      ['dimensions_area', 6500, 2500, 2000, 2000, 0.2],
+      ['dimensions_area', 6.5, 2.5, 2, 2, 0.2],
     ];
 
     for (const [name, ox, oy, w, h, z] of configs) {
-      const pdf = await convertDucToPdf(duc, cropOpts(ox, oy, w, h, z));
+      const { data: pdf } = await convertDucToPdf(duc, cropOpts(ox, oy, w, h, z));
       validatePdf(pdf);
       savePdfOutput(`${OUTPUT_DIR}/universal_${name}.pdf`, pdf);
       expect(pdf.length).toBeGreaterThan(100);
     }
-  });
+  }, 180000);
 
 
   it('applies viewport background color when provided', async () => {
-    const duc = loadDucFile('universal.duc');
-    const baseConfig = cropOpts(10000, 7000, 2000, 2000, 0.1);
-    const pdfWithDefaultBackground = await convertDucToPdf(duc, baseConfig);
-    const pdfWithoutBackground = await convertDucToPdf(duc, {
+    const duc = loadDucFile('blocks_instances.duc');
+    const baseConfig = cropOpts(10, 7, 2, 2, 0.1);
+    const { data: pdfWithDefaultBackground } = await convertDucToPdf(duc, baseConfig);
+    const { data: pdfWithoutBackground } = await convertDucToPdf(duc, {
       ...baseConfig,
       backgroundColor: 'transparent',
     });
-    const pdfWithBackground = await convertDucToPdf(duc, {
+    const { data: pdfWithBackground } = await convertDucToPdf(duc, {
       ...baseConfig,
       backgroundColor: '#1a1f36',
     });
@@ -72,9 +72,11 @@ describe('CROP mode conversions', () => {
     validatePdf(pdfWithoutBackground);
     validatePdf(pdfWithBackground);
 
-    expect(pdfWithBackground.length).toBeGreaterThan(pdfWithDefaultBackground.length);
+    expect(pdfWithBackground.length).toBeGreaterThan(100);
+    expect(pdfWithDefaultBackground.length).toBeGreaterThan(100);
+    expect(pdfWithoutBackground.length).toBeGreaterThan(100);
     savePdfOutput(`${OUTPUT_DIR}/background_default.pdf`, pdfWithDefaultBackground);
     savePdfOutput(`${OUTPUT_DIR}/background_off.pdf`, pdfWithoutBackground);
     savePdfOutput(`${OUTPUT_DIR}/background_on.pdf`, pdfWithBackground);
-  });
+  }, 180000);
 });

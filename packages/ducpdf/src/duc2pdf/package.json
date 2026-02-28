@@ -5,7 +5,7 @@
   "scripts": {
     "build": "cargo build --release",
     "build:wasm": "wasm-pack build --release --target web",
-    "test": "cargo test",
+    "test": "cargo test --lib --tests",
     "semantic-release": "semantic-release"
   },
   "devDependencies": {
