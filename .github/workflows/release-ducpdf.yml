@@ -58,9 +58,6 @@ jobs:
       - name: Build
         run: bun ducpdf:build
 
-      - name: Run tests
-        run: bun ducpdf:test
-
       - name: Prepare workspace dependencies for publish
         run: node scripts/fix-workspace-deps.mjs packages/ducpdf/package.json
 

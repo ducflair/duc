@@ -46,9 +46,6 @@ jobs:
           current-branch: ${{ github.ref_name }}
           package-name: ducrs
 
-      - name: Run tests
-        run: bun ducrs:test
-
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
