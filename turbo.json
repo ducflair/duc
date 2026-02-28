@@ -23,13 +23,24 @@
       "cache": false,
       "dependsOn": [
         "ducjs#build",
-        "ducrs#build"
+        "ducrs#build",
+        "duc2pdf#build"
       ],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    "duc2pdf#build": {
+      "cache": false,
+      "dependsOn": ["ducrs#build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
+    },
+    "duc2pdf#test": {
+      "cache": false,
+      "dependsOn": ["duc2pdf#build"],
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },
     "ducpdf#test": {
       "cache": false,
-      "dependsOn": ["ducpdf#build"],
+      "dependsOn": ["ducpdf#build", "duc2pdf#test"],
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"],
       "outputs": [
         "packages/ducpdf/tests/tests_output/**"
