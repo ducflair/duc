@@ -1,9 +1,7 @@
 use crate::ConversionResult;
-use duc::generated::duc::{
-    ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, STROKE_CAP, STROKE_JOIN, STROKE_PREFERENCE,
-};
 use duc::types::{
-    DucElementEnum, DucElementStylesBase, DucHatchStyle, ElementBackground, ElementStroke, Standard,
+    ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, STROKE_CAP, STROKE_JOIN, STROKE_PREFERENCE,
+    DucElementEnum, DucElementStylesBase, DucHatchStyle, ElementBackground, ElementStroke,
 };
 use hipdf::hatching::{HatchStyle, HatchingManager};
 use hipdf::lopdf::{content::Operation, Object};
@@ -11,24 +9,15 @@ use std::collections::HashMap;
 
 /// Style resolution context for resolving element styles
 pub struct StyleResolver {
-    active_standard: Option<Standard>,
-    standard_overrides: HashMap<String, Standard>,
     parent_overrides: HashMap<String, DucElementStylesBase>,
 }
 
 impl StyleResolver {
-    /// Create a new style resolver with active standard
-    pub fn new(active_standard: Option<Standard>) -> Self {
+    /// Create a new style resolver
+    pub fn new() -> Self {
         Self {
-            active_standard,
-            standard_overrides: HashMap::new(),
             parent_overrides: HashMap::new(),
         }
-    }
-
-    /// Add a standard override
-    pub fn add_standard_override(&mut self, id: String, standard: Standard) {
-        self.standard_overrides.insert(id, standard);
     }
 
     /// Add parent override (from frames, viewports, plots)
@@ -38,15 +27,9 @@ impl StyleResolver {
 
     /// Resolve final styles for an element
     /// Order of precedence (highest to lowest):
-    /// 1. Plot Element's Standard override
-    /// 2. Standard override
-    /// 3. Element parent overrides (from frames, viewports, plots)
-    /// 4. Element styles
-    pub fn resolve_styles(
-        &self,
-        element: &DucElementEnum,
-        plot_standard_override: Option<&String>,
-    ) -> ResolvedStyles {
+    /// 1. Element parent overrides (from frames/plots)
+    /// 2. Element styles
+    pub fn resolve_styles(&self, element: &DucElementEnum) -> ResolvedStyles {
         let base = crate::builder::DucToPdfBuilder::get_element_base(element);
         let mut resolved = {
             let mut r = ResolvedStyles::from_base_styles(&base.styles);
@@ -57,18 +40,6 @@ impl StyleResolver {
         // Apply parent overrides if any
         if let Some(parent_styles) = self.parent_overrides.get(&base.id) {
             resolved.apply_base_styles(parent_styles);
-        }
-
-        // Apply standard override if specified
-        if let Some(standard) = &self.active_standard {
-            resolved.apply_standard_styles(standard);
-        }
-
-        // Apply plot element's standard override (highest precedence)
-        if let Some(override_id) = plot_standard_override {
-            if let Some(standard) = self.standard_overrides.get(override_id) {
-                resolved.apply_standard_styles(standard);
-            }
         }
 
         resolved
@@ -180,44 +151,6 @@ impl ResolvedStyles {
         }
     }
 
-    /// Apply standard styles (simplified implementation)
-    pub fn apply_standard_styles(&mut self, standard: &Standard) {
-        // Apply styles from standard if available
-        if let Some(_standard_styles) = &standard.styles {
-            // This would implement comprehensive standard style application
-            // For now, this is a placeholder for future enhancement
-            // TODO: Implement proper style inheritance based on:
-            // - common_styles: Basic element styles
-            // - text_styles: Text-specific formatting
-            // - table_styles: Table layout and cell styles
-            // - dimension_styles: Measurement annotation styles
-            // - leader_styles: Leader line and callout styles
-            // - feature_control_frame_styles: GD&T frame styles
-            // - viewport_styles: Viewport display styles
-            // - hatch_styles: Pattern fill styles
-            // - xray_styles: Transparency and overlay styles
-        }
-    }
-
-    /// Apply element styles base (helper method)
-    fn apply_element_styles_base(&mut self, styles: &DucElementStylesBase) {
-        // Apply opacity and roundness
-        self.opacity = styles.opacity;
-        self.roundness = styles.roundness;
-
-        // Merge backgrounds (later ones override earlier ones)
-        for bg in &styles.background {
-            self.background
-                .push(ResolvedBackground::from_element_background(bg));
-        }
-
-        // Merge strokes
-        for stroke in &styles.stroke {
-            self.stroke
-                .push(ResolvedStroke::from_element_stroke(stroke));
-        }
-    }
-
     /// Resolve dynamic fields in text elements with comprehensive field support
     pub fn resolve_dynamic_fields(&self, text: &str, element: &DucElementEnum) -> String {
         let mut result = text.to_string();
@@ -239,16 +172,7 @@ impl ResolvedStyles {
         result = result.replace("{time}", &now.format("%H:%M:%S").to_string());
         result = result.replace("{datetime}", &now.format("%Y-%m-%d %H:%M:%S").to_string());
 
-        // Handle text element specific dynamic parts
-        if let DucElementEnum::DucTextElement(text_elem) = element {
-            for dynamic_part in &text_elem.dynamic {
-                // Use cached value for now
-                result = result.replace(
-                    &format!("{{{}}}", dynamic_part.tag),
-                    &dynamic_part.cached_value,
-                );
-            }
-        }
+        let _ = element;
 
         result
     }
@@ -391,7 +315,6 @@ impl StyleResolver {
                 // No hatching pattern for ignore
                 return Ok("no_hatch".to_string());
             }
-            _ => HipdfHatchStyle::DiagonalRight, // Default fallback
         };
 
         let pattern_id = format!(
@@ -420,7 +343,6 @@ impl StyleResolver {
                     Ok(HatchStyle::DiagonalRight) // Default fallback
                 }
             }
-            _ => Ok(HatchStyle::DiagonalRight), // Default fallback for any other values
         }
     }
 

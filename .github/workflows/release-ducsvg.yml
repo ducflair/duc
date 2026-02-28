@@ -1,12 +1,8 @@
 name: Release ducsvg
 
 on:
+  workflow_call:
   workflow_dispatch:
-  push:
-    branches: [main, next, dev]
-    paths:
-      - 'packages/ducsvg/**'
-      - 'package.json'
 
 permissions:
   contents: write
@@ -42,11 +38,26 @@ jobs:
       - name: Update npm
         run: npm install -g npm@latest
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install native toolchain for wasm build
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang
+
+      - name: Install wasm-pack (pinned 0.14.x)
+        run: cargo install wasm-pack --version 0.14.0 --locked --force
 
       - name: Install deps
         run: bun install
       - name: Build
         run: bun ducsvg:build
+
+      - name: Run tests
+        run: bun ducsvg:test
 
       - name: Prepare workspace dependencies for publish
         run: node scripts/fix-workspace-deps.mjs packages/ducsvg/package.json

@@ -1,13 +1,13 @@
 export * from "./typeChecks";
 
-import { DucView, PrecisionValue, Scope } from "..";
-import { BEZIER_MIRRORING, BLENDING, BLOCK_ATTACHMENT, BOOLEAN_OPERATION, COLUMN_TYPE, DATUM_BRACKET_STYLE, DATUM_TARGET_TYPE, DIMENSION_FIT_RULE, DIMENSION_TEXT_PLACEMENT, DIMENSION_TYPE, ELEMENT_CONTENT_PREFERENCE, FEATURE_MODIFIER, GDT_SYMBOL, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, MARK_ELLIPSE_CENTER, MATERIAL_CONDITION, PARAMETRIC_SOURCE_TYPE, STACKED_TEXT_ALIGN, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TABLE_CELL_ALIGNMENT, TABLE_FLOW_DIRECTION, TEXT_ALIGN, TEXT_FIELD_SOURCE_PROPERTY, TEXT_FIELD_SOURCE_TYPE, TEXT_FLOW_DIRECTION, TOLERANCE_DISPLAY, TOLERANCE_TYPE, TOLERANCE_ZONE_TYPE, VERTICAL_ALIGN, VIEWPORT_SHADE_PLOT } from "../../flatbuffers/duc";
-import { Standard, StandardUnits } from "../../technical/standards";
+import { PrecisionValue, Scope } from "..";
+import { BEZIER_MIRRORING, BLENDING, BOOLEAN_OPERATION, ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "../../enums";
+
 import {
   FONT_FAMILY,
   FREEDRAW_EASINGS,
 } from "../../utils/constants";
-import { Axis, GeometricPoint, Percentage, Radian, ScaleFactor } from "../geometryTypes";
+import { GeometricPoint, Percentage, Radian, ScaleFactor } from "../geometryTypes";
 import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "../utility-types";
 
 
@@ -67,8 +67,6 @@ export type _DucElementBase = Readonly<_DucElementStylesBase & {
   versionNonce: number;
   /** Whether the element is a plot (i.e. visible on plotting) */
   isPlot: boolean;
-  /** Whether the element is annotative (scales with DucViewport) */
-  isAnnotative: boolean;
   /** Whether the element is deleted */
   isDeleted: boolean;
   /** 
@@ -173,14 +171,8 @@ export type DucElement =
   | DucEllipseElement
   | DucPolygonElement
   | DucModelElement
-  | DucFeatureControlFrameElement
-  | DucLeaderElement
-  | DucDimensionElement
-  | DucViewportElement
   | DucPlotElement
-  | DucXRayElement
   | DucPdfElement
-  | DucMermaidElement
 
 export type DucElementTypes = DucElement["type"];
 
@@ -194,9 +186,7 @@ export type NonDeletedDucElement = NonDeleted<DucElement> & {
 
 export type DucBinderElement =
   | DucLinearElement
-  | DucDimensionElement
-  | DucFeatureControlFrameElement
-  | DucLeaderElement;
+  | DucArrowElement;
 
 export type DucBindableElement =
   | DucRectangleElement
@@ -208,10 +198,8 @@ export type DucBindableElement =
   | DucFrameElement
   | DucTableElement
   | DucDocElement
-  | DucFeatureControlFrameElement
   | DucLinearElement
-  | DucPdfElement
-  | DucMermaidElement;
+  | DucPdfElement;
 
 export type DucTextContainer =
   | DucRectangleElement
@@ -235,20 +223,16 @@ export type RectangularElement =
   | DucSelectionElement
   | DucDocElement
   | DucTableElement
-  | DucFeatureControlFrameElement
-  | DucViewportElement
   | DucPlotElement
   | DucPdfElement;
 
 
 export type DucStackLikeElement =
   | DucPlotElement
-  | DucViewportElement
   | DucFrameElement;
 
 export type DucLinearLikeElement =
   | DucLinearElement
-  | DucViewportElement
   | DucArrowElement;
 
 export type DucFrameLikeElement =
@@ -287,7 +271,6 @@ export type ElementConstructorOpts = MarkOptional<
   | "scope"
   | "blending"
   | "isPlot"
-  | "isAnnotative"
   | "regionIds"
   | "layerId"
 >;
@@ -526,11 +509,20 @@ export type DucEmbeddableElement = _DucElementBase & {
  * Configuration for PDF grid layout
  */
 export type DocumentGridConfig = {
-  columns: number;              // 1 = single, 2 = two-up, n = grid
-  gapX: number;                 // horizontal spacing (px)
-  gapY: number;                 // vertical spacing (px)
-  alignItems: 'start' | 'center' | 'end';  // vertical alignment within row
-  firstPageAlone: boolean;      // cover page behavior for 2+ columns
+  /** 1 = single, 2 = two-up, n = grid */
+  columns: number;
+  /** Horizontal spacing (px) */
+  gapX: number;
+  /** Vertical spacing (px) */
+  gapY: number;
+  /** Cover page behavior for 2+ columns */
+  firstPageAlone: boolean;
+  /**
+   * The scale factor of the element (Drawing Units / Real World Units).
+   * The scale factor is strictly a ratio and is unitless.
+   * Example: 1:300 => 0.00333, 1:1 => 1, 5:1 => 5
+   */
+  scale: number;
 }
 
 export type DucPdfElement = _DucElementBase & {
@@ -541,136 +533,13 @@ export type DucPdfElement = _DucElementBase & {
   gridConfig: DocumentGridConfig;
 };
 
-export type DucMermaidElement = _DucElementBase & {
-  type: "mermaid";
-  source: string; // Mermaid syntax
-  /** if not provided, the theme will be the same as the document's theme, or default to 'default'
-   * we decided to go with a string type because of the unpredictably of having different themes 
-   */
-  theme?: string;
-  svgPath: string | null;// optional cached SVG string
-};
-
 
 //// === TABLE ELEMENTS ===
 
-export type TableCellAlignment = ValueOf<typeof TABLE_CELL_ALIGNMENT>;
-export type TableFlowDirection = ValueOf<typeof TABLE_FLOW_DIRECTION>;
-
-
-/**
- * Defines the styling for an individual cell or a default for all cells.
- * These properties can be overridden at the row, column, and individual cell levels.
- */
-export type DucTableCellStyle = _DucElementStylesBase & {
-  /** The text style for content within the cell */
-  textStyle: DucTextStyle;
-  /** Margin space inside the cell, between the content and the border */
-  margins: {
-    top: PrecisionValue;
-    right: PrecisionValue;
-    bottom: PrecisionValue;
-    left: PrecisionValue;
-  };
-  /** The alignment of content within the cell */
-  alignment: TableCellAlignment;
-};
-
-/**
- * Defines the overall style for a DucTableElement.
- * It sets the defaults for rows, columns, and cells, which can be
- * individually overridden.
- */
-export type DucTableStyle = {
-  /** The direction in which new rows are added */
-  flowDirection: TableFlowDirection;
-  /** Default style for the header row(s) */
-  headerRowStyle: DucTableCellStyle;
-  /** Default style for the data row(s) */
-  dataRowStyle: DucTableCellStyle;
-  /** Default style for the data column(s) */
-  dataColumnStyle: DucTableCellStyle;
-};
-
-export type DucTableColumn = {
-  id: string;
-  width: PrecisionValue;
-  /** Style overrides for this column */
-  styleOverrides?: Partial<DucTableCellStyle>;
-};
-
-export type DucTableRow = {
-  id: string;
-  height: PrecisionValue;
-  /** Style overrides for this row */
-  styleOverrides?: Partial<DucTableCellStyle>;
-};
-
-export type DucTableCell = {
-  rowId: string;
-  columnId: string;
-
-  /** 
-   * The content of the cell, stored as a Markdown string. This allows for rich text
-   * within cells without complicating the table's main data structure.
-   */
-  data: string;
-
-  /** 
-   * Defines if and how this cell merges with adjacent cells.
-   * A span of 1 means no merging.
-   * The root cell of a merge (top-left) holds the content and span data.
-   * Other cells covered by the span are effectively hidden.
-   */
-  span?: {
-    /** Number of columns this cell spans to the right */
-    columns: number; // Default: 1
-    /** Number of rows this cell spans downwards */
-    rows: number; // Default: 1
-  };
-
-  /** Whether the content of this cell can be edited */
-  locked: boolean;
-
-  /** 
-   * Style overrides for this specific cell.
-   * Any property set here will take precedence over row, column, and table styles.
-   */
-  styleOverrides?: Partial<DucTableCellStyle>;
-};
-
-/**
- * A structured table element composed of rows, columns, and cells.
- * Its data is normalized for efficient updates, and styling is applied
- * hierarchically. The element's base `stroke` and `background` style the
- * outer border and fill.
- */
-export type DucTableElement = _DucElementBase & DucTableStyle & {
+/** Source of truth is the linked xlsx file */
+export type DucTableElement = _DucElementBase & {
   type: "table";
-
-  /** An ordered list of column IDs, defining the horizontal layout */
-  columnOrder: readonly string[];
-  /** An ordered list of row IDs, defining the vertical layout */
-  rowOrder: readonly string[];
-
-  /** A record of all column definitions, keyed by their ID */
-  columns: Record<string, DucTableColumn>;
-  /** A record of all row definitions, keyed by their ID */
-  rows: Record<string, DucTableRow>;
-  /** 
-   * A record of all cell data, keyed by a composite "rowId:columnId" string.
-   * This flat structure is efficient for lookups and updates.
-   */
-  cells: Record<string, DucTableCell>;
-
-  /** Number of top rows to be treated as headers, using the headerRowStyle */
-  headerRowCount: number;
-
-  /** Whether table auto-sizes to content */
-  autoSize: {
-    columns: boolean;
-    rows: boolean;
-  };
+  fileId: ExternalFileId | null;
 };
 
 //// === IMAGE ELEMENTS ===
@@ -711,11 +580,11 @@ export type InitializedDucImageElement = MarkNonNullable<
 //// === TEXT ELEMENTS ===
 export type FontFamilyKeys = keyof typeof FONT_FAMILY;
 export type FontFamilyValues = typeof FONT_FAMILY[FontFamilyKeys];
-export type FontString = string & { _brand: "fontString" };
+/** Font family identifier — any valid CSS font-family string (Google Font name, system font, etc.) */
+export type FontString = string;
 export type TextAlign = ValueOf<typeof TEXT_ALIGN>;
 export type VerticalAlign = ValueOf<typeof VERTICAL_ALIGN>;
 export type LineSpacingType = ValueOf<typeof LINE_SPACING_TYPE>;
-export type TextFieldSourceProperty = ValueOf<typeof TEXT_FIELD_SOURCE_PROPERTY>;
 
 export type DucTextStyle = {
   /** 
@@ -727,7 +596,7 @@ export type DucTextStyle = {
   /**
   * The primary font family to use for the text
   */
-  fontFamily: FontFamilyValues;
+  fontFamily: FontString;
   /**
    * Fallback font family for broader compatibility across all systems and languages
    * Useful for emojis, non-latin characters, etc.
@@ -781,8 +650,6 @@ export type DucTextStyle = {
    * This determines the height of capital letters
    */
   fontSize: PrecisionValue;
-  /** Desired height on printed page (for annotative text) */
-  paperTextHeight?: PrecisionValue;
   /**
    * Character width as a ratio of text height
    * Controls horizontal spacing and character proportions
@@ -810,13 +677,6 @@ export type DucTextElement = _DucElementBase & DucTextStyle & {
   text: string;
 
   /**
-   * An array of metadata objects that define the behavior of the placeholders
-   * found in the `text` property. If this is empty, the text is treated
-   * as purely static.
-   */
-  dynamic: readonly DucTextDynamicPart[];
-
-  /**
    * Text sizing behavior:
    * - `true`: Width adjusts to fit text content (single line or natural wrapping)
    * - `false`: Text wraps to fit within the element's fixed width
@@ -830,47 +690,6 @@ export type DucTextElement = _DucElementBase & DucTextStyle & {
   /** A non-rendered, original version of the text, e.g., before finishing writing the text */
   originalText: string;
 };
-
-
-/**
- * A discriminated union that precisely defines the source of a dynamic part's data.
- * This structure is highly extensible.
- */
-export type DucTextDynamicSource =
-  | {
-    sourceType: TEXT_FIELD_SOURCE_TYPE.ELEMENT;
-    /** The unique ID of the source element. */
-    elementId: DucElement["id"];
-    /** The specific property to retrieve from the source element. */
-    property: TextFieldSourceProperty;
-  }
-  | {
-    sourceType: TEXT_FIELD_SOURCE_TYPE.DICTIONARY;
-    /** The key to look up in the global drawing dictionary. */
-    key: string;
-  };
-
-/**
- * Defines a single dynamic component within a text string.
- * This object contains all the metadata needed to resolve and format a placeholder.
- */
-export type DucTextDynamicPart = {
-  /**
-   * A unique key for this part, which matches the placeholder in the text string.
-   * E.g., for a placeholder `{{PartNumber}}`, the tag would be "PartNumber".
-   */
-  tag: string;
-
-  /** The source of the data for this dynamic part. */
-  source: DucTextDynamicSource;
-
-  /** Formatting rules for displaying the final value. */
-  formatting?: StandardUnits["primaryUnits"];
-
-  /** The last known value, used as a fallback or for initial display. */
-  cachedValue: string;
-};
-
 
 
 export type DucTextElementWithContainer = {
@@ -1052,20 +871,6 @@ export type DucBlockDuplicationArray = {
 }
 
 /**
- * Defines the schema for a single attribute within a block definition.
- */
-export type DucBlockAttributeDefinition = {
-  /** The unique identifier for this attribute within the block (e.g., "PART_NUMBER"). */
-  tag: string;
-  /** The prompt displayed to the user when inserting the block (e.g., "Enter the part number:"). */
-  prompt?: string;
-  /** The default value for this attribute. */
-  defaultValue: string;
-  /** If true, the attribute's value is fixed and cannot be changed after insertion. */
-  isConstant: boolean;
-};
-
-/**
  * Indicates the source drawing of a block.
  */
 export type BlockSource = string;
@@ -1115,12 +920,6 @@ export type DucBlock = {
   description?: string;
   version: number;
 
-  /**
-   * A record of attribute definitions for this block, keyed by their tag.
-   * This defines the "slots" for data that each instance can fill.
-   */
-  attributeDefinitions: Readonly<Record<string, DucBlockAttributeDefinition>>;
-
   /** Block metadata including source, usage count, timestamps, and localization */
   metadata?: DucBlockMetadata;
 
@@ -1142,12 +941,6 @@ export type DucBlockInstance = { //Instance of a block definition
    * <string, string> <=> <elementId, path to field on the element (via JSON RFC6902 style path)>
    */
   elementOverrides?: Record<string, string>;
-
-  /**
-   * A record of the actual values for the attributes of this specific instance,
-   * keyed by the attribute tag defined in the DucBlock.
-   */
-  attributeValues?: Readonly<Record<string, string>>;
 
   duplicationArray: DucBlockDuplicationArray | null;
 };
@@ -1189,15 +982,11 @@ export type _DucStackBase = DucStackLikeStyles & {
 
 export type DucStackLikeStyles = {
   opacity: _DucElementBase["opacity"];
-  labelingColor: string;
 }
 
 export type _DucStackElementBase = _DucElementBase & _DucStackBase & {
   clip: boolean;
   labelVisible: boolean;
-
-  /** Everything inside the stack will use this standard */
-  standardOverride: Standard["id"] | null;
 };
 
 export type DucFrameElement = _DucStackElementBase & {
@@ -1238,70 +1027,6 @@ export type DucLayer = _DucStackBase & {
 
 
 
-//// === VIEWPORT ELEMENTS ===
-
-/**
- * Viewport scale represents how model space is displayed in a viewport.
- * For a scale notation A:B, this represents the ratio A/B.
- * 
- * Examples:
- * - 1:200 viewport → ViewportScale = 1/200 = 0.005
- * - 1:50 viewport → ViewportScale = 1/50 = 0.02
- * - 1:1 viewport → ViewportScale = 1/1 = 1
- * - 2:1 viewport → ViewportScale = 2/1 = 2
- * - 10:1 viewport → ViewportScale = 10/1 = 10
- * 
- * This represents how much model space is "zoomed" in the viewport.
- */
-export type ViewportScale = number & { _brand: "viewportScale" };
-
-/**
- * Annotation scale represents the factor by which annotative objects
- * are scaled to maintain consistent appearance across different viewport scales.
- * For a scale notation A:B, this represents B/A.
- * 
- * Examples:
- * - 1:200 drawing → AnnotationScale = 200/1 = 200
- * - 1:50 drawing → AnnotationScale = 50/1 = 50
- * - 1:1 drawing → AnnotationScale = 1/1 = 1
- * - 2:1 drawing → AnnotationScale = 1/2 = 0.5
- * - 10:1 drawing → AnnotationScale = 1/10 = 0.1
- * 
- * This is typically the inverse of the viewport scale.
- */
-export type AnnotationScale = number & { _brand: "annotationScale" };
-
-
-export type ViewportShadePlot = ValueOf<typeof VIEWPORT_SHADE_PLOT>;
-
-
-/** 
- * This is the style for the viewport element
- * Grid settings, UCS, Snapping and more can be overridden through the overrideStandard property from the _DucStackElementBase
- */
-export type DucViewportStyle = {
-  scaleIndicatorVisible: boolean;
-};
-export type DucViewportElement = _DucLinearElementBase & _DucStackBase & DucViewportStyle & {
-  type: "viewport";
-
-  /** View configuration */
-  view: DucView;
-
-  /** Viewport scale settings */
-  scale: ViewportScale;
-
-  /** Shade plot setting */
-  shadePlot: ViewportShadePlot;
-
-  /** Frozen layers in this viewport */
-  frozenGroupIds: GroupId[];
-
-  /** Everything inside the viewport will use this standard */
-  standardOverride: Standard["id"] | null;
-};
-
-
 //// === PLOT ELEMENTS ===
 
 /**
@@ -1331,540 +1056,17 @@ export type DucPlotElement = _DucStackElementBase & DucPlotStyle & {
 };
 
 
-//// === XRAY ELEMENTS ===
-
-export type DucXRayStyle = {
-  /**
-   * The color of the x-ray
-   */
-  color: string;
-};
-export type DucXRayElement = _DucElementBase & DucXRayStyle & {
-  type: "xray"
-  origin: DucPoint;
-  direction: DucPoint;
-  /**
-   * If true, the x-ray will start from the origin.
-   * If false, the x-ray will be a full infinite line.
-   * @default false
-   */
-  startFromOrigin: boolean;
-}
-
-
-//// === LEADER ELEMENTS ===
-
-export type BlockAttachment = ValueOf<typeof BLOCK_ATTACHMENT>;
-
-/**
- * Defines the visual appearance and behavior of a leader.
- */
-export type DucLeaderStyle = {
-  /**
-   * Override the heads of the leader
-   * The tuple represents [startHead, endHead]
-   */
-  headsOverride?: [DucHead, DucHead];
-
-  /** The "dogleg" or "landing" segment that connects the leader line to the content. */
-  dogleg?: PrecisionValue;
-
-  /** Default styling for text content. */
-  textStyle: DucTextStyle;
-
-  /** 
-   * How the text content attaches to the leader's landing line.
-   * 'top': Text is below the line. 'middle': Text is centered on the line.
-   */
-  textAttachment: VerticalAlign;
-
-  /** How the block content attaches to the leader's landing line. */
-  blockAttachment: BlockAttachment;
-};
-/**
- * Defines the content attached to a leader. The leader is atomic, so its
- * content is defined within it, not as a separate scene element.
- */
-export type LeaderContent =
-  | {
-    type: "text";
-    /** The rich text or markdown string for the content. */
-    text: DucTextElement["text"];
-  }
-  | {
-    type: "block";
-    /** The ID of the DucBlock definition to use as content. */
-    blockId: InstanceId;
-    /**
-     * The attribute values and element overrides for this specific block instance.
-     * This is a subset of the properties from DucBlockInstance.
-     */
-    instanceData: {
-      attributeValues?: DucBlockInstance["attributeValues"];
-      elementOverrides?: DucBlockInstance["elementOverrides"];
-    };
-  };
-/**
- * A leader element that connects an annotation (text or a block) to a point
- * or feature in the drawing. It is a single, atomic entity that manages its
- * own geometry and content. It is designed to be compatible with the modern
- */
-export type DucLeaderElement = _DucLinearElementBase & DucLeaderStyle & {
-  type: "leader";
-
-  /** 
-   * The content attached to the leader. Stored internally to keep the element atomic.
-   */
-  leaderContent: LeaderContent | null;
-
-  /**
-   * The anchor point for the content block, in world coordinates.
-   * The leader's dogleg/landing connects to this point.
-   */
-  contentAnchor: GeometricPoint;
-};
-
-
-
-
-//// === DIMENSION ELEMENTS ===
-
-
-export type DimensionType = ValueOf<typeof DIMENSION_TYPE>;
-export type MarkEllipseCenter = ValueOf<typeof MARK_ELLIPSE_CENTER>;
-export type ToleranceDisplay = ValueOf<typeof TOLERANCE_DISPLAY>;
-export type DimensionFitRule = ValueOf<typeof DIMENSION_FIT_RULE>;
-export type DimensionTextPlacement = ValueOf<typeof DIMENSION_TEXT_PLACEMENT>;
-
-/**
- * The key geometric points that define a dimension's measurement.
- * The meaning of each point depends on the dimensionType.
- */
-export type DimensionDefinitionPoints = {
-  /** 
-   * Primary origin point (e.g., start of a linear dimension, point on a circle for radius).
-   * DXF DefPoint1
-   */
-  origin1: GeometricPoint;
-
-  /** 
-   * Secondary origin point (e.g., end of a linear dimension, end of an arc).
-   * DXF DefPoint2
-   */
-  origin2?: GeometricPoint;
-
-  /** 
-   * A point that defines the position of the dimension line or arc.
-   * DXF DefPoint3
-   */
-  location: GeometricPoint;
-
-  /** 
-   * Center point (for radial/angular/diameter) or vertex (for angular).
-   * DXF DefPoint4
-   */
-  center?: GeometricPoint;
-
-  /** 
-   * A point defining a jog in the dimension line.
-   * DXF DefPoint5
-   */
-  jog?: GeometricPoint;
-};
-/**
- * Defines the complete visual appearance of a dimension.
- * This style can be stored in a library and applied to many dimension instances.
- */
-export type DucDimensionStyle = {
-  /** Style for the main dimension line and its arrowheads */
-  dimLine: {
-    stroke: ElementStroke;
-    /** Gap between the dimension line and the text when text is placed inside */
-    textGap: PrecisionValue;
-  };
-
-  /** Style for the extension lines that connect the dimension to the feature */
-  extLine: {
-    stroke: ElementStroke;
-    /** Distance to extend the line beyond the dimension line */
-    overshoot: PrecisionValue;
-    /** Gap between the feature origin and the start of the extension line */
-    offset: PrecisionValue;
-  };
-
-  /** The text style used for the dimension's measurement and annotations */
-  textStyle: DucTextStyle;
-
-  /** Configuration for arrowheads and other symbols */
-  symbols: {
-    /**
-     * Override the arrow heads for each dimension line
-     * The tuple represents [startHead, endHead]
-     */
-    headsOverride?: [DucHead, DucHead];
-    /** Center mark configuration for radial/diameter dimensions */
-    centerMark: {
-      type: MarkEllipseCenter;
-      size: PrecisionValue;
-    };
-  };
-
-  /** Default settings for dimensional tolerances */
-  tolerance: {
-    /** Whether to display tolerances by default */
-    enabled: boolean;
-    /** Default display method (e.g., Symmetrical, Limits) */
-    displayMethod: ToleranceDisplay;
-    /** Default upper tolerance value */
-    upperValue: number;
-    /** Default lower tolerance value */
-    lowerValue: number;
-    /** Decimal places for tolerance values */
-    precision: number;
-    /** The text style for the tolerance values, inheriting from the main textStyle */
-    textStyle: Partial<DucTextStyle>;
-  };
-
-  /** Rules for how to arrange text and arrows when space is limited */
-  fit: {
-    /** Determines what to move when text and arrows don't fit between extension lines */
-    rule: DimensionFitRule;
-    /** If text is moved, determines its placement relative to the dimension line */
-    textPlacement: DimensionTextPlacement;
-    /** Forces text to always be placed between extension lines */
-    forceTextInside: boolean;
-  };
-};
-/**
- * A dimension element is an atomic annotation that measures and displays the
- * distance or angle between points. It renders its own lines, arrows, and text
- * based on its definition points and style, ensuring a clean and robust data model.
- */
-export type DucDimensionElement = _DucElementBase & DucDimensionStyle & {
-  type: "dimension";
-
-  /** The type of dimension, which determines how definition points are interpreted */
-  dimensionType: DimensionType;
-
-  /** The core geometric points that define what is being measured */
-  definitionPoints: DimensionDefinitionPoints;
-
-  /**
-   * The oblique angle for the extension lines, used for isometric-style dimensions.
-   * An angle of 0 means they are perpendicular to the dimension line.
-   */
-  obliqueAngle: Radian;
-
-  /**
-   * For 'ordinate' dimensions, specifies whether it measures the X or Y coordinate.
-   */
-  ordinateAxis: Axis | null;
-
-  /**
-   * Defines how the definition points are associated with other elements when `isAssociative` is true.
-   * The keys correspond to the keys in `definitionPoints`.
-   */
-  bindings?: {
-    origin1: DucPointBinding | null;
-    origin2: DucPointBinding | null;
-    center: DucPointBinding | null;
-  };
-
-  /**
-   * User-override for the dimension text content.
-   * - If `null`, the measured value is automatically calculated and displayed.
-   * - If a string, this value is displayed instead.
-   * Use `<>` within the string (e.g., "R<>") to include the calculated measurement.
-   */
-  textOverride: string | null;
-
-  /**
-   * User-override for the text position.
-   * - If `null`, the position is automatically determined by the 'fit' rules in the style.
-   * - If a point, the text is moved to this exact location.
-   */
-  textPosition: GeometricPoint | null;
-
-  /** Instance-specific overrides for tolerance, taking precedence over the style's defaults */
-  toleranceOverride?: Partial<DucDimensionStyle["tolerance"]>;
-
-  /** If this is a baseline dimension, contains data linking it to the base */
-  baselineData?: {
-    baseDimensionId: string;
-  };
-
-  /** If this is a continued dimension, contains data linking it to the previous one */
-  continueData?: {
-    continueFromDimensionId: string;
-  };
-
-  /** Calculated measurement value (read-only, for inspection/API use) */
-  readonly calculatedValue: PrecisionValue;
-};
-
-
-
-
-//// === Feature Control Frame ===
-
-export type GDTSymbol = ValueOf<typeof GDT_SYMBOL>;
-export type MaterialCondition = ValueOf<typeof MATERIAL_CONDITION>;
-export type FeatureModifier = ValueOf<typeof FEATURE_MODIFIER>;
-export type ToleranceZoneType = ValueOf<typeof TOLERANCE_ZONE_TYPE>;
-export type DatumTargetType = ValueOf<typeof DATUM_TARGET_TYPE>;
-export type ToleranceType = ValueOf<typeof TOLERANCE_TYPE>;
-export type DatumBracketStyle = ValueOf<typeof DATUM_BRACKET_STYLE>;
-
-
-// --- Component Data Structures ---
-
-/**
- * Represents a single datum reference in a datum reference frame (e.g., "| A(M) |").
- */
-export type DatumReference = {
-  /** The datum letter or letters (e.g., "A", "B", "A-B") */
-  letters: string;
-  /** Material condition modifier, if any (e.g., Maximum, Least) */
-  modifier?: MaterialCondition;
-};
-
-/**
- * Defines the tolerance value and its related specifications within a segment.
- */
-export type ToleranceClause = {
-  /** The primary tolerance value, represented as a string to support various formats */
-  value: string;
-  /** The type of tolerance zone (e.g., Cylindrical, Spherical) */
-  zoneType?: ToleranceZoneType;
-  /** A list of modifiers that apply directly to the feature, like Diameter or Projected Zone */
-  featureModifiers: readonly FeatureModifier[];
-  /** Material condition modifier for the tolerance itself */
-  materialCondition?: MaterialCondition;
-};
-
-/**
- * A single segment within a Feature Control Frame row.
- * Typically contains a geometric symbol, a tolerance clause, and datum references.
- */
-export type FeatureControlFrameSegment = {
-  /** The geometric characteristic symbol (e.g., Position, Flatness, Profile) */
-  symbol: GDTSymbol;
-  /** The tolerance specification for this segment */
-  tolerance: ToleranceClause;
-  /** The datum reference frame, ordered by priority */
-  datums: readonly [
-    primary?: DatumReference,
-    secondary?: DatumReference,
-    tertiary?: DatumReference,
-  ];
-};
-
-
-// --- Style and Element Definitions ---
-
-/**
- * Defines the visual appearance of a Feature Control Frame.
- * This can be stored in a style library and reused.
- */
-export type DucFeatureControlFrameStyle = {
-  /** The base text style for numbers and letters within the frame */
-  textStyle: DucTextStyle;
-
-  /** Layout and spacing properties */
-  layout: {
-    /** Padding between the content and the outer frame border */
-    padding: PrecisionValue;
-    /** Spacing between segments (vertical lines) in a row */
-    segmentSpacing: PrecisionValue;
-    /** Spacing between rows in a composite frame */
-    rowSpacing: PrecisionValue;
-  };
-
-  /** Configuration for GD&T symbols */
-  symbols: {
-    /** Scale factor for symbols relative to the text height */
-    scale: number;
-  };
-
-  /** Styling for datum references */
-  datumStyle: {
-    /** The style of bracket to draw around datum letters */
-    bracketStyle: DatumBracketStyle;
-  };
-};
-
-/**
- * A Geometric Dimensioning and Tolerancing (GD&T) Feature Control Frame element.
- * This element can represent a tolerance specification or define a datum feature.
- */
-export type DucFeatureControlFrameElement = _DucElementBase & DucFeatureControlFrameStyle & {
-  type: "featurecontrolframe";
-
-  /**
-   * An array of rows. Most FCFs have one row. Composite frames have multiple rows.
-   * Each row is an array of segments that are drawn horizontally.
-   */
-  rows: readonly (readonly FeatureControlFrameSegment[])[];
-
-  /** 
-   * Modifiers that apply to the entire feature control frame.
-   */
-  frameModifiers?: {
-    allAround?: boolean;
-    allOver?: boolean;
-    continuousFeature?: boolean;
-    between?: {
-      start: string; // Identifier for start point, e.g., "A"
-      end: string;   // Identifier for end point, e.g., "B"
-    };
-    projectedToleranceZone?: PrecisionValue;
-  };
-
-  /** 
-   * A reference to a leader element that points to this FCF.
-   * The leader element itself holds the geometry and start/end bindings.
-   * This provides a simple, one-way link.
-   */
-  leaderElementId: DucLeaderElement["id"] | null;
-
-  /**
-   * If present, this element acts as a **Datum Feature Symbol**, defining the specified
-   * datum letter and attached to a feature. The `rows` property would be empty.
-   */
-  datumDefinition?: {
-    /** The datum letter this symbol defines (e.g., "A", "B") */
-    letter: string;
-    /**
-     * An optional binding directly to a point on the feature being identified as the datum.
-     * Used when a leader is not present.
-     */
-    featureBinding?: DucPointBinding;
-  };
-};
-
-
-
-
-
 
 //// === Doc Element ===
 
+export type DucDocStyle = {};
 
-export type TextFlowDirection = ValueOf<typeof TEXT_FLOW_DIRECTION>;
-export type ColumnType = ValueOf<typeof COLUMN_TYPE>;
-export type StackedTextAlign = ValueOf<typeof STACKED_TEXT_ALIGN>;
-
-/**
- * Defines advanced styling for a DucDocElement, extending the base text styles.
- * These properties control the overall layout and appearance of the document block.
- */
-export type DucDocStyle = DucTextStyle & {
-
-
-  // === PARAGRAPH FORMATTING ===
-  paragraph: {
-    /** Indentation for the first line of each paragraph */
-    firstLineIndent: PrecisionValue;
-    /** Indentation for all lines except the first (hanging indent) */
-    hangingIndent: PrecisionValue;
-    /** Indentation from the left edge of the element's bounding box */
-    leftIndent: PrecisionValue;
-    /** Indentation from the right edge of the element's bounding box */
-    rightIndent: PrecisionValue;
-    /** Extra spacing added before each paragraph */
-    spaceBefore: PrecisionValue;
-    /** Extra spacing added after each paragraph */
-    spaceAfter: PrecisionValue;
-    /** A list of tab stop positions from the left indent */
-    tabStops: PrecisionValue[];
-  };
-
-  // === AUTOMATIC STACK/FRACTION FORMATTING ===
-  stackFormat: {
-    /** Enable automatic stacking of text around specified characters */
-    autoStack: boolean;
-    /** Characters that trigger stacking (e.g., "/", "#", "^") */
-    stackChars: string[];
-    /** Properties for how stacked text is rendered */
-    properties: {
-      /** Scale of the upper text relative to the main font size */
-      upperScale: number; // e.g., 0.7
-      /** Scale of the lower text relative to the main font size */
-      lowerScale: number; // e.g., 0.7
-      /** Alignment of stacked text (e.g., center, decimal) */
-      alignment: StackedTextAlign;
-    };
-  };
-};
-/**
- * Defines the properties of a single column within a multi-column DucDocElement.
- * The collection of these definitions dictates the overall column layout.
- */
-export type TextColumn = {
-  /** The width of the column in drawing units. */
-  width: PrecisionValue;
-  /** The space between this column and the next, also known as the gutter. */
-  gutter: PrecisionValue;
-};
-/**
- * A rich text document element
- * It supports complex formatting through its style properties and uses a Markdown
- * string for inline text styling, which can be edited with a rich text editor.
- */
-export type DucDocElement = _DucElementBase & DucDocStyle & {
+export type DucDocElement = _DucElementBase & {
   type: "doc";
-
-  /** 
-   * The content of the document, stored as a code string.
-   * This approach allows to use a rich text editor that can compile to PDF using Typst code
-   * 
-   * It can also contain wildcards like `{@fieldname}` for dynamic data insertion.
-   * Example: "This is **bold text** and this is a {color:red}red word{/color}."
-   * 
-   * It can also contain zero or more placeholders in the format `{{tag}}`.
-   * Example: "This document was last saved on {{SaveDate}} by {{Author}}."
-   */
   text: string;
   fileId: ExternalFileId | null;
-
-
   /** Configuration for rendering the document in a grid layout */
   gridConfig: DocumentGridConfig;
-
-
-  /**
-   * An array of metadata objects that define the behavior of the placeholders
-   * found in the `text` property. If this is empty, the text is treated
-   * as purely static.
-   */
-  dynamic: readonly DucTextDynamicPart[];
-
-  /** Direction of text flow for multi-column layouts */
-  flowDirection: TextFlowDirection;
-
-  /**
-   * Defines the structural properties of the columns.
-   */
-  columns: {
-    /** 
-     * - `none`: A single column.
-     * - `static`: A fixed number of columns with defined widths/heights.
-     * - `dynamic`: Text flows automatically between columns based on height.
-     */
-    type: ColumnType;
-    /** An array defining each column's properties */
-    definitions: TextColumn[];
-    /** Whether column height adjusts automatically in dynamic mode */
-    autoHeight: boolean;
-  };
-
-  /**
-   * Text sizing behavior:
-   * - `true`: Width and/or height adjust to fit text content.
-   * - `false`: Text wraps or is clipped to fit the element's fixed bounds.
-   * @default true
-   */
-  autoResize: boolean;
 };
 
 
@@ -1875,21 +1077,115 @@ export type DucDocElement = _DucElementBase & DucDocStyle & {
 
 
 //// === 3D Model Element ===
-// TODO: Add camera and view config
+
+export type Viewer3DClipPlane = {
+  enabled: boolean;
+  value: number;
+  normal: [number, number, number] | null;
+};
+
+export type Viewer3DMaterial = {
+  metalness: number;
+  roughness: number;
+  defaultOpacity: number;
+  /** Packed RGB color (e.g. 0xFFFFFF) */
+  edgeColor: number;
+  ambientIntensity: number;
+  directIntensity: number;
+};
+
+export type Viewer3DZebra = {
+  active: boolean;
+  stripeCount: number;
+  stripeDirection: number;
+  /** Available: "blackwhite" | "colorful" | "grayscale" */
+  colorScheme: string;
+  opacity: number;
+  /** Available: "reflection" | "normal" */
+  mappingMode: string;
+};
+
+export type Viewer3DCamera = {
+  /** Available: "orbit" | "trackball" */
+  control: string;
+  ortho: boolean;
+  /** Available: "Z" | "Y" */
+  up: string;
+  position: [number, number, number];
+  /** Camera rotation as quaternion [x, y, z, w] */
+  quaternion: [number, number, number, number];
+  /** The point the camera orbits around / looks at */
+  target: [number, number, number];
+  zoom: number;
+  panSpeed: number;
+  rotateSpeed: number;
+  zoomSpeed: number;
+  holroyd: boolean;
+};
+
+export type Viewer3DGridPlanes = {
+  xy: boolean;
+  xz: boolean;
+  yz: boolean;
+};
+
+export type Viewer3DGrid =
+  | { type: "uniform"; value: boolean }
+  | { type: "perPlane"; planes: Viewer3DGridPlanes };
+
+export type Viewer3DDisplay = {
+  wireframe: boolean;
+  transparent: boolean;
+  blackEdges: boolean;
+  grid: Viewer3DGrid;
+  /** Whether to show the XYZ axes indicator */
+  axesVisible: boolean;
+  /** If true, axes are positioned at world origin (0,0,0); if false, at object center */
+  axesAtOrigin: boolean;
+};
+
+export type Viewer3DClipping = {
+  x: Viewer3DClipPlane;
+  y: Viewer3DClipPlane;
+  z: Viewer3DClipPlane;
+  intersection: boolean;
+  showPlanes: boolean;
+  objectColorCaps: boolean;
+};
+
+export type Viewer3DExplode = {
+  active: boolean;
+  value: number;
+};
+
+export type Viewer3DState = {
+  camera: Viewer3DCamera;
+  display: Viewer3DDisplay;
+  material: Viewer3DMaterial;
+  clipping: Viewer3DClipping;
+  explode: Viewer3DExplode;
+  zebra: Viewer3DZebra;
+};
 
 /**
- * An element that embeds a 3D model on the 2D canvas, defined by build123d python code.
+ * An element that embeds a 3D model on the 2D canvas.
  * It includes its own 3D view and display controls.
  */
 export type DucModelElement = _DucElementBase & {
   type: "model";
 
-  /** Defines the source of the model using build123d python code */
-  source: string;
+  /** The specific type of 3D model, e.g., "PYTHON", "DXF", "IFC", "STL", "OBJ", "STEP", etc. */
+  modelType: string | null;
+
+  /** Defines the source code of the model using build123d python code */
+  code: string | null;
 
   /** The last known SVG path representation of the 3D model for quick rendering on the canvas */
   svgPath: string | null;
 
-  /** Possibly connected external files, such as STEP, STL or other reference models */
+  /** Possibly connected external files, such as STEP, STL, DXF, etc. */
   fileIds: ExternalFileId[];
+
+  /** The last known 3D viewer state for the model */
+  viewerState: Viewer3DState | null;
 };

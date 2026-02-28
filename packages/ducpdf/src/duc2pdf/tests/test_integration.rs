@@ -432,7 +432,7 @@ mod integration_tests {
     /// Test scaling with real DUC file that has coordinate bounds issues
     #[test]
     fn test_scaling_with_bounds_issues() {
-        let duc_data = load_duc_file("mixed_elements.duc");
+        let duc_data = load_duc_file("universal.duc");
 
         // Test 1: No scale provided - should auto-scale
         let auto_scale_options = ConversionOptions {
@@ -512,11 +512,12 @@ mod integration_tests {
 
         println!("🔧 Real data scaling tests completed");
     }
-    use duc::generated::duc::{
+    use duc::types::{
         ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN, STROKE_PREFERENCE,
     };
     use duc2pdf::streaming::stream_elements::ElementStreamer;
     use duc2pdf::utils::style_resolver::StyleResolver;
+    use std::collections::HashMap;
     use std::f64::consts::PI;
 
     fn sample_element_base() -> duc::types::DucElementBase {
@@ -538,7 +539,6 @@ mod integration_tests {
             updated: 0,
             index: None,
             is_plot: false,
-            is_annotative: false,
             is_deleted: false,
             group_ids: vec![],
             region_ids: vec![],
@@ -611,10 +611,12 @@ mod integration_tests {
     fn full_circle_generates_pdf_ops() {
         let ellipse = sample_ellipse(false);
         let streamer = ElementStreamer::new(
-            StyleResolver::new(None),
+            StyleResolver::new(),
             1000.0,
             "F1".to_string(),
             Font::standard(StandardFont::Helvetica),
+            HashMap::new(),
+            HashMap::new(),
         );
         let ops = streamer
             .stream_ellipse(&ellipse)
@@ -626,10 +628,12 @@ mod integration_tests {
     fn crosshair_operations_are_emitted() {
         let ellipse = sample_ellipse(true);
         let streamer = ElementStreamer::new(
-            StyleResolver::new(None),
+            StyleResolver::new(),
             1000.0,
             "F1".to_string(),
             Font::standard(StandardFont::Helvetica),
+            HashMap::new(),
+            HashMap::new(),
         );
         let ops = streamer
             .stream_ellipse(&ellipse)
@@ -647,10 +651,12 @@ mod integration_tests {
     fn plot_filter_respects_flag() {
         let base = sample_element_base();
         let mut streamer = ElementStreamer::new(
-            StyleResolver::new(None),
+            StyleResolver::new(),
             1000.0,
             "F1".to_string(),
             Font::standard(StandardFont::Helvetica),
+            HashMap::new(),
+            HashMap::new(),
         );
         assert!(streamer.should_render_element(&base));
 

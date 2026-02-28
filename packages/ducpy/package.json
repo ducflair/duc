@@ -5,6 +5,7 @@
   "scripts": {
     "build": "bash -c 'SETUPTOOLS_SCM_PRETEND_VERSION=${1} uv build' --",
     "gen:docs": "bun clean:docs && cd docs && uv run make html",
+    "dev:docs": "uv run --with sphinx-autobuild sphinx-autobuild docs docs/_build/html --port 8080 --open-browser",
     "clean:docs": "cd docs && uv run make clean",
     "test": "uv run -m pytest src/tests/src/test_*.py",
     "test:verbose": "uv run -m pytest -v src/tests/src/test_*.py",

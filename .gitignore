@@ -33,10 +33,10 @@ sst.pyi
 # opennext
 .open-next
 
-# flatc
 build_logs
 
 .claude
 
 
 tsconfig.tsbuildinfo
+__pycache__
