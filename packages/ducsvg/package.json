@@ -25,7 +25,7 @@
     "build:ts": "vite build && pwd && tsc -p tsconfig.json",
     "build:wasm": "cd src/pdf2svg && wasm-pack build --target web --out-dir ../../pkg --release",
     "copy:wasm-to-dist": "mkdir -p dist && cp pkg/pdf2svg_bg.wasm dist/ && cp pkg/pdf2svg.js dist/pdf2svg-wasm.js && cp pkg/pdf2svg.d.ts dist/pdf2svg-wasm.d.ts && cp pkg/pdf2svg_bg.wasm.d.ts dist/",
-    "clean": "rm -rf dist pkg && cd src/pdf2svg && cargo clean",
+    "clean": "rm -rf dist pkg",
     "check-types": "tsc --noEmit",
     "test": "bun test",
     "semantic-release": "semantic-release"

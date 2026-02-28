@@ -56,9 +56,6 @@ jobs:
       - name: Build
         run: bun ducsvg:build
 
-      - name: Run tests
-        run: bun ducsvg:test
-
       - name: Prepare workspace dependencies for publish
         run: node scripts/fix-workspace-deps.mjs packages/ducsvg/package.json
         

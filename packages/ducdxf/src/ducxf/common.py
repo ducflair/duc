@@ -5,6 +5,7 @@ Common utilities and constants for DUC <-> DXF conversion.
 import math
 from enum import Enum
 from typing import Dict, List, Tuple, Any, Optional, Union
+import re
 
 # Type definitions
 Point2D = Tuple[float, float]
@@ -111,6 +112,293 @@ class ElementTypeMapping:
     def get_duc_type(dxf_type: str) -> str:
         """Get the Duc element type for a given DXF entity type"""
         return ElementTypeMapping.DXF_TO_DUC.get(dxf_type, "draw")  # Default to freehand drawing
+
+# Linetype conversion utilities
+class TextStyleConverter:
+    """Utilities for converting between DXF text styles and DUC text styles."""
+    
+    # DXF generation flags bit masks
+    FLAG_BACKWARDS = 4      # Bit 2: Text is backwards (mirrored)
+    FLAG_UPSIDE_DOWN = 16   # Bit 4: Text is upside down
+    FLAG_VERTICAL = 32      # Bit 5: Vertical text
+    
+    @staticmethod
+    def parse_font_name(font_file: str) -> str:
+        """
+        Parse font file name to extract font family.
+        
+        DXF stores font as file name (e.g., 'arial.ttf', 'romans.shx')
+        Convert to font family name for DUC.
+        
+        Args:
+            font_file: Font file name from DXF
+        
+        Returns:
+            Font family name suitable for DUC
+        """
+        if not font_file:
+            return "Arial"  # Default fallback
+        
+        # Remove file extension
+        font_name = font_file.lower()
+        for ext in ['.ttf', '.shx', '.otf', '.fon']:
+            if font_name.endswith(ext):
+                font_name = font_name[:-len(ext)]
+                break
+        
+        # Map common DXF/SHX font names to standard font families
+        font_mapping = {
+            'monotxt': 'Courier New',
+            'txt': 'Arial',
+            'romans': 'Times New Roman',
+            'romand': 'Times New Roman',
+            'romanc': 'Times New Roman',
+            'romant': 'Times New Roman',
+            'italic': 'Times New Roman',
+            'italict': 'Times New Roman',
+            'scriptc': 'Brush Script MT',
+            'scripts': 'Script MT',
+            'arial': 'Arial',
+            'times': 'Times New Roman',
+            'courier': 'Courier New',
+            'verdana': 'Verdana',
+            'tahoma': 'Tahoma',
+            'gothic': 'Century Gothic',
+            'simplex': 'Arial',
+            'complex': 'Arial',
+        }
+        
+        # Check for mapped font
+        for key, value in font_mapping.items():
+            if key in font_name:
+                return value
+        
+        # Return capitalized font name if no mapping found
+        return font_name.capitalize() if font_name else "Arial"
+    
+    @staticmethod
+    def parse_generation_flags(flags: int) -> dict:
+        """
+        Parse DXF text generation flags.
+        
+        Args:
+            flags: Integer bitfield from DXF
+        
+        Returns:
+            dict with:
+                - is_backwards: bool
+                - is_upside_down: bool
+                - is_vertical: bool
+        """
+        return {
+            'is_backwards': bool(flags & TextStyleConverter.FLAG_BACKWARDS),
+            'is_upside_down': bool(flags & TextStyleConverter.FLAG_UPSIDE_DOWN),
+            'is_vertical': bool(flags & TextStyleConverter.FLAG_VERTICAL)
+        }
+    
+    @staticmethod
+    def degrees_to_radians(degrees: float) -> float:
+        """
+        Convert degrees to radians.
+        
+        Args:
+            degrees: Angle in degrees
+        
+        Returns:
+            Angle in radians
+        """
+        import math
+        return math.radians(degrees)
+
+
+class LinetypeConverter:
+    """Utilities for converting between DXF linetypes and DUC stroke styles."""
+    
+    @staticmethod
+    def parse_dxf_pattern(pattern: List[Union[float, str]]) -> Dict[str, Any]:
+        """
+        Parse DXF linetype pattern into DUC-compatible components.
+        
+        Args:
+            pattern: DXF pattern list where:
+                - First element may be total length (optional)
+                - Positive values = line segments
+                - Negative values = gaps
+                - Zero = dot
+                - String elements = complex pattern with text/shapes
+        
+        Returns:
+            dict with:
+                - dash_pattern: List of floats for simple dash patterns
+                - is_complex: Boolean indicating if pattern has text/shapes
+                - complex_elements: List of parsed complex elements (if any)
+        """
+        result = {
+            "dash_pattern": [],
+            "is_complex": False,
+            "complex_elements": [],
+            "description": ""
+        }
+        
+        if not pattern:
+            return result
+        
+        # Convert pattern elements
+        dash_pattern = []
+        for elem in pattern:
+            if isinstance(elem, str):
+                # Complex linetype with text or shapes
+                result["is_complex"] = True
+                parsed = LinetypeConverter._parse_complex_element(elem)
+                if parsed:
+                    result["complex_elements"].append(parsed)
+            elif isinstance(elem, (int, float)):
+                # Simple numeric pattern element
+                # Convert to absolute value for dash pattern
+                # In DUC, dash pattern is [line, gap, line, gap, ...]
+                dash_pattern.append(abs(float(elem)))
+        
+        result["dash_pattern"] = dash_pattern
+        return result
+    
+    @staticmethod
+    def _parse_complex_element(element_str: str) -> Optional[Dict[str, Any]]:
+        """
+        Parse complex linetype element (text or shape).
+        
+        Format examples:
+            - Text: ["GAS",STANDARD,S=.1,U=0.0,X=-0.1,Y=-.05]
+            - Shape: [132,ltypeshp.shx,x=-.1,s=.1]
+        
+        Args:
+            element_str: Complex element string from DXF
+        
+        Returns:
+            Parsed element dict or None if parsing fails
+        """
+        # Remove brackets and split
+        clean_str = element_str.strip('[]')
+        if not clean_str:
+            return None
+        
+        parts = [p.strip() for p in clean_str.split(',')]
+        if not parts:
+            return None
+        
+        # Check if it's a text element (starts with quoted text)
+        if parts[0].startswith('"') or parts[0].startswith("'"):
+            return LinetypeConverter._parse_text_element(parts)
+        else:
+            return LinetypeConverter._parse_shape_element(parts)
+    
+    @staticmethod
+    def _parse_text_element(parts: List[str]) -> Dict[str, Any]:
+        """Parse text element from complex linetype."""
+        result = {
+            "type": "text",
+            "text": parts[0].strip('"\"'),
+            "style": parts[1] if len(parts) > 1 else "STANDARD",
+            "scale": 0.1,
+            "rotation": 0.0,
+            "x_offset": 0.0,
+            "y_offset": 0.0
+        }
+        
+        # Parse parameters like S=.1, U=0.0, X=-0.1, Y=-.05
+        for part in parts[2:]:
+            if '=' in part:
+                key, value = part.split('=', 1)
+                key = key.strip().upper()
+                try:
+                    val = float(value.strip())
+                    if key == 'S':
+                        result['scale'] = val
+                    elif key == 'U':
+                        result['rotation'] = val
+                    elif key == 'X':
+                        result['x_offset'] = val
+                    elif key == 'Y':
+                        result['y_offset'] = val
+                except ValueError:
+                    pass
+        
+        return result
+    
+    @staticmethod
+    def _parse_shape_element(parts: List[str]) -> Dict[str, Any]:
+        """Parse shape element from complex linetype."""
+        result = {
+            "type": "shape",
+            "shape_index": 0,
+            "shape_file": "",
+            "scale": 0.1,
+            "x_offset": 0.0,
+            "y_offset": 0.0
+        }
+        
+        # First part is shape index
+        try:
+            result["shape_index"] = int(parts[0])
+        except ValueError:
+            pass
+        
+        # Second part is shape file
+        if len(parts) > 1:
+            result["shape_file"] = parts[1].strip()
+        
+        # Parse parameters like x=-.1, s=.1
+        for part in parts[2:]:
+            if '=' in part:
+                key, value = part.split('=', 1)
+                key = key.strip().lower()
+                try:
+                    val = float(value.strip())
+                    if key == 's':
+                        result['scale'] = val
+                    elif key == 'x':
+                        result['x_offset'] = val
+                    elif key == 'y':
+                        result['y_offset'] = val
+                except ValueError:
+                    pass
+        
+        return result
+    
+    @staticmethod
+    def convert_dxf_pattern_to_duc_dash(pattern: List[Union[float, str]]) -> List[float]:
+        """
+        Convert DXF pattern to DUC dash pattern (simplified, ignoring complex elements).
+        
+        Args:
+            pattern: DXF pattern list
+        
+        Returns:
+            List of floats representing dash pattern [line, gap, line, gap, ...]
+        """
+        parsed = LinetypeConverter.parse_dxf_pattern(pattern)
+        return parsed["dash_pattern"]
+    
+    @staticmethod
+    def pattern_to_description(name: str, pattern: List[Union[float, str]]) -> str:
+        """
+        Generate a description for a linetype pattern.
+        
+        Args:
+            name: Linetype name
+            pattern: DXF pattern
+        
+        Returns:
+            Human-readable description
+        """
+        parsed = LinetypeConverter.parse_dxf_pattern(pattern)
+        
+        if parsed["is_complex"]:
+            return f"{name} (complex pattern with {len(parsed['complex_elements'])} elements)"
+        elif parsed["dash_pattern"]:
+            return f"{name} (dash pattern)"
+        else:
+            return f"{name} (continuous)"
+
 
 # Stroke style mapping
 def map_stroke_style(duc_style: dict) -> Dict[str, Any]:
