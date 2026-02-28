@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "ezdxf>=1.4.1",
-    "ducpy @ file://../ducpy"
+    "ducpy"
 ]
 
 license = { text = "MIT" }
@@ -20,6 +20,9 @@ authors = [
 classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
+
+[tool.uv.sources]
+ducpy = { path = "../ducpy" }
 
 [project.urls]
 "Homepage" = "https://duc.ducflair.com"
