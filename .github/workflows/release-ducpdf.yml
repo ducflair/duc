@@ -3,7 +3,7 @@ name: Release ducpdf
 on:
   workflow_dispatch:
   push:
-    branches: [main, next, dev]
+    branches: [main, next]
     paths:
       - 'packages/ducpdf/**'
       - 'package.json'
@@ -61,6 +61,9 @@ jobs:
         run: bun install
       - name: Build
         run: bun ducpdf:build
+
+      - name: Run tests
+        run: bun ducpdf:test
 
       - name: Prepare workspace dependencies for publish
         run: node scripts/fix-workspace-deps.mjs packages/ducpdf/package.json

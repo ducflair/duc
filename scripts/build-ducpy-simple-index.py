@@ -116,10 +116,11 @@ def build_index(output_dir: Path):
     # Package index with all wheel links
     (package_dir / "index.html").write_text(
         "<!DOCTYPE html>\n"
-        "<html><head><title>Links for ducpy</title></head>\n"
-        "<body>\n"
-        "<h1>Links for ducpy</h1>\n"
+        "<html><head><meta charset=\"utf-8\"></head>\n"
+        "<body style=\"margin:0;padding:16px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;\">\n"
+        "<main style=\"display:flex;flex-direction:column;gap:8px;align-items:flex-start;\">\n"
         + "\n".join(links) + "\n"
+        "</main>\n"
         "</body></html>\n"
     )
 

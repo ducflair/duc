@@ -3,7 +3,7 @@ name: Release ducjs
 on:
   workflow_dispatch:
   push:
-    branches: [main, next, dev]
+    branches: [main, next]
     paths:
       - 'packages/ducjs/**'
       - 'package.json'
@@ -62,6 +62,10 @@ jobs:
 
       - name: Build
         run: bun ducjs:build
+
+      - name: Run tests
+        run: bun ducjs:test
+
       - name: Prepare workspace dependencies for publish
         run: node scripts/fix-workspace-deps.mjs packages/ducjs/package.json
 

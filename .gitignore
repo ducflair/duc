@@ -39,3 +39,4 @@ build_logs
 
 
 tsconfig.tsbuildinfo
+__pycache__
