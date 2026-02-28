@@ -6,7 +6,6 @@ on:
     branches:
       - main
       - next
-      - dev
     paths:
       - 'packages/ducpy/**'
       - 'package.json'
@@ -61,6 +60,10 @@ jobs:
         with:
           current-branch: ${{ github.ref_name }}
           package-name: ducpy
+
+      - name: Run tests
+        working-directory: ./packages/ducpy
+        run: bun run test
 
       - name: Release
         id: release
