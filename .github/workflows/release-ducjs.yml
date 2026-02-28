@@ -1,12 +1,8 @@
 name: Release ducjs
 
 on:
+  workflow_call:
   workflow_dispatch:
-  push:
-    branches: [main, next]
-    paths:
-      - 'packages/ducjs/**'
-      - 'package.json'
 
 permissions:
   contents: write

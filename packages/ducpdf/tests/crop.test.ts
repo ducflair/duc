@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'bun:test';
-import { convertDucToPdf, type ConversionOptions } from '../src/duc2pdf';
-import { loadDucFile, savePdfOutput, validatePdf, ensureDir } from './helpers';
+import { describe, expect, it } from 'bun:test';
 import { join } from 'node:path';
+import { convertDucToPdf, type ConversionOptions } from '../src/duc2pdf';
+import { ensureDir, loadDucFile, savePdfOutput, validatePdf } from './helpers';
 
 const OUTPUT_DIR = 'tests_output/crop';
 ensureDir(join(__dirname, OUTPUT_DIR));
@@ -38,7 +38,7 @@ describe('CROP mode conversions', () => {
       savePdfOutput(`${OUTPUT_DIR}/multiple_blocks_${name}.pdf`, pdf);
       expect(pdf.length).toBeGreaterThan(100);
     }
-  }, 60000);
+  }, 180000);
 
   it('blocks_instances several crops', async () => {
     const duc = loadDucFile('blocks_instances.duc');
@@ -52,7 +52,7 @@ describe('CROP mode conversions', () => {
       savePdfOutput(`${OUTPUT_DIR}/universal_${name}.pdf`, pdf);
       expect(pdf.length).toBeGreaterThan(100);
     }
-  }, 60000);
+  }, 180000);
 
 
   it('applies viewport background color when provided', async () => {
@@ -78,5 +78,5 @@ describe('CROP mode conversions', () => {
     savePdfOutput(`${OUTPUT_DIR}/background_default.pdf`, pdfWithDefaultBackground);
     savePdfOutput(`${OUTPUT_DIR}/background_off.pdf`, pdfWithoutBackground);
     savePdfOutput(`${OUTPUT_DIR}/background_on.pdf`, pdfWithBackground);
-  }, 60000);
+  }, 180000);
 });

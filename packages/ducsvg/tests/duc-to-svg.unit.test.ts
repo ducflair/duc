@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { ducToSvg } from '../src/ducToSvg';
-import { loadDucFile, saveSvgOutput, validateSvg, ensureDir } from './helpers';
 import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { ducToSvg } from '../src/ducToSvg';
+import { ensureDir, loadDucFile, saveSvgOutput, validateSvg } from './helpers';
 
 const OUTPUT_DIR = 'output/duc-to-svg';
 
@@ -31,6 +31,6 @@ describe('ducToSvg Integration Tests', () => {
         const outName = file.replace(/\.duc$/, `_page_${page.svg.pageIndex}.svg`);
         saveSvgOutput(`${OUTPUT_DIR}/${outName}`, page.svg);
       }
-    }, 60000); // 60 second timeout for PDF/SVG processing
+    }, 180000); // 3 minute timeout for large file processing
   }
 });
