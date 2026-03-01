@@ -146,6 +146,28 @@ function ensurePkgSchemaVersionShim(pkgJsPath, pkgDtsPath, userVersion) {
   }
 }
 
+function copyWasmArtifactsToDist(pkgDir, distDir) {
+  fs.mkdirSync(distDir, { recursive: true });
+
+  const filesToCopy = [
+    'ducjs_wasm_bg.wasm',
+    'ducjs_wasm.js',
+    'ducjs_wasm.d.ts',
+    'ducjs_wasm_bg.wasm.d.ts',
+  ];
+
+  for (const fileName of filesToCopy) {
+    const sourcePath = path.join(pkgDir, fileName);
+    const destinationPath = path.join(distDir, fileName);
+
+    if (!fs.existsSync(sourcePath)) {
+      throw new Error(`Missing expected wasm artifact: ${sourcePath}`);
+    }
+
+    fs.copyFileSync(sourcePath, destinationPath);
+  }
+}
+
 // ── WASM build helpers (clang resolution matching ducpdf) ──────────────────
 
 function tryResolveCompiler(candidates) {
@@ -233,7 +255,10 @@ async function main() {
     console.log('No dist directory to clean or error:', error.message);
   }
 
-  // 4. Run TypeScript compiler
+  // 4. Copy wasm artifacts to dist so TS emits stable dist-relative imports
+  copyWasmArtifactsToDist(pkgDir, distDir);
+
+  // 5. Run TypeScript compiler
   const env = {
     ...process.env,
     DUC_SCHEMA_VERSION: semver,
