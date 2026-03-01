@@ -10,7 +10,7 @@ import init, {
     restoreVersion as _restoreVersion,
     revertToVersion as _revertToVersion,
     serializeDuc as _serializeDuc,
-} from "../pkg/ducjs_wasm";
+} from "../dist/ducjs_wasm";
 
 let initialized = false;
 let initPromise: Promise<void> | null = null;
@@ -33,7 +33,7 @@ export async function ensureWasm(wasmUrl?: string | URL | BufferSource): Promise
  * without being able to resolve the file URL itself.
  */
 export async function getWasmBinary(): Promise<ArrayBuffer> {
-  const url = new URL('../pkg/ducjs_wasm_bg.wasm', import.meta.url);
+  const url = new URL('../dist/ducjs_wasm_bg.wasm', import.meta.url);
   const resp = await fetch(url);
   if (!resp.ok) {
     throw new Error(`Failed to fetch WASM binary: ${resp.status} ${resp.statusText}`);
