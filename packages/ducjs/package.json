@@ -44,7 +44,6 @@
   },
   "files": [
     "dist",
-    "pkg",
     "README.md"
   ],
   "publishConfig": {
