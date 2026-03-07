@@ -1,6 +1,8 @@
 import type { VersionGraph } from "./types";
 import {
     ensureWasm,
+    wasmApplyDeltaChangeset,
+    wasmCreateDeltaChangeset,
     wasmGetCurrentSchemaVersion,
     wasmListVersions,
     wasmReadVersionGraph,
@@ -119,4 +121,44 @@ export const revertToVersion = async (
 export const getCurrentSchemaVersion = async (): Promise<number> => {
   await ensureWasm();
   return wasmGetCurrentSchemaVersion();
+};
+
+/**
+ * Compute a checkpoint-relative binary diff changeset using bsdiff.
+ *
+ * `baseState` is the checkpoint's full data blob (the snapshot at the
+ * base checkpoint version). `currentState` is the full document state
+ * at the new version being saved as a delta.
+ *
+ * Returns an encoded changeset (`Uint8Array`) suitable for use as
+ * `Delta.payload`. bsdiff finds matching blocks even when they shift
+ * offsets, which is critical for SQLite databases where internal page
+ * reordering makes simple byte-level diffs ineffective.
+ *
+ * Use this when constructing `Delta` objects for the `VersionGraph`
+ * before calling `serializeDuc()`.
+ */
+export const createDeltaChangeset = async (
+  baseState: Uint8Array,
+  currentState: Uint8Array,
+): Promise<Uint8Array> => {
+  await ensureWasm();
+  return wasmCreateDeltaChangeset(baseState, currentState);
+};
+
+/**
+ * Apply a changeset to reconstruct document state.
+ *
+ * `baseState` must be the exact checkpoint data used when the changeset
+ * was created. Returns the full document state as `Uint8Array`.
+ *
+ * Handles all changeset formats transparently:
+ *   - v3 (bsdiff), v2 (XOR diff), v1 (zlib full snapshot)
+ */
+export const applyDeltaChangeset = async (
+  baseState: Uint8Array,
+  changeset: Uint8Array,
+): Promise<Uint8Array> => {
+  await ensureWasm();
+  return wasmApplyDeltaChangeset(baseState, changeset);
 };

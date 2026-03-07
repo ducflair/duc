@@ -364,6 +364,7 @@ dependencies = [
  "base64 0.21.7",
  "env_logger",
  "flate2",
+ "fossil-delta",
  "lazy_static",
  "log",
  "percent-encoding",
@@ -569,6 +570,12 @@ dependencies = [
  "tinyvec",
  "ttf-parser 0.25.1",
 ]
+
+[[package]]
+name = "fossil-delta"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e42f72dc65ff480af54c73c63d4b425936aac4167a01b7c9e1ed15aacace22c"
 
 [[package]]
 name = "generic-array"
