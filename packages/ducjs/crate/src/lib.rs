@@ -157,6 +157,41 @@ pub fn revert_to_version(duc_buf: &[u8], target_version: f64) -> Result<JsValue,
     to_restored_js(&restored)
 }
 
+// ── Delta Encoding (bsdiff Binary Diff) ───────────────────────────────────
+
+/// Compute a checkpoint-relative binary diff changeset using bsdiff.
+///
+/// `base_state` is the checkpoint's full data blob.
+/// `current_state` is the full document state at the new version.
+///
+/// Returns an encoded changeset (`Uint8Array`) ready for storage in a
+/// `Delta.payload`. bsdiff finds matching blocks even when they shift
+/// offsets, which is critical for SQLite databases.
+#[wasm_bindgen(js_name = "createDeltaChangeset")]
+pub fn create_delta_changeset(
+    base_state: &[u8],
+    current_state: &[u8],
+) -> Result<Vec<u8>, JsError> {
+    duc::api::version_control::create_bsdiff_changeset(base_state, current_state)
+        .map_err(|e| JsError::new(&format!("{e}")))
+}
+
+/// Apply a changeset to reconstruct document state.
+///
+/// `base_state` must be the exact checkpoint data used when the changeset
+/// was created. Returns the full document state as `Uint8Array`.
+///
+/// Handles all changeset formats transparently:
+///   - v3 (bsdiff), v2 (XOR diff), v1 (zlib full snapshot)
+#[wasm_bindgen(js_name = "applyDeltaChangeset")]
+pub fn apply_delta_changeset(
+    base_state: &[u8],
+    changeset: &[u8],
+) -> Result<Vec<u8>, JsError> {
+    duc::api::version_control::apply_delta_changeset(base_state, changeset)
+        .map_err(|e| JsError::new(&format!("{e}")))
+}
+
 /// Helper: convert a `RestoredVersion` to a JS value.
 fn to_restored_js(r: &duc::api::version_control::RestoredVersion) -> Result<JsValue, JsError> {
     let obj = js_sys::Object::new();

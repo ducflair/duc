@@ -14,10 +14,12 @@ use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use rusqlite::OptionalExtension;
-use std::io::{Read, Write};
+use std::io::Read;
+use std::io::Write;
 use std::os::raw::c_char;
 
 use crate::db::{DbError, DbResult, DucConnection};
+use crate::parse::{decompress_duc_bytes, is_sqlite_header};
 use crate::types::{
     Checkpoint, Delta, SchemaMigration, VersionBase, VersionChain, VersionGraph,
     VersionGraphMetadata,
@@ -132,10 +134,11 @@ impl<'a> VersionControl<'a> {
 
     /// Restore the document state at *exactly* `version_number`.
     ///
-    /// Algorithm (matches the SQL schema comments):
+    /// Algorithm:
     /// 1. If a checkpoint exists at that version → return its `data` directly.
-    /// 2. Otherwise find the nearest checkpoint with `version_number <= target`
-    ///    in the same schema version, then replay deltas sequentially.
+    /// 2. Otherwise find the delta at that version, load its base checkpoint,
+    ///    and decode the changeset (handles both legacy full-snapshot and
+    ///    modern XOR diff formats transparently).
     pub fn restore_version(&self, version_number: i64) -> DbResult<RestoredVersion> {
         self.conn.with(|c| {
             // 1) Try direct checkpoint hit
@@ -172,7 +175,7 @@ impl<'a> VersionControl<'a> {
                 )
                 .map_err(DbError::from)?;
 
-            // 3) Load the base checkpoint
+            // 3) Load the base checkpoint data
             let base_data: Vec<u8> = c
                 .query_row(
                     "SELECT data FROM checkpoints WHERE id = ?1",
@@ -181,48 +184,17 @@ impl<'a> VersionControl<'a> {
                 )
                 .map_err(DbError::from)?;
 
-            let base_cp_version: i64 = c
+            // 4) Load the target delta's changeset
+            let target_changeset: Vec<u8> = c
                 .query_row(
-                    "SELECT version_number FROM checkpoints WHERE id = ?1",
-                    [&target_base_cp_id],
+                    "SELECT changeset FROM deltas WHERE version_number = ?1",
+                    [version_number],
                     |row| row.get(0),
                 )
                 .map_err(DbError::from)?;
 
-            // 4) Collect and replay deltas from base_checkpoint up to target version
-            let mut stmt = c
-                .prepare(
-                    "SELECT changeset FROM deltas
-                     WHERE base_checkpoint_id = ?1
-                       AND schema_version = ?2
-                       AND version_number > ?3
-                       AND version_number <= ?4
-                     ORDER BY delta_sequence ASC",
-                )
-                .map_err(DbError::from)?;
-
-            let delta_payloads: Vec<Vec<u8>> = stmt
-                .query_map(
-                    rusqlite::params![target_base_cp_id, target_sv, base_cp_version, version_number],
-                    |row| row.get::<_, Vec<u8>>(0),
-                )
-                .map_err(DbError::from)?
-                .collect::<Result<Vec<_>, _>>()
-                .map_err(DbError::from)?;
-
-            // 5) Apply deltas sequentially. Each delta payload is zlib-compressed.
-            //    The application-level delta format is opaque — the caller is
-            //    responsible for interpreting the bytes. What we do here is
-            //    decompress each payload and return the *final* state.
-            //
-            //    For snapshot-based deltas (our current model), each delta
-            //    payload IS the full state at that version (compressed).
-            //    So we just need the *last* payload.
-            let final_data = if let Some(last_changeset) = delta_payloads.last() {
-                decompress_zlib(last_changeset)?
-            } else {
-                base_data
-            };
+            // 5) Decode: auto-detects v3 (bsdiff) / v2 (XOR) / v1 (legacy snapshot)
+            let final_data = apply_delta_changeset(&base_data, &target_changeset)?;
 
             Ok(RestoredVersion {
                 version_number,
@@ -411,6 +383,10 @@ impl<'a> VersionControl<'a> {
     /// Insert a new delta into the database and update the version graph
     /// singleton row.
     ///
+    /// `delta.payload` must be the **full document state** at this version
+    /// (uncompressed). The method automatically computes a fossil delta
+    /// against the base checkpoint, producing a compact changeset.
+    ///
     /// If the delta's `schema_version` is higher than the stored
     /// `current_schema_version`, the migration bookkeeping is performed
     /// automatically.
@@ -429,8 +405,18 @@ impl<'a> VersionControl<'a> {
                 )
                 .map_err(DbError::from)?;
 
-            // Compress the payload with zlib before storing
-            let compressed = compress_zlib(&delta.payload)?;
+            // Load the base checkpoint data for delta computation
+            let base_data: Vec<u8> = c
+                .query_row(
+                    "SELECT data FROM checkpoints WHERE id = ?1",
+                    [&delta.base_checkpoint_id],
+                    |row| row.get(0),
+                )
+                .map_err(DbError::from)?;
+
+            // Compute checkpoint-relative fossil delta changeset
+            let changeset = create_bsdiff_changeset(&base_data, &delta.payload)?;
+            let stored_size = changeset.len() as i64;
 
             c.execute(
                 "INSERT OR REPLACE INTO deltas
@@ -450,8 +436,8 @@ impl<'a> VersionControl<'a> {
                     delta.base.description,
                     delta.base.is_manual_save as i32,
                     delta.base.user_id,
-                    compressed,
-                    delta.size_bytes,
+                    changeset,
+                    stored_size,
                 ],
             )
             .map_err(DbError::from)?;
@@ -983,15 +969,129 @@ fn decompress_zlib(compressed: &[u8]) -> DbResult<Vec<u8>> {
     Ok(decompressed)
 }
 
-/// Compress a blob with zlib.
-fn compress_zlib(data: &[u8]) -> DbResult<Vec<u8>> {
+/// Compress a blob with zlib (legacy v1 snapshot-compatible payload).
+fn compress_zlib(raw: &[u8]) -> DbResult<Vec<u8>> {
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     encoder
-        .write_all(data)
+        .write_all(raw)
         .map_err(|e| DbError::Bootstrap(format!("zlib compression failed: {e}")))?;
     encoder
         .finish()
-        .map_err(|e| DbError::Bootstrap(format!("zlib compression finish failed: {e}")))
+        .map_err(|e| DbError::Bootstrap(format!("zlib finalize failed: {e}")))
+}
+
+/// Ensure the input is raw (uncompressed) SQLite bytes.
+///
+/// `.duc` files produced by `serializeDuc` are deflate-compressed. This
+/// helper transparently inflates them so that fossil delta operates on the
+/// raw SQLite pages — producing compact patches. If the input is already
+/// raw SQLite, it is returned as-is (zero-copy via `Cow`).
+fn ensure_raw_sqlite(buf: &[u8]) -> DbResult<std::borrow::Cow<'_, [u8]>> {
+    if is_sqlite_header(buf) {
+        Ok(std::borrow::Cow::Borrowed(buf))
+    } else {
+        let raw = decompress_duc_bytes(buf)
+            .map_err(|e| DbError::Bootstrap(format!("failed to decompress .duc blob: {e}")))?;
+        if !is_sqlite_header(&raw) {
+            return Err(DbError::Bootstrap(
+                "decompressed blob is not a valid SQLite database".into(),
+            ));
+        }
+        Ok(std::borrow::Cow::Owned(raw))
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Fossil delta encoding — checkpoint-relative structural diffing
+// ────────────────────────────────────────────────────────────────────────────
+//
+// Format (v5 — fossil delta):
+//   [0x44 'D'][0x46 'F']          – magic bytes ("DF" = Delta Fossil)
+//   [0x05]                        – format version
+//   [4 bytes LE u32]              – raw SQLite length of new state
+//   [remaining bytes]             – zlib-compressed fossil delta
+//
+// The fossil delta algorithm uses rolling checksums and emits granular
+// COPY (reference old bytes) + INSERT (literal new bytes) commands.
+// This is far more compact than page-level diffs because a 4KB page
+// with 20 changed bytes only stores those 20 bytes, not the full page.
+//
+// Fallback: if the delta is larger than a zlib-compressed full snapshot,
+// the snapshot is stored directly (no magic header → detected as raw zlib).
+
+/// Magic header identifying a fossil delta changeset.
+const DELTA_MAGIC_FOSSIL: [u8; 2] = [0x44, 0x46]; // "DF"
+const DELTA_FORMAT_V5: u8 = 5;
+
+/// Header: magic(2) + version(1) + new_len(4) = 7 bytes.
+const FOSSIL_HEADER_SIZE: usize = 2 + 1 + 4;
+
+/// Returns `true` if the blob starts with the fossil v5 magic header.
+fn is_fossil_format(changeset: &[u8]) -> bool {
+    changeset.len() >= FOSSIL_HEADER_SIZE
+        && changeset[0] == DELTA_MAGIC_FOSSIL[0]
+        && changeset[1] == DELTA_MAGIC_FOSSIL[1]
+        && changeset[2] == DELTA_FORMAT_V5
+}
+
+/// Compute a checkpoint-relative changeset using fossil delta.
+///
+/// Both inputs are transparently decompressed to raw SQLite bytes,
+/// then a fossil delta is computed and zlib-compressed.
+/// Falls back to a full zlib snapshot if the delta isn't smaller.
+pub fn create_bsdiff_changeset(base: &[u8], current: &[u8]) -> DbResult<Vec<u8>> {
+    let raw_base = ensure_raw_sqlite(base)?;
+    let raw_current = ensure_raw_sqlite(current)?;
+
+    // fossil_delta::delta(target, source) — target is what we want to reconstruct,
+    // source is what we already have. apply(source, delta) → target.
+    let raw_delta = fossil_delta::delta(&raw_current, &raw_base);
+    let compressed_delta = compress_zlib(&raw_delta)?;
+
+    let new_len = raw_current.len() as u32;
+    let mut encoded = Vec::with_capacity(FOSSIL_HEADER_SIZE + compressed_delta.len());
+    encoded.extend_from_slice(&DELTA_MAGIC_FOSSIL);
+    encoded.push(DELTA_FORMAT_V5);
+    encoded.extend_from_slice(&new_len.to_le_bytes());
+    encoded.extend_from_slice(&compressed_delta);
+
+    // Fallback: full zlib snapshot if delta isn't beneficial
+    let snapshot = compress_zlib(&raw_current)?;
+
+    if encoded.len() < snapshot.len() {
+        Ok(encoded)
+    } else {
+        Ok(snapshot)
+    }
+}
+
+/// Apply a fossil delta changeset to reconstruct the document state.
+///
+/// `base` is transparently decompressed if compressed.
+/// Returns raw (uncompressed) SQLite bytes.
+fn apply_fossil_changeset(base: &[u8], changeset: &[u8]) -> DbResult<Vec<u8>> {
+    let raw_base = ensure_raw_sqlite(base)?;
+
+    let compressed_delta = &changeset[FOSSIL_HEADER_SIZE..];
+    let raw_delta = decompress_zlib(compressed_delta)?;
+
+    fossil_delta::apply(&raw_base, &raw_delta)
+        .map_err(|e| DbError::Bootstrap(format!("fossil delta apply failed: {e:?}")))
+}
+
+/// Decode a stored changeset.
+///
+/// Detects fossil delta (v5) by magic header. Anything else is treated as
+/// a zlib-compressed full snapshot (fallback).
+///
+/// Returns raw (uncompressed) SQLite bytes.
+pub fn apply_delta_changeset(base_data: &[u8], changeset: &[u8]) -> DbResult<Vec<u8>> {
+    if is_fossil_format(changeset) {
+        apply_fossil_changeset(base_data, changeset)
+    } else {
+        // Snapshot fallback: zlib-compressed full state
+        decompress_zlib(changeset)
+    }
 }
 
 /// Generate a nanoid-style ID (22-char URL-safe random string).
