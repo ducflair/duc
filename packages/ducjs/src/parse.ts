@@ -51,7 +51,26 @@ export async function parseDuc(
 
   const data = transformFromRust(raw) as ExportedDataState;
 
-  return restore(data, elementsConfig ?? { syncInvalidIndices: (els) => els as any }, restoreConfig);
+  // Preserve the original version graph from Rust before restore() can
+  // filter out entries through restoreCheckpoint/restoreDelta validation.
+  // The VG data is already validated by the Rust parser.
+  const originalVG = data.versionGraph;
+  const restored = restore(
+    {
+      ...data,
+      // Preserve versionGraph from Rust separately; do not run it through restore()
+      versionGraph: undefined,
+    },
+    elementsConfig ?? { syncInvalidIndices: (els) => els as any },
+    restoreConfig,
+  );
+
+  // Use the original version graph from Rust, bypassing restore's lossy filtering
+  if (originalVG) {
+    restored.versionGraph = originalVG;
+  }
+
+  return restored;
 }
 
 /**
@@ -85,15 +104,28 @@ export async function parseDucLazy(
 
   const data = transformFromRust(raw) as ExportedDataState;
 
+  // Preserve the original version graph from Rust before restore() filters
+  const originalVG = data.versionGraph;
+
   const lazyFileStore = new LazyExternalFileStore(buffer);
   const files: DucExternalFiles = {};
 
   const restored = restore(
-    { ...data, files },
+    {
+      ...data,
+      files,
+      // Preserve versionGraph from Rust separately; do not run it through restore()
+      versionGraph: undefined,
+    },
     elementsConfig ?? { syncInvalidIndices: (els) => els as any },
     restoreConfig,
   ) as LazyRestoredDataState;
   restored.lazyFileStore = lazyFileStore;
+
+  // Use the original version graph from Rust, bypassing restore's lossy filtering
+  if (originalVG) {
+    restored.versionGraph = originalVG;
+  }
 
   return restored;
 }
