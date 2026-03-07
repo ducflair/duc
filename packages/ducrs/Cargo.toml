@@ -13,6 +13,7 @@ base64 = "0.21.5"
 percent-encoding = "2.3.1"
 log = "0.4.22"
 flate2 = "1.0"
+fossil-delta = "0.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_repr = "0.1"
