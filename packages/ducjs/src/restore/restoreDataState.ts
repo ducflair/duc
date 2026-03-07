@@ -697,13 +697,7 @@ export const restoreVersionGraph = (
   if (!importedGraph || typeof importedGraph !== "object") {
     return undefined;
   }
-  const userCheckpointVersionId = isValidString(
-    importedGraph.userCheckpointVersionId
-  );
-  const latestVersionId = isValidString(importedGraph.latestVersionId);
-  if (!userCheckpointVersionId || !latestVersionId) {
-    return undefined;
-  }
+
   const checkpoints: Checkpoint[] = Array.isArray(importedGraph.checkpoints)
     ? importedGraph.checkpoints
       .map((checkpoint: unknown) => restoreCheckpoint(checkpoint))
@@ -715,6 +709,22 @@ export const restoreVersionGraph = (
       .map((delta: unknown) => restoreDelta(delta))
       .filter((delta: Delta | undefined): delta is Delta => Boolean(delta))
     : [];
+
+  if (checkpoints.length === 0 && deltas.length === 0) {
+    return undefined;
+  }
+
+  // Head IDs can legitimately be empty strings (e.g. after Rust roundtrip
+  // where the DB stores NULL → unwrap_or_default → ""). Accept any string.
+  const userCheckpointVersionId =
+    typeof importedGraph.userCheckpointVersionId === "string"
+      ? importedGraph.userCheckpointVersionId
+      : "";
+  const latestVersionId =
+    typeof importedGraph.latestVersionId === "string"
+      ? importedGraph.latestVersionId
+      : "";
+
   const importedMetadata = importedGraph.metadata;
   const metadata: VersionGraph["metadata"] = {
     currentVersion:
@@ -758,10 +768,15 @@ export const restoreCheckpoint = (importedCheckpoint: unknown): Checkpoint | und
   }
 
   const id = isValidString(checkpoint.id);
-  const data = isValidUint8Array(checkpoint.data);
-  if (!id || !data) {
+  if (!id) {
     return undefined;
   }
+
+  // Accept empty Uint8Array — shell/remote entries have byteLength === 0
+  const data = isValidUint8Array(checkpoint.data)
+    ?? (checkpoint.data instanceof Uint8Array ? checkpoint.data : undefined)
+    ?? (checkpoint.data instanceof ArrayBuffer ? new Uint8Array(checkpoint.data) : undefined)
+    ?? new Uint8Array(0);
 
   return {
     type: "checkpoint",
@@ -795,11 +810,19 @@ export const restoreDelta = (importedDelta: unknown): Delta | undefined => {
   }
 
   const id = isValidString(delta.id);
-  const payload = isValidUint8Array(delta.payload);
-  const baseCheckpointId = isValidString(delta.baseCheckpointId);
-  if (!id || !payload || !baseCheckpointId) {
+  if (!id) {
     return undefined;
   }
+
+  // Accept empty Uint8Array — shell/remote entries have byteLength === 0
+  const payload = isValidUint8Array(delta.payload)
+    ?? (delta.payload instanceof Uint8Array ? delta.payload : undefined)
+    ?? (delta.payload instanceof ArrayBuffer ? new Uint8Array(delta.payload) : undefined)
+    ?? new Uint8Array(0);
+
+  // baseCheckpointId can be empty for shell entries or first-in-chain deltas
+  const baseCheckpointId =
+    typeof delta.baseCheckpointId === "string" ? delta.baseCheckpointId : "";
 
   return {
     type: "delta",

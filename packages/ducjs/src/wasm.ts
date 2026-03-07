@@ -1,4 +1,6 @@
 import init, {
+    applyDeltaChangeset as _applyDeltaChangeset,
+    createDeltaChangeset as _createDeltaChangeset,
     getCurrentSchemaVersion as _getCurrentSchemaVersion,
     getExternalFile as _getExternalFile,
     listExternalFiles as _listExternalFiles,
@@ -53,3 +55,6 @@ export const wasmListVersions = _listVersions;
 export const wasmReadVersionGraph = _readVersionGraph;
 export const wasmRevertToVersion = _revertToVersion;
 export const wasmGetCurrentSchemaVersion = _getCurrentSchemaVersion;
+
+export const wasmCreateDeltaChangeset = _createDeltaChangeset;
+export const wasmApplyDeltaChangeset = _applyDeltaChangeset;

@@ -223,12 +223,12 @@ fn load_db_bytes(buf: &[u8]) -> ParseResult<Connection> {
 }
 
 #[inline]
-fn is_sqlite_header(buf: &[u8]) -> bool {
+pub fn is_sqlite_header(buf: &[u8]) -> bool {
     buf.len() >= SQLITE_HEADER_MAGIC.len() && &buf[..SQLITE_HEADER_MAGIC.len()] == SQLITE_HEADER_MAGIC
 }
 
 /// Inflate a compressed deflate payload.
-fn decompress_duc_bytes(compressed: &[u8]) -> ParseResult<Vec<u8>> {
+pub fn decompress_duc_bytes(compressed: &[u8]) -> ParseResult<Vec<u8>> {
     use flate2::read::DeflateDecoder;
     use std::io::Read;
 
