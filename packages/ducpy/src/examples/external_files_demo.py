@@ -60,13 +60,14 @@ def create_duc_with_external_files():
         duc_local_state=local_state,
         duc_global_state=global_state,
         version_graph=None, # Not focusing on versioning here
-        files=[image_file_entry, pdf_file_entry]
+        files={image_file_entry.id: image_file_entry, pdf_file_entry.id: pdf_file_entry}
     )
 
     print("DUC object with external files created successfully!")
     print(f"Total external files: {len(duc_object.files)}")
-    print(f"First file key: {duc_object.files[0].key}, MIME type: {duc_object.files[0].value.mime_type}")
-    print(f"Second file key: {duc_object.files[1].key}, MIME type: {duc_object.files[1].value.mime_type}")
+    for fid, file in duc_object.files.items():
+        active_rev = file.revisions[file.active_revision_id]
+        print(f"File id: {fid}, MIME type: {active_rev.mime_type}")
     return duc_object
 
 def main():

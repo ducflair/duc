@@ -1,5 +1,5 @@
 from ducpy.classes.DataStateClass import (Checkpoint, Delta,
-                                          DucExternalFileEntry, DucGlobalState,
+                                          DucExternalFile, DucGlobalState,
                                           DucLocalState, VersionGraph)
 from ducpy.classes.ElementsClass import ElementWrapper
 from ducpy.utils import recursive_mutate
@@ -45,6 +45,6 @@ def mutate_local_state(state: DucLocalState, **kwargs):
     recursive_mutate(state, kwargs)
     return state
 
-def mutate_external_file(file_entry: DucExternalFileEntry, **kwargs):
+def mutate_external_file(file_entry: DucExternalFile, **kwargs):
     recursive_mutate(file_entry, kwargs)
     return file_entry
