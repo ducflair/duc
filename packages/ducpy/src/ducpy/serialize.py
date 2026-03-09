@@ -114,12 +114,21 @@ def _element_to_camel(wrapper_or_element: Any) -> dict:
 
 
 def _convert_external_files(
-    entries: Optional[list],
+    entries: Optional[Any],
 ) -> Optional[Dict[str, Any]]:
-    """Convert a list of DucExternalFileEntry to a ``{id: data}`` dict."""
+    """Convert DucExternalFile dict (or legacy list) to camelCase dicts for serialization."""
     if not entries:
         return None
-    result: dict = {}
+    # New format: already a dict mapping id → DucExternalFile
+    if isinstance(entries, dict):
+        result: dict = {}
+        for key, value in entries.items():
+            if is_dataclass(value):
+                value = asdict(value)
+            result[key] = deep_snake_to_camel(value) if isinstance(value, dict) else value
+        return result if result else None
+    # Legacy list format: list of DucExternalFileEntry { key, value }
+    result = {}
     for entry in entries:
         if is_dataclass(entry):
             entry = asdict(entry)
@@ -129,8 +138,6 @@ def _convert_external_files(
             if is_dataclass(value):
                 value = asdict(value)
             result[key] = deep_snake_to_camel(value) if isinstance(value, dict) else value
-        else:
-            continue
     return result if result else None
 
 

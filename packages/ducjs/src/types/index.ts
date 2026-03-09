@@ -124,32 +124,38 @@ export type DucUcs = {
 export type Scope = SupportedMeasures;
 
 
-export type DucExternalFileData = {
+export type ExternalFileRevision = {
+  id: string;
+  sizeBytes: number;
+  /** Content hash for integrity checks and optional deduplication. */
+  checksum?: string;
+  /** Original upload filename shown to the user. */
+  sourceName?: string;
   mimeType: string;
-  id: ExternalFileId;
-  data: Uint8Array;
-  /**
-   * Epoch timestamp in milliseconds
-   */
+  /** Optional note describing what changed in this revision. */
+  message?: string;
+  /** Epoch timestamp in milliseconds when this revision was created. */
   created: number;
   /**
-   * Indicates when the file was last retrieved from storage to be loaded
-   * onto the scene. We use this flag to determine whether to delete unused
-   * files from storage.
-   *
-   * Epoch timestamp in milliseconds.
+   * Epoch timestamp in milliseconds when this revision was last loaded onto
+   * the scene. Used to determine whether to delete unused files from storage.
    */
   lastRetrieved?: number;
-  /**
-   * indicates the version of the file. This can be used to determine whether
-   * the file data has changed e.g. as part of restore due to schema update.
-   */
+  /** The actual file content bytes. */
+  data: Uint8Array;
+};
+
+export type DucExternalFile = {
+  id: ExternalFileId;
+  activeRevisionId: string;
+  /** Epoch ms when the logical file was last mutated (revision added or active changed). */
+  updated: number;
+  /** All revisions of this file, keyed by their id. */
+  revisions: Record<string, ExternalFileRevision>;
   version?: number;
 };
 
-export type DucExternalFileMetadata = Omit<DucExternalFileData, "data">;
-
-export type DucExternalFiles = Record<DucElement["id"], DucExternalFileData>;
+export type DucExternalFiles = Record<ExternalFileId, DucExternalFile>;
 
 export type SuggestedBinding =
   | NonDeleted<DucBindableElement>
