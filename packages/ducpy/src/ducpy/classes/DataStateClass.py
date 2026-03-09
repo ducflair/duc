@@ -118,17 +118,24 @@ class DisplayPrecision:
     angular: int = 2
 
 @dataclass
-class DucExternalFileData:
-    mime_type: str
+class ExternalFileRevision:
     id: str
-    data: bytes
+    size_bytes: int
+    mime_type: str
     created: int
-    last_retrieved: Optional[int]
+    data: bytes
+    checksum: Optional[str] = None
+    source_name: Optional[str] = None
+    message: Optional[str] = None
+    last_retrieved: Optional[int] = None
 
 @dataclass
-class DucExternalFileEntry:
-    key: str
-    value: DucExternalFileData
+class DucExternalFile:
+    id: str
+    active_revision_id: str
+    updated: int
+    revisions: Dict[str, ExternalFileRevision]
+    version: Optional[int] = None
 
 @dataclass
 class ExportedDataState:
@@ -147,5 +154,5 @@ class ExportedDataState:
     duc_local_state: Optional[DucLocalState]
     duc_global_state: Optional[DucGlobalState]
     version_graph: Optional[VersionGraph]
-    files: Optional[List[DucExternalFileEntry]]
+    files: Optional[Dict[str, DucExternalFile]]
     id: Optional[str] = None
