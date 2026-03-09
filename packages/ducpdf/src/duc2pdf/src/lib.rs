@@ -300,13 +300,35 @@ pub fn convert_duc_to_pdf_rs(duc_data: &[u8]) -> Vec<u8> {
     }
 }
 
+/// WASM binding for standard conversion with an explicit manual drawing scale.
+#[wasm_bindgen]
+pub fn convert_duc_to_pdf_with_scale_wasm(duc_data: &[u8], scale: f64) -> Vec<u8> {
+    let options = ConversionOptions {
+        scale: Some(scale),
+        ..Default::default()
+    };
+
+    match convert_duc_to_pdf_with_options(duc_data, options) {
+        Ok(pdf_bytes) => pdf_bytes,
+        Err(e) => {
+            error_handling::log_error_details(&e, duc_data.len(), "Standard conversion with scale");
+            let options = ConversionOptions {
+                scale: Some(scale),
+                ..Default::default()
+            };
+            let error_info = error_handling::create_error_info(&e, duc_data.len(), Some(&options));
+            error_handling::error_to_wasm_bytes(&error_info)
+        }
+    }
+}
+
 /// Conversion function with crop mode
 pub fn convert_duc_to_pdf_crop(
     duc_data: &[u8],
     offset_x: f64,
     offset_y: f64,
 ) -> ConversionResult<Vec<u8>> {
-    convert_duc_to_pdf_crop_with_options(duc_data, offset_x, offset_y, None, None, None)
+    convert_duc_to_pdf_crop_with_options(duc_data, offset_x, offset_y, None, None, None, None)
 }
 
 /// Conversion function with crop mode and specific dimensions
@@ -324,6 +346,7 @@ pub fn convert_duc_to_pdf_crop_with_dimensions(
         Some(width),
         Some(height),
         None,
+        None,
     )
 }
 
@@ -334,6 +357,7 @@ pub fn convert_duc_to_pdf_crop_with_options(
     width: Option<f64>,
     height: Option<f64>,
     background_color: Option<String>,
+    scale: Option<f64>,
 ) -> ConversionResult<Vec<u8>> {
     let options = ConversionOptions {
         mode: ConversionMode::Crop {
@@ -342,6 +366,7 @@ pub fn convert_duc_to_pdf_crop_with_options(
             width,
             height,
         },
+        scale,
         background_color,
         ..Default::default()
     };
@@ -385,6 +410,7 @@ pub fn convert_duc_to_pdf_crop_wasm(
         width,
         height,
         normalized_background.clone(),
+        None,
     ) {
         Ok(pdf_bytes) => pdf_bytes,
         Err(e) => {
@@ -400,6 +426,68 @@ pub fn convert_duc_to_pdf_crop_wasm(
                     width,
                     height,
                 },
+                background_color: normalized_background,
+                ..Default::default()
+            };
+            let error_info =
+                error_handling::create_error_info(&e, duc_data.len(), Some(&crop_options));
+            error_handling::error_to_wasm_bytes(&error_info)
+        }
+    }
+}
+
+/// WASM binding for crop conversion with explicit manual drawing scale.
+#[wasm_bindgen]
+pub fn convert_duc_to_pdf_crop_scaled_wasm(
+    duc_data: &[u8],
+    offset_x: f64,
+    offset_y: f64,
+    width: Option<f64>,
+    height: Option<f64>,
+    background_color: Option<String>,
+    scale: f64,
+) -> Vec<u8> {
+    if let Err(validation_error) = error_handling::validate_basic_inputs(
+        duc_data,
+        Some(offset_x),
+        Some(offset_y),
+        width,
+        height,
+    ) {
+        let error_info = error_handling::WasmErrorInfo {
+            error: validation_error.clone(),
+            error_type: "ValidationError".to_string(),
+            details: validation_error,
+            duc_data_length: duc_data.len(),
+            conversion_context: None,
+        };
+        return error_handling::error_to_wasm_bytes(&error_info);
+    }
+
+    let normalized_background = normalize_background_color(background_color);
+
+    match convert_duc_to_pdf_crop_with_options(
+        duc_data,
+        offset_x,
+        offset_y,
+        width,
+        height,
+        normalized_background.clone(),
+        Some(scale),
+    ) {
+        Ok(pdf_bytes) => pdf_bytes,
+        Err(e) => {
+            error_handling::log_error_details(&e, duc_data.len(), "Crop conversion with scale");
+            error_handling::log_crop_details(offset_x, offset_y, width, height);
+
+            let crop_options = ConversionOptions {
+                mode: ConversionMode::Crop {
+                    offset_x,
+                    offset_y,
+                    width,
+                    height,
+                },
+                scale: Some(scale),
                 background_color: normalized_background,
                 ..Default::default()
             };
@@ -449,6 +537,33 @@ pub fn convert_duc_to_pdf_with_fonts_rs(duc_data: &[u8], font_map_js: JsValue) -
         Err(e) => {
             error_handling::log_error_details(&e, duc_data.len(), "Conversion with fonts (default options)");
             let error_info = error_handling::create_error_info(&e, duc_data.len(), None);
+            error_handling::error_to_wasm_bytes(&error_info)
+        }
+    }
+}
+
+/// WASM binding for standard conversion with fonts and an explicit manual drawing scale.
+#[wasm_bindgen]
+pub fn convert_duc_to_pdf_with_fonts_scaled_wasm(
+    duc_data: &[u8],
+    scale: f64,
+    font_map_js: JsValue,
+) -> Vec<u8> {
+    let font_data = deserialize_font_map(font_map_js);
+    let options = ConversionOptions {
+        scale: Some(scale),
+        ..Default::default()
+    };
+
+    match convert_duc_to_pdf_with_fonts_and_options(duc_data, options, font_data) {
+        Ok(pdf_bytes) => pdf_bytes,
+        Err(e) => {
+            error_handling::log_error_details(&e, duc_data.len(), "Conversion with fonts and scale");
+            let options = ConversionOptions {
+                scale: Some(scale),
+                ..Default::default()
+            };
+            let error_info = error_handling::create_error_info(&e, duc_data.len(), Some(&options));
             error_handling::error_to_wasm_bytes(&error_info)
         }
     }
@@ -508,6 +623,73 @@ pub fn convert_duc_to_pdf_crop_with_fonts_wasm(
                     width,
                     height,
                 },
+                background_color: normalized_background,
+                ..Default::default()
+            };
+            let error_info =
+                error_handling::create_error_info(&e, duc_data.len(), Some(&crop_options));
+            error_handling::error_to_wasm_bytes(&error_info)
+        }
+    }
+}
+
+/// WASM binding for crop conversion with fonts and explicit manual drawing scale.
+#[wasm_bindgen]
+pub fn convert_duc_to_pdf_crop_with_fonts_scaled_wasm(
+    duc_data: &[u8],
+    offset_x: f64,
+    offset_y: f64,
+    width: Option<f64>,
+    height: Option<f64>,
+    background_color: Option<String>,
+    scale: f64,
+    font_map_js: JsValue,
+) -> Vec<u8> {
+    if let Err(validation_error) = error_handling::validate_basic_inputs(
+        duc_data,
+        Some(offset_x),
+        Some(offset_y),
+        width,
+        height,
+    ) {
+        let error_info = error_handling::WasmErrorInfo {
+            error: validation_error.clone(),
+            error_type: "ValidationError".to_string(),
+            details: validation_error,
+            duc_data_length: duc_data.len(),
+            conversion_context: None,
+        };
+        return error_handling::error_to_wasm_bytes(&error_info);
+    }
+
+    let normalized_background = normalize_background_color(background_color);
+    let font_data = deserialize_font_map(font_map_js);
+
+    let options = ConversionOptions {
+        mode: ConversionMode::Crop {
+            offset_x,
+            offset_y,
+            width,
+            height,
+        },
+        scale: Some(scale),
+        background_color: normalized_background.clone(),
+        ..Default::default()
+    };
+
+    match convert_duc_to_pdf_with_fonts_and_options(duc_data, options, font_data) {
+        Ok(pdf_bytes) => pdf_bytes,
+        Err(e) => {
+            error_handling::log_error_details(&e, duc_data.len(), "Crop conversion with fonts and scale");
+            error_handling::log_crop_details(offset_x, offset_y, width, height);
+            let crop_options = ConversionOptions {
+                mode: ConversionMode::Crop {
+                    offset_x,
+                    offset_y,
+                    width,
+                    height,
+                },
+                scale: Some(scale),
                 background_color: normalized_background,
                 ..Default::default()
             };
