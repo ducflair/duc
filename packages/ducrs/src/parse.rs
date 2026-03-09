@@ -121,48 +121,131 @@ pub fn parse_lazy(buf: &[u8]) -> ParseResult<ExportedDataState> {
 }
 
 /// Fetch a single external file from a `.duc` buffer by file ID.
-pub fn get_external_file(buf: &[u8], file_id: &str) -> ParseResult<Option<DucExternalFileEntry>> {
+pub fn get_external_file(buf: &[u8], file_id: &str) -> ParseResult<Option<DucExternalFile>> {
     let conn = load_db_bytes(buf)?;
-    let mut stmt = conn.prepare(
-        "SELECT id, mime_type, data, created, last_retrieved, version FROM external_files WHERE id = ?1"
-    )?;
-    let result = stmt.query_row(params![file_id], |row| {
-        let id: String = row.get(0)?;
-        Ok(DucExternalFileEntry {
-            key: id.clone(),
-            value: DucExternalFileData {
+    let has_revisions_table: bool = conn.prepare(
+        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='external_file_revisions'"
+    )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
+
+    if has_revisions_table {
+        // New schema: load file header + revisions.
+        let file = conn.prepare(
+            "SELECT id, active_revision_id, updated, version FROM external_files WHERE id = ?1"
+        )?.query_row(params![file_id], |row| {
+            Ok(DucExternalFile {
+                id:                 row.get(0)?,
+                active_revision_id: row.get(1)?,
+                updated:            row.get(2)?,
+                revisions:          HashMap::new(),
+                version:            row.get(3)?,
+            })
+        });
+        let mut file = match file {
+            Ok(f) => f,
+            Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
+            Err(e) => return Err(e.into()),
+        };
+
+        let mut rev_stmt = conn.prepare(
+            "SELECT id, size_bytes, checksum, source_name, mime_type, message,
+                    created, last_retrieved, data
+             FROM external_file_revisions WHERE file_id = ?1"
+        )?;
+        let rev_rows = rev_stmt.query_map(params![file_id], |row| {
+            let id: String = row.get(0)?;
+            Ok((id.clone(), ExternalFileRevision {
                 id,
-                mime_type: row.get(1)?,
-                data: row.get(2)?,
-                created: row.get(3)?,
-                last_retrieved: row.get(4)?,
+                size_bytes:     row.get(1)?,
+                checksum:       row.get(2)?,
+                source_name:    row.get(3)?,
+                mime_type:      row.get(4)?,
+                message:        row.get(5)?,
+                created:        row.get(6)?,
+                last_retrieved: row.get(7)?,
+                data:           row.get(8)?,
+            }))
+        })?;
+        for row in rev_rows {
+            let (rev_id, rev) = row?;
+            file.revisions.insert(rev_id, rev);
+        }
+        Ok(Some(file))
+    } else {
+        // Legacy schema: wrap flat row into a single-revision DucExternalFile.
+        let result = conn.prepare(
+            "SELECT id, mime_type, data, created, last_retrieved, version FROM external_files WHERE id = ?1"
+        )?.query_row(params![file_id], |row| {
+            let id: String = row.get(0)?;
+            let rev_id = format!("{}_rev1", id);
+            Ok(DucExternalFile {
+                id: id.clone(),
+                active_revision_id: rev_id.clone(),
+                updated: row.get(3)?,
                 version: row.get(5)?,
-            },
-        })
-    });
-    match result {
-        Ok(entry) => Ok(Some(entry)),
-        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-        Err(e) => Err(e.into()),
+                revisions: {
+                    let mut revs = HashMap::new();
+                    revs.insert(rev_id.clone(), ExternalFileRevision {
+                        id: rev_id,
+                        size_bytes: 0,
+                        checksum: None,
+                        source_name: None,
+                        mime_type: row.get(1)?,
+                        message: None,
+                        created: row.get(3)?,
+                        last_retrieved: row.get(4)?,
+                        data: row.get(2)?,
+                    });
+                    revs
+                },
+            })
+        });
+        match result {
+            Ok(file) => Ok(Some(file)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
     }
 }
 
-/// List metadata for all external files (without the heavy data blobs).
-pub fn list_external_files(buf: &[u8]) -> ParseResult<Vec<ExternalFileMetadata>> {
+/// List metadata summary for all external files (no data blobs loaded).
+pub fn list_external_files(buf: &[u8]) -> ParseResult<Vec<ExternalFileMeta>> {
     let conn = load_db_bytes(buf)?;
-    let mut stmt = conn.prepare(
-        "SELECT id, mime_type, created, last_retrieved, version FROM external_files"
-    )?;
-    let files: Vec<ExternalFileMetadata> = stmt.query_map([], |row| {
-        Ok(ExternalFileMetadata {
-            id: row.get(0)?,
-            mime_type: row.get(1)?,
-            created: row.get(2)?,
-            last_retrieved: row.get(3)?,
-            version: row.get(4)?,
-        })
-    })?.collect::<Result<Vec<_>, _>>()?;
-    Ok(files)
+    let has_revisions_table: bool = conn.prepare(
+        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='external_file_revisions'"
+    )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
+
+    if has_revisions_table {
+        let mut stmt = conn.prepare(
+            "SELECT f.id, r.mime_type, r.created, r.last_retrieved, f.version
+             FROM external_files f
+             JOIN external_file_revisions r ON r.id = f.active_revision_id"
+        )?;
+        let files: Vec<ExternalFileMeta> = stmt.query_map([], |row| {
+            Ok(ExternalFileMeta {
+                id:             row.get(0)?,
+                mime_type:      row.get(1)?,
+                created:        row.get(2)?,
+                last_retrieved: row.get(3)?,
+                version:        row.get(4)?,
+            })
+        })?.collect::<Result<Vec<_>, _>>()?;
+        Ok(files)
+    } else {
+        // Legacy schema flat table.
+        let mut stmt = conn.prepare(
+            "SELECT id, mime_type, created, last_retrieved, version FROM external_files"
+        )?;
+        let files: Vec<ExternalFileMeta> = stmt.query_map([], |row| {
+            Ok(ExternalFileMeta {
+                id:             row.get(0)?,
+                mime_type:      row.get(1)?,
+                created:        row.get(2)?,
+                last_retrieved: row.get(3)?,
+                version:        row.get(4)?,
+            })
+        })?.collect::<Result<Vec<_>, _>>()?;
+        Ok(files)
+    }
 }
 
 // ─── Database import ─────────────────────────────────────────────────────────
@@ -1685,27 +1768,131 @@ fn read_hatch_pattern_lines(conn: &Connection, owner_type: &str, owner_id: i64) 
 
 // ─── external_files ──────────────────────────────────────────────────────────
 
-fn read_external_files(conn: &Connection) -> ParseResult<Option<HashMap<String, DucExternalFileData>>> {
+fn read_external_files(conn: &Connection) -> ParseResult<Option<HashMap<String, DucExternalFile>>> {
+    // Check if the new schema (with external_file_revisions) is present.
+    let has_revisions_table: bool = conn.prepare(
+        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='external_file_revisions'"
+    )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
+
+    if has_revisions_table {
+        read_external_files_v2(conn)
+    } else {
+        read_external_files_v1_legacy(conn)
+    }
+}
+
+/// Read from the current schema (external_files + external_file_revisions).
+fn read_external_files_v2(conn: &Connection) -> ParseResult<Option<HashMap<String, DucExternalFile>>> {
+    // Load all revisions grouped by file_id.
+    let mut rev_stmt = conn.prepare(
+        "SELECT id, file_id, size_bytes, checksum, source_name, mime_type, message,
+                created, last_retrieved, data
+         FROM external_file_revisions"
+    )?;
+    let mut revisions_by_file: HashMap<String, HashMap<String, ExternalFileRevision>> = HashMap::new();
+    let rev_rows = rev_stmt.query_map([], |row| {
+        Ok(ExternalFileRevision {
+            id:             row.get(0)?,
+            size_bytes:     row.get(2)?,
+            checksum:       row.get(3)?,
+            source_name:    row.get(4)?,
+            mime_type:      row.get(5)?,
+            message:        row.get(6)?,
+            created:        row.get(7)?,
+            last_retrieved: row.get(8)?,
+            data:           row.get(9)?,
+        })
+    })?;
+
+    // We need file_id as well; re-query with it included.
+    let mut rev_stmt2 = conn.prepare(
+        "SELECT id, file_id, size_bytes, checksum, source_name, mime_type, message,
+                created, last_retrieved, data
+         FROM external_file_revisions"
+    )?;
+    // Suppress unused warning from first query
+    drop(rev_rows);
+
+    let rev_rows2 = rev_stmt2.query_map([], |row| {
+        let rev_id: String = row.get(0)?;
+        let file_id: String = row.get(1)?;
+        Ok((file_id, rev_id.clone(), ExternalFileRevision {
+            id:             rev_id,
+            size_bytes:     row.get(2)?,
+            checksum:       row.get(3)?,
+            source_name:    row.get(4)?,
+            mime_type:      row.get(5)?,
+            message:        row.get(6)?,
+            created:        row.get(7)?,
+            last_retrieved: row.get(8)?,
+            data:           row.get(9)?,
+        }))
+    })?;
+    for row in rev_rows2 {
+        let (file_id, rev_id, rev) = row?;
+        revisions_by_file.entry(file_id).or_default().insert(rev_id, rev);
+    }
+
+    // Load the file headers.
+    let mut file_stmt = conn.prepare(
+        "SELECT id, active_revision_id, updated, version FROM external_files"
+    )?;
+    let mut map: HashMap<String, DucExternalFile> = HashMap::new();
+    let file_rows = file_stmt.query_map([], |row| {
+        let id: String = row.get(0)?;
+        Ok((id.clone(), DucExternalFile {
+            id,
+            active_revision_id: row.get(1)?,
+            updated: row.get(2)?,
+            revisions: HashMap::new(),
+            version: row.get(3)?,
+        }))
+    })?;
+    for row in file_rows {
+        let (k, mut v) = row?;
+        v.revisions = revisions_by_file.remove(&k).unwrap_or_default();
+        map.insert(k, v);
+    }
+
+    if map.is_empty() { Ok(None) } else { Ok(Some(map)) }
+}
+
+/// Fallback for old schema files that only have the flat `external_files` table.
+/// Wraps each row in a single-revision DucExternalFile.
+fn read_external_files_v1_legacy(conn: &Connection) -> ParseResult<Option<HashMap<String, DucExternalFile>>> {
     let mut stmt = conn.prepare(
         "SELECT id, mime_type, data, created, last_retrieved, version FROM external_files"
     )?;
     let mut map = HashMap::new();
     let rows = stmt.query_map([], |row| {
         let id: String = row.get(0)?;
-        Ok((id.clone(), DucExternalFileData {
-            id,
-            mime_type: row.get(1)?,
-            data: row.get(2)?,
-            created: row.get(3)?,
-            last_retrieved: row.get(4)?,
+        let rev_id = format!("{}_rev1", id);
+        Ok((id.clone(), DucExternalFile {
+            id: id.clone(),
+            active_revision_id: rev_id.clone(),
+            updated: row.get(3)?,
             version: row.get(5)?,
+            revisions: {
+                let mut revs = HashMap::new();
+                revs.insert(rev_id.clone(), ExternalFileRevision {
+                    id: rev_id,
+                    size_bytes: 0,
+                    checksum: None,
+                    source_name: None,
+                    mime_type: row.get(1)?,
+                    message: None,
+                    created: row.get(3)?,
+                    last_retrieved: row.get(4)?,
+                    data: row.get(2)?,
+                });
+                revs
+            },
         }))
     })?;
     for row in rows {
         let (k, v) = row?;
         map.insert(k, v);
     }
-
     if map.is_empty() { Ok(None) } else { Ok(Some(map)) }
 }
 

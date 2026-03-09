@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 /**
  * Aligns text vertically within its bounding box.
  */
@@ -1461,40 +1463,51 @@ pub struct VersionGraph {
 
 // =============== EXTERNAL FILES ===============
 
-/// Lightweight metadata for an external file (no data blob).
+/// Snapshot of an external file at a given point in time.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ExternalFileMetadata {
+pub struct ExternalFileRevision {
+    // Revision number as string, functions as an incremental serial id
     pub id: String,
+    pub size_bytes: i64,
+    /// Content hash for integrity checks and optional deduplication.
+    pub checksum: Option<String>,
+    /// Original upload filename shown to the user.
+    pub source_name: Option<String>,
     pub mime_type: String,
+    /// Optional note describing what changed in this revision.
+    pub message: Option<String>,
+    /// Epoch ms when this revision was created.
     pub created: i64,
+    /// Epoch ms when this revision was last loaded onto the scene.
     pub last_retrieved: Option<i64>,
-    pub version: Option<i32>,
-}
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DucExternalFileData {
-    pub mime_type: String,
-    pub id: String,
-    /** The actual file content bytes. */
+    /// The actual file content bytes
     #[serde(with = "serde_bytes")]
     pub data: Vec<u8>,
-    /** Epoch timestamp in milliseconds when the file was created. */
-    pub created: i64,
-    /**
-     * Epoch timestamp in milliseconds when the file was last retrieved from storage to be loaded onto the scene.
-     * Used to determine whether to delete unused files from storage.
-     */
-    pub last_retrieved: Option<i64>,
+}
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucExternalFile {
+    pub id: String,
+    pub active_revision_id: String,
+    /// Epoch ms when the logical file was last mutated (revision added or active changed).
+    pub updated: i64,
+    // All revisions of this file, keyed by their `id`.
+    pub revisions: HashMap<String, ExternalFileRevision>,
     pub version: Option<i32>,
 }
 
+/// Lightweight summary of an external file used for lazy/metadata-only access
+/// (active revision's metadata + file-level version, no data blob).
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DucExternalFileEntry {
-    pub key: String,
-    pub value: DucExternalFileData,
+pub struct ExternalFileMeta {
+    pub id: String,
+    pub mime_type: String,
+    pub created: i64,
+    pub last_retrieved: Option<i64>,
+    pub version: Option<i32>,
 }
 
 // =============== ROOT TYPE ===============
@@ -1509,7 +1522,7 @@ pub struct ExportedDataState {
     pub source: String,
     #[serde(rename = "type")]
     pub data_type: String,
-    pub dictionary: Option<std::collections::HashMap<String, String>>,
+    pub dictionary: Option<HashMap<String, String>>,
     #[serde(with = "serde_bytes", default, skip_serializing_if = "Option::is_none")]
     pub thumbnail: Option<Vec<u8>>,
     pub elements: Vec<ElementWrapper>,
@@ -1528,5 +1541,5 @@ pub struct ExportedDataState {
     /** In case it is needed to embed the version control into the file format */
     pub version_graph: Option<VersionGraph>,
     #[serde(rename = "files")]
-    pub external_files: Option<std::collections::HashMap<String, DucExternalFileData>>,
+    pub external_files: Option<HashMap<String, DucExternalFile>>,
 }
