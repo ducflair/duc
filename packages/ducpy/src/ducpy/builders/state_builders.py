@@ -9,8 +9,8 @@ from typing import Any, List, Optional
 
 from ducpy.utils.rand_utils import generate_random_id
 
-from ..classes.DataStateClass import (Checkpoint, Delta, DucExternalFileData,
-                                      DucExternalFileEntry, DucGlobalState,
+from ..classes.DataStateClass import (Checkpoint, Delta, DucExternalFile,
+                                      ExternalFileRevision, DucGlobalState,
                                       DucLocalState, VersionGraph,
                                       VersionGraphMetadata)
 from ..classes.ElementsClass import (DucBlock, DucBlockMetadata, DucGroup,
@@ -381,7 +381,7 @@ class DeltaBuilder(StateSpecificBuilder):
 
 class ExternalFileBuilder(StateSpecificBuilder):
     def with_key(self, key: str):
-        self.extra["key"] = key
+        self.base.id = key
         return self
 
     def with_mime_type(self, mime_type: str):
@@ -396,7 +396,7 @@ class ExternalFileBuilder(StateSpecificBuilder):
         self.extra["last_retrieved"] = last_retrieved
         return self
 
-    def build(self) -> DucExternalFileEntry:
+    def build(self) -> DucExternalFile:
         return create_external_file_from_base(self.base, **self.extra)
 
 
@@ -605,17 +605,24 @@ def create_delta_from_base(base: BaseStateParams, **kwargs) -> Delta:
     )
 
 
-def create_external_file_from_base(base: BaseStateParams, **kwargs) -> DucExternalFileEntry:
-    file_data = DucExternalFileData(
+def create_external_file_from_base(base: BaseStateParams, **kwargs) -> DucExternalFile:
+    file_id = base.id or generate_random_id()
+    rev_id = f"{file_id}_rev1"
+    created = int(time.time() * 1000)
+    data = kwargs.get('data', b"")
+    revision = ExternalFileRevision(
+        id=rev_id,
+        size_bytes=len(data),
         mime_type=kwargs.get('mime_type', ""),
-        id=base.id or generate_random_id(),
-        data=kwargs.get('data', b""),
-        created=int(time.time() * 1000),
+        created=created,
+        data=data,
         last_retrieved=kwargs.get('last_retrieved')
     )
-    return DucExternalFileEntry(
-        key=kwargs.get('key', ""),
-        value=file_data
+    return DucExternalFile(
+        id=file_id,
+        active_revision_id=rev_id,
+        updated=created,
+        revisions={rev_id: revision}
     )
 
 

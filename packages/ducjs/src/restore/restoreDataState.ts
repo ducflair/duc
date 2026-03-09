@@ -29,6 +29,7 @@ import type {
   Dictionary,
   DucExternalFiles,
   DucGlobalState,
+  ExternalFileRevision,
   ImportedDataState,
   LibraryItems,
   PrecisionValue,
@@ -222,43 +223,91 @@ export const restoreFiles = (importedFiles: unknown): DucExternalFiles => {
   const files = importedFiles as Record<string, unknown>;
 
   for (const key in files) {
-    if (Object.prototype.hasOwnProperty.call(files, key)) {
-      let fileData = files[key];
-      if (!fileData || typeof fileData !== "object") {
-        continue;
-      }
+    if (!Object.prototype.hasOwnProperty.call(files, key)) continue;
 
-      // Handle the nested DucExternalFileEntry structure { key, value: { ... } }
-      // produced by Rust serde or legacy exports.
-      if ((fileData as any).value && typeof (fileData as any).value === "object") {
-        fileData = (fileData as any).value;
-      }
+    const fileData = files[key];
+    if (!fileData || typeof fileData !== "object") continue;
 
-      const id = isValidExternalFileId((fileData as any).id);
-      const mimeType = isValidString((fileData as any).mimeType);
-      const created = isFiniteNumber((fileData as any).created)
-        ? (fileData as any).created
-        : Date.now();
+    const fd = fileData as Record<string, unknown>;
 
-      // Check for data under 'data' or 'dataURL' to be more flexible.
-      const dataSource = (fileData as any).data ?? (fileData as any).dataURL;
-      const data = isValidUint8Array(dataSource);
+    // New format: DucExternalFile with revisions map
+    if (fd.revisions && typeof fd.revisions === "object" && fd.activeRevisionId) {
+      const id = isValidExternalFileId(fd.id);
+      if (!id) continue;
 
-      if (id && mimeType && data) {
-        restoredFiles[id] = {
-          id,
+      const restoredRevisions: Record<string, ExternalFileRevision> = {};
+      const rawRevisions = fd.revisions as Record<string, unknown>;
+      for (const revKey in rawRevisions) {
+        if (!Object.prototype.hasOwnProperty.call(rawRevisions, revKey)) continue;
+        const rev = rawRevisions[revKey];
+        if (!rev || typeof rev !== "object") continue;
+        const r = rev as Record<string, unknown>;
+
+        const revId = isValidString(r.id);
+        const mimeType = isValidString(r.mimeType);
+        const dataSource = r.data ?? (r as any).dataURL;
+        const data = isValidUint8Array(dataSource);
+        if (!revId || !mimeType || !data) continue;
+
+        restoredRevisions[revKey] = {
+          id: revId,
+          sizeBytes: isFiniteNumber(r.sizeBytes) ? (r.sizeBytes as number) : data.byteLength,
+          checksum: isValidString(r.checksum) || undefined,
+          sourceName: isValidString(r.sourceName) || undefined,
           mimeType,
+          message: isValidString(r.message) || undefined,
+          created: isFiniteNumber(r.created) ? (r.created as number) : Date.now(),
+          lastRetrieved: isFiniteNumber(r.lastRetrieved) ? (r.lastRetrieved as number) : undefined,
           data,
-          created,
-          lastRetrieved: isFiniteNumber((fileData as any).lastRetrieved)
-            ? (fileData as any).lastRetrieved
-            : undefined,
-          version: isFiniteNumber((fileData as any).version)
-            ? (fileData as any).version
-            : undefined,
         };
       }
+
+      if (Object.keys(restoredRevisions).length === 0) continue;
+
+      restoredFiles[id] = {
+        id,
+        activeRevisionId: isValidString(fd.activeRevisionId) || Object.keys(restoredRevisions)[0],
+        updated: isFiniteNumber(fd.updated) ? (fd.updated as number) : Date.now(),
+        revisions: restoredRevisions,
+        version: isFiniteNumber(fd.version) ? (fd.version as number) : undefined,
+      };
+      continue;
     }
+
+    // Legacy flat format: DucExternalFileData — wrap in a single-revision DucExternalFile.
+    let legacyData: Record<string, unknown> = fd;
+    // Handle the nested { key, value: { ... } } structure from old Rust serde output.
+    if (fd.value && typeof fd.value === "object") {
+      legacyData = fd.value as Record<string, unknown>;
+    }
+
+    const id = isValidExternalFileId(legacyData.id);
+    const mimeType = isValidString(legacyData.mimeType);
+    const dataSource = legacyData.data ?? (legacyData as any).dataURL;
+    const data = isValidUint8Array(dataSource);
+    if (!id || !mimeType || !data) continue;
+
+    const revId = `${id}_rev1`;
+    const created = isFiniteNumber(legacyData.created) ? (legacyData.created as number) : Date.now();
+
+    restoredFiles[id] = {
+      id,
+      activeRevisionId: revId,
+      updated: created,
+      version: isFiniteNumber(legacyData.version) ? (legacyData.version as number) : undefined,
+      revisions: {
+        [revId]: {
+          id: revId,
+          sizeBytes: data.byteLength,
+          mimeType,
+          created,
+          lastRetrieved: isFiniteNumber(legacyData.lastRetrieved)
+            ? (legacyData.lastRetrieved as number)
+            : undefined,
+          data,
+        },
+      },
+    };
   }
   return restoredFiles;
 };
