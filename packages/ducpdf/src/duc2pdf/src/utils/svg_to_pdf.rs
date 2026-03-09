@@ -1,5 +1,5 @@
 use crate::{ConversionError, ConversionResult};
-use duc::types::DucExternalFileEntry;
+use duc::types::DucExternalFile;
 use hipdf::lopdf::{Dictionary, Document, Object, Stream};
 use svg2pdf::usvg;
 
@@ -11,7 +11,7 @@ impl SvgToPdfConverter {
     pub fn convert_svg_to_xobject(
         document: &mut Document,
         svg_data: &[u8],
-        _file_entry: &DucExternalFileEntry,
+        _file: &DucExternalFile,
     ) -> ConversionResult<u32> {
         // Parse SVG using usvg
         let svg_tree = usvg::Tree::from_data(svg_data, &usvg::Options::default()).map_err(|e| {
@@ -96,10 +96,12 @@ impl SvgToPdfConverter {
     /// Convert SVG file entry to PDF XObject
     pub fn convert_file_entry_to_xobject(
         document: &mut Document,
-        file_entry: &DucExternalFileEntry,
+        file: &DucExternalFile,
     ) -> ConversionResult<u32> {
-        let svg_data = &file_entry.value.data;
-        Self::convert_svg_to_xobject(document, svg_data, file_entry)
+        let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
+            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
+        })?;
+        Self::convert_svg_to_xobject(document, &revision.data, file)
     }
 
     /// Validate SVG data

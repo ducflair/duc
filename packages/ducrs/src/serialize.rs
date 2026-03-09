@@ -1123,15 +1123,39 @@ fn write_hatch_pattern_lines(
 
 fn write_external_files(
     tx: &Transaction,
-    files: &Option<std::collections::HashMap<String, DucExternalFileData>>,
+    files: &Option<std::collections::HashMap<String, DucExternalFile>>,
 ) -> SerializeResult<()> {
     let Some(files) = files else { return Ok(()) };
-    let mut stmt = tx.prepare_cached(
-        "INSERT OR REPLACE INTO external_files (id, mime_type, data, created, last_retrieved, version)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6)"
+    let mut file_stmt = tx.prepare_cached(
+        "INSERT OR REPLACE INTO external_files (id, active_revision_id, updated, version)
+         VALUES (?1, ?2, ?3, ?4)"
     )?;
-    for (_key, data) in files {
-        stmt.execute(params![data.id, data.mime_type, data.data, data.created, data.last_retrieved, data.version])?;
+    let mut rev_stmt = tx.prepare_cached(
+        "INSERT OR REPLACE INTO external_file_revisions
+            (id, file_id, size_bytes, checksum, source_name, mime_type, message, created, last_retrieved, data)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
+    )?;
+    for (_key, file) in files {
+        file_stmt.execute(params![
+            file.id,
+            file.active_revision_id,
+            file.updated,
+            file.version,
+        ])?;
+        for (_rev_key, rev) in &file.revisions {
+            rev_stmt.execute(params![
+                rev.id,
+                file.id,
+                rev.size_bytes,
+                rev.checksum,
+                rev.source_name,
+                rev.mime_type,
+                rev.message,
+                rev.created,
+                rev.last_retrieved,
+                rev.data,
+            ])?;
+        }
     }
     Ok(())
 }
