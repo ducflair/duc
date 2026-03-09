@@ -35,9 +35,13 @@ async function initWasm(): Promise<any> {
       // Validate that required functions exist on the imported module
       const requiredFunctions = [
         'convert_duc_to_pdf_rs',
+        'convert_duc_to_pdf_with_scale_wasm',
         'convert_duc_to_pdf_crop_wasm',
+        'convert_duc_to_pdf_crop_scaled_wasm',
         'convert_duc_to_pdf_with_fonts_rs',
-        'convert_duc_to_pdf_crop_with_fonts_wasm'
+        'convert_duc_to_pdf_with_fonts_scaled_wasm',
+        'convert_duc_to_pdf_crop_with_fonts_wasm',
+        'convert_duc_to_pdf_crop_with_fonts_scaled_wasm',
       ];
 
       for (const fnName of requiredFunctions) {
@@ -238,34 +242,60 @@ export async function convertDucToPdf(
       const backgroundColor = options.backgroundColor ? options.backgroundColor.trim() : viewBackgroundColor;
       const widthOption = typeof options.width === 'number' ? options.width : undefined;
       const heightOption = typeof options.height === 'number' ? options.height : undefined;
+      const scaleOption = typeof options.scale === 'number' ? options.scale : undefined;
       const backgroundOption = backgroundColor === undefined ? undefined : backgroundColor;
 
       if (hasFonts) {
-        result = wasm.convert_duc_to_pdf_crop_with_fonts_wasm(
-          ducBytes,
-          offsetX,
-          offsetY,
-          widthOption,
-          heightOption,
-          backgroundOption,
-          fontMap
-        );
+        result = scaleOption !== undefined
+          ? wasm.convert_duc_to_pdf_crop_with_fonts_scaled_wasm(
+              ducBytes,
+              offsetX,
+              offsetY,
+              widthOption,
+              heightOption,
+              backgroundOption,
+              scaleOption,
+              fontMap
+            )
+          : wasm.convert_duc_to_pdf_crop_with_fonts_wasm(
+              ducBytes,
+              offsetX,
+              offsetY,
+              widthOption,
+              heightOption,
+              backgroundOption,
+              fontMap
+            );
       } else {
-        result = wasm.convert_duc_to_pdf_crop_wasm(
-          ducBytes,
-          offsetX,
-          offsetY,
-          widthOption,
-          heightOption,
-          backgroundOption
-        );
+        result = scaleOption !== undefined
+          ? wasm.convert_duc_to_pdf_crop_scaled_wasm(
+              ducBytes,
+              offsetX,
+              offsetY,
+              widthOption,
+              heightOption,
+              backgroundOption,
+              scaleOption
+            )
+          : wasm.convert_duc_to_pdf_crop_wasm(
+              ducBytes,
+              offsetX,
+              offsetY,
+              widthOption,
+              heightOption,
+              backgroundOption
+            );
       }
     } else {
       // Standard conversion
       if (hasFonts) {
-        result = wasm.convert_duc_to_pdf_with_fonts_rs(ducBytes, fontMap);
+        result = options?.scale !== undefined
+          ? wasm.convert_duc_to_pdf_with_fonts_scaled_wasm(ducBytes, options.scale, fontMap)
+          : wasm.convert_duc_to_pdf_with_fonts_rs(ducBytes, fontMap);
       } else {
-        result = wasm.convert_duc_to_pdf_rs(ducBytes);
+        result = options?.scale !== undefined
+          ? wasm.convert_duc_to_pdf_with_scale_wasm(ducBytes, options.scale)
+          : wasm.convert_duc_to_pdf_rs(ducBytes);
       }
     }
 
