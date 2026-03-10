@@ -20,8 +20,8 @@ Classes
    ducpy.classes.DataStateClass.VersionGraphMetadata
    ducpy.classes.DataStateClass.VersionGraph
    ducpy.classes.DataStateClass.DisplayPrecision
-   ducpy.classes.DataStateClass.DucExternalFileData
-   ducpy.classes.DataStateClass.DucExternalFileEntry
+   ducpy.classes.DataStateClass.ExternalFileRevision
+   ducpy.classes.DataStateClass.DucExternalFile
    ducpy.classes.DataStateClass.ExportedDataState
 
 
@@ -384,36 +384,74 @@ Module Contents
 
 
 
-.. py:class:: DucExternalFileData
-
-   .. py:attribute:: mime_type
-      :type:  str
-
+.. py:class:: ExternalFileRevision
 
    .. py:attribute:: id
       :type:  str
 
 
-   .. py:attribute:: data
-      :type:  bytes
+   .. py:attribute:: size_bytes
+      :type:  int
+
+
+   .. py:attribute:: mime_type
+      :type:  str
 
 
    .. py:attribute:: created
       :type:  int
 
 
+   .. py:attribute:: data
+      :type:  bytes
+
+
+   .. py:attribute:: checksum
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: source_name
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: message
+      :type:  Optional[str]
+      :value: None
+
+
+
    .. py:attribute:: last_retrieved
       :type:  Optional[int]
+      :value: None
 
 
-.. py:class:: DucExternalFileEntry
 
-   .. py:attribute:: key
+.. py:class:: DucExternalFile
+
+   .. py:attribute:: id
       :type:  str
 
 
-   .. py:attribute:: value
-      :type:  DucExternalFileData
+   .. py:attribute:: active_revision_id
+      :type:  str
+
+
+   .. py:attribute:: updated
+      :type:  int
+
+
+   .. py:attribute:: revisions
+      :type:  Dict[str, ExternalFileRevision]
+
+
+   .. py:attribute:: version
+      :type:  Optional[int]
+      :value: None
+
 
 
 .. py:class:: ExportedDataState
@@ -479,7 +517,7 @@ Module Contents
 
 
    .. py:attribute:: files
-      :type:  Optional[List[DucExternalFileEntry]]
+      :type:  Optional[Dict[str, DucExternalFile]]
 
 
    .. py:attribute:: id

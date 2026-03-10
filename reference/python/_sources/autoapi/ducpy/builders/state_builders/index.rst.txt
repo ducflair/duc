@@ -413,7 +413,7 @@ Module Contents
    .. py:method:: with_last_retrieved(last_retrieved: int)
 
 
-   .. py:method:: build() -> ducpy.classes.DataStateClass.DucExternalFileEntry
+   .. py:method:: build() -> ducpy.classes.DataStateClass.DucExternalFile
 
 
 .. py:class:: StackBaseBuilder(base: BaseStateParams, extra: dict)
@@ -458,7 +458,7 @@ Module Contents
 
 .. py:function:: create_delta_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.DataStateClass.Delta
 
-.. py:function:: create_external_file_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.DataStateClass.DucExternalFileEntry
+.. py:function:: create_external_file_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.DataStateClass.DucExternalFile
 
 .. py:function:: create_stack_base_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.ElementsClass.DucStackBase
 

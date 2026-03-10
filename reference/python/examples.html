@@ -601,25 +601,26 @@ frames and plots using the fluent builder DSL.</p>
 <span class="linenos">60</span>        <span class="n">duc_local_state</span><span class="o">=</span><span class="n">local_state</span><span class="p">,</span>
 <span class="linenos">61</span>        <span class="n">duc_global_state</span><span class="o">=</span><span class="n">global_state</span><span class="p">,</span>
 <span class="linenos">62</span>        <span class="n">version_graph</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="c1"># Not focusing on versioning here</span>
-<span class="linenos">63</span>        <span class="n">files</span><span class="o">=</span><span class="p">[</span><span class="n">image_file_entry</span><span class="p">,</span> <span class="n">pdf_file_entry</span><span class="p">]</span>
+<span class="linenos">63</span>        <span class="n">files</span><span class="o">=</span><span class="p">{</span><span class="n">image_file_entry</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">image_file_entry</span><span class="p">,</span> <span class="n">pdf_file_entry</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">pdf_file_entry</span><span class="p">}</span>
 <span class="linenos">64</span>    <span class="p">)</span>
 <span class="linenos">65</span>
 <span class="linenos">66</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DUC object with external files created successfully!&quot;</span><span class="p">)</span>
 <span class="linenos">67</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total external files: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">duc_object</span><span class="o">.</span><span class="n">files</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="linenos">68</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;First file key: </span><span class="si">{</span><span class="n">duc_object</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">, MIME type: </span><span class="si">{</span><span class="n">duc_object</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">mime_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="linenos">69</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second file key: </span><span class="si">{</span><span class="n">duc_object</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">, MIME type: </span><span class="si">{</span><span class="n">duc_object</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">mime_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="linenos">70</span>    <span class="k">return</span> <span class="n">duc_object</span>
-<span class="linenos">71</span>
-<span class="linenos">72</span><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<span class="linenos">73</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the external files demo.&quot;&quot;&quot;</span>
-<span class="linenos">74</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;External Files Demo&quot;</span><span class="p">)</span>
-<span class="linenos">75</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">30</span><span class="p">)</span>
-<span class="linenos">76</span>    <span class="n">sample_duc</span> <span class="o">=</span> <span class="n">create_duc_with_external_files</span><span class="p">()</span>
-<span class="linenos">77</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">External files demo complete!&quot;</span><span class="p">)</span>
-<span class="linenos">78</span>
+<span class="linenos">68</span>    <span class="k">for</span> <span class="n">fid</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">duc_object</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="linenos">69</span>        <span class="n">active_rev</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">revisions</span><span class="p">[</span><span class="n">file</span><span class="o">.</span><span class="n">active_revision_id</span><span class="p">]</span>
+<span class="linenos">70</span>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File id: </span><span class="si">{</span><span class="n">fid</span><span class="si">}</span><span class="s2">, MIME type: </span><span class="si">{</span><span class="n">active_rev</span><span class="o">.</span><span class="n">mime_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="linenos">71</span>    <span class="k">return</span> <span class="n">duc_object</span>
+<span class="linenos">72</span>
+<span class="linenos">73</span><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="linenos">74</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the external files demo.&quot;&quot;&quot;</span>
+<span class="linenos">75</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;External Files Demo&quot;</span><span class="p">)</span>
+<span class="linenos">76</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">30</span><span class="p">)</span>
+<span class="linenos">77</span>    <span class="n">sample_duc</span> <span class="o">=</span> <span class="n">create_duc_with_external_files</span><span class="p">()</span>
+<span class="linenos">78</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">External files demo complete!&quot;</span><span class="p">)</span>
 <span class="linenos">79</span>
-<span class="linenos">80</span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-<span class="linenos">81</span>    <span class="n">main</span><span class="p">()</span>
+<span class="linenos">80</span>
+<span class="linenos">81</span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="linenos">82</span>    <span class="n">main</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>

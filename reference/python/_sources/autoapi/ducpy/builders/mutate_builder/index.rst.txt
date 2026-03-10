@@ -39,5 +39,5 @@ Module Contents
 
 .. py:function:: mutate_local_state(state: ducpy.classes.DataStateClass.DucLocalState, **kwargs)
 
-.. py:function:: mutate_external_file(file_entry: ducpy.classes.DataStateClass.DucExternalFileEntry, **kwargs)
+.. py:function:: mutate_external_file(file_entry: ducpy.classes.DataStateClass.DucExternalFile, **kwargs)
 

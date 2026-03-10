@@ -306,10 +306,10 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DisplayPrecision" title="ducpy.classes.DataStateClass.DisplayPrecision"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DisplayPrecision</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileData" title="ducpy.classes.DataStateClass.DucExternalFileData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucExternalFileData</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision" title="ducpy.classes.DataStateClass.ExternalFileRevision"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExternalFileRevision</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileEntry" title="ducpy.classes.DataStateClass.DucExternalFileEntry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucExternalFileEntry</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFile" title="ducpy.classes.DataStateClass.DucExternalFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucExternalFile</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.ExportedDataState" title="ducpy.classes.DataStateClass.ExportedDataState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExportedDataState</span></code></a></p></td>
@@ -734,46 +734,81 @@
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFileData">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucExternalFileData</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFileData" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExternalFileRevision">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">ExternalFileRevision</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExternalFileRevision" title="Link to this definition">¶</a></dt>
 <dd><dl class="py attribute">
-<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFileData.mime_type">
-<span class="sig-name descname"><span class="pre">mime_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFileData.mime_type" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExternalFileRevision.id">
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExternalFileRevision.id" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFileData.id">
-<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFileData.id" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExternalFileRevision.size_bytes">
+<span class="sig-name descname"><span class="pre">size_bytes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExternalFileRevision.size_bytes" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFileData.data">
-<span class="sig-name descname"><span class="pre">data</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytes</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFileData.data" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExternalFileRevision.mime_type">
+<span class="sig-name descname"><span class="pre">mime_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExternalFileRevision.mime_type" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFileData.created">
-<span class="sig-name descname"><span class="pre">created</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFileData.created" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExternalFileRevision.created">
+<span class="sig-name descname"><span class="pre">created</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExternalFileRevision.created" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFileData.last_retrieved">
-<span class="sig-name descname"><span class="pre">last_retrieved</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFileData.last_retrieved" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExternalFileRevision.data">
+<span class="sig-name descname"><span class="pre">data</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytes</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExternalFileRevision.data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExternalFileRevision.checksum">
+<span class="sig-name descname"><span class="pre">checksum</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExternalFileRevision.checksum" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExternalFileRevision.source_name">
+<span class="sig-name descname"><span class="pre">source_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExternalFileRevision.source_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExternalFileRevision.message">
+<span class="sig-name descname"><span class="pre">message</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExternalFileRevision.message" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExternalFileRevision.last_retrieved">
+<span class="sig-name descname"><span class="pre">last_retrieved</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExternalFileRevision.last_retrieved" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFileEntry">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucExternalFileEntry</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFileEntry" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFile">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucExternalFile</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFile" title="Link to this definition">¶</a></dt>
 <dd><dl class="py attribute">
-<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFileEntry.key">
-<span class="sig-name descname"><span class="pre">key</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFileEntry.key" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFile.id">
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFile.id" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFileEntry.value">
-<span class="sig-name descname"><span class="pre">value</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileData" title="ducpy.classes.DataStateClass.DucExternalFileData"><span class="pre">DucExternalFileData</span></a></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFileEntry.value" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFile.active_revision_id">
+<span class="sig-name descname"><span class="pre">active_revision_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFile.active_revision_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFile.updated">
+<span class="sig-name descname"><span class="pre">updated</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFile.updated" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFile.revisions">
+<span class="sig-name descname"><span class="pre">revisions</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision" title="ducpy.classes.DataStateClass.ExternalFileRevision"><span class="pre">ExternalFileRevision</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFile.revisions" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucExternalFile.version">
+<span class="sig-name descname"><span class="pre">version</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucExternalFile.version" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -858,7 +893,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExportedDataState.files">
-<span class="sig-name descname"><span class="pre">files</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileEntry" title="ducpy.classes.DataStateClass.DucExternalFileEntry"><span class="pre">DucExternalFileEntry</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExportedDataState.files" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">files</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFile" title="ducpy.classes.DataStateClass.DucExternalFile"><span class="pre">DucExternalFile</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExportedDataState.files" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -1033,17 +1068,24 @@
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.DisplayPrecision.angular"><code class="docutils literal notranslate"><span class="pre">DisplayPrecision.angular</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileData"><code class="docutils literal notranslate"><span class="pre">DucExternalFileData</span></code></a><ul>
-<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileData.mime_type"><code class="docutils literal notranslate"><span class="pre">DucExternalFileData.mime_type</span></code></a></li>
-<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileData.id"><code class="docutils literal notranslate"><span class="pre">DucExternalFileData.id</span></code></a></li>
-<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileData.data"><code class="docutils literal notranslate"><span class="pre">DucExternalFileData.data</span></code></a></li>
-<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileData.created"><code class="docutils literal notranslate"><span class="pre">DucExternalFileData.created</span></code></a></li>
-<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileData.last_retrieved"><code class="docutils literal notranslate"><span class="pre">DucExternalFileData.last_retrieved</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision"><code class="docutils literal notranslate"><span class="pre">ExternalFileRevision</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision.id"><code class="docutils literal notranslate"><span class="pre">ExternalFileRevision.id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision.size_bytes"><code class="docutils literal notranslate"><span class="pre">ExternalFileRevision.size_bytes</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision.mime_type"><code class="docutils literal notranslate"><span class="pre">ExternalFileRevision.mime_type</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision.created"><code class="docutils literal notranslate"><span class="pre">ExternalFileRevision.created</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision.data"><code class="docutils literal notranslate"><span class="pre">ExternalFileRevision.data</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision.checksum"><code class="docutils literal notranslate"><span class="pre">ExternalFileRevision.checksum</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision.source_name"><code class="docutils literal notranslate"><span class="pre">ExternalFileRevision.source_name</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision.message"><code class="docutils literal notranslate"><span class="pre">ExternalFileRevision.message</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision.last_retrieved"><code class="docutils literal notranslate"><span class="pre">ExternalFileRevision.last_retrieved</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileEntry"><code class="docutils literal notranslate"><span class="pre">DucExternalFileEntry</span></code></a><ul>
-<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileEntry.key"><code class="docutils literal notranslate"><span class="pre">DucExternalFileEntry.key</span></code></a></li>
-<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFileEntry.value"><code class="docutils literal notranslate"><span class="pre">DucExternalFileEntry.value</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFile"><code class="docutils literal notranslate"><span class="pre">DucExternalFile</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFile.id"><code class="docutils literal notranslate"><span class="pre">DucExternalFile.id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFile.active_revision_id"><code class="docutils literal notranslate"><span class="pre">DucExternalFile.active_revision_id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFile.updated"><code class="docutils literal notranslate"><span class="pre">DucExternalFile.updated</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFile.revisions"><code class="docutils literal notranslate"><span class="pre">DucExternalFile.revisions</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFile.version"><code class="docutils literal notranslate"><span class="pre">DucExternalFile.version</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExportedDataState"><code class="docutils literal notranslate"><span class="pre">ExportedDataState</span></code></a><ul>

@@ -75,9 +75,9 @@ Module Contents
    Convert an element (or ElementWrapper) to the camelCase dict Rust expects.
 
 
-.. py:function:: _convert_external_files(entries: Optional[list]) -> Optional[Dict[str, Any]]
+.. py:function:: _convert_external_files(entries: Optional[Any]) -> Optional[Dict[str, Any]]
 
-   Convert a list of DucExternalFileEntry to a ``{id: data}`` dict.
+   Convert DucExternalFile dict (or legacy list) to camelCase dicts for serialization.
 
 
 .. py:function:: _convert_dict_entries(entries: Optional[list]) -> Optional[Dict[str, str]]
