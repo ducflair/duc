@@ -138,11 +138,38 @@ export class LazyExternalFileStore {
     return result;
   }
 
-  /** Merge files from another source (only adds missing). */
+  /** Merge files from another source. Adds missing files and merges new revisions into existing ones. */
   mergeFiles(files: DucExternalFiles): void {
     for (const [id, file] of Object.entries(files)) {
       if (!this.has(id)) {
         this.runtimeFiles.set(id, file);
+        continue;
+      }
+
+      const existing = this.runtimeFiles.get(id) ?? this.getFile(id);
+      if (!existing) {
+        this.runtimeFiles.set(id, file);
+        continue;
+      }
+
+      // Merge: add any new revisions that don't exist yet, and update metadata
+      let merged = false;
+      const mergedRevisions = { ...existing.revisions };
+      for (const [revId, rev] of Object.entries(file.revisions)) {
+        if (!mergedRevisions[revId]) {
+          mergedRevisions[revId] = rev;
+          merged = true;
+        }
+      }
+
+      if (merged || file.updated > existing.updated) {
+        this.runtimeFiles.set(id, {
+          ...existing,
+          activeRevisionId: file.activeRevisionId,
+          updated: Math.max(file.updated, existing.updated),
+          version: Math.max(file.version ?? 0, existing.version ?? 0),
+          revisions: mergedRevisions,
+        });
       }
     }
   }
