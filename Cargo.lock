@@ -713,9 +713,9 @@ checksum = "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
 
 [[package]]
 name = "hipdf"
-version = "1.3.4"
+version = "1.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17501a7eaf7befd270cc8f8235aac7af8b6c64907e2cb12b178e82d4e549ecad"
+checksum = "e3b986659f7ff291144addff668450799e4c2cd69686601cd48dfe23d7afc316"
 dependencies = [
  "jpeg-decoder",
  "lopdf",
