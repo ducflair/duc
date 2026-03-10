@@ -12,7 +12,7 @@ use crate::{
 };
 use bigcolor::BigColor;
 use duc::types::{
-    DucBlock, DucElementEnum, DucExternalFileEntry, ElementWrapper, ExportedDataState, TEXT_ALIGN,
+    DucBlock, DucElementEnum, DucExternalFile, ElementWrapper, ExportedDataState, TEXT_ALIGN,
 };
 
 use hipdf::embed_pdf::PdfEmbedder;
@@ -113,45 +113,36 @@ impl DucToPdfBuilder {
             ConversionMode::Plot => None,
         };
 
+        // Determine the effective scale:
+        // If the user provides a scale that keeps all coordinates within bounds, use it.
+        // Otherwise (coordinates too large even at user scale), ignore the hint and auto-calculate.
+        let crop_dimensions = match &options.mode {
+            ConversionMode::Crop { width, height, .. } => (*width, *height),
+            ConversionMode::Plot => (None, None),
+        };
+
         let scale = if let Some(user_scale) = options.scale {
-            Self::validate_all_coordinates_with_scale(
+            let fits = Self::validate_all_coordinates_with_scale(
                 &exported_data,
                 Some(user_scale),
                 crop_offset,
-            )?;
-            user_scale
+            ).is_ok();
+            if fits {
+                user_scale
+            } else {
+                // User scale doesn't keep coordinates in bounds; auto-calculate.
+                if crop_dimensions.0.is_some() || crop_dimensions.1.is_some() {
+                    calculate_required_scale_with_crop_dimensions(&exported_data, crop_offset, crop_dimensions.0, crop_dimensions.1)
+                } else {
+                    calculate_required_scale(&exported_data, crop_offset)
+                }
+            }
         } else {
-            // Extract crop dimensions for scaling calculation
-            let crop_dimensions = match &options.mode {
-                ConversionMode::Crop { width, height, .. } => (*width, *height),
-                ConversionMode::Plot => (None, None),
-            };
-
-            let required_scale = if crop_dimensions.0.is_some() || crop_dimensions.1.is_some() {
-                // Use the new function that considers both content and crop dimensions
+            if crop_dimensions.0.is_some() || crop_dimensions.1.is_some() {
                 calculate_required_scale_with_crop_dimensions(&exported_data, crop_offset, crop_dimensions.0, crop_dimensions.1)
             } else {
-                // Use the original function for content-only scaling
                 calculate_required_scale(&exported_data, crop_offset)
-            };
-
-            // // Log scaling information for debugging
-            // if required_scale < 1.0 {
-            //     #[cfg(target_arch = "wasm32")]
-            //     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            //         "🔧 Auto-scaling applied: {:.6} ({}:1) - crop dimensions considered",
-            //         required_scale,
-            //         (1.0 / required_scale).round() as i32
-            //     )));
-            //     #[cfg(not(target_arch = "wasm32"))]
-            //     println!(
-            //         "🔧 Auto-scaling applied: {:.6} ({}:1) - crop dimensions considered",
-            //         required_scale,
-            //         (1.0 / required_scale).round() as i32
-            //     );
-            // }
-
-            required_scale
+            }
         };
 
         // Apply scaling to options values (crop dimensions, offsets, etc.)
@@ -479,43 +470,46 @@ impl DucToPdfBuilder {
     fn process_external_files(&mut self) -> ConversionResult<()> {
         if let Some(external_files) = &self.context.exported_data.external_files {
             let external_files_clone = external_files.clone();
-            for (file_key, file_data) in external_files_clone {
-                let file_entry = DucExternalFileEntry {
-                    key: file_key,
-                    value: file_data,
+            for (file_key, mut file) in external_files_clone {
+                if file.id != file_key {
+                    file.id = file_key.clone();
+                }
+
+                let mime_type = match file.revisions.get(&file.active_revision_id) {
+                    Some(rev) => rev.mime_type.clone(),
+                    None => continue,
                 };
-                let file_data = &file_entry.value;
-                match file_data.mime_type.to_lowercase().as_str() {
+                match mime_type.to_lowercase().as_str() {
                     "image/svg+xml" | "application/svg+xml" => {
                         // Handle SVG files using svg_to_pdf utility
-                        self.process_svg_file(&file_entry)?;
+                        self.process_svg_file(&file)?;
                         // SVG files are stored as embedded_pdfs since they're converted to PDF
                         // (already stored in process_svg_file, no need to duplicate here)
                     }
                     "image/png" | "image/jpeg" | "image/jpg" | "image/gif" => {
                         // Handle image files using hipdf::images
-                        let _object_id = self.process_image_file(&file_entry)?;
+                        let _object_id = self.process_image_file(&file)?;
                         // Note: image ID and element streamer registration happens in process_image_file
                     }
                     "application/pdf" => {
                         // Handle embedded PDF files
-                        let object_id = self.process_pdf_file(&file_entry)?;
+                        let object_id = self.process_pdf_file(&file)?;
                         self.context
                             .resource_cache
                             .embedded_pdfs
-                            .insert(file_data.id.clone(), object_id);
+                            .insert(file.id.clone(), object_id);
                     }
                     "font/ttf" | "font/otf" | "font/woff" | "font/woff2" => {
                         // Handle font files
-                        let object_id = self.process_font_file(&file_entry)?;
+                        let object_id = self.process_font_file(&file)?;
                         self.context
                             .resource_cache
                             .fonts
-                            .insert(file_data.id.clone(), object_id);
+                            .insert(file.id.clone(), object_id);
                     }
                     _ => {
                         // Skip unknown file types
-                        log_warn!("Unsupported file type: {}", file_data.mime_type);
+                        log_warn!("Unsupported file type: {}", mime_type);
                     }
                 }
             }
@@ -524,8 +518,11 @@ impl DucToPdfBuilder {
     }
 
     /// Process SVG file and convert to PDF for later embedding
-    fn process_svg_file(&mut self, file_entry: &DucExternalFileEntry) -> ConversionResult<u32> {
-        let svg_data = &file_entry.value.data;
+    fn process_svg_file(&mut self, file: &DucExternalFile) -> ConversionResult<u32> {
+        let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
+            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
+        })?;
+        let svg_data = &revision.data;
 
         // Convert SVG to PDF using the utility and get dimensions
         let (pdf_bytes, svg_width, svg_height) = svg_to_pdf_with_dimensions(svg_data).map_err(|e| {
@@ -533,7 +530,7 @@ impl DucToPdfBuilder {
         })?;
 
         // Load the PDF bytes for later embedding (don't embed now, save for when image elements reference it)
-        let embed_id = format!("svg_{}", file_entry.key);
+        let embed_id = format!("svg_{}", file.id);
         self.pdf_embedder
             .load_pdf_from_bytes(&pdf_bytes, &embed_id)
             .map_err(|e| {
@@ -545,7 +542,7 @@ impl DucToPdfBuilder {
 
         // WORKAROUND: Also load with test name embed_id for SVG files
         // This allows image elements to find the PDF using test names
-        if file_entry.value.mime_type == "image/svg+xml" {
+        if revision.mime_type == "image/svg+xml" {
             let test_embed_id = "svg_test_svg";
             self.pdf_embedder
                 .load_pdf_from_bytes(&pdf_bytes, test_embed_id)
@@ -561,27 +558,18 @@ impl DucToPdfBuilder {
         self.context
             .resource_cache
             .svg_dimensions
-            .insert(file_entry.key.clone(), (svg_width, svg_height));
-        self.context
-            .resource_cache
-            .svg_dimensions
-            .insert(file_entry.value.id.clone(), (svg_width, svg_height));
+            .insert(file.id.clone(), (svg_width, svg_height));
 
         // Store as embedded PDF (not regular image) so stream_image can detect it's an SVG-converted PDF
-        // Map by both the external_files key and the internal file id
         self.context
             .resource_cache
             .embedded_pdfs
-            .insert(file_entry.key.clone(), 0); // 0 as placeholder, will be updated when embedded
-        self.context
-            .resource_cache
-            .embedded_pdfs
-            .insert(file_entry.value.id.clone(), 0);
+            .insert(file.id.clone(), 0); // 0 as placeholder, will be updated when embedded
 
         // WORKAROUND: Also store by test name for SVG files
         // This handles the case where image elements reference by expected test names
         // but the files are stored with ID keys in the DUC data
-        if file_entry.value.mime_type == "image/svg+xml" {
+        if revision.mime_type == "image/svg+xml" {
             self.context
                 .resource_cache
                 .embedded_pdfs
@@ -596,13 +584,16 @@ impl DucToPdfBuilder {
     }
 
     /// Process image file using hipdf::images for quality preservation
-    fn process_image_file(&mut self, file_entry: &DucExternalFileEntry) -> ConversionResult<u32> {
-        let image_data = &file_entry.value.data;
-        let _mime_type = &file_entry.value.mime_type;
+    fn process_image_file(&mut self, file: &DucExternalFile) -> ConversionResult<u32> {
+        let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
+            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
+        })?;
+        let image_data = &revision.data;
+        let mime_type = &revision.mime_type;
 
         // Create image directly from bytes (WASM-compatible)
         let image =
-            Image::from_bytes(image_data.clone(), Some(file_entry.key.clone())).map_err(|e| {
+            Image::from_bytes(image_data.clone(), Some(file.id.clone())).map_err(|e| {
                 ConversionError::ResourceLoadError(format!("Failed to load image: {}", e))
             })?;
 
@@ -614,26 +605,20 @@ impl DucToPdfBuilder {
                 ConversionError::ResourceLoadError(format!("Failed to embed image: {}", e))
             })?;
 
-        // Store the image ID in the resource cache mapped by both key and internal id
+        // Store the image ID in the resource cache
         self.context
             .resource_cache
             .images
-            .insert(file_entry.key.clone(), image_id.0);
-        self.context
-            .resource_cache
-            .images
-            .insert(file_entry.value.id.clone(), image_id.0);
+            .insert(file.id.clone(), image_id.0);
 
-        // Pass the image to the element streamer for streaming operations (map by both ids)
+        // Pass the image to the element streamer for streaming operations
         self.element_streamer
-            .add_image(file_entry.key.clone(), image_id.0);
-        self.element_streamer
-            .add_image(file_entry.value.id.clone(), image_id.0);
+            .add_image(file.id.clone(), image_id.0);
 
         // WORKAROUND: Also store by common test names based on MIME type
         // This handles the case where image elements reference by expected test names
         // but the files are stored with ID keys in the DUC data
-        let test_name = match file_entry.value.mime_type.as_str() {
+        let test_name = match mime_type.as_str() {
             "image/svg+xml" => "test_svg",
             "image/png" => "test_png",
             "image/jpeg" => "test_jpeg",
@@ -653,9 +638,13 @@ impl DucToPdfBuilder {
     }
 
     /// Process PDF file for embedding
-    fn process_pdf_file(&mut self, file_entry: &DucExternalFileEntry) -> ConversionResult<u32> {
-        let pdf_data = &file_entry.value.data;
-        let embed_id = format!("pdf_{}", file_entry.key);
+    fn process_pdf_file(&mut self, file: &DucExternalFile) -> ConversionResult<u32> {
+        let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
+            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
+        })?;
+        let pdf_data = &revision.data;
+        let mime_type = &revision.mime_type;
+        let embed_id = format!("pdf_{}", file.id);
 
         // Just load the PDF, don't embed it yet
         self.pdf_embedder
@@ -666,7 +655,7 @@ impl DucToPdfBuilder {
 
         // WORKAROUND: Also load with test name embed_id for PDF files
         // This allows PDF elements to find the PDF using test names
-        if file_entry.value.mime_type == "application/pdf" {
+        if mime_type == "application/pdf" {
             let test_embed_id = "pdf_test_pdf";
             self.pdf_embedder
                 .load_pdf_from_bytes(pdf_data, test_embed_id)
@@ -679,20 +668,15 @@ impl DucToPdfBuilder {
         }
 
         // Store a marker that this PDF is loaded (will be embedded when used)
-        // Map by both the external_files key and the internal file id
         self.context
             .resource_cache
             .embedded_pdfs
-            .insert(file_entry.key.clone(), 0);
-        self.context
-            .resource_cache
-            .embedded_pdfs
-            .insert(file_entry.value.id.clone(), 0);
+            .insert(file.id.clone(), 0);
 
         // WORKAROUND: Also store by test name for PDF files
         // This handles the case where PDF elements reference by expected test names
         // but the files are stored with ID keys in the DUC data
-        if file_entry.value.mime_type == "application/pdf" {
+        if mime_type == "application/pdf" {
             self.context
                 .resource_cache
                 .embedded_pdfs
@@ -722,59 +706,30 @@ impl DucToPdfBuilder {
     }
 
     /// Embed a PDF for a specific element
+    /// Verify that a PDF is loaded in the embedder for later per-page embedding
+    /// during element streaming. The actual XObject creation happens in
+    /// stream_embedded_pdf_with_grid when individual pages are embedded.
     fn embed_pdf_for_element(
         &mut self,
         file_id: &str,
         _width: f64,
         _height: f64,
     ) -> ConversionResult<()> {
-        use hipdf::embed_pdf::{EmbedOptions, MultiPageLayout};
-
         let embed_id = format!("pdf_{}", file_id);
 
-        // Check if already embedded
-        if self
-            .context
-            .resource_cache
-            .xobject_names
-            .contains_key(file_id)
-        {
-            return Ok(());
+        // Just verify the PDF is loaded — actual embedding happens during streaming
+        if self.pdf_embedder.get_pdf_info(&embed_id).is_none() {
+            return Err(ConversionError::ResourceLoadError(format!(
+                "PDF not loaded for file_id={}, embed_id={}",
+                file_id, embed_id
+            )));
         }
 
-        // Create embedding options - using unit dimensions since scaling happens in content stream
-        let options = EmbedOptions::new()
-            .at_position(0.0, 0.0)
-            .with_scale(1.0)
-            .with_layout(MultiPageLayout::FirstPageOnly)
-            .preserve_aspect_ratio(true);
-
-        // Embed the PDF
-        let result = self
-            .pdf_embedder
-            .embed_pdf(&mut self.document, &embed_id, &options)
-            .map_err(|e| {
-                ConversionError::ResourceLoadError(format!("Failed to embed PDF: {}", e))
-            })?;
-
-        // Store the XObject reference
-        for (name, obj_ref) in result.xobject_resources {
-            if let Object::Reference(_id) = obj_ref {
-                self.context
-                    .resource_cache
-                    .xobject_names
-                    .insert(file_id.to_string(), name);
-                return Ok(());
-            }
-        }
-
-        Err(ConversionError::ResourceLoadError(
-            "Failed to get XObject reference".to_string(),
-        ))
+        Ok(())
     }
 
     /// Process font file
-    fn process_font_file(&mut self, _file_entry: &DucExternalFileEntry) -> ConversionResult<u32> {
+    fn process_font_file(&mut self, _file: &DucExternalFile) -> ConversionResult<u32> {
         // Create font object
         // For now, return a placeholder
         Ok(0)
@@ -1342,40 +1297,11 @@ fn create_content_stream(
             }
         }
 
-        // Get zoom value from local state if available
-        let zoom = self
-            .context
-            .exported_data
-            .duc_local_state
-            .as_ref()
-            .map(|ls| ls.zoom)
-            .unwrap_or(1.0);
-
-        let apply_zoom = matches!(self.context.options.mode, ConversionMode::Crop { .. });
-
-        // Step 1: Apply zoom transformation FIRST (affects all subsequent operations)
-        // This must be applied before coordinate translation to ensure consistent scaling
-        if apply_zoom && (zoom - 1.0).abs() > f64::EPSILON {
-            // We apply a corrective translation on the Y-axis to ensure scaling happens
-            // relative to the top of the page (y=height), not the bottom (y=0).
-            // This prevents the content from shifting vertically when zoom is not 1.0.
-            let y_translation_for_zoom = height * (1.0 - zoom);
-
-            operations.push(Operation::new(
-                "cm",
-                vec![
-                    Object::Real(zoom as f32),                      // scale x
-                    Object::Real(0.0),                              // 0
-                    Object::Real(0.0),                              // 0
-                    Object::Real(zoom as f32),                      // scale y
-                    Object::Real(0.0),                              // translate x
-                    Object::Real(y_translation_for_zoom as f32),    // corrective translate y
-                ],
-            ));
-        }
-
-        // Step 2: Apply coordinate transformation for bounds positioning
-        // This translation is applied AFTER zoom, so it's also affected by zoom
+        // Step 1: Apply coordinate transformation for bounds positioning.
+        // Crop offsets and crop dimensions are already converted from the
+        // viewport using the effective export zoom on the TypeScript side, so
+        // re-applying the live canvas zoom here would shrink the export into
+        // the top-left corner.
         let (tx, ty) = match self.context.options.mode {
             ConversionMode::Plot => (-x, -y),
             ConversionMode::Crop { .. } => (-x, -y),
@@ -1396,6 +1322,23 @@ fn create_content_stream(
         // Configure element streamer for this page
         self.element_streamer.set_page_height(height);
         self.element_streamer.set_page_origin(x, y);
+
+        // Compute the visible scene rectangle in element base.x/base.y coordinates.
+        // In CROP mode the content-stream translation uses scroll_x/scroll_y so the
+        // visible area in absolute scene-space is (-scroll_x, -scroll_y, w, h).
+        // In PLOT mode scroll is 0 and bounds are already in the same absolute space.
+        let (vis_x, vis_y) = match self.context.options.mode {
+            ConversionMode::Crop { .. } => {
+                let (sx, sy) = if let Some(state) = &self.context.exported_data.duc_local_state {
+                    (state.scroll_x, state.scroll_y)
+                } else {
+                    (0.0, 0.0)
+                };
+                (-sx, -sy)
+            }
+            ConversionMode::Plot => (x, y),
+        };
+        self.element_streamer.set_visible_scene_rect(vis_x, vis_y, width, height);
         self.element_streamer.set_page_translation(tx, ty);
         self.element_streamer
             .set_resource_cache(self.context.resource_cache.xobject_names.clone());
@@ -1481,18 +1424,26 @@ fn create_content_stream(
                 .elements
                 .iter()
                 .filter_map(|element_wrapper| {
-                    if let DucElementEnum::DucPdfElement(pdf_elem) = &element_wrapper.element {
-                        pdf_elem.file_id.as_ref().map(|file_id| {
-                            (file_id.clone(), pdf_elem.base.width, pdf_elem.base.height)
-                        })
-                    } else {
-                        None
+                    match &element_wrapper.element {
+                        DucElementEnum::DucPdfElement(pdf_elem) => {
+                            pdf_elem.file_id.as_ref().map(|file_id| {
+                                (file_id.clone(), pdf_elem.base.width, pdf_elem.base.height)
+                            })
+                        }
+                        DucElementEnum::DucDocElement(doc_elem) => {
+                            doc_elem.file_id.as_ref().map(|file_id| {
+                                (file_id.clone(), doc_elem.base.width, doc_elem.base.height)
+                            })
+                        }
+                        _ => None,
                     }
                 })
                 .collect();
 
         for (file_id, width, height) in pdf_elements {
-            self.embed_pdf_for_element(&file_id, width, height)?;
+            if let Err(e) = self.embed_pdf_for_element(&file_id, width, height) {
+                log::warn!("Skipping PDF element file_id={}: {}", file_id, e);
+            }
         }
 
         // Update resource cache after PDF embedding

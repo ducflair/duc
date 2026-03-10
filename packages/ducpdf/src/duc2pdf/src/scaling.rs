@@ -80,6 +80,7 @@ impl DucDataScaler {
             }
             types::DucElementEnum::DucPdfElement(pdf) => {
                 Self::scale_element_base(&mut pdf.base, scale);
+                Self::scale_pdf_element(pdf, scale);
             }
             types::DucElementEnum::DucModelElement(model) => {
                 Self::scale_element_base(&mut model.base, scale);
@@ -210,6 +211,12 @@ impl DucDataScaler {
     fn scale_doc_element(doc: &mut types::DucDocElement, scale: f64) {
         doc.grid_config.gap_x *= scale;
         doc.grid_config.gap_y *= scale;
+    }
+
+    /// Scale PDF element fields
+    fn scale_pdf_element(pdf: &mut types::DucPdfElement, scale: f64) {
+        pdf.grid_config.gap_x *= scale;
+        pdf.grid_config.gap_y *= scale;
     }
 
     /// Scale plot element fields

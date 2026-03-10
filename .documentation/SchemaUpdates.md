@@ -7,11 +7,13 @@ on the rust side:
 
 on the typescript side:
 @duc/packages/ducjs/src/types/index.ts 
+@packages/ducjs/src/types/elements/index.ts 
 @duc/packages/ducjs/src/restore/restoreDataState.ts (and other potential restore files related)
 
 
 on the python side: 
 @duc/packages/ducpy/src/ducpy/classes/DataStateClass.py 
+@packages/ducpy/src/ducpy/classes/ElementsClass.py 
 
 And then run the build (or test commands if available) for each from @duc/package.json 
 

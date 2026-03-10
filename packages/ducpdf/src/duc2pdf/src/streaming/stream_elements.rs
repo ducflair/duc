@@ -33,7 +33,7 @@ use bigcolor::BigColor;
 use duc::types::{
     BEZIER_MIRRORING, ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN, DucElementEnum,
     DucEllipseElement, DucFrameElement,
-    DucFreeDrawElement, DucImageElement, DucLine, DucLineReference, DucLinearElement,
+    DucDocElement, DucFreeDrawElement, DucImageElement, DucLine, DucLineReference, DucLinearElement,
     DucLinearElementBase, DucPath, DucPdfElement, DucPlotElement, DucPoint,
     DucPolygonElement, DucRectangleElement, DucTableElement, DucTextElement, ElementBackground,
     ElementContentBase, ElementWrapper, GeometricPoint, DucBlockInstance, DucBlockDuplicationArray,
@@ -76,6 +76,9 @@ pub struct ElementStreamer {
     style_resolver: StyleResolver,
     /// Page height for coordinate transformation from top-left to bottom-left origin
     page_height: f64,
+    /// Visible rectangle in absolute scene coordinates (x, y, w, h) for culling.
+    /// In CROP mode this accounts for the scroll offset; in PLOT mode it matches bounds.
+    visible_scene_rect: (f64, f64, f64, f64),
     /// Absolute origin of the current page prior to page-level transformation (bounds.x, bounds.y)
     page_origin: (f64, f64),
     /// Page-level translation applied in the content stream
@@ -129,6 +132,7 @@ impl ElementStreamer {
         Self {
             style_resolver,
             page_height,
+            visible_scene_rect: (0.0, 0.0, 0.0, 0.0),
             page_origin: (0.0, 0.0),
             page_translation: (0.0, 0.0),
             resource_cache: HashMap::new(),
@@ -270,6 +274,12 @@ impl ElementStreamer {
     /// Set page height for coordinate transformation
     pub fn set_page_height(&mut self, page_height: f64) {
         self.page_height = page_height;
+    }
+
+    /// Set the visible scene rectangle for per-page visibility culling.
+    /// Coordinates are in absolute scene space (same space as element base.x/y).
+    pub fn set_visible_scene_rect(&mut self, x: f64, y: f64, w: f64, h: f64) {
+        self.visible_scene_rect = (x, y, w, h);
     }
 
     /// Record the page origin (bounds.x, bounds.y) for the current content stream
@@ -527,7 +537,7 @@ impl ElementStreamer {
         // Special handling: PDF elements - do not apply styles to avoid affecting embedded content
         let styles = self.style_resolver.resolve_styles(element);
 
-        let is_pdf = matches!(element, DucElementEnum::DucPdfElement(_));
+        let is_pdf = matches!(element, DucElementEnum::DucPdfElement(_) | DucElementEnum::DucDocElement(_));
         if !is_pdf {
             let style_ops = self.apply_styles(element, &styles)?;
             operations.extend(style_ops);
@@ -562,8 +572,8 @@ impl ElementStreamer {
             // Ignored elements (as per specifications)
             DucElementEnum::DucEmbeddableElement(_) => vec![], // Ignore
             DucElementEnum::DucArrowElement(_) => vec![],      // Ignore
-            DucElementEnum::DucDocElement(_) => {
-                vec![Operation::new("% DucDocElement - WIP", vec![])]
+            DucElementEnum::DucDocElement(doc) => {
+                self.stream_doc_element(doc, document, pdf_embedder)?
             }
             DucElementEnum::DucModelElement(_) => {
                 vec![Operation::new("% DucModelElement - WIP", vec![])]
@@ -2067,84 +2077,18 @@ impl ElementStreamer {
         Ok(ops)
     }
 
-    /// Stream PDF element (embedded PDF)
+    /// Stream PDF element (embedded PDF) with grid layout support
     fn stream_pdf_element(
         &mut self,
         pdf: &DucPdfElement,
         document: &mut Document,
         pdf_embedder: &mut PdfEmbedder,
     ) -> ConversionResult<Vec<Operation>> {
-        use hipdf::embed_pdf::{EmbedOptions, PageRange};
-
-        let mut ops = Vec::new();
-
-        // Validate file id
-        let file_id = if let Some(fid) = &pdf.file_id {
-            fid.clone()
-        } else {
-            ops.push(Operation::new("% PDF element without file_id", vec![]));
-            // Placeholder rectangle
-            ops.push(Operation::new(
-                "re",
-                vec![
-                    Object::Real(0.0),
-                    Object::Real(-(pdf.base.height as f32)),
-                    Object::Real(pdf.base.width as f32),
-                    Object::Real(pdf.base.height as f32),
-                ],
-            ));
-            ops.push(Operation::new("S", vec![]));
-            return Ok(ops);
-        };
-
-        let embed_id = format!("pdf_{}", file_id);
-
-        // Build embed options. The element transform has already moved to (base.x, base.y),
-        // so we place the embedded PDF at local origin (0,0) and size it to the element bounds.
-        // Use zero-based first page.
-        let options = EmbedOptions {
-            page_range: Some(PageRange::Single(0)),
-            position: (0.0, 0.0),
-            max_width: Some(pdf.base.width as f32),
-            max_height: Some(pdf.base.height as f32),
-            preserve_aspect_ratio: true,
-            ..Default::default()
-        };
-
-        // Perform embedding (the PDF must have been previously loaded with this id during resource processing)
-        match pdf_embedder.embed_pdf(document, &embed_id, &options) {
-            Ok(result) => {
-                // Record XObject resources so the builder can add them to page resources later
-                for (name, obj_ref) in result.xobject_resources.iter() {
-                    // Track mapping (use file id to map to XObject name for resource assembly)
-                    self.resource_cache.insert(file_id.clone(), name.clone());
-                    self.new_xobjects.push((name.clone(), obj_ref.clone()));
-                }
-
-                // PDF elements need Y-offset correction similar to images
-                // PDF draws from bottom-left, so we need to offset by -height
-                ops.push(Operation::new("q", vec![])); // Save state
-                ops.push(Operation::new(
-                    "cm",
-                    vec![
-                        Object::Real(1.0),
-                        Object::Real(0.0),
-                        Object::Real(0.0),
-                        Object::Real(1.0),
-                        Object::Real(0.0),
-                        Object::Real(-(pdf.base.height as f32)),
-                    ],
-                ));
-                // Append the operations generated by embedder (already includes positioning & clipping if any)
-                ops.extend(result.operations);
-                ops.push(Operation::new("Q", vec![])); // Restore state
-            }
-            Err(e) => {
-                ops.push(Operation::new(
-                    &format!("% Failed to embed PDF {}: {}", embed_id, e),
-                    vec![],
-                ));
-                // Fallback placeholder
+        let file_id = match &pdf.file_id {
+            Some(fid) => fid.clone(),
+            None => {
+                let mut ops = Vec::new();
+                ops.push(Operation::new("% PDF element without file_id", vec![]));
                 ops.push(Operation::new(
                     "re",
                     vec![
@@ -2155,10 +2099,268 @@ impl ElementStreamer {
                     ],
                 ));
                 ops.push(Operation::new("S", vec![]));
+                return Ok(ops);
+            }
+        };
+
+        self.stream_embedded_pdf_with_grid(
+            &file_id,
+            pdf.base.width,
+            pdf.base.height,
+            pdf.base.x,
+            pdf.base.y,
+            &pdf.grid_config,
+            document,
+            pdf_embedder,
+        )
+    }
+
+    /// Shared grid-aware PDF embedding for both DucPdfElement and DucDocElement.
+    ///
+    /// Computes page layout matching the TypeScript `_computePageLayouts` from
+    /// PdfTileRenderer, then embeds each page individually with correct position
+    /// and scale. Adds white background behind each page for transparent PDFs.
+    fn stream_embedded_pdf_with_grid(
+        &mut self,
+        file_id: &str,
+        el_width: f64,
+        el_height: f64,
+        el_scene_x: f64,
+        el_scene_y: f64,
+        grid_config: &duc::types::DocumentGridConfig,
+        document: &mut Document,
+        pdf_embedder: &mut PdfEmbedder,
+    ) -> ConversionResult<Vec<Operation>> {
+        use hipdf::embed_pdf::{EmbedOptions, MultiPageLayout, PageRange};
+
+        let embed_id = format!("pdf_{}", file_id);
+        let el_w = el_width as f32;
+        let el_h = el_height as f32;
+
+        let info = match pdf_embedder.get_pdf_info(&embed_id) {
+            Some(info) => info.clone(),
+            None => {
+                log::info!("[duc2pdf] PDF not loaded for embed_id={}, skipping", embed_id);
+                return Ok(vec![Operation::new(
+                    &format!("% PDF not loaded: {}", embed_id),
+                    vec![],
+                )]);
+            }
+        };
+
+        if info.page_count == 0 {
+            return Ok(vec![]);
+        }
+
+        let columns = grid_config.columns.max(1) as usize;
+        let grid_scale = if grid_config.scale == 0.0 {
+            1.0
+        } else {
+            grid_config.scale as f32
+        };
+        let gap_x = grid_config.gap_x as f32 * grid_scale;
+        let gap_y = grid_config.gap_y as f32 * grid_scale;
+        let first_page_alone = grid_config.first_page_alone;
+
+        let mut total_rows: usize = 0;
+        {
+            let mut col: usize = 0;
+            for i in 0..info.page_count {
+                if first_page_alone && i == 0 {
+                    total_rows += 1;
+                    col = 0;
+                    continue;
+                }
+                if col == 0 {
+                    total_rows += 1;
+                }
+                col += 1;
+                if col >= columns {
+                    col = 0;
+                }
+            }
+        }
+
+        let total_gap_x = if columns > 1 {
+            gap_x * (columns as f32 - 1.0)
+        } else {
+            0.0
+        };
+        let total_gap_y = if total_rows > 1 {
+            gap_y * (total_rows as f32 - 1.0)
+        } else {
+            0.0
+        };
+        let content_w = (el_w - total_gap_x).max(0.0);
+        let content_h = (el_h - total_gap_y).max(0.0);
+        let cell_w = content_w / columns as f32;
+        let cell_h = content_h / total_rows as f32;
+
+        struct PageLayout {
+            page_index: usize,
+            local_x: f32,
+            local_y: f32,
+            scaled_w: f32,
+            scaled_h: f32,
+            page_scale: f32,
+        }
+
+        let mut layouts: Vec<PageLayout> = Vec::with_capacity(info.page_count);
+        let mut row: usize = 0;
+        let mut col: usize = 0;
+
+        for page_idx in 0..info.page_count {
+            let (page_w, page_h) = if page_idx < info.page_dimensions.len() {
+                info.page_dimensions[page_idx]
+            } else {
+                (595.0, 842.0)
+            };
+
+            let (cell_x, cell_y, used_w, used_h);
+
+            if first_page_alone && page_idx == 0 {
+                cell_x = 0.0;
+                cell_y = 0.0;
+                used_w = el_w;
+                used_h = cell_h;
+                row += 1;
+                col = 0;
+            } else {
+                cell_x = col as f32 * (cell_w + gap_x);
+                cell_y = row as f32 * (cell_h + gap_y);
+                used_w = cell_w;
+                used_h = cell_h;
+                col += 1;
+                if col >= columns {
+                    col = 0;
+                    row += 1;
+                }
+            }
+
+            let scale_x = used_w / page_w;
+            let scale_y = used_h / page_h;
+            let page_scale = scale_x.min(scale_y);
+            let scaled_w = page_w * page_scale;
+            let scaled_h = page_h * page_scale;
+            let offset_x = (used_w - scaled_w) / 2.0;
+
+            layouts.push(PageLayout {
+                page_index: page_idx,
+                local_x: cell_x + offset_x,
+                local_y: cell_y,
+                scaled_w,
+                scaled_h,
+                page_scale,
+            });
+        }
+
+        let mut ops = Vec::new();
+
+        // Export-area bounds for per-page visibility filtering.
+        // visible_scene_rect is in the same coordinate space as element base.x/y.
+        let (export_x, export_y, export_w, export_h) = self.visible_scene_rect;
+
+        for layout in &layouts {
+            // Visibility check: skip pages whose scene-space rect doesn't
+            // intersect the export area. Uses axis-aligned check (ignoring
+            // element rotation for speed — most PDF/Doc elements aren't rotated).
+            // A 10% margin is added to avoid edge-case false negatives.
+            if export_w > 0.0 && export_h > 0.0 {
+                let margin_x = export_w * 0.1;
+                let margin_y = export_h * 0.1;
+                let page_scene_x = el_scene_x + layout.local_x as f64;
+                let page_scene_y = el_scene_y + layout.local_y as f64;
+                let page_scene_w = layout.scaled_w as f64;
+                let page_scene_h = layout.scaled_h as f64;
+
+                let no_overlap = page_scene_x + page_scene_w < export_x - margin_x
+                    || page_scene_x > export_x + export_w + margin_x
+                    || page_scene_y + page_scene_h < export_y - margin_y
+                    || page_scene_y > export_y + export_h + margin_y;
+
+                if no_overlap {
+                    continue;
+                }
+            }
+
+            let pdf_x = layout.local_x;
+            let pdf_y = -(layout.local_y + layout.scaled_h);
+
+            ops.push(Operation::new("q", vec![]));
+            ops.push(Operation::new(
+                "rg",
+                vec![Object::Real(1.0), Object::Real(1.0), Object::Real(1.0)],
+            ));
+            ops.push(Operation::new(
+                "re",
+                vec![
+                    Object::Real(layout.local_x),
+                    Object::Real(-(layout.local_y + layout.scaled_h)),
+                    Object::Real(layout.scaled_w),
+                    Object::Real(layout.scaled_h),
+                ],
+            ));
+            ops.push(Operation::new("f", vec![]));
+            ops.push(Operation::new("Q", vec![]));
+
+            let page_opts = EmbedOptions {
+                page_range: Some(PageRange::Single(layout.page_index)),
+                position: (pdf_x, pdf_y),
+                scale: (layout.page_scale, layout.page_scale),
+                layout: MultiPageLayout::FirstPageOnly,
+                preserve_aspect_ratio: false,
+                ..Default::default()
+            };
+
+            match pdf_embedder.embed_pdf(document, &embed_id, &page_opts) {
+                Ok(result) => {
+                    for (name, obj_ref) in result.xobject_resources.iter() {
+                        self.resource_cache.insert(file_id.to_string(), name.clone());
+                        self.new_xobjects.push((name.clone(), obj_ref.clone()));
+                    }
+                    ops.extend(result.operations);
+                }
+                Err(e) => {
+                    log::warn!(
+                        "Failed to embed page {} of PDF {}: {}",
+                        layout.page_index,
+                        embed_id,
+                        e
+                    );
+                }
             }
         }
 
         Ok(ops)
+    }
+
+    /// Stream DucDocElement as an embedded PDF (compiled from Typst via file_id)
+    fn stream_doc_element(
+        &mut self,
+        doc: &DucDocElement,
+        document: &mut Document,
+        pdf_embedder: &mut PdfEmbedder,
+    ) -> ConversionResult<Vec<Operation>> {
+        let file_id = match &doc.file_id {
+            Some(fid) => fid.clone(),
+            None => {
+                return Ok(vec![Operation::new(
+                    "% DucDocElement without file_id",
+                    vec![],
+                )]);
+            }
+        };
+
+        self.stream_embedded_pdf_with_grid(
+            &file_id,
+            doc.base.width,
+            doc.base.height,
+            doc.base.x,
+            doc.base.y,
+            &doc.grid_config,
+            document,
+            pdf_embedder,
+        )
     }
 
     /// Drain newly embedded XObject resources (name, reference) collected during streaming
@@ -2295,6 +2497,7 @@ impl ElementStreamer {
                         image.base.height as f32,
                     ));
                 } else {
+                    log::warn!("[duc2pdf] Image file_id {} NOT FOUND in cache", file_id);
                     // Image not found - create red border placeholder with error text
                     ops.push(Operation::new(
                         &format!("% Image not found: {}", file_id),
