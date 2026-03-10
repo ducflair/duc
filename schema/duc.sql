@@ -1,7 +1,7 @@
 -- "DUC_" in ASCII
 -- Apply in order: duc.sql → version_control.sql → search.sql
 PRAGMA application_id = 1146569567;
-PRAGMA user_version = 3000000;
+PRAGMA user_version = 3000001;
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 PRAGMA synchronous = NORMAL;
@@ -814,14 +814,30 @@ CREATE TABLE element_embeddable (
 -- EXTERNAL FILES
 -- ===========================================================================
 
--- Binary files referenced by elements (images, PDFs, xlsx, STEP, etc.).
+-- Logical file record (the "latest active" pointer + metadata).
+-- Revisions are stored in external_file_revisions.
 CREATE TABLE external_files (
-    id             TEXT    PRIMARY KEY,
-    mime_type      TEXT    NOT NULL,
-    data           BLOB    NOT NULL,   -- actual file content bytes
-    created        INTEGER NOT NULL,   -- epoch ms
-    last_retrieved INTEGER,            -- epoch ms; NULL if never loaded onto scene
-    version        INTEGER
+    id                  TEXT    PRIMARY KEY,
+    active_revision_id  TEXT    NOT NULL,  -- FK resolved after revisions insert
+    updated             INTEGER NOT NULL,  -- epoch ms; last mutation (revision added or active changed)
+    version             INTEGER
 ) WITHOUT ROWID;
 
-CREATE INDEX idx_external_files_mime ON external_files(mime_type);
+CREATE INDEX idx_external_files_active ON external_files(active_revision_id);
+
+-- Immutable snapshot of a file at a point in time.
+-- Deleting the parent external_files row cascades here.
+CREATE TABLE external_file_revisions (
+    id              TEXT    PRIMARY KEY,
+    file_id         TEXT    NOT NULL REFERENCES external_files(id) ON DELETE CASCADE,
+    size_bytes      INTEGER NOT NULL DEFAULT 0,
+    checksum        TEXT,                      -- content hash for integrity / deduplication
+    source_name     TEXT,                      -- original upload filename shown to the user
+    mime_type       TEXT    NOT NULL,
+    message         TEXT,                      -- optional note describing this revision
+    created         INTEGER NOT NULL,          -- epoch ms
+    last_retrieved  INTEGER,                   -- epoch ms; NULL if never loaded onto scene
+    data            BLOB    NOT NULL           -- actual file content bytes
+) WITHOUT ROWID;
+
+CREATE INDEX idx_external_file_revisions_file ON external_file_revisions(file_id);

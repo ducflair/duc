@@ -1,6 +1,6 @@
 use crate::utils::svg_to_pdf::SvgToPdfConverter;
 use crate::{ConversionError, ConversionResult};
-use duc::types::DucExternalFileEntry;
+use duc::types::DucExternalFile;
 use hipdf::blocks::BlockManager;
 use hipdf::embed_pdf::PdfEmbedder;
 use hipdf::hatching::HatchingManager;
@@ -100,12 +100,12 @@ impl ResourceStreamer {
     /// Process and cache external files
     pub fn process_external_files(
         &mut self,
-        external_files: &[DucExternalFileEntry],
+        external_files: &[DucExternalFile],
     ) -> ConversionResult<()> {
-        for file_entry in external_files {
-            let resource_info = self.process_single_file(file_entry)?;
+        for file in external_files {
+            let resource_info = self.process_single_file(file)?;
             self.resource_cache
-                .insert(file_entry.key.clone(), resource_info);
+                .insert(file.id.clone(), resource_info);
         }
         Ok(())
     }
@@ -113,19 +113,22 @@ impl ResourceStreamer {
     /// Process a single external file
     fn process_single_file(
         &mut self,
-        file_entry: &DucExternalFileEntry,
+        file: &DucExternalFile,
     ) -> ConversionResult<ResourceInfo> {
-        let resource_type = self.detect_resource_type(&file_entry.value.mime_type);
+        let mime_type = file.revisions.get(&file.active_revision_id)
+            .map(|r| r.mime_type.clone())
+            .unwrap_or_default();
+        let resource_type = self.detect_resource_type(&mime_type);
 
         match resource_type {
-            ResourceType::Svg => self.process_svg_file(file_entry),
+            ResourceType::Svg => self.process_svg_file(file),
             ResourceType::Png | ResourceType::Jpeg => {
-                self.process_image_file(file_entry, &resource_type)
+                self.process_image_file(file, &resource_type)
             }
-            ResourceType::Pdf => self.process_pdf_file(file_entry),
+            ResourceType::Pdf => self.process_pdf_file(file),
             ResourceType::Unsupported => Err(ConversionError::ResourceLoadError(format!(
                 "Unsupported resource type: {}",
-                file_entry.value.mime_type
+                mime_type
             ))),
         }
     }
@@ -144,18 +147,19 @@ impl ResourceStreamer {
     /// Process SVG file - convert to PDF and cache
     fn process_svg_file(
         &mut self,
-        file_entry: &DucExternalFileEntry,
+        file: &DucExternalFile,
     ) -> ConversionResult<ResourceInfo> {
+        let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
+            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
+        })?;
         let document = self.document.as_mut().ok_or_else(|| {
             ConversionError::ResourceLoadError("PDF document not initialized".to_string())
         })?;
-        let xobject_id = SvgToPdfConverter::convert_file_entry_to_xobject(document, file_entry)?;
-
-        // Get SVG dimensions from the converted XObject
-        let (width, height) = (100.0, 100.0);
+        let (xobject_id, width, height) =
+            SvgToPdfConverter::convert_svg_bytes_to_xobject(document, &revision.data)?;
 
         Ok(ResourceInfo {
-            id: file_entry.key.clone(),
+            id: file.id.clone(),
             resource_type: ResourceType::Svg,
             object_id: Some(xobject_id),
             width: Some(width),
@@ -166,10 +170,13 @@ impl ResourceStreamer {
     /// Process image file (PNG/JPEG) - embed directly
     fn process_image_file(
         &mut self,
-        file_entry: &DucExternalFileEntry,
+        file: &DucExternalFile,
         resource_type: &ResourceType,
     ) -> ConversionResult<ResourceInfo> {
-        let image_data = &file_entry.value.data;
+        let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
+            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
+        })?;
+        let image_data = &revision.data;
         let xobject_id = {
             let mut document = self.document.take().ok_or_else(|| {
                 ConversionError::ResourceLoadError("PDF document not initialized".to_string())
@@ -183,7 +190,7 @@ impl ResourceStreamer {
         let (width, height) = (100.0, 100.0);
 
         Ok(ResourceInfo {
-            id: file_entry.key.clone(),
+            id: file.id.clone(),
             resource_type: resource_type.clone(),
             object_id: Some(xobject_id),
             width: Some(width),
@@ -194,8 +201,13 @@ impl ResourceStreamer {
     /// Process PDF file - embed using hipdf
     fn process_pdf_file(
         &mut self,
-        file_entry: &DucExternalFileEntry,
+        file: &DucExternalFile,
     ) -> ConversionResult<ResourceInfo> {
+        let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
+            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
+        })?;
+        let pdf_data = &revision.data;
+
         let pdf_embedder = self.pdf_embedder.as_mut().ok_or_else(|| {
             ConversionError::ResourceLoadError("PDF embedder not initialized".to_string())
         })?;
@@ -204,12 +216,8 @@ impl ResourceStreamer {
             ConversionError::ResourceLoadError("PDF document not initialized".to_string())
         })?;
 
-        // Load PDF data
-        let pdf_data = &file_entry.value.data;
-
-
         // Embed PDF using hipdf
-        let embed_id = format!("pdf_{}", file_entry.key);
+        let embed_id = format!("pdf_{}", file.id);
         pdf_embedder
             .load_pdf_from_bytes(pdf_data, &embed_id)
             .map_err(|e| {
@@ -220,7 +228,7 @@ impl ResourceStreamer {
         let (width, height) = (100.0, 100.0);
 
         Ok(ResourceInfo {
-            id: file_entry.key.clone(),
+            id: file.id.clone(),
             resource_type: ResourceType::Pdf,
             object_id: None, // PDF embedder handles object IDs internally
             width: Some(width),

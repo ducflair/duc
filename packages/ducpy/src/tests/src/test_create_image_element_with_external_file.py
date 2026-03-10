@@ -83,9 +83,13 @@ def test_image_with_external_file_via_sql(test_assets_dir, test_output_dir):
     with DucSQL.new() as db:
         # Insert external file
         db.sql(
-            "INSERT INTO external_files (id, mime_type, data, created, last_retrieved) "
-            "VALUES (?,?,?,?,?)",
-            "img_001", "image/png", image_bytes, now, now,
+            "INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)",
+            "img_001", "img_001_rev1", now,
+        )
+        db.sql(
+            "INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved, data) "
+            "VALUES (?,?,?,?,?,?,?)",
+            "img_001_rev1", "img_001", len(image_bytes), "image/png", now, now, image_bytes,
         )
 
         # Insert image element referencing the file
@@ -101,7 +105,10 @@ def test_image_with_external_file_via_sql(test_assets_dir, test_output_dir):
         )
 
         # Verify external file was stored
-        ef = db.sql("SELECT id, mime_type, LENGTH(data) AS sz FROM external_files")[0]
+        ef = db.sql(
+            "SELECT ef.id, efr.mime_type, LENGTH(efr.data) AS sz "
+            "FROM external_files ef JOIN external_file_revisions efr ON efr.id = ef.active_revision_id"
+        )[0]
         assert ef["id"] == "img_001"
         assert ef["mime_type"] == "image/png"
         assert ef["sz"] == len(image_bytes)
@@ -120,7 +127,12 @@ def test_image_with_external_file_via_sql(test_assets_dir, test_output_dir):
 
     # Roundtrip: re-open and verify the binary data survived
     with DucSQL(output_file) as db2:
-        stored = db2.sql("SELECT data FROM external_files WHERE id = ?", "img_001")[0]
+        stored = db2.sql(
+            "SELECT efr.data FROM external_files ef "
+            "JOIN external_file_revisions efr ON efr.id = ef.active_revision_id "
+            "WHERE ef.id = ?",
+            "img_001",
+        )[0]
         assert bytes(stored["data"]) == image_bytes
 
 
