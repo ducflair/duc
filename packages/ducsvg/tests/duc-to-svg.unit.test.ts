@@ -1,17 +1,14 @@
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ducToSvg } from '../src/ducToSvg';
-import { ensureDir, loadDucFile, saveSvgOutput, validateSvg } from './helpers';
+import { ensureDir, listDucFiles, loadDucFile, saveSvgOutput, validateSvg } from './helpers';
 
 const OUTPUT_DIR = 'output/duc-to-svg';
 
 ensureDir(join(__dirname, OUTPUT_DIR));
 
 describe('ducToSvg Integration Tests', () => {
-  const assets = [
-    'blocks_instances.duc',
-    'universal.duc',
-  ];
+  const assets = listDucFiles();
 
   for (const file of assets) {
     it(`converts ${file} to SVG`, async () => {
