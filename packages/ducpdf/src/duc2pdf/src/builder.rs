@@ -486,7 +486,7 @@ impl DucToPdfBuilder {
                         // SVG files are stored as embedded_pdfs since they're converted to PDF
                         // (already stored in process_svg_file, no need to duplicate here)
                     }
-                    "image/png" | "image/jpeg" | "image/jpg" | "image/gif" => {
+                    "image/png" | "image/jpeg" | "image/jpg" | "image/gif" | "image/webp" => {
                         // Handle image files using hipdf::images
                         let _object_id = self.process_image_file(&file)?;
                         // Note: image ID and element streamer registration happens in process_image_file

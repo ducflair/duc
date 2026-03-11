@@ -36,6 +36,7 @@ pub enum ResourceType {
     Svg,
     Png,
     Jpeg,
+    WebP,
     Pdf,
     Unsupported,
 }
@@ -122,7 +123,7 @@ impl ResourceStreamer {
 
         match resource_type {
             ResourceType::Svg => self.process_svg_file(file),
-            ResourceType::Png | ResourceType::Jpeg => {
+            ResourceType::Png | ResourceType::Jpeg | ResourceType::WebP => {
                 self.process_image_file(file, &resource_type)
             }
             ResourceType::Pdf => self.process_pdf_file(file),
@@ -139,6 +140,7 @@ impl ResourceStreamer {
             "image/svg+xml" => ResourceType::Svg,
             "image/png" => ResourceType::Png,
             "image/jpeg" | "image/jpg" => ResourceType::Jpeg,
+            "image/webp" => ResourceType::WebP,
             "application/pdf" => ResourceType::Pdf,
             _ => ResourceType::Unsupported,
         }
