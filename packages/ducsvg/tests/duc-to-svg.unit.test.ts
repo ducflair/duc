@@ -3,31 +3,52 @@ import { describe, expect, it } from 'vitest';
 import { ducToSvg } from '../src/ducToSvg';
 import { ensureDir, listDucFiles, loadDucFile, saveSvgOutput, validateSvg } from './helpers';
 
-const OUTPUT_DIR = 'output/duc-to-svg';
+const CROP_DIR = join(__dirname, 'tests_output/crop');
+const PLOTS_DIR = join(__dirname, 'tests_output/plots');
 
-ensureDir(join(__dirname, OUTPUT_DIR));
+ensureDir(CROP_DIR);
+ensureDir(PLOTS_DIR);
 
-describe('ducToSvg Integration Tests', () => {
+describe('ducToSvg — crop mode', () => {
   const assets = listDucFiles();
 
   for (const file of assets) {
-    it(`converts ${file} to SVG`, async () => {
+    it(`crop: ${file}`, async () => {
       const duc = loadDucFile(file);
-      const result = await ducToSvg(duc, {
-        scale: 1,
-      });
+      const result = await ducToSvg(duc, { scale: 1 });
 
       expect(result.pages.length).toBeGreaterThan(0);
-      // expect(result.pages).toHaveLength(result.pageCount);
 
-      // Save each page as a separate SVG file
+      const firstPage = result.pages[0];
+      expect(firstPage.svg).toBeDefined();
+      validateSvg(firstPage.svg);
+
+      const baseName = file.replace(/\.duc$/, '_crop.svg');
+      saveSvgOutput(join('tests_output/crop', baseName), firstPage.svg);
+    }, 180000);
+  }
+});
+
+describe('ducToSvg — plot mode (all pages)', () => {
+  const assets = listDucFiles();
+
+  for (const file of assets) {
+    it(`plot: ${file}`, async () => {
+      const duc = loadDucFile(file);
+      const result = await ducToSvg(duc, { scale: 1 });
+
+      expect(result.pages.length).toBeGreaterThan(0);
+
+      const subDir = file.replace(/\.duc$/, '');
+      ensureDir(join(PLOTS_DIR, subDir));
+
       for (const page of result.pages) {
         expect(page.svg).toBeDefined();
         validateSvg(page.svg);
 
-        const outName = file.replace(/\.duc$/, `_page_${page.svg.pageIndex}.svg`);
-        saveSvgOutput(`${OUTPUT_DIR}/${outName}`, page.svg);
+        const outName = join('tests_output/plots', subDir, `page_${page.pageIndex}.svg`);
+        saveSvgOutput(outName, page.svg);
       }
-    }, 180000); // 3 minute timeout for large file processing
+    }, 180000);
   }
 });
