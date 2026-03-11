@@ -8,7 +8,6 @@ members = [
     "packages/ducsvg/src/pdf2svg",
 ]
 
-
 [profile.release]
 lto = true
 opt-level = "s"
