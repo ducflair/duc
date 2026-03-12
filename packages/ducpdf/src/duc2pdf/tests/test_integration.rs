@@ -11,16 +11,27 @@ mod integration_tests {
     use hipdf::fonts::{Font, StandardFont};
 
     fn get_assets_dir() -> String {
-        // Use environment variable if set, otherwise use relative path
         if let Ok(path) = std::env::var("DUC_ASSETS_DIR") {
             path
         } else {
-            // Rust tests run from the crate directory, so we need to adjust the path
             let current_dir = std::env::current_dir().unwrap();
             let assets_path = current_dir.join("../../../../assets/testing/duc-files");
             assets_path.to_string_lossy().to_string()
         }
     }
+
+    fn list_duc_files() -> Vec<String> {
+        let dir = get_assets_dir();
+        let mut files: Vec<String> = std::fs::read_dir(&dir)
+            .unwrap_or_else(|e| panic!("read assets dir {dir}: {e}"))
+            .filter_map(|e| e.ok())
+            .map(|e| e.file_name().to_string_lossy().to_string())
+            .filter(|name| name.ends_with(".duc"))
+            .collect();
+        files.sort();
+        files
+    }
+
     /// Load a DUC file from the assets directory
     fn load_duc_file(filename: &str) -> Vec<u8> {
         let assets_dir = get_assets_dir();
@@ -512,6 +523,33 @@ mod integration_tests {
 
         println!("🔧 Real data scaling tests completed");
     }
+
+    #[test]
+    fn test_plot_all_assets() {
+        for file in list_duc_files() {
+            let duc_data = load_duc_file(&file);
+
+            let options = ConversionOptions {
+                scale: None,
+                mode: ConversionMode::Plot,
+                metadata_title: Some(file.clone()),
+                metadata_author: Some("DUC2PDF Test Suite".to_string()),
+                metadata_subject: Some("Asset plot conversion".to_string()),
+                background_color: Some("transparent".to_string()),
+            };
+
+            match convert_duc_to_pdf_with_options(&duc_data, options) {
+                Ok(pdf_bytes) => {
+                    validate_pdf_structure(&pdf_bytes, Path::new(&format!("memory:{file}")));
+                    println!("✅ {file}: plot OK, {} bytes", pdf_bytes.len());
+                }
+                Err(e) => {
+                    println!("⚠️  {file}: plot failed: {e}");
+                }
+            }
+        }
+    }
+
     use duc::types::{
         ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN, STROKE_PREFERENCE,
     };
