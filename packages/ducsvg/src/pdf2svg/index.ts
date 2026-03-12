@@ -36,6 +36,7 @@ async function initWasm(): Promise<any> {
 
 export interface SvgPage {
   svg: string;
+  pageIndex: number;
 }
 
 export interface SvgDocument {

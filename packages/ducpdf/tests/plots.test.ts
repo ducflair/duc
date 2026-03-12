@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { join } from 'node:path';
 import { convertDucToPdf } from '../src/duc2pdf/index';
-import { ensureDir, loadDucFile, savePdfOutput, validatePdf } from './helpers';
+import { ensureDir, listDucFiles, loadDucFile, savePdfOutput, validatePdf } from './helpers';
 
 const OUTPUT_DIR = 'tests_output/plots';
 
@@ -12,10 +12,7 @@ function optionsPlot() {
 }
 
 describe('PLOTS mode conversions', () => {
-  const assets = [
-    'blocks_instances.duc',
-    'universal.duc',
-  ];
+  const assets = listDucFiles();
 
   for (const file of assets) {
     it(`converts ${file} (PLOT)`, async () => {

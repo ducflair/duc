@@ -349,6 +349,7 @@ pub struct Viewer3DMaterial {
 #[serde(rename_all = "camelCase")]
 pub struct Viewer3DZebra {
     pub active: bool,
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub stripe_count: i32,
     pub stripe_direction: f64,
     /** Available: "blackwhite" | "colorful" | "grayscale" */
@@ -593,17 +594,20 @@ pub struct DucElementBase {
      * Random integer used to seed shape generation.
      * Doesn't differ across renders.
      */
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub seed: i32,
     /**
      * Integer that is sequentially incremented on each change. Used to reconcile
      * elements during collaboration or when saving to server.
      */
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub version: i32,
     /**
      * Random integer that is regenerated on each change.
      * Used for deterministic reconciliation of updates during collaboration,
      * in case the versions (see above) are identical.
      */
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub version_nonce: i32,
     /** Epoch timestamp (ms) of last element update */
     pub updated: i64,
@@ -673,6 +677,7 @@ pub struct DucHead {
 #[serde(rename_all = "camelCase")]
 pub struct PointBindingPoint {
     /** The index of the target point within the element. */
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub index: i32,
     /**
      * The offset from the point. Ranges from -1 to 1: 0 corresponds to the actual point.
@@ -709,6 +714,7 @@ pub struct DucPointBinding {
 #[serde(rename_all = "camelCase")]
 pub struct DucLineReference {
     /** Index of the point in the points array */
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub index: i32,
     /** Bezier handle of the point on the line segment */
     pub handle: Option<GeometricPoint>,
@@ -724,6 +730,7 @@ pub struct DucLine {
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DucPath {
+    #[serde(deserialize_with = "crate::serde_utils::trunc_vec_i32")]
     pub line_indices: Vec<i32>,
     /** Override the background and stroke from the base if different than null */
     pub background: Option<ElementBackground>,
@@ -990,6 +997,7 @@ pub struct DucPolygonElement {
     #[serde(flatten)]
     pub base: DucElementBase,
     /** Number of sides of the polygon */
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub sides: i32,
 }
 
@@ -1015,6 +1023,7 @@ pub struct DucEmbeddableElement {
 #[serde(rename_all = "camelCase")]
 pub struct DocumentGridConfig {
     /** 1 = single, 2 = two-up, n = grid */
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub columns: i32,
     /** Horizontal spacing (px) */
     pub gap_x: f64,
@@ -1201,7 +1210,9 @@ pub struct DucModelElement {
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DucBlockDuplicationArray {
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub rows: i32,
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub cols: i32,
     pub row_spacing: f64,
     pub col_spacing: f64,
@@ -1211,6 +1222,7 @@ pub struct DucBlockDuplicationArray {
 #[serde(rename_all = "camelCase")]
 pub struct DucBlockMetadata {
     pub source: Option<String>,
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub usage_count: i32,
     /** Epoch timestamp (ms) of block creation */
     pub created_at: i64,
@@ -1237,6 +1249,7 @@ pub struct DucBlock {
     pub id: String,
     pub label: String,
     pub description: Option<String>,
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub version: i32,
     pub metadata: Option<DucBlockMetadata>,
     #[serde(with = "serde_bytes", default, skip_serializing_if = "Option::is_none")]
@@ -1250,6 +1263,7 @@ pub struct DucBlockInstance {
     /** The reference to the DucBlock definition this instance is based on */
     pub block_id: String,
     /** The version that should match the block_id's version, incremented on each change */
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub version: i32,
     pub element_overrides: Option<Vec<StringValueEntry>>,
     pub duplication_array: Option<DucBlockDuplicationArray>,
@@ -1353,6 +1367,7 @@ pub struct DucLocalState {
      * The user needs to manually update the graph for new versions to be saved in version control.
      */
     pub manual_save_mode: bool,
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub decimal_places: i32,
 }
 
@@ -1393,6 +1408,7 @@ pub struct Checkpoint {
     #[serde(flatten)]
     pub base: VersionBase,
     pub version_number: i64,
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub schema_version: i32,
     pub is_schema_boundary: bool,
     #[serde(with = "serde_bytes")]
@@ -1406,6 +1422,7 @@ pub struct Delta {
     #[serde(flatten)]
     pub base: VersionBase,
     pub version_number: i64,
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub schema_version: i32,
     pub base_checkpoint_id: String,
     /** Compressed binary data for the delta (zlib). When present, patch_string is ignored. */
@@ -1417,7 +1434,9 @@ pub struct Delta {
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchemaMigration {
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub from_schema_version: i32,
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub to_schema_version: i32,
     pub migration_name: String,
     pub migration_checksum: Option<String>,
@@ -1429,6 +1448,7 @@ pub struct SchemaMigration {
 #[serde(rename_all = "camelCase")]
 pub struct VersionChain {
     pub id: String,
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub schema_version: i32,
     pub start_version: i64,
     pub end_version: Option<i64>,
@@ -1440,7 +1460,9 @@ pub struct VersionChain {
 #[serde(rename_all = "camelCase")]
 pub struct VersionGraphMetadata {
     pub current_version: i64,
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub current_schema_version: i32,
+    #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub chain_count: i32,
     pub last_pruned: i64,
     pub total_size: i64,
