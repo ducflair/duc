@@ -3,8 +3,10 @@ use wasm_bindgen::prelude::*;
 
 /// Result type for conversion operations
 #[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SvgPage {
     pub svg: String,
+    pub page_index: usize,
 }
 
 #[derive(serde::Serialize)]
@@ -37,7 +39,11 @@ pub fn convert_pdf_to_svg_pages(pdf_bytes: &[u8]) -> Result<Vec<String>, String>
 pub fn convert_pdf_to_svg_rs(pdf_data: &[u8]) -> Result<String, JsValue> {
     match convert_pdf_to_svg_pages(pdf_data) {
         Ok(svg_strings) => {
-            let pages: Vec<SvgPage> = svg_strings.into_iter().map(|svg| SvgPage { svg }).collect();
+            let pages: Vec<SvgPage> = svg_strings
+                .into_iter()
+                .enumerate()
+                .map(|(i, svg)| SvgPage { svg, page_index: i + 1 })
+                .collect();
 
             let result = ConversionResult { pages };
 
