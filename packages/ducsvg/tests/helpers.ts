@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 
 export function getAssetsDir(): string {
@@ -16,6 +16,10 @@ export function ensureDir(path: string) {
   if (!existsSync(path)) {
     mkdirSync(path, { recursive: true });
   }
+}
+
+export function listDucFiles(): string[] {
+  return readdirSync(getAssetsDir()).filter((f) => f.endsWith('.duc')).sort();
 }
 
 export function loadDucFile(filename: string): Uint8Array {
