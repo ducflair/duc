@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import pytest
 from collections import Counter
 from pathlib import Path
 
@@ -147,3 +148,20 @@ def test_search_gibberish_query_returns_empty_results(test_output_dir, request):
     assert payload["all_element_ids"] == []
     assert payload["results"] == []
     assert json.loads(json_path.read_text(encoding="utf-8")) == payload
+def test_search_empty_query_raises_value_error(test_output_dir):
+    asset_path = _asset_input_path("universal.duc")
+    with pytest.raises(ValueError, match="The search query must contain at least one searchable token."):
+        search_duc_elements(asset_path, "", limit=5)
+
+def test_search_respects_limit_parameter(test_output_dir, request):
+    payload, response, _json_path, parsed_asset = _run_asset_search(
+        "blocks_instances.duc",
+        "Rectangle",
+        test_output_dir=test_output_dir,
+        test_name=request.node.name,
+        limit=2,
+    )
+    assert payload["query"] == "Rectangle"
+    assert payload["total_hits"] >= 2
+    assert len(payload["results"]) == 2
+

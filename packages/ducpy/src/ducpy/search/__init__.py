@@ -1,6 +1,6 @@
 """Search helpers for DUC SQLite databases."""
 
-from .elements import (DucElementSearchResult, DucFileSearchResult,
+from .search_elements import (DucElementSearchResult, DucFileSearchResult,
                        DucSearchResponse, DucSearchResult,
                        ensure_search_schema, search_duc_elements)
 
