@@ -1,4 +1,4 @@
-import type { DucExternalFile, DucExternalFiles, ExternalFileId, ExternalFileRevision } from "./types";
+import type { DucExternalFile, DucExternalFiles, ExternalFileId, ExternalFileLoaded, ResolvedFileData, ExternalFilesData } from "./types";
 import { wasmGetExternalFile, wasmListExternalFiles } from "./wasm";
 
 export type LazyFileMetadata = {
@@ -19,7 +19,7 @@ export type LazyFileMetadata = {
 export class LazyExternalFileStore {
   private buffer: Uint8Array | null;
   private metadataCache: Map<string, LazyFileMetadata> | null = null;
-  private runtimeFiles: Map<string, DucExternalFile> = new Map();
+  private runtimeFiles: Map<string, ExternalFileLoaded> = new Map();
 
   constructor(buffer: Uint8Array) {
     this.buffer = buffer;
@@ -80,7 +80,7 @@ export class LazyExternalFileStore {
   }
 
   /** Fetch the full file (including data blobs for all revisions) for a specific file. */
-  getFile(fileId: string): DucExternalFile | null {
+  getFile(fileId: string): ExternalFileLoaded | null {
     const rt = this.runtimeFiles.get(fileId);
     if (rt) return rt;
 
@@ -88,18 +88,22 @@ export class LazyExternalFileStore {
     const result = wasmGetExternalFile(this.buffer, fileId);
     if (!result) return null;
 
-    return result as DucExternalFile;
+    return result as ExternalFileLoaded;
   }
 
   /** Get the active revision data for a specific file. */
-  getFileData(fileId: string): ExternalFileRevision | null {
-    const file = this.getFile(fileId);
-    if (!file) return null;
-    return file.revisions[file.activeRevisionId] ?? null;
+  getFileData(fileId: string): ResolvedFileData | null {
+    const loaded = this.getFile(fileId);
+    if (!loaded) return null;
+    const meta = loaded.revisions[loaded.activeRevisionId];
+    if (!meta) return null;
+    const dataBlob = loaded.data[loaded.activeRevisionId];
+    if (!dataBlob) return null;
+    return { data: dataBlob, mimeType: meta.mimeType };
   }
 
   /** Fetch active revision data and return a copy of the data buffer (safe for transfer). */
-  getFileDataCopy(fileId: string): ExternalFileRevision | null {
+  getFileDataCopy(fileId: string): ResolvedFileData | null {
     const data = this.getFileData(fileId);
     if (!data) return null;
     return {
@@ -109,8 +113,8 @@ export class LazyExternalFileStore {
   }
 
   /** Add a file at runtime (not persisted in .duc until next serialize). */
-  addRuntimeFile(fileId: string, file: DucExternalFile): void {
-    this.runtimeFiles.set(fileId, file);
+  addRuntimeFile(fileId: string, file: DucExternalFile, data: Record<string, Uint8Array>): void {
+    this.runtimeFiles.set(fileId, { ...file, data });
   }
 
   /** Remove a runtime file. */
@@ -118,57 +122,110 @@ export class LazyExternalFileStore {
     return this.runtimeFiles.delete(fileId);
   }
 
-  /** Export all files eagerly as a DucExternalFiles record. */
+  /** Export all files metadata as a DucExternalFiles record. */
   toExternalFiles(): DucExternalFiles {
     const result: DucExternalFiles = {};
 
     if (this.buffer) {
       for (const [id] of this.getMetadataMap()) {
-        const file = this.getFile(id);
-        if (file) {
+        const loaded = this.getFile(id);
+        if (loaded) {
+          const { data: _, ...file } = loaded;
           result[id as ExternalFileId] = file;
         }
       }
     }
 
-    for (const [id, file] of this.runtimeFiles) {
+    for (const [id, loaded] of this.runtimeFiles) {
+      const { data: _, ...file } = loaded;
       result[id as ExternalFileId] = file;
     }
 
     return result;
   }
 
+  /** Export all revision data blobs as an ExternalFilesData record. */
+  toExternalFilesData(): ExternalFilesData {
+    const result: ExternalFilesData = {};
+
+    if (this.buffer) {
+      for (const [id] of this.getMetadataMap()) {
+        const loaded = this.getFile(id);
+        if (loaded) {
+          for (const [revId, blob] of Object.entries(loaded.data)) {
+            result[revId] = blob;
+          }
+        }
+      }
+    }
+
+    for (const [, loaded] of this.runtimeFiles) {
+      for (const [revId, blob] of Object.entries(loaded.data)) {
+        result[revId] = blob;
+      }
+    }
+
+    return result;
+  }
+
   /** Merge files from another source. Adds missing files and merges new revisions into existing ones. */
-  mergeFiles(files: DucExternalFiles): void {
+  mergeFiles(files: DucExternalFiles, filesData?: ExternalFilesData): void {
     for (const [id, file] of Object.entries(files)) {
-      if (!this.has(id)) {
-        this.runtimeFiles.set(id, file);
-        continue;
-      }
-
       const existing = this.runtimeFiles.get(id) ?? this.getFile(id);
+
       if (!existing) {
-        this.runtimeFiles.set(id, file);
+        const dataMap: Record<string, Uint8Array> = {};
+        if (filesData) {
+          for (const revId of Object.keys(file.revisions)) {
+            if (filesData[revId]) {
+              dataMap[revId] = filesData[revId];
+            }
+          }
+        }
+        this.runtimeFiles.set(id, { ...file, data: dataMap });
         continue;
       }
 
-      // Merge: add any new revisions that don't exist yet, and update metadata
       let merged = false;
       const mergedRevisions = { ...existing.revisions };
+      const mergedData = { ...existing.data };
       for (const [revId, rev] of Object.entries(file.revisions)) {
         if (!mergedRevisions[revId]) {
+          mergedRevisions[revId] = rev;
+          if (filesData?.[revId]) {
+            mergedData[revId] = filesData[revId];
+          }
+          merged = true;
+          continue;
+        }
+
+        if (filesData?.[revId] && mergedData[revId] !== filesData[revId]) {
+          mergedData[revId] = filesData[revId];
+          merged = true;
+        }
+
+        if (
+          rev.sizeBytes !== mergedRevisions[revId].sizeBytes ||
+          rev.lastRetrieved !== mergedRevisions[revId].lastRetrieved ||
+          rev.created !== mergedRevisions[revId].created ||
+          rev.mimeType !== mergedRevisions[revId].mimeType ||
+          rev.sourceName !== mergedRevisions[revId].sourceName ||
+          rev.message !== mergedRevisions[revId].message
+        ) {
           mergedRevisions[revId] = rev;
           merged = true;
         }
       }
 
-      if (merged || file.updated > existing.updated) {
+      const activeRevisionChanged = file.activeRevisionId !== existing.activeRevisionId;
+      if (merged || activeRevisionChanged || file.updated > existing.updated) {
         this.runtimeFiles.set(id, {
           ...existing,
           activeRevisionId: file.activeRevisionId,
           updated: Math.max(file.updated, existing.updated),
           version: Math.max(file.version ?? 0, existing.version ?? 0),
           revisions: mergedRevisions,
+          data: mergedData,
         });
       }
     }
