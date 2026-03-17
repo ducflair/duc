@@ -29,7 +29,6 @@ PRAGMA synchronous = NORMAL;
 -- ELEMENT_CONTENT_PREF:     SOLID=12, FILL=14, FIT=15, TILE=16, STRETCH=17, HATCH=18
 -- HATCH_STYLE:              NORMAL=10, OUTER=11, IGNORE=12
 -- IMAGE_STATUS:             PENDING=10, SAVED=11, ERROR=12
--- PRUNING_LEVEL:            CONSERVATIVE=10, BALANCED=20, AGGRESSIVE=30
 -- BOOLEAN_OPERATION:        UNION=10, SUBTRACT=11, INTERSECT=12, EXCLUDE=13
 -- ELEMENT_TYPE (text):      rectangle, ellipse, polygon, table, text, line,
 --                           arrow, freedraw, image, frame, plot, doc, model,
@@ -46,8 +45,7 @@ CREATE TABLE duc_global_state (
     name                                        TEXT,            -- drawing name
     view_background_color                       TEXT    NOT NULL, -- drawing background color
     main_scope                                  TEXT    NOT NULL, -- master unit (mm, cm, m, in, ft…)
-    scope_exponent_threshold                    INTEGER NOT NULL DEFAULT 3,   -- +/- tolerance for scope switching
-    pruning_level                               INTEGER NOT NULL DEFAULT 20   -- PRUNING_LEVEL enum
+    scope_exponent_threshold                    INTEGER NOT NULL DEFAULT 3    -- +/- tolerance for scope switching
 );
 
 -- Per-user session state (not shared). DucHead fields flattened inline.
@@ -825,7 +823,7 @@ CREATE TABLE external_files (
 
 CREATE INDEX idx_external_files_active ON external_files(active_revision_id);
 
--- Immutable snapshot of a file at a point in time.
+-- Immutable snapshot of a file at a point in time (metadata only).
 -- Deleting the parent external_files row cascades here.
 CREATE TABLE external_file_revisions (
     id              TEXT    PRIMARY KEY,
@@ -836,8 +834,14 @@ CREATE TABLE external_file_revisions (
     mime_type       TEXT    NOT NULL,
     message         TEXT,                      -- optional note describing this revision
     created         INTEGER NOT NULL,          -- epoch ms
-    last_retrieved  INTEGER,                   -- epoch ms; NULL if never loaded onto scene
-    data            BLOB    NOT NULL           -- actual file content bytes
+    last_retrieved  INTEGER                    -- epoch ms; NULL if never loaded onto scene
 ) WITHOUT ROWID;
 
 CREATE INDEX idx_external_file_revisions_file ON external_file_revisions(file_id);
+
+-- Actual binary content for each revision, separated from metadata
+-- so that metadata can be read without loading heavy blobs.
+CREATE TABLE external_file_revision_data (
+    revision_id TEXT PRIMARY KEY REFERENCES external_file_revisions(id) ON DELETE CASCADE,
+    data        BLOB NOT NULL
+) WITHOUT ROWID;

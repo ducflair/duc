@@ -1,5 +1,5 @@
 import { isFiniteNumber } from "..";
-import { PRUNING_LEVEL, TEXT_ALIGN } from "../../enums";
+import { TEXT_ALIGN } from "../../enums";
 import { isValidPrecisionScopeValue } from "../../restore/restoreDataState";
 import {
   getPrecisionValueFromRaw,
@@ -55,7 +55,6 @@ export const getDefaultGlobalState = (): DucGlobalState => {
     viewBackgroundColor: typeof window !== "undefined" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? COLOR_PALETTE.night : COLOR_PALETTE.white) : COLOR_PALETTE.white,
     scopeExponentThreshold: 3,
     mainScope: NEUTRAL_SCOPE,
-    pruningLevel: PRUNING_LEVEL.BALANCED,
   };
 };
 
