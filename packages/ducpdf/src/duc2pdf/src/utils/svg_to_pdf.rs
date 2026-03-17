@@ -97,11 +97,9 @@ impl SvgToPdfConverter {
     pub fn convert_file_entry_to_xobject(
         document: &mut Document,
         file: &DucExternalFile,
+        rev_data: &[u8],
     ) -> ConversionResult<u32> {
-        let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
-        })?;
-        Self::convert_svg_to_xobject(document, &revision.data, file)
+        Self::convert_svg_to_xobject(document, rev_data, file)
     }
 
     /// Validate SVG data

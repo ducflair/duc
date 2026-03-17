@@ -57,7 +57,7 @@ pub fn parse(buf: &[u8]) -> ParseResult<ExportedDataState> {
     let regions = read_regions(&conn)?;
     let (blocks, block_instances, block_collections) = read_blocks(&conn)?;
     let elements = read_elements(&conn)?;
-    let external_files = read_external_files(&conn)?;
+    let (external_files, external_files_data) = read_external_files(&conn)?;
     let version_graph = read_version_graph(&conn)?;
 
     Ok(ExportedDataState {
@@ -78,6 +78,7 @@ pub fn parse(buf: &[u8]) -> ParseResult<ExportedDataState> {
         duc_global_state,
         version_graph,
         external_files,
+        external_files_data,
     })
 }
 
@@ -117,14 +118,20 @@ pub fn parse_lazy(buf: &[u8]) -> ParseResult<ExportedDataState> {
         duc_global_state,
         version_graph,
         external_files: None,
+        external_files_data: None,
     })
 }
 
 /// Fetch a single external file from a `.duc` buffer by file ID.
-pub fn get_external_file(buf: &[u8], file_id: &str) -> ParseResult<Option<DucExternalFile>> {
+/// Returns metadata + data blobs as an `ExternalFileLoaded`.
+pub fn get_external_file(buf: &[u8], file_id: &str) -> ParseResult<Option<ExternalFileLoaded>> {
     let conn = load_db_bytes(buf)?;
     let has_revisions_table: bool = conn.prepare(
         "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='external_file_revisions'"
+    )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
+
+    let has_data_table: bool = conn.prepare(
+        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='external_file_revision_data'"
     )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
 
     if has_revisions_table {
@@ -146,30 +153,77 @@ pub fn get_external_file(buf: &[u8], file_id: &str) -> ParseResult<Option<DucExt
             Err(e) => return Err(e.into()),
         };
 
-        let mut rev_stmt = conn.prepare(
-            "SELECT id, size_bytes, checksum, source_name, mime_type, message,
-                    created, last_retrieved, data
-             FROM external_file_revisions WHERE file_id = ?1"
-        )?;
-        let rev_rows = rev_stmt.query_map(params![file_id], |row| {
-            let id: String = row.get(0)?;
-            Ok((id.clone(), ExternalFileRevision {
-                id,
-                size_bytes:     row.get(1)?,
-                checksum:       row.get(2)?,
-                source_name:    row.get(3)?,
-                mime_type:      row.get(4)?,
-                message:        row.get(5)?,
-                created:        row.get(6)?,
-                last_retrieved: row.get(7)?,
-                data:           row.get(8)?,
-            }))
-        })?;
-        for row in rev_rows {
-            let (rev_id, rev) = row?;
-            file.revisions.insert(rev_id, rev);
+        let mut data_map: HashMap<String, serde_bytes::ByteBuf> = HashMap::new();
+
+        if has_data_table {
+            // Split schema: metadata in external_file_revisions, data in external_file_revision_data
+            let mut meta_stmt = conn.prepare(
+                "SELECT id, size_bytes, checksum, source_name, mime_type, message,
+                        created, last_retrieved
+                 FROM external_file_revisions WHERE file_id = ?1"
+            )?;
+            let meta_rows = meta_stmt.query_map(params![file_id], |row| {
+                let id: String = row.get(0)?;
+                Ok((id.clone(), ExternalFileRevisionMeta {
+                    id,
+                    size_bytes:     row.get(1)?,
+                    checksum:       row.get(2)?,
+                    source_name:    row.get(3)?,
+                    mime_type:      row.get(4)?,
+                    message:        row.get(5)?,
+                    created:        row.get(6)?,
+                    last_retrieved: row.get(7)?,
+                }))
+            })?;
+            for row in meta_rows {
+                let (rev_id, meta) = row?;
+                file.revisions.insert(rev_id, meta);
+            }
+
+            let mut data_stmt = conn.prepare(
+                "SELECT d.revision_id, d.data
+                 FROM external_file_revision_data d
+                 JOIN external_file_revisions r ON r.id = d.revision_id
+                 WHERE r.file_id = ?1"
+            )?;
+            let data_rows = data_stmt.query_map(params![file_id], |row| {
+                let rev_id: String = row.get(0)?;
+                let blob: Vec<u8> = row.get(1)?;
+                Ok((rev_id, blob))
+            })?;
+            for row in data_rows {
+                let (rev_id, blob) = row?;
+                data_map.insert(rev_id, serde_bytes::ByteBuf::from(blob));
+            }
+        } else {
+            // Pre-split schema: data still in external_file_revisions
+            let mut rev_stmt = conn.prepare(
+                "SELECT id, size_bytes, checksum, source_name, mime_type, message,
+                        created, last_retrieved, data
+                 FROM external_file_revisions WHERE file_id = ?1"
+            )?;
+            let rev_rows = rev_stmt.query_map(params![file_id], |row| {
+                let id: String = row.get(0)?;
+                let data: Vec<u8> = row.get(8)?;
+                Ok((id.clone(), ExternalFileRevisionMeta {
+                    id,
+                    size_bytes:     row.get(1)?,
+                    checksum:       row.get(2)?,
+                    source_name:    row.get(3)?,
+                    mime_type:      row.get(4)?,
+                    message:        row.get(5)?,
+                    created:        row.get(6)?,
+                    last_retrieved: row.get(7)?,
+                }, data))
+            })?;
+            for row in rev_rows {
+                let (rev_id, meta, blob) = row?;
+                file.revisions.insert(rev_id.clone(), meta);
+                data_map.insert(rev_id, serde_bytes::ByteBuf::from(blob));
+            }
         }
-        Ok(Some(file))
+
+        Ok(Some(ExternalFileLoaded { file, data: data_map }))
     } else {
         // Legacy schema: wrap flat row into a single-revision DucExternalFile.
         let result = conn.prepare(
@@ -177,30 +231,34 @@ pub fn get_external_file(buf: &[u8], file_id: &str) -> ParseResult<Option<DucExt
         )?.query_row(params![file_id], |row| {
             let id: String = row.get(0)?;
             let rev_id = format!("{}_rev1", id);
-            Ok(DucExternalFile {
-                id: id.clone(),
-                active_revision_id: rev_id.clone(),
-                updated: row.get(3)?,
-                version: row.get(5)?,
-                revisions: {
-                    let mut revs = HashMap::new();
-                    revs.insert(rev_id.clone(), ExternalFileRevision {
-                        id: rev_id,
-                        size_bytes: 0,
-                        checksum: None,
-                        source_name: None,
-                        mime_type: row.get(1)?,
-                        message: None,
-                        created: row.get(3)?,
-                        last_retrieved: row.get(4)?,
-                        data: row.get(2)?,
-                    });
-                    revs
+            let blob: Vec<u8> = row.get(2)?;
+            let meta = ExternalFileRevisionMeta {
+                id: rev_id.clone(),
+                size_bytes: blob.len() as i64,
+                checksum: None,
+                source_name: None,
+                mime_type: row.get(1)?,
+                message: None,
+                created: row.get(3)?,
+                last_retrieved: row.get(4)?,
+            };
+            let mut revisions = HashMap::new();
+            revisions.insert(rev_id.clone(), meta);
+            let mut data_map = HashMap::new();
+            data_map.insert(rev_id.clone(), serde_bytes::ByteBuf::from(blob));
+            Ok(ExternalFileLoaded {
+                file: DucExternalFile {
+                    id: id.clone(),
+                    active_revision_id: rev_id,
+                    updated: row.get(3)?,
+                    version: row.get(5)?,
+                    revisions,
                 },
+                data: data_map,
             })
         });
         match result {
-            Ok(file) => Ok(Some(file)),
+            Ok(loaded) => Ok(Some(loaded)),
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
             Err(e) => Err(e.into()),
         }
@@ -579,14 +637,6 @@ fn int_to_image_status(v: i32) -> IMAGE_STATUS {
         _ => IMAGE_STATUS::PENDING,
     }
 }
-fn int_to_pruning_level(v: i32) -> PRUNING_LEVEL {
-    match v {
-        10 => PRUNING_LEVEL::CONSERVATIVE,
-        20 => PRUNING_LEVEL::BALANCED,
-        30 => PRUNING_LEVEL::AGGRESSIVE,
-        _ => PRUNING_LEVEL::BALANCED,
-    }
-}
 fn int_to_boolean_operation(v: i32) -> BOOLEAN_OPERATION {
     match v {
         10 => BOOLEAN_OPERATION::UNION,
@@ -636,7 +686,7 @@ fn read_document(conn: &Connection) -> ParseResult<(Option<String>, String, Stri
 
 fn read_global_state(conn: &Connection) -> ParseResult<Option<DucGlobalState>> {
     let mut stmt = conn.prepare(
-        "SELECT name, view_background_color, main_scope, scope_exponent_threshold, pruning_level
+        "SELECT name, view_background_color, main_scope, scope_exponent_threshold
          FROM duc_global_state WHERE id = 1"
     )?;
     let result = stmt.query_row([], |row| {
@@ -645,7 +695,6 @@ fn read_global_state(conn: &Connection) -> ParseResult<Option<DucGlobalState>> {
             view_background_color: row.get(1)?,
             main_scope: row.get(2)?,
             scope_exponent_threshold: row.get(3)?,
-            pruning_level: int_to_pruning_level(row.get(4)?),
         })
     });
 
@@ -1768,55 +1817,45 @@ fn read_hatch_pattern_lines(conn: &Connection, owner_type: &str, owner_id: i64) 
 
 // ─── external_files ──────────────────────────────────────────────────────────
 
-fn read_external_files(conn: &Connection) -> ParseResult<Option<HashMap<String, DucExternalFile>>> {
+type ExternalFilesResult = (
+    Option<HashMap<String, DucExternalFile>>,
+    Option<HashMap<String, serde_bytes::ByteBuf>>,
+);
+
+fn read_external_files(conn: &Connection) -> ParseResult<ExternalFilesResult> {
     // Check if the new schema (with external_file_revisions) is present.
     let has_revisions_table: bool = conn.prepare(
         "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='external_file_revisions'"
     )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
 
     if has_revisions_table {
-        read_external_files_v2(conn)
+        let has_data_table: bool = conn.prepare(
+            "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='external_file_revision_data'"
+        )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
+
+        if has_data_table {
+            read_external_files_v3(conn)
+        } else {
+            read_external_files_v2(conn)
+        }
     } else {
         read_external_files_v1_legacy(conn)
     }
 }
 
-/// Read from the current schema (external_files + external_file_revisions).
-fn read_external_files_v2(conn: &Connection) -> ParseResult<Option<HashMap<String, DucExternalFile>>> {
-    // Load all revisions grouped by file_id.
+/// Read from the split schema (external_file_revisions metadata + external_file_revision_data).
+fn read_external_files_v3(conn: &Connection) -> ParseResult<ExternalFilesResult> {
+    // Load revision metadata
     let mut rev_stmt = conn.prepare(
         "SELECT id, file_id, size_bytes, checksum, source_name, mime_type, message,
-                created, last_retrieved, data
+                created, last_retrieved
          FROM external_file_revisions"
     )?;
-    let mut revisions_by_file: HashMap<String, HashMap<String, ExternalFileRevision>> = HashMap::new();
+    let mut revisions_by_file: HashMap<String, HashMap<String, ExternalFileRevisionMeta>> = HashMap::new();
     let rev_rows = rev_stmt.query_map([], |row| {
-        Ok(ExternalFileRevision {
-            id:             row.get(0)?,
-            size_bytes:     row.get(2)?,
-            checksum:       row.get(3)?,
-            source_name:    row.get(4)?,
-            mime_type:      row.get(5)?,
-            message:        row.get(6)?,
-            created:        row.get(7)?,
-            last_retrieved: row.get(8)?,
-            data:           row.get(9)?,
-        })
-    })?;
-
-    // We need file_id as well; re-query with it included.
-    let mut rev_stmt2 = conn.prepare(
-        "SELECT id, file_id, size_bytes, checksum, source_name, mime_type, message,
-                created, last_retrieved, data
-         FROM external_file_revisions"
-    )?;
-    // Suppress unused warning from first query
-    drop(rev_rows);
-
-    let rev_rows2 = rev_stmt2.query_map([], |row| {
         let rev_id: String = row.get(0)?;
         let file_id: String = row.get(1)?;
-        Ok((file_id, rev_id.clone(), ExternalFileRevision {
+        Ok((file_id, rev_id.clone(), ExternalFileRevisionMeta {
             id:             rev_id,
             size_bytes:     row.get(2)?,
             checksum:       row.get(3)?,
@@ -1825,12 +1864,83 @@ fn read_external_files_v2(conn: &Connection) -> ParseResult<Option<HashMap<Strin
             message:        row.get(6)?,
             created:        row.get(7)?,
             last_retrieved: row.get(8)?,
-            data:           row.get(9)?,
         }))
     })?;
-    for row in rev_rows2 {
-        let (file_id, rev_id, rev) = row?;
-        revisions_by_file.entry(file_id).or_default().insert(rev_id, rev);
+    for row in rev_rows {
+        let (file_id, rev_id, meta) = row?;
+        revisions_by_file.entry(file_id).or_default().insert(rev_id, meta);
+    }
+
+    // Load data blobs
+    let mut data_stmt = conn.prepare(
+        "SELECT revision_id, data FROM external_file_revision_data"
+    )?;
+    let mut data_map: HashMap<String, serde_bytes::ByteBuf> = HashMap::new();
+    let data_rows = data_stmt.query_map([], |row| {
+        let rev_id: String = row.get(0)?;
+        let blob: Vec<u8> = row.get(1)?;
+        Ok((rev_id, blob))
+    })?;
+    for row in data_rows {
+        let (rev_id, blob) = row?;
+        data_map.insert(rev_id, serde_bytes::ByteBuf::from(blob));
+    }
+
+    // Load file headers
+    let mut file_stmt = conn.prepare(
+        "SELECT id, active_revision_id, updated, version FROM external_files"
+    )?;
+    let mut map: HashMap<String, DucExternalFile> = HashMap::new();
+    let file_rows = file_stmt.query_map([], |row| {
+        let id: String = row.get(0)?;
+        Ok((id.clone(), DucExternalFile {
+            id,
+            active_revision_id: row.get(1)?,
+            updated: row.get(2)?,
+            revisions: HashMap::new(),
+            version: row.get(3)?,
+        }))
+    })?;
+    for row in file_rows {
+        let (k, mut v) = row?;
+        v.revisions = revisions_by_file.remove(&k).unwrap_or_default();
+        map.insert(k, v);
+    }
+
+    let files = if map.is_empty() { None } else { Some(map) };
+    let data = if data_map.is_empty() { None } else { Some(data_map) };
+    Ok((files, data))
+}
+
+/// Read from the pre-split schema (external_files + external_file_revisions with data column).
+fn read_external_files_v2(conn: &Connection) -> ParseResult<ExternalFilesResult> {
+    let mut rev_stmt = conn.prepare(
+        "SELECT id, file_id, size_bytes, checksum, source_name, mime_type, message,
+                created, last_retrieved, data
+         FROM external_file_revisions"
+    )?;
+    let mut revisions_by_file: HashMap<String, HashMap<String, ExternalFileRevisionMeta>> = HashMap::new();
+    let mut data_map: HashMap<String, serde_bytes::ByteBuf> = HashMap::new();
+
+    let rev_rows = rev_stmt.query_map([], |row| {
+        let rev_id: String = row.get(0)?;
+        let file_id: String = row.get(1)?;
+        let blob: Vec<u8> = row.get(9)?;
+        Ok((file_id, rev_id.clone(), ExternalFileRevisionMeta {
+            id:             rev_id,
+            size_bytes:     row.get(2)?,
+            checksum:       row.get(3)?,
+            source_name:    row.get(4)?,
+            mime_type:      row.get(5)?,
+            message:        row.get(6)?,
+            created:        row.get(7)?,
+            last_retrieved: row.get(8)?,
+        }, blob))
+    })?;
+    for row in rev_rows {
+        let (file_id, rev_id, meta, blob) = row?;
+        revisions_by_file.entry(file_id).or_default().insert(rev_id.clone(), meta);
+        data_map.insert(rev_id, serde_bytes::ByteBuf::from(blob));
     }
 
     // Load the file headers.
@@ -1854,46 +1964,53 @@ fn read_external_files_v2(conn: &Connection) -> ParseResult<Option<HashMap<Strin
         map.insert(k, v);
     }
 
-    if map.is_empty() { Ok(None) } else { Ok(Some(map)) }
+    let files = if map.is_empty() { None } else { Some(map) };
+    let data = if data_map.is_empty() { None } else { Some(data_map) };
+    Ok((files, data))
 }
 
 /// Fallback for old schema files that only have the flat `external_files` table.
 /// Wraps each row in a single-revision DucExternalFile.
-fn read_external_files_v1_legacy(conn: &Connection) -> ParseResult<Option<HashMap<String, DucExternalFile>>> {
+fn read_external_files_v1_legacy(conn: &Connection) -> ParseResult<ExternalFilesResult> {
     let mut stmt = conn.prepare(
         "SELECT id, mime_type, data, created, last_retrieved, version FROM external_files"
     )?;
     let mut map = HashMap::new();
+    let mut data_map: HashMap<String, serde_bytes::ByteBuf> = HashMap::new();
     let rows = stmt.query_map([], |row| {
         let id: String = row.get(0)?;
         let rev_id = format!("{}_rev1", id);
-        Ok((id.clone(), DucExternalFile {
-            id: id.clone(),
+        let blob: Vec<u8> = row.get(2)?;
+        let meta = ExternalFileRevisionMeta {
+            id: rev_id.clone(),
+            size_bytes: blob.len() as i64,
+            checksum: None,
+            source_name: None,
+            mime_type: row.get(1)?,
+            message: None,
+            created: row.get(3)?,
+            last_retrieved: row.get(4)?,
+        };
+        Ok((id.clone(), rev_id.clone(), DucExternalFile {
+            id,
             active_revision_id: rev_id.clone(),
             updated: row.get(3)?,
             version: row.get(5)?,
             revisions: {
                 let mut revs = HashMap::new();
-                revs.insert(rev_id.clone(), ExternalFileRevision {
-                    id: rev_id,
-                    size_bytes: 0,
-                    checksum: None,
-                    source_name: None,
-                    mime_type: row.get(1)?,
-                    message: None,
-                    created: row.get(3)?,
-                    last_retrieved: row.get(4)?,
-                    data: row.get(2)?,
-                });
+                revs.insert(rev_id.clone(), meta);
                 revs
             },
-        }))
+        }, blob))
     })?;
     for row in rows {
-        let (k, v) = row?;
+        let (k, rev_id, v, blob) = row?;
+        data_map.insert(rev_id, serde_bytes::ByteBuf::from(blob));
         map.insert(k, v);
     }
-    if map.is_empty() { Ok(None) } else { Ok(Some(map)) }
+    let files = if map.is_empty() { None } else { Some(map) };
+    let data = if data_map.is_empty() { None } else { Some(data_map) };
+    Ok((files, data))
 }
 
 // ─── version_graph ───────────────────────────────────────────────────────────
@@ -1910,7 +2027,7 @@ fn read_version_graph(conn: &Connection) -> ParseResult<Option<VersionGraph>> {
 
     let mut vg_stmt = conn.prepare(
         "SELECT current_version, current_schema_version, user_checkpoint_version_id,
-                latest_version_id, chain_count, last_pruned, total_size
+                latest_version_id, chain_count, total_size
          FROM version_graph WHERE id = 1"
     )?;
     let (metadata, user_cp_id, latest_id) = match vg_stmt.query_row([], |row| {
@@ -1919,8 +2036,7 @@ fn read_version_graph(conn: &Connection) -> ParseResult<Option<VersionGraph>> {
                 current_version: row.get(0)?,
                 current_schema_version: row.get(1)?,
                 chain_count: row.get(4)?,
-                last_pruned: row.get::<_, Option<i64>>(5)?.unwrap_or(0),
-                total_size: row.get::<_, Option<i64>>(6)?.unwrap_or(0),
+                total_size: row.get::<_, Option<i64>>(5)?.unwrap_or(0),
             },
             row.get::<_, Option<String>>(2)?.unwrap_or_default(),
             row.get::<_, Option<String>>(3)?.unwrap_or_default(),
