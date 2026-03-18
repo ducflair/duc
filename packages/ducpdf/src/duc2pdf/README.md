@@ -2,7 +2,7 @@
 
 <p align="center">
   <br/>
-  <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://raw.githubusercontent.com/ducflair/assets/refs/heads/main/src/duc/duc-extended.png" /></a>
+  <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" /></a>
   <p align="center">Rust CLI Tool for duc to PDF Conversion</p>
   <p align="center" style="align: center;">
     <a href="https://crates.io/crates/duc2pdf/"><img src="https://shields.io/badge/Crates-FFC933?logo=Rust&logoColor=646464&style=round-square" alt="Crates" /></a>
