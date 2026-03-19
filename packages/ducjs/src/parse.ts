@@ -1,6 +1,6 @@
 import { restore, type ElementsConfig, type RestoreConfig, type RestoredDataState } from "./restore";
 import { transformFromRust } from "./transform";
-import type { DucExternalFiles, ExportedDataState } from "./types";
+import type { DucExternalFiles, ExportedDataState, ExternalFilesData } from "./types";
 import { ensureWasm, wasmParseDuc, wasmParseDucLazy } from "./wasm";
 
 export type { RestoredDataState };
@@ -109,11 +109,13 @@ export async function parseDucLazy(
 
   const lazyFileStore = new LazyExternalFileStore(buffer);
   const files: DucExternalFiles = {};
+  const filesData: ExternalFilesData = {};
 
   const restored = restore(
     {
       ...data,
       files,
+      filesData,
       // Preserve versionGraph from Rust separately; do not run it through restore()
       versionGraph: undefined,
     },

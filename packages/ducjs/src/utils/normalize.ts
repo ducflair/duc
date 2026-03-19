@@ -7,14 +7,6 @@ export const getNormalizedZoom = (zoom: number): NormalizedZoomValue => {
   return clamp(zoom, MIN_ZOOM, MAX_ZOOM) as NormalizedZoomValue;
 };
 
-export const getNormalizedGridSize = (gridStep: number) => {
-  return clamp(Math.round(gridStep), 1, 100);
-};
-
-export const getNormalizedGridStep = (gridStep: number) => {
-  return clamp(Math.round(gridStep), 1, 100);
-};
-
 export const normalizeFixedPoint = <T extends FixedPoint | null>(
   fixedPoint: T,
 ): T extends null ? null : FixedPoint => {
