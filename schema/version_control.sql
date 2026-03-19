@@ -60,7 +60,6 @@ CREATE TABLE version_graph (
     user_checkpoint_version_id  TEXT,    -- user-designated save point
     latest_version_id           TEXT,    -- most recent version (checkpoint or delta)
     chain_count                 INTEGER NOT NULL DEFAULT 1,
-    last_pruned                 INTEGER, -- epoch ms of last pruning pass
     total_size                  INTEGER, -- aggregate bytes of all checkpoints + deltas
     CHECK (current_schema_version >= 1),
     CHECK (chain_count >= 1)

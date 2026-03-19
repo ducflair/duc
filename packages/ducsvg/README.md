@@ -2,7 +2,7 @@
 
 <p align="center">
   <br/>
-  <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://raw.githubusercontent.com/ducflair/assets/refs/heads/main/src/duc/duc-extended.png" /></a>
+  <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" /></a>
   <p align="center">SVG Adapter for the duc 2D CAD File Format</p>
   <p align="center" style="align: center;">
     <a href="https://www.npmjs.com/package/ducsvg"><img src="https://shields.io/badge/NPM-cc3534?logo=Npm&logoColor=white&style=round-square" alt="NPM" /></a>
