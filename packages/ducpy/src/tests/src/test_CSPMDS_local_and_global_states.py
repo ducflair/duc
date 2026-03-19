@@ -170,9 +170,9 @@ def test_local_and_global_states_via_sql():
         # Insert global state
         db.sql(
             "INSERT INTO duc_global_state "
-            "(id, name, view_background_color, main_scope, scope_exponent_threshold, pruning_level) "
-            "VALUES (?,?,?,?,?,?)",
-            1, "Test Drawing", "#FFFFFF", "mm", 6, 20,
+            "(id, name, view_background_color, main_scope, scope_exponent_threshold) "
+            "VALUES (?,?,?,?,?)",
+            1, "Test Drawing", "#FFFFFF", "mm", 6,
         )
 
         # Insert local state

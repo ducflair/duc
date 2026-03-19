@@ -249,18 +249,6 @@ pub enum IMAGE_STATUS {
     ERROR = 12,
 }
 
-#[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
-#[repr(i32)]
-pub enum PRUNING_LEVEL {
-    /** Conservative pruning, retains more history. */
-    CONSERVATIVE = 10,
-    /** Balanced pruning, optimizes between history and size. */
-    BALANCED = 20,
-    /** Aggressive pruning, retains less history for smaller size. */
-    AGGRESSIVE = 30,
-}
-
 /**
  * Defines the types of boolean operations that can be performed.
  */
@@ -1326,8 +1314,6 @@ pub struct DucGlobalState {
      * This value defines a +/- tolerance range around the exponent of the current scope.
      */
     pub scope_exponent_threshold: i8,
-    /** The level of pruning to the versions from the version graph. */
-    pub pruning_level: PRUNING_LEVEL,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -1464,7 +1450,6 @@ pub struct VersionGraphMetadata {
     pub current_schema_version: i32,
     #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub chain_count: i32,
-    pub last_pruned: i64,
     pub total_size: i64,
 }
 
@@ -1485,11 +1470,11 @@ pub struct VersionGraph {
 
 // =============== EXTERNAL FILES ===============
 
-/// Snapshot of an external file at a given point in time.
+/// Revision metadata without the heavy data blob.
+/// Used inside `DucExternalFile.revisions` so the file record stays lightweight.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ExternalFileRevision {
-    // Revision number as string, functions as an incremental serial id
+pub struct ExternalFileRevisionMeta {
     pub id: String,
     pub size_bytes: i64,
     /// Content hash for integrity checks and optional deduplication.
@@ -1503,11 +1488,8 @@ pub struct ExternalFileRevision {
     pub created: i64,
     /// Epoch ms when this revision was last loaded onto the scene.
     pub last_retrieved: Option<i64>,
-
-    /// The actual file content bytes
-    #[serde(with = "serde_bytes")]
-    pub data: Vec<u8>,
 }
+
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DucExternalFile {
@@ -1515,9 +1497,19 @@ pub struct DucExternalFile {
     pub active_revision_id: String,
     /// Epoch ms when the logical file was last mutated (revision added or active changed).
     pub updated: i64,
-    // All revisions of this file, keyed by their `id`.
-    pub revisions: HashMap<String, ExternalFileRevision>,
+    /// All revisions of this file (metadata only, no data blobs).
+    pub revisions: HashMap<String, ExternalFileRevisionMeta>,
     pub version: Option<i32>,
+}
+
+/// Result of on-demand file loading — includes both metadata and data blobs.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExternalFileLoaded {
+    #[serde(flatten)]
+    pub file: DucExternalFile,
+    /// Revision data blobs keyed by revision id.
+    pub data: HashMap<String, serde_bytes::ByteBuf>,
 }
 
 /// Lightweight summary of an external file used for lazy/metadata-only access
@@ -1564,4 +1556,8 @@ pub struct ExportedDataState {
     pub version_graph: Option<VersionGraph>,
     #[serde(rename = "files")]
     pub external_files: Option<HashMap<String, DucExternalFile>>,
+    /// Binary data blobs for external file revisions, keyed by revision id.
+    /// Separated from `external_files` so metadata can travel without heavy blobs.
+    #[serde(rename = "filesData", default, skip_serializing_if = "Option::is_none")]
+    pub external_files_data: Option<HashMap<String, serde_bytes::ByteBuf>>,
 }

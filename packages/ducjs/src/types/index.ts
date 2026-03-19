@@ -3,7 +3,6 @@ export * from "./geometryTypes";
 export * from "./typeChecks";
 export * from "./utility-types";
 
-import { PRUNING_LEVEL } from "../enums";
 import { SupportedMeasures } from "../technical/scopes";
 import {
   DucBindableElement,
@@ -58,7 +57,10 @@ export interface ExportedDataState {
   groups: readonly DucGroup[];
   regions: readonly DucRegion[];
   layers: readonly DucLayer[];
+  
   files: DucExternalFiles | undefined;
+  /** Revision data blobs keyed by revision id. Separated from metadata for lazy loading. */
+  filesData: ExternalFilesData | undefined;
 
   /** In case it is needed to embed the version control into the file format */
   versionGraph: VersionGraph | undefined;
@@ -89,42 +91,10 @@ export type Dictionary = {
   [key: string]: string;
 };
 
-export type DucView = {
-  scrollX: PrecisionValue;
-  scrollY: PrecisionValue;
-  zoom: Zoom;
-  twistAngle: Radian;
-
-  /** The specific spot on that plane that you want to be in the middle of your screen when this view is active */
-  centerPoint: DucPoint;
-
-  scope: Scope;
-};
-
-/**
- * Defines a 2D User Coordinate System (UCS), a movable coordinate system
- * that establishes a local origin and rotation for drawing. All coordinates
- * within this UCS are relative to its origin and angle.
- */
-export type DucUcs = {
-  /**
-   * The origin point of the UCS in World Coordinate System (WCS) coordinates.
-   * This defines the (0,0) point of the new local system.
-   */
-  origin: GeometricPoint;
-
-  /**
-   * The rotation angle of the UCS's X-axis, measured in radians,
-   * relative to the World Coordinate System's X-axis.
-   * An angle of 0 means the UCS is aligned with the WCS.
-   */
-  angle: Radian;
-};
-
 export type Scope = SupportedMeasures;
 
 
-export type ExternalFileRevision = {
+export type ExternalFileRevisionMeta = {
   id: string;
   sizeBytes: number;
   /** Content hash for integrity checks and optional deduplication. */
@@ -141,8 +111,15 @@ export type ExternalFileRevision = {
    * the scene. Used to determine whether to delete unused files from storage.
    */
   lastRetrieved?: number;
-  /** The actual file content bytes. */
+};
+
+/**
+ * Minimal resolved file data for rendering — just the bytes and their MIME type.
+ * Used by renderers and export pipelines that need active revision data.
+ */
+export type ResolvedFileData = {
   data: Uint8Array;
+  mimeType: string;
 };
 
 export type DucExternalFile = {
@@ -150,12 +127,20 @@ export type DucExternalFile = {
   activeRevisionId: string;
   /** Epoch ms when the logical file was last mutated (revision added or active changed). */
   updated: number;
-  /** All revisions of this file, keyed by their id. */
-  revisions: Record<string, ExternalFileRevision>;
+  /** All revisions of this file, keyed by their id (metadata only, no data blobs). */
+  revisions: Record<string, ExternalFileRevisionMeta>;
   version?: number;
 };
 
 export type DucExternalFiles = Record<ExternalFileId, DucExternalFile>;
+
+/** Revision data blobs keyed by revision id. */
+export type ExternalFilesData = Record<string, Uint8Array>;
+
+/** A fully-loaded external file including its revision data blobs. */
+export type ExternalFileLoaded = DucExternalFile & {
+  data: Record<string, Uint8Array>;
+};
 
 export type SuggestedBinding =
   | NonDeleted<DucBindableElement>
@@ -215,8 +200,6 @@ export type DucGlobalState = {
    */
   scopeExponentThreshold: number;
 
-  /** The level of pruning to the versions from the version graph. */
-  pruningLevel: PruningLevel;
 };
 
 export type DucLocalState = {
@@ -379,8 +362,6 @@ export type PendingDucElements = DucElement[];
 
 //// VERSION CONTROL
 export type VersionId = string;
-export type PruningLevel = ValueOf<typeof PRUNING_LEVEL>;
-
 export interface VersionBase {
   id: VersionId;
   parentId: VersionId | null;
@@ -431,7 +412,6 @@ export interface VersionGraphMetadata {
   currentVersion: number;
   currentSchemaVersion: number;
   chainCount: number;
-  lastPruned: number;
   totalSize: number;
 }
 
