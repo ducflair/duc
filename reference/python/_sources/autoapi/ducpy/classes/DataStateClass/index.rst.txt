@@ -56,12 +56,6 @@ Module Contents
       :type:  Optional[str]
 
 
-   .. py:attribute:: pruning_level
-      :type:  Optional[ducpy.enums.PRUNING_LEVEL]
-      :value: None
-
-
-
 .. py:class:: DucLocalState
 
    .. py:attribute:: scope
@@ -336,10 +330,6 @@ Module Contents
       :type:  int
 
 
-   .. py:attribute:: last_pruned
-      :type:  int
-
-
    .. py:attribute:: total_size
       :type:  int
 
@@ -400,10 +390,6 @@ Module Contents
 
    .. py:attribute:: created
       :type:  int
-
-
-   .. py:attribute:: data
-      :type:  bytes
 
 
    .. py:attribute:: checksum
@@ -518,6 +504,12 @@ Module Contents
 
    .. py:attribute:: files
       :type:  Optional[Dict[str, DucExternalFile]]
+
+
+   .. py:attribute:: files_data
+      :type:  Optional[Dict[str, bytes]]
+      :value: None
+
 
 
    .. py:attribute:: id

@@ -75,9 +75,13 @@ Module Contents
    Convert an element (or ElementWrapper) to the camelCase dict Rust expects.
 
 
-.. py:function:: _convert_external_files(entries: Optional[Any]) -> Optional[Dict[str, Any]]
+.. py:function:: _convert_external_files(entries: Optional[Any]) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, bytes]]]
 
    Convert DucExternalFile dict (or legacy list) to camelCase dicts for serialization.
+
+   Returns ``(files_meta, files_data)`` where *files_meta* contains revision
+   metadata (no blobs) and *files_data* maps revision-id → raw bytes for the
+   separate ``filesData`` key expected by the Rust serializer.
 
 
 .. py:function:: _convert_dict_entries(entries: Optional[list]) -> Optional[Dict[str, str]]

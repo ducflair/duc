@@ -29,7 +29,6 @@ Classes
    ducpy.enums.ELEMENT_CONTENT_PREFERENCE
    ducpy.enums.HATCH_STYLE
    ducpy.enums.IMAGE_STATUS
-   ducpy.enums.PRUNING_LEVEL
    ducpy.enums.BOOLEAN_OPERATION
 
 
@@ -498,31 +497,6 @@ Module Contents
 
    .. py:attribute:: ERROR
       :value: 12
-
-
-
-.. py:class:: PRUNING_LEVEL
-
-   Bases: :py:obj:`enum.IntEnum`
-
-
-   Enum where members are also (and must be) ints
-
-   Initialize self.  See help(type(self)) for accurate signature.
-
-
-   .. py:attribute:: CONSERVATIVE
-      :value: 10
-
-
-
-   .. py:attribute:: BALANCED
-      :value: 20
-
-
-
-   .. py:attribute:: AGGRESSIVE
-      :value: 30
 
 
 
