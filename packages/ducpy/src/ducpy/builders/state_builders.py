@@ -17,7 +17,7 @@ from ..classes.ElementsClass import (DucBlock, DucBlockMetadata, DucGroup,
                                      DucLayer, DucLayerOverrides, DucRegion,
                                      DucStackBase, DucStackLikeStyles,
                                      ElementWrapper, StringValueEntry)
-from ..enums import BOOLEAN_OPERATION, PRUNING_LEVEL, TEXT_ALIGN
+from ..enums import BOOLEAN_OPERATION, TEXT_ALIGN
 
 
 @dataclass
@@ -110,10 +110,6 @@ class GlobalStateBuilder(StateSpecificBuilder):
 
     def with_scope_exponent_threshold(self, threshold: int):
         self.extra["scope_exponent_threshold"] = threshold
-        return self
-
-    def with_pruning_level(self, level: PRUNING_LEVEL):
-        self.extra["pruning_level"] = level
         return self
 
     def build(self) -> DucGlobalState:
@@ -437,7 +433,6 @@ def create_global_state_from_base(base: BaseStateParams, **kwargs) -> DucGlobalS
         view_background_color=kwargs.get('view_background_color', "#FFFFFF"),
         main_scope=kwargs.get('main_scope', "mm"),
         scope_exponent_threshold=kwargs.get('scope_exponent_threshold', 6),
-        pruning_level=kwargs.get('pruning_level', None),
     )
 
 
@@ -564,7 +559,6 @@ def create_version_graph_from_base(base: BaseStateParams, **kwargs) -> VersionGr
         current_version=0,
         current_schema_version=0,
         chain_count=0,
-        last_pruned=int(time.time() * 1000),
         total_size=0,
     )
     return VersionGraph(
@@ -615,15 +609,18 @@ def create_external_file_from_base(base: BaseStateParams, **kwargs) -> DucExtern
         size_bytes=len(data),
         mime_type=kwargs.get('mime_type', ""),
         created=created,
-        data=data,
         last_retrieved=kwargs.get('last_retrieved')
     )
-    return DucExternalFile(
+    ef = DucExternalFile(
         id=file_id,
         active_revision_id=rev_id,
         updated=created,
         revisions={rev_id: revision}
     )
+    # Carry binary blobs alongside the metadata so the serializer
+    # can split them into the separate `filesData` map.
+    ef._data_blobs = {rev_id: data} if data else {}  # type: ignore[attr-defined]
+    return ef
 
 
 def create_stack_base_from_base(base: BaseStateParams, **kwargs) -> DucStackBase:

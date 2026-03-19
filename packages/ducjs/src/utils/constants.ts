@@ -27,7 +27,6 @@ export const TEXT_TO_CENTER_SNAP_THRESHOLD = 30;
 export const SHIFT_LOCKING_ANGLE = Math.PI / 12;
 
 export const DEFAULT_GRID_SIZE = 1;
-export const DEFAULT_GRID_STEP = 20;
 
 export const SVG_NS = "http://www.w3.org/2000/svg";
 

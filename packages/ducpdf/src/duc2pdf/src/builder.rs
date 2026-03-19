@@ -470,6 +470,7 @@ impl DucToPdfBuilder {
     fn process_external_files(&mut self) -> ConversionResult<()> {
         if let Some(external_files) = &self.context.exported_data.external_files {
             let external_files_clone = external_files.clone();
+            let files_data = self.context.exported_data.external_files_data.clone();
             for (file_key, mut file) in external_files_clone {
                 if file.id != file_key {
                     file.id = file_key.clone();
@@ -479,28 +480,27 @@ impl DucToPdfBuilder {
                     Some(rev) => rev.mime_type.clone(),
                     None => continue,
                 };
+
+                let rev_data = files_data
+                    .as_ref()
+                    .and_then(|d| d.get(&file.active_revision_id))
+                    .map(|b| b.as_ref());
+
                 match mime_type.to_lowercase().as_str() {
                     "image/svg+xml" | "application/svg+xml" => {
-                        // Handle SVG files using svg_to_pdf utility
-                        self.process_svg_file(&file)?;
-                        // SVG files are stored as embedded_pdfs since they're converted to PDF
-                        // (already stored in process_svg_file, no need to duplicate here)
+                        self.process_svg_file(&file, rev_data)?;
                     }
                     "image/png" | "image/jpeg" | "image/jpg" | "image/gif" | "image/webp" => {
-                        // Handle image files using hipdf::images
-                        let _object_id = self.process_image_file(&file)?;
-                        // Note: image ID and element streamer registration happens in process_image_file
+                        let _object_id = self.process_image_file(&file, rev_data)?;
                     }
                     "application/pdf" => {
-                        // Handle embedded PDF files
-                        let object_id = self.process_pdf_file(&file)?;
+                        let object_id = self.process_pdf_file(&file, rev_data)?;
                         self.context
                             .resource_cache
                             .embedded_pdfs
                             .insert(file.id.clone(), object_id);
                     }
                     "font/ttf" | "font/otf" | "font/woff" | "font/woff2" => {
-                        // Handle font files
                         let object_id = self.process_font_file(&file)?;
                         self.context
                             .resource_cache
@@ -508,7 +508,6 @@ impl DucToPdfBuilder {
                             .insert(file.id.clone(), object_id);
                     }
                     _ => {
-                        // Skip unknown file types
                         log_warn!("Unsupported file type: {}", mime_type);
                     }
                 }
@@ -518,11 +517,13 @@ impl DucToPdfBuilder {
     }
 
     /// Process SVG file and convert to PDF for later embedding
-    fn process_svg_file(&mut self, file: &DucExternalFile) -> ConversionResult<u32> {
+    fn process_svg_file(&mut self, file: &DucExternalFile, rev_data: Option<&[u8]>) -> ConversionResult<u32> {
         let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
             ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
         })?;
-        let svg_data = &revision.data;
+        let svg_data = rev_data.ok_or_else(|| {
+            ConversionError::ResourceLoadError(format!("No data blob for revision {}", file.active_revision_id))
+        })?;
 
         // Convert SVG to PDF using the utility and get dimensions
         let (pdf_bytes, svg_width, svg_height) = svg_to_pdf_with_dimensions(svg_data).map_err(|e| {
@@ -584,16 +585,18 @@ impl DucToPdfBuilder {
     }
 
     /// Process image file using hipdf::images for quality preservation
-    fn process_image_file(&mut self, file: &DucExternalFile) -> ConversionResult<u32> {
+    fn process_image_file(&mut self, file: &DucExternalFile, rev_data: Option<&[u8]>) -> ConversionResult<u32> {
         let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
             ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
         })?;
-        let image_data = &revision.data;
+        let image_data = rev_data.ok_or_else(|| {
+            ConversionError::ResourceLoadError(format!("No data blob for revision {}", file.active_revision_id))
+        })?;
         let mime_type = &revision.mime_type;
 
         // Create image directly from bytes (WASM-compatible)
         let image =
-            Image::from_bytes(image_data.clone(), Some(file.id.clone())).map_err(|e| {
+            Image::from_bytes(image_data.to_vec(), Some(file.id.clone())).map_err(|e| {
                 ConversionError::ResourceLoadError(format!("Failed to load image: {}", e))
             })?;
 
@@ -638,11 +641,13 @@ impl DucToPdfBuilder {
     }
 
     /// Process PDF file for embedding
-    fn process_pdf_file(&mut self, file: &DucExternalFile) -> ConversionResult<u32> {
+    fn process_pdf_file(&mut self, file: &DucExternalFile, rev_data: Option<&[u8]>) -> ConversionResult<u32> {
         let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
             ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
         })?;
-        let pdf_data = &revision.data;
+        let pdf_data = rev_data.ok_or_else(|| {
+            ConversionError::ResourceLoadError(format!("No data blob for revision {}", file.active_revision_id))
+        })?;
         let mime_type = &revision.mime_type;
         let embed_id = format!("pdf_{}", file.id);
 
