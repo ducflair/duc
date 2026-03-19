@@ -8,7 +8,7 @@ import logging
 import re
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import ducpy_native
 from ducpy.utils.convert import (deep_snake_to_camel, snake_to_camel,
@@ -115,21 +115,37 @@ def _element_to_camel(wrapper_or_element: Any) -> dict:
 
 def _convert_external_files(
     entries: Optional[Any],
-) -> Optional[Dict[str, Any]]:
-    """Convert DucExternalFile dict (or legacy list) to camelCase dicts for serialization."""
+) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, bytes]]]:
+    """Convert DucExternalFile dict (or legacy list) to camelCase dicts for serialization.
+
+    Returns ``(files_meta, files_data)`` where *files_meta* contains revision
+    metadata (no blobs) and *files_data* maps revision-id → raw bytes for the
+    separate ``filesData`` key expected by the Rust serializer.
+    """
     if not entries:
-        return None
+        return None, None
+
+    data_blobs: Dict[str, bytes] = {}
+
+    def _extract_blobs(entry: Any) -> None:
+        blobs = getattr(entry, "_data_blobs", None)
+        if blobs:
+            data_blobs.update(blobs)
+
     # New format: already a dict mapping id → DucExternalFile
     if isinstance(entries, dict):
         result: dict = {}
         for key, value in entries.items():
+            _extract_blobs(value)
             if is_dataclass(value):
                 value = asdict(value)
             result[key] = deep_snake_to_camel(value) if isinstance(value, dict) else value
-        return result if result else None
+        return (result if result else None), (data_blobs if data_blobs else None)
+
     # Legacy list format: list of DucExternalFileEntry { key, value }
     result = {}
     for entry in entries:
+        _extract_blobs(entry)
         if is_dataclass(entry):
             entry = asdict(entry)
         if isinstance(entry, dict):
@@ -138,7 +154,7 @@ def _convert_external_files(
             if is_dataclass(value):
                 value = asdict(value)
             result[key] = deep_snake_to_camel(value) if isinstance(value, dict) else value
-    return result if result else None
+    return (result if result else None), (data_blobs if data_blobs else None)
 
 
 def _convert_dict_entries(
@@ -187,6 +203,8 @@ def serialize_duc(
     """
     thumb = bytes(thumbnail) if thumbnail is not None else None
 
+    files_meta, files_data = _convert_external_files(external_files)
+
     data: Dict[str, Any] = {
         "type": "duc",
         "version": DUC_SCHEMA_VERSION,
@@ -203,7 +221,8 @@ def serialize_duc(
         "localState": to_serializable(duc_local_state),
         "globalState": to_serializable(duc_global_state),
         "versionGraph": to_serializable(version_graph),
-        "files": _convert_external_files(external_files),
+        "files": files_meta,
+        "filesData": files_data,
     }
 
     return ducpy_native.serialize_duc(data)

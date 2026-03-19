@@ -68,7 +68,7 @@ pub fn serialize(state: &ExportedDataState) -> SerializeResult<Vec<u8>> {
         write_stack_and_containers(&tx, state)?;
         write_blocks(&tx, state)?;
         write_elements(&tx, state)?;
-        write_external_files(&tx, &state.external_files)?;
+        write_external_files(&tx, &state.external_files, &state.external_files_data)?;
         write_version_graph(&tx, &state.version_graph)?;
         tx.commit()?;
 
@@ -149,14 +149,13 @@ fn write_global_state(tx: &Transaction, gs: &Option<DucGlobalState>) -> Serializ
     let Some(gs) = gs else { return Ok(()) };
     tx.execute(
         "INSERT OR REPLACE INTO duc_global_state
-            (id, name, view_background_color, main_scope, scope_exponent_threshold, pruning_level)
-         VALUES (1, ?1, ?2, ?3, ?4, ?5)",
+            (id, name, view_background_color, main_scope, scope_exponent_threshold)
+         VALUES (1, ?1, ?2, ?3, ?4)",
         params![
             gs.name,
             gs.view_background_color,
             gs.main_scope,
             gs.scope_exponent_threshold,
-            gs.pruning_level as i32,
         ],
     )?;
     Ok(())
@@ -1124,6 +1123,7 @@ fn write_hatch_pattern_lines(
 fn write_external_files(
     tx: &Transaction,
     files: &Option<std::collections::HashMap<String, DucExternalFile>>,
+    files_data: &Option<std::collections::HashMap<String, serde_bytes::ByteBuf>>,
 ) -> SerializeResult<()> {
     let Some(files) = files else { return Ok(()) };
     let mut file_stmt = tx.prepare_cached(
@@ -1132,8 +1132,12 @@ fn write_external_files(
     )?;
     let mut rev_stmt = tx.prepare_cached(
         "INSERT OR REPLACE INTO external_file_revisions
-            (id, file_id, size_bytes, checksum, source_name, mime_type, message, created, last_retrieved, data)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
+            (id, file_id, size_bytes, checksum, source_name, mime_type, message, created, last_retrieved)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"
+    )?;
+    let mut data_stmt = tx.prepare_cached(
+        "INSERT OR REPLACE INTO external_file_revision_data (revision_id, data)
+         VALUES (?1, ?2)"
     )?;
     for (_key, file) in files {
         file_stmt.execute(params![
@@ -1153,8 +1157,13 @@ fn write_external_files(
                 rev.message,
                 rev.created,
                 rev.last_retrieved,
-                rev.data,
             ])?;
+        }
+    }
+    // Write data blobs from the separate filesData map
+    if let Some(data_map) = files_data {
+        for (rev_id, blob) in data_map {
+            data_stmt.execute(params![rev_id, blob.as_ref()])?;
         }
     }
     Ok(())
@@ -1172,8 +1181,7 @@ fn write_version_graph(tx: &Transaction, vg: &Option<VersionGraph>) -> Serialize
             user_checkpoint_version_id = ?3,
             latest_version_id = ?4,
             chain_count = ?5,
-            last_pruned = ?6,
-            total_size = ?7
+            total_size = ?6
          WHERE id = 1",
         params![
             vg.metadata.current_version,
@@ -1181,7 +1189,6 @@ fn write_version_graph(tx: &Transaction, vg: &Option<VersionGraph>) -> Serialize
             vg.user_checkpoint_version_id,
             vg.latest_version_id,
             vg.metadata.chain_count,
-            vg.metadata.last_pruned,
             vg.metadata.total_size,
         ],
     )?;

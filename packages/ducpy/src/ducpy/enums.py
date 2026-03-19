@@ -112,12 +112,6 @@ class IMAGE_STATUS(IntEnum):
     ERROR = 12
 
 
-class PRUNING_LEVEL(IntEnum):
-    CONSERVATIVE = 10
-    BALANCED = 20
-    AGGRESSIVE = 30
-
-
 class BOOLEAN_OPERATION(IntEnum):
     UNION = 10
     SUBTRACT = 11

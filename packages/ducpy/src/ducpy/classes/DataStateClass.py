@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-from ducpy.enums import PRUNING_LEVEL, TEXT_ALIGN
+from ducpy.enums import TEXT_ALIGN
 
 if TYPE_CHECKING:
     from ducpy.classes.ElementsClass import ElementWrapper
@@ -24,7 +24,6 @@ class DucGlobalState:
     main_scope: str
     scope_exponent_threshold: int
     name: Optional[str]
-    pruning_level: Optional[PRUNING_LEVEL] = None
 
 @dataclass
 class DucLocalState:
@@ -100,7 +99,6 @@ class VersionGraphMetadata:
     current_version: int
     current_schema_version: int
     chain_count: int
-    last_pruned: int
     total_size: int
 
 @dataclass
@@ -123,7 +121,6 @@ class ExternalFileRevision:
     size_bytes: int
     mime_type: str
     created: int
-    data: bytes
     checksum: Optional[str] = None
     source_name: Optional[str] = None
     message: Optional[str] = None
@@ -155,4 +152,5 @@ class ExportedDataState:
     duc_global_state: Optional[DucGlobalState]
     version_graph: Optional[VersionGraph]
     files: Optional[Dict[str, DucExternalFile]]
+    files_data: Optional[Dict[str, bytes]] = None
     id: Optional[str] = None

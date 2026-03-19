@@ -87,9 +87,13 @@ def test_image_with_external_file_via_sql(test_assets_dir, test_output_dir):
             "img_001", "img_001_rev1", now,
         )
         db.sql(
-            "INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved, data) "
-            "VALUES (?,?,?,?,?,?,?)",
-            "img_001_rev1", "img_001", len(image_bytes), "image/png", now, now, image_bytes,
+            "INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved) "
+            "VALUES (?,?,?,?,?,?)",
+            "img_001_rev1", "img_001", len(image_bytes), "image/png", now, now,
+        )
+        db.sql(
+            "INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)",
+            "img_001_rev1", image_bytes,
         )
 
         # Insert image element referencing the file
@@ -104,10 +108,12 @@ def test_image_with_external_file_via_sql(test_assets_dir, test_output_dir):
             "img_el", "img_001", 11, 1.0, 1.0,  # IMAGE_STATUS.SAVED=11
         )
 
-        # Verify external file was stored
+        # Verify external file was stored (data lives in external_file_revision_data)
         ef = db.sql(
-            "SELECT ef.id, efr.mime_type, LENGTH(efr.data) AS sz "
-            "FROM external_files ef JOIN external_file_revisions efr ON efr.id = ef.active_revision_id"
+            "SELECT ef.id, efr.mime_type, LENGTH(efrd.data) AS sz "
+            "FROM external_files ef "
+            "JOIN external_file_revisions efr ON efr.id = ef.active_revision_id "
+            "JOIN external_file_revision_data efrd ON efrd.revision_id = efr.id"
         )[0]
         assert ef["id"] == "img_001"
         assert ef["mime_type"] == "image/png"
@@ -128,8 +134,9 @@ def test_image_with_external_file_via_sql(test_assets_dir, test_output_dir):
     # Roundtrip: re-open and verify the binary data survived
     with DucSQL(output_file) as db2:
         stored = db2.sql(
-            "SELECT efr.data FROM external_files ef "
+            "SELECT efrd.data FROM external_files ef "
             "JOIN external_file_revisions efr ON efr.id = ef.active_revision_id "
+            "JOIN external_file_revision_data efrd ON efrd.revision_id = efr.id "
             "WHERE ef.id = ?",
             "img_001",
         )[0]

@@ -313,7 +313,7 @@ impl<'a> VersionControl<'a> {
         self.conn.with(|c| {
             c.query_row(
                 "SELECT current_version, current_schema_version, chain_count,
-                        last_pruned, total_size
+                        total_size
                  FROM version_graph WHERE id = 1",
                 [],
                 |row| {
@@ -321,8 +321,7 @@ impl<'a> VersionControl<'a> {
                         current_version: row.get(0)?,
                         current_schema_version: row.get(1)?,
                         chain_count: row.get(2)?,
-                        last_pruned: row.get::<_, Option<i64>>(3)?.unwrap_or(0),
-                        total_size: row.get::<_, Option<i64>>(4)?.unwrap_or(0),
+                        total_size: row.get::<_, Option<i64>>(3)?.unwrap_or(0),
                     })
                 },
             )
@@ -462,93 +461,6 @@ impl<'a> VersionControl<'a> {
             )
             .map(|_| ())
             .map_err(DbError::from)
-        })
-    }
-
-    // ────────────────────────────────────────────────────────────────────────
-    // WRITE — Pruning
-    // ────────────────────────────────────────────────────────────────────────
-
-    /// Prune old deltas that precede the given `keep_after_version`.
-    /// Checkpoints are never pruned (they are self-contained recovery points).
-    /// Returns the number of deltas removed.
-    pub fn prune_deltas_before(&self, keep_after_version: i64) -> DbResult<usize> {
-        self.conn.with(|c| {
-            let removed = c
-                .execute(
-                    "DELETE FROM deltas WHERE version_number < ?1",
-                    [keep_after_version],
-                )
-                .map_err(DbError::from)?;
-
-            // Update last_pruned timestamp
-            let now_ms = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_millis() as i64;
-
-            c.execute(
-                "UPDATE version_graph SET last_pruned = ?1 WHERE id = 1",
-                [now_ms],
-            )
-            .map_err(DbError::from)?;
-
-            // Recalculate total_size
-            self.recalculate_total_size(c)?;
-
-            Ok(removed)
-        })
-    }
-
-    /// Remove ALL versions (checkpoints + deltas) that are strictly older than
-    /// `keep_after_version`, except the most recent checkpoint before that
-    /// boundary (needed as a recovery base).
-    pub fn prune_before(&self, keep_after_version: i64) -> DbResult<usize> {
-        self.conn.with(|c| {
-            // Find the latest checkpoint at or before the boundary — keep it
-            let safe_cp_version: Option<i64> = c
-                .query_row(
-                    "SELECT MAX(version_number) FROM checkpoints
-                     WHERE version_number <= ?1",
-                    [keep_after_version],
-                    |row| row.get(0),
-                )
-                .optional()
-                .map_err(DbError::from)?
-                .flatten();
-
-            let safe_version = safe_cp_version.unwrap_or(0);
-
-            // Delete deltas before the safe checkpoint
-            let del_deltas = c
-                .execute(
-                    "DELETE FROM deltas WHERE version_number < ?1",
-                    [safe_version],
-                )
-                .map_err(DbError::from)?;
-
-            // Delete checkpoints before the safe checkpoint (keep the safe one)
-            let del_cps = c
-                .execute(
-                    "DELETE FROM checkpoints WHERE version_number < ?1",
-                    [safe_version],
-                )
-                .map_err(DbError::from)?;
-
-            let now_ms = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_millis() as i64;
-
-            c.execute(
-                "UPDATE version_graph SET last_pruned = ?1 WHERE id = 1",
-                [now_ms],
-            )
-            .map_err(DbError::from)?;
-
-            self.recalculate_total_size(c)?;
-
-            Ok(del_deltas + del_cps)
         })
     }
 
@@ -808,7 +720,7 @@ pub(crate) fn read_version_graph_inner(
     let mut vg_stmt = conn
         .prepare(
             "SELECT current_version, current_schema_version, user_checkpoint_version_id,
-                    latest_version_id, chain_count, last_pruned, total_size
+                    latest_version_id, chain_count, total_size
              FROM version_graph WHERE id = 1",
         )
         .map_err(DbError::from)?;
@@ -819,8 +731,7 @@ pub(crate) fn read_version_graph_inner(
                 current_version: row.get(0)?,
                 current_schema_version: row.get(1)?,
                 chain_count: row.get(4)?,
-                last_pruned: row.get::<_, Option<i64>>(5)?.unwrap_or(0),
-                total_size: row.get::<_, Option<i64>>(6)?.unwrap_or(0),
+                total_size: row.get::<_, Option<i64>>(5)?.unwrap_or(0),
             },
             row.get::<_, Option<String>>(2)?.unwrap_or_default(),
             row.get::<_, Option<String>>(3)?.unwrap_or_default(),

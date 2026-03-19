@@ -114,6 +114,7 @@ mod tests {
                 .unwrap_or_else(|e| panic!("parse_lazy {} failed: {e}", path.display()));
 
             assert!(lazy.external_files.is_none(), "{}: lazy parse must omit external_files", path.display());
+            assert!(lazy.external_files_data.is_none(), "{}: lazy parse must omit external_files_data", path.display());
             assert_eq!(full.elements.len(), lazy.elements.len(), "{}: element count diverged", path.display());
             assert_eq!(full.layers.len(), lazy.layers.len(), "{}: layer count diverged", path.display());
         }
@@ -194,9 +195,9 @@ mod tests {
                 let file = parse::get_external_file(&buf, &meta.id)
                     .unwrap_or_else(|e| panic!("get_external_file {} id={} failed: {e}", path.display(), meta.id));
                 assert!(file.is_some(), "{}: listed file '{}' not found via get", path.display(), meta.id);
-                let file = file.unwrap();
-                assert_eq!(file.id, meta.id);
-                assert!(!file.revisions.is_empty(), "{}: file '{}' has no revisions", path.display(), meta.id);
+                let loaded = file.unwrap();
+                assert_eq!(loaded.file.id, meta.id);
+                assert!(!loaded.file.revisions.is_empty(), "{}: file '{}' has no revisions", path.display(), meta.id);
             }
         }
     }
