@@ -6,6 +6,49 @@ export interface PdfConversionResult {
   warnings: string[];
 }
 
+/**
+ * Fetch the raw duc2pdf WASM binary as an ArrayBuffer.
+ * Must be called from the main thread where `import.meta.url` resolves correctly.
+ * Used by ExportService to transfer the binary to a Web Worker.
+ */
+export async function getDuc2PdfWasmBinary(): Promise<ArrayBuffer> {
+  const url = new URL('../../dist/duc2pdf_bg.wasm', import.meta.url);
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to fetch duc2pdf WASM: ${resp.status} ${resp.statusText}`);
+  return resp.arrayBuffer();
+}
+
+/**
+ * Initialize the duc2pdf WASM module from a pre-fetched binary (ArrayBuffer).
+ * Used inside Web Workers where `import.meta.url` cannot resolve the .wasm file.
+ */
+export async function initWasmFromBinary(wasmBinary: BufferSource): Promise<void> {
+  if (wasmModule) return;
+  const wasmBindings: any = await import('../wasm');
+  if (typeof wasmBindings.initSync === 'function') {
+    wasmBindings.initSync({ module: wasmBinary });
+  } else {
+    await wasmBindings.default(wasmBinary);
+  }
+
+  const requiredFunctions = [
+    'convert_duc_to_pdf_rs',
+    'convert_duc_to_pdf_with_scale_wasm',
+    'convert_duc_to_pdf_crop_wasm',
+    'convert_duc_to_pdf_crop_scaled_wasm',
+    'convert_duc_to_pdf_with_fonts_rs',
+    'convert_duc_to_pdf_with_fonts_scaled_wasm',
+    'convert_duc_to_pdf_crop_with_fonts_wasm',
+    'convert_duc_to_pdf_crop_with_fonts_scaled_wasm',
+  ];
+  for (const fnName of requiredFunctions) {
+    if (typeof wasmBindings[fnName] !== 'function') {
+      throw new Error(`Required WASM function '${fnName}' not found`);
+    }
+  }
+  wasmModule = wasmBindings;
+}
+
 let wasmModule: any = null;
 let wasmInitPromise: Promise<any> | null = null;
 
@@ -35,9 +78,13 @@ async function initWasm(): Promise<any> {
       // Validate that required functions exist on the imported module
       const requiredFunctions = [
         'convert_duc_to_pdf_rs',
+        'convert_duc_to_pdf_with_scale_wasm',
         'convert_duc_to_pdf_crop_wasm',
+        'convert_duc_to_pdf_crop_scaled_wasm',
         'convert_duc_to_pdf_with_fonts_rs',
-        'convert_duc_to_pdf_crop_with_fonts_wasm'
+        'convert_duc_to_pdf_with_fonts_scaled_wasm',
+        'convert_duc_to_pdf_crop_with_fonts_wasm',
+        'convert_duc_to_pdf_crop_with_fonts_scaled_wasm',
       ];
 
       for (const fnName of requiredFunctions) {
@@ -238,34 +285,60 @@ export async function convertDucToPdf(
       const backgroundColor = options.backgroundColor ? options.backgroundColor.trim() : viewBackgroundColor;
       const widthOption = typeof options.width === 'number' ? options.width : undefined;
       const heightOption = typeof options.height === 'number' ? options.height : undefined;
+      const scaleOption = typeof options.scale === 'number' ? options.scale : undefined;
       const backgroundOption = backgroundColor === undefined ? undefined : backgroundColor;
 
       if (hasFonts) {
-        result = wasm.convert_duc_to_pdf_crop_with_fonts_wasm(
-          ducBytes,
-          offsetX,
-          offsetY,
-          widthOption,
-          heightOption,
-          backgroundOption,
-          fontMap
-        );
+        result = scaleOption !== undefined
+          ? wasm.convert_duc_to_pdf_crop_with_fonts_scaled_wasm(
+              ducBytes,
+              offsetX,
+              offsetY,
+              widthOption,
+              heightOption,
+              backgroundOption,
+              scaleOption,
+              fontMap
+            )
+          : wasm.convert_duc_to_pdf_crop_with_fonts_wasm(
+              ducBytes,
+              offsetX,
+              offsetY,
+              widthOption,
+              heightOption,
+              backgroundOption,
+              fontMap
+            );
       } else {
-        result = wasm.convert_duc_to_pdf_crop_wasm(
-          ducBytes,
-          offsetX,
-          offsetY,
-          widthOption,
-          heightOption,
-          backgroundOption
-        );
+        result = scaleOption !== undefined
+          ? wasm.convert_duc_to_pdf_crop_scaled_wasm(
+              ducBytes,
+              offsetX,
+              offsetY,
+              widthOption,
+              heightOption,
+              backgroundOption,
+              scaleOption
+            )
+          : wasm.convert_duc_to_pdf_crop_wasm(
+              ducBytes,
+              offsetX,
+              offsetY,
+              widthOption,
+              heightOption,
+              backgroundOption
+            );
       }
     } else {
       // Standard conversion
       if (hasFonts) {
-        result = wasm.convert_duc_to_pdf_with_fonts_rs(ducBytes, fontMap);
+        result = options?.scale !== undefined
+          ? wasm.convert_duc_to_pdf_with_fonts_scaled_wasm(ducBytes, options.scale, fontMap)
+          : wasm.convert_duc_to_pdf_with_fonts_rs(ducBytes, fontMap);
       } else {
-        result = wasm.convert_duc_to_pdf_rs(ducBytes);
+        result = options?.scale !== undefined
+          ? wasm.convert_duc_to_pdf_with_scale_wasm(ducBytes, options.scale)
+          : wasm.convert_duc_to_pdf_rs(ducBytes);
       }
     }
 
