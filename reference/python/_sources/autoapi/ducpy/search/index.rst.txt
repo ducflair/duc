@@ -1,0 +1,20 @@
+ducpy.search
+============
+
+.. py:module:: ducpy.search
+
+.. autoapi-nested-parse::
+
+   Search helpers for DUC SQLite databases.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/ducpy/search/search_elements/index
+
+

@@ -27,6 +27,7 @@ Submodules
    /autoapi/ducpy/classes/index
    /autoapi/ducpy/enums/index
    /autoapi/ducpy/parse/index
+   /autoapi/ducpy/search/index
    /autoapi/ducpy/serialize/index
    /autoapi/ducpy/utils/index
 
