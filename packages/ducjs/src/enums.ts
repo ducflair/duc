@@ -110,12 +110,6 @@ export enum IMAGE_STATUS {
   ERROR = 12,
 }
 
-export enum PRUNING_LEVEL {
-  CONSERVATIVE = 10,
-  BALANCED = 20,
-  AGGRESSIVE = 30,
-}
-
 export enum BOOLEAN_OPERATION {
   UNION = 10,
   SUBTRACT = 11,

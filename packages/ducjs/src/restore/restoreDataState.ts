@@ -7,7 +7,6 @@ import {
   ELEMENT_CONTENT_PREFERENCE,
   IMAGE_STATUS,
   LINE_HEAD,
-  PRUNING_LEVEL,
   STROKE_CAP,
   STROKE_JOIN,
   STROKE_PLACEMENT,
@@ -29,7 +28,8 @@ import type {
   Dictionary,
   DucExternalFiles,
   DucGlobalState,
-  ExternalFileRevision,
+  ExternalFileRevisionMeta,
+  ExternalFilesData,
   ImportedDataState,
   LibraryItems,
   PrecisionValue,
@@ -107,6 +107,7 @@ export type RestoredDataState = {
   globalState: DucGlobalState;
 
   files: DucExternalFiles;
+  filesData: ExternalFilesData;
 
   blocks: DucBlock[];
   blockInstances: DucBlockInstance[];
@@ -210,6 +211,7 @@ export const restore = (
     localState: restoredLocalState,
     globalState: restoredGlobalState,
     files: restoreFiles(data?.files),
+    filesData: restoreFilesData(data?.filesData, data?.files),
     id: restoredId,
   };
 };
@@ -235,7 +237,7 @@ export const restoreFiles = (importedFiles: unknown): DucExternalFiles => {
       const id = isValidExternalFileId(fd.id);
       if (!id) continue;
 
-      const restoredRevisions: Record<string, ExternalFileRevision> = {};
+      const restoredRevisions: Record<string, ExternalFileRevisionMeta> = {};
       const rawRevisions = fd.revisions as Record<string, unknown>;
       for (const revKey in rawRevisions) {
         if (!Object.prototype.hasOwnProperty.call(rawRevisions, revKey)) continue;
@@ -245,20 +247,17 @@ export const restoreFiles = (importedFiles: unknown): DucExternalFiles => {
 
         const revId = isValidString(r.id);
         const mimeType = isValidString(r.mimeType);
-        const dataSource = r.data ?? (r as any).dataURL;
-        const data = isValidUint8Array(dataSource);
-        if (!revId || !mimeType || !data) continue;
+        if (!revId || !mimeType) continue;
 
         restoredRevisions[revKey] = {
           id: revId,
-          sizeBytes: isFiniteNumber(r.sizeBytes) ? (r.sizeBytes as number) : data.byteLength,
+          sizeBytes: isFiniteNumber(r.sizeBytes) ? (r.sizeBytes as number) : 0,
           checksum: isValidString(r.checksum) || undefined,
           sourceName: isValidString(r.sourceName) || undefined,
           mimeType,
           message: isValidString(r.message) || undefined,
           created: isFiniteNumber(r.created) ? (r.created as number) : Date.now(),
           lastRetrieved: isFiniteNumber(r.lastRetrieved) ? (r.lastRetrieved as number) : undefined,
-          data,
         };
       }
 
@@ -276,16 +275,13 @@ export const restoreFiles = (importedFiles: unknown): DucExternalFiles => {
 
     // Legacy flat format: DucExternalFileData — wrap in a single-revision DucExternalFile.
     let legacyData: Record<string, unknown> = fd;
-    // Handle the nested { key, value: { ... } } structure from old Rust serde output.
     if (fd.value && typeof fd.value === "object") {
       legacyData = fd.value as Record<string, unknown>;
     }
 
     const id = isValidExternalFileId(legacyData.id);
     const mimeType = isValidString(legacyData.mimeType);
-    const dataSource = legacyData.data ?? (legacyData as any).dataURL;
-    const data = isValidUint8Array(dataSource);
-    if (!id || !mimeType || !data) continue;
+    if (!id || !mimeType) continue;
 
     const revId = `${id}_rev1`;
     const created = isFiniteNumber(legacyData.created) ? (legacyData.created as number) : Date.now();
@@ -298,18 +294,84 @@ export const restoreFiles = (importedFiles: unknown): DucExternalFiles => {
       revisions: {
         [revId]: {
           id: revId,
-          sizeBytes: data.byteLength,
+          sizeBytes: 0,
           mimeType,
           created,
           lastRetrieved: isFiniteNumber(legacyData.lastRetrieved)
             ? (legacyData.lastRetrieved as number)
             : undefined,
-          data,
         },
       },
     };
   }
   return restoredFiles;
+};
+
+/**
+ * Restore external file data blobs from the split `filesData` field.
+ * Also extracts data from legacy inline `revisions[].data` when present.
+ */
+export const restoreFilesData = (
+  importedFilesData: unknown,
+  importedFiles: unknown,
+): ExternalFilesData => {
+  const result: ExternalFilesData = {};
+
+  // 1. Restore from the explicit filesData field (new format)
+  if (importedFilesData && typeof importedFilesData === "object") {
+    const fd = importedFilesData as Record<string, unknown>;
+    for (const revId in fd) {
+      if (!Object.prototype.hasOwnProperty.call(fd, revId)) continue;
+      const data = isValidUint8Array(fd[revId]);
+      if (data) {
+        result[revId] = data;
+      }
+    }
+  }
+
+  // 2. Extract data from legacy inline revisions (backward compatibility)
+  if (importedFiles && typeof importedFiles === "object") {
+    const files = importedFiles as Record<string, unknown>;
+    for (const key in files) {
+      if (!Object.prototype.hasOwnProperty.call(files, key)) continue;
+      const fileData = files[key];
+      if (!fileData || typeof fileData !== "object") continue;
+      const fd = fileData as Record<string, unknown>;
+
+      if (fd.revisions && typeof fd.revisions === "object") {
+        const rawRevisions = fd.revisions as Record<string, unknown>;
+        for (const revKey in rawRevisions) {
+          if (!Object.prototype.hasOwnProperty.call(rawRevisions, revKey)) continue;
+          if (result[revKey]) continue; // filesData takes precedence
+          const rev = rawRevisions[revKey];
+          if (!rev || typeof rev !== "object") continue;
+          const r = rev as Record<string, unknown>;
+          const dataSource = r.data ?? (r as any).dataURL;
+          const data = isValidUint8Array(dataSource);
+          if (data) {
+            result[revKey] = data;
+          }
+        }
+      } else {
+        // Legacy flat format
+        let legacyData: Record<string, unknown> = fd;
+        if (fd.value && typeof fd.value === "object") {
+          legacyData = fd.value as Record<string, unknown>;
+        }
+        const id = isValidExternalFileId(legacyData.id);
+        if (!id) continue;
+        const revId = `${id}_rev1`;
+        if (result[revId]) continue;
+        const dataSource = legacyData.data ?? (legacyData as any).dataURL;
+        const data = isValidUint8Array(dataSource);
+        if (data) {
+          result[revId] = data;
+        }
+      }
+    }
+  }
+
+  return result;
 };
 
 export const restoreDictionary = (importedDictionary: unknown): Dictionary => {
@@ -624,11 +686,6 @@ export const restoreGlobalState = (
       importedState?.scopeExponentThreshold,
       defaults.scopeExponentThreshold
     ),
-    pruningLevel:
-      importedState?.pruningLevel &&
-        Object.values(PRUNING_LEVEL).includes(importedState.pruningLevel)
-        ? importedState.pruningLevel
-        : PRUNING_LEVEL.BALANCED,
   };
 };
 
@@ -788,9 +845,6 @@ export const restoreVersionGraph = (
       isFiniteNumber(importedMetadata?.chainCount) && importedMetadata.chainCount >= 1
         ? importedMetadata.chainCount
         : 1,
-    lastPruned: isFiniteNumber(importedMetadata?.lastPruned)
-      ? importedMetadata.lastPruned
-      : 0,
     totalSize:
       isFiniteNumber(importedMetadata?.totalSize) &&
         importedMetadata.totalSize >= 0

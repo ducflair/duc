@@ -6,7 +6,7 @@ ducpy
    <p align="center">
      <br/>
      <a href="https://duc.ducflair.com" target="_blank">
-       <img width="256px" src="https://raw.githubusercontent.com/ducflair/assets/refs/heads/main/src/duc/duc-extended.png" />
+       <img width="256px" src="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" />
      </a>
      <p align="center">2D CAD File Format</p>
      <p align="center">

@@ -167,9 +167,9 @@ def test_a_duc_with_everything(test_output_dir, test_assets_dir):
 
         # Global + local state
         db.sql(
-            "INSERT INTO duc_global_state (id, name, view_background_color, main_scope, scope_exponent_threshold, pruning_level) "
-            "VALUES (?,?,?,?,?,?)",
-            1, "Everything", "#F0F0F0", "m", 3, 30,
+            "INSERT INTO duc_global_state (id, name, view_background_color, main_scope, scope_exponent_threshold) "
+            "VALUES (?,?,?,?,?)",
+            1, "Everything", "#F0F0F0", "m", 3,
         )
         db.sql(
             "INSERT INTO duc_local_state (id, scope, scroll_x, scroll_y, zoom, is_binding_enabled, pen_mode, view_mode_enabled, objects_snap_mode_enabled, grid_mode_enabled, outline_mode_enabled) "
@@ -195,11 +195,14 @@ def test_a_duc_with_everything(test_output_dir, test_assets_dir):
 
         # External files
         db.sql("INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)", "pdf_file", "pdf_file_rev1", now)
-        db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved, data) VALUES (?,?,?,?,?,?,?)", "pdf_file_rev1", "pdf_file", len(pdf_bytes), "application/pdf", now, now, pdf_bytes)
+        db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved) VALUES (?,?,?,?,?,?)", "pdf_file_rev1", "pdf_file", len(pdf_bytes), "application/pdf", now, now)
+        db.sql("INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)", "pdf_file_rev1", pdf_bytes)
         db.sql("INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)", "step_file", "step_file_rev1", now)
-        db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved, data) VALUES (?,?,?,?,?,?,?)", "step_file_rev1", "step_file", len(step_bytes), "model/step", now, now, step_bytes)
+        db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved) VALUES (?,?,?,?,?,?)", "step_file_rev1", "step_file", len(step_bytes), "model/step", now, now)
+        db.sql("INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)", "step_file_rev1", step_bytes)
         db.sql("INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)", "jpg_file", "jpg_file_rev1", now)
-        db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved, data) VALUES (?,?,?,?,?,?,?)", "jpg_file_rev1", "jpg_file", len(jpg_bytes), "image/jpeg", now, now, jpg_bytes)
+        db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved) VALUES (?,?,?,?,?,?)", "jpg_file_rev1", "jpg_file", len(jpg_bytes), "image/jpeg", now, now)
+        db.sql("INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)", "jpg_file_rev1", jpg_bytes)
 
         # Core elements (broad type coverage in new schema): each family has builder+SQL-created members.
         rect_base = rect_from_builder.element.base
@@ -332,7 +335,8 @@ def test_a_duc_with_everything(test_output_dir, test_assets_dir):
 
         db.sql("INSERT INTO elements (id, element_type, x, y, width, height, label, z_index) VALUES (?,?,?,?,?,?,?,?)", "tbl1", "table", 100, 400, 300, 120, "Table", 9.0)
         db.sql("INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)", "xlsx_tbl", "xlsx_tbl_rev1", now)
-        db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved, data) VALUES (?,?,?,?,?,?,?)", "xlsx_tbl_rev1", "xlsx_tbl", len(b"fake-xlsx"), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", now, now, b"fake-xlsx")
+        db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved) VALUES (?,?,?,?,?,?)", "xlsx_tbl_rev1", "xlsx_tbl", len(b"fake-xlsx"), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", now, now)
+        db.sql("INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)", "xlsx_tbl_rev1", b"fake-xlsx")
         db.sql("INSERT INTO element_table (element_id, file_id) VALUES (?,?)", "tbl1", "xlsx_tbl")
 
         # Blocks: SQL block definition that references both builder- and SQL-originated rectangles.
