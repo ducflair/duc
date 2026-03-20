@@ -28,6 +28,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
+from ..builders.sql_builder import DucSQL
 from ..parse import parse_duc_lazy
 
 __all__ = [
@@ -35,17 +36,10 @@ __all__ = [
     "DucFileSearchResult",
     "DucSearchResponse",
     "DucSearchResult",
-    "ensure_search_schema",
     "search_duc_elements",
 ]
 
 _TOKEN_RE = re.compile(r"[\w]+", re.UNICODE)
-_SEARCH_TABLES = {
-    "search_elements",
-    "search_element_text",
-    "search_element_doc",
-    "search_element_model",
-}
 _FILE_AGGREGATE_TYPES = {"pdf", "image", "table", "doc"}
 
 @dataclass(slots=True)
@@ -244,39 +238,6 @@ _SOURCE_QUERIES: tuple[_SourceQuery, ...] = (
         """,
     ),
 )
-
-
-def _find_schema_dir() -> Path:
-    current = Path(__file__).resolve()
-    for parent in current.parents:
-        candidate = parent / "schema"
-        if (candidate / "search.sql").exists():
-            return candidate
-    raise FileNotFoundError(
-        "Could not locate schema/search.sql. Ensure the search module is running inside the DUC repository."
-    )
-
-
-def _read_search_schema_sql() -> str:
-    return (_find_schema_dir() / "search.sql").read_text(encoding="utf-8")
-
-
-def ensure_search_schema(conn: sqlite3.Connection, rebuild: bool = False) -> None:
-    """Create missing FTS search tables and triggers for a DUC database.
-
-    Args:
-        conn: Open SQLite connection for a ``.duc`` database.
-        rebuild: When ``True``, reruns the FTS rebuild statements even if the
-            search schema already exists.
-    """
-
-    existing_tables = {
-        row[0]
-        for row in conn.execute("SELECT name FROM sqlite_master WHERE type IN ('table', 'view')")
-    }
-    if rebuild or not _SEARCH_TABLES.issubset(existing_tables):
-        conn.executescript(_read_search_schema_sql())
-        conn.commit()
 
 
 def _normalize_text(value: str | None) -> str:
@@ -673,8 +634,6 @@ def search_duc_elements(
     *,
     output_path: str | Path | None = None,
     limit: int = 50,
-    ensure_schema: bool = True,
-    rebuild_index: bool = False,
 ) -> DucSearchResponse:
     """Search DUC elements and export ordered results to JSON.
 
@@ -684,8 +643,6 @@ def search_duc_elements(
         output_path: Optional JSON output path. When omitted, a file is created
             next to the ``.duc`` file.
         limit: Maximum number of ranked element results to keep.
-        ensure_schema: Create the FTS schema if it is missing.
-        rebuild_index: Rebuild the FTS indexes before searching.
     """
 
     duc_file = Path(duc_path)
@@ -697,14 +654,9 @@ def search_duc_elements(
     destination = Path(output_path) if output_path else _default_output_path(duc_file, query)
 
     try:
-        conn = sqlite3.connect(duc_file)
-        conn.row_factory = sqlite3.Row
-        try:
-            if ensure_schema:
-                ensure_search_schema(conn, rebuild=rebuild_index)
-
-            candidates = _collect_candidates(conn, query, limit_per_source=max(limit * 3, 25))[:limit]
-            file_id_map = _resolve_file_ids(conn, [candidate.element_id for candidate in candidates])
+        with DucSQL(duc_file) as db:
+            candidates = _collect_candidates(db.conn, query, limit_per_source=max(limit * 3, 25))[:limit]
+            file_id_map = _resolve_file_ids(db.conn, [candidate.element_id for candidate in candidates])
             for candidate in candidates:
                 candidate.file_id = file_id_map.get(candidate.element_id)
 
@@ -722,8 +674,6 @@ def search_duc_elements(
                 encoding="utf-8",
             )
             return response
-        finally:
-            conn.close()
     except sqlite3.DatabaseError:
         return _search_non_sqlite_duc(
             duc_file,
