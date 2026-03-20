@@ -69,21 +69,24 @@ def test_search_exact_rectangle_result_from_blocks_instances_asset(test_output_d
 
 
 def test_search_groups_repeated_pdf_file_results(test_output_dir, request):
-    payload, response, _json_path, parsed_asset = _run_asset_search(
-        "universal.duc",
-        "Pdf 1",
-        test_output_dir=test_output_dir,
-        test_name=request.node.name,
-        limit=2,
-    )
-    pdf_elements = [element for element in parsed_asset["elements"] if element.get("type") == "pdf" and element.get("file_id")]
+    pdf_elements = [element for element in parse_duc_lazy(str(_asset_input_path("universal.duc")))["elements"] if element.get("type") == "pdf" and element.get("file_id") and not element.get("is_deleted")]
     duplicated_file_id = next(
         file_id for file_id, count in Counter(element["file_id"] for element in pdf_elements).items() if count > 1
     )
     selected = [element for element in pdf_elements if element.get("file_id") == duplicated_file_id]
     assert len(selected) == 2
 
-    assert payload["query"] == "Pdf 1"
+    # Use the label of the first selected element as the query
+    query = selected[0]["label"]
+    payload, response, _json_path, parsed_asset = _run_asset_search(
+        "universal.duc",
+        query,
+        test_output_dir=test_output_dir,
+        test_name=request.node.name,
+        limit=2,
+    )
+
+    assert payload["query"] == query
     assert payload["total_hits"] == 2
     assert set(payload["all_element_ids"]) == {element["id"] for element in selected}
     assert len(payload["results"]) == 1
@@ -93,7 +96,7 @@ def test_search_groups_repeated_pdf_file_results(test_output_dir, request):
     assert grouped["element_type"] == "pdf"
     assert grouped["hits"] == 2
     assert set(grouped["element_ids"]) == {element["id"] for element in selected}
-    assert grouped["matches"][0] == "Pdf 1"
+    assert grouped["matches"][0] == query
     assert set(grouped["matches"]) == {element["label"] for element in selected}
     assert grouped["score"] == round(max(result.score for result in response.results), 6)
 
