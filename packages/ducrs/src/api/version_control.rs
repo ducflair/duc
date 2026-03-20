@@ -4,7 +4,6 @@
 //! - Restoring document state at any version (checkpoint or delta replay)
 //! - Creating new checkpoints and deltas
 //! - Listing version history
-//! - Pruning old versions
 //!
 //! All operations work directly against the embedded SQLite schema
 //! (`version_control.sql`) and produce/consume the canonical Rust types
