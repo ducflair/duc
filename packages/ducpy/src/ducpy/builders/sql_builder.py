@@ -29,12 +29,16 @@ Usage::
 from __future__ import annotations
 
 import os
+import re
 import sqlite3
 import tempfile
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
 __all__ = ["DucSQL"]
+
+
+_MIGRATION_RE = re.compile(r"^(\d+)_to_(\d+)$")
 
 
 def _find_schema_dir() -> Optional[Path]:
@@ -44,6 +48,61 @@ def _find_schema_dir() -> Optional[Path]:
         if (candidate / "duc.sql").exists():
             return candidate
     return None
+
+
+def _get_current_schema_version() -> int:
+    """Read the target user_version from duc.sql — mirrors Rust's CURRENT_VERSION."""
+    schema_dir = _find_schema_dir()
+    if schema_dir is None:
+        return 0
+    duc_sql = (schema_dir / "duc.sql").read_text(encoding="utf-8")
+    m = re.search(r"PRAGMA\s+user_version\s*=\s*(\d+)", duc_sql, re.IGNORECASE)
+    return int(m.group(1)) if m else 0
+
+
+def _read_migrations() -> list[tuple[int, int, str]]:
+    """Load all migration SQL files from schema/migrations/, sorted by from_version."""
+    schema_dir = _find_schema_dir()
+    if schema_dir is None:
+        return []
+    migrations_dir = schema_dir / "migrations"
+    if not migrations_dir.exists():
+        return []
+    result: list[tuple[int, int, str]] = []
+    for path in sorted(migrations_dir.glob("*.sql")):
+        m = _MIGRATION_RE.match(path.stem)
+        if m:
+            result.append((int(m.group(1)), int(m.group(2)), path.read_text(encoding="utf-8")))
+    result.sort(key=lambda x: x[0])
+    return result
+
+
+def _apply_migrations(conn: sqlite3.Connection) -> None:
+    """Walk the migration chain until user_version reaches the current schema version.
+
+    Mirrors the migration logic in Rust's ``bootstrap.rs``:
+    reads ``schema/migrations/{from}_to_{to}.sql`` files in order and executes
+    them until ``PRAGMA user_version`` matches the version declared in ``duc.sql``.
+    Safe to call on already-current or brand-new databases.
+    """
+    user_version: int = conn.execute("PRAGMA user_version").fetchone()[0]
+    if user_version == 0:
+        return  # unversioned / brand-new DB — schema applied by DucSQL.new()
+    current_version = _get_current_schema_version()
+    if user_version >= current_version:
+        return  # already up to date
+    migrations = _read_migrations()
+    current = user_version
+    while current < current_version:
+        migration = next(((f, t, sql) for f, t, sql in migrations if f == current), None)
+        if migration is None:
+            raise RuntimeError(
+                f"No migration path from schema version {current} to {current_version}. "
+                "Upgrade the ducpy package."
+            )
+        _, to_v, sql = migration
+        conn.executescript(sql)
+        current = conn.execute("PRAGMA user_version").fetchone()[0]
 
 
 def _read_schema_sql() -> str:
@@ -83,6 +142,7 @@ class DucSQL:
         self.conn: sqlite3.Connection = sqlite3.connect(path)
         self.conn.row_factory = sqlite3.Row
         _apply_pragmas(self.conn)
+        _apply_migrations(self.conn)
         self._path: Optional[str] = path
         self._temp: Optional[str] = None
         self._closed = False
@@ -114,6 +174,7 @@ class DucSQL:
             inst.conn = sqlite3.connect(tmp.name)
             inst.conn.row_factory = sqlite3.Row
             _apply_pragmas(inst.conn)
+            _apply_migrations(inst.conn)
             inst._path = tmp.name
             inst._temp = tmp.name
             inst._closed = False
