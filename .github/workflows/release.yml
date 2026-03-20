@@ -76,9 +76,7 @@ jobs:
           check_release "duc2pdf" "./packages/ducpdf/src/duc2pdf"
 
   # ──────────────────────────────────────────────────────────────────────
-  # Phase 2: Trigger release workflows for packages with pending releases
-  # Each workflow handles its own build, test, and publish steps.
-  # Packages without pending releases are skipped entirely.
+  # Phase 2: Release in dependency order (mirrors turbo.json build graph)
   # ──────────────────────────────────────────────────────────────────────
   release-ducrs:
     needs: release-gate
@@ -87,32 +85,32 @@ jobs:
     secrets: inherit
 
   release-ducjs:
-    needs: release-gate
-    if: needs.release-gate.outputs.ducjs == 'true'
+    needs: [release-gate, release-ducrs]
+    if: always() && needs.release-gate.outputs.ducjs == 'true' && needs.release-gate.result == 'success' && (needs.release-ducrs.result == 'success' || needs.release-ducrs.result == 'skipped')
     uses: ./.github/workflows/release-ducjs.yml
     secrets: inherit
 
-  release-duc2pdf:
-    needs: release-gate
-    if: needs.release-gate.outputs.duc2pdf == 'true'
-    uses: ./.github/workflows/release-duc2pdf.yml
-    secrets: inherit
-
   release-ducpy:
-    needs: release-gate
-    if: needs.release-gate.outputs.ducpy == 'true'
+    needs: [release-gate, release-ducrs]
+    if: always() && needs.release-gate.outputs.ducpy == 'true' && needs.release-gate.result == 'success' && (needs.release-ducrs.result == 'success' || needs.release-ducrs.result == 'skipped')
     uses: ./.github/workflows/release-ducpy.yml
     secrets: inherit
 
+  release-duc2pdf:
+    needs: [release-gate, release-ducrs]
+    if: always() && needs.release-gate.outputs.duc2pdf == 'true' && needs.release-gate.result == 'success' && (needs.release-ducrs.result == 'success' || needs.release-ducrs.result == 'skipped')
+    uses: ./.github/workflows/release-duc2pdf.yml
+    secrets: inherit
+
   release-ducpdf:
-    needs: release-gate
-    if: needs.release-gate.outputs.ducpdf == 'true'
+    needs: [release-gate, release-ducjs, release-duc2pdf]
+    if: always() && needs.release-gate.outputs.ducpdf == 'true' && needs.release-gate.result == 'success' && (needs.release-ducjs.result == 'success' || needs.release-ducjs.result == 'skipped') && (needs.release-duc2pdf.result == 'success' || needs.release-duc2pdf.result == 'skipped')
     uses: ./.github/workflows/release-ducpdf.yml
     secrets: inherit
 
   release-ducsvg:
-    needs: release-gate
-    if: needs.release-gate.outputs.ducsvg == 'true'
+    needs: [release-gate, release-ducpdf]
+    if: always() && needs.release-gate.outputs.ducsvg == 'true' && needs.release-gate.result == 'success' && (needs.release-ducpdf.result == 'success' || needs.release-ducpdf.result == 'skipped')
     uses: ./.github/workflows/release-ducsvg.yml
     secrets: inherit
 

@@ -454,7 +454,6 @@ function normalizeGlobalStateForRust(globalState: any): any {
   return {
     ...globalState,
     scopeExponentThreshold: toInteger(globalState.scopeExponentThreshold, 4),
-    pruningLevel: toInteger(globalState.pruningLevel, 20),
   };
 }
 
