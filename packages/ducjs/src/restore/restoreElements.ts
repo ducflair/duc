@@ -534,8 +534,12 @@ const restoreElement = (
             : null;
 
       // Create the base restored element
+      // Skip sizeFromPoints override for block instance elements: their stored
+      // width/height represents the total duplication grid, not single-cell dims.
+      const isBlockInstanceElement = !!element.instanceId;
       const sizeFromPoints =
         !hasBindings &&
+        !isBlockInstanceElement &&
         getSizeFromPoints(finalPoints.map(getScopedBezierPointFromDucPoint));
       let restoredElement = restoreElementWithProperties(
         element,
@@ -555,6 +559,7 @@ const restoreElement = (
           x: element.x,
           y: element.y,
           // Only calculate size from points if we don't have bindings
+          // and the element is not a block instance member (dup array uses stored total dims)
           ...(!sizeFromPoints
             ? {}
             : {
