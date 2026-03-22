@@ -103,6 +103,9 @@ pub struct ElementStreamer {
     font_map: HashMap<String, (Font, String)>,
     /// Map of block instances for looking up duplication arrays
     block_instances: HashMap<String, DucBlockInstance>,
+    /// Pre-computed group cell pitches for multi-element instances
+    /// Key is instance_id, value is (group_cell_width, group_cell_height)
+    group_cell_pitches: HashMap<String, (f64, f64)>,
     /// Whether we should require elements to be marked as "plot" to be rendered
     render_only_plot_elements: bool,
     /// Cached ExtGState names keyed by stroke/fill opacity thousandths
@@ -145,6 +148,7 @@ impl ElementStreamer {
             text_font,
             font_map,
             block_instances,
+            group_cell_pitches: HashMap::new(),
             render_only_plot_elements: false,
             ext_gstate_cache: HashMap::new(),
             ext_gstate_definitions: HashMap::new(),
@@ -280,38 +284,13 @@ impl ElementStreamer {
     fn get_duplication_footprint_coords(
         &self,
         element: &DucElementEnum,
-        duplication_array: Option<&DucBlockDuplicationArray>,
+        _duplication_array: Option<&DucBlockDuplicationArray>,
     ) -> (f64, f64, f64, f64, f64, f64) {
         let base = Self::get_element_base(element);
-        let mut bx1 = base.x;
-        let mut by1 = base.y;
-        let mut footprint_width = base.width.abs();
-        let mut footprint_height = base.height.abs();
-
-        if let DucElementEnum::DucLinearElement(linear) = element {
-            if let Some((cell_x1, cell_y1, cell_x2, cell_y2)) =
-                Self::compute_linear_absolute_visual_bounds(&linear.linear_base)
-            {
-                bx1 = cell_x1;
-                by1 = cell_y1;
-
-                let visual_cell_width = cell_x2 - cell_x1;
-                let visual_cell_height = cell_y2 - cell_y1;
-
-                if let Some(duplication_array) = duplication_array {
-                    let (stored_cell_width, stored_cell_height) =
-                        Self::compute_cell_dimensions(base.width.abs(), base.height.abs(), duplication_array);
-                    footprint_width = base.width.abs() + (visual_cell_width - stored_cell_width);
-                    footprint_height = base.height.abs() + (visual_cell_height - stored_cell_height);
-                } else {
-                    footprint_width = visual_cell_width;
-                    footprint_height = visual_cell_height;
-                }
-            }
-        } else {
-            bx1 = base.x.min(base.x + base.width.abs());
-            by1 = base.y.min(base.y + base.height.abs());
-        }
+        let bx1 = base.x.min(base.x + base.width.abs());
+        let by1 = base.y.min(base.y + base.height.abs());
+        let footprint_width = base.width.abs();
+        let footprint_height = base.height.abs();
 
         let x1 = bx1;
         let y1 = by1;
@@ -321,6 +300,76 @@ impl ElementStreamer {
         let cy = (y1 + y2) / 2.0;
 
         (x1, y1, x2, y2, cx, cy)
+    }
+
+    fn compute_element_visual_bounds(element: &DucElementEnum) -> (f64, f64, f64, f64) {
+        if let DucElementEnum::DucLinearElement(l) = element {
+            if let Some(bounds) = Self::compute_linear_absolute_visual_bounds(&l.linear_base) {
+                return bounds;
+            }
+        }
+        let base = Self::get_element_base(element);
+        let x = base.x;
+        let y = base.y;
+        let w = base.width.abs();
+        let h = base.height.abs();
+        (x, y, x + w, y + h)
+    }
+
+    pub fn precompute_group_cell_pitches(&mut self, elements: &[ElementWrapper]) {
+        self.group_cell_pitches.clear();
+
+        let mut instance_elements: HashMap<String, Vec<&DucElementEnum>> = HashMap::new();
+        for ew in elements {
+            let base = Self::get_element_base(&ew.element);
+            if let Some(instance_id) = &base.instance_id {
+                if base.is_deleted || !base.is_visible {
+                    continue;
+                }
+                instance_elements
+                    .entry(instance_id.clone())
+                    .or_default()
+                    .push(&ew.element);
+            }
+        }
+
+        for (instance_id, elems) in &instance_elements {
+            if elems.len() <= 1 {
+                continue;
+            }
+
+            let Some(block_instance) = self.block_instances.get(instance_id) else {
+                continue;
+            };
+            let Some(dup_array) = &block_instance.duplication_array else {
+                continue;
+            };
+            if dup_array.rows <= 1 && dup_array.cols <= 1 {
+                continue;
+            }
+
+            let mut min_x = f64::INFINITY;
+            let mut min_y = f64::INFINITY;
+            let mut max_x = f64::NEG_INFINITY;
+            let mut max_y = f64::NEG_INFINITY;
+
+            for elem in elems {
+                let renderable = self.get_renderable_duplication_element(elem);
+                let (bx1, by1, bx2, by2) = Self::compute_element_visual_bounds(&renderable);
+                min_x = min_x.min(bx1);
+                min_y = min_y.min(by1);
+                max_x = max_x.max(bx2);
+                max_y = max_y.max(by2);
+            }
+
+            let group_cell_width = max_x - min_x;
+            let group_cell_height = max_y - min_y;
+
+            if group_cell_width > 0.0 && group_cell_height > 0.0 {
+                self.group_cell_pitches
+                    .insert(instance_id.clone(), (group_cell_width, group_cell_height));
+            }
+        }
     }
 
     /// Get duplication offsets for an element by looking up its block instance.
@@ -340,24 +389,36 @@ impl ElementStreamer {
                 // Only return offsets if there's more than one copy to render
                 if dup_array.rows > 1 || dup_array.cols > 1 {
                     let (total_width, total_height) = Self::extract_element_dimensions(element);
-                    let (cell_width, cell_height) =
+                    let (elem_cell_width, elem_cell_height) =
                         Self::compute_cell_dimensions(total_width, total_height, dup_array);
+
+                    let (pitch_w, pitch_h) = self
+                        .group_cell_pitches
+                        .get(instance_id.as_str())
+                        .copied()
+                        .unwrap_or((elem_cell_width, elem_cell_height));
+
                     let cols = dup_array.cols.max(1) as usize;
                     let rows = dup_array.rows.max(1) as usize;
                     let col_spacing = dup_array.col_spacing;
                     let row_spacing = dup_array.row_spacing;
 
-                    let (bx1, by1, _bx2, _by2, fcx, fcy) =
+                    let footprint_width = pitch_w * cols as f64 + (cols as f64 - 1.0) * col_spacing;
+                    let footprint_height = pitch_h * rows as f64 + (rows as f64 - 1.0) * row_spacing;
+
+                    let (bx1, by1, _bx2, _by2, _fcx, _fcy) =
                         self.get_duplication_footprint_coords(element, Some(dup_array));
+                    let fcx = bx1 + footprint_width / 2.0;
+                    let fcy = by1 + footprint_height / 2.0;
                     let footprint_center = (fcx, fcy);
-                    let c0 = (bx1 + cell_width / 2.0, by1 + cell_height / 2.0);
+                    let c0 = (bx1 + pitch_w / 2.0, by1 + pitch_h / 2.0);
 
                     let mut offsets = Vec::with_capacity(rows * cols);
                     for row in 0..rows {
                         for col in 0..cols {
                             let c_copy = (
-                                c0.0 + col as f64 * (cell_width + col_spacing),
-                                c0.1 + row as f64 * (cell_height + row_spacing),
+                                c0.0 + col as f64 * (pitch_w + col_spacing),
+                                c0.1 + row as f64 * (pitch_h + row_spacing),
                             );
                             let c_rotated = Self::rotate_point_around_center(
                                 c_copy,
@@ -672,7 +733,7 @@ impl ElementStreamer {
         let is_plot_mode = matches!(self.current_mode, StreamMode::Plot);
         let (_bounds_x, _bounds_y, _bounds_width, _bounds_height) = bounds;
 
-
+        self.precompute_group_cell_pitches(elements);
 
         // Filter and sort elements by z-index and visibility criteria
         let mut filtered_elements: Vec<_> = elements
