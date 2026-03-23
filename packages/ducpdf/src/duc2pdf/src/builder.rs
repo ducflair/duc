@@ -2,7 +2,8 @@ use crate::scaling::DucDataScaler;
 use crate::streaming::stream_elements::ElementStreamer;
 use crate::streaming::stream_resources::ResourceStreamer;
 use crate::utils::freedraw_bounds::{
-    calculate_freedraw_bbox, format_number, FreeDrawBounds, UNIT_EPSILON as FREEDRAW_EPSILON,
+    calculate_freedraw_bbox, calculate_freedraw_point_bbox, format_number, FreeDrawBounds,
+    UNIT_EPSILON as FREEDRAW_EPSILON,
 };
 use crate::utils::style_resolver::StyleResolver;
 use crate::utils::svg_to_pdf::{svg_to_pdf, svg_to_pdf_with_dimensions};
@@ -51,6 +52,8 @@ const ROBOTO_MONO_FONT_BYTES: &[u8] = include_bytes!(concat!(
     "/fonts/RobotoMono-Variable.ttf"
 ));
 
+const EXPORT_SANITY_LIMIT_MM: f64 = 1.0e12;
+
 /// Resource cache for storing PDF object IDs
 #[derive(Default, Clone)]
 pub struct ResourceCache {
@@ -90,6 +93,174 @@ pub struct DucToPdfBuilder {
 }
 
 impl DucToPdfBuilder {
+    fn is_export_sane_value(value: f64) -> bool {
+        value.is_finite() && value.abs() <= EXPORT_SANITY_LIMIT_MM
+    }
+
+    fn element_id_and_type(element_wrapper: &ElementWrapper) -> (&str, &str) {
+        match &element_wrapper.element {
+            DucElementEnum::DucRectangleElement(elem) => (&elem.base.id, "rectangle"),
+            DucElementEnum::DucPolygonElement(elem) => (&elem.base.id, "polygon"),
+            DucElementEnum::DucEllipseElement(elem) => (&elem.base.id, "ellipse"),
+            DucElementEnum::DucEmbeddableElement(elem) => (&elem.base.id, "embeddable"),
+            DucElementEnum::DucPdfElement(elem) => (&elem.base.id, "pdf"),
+            DucElementEnum::DucTableElement(elem) => (&elem.base.id, "table"),
+            DucElementEnum::DucImageElement(elem) => (&elem.base.id, "image"),
+            DucElementEnum::DucTextElement(elem) => (&elem.base.id, "text"),
+            DucElementEnum::DucLinearElement(elem) => (&elem.linear_base.base.id, "line"),
+            DucElementEnum::DucArrowElement(elem) => (&elem.linear_base.base.id, "arrow"),
+            DucElementEnum::DucFreeDrawElement(elem) => (&elem.base.id, "freedraw"),
+            DucElementEnum::DucFrameElement(elem) => (&elem.stack_element_base.base.id, "frame"),
+            DucElementEnum::DucPlotElement(elem) => (&elem.stack_element_base.base.id, "plot"),
+            DucElementEnum::DucDocElement(elem) => (&elem.base.id, "doc"),
+            DucElementEnum::DucModelElement(elem) => (&elem.base.id, "model"),
+        }
+    }
+
+    fn element_has_sane_geometry(element_wrapper: &ElementWrapper) -> bool {
+        let base_is_sane = |base: &duc::types::DucElementBase| {
+            [base.x, base.y, base.width, base.height, base.angle]
+                .into_iter()
+                .all(Self::is_export_sane_value)
+        };
+
+        match &element_wrapper.element {
+            DucElementEnum::DucRectangleElement(elem) => base_is_sane(&elem.base),
+            DucElementEnum::DucPolygonElement(elem) => base_is_sane(&elem.base),
+            DucElementEnum::DucEllipseElement(elem) => base_is_sane(&elem.base),
+            DucElementEnum::DucEmbeddableElement(elem) => base_is_sane(&elem.base),
+            DucElementEnum::DucPdfElement(elem) => base_is_sane(&elem.base),
+            DucElementEnum::DucTableElement(elem) => base_is_sane(&elem.base),
+            DucElementEnum::DucImageElement(elem) => base_is_sane(&elem.base),
+            DucElementEnum::DucTextElement(elem) => base_is_sane(&elem.base),
+            DucElementEnum::DucDocElement(elem) => base_is_sane(&elem.base),
+            DucElementEnum::DucModelElement(elem) => base_is_sane(&elem.base),
+            DucElementEnum::DucFrameElement(elem) => base_is_sane(&elem.stack_element_base.base),
+            DucElementEnum::DucPlotElement(elem) => base_is_sane(&elem.stack_element_base.base),
+            DucElementEnum::DucLinearElement(elem) => {
+                base_is_sane(&elem.linear_base.base)
+                    && elem
+                        .linear_base
+                        .points
+                        .iter()
+                        .all(|point| Self::is_export_sane_value(point.x) && Self::is_export_sane_value(point.y))
+            }
+            DucElementEnum::DucArrowElement(elem) => {
+                base_is_sane(&elem.linear_base.base)
+                    && elem
+                        .linear_base
+                        .points
+                        .iter()
+                        .all(|point| Self::is_export_sane_value(point.x) && Self::is_export_sane_value(point.y))
+            }
+            DucElementEnum::DucFreeDrawElement(elem) => {
+                base_is_sane(&elem.base)
+                    && Self::is_export_sane_value(elem.size)
+                    && elem
+                        .points
+                        .iter()
+                        .all(|point| Self::is_export_sane_value(point.x) && Self::is_export_sane_value(point.y))
+            }
+        }
+    }
+
+    fn filter_out_unusable_elements(exported_data: &mut ExportedDataState) {
+        let mut dropped_elements = Vec::new();
+
+        exported_data.elements.retain(|element_wrapper| {
+            let keep = Self::element_has_sane_geometry(element_wrapper);
+            if !keep {
+                let (id, element_type) = Self::element_id_and_type(element_wrapper);
+                dropped_elements.push((id.to_string(), element_type.to_string()));
+            }
+
+            keep
+        });
+
+        if !dropped_elements.is_empty() {
+            let preview = dropped_elements
+                .iter()
+                .take(5)
+                .map(|(id, element_type)| format!("{} ({})", id, element_type))
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            log_warn!(
+                "Skipping {} export element(s) with absurd geometry before scaling: {}",
+                dropped_elements.len(),
+                preview
+            );
+        }
+    }
+
+    fn has_usable_dimension(value: f64) -> bool {
+        value.is_finite() && value > FREEDRAW_EPSILON
+    }
+
+    fn select_freedraw_bounds(
+        &self,
+        freedraw: &duc::types::DucFreeDrawElement,
+    ) -> Option<FreeDrawBounds> {
+        let preferred_bounds = calculate_freedraw_bbox(freedraw);
+        let point_bounds = calculate_freedraw_point_bbox(&freedraw.points, freedraw.size);
+
+        if let Some(bounds) = preferred_bounds {
+            if Self::has_usable_dimension(bounds.width()) && Self::has_usable_dimension(bounds.height()) {
+                return Some(bounds);
+            }
+
+            if let Some(point_bounds) = point_bounds {
+                if Self::has_usable_dimension(point_bounds.width())
+                    && Self::has_usable_dimension(point_bounds.height())
+                {
+                    log_warn!(
+                        "Recovered degenerate freedraw bbox for {} using point bounds (svg/path bbox: {}x{}, points bbox: {}x{})",
+                        freedraw.base.id,
+                        bounds.width(),
+                        bounds.height(),
+                        point_bounds.width(),
+                        point_bounds.height()
+                    );
+                    return Some(point_bounds);
+                }
+            }
+
+            return Some(bounds);
+        }
+
+        point_bounds
+    }
+
+    fn sanitize_page_size(&self, width: f64, height: f64) -> (f64, f64) {
+        let fallback_bounds = self.calculate_overall_bounds();
+        let fallback_width = fallback_bounds.2.abs().max(210.0);
+        let fallback_height = fallback_bounds.3.abs().max(297.0);
+
+        let sanitized_width = if Self::has_usable_dimension(width) {
+            width
+        } else {
+            log_warn!(
+                "Recovered invalid PDF page width {} using fallback {}",
+                width,
+                fallback_width
+            );
+            fallback_width
+        };
+
+        let sanitized_height = if Self::has_usable_dimension(height) {
+            height
+        } else {
+            log_warn!(
+                "Recovered invalid PDF page height {} using fallback {}",
+                height,
+                fallback_height
+            );
+            fallback_height
+        };
+
+        (sanitized_width.max(0.001), sanitized_height.max(0.001))
+    }
+
     /// Parse color string to RGB values (0-255) using bigcolor
     /// Supports various color formats (hex, rgb, named colors, etc.)
     fn parse_color(&self, color_str: &str) -> Option<(u8, u8, u8)> {
@@ -105,6 +276,8 @@ impl DucToPdfBuilder {
         font_data: HashMap<String, Vec<u8>>,
     ) -> ConversionResult<Self> {
         let mut document = Document::with_version("1.7");
+
+        Self::filter_out_unusable_elements(&mut exported_data);
 
         let crop_offset = match &options.mode {
             ConversionMode::Crop {
@@ -779,7 +952,7 @@ impl DucToPdfBuilder {
                         };
 
                         // Calculate bounding box using the SVG path when available for accurate bounds
-                        let svg_document = if let Some(bounds) = calculate_freedraw_bbox(freedraw) {
+                        let svg_document = if let Some(bounds) = self.select_freedraw_bounds(freedraw) {
                             // Cache the calculated bounding box for later use in stream_freedraw
                             self.context
                                 .resource_cache
@@ -789,15 +962,41 @@ impl DucToPdfBuilder {
                             let mut width = bounds.width();
                             let mut height = bounds.height();
 
-                            if width < FREEDRAW_EPSILON {
-                                width = freedraw.base.width.max(FREEDRAW_EPSILON);
+                            if !Self::has_usable_dimension(width) {
+                                width = freedraw.base.width.abs().max(freedraw.size.abs()).max(FREEDRAW_EPSILON);
                             }
-                            if height < FREEDRAW_EPSILON {
-                                height = freedraw.base.height.max(FREEDRAW_EPSILON);
+                            if !Self::has_usable_dimension(height) {
+                                height = freedraw.base.height.abs().max(freedraw.size.abs()).max(FREEDRAW_EPSILON);
+                            }
+
+                            if !Self::has_usable_dimension(width) || !Self::has_usable_dimension(height) {
+                                log_warn!(
+                                    "Skipping freedraw {} because bounds remained unusable after fallback (base={}x{}, size={}, svg_len={})",
+                                    freedraw.base.id,
+                                    freedraw.base.width,
+                                    freedraw.base.height,
+                                    freedraw.size,
+                                    svg_path.len()
+                                );
+                                continue;
                             }
 
                             let width_str = format_number(width);
                             let height_str = format_number(height);
+
+                            if width_str == "0" || height_str == "0" {
+                                log_warn!(
+                                    "Skipping freedraw {} because formatted bounds collapsed to zero (numeric={}x{}, base={}x{}, size={})",
+                                    freedraw.base.id,
+                                    width,
+                                    height,
+                                    freedraw.base.width,
+                                    freedraw.base.height,
+                                    freedraw.size
+                                );
+                                continue;
+                            }
+
                             let translate_x = format_number(-bounds.min_x);
                             let translate_y = format_number(-bounds.min_y);
 
@@ -844,7 +1043,19 @@ impl DucToPdfBuilder {
                             }
                             Err(e) => {
                                 // Log error but continue processing other elements
-                                log_warn!("Warning: SVG to PDF conversion failed for Freedraw element {}: {}", freedraw.base.id, e);
+                                let svg_header_preview = svg_document
+                                    .split('>')
+                                    .next()
+                                    .unwrap_or_default();
+                                log_warn!(
+                                    "Warning: SVG to PDF conversion failed for Freedraw element {}: {} (base={}x{}, size={}, header='{}')",
+                                    freedraw.base.id,
+                                    e,
+                                    freedraw.base.width,
+                                    freedraw.base.height,
+                                    freedraw.size,
+                                    svg_header_preview
+                                );
                             }
                         }
                     }
@@ -1059,8 +1270,7 @@ impl DucToPdfBuilder {
     ) -> ConversionResult<()> {
         let (_x, _y, width, height) = bounds; // Use bounds directly (already scaled)
 
-        let page_width = width;
-        let page_height = height;
+        let (page_width, page_height) = self.sanitize_page_size(width, height);
 
         // Set the page height for Y-axis coordinate transformations
         self.page_height = page_height;
@@ -1119,6 +1329,8 @@ impl DucToPdfBuilder {
             let (_x, _y, width, height) = bounds;
             (width, height)
         };
+
+        let (page_width, page_height) = self.sanitize_page_size(page_width, page_height);
 
         // Set the page height for Y-axis coordinate transformations
         self.page_height = page_height;
