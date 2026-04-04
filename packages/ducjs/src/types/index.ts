@@ -171,7 +171,8 @@ export type ToolType =
   | "laser"
   | "table"
   | "doc"
-  | "pdf";
+  | "pdf"
+  | "model";
 
 export type ElementOrToolType = DucElementType | ToolType | "custom";
 
