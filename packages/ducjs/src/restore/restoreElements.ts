@@ -769,7 +769,7 @@ const restoreElement = (
           modelType: isValidString(modelElement.modelType) || null,
           code: isValidString(modelElement.code) || null,
           fileIds: modelElement.fileIds || [],
-          svgPath: modelElement.svgPath || null,
+          thumbnail: modelElement.thumbnail instanceof Uint8Array ? modelElement.thumbnail : null,
           viewerState: (modelElement.viewerState || null) as Viewer3DState | null,
         },
         localState,
