@@ -1400,8 +1400,8 @@ Module Contents
 
 
 
-   .. py:attribute:: svg_path
-      :type:  Optional[str]
+   .. py:attribute:: thumbnail
+      :type:  Optional[bytes]
       :value: None
 
 
