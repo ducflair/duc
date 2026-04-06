@@ -103,6 +103,9 @@ pub struct ElementStreamer {
     font_map: HashMap<String, (Font, String)>,
     /// Map of block instances for looking up duplication arrays
     block_instances: HashMap<String, DucBlockInstance>,
+    /// Pre-computed group cell pitches for multi-element instances
+    /// Key is instance_id, value is (group_cell_width, group_cell_height)
+    group_cell_pitches: HashMap<String, (f64, f64)>,
     /// Whether we should require elements to be marked as "plot" to be rendered
     render_only_plot_elements: bool,
     /// Cached ExtGState names keyed by stroke/fill opacity thousandths
@@ -145,6 +148,7 @@ impl ElementStreamer {
             text_font,
             font_map,
             block_instances,
+            group_cell_pitches: HashMap::new(),
             render_only_plot_elements: false,
             ext_gstate_cache: HashMap::new(),
             ext_gstate_definitions: HashMap::new(),
@@ -155,13 +159,14 @@ impl ElementStreamer {
         }
     }
 
-    /// Calculate duplication offsets for block instance grid rendering
-    /// Returns a vector of (x_offset, y_offset) tuples for each grid position
-    /// The first offset is always (0.0, 0.0) representing the original position
+    /// Calculate duplication offsets for block instance grid rendering.
+    /// `cell_width` and `cell_height` are the per-cell dimensions (NOT total grid).
+    /// Returns a vector of (x_offset, y_offset) tuples for each grid position.
+    /// The first offset is always (0.0, 0.0) representing the original position.
     pub fn get_duplication_offsets(
         duplication_array: &DucBlockDuplicationArray,
-        element_width: f64,
-        element_height: f64,
+        cell_width: f64,
+        cell_height: f64,
     ) -> Vec<(f64, f64)> {
         if duplication_array.row_spacing.is_nan() || duplication_array.col_spacing.is_nan() {
 
@@ -177,8 +182,8 @@ impl ElementStreamer {
         let row_spacing = duplication_array.row_spacing;
         let col_spacing = duplication_array.col_spacing;
 
-        let stride_x = element_width + col_spacing;
-        let stride_y = element_height + row_spacing;
+        let stride_x = cell_width + col_spacing;
+        let stride_y = cell_height + row_spacing;
 
         let mut offsets = Vec::with_capacity(rows * cols);
         for row in 0..rows {
@@ -191,8 +196,186 @@ impl ElementStreamer {
         offsets
     }
 
-    /// Get duplication offsets for an element by looking up its block instance
-    /// Returns None if element has no instance_id or no duplication array
+    /// Compute per-cell dimensions from total grid dimensions and a duplication array.
+    /// Formula: cell = (total - (n - 1) * spacing) / n
+    fn compute_cell_dimensions(
+        total_width: f64,
+        total_height: f64,
+        dup_array: &DucBlockDuplicationArray,
+    ) -> (f64, f64) {
+        let cols = dup_array.cols.max(1) as f64;
+        let rows = dup_array.rows.max(1) as f64;
+        let cell_width = (total_width - (cols - 1.0) * dup_array.col_spacing) / cols;
+        let cell_height = (total_height - (rows - 1.0) * dup_array.row_spacing) / rows;
+        (cell_width.max(0.0), cell_height.max(0.0))
+    }
+
+    fn rotate_point_around_center(
+        point: (f64, f64),
+        center: (f64, f64),
+        angle: f64,
+    ) -> (f64, f64) {
+        if angle == 0.0 {
+            return point;
+        }
+
+        let cos = angle.cos();
+        let sin = angle.sin();
+        let dx = point.0 - center.0;
+        let dy = point.1 - center.1;
+
+        (
+            center.0 + dx * cos - dy * sin,
+            center.1 + dx * sin + dy * cos,
+        )
+    }
+
+    fn compute_linear_absolute_visual_bounds(
+        linear_base: &duc::types::DucLinearElementBase,
+    ) -> Option<(f64, f64, f64, f64)> {
+        if linear_base.points.is_empty() {
+            return None;
+        }
+
+        let mut min_x = f64::INFINITY;
+        let mut min_y = f64::INFINITY;
+        let mut max_x = f64::NEG_INFINITY;
+        let mut max_y = f64::NEG_INFINITY;
+
+        for point in &linear_base.points {
+            min_x = min_x.min(point.x);
+            min_y = min_y.min(point.y);
+            max_x = max_x.max(point.x);
+            max_y = max_y.max(point.y);
+        }
+
+        for line in &linear_base.lines {
+            if let Some(handle) = &line.start.handle {
+                min_x = min_x.min(handle.x);
+                min_y = min_y.min(handle.y);
+                max_x = max_x.max(handle.x);
+                max_y = max_y.max(handle.y);
+            }
+            if let Some(handle) = &line.end.handle {
+                min_x = min_x.min(handle.x);
+                min_y = min_y.min(handle.y);
+                max_x = max_x.max(handle.x);
+                max_y = max_y.max(handle.y);
+            }
+        }
+
+        let stroke_width = linear_base
+            .base
+            .styles
+            .stroke
+            .first()
+            .map(|stroke| stroke.width)
+            .unwrap_or(0.0);
+        let stroke_offset = stroke_width / 2.0;
+
+        Some((
+            linear_base.base.x + min_x - stroke_offset,
+            linear_base.base.y + min_y - stroke_offset,
+            linear_base.base.x + max_x + stroke_offset,
+            linear_base.base.y + max_y + stroke_offset,
+        ))
+    }
+
+    fn get_duplication_footprint_coords(
+        &self,
+        element: &DucElementEnum,
+        _duplication_array: Option<&DucBlockDuplicationArray>,
+    ) -> (f64, f64, f64, f64, f64, f64) {
+        let base = Self::get_element_base(element);
+        let bx1 = base.x.min(base.x + base.width.abs());
+        let by1 = base.y.min(base.y + base.height.abs());
+        let footprint_width = base.width.abs();
+        let footprint_height = base.height.abs();
+
+        let x1 = bx1;
+        let y1 = by1;
+        let x2 = bx1 + footprint_width;
+        let y2 = by1 + footprint_height;
+        let cx = (x1 + x2) / 2.0;
+        let cy = (y1 + y2) / 2.0;
+
+        (x1, y1, x2, y2, cx, cy)
+    }
+
+    fn compute_element_visual_bounds(element: &DucElementEnum) -> (f64, f64, f64, f64) {
+        if let DucElementEnum::DucLinearElement(l) = element {
+            if let Some(bounds) = Self::compute_linear_absolute_visual_bounds(&l.linear_base) {
+                return bounds;
+            }
+        }
+        let base = Self::get_element_base(element);
+        let x = base.x;
+        let y = base.y;
+        let w = base.width.abs();
+        let h = base.height.abs();
+        (x, y, x + w, y + h)
+    }
+
+    pub fn precompute_group_cell_pitches(&mut self, elements: &[ElementWrapper]) {
+        self.group_cell_pitches.clear();
+
+        let mut instance_elements: HashMap<String, Vec<&DucElementEnum>> = HashMap::new();
+        for ew in elements {
+            let base = Self::get_element_base(&ew.element);
+            if let Some(instance_id) = &base.instance_id {
+                if base.is_deleted || !base.is_visible {
+                    continue;
+                }
+                instance_elements
+                    .entry(instance_id.clone())
+                    .or_default()
+                    .push(&ew.element);
+            }
+        }
+
+        for (instance_id, elems) in &instance_elements {
+            if elems.len() <= 1 {
+                continue;
+            }
+
+            let Some(block_instance) = self.block_instances.get(instance_id) else {
+                continue;
+            };
+            let Some(dup_array) = &block_instance.duplication_array else {
+                continue;
+            };
+            if dup_array.rows <= 1 && dup_array.cols <= 1 {
+                continue;
+            }
+
+            let mut min_x = f64::INFINITY;
+            let mut min_y = f64::INFINITY;
+            let mut max_x = f64::NEG_INFINITY;
+            let mut max_y = f64::NEG_INFINITY;
+
+            for elem in elems {
+                let renderable = self.get_renderable_duplication_element(elem);
+                let (bx1, by1, bx2, by2) = Self::compute_element_visual_bounds(&renderable);
+                min_x = min_x.min(bx1);
+                min_y = min_y.min(by1);
+                max_x = max_x.max(bx2);
+                max_y = max_y.max(by2);
+            }
+
+            let group_cell_width = max_x - min_x;
+            let group_cell_height = max_y - min_y;
+
+            if group_cell_width > 0.0 && group_cell_height > 0.0 {
+                self.group_cell_pitches
+                    .insert(instance_id.clone(), (group_cell_width, group_cell_height));
+            }
+        }
+    }
+
+    /// Get duplication offsets for an element by looking up its block instance.
+    /// Returns None if element has no instance_id or no duplication array.
+    /// Offsets are computed using per-cell dimensions derived from the element's
+    /// total grid width/height.
     pub fn get_element_duplication_offsets(
         &self,
         element: &DucElementEnum,
@@ -205,34 +388,245 @@ impl ElementStreamer {
             if let Some(dup_array) = &block_instance.duplication_array {
                 // Only return offsets if there's more than one copy to render
                 if dup_array.rows > 1 || dup_array.cols > 1 {
+                    let (total_width, total_height) = Self::extract_element_dimensions(element);
+                    let (elem_cell_width, elem_cell_height) =
+                        Self::compute_cell_dimensions(total_width, total_height, dup_array);
 
-                    // Attempt to extract dimensions from the element
-                    // This allows "gap" spacing: offset = index * (size + spacing)
-                    let (width, height) = match element {
-                        DucElementEnum::DucRectangleElement(r) => (r.base.width, r.base.height),
-                        DucElementEnum::DucEllipseElement(e) => (e.base.width, e.base.height),
-                        DucElementEnum::DucImageElement(i) => (i.base.width, i.base.height),
-                        DucElementEnum::DucFrameElement(f) => (f.stack_element_base.base.width, f.stack_element_base.base.height),
-                        DucElementEnum::DucPlotElement(p) => (p.stack_element_base.base.width, p.stack_element_base.base.height),
-                        DucElementEnum::DucTableElement(t) => (t.base.width, t.base.height),
-                        DucElementEnum::DucDocElement(d) => (d.base.width, d.base.height),
-                        DucElementEnum::DucEmbeddableElement(e) => (e.base.width, e.base.height),
-                        DucElementEnum::DucPolygonElement(p) => (p.base.width, p.base.height),
-                        DucElementEnum::DucTextElement(t) => (t.base.width, t.base.height),
-                        DucElementEnum::DucFreeDrawElement(f) => (f.base.width, f.base.height),
-                        DucElementEnum::DucLinearElement(l) => (l.linear_base.base.width, l.linear_base.base.height),
-                        DucElementEnum::DucArrowElement(a) => (a.linear_base.base.width, a.linear_base.base.height),
-                        DucElementEnum::DucPdfElement(p) => (p.base.width, p.base.height),
-                        DucElementEnum::DucModelElement(m) => (m.base.width, m.base.height),
-                    };
+                    let (pitch_w, pitch_h) = self
+                        .group_cell_pitches
+                        .get(instance_id.as_str())
+                        .copied()
+                        .unwrap_or((elem_cell_width, elem_cell_height));
 
-                    return Some(Self::get_duplication_offsets(dup_array, width, height));
+                    let cols = dup_array.cols.max(1) as usize;
+                    let rows = dup_array.rows.max(1) as usize;
+                    let col_spacing = dup_array.col_spacing;
+                    let row_spacing = dup_array.row_spacing;
+
+                    let footprint_width = pitch_w * cols as f64 + (cols as f64 - 1.0) * col_spacing;
+                    let footprint_height = pitch_h * rows as f64 + (rows as f64 - 1.0) * row_spacing;
+
+                    let (bx1, by1, _bx2, _by2, _fcx, _fcy) =
+                        self.get_duplication_footprint_coords(element, Some(dup_array));
+                    let fcx = bx1 + footprint_width / 2.0;
+                    let fcy = by1 + footprint_height / 2.0;
+                    let footprint_center = (fcx, fcy);
+                    let c0 = (bx1 + pitch_w / 2.0, by1 + pitch_h / 2.0);
+
+                    let mut offsets = Vec::with_capacity(rows * cols);
+                    for row in 0..rows {
+                        for col in 0..cols {
+                            let c_copy = (
+                                c0.0 + col as f64 * (pitch_w + col_spacing),
+                                c0.1 + row as f64 * (pitch_h + row_spacing),
+                            );
+                            let c_rotated = Self::rotate_point_around_center(
+                                c_copy,
+                                footprint_center,
+                                base.angle,
+                            );
+                            offsets.push((c_rotated.0 - c0.0, c_rotated.1 - c0.1));
+                        }
+                    }
+
+                    return Some(offsets);
                 }
             }
         } else {
              log::info!("Element refers to instance {} which is missing from block_instances!", instance_id);
         }
         None
+    }
+
+    /// Create a per-cell renderable element for duplication-array rendering.
+    /// The exported element stores total grid dimensions, but each rendered copy
+    /// needs the single-cell size.
+    pub fn get_renderable_duplication_element(
+        &self,
+        element: &DucElementEnum,
+    ) -> DucElementEnum {
+        let base = Self::get_element_base(element);
+        let Some(instance_id) = base.instance_id.as_ref() else {
+            return element.clone();
+        };
+        let Some(block_instance) = self.block_instances.get(instance_id) else {
+            return element.clone();
+        };
+        let Some(dup_array) = block_instance.duplication_array.as_ref() else {
+            return element.clone();
+        };
+        if dup_array.rows <= 1 && dup_array.cols <= 1 {
+            return element.clone();
+        }
+
+        let (total_width, total_height) = Self::extract_element_dimensions(element);
+        let (cell_width, cell_height) =
+            Self::compute_cell_dimensions(total_width, total_height, dup_array);
+
+        Self::with_element_dimensions(element.clone(), cell_width, cell_height)
+    }
+
+    /// Extract width/height from any DucElementEnum variant.
+    fn extract_element_dimensions(element: &DucElementEnum) -> (f64, f64) {
+        match element {
+            DucElementEnum::DucRectangleElement(r) => (r.base.width, r.base.height),
+            DucElementEnum::DucEllipseElement(e) => (e.base.width, e.base.height),
+            DucElementEnum::DucImageElement(i) => (i.base.width, i.base.height),
+            DucElementEnum::DucFrameElement(f) => (f.stack_element_base.base.width, f.stack_element_base.base.height),
+            DucElementEnum::DucPlotElement(p) => (p.stack_element_base.base.width, p.stack_element_base.base.height),
+            DucElementEnum::DucTableElement(t) => (t.base.width, t.base.height),
+            DucElementEnum::DucDocElement(d) => (d.base.width, d.base.height),
+            DucElementEnum::DucEmbeddableElement(e) => (e.base.width, e.base.height),
+            DucElementEnum::DucPolygonElement(p) => (p.base.width, p.base.height),
+            DucElementEnum::DucTextElement(t) => (t.base.width, t.base.height),
+            DucElementEnum::DucFreeDrawElement(f) => (f.base.width, f.base.height),
+            DucElementEnum::DucLinearElement(l) => (l.linear_base.base.width, l.linear_base.base.height),
+            DucElementEnum::DucArrowElement(a) => (a.linear_base.base.width, a.linear_base.base.height),
+            DucElementEnum::DucPdfElement(p) => (p.base.width, p.base.height),
+            DucElementEnum::DucModelElement(m) => (m.base.width, m.base.height),
+        }
+    }
+
+    fn with_element_dimensions(
+        mut element: DucElementEnum,
+        width: f64,
+        height: f64,
+    ) -> DucElementEnum {
+        match &mut element {
+            DucElementEnum::DucRectangleElement(r) => {
+                r.base.width = width;
+                r.base.height = height;
+            }
+            DucElementEnum::DucPolygonElement(p) => {
+                p.base.width = width;
+                p.base.height = height;
+            }
+            DucElementEnum::DucEllipseElement(e) => {
+                e.base.width = width;
+                e.base.height = height;
+            }
+            DucElementEnum::DucEmbeddableElement(e) => {
+                e.base.width = width;
+                e.base.height = height;
+            }
+            DucElementEnum::DucPdfElement(p) => {
+                p.base.width = width;
+                p.base.height = height;
+            }
+            DucElementEnum::DucTableElement(t) => {
+                t.base.width = width;
+                t.base.height = height;
+            }
+            DucElementEnum::DucImageElement(i) => {
+                i.base.width = width;
+                i.base.height = height;
+            }
+            DucElementEnum::DucTextElement(t) => {
+                t.base.width = width;
+                t.base.height = height;
+            }
+            DucElementEnum::DucLinearElement(l) => {
+                l.linear_base.base.width = width;
+                l.linear_base.base.height = height;
+            }
+            DucElementEnum::DucArrowElement(a) => {
+                a.linear_base.base.width = width;
+                a.linear_base.base.height = height;
+            }
+            DucElementEnum::DucFreeDrawElement(f) => {
+                f.base.width = width;
+                f.base.height = height;
+            }
+            DucElementEnum::DucFrameElement(f) => {
+                f.stack_element_base.base.width = width;
+                f.stack_element_base.base.height = height;
+            }
+            DucElementEnum::DucPlotElement(p) => {
+                p.stack_element_base.base.width = width;
+                p.stack_element_base.base.height = height;
+            }
+            DucElementEnum::DucDocElement(d) => {
+                d.base.width = width;
+                d.base.height = height;
+            }
+            DucElementEnum::DucModelElement(m) => {
+                m.base.width = width;
+                m.base.height = height;
+            }
+        }
+
+        element
+    }
+
+    fn with_element_position(
+        mut element: DucElementEnum,
+        x: f64,
+        y: f64,
+    ) -> DucElementEnum {
+        match &mut element {
+            DucElementEnum::DucRectangleElement(r) => {
+                r.base.x = x;
+                r.base.y = y;
+            }
+            DucElementEnum::DucPolygonElement(p) => {
+                p.base.x = x;
+                p.base.y = y;
+            }
+            DucElementEnum::DucEllipseElement(e) => {
+                e.base.x = x;
+                e.base.y = y;
+            }
+            DucElementEnum::DucEmbeddableElement(e) => {
+                e.base.x = x;
+                e.base.y = y;
+            }
+            DucElementEnum::DucPdfElement(p) => {
+                p.base.x = x;
+                p.base.y = y;
+            }
+            DucElementEnum::DucTableElement(t) => {
+                t.base.x = x;
+                t.base.y = y;
+            }
+            DucElementEnum::DucImageElement(i) => {
+                i.base.x = x;
+                i.base.y = y;
+            }
+            DucElementEnum::DucTextElement(t) => {
+                t.base.x = x;
+                t.base.y = y;
+            }
+            DucElementEnum::DucLinearElement(l) => {
+                l.linear_base.base.x = x;
+                l.linear_base.base.y = y;
+            }
+            DucElementEnum::DucArrowElement(a) => {
+                a.linear_base.base.x = x;
+                a.linear_base.base.y = y;
+            }
+            DucElementEnum::DucFreeDrawElement(f) => {
+                f.base.x = x;
+                f.base.y = y;
+            }
+            DucElementEnum::DucFrameElement(f) => {
+                f.stack_element_base.base.x = x;
+                f.stack_element_base.base.y = y;
+            }
+            DucElementEnum::DucPlotElement(p) => {
+                p.stack_element_base.base.x = x;
+                p.stack_element_base.base.y = y;
+            }
+            DucElementEnum::DucDocElement(d) => {
+                d.base.x = x;
+                d.base.y = y;
+            }
+            DucElementEnum::DucModelElement(m) => {
+                m.base.x = x;
+                m.base.y = y;
+            }
+        }
+
+        element
     }
 
     /// Update the active font used for text rendering
@@ -339,7 +733,7 @@ impl ElementStreamer {
         let is_plot_mode = matches!(self.current_mode, StreamMode::Plot);
         let (_bounds_x, _bounds_y, _bounds_width, _bounds_height) = bounds;
 
-
+        self.precompute_group_cell_pitches(elements);
 
         // Filter and sort elements by z-index and visibility criteria
         let mut filtered_elements: Vec<_> = elements
@@ -416,16 +810,24 @@ impl ElementStreamer {
                 clip_applied = clip_active;
             }
 
-            // Get duplication offsets (default to single (0,0) if none)
+            let renderable_element = self
+                .get_renderable_duplication_element(&element_wrapper.element);
+
             let offsets = self
                 .get_element_duplication_offsets(&element_wrapper.element)
                 .unwrap_or_else(|| vec![(0.0, 0.0)]);
 
+            let renderable_base = Self::get_element_base(&renderable_element);
+
             for (x_off, y_off) in offsets {
-                // Stream the element with duplication offset applied AFTER its own transform
-                // so the offset is not rotated or scaled by the element transform.
+                let positioned_renderable_element = Self::with_element_position(
+                    renderable_element.clone(),
+                    renderable_base.x + x_off,
+                    renderable_base.y + y_off,
+                );
+
                 let element_ops = self.stream_element_with_resources(
-                    &element_wrapper.element,
+                    &positioned_renderable_element,
                     local_state,
                     all_elements,
                     document,
@@ -433,7 +835,7 @@ impl ElementStreamer {
                     hatching_manager,
                     pdf_embedder,
                     image_manager,
-                    Some((x_off, y_off)),
+                    None,
                 )?;
 
                 all_operations.extend(element_ops);

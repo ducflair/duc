@@ -18,3 +18,5 @@ on the python side:
 And then run the build (or test commands if available) for each from @duc/package.json 
 
 and in case you need to check the fbs schema or what changed (changes may be git staged): @duc/schema/duc.sql 
+
+migrations for the .sql files may need to be created by running the following the folder and adding on top of the last one: schema/migrations
