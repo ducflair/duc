@@ -829,9 +829,9 @@ fn write_document_grid_config(
 
 fn write_model_element(tx: &Transaction, e: &DucModelElement) -> SerializeResult<()> {
     tx.execute(
-        "INSERT INTO element_model (element_id, model_type, code, svg_path)
+        "INSERT INTO element_model (element_id, model_type, code, thumbnail)
          VALUES (?1, ?2, ?3, ?4)",
-        params![e.base.id, e.model_type, e.code, e.svg_path],
+        params![e.base.id, e.model_type, e.code, e.thumbnail],
     )?;
 
     {

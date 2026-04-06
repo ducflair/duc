@@ -32,6 +32,7 @@ export async function initWasmFromBinary(wasmBinary: BufferSource): Promise<void
   }
 
   const requiredFunctions = [
+    'convert_exported_data_to_pdf_wasm',
     'convert_duc_to_pdf_rs',
     'convert_duc_to_pdf_with_scale_wasm',
     'convert_duc_to_pdf_crop_wasm',
@@ -77,6 +78,7 @@ async function initWasm(): Promise<any> {
 
       // Validate that required functions exist on the imported module
       const requiredFunctions = [
+        'convert_exported_data_to_pdf_wasm',
         'convert_duc_to_pdf_rs',
         'convert_duc_to_pdf_with_scale_wasm',
         'convert_duc_to_pdf_crop_wasm',
@@ -191,16 +193,18 @@ export async function convertDucToPdf(
     let ducBytes = new Uint8Array(ducData);
     let viewBackgroundColor;
     let normalizedData: ExportedDataState | null = null;
+    let rustPayload: unknown = null;
 
     try {
       const latestBlob = new Blob([ducBytes]);
       const parsed = await parseDuc(latestBlob);
       if (parsed) {
-        // Extract scope from parsed data - use localState.scope first, fallback to globalState.mainScope
         const scope = parsed?.localState?.scope || parsed?.globalState?.mainScope || 'mm';
-
-        // ensure that we are only working with mm on the pdf conversion logic
-        const normalized: ExportedDataState = normalizeForSerializationScope(parsed as unknown as ExportedDataState, 'mm', scope);
+        const normalized: ExportedDataState = normalizeForSerializationScope(
+          parsed as unknown as ExportedDataState,
+          'mm',
+          scope,
+        );
         normalized.localState.scope = 'mm';
         normalized.globalState.mainScope = 'mm';
 
@@ -278,7 +282,19 @@ export async function convertDucToPdf(
     let result: Uint8Array;
     const hasFonts = fontMap.size > 0;
 
-    if (options && (options.offsetX !== undefined || options.offsetY !== undefined)) {
+    if (rustPayload) {
+      const backgroundColor = options?.backgroundColor ? options.backgroundColor.trim() : viewBackgroundColor;
+      result = wasm.convert_exported_data_to_pdf_wasm(
+        rustPayload,
+        options?.offsetX,
+        options?.offsetY,
+        typeof options?.width === 'number' ? options.width : undefined,
+        typeof options?.height === 'number' ? options.height : undefined,
+        backgroundColor === undefined ? undefined : backgroundColor,
+        typeof options?.scale === 'number' ? options.scale : undefined,
+        fontMap,
+      );
+    } else if (options && (options.offsetX !== undefined || options.offsetY !== undefined)) {
       // Use crop mode with offset
       const offsetX = options.offsetX || 0;
       const offsetY = options.offsetY || 0;
@@ -291,43 +307,43 @@ export async function convertDucToPdf(
       if (hasFonts) {
         result = scaleOption !== undefined
           ? wasm.convert_duc_to_pdf_crop_with_fonts_scaled_wasm(
-              ducBytes,
-              offsetX,
-              offsetY,
-              widthOption,
-              heightOption,
-              backgroundOption,
-              scaleOption,
-              fontMap
-            )
+            ducBytes,
+            offsetX,
+            offsetY,
+            widthOption,
+            heightOption,
+            backgroundOption,
+            scaleOption,
+            fontMap
+          )
           : wasm.convert_duc_to_pdf_crop_with_fonts_wasm(
-              ducBytes,
-              offsetX,
-              offsetY,
-              widthOption,
-              heightOption,
-              backgroundOption,
-              fontMap
-            );
+            ducBytes,
+            offsetX,
+            offsetY,
+            widthOption,
+            heightOption,
+            backgroundOption,
+            fontMap
+          );
       } else {
         result = scaleOption !== undefined
           ? wasm.convert_duc_to_pdf_crop_scaled_wasm(
-              ducBytes,
-              offsetX,
-              offsetY,
-              widthOption,
-              heightOption,
-              backgroundOption,
-              scaleOption
-            )
+            ducBytes,
+            offsetX,
+            offsetY,
+            widthOption,
+            heightOption,
+            backgroundOption,
+            scaleOption
+          )
           : wasm.convert_duc_to_pdf_crop_wasm(
-              ducBytes,
-              offsetX,
-              offsetY,
-              widthOption,
-              heightOption,
-              backgroundOption
-            );
+            ducBytes,
+            offsetX,
+            offsetY,
+            widthOption,
+            heightOption,
+            backgroundOption
+          );
       }
     } else {
       // Standard conversion
