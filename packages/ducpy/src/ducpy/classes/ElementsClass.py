@@ -479,7 +479,7 @@ class DucModelElement:
     file_ids: List[str]
     model_type: Optional[str] = None
     code: Optional[str] = None
-    svg_path: Optional[str] = None
+    thumbnail: Optional[bytes] = None
     viewer_state: Optional[Viewer3DState] = None
 
 

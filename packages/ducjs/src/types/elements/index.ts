@@ -1180,8 +1180,8 @@ export type DucModelElement = _DucElementBase & {
   /** Defines the source code of the model using build123d python code */
   code: string | null;
 
-  /** The last known SVG path representation of the 3D model for quick rendering on the canvas */
-  svgPath: string | null;
+  /** The last known image thumbnail of the 3D model for quick rendering on the canvas */
+  thumbnail: Uint8Array | null;
 
   /** Possibly connected external files, such as STEP, STL, DXF, etc. */
   fileIds: ExternalFileId[];
