@@ -1506,10 +1506,10 @@ fn read_table_element(conn: &Connection, base: DucElementBase) -> ParseResult<Du
 fn read_model_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucElementEnum> {
     let id = base.id.clone();
     let mut stmt = conn.prepare_cached(
-        "SELECT model_type, code, svg_path FROM element_model WHERE element_id = ?1"
+        "SELECT model_type, code, thumbnail FROM element_model WHERE element_id = ?1"
     )?;
-    let (model_type, code, svg_path) = stmt.query_row(params![id], |row| {
-        Ok((row.get::<_, Option<String>>(0)?, row.get::<_, Option<String>>(1)?, row.get::<_, Option<String>>(2)?))
+    let (model_type, code, thumbnail) = stmt.query_row(params![id], |row| {
+        Ok((row.get::<_, Option<String>>(0)?, row.get::<_, Option<String>>(1)?, row.get::<_, Option<Vec<u8>>>(2)?))
     })?;
 
     let mut f_stmt = conn.prepare_cached(
@@ -1521,7 +1521,7 @@ fn read_model_element(conn: &Connection, base: DucElementBase) -> ParseResult<Du
     let viewer_state = read_model_viewer_state(conn, &id)?;
 
     Ok(DucElementEnum::DucModelElement(DucModelElement {
-        base, model_type, code, svg_path, file_ids, viewer_state,
+        base, model_type, code, thumbnail, file_ids, viewer_state,
     }))
 }
 
