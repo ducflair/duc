@@ -1185,8 +1185,9 @@ pub struct DucModelElement {
     pub model_type: Option<String>,
     /** Defines the source code of the model using build123d python code */
     pub code: Option<String>,
-    /** The last known SVG path representation of the 3D model for quick rendering on the canvas */
-    pub svg_path: Option<String>,
+    /** The last known image thumbnail of the 3D model for quick rendering on the canvas */
+    #[serde(with = "serde_bytes", default, skip_serializing_if = "Option::is_none")]
+    pub thumbnail: Option<Vec<u8>>,
     /** Possibly connected external files, such as STEP, STL, DXF, etc. */
     pub file_ids: Vec<String>,
     /** The last known 3D viewer state for the model */

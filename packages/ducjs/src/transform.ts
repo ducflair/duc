@@ -301,16 +301,110 @@ function fixElementFromRust(el: any): any {
   };
 }
 
+function normalizeViewer3DStateForRust(vs: any): any {
+  if (!vs || typeof vs !== "object") return vs;
+
+  const n = (v: any, fallback: number) =>
+    typeof v === "number" && Number.isFinite(v) ? v : fallback;
+
+  const b = (v: any, fallback: boolean) =>
+    typeof v === "boolean" ? v : fallback;
+
+  const s = (v: any, fallback: string) =>
+    typeof v === "string" ? v : fallback;
+
+  const arr3 = (v: any, fallback: [number, number, number]): [number, number, number] =>
+    Array.isArray(v) && v.length === 3 && v.every((x: any) => typeof x === "number")
+      ? (v as [number, number, number])
+      : fallback;
+
+  const arr4 = (v: any, fallback: [number, number, number, number]): [number, number, number, number] =>
+    Array.isArray(v) && v.length === 4 && v.every((x: any) => typeof x === "number")
+      ? (v as [number, number, number, number])
+      : fallback;
+
+  const cam = vs.camera ?? {};
+  const dsp = vs.display ?? {};
+  const mat = vs.material ?? {};
+  const clip = vs.clipping ?? {};
+  const expl = vs.explode ?? {};
+  const zeb = vs.zebra ?? {};
+
+  const normalizeClipPlane = (cp: any) => ({
+    enabled: b(cp?.enabled, false),
+    value: n(cp?.value, 0),
+    normal: cp?.normal != null ? arr3(cp.normal, [0, 0, 0]) : null,
+  });
+
+  return {
+    camera: {
+      control: s(cam.control, "orbit"),
+      ortho: b(cam.ortho, true),
+      up: s(cam.up, "Z"),
+      position: arr3(cam.position, [0, 0, 0]),
+      quaternion: arr4(cam.quaternion, [0, 0, 0, 1]),
+      target: arr3(cam.target, [0, 0, 0]),
+      zoom: n(cam.zoom, 1),
+      panSpeed: n(cam.panSpeed, 1),
+      rotateSpeed: n(cam.rotateSpeed, 1),
+      zoomSpeed: n(cam.zoomSpeed, 1),
+      holroyd: b(cam.holroyd, false),
+    },
+    display: {
+      wireframe: b(dsp.wireframe, false),
+      transparent: b(dsp.transparent, false),
+      blackEdges: b(dsp.blackEdges, true),
+      grid: dsp.grid ?? { type: "uniform", value: false },
+      axesVisible: b(dsp.axesVisible, false),
+      axesAtOrigin: b(dsp.axesAtOrigin, true),
+    },
+    material: {
+      metalness: n(mat.metalness, 0.3),
+      roughness: n(mat.roughness, 0.65),
+      defaultOpacity: n(mat.defaultOpacity, 0.5),
+      edgeColor: n(mat.edgeColor, 0x707070),
+      ambientIntensity: n(mat.ambientIntensity, 1.0),
+      directIntensity: n(mat.directIntensity, 1.1),
+    },
+    clipping: {
+      x: normalizeClipPlane(clip.x),
+      y: normalizeClipPlane(clip.y),
+      z: normalizeClipPlane(clip.z),
+      intersection: b(clip.intersection, false),
+      showPlanes: b(clip.showPlanes, false),
+      objectColorCaps: b(clip.objectColorCaps, false),
+    },
+    explode: {
+      active: b(expl.active, false),
+      value: n(expl.value, 0),
+    },
+    zebra: {
+      active: b(zeb.active, false),
+      stripeCount: toInteger(zeb.stripeCount, 6),
+      stripeDirection: n(zeb.stripeDirection, 0),
+      colorScheme: s(zeb.colorScheme, "blackwhite"),
+      opacity: n(zeb.opacity, 1),
+      mappingMode: s(zeb.mappingMode, "reflection"),
+    },
+  };
+}
+
 function fixElementToRust(el: any): any {
   if (!el) return el;
 
   fixStylesHatch(el, false);
   fixCustomDataToRust(el);
-  if (el.type === "model" && el.viewerState?.display?.grid) {
-    el.viewerState = {
-      ...el.viewerState,
-      display: { ...el.viewerState.display, grid: fixViewer3DGridToRust(el.viewerState.display.grid) },
-    };
+
+  if (el.type === "model") {
+    if (el.viewerState) {
+      el.viewerState = normalizeViewer3DStateForRust(el.viewerState);
+    }
+    if (el.viewerState?.display?.grid) {
+      el.viewerState = {
+        ...el.viewerState,
+        display: { ...el.viewerState.display, grid: fixViewer3DGridToRust(el.viewerState.display.grid) },
+      };
+    }
   }
 
   // Convert TypeScript DucLine tuples [start, end] → Rust structs { start, end }
@@ -380,6 +474,10 @@ function flattenPrecisionValues(obj: any): any {
   if (isPrecisionValueLike(obj)) return obj.value;
 
   if (Array.isArray(obj)) return obj.map(flattenPrecisionValues);
+
+  if (ArrayBuffer.isView(obj) || obj instanceof ArrayBuffer) {
+    return obj;
+  }
 
   if (typeof obj === "object") {
     const out: Record<string, any> = {};

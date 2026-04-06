@@ -398,7 +398,7 @@ export const newPdfElement = (currentScope: Scope, opts: ElementConstructorOpts)
 export const newModelElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucModelElement> => ({
   modelType: null,
   code: null,
-  svgPath: null,
+  thumbnail: null,
   fileIds: [],
   viewerState: null,
   ..._newElementBase<DucModelElement>("model", currentScope, opts),
@@ -418,6 +418,10 @@ const _deepCopyElement = (val: any, depth: number = 0) => {
   // only clone non-primitives
   if (val == null || typeof val !== "object") {
     return val;
+  }
+
+  if (ArrayBuffer.isView(val)) {
+    return (val as any).slice(0);
   }
 
   const objectType = Object.prototype.toString.call(val);

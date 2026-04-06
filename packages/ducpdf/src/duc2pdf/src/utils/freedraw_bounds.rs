@@ -237,7 +237,10 @@ pub(crate) fn calculate_freedraw_bbox(freedraw: &DucFreeDrawElement) -> Option<F
     calculate_freedraw_point_bbox(&freedraw.points, freedraw.size)
 }
 
-fn calculate_freedraw_point_bbox(points: &[DucPoint], stroke_size: f64) -> Option<FreeDrawBounds> {
+pub(crate) fn calculate_freedraw_point_bbox(
+    points: &[DucPoint],
+    stroke_size: f64,
+) -> Option<FreeDrawBounds> {
     if points.is_empty() {
         return None;
     }
@@ -421,11 +424,23 @@ fn calculate_svg_path_bbox(path_data: &str) -> Option<FreeDrawBounds> {
 }
 
 pub(crate) fn format_number(value: f64) -> String {
+    if !value.is_finite() {
+        return "0".to_string();
+    }
+
     if value.abs() < UNIT_EPSILON {
         return "0".to_string();
     }
 
-    let mut s = format!("{:.6}", value);
+    let precision = if value.abs() < 0.000_001 {
+        12
+    } else if value.abs() < 0.001 {
+        9
+    } else {
+        6
+    };
+
+    let mut s = format!("{value:.precision$}");
     while s.contains('.') && s.ends_with('0') {
         s.pop();
     }
@@ -436,5 +451,16 @@ pub(crate) fn format_number(value: f64) -> String {
         "0".to_string()
     } else {
         s
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::format_number;
+
+    #[test]
+    fn preserves_tiny_positive_values() {
+        assert_eq!(format_number(0.000_000_4), "0.0000004");
+        assert_eq!(format_number(0.000_000_000_4), "0");
     }
 }

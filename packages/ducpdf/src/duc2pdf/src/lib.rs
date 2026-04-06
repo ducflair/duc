@@ -280,6 +280,18 @@ pub fn convert_duc_to_pdf_with_fonts_and_options(
     builder::DucToPdfBuilder::new(exported_data, normalized_options, font_data)?.build()
 }
 
+pub fn convert_exported_data_to_pdf_with_fonts_and_options(
+    exported_data: duc::types::ExportedDataState,
+    options: ConversionOptions,
+    font_data: HashMap<String, Vec<u8>>,
+) -> ConversionResult<Vec<u8>> {
+    let mut normalized_options = options;
+    normalized_options.background_color =
+        normalize_background_color(normalized_options.background_color);
+
+    builder::DucToPdfBuilder::new(exported_data, normalized_options, font_data)?.build()
+}
+
 /// WASM binding for the main conversion function
 #[wasm_bindgen]
 pub fn convert_duc_to_pdf_rs(duc_data: &[u8]) -> Vec<u8> {
@@ -525,6 +537,95 @@ fn deserialize_font_map(font_map_js: JsValue) -> HashMap<String, Vec<u8>> {
         }
     }
     fonts
+}
+
+fn deserialize_exported_data(
+    exported_data_js: JsValue,
+) -> Result<duc::types::ExportedDataState, String> {
+    serde_wasm_bindgen::from_value(exported_data_js)
+        .map_err(|e| format!("Failed to deserialize exported data: {}", e))
+}
+
+#[wasm_bindgen]
+pub fn convert_exported_data_to_pdf_wasm(
+    exported_data_js: JsValue,
+    offset_x: Option<f64>,
+    offset_y: Option<f64>,
+    width: Option<f64>,
+    height: Option<f64>,
+    background_color: Option<String>,
+    scale: Option<f64>,
+    font_map_js: JsValue,
+) -> Vec<u8> {
+    if let Some(w) = width {
+        if !w.is_finite() || w <= 0.0 {
+            let error_info = error_handling::WasmErrorInfo {
+                error: format!("Invalid width: {}", w),
+                error_type: "ValidationError".to_string(),
+                details: format!("width must be a positive finite number, got {}", w),
+                duc_data_length: 0,
+                conversion_context: None,
+            };
+            return error_handling::error_to_wasm_bytes(&error_info);
+        }
+    }
+
+    if let Some(h) = height {
+        if !h.is_finite() || h <= 0.0 {
+            let error_info = error_handling::WasmErrorInfo {
+                error: format!("Invalid height: {}", h),
+                error_type: "ValidationError".to_string(),
+                details: format!("height must be a positive finite number, got {}", h),
+                duc_data_length: 0,
+                conversion_context: None,
+            };
+            return error_handling::error_to_wasm_bytes(&error_info);
+        }
+    }
+
+    let exported_data = match deserialize_exported_data(exported_data_js) {
+        Ok(data) => data,
+        Err(details) => {
+            let error_info = error_handling::WasmErrorInfo {
+                error: details.clone(),
+                error_type: "ValidationError".to_string(),
+                details,
+                duc_data_length: 0,
+                conversion_context: None,
+            };
+            return error_handling::error_to_wasm_bytes(&error_info);
+        }
+    };
+
+    let font_data = deserialize_font_map(font_map_js);
+    let normalized_background = normalize_background_color(background_color);
+
+    let mode = if offset_x.is_some() || offset_y.is_some() {
+        ConversionMode::Crop {
+            offset_x: offset_x.unwrap_or(0.0),
+            offset_y: offset_y.unwrap_or(0.0),
+            width,
+            height,
+        }
+    } else {
+        ConversionMode::Plot
+    };
+
+    let options = ConversionOptions {
+        mode,
+        scale,
+        background_color: normalized_background,
+        ..Default::default()
+    };
+
+    match convert_exported_data_to_pdf_with_fonts_and_options(exported_data, options, font_data) {
+        Ok(pdf_bytes) => pdf_bytes,
+        Err(e) => {
+            error_handling::log_error_details(&e, 0, "Direct exported data conversion");
+            let error_info = error_handling::create_error_info(&e, 0, None);
+            error_handling::error_to_wasm_bytes(&error_info)
+        }
+    }
 }
 
 /// WASM binding for conversion with custom font data
