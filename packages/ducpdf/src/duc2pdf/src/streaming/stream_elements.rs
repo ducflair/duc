@@ -35,14 +35,14 @@ use duc::types::{
     DucEllipseElement, DucFrameElement,
     DucDocElement, DucFreeDrawElement, DucImageElement, DucLine, DucLineReference, DucLinearElement,
     DucLinearElementBase, DucPath, DucPdfElement, DucPlotElement, DucPoint,
-    DucPolygonElement, DucRectangleElement, DucTableElement, DucTextElement, ElementBackground,
+    DucPolygonElement, DucRectangleElement, DucTableElement, DucTextElement, DucModelElement, ElementBackground,
     ElementContentBase, ElementWrapper, GeometricPoint, DucBlockInstance, DucBlockDuplicationArray,
 };
 
 use hipdf::embed_pdf::PdfEmbedder;
 use hipdf::fonts::Font;
 use hipdf::hatching::HatchingManager;
-use hipdf::images::ImageManager;
+use hipdf::images::{Image, ImageManager};
 use hipdf::lopdf::content::Operation;
 use hipdf::lopdf::{Dictionary, Document, Object};
 use hipdf::ocg::OCGManager;
@@ -977,8 +977,8 @@ impl ElementStreamer {
             DucElementEnum::DucDocElement(doc) => {
                 self.stream_doc_element(doc, document, pdf_embedder)?
             }
-            DucElementEnum::DucModelElement(_) => {
-                vec![Operation::new("% DucModelElement - WIP", vec![])]
+            DucElementEnum::DucModelElement(model) => {
+                self.stream_model(model, document, image_manager)?
             }
         };
         operations.extend(element_ops);
@@ -2770,6 +2770,91 @@ impl ElementStreamer {
         let mut taken = Vec::new();
         std::mem::swap(&mut self.new_xobjects, &mut taken);
         taken
+    }
+
+    fn stream_model(
+        &mut self,
+        model: &DucModelElement,
+        document: &mut Document,
+        image_manager: &mut ImageManager,
+    ) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+
+        let thumbnail = match &model.thumbnail {
+            Some(bytes) if !bytes.is_empty() => bytes,
+            _ => {
+                ops.push(Operation::new(
+                    "% DucModelElement without thumbnail",
+                    vec![],
+                ));
+                return Ok(ops);
+            }
+        };
+
+        if model.base.width <= 0.0 || model.base.height <= 0.0 {
+            ops.push(Operation::new(
+                "% DucModelElement with invalid thumbnail bounds",
+                vec![],
+            ));
+            return Ok(ops);
+        }
+
+        let cache_key = format!("model-thumbnail:{}", model.base.id);
+
+        let image_id = if let Some(&cached_id) = self.images.get(&cache_key) {
+            cached_id
+        } else {
+            let image = match Image::from_bytes(thumbnail.clone(), Some(cache_key.clone())) {
+                Ok(image) => image,
+                Err(error) => {
+                    log::warn!(
+                        "[duc2pdf] Failed to decode model thumbnail for {}: {}",
+                        model.base.id,
+                        error,
+                    );
+                    ops.push(Operation::new(
+                        &format!("% Failed to decode DucModelElement thumbnail: {}", model.base.id),
+                        vec![],
+                    ));
+                    return Ok(ops);
+                }
+            };
+
+            let embedded_image_id = match image_manager.embed_image(document, image) {
+                Ok(image_id) => image_id.0,
+                Err(error) => {
+                    log::warn!(
+                        "[duc2pdf] Failed to embed model thumbnail for {}: {}",
+                        model.base.id,
+                        error,
+                    );
+                    ops.push(Operation::new(
+                        &format!("% Failed to embed DucModelElement thumbnail: {}", model.base.id),
+                        vec![],
+                    ));
+                    return Ok(ops);
+                }
+            };
+
+            self.images.insert(cache_key.clone(), embedded_image_id);
+            embedded_image_id
+        };
+
+        let mut temp_resources = Dictionary::new();
+        let resource_name = image_manager.add_to_resources(&mut temp_resources, (image_id, 0));
+        self.new_xobjects
+            .push((resource_name.clone(), Object::Reference((image_id, 0))));
+
+        let y_offset = -(model.base.height as f32);
+        ops.extend(hipdf::images::ImageManager::draw_image(
+            &resource_name,
+            0.0,
+            y_offset,
+            model.base.width as f32,
+            model.base.height as f32,
+        ));
+
+        Ok(ops)
     }
 
     /// Stream image element
