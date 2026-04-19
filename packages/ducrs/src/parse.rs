@@ -1374,23 +1374,23 @@ fn read_binding_from_row(row: &rusqlite::Row, offset: usize) -> rusqlite::Result
     let elem_id: Option<String> = row.get(offset)?;
     let Some(element_id) = elem_id else { return Ok(None) };
 
-    let fixed_x: Option<f64> = row.get(offset + 4)?;
+    let fixed_x: Option<f64> = row.get(offset + 3)?;
     let fixed_point = fixed_x.map(|x| GeometricPoint {
         x,
-        y: row.get::<_, f64>(offset + 5).unwrap_or(0.0),
+        y: row.get::<_, f64>(offset + 4).unwrap_or(0.0),
     });
 
-    let pt_idx: Option<i32> = row.get(offset + 6)?;
+    let pt_idx: Option<i32> = row.get(offset + 5)?;
     let point = pt_idx.map(|index| PointBindingPoint {
         index,
-        offset: row.get::<_, f64>(offset + 7).unwrap_or(0.0),
+        offset: row.get::<_, f64>(offset + 6).unwrap_or(0.0),
     });
 
-    let head_type: Option<i32> = row.get(offset + 8)?;
+    let head_type: Option<i32> = row.get(offset + 7)?;
     let head = head_type.map(|ht| DucHead {
         head_type: Some(int_to_line_head(ht)),
-        block_id: row.get::<_, Option<String>>(offset + 9).unwrap_or(None),
-        size: row.get::<_, f64>(offset + 10).unwrap_or(1.0),
+        block_id: row.get::<_, Option<String>>(offset + 8).unwrap_or(None),
+        size: row.get::<_, f64>(offset + 9).unwrap_or(1.0),
     });
 
     Ok(Some(DucPointBinding {
