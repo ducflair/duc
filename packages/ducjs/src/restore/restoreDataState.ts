@@ -190,6 +190,8 @@ export const restore = (
   );
 
   const restoredVersionGraph = restoreVersionGraph(data?.versionGraph);
+  const restoredFilesData = restoreFilesData(data?.filesData, data?.files);
+  const restoredFiles = restoreFiles(data?.files, restoredFilesData);
 
   // Generate a new ID if none exists or if it's empty
   const parsedId = data?.id;
@@ -210,13 +212,39 @@ export const restore = (
 
     localState: restoredLocalState,
     globalState: restoredGlobalState,
-    files: restoreFiles(data?.files),
-    filesData: restoreFilesData(data?.filesData, data?.files),
+    files: restoredFiles,
+    filesData: restoredFilesData,
     id: restoredId,
   };
 };
 
-export const restoreFiles = (importedFiles: unknown): DucExternalFiles => {
+const getRestoredRevisionSizeBytes = (
+  rawSizeBytes: unknown,
+  revisionId: string,
+  restoredFilesData: ExternalFilesData,
+) => {
+  const explicitSizeBytes = isFiniteNumber(rawSizeBytes)
+    ? (rawSizeBytes as number)
+    : undefined;
+
+  if (typeof explicitSizeBytes === "number" && explicitSizeBytes > 0) {
+    return explicitSizeBytes;
+  }
+
+  return restoredFilesData[revisionId]?.byteLength ?? explicitSizeBytes ?? 0;
+};
+
+const getRestoredSourceName = (fileData: Record<string, unknown>) => {
+  return isValidString(fileData.sourceName)
+    || isValidString(fileData.fileName)
+    || isValidString(fileData.name)
+    || undefined;
+};
+
+export const restoreFiles = (
+  importedFiles: unknown,
+  restoredFilesData: ExternalFilesData = {},
+): DucExternalFiles => {
   if (!importedFiles || typeof importedFiles !== "object") {
     return {};
   }
@@ -251,9 +279,9 @@ export const restoreFiles = (importedFiles: unknown): DucExternalFiles => {
 
         restoredRevisions[revKey] = {
           id: revId,
-          sizeBytes: isFiniteNumber(r.sizeBytes) ? (r.sizeBytes as number) : 0,
+          sizeBytes: getRestoredRevisionSizeBytes(r.sizeBytes, revId, restoredFilesData),
           checksum: isValidString(r.checksum) || undefined,
-          sourceName: isValidString(r.sourceName) || undefined,
+          sourceName: getRestoredSourceName(r),
           mimeType,
           message: isValidString(r.message) || undefined,
           created: isFiniteNumber(r.created) ? (r.created as number) : Date.now(),
@@ -294,7 +322,8 @@ export const restoreFiles = (importedFiles: unknown): DucExternalFiles => {
       revisions: {
         [revId]: {
           id: revId,
-          sizeBytes: 0,
+          sizeBytes: getRestoredRevisionSizeBytes(legacyData.sizeBytes, revId, restoredFilesData),
+          sourceName: getRestoredSourceName(legacyData),
           mimeType,
           created,
           lastRetrieved: isFiniteNumber(legacyData.lastRetrieved)

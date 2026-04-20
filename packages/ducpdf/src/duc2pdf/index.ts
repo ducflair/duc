@@ -239,6 +239,29 @@ export async function convertDucToPdf(
               normalizedElement = Object.assign({}, element, { svgPath });
             }
           }
+          // Ensure model element thumbnails are Uint8Array for serde_bytes compatibility.
+          // The normalizeForSerializationScope traversal creates plain objects by iterating
+          // own-keys, which can demote Uint8Array to a plain {0:…, 1:…} object.
+          if (element && element.type === 'model' && element.thumbnail != null) {
+            const tn = element.thumbnail;
+            if (!(tn instanceof Uint8Array)) {
+              try {
+                if (ArrayBuffer.isView(tn)) {
+                  normalizedElement = Object.assign({}, normalizedElement, {
+                    thumbnail: new Uint8Array((tn as ArrayBufferView).buffer, (tn as ArrayBufferView).byteOffset, (tn as ArrayBufferView).byteLength),
+                  });
+                } else if (Array.isArray(tn)) {
+                  normalizedElement = Object.assign({}, normalizedElement, { thumbnail: new Uint8Array(tn) });
+                } else if (typeof tn === 'object') {
+                  normalizedElement = Object.assign({}, normalizedElement, {
+                    thumbnail: new Uint8Array(Object.values(tn) as number[]),
+                  });
+                }
+              } catch {
+                // Leave as-is if coercion fails
+              }
+            }
+          }
           return normalizedElement;
         });
 
