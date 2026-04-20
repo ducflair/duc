@@ -27,8 +27,6 @@ yarn-error.log*
 
 # sst
 .sst
-sst-env.d.ts
-sst.pyi
 
 # opennext
 .open-next
