@@ -356,7 +356,7 @@ function normalizeViewer3DStateForRust(vs: any): any {
       blackEdges: b(dsp.blackEdges, true),
       grid: dsp.grid ?? { type: "uniform", value: false },
       axesVisible: b(dsp.axesVisible, false),
-      axesAtOrigin: b(dsp.axesAtOrigin, true),
+      axesAtOrigin: b(dsp.axesAtOrigin, false),
     },
     material: {
       metalness: n(mat.metalness, 0.3),
