@@ -1475,8 +1475,22 @@ export const isValidUint8Array = (value: unknown): Uint8Array | undefined => {
     return value.byteLength > 0 ? value : undefined;
   }
 
+  if (ArrayBuffer.isView(value)) {
+    const bytes = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+    return bytes.byteLength > 0 ? bytes : undefined;
+  }
+
   if (value instanceof ArrayBuffer) {
     return value.byteLength > 0 ? new Uint8Array(value) : undefined;
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0 || !value.every((entry) => typeof entry === "number")) {
+      return undefined;
+    }
+
+    const bytes = new Uint8Array(value);
+    return bytes.byteLength > 0 ? bytes : undefined;
   }
 
   if (typeof value === "string") {
@@ -1509,6 +1523,14 @@ export const isValidUint8Array = (value: unknown): Uint8Array | undefined => {
     } catch (error) {
       console.warn("Failed to decode base64 string:", error);
       return undefined;
+    }
+  }
+
+  if (value && typeof value === "object") {
+    const entries = Object.values(value);
+    if (entries.length > 0 && entries.every((entry) => typeof entry === "number")) {
+      const bytes = new Uint8Array(entries as number[]);
+      return bytes.byteLength > 0 ? bytes : undefined;
     }
   }
 
