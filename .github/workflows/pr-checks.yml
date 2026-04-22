@@ -202,12 +202,6 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Install native toolchain for wasm build
-        if: needs.release-check.outputs.needs_wasm == 'true'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang
-
       - name: Install wasm-pack
         if: needs.release-check.outputs.needs_wasm == 'true'
         run: cargo install wasm-pack --version 0.14.0 --locked --force
