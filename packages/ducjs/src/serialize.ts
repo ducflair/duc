@@ -1,4 +1,4 @@
-import { restore, type ElementsConfig, type RestoreConfig } from "./restore";
+import { isValidUint8Array, restore, type ElementsConfig, type RestoreConfig } from "./restore";
 import { transformToRust } from "./transform";
 import type { ExportedDataState } from "./types";
 import { ensureWasm, wasmGetCurrentSchemaVersion, wasmParseDuc, wasmSerializeDuc } from "./wasm";
@@ -148,23 +148,36 @@ function prepareVersionGraphForSerialization(vg: any): any {
   if (!vg || typeof vg !== "object") return undefined;
 
   const checkpoints = Array.isArray(vg.checkpoints)
-    ? vg.checkpoints.filter((cp: any) => {
-      const data = cp?.data;
-      if (data instanceof Uint8Array) return data.byteLength > 0;
-      if (data instanceof ArrayBuffer) return data.byteLength > 0;
-      // Accept base64 strings (from JSON imports)
-      if (typeof data === "string" && data.length > 0) return true;
-      return false;
+    ? vg.checkpoints.flatMap((checkpoint: any) => {
+      const data = isValidUint8Array(checkpoint?.data);
+      if (!data?.byteLength) {
+        return [];
+      }
+
+      return [{
+        ...checkpoint,
+        data,
+      }];
     })
     : [];
 
+  const validCheckpointIds = new Set(
+    checkpoints
+      .map((checkpoint: any) => checkpoint?.id)
+      .filter((checkpointId: unknown): checkpointId is string => typeof checkpointId === "string" && checkpointId.length > 0),
+  );
+
   const deltas = Array.isArray(vg.deltas)
-    ? vg.deltas.filter((d: any) => {
-      const payload = d?.payload;
-      if (payload instanceof Uint8Array) return payload.byteLength > 0;
-      if (payload instanceof ArrayBuffer) return payload.byteLength > 0;
-      if (typeof payload === "string" && payload.length > 0) return true;
-      return false;
+    ? vg.deltas.flatMap((delta: any) => {
+      const payload = isValidUint8Array(delta?.payload);
+      if (!payload?.byteLength || typeof delta?.baseCheckpointId !== "string" || !validCheckpointIds.has(delta.baseCheckpointId)) {
+        return [];
+      }
+
+      return [{
+        ...delta,
+        payload,
+      }];
     })
     : [];
 
