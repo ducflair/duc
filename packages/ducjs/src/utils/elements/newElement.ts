@@ -24,6 +24,8 @@ import {
   DucTableElement,
   DucTextElement,
   ElementConstructorOpts,
+  ElementBackground,
+  ElementStroke,
   ElementUpdate,
   NonDeleted
 } from "../../types/elements";
@@ -395,15 +397,39 @@ export const newPdfElement = (currentScope: Scope, opts: ElementConstructorOpts)
   type: "pdf",
 });
 
-export const newModelElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucModelElement> => ({
-  modelType: null,
-  code: null,
-  thumbnail: null,
-  fileIds: [],
-  viewerState: null,
-  ..._newElementBase<DucModelElement>("model", currentScope, opts),
-  type: 'model',
-});
+const withDisabledContentVisibility = <T extends ElementBackground | ElementStroke>(
+  items: readonly T[] | undefined,
+  fallback: T,
+): T[] => {
+  const source = items?.length ? items : [fallback];
+  return source.map((item) => ({
+    ...item,
+    content: {
+      ...item.content,
+      visible: false,
+    },
+  }));
+};
+
+export const newModelElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucModelElement> => {
+  const modelStyle = {
+    stroke: withDisabledContentVisibility(opts.stroke as ElementStroke[] | undefined, DEFAULT_ELEMENT_PROPS.stroke),
+    background: withDisabledContentVisibility(opts.background as ElementBackground[] | undefined, DEFAULT_ELEMENT_PROPS.background),
+  };
+
+  return {
+    modelType: null,
+    code: null,
+    thumbnail: null,
+    fileIds: [],
+    viewerState: null,
+    ..._newElementBase<DucModelElement>("model", currentScope, {
+      ...opts,
+      ...modelStyle,
+    }),
+    type: 'model',
+  };
+};
 
 // Simplified deep clone for the purpose of cloning DucElement.
 //
