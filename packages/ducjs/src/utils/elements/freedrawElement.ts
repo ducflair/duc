@@ -46,10 +46,18 @@ function buildStrokeOptions(element: DucFreeDrawElement): StrokeOptions {
   };
 }
 
+const normalizeStrokePressure = (pressure: number | undefined): number => {
+  if (!Number.isFinite(pressure) || pressure === undefined || pressure <= 0) {
+    return 0.5;
+  }
+
+  return Math.min(1, Math.max(0.05, pressure));
+};
+
 function buildInputPoints(element: DucFreeDrawElement): number[][] {
   return element.simulatePressure
-    ? element.points.map(({x, y}, i) => [x.scoped, y.scoped, element.pressures[i]])
-    : element.points.map(({x, y}) => [x.scoped, y.scoped]);
+    ? element.points.map(({x, y}) => [x.scoped, y.scoped])
+    : element.points.map(({x, y}, i) => [x.scoped, y.scoped, normalizeStrokePressure(element.pressures[i])]);
 }
 
 export function getFreeDrawSvgPath(element: DucFreeDrawElement) {
