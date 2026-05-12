@@ -351,11 +351,38 @@ export const newArrowElement = (
   elbowed: opts.elbowed ?? true,
 });
 
+const withDisabledContentVisibility = <T extends ElementBackground | ElementStroke>(
+  items: readonly T[] | undefined,
+  fallback: T,
+): T[] => {
+  const source = items?.length ? items : [fallback];
+  return source.map((item) => ({
+    ...item,
+    content: {
+      ...item.content,
+      visible: false,
+    },
+  }));
+};
+
+const getMediaElementStyle = (opts: ElementConstructorOpts) => ({
+  stroke: withDisabledContentVisibility(opts.stroke as ElementStroke[] | undefined, DEFAULT_ELEMENT_PROPS.stroke),
+  background: withDisabledContentVisibility(opts.background as ElementBackground[] | undefined, DEFAULT_ELEMENT_PROPS.background),
+});
+
+const getDocumentElementStyle = (opts: ElementConstructorOpts) => ({
+  stroke: withDisabledContentVisibility(opts.stroke as ElementStroke[] | undefined, DEFAULT_ELEMENT_PROPS.stroke),
+  background: withDisabledContentVisibility(opts.background as ElementBackground[] | undefined, DEFAULT_ELEMENT_PROPS.background),
+});
+
 export const newImageElement = (
   currentScope: Scope,
   opts: Partial<DucImageElement> & ElementConstructorOpts,
 ): NonDeleted<DucImageElement> => ({
-  ..._newElementBase<DucImageElement>("image", currentScope, opts),
+  ..._newElementBase<DucImageElement>("image", currentScope, {
+    ...opts,
+    ...getMediaElementStyle(opts),
+  }),
   type: "image",
   status: opts.status ?? IMAGE_STATUS.PENDING,
   fileId: opts.fileId ?? null,
@@ -377,7 +404,10 @@ export const newDocElement = (
   currentScope: Scope,
   opts: Partial<DucDocElement> & ElementConstructorOpts,
 ): NonDeleted<DucDocElement> => ({
-  ..._newElementBase<DucDocElement>("doc", currentScope, opts),
+  ..._newElementBase<DucDocElement>("doc", currentScope, {
+    ...opts,
+    ...getDocumentElementStyle(opts),
+  }),
   type: "doc",
   text: opts.text || "",
   fileId: opts.fileId ?? null,
@@ -393,23 +423,12 @@ export const newDocElement = (
 export const newPdfElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucPdfElement> => ({
   fileId: null,
   gridConfig: { columns: 1, gapX: 0, gapY: 0, firstPageAlone: false, scale: 1 },
-  ..._newElementBase<DucPdfElement>("pdf", currentScope, opts),
+  ..._newElementBase<DucPdfElement>("pdf", currentScope, {
+    ...opts,
+    ...getDocumentElementStyle(opts),
+  }),
   type: "pdf",
 });
-
-const withDisabledContentVisibility = <T extends ElementBackground | ElementStroke>(
-  items: readonly T[] | undefined,
-  fallback: T,
-): T[] => {
-  const source = items?.length ? items : [fallback];
-  return source.map((item) => ({
-    ...item,
-    content: {
-      ...item.content,
-      visible: false,
-    },
-  }));
-};
 
 export const newModelElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucModelElement> => {
   const modelStyle = {
@@ -482,7 +501,8 @@ const _deepCopyElement = (val: any, depth: number = 0) => {
   // we're not cloning non-array & non-plain-object objects because we
   // don't support them on excalidraw elements yet. If we do, we need to make
   // sure we start cloning them, so let's warn about it.
-  if (import.meta.env.DEV) {
+  const importMetaEnv = (import.meta as unknown as { env?: { DEV?: boolean } }).env;
+  if (importMetaEnv?.DEV) {
     if (
       objectType !== "[object Object]" &&
       objectType !== "[object Array]" &&

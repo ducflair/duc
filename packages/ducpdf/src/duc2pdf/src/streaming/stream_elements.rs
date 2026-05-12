@@ -32,7 +32,7 @@ use crate::{ConversionError, ConversionResult};
 use bigcolor::BigColor;
 use duc::types::{
     BEZIER_MIRRORING, ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN, DucElementEnum,
-    DucEllipseElement, DucFrameElement,
+    DucArrowElement, DucEllipseElement, DucFrameElement,
     DucDocElement, DucFreeDrawElement, DucImageElement, DucLine, DucLineReference, DucLinearElement,
     DucLinearElementBase, DucPath, DucPdfElement, DucPlotElement, DucPoint,
     DucPolygonElement, DucRectangleElement, DucTableElement, DucTextElement, DucModelElement, ElementBackground,
@@ -954,6 +954,7 @@ impl ElementStreamer {
             DucElementEnum::DucEllipseElement(ellipse) => self.stream_ellipse(ellipse)?,
             DucElementEnum::DucTextElement(text) => self.stream_text(text)?,
             DucElementEnum::DucLinearElement(linear) => self.stream_linear(linear)?,
+            DucElementEnum::DucArrowElement(arrow) => self.stream_arrow(arrow)?,
             DucElementEnum::DucTableElement(table) => self.stream_table(table)?,
             DucElementEnum::DucFreeDrawElement(freedraw) => {
                 self.stream_freedraw(freedraw, &styles, document, pdf_embedder, resource_streamer)?
@@ -973,7 +974,6 @@ impl ElementStreamer {
 
             // Ignored elements (as per specifications)
             DucElementEnum::DucEmbeddableElement(_) => vec![], // Ignore
-            DucElementEnum::DucArrowElement(_) => vec![],      // Ignore
             DucElementEnum::DucDocElement(doc) => {
                 self.stream_doc_element(doc, document, pdf_embedder)?
             }
@@ -1752,6 +1752,122 @@ impl ElementStreamer {
         ))
     }
 
+    /// Append a rectangle path in the local top-left coordinate system, preserving element roundness.
+    fn append_rounded_rect_path(
+        ops: &mut Vec<Operation>,
+        x: f64,
+        top_y: f64,
+        width: f64,
+        height: f64,
+        roundness: f64,
+    ) {
+        if width <= 0.0 || height <= 0.0 || !width.is_finite() || !height.is_finite() {
+            return;
+        }
+
+        let radius = roundness.max(0.0).min(width * 0.5).min(height * 0.5);
+        if radius <= 0.01 {
+            ops.push(Operation::new(
+                "re",
+                vec![
+                    Object::Real(x as f32),
+                    Object::Real((top_y - height) as f32),
+                    Object::Real(width as f32),
+                    Object::Real(height as f32),
+                ],
+            ));
+            return;
+        }
+
+        let right = x + width;
+        let bottom = top_y - height;
+        let kappa = 0.552_284_749_830_793_6;
+        let control = radius * kappa;
+
+        ops.push(Operation::new(
+            "m",
+            vec![Object::Real((x + radius) as f32), Object::Real(top_y as f32)],
+        ));
+        ops.push(Operation::new(
+            "l",
+            vec![Object::Real((right - radius) as f32), Object::Real(top_y as f32)],
+        ));
+        ops.push(Operation::new(
+            "c",
+            vec![
+                Object::Real((right - radius + control) as f32),
+                Object::Real(top_y as f32),
+                Object::Real(right as f32),
+                Object::Real((top_y - radius + control) as f32),
+                Object::Real(right as f32),
+                Object::Real((top_y - radius) as f32),
+            ],
+        ));
+        ops.push(Operation::new(
+            "l",
+            vec![Object::Real(right as f32), Object::Real((bottom + radius) as f32)],
+        ));
+        ops.push(Operation::new(
+            "c",
+            vec![
+                Object::Real(right as f32),
+                Object::Real((bottom + radius - control) as f32),
+                Object::Real((right - radius + control) as f32),
+                Object::Real(bottom as f32),
+                Object::Real((right - radius) as f32),
+                Object::Real(bottom as f32),
+            ],
+        ));
+        ops.push(Operation::new(
+            "l",
+            vec![Object::Real((x + radius) as f32), Object::Real(bottom as f32)],
+        ));
+        ops.push(Operation::new(
+            "c",
+            vec![
+                Object::Real((x + radius - control) as f32),
+                Object::Real(bottom as f32),
+                Object::Real(x as f32),
+                Object::Real((bottom + radius - control) as f32),
+                Object::Real(x as f32),
+                Object::Real((bottom + radius) as f32),
+            ],
+        ));
+        ops.push(Operation::new(
+            "l",
+            vec![Object::Real(x as f32), Object::Real((top_y - radius) as f32)],
+        ));
+        ops.push(Operation::new(
+            "c",
+            vec![
+                Object::Real(x as f32),
+                Object::Real((top_y - radius + control) as f32),
+                Object::Real((x + radius - control) as f32),
+                Object::Real(top_y as f32),
+                Object::Real((x + radius) as f32),
+                Object::Real(top_y as f32),
+            ],
+        ));
+        ops.push(Operation::new("h", vec![]));
+    }
+
+    fn begin_rounded_element_clip(
+        ops: &mut Vec<Operation>,
+        width: f64,
+        height: f64,
+        roundness: f64,
+    ) -> bool {
+        if roundness <= 0.01 || width <= 0.0 || height <= 0.0 || !width.is_finite() || !height.is_finite() {
+            return false;
+        }
+
+        ops.push(Operation::new("q", vec![]));
+        Self::append_rounded_rect_path(ops, 0.0, 0.0, width, height, roundness);
+        ops.push(Operation::new("W", vec![]));
+        ops.push(Operation::new("n", vec![]));
+        true
+    }
+
     /// Stream rectangle element
     fn stream_rectangle(
         &self,
@@ -1762,13 +1878,20 @@ impl ElementStreamer {
 
         // Handle filling and stroking with hatching support
         let styles = &rect.base.styles;
-        let has_background = !styles.background.is_empty();
-        let has_stroke = !styles.stroke.is_empty();
+        let has_background = styles.background.iter().any(|background| background.content.visible);
+        let has_stroke = styles.stroke.iter().any(|stroke| stroke.content.visible);
 
         // Check for hatching patterns in backgrounds
         let has_hatching = self.style_resolver.has_hatching(&styles.background);
 
         if has_hatching {
+            let has_rounded_clip = Self::begin_rounded_element_clip(
+                &mut ops,
+                rect.base.width,
+                rect.base.height,
+                styles.roundness,
+            );
+
             // Use style resolver for hatching pattern filling
             self.style_resolver.apply_hatching_pattern_with_dims(
                 &styles.background,
@@ -1778,30 +1901,32 @@ impl ElementStreamer {
                 rect.base.height,
             )?;
 
+            if has_rounded_clip {
+                ops.push(Operation::new("Q", vec![]));
+            }
+
             // Create rectangle path for stroking if needed
             if has_stroke {
-                ops.push(Operation::new(
-                    "re",
-                    vec![
-                        Object::Real(0.0),                        // x (relative to current transformation)
-                        Object::Real(-(rect.base.height as f32)), // y (flip to keep origin at top-left)
-                        Object::Real(rect.base.width as f32),
-                        Object::Real(rect.base.height as f32),
-                    ],
-                ));
+                Self::append_rounded_rect_path(
+                    &mut ops,
+                    0.0,
+                    0.0,
+                    rect.base.width,
+                    rect.base.height,
+                    styles.roundness,
+                );
                 ops.push(Operation::new("S", vec![])); // Stroke after hatching
             }
         } else {
             // Create rectangle path
-            ops.push(Operation::new(
-                "re",
-                vec![
-                    Object::Real(0.0),                        // x (relative to current transformation)
-                    Object::Real(-(rect.base.height as f32)), // y (flip to keep origin at top-left)
-                    Object::Real(rect.base.width as f32),
-                    Object::Real(rect.base.height as f32),
-                ],
-            ));
+            Self::append_rounded_rect_path(
+                &mut ops,
+                0.0,
+                0.0,
+                rect.base.width,
+                rect.base.height,
+                styles.roundness,
+            );
 
             // Standard fill and stroke
             if has_background && has_stroke {
@@ -1822,13 +1947,18 @@ impl ElementStreamer {
             | DucElementEnum::DucPolygonElement(_)
             | DucElementEnum::DucEllipseElement(_)
             | DucElementEnum::DucLinearElement(_)
+            | DucElementEnum::DucArrowElement(_)
             | DucElementEnum::DucTableElement(_) => StyleProfile {
                 use_background_fill: true,
                 fill_from_stroke: false,
                 apply_stroke_properties: true,
             },
-            DucElementEnum::DucFrameElement(_)
-            | DucElementEnum::DucPlotElement(_) => StyleProfile {
+            DucElementEnum::DucFrameElement(_) => StyleProfile {
+                use_background_fill: true,
+                fill_from_stroke: false,
+                apply_stroke_properties: true,
+            },
+            DucElementEnum::DucPlotElement(_) => StyleProfile {
                 use_background_fill: false,
                 fill_from_stroke: false,
                 apply_stroke_properties: true,
@@ -1842,7 +1972,6 @@ impl ElementStreamer {
             | DucElementEnum::DucImageElement(_)
             | DucElementEnum::DucPdfElement(_)
             | DucElementEnum::DucEmbeddableElement(_)
-            | DucElementEnum::DucArrowElement(_)
             | DucElementEnum::DucDocElement(_) => StyleProfile {
                 use_background_fill: false,
                 fill_from_stroke: false,
@@ -1978,24 +2107,38 @@ impl ElementStreamer {
         PdfLinearRenderer::stream_linear(&linear)
     }
 
+    fn stream_arrow(&self, arrow: &DucArrowElement) -> ConversionResult<Vec<Operation>> {
+        PdfLinearRenderer::stream_linear(&DucLinearElement {
+            linear_base: arrow.linear_base.clone(),
+            wipeout_below: false,
+        })
+    }
+
     fn convert_polygon_to_linear_element(polygon: &DucPolygonElement) -> DucLinearElement {
         let sides = polygon.sides.max(3);
-        let points = Self::generate_polygon_points(sides, polygon.base.width, polygon.base.height);
-        let mut lines: Vec<DucLine> = Vec::with_capacity(points.len());
+        let base_points = Self::generate_polygon_points(sides, polygon.base.width, polygon.base.height);
+        let roundness = polygon.base.styles.roundness.max(0.0);
+        let (points, lines) = if roundness > 0.01 {
+            Self::generate_rounded_polygon_path(&base_points, roundness)
+        } else {
+            let mut lines: Vec<DucLine> = Vec::with_capacity(base_points.len());
 
-        for i in 0..points.len() {
-            let next_i = (i + 1) % points.len();
-            lines.push(DucLine {
-                start: DucLineReference {
-                    index: i as i32,
-                    handle: None,
-                },
-                end: DucLineReference {
-                    index: next_i as i32,
-                    handle: None,
-                },
-            });
-        }
+            for i in 0..base_points.len() {
+                let next_i = (i + 1) % base_points.len();
+                lines.push(DucLine {
+                    start: DucLineReference {
+                        index: i as i32,
+                        handle: None,
+                    },
+                    end: DucLineReference {
+                        index: next_i as i32,
+                        handle: None,
+                    },
+                });
+            }
+
+            (base_points, lines)
+        };
 
         DucLinearElement {
             linear_base: DucLinearElementBase {
@@ -2009,6 +2152,83 @@ impl ElementStreamer {
             },
             wipeout_below: false,
         }
+    }
+
+    fn generate_rounded_polygon_path(
+        vertices: &[DucPoint],
+        roundness: f64,
+    ) -> (Vec<DucPoint>, Vec<DucLine>) {
+        if vertices.len() < 3 {
+            return (vertices.to_vec(), Vec::new());
+        }
+
+        let mut points = Vec::with_capacity(vertices.len() * 2);
+        let mut corner_controls = Vec::with_capacity(vertices.len());
+
+        for (index, point) in vertices.iter().enumerate() {
+            let prev = &vertices[(index + vertices.len() - 1) % vertices.len()];
+            let next = &vertices[(index + 1) % vertices.len()];
+            let prev_dx = prev.x - point.x;
+            let prev_dy = prev.y - point.y;
+            let next_dx = next.x - point.x;
+            let next_dy = next.y - point.y;
+            let prev_len = (prev_dx * prev_dx + prev_dy * prev_dy).sqrt();
+            let next_len = (next_dx * next_dx + next_dy * next_dy).sqrt();
+            let tangent = roundness.min(prev_len * 0.45).min(next_len * 0.45);
+
+            if tangent <= 0.01 || prev_len <= 0.001 || next_len <= 0.001 {
+                points.push(point.clone());
+                points.push(point.clone());
+                corner_controls.push((point.x, point.y));
+                continue;
+            }
+
+            points.push(DucPoint {
+                x: point.x + (prev_dx / prev_len) * tangent,
+                y: point.y + (prev_dy / prev_len) * tangent,
+                mirroring: None,
+            });
+            points.push(DucPoint {
+                x: point.x + (next_dx / next_len) * tangent,
+                y: point.y + (next_dy / next_len) * tangent,
+                mirroring: None,
+            });
+            corner_controls.push((point.x, point.y));
+        }
+
+        let mut lines = Vec::with_capacity(vertices.len() * 2);
+        for index in 0..vertices.len() {
+            let start_idx = index * 2;
+            let end_idx = start_idx + 1;
+            let next_start_idx = ((index + 1) % vertices.len()) * 2;
+            let control = corner_controls[index];
+
+            lines.push(DucLine {
+                start: DucLineReference {
+                    index: start_idx as i32,
+                    handle: Some(GeometricPoint {
+                        x: control.0,
+                        y: control.1,
+                    }),
+                },
+                end: DucLineReference {
+                    index: end_idx as i32,
+                    handle: None,
+                },
+            });
+            lines.push(DucLine {
+                start: DucLineReference {
+                    index: end_idx as i32,
+                    handle: None,
+                },
+                end: DucLineReference {
+                    index: next_start_idx as i32,
+                    handle: None,
+                },
+            });
+        }
+
+        (points, lines)
     }
 
     fn generate_polygon_points(sides: i32, width: f64, height: f64) -> Vec<DucPoint> {
@@ -2904,6 +3124,13 @@ impl ElementStreamer {
                             }
                         }
 
+                        let has_rounded_clip = Self::begin_rounded_element_clip(
+                            &mut ops,
+                            image.base.width,
+                            image.base.height,
+                            image.base.styles.roundness,
+                        );
+
                         // PDF/SVG elements need Y-offset correction similar to images
                         // PDF draws from bottom-left, so we need to offset by -height
                         ops.push(Operation::new("q", vec![])); // Save state
@@ -2923,6 +3150,10 @@ impl ElementStreamer {
 
                         ops.extend(result.operations);
                         ops.push(Operation::new("Q", vec![])); // Restore state
+
+                        if has_rounded_clip {
+                            ops.push(Operation::new("Q", vec![]));
+                        }
                     }
                     Err(e) => {
                         ops.push(Operation::new(
@@ -2931,15 +3162,14 @@ impl ElementStreamer {
                         ));
                         println!("❌ Failed to embed SVG-PDF {}: {}", embed_id, e);
                         // Placeholder relative to current transform
-                        ops.push(Operation::new(
-                            "re",
-                            vec![
-                                Object::Real(0.0),
-                                Object::Real(-(image.base.height as f32)),
-                                Object::Real(image.base.width as f32),
-                                Object::Real(image.base.height as f32),
-                            ],
-                        ));
+                        Self::append_rounded_rect_path(
+                            &mut ops,
+                            0.0,
+                            0.0,
+                            image.base.width,
+                            image.base.height,
+                            image.base.styles.roundness,
+                        );
                         ops.push(Operation::new("S", vec![]));
                     }
                 }
@@ -2972,6 +3202,13 @@ impl ElementStreamer {
                     self.new_xobjects
                         .push((resource_name.clone(), Object::Reference((image_id, 0))));
 
+                    let has_rounded_clip = Self::begin_rounded_element_clip(
+                        &mut ops,
+                        image.base.width,
+                        image.base.height,
+                        image.base.styles.roundness,
+                    );
+
                     // Use image_manager to draw the image with proper transformations
                     // PDF draws images from bottom-left corner, so we need to offset by -height
                     // to make it appear at the correct position (since our transform positions top-left)
@@ -2983,6 +3220,10 @@ impl ElementStreamer {
                         image.base.width as f32,
                         image.base.height as f32,
                     ));
+
+                    if has_rounded_clip {
+                        ops.push(Operation::new("Q", vec![]));
+                    }
                 } else {
                     log::warn!("[duc2pdf] Image file_id {} NOT FOUND in cache", file_id);
                     // Image not found - create red border placeholder with error text
@@ -3002,15 +3243,14 @@ impl ElementStreamer {
                     ));
 
                     // Draw rectangle with red border
-                    ops.push(Operation::new(
-                        "re",
-                        vec![
-                            Object::Real(0.0),
-                            Object::Real(-(image.base.height as f32)),
-                            Object::Real(image.base.width as f32),
-                            Object::Real(image.base.height as f32),
-                        ],
-                    ));
+                    Self::append_rounded_rect_path(
+                        &mut ops,
+                        0.0,
+                        0.0,
+                        image.base.width,
+                        image.base.height,
+                        image.base.styles.roundness,
+                    );
                     ops.push(Operation::new("S", vec![]));
 
                     // Add error text inside the rectangle
@@ -3057,15 +3297,14 @@ impl ElementStreamer {
             ));
 
             // Draw rectangle with blue border
-            ops.push(Operation::new(
-                "re",
-                vec![
-                    Object::Real(0.0),
-                    Object::Real(-(image.base.height as f32)),
-                    Object::Real(image.base.width as f32),
-                    Object::Real(image.base.height as f32),
-                ],
-            ));
+            Self::append_rounded_rect_path(
+                &mut ops,
+                0.0,
+                0.0,
+                image.base.width,
+                image.base.height,
+                image.base.styles.roundness,
+            );
             ops.push(Operation::new("S", vec![]));
         }
 
@@ -3081,24 +3320,27 @@ impl ElementStreamer {
     fn stream_frame(&self, frame: &DucFrameElement) -> ConversionResult<Vec<Operation>> {
         let mut ops = Vec::new();
 
-        // Note: Clipping is handled in handle_frame_clipping for child elements
-        // This function only renders the frame border if present
-
-        // Draw frame border if it has stroke styles
         let styles = &frame.stack_element_base.base.styles;
-        if !styles.stroke.is_empty() {
-            // Draw rectangle at element bounds
-            // The clipping inset in handle_frame_clipping ensures the stroke won't be clipped
-            ops.push(Operation::new(
-                "re",
-                vec![
-                    Object::Real(0.0),
-                    Object::Real(0.0),
-                    Object::Real(frame.stack_element_base.base.width as f32),
-                    Object::Real(-(frame.stack_element_base.base.height as f32)),
-                ],
-            ));
-            ops.push(Operation::new("S", vec![]));
+        let has_background = styles.background.iter().any(|background| background.content.visible);
+        let has_stroke = styles.stroke.iter().any(|stroke| stroke.content.visible);
+
+        if has_background || has_stroke {
+            Self::append_rounded_rect_path(
+                &mut ops,
+                0.0,
+                0.0,
+                frame.stack_element_base.base.width,
+                frame.stack_element_base.base.height,
+                styles.roundness,
+            );
+
+            if has_background && has_stroke {
+                ops.push(Operation::new("B", vec![]));
+            } else if has_background {
+                ops.push(Operation::new("f", vec![]));
+            } else {
+                ops.push(Operation::new("S", vec![]));
+            }
         }
 
         // Stream child elements within the frame's coordinate system
