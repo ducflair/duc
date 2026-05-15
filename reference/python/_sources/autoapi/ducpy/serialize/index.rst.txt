@@ -25,6 +25,7 @@ Functions
 
 .. autoapisummary::
 
+   ducpy.serialize._find_schema_file
    ducpy.serialize._decode_user_version_to_semver
    ducpy.serialize._read_schema_version_fallback
    ducpy.serialize._flatten_dict
@@ -39,6 +40,8 @@ Module Contents
 ---------------
 
 .. py:data:: logger
+
+.. py:function:: _find_schema_file() -> pathlib.Path | None
 
 .. py:function:: _decode_user_version_to_semver(user_version: int) -> str
 

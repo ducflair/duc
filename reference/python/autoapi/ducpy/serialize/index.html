@@ -299,28 +299,31 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._decode_user_version_to_semver" title="ducpy.serialize._decode_user_version_to_semver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_decode_user_version_to_semver</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._find_schema_file" title="ducpy.serialize._find_schema_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_find_schema_file</span></code></a>(→ pathlib.Path | None)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._decode_user_version_to_semver" title="ducpy.serialize._decode_user_version_to_semver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_decode_user_version_to_semver</span></code></a>(→ str)</p></td>
 <td><p>Decode sqlite-style schema user_version to semver.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._read_schema_version_fallback" title="ducpy.serialize._read_schema_version_fallback"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_read_schema_version_fallback</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._read_schema_version_fallback" title="ducpy.serialize._read_schema_version_fallback"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_read_schema_version_fallback</span></code></a>(→ str)</p></td>
 <td><p>Resolve schema version directly from repository <cite>schema/duc.sql</cite>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._flatten_dict" title="ducpy.serialize._flatten_dict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_flatten_dict</span></code></a>(→ dict)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._flatten_dict" title="ducpy.serialize._flatten_dict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_flatten_dict</span></code></a>(→ dict)</p></td>
 <td><p>Recursively flatten nested dicts whose key is in <code class="docutils literal notranslate"><span class="pre">_FLATTEN_KEYS</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._element_to_camel" title="ducpy.serialize._element_to_camel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_element_to_camel</span></code></a>(→ dict)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._element_to_camel" title="ducpy.serialize._element_to_camel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_element_to_camel</span></code></a>(→ dict)</p></td>
 <td><p>Convert an element (or ElementWrapper) to the camelCase dict Rust expects.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._convert_external_files" title="ducpy.serialize._convert_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_external_files</span></code></a>(→ Tuple[Optional[Dict[str, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._convert_external_files" title="ducpy.serialize._convert_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_external_files</span></code></a>(→ Tuple[Optional[Dict[str, ...)</p></td>
 <td><p>Convert DucExternalFile dict (or legacy list) to camelCase dicts for serialization.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._convert_dict_entries" title="ducpy.serialize._convert_dict_entries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_dict_entries</span></code></a>(→ Optional[Dict[str, str]])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._convert_dict_entries" title="ducpy.serialize._convert_dict_entries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_dict_entries</span></code></a>(→ Optional[Dict[str, str]])</p></td>
 <td><p>Convert a list of DictionaryEntry to a <code class="docutils literal notranslate"><span class="pre">{key:</span> <span class="pre">value}</span></code> dict.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._convert_list" title="ducpy.serialize._convert_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_list</span></code></a>(→ Optional[list])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._convert_list" title="ducpy.serialize._convert_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_list</span></code></a>(→ Optional[list])</p></td>
 <td><p>Convert a list of dataclass instances to camelCase dicts.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize.serialize_duc" title="ducpy.serialize.serialize_duc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">serialize_duc</span></code></a>(→ bytes)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize.serialize_duc" title="ducpy.serialize.serialize_duc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">serialize_duc</span></code></a>(→ bytes)</p></td>
 <td><p>Serialize elements to <code class="docutils literal notranslate"><span class="pre">.duc</span></code> format.</p></td>
 </tr>
 </tbody>
@@ -332,6 +335,11 @@
 <dl class="py data">
 <dt class="sig sig-object py" id="ducpy.serialize.logger">
 <span class="sig-prename descclassname"><span class="pre">ducpy.serialize.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#ducpy.serialize.logger" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.serialize._find_schema_file">
+<span class="sig-prename descclassname"><span class="pre">ducpy.serialize.</span></span><span class="sig-name descname"><span class="pre">_find_schema_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#ducpy.serialize._find_schema_file" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -471,6 +479,7 @@ camelCase dicts expected by the Rust native module.</p>
 <li><a class="reference internal" href="#functions">Functions</a></li>
 <li><a class="reference internal" href="#module-contents">Module Contents</a><ul>
 <li><a class="reference internal" href="#ducpy.serialize.logger"><code class="docutils literal notranslate"><span class="pre">logger</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.serialize._find_schema_file"><code class="docutils literal notranslate"><span class="pre">_find_schema_file()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.serialize._decode_user_version_to_semver"><code class="docutils literal notranslate"><span class="pre">_decode_user_version_to_semver()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.serialize._read_schema_version_fallback"><code class="docutils literal notranslate"><span class="pre">_read_schema_version_fallback()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.serialize.DUC_SCHEMA_VERSION"><code class="docutils literal notranslate"><span class="pre">DUC_SCHEMA_VERSION</span></code></a></li>
