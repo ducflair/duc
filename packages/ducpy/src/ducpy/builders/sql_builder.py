@@ -42,6 +42,12 @@ _MIGRATION_RE = re.compile(r"^(\d+)_to_(\d+)$")
 
 
 def _find_schema_dir() -> Optional[Path]:
+    env_path = os.environ.get("DUC_SCHEMA_DIR")
+    if env_path:
+        candidate = Path(env_path)
+        if (candidate / "duc.sql").exists():
+            return candidate
+
     current = Path(__file__).resolve()
     for parent in current.parents:
         candidate = parent / "schema"

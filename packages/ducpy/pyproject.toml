@@ -34,7 +34,9 @@ manifest-path = "crate/Cargo.toml"
 python-source = "src"
 module-name = "ducpy_native"
 include = [
-    { path = "LICENSE", format = "sdist" }
+    { path = "LICENSE", format = "sdist" },
+    { path = "schema/**/*", format = "sdist" },
+    { path = "schema/**/*", format = "wheel" }
 ]
 
 [tool.setuptools]

@@ -5,6 +5,7 @@ Serialize DUC data using the Rust native extension (ducpy_native).
 from __future__ import annotations
 
 import logging
+import os
 import re
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
@@ -15,6 +16,22 @@ from ducpy.utils.convert import (deep_snake_to_camel, snake_to_camel,
                                  to_serializable)
 
 logger = logging.getLogger(__name__)
+
+
+def _find_schema_file() -> Path | None:
+    env_path = Path(os.environ["DUC_SCHEMA_DIR"]) if "DUC_SCHEMA_DIR" in os.environ else None
+    if env_path is not None:
+        candidate = env_path / "duc.sql"
+        if candidate.exists():
+            return candidate
+
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        candidate = parent / "schema" / "duc.sql"
+        if candidate.exists():
+            return candidate
+
+    return None
 
 
 def _decode_user_version_to_semver(user_version: int) -> str:
@@ -39,7 +56,9 @@ def _read_schema_version_fallback() -> str:
     CI environments before setup-time generation has run).
     """
     try:
-        schema_path = Path(__file__).resolve().parents[4] / "schema" / "duc.sql"
+        schema_path = _find_schema_file()
+        if schema_path is None:
+            return "0.0.0"
         content = schema_path.read_text(encoding="utf-8")
         match = re.search(r"PRAGMA\s+user_version\s*=\s*(\d+)\s*;", content)
         if match:
@@ -226,4 +245,3 @@ def serialize_duc(
     }
 
     return ducpy_native.serialize_duc(data)
-

@@ -1,6 +1,8 @@
 # Test files
 dist/
 inputs/
+schema/*
+!schema/.gitkeep
 
 # Auto-generated version file
 **/_version.py
