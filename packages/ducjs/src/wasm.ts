@@ -17,13 +17,40 @@ import init, {
 let initialized = false;
 let initPromise: Promise<void> | null = null;
 
+const DEFAULT_WASM_URL = new URL("../dist/ducjs_wasm_bg.wasm", import.meta.url);
+
+const isNodeRuntime = () =>
+  typeof process !== "undefined" && typeof process.versions?.node === "string";
+
+type NodeFsPromisesModule = {
+  readFile(path: string | URL): Promise<Uint8Array>;
+};
+
+const loadNodeFsPromises = async (): Promise<NodeFsPromisesModule> => {
+  const dynamicImport = new Function("specifier", "return import(specifier)") as (
+    specifier: string,
+  ) => Promise<NodeFsPromisesModule>;
+  return dynamicImport(["node", "fs/promises"].join(":"));
+};
+
+const resolveDefaultWasmInput = async (): Promise<URL | Uint8Array> => {
+  if (!isNodeRuntime()) {
+    return DEFAULT_WASM_URL;
+  }
+
+  const { readFile } = await loadNodeFsPromises();
+  const bytes = await readFile(DEFAULT_WASM_URL);
+  return new Uint8Array(bytes);
+};
+
 export async function ensureWasm(wasmUrl?: string | URL | BufferSource): Promise<void> {
   if (initialized) return;
   if (!initPromise) {
-    const arg = wasmUrl !== undefined ? { module_or_path: wasmUrl } : undefined;
-    initPromise = init(arg).then(() => {
+    initPromise = (async () => {
+      const moduleOrPath = wasmUrl ?? await resolveDefaultWasmInput();
+      await init({ module_or_path: moduleOrPath });
       initialized = true;
-    });
+    })();
   }
   return initPromise;
 }
@@ -35,8 +62,13 @@ export async function ensureWasm(wasmUrl?: string | URL | BufferSource): Promise
  * without being able to resolve the file URL itself.
  */
 export async function getWasmBinary(): Promise<ArrayBuffer> {
-  const url = new URL('../dist/ducjs_wasm_bg.wasm', import.meta.url);
-  const resp = await fetch(url);
+  if (isNodeRuntime()) {
+    const { readFile } = await loadNodeFsPromises();
+    const bytes = await readFile(DEFAULT_WASM_URL);
+    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  }
+
+  const resp = await fetch(DEFAULT_WASM_URL);
   if (!resp.ok) {
     throw new Error(`Failed to fetch WASM binary: ${resp.status} ${resp.statusText}`);
   }
