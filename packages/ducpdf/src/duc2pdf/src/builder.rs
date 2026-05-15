@@ -8,8 +8,9 @@ use crate::utils::freedraw_bounds::{
 use crate::utils::style_resolver::StyleResolver;
 use crate::utils::svg_to_pdf::{svg_to_pdf, svg_to_pdf_with_dimensions};
 use crate::{
-    calculate_required_scale, calculate_required_scale_with_crop_dimensions, validate_coordinates_with_scale, ConversionError, ConversionMode,
-    ConversionOptions, ConversionResult, PDF_USER_UNIT,
+    calculate_required_scale, calculate_required_scale_with_crop_dimensions,
+    validate_coordinates_with_scale, ConversionError, ConversionMode, ConversionOptions,
+    ConversionResult, PDF_USER_UNIT,
 };
 use bigcolor::BigColor;
 use duc::types::{
@@ -139,27 +140,22 @@ impl DucToPdfBuilder {
             DucElementEnum::DucPlotElement(elem) => base_is_sane(&elem.stack_element_base.base),
             DucElementEnum::DucLinearElement(elem) => {
                 base_is_sane(&elem.linear_base.base)
-                    && elem
-                        .linear_base
-                        .points
-                        .iter()
-                        .all(|point| Self::is_export_sane_value(point.x) && Self::is_export_sane_value(point.y))
+                    && elem.linear_base.points.iter().all(|point| {
+                        Self::is_export_sane_value(point.x) && Self::is_export_sane_value(point.y)
+                    })
             }
             DucElementEnum::DucArrowElement(elem) => {
                 base_is_sane(&elem.linear_base.base)
-                    && elem
-                        .linear_base
-                        .points
-                        .iter()
-                        .all(|point| Self::is_export_sane_value(point.x) && Self::is_export_sane_value(point.y))
+                    && elem.linear_base.points.iter().all(|point| {
+                        Self::is_export_sane_value(point.x) && Self::is_export_sane_value(point.y)
+                    })
             }
             DucElementEnum::DucFreeDrawElement(elem) => {
                 base_is_sane(&elem.base)
                     && Self::is_export_sane_value(elem.size)
-                    && elem
-                        .points
-                        .iter()
-                        .all(|point| Self::is_export_sane_value(point.x) && Self::is_export_sane_value(point.y))
+                    && elem.points.iter().all(|point| {
+                        Self::is_export_sane_value(point.x) && Self::is_export_sane_value(point.y)
+                    })
             }
         }
     }
@@ -205,7 +201,9 @@ impl DucToPdfBuilder {
         let point_bounds = calculate_freedraw_point_bbox(&freedraw.points, freedraw.size);
 
         if let Some(bounds) = preferred_bounds {
-            if Self::has_usable_dimension(bounds.width()) && Self::has_usable_dimension(bounds.height()) {
+            if Self::has_usable_dimension(bounds.width())
+                && Self::has_usable_dimension(bounds.height())
+            {
                 return Some(bounds);
             }
 
@@ -299,20 +297,31 @@ impl DucToPdfBuilder {
                 &exported_data,
                 Some(user_scale),
                 crop_offset,
-            ).is_ok();
+            )
+            .is_ok();
             if fits {
                 user_scale
             } else {
                 // User scale doesn't keep coordinates in bounds; auto-calculate.
                 if crop_dimensions.0.is_some() || crop_dimensions.1.is_some() {
-                    calculate_required_scale_with_crop_dimensions(&exported_data, crop_offset, crop_dimensions.0, crop_dimensions.1)
+                    calculate_required_scale_with_crop_dimensions(
+                        &exported_data,
+                        crop_offset,
+                        crop_dimensions.0,
+                        crop_dimensions.1,
+                    )
                 } else {
                     calculate_required_scale(&exported_data, crop_offset)
                 }
             }
         } else {
             if crop_dimensions.0.is_some() || crop_dimensions.1.is_some() {
-                calculate_required_scale_with_crop_dimensions(&exported_data, crop_offset, crop_dimensions.0, crop_dimensions.1)
+                calculate_required_scale_with_crop_dimensions(
+                    &exported_data,
+                    crop_offset,
+                    crop_dimensions.0,
+                    crop_dimensions.1,
+                )
             } else {
                 calculate_required_scale(&exported_data, crop_offset)
             }
@@ -347,29 +356,39 @@ impl DucToPdfBuilder {
         if !family.is_empty() {
             font_map.insert(family, (primary_font.clone(), font_resource_name.clone()));
         }
-        font_map.insert("Roboto Mono".to_string(), (primary_font.clone(), font_resource_name.clone()));
+        font_map.insert(
+            "Roboto Mono".to_string(),
+            (primary_font.clone(), font_resource_name.clone()),
+        );
 
         for (family_name, ttf_bytes) in font_data {
             match Font::from_bytes(ttf_bytes, Some(format!("{}.ttf", family_name))) {
-                Ok(font) => {
-                    match font_manager.embed_font(&mut document, font.clone()) {
-                        Ok((_, res_name)) => {
-                            log_info!("Embedded font '{}' as {}", family_name, res_name);
-                            font_map.insert(family_name, (font, res_name));
-                        }
-                        Err(e) => {
-                            log_warn!("Failed to embed font '{}': {}. Will use fallback.", family_name, e);
-                        }
+                Ok(font) => match font_manager.embed_font(&mut document, font.clone()) {
+                    Ok((_, res_name)) => {
+                        log_info!("Embedded font '{}' as {}", family_name, res_name);
+                        font_map.insert(family_name, (font, res_name));
                     }
-                }
+                    Err(e) => {
+                        log_warn!(
+                            "Failed to embed font '{}': {}. Will use fallback.",
+                            family_name,
+                            e
+                        );
+                    }
+                },
                 Err(e) => {
-                    log_warn!("Failed to parse font '{}': {}. Will use fallback.", family_name, e);
+                    log_warn!(
+                        "Failed to parse font '{}': {}. Will use fallback.",
+                        family_name,
+                        e
+                    );
                 }
             }
         }
 
         // Create block instances map for duplication support
-        let block_instances: HashMap<String, duc::types::DucBlockInstance> = context.exported_data
+        let block_instances: HashMap<String, duc::types::DucBlockInstance> = context
+            .exported_data
             .block_instances
             .iter()
             .map(|bi| (bi.id.clone(), bi.clone()))
@@ -690,18 +709,32 @@ impl DucToPdfBuilder {
     }
 
     /// Process SVG file and convert to PDF for later embedding
-    fn process_svg_file(&mut self, file: &DucExternalFile, rev_data: Option<&[u8]>) -> ConversionResult<u32> {
-        let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
-        })?;
+    fn process_svg_file(
+        &mut self,
+        file: &DucExternalFile,
+        rev_data: Option<&[u8]>,
+    ) -> ConversionResult<u32> {
+        let revision = file
+            .revisions
+            .get(&file.active_revision_id)
+            .ok_or_else(|| {
+                ConversionError::ResourceLoadError(format!(
+                    "No active revision for file {}",
+                    file.id
+                ))
+            })?;
         let svg_data = rev_data.ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No data blob for revision {}", file.active_revision_id))
+            ConversionError::ResourceLoadError(format!(
+                "No data blob for revision {}",
+                file.active_revision_id
+            ))
         })?;
 
         // Convert SVG to PDF using the utility and get dimensions
-        let (pdf_bytes, svg_width, svg_height) = svg_to_pdf_with_dimensions(svg_data).map_err(|e| {
-            ConversionError::ResourceLoadError(format!("SVG to PDF conversion failed: {}", e))
-        })?;
+        let (pdf_bytes, svg_width, svg_height) =
+            svg_to_pdf_with_dimensions(svg_data).map_err(|e| {
+                ConversionError::ResourceLoadError(format!("SVG to PDF conversion failed: {}", e))
+            })?;
 
         // Load the PDF bytes for later embedding (don't embed now, save for when image elements reference it)
         let embed_id = format!("svg_{}", file.id);
@@ -758,20 +791,32 @@ impl DucToPdfBuilder {
     }
 
     /// Process image file using hipdf::images for quality preservation
-    fn process_image_file(&mut self, file: &DucExternalFile, rev_data: Option<&[u8]>) -> ConversionResult<u32> {
-        let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
-        })?;
+    fn process_image_file(
+        &mut self,
+        file: &DucExternalFile,
+        rev_data: Option<&[u8]>,
+    ) -> ConversionResult<u32> {
+        let revision = file
+            .revisions
+            .get(&file.active_revision_id)
+            .ok_or_else(|| {
+                ConversionError::ResourceLoadError(format!(
+                    "No active revision for file {}",
+                    file.id
+                ))
+            })?;
         let image_data = rev_data.ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No data blob for revision {}", file.active_revision_id))
+            ConversionError::ResourceLoadError(format!(
+                "No data blob for revision {}",
+                file.active_revision_id
+            ))
         })?;
         let mime_type = &revision.mime_type;
 
         // Create image directly from bytes (WASM-compatible)
-        let image =
-            Image::from_bytes(image_data.to_vec(), Some(file.id.clone())).map_err(|e| {
-                ConversionError::ResourceLoadError(format!("Failed to load image: {}", e))
-            })?;
+        let image = Image::from_bytes(image_data.to_vec(), Some(file.id.clone())).map_err(|e| {
+            ConversionError::ResourceLoadError(format!("Failed to load image: {}", e))
+        })?;
 
         // Embed the image with perfect quality preservation using hipdf::images
         let image_id = self
@@ -788,8 +833,7 @@ impl DucToPdfBuilder {
             .insert(file.id.clone(), image_id.0);
 
         // Pass the image to the element streamer for streaming operations
-        self.element_streamer
-            .add_image(file.id.clone(), image_id.0);
+        self.element_streamer.add_image(file.id.clone(), image_id.0);
 
         // WORKAROUND: Also store by common test names based on MIME type
         // This handles the case where image elements reference by expected test names
@@ -814,12 +858,25 @@ impl DucToPdfBuilder {
     }
 
     /// Process PDF file for embedding
-    fn process_pdf_file(&mut self, file: &DucExternalFile, rev_data: Option<&[u8]>) -> ConversionResult<u32> {
-        let revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
-        })?;
+    fn process_pdf_file(
+        &mut self,
+        file: &DucExternalFile,
+        rev_data: Option<&[u8]>,
+    ) -> ConversionResult<u32> {
+        let revision = file
+            .revisions
+            .get(&file.active_revision_id)
+            .ok_or_else(|| {
+                ConversionError::ResourceLoadError(format!(
+                    "No active revision for file {}",
+                    file.id
+                ))
+            })?;
         let pdf_data = rev_data.ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No data blob for revision {}", file.active_revision_id))
+            ConversionError::ResourceLoadError(format!(
+                "No data blob for revision {}",
+                file.active_revision_id
+            ))
         })?;
         let mime_type = &revision.mime_type;
         let embed_id = format!("pdf_{}", file.id);
@@ -952,7 +1009,9 @@ impl DucToPdfBuilder {
                         };
 
                         // Calculate bounding box using the SVG path when available for accurate bounds
-                        let svg_document = if let Some(bounds) = self.select_freedraw_bounds(freedraw) {
+                        let svg_document = if let Some(bounds) =
+                            self.select_freedraw_bounds(freedraw)
+                        {
                             // Cache the calculated bounding box for later use in stream_freedraw
                             self.context
                                 .resource_cache
@@ -963,13 +1022,25 @@ impl DucToPdfBuilder {
                             let mut height = bounds.height();
 
                             if !Self::has_usable_dimension(width) {
-                                width = freedraw.base.width.abs().max(freedraw.size.abs()).max(FREEDRAW_EPSILON);
+                                width = freedraw
+                                    .base
+                                    .width
+                                    .abs()
+                                    .max(freedraw.size.abs())
+                                    .max(FREEDRAW_EPSILON);
                             }
                             if !Self::has_usable_dimension(height) {
-                                height = freedraw.base.height.abs().max(freedraw.size.abs()).max(FREEDRAW_EPSILON);
+                                height = freedraw
+                                    .base
+                                    .height
+                                    .abs()
+                                    .max(freedraw.size.abs())
+                                    .max(FREEDRAW_EPSILON);
                             }
 
-                            if !Self::has_usable_dimension(width) || !Self::has_usable_dimension(height) {
+                            if !Self::has_usable_dimension(width)
+                                || !Self::has_usable_dimension(height)
+                            {
                                 log_warn!(
                                     "Skipping freedraw {} because bounds remained unusable after fallback (base={}x{}, size={}, svg_len={})",
                                     freedraw.base.id,
@@ -1043,10 +1114,8 @@ impl DucToPdfBuilder {
                             }
                             Err(e) => {
                                 // Log error but continue processing other elements
-                                let svg_header_preview = svg_document
-                                    .split('>')
-                                    .next()
-                                    .unwrap_or_default();
+                                let svg_header_preview =
+                                    svg_document.split('>').next().unwrap_or_default();
                                 log_warn!(
                                     "Warning: SVG to PDF conversion failed for Freedraw element {}: {} (base={}x{}, size={}, header='{}')",
                                     freedraw.base.id,
@@ -1135,29 +1204,27 @@ impl DucToPdfBuilder {
             .filter_map(|elem| {
                 if let DucElementEnum::DucPlotElement(plot) = &elem.element {
                     let base = &plot.stack_element_base.base;
-                    
+
                     // Skip deleted plot elements
                     if base.is_deleted {
                         return None;
                     }
-                    
+
                     // Extract background color and opacity from plot element
                     // Only use background if it's visible and has a valid color
                     let background_data = if !base.styles.background.is_empty() {
-                        base.styles.background
-                            .first()
-                            .and_then(|bg| {
-                                // Check if background is visible
-                                if bg.content.visible && !bg.content.src.is_empty() {
-                                    Some((bg.content.src.clone(), bg.content.opacity))
-                                } else {
-                                    None
-                                }
-                            })
+                        base.styles.background.first().and_then(|bg| {
+                            // Check if background is visible
+                            if bg.content.visible && !bg.content.src.is_empty() {
+                                Some((bg.content.src.clone(), bg.content.opacity))
+                            } else {
+                                None
+                            }
+                        })
                     } else {
                         None
                     };
-                    
+
                     Some((
                         base.id.clone(),
                         (base.x, base.y, base.width, base.height),
@@ -1173,8 +1240,14 @@ impl DucToPdfBuilder {
             self.create_single_page_with_all_elements()?;
         } else {
             for (plot_id, bounds, background_data) in plot_entries {
-                let background_with_opacity = background_data.as_ref().map(|(color, opacity)| (color.as_str(), *opacity));
-                self.create_page_with_bounds(bounds, Some(plot_id.as_str()), background_with_opacity)?;
+                let background_with_opacity = background_data
+                    .as_ref()
+                    .map(|(color, opacity)| (color.as_str(), *opacity));
+                self.create_page_with_bounds(
+                    bounds,
+                    Some(plot_id.as_str()),
+                    background_with_opacity,
+                )?;
             }
         }
 
@@ -1197,7 +1270,6 @@ impl DucToPdfBuilder {
 
         // If width/height are specified, create a crop bounds that limits the visible area
         let crop_bounds = if let (Some(w_mm), Some(h_mm)) = (width, height) {
-
             println!(
                 "🔧 Applied crop dimensions: {}x{} mm at offset ({}, {})",
                 w_mm, h_mm, offset_x, offset_y
@@ -1276,7 +1348,8 @@ impl DucToPdfBuilder {
         self.page_height = page_height;
 
         // Create content stream
-        let content_stream = self.create_content_stream(bounds, active_plot_id, page_background_color)?;
+        let content_stream =
+            self.create_content_stream(bounds, active_plot_id, page_background_color)?;
         let content_id = self.document.add_object(Object::Stream(content_stream));
 
         // Setup page resources including XObjects
@@ -1431,13 +1504,13 @@ impl DucToPdfBuilder {
         Ok(resources)
     }
 
-fn create_content_stream(
+    fn create_content_stream(
         &mut self,
         bounds: (f64, f64, f64, f64),
         active_plot_id: Option<&str>,
         page_background_color: Option<(&str, f64)>,
     ) -> ConversionResult<Stream> {
-    let (x, y, width, height) = bounds; // Use bounds directly - data is already scaled by DucDataScaler
+        let (x, y, width, height) = bounds; // Use bounds directly - data is already scaled by DucDataScaler
 
         let mut operations = Vec::new();
 
@@ -1453,7 +1526,12 @@ fn create_content_stream(
         // - In CROP mode: use crop background option (with full opacity)
         let background_to_apply = match &self.context.options.mode {
             ConversionMode::Plot => page_background_color,
-            ConversionMode::Crop { .. } => self.context.options.background_color.as_deref().map(|color| (color, 1.0)),
+            ConversionMode::Crop { .. } => self
+                .context
+                .options
+                .background_color
+                .as_deref()
+                .map(|color| (color, 1.0)),
         };
 
         // Add background color if specified
@@ -1464,7 +1542,7 @@ fn create_content_stream(
                 let r_norm = r as f32 / 255.0;
                 let g_norm = g as f32 / 255.0;
                 let b_norm = b as f32 / 255.0;
-                
+
                 // If opacity is less than 1.0, we need to apply transparency
                 // In PDF, we use the extended graphics state for this
                 if (bg_opacity - 1.0).abs() > f64::EPSILON {
@@ -1474,38 +1552,46 @@ fn create_content_stream(
                     let r_blended = r_norm * alpha + (1.0 - alpha);
                     let g_blended = g_norm * alpha + (1.0 - alpha);
                     let b_blended = b_norm * alpha + (1.0 - alpha);
-                    
-                    operations.push(Operation::new("rg", vec![
-                        Object::Real(r_blended),
-                        Object::Real(g_blended),
-                        Object::Real(b_blended),
-                    ]));
+
+                    operations.push(Operation::new(
+                        "rg",
+                        vec![
+                            Object::Real(r_blended),
+                            Object::Real(g_blended),
+                            Object::Real(b_blended),
+                        ],
+                    ));
                 } else {
                     // Full opacity - use color directly
-                    operations.push(Operation::new("rg", vec![
-                        Object::Real(r_norm),
-                        Object::Real(g_norm),
-                        Object::Real(b_norm),
-                    ]));
+                    operations.push(Operation::new(
+                        "rg",
+                        vec![
+                            Object::Real(r_norm),
+                            Object::Real(g_norm),
+                            Object::Real(b_norm),
+                        ],
+                    ));
                 }
 
                 // Create a filled rectangle covering the entire page
                 // Slightly overscan (1 unit on each side) to prevent aliasing artifacts at edges
                 const OVERSCAN: f32 = 3.0;
-                operations.push(Operation::new("re", vec![
-                    Object::Real(-OVERSCAN),                        // x (start slightly left)
-                    Object::Real(-OVERSCAN),                        // y (start slightly down)
-                    Object::Real(width as f32 + OVERSCAN * 2.0),   // width (extend right)
-                    Object::Real(height as f32 + OVERSCAN * 2.0),  // height (extend up)
-                ]));
+                operations.push(Operation::new(
+                    "re",
+                    vec![
+                        Object::Real(-OVERSCAN),                      // x (start slightly left)
+                        Object::Real(-OVERSCAN),                      // y (start slightly down)
+                        Object::Real(width as f32 + OVERSCAN * 2.0),  // width (extend right)
+                        Object::Real(height as f32 + OVERSCAN * 2.0), // height (extend up)
+                    ],
+                ));
                 operations.push(Operation::new("f", vec![])); // Fill the rectangle
-                
+
                 // Reset fill color to default (black)
-                operations.push(Operation::new("rg", vec![
-                    Object::Real(0.0),
-                    Object::Real(0.0),
-                    Object::Real(0.0),
-                ]));
+                operations.push(Operation::new(
+                    "rg",
+                    vec![Object::Real(0.0), Object::Real(0.0), Object::Real(0.0)],
+                ));
             } else {
                 log_warn!(
                     "⚠️  Failed to parse background color '{}'; skipping background fill.",
@@ -1555,7 +1641,8 @@ fn create_content_stream(
             }
             ConversionMode::Plot => (x, y),
         };
-        self.element_streamer.set_visible_scene_rect(vis_x, vis_y, width, height);
+        self.element_streamer
+            .set_visible_scene_rect(vis_x, vis_y, width, height);
         self.element_streamer.set_page_translation(tx, ty);
         self.element_streamer
             .set_resource_cache(self.context.resource_cache.xobject_names.clone());
@@ -1635,27 +1722,23 @@ fn create_content_stream(
         let mut all_operations = Vec::new();
 
         // Pre-process PDF elements to ensure they're embedded before streaming
-        let pdf_elements: Vec<_> =
-            self.context
-                .exported_data
-                .elements
-                .iter()
-                .filter_map(|element_wrapper| {
-                    match &element_wrapper.element {
-                        DucElementEnum::DucPdfElement(pdf_elem) => {
-                            pdf_elem.file_id.as_ref().map(|file_id| {
-                                (file_id.clone(), pdf_elem.base.width, pdf_elem.base.height)
-                            })
-                        }
-                        DucElementEnum::DucDocElement(doc_elem) => {
-                            doc_elem.file_id.as_ref().map(|file_id| {
-                                (file_id.clone(), doc_elem.base.width, doc_elem.base.height)
-                            })
-                        }
-                        _ => None,
-                    }
-                })
-                .collect();
+        let pdf_elements: Vec<_> = self
+            .context
+            .exported_data
+            .elements
+            .iter()
+            .filter_map(|element_wrapper| match &element_wrapper.element {
+                DucElementEnum::DucPdfElement(pdf_elem) => pdf_elem
+                    .file_id
+                    .as_ref()
+                    .map(|file_id| (file_id.clone(), pdf_elem.base.width, pdf_elem.base.height)),
+                DucElementEnum::DucDocElement(doc_elem) => doc_elem
+                    .file_id
+                    .as_ref()
+                    .map(|file_id| (file_id.clone(), doc_elem.base.width, doc_elem.base.height)),
+                _ => None,
+            })
+            .collect();
 
         for (file_id, width, height) in pdf_elements {
             if let Err(e) = self.embed_pdf_for_element(&file_id, width, height) {

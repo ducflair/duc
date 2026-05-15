@@ -1,15 +1,16 @@
-/// PDF Linear Element Renderer
-///
-/// This module handles the rendering of DucLinearElement to PDF operations.
-/// It translates the Vello renderer's BezPath logic into PDF path construction
-/// commands, supporting:
-/// - Straight lines and Bezier curves (quadratic and cubic)
-/// - Closed and open paths
-/// - Fill paths with minimal cycles (faces)
-/// - Stroke paths with all segments
-/// - Path overrides for selective styling
+//! PDF Linear Element Renderer
+//!
+//! This module handles the rendering of DucLinearElement to PDF operations.
+//! It translates the Vello renderer's BezPath logic into PDF path construction
+//! commands, supporting:
+//! - Straight lines and Bezier curves (quadratic and cubic)
+//! - Closed and open paths
+//! - Fill paths with minimal cycles (faces)
+//! - Stroke paths with all segments
+//! - Path overrides for selective styling
+use crate::streaming::pdf_line_head::PdfLineHeadRenderer;
 use crate::ConversionResult;
-use duc::types::{DucLine, DucLinearElement, DucPoint, GeometricPoint};
+use duc::types::{DucLine, DucLinearElement, DucPoint, GeometricPoint, LINE_HEAD};
 use hipdf::lopdf::{content::Operation, Object};
 use std::collections::{BTreeMap, HashSet};
 
@@ -27,15 +28,23 @@ impl PdfLinearRenderer {
             return Ok(ops);
         }
 
-        // Create stroke path (all segments)
-        let stroke_path_ops = Self::create_stroke_path(points, lines)?;
-
         // Create fill paths (minimal closed loops only)
         let fill_paths_ops = Self::create_fill_paths(points, lines)?;
 
         // Determine what to render based on styles
         let has_background = !linear.linear_base.base.styles.background.is_empty();
-        let has_stroke = !linear.linear_base.base.styles.stroke.is_empty();
+        let visible_stroke = linear
+            .linear_base
+            .base
+            .styles
+            .stroke
+            .iter()
+            .find(|stroke| stroke.content.visible);
+        let has_stroke = visible_stroke.is_some();
+        let stroke_width = visible_stroke
+            .map(|stroke| stroke.width)
+            .filter(|width| width.is_finite() && *width > 0.0)
+            .unwrap_or(1.0);
 
         if has_background && !fill_paths_ops.is_empty() {
             // Render fills first
@@ -43,14 +52,246 @@ impl PdfLinearRenderer {
 
             if has_stroke {
                 // Then render strokes on top
+                let stroke_points = Self::get_trimmed_linear_points(linear, points, stroke_width);
+                let stroke_path_ops = Self::create_stroke_path(&stroke_points, lines)?;
                 ops.extend(stroke_path_ops);
             }
         } else if has_stroke {
             // Stroke only
+            let stroke_points = Self::get_trimmed_linear_points(linear, points, stroke_width);
+            let stroke_path_ops = Self::create_stroke_path(&stroke_points, lines)?;
             ops.extend(stroke_path_ops);
         }
 
+        ops.extend(Self::render_line_heads(linear, points, stroke_width)?);
+
         Ok(ops)
+    }
+
+    fn render_line_heads(
+        linear: &DucLinearElement,
+        points: &[DucPoint],
+        line_width: f64,
+    ) -> ConversionResult<Vec<Operation>> {
+        let mut ops = Vec::new();
+
+        if points.len() < 2 {
+            return Ok(ops);
+        }
+
+        let Some(stroke) = linear.linear_base.base.styles.stroke.first() else {
+            return Ok(ops);
+        };
+        if !stroke.content.visible || stroke.content.src.trim().is_empty() {
+            return Ok(ops);
+        }
+
+        if let Some(binding) = &linear.linear_base.start_binding {
+            if let Some(head) = &binding.head {
+                if let Some(head_type) = head.head_type {
+                    let (tip, from) = Self::get_line_head_reference(linear, points, 0);
+                    ops.extend(PdfLineHeadRenderer::render_line_head(
+                        head_type,
+                        tip,
+                        from,
+                        line_width,
+                        &stroke.content.src,
+                        head.size,
+                    )?);
+                }
+            }
+        }
+
+        if let Some(binding) = &linear.linear_base.end_binding {
+            if let Some(head) = &binding.head {
+                if let Some(head_type) = head.head_type {
+                    let end_index = points.len() - 1;
+                    let (tip, from) = Self::get_line_head_reference(linear, points, end_index);
+                    ops.extend(PdfLineHeadRenderer::render_line_head(
+                        head_type,
+                        tip,
+                        from,
+                        line_width,
+                        &stroke.content.src,
+                        head.size,
+                    )?);
+                }
+            }
+        }
+
+        Ok(ops)
+    }
+
+    fn get_trimmed_linear_points(
+        linear: &DucLinearElement,
+        points: &[DucPoint],
+        line_width: f64,
+    ) -> Vec<DucPoint> {
+        if points.len() < 2 {
+            return points.to_vec();
+        }
+
+        let start_clearance = linear
+            .linear_base
+            .start_binding
+            .as_ref()
+            .and_then(|binding| binding.head.as_ref())
+            .and_then(|head| head.head_type.map(|head_type| (head_type, head.size)))
+            .map(|(head_type, size)| Self::get_line_head_clearance(head_type, line_width, size))
+            .unwrap_or(0.0);
+
+        let end_clearance = linear
+            .linear_base
+            .end_binding
+            .as_ref()
+            .and_then(|binding| binding.head.as_ref())
+            .and_then(|head| head.head_type.map(|head_type| (head_type, head.size)))
+            .map(|(head_type, size)| Self::get_line_head_clearance(head_type, line_width, size))
+            .unwrap_or(0.0);
+
+        if start_clearance <= 0.0 && end_clearance <= 0.0 {
+            return points.to_vec();
+        }
+
+        let mut trimmed = points.to_vec();
+        if start_clearance > 0.0 {
+            trimmed[0] = Self::trim_endpoint_point(linear, points, 0, start_clearance);
+        }
+        if end_clearance > 0.0 {
+            let last_index = points.len() - 1;
+            trimmed[last_index] =
+                Self::trim_endpoint_point(linear, points, last_index, end_clearance);
+        }
+
+        trimmed
+    }
+
+    fn get_line_head_clearance(head_type: LINE_HEAD, line_width: f64, size_scale: f64) -> f64 {
+        let normalized_size = if size_scale.is_finite() && size_scale > 0.0 {
+            size_scale
+        } else {
+            1.0
+        };
+        let width = if line_width.is_finite() && line_width > 0.0 {
+            line_width
+        } else {
+            1.0
+        };
+        let length = (width * 4.0).max(8.0) * normalized_size;
+
+        match head_type {
+            LINE_HEAD::CIRCLE_OUTLINED => length * 0.28 + width * 0.2,
+            LINE_HEAD::TRIANGLE_OUTLINED | LINE_HEAD::DIAMOND_OUTLINED => {
+                length * 0.95 + width * 0.5
+            }
+            _ => 0.0,
+        }
+    }
+
+    fn trim_endpoint_point(
+        linear: &DucLinearElement,
+        points: &[DucPoint],
+        point_index: usize,
+        distance: f64,
+    ) -> DucPoint {
+        let point = &points[point_index];
+        let interior = Self::get_endpoint_interior_vector(linear, points, point_index);
+        Self::trim_point_along_vector(point, interior, distance)
+    }
+
+    fn trim_point_along_vector(point: &DucPoint, direction: (f64, f64), distance: f64) -> DucPoint {
+        let direction_length = (direction.0 * direction.0 + direction.1 * direction.1).sqrt();
+        if direction_length <= 0.001 {
+            return point.clone();
+        }
+
+        let normalized = Self::normalize_vector(direction.0, direction.1);
+        let amount = distance.min((direction_length - 0.5).max(0.0));
+        let mut trimmed = point.clone();
+        trimmed.x += normalized.0 * amount;
+        trimmed.y += normalized.1 * amount;
+        trimmed
+    }
+
+    fn get_line_head_reference(
+        linear: &DucLinearElement,
+        points: &[DucPoint],
+        point_index: usize,
+    ) -> ((f64, f64), (f64, f64)) {
+        let point = &points[point_index];
+        let tip = (point.x, point.y);
+        let interior_vector = Self::get_endpoint_interior_vector(linear, points, point_index);
+        let interior = Self::normalize_vector(interior_vector.0, interior_vector.1);
+
+        (tip, (tip.0 + interior.0, tip.1 + interior.1))
+    }
+
+    fn get_endpoint_line<'a>(
+        linear: &'a DucLinearElement,
+        points: &[DucPoint],
+        point_index: usize,
+    ) -> Option<&'a DucLine> {
+        let lines = &linear.linear_base.lines;
+        let preferred_neighbor = if point_index == 0 {
+            1
+        } else {
+            points.len() as i32 - 2
+        };
+        let point_index = point_index as i32;
+
+        lines
+            .iter()
+            .find(|line| {
+                (line.start.index == point_index && line.end.index == preferred_neighbor)
+                    || (line.end.index == point_index && line.start.index == preferred_neighbor)
+            })
+            .or_else(|| {
+                lines
+                    .iter()
+                    .find(|line| line.start.index == point_index || line.end.index == point_index)
+            })
+    }
+
+    fn get_endpoint_interior_vector(
+        linear: &DucLinearElement,
+        points: &[DucPoint],
+        point_index: usize,
+    ) -> (f64, f64) {
+        let point = &points[point_index];
+        let tip = (point.x, point.y);
+        let Some(line) = Self::get_endpoint_line(linear, points, point_index) else {
+            let fallback_index = if point_index == 0 {
+                1
+            } else {
+                points.len().saturating_sub(2)
+            };
+            let fallback = points.get(fallback_index).unwrap_or(point);
+            return (fallback.x - tip.0, fallback.y - tip.1);
+        };
+
+        let is_start_ref = line.start.index == point_index as i32;
+        let endpoint_ref = if is_start_ref { &line.start } else { &line.end };
+        let neighbor_ref = if is_start_ref { &line.end } else { &line.start };
+
+        if let Some(handle) = endpoint_ref
+            .handle
+            .as_ref()
+            .or(neighbor_ref.handle.as_ref())
+        {
+            return (handle.x - tip.0, handle.y - tip.1);
+        }
+
+        let neighbor = points.get(neighbor_ref.index as usize).unwrap_or(point);
+        (neighbor.x - tip.0, neighbor.y - tip.1)
+    }
+
+    fn normalize_vector(x: f64, y: f64) -> (f64, f64) {
+        let length = (x * x + y * y).sqrt();
+        if length < 0.001 {
+            (1.0, 0.0)
+        } else {
+            (x / length, y / length)
+        }
     }
 
     /// Transform a Duc point from the top-left DUC system to PDF local coordinates
@@ -325,7 +566,6 @@ impl PdfLinearRenderer {
     ) -> ConversionResult<Vec<Operation>> {
         let mut ops = Vec::new();
 
-
         let (p3_x, p3_y) = Self::transform_point_to_pdf(end_point);
 
         match (start_handle, end_handle) {
@@ -362,8 +602,6 @@ impl PdfLinearRenderer {
             // Quadratic curve (single handle) - convert to cubic
             _ if start_handle.is_some() || end_handle.is_some() => {
                 if let Some(h) = start_handle.as_ref().or(end_handle.as_ref()) {
-
-
                     // Convert quadratic to cubic using original coordinates, then transform the result.
                     // cp1 = p0 + 2/3 * (c - p0)
                     let cp1_x_orig = start_point.x + (2.0 / 3.0) * (h.x - start_point.x);

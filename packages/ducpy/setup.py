@@ -1,14 +1,27 @@
 import os
 import re
+from pathlib import Path
 
 from setuptools import setup
 
-# Path to the schema file, relative to this setup.py file
-# setup.py is in packages/ducpy/
-# schema/duc.sql is at the workspace root, so ../../schema/duc.sql
-SCHEMA_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'schema', 'duc.sql')
 # Path where _version.py will be written
 VERSION_PY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'ducpy', '_version.py')
+
+
+def find_schema_file_path():
+    env_path = os.environ.get('DUC_SCHEMA_DIR')
+    if env_path:
+        candidate = Path(env_path) / 'duc.sql'
+        if candidate.exists():
+            return str(candidate)
+
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        candidate = parent / 'schema' / 'duc.sql'
+        if candidate.exists():
+            return str(candidate)
+
+    return None
 
 def get_schema_version_from_sql(sql_file_path):
     """Extract schema version from PRAGMA user_version in duc.sql.
@@ -34,7 +47,8 @@ def get_schema_version_from_sql(sql_file_path):
 
 def generate_version_py():
     """Generates the _version.py file with DUC_SCHEMA_VERSION."""
-    schema_version = get_schema_version_from_sql(SCHEMA_FILE_PATH)
+    schema_file_path = find_schema_file_path()
+    schema_version = get_schema_version_from_sql(schema_file_path) if schema_file_path else None
 
     if schema_version is not None:
         print(f"Generating DUC schema version file at: {VERSION_PY_PATH} with version: {schema_version}")

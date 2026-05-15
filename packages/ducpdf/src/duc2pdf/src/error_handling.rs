@@ -50,7 +50,11 @@ pub fn create_error_info(
             )
         }
         ConversionError::PrecisionTooHigh(precision) => {
-            format!("Precision too high: {} (min allowed: {})", precision, crate::MIN_PRECISION_MM)
+            format!(
+                "Precision too high: {} (min allowed: {})",
+                precision,
+                crate::MIN_PRECISION_MM
+            )
         }
         ConversionError::PdfGenerationError(msg) => {
             format!("PDF generation failed: {}", msg)
@@ -66,7 +70,9 @@ pub fn create_error_info(
             crate::ConversionMode::Plot => false,
         },
         has_dimensions: match &opts.mode {
-            crate::ConversionMode::Crop { width, height, .. } => width.is_some() && height.is_some(),
+            crate::ConversionMode::Crop { width, height, .. } => {
+                width.is_some() && height.is_some()
+            }
             crate::ConversionMode::Plot => false,
         },
         has_zoom: false, // zoom is handled in JavaScript side
@@ -97,18 +103,33 @@ pub fn log_error_details(error: &ConversionError, duc_data_length: usize, contex
             println!("Possible causes: corrupted DUC data, incomplete file transfer, or incompatible DUC version");
         }
         ConversionError::CoordinateOutOfBounds(x, y) => {
-            println!("Coordinate out of bounds: x={}, y={} (max allowed: ±{})", x, y, crate::MAX_COORDINATE_MM);
+            println!(
+                "Coordinate out of bounds: x={}, y={} (max allowed: ±{})",
+                x,
+                y,
+                crate::MAX_COORDINATE_MM
+            );
             println!("⚠️  This should be prevented by automatic scaling! Investigate the scaling logic in:");
             println!("   - calculate_required_scale() function");
             println!("   - validate_all_coordinates_with_scale() function");
             println!("   - DucDataScaler scaling application");
         }
         ConversionError::ScaleExceedsBounds(x, y, scale) => {
-            println!("Scale exceeds bounds: x={}, y={}, scale={} (max allowed: ±{})", x, y, scale, crate::MAX_COORDINATE_MM);
+            println!(
+                "Scale exceeds bounds: x={}, y={}, scale={} (max allowed: ±{})",
+                x,
+                y,
+                scale,
+                crate::MAX_COORDINATE_MM
+            );
             println!("⚠️  User-provided scale still exceeds bounds! The scaling validation may need improvement.");
         }
         ConversionError::PrecisionTooHigh(precision) => {
-            println!("Precision too high: {} (min allowed: {})", precision, crate::MIN_PRECISION_MM);
+            println!(
+                "Precision too high: {} (min allowed: {})",
+                precision,
+                crate::MIN_PRECISION_MM
+            );
         }
         ConversionError::PdfGenerationError(msg) => {
             println!("PDF generation failed: {}", msg);
@@ -134,7 +155,13 @@ pub fn log_crop_details(offset_x: f64, offset_y: f64, width: Option<f64>, height
 }
 
 /// Validates basic input parameters for conversion operations
-pub fn validate_basic_inputs(duc_data: &[u8], offset_x: Option<f64>, offset_y: Option<f64>, width: Option<f64>, height: Option<f64>) -> Result<(), String> {
+pub fn validate_basic_inputs(
+    duc_data: &[u8],
+    offset_x: Option<f64>,
+    offset_y: Option<f64>,
+    width: Option<f64>,
+    height: Option<f64>,
+) -> Result<(), String> {
     // Validate DUC data
     if duc_data.is_empty() {
         return Err("DUC data is empty".to_string());
@@ -171,7 +198,10 @@ pub fn validate_basic_inputs(duc_data: &[u8], offset_x: Option<f64>, offset_y: O
 /// Converts a ConversionError to a WASM-compatible byte vector
 pub fn error_to_wasm_bytes(error_info: &WasmErrorInfo) -> Vec<u8> {
     let error_json = serde_json::to_string(error_info).unwrap_or_else(|e| {
-        format!(r#"{{"error":"Failed to serialize error","details":"{}"}}"#, e)
+        format!(
+            r#"{{"error":"Failed to serialize error","details":"{}"}}"#,
+            e
+        )
     });
 
     let mut result = b"ERROR:".to_vec();
