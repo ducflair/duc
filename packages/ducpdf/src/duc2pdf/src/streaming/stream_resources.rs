@@ -1,6 +1,6 @@
 use crate::utils::svg_to_pdf::SvgToPdfConverter;
 use crate::{ConversionError, ConversionResult};
-use duc::types::{DucExternalFile};
+use duc::types::DucExternalFile;
 use hipdf::blocks::BlockManager;
 use hipdf::embed_pdf::PdfEmbedder;
 use hipdf::hatching::HatchingManager;
@@ -109,8 +109,7 @@ impl ResourceStreamer {
                 .and_then(|d| d.get(&file.active_revision_id))
                 .map(|b| b.as_ref() as &[u8]);
             let resource_info = self.process_single_file(file, rev_data)?;
-            self.resource_cache
-                .insert(file.id.clone(), resource_info);
+            self.resource_cache.insert(file.id.clone(), resource_info);
         }
         Ok(())
     }
@@ -121,7 +120,9 @@ impl ResourceStreamer {
         file: &DucExternalFile,
         rev_data: Option<&[u8]>,
     ) -> ConversionResult<ResourceInfo> {
-        let mime_type = file.revisions.get(&file.active_revision_id)
+        let mime_type = file
+            .revisions
+            .get(&file.active_revision_id)
             .map(|r| r.mime_type.clone())
             .unwrap_or_default();
         let resource_type = self.detect_resource_type(&mime_type);
@@ -157,11 +158,20 @@ impl ResourceStreamer {
         file: &DucExternalFile,
         rev_data: Option<&[u8]>,
     ) -> ConversionResult<ResourceInfo> {
-        let _revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
-        })?;
+        let _revision = file
+            .revisions
+            .get(&file.active_revision_id)
+            .ok_or_else(|| {
+                ConversionError::ResourceLoadError(format!(
+                    "No active revision for file {}",
+                    file.id
+                ))
+            })?;
         let data = rev_data.ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No data blob for revision {}", file.active_revision_id))
+            ConversionError::ResourceLoadError(format!(
+                "No data blob for revision {}",
+                file.active_revision_id
+            ))
         })?;
         let document = self.document.as_mut().ok_or_else(|| {
             ConversionError::ResourceLoadError("PDF document not initialized".to_string())
@@ -185,11 +195,20 @@ impl ResourceStreamer {
         rev_data: Option<&[u8]>,
         resource_type: &ResourceType,
     ) -> ConversionResult<ResourceInfo> {
-        let _revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
-        })?;
+        let _revision = file
+            .revisions
+            .get(&file.active_revision_id)
+            .ok_or_else(|| {
+                ConversionError::ResourceLoadError(format!(
+                    "No active revision for file {}",
+                    file.id
+                ))
+            })?;
         let image_data = rev_data.ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No data blob for revision {}", file.active_revision_id))
+            ConversionError::ResourceLoadError(format!(
+                "No data blob for revision {}",
+                file.active_revision_id
+            ))
         })?;
         let xobject_id = {
             let mut document = self.document.take().ok_or_else(|| {
@@ -218,11 +237,20 @@ impl ResourceStreamer {
         file: &DucExternalFile,
         rev_data: Option<&[u8]>,
     ) -> ConversionResult<ResourceInfo> {
-        let _revision = file.revisions.get(&file.active_revision_id).ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No active revision for file {}", file.id))
-        })?;
+        let _revision = file
+            .revisions
+            .get(&file.active_revision_id)
+            .ok_or_else(|| {
+                ConversionError::ResourceLoadError(format!(
+                    "No active revision for file {}",
+                    file.id
+                ))
+            })?;
         let pdf_data = rev_data.ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!("No data blob for revision {}", file.active_revision_id))
+            ConversionError::ResourceLoadError(format!(
+                "No data blob for revision {}",
+                file.active_revision_id
+            ))
         })?;
 
         let pdf_embedder = self.pdf_embedder.as_mut().ok_or_else(|| {
@@ -306,12 +334,6 @@ impl ResourceStreamer {
 
         Ok(object_id)
     }
-
-
-
-
-
-
 
     /// Stream SVG resource as PDF operations
     pub fn stream_svg_resource(
