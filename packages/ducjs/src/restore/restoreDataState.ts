@@ -1147,18 +1147,18 @@ export const isValidImageStatusValue = (
 export const isValidDucHead = (
   value: DucHead | null | undefined,
   blocks: RestoredDataState["blocks"],
-  elementScope: Scope,
-  currentScope: Scope
 ): DucHead | null => {
   if (value === undefined || value === null) return null;
   const type = isValidLineHeadValue(value.type);
-  // blockId can be null - only reject if type is invalid
   if (type === null) return null;
   const blockId = isValidBlockId(value.blockId, blocks);
+  const size = typeof value.size === "number" && Number.isFinite(value.size) && value.size > 0
+    ? value.size
+    : 1;
   return {
     type,
     blockId,
-    size: restorePrecisionValue(value.size, elementScope, currentScope),
+    size,
   };
 };
 

@@ -1415,9 +1415,7 @@ const repairBinding = (
     ),
     head: isValidDucHead(
       binding.head,
-      restoredBlocks,
-      elementScope,
-      currentScope
+      restoredBlocks
     ),
     fixedPoint: element && isElbowArrow(element)
       ? normalizeFixedPoint(binding.fixedPoint ?? { x: 0.5, y: 0.5 })
@@ -1561,7 +1559,7 @@ const createHeadOnlyBinding = (
     gap: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
     fixedPoint: null,
     point: null,
-    head: isValidDucHead(head, restoredBlocks, currentScope, currentScope),
+    head: isValidDucHead(head, restoredBlocks),
   };
 };
 
