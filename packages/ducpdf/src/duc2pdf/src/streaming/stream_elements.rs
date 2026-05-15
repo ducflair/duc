@@ -31,12 +31,12 @@ use crate::utils::style_resolver::{ResolvedStyles, StyleResolver};
 use crate::{ConversionError, ConversionResult};
 use bigcolor::BigColor;
 use duc::types::{
-    BEZIER_MIRRORING, ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN, DucElementEnum,
-    DucArrowElement, DucEllipseElement, DucFrameElement,
-    DucDocElement, DucFreeDrawElement, DucImageElement, DucLine, DucLineReference, DucLinearElement,
-    DucLinearElementBase, DucPath, DucPdfElement, DucPlotElement, DucPoint,
-    DucPolygonElement, DucRectangleElement, DucTableElement, DucTextElement, DucModelElement, ElementBackground,
-    ElementContentBase, ElementWrapper, GeometricPoint, DucBlockInstance, DucBlockDuplicationArray,
+    DucArrowElement, DucBlockDuplicationArray, DucBlockInstance, DucDocElement, DucElementEnum,
+    DucEllipseElement, DucFrameElement, DucFreeDrawElement, DucImageElement, DucLine,
+    DucLineReference, DucLinearElement, DucLinearElementBase, DucModelElement, DucPath,
+    DucPdfElement, DucPlotElement, DucPoint, DucPolygonElement, DucRectangleElement,
+    DucTableElement, DucTextElement, ElementBackground, ElementContentBase, ElementWrapper,
+    GeometricPoint, BEZIER_MIRRORING, ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN,
 };
 
 use hipdf::embed_pdf::PdfEmbedder;
@@ -169,8 +169,7 @@ impl ElementStreamer {
         cell_height: f64,
     ) -> Vec<(f64, f64)> {
         if duplication_array.row_spacing.is_nan() || duplication_array.col_spacing.is_nan() {
-
-             log::warn!(
+            log::warn!(
                 "Duplication array has NaN spacing! row_spacing: {}, col_spacing: {}",
                 duplication_array.row_spacing,
                 duplication_array.col_spacing
@@ -210,11 +209,7 @@ impl ElementStreamer {
         (cell_width.max(0.0), cell_height.max(0.0))
     }
 
-    fn rotate_point_around_center(
-        point: (f64, f64),
-        center: (f64, f64),
-        angle: f64,
-    ) -> (f64, f64) {
+    fn rotate_point_around_center(point: (f64, f64), center: (f64, f64), angle: f64) -> (f64, f64) {
         if angle == 0.0 {
             return point;
         }
@@ -404,7 +399,8 @@ impl ElementStreamer {
                     let row_spacing = dup_array.row_spacing;
 
                     let footprint_width = pitch_w * cols as f64 + (cols as f64 - 1.0) * col_spacing;
-                    let footprint_height = pitch_h * rows as f64 + (rows as f64 - 1.0) * row_spacing;
+                    let footprint_height =
+                        pitch_h * rows as f64 + (rows as f64 - 1.0) * row_spacing;
 
                     let (bx1, by1, _bx2, _by2, _fcx, _fcy) =
                         self.get_duplication_footprint_coords(element, Some(dup_array));
@@ -433,7 +429,10 @@ impl ElementStreamer {
                 }
             }
         } else {
-             log::info!("Element refers to instance {} which is missing from block_instances!", instance_id);
+            log::info!(
+                "Element refers to instance {} which is missing from block_instances!",
+                instance_id
+            );
         }
         None
     }
@@ -441,10 +440,7 @@ impl ElementStreamer {
     /// Create a per-cell renderable element for duplication-array rendering.
     /// The exported element stores total grid dimensions, but each rendered copy
     /// needs the single-cell size.
-    pub fn get_renderable_duplication_element(
-        &self,
-        element: &DucElementEnum,
-    ) -> DucElementEnum {
+    pub fn get_renderable_duplication_element(&self, element: &DucElementEnum) -> DucElementEnum {
         let base = Self::get_element_base(element);
         let Some(instance_id) = base.instance_id.as_ref() else {
             return element.clone();
@@ -472,16 +468,26 @@ impl ElementStreamer {
             DucElementEnum::DucRectangleElement(r) => (r.base.width, r.base.height),
             DucElementEnum::DucEllipseElement(e) => (e.base.width, e.base.height),
             DucElementEnum::DucImageElement(i) => (i.base.width, i.base.height),
-            DucElementEnum::DucFrameElement(f) => (f.stack_element_base.base.width, f.stack_element_base.base.height),
-            DucElementEnum::DucPlotElement(p) => (p.stack_element_base.base.width, p.stack_element_base.base.height),
+            DucElementEnum::DucFrameElement(f) => (
+                f.stack_element_base.base.width,
+                f.stack_element_base.base.height,
+            ),
+            DucElementEnum::DucPlotElement(p) => (
+                p.stack_element_base.base.width,
+                p.stack_element_base.base.height,
+            ),
             DucElementEnum::DucTableElement(t) => (t.base.width, t.base.height),
             DucElementEnum::DucDocElement(d) => (d.base.width, d.base.height),
             DucElementEnum::DucEmbeddableElement(e) => (e.base.width, e.base.height),
             DucElementEnum::DucPolygonElement(p) => (p.base.width, p.base.height),
             DucElementEnum::DucTextElement(t) => (t.base.width, t.base.height),
             DucElementEnum::DucFreeDrawElement(f) => (f.base.width, f.base.height),
-            DucElementEnum::DucLinearElement(l) => (l.linear_base.base.width, l.linear_base.base.height),
-            DucElementEnum::DucArrowElement(a) => (a.linear_base.base.width, a.linear_base.base.height),
+            DucElementEnum::DucLinearElement(l) => {
+                (l.linear_base.base.width, l.linear_base.base.height)
+            }
+            DucElementEnum::DucArrowElement(a) => {
+                (a.linear_base.base.width, a.linear_base.base.height)
+            }
             DucElementEnum::DucPdfElement(p) => (p.base.width, p.base.height),
             DucElementEnum::DucModelElement(m) => (m.base.width, m.base.height),
         }
@@ -558,11 +564,7 @@ impl ElementStreamer {
         element
     }
 
-    fn with_element_position(
-        mut element: DucElementEnum,
-        x: f64,
-        y: f64,
-    ) -> DucElementEnum {
+    fn with_element_position(mut element: DucElementEnum, x: f64, y: f64) -> DucElementEnum {
         match &mut element {
             DucElementEnum::DucRectangleElement(r) => {
                 r.base.x = x;
@@ -810,8 +812,8 @@ impl ElementStreamer {
                 clip_applied = clip_active;
             }
 
-            let renderable_element = self
-                .get_renderable_duplication_element(&element_wrapper.element);
+            let renderable_element =
+                self.get_renderable_duplication_element(&element_wrapper.element);
 
             let offsets = self
                 .get_element_duplication_offsets(&element_wrapper.element)
@@ -939,7 +941,10 @@ impl ElementStreamer {
         // Special handling: PDF elements - do not apply styles to avoid affecting embedded content
         let styles = self.style_resolver.resolve_styles(element);
 
-        let is_pdf = matches!(element, DucElementEnum::DucPdfElement(_) | DucElementEnum::DucDocElement(_));
+        let is_pdf = matches!(
+            element,
+            DucElementEnum::DucPdfElement(_) | DucElementEnum::DucDocElement(_)
+        );
         if !is_pdf {
             let style_ops = self.apply_styles(element, &styles)?;
             operations.extend(style_ops);
@@ -1786,11 +1791,17 @@ impl ElementStreamer {
 
         ops.push(Operation::new(
             "m",
-            vec![Object::Real((x + radius) as f32), Object::Real(top_y as f32)],
+            vec![
+                Object::Real((x + radius) as f32),
+                Object::Real(top_y as f32),
+            ],
         ));
         ops.push(Operation::new(
             "l",
-            vec![Object::Real((right - radius) as f32), Object::Real(top_y as f32)],
+            vec![
+                Object::Real((right - radius) as f32),
+                Object::Real(top_y as f32),
+            ],
         ));
         ops.push(Operation::new(
             "c",
@@ -1805,7 +1816,10 @@ impl ElementStreamer {
         ));
         ops.push(Operation::new(
             "l",
-            vec![Object::Real(right as f32), Object::Real((bottom + radius) as f32)],
+            vec![
+                Object::Real(right as f32),
+                Object::Real((bottom + radius) as f32),
+            ],
         ));
         ops.push(Operation::new(
             "c",
@@ -1820,7 +1834,10 @@ impl ElementStreamer {
         ));
         ops.push(Operation::new(
             "l",
-            vec![Object::Real((x + radius) as f32), Object::Real(bottom as f32)],
+            vec![
+                Object::Real((x + radius) as f32),
+                Object::Real(bottom as f32),
+            ],
         ));
         ops.push(Operation::new(
             "c",
@@ -1835,7 +1852,10 @@ impl ElementStreamer {
         ));
         ops.push(Operation::new(
             "l",
-            vec![Object::Real(x as f32), Object::Real((top_y - radius) as f32)],
+            vec![
+                Object::Real(x as f32),
+                Object::Real((top_y - radius) as f32),
+            ],
         ));
         ops.push(Operation::new(
             "c",
@@ -1857,7 +1877,12 @@ impl ElementStreamer {
         height: f64,
         roundness: f64,
     ) -> bool {
-        if roundness <= 0.01 || width <= 0.0 || height <= 0.0 || !width.is_finite() || !height.is_finite() {
+        if roundness <= 0.01
+            || width <= 0.0
+            || height <= 0.0
+            || !width.is_finite()
+            || !height.is_finite()
+        {
             return false;
         }
 
@@ -1878,7 +1903,10 @@ impl ElementStreamer {
 
         // Handle filling and stroking with hatching support
         let styles = &rect.base.styles;
-        let has_background = styles.background.iter().any(|background| background.content.visible);
+        let has_background = styles
+            .background
+            .iter()
+            .any(|background| background.content.visible);
         let has_stroke = styles.stroke.iter().any(|stroke| stroke.content.visible);
 
         // Check for hatching patterns in backgrounds
@@ -2023,14 +2051,24 @@ impl ElementStreamer {
 
         // Estimate total text height for vertical alignment
         let line_count = {
-            let max_w = if text.auto_resize { None } else { Some(text.base.width as f32) };
+            let max_w = if text.auto_resize {
+                None
+            } else {
+                Some(text.base.width as f32)
+            };
             let paragraphs: Vec<&str> = resolved_text.split('\n').collect();
             let mut count = 0usize;
             for para in &paragraphs {
                 if para.is_empty() {
                     count += 1;
                 } else if let Some(w) = max_w {
-                    let wrapped = hipdf::fonts::utils::wrap_text(active_font, para, w, font_size, wrap_strategy);
+                    let wrapped = hipdf::fonts::utils::wrap_text(
+                        active_font,
+                        para,
+                        w,
+                        font_size,
+                        wrap_strategy,
+                    );
                     count += wrapped.len().max(1);
                 } else {
                     count += 1;
@@ -2042,12 +2080,8 @@ impl ElementStreamer {
 
         // Apply vertical alignment
         let text_start_y = match text.style.vertical_align {
-            VERTICAL_ALIGN::MIDDLE => {
-                -(font_size + (element_height - total_text_height) / 2.0)
-            }
-            VERTICAL_ALIGN::BOTTOM => {
-                -(element_height)
-            }
+            VERTICAL_ALIGN::MIDDLE => -(font_size + (element_height - total_text_height) / 2.0),
+            VERTICAL_ALIGN::BOTTOM => -(element_height),
             // TOP or default
             _ => -font_size,
         };
@@ -2116,7 +2150,8 @@ impl ElementStreamer {
 
     fn convert_polygon_to_linear_element(polygon: &DucPolygonElement) -> DucLinearElement {
         let sides = polygon.sides.max(3);
-        let base_points = Self::generate_polygon_points(sides, polygon.base.width, polygon.base.height);
+        let base_points =
+            Self::generate_polygon_points(sides, polygon.base.width, polygon.base.height);
         let roundness = polygon.base.styles.roundness.max(0.0);
         let (points, lines) = if roundness > 0.01 {
             Self::generate_rounded_polygon_path(&base_points, roundness)
@@ -2762,7 +2797,10 @@ impl ElementStreamer {
         let info = match pdf_embedder.get_pdf_info(&embed_id) {
             Some(info) => info.clone(),
             None => {
-                log::info!("[duc2pdf] PDF not loaded for embed_id={}, skipping", embed_id);
+                log::info!(
+                    "[duc2pdf] PDF not loaded for embed_id={}, skipping",
+                    embed_id
+                );
                 return Ok(vec![Operation::new(
                     &format!("% PDF not loaded: {}", embed_id),
                     vec![],
@@ -2937,7 +2975,8 @@ impl ElementStreamer {
             match pdf_embedder.embed_pdf(document, &embed_id, &page_opts) {
                 Ok(result) => {
                     for (name, obj_ref) in result.xobject_resources.iter() {
-                        self.resource_cache.insert(file_id.to_string(), name.clone());
+                        self.resource_cache
+                            .insert(file_id.to_string(), name.clone());
                         self.new_xobjects.push((name.clone(), obj_ref.clone()));
                     }
                     ops.extend(result.operations);
@@ -3033,7 +3072,10 @@ impl ElementStreamer {
                         error,
                     );
                     ops.push(Operation::new(
-                        &format!("% Failed to decode DucModelElement thumbnail: {}", model.base.id),
+                        &format!(
+                            "% Failed to decode DucModelElement thumbnail: {}",
+                            model.base.id
+                        ),
                         vec![],
                     ));
                     return Ok(ops);
@@ -3049,7 +3091,10 @@ impl ElementStreamer {
                         error,
                     );
                     ops.push(Operation::new(
-                        &format!("% Failed to embed DucModelElement thumbnail: {}", model.base.id),
+                        &format!(
+                            "% Failed to embed DucModelElement thumbnail: {}",
+                            model.base.id
+                        ),
                         vec![],
                     ));
                     return Ok(ops);
@@ -3139,10 +3184,10 @@ impl ElementStreamer {
                         ops.push(Operation::new(
                             "cm",
                             vec![
-                                Object::Real(scale_x as f32),  // Scale X to fill width
+                                Object::Real(scale_x as f32), // Scale X to fill width
                                 Object::Real(0.0),
                                 Object::Real(0.0),
-                                Object::Real(scale_y as f32),  // Scale Y to fill height
+                                Object::Real(scale_y as f32), // Scale Y to fill height
                                 Object::Real(0.0),
                                 Object::Real(-(image.base.height as f32)), // Y-offset correction
                             ],
@@ -3321,7 +3366,10 @@ impl ElementStreamer {
         let mut ops = Vec::new();
 
         let styles = &frame.stack_element_base.base.styles;
-        let has_background = styles.background.iter().any(|background| background.content.visible);
+        let has_background = styles
+            .background
+            .iter()
+            .any(|background| background.content.visible);
         let has_stroke = styles.stroke.iter().any(|stroke| stroke.content.visible);
 
         if has_background || has_stroke {
