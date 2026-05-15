@@ -1,7 +1,7 @@
 use crate::ConversionResult;
 use duc::types::{
-    ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, STROKE_CAP, STROKE_JOIN, STROKE_PREFERENCE,
     DucElementEnum, DucElementStylesBase, DucHatchStyle, ElementBackground, ElementStroke,
+    ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, STROKE_CAP, STROKE_JOIN, STROKE_PREFERENCE,
 };
 use hipdf::hatching::{HatchStyle, HatchingManager};
 use hipdf::lopdf::{content::Operation, Object};
