@@ -760,8 +760,8 @@ export type DucPointBinding = {
 
 export type DucHead = {
   type: LineHead;
-  blockId: string | null; // If the head is a block, this is the id of the block
-  size: PrecisionValue;
+  blockId: string | null;
+  size: number;
 }
 
 export interface DucPointPosition {
