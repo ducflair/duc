@@ -550,9 +550,7 @@ mod integration_tests {
         }
     }
 
-    use duc::types::{
-        ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN, STROKE_PREFERENCE,
-    };
+    use duc::types::{ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN, STROKE_PREFERENCE};
     use duc2pdf::streaming::stream_elements::ElementStreamer;
     use duc2pdf::utils::style_resolver::StyleResolver;
     use std::collections::HashMap;
@@ -580,7 +578,7 @@ mod integration_tests {
             is_deleted: false,
             group_ids: vec![],
             region_ids: vec![],
-            
+
             layer_id: None,
             frame_id: None,
             bound_elements: None,
