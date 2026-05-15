@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Extract raw `PRAGMA user_version = <N>;` from `duc.sql`.
 fn schema_user_version_from_sql(sql: &str) -> u32 {
@@ -24,23 +24,45 @@ fn decode_user_version_to_semver(user_version: u32) -> String {
     format!("{major}.{minor}.{patch}")
 }
 
+fn find_schema_dir(manifest_dir: &Path) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    if let Ok(path) = env::var("DUC_SCHEMA_DIR") {
+        let candidate = PathBuf::from(path);
+        if candidate.join("duc.sql").is_file() {
+            return Ok(candidate);
+        }
+    }
+
+    for ancestor in manifest_dir.ancestors() {
+        for candidate in [
+            ancestor.join("schema"),
+            ancestor.join("packages").join("ducpy").join("schema"),
+        ] {
+            if candidate.join("duc.sql").is_file() {
+                return Ok(candidate);
+            }
+        }
+    }
+
+    Err(format!(
+        "Could not locate schema/duc.sql from {}. Set DUC_SCHEMA_DIR to a directory containing duc.sql.",
+        manifest_dir.display()
+    )
+    .into())
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?);
-    let schema_dir = manifest_dir.join("..").join("..").join("schema");
+    let schema_dir = find_schema_dir(&manifest_dir)?;
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
+    println!("cargo:rerun-if-env-changed=DUC_SCHEMA_DIR");
 
     // Copy schema files into OUT_DIR so bootstrap.rs can include_str! them
     // even when the crate is built from an sdist in a temp directory.
     for name in ["duc.sql", "version_control.sql", "search.sql"] {
         let src = schema_dir.join(name);
         let dst = out_dir.join(name);
-        match fs::read_to_string(&src) {
-            Ok(contents) => fs::write(&dst, contents)?,
-            Err(e) => {
-                eprintln!("cargo:warning=Could not read {:?}: {e}. Writing empty stub.", src);
-                fs::write(&dst, "")?;
-            }
-        }
+        let contents = fs::read_to_string(&src)?;
+        fs::write(&dst, contents)?;
         println!("cargo:rerun-if-changed={}", src.display());
     }
     // Scan schema/migrations/*.sql, parse (from, to) from filenames like
