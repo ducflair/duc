@@ -517,9 +517,7 @@ fn deserialize_font_map(font_map_js: JsValue) -> HashMap<String, Vec<u8>> {
         return fonts;
     }
 
-    let entries = js_sys::try_iter(&font_map_js)
-        .ok()
-        .flatten();
+    let entries = js_sys::try_iter(&font_map_js).ok().flatten();
 
     if let Some(iter) = entries {
         for entry_result in iter {
@@ -633,10 +631,18 @@ pub fn convert_exported_data_to_pdf_wasm(
 #[wasm_bindgen]
 pub fn convert_duc_to_pdf_with_fonts_rs(duc_data: &[u8], font_map_js: JsValue) -> Vec<u8> {
     let font_data = deserialize_font_map(font_map_js);
-    match convert_duc_to_pdf_with_fonts_and_options(duc_data, ConversionOptions::default(), font_data) {
+    match convert_duc_to_pdf_with_fonts_and_options(
+        duc_data,
+        ConversionOptions::default(),
+        font_data,
+    ) {
         Ok(pdf_bytes) => pdf_bytes,
         Err(e) => {
-            error_handling::log_error_details(&e, duc_data.len(), "Conversion with fonts (default options)");
+            error_handling::log_error_details(
+                &e,
+                duc_data.len(),
+                "Conversion with fonts (default options)",
+            );
             let error_info = error_handling::create_error_info(&e, duc_data.len(), None);
             error_handling::error_to_wasm_bytes(&error_info)
         }
@@ -659,7 +665,11 @@ pub fn convert_duc_to_pdf_with_fonts_scaled_wasm(
     match convert_duc_to_pdf_with_fonts_and_options(duc_data, options, font_data) {
         Ok(pdf_bytes) => pdf_bytes,
         Err(e) => {
-            error_handling::log_error_details(&e, duc_data.len(), "Conversion with fonts and scale");
+            error_handling::log_error_details(
+                &e,
+                duc_data.len(),
+                "Conversion with fonts and scale",
+            );
             let options = ConversionOptions {
                 scale: Some(scale),
                 ..Default::default()
@@ -781,7 +791,11 @@ pub fn convert_duc_to_pdf_crop_with_fonts_scaled_wasm(
     match convert_duc_to_pdf_with_fonts_and_options(duc_data, options, font_data) {
         Ok(pdf_bytes) => pdf_bytes,
         Err(e) => {
-            error_handling::log_error_details(&e, duc_data.len(), "Crop conversion with fonts and scale");
+            error_handling::log_error_details(
+                &e,
+                duc_data.len(),
+                "Crop conversion with fonts and scale",
+            );
             error_handling::log_crop_details(offset_x, offset_y, width, height);
             let crop_options = ConversionOptions {
                 mode: ConversionMode::Crop {

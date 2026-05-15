@@ -16,7 +16,7 @@ module.exports = {
       "@semantic-release/exec",
       {
         prepareCmd:
-          "uv sync && sed -i 's/^version = \".*\"$/version = \"${nextRelease.version}\"/' crate/Cargo.toml && SETUPTOOLS_SCM_PRETEND_VERSION=${nextRelease.version} uv build --sdist",
+          "uv sync && uv run python scripts/sync_schema.py && sed -i 's/^version = \".*\"$/version = \"${nextRelease.version}\"/' crate/Cargo.toml && SETUPTOOLS_SCM_PRETEND_VERSION=${nextRelease.version} uv build --sdist",
         publishCmd: "uv publish --token ${process.env.PYPI_TOKEN} dist/*.tar.gz",
       },
     ],

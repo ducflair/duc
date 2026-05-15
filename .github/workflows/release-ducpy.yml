@@ -96,6 +96,7 @@ jobs:
           TAG=$(git describe --tags --abbrev=0 --match 'ducpy@*')
           VERSION="${TAG#ducpy@}"
           echo "Building Pyodide wheel for version ${VERSION}"
+          uv run python scripts/sync_schema.py
           RUSTUP_TOOLCHAIN=nightly SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION}" pyodide build --outdir dist
 
       - name: Upload wheels to GitHub release

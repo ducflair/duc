@@ -8,14 +8,14 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./*": {
+      "types": ["./dist/*.d.ts", "./dist/*/index.d.ts"],
       "import": ["./dist/*.js", "./dist/*/index.js"],
-      "require": ["./dist/*.js", "./dist/*/index.js"],
-      "types": ["./dist/*.d.ts", "./dist/*/index.d.ts"]
+      "require": ["./dist/*.js", "./dist/*/index.js"]
     }
   },
   "scripts": {
