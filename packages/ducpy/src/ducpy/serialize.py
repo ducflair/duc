@@ -216,9 +216,48 @@ def serialize_duc(
     layers: Optional[list] = None,
     external_files: Optional[list] = None,
 ) -> bytes:
-    """Serialize elements to ``.duc`` format.
-    Element instances and state dataclasses are automatically converted to the
-    camelCase dicts expected by the Rust native module.
+    """Serialize elements and document state to raw ``.duc`` binary format.
+
+    This function accepts lists of elements created via the `ducpy.builders` API
+    (e.g., `ElementBuilder`) and serializes them into the compressed format
+    expected by `.duc` files. Element instances and state dataclasses are 
+    automatically converted to the camelCase dicts expected by the Rust native module.
+
+    Parameters
+    ----------
+    name : str
+        The document name or identifier (used to populate the `source` field).
+    thumbnail : Optional[bytes], default=None
+        Raw PNG bytes representing a thumbnail of the document.
+    dictionary : Optional[list], default=None
+        List of Key-Value string pairs for dictionary entries.
+    elements : Optional[list], default=None
+        A list of elements (e.g., created via `ElementBuilder`) to include.
+    duc_local_state : Any, default=None
+        A `DucLocalState` object representing viewport state (pan, zoom, etc).
+    duc_global_state : Any, default=None
+        A `DucGlobalState` object representing document-wide settings.
+    version_graph : Any, default=None
+        Version history metadata of the document.
+    blocks : Optional[list], default=None
+        List of block definitions.
+    block_instances : Optional[list], default=None
+        List of block instances.
+    block_collections : Optional[list], default=None
+        List of block collections (libraries).
+    groups : Optional[list], default=None
+        List of element groups.
+    regions : Optional[list], default=None
+        List of boolean regions.
+    layers : Optional[list], default=None
+        List of document layers.
+    external_files : Optional[list], default=None
+        List of external files (e.g., embedded images or PDFs).
+
+    Returns
+    -------
+    bytes
+        The raw `.duc` binary data, ready to be written to a file.
     """
     thumb = bytes(thumbnail) if thumbnail is not None else None
 
