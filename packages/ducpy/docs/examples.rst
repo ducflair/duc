@@ -49,3 +49,25 @@ anything beyond what the high-level builders expose.
 .. literalinclude:: ../src/examples/sql_builder_demo.py
    :language: python
    :linenos:
+
+----
+
+Serialization
+-------------
+
+Demonstrates how to serialize builder-created elements directly to a `.duc` file using `duc.serialize_duc`.
+
+.. literalinclude:: ../src/examples/serialization_demo.py
+   :language: python
+   :linenos:
+
+----
+
+Parsing
+-------
+
+Demonstrates how to parse a `.duc` file or raw binary bytes using `duc.parse_duc`, allowing attribute-style access to the document's content.
+
+.. literalinclude:: ../src/examples/parsing_demo.py
+   :language: python
+   :linenos:
