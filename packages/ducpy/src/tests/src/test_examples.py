@@ -18,6 +18,8 @@ import element_creation_demo
 import external_files_demo
 import mutation_demo
 import sql_builder_demo
+import serialization_demo
+import parsing_demo
 
 
 class TestElementCreationDemo:
@@ -95,6 +97,40 @@ class TestSQLBuilderDemo:
         assert "Bytes round-trip" in output_text
         assert "Advanced" in output_text
         assert "All DucSQL demos completed successfully!" in output_text
+
+
+class TestSerializationDemo:
+    """Test the serialization demo."""
+
+    def test_serialization_demo_runs_successfully(self):
+        """Test that the serialization demo runs without errors."""
+        output = StringIO()
+        with redirect_stdout(output):
+            serialization_demo.main()
+
+        output_text = output.getvalue()
+        assert "Serialization Demo" in output_text
+        assert "Creating elements via Builder API" in output_text
+        assert "Serializing to .duc format" in output_text
+        assert "Successfully serialized" in output_text
+        assert "Serialization demo complete" in output_text
+
+
+class TestParsingDemo:
+    """Test the parsing demo."""
+
+    def test_parsing_demo_runs_successfully(self):
+        """Test that the parsing demo runs without errors."""
+        output = StringIO()
+        with redirect_stdout(output):
+            parsing_demo.main()
+
+        output_text = output.getvalue()
+        assert "Parsing Demo" in output_text
+        assert "Parsing a .duc file from a file path" in output_text
+        assert "Accessing element attributes" in output_text
+        assert "Parsing directly from raw bytes" in output_text
+        assert "Parsing demo complete" in output_text
 
 
 class TestStyleBuilders:
