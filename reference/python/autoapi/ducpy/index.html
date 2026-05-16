@@ -272,13 +272,23 @@
         <article role="main" id="furo-main-content">
           <section id="module-ducpy">
 <span id="ducpy"></span><h1>ducpy<a class="headerlink" href="#module-ducpy" title="Link to this heading">¶</a></h1>
-<p>Main module for duc_py package.</p>
-<dl>
-<dt>Import usage examples:</dt><dd><p>import ducpy as duc</p>
-<p>duc.classes.SomeClass
-duc.parse_duc(source)
-duc.serialize_duc(name=…, elements=…)
-duc.utils.some_utility</p>
+<p>Python library for the DUC 2D CAD file format.</p>
+<dl class="simple">
+<dt>Usage::</dt><dd><p><code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">ducpy</span> <span class="pre">as</span> <span class="pre">duc</span></code></p>
+</dd>
+<dt>Builders API (High-level):</dt><dd><p>The easy way to build, manage <code class="docutils literal notranslate"><span class="pre">.duc</span></code> files.
+Construct elements, apply styles, manage layers, build blocks,
+and handle document state with the <code class="docutils literal notranslate"><span class="pre">duc.builders</span></code> module.</p>
+</dd>
+<dt>SQL Builder (Low-level):</dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">.duc</span></code> file is a zlib-compressed SQLite database. Use
+<code class="docutils literal notranslate"><span class="pre">duc.builders.sql_builder</span></code> for direct schema access, bulk
+queries, and low-level manipulation.</p>
+</dd>
+<dt>Search:</dt><dd><p>Query/search elements and files programmatically via the
+<code class="docutils literal notranslate"><span class="pre">duc.search</span></code> API.</p>
+</dd>
+<dt>File I/O:</dt><dd><p>Read and write <code class="docutils literal notranslate"><span class="pre">.duc</span></code> files using the <code class="docutils literal notranslate"><span class="pre">duc.parse</span></code>
+and <code class="docutils literal notranslate"><span class="pre">duc.serialize</span></code> modules.</p>
 </dd>
 </dl>
 <section id="submodules">

@@ -803,6 +803,156 @@ anything beyond what the high-level builders expose.</p>
 </pre></div>
 </div>
 </section>
+<hr class="docutils" />
+<section id="serialization">
+<h2>Serialization<a class="headerlink" href="#serialization" title="Link to this heading">¶</a></h2>
+<p>Demonstrates how to serialize builder-created elements directly to a <cite>.duc</cite> file using <cite>duc.serialize_duc</cite>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="ch">#!/usr/bin/env python3</span>
+<span class="linenos"> 2</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 3</span><span class="sd">Example demonstrating how to serialize elements created by the Builder API into a .duc file.</span>
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span><span class="sd">This demo shows the correct pattern for taking in-memory python elements</span>
+<span class="linenos"> 6</span><span class="sd">and writing them to a raw `.duc` binary blob.</span>
+<span class="linenos"> 7</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="linenos">10</span><span class="kn">import</span><span class="w"> </span><span class="nn">ducpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">duc</span>
+<span class="linenos">11</span><span class="kn">from</span><span class="w"> </span><span class="nn">ducpy.builders.style_builders</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_fill_and_stroke_style</span><span class="p">,</span> <span class="n">create_solid_content</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="linenos">14</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Serialization Demo&quot;</span><span class="p">)</span>
+<span class="linenos">15</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">30</span><span class="p">)</span>
+<span class="linenos">16</span>    
+<span class="linenos">17</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;1. Creating elements via Builder API...&quot;</span><span class="p">)</span>
+<span class="linenos">18</span>    <span class="n">elements</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="linenos">19</span>    
+<span class="linenos">20</span>    <span class="c1"># Create some basic elements</span>
+<span class="linenos">21</span>    <span class="n">rect</span> <span class="o">=</span> <span class="p">(</span><span class="n">duc</span><span class="o">.</span><span class="n">ElementBuilder</span><span class="p">()</span>
+<span class="linenos">22</span>        <span class="o">.</span><span class="n">at_position</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="linenos">23</span>        <span class="o">.</span><span class="n">with_size</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="linenos">24</span>        <span class="o">.</span><span class="n">with_label</span><span class="p">(</span><span class="s2">&quot;Sample Rectangle&quot;</span><span class="p">)</span>
+<span class="linenos">25</span>        <span class="o">.</span><span class="n">with_styles</span><span class="p">(</span><span class="n">create_fill_and_stroke_style</span><span class="p">(</span>
+<span class="linenos">26</span>            <span class="n">fill_content</span><span class="o">=</span><span class="n">create_solid_content</span><span class="p">(</span><span class="s2">&quot;#FF6B6B&quot;</span><span class="p">),</span>
+<span class="linenos">27</span>            <span class="n">stroke_content</span><span class="o">=</span><span class="n">create_solid_content</span><span class="p">(</span><span class="s2">&quot;#2C3E50&quot;</span><span class="p">),</span>
+<span class="linenos">28</span>            <span class="n">stroke_width</span><span class="o">=</span><span class="mf">2.0</span>
+<span class="linenos">29</span>        <span class="p">))</span>
+<span class="linenos">30</span>        <span class="o">.</span><span class="n">build_rectangle</span><span class="p">()</span>
+<span class="linenos">31</span>        <span class="o">.</span><span class="n">build</span><span class="p">())</span>
+<span class="linenos">32</span>    <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
+<span class="linenos">33</span>    
+<span class="linenos">34</span>    <span class="n">ellipse</span> <span class="o">=</span> <span class="p">(</span><span class="n">duc</span><span class="o">.</span><span class="n">ElementBuilder</span><span class="p">()</span>
+<span class="linenos">35</span>        <span class="o">.</span><span class="n">at_position</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="linenos">36</span>        <span class="o">.</span><span class="n">with_size</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+<span class="linenos">37</span>        <span class="o">.</span><span class="n">with_label</span><span class="p">(</span><span class="s2">&quot;Sample Ellipse&quot;</span><span class="p">)</span>
+<span class="linenos">38</span>        <span class="o">.</span><span class="n">with_styles</span><span class="p">(</span><span class="n">create_fill_and_stroke_style</span><span class="p">(</span>
+<span class="linenos">39</span>            <span class="n">fill_content</span><span class="o">=</span><span class="n">create_solid_content</span><span class="p">(</span><span class="s2">&quot;#4ECDC4&quot;</span><span class="p">),</span>
+<span class="linenos">40</span>            <span class="n">stroke_content</span><span class="o">=</span><span class="n">create_solid_content</span><span class="p">(</span><span class="s2">&quot;#34495E&quot;</span><span class="p">),</span>
+<span class="linenos">41</span>            <span class="n">stroke_width</span><span class="o">=</span><span class="mf">1.5</span>
+<span class="linenos">42</span>        <span class="p">))</span>
+<span class="linenos">43</span>        <span class="o">.</span><span class="n">build_ellipse</span><span class="p">()</span>
+<span class="linenos">44</span>        <span class="o">.</span><span class="n">build</span><span class="p">())</span>
+<span class="linenos">45</span>    <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ellipse</span><span class="p">)</span>
+<span class="linenos">46</span>    
+<span class="linenos">47</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Created </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span><span class="si">}</span><span class="s2"> elements.&quot;</span><span class="p">)</span>
+<span class="linenos">48</span>    
+<span class="linenos">49</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;2. Serializing to .duc format...&quot;</span><span class="p">)</span>
+<span class="linenos">50</span>    <span class="c1"># NOTE: The serialize_duc function takes keyword arguments for elements, </span>
+<span class="linenos">51</span>    <span class="c1"># blocks, global state, etc. and bridges to the Rust native backend.</span>
+<span class="linenos">52</span>    <span class="n">duc_bytes</span> <span class="o">=</span> <span class="n">duc</span><span class="o">.</span><span class="n">serialize_duc</span><span class="p">(</span>
+<span class="linenos">53</span>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;serialization_example&quot;</span><span class="p">,</span>
+<span class="linenos">54</span>        <span class="n">elements</span><span class="o">=</span><span class="n">elements</span>
+<span class="linenos">55</span>    <span class="p">)</span>
+<span class="linenos">56</span>    
+<span class="linenos">57</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Successfully serialized </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">duc_bytes</span><span class="p">)</span><span class="si">}</span><span class="s2"> bytes.&quot;</span><span class="p">)</span>
+<span class="linenos">58</span>    
+<span class="linenos">59</span>    <span class="c1"># You would typically write this to a file</span>
+<span class="linenos">60</span>    <span class="c1"># output_file = &quot;example.duc&quot;</span>
+<span class="linenos">61</span>    <span class="c1"># with open(output_file, &quot;wb&quot;) as f:</span>
+<span class="linenos">62</span>    <span class="c1">#     f.write(duc_bytes)</span>
+<span class="linenos">63</span>    <span class="c1"># print(f&quot;3. Saved to {output_file}&quot;)</span>
+<span class="linenos">64</span>    
+<span class="linenos">65</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">✅ Serialization demo complete!&quot;</span><span class="p">)</span>
+<span class="linenos">66</span>
+<span class="linenos">67</span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="linenos">68</span>    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="parsing">
+<h2>Parsing<a class="headerlink" href="#parsing" title="Link to this heading">¶</a></h2>
+<p>Demonstrates how to parse a <cite>.duc</cite> file or raw binary bytes using <cite>duc.parse_duc</cite>, allowing attribute-style access to the document’s content.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="ch">#!/usr/bin/env python3</span>
+<span class="linenos"> 2</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 3</span><span class="sd">Example demonstrating how to parse a .duc file using the parsing API.</span>
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span><span class="sd">This demo shows how to read a `.duc` binary blob or file path and access</span>
+<span class="linenos"> 6</span><span class="sd">the parsed data using attribute-style access via DucData.</span>
+<span class="linenos"> 7</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="linenos">10</span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="linenos">11</span><span class="kn">import</span><span class="w"> </span><span class="nn">ducpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">duc</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="linenos">14</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Parsing Demo&quot;</span><span class="p">)</span>
+<span class="linenos">15</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">30</span><span class="p">)</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span>    <span class="c1"># First, let&#39;s create a temporary .duc file to parse</span>
+<span class="linenos">18</span>    <span class="kn">from</span><span class="w"> </span><span class="nn">ducpy.builders.style_builders</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_fill_and_stroke_style</span><span class="p">,</span> <span class="n">create_solid_content</span>
+<span class="linenos">19</span>    <span class="n">elements</span> <span class="o">=</span> <span class="p">[</span>
+<span class="linenos">20</span>        <span class="n">duc</span><span class="o">.</span><span class="n">ElementBuilder</span><span class="p">()</span>
+<span class="linenos">21</span>            <span class="o">.</span><span class="n">at_position</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="linenos">22</span>            <span class="o">.</span><span class="n">with_size</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="linenos">23</span>            <span class="o">.</span><span class="n">with_label</span><span class="p">(</span><span class="s2">&quot;Parsed Rectangle&quot;</span><span class="p">)</span>
+<span class="linenos">24</span>            <span class="o">.</span><span class="n">with_styles</span><span class="p">(</span><span class="n">create_fill_and_stroke_style</span><span class="p">(</span>
+<span class="linenos">25</span>                <span class="n">fill_content</span><span class="o">=</span><span class="n">create_solid_content</span><span class="p">(</span><span class="s2">&quot;#FF6B6B&quot;</span><span class="p">),</span>
+<span class="linenos">26</span>                <span class="n">stroke_content</span><span class="o">=</span><span class="n">create_solid_content</span><span class="p">(</span><span class="s2">&quot;#2C3E50&quot;</span><span class="p">),</span>
+<span class="linenos">27</span>                <span class="n">stroke_width</span><span class="o">=</span><span class="mf">2.0</span>
+<span class="linenos">28</span>            <span class="p">))</span>
+<span class="linenos">29</span>            <span class="o">.</span><span class="n">build_rectangle</span><span class="p">()</span>
+<span class="linenos">30</span>            <span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="linenos">31</span>    <span class="p">]</span>
+<span class="linenos">32</span>    <span class="n">duc_bytes</span> <span class="o">=</span> <span class="n">duc</span><span class="o">.</span><span class="n">serialize_duc</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;parsing_example&quot;</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">elements</span><span class="p">)</span>
+<span class="linenos">33</span>    
+<span class="linenos">34</span>    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.duc&quot;</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+<span class="linenos">35</span>        <span class="n">tmp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">duc_bytes</span><span class="p">)</span>
+<span class="linenos">36</span>        <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">name</span>
+<span class="linenos">37</span>
+<span class="linenos">38</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;1. Parsing a .duc file from a file path...&quot;</span><span class="p">)</span>
+<span class="linenos">39</span>    
+<span class="linenos">40</span>    <span class="c1"># You can pass a string path directly to parse_duc</span>
+<span class="linenos">41</span>    <span class="n">parsed_data</span> <span class="o">=</span> <span class="n">duc</span><span class="o">.</span><span class="n">parse_duc</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span>
+<span class="linenos">42</span>    
+<span class="linenos">43</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Document Source: </span><span class="si">{</span><span class="n">parsed_data</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="linenos">44</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Parsed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">parsed_data</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span><span class="si">}</span><span class="s2"> elements.&quot;</span><span class="p">)</span>
+<span class="linenos">45</span>    
+<span class="linenos">46</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">2. Accessing element attributes (snake_case)...&quot;</span><span class="p">)</span>
+<span class="linenos">47</span>    
+<span class="linenos">48</span>    <span class="c1"># Element properties are accessible via dot-notation with snake_case keys</span>
+<span class="linenos">49</span>    <span class="c1"># because parse_duc returns a DucData object.</span>
+<span class="linenos">50</span>    <span class="n">first_element</span> <span class="o">=</span> <span class="n">parsed_data</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="linenos">51</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Element ID: </span><span class="si">{</span><span class="n">first_element</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="linenos">52</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Element Type: </span><span class="si">{</span><span class="n">first_element</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="linenos">53</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Element Label: </span><span class="si">{</span><span class="n">first_element</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="linenos">54</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Element Position: (X: </span><span class="si">{</span><span class="n">first_element</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">, Y: </span><span class="si">{</span><span class="n">first_element</span><span class="o">.</span><span class="n">y</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+<span class="linenos">55</span>    
+<span class="linenos">56</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">3. Parsing directly from raw bytes...&quot;</span><span class="p">)</span>
+<span class="linenos">57</span>    
+<span class="linenos">58</span>    <span class="c1"># You can also pass raw bytes directly to parse_duc</span>
+<span class="linenos">59</span>    <span class="n">parsed_from_bytes</span> <span class="o">=</span> <span class="n">duc</span><span class="o">.</span><span class="n">parse_duc</span><span class="p">(</span><span class="n">duc_bytes</span><span class="p">)</span>
+<span class="linenos">60</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Parsed successfully from bytes. Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">parsed_from_bytes</span><span class="o">.</span><span class="n">elements</span><span class="p">)</span><span class="si">}</span><span class="s2"> elements.&quot;</span><span class="p">)</span>
+<span class="linenos">61</span>    
+<span class="linenos">62</span>    <span class="c1"># Clean up the temporary file</span>
+<span class="linenos">63</span>    <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span>
+<span class="linenos">64</span>    
+<span class="linenos">65</span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">✅ Parsing demo complete!&quot;</span><span class="p">)</span>
+<span class="linenos">66</span>
+<span class="linenos">67</span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="linenos">68</span>    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
 </section>
 
         </article>
@@ -865,6 +1015,8 @@ anything beyond what the high-level builders expose.</p>
 <li><a class="reference internal" href="#mutating-elements">Mutating Elements</a></li>
 <li><a class="reference internal" href="#external-files">External Files</a></li>
 <li><a class="reference internal" href="#sql-builder">SQL Builder</a></li>
+<li><a class="reference internal" href="#serialization">Serialization</a></li>
+<li><a class="reference internal" href="#parsing">Parsing</a></li>
 </ul>
 </li>
 </ul>

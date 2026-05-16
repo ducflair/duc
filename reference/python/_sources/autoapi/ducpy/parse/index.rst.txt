@@ -85,16 +85,29 @@ Module Contents
 
    Parse a ``.duc`` file into a :class:`DucData` dict.
 
+   This function reads a raw `.duc` binary blob or file path and parses it using 
+   the Rust native extension. It returns a specialized dictionary (`DucData`) 
+   that allows attribute-style access to the parsed properties (e.g. `data.elements[0].id`),
+   using `snake_case` keys instead of the internal `camelCase` format.
+
    Parameters
    ----------
    source : bytes | file | str
-       Raw bytes, an open binary file, or a path to a ``.duc`` file.
+       Raw bytes, an open binary file, or a string path to a ``.duc`` file.
 
    Returns
    -------
    DucData
-       Attribute-accessible dict matching the ExportedDataState schema with
-       snake_case keys.
+       An attribute-accessible dictionary matching the internal `ExportedDataState` 
+       schema with snake_case keys. Common keys include `elements`, `global_state`, 
+       `local_state`, and `version_graph`.
+       
+   Examples
+   --------
+   >>> data = duc.parse_duc("path/to/file.duc")
+   >>> data = duc.parse_duc(binary_data)
+   >>> print(f"Found {len(data.elements)} elements")
+   >>> print(f"First element type: {data.elements[0].type}")
 
 
 .. py:function:: parse_duc_lazy(source: Union[bytes, bytearray, BinaryIO, str]) -> DucData

@@ -324,7 +324,7 @@
 <td><p>Convert a list of dataclass instances to camelCase dicts.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize.serialize_duc" title="ducpy.serialize.serialize_duc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">serialize_duc</span></code></a>(→ bytes)</p></td>
-<td><p>Serialize elements to <code class="docutils literal notranslate"><span class="pre">.duc</span></code> format.</p></td>
+<td><p>Serialize elements and document state to raw <code class="docutils literal notranslate"><span class="pre">.duc</span></code> binary format.</p></td>
 </tr>
 </tbody>
 </table>
@@ -411,9 +411,51 @@ separate <code class="docutils literal notranslate"><span class="pre">filesData<
 <dl class="py function">
 <dt class="sig sig-object py" id="ducpy.serialize.serialize_duc">
 <span class="sig-prename descclassname"><span class="pre">ducpy.serialize.</span></span><span class="sig-name descname"><span class="pre">serialize_duc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thumbnail</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dictionary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elements</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duc_local_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duc_global_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_collections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external_files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#ducpy.serialize.serialize_duc" title="Link to this definition">¶</a></dt>
-<dd><p>Serialize elements to <code class="docutils literal notranslate"><span class="pre">.duc</span></code> format.
-Element instances and state dataclasses are automatically converted to the
-camelCase dicts expected by the Rust native module.</p>
+<dd><p>Serialize elements and document state to raw <code class="docutils literal notranslate"><span class="pre">.duc</span></code> binary format.</p>
+<p>This function accepts lists of elements created via the <cite>ducpy.builders</cite> API
+(e.g., <cite>ElementBuilder</cite>) and serializes them into the compressed format
+expected by <cite>.duc</cite> files. Element instances and state dataclasses are
+automatically converted to the camelCase dicts expected by the Rust native module.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>name<span class="classifier">str</span></dt><dd><p>The document name or identifier (used to populate the <cite>source</cite> field).</p>
+</dd>
+<dt>thumbnail<span class="classifier">Optional[bytes], default=None</span></dt><dd><p>Raw PNG bytes representing a thumbnail of the document.</p>
+</dd>
+<dt>dictionary<span class="classifier">Optional[list], default=None</span></dt><dd><p>List of Key-Value string pairs for dictionary entries.</p>
+</dd>
+<dt>elements<span class="classifier">Optional[list], default=None</span></dt><dd><p>A list of elements (e.g., created via <cite>ElementBuilder</cite>) to include.</p>
+</dd>
+<dt>duc_local_state<span class="classifier">Any, default=None</span></dt><dd><p>A <cite>DucLocalState</cite> object representing viewport state (pan, zoom, etc).</p>
+</dd>
+<dt>duc_global_state<span class="classifier">Any, default=None</span></dt><dd><p>A <cite>DucGlobalState</cite> object representing document-wide settings.</p>
+</dd>
+<dt>version_graph<span class="classifier">Any, default=None</span></dt><dd><p>Version history metadata of the document.</p>
+</dd>
+<dt>blocks<span class="classifier">Optional[list], default=None</span></dt><dd><p>List of block definitions.</p>
+</dd>
+<dt>block_instances<span class="classifier">Optional[list], default=None</span></dt><dd><p>List of block instances.</p>
+</dd>
+<dt>block_collections<span class="classifier">Optional[list], default=None</span></dt><dd><p>List of block collections (libraries).</p>
+</dd>
+<dt>groups<span class="classifier">Optional[list], default=None</span></dt><dd><p>List of element groups.</p>
+</dd>
+<dt>regions<span class="classifier">Optional[list], default=None</span></dt><dd><p>List of boolean regions.</p>
+</dd>
+<dt>layers<span class="classifier">Optional[list], default=None</span></dt><dd><p>List of document layers.</p>
+</dd>
+<dt>external_files<span class="classifier">Optional[list], default=None</span></dt><dd><p>List of external files (e.g., embedded images or PDFs).</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>bytes</dt><dd><p>The raw <cite>.duc</cite> binary data, ready to be written to a file.</p>
+</dd>
+</dl>
+</section>
 </dd></dl>
 
 </section>

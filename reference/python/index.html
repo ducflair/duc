@@ -174,7 +174,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
       </label>
     </div>
@@ -265,7 +265,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
           </label>
         </div>
@@ -283,7 +283,27 @@
     <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/pypi/v/ducpy?style=round-square&label=latest%20stable" alt="PyPI ducpy@latest release" /></a>
     <a href="https://pypi.org/project/ducpy/"><img src="https://img.shields.io/pypi/dm/ducpy?style=round-square&color=salmon" alt="Downloads" /></a>
   </p>
-</p><div class="toctree-wrapper compound">
+</p><section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt><strong>Builders API (High-level)</strong></dt><dd><p>The easy way to build, manage <code class="docutils literal notranslate"><span class="pre">.duc</span></code> files.
+Construct elements, apply styles, manage layers, build blocks,
+and handle document state with the
+<a class="reference internal" href="autoapi/ducpy/builders/index.html"><span class="doc">builders</span></a> module.</p>
+</dd>
+<dt><strong>SQL Builder (Low-level)</strong></dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">.duc</span></code> file is a zlib-compressed SQLite database. Use the
+<a class="reference internal" href="autoapi/ducpy/builders/sql_builder/index.html"><span class="doc">sql_builder</span></a>
+for direct schema access, bulk queries, and low-level manipulation.</p>
+</dd>
+<dt><strong>Search</strong></dt><dd><p>Query/search elements and files programmatically via the
+<a class="reference internal" href="autoapi/ducpy/search/index.html"><span class="doc">search</span></a> API.</p>
+</dd>
+<dt><strong>File I/O</strong></dt><dd><p>Read and write <code class="docutils literal notranslate"><span class="pre">.duc</span></code> files using the
+<a class="reference internal" href="autoapi/ducpy/parse/index.html"><span class="doc">parse</span></a> and
+<a class="reference internal" href="autoapi/ducpy/serialize/index.html"><span class="doc">serialize</span></a> modules.</p>
+</dd>
+</dl>
+<div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a><ul>
@@ -295,6 +315,8 @@
 <li class="toctree-l2"><a class="reference internal" href="examples.html#mutating-elements">Mutating Elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#external-files">External Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#sql-builder">SQL Builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#serialization">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#parsing">Parsing</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="downloads.html">Downloads &amp; Installation</a><ul>
@@ -306,6 +328,7 @@
 </li>
 </ul>
 </div>
+</section>
 </section>
 
         </article>
@@ -341,8 +364,27 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">ducpy</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
