@@ -26,6 +26,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_theme = "furo"
 html_static_path = ['_static']
+html_extra_path = ['extra']
 html_baseurl = "https://ducflair.github.io/duc/reference/python/"
 
 extensions.append('autoapi.extension')
