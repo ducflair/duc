@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 from math import pi
 from typing import Any, Dict, List, Optional, Union
 
-import numpy as np
 from ducpy.enums import (IMAGE_STATUS, STROKE_CAP, STROKE_JOIN,
                          STROKE_PLACEMENT, STROKE_PREFERENCE, TEXT_ALIGN,
                          VERTICAL_ALIGN)
@@ -192,9 +191,6 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         )
         specific_element = element_class(stack_element_base=stack_element_base)
     elif element_class == DucImageElement:
-        scale = element_params.get('scale', [1.0, 1.0])
-        if isinstance(scale, list):
-            element_params['scale'] = np.array(scale, dtype=np.float32)
         element_params['base'] = base_element
         specific_element = element_class(**element_params)
     elif element_class == DucFreeDrawElement:
@@ -204,9 +200,6 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
             for p in points
         ]
         element_params['points'] = duc_points
-        pressures = element_params.get('pressures', [])
-        if isinstance(pressures, list):
-            element_params['pressures'] = np.array(pressures, dtype=np.float32)
         element_params['base'] = base_element
         specific_element = element_class(**element_params)
     elif element_class == DucTableElement:
