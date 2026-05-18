@@ -1,6 +1,6 @@
 """Python library for the DUC 2D CAD file format.
 
-Usage::
+Usage:
     ``import ducpy as duc``
 
 Builders API (High-level):
