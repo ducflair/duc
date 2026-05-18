@@ -28,6 +28,7 @@ html_theme = "furo"
 html_static_path = ['_static']
 html_extra_path = ['extra']
 html_baseurl = "https://ducflair.github.io/duc/reference/python/"
+html_logo = "https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png"
 
 extensions.append('autoapi.extension')
 autoapi_dirs = ["../src/ducpy"]
