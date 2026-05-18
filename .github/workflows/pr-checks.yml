@@ -233,14 +233,23 @@ jobs:
           # Verify pyodide CLI works (catches import errors like the wheel.cli removal)
           pyodide --help > /dev/null
 
-          # Install cross-build env and verify the wheel platform tag
+          # Install cross-build environment
           pyodide xbuildenv install 0.29.3
-          PYODIDE_ROOT="$(pyodide config get pyodide_root 2>/dev/null || true)"
-          if [ -z "$PYODIDE_ROOT" ]; then
-            PYODIDE_ROOT="$HOME/.pyodide-xbuildenv-0.29.3/0.29.3/xbuildenv/pyodide-root"
+
+          # Derive PYODIDE_ROOT directly — the xbuildenv install prints its path,
+          # and pyodide config requires a Makefile that only exists inside a full
+          # Pyodide checkout, not in the standalone xbuildenv.
+          XBUILD_DIR="$(pwd)/.pyodide-xbuildenv-0.29.3/0.29.3/xbuildenv"
+          if [ ! -d "$XBUILD_DIR/pyodide-root" ]; then
+            # Fall back to home-directory location (used outside CI workdirs)
+            XBUILD_DIR="$HOME/.pyodide-xbuildenv-0.29.3/0.29.3/xbuildenv"
           fi
+          export PYODIDE_ROOT="$XBUILD_DIR/pyodide-root"
+          echo "PYODIDE_ROOT=$PYODIDE_ROOT"
+
+          # Check wheel platform tag — must contain pyodide_* for Pyodide 0.29.3 compat
           TAG=$(python3 -c "
-          import os, sys
+          import os
           os.environ['PYODIDE_ROOT'] = '$PYODIDE_ROOT'
           from pyodide_build.build_env import pyodide_tags
           print(next(iter(pyodide_tags())))
@@ -253,10 +262,6 @@ jobs:
             echo "This means the built wheel will NOT be compatible with the Pyodide 0.29.3 runtime."
             exit 1
           fi
-
-          # Also verify the Emscripten version matches what the runtime expects
-          EMSCRIPTEN_VERSION="$(pyodide config get emscripten_version)"
-          echo "Expected Emscripten version: $EMSCRIPTEN_VERSION"
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase 3: Summary & gate check
