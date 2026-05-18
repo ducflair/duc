@@ -226,39 +226,9 @@ jobs:
 
       - name: Validate Pyodide build tooling
         if: needs.release-check.outputs.ducpy == 'true'
-        run: |
-          python -m pip install --upgrade pip
-          pip install "pyodide-build==0.29.3" "wheel<0.44"
-
-          # Verify pyodide CLI works (catches import errors like the wheel.cli removal)
-          pyodide --help > /dev/null
-
-          # Install cross-build environment
-          pyodide xbuildenv install 0.29.3
-          XBUILD_DIR="$(pwd)/.pyodide-xbuildenv-0.29.3/0.29.3/xbuildenv"
-          if [ ! -d "$XBUILD_DIR/pyodide-root" ]; then
-            XBUILD_DIR="$HOME/.pyodide-xbuildenv-0.29.3/0.29.3/xbuildenv"
-          fi
-          export PYODIDE_ROOT="$XBUILD_DIR/pyodide-root"
-          echo "PYODIDE_ROOT=$PYODIDE_ROOT"
-
-          # Check wheel platform tag — this is the tag used in the .whl filename.
-          # pyodide_tags() returns install-compatibility tags (emscripten first), but
-          # wheel_platform() returns the actual build platform tag (e.g. pyodide_2025_0_wasm32).
-          TAG=$(python3 -c "
-          import os
-          os.environ['PYODIDE_ROOT'] = '$PYODIDE_ROOT'
-          from pyodide_build.build_env import wheel_platform
-          print(wheel_platform())
-          ")
-          echo "Pyodide wheel platform tag: $TAG"
-          if echo "$TAG" | grep -q "pyodide_"; then
-            echo "Wheel platform tag is pyodide_* — OK (compatible with Pyodide 0.29.3 runtime)"
-          else
-            echo "ERROR: Wheel platform tag is '$TAG', expected pyodide_*"
-            echo "This means the built wheel will NOT be compatible with the Pyodide 0.29.3 runtime."
-            exit 1
-          fi
+        uses: ./.github/actions/setup-pyodide-build
+        with:
+          pyodide-version: '0.29.3'
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase 3: Summary & gate check
