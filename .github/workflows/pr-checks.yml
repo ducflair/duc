@@ -224,6 +224,40 @@ jobs:
       - name: Run package tests
         run: bun turbo test ${{ needs.release-check.outputs.test_filters }}
 
+      - name: Validate Pyodide build tooling
+        if: needs.release-check.outputs.ducpy == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install "pyodide-build==0.29.3" "wheel<0.44"
+
+          # Verify pyodide CLI works (catches import errors like the wheel.cli removal)
+          pyodide --help > /dev/null
+
+          # Install cross-build env and verify the wheel platform tag
+          pyodide xbuildenv install 0.29.3
+          PYODIDE_ROOT="$(pyodide config get pyodide_root 2>/dev/null || true)"
+          if [ -z "$PYODIDE_ROOT" ]; then
+            PYODIDE_ROOT="$HOME/.pyodide-xbuildenv-0.29.3/0.29.3/xbuildenv/pyodide-root"
+          fi
+          TAG=$(python3 -c "
+          import os, sys
+          os.environ['PYODIDE_ROOT'] = '$PYODIDE_ROOT'
+          from pyodide_build.build_env import pyodide_tags
+          print(next(iter(pyodide_tags())))
+          ")
+          echo "Pyodide primary wheel tag: $TAG"
+          if echo "$TAG" | grep -q "pyodide_"; then
+            echo "Wheel tag includes pyodide_* — OK"
+          else
+            echo "ERROR: Wheel tag does not include pyodide_*. Got: $TAG"
+            echo "This means the built wheel will NOT be compatible with the Pyodide 0.29.3 runtime."
+            exit 1
+          fi
+
+          # Also verify the Emscripten version matches what the runtime expects
+          EMSCRIPTEN_VERSION="$(pyodide config get emscripten_version)"
+          echo "Expected Emscripten version: $EMSCRIPTEN_VERSION"
+
   # ──────────────────────────────────────────────────────────────────────
   # Phase 3: Summary & gate check
   # Acts as a single required status check for branch protection.
