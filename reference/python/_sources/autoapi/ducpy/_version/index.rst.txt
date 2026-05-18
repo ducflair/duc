@@ -1,0 +1,21 @@
+ducpy._version
+==============
+
+.. py:module:: ducpy._version
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   ducpy._version.DUC_SCHEMA_VERSION
+
+
+Module Contents
+---------------
+
+.. py:data:: DUC_SCHEMA_VERSION
+   :value: '3.0.0'
+
+
