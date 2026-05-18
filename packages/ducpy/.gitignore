@@ -4,8 +4,6 @@ inputs/
 schema/*
 !schema/.gitkeep
 
-# Auto-generated version file
-**/_version.py
 
 
 # Byte-compiled / optimized / DLL files
@@ -35,6 +33,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+MANIFEST.in
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
