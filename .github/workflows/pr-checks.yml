@@ -235,30 +235,27 @@ jobs:
 
           # Install cross-build environment
           pyodide xbuildenv install 0.29.3
-
-          # Derive PYODIDE_ROOT directly — the xbuildenv install prints its path,
-          # and pyodide config requires a Makefile that only exists inside a full
-          # Pyodide checkout, not in the standalone xbuildenv.
           XBUILD_DIR="$(pwd)/.pyodide-xbuildenv-0.29.3/0.29.3/xbuildenv"
           if [ ! -d "$XBUILD_DIR/pyodide-root" ]; then
-            # Fall back to home-directory location (used outside CI workdirs)
             XBUILD_DIR="$HOME/.pyodide-xbuildenv-0.29.3/0.29.3/xbuildenv"
           fi
           export PYODIDE_ROOT="$XBUILD_DIR/pyodide-root"
           echo "PYODIDE_ROOT=$PYODIDE_ROOT"
 
-          # Check wheel platform tag — must contain pyodide_* for Pyodide 0.29.3 compat
+          # Check wheel platform tag — this is the tag used in the .whl filename.
+          # pyodide_tags() returns install-compatibility tags (emscripten first), but
+          # wheel_platform() returns the actual build platform tag (e.g. pyodide_2025_0_wasm32).
           TAG=$(python3 -c "
           import os
           os.environ['PYODIDE_ROOT'] = '$PYODIDE_ROOT'
-          from pyodide_build.build_env import pyodide_tags
-          print(next(iter(pyodide_tags())))
+          from pyodide_build.build_env import wheel_platform
+          print(wheel_platform())
           ")
-          echo "Pyodide primary wheel tag: $TAG"
+          echo "Pyodide wheel platform tag: $TAG"
           if echo "$TAG" | grep -q "pyodide_"; then
-            echo "Wheel tag includes pyodide_* — OK"
+            echo "Wheel platform tag is pyodide_* — OK (compatible with Pyodide 0.29.3 runtime)"
           else
-            echo "ERROR: Wheel tag does not include pyodide_*. Got: $TAG"
+            echo "ERROR: Wheel platform tag is '$TAG', expected pyodide_*"
             echo "This means the built wheel will NOT be compatible with the Pyodide 0.29.3 runtime."
             exit 1
           fi
