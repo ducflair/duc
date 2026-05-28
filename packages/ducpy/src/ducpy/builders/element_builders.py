@@ -698,6 +698,8 @@ class DocElementBuilder(ElementSpecificBuilder):
         self.extra["style"] = style; return self
     def with_file_id(self, file_id: str):
         self.extra["file_id"] = file_id; return self
+    def with_referenced_file_ids(self, referenced_file_ids: List[str]):
+        self.extra["referenced_file_ids"] = referenced_file_ids; return self
     def with_grid_config(self, grid_config: DocumentGridConfig):
         self.extra["grid_config"] = grid_config; return self
 
@@ -707,6 +709,7 @@ class DocElementBuilder(ElementSpecificBuilder):
             "style": self.extra.get('style'),
             "text": self.extra.get('text', ""),
             "file_id": self.extra.get('file_id'),
+            "referenced_file_ids": self.extra.get('referenced_file_ids', []),
             "grid_config": self.extra.get('grid_config'),
         }
         return _create_element_wrapper(DucDocElement, base_params, element_params,
@@ -730,8 +733,6 @@ class ModelElementBuilder(ElementSpecificBuilder):
         self.extra["model_type"] = model_type; return self
     def with_code(self, code: str):
         self.extra["code"] = code; return self
-    def with_svg_path(self, svg_path: str):
-        self.extra["svg_path"] = svg_path; return self
     def with_file_ids(self, file_ids: List[str]):
         self.extra["file_ids"] = file_ids; return self
     def with_viewer_state(self, viewer_state):
@@ -743,7 +744,6 @@ class ModelElementBuilder(ElementSpecificBuilder):
             "file_ids": self.extra.get('file_ids', []),
             "model_type": self.extra.get('model_type'),
             "code": self.extra.get('code'),
-            "svg_path": self.extra.get('svg_path'),
             "viewer_state": self.extra.get('viewer_state'),
         }
         return _create_element_wrapper(DucModelElement, base_params, element_params,

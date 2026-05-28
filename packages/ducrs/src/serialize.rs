@@ -456,6 +456,7 @@ fn write_element_wrapper(tx: &Transaction, wrapper: &ElementWrapper) -> Serializ
                 "INSERT INTO element_doc (element_id, text) VALUES (?1, ?2)",
                 params![e.base.id, e.text],
             )?;
+            write_doc_referenced_file_ids(tx, &e.base.id, &e.referenced_file_ids)?;
         }
         DucElementEnum::DucTableElement(e) => {
             write_base_element(tx, "table", &e.base)?;
@@ -834,19 +835,32 @@ fn write_model_element(tx: &Transaction, e: &DucModelElement) -> SerializeResult
         params![e.base.id, e.model_type, e.code, e.thumbnail],
     )?;
 
-    {
-        let mut stmt = tx.prepare_cached(
-            "INSERT INTO model_element_files (element_id, file_id, sort_order) VALUES (?1, ?2, ?3)"
-        )?;
-        for (i, fid) in e.file_ids.iter().enumerate() {
-            stmt.execute(params![e.base.id, fid, i as i32])?;
-        }
-    }
+    write_element_file_ids(tx, &e.base.id, &e.file_ids)?;
 
     if let Some(ref vs) = e.viewer_state {
         write_model_viewer_state(tx, &e.base.id, vs)?;
     }
 
+    Ok(())
+}
+
+fn write_element_file_ids(tx: &Transaction, element_id: &str, file_ids: &[String]) -> SerializeResult<()> {
+    let mut stmt = tx.prepare_cached(
+        "INSERT INTO model_element_files (element_id, file_id, sort_order) VALUES (?1, ?2, ?3)"
+    )?;
+    for (i, fid) in file_ids.iter().enumerate() {
+        stmt.execute(params![element_id, fid, i as i32])?;
+    }
+    Ok(())
+}
+
+fn write_doc_referenced_file_ids(tx: &Transaction, element_id: &str, file_ids: &[String]) -> SerializeResult<()> {
+    let mut stmt = tx.prepare_cached(
+        "INSERT INTO doc_element_referenced_files (element_id, file_id, sort_order) VALUES (?1, ?2, ?3)"
+    )?;
+    for (i, fid) in file_ids.iter().enumerate() {
+        stmt.execute(params![element_id, fid, i as i32])?;
+    }
     Ok(())
 }
 
