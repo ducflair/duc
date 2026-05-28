@@ -20,6 +20,8 @@ import mutation_demo
 import sql_builder_demo
 import serialization_demo
 import parsing_demo
+import document_element_demo
+import model_element_demo
 
 
 class TestElementCreationDemo:
@@ -131,6 +133,42 @@ class TestParsingDemo:
         assert "Accessing element attributes" in output_text
         assert "Parsing directly from raw bytes" in output_text
         assert "Parsing demo complete" in output_text
+
+
+class TestDocumentElementDemo:
+    """Test the document element demo."""
+    
+    def test_document_element_demo_runs_successfully(self):
+        """Test that the document element demo runs without errors."""
+        output = StringIO()
+        with redirect_stdout(output):
+            document_element_demo.main()
+            
+        output_text = output.getvalue()
+        assert "Document Element Demo" in output_text
+        assert "Designing rich Typst document content" in output_text
+        assert "Building the Document element" in output_text
+        assert "Successfully serialized DUC file" in output_text
+        
+        
+class TestModelElementDemo:
+    """Test the model element demo."""
+    
+    def test_model_element_demo_runs_successfully(self):
+        """Test that the model element demo runs without errors."""
+        output = StringIO()
+        with redirect_stdout(output):
+            model_element_demo.main()
+            
+        output_text = output.getvalue()
+        assert "Model Element Demo" in output_text
+        assert "Creating Python model element with build123d" in output_text
+        assert "Creating Python model element with ifcopenshell" in output_text
+        assert "Creating Python model element with ezdxf" in output_text
+        assert "Demonstrating Non-Python model imports" in output_text
+        assert "Testing model type validation" in output_text
+        assert "Correctly rejected invalid model_type" in output_text
+        assert "Successfully serialized DUC file containing" in output_text
 
 
 class TestStyleBuilders:

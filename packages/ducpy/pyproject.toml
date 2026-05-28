@@ -51,6 +51,10 @@ dev = [
     "sphinx-autoapi>=3.6.0",
     "pytest>=8.3.5",
     "rich>=13.0.0",
+    "typst>=0.14.9",
+    "build123d>=0.10.0",
+    "ocp-vscode>=3.4.0",
+    "ifcopenshell>=0.8.5",
 ]
 
 
