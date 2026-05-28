@@ -411,6 +411,7 @@ export const newDocElement = (
   type: "doc",
   text: opts.text || "",
   fileId: opts.fileId ?? null,
+  referencedFileIds: opts.referencedFileIds ?? [],
   gridConfig: {
     columns: opts.gridConfig?.columns ?? 1,
     gapX: opts.gridConfig?.gapX ?? 0,

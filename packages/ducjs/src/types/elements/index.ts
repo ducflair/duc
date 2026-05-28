@@ -1065,6 +1065,8 @@ export type DucDocElement = _DucElementBase & {
   type: "doc";
   text: string;
   fileId: ExternalFileId | null;
+  /** Files referenced by the Typst source, such as images or data files. */
+  referencedFileIds: ExternalFileId[];
   /** Configuration for rendering the document in a grid layout */
   gridConfig: DocumentGridConfig;
 };

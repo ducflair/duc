@@ -60,7 +60,7 @@ def deep_snake_to_camel(obj: Any) -> Any:
     if is_dataclass(obj) and not isinstance(obj, type):
         return deep_snake_to_camel(asdict(obj))
     if isinstance(obj, bytes):
-        return list(obj)
+        return obj
     return obj
 
 
@@ -80,7 +80,7 @@ def to_serializable(obj: Any) -> Any:
 
     Handles:
     - Dataclass instances → dict (recursively)
-    - bytes → list of ints
+    - bytes → bytes (native serializer accepts PyBytes for binary fields)
     - Nested base/styles/linear_base/stack_element_base → flattened
     - snake_case keys → camelCase keys
     """
@@ -97,5 +97,5 @@ def to_serializable(obj: Any) -> Any:
     if isinstance(obj, list):
         return [to_serializable(item) for item in obj]
     if isinstance(obj, bytes):
-        return list(obj)
+        return obj
     return obj

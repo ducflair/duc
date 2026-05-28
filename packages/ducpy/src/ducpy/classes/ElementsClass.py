@@ -393,6 +393,7 @@ class DucDocElement:
     text: str
     grid_config: DocumentGridConfig
     file_id: Optional[str] = None
+    referenced_file_ids: Optional[List[str]] = None
 
 @dataclass
 class DucTableElement:

@@ -27,6 +27,6 @@ from .classes import *
 from .enums import *
 from .parse import (DucData, get_external_file, list_external_files, parse_duc,
                     parse_duc_lazy)
-from .serialize import DUC_SCHEMA_VERSION, serialize_duc
+from .serialize import DUC_SCHEMA_VERSION, DucSerializationValidationError, serialize_duc
 from .search import *
 from .utils import *
