@@ -55,45 +55,46 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
     base_params.setdefault('region_ids', [])
     base_params.setdefault('instance_id', None)
 
-    base_params.setdefault('styles', DucElementStylesBase(
-        roundness=0.0,
-        stroke=[ElementStroke(
-            content=ElementContentBase(
-                preference=None,
-                src="",
-                visible=True,
-                opacity=1.0,
-                tiling=None,
-                hatch=None,
-                image_filter=DucImageFilter(brightness=1.0, contrast=1.0)
-            ),
-            width=DEFAULT_STROKE_WIDTH,
-            style=StrokeStyle(
-                preference=STROKE_PREFERENCE.SOLID,
-                dash=None,
-                dash_line_override=None,
-                cap=None,
-                join=None,
-                dash_cap=None,
-                miter_limit=None
-            ),
-            placement=STROKE_PLACEMENT.CENTER,
-            stroke_sides=None
-        )],
-        background=[ElementBackground(
-            content=ElementContentBase(
-                preference=None,
-                src="",
-                visible=True,
-                opacity=1.0,
-                tiling=None,
-                hatch=None,
-                image_filter=DucImageFilter(brightness=1.0, contrast=1.0)
-            )
-        )],
-        opacity=1.0,
-        blending=None
-    ))
+    if base_params.get('styles') is None:
+        base_params['styles'] = DucElementStylesBase(
+            roundness=0.0,
+            stroke=[ElementStroke(
+                content=ElementContentBase(
+                    preference=None,
+                    src="",
+                    visible=True,
+                    opacity=1.0,
+                    tiling=None,
+                    hatch=None,
+                    image_filter=DucImageFilter(brightness=1.0, contrast=1.0)
+                ),
+                width=DEFAULT_STROKE_WIDTH,
+                style=StrokeStyle(
+                    preference=STROKE_PREFERENCE.SOLID,
+                    dash=None,
+                    dash_line_override=None,
+                    cap=None,
+                    join=None,
+                    dash_cap=None,
+                    miter_limit=None
+                ),
+                placement=STROKE_PLACEMENT.CENTER,
+                stroke_sides=None
+            )],
+            background=[ElementBackground(
+                content=ElementContentBase(
+                    preference=None,
+                    src="",
+                    visible=True,
+                    opacity=1.0,
+                    tiling=None,
+                    hatch=None,
+                    image_filter=DucImageFilter(brightness=1.0, contrast=1.0)
+                )
+            )],
+            opacity=1.0,
+            blending=None
+        )
 
     base_element = DucElementBase(**base_params)
 
@@ -168,8 +169,9 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
             base=base_element,
             style=element_params.get('style') or DucDocStyle(),
             text=element_params.get('text', ""),
-            grid_config=element_params.get('grid_config', default_grid_config),
+            grid_config=element_params.get('grid_config') or default_grid_config,
             file_id=element_params.get('file_id'),
+            referenced_file_ids=element_params.get('referenced_file_ids') or [],
         )
     elif element_class == DucFrameElement:
         stack_base = element_params.get('stack_base')
@@ -730,6 +732,9 @@ class EmbeddableElementBuilder(ElementSpecificBuilder):
 
 class ModelElementBuilder(ElementSpecificBuilder):
     def with_model_type(self, model_type: str):
+        valid_types = {"python", "ifc", "dxf", "dwg", "step", "stl"}
+        if model_type not in valid_types:
+            raise ValueError(f"Invalid model_type: {model_type}. Allowed types: {sorted(list(valid_types))}")
         self.extra["model_type"] = model_type; return self
     def with_code(self, code: str):
         self.extra["code"] = code; return self
@@ -740,9 +745,14 @@ class ModelElementBuilder(ElementSpecificBuilder):
 
     def build(self) -> ElementWrapper:
         base_params = self.base.__dict__.copy()
+        model_type = self.extra.get('model_type', 'python')
+        valid_types = {"python", "ifc", "dxf", "dwg", "step", "stl"}
+        if model_type not in valid_types:
+            raise ValueError(f"Invalid model_type: {model_type}. Allowed types: {sorted(list(valid_types))}")
+        
         element_params = {
             "file_ids": self.extra.get('file_ids', []),
-            "model_type": self.extra.get('model_type'),
+            "model_type": model_type,
             "code": self.extra.get('code'),
             "viewer_state": self.extra.get('viewer_state'),
         }

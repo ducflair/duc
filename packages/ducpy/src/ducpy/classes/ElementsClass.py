@@ -483,6 +483,13 @@ class DucModelElement:
     thumbnail: Optional[bytes] = None
     viewer_state: Optional[Viewer3DState] = None
 
+    def __post_init__(self):
+        valid_types = {"python", "ifc", "dxf", "dwg", "step", "stl"}
+        if self.model_type is None:
+            self.model_type = "python"
+        if self.model_type not in valid_types:
+            raise ValueError(f"Invalid model_type: {self.model_type}. Allowed types: {sorted(list(valid_types))}")
+
 
 # =============== BLOCK DEFINITIONS ===============
 
