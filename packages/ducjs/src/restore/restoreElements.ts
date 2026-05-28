@@ -755,6 +755,7 @@ const restoreElement = (
         {
           text: isValidString(docElement.text),
           fileId: (isValidString(docElement.fileId) as ExternalFileId) || null,
+          referencedFileIds: docElement.referencedFileIds || [],
           gridConfig: restoreDocumentGridConfig(docElement.gridConfig),
         },
         localState

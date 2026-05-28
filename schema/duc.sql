@@ -1,7 +1,7 @@
 -- "DUC_" in ASCII
 -- Apply in order: duc.sql → version_control.sql → search.sql
 PRAGMA application_id = 1146569567;
-PRAGMA user_version = 3000003;
+PRAGMA user_version = 3000004;
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 PRAGMA synchronous = NORMAL;
@@ -701,6 +701,16 @@ CREATE TABLE element_doc (
     element_id TEXT PRIMARY KEY REFERENCES document_grid_config(element_id) ON DELETE CASCADE,
     text       TEXT NOT NULL DEFAULT ''
 );  -- no WITHOUT ROWID: implicit integer rowid needed for FTS5 content sync
+
+-- External files referenced by a doc element's Typst source (images, data files, etc.).
+CREATE TABLE doc_element_referenced_files (
+    element_id TEXT NOT NULL REFERENCES element_doc(element_id) ON DELETE CASCADE,
+    file_id    TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (element_id, file_id)
+) WITHOUT ROWID;
+
+CREATE INDEX idx_doc_referenced_files_file ON doc_element_referenced_files(file_id);
 
 -- Table element. Source of truth is the linked xlsx file.
 CREATE TABLE element_table (
