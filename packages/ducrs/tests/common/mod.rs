@@ -659,6 +659,7 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
                     scale: 2.0,
                 },
                 file_id: Some("file-model".to_string()),
+                referenced_file_ids: vec!["file-model".to_string()],
             }),
         },
         ElementWrapper {
