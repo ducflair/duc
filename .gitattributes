@@ -1,0 +1,10 @@
+
+# Treat CAD and 3D files as binary so line endings are never altered
+*.dxf binary
+*.dwg binary
+*.dwf binary
+*.ifc binary
+*.stp binary
+*.step binary
+*.custom binary
+*.duc binary
