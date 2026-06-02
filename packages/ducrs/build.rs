@@ -25,6 +25,7 @@ fn decode_user_version_to_semver(user_version: u32) -> String {
 }
 
 fn find_schema_dir(manifest_dir: &Path) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    // 1. Explicit override.
     if let Ok(path) = env::var("DUC_SCHEMA_DIR") {
         let candidate = PathBuf::from(path);
         if candidate.join("duc.sql").is_file() {
@@ -32,14 +33,21 @@ fn find_schema_dir(manifest_dir: &Path) -> Result<PathBuf, Box<dyn std::error::E
         }
     }
 
+    // 2. Bundled schema — present after `cargo publish`.
+    let bundled = manifest_dir.join("schema");
+    if bundled.join("duc.sql").is_file() {
+        return Ok(bundled);
+    }
+
+    // 3. Local workspace: walk up until we hit the repo root `schema/`.
+    //    When found, mirror it into `manifest_dir/schema/` so the crate is
+    //    self-contained for `cargo publish` and does not rely on the parent
+    //    directory layout once it is on crates.io.
     for ancestor in manifest_dir.ancestors() {
-        for candidate in [
-            ancestor.join("schema"),
-            ancestor.join("packages").join("ducpy").join("schema"),
-        ] {
-            if candidate.join("duc.sql").is_file() {
-                return Ok(candidate);
-            }
+        let candidate = ancestor.join("schema");
+        if candidate.join("duc.sql").is_file() {
+            mirror_schema(&candidate, &bundled)?;
+            return Ok(bundled);
         }
     }
 
@@ -48,6 +56,52 @@ fn find_schema_dir(manifest_dir: &Path) -> Result<PathBuf, Box<dyn std::error::E
         manifest_dir.display()
     )
     .into())
+}
+
+/// Recursively mirror `src` into `dst`, creating/overwriting as needed.
+fn mirror_schema(src: &Path, dst: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    if dst.exists() {
+        let _ = fs::remove_dir_all(dst);
+    }
+    fs::create_dir_all(dst)?;
+
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let from = entry.path();
+        let name = match from.file_name() {
+            Some(n) => n,
+            None => continue,
+        };
+        let to = dst.join(name);
+
+        let meta = entry.metadata()?;
+        if meta.is_dir() {
+            mirror_dir(&from, &to)?;
+        } else {
+            fs::copy(&from, &to)?;
+        }
+    }
+    Ok(())
+}
+
+fn mirror_dir(src: &Path, dst: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    fs::create_dir_all(dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let from = entry.path();
+        let name = match from.file_name() {
+            Some(n) => n,
+            None => continue,
+        };
+        let to = dst.join(name);
+        let meta = entry.metadata()?;
+        if meta.is_dir() {
+            mirror_dir(&from, &to)?;
+        } else {
+            fs::copy(&from, &to)?;
+        }
+    }
+    Ok(())
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
