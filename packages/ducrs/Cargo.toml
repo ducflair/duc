@@ -7,6 +7,17 @@ license = "MIT"
 authors = ["Ducflair support@ducflair.com"]
 repository = "https://github.com/ducflair/duc/tree/main/packages/ducrs"
 readme = "README.md"
+include = [
+  "src/**",
+  "build.rs",
+  "Cargo.toml",
+  "README.md",
+  "LICENSE",
+  "schema/duc.sql",
+  "schema/version_control.sql",
+  "schema/search.sql",
+  "schema/migrations/*.sql",
+]
 
 [dependencies]
 base64 = "0.21.5"

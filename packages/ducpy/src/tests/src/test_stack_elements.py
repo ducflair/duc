@@ -201,9 +201,5 @@ def test_stack_elements_via_sql():
         assert len(db2.sql("SELECT * FROM element_plot")) == 1
 
 
-# Legacy builder/native serialization demo now covered by SQL-first variant.
-test_serialize_stack_elements_demo = test_stack_elements_via_sql
-
-
 if __name__ == "__main__":
     pytest.main([__file__])
