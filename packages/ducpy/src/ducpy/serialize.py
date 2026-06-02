@@ -278,7 +278,7 @@ def _write_python_external_files(
 def _run_python_validation(
     code: str,
     label: str,
-    timeout_seconds: float,
+    timeout_seconds: Optional[float],
     files_meta: Optional[Dict[str, Any]] = None,
     files_data: Optional[Dict[str, bytes]] = None,
 ) -> Optional[str]:
@@ -308,15 +308,20 @@ builtins.resolve_external_file = resolve_external_file
         script_path = tmp_path / "model.py"
         script_path.write_text(header + "\n" + code, encoding="utf-8")
 
+        run_kwargs = {
+            "cwd": tmpdir,
+            "text": True,
+            "stdout": subprocess.PIPE,
+            "stderr": subprocess.PIPE,
+            "check": False,
+        }
+        if timeout_seconds is not None:
+            run_kwargs["timeout"] = timeout_seconds
+
         try:
             completed = subprocess.run(
                 [sys.executable, str(script_path)],
-                cwd=tmpdir,
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=timeout_seconds,
-                check=False,
+                **run_kwargs,
             )
         except subprocess.TimeoutExpired as exc:
             return f"{label}: Python validation timed out after {timeout_seconds:g}s"
@@ -434,7 +439,7 @@ def serialize_duc(
     layers: Optional[list] = None,
     external_files: Optional[list] = None,
     validate_embedded_code: bool = True,
-    validation_timeout_seconds: float = 30.0,
+    validation_timeout_seconds: Optional[float] = None,
 ) -> bytes:
     """Serialize elements and document state to raw ``.duc`` binary format.
 
@@ -477,8 +482,8 @@ def serialize_duc(
         Validate model Python code and document source before native serialization.
         This is intended for server-side CPython usage and raises
         DucSerializationValidationError with per-element diagnostics on failure.
-    validation_timeout_seconds : float, default=30.0
-        Timeout used for each embedded code validation step.
+    validation_timeout_seconds : float, optional, default=None
+        Timeout used for each embedded code validation step. If None, no timeout is applied.
 
     Returns
     -------
