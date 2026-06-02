@@ -1045,6 +1045,8 @@ pub struct DucDocElement {
     pub text: String,
     pub grid_config: DocumentGridConfig,
     pub file_id: Option<String>,
+    #[serde(default)]
+    pub referenced_file_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]

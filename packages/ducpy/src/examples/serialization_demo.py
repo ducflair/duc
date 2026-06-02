@@ -6,7 +6,6 @@ This demo shows the correct pattern for taking in-memory python elements
 and writing them to a raw `.duc` binary blob.
 """
 
-import os
 import ducpy as duc
 from ducpy.builders.style_builders import create_fill_and_stroke_style, create_solid_content
 
@@ -55,14 +54,8 @@ def main():
     )
     
     print(f"   Successfully serialized {len(duc_bytes)} bytes.")
-    
-    # You would typically write this to a file
-    # output_file = "example.duc"
-    # with open(output_file, "wb") as f:
-    #     f.write(duc_bytes)
-    # print(f"3. Saved to {output_file}")
-    
     print("\n✅ Serialization demo complete!")
+    return duc_bytes
 
 if __name__ == "__main__":
     main()

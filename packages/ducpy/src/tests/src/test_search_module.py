@@ -7,12 +7,13 @@ import pytest
 from collections import Counter
 from pathlib import Path
 
+from _dev.dev_utils import get_testing_assets_dir
 from ducpy.parse import parse_duc_lazy
 from ducpy.search import search_duc_elements
 
 
 def _asset_input_path(filename: str) -> Path:
-    return Path(__file__).resolve().parents[5] / "assets" / "testing" / "duc-files" / filename
+    return Path(get_testing_assets_dir()) / "duc-files" / filename
 
 
 def _run_asset_search(

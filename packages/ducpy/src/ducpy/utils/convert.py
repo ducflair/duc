@@ -60,7 +60,7 @@ def deep_snake_to_camel(obj: Any) -> Any:
     if is_dataclass(obj) and not isinstance(obj, type):
         return deep_snake_to_camel(asdict(obj))
     if isinstance(obj, bytes):
-        return list(obj)
+        return obj
     return obj
 
 
@@ -80,7 +80,7 @@ def to_serializable(obj: Any) -> Any:
 
     Handles:
     - Dataclass instances → dict (recursively)
-    - bytes → list of ints
+    - bytes → bytes (native serializer accepts PyBytes for binary fields)
     - Nested base/styles/linear_base/stack_element_base → flattened
     - snake_case keys → camelCase keys
     """
@@ -97,5 +97,49 @@ def to_serializable(obj: Any) -> Any:
     if isinstance(obj, list):
         return [to_serializable(item) for item in obj]
     if isinstance(obj, bytes):
-        return list(obj)
+        return obj
     return obj
+
+
+def extract_embedded_code(func) -> str:
+    """Extracts the body of a Python function as a clean standalone script.
+
+    This is highly useful for defining CAD/BIM model generation code as actual,
+    syntax-highlighted Python functions inside examples/tests, and then serializing
+    them to DUC.
+
+    Args:
+        func: The Python function/callable to extract the body from.
+
+    Returns:
+        The body of the function as a clean, dedented string.
+    """
+    import inspect
+    import textwrap
+
+    if not callable(func):
+        raise TypeError(f"extract_embedded_code expects a callable, got {type(func).__name__}")
+
+    try:
+        source = inspect.getsource(func)
+    except OSError as exc:
+        raise ValueError(
+            f"Could not retrieve source code for {func.__name__ if hasattr(func, '__name__') else func}. "
+            "Ensure the function is defined in a physical file rather than dynamically."
+        ) from exc
+
+    lines = source.splitlines()
+
+    # Locate the starting 'def ' statement (skipping decorators)
+    try:
+        def_idx = next(i for i, line in enumerate(lines) if line.strip().startswith("def "))
+    except StopIteration:
+        # If no 'def ' was found (e.g. lambda), return the whole source dedented
+        return textwrap.dedent(source)
+
+    body_lines = lines[def_idx + 1:]
+
+    # Reconstruct and dedent the body
+    body_content = "\n".join(body_lines)
+    return textwrap.dedent(body_content)
+

@@ -1460,17 +1460,20 @@ fn read_pdf_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucE
 }
 
 fn read_doc_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucElementEnum> {
+    let id = base.id.clone();
     let (file_id, grid_config) = read_document_grid_config(conn, &base.id)?;
     let mut stmt = conn.prepare_cached(
         "SELECT text FROM element_doc WHERE element_id = ?1"
     )?;
     let text: String = stmt.query_row(params![base.id], |row| row.get(0))?;
+    let referenced_file_ids = read_doc_referenced_file_ids(conn, &id)?;
     Ok(DucElementEnum::DucDocElement(DucDocElement {
         base,
         style: DucDocStyle {},
         text,
         grid_config,
         file_id,
+        referenced_file_ids,
     }))
 }
 
@@ -1512,17 +1515,43 @@ fn read_model_element(conn: &Connection, base: DucElementBase) -> ParseResult<Du
         Ok((row.get::<_, Option<String>>(0)?, row.get::<_, Option<String>>(1)?, row.get::<_, Option<Vec<u8>>>(2)?))
     })?;
 
-    let mut f_stmt = conn.prepare_cached(
-        "SELECT file_id FROM model_element_files WHERE element_id = ?1 ORDER BY sort_order"
-    )?;
-    let file_ids: Vec<String> = f_stmt.query_map(params![id], |row| row.get(0))?
-        .collect::<Result<Vec<_>, _>>()?;
+    let file_ids = read_element_file_ids(conn, &id)?;
 
     let viewer_state = read_model_viewer_state(conn, &id)?;
 
     Ok(DucElementEnum::DucModelElement(DucModelElement {
         base, model_type, code, thumbnail, file_ids, viewer_state,
     }))
+}
+
+fn read_element_file_ids(conn: &Connection, element_id: &str) -> ParseResult<Vec<String>> {
+    let mut stmt = conn.prepare_cached(
+        "SELECT file_id FROM model_element_files WHERE element_id = ?1 ORDER BY sort_order"
+    )?;
+    let file_ids = stmt.query_map(params![element_id], |row| row.get(0))?
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(file_ids)
+}
+
+fn read_doc_referenced_file_ids(conn: &Connection, element_id: &str) -> ParseResult<Vec<String>> {
+    if !table_exists(conn, "doc_element_referenced_files")? {
+        return Ok(Vec::new());
+    }
+
+    let mut stmt = conn.prepare_cached(
+        "SELECT file_id FROM doc_element_referenced_files WHERE element_id = ?1 ORDER BY sort_order"
+    )?;
+    let file_ids = stmt.query_map(params![element_id], |row| row.get(0))?
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(file_ids)
+}
+
+fn table_exists(conn: &Connection, table_name: &str) -> ParseResult<bool> {
+    Ok(conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?1)",
+        params![table_name],
+        |row| row.get::<_, i64>(0),
+    )? != 0)
 }
 
 fn read_model_viewer_state(conn: &Connection, element_id: &str) -> ParseResult<Option<Viewer3DState>> {
