@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import ducpy_native
 from ducpy.utils.convert import (deep_snake_to_camel, snake_to_camel,
-                                 to_serializable)
+                                 to_serializable, _flatten_dict)
 
 logger = logging.getLogger(__name__)
 
@@ -103,22 +103,6 @@ _ELEMENT_CLASS_TO_TYPE: Dict[str, str] = {
     "DucDocElement": "doc",
     "DucModelElement": "model",
 }
-
-# Keys in the asdict() output that should be flattened (merged into the parent),
-# mirroring Rust's #[serde(flatten)] on base / styles / linear_base / stack_element_base.
-_FLATTEN_KEYS = frozenset({"base", "styles", "linear_base", "stack_element_base"})
-
-
-def _flatten_dict(d: dict) -> dict:
-    """Recursively flatten nested dicts whose key is in ``_FLATTEN_KEYS``."""
-    result: dict = {}
-    for k, v in d.items():
-        if k in _FLATTEN_KEYS and isinstance(v, dict):
-            result.update(_flatten_dict(v))
-        else:
-            result[k] = v
-    return result
-
 
 def _element_to_camel(wrapper_or_element: Any) -> dict:
     """Convert an element (or ElementWrapper) to the camelCase dict Rust expects."""
