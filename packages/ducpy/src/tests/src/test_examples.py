@@ -72,17 +72,15 @@ class TestElementCreationDemo:
 
 class TestMutationDemo:
     """Test the mutation demo."""
-    
+
     def test_mutation_demo_runs_successfully(self, test_output_dir):
         """Test that the mutation demo runs without errors."""
-        output_text, _ = _run_demo(mutation_demo, test_output_dir)
+        output_text, duc_bytes = _run_demo(mutation_demo, test_output_dir)
 
         assert "Mutation Demo" in output_text
-        assert "Demonstrating element mutation..." in output_text
-        assert "Initial Rectangle Properties:" in output_text
-        assert "Mutating the rectangle element..." in output_text
-        assert "Mutated Rectangle Properties:" in output_text
-        assert "Element mutation demo complete!" in output_text
+        assert "Mutation demo complete" in output_text
+        assert duc_bytes is not None
+        assert os.path.isfile(os.path.join(test_output_dir, f"{mutation_demo.__name__}.duc"))
 
 
 class TestExternalFilesDemo:
@@ -104,14 +102,17 @@ class TestSQLBuilderDemo:
 
     def test_sql_builder_demo_runs_successfully(self, test_output_dir):
         """Test that the SQL builder demo runs without errors."""
-        output_text, _ = _run_demo(sql_builder_demo, test_output_dir)
+        output_text, duc_bytes = _run_demo(sql_builder_demo, test_output_dir)
 
         assert "DucSQL Builder Demo" in output_text
         assert "Create new .duc" in output_text
         assert "Open existing .duc" in output_text
         assert "Bytes round-trip" in output_text
         assert "Advanced" in output_text
+        assert "Build with SQL, serialize with the high-level API" in output_text
         assert "All DucSQL demos completed successfully!" in output_text
+        assert duc_bytes is not None
+        assert os.path.isfile(os.path.join(test_output_dir, f"{sql_builder_demo.__name__}.duc"))
 
 
 class TestSerializationDemo:

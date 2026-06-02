@@ -65,11 +65,19 @@ def deep_snake_to_camel(obj: Any) -> Any:
 
 
 def _flatten_dict(d: dict) -> dict:
-    """Recursively flatten keys that Rust serde #[serde(flatten)] would flatten."""
+    """Recursively flatten keys that Rust serde #[serde(flatten)] would flatten.
+
+    Walks the entire dict so that nested flatten keys (e.g. ``stack_element_base``
+    -> ``stack_base`` -> ``styles``) are all merged into the appropriate level.
+    """
     result: dict = {}
     for k, v in d.items():
-        if k in _FLATTEN_KEYS and isinstance(v, dict):
-            result.update(_flatten_dict(v))
+        if isinstance(v, dict):
+            v = _flatten_dict(v)
+            if k in _FLATTEN_KEYS:
+                result.update(v)
+            else:
+                result[k] = v
         else:
             result[k] = v
     return result

@@ -446,9 +446,9 @@ def create_local_state_from_base(base: BaseStateParams, **kwargs) -> DucLocalSta
         current_item_stroke=kwargs.get('current_item_stroke', None),
         current_item_background=kwargs.get('current_item_background', None),
         current_item_opacity=kwargs.get('current_item_opacity', 1.0),
-        current_item_font_family=kwargs.get('current_item_font_family', "Virgil"),
+        current_item_font_family=kwargs.get('current_item_font_family', "Roboto Mono"),
         current_item_font_size=kwargs.get('current_item_font_size', 20.0),
-        current_item_text_align=kwargs.get('current_item_text_align', None),
+        current_item_text_align=kwargs.get('current_item_text_align', TEXT_ALIGN.LEFT),
         current_item_roundness=kwargs.get('current_item_roundness', 0.0),
         current_item_start_line_head=kwargs.get('current_item_start_line_head', None),
         current_item_end_line_head=kwargs.get('current_item_end_line_head', None),
@@ -457,7 +457,7 @@ def create_local_state_from_base(base: BaseStateParams, **kwargs) -> DucLocalSta
         objects_snap_mode_enabled=kwargs.get('objects_snap_mode_enabled', True),
         grid_mode_enabled=kwargs.get('grid_mode_enabled', True),
         outline_mode_enabled=kwargs.get('outline_mode_enabled', False),
-        manual_save_mode=kwargs.get('manual_save_mode', None),
+        manual_save_mode=kwargs.get('manual_save_mode', False),
         decimal_places=kwargs.get('decimal_places', 2),
     )
 
