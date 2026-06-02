@@ -166,7 +166,8 @@ def test_build123d_validation_failure():
         )
     
     assert "Python validation failed" in str(excinfo.value)
-    assert "standard_failure" in str(excinfo.value).lower()
+    # OCP exception class changed across versions (Standard_Failure → Standard_DomainError)
+    assert "standard_" in str(excinfo.value).lower()
 
 
 def test_ifcopenshell_validation_success(test_output_dir, test_assets_dir):
