@@ -4,6 +4,8 @@ Pytest configuration file for the ducpy tests.
 import os
 import pytest
 
+from _dev.dev_utils import get_testing_assets_dir
+
 
 def get_asset_subdirectory(filename):
     """Determine the appropriate subdirectory based on file extension."""
@@ -27,14 +29,13 @@ def get_asset_subdirectory(filename):
 @pytest.fixture
 def test_assets_dir():
     """Return the path to the assets directory."""
-    # Go up to the root duc directory and then to assets/testing
-    return os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "assets", "testing"))
+    return get_testing_assets_dir()
 
 
 @pytest.fixture
 def load_test_asset():
     """Return a function to load test assets by filename."""
-    assets_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "assets", "testing"))
+    assets_dir = get_testing_assets_dir()
 
     def _load_asset(filename):
         sub_dir = get_asset_subdirectory(filename)

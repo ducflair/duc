@@ -61,6 +61,7 @@ It supports advanced typesetting features, styles, and structured data layouts.
     
     print(f"   Successfully serialized DUC file ({len(duc_bytes)} bytes).")
     print("\n✅ Document element demo complete!")
+    return duc_bytes
 
 if __name__ == "__main__":
     main()
