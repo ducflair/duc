@@ -333,6 +333,9 @@ and for flattening/nesting element structures to match the Rust serde layout.</p
 <tr class="row-even"><td><p><a class="reference internal" href="#ducpy.utils.convert.to_serializable" title="ducpy.utils.convert.to_serializable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_serializable</span></code></a>(→ Any)</p></td>
 <td><p>Convert a value to a JSON-serializable form suitable for the Rust native module.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.utils.convert.extract_embedded_code" title="ducpy.utils.convert.extract_embedded_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_embedded_code</span></code></a>(→ str)</p></td>
+<td><p>Extracts the body of a Python function as a clean standalone script.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -391,9 +394,24 @@ and for flattening/nesting element structures to match the Rust serde layout.</p
 <dd><p>Convert a value to a JSON-serializable form suitable for the Rust native module.</p>
 <p>Handles:
 - Dataclass instances → dict (recursively)
-- bytes → list of ints
+- bytes → bytes (native serializer accepts PyBytes for binary fields)
 - Nested base/styles/linear_base/stack_element_base → flattened
 - snake_case keys → camelCase keys</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.utils.convert.extract_embedded_code">
+<span class="sig-prename descclassname"><span class="pre">ducpy.utils.convert.</span></span><span class="sig-name descname"><span class="pre">extract_embedded_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#ducpy.utils.convert.extract_embedded_code" title="Link to this definition">¶</a></dt>
+<dd><p>Extracts the body of a Python function as a clean standalone script.</p>
+<p>This is highly useful for defining CAD/BIM model generation code as actual,
+syntax-highlighted Python functions inside examples/tests, and then serializing
+them to DUC.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>func: The Python function/callable to extract the body from.</p>
+</dd>
+<dt>Returns:</dt><dd><p>The body of the function as a clean, dedented string.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -468,6 +486,7 @@ and for flattening/nesting element structures to match the Rust serde layout.</p
 <li><a class="reference internal" href="#ducpy.utils.convert.deep_snake_to_camel"><code class="docutils literal notranslate"><span class="pre">deep_snake_to_camel()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.utils.convert._flatten_dict"><code class="docutils literal notranslate"><span class="pre">_flatten_dict()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.utils.convert.to_serializable"><code class="docutils literal notranslate"><span class="pre">to_serializable()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.utils.convert.extract_embedded_code"><code class="docutils literal notranslate"><span class="pre">extract_embedded_code()</span></code></a></li>
 </ul>
 </li>
 </ul>

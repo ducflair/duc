@@ -592,6 +592,9 @@ Module Contents
    .. py:method:: with_file_id(file_id: str)
 
 
+   .. py:method:: with_referenced_file_ids(referenced_file_ids: List[str])
+
+
    .. py:method:: with_grid_config(grid_config: ducpy.classes.ElementsClass.DocumentGridConfig)
 
 
@@ -618,9 +621,6 @@ Module Contents
 
 
    .. py:method:: with_code(code: str)
-
-
-   .. py:method:: with_svg_path(svg_path: str)
 
 
    .. py:method:: with_file_ids(file_ids: List[str])

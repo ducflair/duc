@@ -20,6 +20,14 @@ Attributes
    ducpy.serialize._FLATTEN_KEYS
 
 
+Exceptions
+----------
+
+.. autoapisummary::
+
+   ducpy.serialize.DucSerializationValidationError
+
+
 Functions
 ---------
 
@@ -33,6 +41,13 @@ Functions
    ducpy.serialize._convert_external_files
    ducpy.serialize._convert_dict_entries
    ducpy.serialize._convert_list
+   ducpy.serialize._element_label
+   ducpy.serialize._find_revision
+   ducpy.serialize._write_python_external_files
+   ducpy.serialize._run_python_validation
+   ducpy.serialize._write_typst_external_files
+   ducpy.serialize._run_typst_validation
+   ducpy.serialize._validate_embedded_code
    ducpy.serialize.serialize_duc
 
 
@@ -40,6 +55,19 @@ Module Contents
 ---------------
 
 .. py:data:: logger
+
+.. py:exception:: DucSerializationValidationError(failures: List[str])
+
+   Bases: :py:obj:`ValueError`
+
+
+   Raised when embedded element code fails validation before serialization.
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: failures
+
 
 .. py:function:: _find_schema_file() -> pathlib.Path | None
 
@@ -97,7 +125,21 @@ Module Contents
    Convert a list of dataclass instances to camelCase dicts.
 
 
-.. py:function:: serialize_duc(name: str, thumbnail: Optional[bytes] = None, dictionary: Optional[list] = None, elements: Optional[list] = None, duc_local_state: Any = None, duc_global_state: Any = None, version_graph: Any = None, blocks: Optional[list] = None, block_instances: Optional[list] = None, block_collections: Optional[list] = None, groups: Optional[list] = None, regions: Optional[list] = None, layers: Optional[list] = None, external_files: Optional[list] = None) -> bytes
+.. py:function:: _element_label(element: Dict[str, Any]) -> str
+
+.. py:function:: _find_revision(revisions: Any, active_revision_id: str) -> Optional[Dict[str, Any]]
+
+.. py:function:: _write_python_external_files(project_dir: pathlib.Path, files_meta: Optional[Dict[str, Any]], files_data: Optional[Dict[str, bytes]]) -> Dict[str, str]
+
+.. py:function:: _run_python_validation(code: str, label: str, timeout_seconds: Optional[float], files_meta: Optional[Dict[str, Any]] = None, files_data: Optional[Dict[str, bytes]] = None) -> Optional[str]
+
+.. py:function:: _write_typst_external_files(project_dir: pathlib.Path, files_meta: Optional[Dict[str, Any]], files_data: Optional[Dict[str, bytes]]) -> None
+
+.. py:function:: _run_typst_validation(code: str, label: str, timeout_seconds: float, files_meta: Optional[Dict[str, Any]], files_data: Optional[Dict[str, bytes]]) -> Optional[str]
+
+.. py:function:: _validate_embedded_code(elements: List[Any], files_meta: Optional[Dict[str, Any]], files_data: Optional[Dict[str, bytes]], timeout_seconds: float) -> None
+
+.. py:function:: serialize_duc(name: str, thumbnail: Optional[bytes] = None, dictionary: Optional[list] = None, elements: Optional[list] = None, duc_local_state: Any = None, duc_global_state: Any = None, version_graph: Any = None, blocks: Optional[list] = None, block_instances: Optional[list] = None, block_collections: Optional[list] = None, groups: Optional[list] = None, regions: Optional[list] = None, layers: Optional[list] = None, external_files: Optional[list] = None, validate_embedded_code: bool = True, validation_timeout_seconds: Optional[float] = None) -> bytes
 
    Serialize elements and document state to raw ``.duc`` binary format.
 
@@ -136,6 +178,12 @@ Module Contents
        List of document layers.
    external_files : Optional[list], default=None
        List of external files (e.g., embedded images or PDFs).
+   validate_embedded_code : bool, default=True
+       Validate model Python code and document source before native serialization.
+       This is intended for server-side CPython usage and raises
+       DucSerializationValidationError with per-element diagnostics on failure.
+   validation_timeout_seconds : float, optional, default=None
+       Timeout used for each embedded code validation step. If None, no timeout is applied.
 
    Returns
    -------

@@ -1154,6 +1154,12 @@ Module Contents
 
 
 
+   .. py:attribute:: referenced_file_ids
+      :type:  Optional[List[str]]
+      :value: None
+
+
+
 .. py:class:: DucTableElement
 
    .. py:attribute:: base
@@ -1410,6 +1416,9 @@ Module Contents
       :type:  Optional[Viewer3DState]
       :value: None
 
+
+
+   .. py:method:: __post_init__()
 
 
 .. py:class:: DucBlockDuplicationArray

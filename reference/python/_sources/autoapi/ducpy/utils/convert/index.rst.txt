@@ -32,6 +32,7 @@ Functions
    ducpy.utils.convert.deep_snake_to_camel
    ducpy.utils.convert._flatten_dict
    ducpy.utils.convert.to_serializable
+   ducpy.utils.convert.extract_embedded_code
 
 
 Module Contents
@@ -65,8 +66,23 @@ Module Contents
 
    Handles:
    - Dataclass instances → dict (recursively)
-   - bytes → list of ints
+   - bytes → bytes (native serializer accepts PyBytes for binary fields)
    - Nested base/styles/linear_base/stack_element_base → flattened
    - snake_case keys → camelCase keys
+
+
+.. py:function:: extract_embedded_code(func) -> str
+
+   Extracts the body of a Python function as a clean standalone script.
+
+   This is highly useful for defining CAD/BIM model generation code as actual,
+   syntax-highlighted Python functions inside examples/tests, and then serializing
+   them to DUC.
+
+   Args:
+       func: The Python function/callable to extract the body from.
+
+   Returns:
+       The body of the function as a clean, dedented string.
 
 
