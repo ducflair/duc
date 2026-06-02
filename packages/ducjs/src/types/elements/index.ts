@@ -281,7 +281,28 @@ export const DUC_ELEMENT_SELECTABLE_FIELDS = [
   "startBinding",
   "endBinding",
   "svgPath",
-] as const;
+  "isPlot",
+  "isCollapsed",
+] as const satisfies readonly DucElementSelectableField[];
+
+type DucElementSelectableFieldCoverageExclusion = "strokeColor" | "backgroundColor";
+type _MissingSelectableFields = Exclude<
+  DucElementSelectableField,
+  typeof DUC_ELEMENT_SELECTABLE_FIELDS[number] | DucElementSelectableFieldCoverageExclusion
+>;
+type _AssertAllFieldsCovered = _MissingSelectableFields extends never ? true : { missing: _MissingSelectableFields };
+const _fieldCoverage: _AssertAllFieldsCovered = true;
+
+export const DUC_ELEMENT_COMMUNICATION_DENY_FIELDS = [
+  "seed",
+  "versionNonce",
+  "thumbnail",
+  "svgPath",
+  "originalText",
+] as const satisfies readonly DucElementSelectableField[];
+
+export type DucElementCommunicationDenyField = typeof DUC_ELEMENT_COMMUNICATION_DENY_FIELDS[number];
+export const DUC_ELEMENT_COMMUNICATION_DENY_FIELD_SET: ReadonlySet<string> = new Set(DUC_ELEMENT_COMMUNICATION_DENY_FIELDS);
 
 export const DUC_ELEMENT_TYPE_VALUES = [
   "rectangle",
@@ -299,7 +320,10 @@ export const DUC_ELEMENT_TYPE_VALUES = [
   "pdf",
   "doc",
   "plot",
-] as const;
+] as const satisfies readonly Exclude<DucElement["type"], "selection">[];
+
+type _AssertAllTypesCovered = Exclude<DucElement["type"], typeof DUC_ELEMENT_TYPE_VALUES[number] | "selection"> extends never ? true : { missing: Exclude<DucElement["type"], typeof DUC_ELEMENT_TYPE_VALUES[number] | "selection"> };
+const _typeCoverage: _AssertAllTypesCovered = true;
 
 export type NonDeleted<TElement extends DucElement> = TElement & {
   isDeleted: boolean;
