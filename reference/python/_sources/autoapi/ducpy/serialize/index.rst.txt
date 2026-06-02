@@ -17,7 +17,6 @@ Attributes
    ducpy.serialize.logger
    ducpy.serialize.DUC_SCHEMA_VERSION
    ducpy.serialize._ELEMENT_CLASS_TO_TYPE
-   ducpy.serialize._FLATTEN_KEYS
 
 
 Exceptions
@@ -36,7 +35,6 @@ Functions
    ducpy.serialize._find_schema_file
    ducpy.serialize._decode_user_version_to_semver
    ducpy.serialize._read_schema_version_fallback
-   ducpy.serialize._flatten_dict
    ducpy.serialize._element_to_camel
    ducpy.serialize._convert_external_files
    ducpy.serialize._convert_dict_entries
@@ -93,13 +91,6 @@ Module Contents
 
 .. py:data:: _ELEMENT_CLASS_TO_TYPE
    :type:  Dict[str, str]
-
-.. py:data:: _FLATTEN_KEYS
-
-.. py:function:: _flatten_dict(d: dict) -> dict
-
-   Recursively flatten nested dicts whose key is in ``_FLATTEN_KEYS``.
-
 
 .. py:function:: _element_to_camel(wrapper_or_element: Any) -> dict
 

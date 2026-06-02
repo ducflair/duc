@@ -59,6 +59,9 @@ Module Contents
 
    Recursively flatten keys that Rust serde #[serde(flatten)] would flatten.
 
+   Walks the entire dict so that nested flatten keys (e.g. ``stack_element_base``
+   -> ``stack_base`` -> ``styles``) are all merged into the appropriate level.
+
 
 .. py:function:: to_serializable(obj: Any) -> Any
 
