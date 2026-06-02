@@ -45,7 +45,7 @@ This documentation aims to provide a comprehensive guide to the format's structu
 
 ## Contributing
 
-We encourage contributions to the project! For guidelines on how to contribute, please refer to our [CONTRIBUTING.md](./CONTRIBUTING.md). We welcome all forms of contributions, from code to documentation, design, or community support.
+We welcome contributions of all kinds. See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions (including the required Git LFS install) and commit message guidelines.
 
 ## License
 
@@ -54,14 +54,6 @@ The project is licensed under the MIT License. See the [LICENSE](./LICENSE) file
 ## Community and Support
 
 Join our growing community to discuss, collaborate, and share insights about the duc format. Connect with us on [Scopture Community](https://site.scopture.com/community) or follow our [Social Media](https://site.scopture.com/socials) for the latest updates. For support, feel free to open an issue or contact us at [Support](https://ducflair.com/support).
-
-## Commit Message Guidelines
-To assure semantic release works, follow [these guidelines](https://semantic-release.gitbook.io/semantic-release#how-does-it-work).
-
-Notes:
-
-- Package names are inferred from the configured semantic-release `paths` (for example, `packages/ducpy` -> `ducpy`).
-- Use lowercase package names to keep it consistent.
 
 ---
 
