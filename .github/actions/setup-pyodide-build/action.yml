@@ -45,11 +45,22 @@ runs:
         # Without this, `pyodide build` would auto-install the latest xbuildenv,
         # which may have an incompatible lockfile format (e.g. 0.29.4 lockfile
         # missing `info.version` causes pydantic ValidationError in 0.29.3).
-        pyodide xbuildenv install "${PYODIDE_VERSION}"
+        #
+        # `pyodide xbuildenv install` fetches a metadata file from
+        # https://raw.githubusercontent.com/pyodide/pyodide/main/pyodide-cross-build-environments.json
+        # which was removed when the pyodide repo was restructured. To avoid that
+        # broken fetch, we download the xbuildenv tarball directly from the matching
+        # GitHub release and extract it into a stable location.
+        mkdir -p ".pyodide-xbuildenv-${PYODIDE_VERSION}"
+        XBUILDENV_TARBALL="xbuildenv-${PYODIDE_VERSION}.tar.bz2"
+        XBUILDENV_URL="https://github.com/pyodide/pyodide/releases/download/${PYODIDE_VERSION}/${XBUILDENV_TARBALL}"
+        curl -fL --retry 3 -o "${XBUILDENV_TARBALL}" "${XBUILDENV_URL}"
+        tar -xjf "${XBUILDENV_TARBALL}" -C ".pyodide-xbuildenv-${PYODIDE_VERSION}"
+        rm -f "${XBUILDENV_TARBALL}"
 
-        # Derive PYODIDE_ROOT — the xbuildenv install prints its path,
-        # and `pyodide config` requires a full Pyodide checkout Makefile.
-        XBUILD_DIR="$(pwd)/.pyodide-xbuildenv-${PYODIDE_VERSION}/${PYODIDE_VERSION}/xbuildenv"
+        # Derive PYODIDE_ROOT — the xbuildenv tarball extracts to
+        #   .pyodide-xbuildenv-<version>/xbuildenv/pyodide-root
+        XBUILD_DIR="$(pwd)/.pyodide-xbuildenv-${PYODIDE_VERSION}/xbuildenv"
         if [ ! -d "$XBUILD_DIR/pyodide-root" ]; then
           XBUILD_DIR="$HOME/.pyodide-xbuildenv-${PYODIDE_VERSION}/${PYODIDE_VERSION}/xbuildenv"
         fi
