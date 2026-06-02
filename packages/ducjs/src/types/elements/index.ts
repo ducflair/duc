@@ -176,6 +176,131 @@ export type DucElement =
 
 export type DucElementTypes = DucElement["type"];
 
+export type DucElementSelectableField =
+  | keyof DucElement
+  | keyof Extract<DucElement, { type: "model" }>
+  | keyof Extract<DucElement, { type: "text" }>
+  | keyof Extract<DucElement, { type: "line" }>
+  | keyof Extract<DucElement, { type: "arrow" }>
+  | keyof Extract<DucElement, { type: "freedraw" }>
+  | keyof Extract<DucElement, { type: "ellipse" }>
+  | keyof Extract<DucElement, { type: "polygon" }>
+  | keyof Extract<DucElement, { type: "image" }>
+  | keyof Extract<DucElement, { type: "frame" }>
+  | keyof Extract<DucElement, { type: "plot" }>
+  | keyof Extract<DucElement, { type: "doc" }>
+  | keyof Extract<DucElement, { type: "pdf" }>
+  | keyof Extract<DucElement, { type: "table" }>
+  | keyof Extract<DucElement, { type: "embeddable" }>;
+
+export const DUC_ELEMENT_SELECTABLE_FIELDS = [
+  "id",
+  "type",
+  "label",
+  "x",
+  "y",
+  "width",
+  "height",
+  "angle",
+  "opacity",
+  "isDeleted",
+  "isVisible",
+  "groupIds",
+  "frameId",
+  "scope",
+  "layerId",
+  "zIndex",
+  "description",
+  "customData",
+  "roundness",
+  "blending",
+  "background",
+  "stroke",
+  "boundElements",
+  "link",
+  "locked",
+  "regionIds",
+  "blockIds",
+  "instanceId",
+  "index",
+  "updated",
+  "version",
+  "versionNonce",
+  "seed",
+  "modelType",
+  "fileIds",
+  "code",
+  "thumbnail",
+  "viewerState",
+  "text",
+  "autoResize",
+  "containerId",
+  "originalText",
+  "isLtr",
+  "fontFamily",
+  "bigFontFamily",
+  "fontSize",
+  "textAlign",
+  "verticalAlign",
+  "lineHeight",
+  "lineSpacing",
+  "obliqueAngle",
+  "widthFactor",
+  "isUpsideDown",
+  "isBackwards",
+  "points",
+  "fileId",
+  "status",
+  "scaleFlip",
+  "crop",
+  "filter",
+  "elbowed",
+  "wipeoutBelow",
+  "clip",
+  "labelVisible",
+  "layout",
+  "gridConfig",
+  "referencedFileIds",
+  "sides",
+  "ratio",
+  "startAngle",
+  "endAngle",
+  "showAuxCrosshair",
+  "size",
+  "thinning",
+  "smoothing",
+  "streamline",
+  "easing",
+  "start",
+  "end",
+  "pressures",
+  "simulatePressure",
+  "lastCommittedPoint",
+  "lines",
+  "pathOverrides",
+  "startBinding",
+  "endBinding",
+  "svgPath",
+] as const;
+
+export const DUC_ELEMENT_TYPE_VALUES = [
+  "rectangle",
+  "polygon",
+  "ellipse",
+  "line",
+  "arrow",
+  "freedraw",
+  "text",
+  "image",
+  "frame",
+  "embeddable",
+  "table",
+  "model",
+  "pdf",
+  "doc",
+  "plot",
+] as const;
+
 export type NonDeleted<TElement extends DucElement> = TElement & {
   isDeleted: boolean;
 };
