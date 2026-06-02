@@ -35,7 +35,7 @@ The `duc` 2D CAD file format is a cornerstone of our advanced design system, con
 This documentation aims to provide a comprehensive guide to the format's structure, capabilities, and integration with various applications.
 
 ## Tools
-[Documentation](https://duc.ducflair.com) | [Playground](https://scopture.com)
+[Documentation](https://duc.ducflair.com) | [Playground](https://scopture.com/w/hollow)
 
 
 ## Market Insights
