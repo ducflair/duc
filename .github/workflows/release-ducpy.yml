@@ -13,7 +13,7 @@ jobs:
   release_ducpy:
     runs-on: ubuntu-latest
     env:
-      UV_PYTHON: "3.13"
+      UV_PYTHON: "3.12"
       PYODIDE_VERSION: "0.29.3"
     concurrency:
       group: release-ducpy
@@ -43,7 +43,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.12'
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
