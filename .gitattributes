@@ -1,3 +1,57 @@
+# ========================================
+# CAD, 3D, and Engineering Binary Files
+
+*.duc binary
+# Common Exchange Formats
+*.dxf binary
+*.dwg binary
+*.dwf binary
+*.ifc binary
+*.stp binary
+*.step binary
+*.igs binary
+*.iges binary
+*.jt binary
+# Meshes / Standard 3D
+*.stl binary
+*.obj binary
+*.fbx binary
+*.glb binary
+*.3ds binary
+*.ply binary
+*.abc binary
+*.dae binary
+# Native CAD / BIM Software
+# SolidWorks
+*.sldprt binary
+*.sldasm binary
+*.slddrw binary
+# Autodesk Inventor
+*.ipt binary
+*.iam binary
+*.idw binary
+*.ipn binary
+# Revit
+*.rvt binary
+*.rfa binary
+*.rte binary
+*.rft binary
+# Rhino
+*.3dm binary
+# SketchUp
+*.skp binary
+# DCC (Digital Content Creation) Software
+*.blend binary
+*.max binary
+*.mb binary
+*.c4d binary
+*.hip binary
+# Point Clouds / Scans
+*.las binary
+*.laz binary
+*.e57 binary
+*.rcp binary
+*.rcs binary
 *.duc filter=lfs diff=lfs merge=lfs -text
 *.dxf filter=lfs diff=lfs merge=lfs -text
 *.dwg filter=lfs diff=lfs merge=lfs -text
