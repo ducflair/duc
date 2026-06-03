@@ -36,8 +36,6 @@ python-packages = ["ducpy", "ducpy_native"]
 module-name = "ducpy_native"
 include = [
     { path = "LICENSE", format = "sdist" },
-    { path = "schema/**/*", format = "sdist" },
-    { path = "schema/**/*", format = "wheel" }
 ]
 
 [tool.setuptools]

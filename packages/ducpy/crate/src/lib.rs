@@ -58,6 +58,45 @@ fn list_external_files(py: Python<'_>, buf: &[u8]) -> PyResult<PyObject> {
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{e}")))
 }
 
+/// Returns the current DUC schema version as a semver string (e.g. "3.0.0").
+#[pyfunction]
+fn get_schema_version() -> PyResult<String> {
+    Ok(duc::db::bootstrap::CURRENT_SCHEMA_VERSION_SEMVER.into())
+}
+
+/// Returns the raw integer schema version (e.g. 3000000).
+#[pyfunction]
+fn get_schema_version_int() -> PyResult<i64> {
+    Ok(duc::db::bootstrap::current_schema_version_int())
+}
+
+/// Returns the canonical `duc.sql` schema string.
+#[pyfunction]
+fn get_duc_schema_sql() -> PyResult<String> {
+    Ok(duc::db::bootstrap::DUC_SCHEMA_SQL.into())
+}
+
+/// Returns the `version_control.sql` schema string.
+#[pyfunction]
+fn get_version_control_schema_sql() -> PyResult<String> {
+    Ok(duc::db::bootstrap::VERSION_CONTROL_SCHEMA_SQL.into())
+}
+
+/// Returns the `search.sql` schema string.
+#[pyfunction]
+fn get_search_schema_sql() -> PyResult<String> {
+    Ok(duc::db::bootstrap::SEARCH_SCHEMA_SQL.into())
+}
+
+/// Returns all migrations as a list of `(from_version, to_version, sql)` tuples.
+#[pyfunction]
+fn get_migrations(_py: Python<'_>) -> PyResult<Vec<(i64, i64, String)>> {
+    Ok(duc::db::bootstrap::MIGRATIONS
+        .iter()
+        .map(|(f, t, sql)| (*f, *t, sql.to_string()))
+        .collect())
+}
+
 /// Native duc file format operations.
 #[pymodule]
 fn ducpy_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -66,5 +105,11 @@ fn ducpy_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(serialize_duc, m)?)?;
     m.add_function(wrap_pyfunction!(get_external_file, m)?)?;
     m.add_function(wrap_pyfunction!(list_external_files, m)?)?;
+    m.add_function(wrap_pyfunction!(get_schema_version, m)?)?;
+    m.add_function(wrap_pyfunction!(get_schema_version_int, m)?)?;
+    m.add_function(wrap_pyfunction!(get_duc_schema_sql, m)?)?;
+    m.add_function(wrap_pyfunction!(get_version_control_schema_sql, m)?)?;
+    m.add_function(wrap_pyfunction!(get_search_schema_sql, m)?)?;
+    m.add_function(wrap_pyfunction!(get_migrations, m)?)?;
     Ok(())
 }
