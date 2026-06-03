@@ -1,8 +1,11 @@
 """Tests for DucSQL — raw SQL access to .duc databases."""
 import os
+from pathlib import Path
 
+import ducpy as duc
 import pytest
 from ducpy.builders.sql_builder import DucSQL
+from _dev.dev_utils import get_testing_assets_dir
 
 
 @pytest.fixture
@@ -44,6 +47,62 @@ class TestLifecycle:
         with DucSQL.from_bytes(raw) as db2:
             row = db2.sql("SELECT x, y FROM elements WHERE id = ?", "r1")[0]
             assert row["x"] == 10.0 and row["y"] == 20.0
+
+    def test_from_serialized_duc_bytes(self):
+        element = (
+            duc.ElementBuilder()
+            .at_position(10, 20)
+            .with_size(100, 50)
+            .build_rectangle()
+            .build()
+        )
+        serialized = duc.serialize_duc(name="SqlSerializedBytes", elements=[element])
+
+        assert serialized[:6] != b"SQLite"
+        with DucSQL.from_bytes(serialized) as db:
+            rows = db.sql("SELECT id, element_type FROM elements")
+            assert rows[0]["element_type"] == "rectangle"
+
+    def test_open_serialized_duc_file(self, tmp_path):
+        element = duc.ElementBuilder().build_text_element().with_text("Hello SQL").build()
+        serialized = duc.serialize_duc(name="SqlSerializedFile", elements=[element])
+        path = tmp_path / "serialized.duc"
+        path.write_bytes(serialized)
+
+        with DucSQL(path) as db:
+            rows = db.sql("SELECT element_type FROM elements")
+            assert rows[0]["element_type"] == "text"
+
+    def test_attach_many_serialized_duc_files(self, tmp_path):
+        paths = []
+        for index in range(2):
+            element = duc.ElementBuilder().build_rectangle().build()
+            path = tmp_path / f"drawing_{index}.duc"
+            path.write_bytes(duc.serialize_duc(name=f"SqlAttach{index}", elements=[element]))
+            paths.append(path)
+
+        with DucSQL.attach_many(paths, aliases=["d0", "d1"]) as db:
+            rows = db.sql(
+                "SELECT 'd0' AS source, COUNT(*) AS n FROM d0.elements "
+                "UNION ALL "
+                "SELECT 'd1' AS source, COUNT(*) AS n FROM d1.elements"
+            )
+            assert [row["n"] for row in rows] == [1, 1]
+
+    def test_attach_many_all_asset_duc_files_counts_text_elements(self):
+        duc_files = sorted(Path(get_testing_assets_dir()).rglob("*.duc"))
+        assert duc_files
+
+        aliases = [f"d{index}" for index in range(len(duc_files))]
+        with DucSQL.attach_many(duc_files, aliases=aliases) as db:
+            query = " UNION ALL ".join(
+                f"SELECT '{path.name}' AS source_file, COUNT(*) AS text_count FROM {alias}.elements WHERE element_type = 'text'"
+                for alias, path in zip(aliases, duc_files)
+            )
+            rows = db.sql(query)
+
+        assert len(rows) == len(duc_files)
+        assert sum(row["text_count"] for row in rows) > 0
 
     def test_context_manager_commits(self, tmp_path):
         path = tmp_path / "cm.duc"
