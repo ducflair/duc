@@ -41,8 +41,21 @@ Classes
    ducpy.builders.sql_builder.DucSQL
 
 
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.builders.sql_builder.quote_sql_identifier
+
+
 Module Contents
 ---------------
+
+.. py:function:: quote_sql_identifier(value: str) -> str
+
+   Quote a SQLite identifier such as an attached database alias.
+
 
 .. py:class:: DucSQL(path: Union[str, pathlib.Path])
 
@@ -71,6 +84,12 @@ Module Contents
 
 
 
+   .. py:attribute:: _attached_temps
+      :type:  list[str]
+      :value: []
+
+
+
    .. py:attribute:: _closed
       :value: False
 
@@ -91,6 +110,18 @@ Module Contents
 
 
       Open a ``.duc`` from raw bytes (temp file, cleaned up on close).
+
+
+
+   .. py:method:: attach_many(paths: Sequence[Union[str, pathlib.Path]], aliases: Optional[Sequence[str]] = None, read_only: bool = True) -> DucSQL
+      :classmethod:
+
+
+      Open an in-memory SQLite connection with multiple ``.duc`` files attached.
+
+      This is useful for querying multiple drawings in one SQL statement. The
+      returned ``DucSQL`` owns only the in-memory connection; attached files are
+      not deleted on close.
 
 
 
@@ -118,7 +149,7 @@ Module Contents
 
 
 
-   .. py:method:: to_bytes() -> bytes
+   .. py:method:: to_bytes(compressed: bool = False) -> bytes
 
       Export the database as raw bytes.
 

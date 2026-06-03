@@ -322,8 +322,26 @@ so you can write whatever SQL you want.</p>
 </table>
 </div>
 </section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.sql_builder.quote_sql_identifier" title="ducpy.builders.sql_builder.quote_sql_identifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quote_sql_identifier</span></code></a>(→ str)</p></td>
+<td><p>Quote a SQLite identifier such as an attached database alias.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.builders.sql_builder.quote_sql_identifier">
+<span class="sig-prename descclassname"><span class="pre">ducpy.builders.sql_builder.</span></span><span class="sig-name descname"><span class="pre">quote_sql_identifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#ducpy.builders.sql_builder.quote_sql_identifier" title="Link to this definition">¶</a></dt>
+<dd><p>Quote a SQLite identifier such as an attached database alias.</p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="ducpy.builders.sql_builder.DucSQL">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.builders.sql_builder.</span></span><span class="sig-name descname"><span class="pre">DucSQL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ducpy.builders.sql_builder.DucSQL" title="Link to this definition">¶</a></dt>
@@ -352,6 +370,11 @@ so you can write whatever SQL you want.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.builders.sql_builder.DucSQL._attached_temps">
+<span class="sig-name descname"><span class="pre">_attached_temps</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></span><a class="headerlink" href="#ducpy.builders.sql_builder.DucSQL._attached_temps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="ducpy.builders.sql_builder.DucSQL._closed">
 <span class="sig-name descname"><span class="pre">_closed</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#ducpy.builders.sql_builder.DucSQL._closed" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -367,6 +390,15 @@ so you can write whatever SQL you want.</p>
 <dt class="sig sig-object py" id="ducpy.builders.sql_builder.DucSQL.from_bytes">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL" title="ducpy.builders.sql_builder.DucSQL"><span class="pre">DucSQL</span></a></span></span><a class="headerlink" href="#ducpy.builders.sql_builder.DucSQL.from_bytes" title="Link to this definition">¶</a></dt>
 <dd><p>Open a <code class="docutils literal notranslate"><span class="pre">.duc</span></code> from raw bytes (temp file, cleaned up on close).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ducpy.builders.sql_builder.DucSQL.attach_many">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">attach_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aliases</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL" title="ducpy.builders.sql_builder.DucSQL"><span class="pre">DucSQL</span></a></span></span><a class="headerlink" href="#ducpy.builders.sql_builder.DucSQL.attach_many" title="Link to this definition">¶</a></dt>
+<dd><p>Open an in-memory SQLite connection with multiple <code class="docutils literal notranslate"><span class="pre">.duc</span></code> files attached.</p>
+<p>This is useful for querying multiple drawings in one SQL statement. The
+returned <code class="docutils literal notranslate"><span class="pre">DucSQL</span></code> owns only the in-memory connection; attached files are
+not deleted on close.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -399,7 +431,7 @@ so you can write whatever SQL you want.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ducpy.builders.sql_builder.DucSQL.to_bytes">
-<span class="sig-name descname"><span class="pre">to_bytes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#ducpy.builders.sql_builder.DucSQL.to_bytes" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">to_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compressed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#ducpy.builders.sql_builder.DucSQL.to_bytes" title="Link to this definition">¶</a></dt>
 <dd><p>Export the database as raw bytes.</p>
 </dd></dl>
 
@@ -490,14 +522,18 @@ so you can write whatever SQL you want.</p>
             <ul>
 <li><a class="reference internal" href="#">ducpy.builders.sql_builder</a><ul>
 <li><a class="reference internal" href="#classes">Classes</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
 <li><a class="reference internal" href="#module-contents">Module Contents</a><ul>
+<li><a class="reference internal" href="#ducpy.builders.sql_builder.quote_sql_identifier"><code class="docutils literal notranslate"><span class="pre">quote_sql_identifier()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL"><code class="docutils literal notranslate"><span class="pre">DucSQL</span></code></a><ul>
 <li><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL.conn"><code class="docutils literal notranslate"><span class="pre">DucSQL.conn</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL._path"><code class="docutils literal notranslate"><span class="pre">DucSQL._path</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL._temp"><code class="docutils literal notranslate"><span class="pre">DucSQL._temp</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL._attached_temps"><code class="docutils literal notranslate"><span class="pre">DucSQL._attached_temps</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL._closed"><code class="docutils literal notranslate"><span class="pre">DucSQL._closed</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL.new"><code class="docutils literal notranslate"><span class="pre">DucSQL.new()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL.from_bytes"><code class="docutils literal notranslate"><span class="pre">DucSQL.from_bytes()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL.attach_many"><code class="docutils literal notranslate"><span class="pre">DucSQL.attach_many()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL.sql"><code class="docutils literal notranslate"><span class="pre">DucSQL.sql()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL.sql_dict"><code class="docutils literal notranslate"><span class="pre">DucSQL.sql_dict()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.builders.sql_builder.DucSQL.commit"><code class="docutils literal notranslate"><span class="pre">DucSQL.commit()</span></code></a></li>
