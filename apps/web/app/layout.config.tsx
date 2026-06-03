@@ -1,8 +1,7 @@
-import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import { GITHUB_URL, PLAYGROUND_URL, REDDIT_URL } from '@/constants/links';
-import { BLOG, DOCS, HOME } from '@/constants/routes';
 import { Icons } from '@/components/ui/icons';
-import Link from 'next/link';
+import { GITHUB_URL, PLAYGROUND_URL } from '@/constants/links';
+import { BLOG, DOCS } from '@/constants/routes';
+import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 
 export const siteName = 'Duc';
 export const baseUrl = 'https://duc.ducflair.com';

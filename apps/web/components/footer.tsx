@@ -1,7 +1,7 @@
-import { BLOG, DOCS, HOME } from "@/constants/routes";
-import { GITHUB_URL, REDDIT_URL } from "@/constants/links";
-import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { FORUM_URL, GITHUB_URL } from "@/constants/links";
+import { BLOG, DOCS, HOME } from "@/constants/routes";
+import Link from "next/link";
 
 const links = [{
   title: 'Home',
@@ -16,8 +16,8 @@ const links = [{
   title: 'GitHub',
   href: GITHUB_URL
 }, {
-  title: 'Reddit',
-  href: REDDIT_URL
+  title: 'Forum',
+  href: FORUM_URL
 }];
 const currentYear = new Date().getFullYear();
 
