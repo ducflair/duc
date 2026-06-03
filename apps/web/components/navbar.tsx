@@ -1,9 +1,9 @@
-import { GITHUB_URL, REDDIT_URL } from '@/constants/links';
-import { BLOG, DOCS, HOME } from '@/constants/routes';
-import { Icons } from '@/components/ui/icons';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { siteName } from '@/app/layout.config';
+import { Button } from '@/components/ui/button';
+import { Icons } from '@/components/ui/icons';
+import { GITHUB_URL } from '@/constants/links';
+import { BLOG, DOCS, HOME } from '@/constants/routes';
+import Link from 'next/link';
 
 function Navbar() {
   return (
@@ -27,11 +27,6 @@ function Navbar() {
         <Link href={GITHUB_URL}>
           <Button variant='ghost' size='sm'>
             <Icons.gitHub className='size-5!' />
-          </Button>
-        </Link>
-        <Link href={REDDIT_URL}>
-          <Button variant='ghost' size='sm'>
-            <Icons.reddit className='size-5!' />
           </Button>
         </Link>
       </div>
