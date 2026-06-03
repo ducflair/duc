@@ -32,9 +32,6 @@ Functions
 
 .. autoapisummary::
 
-   ducpy.serialize._find_schema_file
-   ducpy.serialize._decode_user_version_to_semver
-   ducpy.serialize._read_schema_version_fallback
    ducpy.serialize._element_to_camel
    ducpy.serialize._convert_external_files
    ducpy.serialize._convert_dict_entries
@@ -67,27 +64,7 @@ Module Contents
    .. py:attribute:: failures
 
 
-.. py:function:: _find_schema_file() -> pathlib.Path | None
-
-.. py:function:: _decode_user_version_to_semver(user_version: int) -> str
-
-   Decode sqlite-style schema user_version to semver.
-
-   Encoding convention:
-       major * 1_000_000 + minor * 1_000 + patch
-
-
-.. py:function:: _read_schema_version_fallback() -> str
-
-   Resolve schema version directly from repository `schema/duc.sql`.
-
-   This is used when `ducpy._version` isn't available (for example, in clean
-   CI environments before setup-time generation has run).
-
-
 .. py:data:: DUC_SCHEMA_VERSION
-   :value: '0.0.0'
-
 
 .. py:data:: _ELEMENT_CLASS_TO_TYPE
    :type:  Dict[str, str]

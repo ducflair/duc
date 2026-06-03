@@ -210,7 +210,6 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../../index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../index.html">ducpy</a><input aria-label="Toggle navigation of ducpy" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="../_version/index.html">ducpy._version</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../builders/index.html">ducpy.builders</a><input aria-label="Toggle navigation of ducpy.builders" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../builders/block_instance_builder/index.html">ducpy.builders.block_instance_builder</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../builders/block_utils/index.html">ducpy.builders.block_utils</a></li>
@@ -323,49 +322,40 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._find_schema_file" title="ducpy.serialize._find_schema_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_find_schema_file</span></code></a>(→ pathlib.Path | None)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._decode_user_version_to_semver" title="ducpy.serialize._decode_user_version_to_semver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_decode_user_version_to_semver</span></code></a>(→ str)</p></td>
-<td><p>Decode sqlite-style schema user_version to semver.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._read_schema_version_fallback" title="ducpy.serialize._read_schema_version_fallback"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_read_schema_version_fallback</span></code></a>(→ str)</p></td>
-<td><p>Resolve schema version directly from repository <cite>schema/duc.sql</cite>.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._element_to_camel" title="ducpy.serialize._element_to_camel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_element_to_camel</span></code></a>(→ dict)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._element_to_camel" title="ducpy.serialize._element_to_camel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_element_to_camel</span></code></a>(→ dict)</p></td>
 <td><p>Convert an element (or ElementWrapper) to the camelCase dict Rust expects.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._convert_external_files" title="ducpy.serialize._convert_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_external_files</span></code></a>(→ Tuple[Optional[Dict[str, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._convert_external_files" title="ducpy.serialize._convert_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_external_files</span></code></a>(→ Tuple[Optional[Dict[str, ...)</p></td>
 <td><p>Convert DucExternalFile dict (or legacy list) to camelCase dicts for serialization.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._convert_dict_entries" title="ducpy.serialize._convert_dict_entries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_dict_entries</span></code></a>(→ Optional[Dict[str, str]])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._convert_dict_entries" title="ducpy.serialize._convert_dict_entries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_dict_entries</span></code></a>(→ Optional[Dict[str, str]])</p></td>
 <td><p>Convert a list of DictionaryEntry to a <code class="docutils literal notranslate"><span class="pre">{key:</span> <span class="pre">value}</span></code> dict.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._convert_list" title="ducpy.serialize._convert_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_list</span></code></a>(→ Optional[list])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._convert_list" title="ducpy.serialize._convert_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_list</span></code></a>(→ Optional[list])</p></td>
 <td><p>Convert a list of dataclass instances to camelCase dicts.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._element_label" title="ducpy.serialize._element_label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_element_label</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._element_label" title="ducpy.serialize._element_label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_element_label</span></code></a>(→ str)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._find_revision" title="ducpy.serialize._find_revision"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_find_revision</span></code></a>(→ Optional[Dict[str, Any]])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._find_revision" title="ducpy.serialize._find_revision"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_find_revision</span></code></a>(→ Optional[Dict[str, Any]])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._write_python_external_files" title="ducpy.serialize._write_python_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_write_python_external_files</span></code></a>(→ Dict[str, str])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._write_python_external_files" title="ducpy.serialize._write_python_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_write_python_external_files</span></code></a>(→ Dict[str, str])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._run_python_validation" title="ducpy.serialize._run_python_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_run_python_validation</span></code></a>(→ Optional[str])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._run_python_validation" title="ducpy.serialize._run_python_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_run_python_validation</span></code></a>(→ Optional[str])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._write_typst_external_files" title="ducpy.serialize._write_typst_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_write_typst_external_files</span></code></a>(→ None)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._write_typst_external_files" title="ducpy.serialize._write_typst_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_write_typst_external_files</span></code></a>(→ None)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._run_typst_validation" title="ducpy.serialize._run_typst_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_run_typst_validation</span></code></a>(→ Optional[str])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._run_typst_validation" title="ducpy.serialize._run_typst_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_run_typst_validation</span></code></a>(→ Optional[str])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._validate_embedded_code" title="ducpy.serialize._validate_embedded_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_validate_embedded_code</span></code></a>(→ None)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._validate_embedded_code" title="ducpy.serialize._validate_embedded_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_validate_embedded_code</span></code></a>(→ None)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize.serialize_duc" title="ducpy.serialize.serialize_duc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">serialize_duc</span></code></a>(→ bytes)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize.serialize_duc" title="ducpy.serialize.serialize_duc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">serialize_duc</span></code></a>(→ bytes)</p></td>
 <td><p>Serialize elements and document state to raw <code class="docutils literal notranslate"><span class="pre">.duc</span></code> binary format.</p></td>
 </tr>
 </tbody>
@@ -392,32 +382,9 @@
 
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="ducpy.serialize._find_schema_file">
-<span class="sig-prename descclassname"><span class="pre">ducpy.serialize.</span></span><span class="sig-name descname"><span class="pre">_find_schema_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#ducpy.serialize._find_schema_file" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="ducpy.serialize._decode_user_version_to_semver">
-<span class="sig-prename descclassname"><span class="pre">ducpy.serialize.</span></span><span class="sig-name descname"><span class="pre">_decode_user_version_to_semver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#ducpy.serialize._decode_user_version_to_semver" title="Link to this definition">¶</a></dt>
-<dd><p>Decode sqlite-style schema user_version to semver.</p>
-<dl class="simple">
-<dt>Encoding convention:</dt><dd><p>major * 1_000_000 + minor * 1_000 + patch</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="ducpy.serialize._read_schema_version_fallback">
-<span class="sig-prename descclassname"><span class="pre">ducpy.serialize.</span></span><span class="sig-name descname"><span class="pre">_read_schema_version_fallback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#ducpy.serialize._read_schema_version_fallback" title="Link to this definition">¶</a></dt>
-<dd><p>Resolve schema version directly from repository <cite>schema/duc.sql</cite>.</p>
-<p>This is used when <cite>ducpy._version</cite> isn’t available (for example, in clean
-CI environments before setup-time generation has run).</p>
-</dd></dl>
-
 <dl class="py data">
 <dt class="sig sig-object py" id="ducpy.serialize.DUC_SCHEMA_VERSION">
-<span class="sig-prename descclassname"><span class="pre">ducpy.serialize.</span></span><span class="sig-name descname"><span class="pre">DUC_SCHEMA_VERSION</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'0.0.0'</span></span><a class="headerlink" href="#ducpy.serialize.DUC_SCHEMA_VERSION" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">ducpy.serialize.</span></span><span class="sig-name descname"><span class="pre">DUC_SCHEMA_VERSION</span></span><a class="headerlink" href="#ducpy.serialize.DUC_SCHEMA_VERSION" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
@@ -611,9 +578,6 @@ DucSerializationValidationError with per-element diagnostics on failure.</p>
 <li><a class="reference internal" href="#ducpy.serialize.DucSerializationValidationError.failures"><code class="docutils literal notranslate"><span class="pre">DucSerializationValidationError.failures</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#ducpy.serialize._find_schema_file"><code class="docutils literal notranslate"><span class="pre">_find_schema_file()</span></code></a></li>
-<li><a class="reference internal" href="#ducpy.serialize._decode_user_version_to_semver"><code class="docutils literal notranslate"><span class="pre">_decode_user_version_to_semver()</span></code></a></li>
-<li><a class="reference internal" href="#ducpy.serialize._read_schema_version_fallback"><code class="docutils literal notranslate"><span class="pre">_read_schema_version_fallback()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.serialize.DUC_SCHEMA_VERSION"><code class="docutils literal notranslate"><span class="pre">DUC_SCHEMA_VERSION</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.serialize._ELEMENT_CLASS_TO_TYPE"><code class="docutils literal notranslate"><span class="pre">_ELEMENT_CLASS_TO_TYPE</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.serialize._element_to_camel"><code class="docutils literal notranslate"><span class="pre">_element_to_camel()</span></code></a></li>

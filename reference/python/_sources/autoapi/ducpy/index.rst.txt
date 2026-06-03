@@ -36,7 +36,6 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/ducpy/_version/index
    /autoapi/ducpy/builders/index
    /autoapi/ducpy/classes/index
    /autoapi/ducpy/enums/index
