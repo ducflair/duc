@@ -19,7 +19,9 @@
       "default": "./pkg/pdf2svg.js"
     }
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/pdf2svg-wasm.js"
+  ],
   "scripts": {
     "build": "bun run clean && bun run build:wasm && bun run copy:wasm-to-dist && bun run build:ts",
     "build:ts": "vite build && pwd && tsc -p tsconfig.json",
