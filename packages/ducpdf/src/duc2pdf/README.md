@@ -65,18 +65,10 @@ For detailed documentation, including all available types and utility functions,
 
 ## Tools
 
-- [Playground](https://ducflair.com/core): Experiment with the `duc` format in a live environment.
+- [Playground](https://scopture.com/w/hollow): Experiment with the `duc` format in a live environment.
 - [Documentation](https://duc.ducflair.com): Comprehensive guides and API references.
 
 
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
-
-## Commit Message Guidelines
-
-To ensure smooth releases with semantic-release, please follow [these guidelines](https://semantic-release.gitbook.io/semantic-release#how-does-it-work).
-
----
-
-*The duc format and libraries are constantly evolving, aiming to set new standards in the 2D CAD industry. Be a part of this transformation and help shape the future of design technology!*

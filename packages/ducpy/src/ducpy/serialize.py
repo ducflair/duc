@@ -5,11 +5,15 @@ Serialize DUC data using the Rust native extension (ducpy_native).
 from __future__ import annotations
 
 import logging
+import builtins
+import contextlib
+import io
 import os
 import re
 import subprocess
 import sys
 import tempfile
+import traceback
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -256,6 +260,8 @@ builtins.resolve_external_file = resolve_external_file
             )
         except subprocess.TimeoutExpired as exc:
             return f"{label}: Python validation timed out after {timeout_seconds:g}s"
+        except PermissionError:
+            return _run_python_validation_in_process(code, label, tmp_path, resolved_files)
         except OSError as exc:
             return f"{label}: failed to start Python validation: {exc}"
 
@@ -264,6 +270,44 @@ builtins.resolve_external_file = resolve_external_file
 
     output = (completed.stderr or completed.stdout or "Python process exited with an error").strip()
     return f"{label}: Python validation failed\n{output}"
+
+
+def _run_python_validation_in_process(
+    code: str,
+    label: str,
+    project_dir: Path,
+    resolved_files: Dict[str, str],
+) -> Optional[str]:
+    previous_cwd = os.getcwd()
+    had_resolver = hasattr(builtins, "resolve_external_file")
+    previous_resolver = getattr(builtins, "resolve_external_file", None)
+
+    def resolve_external_file(file_id: str) -> str:
+        if file_id in resolved_files:
+            return resolved_files[file_id]
+        if callable(previous_resolver):
+            return os.fspath(previous_resolver(file_id))
+        raise FileNotFoundError(f"External file '{file_id}' not found in validation sandbox.")
+
+    try:
+        os.chdir(project_dir)
+        builtins.resolve_external_file = resolve_external_file
+        globals_dict = {
+            "__name__": "__main__",
+            "resolve_external_file": resolve_external_file,
+        }
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            exec(compile(code, "<ducpy-embedded-model>", "exec"), globals_dict)
+    except Exception:
+        return f"{label}: Python validation failed\n{traceback.format_exc().strip()}"
+    finally:
+        os.chdir(previous_cwd)
+        if had_resolver:
+            builtins.resolve_external_file = previous_resolver
+        elif hasattr(builtins, "resolve_external_file"):
+            delattr(builtins, "resolve_external_file")
+
+    return None
 
 
 def _write_typst_external_files(project_dir: Path, files_meta: Optional[Dict[str, Any]], files_data: Optional[Dict[str, bytes]]) -> None:
@@ -324,7 +368,7 @@ def _validate_embedded_code(
     elements: List[Any],
     files_meta: Optional[Dict[str, Any]],
     files_data: Optional[Dict[str, bytes]],
-    timeout_seconds: float,
+    timeout_seconds: Optional[float],
 ) -> None:
     failures: List[str] = []
 

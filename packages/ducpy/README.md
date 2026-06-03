@@ -12,37 +12,67 @@
   </p>
 </p>
 
-
-The `ducpy` package provides a robust Python implementation for the `duc` 2D CAD file format, a cornerstone of our advanced design system. Designed for professionals seeking precision and efficiency, this package ensures seamless integration and manipulation of `duc` files within your Python projects.
-
-## Introduction
-
-The `ducpy` package offers comprehensive Python types and helper functions to work effortlessly with the `duc` CAD file format. Built with efficiency and performance in mind, this package enables you to parse, validate, and manipulate `duc` files with ease.
-
-## Features
-
-- **Python Support:** Strongly-typed interfaces for all aspects of the `duc` file format, ensuring type safety and IDE support.
-- **Utility Functions:** Easy-to-use functions for parsing, validating, and manipulating `duc` files.
-- **Extensible Architecture:** Designed to integrate seamlessly with other `ducflair` packages and your custom tools.
-- **Performance Optimized:** Efficient processing to handle complex CAD data with ease.
+The `ducpy` package is the official Python implementation of the `.duc` 2D CAD file format. It is built on top of the [`duc`](../ducrs) Rust crate, exposed as the `ducpy_native` extension. A `.duc` file is a zlib-compressed SQLite database — `ducpy` gives you both a high-level builder DSL and direct low-level access to that schema, plus parsing, serialization, and search helpers.
 
 ## Installation
-
-Install the package using pip:
 
 ```bash
 pip install ducpy
 ```
 
-## Usage
+or with [`uv`](https://docs.astral.sh/uv/):
+
+```bash
+uv add ducpy
+```
+
+## Quick start
 
 ```python
 import ducpy as duc
 ```
 
+## API overview
+
+`ducpy` is organised around four conceptual entry points, matching the structure of the full [API reference](https://duc.ducflair.com):
+
+### Builders API (High-level)
+
+The easy way to build and manage `.duc` files. Construct elements, apply styles, manage layers, build blocks, and handle document state through the `duc.builders` module.
+
+See the worked examples:
+
+- [Element creation](src/examples/element_creation_demo.py) — building rectangles, ellipses, polygons, lines, arrows, text, frames and plots with the fluent builder DSL.
+- [Mutating elements](src/examples/mutation_demo.py) — updating element properties in place and observing version changes.
+- [Document elements](src/examples/document_element_demo.py) and [model elements](src/examples/model_element_demo.py) — for the higher-level container / model element types.
+
+### SQL Builder (Low-level)
+
+A `.duc` file is a zlib-compressed SQLite database. Use `duc.builders.sql_builder` (`DucSQL`) for direct schema access, bulk queries, and low-level manipulation.
+
+See the worked example: [SQL Builder](src/examples/sql_builder_demo.py) — `DucSQL.new()` to create a `.duc` from scratch, `DucSQL(path)` to query an existing one.
+
+### Search
+
+Query and search elements and files programmatically through the `duc.search` API.
+
+### File I/O
+
+Read and write `.duc` files using the `duc.parse` and `duc.serialize` modules.
+
+See the worked examples:
+
+- [Parsing](src/examples/parsing_demo.py) — `parse_duc` / `parse_duc_lazy` / `get_external_file` / `list_external_files`.
+- [Serialization](src/examples/serialization_demo.py) — `serialize_duc` from builder-created elements.
+- [External files](src/examples/external_files_demo.py) — attaching binary blobs (images, PDFs) to a `.duc` document.
+
 ## Documentation
 
-For detailed documentation, including all available types and utility functions, visit our [Documentation](https://duc.ducflair.com).
+For detailed documentation, including the full API reference, schema specification, and end-to-end examples, see:
+
+- API reference & guides: [duc.ducflair.com](https://duc.ducflair.com)
+- Source-level reference: [docs/](docs/index.rst)
+- Full example index: [docs/examples.rst](docs/examples.rst)
 
 ## Tools
 
@@ -50,16 +80,8 @@ For detailed documentation, including all available types and utility functions,
 
 ## Contributing
 
-At the moment we are not accepting contributions to this package. However, we welcome feedback and suggestions for future improvements. Feel free to open an issue or contact us at [Ducflair Support](https://www.ducflair.com/support).
+Feel free to open an issue or contact us at [Ducflair Support](https://www.ducflair.com/support).
 
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
-
-## Commit Message Guidelines
-
-To ensure smooth releases with semantic-release, please follow [these guidelines](https://semantic-release.gitbook.io/semantic-release#how-does-it-work).
-
----
-
-*The duc format and libraries are constantly evolving, aiming to set new standards in the 2D CAD industry. Be a part of this transformation and help shape the future of design technology!*

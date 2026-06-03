@@ -5,48 +5,50 @@
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" /></a>
   <p align="center">2D CAD File Format</p>
   <p align="center" style="align: center;">
-    <a href="https://crates.io/crates/duc/"><img src="https://shields.io/badge/Crates-FFC933?logo=Rust&logoColor=646464&style=round-square" alt="Crates" /></a>
-    <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/crates/v/duc?style=round-square&label=latest%20stable" alt="Crates.io duc@latest release" /></a>
+    <a href="https://crates.io/crates/duc"><img src="https://shields.io/badge/Crates-FFC933?logo=Rust&logoColor=646464&style=round-square" alt="Crates" /></a>
+    <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/crates/v/duc?style=round-square&label=latest%20stable" alt="crates.io duc@latest release" /></a>
     <a href="https://crates.io/crates/duc"><img src="https://img.shields.io/crates/d/duc?style=round-square&color=salmon" alt="Downloads" /></a>
     <img src="https://shields.io/badge/Rust-CE412B?logo=Rust&logoColor=fff&style=round-square" alt="Rust" />
   </p>
 </p>
 
-The `duc` crate provides a robust Rust implementation for the `duc` 2D CAD file format, a cornerstone of our advanced design system. Designed for professionals seeking precision and efficiency, this crate ensures seamless integration and manipulation of `duc` files within your Rust projects.
+The `duc` crate is the canonical Rust implementation of the `.duc` 2D CAD file format and the **root of the entire Duc ecosystem**. [`ducpy`](https://pypi.org/project/ducpy/), [`ducjs`](https://www.npmjs.com/package/ducjs), and the rest of the toolchain are all built on top of the types, parsers and storage layer defined here.
 
-## Introduction
+A `.duc` file is a standard zlib compressed **SQLite database file** following the schema in `schema/duc.sql`. This crate wraps that database in a strongly-typed Rust API for reading, writing and manipulating `.duc` documents.
 
-The `duc` crate offers comprehensive Rust types and helper functions to work effortlessly with the `duc` CAD file format. Built with efficiency and performance in mind, this crate enables you to parse, validate, and manipulate `duc` files with ease.
+
+----
+<br/>
+<br/>
+<br/>
+
+## Schema and migrations
+
+The canonical SQL lives at `schema/duc.sql` (plus `schema/version_control.sql` and `schema/search.sql`) and is **embedded at compile time** by [`build.rs`](build.rs)
+
+Migrations are ran and handled **automatically** upon usage of the library. Each migration is a SQL file named `<from>_to_<to>.sql` in `schema/migrations/`. `build.rs` scans that directory, sorts by `from_version` and emits a static `MIGRATIONS` array. Adding a new migration requires **no Rust changes** — drop the file in and rebuild.
 
 ## Features
 
-- **Rust Support:** Strongly-typed interfaces for all aspects of the `duc` file format, ensuring type safety and IDE support.
-- **Utility Functions:** Easy-to-use functions for parsing, validating, and manipulating `duc` files.
-- **Extensible Architecture:** Designed to integrate seamlessly with other `ducflair` packages and your custom tools.
-- **Performance Optimized:** Efficient processing to handle complex CAD data with ease.
+| Feature | Default | Description |
+|---------|---------|-------------|
+| `default` | ✅ | Native build with bundled SQLite |
+| `opfs` | ❌ | OPFS SAH-pool VFS for `wasm32-unknown-unknown` (browser persistence) |
 
 
 ## Documentation
 
-For detailed documentation, including all available types and utility functions, visit our [Documentation](https://duc.ducflair.com).
+- Full API reference: [docs.rs/duc](https://docs.rs/duc)
+- Format specification, concepts and guides: [duc.ducflair.com](https://duc.ducflair.com)
 
 ## Tools
 
-- [Playground](https://ducflair.com/core): Experiment with the `duc` format in a live environment.
-- [Documentation](https://duc.ducflair.com): Comprehensive guides and API references.
+- [Playground](https://ducflair.com/core): Experiment with the `.duc` format in the browser.
 
 ## Contributing
 
-At the moment we are not accepting contributions to this crate. However, we welcome feedback and suggestions for future improvements. Feel free to open an issue or contact us at [Ducflair Support](https://www.ducflair.com/support).
+Feel free to open an issue or contact us at [Ducflair Support](https://www.ducflair.com/support).
 
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
-
-## Commit Message Guidelines
-
-To ensure smooth releases with semantic-release, please follow [these guidelines](https://semantic-release.gitbook.io/semantic-release#how-does-it-work).
-
----
-
-*The duc format and libraries are constantly evolving, aiming to set new standards in the 2D CAD industry. Be a part of this transformation and help shape the future of design technology!*
