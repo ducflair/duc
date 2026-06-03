@@ -45,7 +45,7 @@ This documentation aims to provide a comprehensive guide to the format's structu
 
 ## Contributing
 
-We welcome contributions of all kinds. See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions (including the required Git LFS install) and commit message guidelines.
+We welcome contributions. See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions (including the required Git LFS install) and commit message guidelines.
 
 ## License
 

@@ -1,6 +1,46 @@
 {
   "name": "duc-monorepo",
   "version": "0.0.0-development",
+  "description": "",
+  "packageManager": "bun@1.1.24",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "packages:build": "turbo build --filter=ducjs --filter=ducpy --filter=ducrs --filter=ducsvg --filter=ducpdf",
+    "packages:test": "turbo test --filter=ducjs --filter=ducpy --filter=ducrs --filter=ducsvg --filter=ducpdf",
+    "sst:shell": "bash -c 'CMD=\"$1\"; shift; [ -n \"$1\" ] && [ \"$1\" != \"_\" ] && export SST_STAGE=\"$1\"; eval \"$CMD\"' _",
+    "clean": "bun del-cli \"**/dist\" \".turbo\" \"**/node_modules\" \"**/package-lock.json\" \"**/tsconfig.tsbuildinfo\" \"**/tsconfig.node.tsbuildinfo\" \"**/vite.config.js\"",
+    "docs:dev": "turbo dev --filter=@duc/docs",
+    "docs:build": "turbo build --filter=@duc/docs",
+    "ducpy:docs:dev": "turbo run dev:docs --filter=ducpy",
+    "ducpy:docs:build": "turbo run gen:docs --filter=ducpy",
+    "ducpy:test": "turbo run test --filter=ducpy --force",
+    "ducpy:build": "bun turbo run build --filter=ducpy -- ${1}",
+    "ducrs:build": "turbo build --filter=ducrs",
+    "ducrs:test": "turbo run test --filter=ducrs",
+    "ducjs:build": "turbo build --filter=ducjs",
+    "ducjs:test": "turbo run test --filter=ducjs",
+    "ducsvg:build": "turbo build --filter=ducsvg",
+    "ducsvg:test": "turbo run test --filter=ducsvg",
+    "ducpdf:build": "turbo build --filter=ducpdf",
+    "ducpdf:test": "turbo run test --filter=ducpdf",
+    "duc2pdf:build": "turbo build --filter=duc2pdf",
+    "duc2pdf:test": "turbo run test --filter=duc2pdf",
+    "semantic-release": "turbo run semantic-release",
+    "sst:deploy": "bun sst:shell 'bun run sst:clean && sst unlock && sst refresh && sst deploy'",
+    "sst:clean": "bun del-cli \".sst\" \"**/sst-env.d.ts\" \"**/sst.pyi\"",
+    "sst:dev": "bun run sst dev",
+    "knip:deps": "bun sst:shell 'bun run sst unlock && sst shell -- bunx knip --dependencies'",
+    "knip": "bun sst:shell 'bun run sst unlock && sst shell -- bunx knip'"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "packages/ducpdf/src/duc2pdf"
+  ],
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
@@ -41,45 +81,5 @@
     "tailwind-merge": "^3.4.0",
     "tw-animate-css": "^1.4.0",
     "zod": "^3.25.76"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "description": "",
-  "packageManager": "bun@1.1.24",
-  "private": true,
-  "scripts": {
-    "build": "turbo build",
-    "packages:build": "turbo build --filter=ducjs --filter=ducpy --filter=ducrs --filter=ducsvg --filter=ducpdf",
-    "packages:test": "turbo test --filter=ducjs --filter=ducpy --filter=ducrs --filter=ducsvg --filter=ducpdf",
-    "sst:shell": "bash -c 'CMD=\"$1\"; shift; [ -n \"$1\" ] && [ \"$1\" != \"_\" ] && export SST_STAGE=\"$1\"; eval \"$CMD\"' _",
-    "clean": "bun del-cli \"**/dist\" \".turbo\" \"**/node_modules\" \"**/package-lock.json\" \"**/tsconfig.tsbuildinfo\" \"**/tsconfig.node.tsbuildinfo\" \"**/vite.config.js\"",
-    "docs:dev": "turbo dev --filter=@duc/docs",
-    "docs:build": "turbo build --filter=@duc/docs",
-    "ducpy:docs:dev": "turbo run dev:docs --filter=ducpy",
-    "ducpy:docs:build": "turbo run gen:docs --filter=ducpy",
-    "ducpy:test": "turbo run test --filter=ducpy --force",
-    "ducpy:build": "bun turbo run build --filter=ducpy -- ${1}",
-    "ducrs:build": "turbo build --filter=ducrs",
-    "ducrs:test": "turbo run test --filter=ducrs",
-    "ducjs:build": "turbo build --filter=ducjs",
-    "ducjs:test": "turbo run test --filter=ducjs",
-    "ducsvg:build": "turbo build --filter=ducsvg",
-    "ducsvg:test": "turbo run test --filter=ducsvg",
-    "ducpdf:build": "turbo build --filter=ducpdf",
-    "ducpdf:test": "turbo run test --filter=ducpdf",
-    "duc2pdf:build": "turbo build --filter=duc2pdf",
-    "duc2pdf:test": "turbo run test --filter=duc2pdf",
-    "semantic-release": "turbo run semantic-release",
-    "sst:deploy": "bun sst:shell 'bun run sst:clean && sst unlock && sst refresh && sst deploy'",
-    "sst:clean": "bun del-cli \".sst\" \"**/sst-env.d.ts\" \"**/sst.pyi\"",
-    "sst:dev": "bun run sst dev",
-    "knip:deps": "bun sst:shell 'bun run sst unlock && sst shell -- bunx knip --dependencies'",
-    "knip": "bun sst:shell 'bun run sst unlock && sst shell -- bunx knip'"
-  },
-  "workspaces": [
-    "apps/*",
-    "packages/*",
-    "packages/ducpdf/src/duc2pdf"
-  ]
+  }
 }
