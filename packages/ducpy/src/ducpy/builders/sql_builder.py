@@ -29,67 +29,33 @@ Usage::
 from __future__ import annotations
 
 import os
-import re
 import sqlite3
 import tempfile
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
+import ducpy_native
+
 __all__ = ["DucSQL"]
 
 
-_MIGRATION_RE = re.compile(r"^(\d+)_to_(\d+)$")
-
-
-def _find_schema_dir() -> Optional[Path]:
-    env_path = os.environ.get("DUC_SCHEMA_DIR")
-    if env_path:
-        candidate = Path(env_path)
-        if (candidate / "duc.sql").exists():
-            return candidate
-
-    current = Path(__file__).resolve()
-    for parent in current.parents:
-        candidate = parent / "schema"
-        if (candidate / "duc.sql").exists():
-            return candidate
-    return None
-
-
 def _get_current_schema_version() -> int:
-    """Read the target user_version from duc.sql — mirrors Rust's CURRENT_VERSION."""
-    schema_dir = _find_schema_dir()
-    if schema_dir is None:
-        return 0
-    duc_sql = (schema_dir / "duc.sql").read_text(encoding="utf-8")
-    m = re.search(r"PRAGMA\s+user_version\s*=\s*(\d+)", duc_sql, re.IGNORECASE)
-    return int(m.group(1)) if m else 0
+    """Current schema version integer (e.g. 3000000) — from the Rust crate."""
+    return ducpy_native.get_schema_version_int()
 
 
 def _read_migrations() -> list[tuple[int, int, str]]:
-    """Load all migration SQL files from schema/migrations/, sorted by from_version."""
-    schema_dir = _find_schema_dir()
-    if schema_dir is None:
-        return []
-    migrations_dir = schema_dir / "migrations"
-    if not migrations_dir.exists():
-        return []
-    result: list[tuple[int, int, str]] = []
-    for path in sorted(migrations_dir.glob("*.sql")):
-        m = _MIGRATION_RE.match(path.stem)
-        if m:
-            result.append((int(m.group(1)), int(m.group(2)), path.read_text(encoding="utf-8")))
-    result.sort(key=lambda x: x[0])
-    return result
+    """All migrations as (from_version, to_version, sql) — from the Rust crate."""
+    raw = ducpy_native.get_migrations()
+    # get_migrations returns list of tuples with i64 values
+    return [(int(f), int(t), sql) for f, t, sql in raw]
 
 
 def _apply_migrations(conn: sqlite3.Connection) -> None:
     """Walk the migration chain until user_version reaches the current schema version.
 
-    Mirrors the migration logic in Rust's ``bootstrap.rs``:
-    reads ``schema/migrations/{from}_to_{to}.sql`` files in order and executes
-    them until ``PRAGMA user_version`` matches the version declared in ``duc.sql``.
-    Safe to call on already-current or brand-new databases.
+    Mirrors the migration logic in Rust's ``bootstrap.rs``. Safe to call on
+    already-current or brand-new databases.
     """
     user_version: int = conn.execute("PRAGMA user_version").fetchone()[0]
     if user_version == 0:
@@ -112,18 +78,12 @@ def _apply_migrations(conn: sqlite3.Connection) -> None:
 
 
 def _read_schema_sql() -> str:
-    schema_dir = _find_schema_dir()
-    if schema_dir is None:
-        raise FileNotFoundError(
-            "Could not locate schema/duc.sql. "
-            "Ensure you are running from within the DUC repository."
-        )
-    parts: list[str] = []
-    for filename in ("duc.sql", "version_control.sql", "search.sql"):
-        path = schema_dir / filename
-        if path.exists():
-            parts.append(path.read_text(encoding="utf-8"))
-    return "\n".join(parts)
+    """Concatenate the three schema SQL strings shipped by the Rust crate."""
+    return "\n".join([
+        ducpy_native.get_duc_schema_sql(),
+        ducpy_native.get_version_control_schema_sql(),
+        ducpy_native.get_search_schema_sql(),
+    ])
 
 
 def _apply_pragmas(conn: sqlite3.Connection) -> None:

@@ -13,9 +13,7 @@ include = [
   "Cargo.toml",
   "README.md",
   "LICENSE",
-  "schema/duc.sql",
-  "schema/version_control.sql",
-  "schema/search.sql",
+  "schema/*.sql",
   "schema/migrations/*.sql",
 ]
 
