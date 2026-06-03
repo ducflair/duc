@@ -3,6 +3,7 @@
 import os
 import pytest
 import ducpy as duc
+import ducpy.serialize as duc_serialize
 
 # --- Helper Functions representing embedded code blocks ---
 
@@ -330,3 +331,49 @@ def test_model_type_enforcement_raises_error():
             model_type="invalid_type"
         )
     assert "Invalid model_type" in str(excinfo.value)
+
+
+def test_python_validation_falls_back_when_subprocess_is_blocked(monkeypatch):
+    def blocked_run(*_args, **_kwargs):
+        raise PermissionError("subprocess blocked")
+
+    monkeypatch.setattr(duc_serialize.subprocess, "run", blocked_run)
+
+    model_element = (
+        duc.ElementBuilder()
+        .build_model_element()
+        .with_code("value = 1 + 1")
+        .build()
+    )
+
+    serialized_bytes = duc.serialize_duc(
+        name="InProcessValidationFallbackTest",
+        elements=[model_element],
+        validate_embedded_code=True,
+    )
+
+    assert serialized_bytes
+
+
+def test_python_validation_fallback_reports_runtime_failure(monkeypatch):
+    def blocked_run(*_args, **_kwargs):
+        raise PermissionError("subprocess blocked")
+
+    monkeypatch.setattr(duc_serialize.subprocess, "run", blocked_run)
+
+    model_element = (
+        duc.ElementBuilder()
+        .build_model_element()
+        .with_code("raise RuntimeError('embedded boom')")
+        .build()
+    )
+
+    with pytest.raises(duc.DucSerializationValidationError) as excinfo:
+        duc.serialize_duc(
+            name="InProcessValidationFallbackFailureTest",
+            elements=[model_element],
+            validate_embedded_code=True,
+        )
+
+    assert "Python validation failed" in str(excinfo.value)
+    assert "embedded boom" in str(excinfo.value)
