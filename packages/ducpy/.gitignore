@@ -1,8 +1,6 @@
 # Test files
 dist/
 inputs/
-schema/*
-!schema/.gitkeep
 
 
 

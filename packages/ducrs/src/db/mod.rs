@@ -3,7 +3,7 @@
 //! Call [`open_file`] or [`open_memory`] instead of calling `rusqlite::Connection`
 //! directly. Internally they dispatch to the correct backend for each compile target.
 
-mod bootstrap;
+pub mod bootstrap;
 
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 mod native;
