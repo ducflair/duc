@@ -3,17 +3,18 @@
 import os
 import time
 
+from _dev.dev_utils import get_asset_bytes
 from ducpy.builders.sql_builder import DucSQL
 
 
-def test_csp_pdf_image_elements(test_output_dir, load_test_asset):
+def test_csp_pdf_image_elements(test_output_dir):
     output_file = os.path.join(test_output_dir, "test_pdf_image_elements_sql.duc")
     if os.path.exists(output_file):
         os.remove(output_file)
     now = int(time.time() * 1000)
 
-    pdf_bytes = load_test_asset("test.pdf")
-    image_bytes = load_test_asset("test.jpg")
+    pdf_bytes = get_asset_bytes("pdf-files/test.pdf")
+    image_bytes = get_asset_bytes("jpeg-files/test.jpg")
 
     with DucSQL.new(output_file) as db:
         db.sql("INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)", "file_pdf", "file_pdf_rev1", now)

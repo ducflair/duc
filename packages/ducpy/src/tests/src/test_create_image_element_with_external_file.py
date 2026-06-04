@@ -3,6 +3,8 @@ Tests for serializing and parsing binary files in DUC format.
 """
 import os
 
+from _dev.dev_utils import download_fixture_from_cdn
+
 import ducpy as duc
 
 
@@ -18,17 +20,12 @@ def create_binary_files_dict(mime_type: str, image_id: str, image_bytes: bytes, 
     }
 
 
-def test_binary_files_serialization(test_assets_dir, test_output_dir):
+def test_binary_files_serialization(test_output_dir):
     """Test serializing a DUC file with binary image data and external file entry using the builder API."""
     import ducpy as duc
 
-    image_path = os.path.join(test_assets_dir, "image-files", "infinite-zoom-math.png")
-    assert os.path.exists(image_path), f"Test asset not found: {image_path}"
+    image_bytes = download_fixture_from_cdn("png-files/infinite-zoom-math.png")
 
-    with open(image_path, 'rb') as f:
-        image_bytes = f.read()
-
-    current_time_ms = int(os.path.getmtime(image_path) * 1000)
     mime_type = "image/png"
     image_id = "test_image"
 
@@ -59,23 +56,19 @@ def test_binary_files_serialization(test_assets_dir, test_output_dir):
     )
 
     print(f"Created DUC file with external file entry at {duc_path}")
-    print(f"Image ('{image_path}') size: {len(image_bytes)} bytes")
+    print(f"Image (from {image_url}) size: {len(image_bytes)} bytes")
 
     assert os.path.exists(duc_path), f"DUC file was not created: {duc_path}"
     assert os.path.getsize(duc_path) > 0, "DUC file should not be empty"
 
 
-def test_image_with_external_file_via_sql(test_assets_dir, test_output_dir):
+def test_image_with_external_file_via_sql(test_output_dir):
     """Insert an image element with an external binary file using raw SQL."""
     import time as _time
 
     from ducpy.builders.sql_builder import DucSQL
 
-    image_path = os.path.join(test_assets_dir, "image-files", "infinite-zoom-math.png")
-    assert os.path.exists(image_path), f"Test asset not found: {image_path}"
-
-    with open(image_path, "rb") as f:
-        image_bytes = f.read()
+    image_bytes = download_fixture_from_cdn("png-files/infinite-zoom-math.png")
 
     now = int(_time.time() * 1000)
     output_file = os.path.join(test_output_dir, "test_image_external_sql.duc")

@@ -3,36 +3,23 @@
 import os
 import time
 
+from _dev.dev_utils import download_fixture_from_cdn
+
 import ducpy as duc
 from ducpy.builders.sql_builder import DucSQL
 
 
-def _load_asset_bytes(base_dir: str, filename: str) -> bytes:
-    _, ext = os.path.splitext(filename.lower())
-    ext = ext[1:]
-    if ext == "pdf":
-        sub_dir = "pdf-files"
-    elif ext in {"png", "jpg", "jpeg", "gif"}:
-        sub_dir = "image-files"
-    elif ext == "step":
-        sub_dir = "step-files"
-    else:
-        sub_dir = "image-files"
-    with open(os.path.join(base_dir, sub_dir, filename), "rb") as f:
-        return f.read()
-
-
-def test_a_duc_with_everything(test_output_dir, test_assets_dir):
+def test_a_duc_with_everything(test_output_dir):
     output_file = os.path.join(test_output_dir, "test_a_duc_with_everything.duc")
     now = int(time.time() * 1000)
 
     if os.path.exists(output_file):
         os.remove(output_file)
 
-    thumbnail = _load_asset_bytes(test_assets_dir, "thumbnail.png")
-    pdf_bytes = _load_asset_bytes(test_assets_dir, "test.pdf")
-    step_bytes = _load_asset_bytes(test_assets_dir, "test.step")
-    jpg_bytes = _load_asset_bytes(test_assets_dir, "test.jpg")
+    thumbnail = download_fixture_from_cdn("png-files/thumbnail.png")
+    pdf_bytes = download_fixture_from_cdn("pdf-files/test.pdf")
+    step_bytes = download_fixture_from_cdn("step-files/cis/MainSteel_structural.stp")
+    jpg_bytes = download_fixture_from_cdn("jpeg-files/test.jpg")
 
     # Builder stream: elements
     rect_from_builder = (
