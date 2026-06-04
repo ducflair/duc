@@ -1,7 +1,6 @@
 # ========================================
 # CAD, 3D, and Engineering Binary Files
 
-*.duc filter=lfs diff=lfs merge=lfs -text
 # Common Exchange Formats
 *.dxf filter=lfs diff=lfs merge=lfs -text
 *.dwg filter=lfs diff=lfs merge=lfs -text
