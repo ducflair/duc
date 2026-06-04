@@ -4,8 +4,9 @@ Example demonstrating how to build, configure, and serialize Model elements in D
 """
 
 import os
+
 import ducpy as duc
-from _dev.dev_utils import get_testing_assets_dir
+from _dev.dev_utils import download_fixture_from_cdn, get_testing_assets_dir
 
 
 def build123d_model_code():
@@ -61,11 +62,6 @@ def main():
     assets_dir = get_testing_assets_dir()
     print(f"Testing Assets Directory resolved to: {assets_dir}")
 
-    # Define paths to real test files
-    ifc_file_path = os.path.join(assets_dir, "ifc-files", "NVW_DCR-LOD100_Arch.ifc")
-    dxf_file_path = os.path.join(assets_dir, "dxf-files", "columns_R2007.dxf")
-    step_file_path = os.path.join(assets_dir, "step-files", "123Block_Color.stp")
-
     print("\n1. Creating Python model element with build123d...")
     build123d_code = duc.extract_embedded_code(build123d_model_code)
     build123d_model = (
@@ -80,8 +76,7 @@ def main():
     print(f"   Created build123d model (defaults to model_type: '{build123d_model.element.model_type}')")
 
     print("\n2. Creating Python model element with ifcopenshell and a REAL IFC file...")
-    with open(ifc_file_path, "rb") as f:
-        ifc_bytes = f.read()
+    ifc_bytes = download_fixture_from_cdn("ifc-files/NVW_DCR-LOD100_Arch.ifc")
 
     ifc_external_file = (
         duc.StateBuilder()
@@ -104,11 +99,10 @@ def main():
         .with_file_ids(["real_ifc_file"])
         .build()
     )
-    print(f"   Created ifcopenshell model with real IFC file '{os.path.basename(ifc_file_path)}' ({len(ifc_bytes)} bytes)")
+    print(f"   Created ifcopenshell model with real IFC file ({len(ifc_bytes)} bytes)")
 
     print("\n3. Creating Python model element with ezdxf and a REAL DXF file...")
-    with open(dxf_file_path, "rb") as f:
-        dxf_bytes = f.read()
+    dxf_bytes = download_fixture_from_cdn("dxf-files/columns_R2007.dxf")
 
     dxf_external_file = (
         duc.StateBuilder()
@@ -131,11 +125,10 @@ def main():
         .with_file_ids(["real_dxf_file"])
         .build()
     )
-    print(f"   Created ezdxf model with real DXF file '{os.path.basename(dxf_file_path)}' ({len(dxf_bytes)} bytes)")
+    print(f"   Created ezdxf model with real DXF file ({len(dxf_bytes)} bytes)")
 
     print("\n4. Demonstrating Non-Python model imports (via external STEP files)...")
-    with open(step_file_path, "rb") as f:
-        step_bytes = f.read()
+    step_bytes = download_fixture_from_cdn("step-files/cis/MainSteel_structural.stp")
 
     step_external_file = (
         duc.StateBuilder()
@@ -158,7 +151,7 @@ def main():
         .with_code(step_importer_code)
         .build()
     )
-    print(f"   Created STEP model with real STEP file '{os.path.basename(step_file_path)}' ({len(step_bytes)} bytes)")
+    print(f"   Created STEP model with real STEP file ({len(step_bytes)} bytes)")
 
     print("\n5. Testing model type validation (ValueErrors)...")
     try:

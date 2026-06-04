@@ -4,26 +4,11 @@ Pytest configuration file for the ducpy tests.
 import os
 import pytest
 
-from _dev.dev_utils import get_testing_assets_dir
-
-
-def get_asset_subdirectory(filename):
-    """Determine the appropriate subdirectory based on file extension."""
-    _, ext = os.path.splitext(filename.lower())
-    ext = ext[1:]  # Remove the dot
-
-    if ext == "pdf":
-        return "pdf-files"
-    elif ext == "svg":
-        return "svg-files"
-    elif ext in ["png", "jpg", "jpeg", "gif"]:
-        return "image-files"
-    elif ext == "step":
-        return "step-files"
-    elif ext == "duc":
-        return "duc-files"
-    else:
-        return "image-files"  # default
+from _dev.dev_utils import (
+    get_testing_assets_dir,
+    get_asset_bytes,
+    download_fixture_from_cdn,
+)
 
 
 @pytest.fixture
@@ -34,13 +19,11 @@ def test_assets_dir():
 
 @pytest.fixture
 def load_test_asset():
-    """Return a function to load test assets by filename."""
-    assets_dir = get_testing_assets_dir()
+    """Return a function to load test assets by filename (local or CDN fallback)."""
 
-    def _load_asset(filename):
-        sub_dir = get_asset_subdirectory(filename)
-        with open(os.path.join(assets_dir, sub_dir, filename), "rb") as f:
-            return f.read()
+    def _load_asset(path: str):
+        """Load an asset by its relative path (e.g. ``'pdf-files/test.pdf'``)."""
+        return get_asset_bytes(path, prefer_local=True)
 
     return _load_asset
 

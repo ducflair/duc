@@ -8,38 +8,6 @@ Thanks for your interest in contributing! We welcome all forms of contributions,
 
 - [Bun](https://bun.sh/) `>=1.1.24` (package manager)
 - [Node.js](https://nodejs.org/) `>=20`
-- [Git LFS](https://git-lfs.com/) — **required** to clone this repository
-
-### Git LFS
-
-This repository tracks CAD, 3D, and engineering binary files (`.duc`, `.dxf`, `.dwg`, `.stl`, `.obj`, `.fbx`, etc.) through [Git LFS](https://git-lfs.com/). You must install and initialize it before cloning, otherwise those files will be checked out as pointer stubs instead of the actual content.
-
-Install:
-
-```sh
-# macOS
-brew install git-lfs
-
-# Debian/Ubuntu
-sudo apt install git-lfs
-
-# Windows
-winget install GitHub.GitLFS
-```
-
-Initialize once per machine:
-
-```sh
-git lfs install
-```
-
-If you already cloned the repo before installing LFS, run:
-
-```sh
-git lfs pull
-```
-
-The full list of tracked extensions lives in [`.gitattributes`](./.gitattributes).
 
 ### Setup
 

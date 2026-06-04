@@ -2,8 +2,12 @@
 
 import os
 import pytest
+
+from _dev.dev_utils import download_fixture_from_cdn
+
 import ducpy as duc
 import ducpy.serialize as duc_serialize
+
 
 # --- Helper Functions representing embedded code blocks ---
 
@@ -171,11 +175,9 @@ def test_build123d_validation_failure():
     assert "standard_" in str(excinfo.value).lower()
 
 
-def test_ifcopenshell_validation_success(test_output_dir, test_assets_dir):
+def test_ifcopenshell_validation_success(test_output_dir):
     """Verify that a Model element with valid ifcopenshell Python syntax and a real file serializes successfully."""
-    ifc_file_path = os.path.join(test_assets_dir, "ifc-files", "NVW_DCR-LOD100_Arch.ifc")
-    with open(ifc_file_path, "rb") as f:
-        ifc_bytes = f.read()
+    ifc_bytes = download_fixture_from_cdn("ifc-files/NVW_DCR-LOD100_Arch.ifc")
         
     external_file = (
         duc.StateBuilder()
@@ -242,11 +244,9 @@ def test_ifcopenshell_validation_failure():
     assert "not found in schema" in str(excinfo.value).lower()
 
 
-def test_ezdxf_validation_success(test_output_dir, test_assets_dir):
+def test_ezdxf_validation_success(test_output_dir):
     """Verify that a Model element with valid ezdxf Python syntax and a real file serializes successfully."""
-    dxf_file_path = os.path.join(test_assets_dir, "dxf-files", "columns_R2007.dxf")
-    with open(dxf_file_path, "rb") as f:
-        dxf_bytes = f.read()
+    dxf_bytes = download_fixture_from_cdn("dxf-files/columns_R2007.dxf")
         
     external_file = (
         duc.StateBuilder()
