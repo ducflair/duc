@@ -30,12 +30,24 @@ from typing import Any
 
 from ..builders.sql_builder import DucSQL
 from ..parse import parse_duc_lazy
+from .search_external_files import (
+    ExternalFileSearchTarget,
+    ExtractedExternalText,
+    PageSpan,
+    element_file_id,
+    ensure_external_file_search_index,
+    load_external_file_text,
+    query_external_file_search_rows,
+    resolve_external_file_search_targets,
+    resolve_external_file_search_targets_from_parsed_duc,
+)
 
 __all__ = [
     "DucElementSearchResult",
     "DucFileSearchResult",
     "DucSearchResponse",
     "DucSearchResult",
+    "ExternalFileSearchTarget",
     "search_duc_elements",
 ]
 
@@ -49,25 +61,41 @@ class DucSearchResult:
 
 @dataclass(slots=True)
 class DucElementSearchResult:
-    """One result row for a single element."""
+    """One result row for a single element.
+
+    ``match_pages[i]`` is the starting page number (as a string) for the text
+    in ``matches[i]``.  The two lists always have the same length, and
+    ``match_pages`` is ``None`` for results that are not backed by a
+    PDF/image external file.
+    """
 
     element_id: str
     element_type: str
     matches: list[str]
     score: float
+    match_pages: list[str] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        d: dict[str, Any] = {
             "element_id": self.element_id,
             "element_type": self.element_type,
             "matches": self.matches,
             "score": round(self.score, 6),
         }
+        if self.match_pages is not None:
+            d["match_pages"] = self.match_pages
+        return d
 
 
 @dataclass(slots=True)
 class DucFileSearchResult:
-    """One grouped result row for repeated file-backed elements."""
+    """One grouped result row for repeated file-backed elements.
+
+    ``match_pages[i]`` is the starting page number (as a string) for the text
+    in ``matches[i]``.  The two lists always have the same length, and
+    ``match_pages`` is ``None`` for results that are not backed by a
+    PDF/image external file.
+    """
 
     file_id: str
     element_type: str
@@ -75,9 +103,10 @@ class DucFileSearchResult:
     score: float
     hits: int
     element_ids: list[str]
+    match_pages: list[str] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        d: dict[str, Any] = {
             "file_id": self.file_id,
             "element_type": self.element_type,
             "matches": self.matches,
@@ -85,6 +114,9 @@ class DucFileSearchResult:
             "hits": self.hits,
             "element_ids": self.element_ids,
         }
+        if self.match_pages is not None:
+            d["match_pages"] = self.match_pages
+        return d
 
 
 DucSearchResult = DucElementSearchResult | DucFileSearchResult
@@ -112,21 +144,46 @@ class DucSearchResponse:
         return payload
 
 
+def _merge_pages(
+    current: tuple[int, ...] | None,
+    incoming: tuple[int, ...] | None,
+) -> tuple[int, ...] | None:
+    if not current:
+        return incoming
+    if not incoming:
+        return current
+    return tuple(sorted({*current, *incoming}))
+
+
+@dataclass(frozen=True, slots=True)
+class _MatchContext:
+    text: str
+    pages: tuple[int, ...] | None = None
+
+
 @dataclass(slots=True)
 class _ElementAggregate:
     element_id: str
     raw_element_type: str
     label: str
     description: str | None
-    match_scores: dict[str, tuple[str, float]] = field(default_factory=dict)
+    match_scores: dict[str, tuple[str, float, tuple[int, ...] | None]] = field(default_factory=dict)
     best_score: float = 0.0
     file_id: str | None = None
 
-    def add_match(self, text: str, score: float) -> None:
+    def add_match(
+        self,
+        text: str,
+        score: float,
+        pages: tuple[int, ...] | None = None,
+    ) -> None:
         normalized = _normalize_text(text)
         current = self.match_scores.get(normalized)
+        merged_pages = _merge_pages(current[2] if current else None, pages)
         if current is None or score > current[1]:
-            self.match_scores[normalized] = (text, score)
+            self.match_scores[normalized] = (text, score, merged_pages)
+        elif merged_pages != current[2]:
+            self.match_scores[normalized] = (current[0], current[1], merged_pages)
         if score > self.best_score:
             self.best_score = score
 
@@ -136,7 +193,27 @@ class _ElementAggregate:
             self.match_scores.values(),
             key=lambda item: (-item[1], _normalize_text(item[0]), item[0]),
         )
-        return [text for text, _score in ordered]
+        return [text for text, _score, _pages in ordered]
+
+    @property
+    def ordered_match_pages(self) -> list[str] | None:
+        if not self.match_scores:
+            return None
+        ordered = sorted(
+            self.match_scores.values(),
+            key=lambda item: (-item[1], _normalize_text(item[0]), item[0]),
+        )
+        result: list[str] = []
+        for _text, _score, pages in ordered:
+            if pages:
+                result.append(str(pages[0]))
+            else:
+                result.append("")
+        return result if any(v for v in result) else None
+
+    @property
+    def is_pdf_or_image(self) -> bool:
+        return self.raw_element_type in ("pdf", "image")
 
 @dataclass(frozen=True, slots=True)
 class _SourceQuery:
@@ -178,16 +255,16 @@ _SOURCE_QUERIES: tuple[_SourceQuery, ...] = (
                 e.label,
                 e.description,
                 et.text AS candidate_text_1,
-                et.original_text AS candidate_text_2,
+                NULL AS candidate_text_2,
                 NULL AS candidate_text_3,
-                bm25(search_element_text, 6.0, 2.0) AS fts_rank,
+                bm25(search_element_text, 6.0) AS fts_rank,
                 'search_element_text' AS source_table
             FROM search_element_text
             JOIN element_text AS et ON et.rowid = search_element_text.rowid
             JOIN elements AS e ON e.id = et.element_id
             WHERE search_element_text MATCH ?
               AND e.is_deleted = 0
-            ORDER BY bm25(search_element_text, 6.0, 2.0)
+            ORDER BY bm25(search_element_text, 6.0)
             LIMIT ?
         """,
     ),
@@ -214,29 +291,6 @@ _SOURCE_QUERIES: tuple[_SourceQuery, ...] = (
             LIMIT ?
         """,
     ),
-    _SourceQuery(
-        table_name="search_element_model",
-        source_weight=0.72,
-        sql="""
-            SELECT
-                e.id AS element_id,
-                e.element_type,
-                e.label,
-                e.description,
-                em.code AS candidate_text_1,
-                NULL AS candidate_text_2,
-                NULL AS candidate_text_3,
-                bm25(search_element_model, 2.0) AS fts_rank,
-                'search_element_model' AS source_table
-            FROM search_element_model
-            JOIN element_model AS em ON em.rowid = search_element_model.rowid
-            JOIN elements AS e ON e.id = em.element_id
-            WHERE search_element_model MATCH ?
-              AND e.is_deleted = 0
-            ORDER BY bm25(search_element_model, 2.0)
-            LIMIT ?
-        """,
-    ),
 )
 
 
@@ -251,6 +305,118 @@ def _normalize_text(value: str | None) -> str:
 
 def _tokenize(value: str | None) -> list[str]:
     return _TOKEN_RE.findall(_normalize_text(value))
+
+
+def _compress_whitespace(value: str | None) -> str:
+    if not value:
+        return ""
+    return " ".join(str(value).split())
+
+
+def _clip_with_ellipsis(text: str, start: int, end: int) -> str:
+    body = text[start:end].strip()
+    if not body:
+        return ""
+    prefix = "..." if start > 0 else ""
+    suffix = "..." if end < len(text) else ""
+    return f"{prefix}{body}{suffix}"
+
+
+def _pages_for_range(
+    page_spans: tuple[PageSpan, ...],
+    start: int,
+    end: int,
+) -> tuple[int, ...] | None:
+    if not page_spans:
+        return None
+    end = max(start + 1, end)
+    pages = [span.page for span in page_spans if start < span.end and end > span.start]
+    if not pages:
+        return None
+    return tuple(sorted(set(pages)))
+
+
+def _build_match_contexts(
+    query: str,
+    raw_text: str,
+    *,
+    page_spans: tuple[PageSpan, ...] = (),
+    max_length: int = 220,
+) -> list[_MatchContext]:
+
+    compact = _compress_whitespace(raw_text)
+    if not compact:
+        return []
+    if len(compact) <= max_length:
+        return [_MatchContext(compact, _pages_for_range(page_spans, 0, len(compact)))]
+
+    query_phrase = _compress_whitespace(query).casefold()
+    folded = compact.casefold()
+    query_tokens = [token for token in re.findall(r"[\\w]+", query_phrase, re.UNICODE) if len(token) >= 2]
+
+    anchors: list[tuple[int, int, float]] = []
+
+    if query_phrase:
+        start = 0
+        while True:
+            idx = folded.find(query_phrase, start)
+            if idx < 0:
+                break
+            anchors.append((idx, len(query_phrase), 3.0))
+            start = idx + max(1, len(query_phrase))
+
+    for token in dict.fromkeys(query_tokens):
+        for match in re.finditer(re.escape(token), folded):
+            anchors.append((match.start(), len(token), 1.0 + min(len(token), 12) / 12.0))
+
+    if not anchors:
+        return [_MatchContext(_clip_with_ellipsis(compact, 0, max_length), _pages_for_range(page_spans, 0, max_length))]
+
+    window = max(80, max_length - 6)
+    candidates: list[tuple[float, int, str, tuple[int, ...] | None]] = []
+    seen_windows: set[tuple[int, int]] = set()
+
+    for anchor, anchor_length, anchor_weight in anchors:
+        start = max(0, anchor - window // 2)
+        end = min(len(compact), start + window)
+        start = max(0, end - window)
+
+        while start > 0 and compact[start - 1].isalnum():
+            start -= 1
+        while end < len(compact) and compact[end - 1].isalnum():
+            end += 1
+
+        window_key = (start, end)
+        if window_key in seen_windows:
+            continue
+        seen_windows.add(window_key)
+
+        snippet = _clip_with_ellipsis(compact, start, end)
+        if not snippet:
+            continue
+
+        snippet_folded = snippet.casefold()
+        phrase_bonus = 2.0 if query_phrase and query_phrase in snippet_folded else 0.0
+        token_hits = sum(1.0 for token in query_tokens if token in snippet_folded)
+        score = anchor_weight + phrase_bonus + token_hits
+        candidates.append((score, start, snippet, _pages_for_range(page_spans, anchor, anchor + anchor_length)))
+
+    candidates.sort(key=lambda item: (-item[0], item[1]))
+    snippets: list[_MatchContext] = []
+    seen_snippets: dict[str, int] = {}
+    for _score, _start, snippet, pages in candidates:
+        normalized = _normalize_text(snippet)
+        existing_index = seen_snippets.get(normalized)
+        if existing_index is not None:
+            current = snippets[existing_index]
+            snippets[existing_index] = _MatchContext(current.text, _merge_pages(current.pages, pages))
+            continue
+        seen_snippets[normalized] = len(snippets)
+        snippets.append(_MatchContext(snippet, pages))
+
+    if not snippets:
+        return [_MatchContext(_clip_with_ellipsis(compact, 0, max_length), _pages_for_range(page_spans, 0, max_length))]
+    return snippets
 
 
 def _escape_fts_term(term: str) -> str:
@@ -362,17 +528,32 @@ def _evaluate_match_text(
         else 0.0
     )
     similarity_score = SequenceMatcher(None, query_normalized, normalized).ratio()
+
+    contains_query = bool(query_normalized and query_normalized in normalized)
+    # OCR output can emit a whole text line without spaces between words, turning
+    # "AIR NATIONAL GUARD RANGE" into "airnationalguardrange".
+    # Matching the query with spacing removed keeps such concatenated OCR output
+    # searchable. Guarded by a minimum length to avoid spurious short-substring hits.
+    query_nospace = query_normalized.replace(" ", "")
+    normalized_nospace = normalized.replace(" ", "")
+    contains_query_nospace = bool(
+        query_nospace
+        and len(query_nospace) >= 4
+        and query_nospace in normalized_nospace
+    )
+
     text_quality = max(
         field_exact,
         field_prefix,
         token_coverage,
         0.7 * similarity_score,
+        0.9 if contains_query_nospace else 0.0,
     )
-    contains_query = bool(query_normalized and query_normalized in normalized)
     meaningful_match = (
         field_exact == 1.0
         or field_prefix > 0.0
         or contains_query
+        or contains_query_nospace
         or (token_scores and min(token_scores) >= 0.6)
         or (similarity_score >= 0.75 and token_coverage >= 0.5)
     )
@@ -397,34 +578,66 @@ def _collect_candidates(
     query: str,
     *,
     limit_per_source: int,
+    external_targets: tuple[Any, ...] = (),
+    external_text_by_revision: dict[tuple[str, str], ExtractedExternalText] | None = None,
 ) -> list[_ElementAggregate]:
     aggregates: dict[str, _ElementAggregate] = {}
+    external_text_by_revision = external_text_by_revision or {}
+
+    def apply_row(
+        row: sqlite3.Row,
+        *,
+        source_weight: float,
+        variant_boost: float,
+        page_spans: tuple[PageSpan, ...] = (),
+    ) -> None:
+        aggregate = aggregates.get(row["element_id"])
+        if aggregate is None:
+            aggregate = _ElementAggregate(
+                element_id=row["element_id"],
+                raw_element_type=row["element_type"],
+                label=row["label"] or "",
+                description=row["description"],
+            )
+            aggregates[aggregate.element_id] = aggregate
+
+        fts_rank = float(row["fts_rank"]) if row["fts_rank"] is not None else None
+        for index, raw_text in enumerate((row["candidate_text_1"], row["candidate_text_2"], row["candidate_text_3"])):
+            score, _similarity = _evaluate_match_text(
+                query,
+                raw_text,
+                fts_rank=fts_rank,
+                source_weight=source_weight,
+                variant_boost=variant_boost,
+            )
+            if score <= 0.0 or not raw_text:
+                continue
+            match_page_spans = page_spans if index == 0 else ()
+            for match in _build_match_contexts(query, str(raw_text), page_spans=match_page_spans):
+                aggregate.add_match(match.text, score, match.pages)
 
     for _variant_name, expression, variant_boost in _build_query_variants(query):
         for source in _SOURCE_QUERIES:
             rows = conn.execute(source.sql, (expression, limit_per_source)).fetchall()
             for row in rows:
-                aggregate = aggregates.get(row["element_id"])
-                if aggregate is None:
-                    aggregate = _ElementAggregate(
-                        element_id=row["element_id"],
-                        raw_element_type=row["element_type"],
-                        label=row["label"] or "",
-                        description=row["description"],
-                    )
-                    aggregates[aggregate.element_id] = aggregate
+                apply_row(row, source_weight=source.source_weight, variant_boost=variant_boost)
 
-                fts_rank = float(row["fts_rank"]) if row["fts_rank"] is not None else None
-                for raw_text in (row["candidate_text_1"], row["candidate_text_2"], row["candidate_text_3"]):
-                    score, _similarity = _evaluate_match_text(
-                        query,
-                        raw_text,
-                        fts_rank=fts_rank,
-                        source_weight=source.source_weight,
-                        variant_boost=variant_boost,
-                    )
-                    if score > 0.0 and raw_text:
-                        aggregate.add_match(raw_text, score)
+        if external_targets:
+            external_rows = query_external_file_search_rows(
+                conn,
+                expression=expression,
+                limit=limit_per_source,
+                targets=external_targets,
+            )
+            for row in external_rows:
+                key = (str(row["external_file_id"]), str(row["external_revision_id"]))
+                extracted = external_text_by_revision.get(key)
+                apply_row(
+                    row,
+                    source_weight=0.92,
+                    variant_boost=variant_boost,
+                    page_spans=extracted.pages if extracted else (),
+                )
 
     results = list(aggregates.values())
     results.sort(key=lambda item: (-item.best_score, item.raw_element_type.casefold(), item.element_id))
@@ -461,20 +674,62 @@ def _resolve_file_ids(conn: sqlite3.Connection, element_ids: list[str]) -> dict[
 
 
 def _collect_candidates_from_parsed_duc(
+    duc_source: str | Path,
     duc_data: dict[str, Any],
     query: str,
     *,
     limit: int,
+    ocr_language: str,
+    search_all_external_files: bool,
+    external_file_targets: list[ExternalFileSearchTarget | dict[str, Any] | tuple[Any, ...] | str] | None,
+    external_file_element_ids: list[str] | None,
 ) -> list[_ElementAggregate]:
     elements = duc_data.get("elements", []) or []
     aggregates: dict[str, _ElementAggregate] = {}
     field_weights = {
-        "label": 1.0,
+        "label": 0.8,
         "description": 0.9,
-        "text": 0.94,
-        "original_text": 0.88,
-        "code": 0.72,
+        "text": 1,
     }
+
+    resolved_external_targets = resolve_external_file_search_targets_from_parsed_duc(
+        duc_source,
+        duc_data,
+        search_all_external_files=search_all_external_files,
+        external_file_targets=external_file_targets,
+        external_file_element_ids=external_file_element_ids,
+    )
+    targets_by_file_id: dict[str, list[Any]] = {}
+    for target in resolved_external_targets:
+        targets_by_file_id.setdefault(target.file_id, []).append(target)
+    external_text_cache: dict[tuple[str, str], ExtractedExternalText] = {}
+
+    def _external_texts_for(element: dict[str, Any]) -> list[tuple[ExtractedExternalText, float]]:
+        element_type = element.get("type")
+        element_id = element.get("id")
+        if element_type not in {"pdf", "image"} or not element_id:
+            return []
+        file_id = element_file_id(element)
+        if not file_id:
+            return []
+
+        matches: list[tuple[ExtractedExternalText, float]] = []
+        for target in targets_by_file_id.get(file_id, []):
+            if target.element_id is not None and target.element_id != element_id:
+                continue
+            cache_key = (target.file_id, target.revision_id)
+            if cache_key not in external_text_cache:
+                external_text_cache[cache_key] = load_external_file_text(
+                    duc_source,
+                    target,
+                    fallback_element_type=str(element_type),
+                    ocr_language=ocr_language,
+                )
+            extracted = external_text_cache[cache_key]
+            if not extracted.text:
+                continue
+            matches.append((extracted, 0.92 if element_type == "pdf" else 0.9))
+        return matches
 
     for _variant_name, _expression, variant_boost in _build_query_variants(query):
         for element in elements:
@@ -506,18 +761,30 @@ def _collect_candidates_from_parsed_duc(
                     variant_boost=variant_boost,
                 )
                 if score > 0.0 and raw_text:
-                    aggregate.add_match(raw_text, score)
+                    for match in _build_match_contexts(query, str(raw_text)):
+                        aggregate.add_match(match.text, score, match.pages)
+
+            for extracted_text, source_weight in _external_texts_for(element):
+                score, _similarity = _evaluate_match_text(
+                    query,
+                    extracted_text.text,
+                    fts_rank=None,
+                    source_weight=source_weight,
+                    variant_boost=variant_boost,
+                )
+                if score > 0.0:
+                    for match in _build_match_contexts(
+                        query,
+                        extracted_text.text,
+                        page_spans=extracted_text.pages,
+                    ):
+                        aggregate.add_match(match.text, score, match.pages)
 
     results = [aggregate for aggregate in aggregates.values() if aggregate.best_score > 0.0]
     element_lookup = {element.get("id"): element for element in elements}
     for aggregate in results:
         element = element_lookup.get(aggregate.element_id, {})
-        file_id = element.get("file_id")
-        if file_id is None:
-            file_ids = element.get("file_ids") or []
-            if file_ids:
-                file_id = file_ids[0]
-        aggregate.file_id = file_id
+        aggregate.file_id = element_file_id(element)
 
     results.sort(key=lambda item: (-item.best_score, item.raw_element_type.casefold(), item.element_id))
     return results[:limit]
@@ -529,9 +796,22 @@ def _search_non_sqlite_duc(
     *,
     output_path: Path,
     limit: int,
+    ocr_language: str,
+    search_all_external_files: bool,
+    external_file_targets: list[ExternalFileSearchTarget | dict[str, Any] | tuple[Any, ...] | str] | None,
+    external_file_element_ids: list[str] | None,
 ) -> DucSearchResponse:
     duc_data = parse_duc_lazy(str(duc_file))
-    candidates = _collect_candidates_from_parsed_duc(duc_data, query, limit=limit)
+    candidates = _collect_candidates_from_parsed_duc(
+        duc_file,
+        duc_data,
+        query,
+        limit=limit,
+        ocr_language=ocr_language,
+        search_all_external_files=search_all_external_files,
+        external_file_targets=external_file_targets,
+        external_file_element_ids=external_file_element_ids,
+    )
     all_element_ids, results = _build_result_payloads(candidates)
     response = DucSearchResponse(
         query=query,
@@ -568,6 +848,7 @@ def _build_result_payloads(candidates: list[_ElementAggregate]) -> tuple[list[st
                 element_type=candidate.raw_element_type,
                 matches=candidate.ordered_matches,
                 score=candidate.best_score,
+                match_pages=candidate.ordered_match_pages if candidate.is_pdf_or_image else None,
             )
         )
 
@@ -581,24 +862,29 @@ def _build_result_payloads(candidates: list[_ElementAggregate]) -> tuple[list[st
                     element_type=candidate.raw_element_type,
                     matches=candidate.ordered_matches,
                     score=candidate.best_score,
+                    match_pages=candidate.ordered_match_pages if candidate.is_pdf_or_image else None,
                 )
             )
             continue
 
-        merged_matches: dict[str, tuple[str, float]] = {}
+        merged_matches: dict[str, tuple[str, float, tuple[int, ...] | None]] = {}
         for candidate in group:
-            for normalized, (text, score) in candidate.match_scores.items():
+            for normalized, (text, score, pages) in candidate.match_scores.items():
                 current = merged_matches.get(normalized)
                 if current is None or score > current[1]:
-                    merged_matches[normalized] = (text, score)
+                    merged_matches[normalized] = (text, score, _merge_pages(current[2] if current else None, pages))
+                elif pages:
+                    merged_matches[normalized] = (current[0], current[1], _merge_pages(current[2], pages))
 
-        ordered_matches = [
-            text
-            for text, _score in sorted(
-                merged_matches.values(),
-                key=lambda item: (-item[1], _normalize_text(item[0]), item[0]),
-            )
-        ]
+        ordered = sorted(
+            merged_matches.values(),
+            key=lambda item: (-item[1], _normalize_text(item[0]), item[0]),
+        )
+        ordered_matches = [text for text, _score, _pages in ordered]
+        match_pages_list: list[str] | None = None
+        if any(pages for _text, _score, pages in ordered):
+            match_pages_list = [str(sorted(pages)[0]) if pages else "" for _text, _score, pages in ordered]
+
         results.append(
             DucFileSearchResult(
                 file_id=file_id,
@@ -607,6 +893,7 @@ def _build_result_payloads(candidates: list[_ElementAggregate]) -> tuple[list[st
                 score=max(candidate.best_score for candidate in group),
                 hits=len(group),
                 element_ids=[candidate.element_id for candidate in group],
+                match_pages=match_pages_list,
             )
         )
 
@@ -634,16 +921,12 @@ def search_duc_elements(
     *,
     output_path: str | Path | None = None,
     limit: int = 50,
+    ocr_language: str = "eng",
+    search_all_external_files: bool = False,
+    external_file_targets: list[ExternalFileSearchTarget | dict[str, Any] | tuple[Any, ...] | str] | None = None,
+    external_file_element_ids: list[str] | None = None,
 ) -> DucSearchResponse:
-    """Search DUC elements and export ordered results to JSON.
-
-    Args:
-        duc_path: Path to the ``.duc`` SQLite database.
-        query: Plain-text search query.
-        output_path: Optional JSON output path. When omitted, a file is created
-            next to the ``.duc`` file.
-        limit: Maximum number of ranked element results to keep.
-    """
+    """Search DUC elements and export ordered results to JSON."""
 
     duc_file = Path(duc_path)
     if not duc_file.exists():
@@ -652,10 +935,32 @@ def search_duc_elements(
         raise ValueError("limit must be greater than zero")
 
     destination = Path(output_path) if output_path else _default_output_path(duc_file, query)
+    use_external_search = bool(
+        search_all_external_files
+        or external_file_targets
+        or external_file_element_ids
+    )
 
     try:
         with DucSQL(duc_file) as db:
-            candidates = _collect_candidates(db.conn, query, limit_per_source=max(limit * 3, 25))[:limit]
+            resolved_external_targets = resolve_external_file_search_targets(
+                db.conn,
+                search_all_external_files=search_all_external_files,
+                external_file_targets=external_file_targets,
+                external_file_element_ids=external_file_element_ids,
+            ) if use_external_search else ()
+            external_text_by_revision = ensure_external_file_search_index(
+                db.conn,
+                targets=resolved_external_targets,
+                ocr_language=ocr_language,
+            ) if resolved_external_targets else {}
+            candidates = _collect_candidates(
+                db.conn,
+                query,
+                limit_per_source=max(limit * 3, 25),
+                external_targets=resolved_external_targets,
+                external_text_by_revision=external_text_by_revision,
+            )[:limit]
             file_id_map = _resolve_file_ids(db.conn, [candidate.element_id for candidate in candidates])
             for candidate in candidates:
                 candidate.file_id = file_id_map.get(candidate.element_id)
@@ -680,4 +985,8 @@ def search_duc_elements(
             query,
             output_path=destination,
             limit=limit,
+            ocr_language=ocr_language,
+            search_all_external_files=search_all_external_files,
+            external_file_targets=external_file_targets,
+            external_file_element_ids=external_file_element_ids,
         )

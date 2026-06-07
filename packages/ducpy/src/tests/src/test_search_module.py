@@ -7,13 +7,12 @@ import pytest
 from collections import Counter
 from pathlib import Path
 
-from _dev.dev_utils import get_testing_assets_dir
 from ducpy.parse import parse_duc_lazy
 from ducpy.search import search_duc_elements
 
 
 def _asset_input_path(filename: str) -> Path:
-    return Path(get_testing_assets_dir()) / "duc-files" / filename
+    return Path(__file__).resolve().parents[5] / "assets" / "testing" / "duc-files" / filename
 
 
 def _run_asset_search(
@@ -27,7 +26,9 @@ def _run_asset_search(
     asset_path = _asset_input_path(asset_name)
     assert asset_path.exists(), f"Missing asset file: {asset_path}"
 
-    json_path = Path(test_output_dir+"/search_results") /  f"{test_name}.json"
+    output_dir = Path(test_output_dir) / "search_results"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / f"{test_name}.json"
     if json_path.exists():
         json_path.unlink()
 
