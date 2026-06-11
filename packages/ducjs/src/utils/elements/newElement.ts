@@ -181,7 +181,7 @@ export const newEmbeddableElement = (
 
 export const newFrameElement = (
   currentScope: Scope,
-  opts: ElementConstructorOpts,
+  opts: Partial<DucFrameElement> & ElementConstructorOpts,
 ): NonDeleted<DucFrameElement> => ({
   ...getDefaultStackProperties(),
   clip: false,
@@ -192,7 +192,7 @@ export const newFrameElement = (
 
 export const newPlotElement = (
   currentScope: Scope,
-  opts: ElementConstructorOpts,
+  opts: Partial<DucPlotElement> & ElementConstructorOpts,
 ): NonDeleted<DucPlotElement> => ({
   ...getDefaultStackProperties(),
   clip: false,
@@ -431,7 +431,7 @@ export const newDocElement = (
   },
 });
 
-export const newPdfElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucPdfElement> => ({
+export const newPdfElement = (currentScope: Scope, opts: Partial<DucPdfElement> & ElementConstructorOpts): NonDeleted<DucPdfElement> => ({
   fileId: null,
   gridConfig: { columns: 1, gapX: 0, gapY: 0, firstPageAlone: false, scale: 1 },
   ..._newElementBase<DucPdfElement>("pdf", currentScope, {
@@ -441,7 +441,7 @@ export const newPdfElement = (currentScope: Scope, opts: ElementConstructorOpts)
   type: "pdf",
 });
 
-export const newModelElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucModelElement> => {
+export const newModelElement = (currentScope: Scope, opts: Partial<DucModelElement> & ElementConstructorOpts): NonDeleted<DucModelElement> => {
   const modelType = (opts as Partial<DucModelElement>).modelType?.toLowerCase();
   const backgroundFallback = modelType === "dxf" || modelType === "dwg"
     ? getDxfDefaultBackground()
