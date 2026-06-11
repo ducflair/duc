@@ -29,7 +29,7 @@ import {
   ElementUpdate,
   NonDeleted
 } from "../../types/elements";
-import { Radian, ScaleFactor } from "../../types/geometryTypes";
+import { Percentage, Radian, ScaleFactor } from "../../types/geometryTypes";
 import { Merge, Mutable } from "../../types/utility-types";
 import {
   DEFAULT_ELEMENT_PROPS,
@@ -181,7 +181,7 @@ export const newEmbeddableElement = (
 
 export const newFrameElement = (
   currentScope: Scope,
-  opts: ElementConstructorOpts,
+  opts: Partial<DucFrameElement> & ElementConstructorOpts,
 ): NonDeleted<DucFrameElement> => ({
   ...getDefaultStackProperties(),
   clip: false,
@@ -192,7 +192,7 @@ export const newFrameElement = (
 
 export const newPlotElement = (
   currentScope: Scope,
-  opts: ElementConstructorOpts,
+  opts: Partial<DucPlotElement> & ElementConstructorOpts,
 ): NonDeleted<DucPlotElement> => ({
   ...getDefaultStackProperties(),
   clip: false,
@@ -365,6 +365,16 @@ const withDisabledContentVisibility = <T extends ElementBackground | ElementStro
   }));
 };
 
+const getDxfDefaultBackground = (): ElementBackground => ({
+  ...DEFAULT_ELEMENT_PROPS.background,
+  content: {
+    ...DEFAULT_ELEMENT_PROPS.background.content,
+    src: "#ffffff",
+    visible: false,
+    opacity: 1 as Percentage,
+  },
+});
+
 const getMediaElementStyle = (opts: ElementConstructorOpts) => ({
   stroke: withDisabledContentVisibility(opts.stroke as ElementStroke[] | undefined, DEFAULT_ELEMENT_PROPS.stroke),
   background: withDisabledContentVisibility(opts.background as ElementBackground[] | undefined, DEFAULT_ELEMENT_PROPS.background),
@@ -421,7 +431,7 @@ export const newDocElement = (
   },
 });
 
-export const newPdfElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucPdfElement> => ({
+export const newPdfElement = (currentScope: Scope, opts: Partial<DucPdfElement> & ElementConstructorOpts): NonDeleted<DucPdfElement> => ({
   fileId: null,
   gridConfig: { columns: 1, gapX: 0, gapY: 0, firstPageAlone: false, scale: 1 },
   ..._newElementBase<DucPdfElement>("pdf", currentScope, {
@@ -431,10 +441,14 @@ export const newPdfElement = (currentScope: Scope, opts: ElementConstructorOpts)
   type: "pdf",
 });
 
-export const newModelElement = (currentScope: Scope, opts: ElementConstructorOpts): NonDeleted<DucModelElement> => {
+export const newModelElement = (currentScope: Scope, opts: Partial<DucModelElement> & ElementConstructorOpts): NonDeleted<DucModelElement> => {
+  const modelType = (opts as Partial<DucModelElement>).modelType?.toLowerCase();
+  const backgroundFallback = modelType === "dxf" || modelType === "dwg"
+    ? getDxfDefaultBackground()
+    : DEFAULT_ELEMENT_PROPS.background;
   const modelStyle = {
     stroke: withDisabledContentVisibility(opts.stroke as ElementStroke[] | undefined, DEFAULT_ELEMENT_PROPS.stroke),
-    background: withDisabledContentVisibility(opts.background as ElementBackground[] | undefined, DEFAULT_ELEMENT_PROPS.background),
+    background: withDisabledContentVisibility(opts.background as ElementBackground[] | undefined, backgroundFallback),
   };
 
   return {

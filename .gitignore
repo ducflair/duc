@@ -28,6 +28,9 @@ yarn-error.log*
 # sst
 .sst
 
+# Windows Zone.Identifier metadata from downloaded files
+*.Zone.Identifier
+
 # opennext
 .open-next
 
