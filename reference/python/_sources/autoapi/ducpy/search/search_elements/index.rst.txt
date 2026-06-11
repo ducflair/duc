@@ -64,6 +64,11 @@ Module Contents
 
    One result row for a single element.
 
+   ``match_pages[i]`` is the starting page number (as a string) for the text
+   in ``matches[i]``.  The two lists always have the same length, and
+   ``match_pages`` is ``None`` for results that are not backed by a
+   PDF/image external file.
+
 
    .. py:attribute:: element_id
       :type:  str
@@ -81,12 +86,23 @@ Module Contents
       :type:  float
 
 
+   .. py:attribute:: match_pages
+      :type:  list[str] | None
+      :value: None
+
+
+
    .. py:method:: to_dict() -> dict[str, Any]
 
 
 .. py:class:: DucFileSearchResult
 
    One grouped result row for repeated file-backed elements.
+
+   ``match_pages[i]`` is the starting page number (as a string) for the text
+   in ``matches[i]``.  The two lists always have the same length, and
+   ``match_pages`` is ``None`` for results that are not backed by a
+   PDF/image external file.
 
 
    .. py:attribute:: file_id
@@ -111,6 +127,12 @@ Module Contents
 
    .. py:attribute:: element_ids
       :type:  list[str]
+
+
+   .. py:attribute:: match_pages
+      :type:  list[str] | None
+      :value: None
+
 
 
    .. py:method:: to_dict() -> dict[str, Any]
@@ -151,15 +173,8 @@ Module Contents
 
 
 
-.. py:function:: search_duc_elements(duc_path: str | pathlib.Path, query: str, *, output_path: str | pathlib.Path | None = None, limit: int = 50) -> DucSearchResponse
+.. py:function:: search_duc_elements(duc_path: str | pathlib.Path, query: str, *, output_path: str | pathlib.Path | None = None, limit: int = 50, ocr_language: str = 'eng', search_all_external_files: bool = False, external_file_targets: list[ducpy.search.search_external_files.ExternalFileSearchTarget | dict[str, Any] | tuple[Any, Ellipsis] | str] | None = None, external_file_element_ids: list[str] | None = None) -> DucSearchResponse
 
    Search DUC elements and export ordered results to JSON.
-
-   Args:
-       duc_path: Path to the ``.duc`` SQLite database.
-       query: Plain-text search query.
-       output_path: Optional JSON output path. When omitted, a file is created
-           next to the ``.duc`` file.
-       limit: Maximum number of ranked element results to keep.
 
 

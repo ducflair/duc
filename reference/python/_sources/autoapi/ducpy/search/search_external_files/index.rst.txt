@@ -1,0 +1,162 @@
+ducpy.search.search_external_files
+==================================
+
+.. py:module:: ducpy.search.search_external_files
+
+.. autoapi-nested-parse::
+
+   Scoped external-file search helpers.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   ducpy.search.search_external_files.logger
+   ducpy.search.search_external_files._SUPPORTED_EXTERNAL_ELEMENT_TYPES
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.search.search_external_files.ExternalFileSearchTarget
+   ducpy.search.search_external_files.PageSpan
+   ducpy.search.search_external_files.ExtractedExternalText
+   ducpy.search.search_external_files.ResolvedExternalFileSearchTarget
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.search.search_external_files._compress_whitespace
+   ducpy.search.search_external_files.element_file_id
+   ducpy.search.search_external_files._normalize_target
+   ducpy.search.search_external_files._dedupe_targets
+   ducpy.search.search_external_files._has_table
+   ducpy.search.search_external_files._fetch_active_revision_ids
+   ducpy.search.search_external_files._fetch_live_external_file_ids
+   ducpy.search.search_external_files._fetch_element_external_refs
+   ducpy.search.search_external_files.resolve_external_file_search_targets
+   ducpy.search.search_external_files._external_active_revision_id
+   ducpy.search.search_external_files._external_revision_blob
+   ducpy.search.search_external_files._external_revision_meta
+   ducpy.search.search_external_files._external_revision_mime_type
+   ducpy.search.search_external_files.extract_image_text_for_search
+   ducpy.search.search_external_files.load_external_file_text
+   ducpy.search.search_external_files.resolve_external_file_search_targets_from_parsed_duc
+   ducpy.search.search_external_files._fetch_external_revision_row
+   ducpy.search.search_external_files.ensure_external_file_search_index
+   ducpy.search.search_external_files.query_external_file_search_rows
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:data:: _SUPPORTED_EXTERNAL_ELEMENT_TYPES
+
+.. py:class:: ExternalFileSearchTarget
+
+   .. py:attribute:: file_id
+      :type:  str
+
+
+   .. py:attribute:: revision_id
+      :type:  str | None
+      :value: None
+
+
+
+.. py:class:: PageSpan
+
+   .. py:attribute:: page
+      :type:  int
+
+
+   .. py:attribute:: start
+      :type:  int
+
+
+   .. py:attribute:: end
+      :type:  int
+
+
+.. py:class:: ExtractedExternalText
+
+   .. py:attribute:: text
+      :type:  str
+
+
+   .. py:attribute:: pages
+      :type:  tuple[PageSpan, Ellipsis]
+      :value: ()
+
+
+
+   .. py:attribute:: used_ocr
+      :type:  bool
+      :value: False
+
+
+
+.. py:class:: ResolvedExternalFileSearchTarget
+
+   .. py:attribute:: file_id
+      :type:  str
+
+
+   .. py:attribute:: revision_id
+      :type:  str
+
+
+   .. py:attribute:: element_id
+      :type:  str | None
+      :value: None
+
+
+
+.. py:function:: _compress_whitespace(value: str | None) -> str
+
+.. py:function:: element_file_id(element: dict[str, Any]) -> str | None
+
+.. py:function:: _normalize_target(value: ExternalFileSearchTarget | dict[str, Any] | tuple[Any, Ellipsis] | str) -> ExternalFileSearchTarget
+
+.. py:function:: _dedupe_targets(targets: Iterable[ResolvedExternalFileSearchTarget]) -> tuple[ResolvedExternalFileSearchTarget, Ellipsis]
+
+.. py:function:: _has_table(conn: sqlite3.Connection, table_name: str) -> bool
+
+.. py:function:: _fetch_active_revision_ids(conn: sqlite3.Connection, file_ids: Iterable[str]) -> dict[str, str]
+
+.. py:function:: _fetch_live_external_file_ids(conn: sqlite3.Connection) -> set[str]
+
+.. py:function:: _fetch_element_external_refs(conn: sqlite3.Connection, element_ids: Iterable[str]) -> list[tuple[str, str]]
+
+.. py:function:: resolve_external_file_search_targets(conn: sqlite3.Connection, *, search_all_external_files: bool = False, external_file_targets: Iterable[ExternalFileSearchTarget | dict[str, Any] | tuple[Any, Ellipsis] | str] | None = None, external_file_element_ids: Iterable[str] | None = None) -> tuple[ResolvedExternalFileSearchTarget, Ellipsis]
+
+.. py:function:: _external_active_revision_id(external: dict[str, Any]) -> str | None
+
+.. py:function:: _external_revision_blob(external: dict[str, Any], revision_id: str) -> bytes | None
+
+.. py:function:: _external_revision_meta(external: dict[str, Any], revision_id: str) -> dict[str, Any] | None
+
+.. py:function:: _external_revision_mime_type(external: dict[str, Any], revision_id: str, *, fallback_element_type: str | None) -> str
+
+.. py:function:: extract_image_text_for_search(image_bytes: bytes, *, ocr_language: str) -> ExtractedExternalText
+
+.. py:function:: load_external_file_text(duc_source: str | pathlib.Path, target: ResolvedExternalFileSearchTarget, *, fallback_element_type: str | None, ocr_language: str) -> ExtractedExternalText
+
+.. py:function:: resolve_external_file_search_targets_from_parsed_duc(duc_source: str | pathlib.Path, duc_data: dict[str, Any], *, search_all_external_files: bool = False, external_file_targets: Iterable[ExternalFileSearchTarget | dict[str, Any] | tuple[Any, Ellipsis] | str] | None = None, external_file_element_ids: Iterable[str] | None = None) -> tuple[ResolvedExternalFileSearchTarget, Ellipsis]
+
+.. py:function:: _fetch_external_revision_row(conn: sqlite3.Connection, file_id: str, revision_id: str) -> sqlite3.Row | None
+
+.. py:function:: ensure_external_file_search_index(conn: sqlite3.Connection, *, targets: Iterable[ResolvedExternalFileSearchTarget], ocr_language: str = 'eng') -> dict[tuple[str, str], ExtractedExternalText]
+
+.. py:function:: query_external_file_search_rows(conn: sqlite3.Connection, *, expression: str, limit: int, targets: Iterable[ResolvedExternalFileSearchTarget]) -> list[sqlite3.Row]
+

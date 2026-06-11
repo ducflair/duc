@@ -1,0 +1,37 @@
+ducpy.search.search_pdf
+=======================
+
+.. py:module:: ducpy.search.search_pdf
+
+.. autoapi-nested-parse::
+
+   PDF text extraction for search.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   ducpy.search.search_pdf.logger
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.search.search_pdf._compress_whitespace
+   ducpy.search.search_pdf.extract_pdf_text_for_search
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:function:: _compress_whitespace(value: str | None) -> str
+
+.. py:function:: extract_pdf_text_for_search(pdf_bytes: bytes, *, ocr_language: str) -> tuple[str, tuple[tuple[int, int, int], Ellipsis], bool]
+

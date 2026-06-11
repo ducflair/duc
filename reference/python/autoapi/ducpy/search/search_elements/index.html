@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../../../genindex.html"><link rel="search" title="Search" href="../../../../search.html"><link rel="next" title="ducpy.serialize" href="../../serialize/index.html"><link rel="prev" title="ducpy.search" href="../index.html">
+<link rel="index" title="Index" href="../../../../genindex.html"><link rel="search" title="Search" href="../../../../search.html"><link rel="next" title="ducpy.search.search_external_files" href="../search_external_files/index.html"><link rel="prev" title="ducpy.search.image_ocr" href="../image_ocr/index.html">
         <link rel="canonical" href="https://ducflair.github.io/duc/reference/python/autoapi/ducpy/search/search_elements/index.html">
         <link rel="prefetch" href="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" as="image">
 
@@ -228,7 +228,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../../enums/index.html">ducpy.enums</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../parse/index.html">ducpy.parse</a></li>
 <li class="toctree-l3 current has-children"><a class="reference internal" href="../index.html">ducpy.search</a><input aria-label="Toggle navigation of ducpy.search" checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../image_ocr/index.html">ducpy.search.image_ocr</a></li>
 <li class="toctree-l4 current current-page"><a class="current reference internal" href="#">ducpy.search.search_elements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../search_external_files/index.html">ducpy.search.search_external_files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../search_pdf/index.html">ducpy.search.search_pdf</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../serialize/index.html">ducpy.serialize</a></li>
@@ -365,6 +368,10 @@
 <dt class="sig sig-object py" id="ducpy.search.search_elements.DucElementSearchResult">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.search.search_elements.</span></span><span class="sig-name descname"><span class="pre">DucElementSearchResult</span></span><a class="headerlink" href="#ducpy.search.search_elements.DucElementSearchResult" title="Link to this definition">¶</a></dt>
 <dd><p>One result row for a single element.</p>
+<p><code class="docutils literal notranslate"><span class="pre">match_pages[i]</span></code> is the starting page number (as a string) for the text
+in <code class="docutils literal notranslate"><span class="pre">matches[i]</span></code>.  The two lists always have the same length, and
+<code class="docutils literal notranslate"><span class="pre">match_pages</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> for results that are not backed by a
+PDF/image external file.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ducpy.search.search_elements.DucElementSearchResult.element_id">
 <span class="sig-name descname"><span class="pre">element_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.search.search_elements.DucElementSearchResult.element_id" title="Link to this definition">¶</a></dt>
@@ -385,6 +392,11 @@
 <span class="sig-name descname"><span class="pre">score</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#ducpy.search.search_elements.DucElementSearchResult.score" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.search.search_elements.DucElementSearchResult.match_pages">
+<span class="sig-name descname"><span class="pre">match_pages</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.search.search_elements.DucElementSearchResult.match_pages" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="ducpy.search.search_elements.DucElementSearchResult.to_dict">
 <span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ducpy.search.search_elements.DucElementSearchResult.to_dict" title="Link to this definition">¶</a></dt>
@@ -396,6 +408,10 @@
 <dt class="sig sig-object py" id="ducpy.search.search_elements.DucFileSearchResult">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.search.search_elements.</span></span><span class="sig-name descname"><span class="pre">DucFileSearchResult</span></span><a class="headerlink" href="#ducpy.search.search_elements.DucFileSearchResult" title="Link to this definition">¶</a></dt>
 <dd><p>One grouped result row for repeated file-backed elements.</p>
+<p><code class="docutils literal notranslate"><span class="pre">match_pages[i]</span></code> is the starting page number (as a string) for the text
+in <code class="docutils literal notranslate"><span class="pre">matches[i]</span></code>.  The two lists always have the same length, and
+<code class="docutils literal notranslate"><span class="pre">match_pages</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> for results that are not backed by a
+PDF/image external file.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ducpy.search.search_elements.DucFileSearchResult.file_id">
 <span class="sig-name descname"><span class="pre">file_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.search.search_elements.DucFileSearchResult.file_id" title="Link to this definition">¶</a></dt>
@@ -424,6 +440,11 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ducpy.search.search_elements.DucFileSearchResult.element_ids">
 <span class="sig-name descname"><span class="pre">element_ids</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#ducpy.search.search_elements.DucFileSearchResult.element_ids" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.search.search_elements.DucFileSearchResult.match_pages">
+<span class="sig-name descname"><span class="pre">match_pages</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.search.search_elements.DucFileSearchResult.match_pages" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -477,18 +498,8 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ducpy.search.search_elements.search_duc_elements">
-<span class="sig-prename descclassname"><span class="pre">ducpy.search.search_elements.</span></span><span class="sig-name descname"><span class="pre">search_duc_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duc_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ducpy.search.search_elements.DucSearchResponse" title="ducpy.search.search_elements.DucSearchResponse"><span class="pre">DucSearchResponse</span></a></span></span><a class="headerlink" href="#ducpy.search.search_elements.search_duc_elements" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">ducpy.search.search_elements.</span></span><span class="sig-name descname"><span class="pre">search_duc_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duc_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ocr_language</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'eng'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_all_external_files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external_file_targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../search_external_files/index.html#ducpy.search.search_external_files.ExternalFileSearchTarget" title="ducpy.search.search_external_files.ExternalFileSearchTarget"><span class="pre">ducpy.search.search_external_files.ExternalFileSearchTarget</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external_file_element_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ducpy.search.search_elements.DucSearchResponse" title="ducpy.search.search_elements.DucSearchResponse"><span class="pre">DucSearchResponse</span></a></span></span><a class="headerlink" href="#ducpy.search.search_elements.search_duc_elements" title="Link to this definition">¶</a></dt>
 <dd><p>Search DUC elements and export ordered results to JSON.</p>
-<dl>
-<dt>Args:</dt><dd><p>duc_path: Path to the <code class="docutils literal notranslate"><span class="pre">.duc</span></code> SQLite database.
-query: Plain-text search query.
-output_path: Optional JSON output path. When omitted, a file is created</p>
-<blockquote>
-<div><p>next to the <code class="docutils literal notranslate"><span class="pre">.duc</span></code> file.</p>
-</div></blockquote>
-<p>limit: Maximum number of ranked element results to keep.</p>
-</dd>
-</dl>
 </dd></dl>
 
 </section>
@@ -499,23 +510,23 @@ output_path: Optional JSON output path. When omitted, a file is created</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../../serialize/index.html">
+          <a class="next-page" href="../search_external_files/index.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">ducpy.serialize</div>
+                <div class="title">ducpy.search.search_external_files</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="../index.html">
+          <a class="prev-page" href="../image_ocr/index.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">ducpy.search</div>
+                <div class="title">ducpy.search.image_ocr</div>
                 
               </div>
             </a>
@@ -560,6 +571,7 @@ output_path: Optional JSON output path. When omitted, a file is created</p>
 <li><a class="reference internal" href="#ducpy.search.search_elements.DucElementSearchResult.element_type"><code class="docutils literal notranslate"><span class="pre">DucElementSearchResult.element_type</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.search.search_elements.DucElementSearchResult.matches"><code class="docutils literal notranslate"><span class="pre">DucElementSearchResult.matches</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.search.search_elements.DucElementSearchResult.score"><code class="docutils literal notranslate"><span class="pre">DucElementSearchResult.score</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.search.search_elements.DucElementSearchResult.match_pages"><code class="docutils literal notranslate"><span class="pre">DucElementSearchResult.match_pages</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.search.search_elements.DucElementSearchResult.to_dict"><code class="docutils literal notranslate"><span class="pre">DucElementSearchResult.to_dict()</span></code></a></li>
 </ul>
 </li>
@@ -570,6 +582,7 @@ output_path: Optional JSON output path. When omitted, a file is created</p>
 <li><a class="reference internal" href="#ducpy.search.search_elements.DucFileSearchResult.score"><code class="docutils literal notranslate"><span class="pre">DucFileSearchResult.score</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.search.search_elements.DucFileSearchResult.hits"><code class="docutils literal notranslate"><span class="pre">DucFileSearchResult.hits</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.search.search_elements.DucFileSearchResult.element_ids"><code class="docutils literal notranslate"><span class="pre">DucFileSearchResult.element_ids</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.search.search_elements.DucFileSearchResult.match_pages"><code class="docutils literal notranslate"><span class="pre">DucFileSearchResult.match_pages</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.search.search_elements.DucFileSearchResult.to_dict"><code class="docutils literal notranslate"><span class="pre">DucFileSearchResult.to_dict()</span></code></a></li>
 </ul>
 </li>
