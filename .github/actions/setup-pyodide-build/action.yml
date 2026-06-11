@@ -3,17 +3,17 @@ description: 'Install pyodide-build tooling, cross-build environment, and valida
 
 inputs:
   pyodide-version:
-    description: 'Pyodide version (e.g. 0.29.3). Used for both pyodide-build and xbuildenv.'
+    description: 'Pyodide runtime version for the xbuildenv (e.g. 0.29.4).'
+    required: true
+  pyodide-build-version:
+    description: 'pyodide-build package version (e.g. 0.35.0). Separate from the runtime version.'
     required: true
   python-version:
     description: 'Python version for setup-python step'
     required: false
-    default: '3.13'
+    default: '3.12'
 
 outputs:
-  emscripten-version:
-    description: 'Emscripten SDK version required by this Pyodide build'
-    value: ${{ steps.validate.outputs.emscripten_version }}
   pyodide-root:
     description: 'Path to the Pyodide cross-build root directory'
     value: ${{ steps.validate.outputs.pyodide_root }}
@@ -34,39 +34,26 @@ runs:
       shell: bash
       run: |
         PYODIDE_VERSION="${{ inputs.pyodide-version }}"
+        PYODIDE_BUILD_VERSION="${{ inputs.pyodide-build-version }}"
 
         python -m pip install --upgrade pip
-        pip install "pyodide-build==${PYODIDE_VERSION}" "wheel<0.44"
+        pip install "pyodide-build==${PYODIDE_BUILD_VERSION}"
 
-        # Verify pyodide CLI works (catches import errors like wheel.cli removal)
+        # Verify pyodide CLI works
         pyodide --help > /dev/null
 
         # Install the matching cross-build environment explicitly.
-        # Without this, `pyodide build` would auto-install the latest xbuildenv,
-        # which may have an incompatible lockfile format (e.g. 0.29.4 lockfile
-        # missing `info.version` causes pydantic ValidationError in 0.29.3).
-        #
-        # `pyodide xbuildenv install` fetches a metadata file from
-        # https://raw.githubusercontent.com/pyodide/pyodide/main/pyodide-cross-build-environments.json
-        # which was removed when the pyodide repo was restructured. To avoid that
-        # broken fetch, we download the xbuildenv tarball directly from the matching
-        # GitHub release and extract it into a stable location.
-        mkdir -p ".pyodide-xbuildenv-${PYODIDE_VERSION}"
-        XBUILDENV_TARBALL="xbuildenv-${PYODIDE_VERSION}.tar.bz2"
-        XBUILDENV_URL="https://github.com/pyodide/pyodide/releases/download/${PYODIDE_VERSION}/${XBUILDENV_TARBALL}"
-        curl -fL --retry 3 -o "${XBUILDENV_TARBALL}" "${XBUILDENV_URL}"
-        tar -xjf "${XBUILDENV_TARBALL}" -C ".pyodide-xbuildenv-${PYODIDE_VERSION}"
-        rm -f "${XBUILDENV_TARBALL}"
+        # pyodide-build >= 0.30.0 uses the new xbuildenv system and can
+        # download and install the toolchain (including Emscripten and a
+        # patched Rust nightly with wasm-eh support) automatically via
+        # `pyodide xbuildenv install`. We pin the runtime version to
+        # ensure the wheel targets the correct Pyodide runtime.
+        pyodide xbuildenv install "${PYODIDE_VERSION}"
 
-        # Derive PYODIDE_ROOT — the xbuildenv tarball extracts to
-        #   .pyodide-xbuildenv-<version>/xbuildenv/pyodide-root
-        XBUILD_DIR="$(pwd)/.pyodide-xbuildenv-${PYODIDE_VERSION}/xbuildenv"
-        if [ ! -d "$XBUILD_DIR/pyodide-root" ]; then
-          XBUILD_DIR="$HOME/.pyodide-xbuildenv-${PYODIDE_VERSION}/${PYODIDE_VERSION}/xbuildenv"
-        fi
-        PYODIDE_ROOT="$XBUILD_DIR/pyodide-root"
+        # Derive PYODIDE_ROOT from the installed xbuildenv
+        PYODIDE_ROOT=$(pyodide config get pyodide_root)
 
-        if [ ! -d "$PYODIDE_ROOT" ]; then
+        if [ -z "$PYODIDE_ROOT" ] || [ ! -d "$PYODIDE_ROOT" ]; then
           echo "ERROR: PYODIDE_ROOT not found at $PYODIDE_ROOT"
           exit 1
         fi
@@ -74,20 +61,7 @@ runs:
         echo "PYODIDE_ROOT=$PYODIDE_ROOT" >> $GITHUB_ENV
         echo "pyodide_root=$PYODIDE_ROOT" >> $GITHUB_OUTPUT
 
-        # Get Emscripten version (needed for emsdk setup in release workflow)
-        EMSCRIPTEN_VERSION=$(python3 -c "
-        import os
-        os.environ['PYODIDE_ROOT'] = '$PYODIDE_ROOT'
-        from pyodide_build.build_env import get_build_environment_vars
-        from pathlib import Path
-        print(get_build_environment_vars(Path(os.environ['PYODIDE_ROOT']))['PYODIDE_EMSCRIPTEN_VERSION'])
-        ")
-        echo "emscripten_version=${EMSCRIPTEN_VERSION}" >> $GITHUB_OUTPUT
-        echo "Emscripten version: ${EMSCRIPTEN_VERSION}"
-
         # Verify wheel platform tag — this is the tag used in the .whl filename.
-        # wheel_platform() returns the build platform tag (e.g. pyodide_2025_0_wasm32)
-        # NOT the install-compatibility tags from pyodide_tags() where emscripten comes first.
         TAG=$(python3 -c "
         import os
         os.environ['PYODIDE_ROOT'] = '$PYODIDE_ROOT'
@@ -97,10 +71,10 @@ runs:
         echo "wheel_platform_tag=$TAG" >> $GITHUB_OUTPUT
         echo "Pyodide wheel platform tag: $TAG"
 
-        if echo "$TAG" | grep -q "pyodide_"; then
-          echo "Wheel platform tag is pyodide_* — OK (compatible with Pyodide ${PYODIDE_VERSION} runtime)"
+        if echo "$TAG" | grep -qE "^(pyodide_|pyemscripten)_"; then
+          echo "Wheel platform tag looks correct — OK (compatible with Pyodide ${PYODIDE_VERSION} runtime)"
         else
-          echo "ERROR: Wheel platform tag is '$TAG', expected pyodide_*"
+          echo "ERROR: Wheel platform tag is '$TAG', expected pyodide_* or pyemscripten_*"
           echo "This means the built wheel will NOT be compatible with the Pyodide ${PYODIDE_VERSION} runtime."
           exit 1
         fi
