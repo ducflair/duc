@@ -7,7 +7,7 @@ ducpy.search.image_ocr
 
    Server-side image OCR helpers for DUC search.
 
-   Uses ``rapidocr-onnxruntime`` when the ``ocr`` extra is installed, otherwise
+   Uses ``rapidocr-onnxruntime`` with custom PP-OCRv6_tiny ONNX models when the ``ocr`` extra is installed, otherwise
    OCR is gracefully skipped.
 
 
@@ -29,6 +29,7 @@ Functions
 .. autoapisummary::
 
    ducpy.search.image_ocr.server_side_ocr_available
+   ducpy.search.image_ocr._get_local_cache_dir
    ducpy.search.image_ocr._get_rapid_engine
    ducpy.search.image_ocr.extract_image_text_with_ocr
 
@@ -47,6 +48,8 @@ Module Contents
 
    Return whether the ``ocr`` extra (RapidOCR) is installed and usable.
 
+
+.. py:function:: _get_local_cache_dir(repo_id: str) -> str | None
 
 .. py:function:: _get_rapid_engine() -> Any
 

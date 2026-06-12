@@ -290,7 +290,7 @@
           <section id="module-ducpy.search.image_ocr">
 <span id="ducpy-search-image-ocr"></span><h1>ducpy.search.image_ocr<a class="headerlink" href="#module-ducpy.search.image_ocr" title="Link to this heading">¶</a></h1>
 <p>Server-side image OCR helpers for DUC search.</p>
-<p>Uses <code class="docutils literal notranslate"><span class="pre">rapidocr-onnxruntime</span></code> when the <code class="docutils literal notranslate"><span class="pre">ocr</span></code> extra is installed, otherwise
+<p>Uses <code class="docutils literal notranslate"><span class="pre">rapidocr-onnxruntime</span></code> with custom PP-OCRv6_tiny ONNX models when the <code class="docutils literal notranslate"><span class="pre">ocr</span></code> extra is installed, otherwise
 OCR is gracefully skipped.</p>
 <section id="attributes">
 <h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">¶</a></h2>
@@ -321,10 +321,13 @@ OCR is gracefully skipped.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.image_ocr.server_side_ocr_available" title="ducpy.search.image_ocr.server_side_ocr_available"><code class="xref py py-obj docutils literal notranslate"><span class="pre">server_side_ocr_available</span></code></a>(→ bool)</p></td>
 <td><p>Return whether the <code class="docutils literal notranslate"><span class="pre">ocr</span></code> extra (RapidOCR) is installed and usable.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.image_ocr._get_rapid_engine" title="ducpy.search.image_ocr._get_rapid_engine"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_get_rapid_engine</span></code></a>(→ Any)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.image_ocr._get_local_cache_dir" title="ducpy.search.image_ocr._get_local_cache_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_get_local_cache_dir</span></code></a>(→ str | None)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.image_ocr.extract_image_text_with_ocr" title="ducpy.search.image_ocr.extract_image_text_with_ocr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_image_text_with_ocr</span></code></a>(→ tuple[str, bool])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.image_ocr._get_rapid_engine" title="ducpy.search.image_ocr._get_rapid_engine"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_get_rapid_engine</span></code></a>(→ Any)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.image_ocr.extract_image_text_with_ocr" title="ducpy.search.image_ocr.extract_image_text_with_ocr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_image_text_with_ocr</span></code></a>(→ tuple[str, bool])</p></td>
 <td><p>OCR an image using the <code class="docutils literal notranslate"><span class="pre">ocr</span></code> extra, or skip when unavailable.</p></td>
 </tr>
 </tbody>
@@ -348,6 +351,11 @@ OCR is gracefully skipped.</p>
 <span class="sig-prename descclassname"><span class="pre">ducpy.search.image_ocr.</span></span><span class="sig-name descname"><span class="pre">server_side_ocr_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#ducpy.search.image_ocr.server_side_ocr_available" title="Link to this definition">¶</a></dt>
 <dd><p>Return whether the <code class="docutils literal notranslate"><span class="pre">ocr</span></code> extra (RapidOCR) is installed and usable.</p>
 </dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ducpy.search.image_ocr._get_local_cache_dir">
+<span class="sig-prename descclassname"><span class="pre">ducpy.search.image_ocr.</span></span><span class="sig-name descname"><span class="pre">_get_local_cache_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#ducpy.search.image_ocr._get_local_cache_dir" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ducpy.search.image_ocr._get_rapid_engine">
@@ -435,6 +443,7 @@ OCR is gracefully skipped.</p>
 <li><a class="reference internal" href="#ducpy.search.image_ocr.logger"><code class="docutils literal notranslate"><span class="pre">logger</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.search.image_ocr._RAPID_OCR_ENGINE"><code class="docutils literal notranslate"><span class="pre">_RAPID_OCR_ENGINE</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.search.image_ocr.server_side_ocr_available"><code class="docutils literal notranslate"><span class="pre">server_side_ocr_available()</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.search.image_ocr._get_local_cache_dir"><code class="docutils literal notranslate"><span class="pre">_get_local_cache_dir()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.search.image_ocr._get_rapid_engine"><code class="docutils literal notranslate"><span class="pre">_get_rapid_engine()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.search.image_ocr.extract_image_text_with_ocr"><code class="docutils literal notranslate"><span class="pre">extract_image_text_with_ocr()</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.search.image_ocr._server_side_ocr_available"><code class="docutils literal notranslate"><span class="pre">_server_side_ocr_available</span></code></a></li>
