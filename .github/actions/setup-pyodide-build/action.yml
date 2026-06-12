@@ -3,13 +3,13 @@ description: 'Install pyodide-build tooling, cross-build environment, and valida
 
 inputs:
   pyodide-version:
-    description: 'Pyodide runtime version for the xbuildenv (e.g. 0.29.4).'
+    description: 'Pyodide runtime version for the xbuildenv (e.g. 0.28.0).'
     required: true
   pyodide-build-version:
     description: 'pyodide-build package version (e.g. 0.35.0). Separate from the runtime version.'
     required: true
   python-version:
-    description: 'Python version for setup-python step'
+    description: 'Python version for setup-python step. Must be 3.12 when ducpy dev deps require vtk (3.13 target in xbuildenv is handled by pyodide-build internally).'
     required: false
     default: '3.12'
 
@@ -20,6 +20,12 @@ outputs:
   wheel-platform-tag:
     description: 'Wheel platform tag (e.g. pyodide_2025_0_wasm32)'
     value: ${{ steps.validate.outputs.wheel_platform_tag }}
+  rust-toolchain:
+    description: 'Rust nightly toolchain required by this Pyodide build (e.g. nightly-2025-02-01)'
+    value: ${{ steps.validate.outputs.rust_toolchain }}
+  rust-emscripten-target-url:
+    description: 'URL for the patched Rust emscripten sysroot with wasm-eh support'
+    value: ${{ steps.validate.outputs.rust_emscripten_target_url }}
 
 runs:
   using: 'composite'
@@ -48,7 +54,9 @@ runs:
         # patched Rust nightly with wasm-eh support) automatically via
         # `pyodide xbuildenv install`. We pin the runtime version to
         # ensure the wheel targets the correct Pyodide runtime.
-        pyodide xbuildenv install "${PYODIDE_VERSION}"
+        # --force skips the host Python version compatibility check since
+        # we use 3.12 on the host but the xbuildenv targets 3.13.
+        pyodide xbuildenv install "${PYODIDE_VERSION}" --force
 
         # Derive PYODIDE_ROOT from the installed xbuildenv
         PYODIDE_ROOT=$(pyodide config get pyodide_root)
@@ -61,7 +69,28 @@ runs:
         echo "PYODIDE_ROOT=$PYODIDE_ROOT" >> $GITHUB_ENV
         echo "pyodide_root=$PYODIDE_ROOT" >> $GITHUB_OUTPUT
 
-        # Verify wheel platform tag — this is the tag used in the .whl filename.
+        # Get Rust toolchain and sysroot URL from xbuildenv
+        RUST_TOOLCHAIN=$(python3 -c "
+        import os
+        os.environ['PYODIDE_ROOT'] = '$PYODIDE_ROOT'
+        from pyodide_build.build_env import get_build_environment_vars
+        from pathlib import Path
+        print(get_build_environment_vars(Path(os.environ['PYODIDE_ROOT'])).get('RUST_TOOLCHAIN', ''))
+        ")
+        echo "rust_toolchain=${RUST_TOOLCHAIN}" >> $GITHUB_OUTPUT
+        echo "Rust toolchain: ${RUST_TOOLCHAIN}"
+
+        RUST_EMSCRIPTEN_TARGET_URL=$(python3 -c "
+        import os
+        os.environ['PYODIDE_ROOT'] = '$PYODIDE_ROOT'
+        from pyodide_build.build_env import get_build_environment_vars
+        from pathlib import Path
+        print(get_build_environment_vars(Path(os.environ['PYODIDE_ROOT'])).get('RUST_EMSCRIPTEN_TARGET_URL', ''))
+        ")
+        echo "rust_emscripten_target_url=${RUST_EMSCRIPTEN_TARGET_URL}" >> $GITHUB_OUTPUT
+        echo "Rust emscripten target URL: ${RUST_EMSCRIPTEN_TARGET_URL}"
+
+        # Verify wheel platform tag
         TAG=$(python3 -c "
         import os
         os.environ['PYODIDE_ROOT'] = '$PYODIDE_ROOT'
@@ -77,4 +106,26 @@ runs:
           echo "ERROR: Wheel platform tag is '$TAG', expected pyodide_* or pyemscripten_*"
           echo "This means the built wheel will NOT be compatible with the Pyodide ${PYODIDE_VERSION} runtime."
           exit 1
+        fi
+
+    - name: Install Rust toolchain for Pyodide
+      shell: bash
+      run: |
+        RUST_TOOLCHAIN="${{ steps.validate.outputs.rust_toolchain }}"
+        RUST_EMSCRIPTEN_TARGET_URL="${{ steps.validate.outputs.rust_emscripten_target_url }}"
+
+        if [ -n "$RUST_TOOLCHAIN" ]; then
+          echo "Installing Rust toolchain: $RUST_TOOLCHAIN"
+          rustup toolchain install "$RUST_TOOLCHAIN"
+          rustup default "$RUST_TOOLCHAIN"
+          rustup target add wasm32-unknown-emscripten --toolchain "$RUST_TOOLCHAIN"
+        fi
+
+        if [ -n "$RUST_EMSCRIPTEN_TARGET_URL" ]; then
+          echo "Downloading patched Rust sysroot for wasm-eh..."
+          RUSTLIB_ROOT=$(rustup which rustc --toolchain "${RUST_TOOLCHAIN}" | xargs dirname | xargs dirname)/lib/rustlib
+          curl -fL --retry 3 -o /tmp/rust-emscripten-sysroot.tar.bz2 "$RUST_EMSCRIPTEN_TARGET_URL"
+          rm -rf "$RUSTLIB_ROOT/wasm32-unknown-emscripten"
+          tar -xjf /tmp/rust-emscripten-sysroot.tar.bz2 -C "$RUSTLIB_ROOT"
+          echo "Installed patched Rust sysroot for wasm-eh"
         fi
