@@ -78,6 +78,7 @@ jobs:
         with:
           pyodide-version: ${{ env.PYODIDE_VERSION }}
           pyodide-build-version: ${{ env.PYODIDE_BUILD_VERSION }}
+          python-version: '3.13'
 
       - name: Build Pyodide wheel
         if: steps.release.outputs.status == 'success'

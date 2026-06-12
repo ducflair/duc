@@ -9,7 +9,7 @@ inputs:
     description: 'pyodide-build package version (e.g. 0.35.0). Separate from the runtime version.'
     required: true
   python-version:
-    description: 'Python version for setup-python step. Must be 3.12 when ducpy dev deps require vtk (3.13 target in xbuildenv is handled by pyodide-build internally).'
+    description: 'Python version for setup-python step. Should match the xbuildenv target Python version (e.g. 3.13 for Pyodide 0.28.0) to avoid sysconfigdata path issues. Defaults to 3.12 for backward compatibility with workflows that need it for dev deps.'
     required: false
     default: '3.12'
 
@@ -54,8 +54,8 @@ runs:
         # patched Rust nightly with wasm-eh support) automatically via
         # `pyodide xbuildenv install`. We pin the runtime version to
         # ensure the wheel targets the correct Pyodide runtime.
-        # --force skips the host Python version compatibility check since
-        # we use 3.12 on the host but the xbuildenv targets 3.13.
+        # --force is kept as a safety net for minor version mismatches
+        # between host Python and the xbuildenv target Python.
         pyodide xbuildenv install "${PYODIDE_VERSION}" --force
 
         # Derive PYODIDE_ROOT from the installed xbuildenv
