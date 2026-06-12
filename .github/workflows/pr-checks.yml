@@ -224,10 +224,41 @@ jobs:
         run: bun turbo test ${{ needs.release-check.outputs.test_filters }}
 
       - name: Validate Pyodide build tooling
+        id: pyodide-tooling
         if: needs.release-check.outputs.ducpy == 'true'
         uses: ./.github/actions/setup-pyodide-build
         with:
-          pyodide-version: '0.29.3'
+          pyodide-version: '0.28.0'
+          pyodide-build-version: '0.35.0'
+          python-version: '3.13'
+
+      - name: Test Pyodide wheel build
+        if: needs.release-check.outputs.ducpy == 'true'
+        working-directory: ./packages/ducpy
+        env:
+          PYODIDE_ROOT: ${{ steps.pyodide-tooling.outputs.pyodide-root }}
+        run: |
+          echo "Testing Pyodide wheel build..."
+          pyodide build --outdir /tmp/pyodide-wheel-test
+          echo "Pyodide wheel build succeeded"
+
+      - name: Verify wheel platform tag
+        if: needs.release-check.outputs.ducpy == 'true'
+        working-directory: /tmp/pyodide-wheel-test
+        run: |
+          WHEEL=$(find . -name '*.whl' | head -1)
+          if [ -z "$WHEEL" ]; then
+            echo "ERROR: No wheel found"
+            exit 1
+          fi
+          echo "Built wheel: $WHEEL"
+          EXPECTED_TAG="${{ steps.pyodide-tooling.outputs.wheel-platform-tag }}"
+          if echo "$WHEEL" | grep -q "$EXPECTED_TAG"; then
+            echo "Wheel filename contains expected tag '$EXPECTED_TAG' — OK"
+          else
+            echo "ERROR: Wheel filename does not contain expected tag '$EXPECTED_TAG'"
+            exit 1
+          fi
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase 3: Summary & gate check
