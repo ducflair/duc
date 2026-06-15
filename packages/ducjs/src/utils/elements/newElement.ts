@@ -29,8 +29,8 @@ import {
   ElementUpdate,
   NonDeleted
 } from "../../types/elements";
-import { Percentage, Radian, ScaleFactor } from "../../types/geometryTypes";
-import { Merge, Mutable } from "../../types/utility-types";
+import { Percentage, Radian, ScaleFactor } from "../../types/geometry.types";
+import { Merge, Mutable } from "../../types/utility.types";
 import {
   DEFAULT_ELEMENT_PROPS,
   DEFAULT_ELLIPSE_ELEMENT,

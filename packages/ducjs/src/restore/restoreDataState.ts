@@ -68,8 +68,8 @@ import type {
   TextAlign,
   VerticalAlign,
 } from "../types/elements";
-import { Percentage, Radian } from "../types/geometryTypes";
-import { ValueOf } from "../types/utility-types";
+import { Percentage, Radian } from "../types/geometry.types";
+import { ValueOf } from "../types/utility.types";
 import {
   base64ToUint8Array,
   getDefaultGlobalState,

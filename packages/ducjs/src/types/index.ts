@@ -1,7 +1,7 @@
 export * from "./elements";
-export * from "./geometryTypes";
+export * from "./geometry.types";
 export * from "./typeChecks";
-export * from "./utility-types";
+export * from "./utility.types";
 
 import { SupportedMeasures } from "../technical/scopes";
 import {
@@ -30,8 +30,9 @@ import {
   GeometricPoint,
   Percentage,
   Radian,
-} from "./geometryTypes";
-import { MarkOptional, MaybePromise, ValueOf } from "./utility-types";
+} from "./geometry.types";
+import { MarkOptional, MaybePromise, ValueOf } from "./utility.types";
+
 
 /**
  * Root data structure for the stored data state

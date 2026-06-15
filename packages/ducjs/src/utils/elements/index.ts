@@ -10,8 +10,8 @@ import { getPrecisionValueFromRaw } from "../../technical/scopes";
 import { RawValue, Scope } from "../../types";
 import { _DucStackBase, DucElement, DucNonSelectionElement, DucTableElement, DucTextStyle, ElementConstructorOpts, NonDeleted } from "../../types/elements";
 import { isFreeDrawElement, isLinearElement } from "../../types/elements/typeChecks";
-import { GeometricPoint, Percentage, Radian, ScaleFactor, TuplePoint } from "../../types/geometryTypes";
-import { Mutable } from "../../types/utility-types";
+import { GeometricPoint, Percentage, Radian, ScaleFactor, TuplePoint } from "../../types/geometry.types";
+import { Mutable } from "../../types/utility.types";
 import { DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_TEXT_ALIGN, DEFAULT_VERTICAL_ALIGN } from "../constants";
 import { randomInteger } from "../math/random";
 

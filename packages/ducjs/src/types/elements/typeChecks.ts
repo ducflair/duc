@@ -1,7 +1,7 @@
 import type { ElementOrToolType } from "..";
 import { assertNever } from "../../utils";
-import { Bounds, LineSegment, TuplePoint } from "../geometryTypes";
-import type { MarkNonNullable } from "../utility-types";
+import { Bounds, LineSegment, TuplePoint } from "../geometry.types";
+import type { MarkNonNullable } from "../utility.types";
 import type {
     DucArrowElement,
     DucBindableElement,

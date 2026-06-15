@@ -7,8 +7,8 @@ import {
   FONT_FAMILY,
   FREEDRAW_EASINGS,
 } from "../../utils/constants";
-import { GeometricPoint, Percentage, Radian, ScaleFactor } from "../geometryTypes";
-import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "../utility-types";
+import { GeometricPoint, Percentage, Radian, ScaleFactor } from "../geometry.types";
+import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "../utility.types";
 
 
 
