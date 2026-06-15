@@ -36,8 +36,5 @@ yarn-error.log*
 
 build_logs
 
-.claude
-
-
 tsconfig.tsbuildinfo
 __pycache__
