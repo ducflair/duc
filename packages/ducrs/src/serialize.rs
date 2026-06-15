@@ -460,9 +460,10 @@ fn write_element_wrapper(tx: &Transaction, wrapper: &ElementWrapper) -> Serializ
         }
         DucElementEnum::DucTableElement(e) => {
             write_base_element(tx, "table", &e.base)?;
+            write_document_grid_config(tx, &e.base.id, e.file_id.as_deref(), &e.grid_config)?;
             tx.execute(
-                "INSERT INTO element_table (element_id, file_id) VALUES (?1, ?2)",
-                params![e.base.id, e.file_id],
+                "INSERT INTO element_table (element_id) VALUES (?1)",
+                params![e.base.id],
             )?;
         }
         DucElementEnum::DucModelElement(e) => {

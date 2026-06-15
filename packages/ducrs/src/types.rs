@@ -1056,6 +1056,7 @@ pub struct DucTableElement {
     pub base: DucElementBase,
     pub style: DucTableStyle,
     pub file_id: Option<String>, // Source of truth is the linked xlsx file
+    pub grid_config: DocumentGridConfig,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]

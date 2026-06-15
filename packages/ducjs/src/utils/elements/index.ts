@@ -69,9 +69,17 @@ export const getDefaultStackProperties = (): _DucStackBase => {
  */
 export const getDefaultTableData = (currentScope: Scope): {
   fileId: DucTableElement["fileId"];
+  gridConfig: DucTableElement["gridConfig"];
 } => {
   return {
     fileId: null,
+    gridConfig: {
+      columns: 1,
+      gapX: 0,
+      gapY: 0,
+      firstPageAlone: false,
+      scale: 1,
+    },
   };
 };
 

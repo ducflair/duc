@@ -1,7 +1,7 @@
 -- "DUC_" in ASCII
 -- Apply in order: duc.sql → version_control.sql → search.sql
 PRAGMA application_id = 1146569567;
-PRAGMA user_version = 3000005;
+PRAGMA user_version = 3000006;
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 PRAGMA synchronous = NORMAL;
@@ -674,7 +674,7 @@ CREATE TABLE element_plot (
     margin_left   REAL    NOT NULL DEFAULT 0.0
 ) WITHOUT ROWID;
 
--- Shared DocumentGridConfig for document-like elements (PDF, doc).
+-- Shared DocumentGridConfig for document-like elements (PDF, doc, table).
 -- One row per element that needs grid layout + file reference.
 CREATE TABLE document_grid_config (
     element_id            TEXT    PRIMARY KEY REFERENCES elements(id) ON DELETE CASCADE,
@@ -712,13 +712,10 @@ CREATE TABLE doc_element_referenced_files (
 
 CREATE INDEX idx_doc_referenced_files_file ON doc_element_referenced_files(file_id);
 
--- Table element. Source of truth is the linked xlsx file.
+-- Table element. Grid config and file reference stored in document_grid_config.
 CREATE TABLE element_table (
-    element_id TEXT PRIMARY KEY REFERENCES elements(id) ON DELETE CASCADE,
-    file_id    TEXT  -- reference to external xlsx file
+    element_id TEXT PRIMARY KEY REFERENCES document_grid_config(element_id) ON DELETE CASCADE
 ) WITHOUT ROWID;
-
-CREATE INDEX idx_element_table_file ON element_table(file_id);
 
 -- Model element (3D parametric, DucModelElement). file_ids in child table.
 -- Viewer state stored in model_viewer_state table.

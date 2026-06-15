@@ -1497,13 +1497,46 @@ fn read_document_grid_config(conn: &Connection, element_id: &str) -> ParseResult
 }
 
 fn read_table_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucElementEnum> {
-    let mut stmt = conn.prepare_cached("SELECT file_id FROM element_table WHERE element_id = ?1")?;
-    let file_id: Option<String> = stmt.query_row(params![base.id], |row| row.get(0))?;
+    let (file_id, grid_config) = match read_document_grid_config(conn, &base.id) {
+        Ok(value) => value,
+        Err(ParseError::Sqlite(rusqlite::Error::QueryReturnedNoRows)) => {
+            let legacy_file_id = read_legacy_table_file_id(conn, &base.id)?;
+            (legacy_file_id, default_document_grid_config())
+        }
+        Err(error) => return Err(error),
+    };
     Ok(DucElementEnum::DucTableElement(DucTableElement {
         base,
         style: DucTableStyle {},
         file_id,
+        grid_config,
     }))
+}
+
+fn default_document_grid_config() -> DocumentGridConfig {
+    DocumentGridConfig {
+        columns: 1,
+        gap_x: 0.0,
+        gap_y: 0.0,
+        first_page_alone: false,
+        scale: 1.0,
+    }
+}
+
+fn read_legacy_table_file_id(conn: &Connection, element_id: &str) -> ParseResult<Option<String>> {
+    let mut stmt = match conn.prepare_cached("SELECT file_id FROM element_table WHERE element_id = ?1") {
+        Ok(stmt) => stmt,
+        Err(rusqlite::Error::SqliteFailure(_, Some(message))) if message.contains("no such column") => {
+            return Ok(None);
+        }
+        Err(error) => return Err(error.into()),
+    };
+
+    match stmt.query_row(params![element_id], |row| row.get(0)) {
+        Ok(file_id) => Ok(file_id),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(error) => Err(error.into()),
+    }
 }
 
 fn read_model_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucElementEnum> {

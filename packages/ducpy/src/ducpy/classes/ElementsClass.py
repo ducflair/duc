@@ -399,6 +399,7 @@ class DucDocElement:
 class DucTableElement:
     base: DucElementBase
     style: DucTableStyle
+    grid_config: DocumentGridConfig
     file_id: Optional[str] = None
 
 @dataclass

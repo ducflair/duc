@@ -689,6 +689,8 @@ export type DucPdfElement = _DucElementBase & {
 export type DucTableElement = _DucElementBase & {
   type: "table";
   fileId: ExternalFileId | null;
+  /** Configuration for rendering sheets in a grid layout */
+  gridConfig: DocumentGridConfig;
 };
 
 //// === IMAGE ELEMENTS ===

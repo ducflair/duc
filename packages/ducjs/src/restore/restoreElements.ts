@@ -743,6 +743,7 @@ const restoreElement = (
         {
           fileId: (isValidString(tableElement.fileId) as ExternalFileId) ||
             defaultData.fileId,
+          gridConfig: restoreDocumentGridConfig((tableElement as any).gridConfig),
         },
         localState
       );

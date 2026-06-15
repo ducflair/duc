@@ -208,6 +208,9 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         specific_element = element_class(
             base=base_element,
             style=element_params.get('style') or DucTableStyle(),
+            grid_config=element_params.get('grid_config') or DocumentGridConfig(
+                columns=1, gap_x=0.0, gap_y=0.0, first_page_alone=False, scale=1.0
+            ),
             file_id=element_params.get('file_id'),
         )
     else:
@@ -568,12 +571,17 @@ class TableElementBuilder(ElementSpecificBuilder):
         self.extra["file_id"] = file_id; return self
     def with_table_style(self, style: Optional[DucTableStyle]):
         self.extra["style"] = style; return self
+    def with_grid_config(self, grid_config: DocumentGridConfig):
+        self.extra["grid_config"] = grid_config; return self
 
     def build(self) -> ElementWrapper:
         base_params = self.base.__dict__.copy()
         element_params = {
             "style": self.extra.get('style'),
             "file_id": self.extra.get('file_id'),
+            "grid_config": self.extra.get('grid_config', DocumentGridConfig(
+                columns=1, gap_x=0.0, gap_y=0.0, first_page_alone=False, scale=1.0
+            )),
         }
         return _create_element_wrapper(DucTableElement, base_params, element_params,
                                        self.extra.get('explicit_properties_override'))
