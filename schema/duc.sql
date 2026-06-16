@@ -1,7 +1,7 @@
 -- "DUC_" in ASCII
 -- Apply in order: duc.sql → version_control.sql → search.sql
 PRAGMA application_id = 1146569567;
-PRAGMA user_version = 3000006;
+PRAGMA user_version = 3000007;
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 PRAGMA synchronous = NORMAL;
@@ -42,7 +42,6 @@ PRAGMA synchronous = NORMAL;
 -- Project-wide settings shared by all users, saved with the document.
 CREATE TABLE duc_global_state (
     id                                          INTEGER PRIMARY KEY CHECK (id = 1),
-    name                                        TEXT,            -- drawing name
     view_background_color                       TEXT    NOT NULL, -- drawing background color
     main_scope                                  TEXT    NOT NULL, -- master unit (mm, cm, m, in, ft…)
     scope_exponent_threshold                    INTEGER NOT NULL DEFAULT 3    -- +/- tolerance for scope switching
@@ -91,7 +90,7 @@ CREATE TABLE duc_document (
     version     TEXT NOT NULL,     -- format version string
     source      TEXT NOT NULL,     -- originating application
     data_type   TEXT NOT NULL,     -- file data type identifier
-    thumbnail   BLOB               -- binary thumbnail image
+    thumbnail   BLOB              -- binary thumbnail image
 ) WITHOUT ROWID;
 
 -- Key-value string dictionary for the document.
@@ -100,6 +99,142 @@ CREATE TABLE document_dictionary (
     value TEXT NOT NULL
 ) WITHOUT ROWID;
 
+
+-- ===========================================================================
+-- PROJECT CHARTER
+-- ===========================================================================
+
+CREATE TABLE duc_charter (
+    id            INTEGER PRIMARY KEY CHECK (id = 1),
+    title         TEXT    NOT NULL DEFAULT '',
+    description   TEXT,
+    objective     TEXT    NOT NULL DEFAULT '',
+    phase         TEXT    NOT NULL DEFAULT 'intent' CHECK (phase IN ('intent', 'review', 'delivery', 'closed')),
+    closed_reason TEXT,
+    updated_at    INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE duc_charter_requirements (
+    id         TEXT    PRIMARY KEY,
+    statement  TEXT    NOT NULL,
+    must       INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0
+) WITHOUT ROWID;
+
+CREATE TABLE duc_charter_requirement_acceptance_criteria (
+    requirement_id TEXT    NOT NULL REFERENCES duc_charter_requirements(id) ON DELETE CASCADE,
+    sort_order     INTEGER NOT NULL DEFAULT 0,
+    criterion      TEXT    NOT NULL,
+    PRIMARY KEY (requirement_id, sort_order)
+) WITHOUT ROWID;
+
+CREATE TABLE duc_charter_constraints (
+    id         TEXT    PRIMARY KEY,
+    statement  TEXT    NOT NULL,
+    hard       INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0
+) WITHOUT ROWID;
+
+CREATE TABLE duc_charter_decisions (
+    id         TEXT    PRIMARY KEY,
+    accepted   INTEGER NOT NULL DEFAULT 1,
+    decision   TEXT    NOT NULL,
+    rationale  TEXT    NOT NULL,
+    decided_at INTEGER NOT NULL DEFAULT 0,
+    sort_order INTEGER NOT NULL DEFAULT 0
+) WITHOUT ROWID;
+
+CREATE TABLE duc_charter_decision_issue_ids (
+    decision_id TEXT    NOT NULL REFERENCES duc_charter_decisions(id) ON DELETE CASCADE,
+    issue_id    TEXT    NOT NULL,
+    sort_order  INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (decision_id, sort_order)
+) WITHOUT ROWID;
+
+CREATE TABLE duc_charter_stakeholders (
+    sort_order       INTEGER PRIMARY KEY,
+    actor_identifier TEXT    NOT NULL,
+    actor_name       TEXT,
+    role             TEXT    NOT NULL
+);
+
+
+-- ===========================================================================
+-- ISSUES
+-- ===========================================================================
+
+CREATE TABLE duc_issues (
+    id               TEXT    PRIMARY KEY,
+    local_id         INTEGER NOT NULL,
+    title            TEXT    NOT NULL,
+    status           TEXT    NOT NULL CHECK (status IN ('open', 'closed', 'dismissed')),
+    dismissed_reason TEXT,
+    due_date         INTEGER,
+    author_id        TEXT    NOT NULL,
+    created_at       INTEGER NOT NULL,
+    updated_at       INTEGER NOT NULL,
+    deleted_at       INTEGER,
+    sort_order       INTEGER NOT NULL DEFAULT 0
+) WITHOUT ROWID;
+
+CREATE UNIQUE INDEX idx_duc_issues_local_id ON duc_issues(local_id);
+CREATE INDEX idx_duc_issues_status ON duc_issues(status);
+CREATE INDEX idx_duc_issues_updated ON duc_issues(updated_at);
+
+CREATE TABLE duc_issue_assignees (
+    issue_id         TEXT    NOT NULL REFERENCES duc_issues(id) ON DELETE CASCADE,
+    actor_identifier TEXT    NOT NULL,
+    sort_order       INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (issue_id, actor_identifier)
+) WITHOUT ROWID;
+
+CREATE TABLE duc_issue_followers (
+    issue_id         TEXT    NOT NULL REFERENCES duc_issues(id) ON DELETE CASCADE,
+    actor_identifier TEXT    NOT NULL,
+    sort_order       INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (issue_id, actor_identifier)
+) WITHOUT ROWID;
+
+CREATE TABLE duc_issue_messages (
+    id                TEXT    PRIMARY KEY,
+    issue_id          TEXT    NOT NULL REFERENCES duc_issues(id) ON DELETE CASCADE,
+    author_identifier TEXT    NOT NULL,
+    author_name       TEXT,
+    content           TEXT    NOT NULL,
+    reply_to_id       TEXT,
+    created_at        INTEGER NOT NULL,
+    edited_at         INTEGER,
+    deleted_at        INTEGER,
+    sort_order        INTEGER NOT NULL DEFAULT 0
+) WITHOUT ROWID;
+
+CREATE INDEX idx_duc_issue_messages_issue ON duc_issue_messages(issue_id, sort_order);
+
+CREATE TABLE duc_issue_message_reactions (
+    message_id        TEXT    NOT NULL REFERENCES duc_issue_messages(id) ON DELETE CASCADE,
+    emoji             TEXT    NOT NULL,
+    actor_identifier  TEXT    NOT NULL,
+    sort_order        INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (message_id, emoji, actor_identifier)
+) WITHOUT ROWID;
+
+CREATE TABLE duc_issue_anchors (
+    issue_id        TEXT PRIMARY KEY REFERENCES duc_issues(id) ON DELETE CASCADE,
+    anchor_type     TEXT NOT NULL CHECK (anchor_type IN ('canvas', 'element', 'model')),
+    canvas_x        REAL,
+    canvas_y        REAL,
+    canvas_scope    TEXT,
+    element_id      TEXT,
+    anchor_x        REAL,
+    anchor_y        REAL,
+    model_point_x   REAL,
+    model_point_y   REAL,
+    model_point_z   REAL,
+    model_normal_x  REAL,
+    model_normal_y  REAL,
+    model_normal_z  REAL,
+    topology_id     TEXT
+) WITHOUT ROWID;
 
 -- ===========================================================================
 -- STACK-LIKE PROPERTIES (shared base for layers, groups, regions)
@@ -728,10 +863,11 @@ CREATE TABLE element_model (
 
 CREATE INDEX idx_element_model_type ON element_model(model_type);
 
--- 3D viewer state for a model element (Viewer3DState, all sub-structs flattened).
--- At most one row per model element.
+-- 3D viewer state shared by model elements and model issue anchors.
+-- owner_type='element' owner_id=elements.id, or owner_type='issue_anchor' owner_id=duc_issue_anchors.issue_id.
 CREATE TABLE model_viewer_state (
-    element_id                 TEXT PRIMARY KEY REFERENCES elements(id) ON DELETE CASCADE,
+    owner_type                 TEXT    NOT NULL CHECK (owner_type IN ('element', 'issue_anchor')),
+    owner_id                   TEXT    NOT NULL,
     -- Viewer3DCamera
     camera_control             TEXT    NOT NULL DEFAULT 'orbit',    -- 'orbit' | 'trackball'
     camera_ortho               INTEGER NOT NULL DEFAULT 0,
@@ -796,8 +932,21 @@ CREATE TABLE model_viewer_state (
     zebra_stripe_direction     REAL    NOT NULL DEFAULT 0.0,
     zebra_color_scheme         TEXT    NOT NULL DEFAULT 'blackwhite', -- 'blackwhite' | 'colorful' | 'grayscale'
     zebra_opacity              REAL    NOT NULL DEFAULT 1.0,
-    zebra_mapping_mode         TEXT    NOT NULL DEFAULT 'reflection'  -- 'reflection' | 'normal'
+    zebra_mapping_mode         TEXT    NOT NULL DEFAULT 'reflection', -- 'reflection' | 'normal'
+    PRIMARY KEY (owner_type, owner_id)
 ) WITHOUT ROWID;
+
+CREATE TRIGGER model_viewer_state_delete_element
+AFTER DELETE ON elements
+BEGIN
+    DELETE FROM model_viewer_state WHERE owner_type = 'element' AND owner_id = OLD.id;
+END;
+
+CREATE TRIGGER model_viewer_state_delete_issue_anchor
+AFTER DELETE ON duc_issue_anchors
+BEGIN
+    DELETE FROM model_viewer_state WHERE owner_type = 'issue_anchor' AND owner_id = OLD.issue_id;
+END;
 
 -- External files connected to a model element (STEP, STL, DXF, etc.).
 CREATE TABLE model_element_files (

@@ -49,6 +49,8 @@ pub fn parse(buf: &[u8]) -> ParseResult<ExportedDataState> {
     let conn = load_db_bytes(buf)?;
 
     let (id, version, source, data_type, thumbnail) = read_document(&conn)?;
+    let charter = read_charter(&conn)?;
+    let issues = read_issues(&conn)?;
     let duc_global_state = read_global_state(&conn)?;
     let duc_local_state = read_local_state(&conn)?;
     let dictionary = read_dictionary(&conn)?;
@@ -67,6 +69,8 @@ pub fn parse(buf: &[u8]) -> ParseResult<ExportedDataState> {
         data_type,
         dictionary,
         thumbnail,
+        charter,
+        issues,
         elements,
         blocks,
         block_instances,
@@ -90,6 +94,8 @@ pub fn parse_lazy(buf: &[u8]) -> ParseResult<ExportedDataState> {
     let conn = load_db_bytes(buf)?;
 
     let (id, version, source, data_type, thumbnail) = read_document(&conn)?;
+    let charter = read_charter(&conn)?;
+    let issues = read_issues(&conn)?;
     let duc_global_state = read_global_state(&conn)?;
     let duc_local_state = read_local_state(&conn)?;
     let dictionary = read_dictionary(&conn)?;
@@ -107,6 +113,8 @@ pub fn parse_lazy(buf: &[u8]) -> ParseResult<ExportedDataState> {
         data_type,
         dictionary,
         thumbnail,
+        charter,
+        issues,
         elements,
         blocks,
         block_instances,
@@ -682,19 +690,321 @@ fn read_document(conn: &Connection) -> ParseResult<(Option<String>, String, Stri
     }
 }
 
+fn str_to_charter_phase(value: &str) -> DucCharterPhase {
+    match value {
+        "review" => DucCharterPhase::Review,
+        "delivery" => DucCharterPhase::Delivery,
+        "closed" => DucCharterPhase::Closed,
+        _ => DucCharterPhase::Intent,
+    }
+}
+
+fn str_to_issue_status(value: &str) -> DucIssueStatus {
+    match value {
+        "closed" => DucIssueStatus::Closed,
+        "dismissed" => DucIssueStatus::Dismissed,
+        _ => DucIssueStatus::Open,
+    }
+}
+
+fn read_charter(conn: &Connection) -> ParseResult<Option<DucCharter>> {
+    if !table_exists(conn, "duc_charter")? {
+        return Ok(None);
+    }
+
+    let result = conn.query_row(
+        "SELECT title, description, objective, phase, closed_reason, updated_at FROM duc_charter WHERE id = 1",
+        [],
+        |row| {
+            let phase: String = row.get(3)?;
+            Ok(DucCharter {
+                title: row.get(0)?,
+                description: row.get(1)?,
+                objective: row.get(2)?,
+                phase: str_to_charter_phase(&phase),
+                closed_reason: row.get(4)?,
+                requirements: Vec::new(),
+                constraints: Vec::new(),
+                decisions: Vec::new(),
+                stakeholders: None,
+                updated_at: row.get(5)?,
+            })
+        },
+    );
+
+    let mut charter = match result {
+        Ok(charter) => charter,
+        Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
+        Err(e) => return Err(e.into()),
+    };
+
+    charter.requirements = read_charter_requirements(conn)?;
+    charter.constraints = read_charter_constraints(conn)?;
+    charter.decisions = read_charter_decisions(conn)?;
+    let stakeholders = read_charter_stakeholders(conn)?;
+    charter.stakeholders = if stakeholders.is_empty() { None } else { Some(stakeholders) };
+
+    Ok(Some(charter))
+}
+
+fn read_charter_requirements(conn: &Connection) -> ParseResult<Vec<DucCharterRequirement>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, statement, must FROM duc_charter_requirements ORDER BY sort_order"
+    )?;
+    let rows = stmt.query_map([], |row| {
+        Ok(DucCharterRequirement {
+            id: row.get(0)?,
+            statement: row.get(1)?,
+            must: row.get::<_, i32>(2)? != 0,
+            acceptance_criteria: None,
+        })
+    })?;
+
+    let mut requirements = Vec::new();
+    for row in rows {
+        let mut requirement = row?;
+        let criteria = read_string_list(
+            conn,
+            "SELECT criterion FROM duc_charter_requirement_acceptance_criteria WHERE requirement_id = ?1 ORDER BY sort_order",
+            &requirement.id,
+        )?;
+        requirement.acceptance_criteria = if criteria.is_empty() { None } else { Some(criteria) };
+        requirements.push(requirement);
+    }
+    Ok(requirements)
+}
+
+fn read_charter_constraints(conn: &Connection) -> ParseResult<Vec<DucCharterConstraint>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, statement, hard FROM duc_charter_constraints ORDER BY sort_order"
+    )?;
+    let constraints = stmt.query_map([], |row| {
+        Ok(DucCharterConstraint {
+            id: row.get(0)?,
+            statement: row.get(1)?,
+            hard: row.get::<_, i32>(2)? != 0,
+        })
+    })?.collect::<Result<Vec<_>, _>>()?;
+    Ok(constraints)
+}
+
+fn read_charter_decisions(conn: &Connection) -> ParseResult<Vec<DucCharterDecision>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, accepted, decision, rationale, decided_at FROM duc_charter_decisions ORDER BY sort_order"
+    )?;
+    let rows = stmt.query_map([], |row| {
+        Ok(DucCharterDecision {
+            id: row.get(0)?,
+            accepted: row.get::<_, i32>(1)? != 0,
+            decision: row.get(2)?,
+            rationale: row.get(3)?,
+            issue_ids: None,
+            decided_at: row.get(4)?,
+        })
+    })?;
+
+    let mut decisions = Vec::new();
+    for row in rows {
+        let mut decision = row?;
+        let issue_ids = read_string_list(
+            conn,
+            "SELECT issue_id FROM duc_charter_decision_issue_ids WHERE decision_id = ?1 ORDER BY sort_order",
+            &decision.id,
+        )?;
+        decision.issue_ids = if issue_ids.is_empty() { None } else { Some(issue_ids) };
+        decisions.push(decision);
+    }
+    Ok(decisions)
+}
+
+fn read_charter_stakeholders(conn: &Connection) -> ParseResult<Vec<DucCharterStakeholder>> {
+    let mut stmt = conn.prepare(
+        "SELECT actor_identifier, actor_name, role FROM duc_charter_stakeholders ORDER BY sort_order"
+    )?;
+    let stakeholders = stmt.query_map([], |row| {
+        Ok(DucCharterStakeholder {
+            actor: Actor {
+                identifier: row.get(0)?,
+                name: row.get(1)?,
+            },
+            role: row.get(2)?,
+        })
+    })?.collect::<Result<Vec<_>, _>>()?;
+    Ok(stakeholders)
+}
+
+fn read_issues(conn: &Connection) -> ParseResult<Vec<DucIssue>> {
+    if !table_exists(conn, "duc_issues")? {
+        return Ok(Vec::new());
+    }
+
+    let mut stmt = conn.prepare(
+        "SELECT id, local_id, title, status, dismissed_reason, due_date, author_id,
+                created_at, updated_at, deleted_at
+         FROM duc_issues ORDER BY sort_order, local_id"
+    )?;
+    let rows = stmt.query_map([], |row| {
+        let status: String = row.get(3)?;
+        Ok(DucIssue {
+            id: row.get(0)?,
+            local_id: row.get(1)?,
+            title: row.get(2)?,
+            status: str_to_issue_status(&status),
+            dismissed_reason: row.get(4)?,
+            messages: Vec::new(),
+            due_date: row.get(5)?,
+            anchor: None,
+            author_id: row.get(6)?,
+            assignee_ids: None,
+            follower_ids: None,
+            created_at: row.get(7)?,
+            updated_at: row.get(8)?,
+            deleted_at: row.get(9)?,
+        })
+    })?;
+
+    let mut issues = Vec::new();
+    for row in rows {
+        let mut issue = row?;
+        issue.assignee_ids = optional_string_list(read_issue_actor_ids(conn, "duc_issue_assignees", &issue.id)?);
+        issue.follower_ids = optional_string_list(read_issue_actor_ids(conn, "duc_issue_followers", &issue.id)?);
+        issue.messages = read_issue_messages(conn, &issue.id)?;
+        issue.anchor = read_issue_anchor(conn, &issue.id)?;
+        issues.push(issue);
+    }
+    Ok(issues)
+}
+
+fn optional_string_list(list: Vec<String>) -> Option<Vec<String>> {
+    if list.is_empty() { None } else { Some(list) }
+}
+
+fn read_issue_actor_ids(conn: &Connection, table: &str, issue_id: &str) -> ParseResult<Vec<String>> {
+    let sql = format!("SELECT actor_identifier FROM {table} WHERE issue_id = ?1 ORDER BY sort_order");
+    let mut stmt = conn.prepare_cached(&sql)?;
+    let actor_ids = stmt.query_map(params![issue_id], |row| row.get(0))?
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(actor_ids)
+}
+
+fn read_issue_messages(conn: &Connection, issue_id: &str) -> ParseResult<Vec<DucIssueMessage>> {
+    let mut stmt = conn.prepare_cached(
+        "SELECT id, author_identifier, author_name, content, reply_to_id,
+                created_at, edited_at, deleted_at
+         FROM duc_issue_messages WHERE issue_id = ?1 ORDER BY sort_order"
+    )?;
+    let rows = stmt.query_map(params![issue_id], |row| {
+        Ok(DucIssueMessage {
+            id: row.get(0)?,
+            author: Actor {
+                identifier: row.get(1)?,
+                name: row.get(2)?,
+            },
+            content: row.get(3)?,
+            reply_to_id: row.get(4)?,
+            reactions: None,
+            created_at: row.get(5)?,
+            edited_at: row.get(6)?,
+            deleted_at: row.get(7)?,
+        })
+    })?;
+
+    let mut messages = Vec::new();
+    for row in rows {
+        let mut message = row?;
+        message.reactions = read_issue_message_reactions(conn, &message.id)?;
+        messages.push(message);
+    }
+    Ok(messages)
+}
+
+fn read_issue_message_reactions(
+    conn: &Connection,
+    message_id: &str,
+) -> ParseResult<Option<HashMap<String, Vec<String>>>> {
+    let mut stmt = conn.prepare_cached(
+        "SELECT emoji, actor_identifier
+         FROM duc_issue_message_reactions WHERE message_id = ?1 ORDER BY emoji, sort_order"
+    )?;
+    let rows = stmt.query_map(params![message_id], |row| {
+        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+    })?;
+
+    let mut reactions: HashMap<String, Vec<String>> = HashMap::new();
+    for row in rows {
+        let (emoji, actor_identifier) = row?;
+        reactions.entry(emoji).or_default().push(actor_identifier);
+    }
+    Ok(if reactions.is_empty() { None } else { Some(reactions) })
+}
+
+fn read_issue_anchor(conn: &Connection, issue_id: &str) -> ParseResult<Option<DucIssueAnchor>> {
+    let mut stmt = conn.prepare_cached(
+        "SELECT anchor_type, canvas_x, canvas_y, canvas_scope, element_id, anchor_x, anchor_y,
+                model_point_x, model_point_y, model_point_z, model_normal_x, model_normal_y,
+                model_normal_z, topology_id
+         FROM duc_issue_anchors WHERE issue_id = ?1"
+    )?;
+    let result = stmt.query_row(params![issue_id], |row| {
+        let anchor_type: String = row.get(0)?;
+        match anchor_type.as_str() {
+            "canvas" => Ok(DucIssueAnchor::Canvas {
+                x: row.get::<_, Option<f64>>(1)?.unwrap_or(0.0),
+                y: row.get::<_, Option<f64>>(2)?.unwrap_or(0.0),
+                scope: row.get(3)?,
+            }),
+            "element" => Ok(DucIssueAnchor::Element {
+                element_id: row.get::<_, Option<String>>(4)?.unwrap_or_default(),
+                anchor_x: row.get(5)?,
+                anchor_y: row.get(6)?,
+            }),
+            "model" => {
+                let normal_x: Option<f64> = row.get(10)?;
+                Ok(DucIssueAnchor::Model {
+                    element_id: row.get::<_, Option<String>>(4)?.unwrap_or_default(),
+                    point: [
+                        row.get::<_, Option<f64>>(7)?.unwrap_or(0.0),
+                        row.get::<_, Option<f64>>(8)?.unwrap_or(0.0),
+                        row.get::<_, Option<f64>>(9)?.unwrap_or(0.0),
+                    ],
+                    normal: normal_x.map(|x| [
+                        x,
+                        row.get::<_, Option<f64>>(11).ok().flatten().unwrap_or(0.0),
+                        row.get::<_, Option<f64>>(12).ok().flatten().unwrap_or(0.0),
+                    ]),
+                    viewer_state: None,
+                    topology_id: row.get(13)?,
+                })
+            }
+            _ => Ok(DucIssueAnchor::Canvas { x: 0.0, y: 0.0, scope: None }),
+        }
+    });
+
+    let mut anchor = match result {
+        Ok(anchor) => anchor,
+        Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
+        Err(e) => return Err(e.into()),
+    };
+
+    if let DucIssueAnchor::Model { ref mut viewer_state, .. } = anchor {
+        *viewer_state = read_model_viewer_state(conn, "issue_anchor", issue_id)?;
+    }
+
+    Ok(Some(anchor))
+}
+
 // ─── duc_global_state ────────────────────────────────────────────────────────
 
 fn read_global_state(conn: &Connection) -> ParseResult<Option<DucGlobalState>> {
     let mut stmt = conn.prepare(
-        "SELECT name, view_background_color, main_scope, scope_exponent_threshold
+        "SELECT view_background_color, main_scope, scope_exponent_threshold
          FROM duc_global_state WHERE id = 1"
     )?;
     let result = stmt.query_row([], |row| {
         Ok(DucGlobalState {
-            name: row.get(0)?,
-            view_background_color: row.get(1)?,
-            main_scope: row.get(2)?,
-            scope_exponent_threshold: row.get(3)?,
+            view_background_color: row.get(0)?,
+            main_scope: row.get(1)?,
+            scope_exponent_threshold: row.get(2)?,
         })
     });
 
@@ -1550,7 +1860,7 @@ fn read_model_element(conn: &Connection, base: DucElementBase) -> ParseResult<Du
 
     let file_ids = read_element_file_ids(conn, &id)?;
 
-    let viewer_state = read_model_viewer_state(conn, &id)?;
+    let viewer_state = read_model_viewer_state(conn, "element", &id)?;
 
     Ok(DucElementEnum::DucModelElement(DucModelElement {
         base, model_type, code, thumbnail, file_ids, viewer_state,
@@ -1587,9 +1897,16 @@ fn table_exists(conn: &Connection, table_name: &str) -> ParseResult<bool> {
     )? != 0)
 }
 
-fn read_model_viewer_state(conn: &Connection, element_id: &str) -> ParseResult<Option<Viewer3DState>> {
-    let mut stmt = conn.prepare_cached(
-        "SELECT
+fn column_exists(conn: &Connection, table_name: &str, column_name: &str) -> ParseResult<bool> {
+    Ok(conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM pragma_table_info(?1) WHERE name = ?2)",
+        params![table_name, column_name],
+        |row| row.get::<_, i64>(0),
+    )? != 0)
+}
+
+fn read_model_viewer_state(conn: &Connection, owner_type: &str, owner_id: &str) -> ParseResult<Option<Viewer3DState>> {
+    let select_columns = "
             camera_control, camera_ortho, camera_up,
             camera_position_x, camera_position_y, camera_position_z,
             camera_quaternion_x, camera_quaternion_y, camera_quaternion_z, camera_quaternion_w,
@@ -1606,93 +1923,107 @@ fn read_model_viewer_state(conn: &Connection, element_id: &str) -> ParseResult<O
             clip_intersection, clip_show_planes, clip_object_color_caps,
             explode_active, explode_value,
             zebra_active, zebra_stripe_count, zebra_stripe_direction,
-            zebra_color_scheme, zebra_opacity, zebra_mapping_mode
-         FROM model_viewer_state WHERE element_id = ?1"
-    )?;
+            zebra_color_scheme, zebra_opacity, zebra_mapping_mode";
 
-    let result = stmt.query_row(params![element_id], |row| {
-        let grid_uniform: Option<i32> = row.get(21)?;
-        let grid = match grid_uniform {
-            Some(v) => Viewer3DGrid::Uniform(v != 0),
-            None => Viewer3DGrid::PerPlane(Viewer3DGridPlanes {
-                xy: row.get::<_, i32>(22)? != 0,
-                xz: row.get::<_, i32>(23)? != 0,
-                yz: row.get::<_, i32>(24)? != 0,
-            }),
-        };
-
-        fn read_clip(row: &rusqlite::Row, offset: usize) -> rusqlite::Result<Viewer3DClipPlane> {
-            let nx: Option<f64> = row.get(offset + 2)?;
-            let normal = nx.map(|x| [
-                x,
-                row.get::<_, f64>(offset + 3).unwrap_or(0.0),
-                row.get::<_, f64>(offset + 4).unwrap_or(0.0),
-            ]);
-            Ok(Viewer3DClipPlane {
-                enabled: row.get::<_, i32>(offset)? != 0,
-                value: row.get(offset + 1)?,
-                normal,
-            })
-        }
-
-        Ok(Viewer3DState {
-            camera: Viewer3DCamera {
-                control: row.get(0)?,
-                ortho: row.get::<_, i32>(1)? != 0,
-                up: row.get(2)?,
-                position: [row.get(3)?, row.get(4)?, row.get(5)?],
-                quaternion: [row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?],
-                target: [row.get(10)?, row.get(11)?, row.get(12)?],
-                zoom: row.get(13)?,
-                pan_speed: row.get(14)?,
-                rotate_speed: row.get(15)?,
-                zoom_speed: row.get(16)?,
-                holroyd: row.get::<_, i32>(17)? != 0,
-            },
-            display: Viewer3DDisplay {
-                wireframe: row.get::<_, i32>(18)? != 0,
-                transparent: row.get::<_, i32>(19)? != 0,
-                black_edges: row.get::<_, i32>(20)? != 0,
-                grid,
-                axes_visible: row.get::<_, i32>(25)? != 0,
-                axes_at_origin: row.get::<_, i32>(26)? != 0,
-            },
-            material: Viewer3DMaterial {
-                metalness: row.get(27)?,
-                roughness: row.get(28)?,
-                default_opacity: row.get(29)?,
-                edge_color: row.get(30)?,
-                ambient_intensity: row.get(31)?,
-                direct_intensity: row.get(32)?,
-            },
-            clipping: Viewer3DClipping {
-                x: read_clip(row, 33)?,
-                y: read_clip(row, 38)?,
-                z: read_clip(row, 43)?,
-                intersection: row.get::<_, i32>(48)? != 0,
-                show_planes: row.get::<_, i32>(49)? != 0,
-                object_color_caps: row.get::<_, i32>(50)? != 0,
-            },
-            explode: Viewer3DExplode {
-                active: row.get::<_, i32>(51)? != 0,
-                value: row.get(52)?,
-            },
-            zebra: Viewer3DZebra {
-                active: row.get::<_, i32>(53)? != 0,
-                stripe_count: row.get(54)?,
-                stripe_direction: row.get(55)?,
-                color_scheme: row.get(56)?,
-                opacity: row.get(57)?,
-                mapping_mode: row.get(58)?,
-            },
-        })
-    });
+    let result = if column_exists(conn, "model_viewer_state", "owner_type")? {
+        let sql = format!(
+            "SELECT {select_columns} FROM model_viewer_state WHERE owner_type = ?1 AND owner_id = ?2"
+        );
+        let mut stmt = conn.prepare_cached(&sql)?;
+        stmt.query_row(params![owner_type, owner_id], read_viewer3d_state_row)
+    } else if owner_type == "element" {
+        let sql = format!(
+            "SELECT {select_columns} FROM model_viewer_state WHERE element_id = ?1"
+        );
+        let mut stmt = conn.prepare_cached(&sql)?;
+        stmt.query_row(params![owner_id], read_viewer3d_state_row)
+    } else {
+        return Ok(None);
+    };
 
     match result {
         Ok(vs) => Ok(Some(vs)),
         Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
         Err(e) => Err(e.into()),
     }
+}
+
+fn read_viewer3d_state_row(row: &rusqlite::Row) -> rusqlite::Result<Viewer3DState> {
+    let grid_uniform: Option<i32> = row.get(21)?;
+    let grid = match grid_uniform {
+        Some(v) => Viewer3DGrid::Uniform(v != 0),
+        None => Viewer3DGrid::PerPlane(Viewer3DGridPlanes {
+            xy: row.get::<_, i32>(22)? != 0,
+            xz: row.get::<_, i32>(23)? != 0,
+            yz: row.get::<_, i32>(24)? != 0,
+        }),
+    };
+
+    fn read_clip(row: &rusqlite::Row, offset: usize) -> rusqlite::Result<Viewer3DClipPlane> {
+        let nx: Option<f64> = row.get(offset + 2)?;
+        let normal = nx.map(|x| [
+            x,
+            row.get::<_, f64>(offset + 3).unwrap_or(0.0),
+            row.get::<_, f64>(offset + 4).unwrap_or(0.0),
+        ]);
+        Ok(Viewer3DClipPlane {
+            enabled: row.get::<_, i32>(offset)? != 0,
+            value: row.get(offset + 1)?,
+            normal,
+        })
+    }
+
+    Ok(Viewer3DState {
+        camera: Viewer3DCamera {
+            control: row.get(0)?,
+            ortho: row.get::<_, i32>(1)? != 0,
+            up: row.get(2)?,
+            position: [row.get(3)?, row.get(4)?, row.get(5)?],
+            quaternion: [row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?],
+            target: [row.get(10)?, row.get(11)?, row.get(12)?],
+            zoom: row.get(13)?,
+            pan_speed: row.get(14)?,
+            rotate_speed: row.get(15)?,
+            zoom_speed: row.get(16)?,
+            holroyd: row.get::<_, i32>(17)? != 0,
+        },
+        display: Viewer3DDisplay {
+            wireframe: row.get::<_, i32>(18)? != 0,
+            transparent: row.get::<_, i32>(19)? != 0,
+            black_edges: row.get::<_, i32>(20)? != 0,
+            grid,
+            axes_visible: row.get::<_, i32>(25)? != 0,
+            axes_at_origin: row.get::<_, i32>(26)? != 0,
+        },
+        material: Viewer3DMaterial {
+            metalness: row.get(27)?,
+            roughness: row.get(28)?,
+            default_opacity: row.get(29)?,
+            edge_color: row.get(30)?,
+            ambient_intensity: row.get(31)?,
+            direct_intensity: row.get(32)?,
+        },
+        clipping: Viewer3DClipping {
+            x: read_clip(row, 33)?,
+            y: read_clip(row, 38)?,
+            z: read_clip(row, 43)?,
+            intersection: row.get::<_, i32>(48)? != 0,
+            show_planes: row.get::<_, i32>(49)? != 0,
+            object_color_caps: row.get::<_, i32>(50)? != 0,
+        },
+        explode: Viewer3DExplode {
+            active: row.get::<_, i32>(51)? != 0,
+            value: row.get(52)?,
+        },
+        zebra: Viewer3DZebra {
+            active: row.get::<_, i32>(53)? != 0,
+            stripe_count: row.get(54)?,
+            stripe_direction: row.get(55)?,
+            color_scheme: row.get(56)?,
+            opacity: row.get(57)?,
+            mapping_mode: row.get(58)?,
+        },
+    })
 }
 
 // ─── shared point reader ─────────────────────────────────────────────────────

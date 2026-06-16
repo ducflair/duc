@@ -1,5 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "CONTRIBUTING.md"
+  ],
   "command": {
     "gen-commit-message": {
       "template": "Generate the commit message for the staged changes (if no staged changes fallback to checking the unstaged changes) using the /commit-messages skill. On the response, print only the message as a code block with the proposed commit message",

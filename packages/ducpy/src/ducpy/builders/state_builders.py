@@ -5,18 +5,30 @@ Only types from types.rs / duc.sql are supported.
 """
 import time
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from ducpy.utils.rand_utils import generate_random_id
 
-from ..classes.DataStateClass import (Checkpoint, Delta, DucExternalFile,
+
+def now_ms() -> int:
+    """Current Unix timestamp in milliseconds."""
+    return int(time.time() * 1000)
+
+from ..classes.DataStateClass import (Actor, Checkpoint, Delta, DucCharter,
+                                      DucCharterConstraint, DucCharterDecision,
+                                      DucCharterRequirement,
+                                      DucCharterStakeholder, DucExternalFile,
+                                      DucIssue, DucIssueCanvasAnchor,
+                                      DucIssueElementAnchor,
+                                      DucIssueMessage, DucIssueModelAnchor,
                                       ExternalFileRevision, DucGlobalState,
                                       DucLocalState, VersionGraph,
                                       VersionGraphMetadata)
 from ..classes.ElementsClass import (DucBlock, DucBlockMetadata, DucGroup,
                                      DucLayer, DucLayerOverrides, DucRegion,
                                      DucStackBase, DucStackLikeStyles,
-                                     ElementWrapper, StringValueEntry)
+                                     ElementWrapper, StringValueEntry,
+                                     Viewer3DState)
 from ..enums import BOOLEAN_OPERATION, TEXT_ALIGN
 
 
@@ -87,6 +99,12 @@ class StateBuilder:
 
     def build_stack_base(self):
         return StackBaseBuilder(self.base, self.extra)
+
+    def build_charter(self):
+        return CharterBuilder(self.base, self.extra)
+
+    def build_issue(self):
+        return IssueBuilder(self.base, self.extra)
 
 
 class StateSpecificBuilder:
@@ -429,7 +447,6 @@ class StackBaseBuilder(StateSpecificBuilder):
 
 def create_global_state_from_base(base: BaseStateParams, **kwargs) -> DucGlobalState:
     return DucGlobalState(
-        name=base.name or None,
         view_background_color=kwargs.get('view_background_color', "#FFFFFF"),
         main_scope=kwargs.get('main_scope', "mm"),
         scope_exponent_threshold=kwargs.get('scope_exponent_threshold', 6),
@@ -574,7 +591,7 @@ def create_version_graph_from_base(base: BaseStateParams, **kwargs) -> VersionGr
 def create_checkpoint_from_base(base: BaseStateParams, **kwargs) -> Checkpoint:
     return Checkpoint(
         id=base.id or generate_random_id(),
-        timestamp=int(time.time() * 1000),
+        timestamp=now_ms(),
         is_manual_save=kwargs.get('is_manual_save', False),
         parent_id=kwargs.get('parent_id'),
         description=base.description,
@@ -588,7 +605,7 @@ def create_checkpoint_from_base(base: BaseStateParams, **kwargs) -> Checkpoint:
 def create_delta_from_base(base: BaseStateParams, **kwargs) -> Delta:
     return Delta(
         id=base.id or generate_random_id(),
-        timestamp=int(time.time() * 1000),
+        timestamp=now_ms(),
         is_manual_save=kwargs.get('is_manual_save', False),
         parent_id=kwargs.get('parent_id'),
         description=base.description,
@@ -602,7 +619,7 @@ def create_delta_from_base(base: BaseStateParams, **kwargs) -> Delta:
 def create_external_file_from_base(base: BaseStateParams, **kwargs) -> DucExternalFile:
     file_id = base.id or generate_random_id()
     rev_id = f"{file_id}_rev1"
-    created = int(time.time() * 1000)
+    created = now_ms()
     data = kwargs.get('data', b"")
     revision = ExternalFileRevision(
         id=rev_id,
@@ -635,6 +652,218 @@ def create_stack_base_from_base(base: BaseStateParams, **kwargs) -> DucStackBase
     )
 
 
+class CharterBuilder(StateSpecificBuilder):
+    def __init__(self, base: BaseStateParams, extra: dict):
+        super().__init__(base, extra)
+        self.requirements: List[DucCharterRequirement] = []
+        self.constraints: List[DucCharterConstraint] = []
+        self.decisions: List[DucCharterDecision] = []
+        self.stakeholders: List[DucCharterStakeholder] = []
+
+    def with_title(self, title: str):
+        self.base.name = title
+        return self
+
+    def with_description(self, description: str):
+        self.base.description = description
+        return self
+
+    def with_objective(self, objective: str):
+        self.extra["objective"] = objective
+        return self
+
+    def with_phase(self, phase: str):
+        self.extra["phase"] = phase
+        return self
+
+    def with_closed_reason(self, reason: str):
+        self.extra["closed_reason"] = reason
+        return self
+
+    def with_updated_at(self, updated_at: int):
+        self.extra["updated_at"] = updated_at
+        return self
+
+    def add_requirement(self, statement: str, must: bool = True, *, id: Optional[str] = None,
+                        acceptance_criteria: Optional[List[str]] = None):
+        self.requirements.append(DucCharterRequirement(
+            id=id or generate_random_id(),
+            statement=statement,
+            must=must,
+            acceptance_criteria=acceptance_criteria,
+        ))
+        return self
+
+    def add_constraint(self, statement: str, hard: bool = True, *, id: Optional[str] = None):
+        self.constraints.append(DucCharterConstraint(
+            id=id or generate_random_id(),
+            statement=statement,
+            hard=hard,
+        ))
+        return self
+
+    def add_decision(self, decision: str, rationale: str, accepted: bool = True, *,
+                     id: Optional[str] = None, issue_ids: Optional[List[str]] = None,
+                     decided_at: Optional[int] = None):
+        self.decisions.append(DucCharterDecision(
+            id=id or generate_random_id(),
+            accepted=accepted,
+            decision=decision,
+            rationale=rationale,
+            issue_ids=issue_ids,
+            decided_at=decided_at or now_ms(),
+        ))
+        return self
+
+    def add_stakeholder(self, identifier: str, role: str, *, name: Optional[str] = None):
+        self.stakeholders.append(DucCharterStakeholder(
+            actor=Actor(identifier=identifier, name=name),
+            role=role,
+        ))
+        return self
+
+    def build(self) -> DucCharter:
+        return DucCharter(
+            title=self.base.name,
+            description=self.base.description or None,
+            objective=self.extra.get("objective", ""),
+            phase=self.extra.get("phase", "intent"),
+            closed_reason=self.extra.get("closed_reason"),
+            requirements=self.requirements,
+            constraints=self.constraints,
+            decisions=self.decisions,
+            stakeholders=self.stakeholders or None,
+            updated_at=self.extra.get("updated_at", now_ms()),
+        )
+
+
+class IssueBuilder(StateSpecificBuilder):
+    def __init__(self, base: BaseStateParams, extra: dict):
+        super().__init__(base, extra)
+        self.messages: List[DucIssueMessage] = []
+        self.assignees: List[str] = []
+        self.followers: List[str] = []
+
+    def with_local_id(self, local_id: int):
+        self.extra["local_id"] = local_id
+        return self
+
+    def with_title(self, title: str):
+        self.base.name = title
+        return self
+
+    def with_status(self, status: str):
+        self.extra["status"] = status
+        return self
+
+    def with_author_id(self, author_id: str):
+        self.extra["author_id"] = author_id
+        return self
+
+    def with_dismissed_reason(self, reason: str):
+        self.extra["dismissed_reason"] = reason
+        return self
+
+    def with_due_date(self, due_date: int):
+        self.extra["due_date"] = due_date
+        return self
+
+    def with_created_at(self, created_at: int):
+        self.extra["created_at"] = created_at
+        return self
+
+    def with_updated_at(self, updated_at: int):
+        self.extra["updated_at"] = updated_at
+        return self
+
+    def with_deleted_at(self, deleted_at: int):
+        self.extra["deleted_at"] = deleted_at
+        return self
+
+    def add_assignee(self, actor_identifier: str):
+        self.assignees.append(actor_identifier)
+        return self
+
+    def add_follower(self, actor_identifier: str):
+        self.followers.append(actor_identifier)
+        return self
+
+    def add_message(self, author_id: str, content: str, *, name: Optional[str] = None,
+                    reply_to_id: Optional[str] = None,
+                    reactions: Optional[Dict[str, List[str]]] = None,
+                    created_at: Optional[int] = None,
+                    edited_at: Optional[int] = None,
+                    deleted_at: Optional[int] = None):
+        self.messages.append(DucIssueMessage(
+            id=generate_random_id(),
+            author=Actor(identifier=author_id, name=name),
+            content=content,
+            reply_to_id=reply_to_id,
+            reactions=reactions,
+            created_at=created_at or now_ms(),
+            edited_at=edited_at,
+            deleted_at=deleted_at,
+        ))
+        return self
+
+    def with_canvas_anchor(self, x: float, y: float, *, scope: Optional[str] = None):
+        self.extra["anchor"] = DucIssueCanvasAnchor(x=x, y=y, scope=scope)
+        return self
+
+    def with_element_anchor(self, element_id: str, *, anchor_x: Optional[float] = None,
+                            anchor_y: Optional[float] = None):
+        self.extra["anchor"] = DucIssueElementAnchor(
+            element_id=element_id, anchor_x=anchor_x, anchor_y=anchor_y
+        )
+        return self
+
+    def with_model_anchor(self, element_id: str, point: List[float], *,
+                          normal: Optional[List[float]] = None,
+                          viewer_state: Optional[Viewer3DState] = None,
+                          topology_id: Optional[str] = None):
+        self.extra["anchor"] = DucIssueModelAnchor(
+            element_id=element_id,
+            point=point,
+            normal=normal,
+            viewer_state=viewer_state,
+            topology_id=topology_id,
+        )
+        return self
+
+    def build(self) -> DucIssue:
+        return DucIssue(
+            id=self.base.id or generate_random_id(),
+            local_id=self.extra.get("local_id", 0),
+            title=self.base.name,
+            status=self.extra.get("status", "open"),
+            dismissed_reason=self.extra.get("dismissed_reason"),
+            due_date=self.extra.get("due_date"),
+            anchor=self.extra.get("anchor"),
+            author_id=self.extra.get("author_id", ""),
+            assignee_ids=self.assignees or None,
+            follower_ids=self.followers or None,
+            messages=self.messages,
+            created_at=self.extra.get("created_at", now_ms()),
+            updated_at=self.extra.get("updated_at", now_ms()),
+            deleted_at=self.extra.get("deleted_at"),
+        )
+
+
+# =============== ANCHOR & VIEWER HELPERS ===============
+
+def create_actor(identifier: str, name: Optional[str] = None) -> Actor:
+    return Actor(identifier=identifier, name=name)
+
+
+def create_viewer3d_grid_uniform(value: bool = True) -> Dict[str, Any]:
+    return {"type": "uniform", "value": value}
+
+
+def create_viewer3d_grid_per_plane(xy: bool = True, xz: bool = False,
+                                  yz: bool = False) -> Dict[str, Any]:
+    return {"type": "perPlane", "value": {"xy": xy, "xz": xz, "yz": yz}}
+
+
 def create_block(
     id: str,
     label: str,
@@ -644,8 +873,8 @@ def create_block(
     metadata = DucBlockMetadata(
         source="ducpy",
         usage_count=0,
-        created_at=int(time.time() * 1000),
-        updated_at=int(time.time() * 1000),
+        created_at=now_ms(),
+        updated_at=now_ms(),
         localization=None
     )
 

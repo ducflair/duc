@@ -45,7 +45,6 @@ def test_cspmds_local_and_global_states(test_output_dir):
     # Create global state using the builder API
     global_state = (duc.StateBuilder()
         .with_id("global_state_1")
-        .with_name("Test Global State")
         .with_description("Test global state for CSPMDS")
         .with_version("1.0")
         .with_readonly(False)
@@ -66,7 +65,6 @@ def test_cspmds_local_and_global_states(test_output_dir):
     # Create local state using the builder API
     local_state = (duc.StateBuilder()
         .with_id("local_state_1")
-        .with_name("Test Local State")
         .with_description("Test local state for CSPMDS")
         .with_version("1.0")
         .with_readonly(False)
@@ -170,9 +168,9 @@ def test_local_and_global_states_via_sql():
         # Insert global state
         db.sql(
             "INSERT INTO duc_global_state "
-            "(id, name, view_background_color, main_scope, scope_exponent_threshold) "
-            "VALUES (?,?,?,?,?)",
-            1, "Test Drawing", "#FFFFFF", "mm", 6,
+            "(id, view_background_color, main_scope, scope_exponent_threshold) "
+            "VALUES (?,?,?,?)",
+            1, "#FFFFFF", "mm", 6,
         )
 
         # Insert local state
@@ -197,7 +195,7 @@ def test_local_and_global_states_via_sql():
 
         # Verify
         gs = db.sql("SELECT * FROM duc_global_state")[0]
-        assert gs["name"] == "Test Drawing"
+        assert gs["view_background_color"] == "#FFFFFF"
         assert gs["main_scope"] == "mm"
 
         ls = db.sql("SELECT * FROM duc_local_state")[0]

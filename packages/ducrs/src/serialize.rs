@@ -62,6 +62,8 @@ pub fn serialize(state: &ExportedDataState) -> SerializeResult<Vec<u8>> {
 
         let tx = inner.transaction()?;
         write_document(&tx, state)?;
+        write_charter(&tx, &state.charter)?;
+        write_issues(&tx, &state.issues)?;
         write_global_state(&tx, &state.duc_global_state)?;
         write_local_state(&tx, &state.duc_local_state)?;
         write_dictionary(&tx, &state.dictionary)?;
@@ -143,16 +145,245 @@ fn write_document(tx: &Transaction, state: &ExportedDataState) -> SerializeResul
     Ok(())
 }
 
+fn charter_phase_to_str(phase: DucCharterPhase) -> &'static str {
+    match phase {
+        DucCharterPhase::Intent => "intent",
+        DucCharterPhase::Review => "review",
+        DucCharterPhase::Delivery => "delivery",
+        DucCharterPhase::Closed => "closed",
+    }
+}
+
+fn issue_status_to_str(status: DucIssueStatus) -> &'static str {
+    match status {
+        DucIssueStatus::Open => "open",
+        DucIssueStatus::Closed => "closed",
+        DucIssueStatus::Dismissed => "dismissed",
+    }
+}
+
+fn write_charter(tx: &Transaction, charter: &Option<DucCharter>) -> SerializeResult<()> {
+    let Some(charter) = charter else { return Ok(()) };
+
+    tx.execute(
+        "INSERT OR REPLACE INTO duc_charter
+            (id, title, description, objective, phase, closed_reason, updated_at)
+         VALUES (1, ?1, ?2, ?3, ?4, ?5, ?6)",
+        params![
+            charter.title,
+            charter.description,
+            charter.objective,
+            charter_phase_to_str(charter.phase),
+            charter.closed_reason,
+            charter.updated_at,
+        ],
+    )?;
+
+    let mut req_stmt = tx.prepare_cached(
+        "INSERT INTO duc_charter_requirements (id, statement, must, sort_order)
+         VALUES (?1, ?2, ?3, ?4)"
+    )?;
+    let mut criteria_stmt = tx.prepare_cached(
+        "INSERT INTO duc_charter_requirement_acceptance_criteria (requirement_id, sort_order, criterion)
+         VALUES (?1, ?2, ?3)"
+    )?;
+    for (i, requirement) in charter.requirements.iter().enumerate() {
+        req_stmt.execute(params![requirement.id, requirement.statement, requirement.must as i32, i as i32])?;
+        if let Some(criteria) = &requirement.acceptance_criteria {
+            for (j, criterion) in criteria.iter().enumerate() {
+                criteria_stmt.execute(params![requirement.id, j as i32, criterion])?;
+            }
+        }
+    }
+
+    let mut constraint_stmt = tx.prepare_cached(
+        "INSERT INTO duc_charter_constraints (id, statement, hard, sort_order)
+         VALUES (?1, ?2, ?3, ?4)"
+    )?;
+    for (i, constraint) in charter.constraints.iter().enumerate() {
+        constraint_stmt.execute(params![constraint.id, constraint.statement, constraint.hard as i32, i as i32])?;
+    }
+
+    let mut decision_stmt = tx.prepare_cached(
+        "INSERT INTO duc_charter_decisions (id, accepted, decision, rationale, decided_at, sort_order)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)"
+    )?;
+    let mut decision_issue_stmt = tx.prepare_cached(
+        "INSERT INTO duc_charter_decision_issue_ids (decision_id, issue_id, sort_order)
+         VALUES (?1, ?2, ?3)"
+    )?;
+    for (i, decision) in charter.decisions.iter().enumerate() {
+        decision_stmt.execute(params![
+            decision.id,
+            decision.accepted as i32,
+            decision.decision,
+            decision.rationale,
+            decision.decided_at,
+            i as i32,
+        ])?;
+        if let Some(issue_ids) = &decision.issue_ids {
+            for (j, issue_id) in issue_ids.iter().enumerate() {
+                decision_issue_stmt.execute(params![decision.id, issue_id, j as i32])?;
+            }
+        }
+    }
+
+    if let Some(stakeholders) = &charter.stakeholders {
+        let mut stakeholder_stmt = tx.prepare_cached(
+            "INSERT INTO duc_charter_stakeholders (sort_order, actor_identifier, actor_name, role)
+             VALUES (?1, ?2, ?3, ?4)"
+        )?;
+        for (i, stakeholder) in stakeholders.iter().enumerate() {
+            stakeholder_stmt.execute(params![
+                i as i32,
+                stakeholder.actor.identifier,
+                stakeholder.actor.name,
+                stakeholder.role,
+            ])?;
+        }
+    }
+
+    Ok(())
+}
+
+fn write_issues(tx: &Transaction, issues: &[DucIssue]) -> SerializeResult<()> {
+    let mut issue_stmt = tx.prepare_cached(
+        "INSERT INTO duc_issues
+            (id, local_id, title, status, dismissed_reason, due_date, author_id,
+             created_at, updated_at, deleted_at, sort_order)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)"
+    )?;
+
+    for (i, issue) in issues.iter().enumerate() {
+        issue_stmt.execute(params![
+            issue.id,
+            issue.local_id,
+            issue.title,
+            issue_status_to_str(issue.status),
+            issue.dismissed_reason,
+            issue.due_date,
+            issue.author_id,
+            issue.created_at,
+            issue.updated_at,
+            issue.deleted_at,
+            i as i32,
+        ])?;
+        write_issue_actor_ids(tx, "duc_issue_assignees", &issue.id, issue.assignee_ids.as_deref())?;
+        write_issue_actor_ids(tx, "duc_issue_followers", &issue.id, issue.follower_ids.as_deref())?;
+        write_issue_messages(tx, &issue.id, &issue.messages)?;
+        if let Some(anchor) = &issue.anchor {
+            write_issue_anchor(tx, &issue.id, anchor)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn write_issue_actor_ids(
+    tx: &Transaction,
+    table: &str,
+    issue_id: &str,
+    actor_ids: Option<&[String]>,
+) -> SerializeResult<()> {
+    let Some(actor_ids) = actor_ids else { return Ok(()) };
+    let sql = format!(
+        "INSERT OR REPLACE INTO {table} (issue_id, actor_identifier, sort_order) VALUES (?1, ?2, ?3)"
+    );
+    let mut stmt = tx.prepare_cached(&sql)?;
+    for (i, actor_id) in actor_ids.iter().enumerate() {
+        stmt.execute(params![issue_id, actor_id, i as i32])?;
+    }
+    Ok(())
+}
+
+fn write_issue_messages(tx: &Transaction, issue_id: &str, messages: &[DucIssueMessage]) -> SerializeResult<()> {
+    let mut message_stmt = tx.prepare_cached(
+        "INSERT INTO duc_issue_messages
+            (id, issue_id, author_identifier, author_name, content, reply_to_id,
+             created_at, edited_at, deleted_at, sort_order)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
+    )?;
+    let mut reaction_stmt = tx.prepare_cached(
+        "INSERT OR REPLACE INTO duc_issue_message_reactions
+            (message_id, emoji, actor_identifier, sort_order)
+         VALUES (?1, ?2, ?3, ?4)"
+    )?;
+
+    for (i, message) in messages.iter().enumerate() {
+        message_stmt.execute(params![
+            message.id,
+            issue_id,
+            message.author.identifier,
+            message.author.name,
+            message.content,
+            message.reply_to_id,
+            message.created_at,
+            message.edited_at,
+            message.deleted_at,
+            i as i32,
+        ])?;
+        if let Some(reactions) = &message.reactions {
+            for (emoji, actor_ids) in reactions {
+                for (j, actor_id) in actor_ids.iter().enumerate() {
+                    reaction_stmt.execute(params![message.id, emoji, actor_id, j as i32])?;
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn write_issue_anchor(tx: &Transaction, issue_id: &str, anchor: &DucIssueAnchor) -> SerializeResult<()> {
+    match anchor {
+        DucIssueAnchor::Canvas { x, y, scope } => {
+            tx.execute(
+                "INSERT INTO duc_issue_anchors (issue_id, anchor_type, canvas_x, canvas_y, canvas_scope)
+                 VALUES (?1, 'canvas', ?2, ?3, ?4)",
+                params![issue_id, x, y, scope],
+            )?;
+        }
+        DucIssueAnchor::Element { element_id, anchor_x, anchor_y } => {
+            tx.execute(
+                "INSERT INTO duc_issue_anchors (issue_id, anchor_type, element_id, anchor_x, anchor_y)
+                 VALUES (?1, 'element', ?2, ?3, ?4)",
+                params![issue_id, element_id, anchor_x, anchor_y],
+            )?;
+        }
+        DucIssueAnchor::Model { element_id, point, normal, viewer_state, topology_id } => {
+            tx.execute(
+                "INSERT INTO duc_issue_anchors (
+                    issue_id, anchor_type, element_id,
+                    model_point_x, model_point_y, model_point_z,
+                    model_normal_x, model_normal_y, model_normal_z, topology_id
+                 ) VALUES (?1, 'model', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                params![
+                    issue_id,
+                    element_id,
+                    point[0], point[1], point[2],
+                    normal.as_ref().map(|n| n[0]),
+                    normal.as_ref().map(|n| n[1]),
+                    normal.as_ref().map(|n| n[2]),
+                    topology_id,
+                ],
+            )?;
+            if let Some(viewer_state) = viewer_state {
+                write_model_viewer_state(tx, "issue_anchor", issue_id, viewer_state)?;
+            }
+        }
+    }
+    Ok(())
+}
+
 // ─── duc_global_state ────────────────────────────────────────────────────────
 
 fn write_global_state(tx: &Transaction, gs: &Option<DucGlobalState>) -> SerializeResult<()> {
     let Some(gs) = gs else { return Ok(()) };
     tx.execute(
         "INSERT OR REPLACE INTO duc_global_state
-            (id, name, view_background_color, main_scope, scope_exponent_threshold)
-         VALUES (1, ?1, ?2, ?3, ?4)",
+            (id, view_background_color, main_scope, scope_exponent_threshold)
+         VALUES (1, ?1, ?2, ?3)",
         params![
-            gs.name,
             gs.view_background_color,
             gs.main_scope,
             gs.scope_exponent_threshold,
@@ -839,7 +1070,7 @@ fn write_model_element(tx: &Transaction, e: &DucModelElement) -> SerializeResult
     write_element_file_ids(tx, &e.base.id, &e.file_ids)?;
 
     if let Some(ref vs) = e.viewer_state {
-        write_model_viewer_state(tx, &e.base.id, vs)?;
+        write_model_viewer_state(tx, "element", &e.base.id, vs)?;
     }
 
     Ok(())
@@ -865,7 +1096,12 @@ fn write_doc_referenced_file_ids(tx: &Transaction, element_id: &str, file_ids: &
     Ok(())
 }
 
-fn write_model_viewer_state(tx: &Transaction, element_id: &str, vs: &Viewer3DState) -> SerializeResult<()> {
+fn write_model_viewer_state(
+    tx: &Transaction,
+    owner_type: &str,
+    owner_id: &str,
+    vs: &Viewer3DState,
+) -> SerializeResult<()> {
     let cam = &vs.camera;
     let disp = &vs.display;
     let mat = &vs.material;
@@ -880,7 +1116,7 @@ fn write_model_viewer_state(tx: &Transaction, element_id: &str, vs: &Viewer3DSta
 
     tx.execute(
         "INSERT INTO model_viewer_state (
-            element_id,
+            owner_type, owner_id,
             camera_control, camera_ortho, camera_up,
             camera_position_x, camera_position_y, camera_position_z,
             camera_quaternion_x, camera_quaternion_y, camera_quaternion_z, camera_quaternion_w,
@@ -899,27 +1135,28 @@ fn write_model_viewer_state(tx: &Transaction, element_id: &str, vs: &Viewer3DSta
             zebra_active, zebra_stripe_count, zebra_stripe_direction,
             zebra_color_scheme, zebra_opacity, zebra_mapping_mode
         ) VALUES (
-            ?1,
-            ?2, ?3, ?4,
-            ?5, ?6, ?7,
-            ?8, ?9, ?10, ?11,
-            ?12, ?13, ?14,
-            ?15, ?16, ?17, ?18, ?19,
-            ?20, ?21, ?22,
-            ?23, ?24, ?25, ?26,
-            ?27, ?28,
-            ?29, ?30, ?31,
-            ?32, ?33, ?34,
-            ?35, ?36, ?37, ?38, ?39,
-            ?40, ?41, ?42, ?43, ?44,
-            ?45, ?46, ?47, ?48, ?49,
-            ?50, ?51, ?52,
-            ?53, ?54,
-            ?55, ?56, ?57,
-            ?58, ?59, ?60
+            ?, ?,
+            ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?, ?,
+            ?, ?,
+            ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?,
+            ?, ?, ?,
+            ?, ?,
+            ?, ?, ?,
+            ?, ?, ?
         )",
         params![
-            element_id,
+            owner_type,
+            owner_id,
             cam.control, cam.ortho as i32, cam.up,
             cam.position[0], cam.position[1], cam.position[2],
             cam.quaternion[0], cam.quaternion[1], cam.quaternion[2], cam.quaternion[3],

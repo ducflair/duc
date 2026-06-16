@@ -1,9 +1,12 @@
+export * from "./charter.types";
 export * from "./elements";
 export * from "./geometry.types";
+export * from "./issues.types";
 export * from "./typeChecks";
 export * from "./utility.types";
 
 import { SupportedMeasures } from "../technical/scopes";
+import { DucCharter } from "./charter.types";
 import {
   DucBindableElement,
   DucBlock,
@@ -15,7 +18,6 @@ import {
   DucIframeLikeElement,
   DucLayer,
   DucLinearElement,
-  DucPoint,
   DucRegion,
   DucTextElement,
   ElementBackground,
@@ -24,15 +26,13 @@ import {
   FontFamilyValues,
   LineHead,
   NonDeleted,
-  TextAlign,
+  TextAlign
 } from "./elements";
 import {
-  GeometricPoint,
-  Percentage,
-  Radian,
+  Percentage
 } from "./geometry.types";
-import { MarkOptional, MaybePromise, ValueOf } from "./utility.types";
-
+import { DucIssue } from "./issues.types";
+import { MarkOptional, MaybePromise } from "./utility.types";
 
 /**
  * Root data structure for the stored data state
@@ -44,6 +44,9 @@ export interface ExportedDataState {
   source: string;
   thumbnail: Uint8Array | undefined;
   dictionary: Dictionary | undefined;
+  
+  charter: DucCharter;
+  issues: DucIssue[];
 
   elements: readonly DucElement[];
 
@@ -58,7 +61,7 @@ export interface ExportedDataState {
   groups: readonly DucGroup[];
   regions: readonly DucRegion[];
   layers: readonly DucLayer[];
-  
+
   files: DucExternalFiles | undefined;
   /** Revision data blobs keyed by revision id. Separated from metadata for lazy loading. */
   filesData: ExternalFilesData | undefined;
@@ -67,7 +70,7 @@ export interface ExportedDataState {
   versionGraph: VersionGraph | undefined;
 
   /** Actual file id */
-  id: string | undefined;
+  id: string;
 }
 
 export type ExportedDataStateContent = Omit<ExportedDataState, "type" | "version" | "source">;
@@ -79,21 +82,22 @@ export type BaseExportedDataState = MarkOptional<ExportedDataStateContent, "elem
  */
 export type ImportedDataState = Partial<ExportedDataState>;
 
-export type Identifier = {
-  /** Unique identifier for this standard */
-  id: string;
-  /** Human-readable name */
-  name: string;
-  /** Description of the standard */
-  description?: string;
-};
-
 export type Dictionary = {
   [key: string]: string;
 };
 
-export type Scope = SupportedMeasures;
+/**
+ * A person, organization, team, system, or agent relevant to the project.
+ *
+ * The identifier is stable within the project context: email, @username,
+ * agent ID, organization ID, role ID, or imported external identifier.
+ */
+export interface Actor {
+  identifier: string;
+  name?: string;
+}
 
+export type Scope = SupportedMeasures;
 
 export type ExternalFileRevisionMeta = {
   id: string;
@@ -183,10 +187,6 @@ export type ElementOrToolType = DucElementType | ToolType | "custom";
  * They travel with the file and are consistent for all users.
  */
 export type DucGlobalState = {
-  /**
-   * The name of the drawing
-   */
-  name: string | null;
   /**
    * The background color of the drawing
    */

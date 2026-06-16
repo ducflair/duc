@@ -115,7 +115,7 @@ def main():
     )
 
     print(f"   Mutated {len(elements)} elements.")
-    print(f"   Global state name -> {global_state.name!r}")
+    print(f"   Global state main scope -> {global_state.main_scope!r}")
     print(f"   Local state scroll -> ({local_state.scroll_x}, {local_state.scroll_y})")
     print(f"   External file version -> {external_file.version}")
     print(f"   Serialized {len(duc_bytes)} bytes.")
