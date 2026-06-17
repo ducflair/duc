@@ -94,6 +94,13 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
         conn.execute_batch(CONN_PRAGMAS)
             .map_err(|e| DbError::Bootstrap(format!("pragma apply failed: {e}")))?;
     } else {
+        // Older database: normalize any known schema drift before running the
+        // canonical migration chain. Fixtures written by prerelease code may
+        // have applied parts of later schemas without bumping user_version, so
+        // we add columns/indexes migrations expect when missing and recreate
+        // objects that already exist to keep the migration SQL idempotent.
+        normalize_legacy_schema(conn, user_version)?;
+
         // Walk the migration chain until we reach CURRENT_VERSION.
         // build.rs generates MIGRATIONS sorted by from_version, so chaining
         // (e.g. 3000000→3000001→3000002) works without any code changes here.
@@ -120,6 +127,34 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
         }
         conn.execute_batch(CONN_PRAGMAS)
             .map_err(|e| DbError::Bootstrap(format!("pragma apply failed: {e}")))?;
+    }
+
+    Ok(())
+}
+
+/// Add missing columns/objects that later migrations expect.
+///
+/// Some test fixtures were produced by intermediate code that created tables
+/// such as `search_elements` or renamed `element_model.svg_path` to `thumbnail`
+/// while still reporting an older `user_version`. Adding the missing legacy
+/// columns back lets the canonical migration SQL run without modification.
+fn normalize_legacy_schema(conn: &Connection, user_version: i64) -> Result<(), DbError> {
+    // 3000003→3000004 migration expects `element_model.svg_path`.
+    if user_version <= 3000004 {
+        let has_column: bool = conn.query_row(
+            "SELECT 1 FROM pragma_table_info('element_model') WHERE name = 'svg_path'",
+            [],
+            |_| Ok(true),
+        ).unwrap_or(false);
+        if !has_column {
+            conn.execute(
+                "ALTER TABLE element_model ADD COLUMN svg_path TEXT DEFAULT NULL",
+                [],
+            )
+            .map_err(|e| DbError::Bootstrap(format!(
+                "legacy normalization: add element_model.svg_path failed: {e}"
+            )))?;
+        }
     }
 
     Ok(())

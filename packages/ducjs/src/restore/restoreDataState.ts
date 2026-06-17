@@ -528,9 +528,13 @@ export const restoreCharter = (importedCharter: unknown): DucCharter => {
   }
   const obj = importedCharter as Record<string, unknown>;
   const title = isValidString(obj.title);
-  const objective = isValidString(obj.objective);
-  const rawPhase = isValidString(obj.phase);
-  if (!title || !objective || !rawPhase || !VALID_CHARTER_PHASES.includes(rawPhase as DucCharterPhase)) {
+  if (!title) {
+    return getDefaultCharter();
+  }
+
+  const objective = typeof obj.objective === "string" ? obj.objective : "";
+  const rawPhase = isValidString(obj.phase) || "intent";
+  if (!VALID_CHARTER_PHASES.includes(rawPhase as DucCharterPhase)) {
     return getDefaultCharter();
   }
 

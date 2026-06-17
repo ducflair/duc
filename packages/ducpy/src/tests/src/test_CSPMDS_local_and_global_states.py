@@ -43,7 +43,7 @@ def test_cspmds_local_and_global_states(test_output_dir):
               .build())
     
     # Create global state using the builder API
-    global_state = (duc.StateBuilder()
+    duc_global_state = (duc.StateBuilder()
         .with_id("global_state_1")
         .with_description("Test global state for CSPMDS")
         .with_version("1.0")
@@ -63,7 +63,7 @@ def test_cspmds_local_and_global_states(test_output_dir):
         .build())
     
     # Create local state using the builder API
-    local_state = (duc.StateBuilder()
+    duc_local_state = (duc.StateBuilder()
         .with_id("local_state_1")
         .with_description("Test local state for CSPMDS")
         .with_version("1.0")
@@ -94,8 +94,8 @@ def test_cspmds_local_and_global_states(test_output_dir):
         file_path=output_file,
         name="LocalAndGlobalStatesTest",
         elements=elements,
-        duc_global_state=global_state,
-        duc_local_state=local_state
+        duc_global_state=duc_global_state,
+        duc_local_state=duc_local_state
     )
     
     assert os.path.exists(output_file) and os.path.getsize(output_file) > 0
@@ -183,14 +183,14 @@ def test_local_and_global_states_via_sql():
             1, "mm", 0.0, 0.0, 1.0, 1, 0, 0, 1, 1, 0, 2,
         )
 
-        # Add default current-item stroke/background via local_state owner
+        # Add default current-item stroke/background via duc_local_state owner
         db.sql(
             "INSERT INTO backgrounds (owner_type, owner_id, src, opacity) VALUES (?,?,?,?)",
-            "local_state", "1", "#3498db", 1.0,
+            "duc_local_state", "1", "#3498db", 1.0,
         )
         db.sql(
             "INSERT INTO strokes (owner_type, owner_id, src, width) VALUES (?,?,?,?)",
-            "local_state", "1", "#000000", 1.0,
+            "duc_local_state", "1", "#000000", 1.0,
         )
 
         # Verify

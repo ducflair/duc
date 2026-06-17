@@ -1284,7 +1284,7 @@ export type Viewer3DGridPlanes = {
 
 export type Viewer3DGrid =
   | { type: "uniform"; value: boolean }
-  | { type: "perPlane"; planes: Viewer3DGridPlanes };
+  | { type: "perPlane"; value: Viewer3DGridPlanes };
 
 export type Viewer3DDisplay = {
   wireframe: boolean;

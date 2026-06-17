@@ -28,6 +28,7 @@ CREATE TABLE external_file_revisions (
     last_retrieved  INTEGER
 ) WITHOUT ROWID;
 
+DROP INDEX IF EXISTS idx_external_file_revisions_file;
 CREATE INDEX idx_external_file_revisions_file ON external_file_revisions(file_id);
 
 INSERT INTO external_file_revisions (id, file_id, size_bytes, checksum, source_name, mime_type, message, created, last_retrieved)

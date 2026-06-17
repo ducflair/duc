@@ -74,7 +74,12 @@ CREATE TABLE duc_charter_stakeholders (
 );
 
 INSERT INTO duc_charter (id, title, objective, phase, updated_at)
-SELECT 1, COALESCE((SELECT name FROM _duc_global_state_name LIMIT 1), ''), '', 'intent', 0;
+SELECT
+    1,
+    COALESCE((SELECT name FROM _duc_global_state_name LIMIT 1), ''),
+    '',
+    'intent',
+    CAST(strftime('%s', 'now') AS INTEGER) * 1000;
 
 DROP TABLE _duc_global_state_name;
 

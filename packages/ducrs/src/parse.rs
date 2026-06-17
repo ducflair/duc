@@ -440,6 +440,10 @@ fn deserialize_image(buf: &[u8]) -> ParseResult<Connection> {
         )));
     }
 
+    // Apply pending schema migrations so the in-memory DB reflects the
+    // current schema before the read-only parse path queries it.
+    crate::db::bootstrap::bootstrap(&conn).map_err(ParseError::Db)?;
+
     // Read-only parse path. Avoid journal transitions.
     conn.execute_batch("PRAGMA query_only = ON;")
         .map_err(|e| ParseError::InvalidData(format!(
