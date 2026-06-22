@@ -8,6 +8,12 @@ from .search_elements import (
     ExternalFileSearchTarget,
     search_duc_elements,
 )
+from .search_models import (
+    ModelElementInfo,
+    ModelEngine,
+    detect_model_engine,
+    search_duc_models,
+)
 
 __all__ = [
     "DucElementSearchResult",
@@ -15,5 +21,9 @@ __all__ = [
     "DucSearchResponse",
     "DucSearchResult",
     "ExternalFileSearchTarget",
+    "ModelElementInfo",
+    "ModelEngine",
+    "detect_model_engine",
     "search_duc_elements",
+    "search_duc_models",
 ]
