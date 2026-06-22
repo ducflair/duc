@@ -9,12 +9,10 @@
 //! (`version_control.sql`) and produce/consume the canonical Rust types
 //! from `crate::types`.
 
-use flate2::read::ZlibDecoder;
-use flate2::write::ZlibEncoder;
+use flate2::read::{GzDecoder, ZlibDecoder};
+use flate2::write::GzEncoder;
 use flate2::Compression;
 use rusqlite::OptionalExtension;
-use std::io::Read;
-use std::io::Write;
 use std::os::raw::c_char;
 
 use crate::db::{DbError, DbResult, DucConnection};
@@ -869,31 +867,51 @@ pub(crate) fn read_version_graph_inner(
 // Compression utilities
 // ────────────────────────────────────────────────────────────────────────────
 
-/// Decompress a zlib-compressed blob.
-fn decompress_zlib(compressed: &[u8]) -> DbResult<Vec<u8>> {
-    let mut decoder = ZlibDecoder::new(compressed);
+const GZIP_MAGIC: &[u8] = &[0x1f, 0x8b];
+
+/// Returns true if the buffer starts with the gzip magic header.
+#[inline]
+fn is_gzip_header(buf: &[u8]) -> bool {
+    buf.starts_with(GZIP_MAGIC)
+}
+
+/// Decompress a changeset payload, auto-detecting gzip vs legacy zlib/deflate.
+fn decompress_changeset_payload(compressed: &[u8]) -> DbResult<Vec<u8>> {
+    use std::io::Read;
+
     let mut decompressed = Vec::new();
-    decoder
-        .read_to_end(&mut decompressed)
-        .map_err(|e| DbError::Bootstrap(format!("zlib decompression failed: {e}")))?;
+    if is_gzip_header(compressed) {
+        let mut decoder = GzDecoder::new(compressed);
+        decoder
+            .read_to_end(&mut decompressed)
+            .map_err(|e| DbError::Bootstrap(format!("gzip changeset decompression failed: {e}")))?;
+    } else {
+        // Legacy: zlib-wrapped delta/snapshot (v1/v2/v3).
+        let mut decoder = ZlibDecoder::new(compressed);
+        decoder
+            .read_to_end(&mut decompressed)
+            .map_err(|e| DbError::Bootstrap(format!("zlib changeset decompression failed: {e}")))?;
+    }
     Ok(decompressed)
 }
 
-/// Compress a blob with zlib (legacy v1 snapshot-compatible payload).
-fn compress_zlib(raw: &[u8]) -> DbResult<Vec<u8>> {
-    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+/// Compress a changeset payload with gzip.
+fn compress_changeset_payload(raw: &[u8]) -> DbResult<Vec<u8>> {
+    use std::io::Write;
+
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
     encoder
         .write_all(raw)
-        .map_err(|e| DbError::Bootstrap(format!("zlib compression failed: {e}")))?;
+        .map_err(|e| DbError::Bootstrap(format!("gzip changeset compression failed: {e}")))?;
     encoder
         .finish()
-        .map_err(|e| DbError::Bootstrap(format!("zlib finalize failed: {e}")))
+        .map_err(|e| DbError::Bootstrap(format!("gzip changeset finalize failed: {e}")))
 }
 
 /// Ensure the input is raw (uncompressed) SQLite bytes.
 ///
-/// `.duc` files produced by `serializeDuc` are deflate-compressed. This
-/// helper transparently inflates them so that fossil delta operates on the
+/// `.duc` files produced by `serializeDuc` are gzip (or legacy deflate) compressed.
+/// This helper transparently inflates them so that fossil delta operates on the
 /// raw SQLite pages — producing compact patches. If the input is already
 /// raw SQLite, it is returned as-is (zero-copy via `Cow`).
 fn ensure_raw_sqlite(buf: &[u8]) -> DbResult<std::borrow::Cow<'_, [u8]>> {
@@ -919,15 +937,15 @@ fn ensure_raw_sqlite(buf: &[u8]) -> DbResult<std::borrow::Cow<'_, [u8]>> {
 //   [0x44 'D'][0x46 'F']          – magic bytes ("DF" = Delta Fossil)
 //   [0x05]                        – format version
 //   [4 bytes LE u32]              – raw SQLite length of new state
-//   [remaining bytes]             – zlib-compressed fossil delta
+//   [remaining bytes]             – gzip-compressed fossil delta
 //
 // The fossil delta algorithm uses rolling checksums and emits granular
 // COPY (reference old bytes) + INSERT (literal new bytes) commands.
 // This is far more compact than page-level diffs because a 4KB page
 // with 20 changed bytes only stores those 20 bytes, not the full page.
 //
-// Fallback: if the delta is larger than a zlib-compressed full snapshot,
-// the snapshot is stored directly (no magic header → detected as raw zlib).
+// Fallback: if the delta is larger than a gzip-compressed full snapshot,
+// the snapshot is stored directly (no magic header → detected by gzip/zlib magic).
 
 /// Magic header identifying a fossil delta changeset.
 const DELTA_MAGIC_FOSSIL: [u8; 2] = [0x44, 0x46]; // "DF"
@@ -947,8 +965,8 @@ fn is_fossil_format(changeset: &[u8]) -> bool {
 /// Compute a checkpoint-relative changeset using fossil delta.
 ///
 /// Both inputs are transparently decompressed to raw SQLite bytes,
-/// then a fossil delta is computed and zlib-compressed.
-/// Falls back to a full zlib snapshot if the delta isn't smaller.
+/// then a fossil delta is computed and gzip-compressed.
+/// Falls back to a full gzip snapshot if the delta isn't smaller.
 pub fn create_bsdiff_changeset(base: &[u8], current: &[u8]) -> DbResult<Vec<u8>> {
     let raw_base = ensure_raw_sqlite(base)?;
     let raw_current = ensure_raw_sqlite(current)?;
@@ -956,7 +974,7 @@ pub fn create_bsdiff_changeset(base: &[u8], current: &[u8]) -> DbResult<Vec<u8>>
     // fossil_delta::delta(target, source) — target is what we want to reconstruct,
     // source is what we already have. apply(source, delta) → target.
     let raw_delta = fossil_delta::delta(&raw_current, &raw_base);
-    let compressed_delta = compress_zlib(&raw_delta)?;
+    let compressed_delta = compress_changeset_payload(&raw_delta)?;
 
     let new_len = raw_current.len() as u32;
     let mut encoded = Vec::with_capacity(FOSSIL_HEADER_SIZE + compressed_delta.len());
@@ -965,8 +983,8 @@ pub fn create_bsdiff_changeset(base: &[u8], current: &[u8]) -> DbResult<Vec<u8>>
     encoded.extend_from_slice(&new_len.to_le_bytes());
     encoded.extend_from_slice(&compressed_delta);
 
-    // Fallback: full zlib snapshot if delta isn't beneficial
-    let snapshot = compress_zlib(&raw_current)?;
+    // Fallback: full gzip snapshot if delta isn't beneficial
+    let snapshot = compress_changeset_payload(&raw_current)?;
 
     if encoded.len() < snapshot.len() {
         Ok(encoded)
@@ -983,7 +1001,7 @@ fn apply_fossil_changeset(base: &[u8], changeset: &[u8]) -> DbResult<Vec<u8>> {
     let raw_base = ensure_raw_sqlite(base)?;
 
     let compressed_delta = &changeset[FOSSIL_HEADER_SIZE..];
-    let raw_delta = decompress_zlib(compressed_delta)?;
+    let raw_delta = decompress_changeset_payload(compressed_delta)?;
 
     fossil_delta::apply(&raw_base, &raw_delta)
         .map_err(|e| DbError::Bootstrap(format!("fossil delta apply failed: {e:?}")))
@@ -992,15 +1010,15 @@ fn apply_fossil_changeset(base: &[u8], changeset: &[u8]) -> DbResult<Vec<u8>> {
 /// Decode a stored changeset.
 ///
 /// Detects fossil delta (v5) by magic header. Anything else is treated as
-/// a zlib-compressed full snapshot (fallback).
+/// a gzip-compressed full snapshot (fallback).
 ///
 /// Returns raw (uncompressed) SQLite bytes.
 pub fn apply_delta_changeset(base_data: &[u8], changeset: &[u8]) -> DbResult<Vec<u8>> {
     if is_fossil_format(changeset) {
         apply_fossil_changeset(base_data, changeset)
     } else {
-        // Snapshot fallback: zlib-compressed full state
-        decompress_zlib(changeset)
+        // Snapshot fallback: gzip-compressed full state
+        decompress_changeset_payload(changeset)
     }
 }
 

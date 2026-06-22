@@ -16,7 +16,7 @@ const robotoMono = Roboto_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Duc CAD File",
+    default: "Duc File",
     template: `%s | ${siteName}`,
   },
   description,

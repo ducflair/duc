@@ -9,7 +9,7 @@ Builders API (High-level):
     and handle document state with the ``duc.builders`` module.
 
 SQL Builder (Low-level):
-    A ``.duc`` file is a zlib-compressed SQLite database. Use
+    A ``.duc`` file is a gzip-compressed SQLite database. Use
     ``duc.builders.sql_builder`` for direct schema access, bulk
     queries, and low-level manipulation.
 

@@ -42,15 +42,19 @@ impl From<std::io::Error> for SerializeError {
 
 pub type SerializeResult<T> = Result<T, SerializeError>;
 
+const LARGE_EMBEDDED_FILES_THRESHOLD_BYTES: usize = 128 * 1024 * 1024;
+
 // ─── Public entry point ──────────────────────────────────────────────────────
 
 /// Serialize an [`ExportedDataState`] into a compressed `.duc` file (raw bytes).
 ///
-/// Uses `page_size = 1024` and zlib compression for minimal output size.
+/// Uses `page_size = 1024` and gzip (RFC 1952) compression for minimal output size.
 /// The result can be parsed back with [`crate::parse::parse`].
 pub fn serialize(state: &ExportedDataState) -> SerializeResult<Vec<u8>> {
     let conn = db::open_memory_compact()?;
     let mut inner = conn.into_inner();
+    let embedded_external_bytes = total_external_file_data_bytes(state);
+    let should_optimize_for_large_embeds = embedded_external_bytes >= LARGE_EMBEDDED_FILES_THRESHOLD_BYTES;
 
     {
         // Temporarily disable FK checks during bulk insert so that
@@ -77,11 +81,31 @@ pub fn serialize(state: &ExportedDataState) -> SerializeResult<Vec<u8>> {
         inner.execute_batch("PRAGMA foreign_keys = ON;")?;
     }
 
-    // Reclaim any wasted pages before exporting.
-    inner.execute_batch("VACUUM;")?;
+    // VACUUM creates another full copy of the sqlite image. Skip it for very
+    // large embedded-file exports where peak memory matters more than a compact
+    // final database layout.
+    if !should_optimize_for_large_embeds {
+        inner.execute_batch("VACUUM;")?;
+    }
 
     let raw = export_db_bytes(&inner)?;
+
+    // For very large embedded-file exports, returning the raw sqlite image
+    // avoids another full-memory deflate copy. The parser already accepts raw
+    // sqlite `.duc` payloads.
+    if should_optimize_for_large_embeds {
+        return Ok(raw);
+    }
+
     compress_duc_bytes(&raw)
+}
+
+fn total_external_file_data_bytes(state: &ExportedDataState) -> usize {
+    state
+        .external_files_data
+        .as_ref()
+        .map(|data| data.values().map(|blob| blob.len()).sum())
+        .unwrap_or(0)
 }
 
 // ─── Database export ─────────────────────────────────────────────────────────
@@ -117,13 +141,13 @@ fn export_db_bytes(conn: &Connection) -> SerializeResult<Vec<u8>> {
     Ok(bytes)
 }
 
-/// Compress raw SQLite bytes using a zlib/deflate stream.
+/// Compress raw SQLite bytes using a gzip (RFC 1952) stream.
 fn compress_duc_bytes(raw: &[u8]) -> SerializeResult<Vec<u8>> {
-    use flate2::write::DeflateEncoder;
+    use flate2::write::GzEncoder;
     use flate2::Compression;
     use std::io::Write;
 
-    let mut encoder = DeflateEncoder::new(Vec::with_capacity(raw.len() / 4), Compression::default());
+    let mut encoder = GzEncoder::new(Vec::with_capacity(raw.len() / 4), Compression::default());
     encoder.write_all(raw)?;
     Ok(encoder.finish()?)
 }
@@ -1078,7 +1102,7 @@ fn write_model_element(tx: &Transaction, e: &DucModelElement) -> SerializeResult
 
 fn write_element_file_ids(tx: &Transaction, element_id: &str, file_ids: &[String]) -> SerializeResult<()> {
     let mut stmt = tx.prepare_cached(
-        "INSERT INTO model_element_files (element_id, file_id, sort_order) VALUES (?1, ?2, ?3)"
+        "INSERT OR IGNORE INTO model_element_files (element_id, file_id, sort_order) VALUES (?1, ?2, ?3)"
     )?;
     for (i, fid) in file_ids.iter().enumerate() {
         stmt.execute(params![element_id, fid, i as i32])?;

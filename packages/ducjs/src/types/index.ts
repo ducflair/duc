@@ -387,7 +387,7 @@ export interface Delta extends VersionBase {
   versionNumber: number;
   schemaVersion: number;
   baseCheckpointId: VersionId;
-  /** Compressed binary data for the delta (zlib). */
+  /** Compressed binary data for the delta (gzip). */
   payload: Uint8Array;
   sizeBytes: number;
 }

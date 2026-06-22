@@ -12,7 +12,7 @@
   </p>
 </p>
 
-The `ducpy` package is the official Python implementation of the `.duc` 2D CAD file format. It is built on top of the [`duc`](../ducrs) Rust crate, exposed as the `ducpy_native` extension. A `.duc` file is a zlib-compressed SQLite database — `ducpy` gives you both a high-level builder DSL and direct low-level access to that schema, plus parsing, serialization, and search helpers.
+The `ducpy` package is the official Python implementation of the `.duc` 2D CAD file format. It is built on top of the [`duc`](../ducrs) Rust crate, exposed as the `ducpy_native` extension. A `.duc` file is a gzip-compressed SQLite database — `ducpy` gives you both a high-level builder DSL and direct low-level access to that schema, plus parsing, serialization, and search helpers.
 
 ## Installation
 
@@ -48,7 +48,7 @@ See the worked examples:
 
 ### SQL Builder (Low-level)
 
-A `.duc` file is a zlib-compressed SQLite database. Use `duc.builders.sql_builder` (`DucSQL`) for direct schema access, bulk queries, and low-level manipulation.
+A `.duc` file is a gzip-compressed SQLite database. Use `duc.builders.sql_builder` (`DucSQL`) for direct schema access, bulk queries, and low-level manipulation.
 
 See the worked example: [SQL Builder](src/examples/sql_builder_demo.py) — `DucSQL.new()` to create a `.duc` from scratch, `DucSQL(path)` to query an existing one.
 

@@ -1415,7 +1415,7 @@ pub struct Delta {
     #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub schema_version: i32,
     pub base_checkpoint_id: String,
-    /** Compressed binary data for the delta (zlib). When present, patch_string is ignored. */
+    /** Compressed binary data for the delta (gzip). When present, patch_string is ignored. */
     #[serde(with = "serde_bytes")]
     pub payload: Vec<u8>,
     pub size_bytes: i64,

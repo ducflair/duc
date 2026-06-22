@@ -376,16 +376,26 @@ pub fn is_sqlite_header(buf: &[u8]) -> bool {
     buf.len() >= SQLITE_HEADER_MAGIC.len() && &buf[..SQLITE_HEADER_MAGIC.len()] == SQLITE_HEADER_MAGIC
 }
 
-/// Inflate a compressed deflate payload.
+/// Inflate a compressed `.duc` payload.
+/// Detects gzip by magic bytes (`0x1f 0x8b`) and falls back to raw deflate for legacy files.
 pub fn decompress_duc_bytes(compressed: &[u8]) -> ParseResult<Vec<u8>> {
-    use flate2::read::DeflateDecoder;
+    use flate2::read::{DeflateDecoder, GzDecoder};
     use std::io::Read;
 
-    let mut decoder = DeflateDecoder::new(compressed);
+    const GZIP_MAGIC: &[u8] = &[0x1f, 0x8b];
+
     let mut out = Vec::new();
-    decoder
-        .read_to_end(&mut out)
-        .map_err(|e| ParseError::Io(format!("DUCz decompression failed: {e}")))?;
+    if compressed.starts_with(GZIP_MAGIC) {
+        let mut decoder = GzDecoder::new(compressed);
+        decoder
+            .read_to_end(&mut out)
+            .map_err(|e| ParseError::Io(format!("DUCz gzip decompression failed: {e}")))?;
+    } else {
+        let mut decoder = DeflateDecoder::new(compressed);
+        decoder
+            .read_to_end(&mut out)
+            .map_err(|e| ParseError::Io(format!("DUCz decompression failed: {e}")))?;
+    }
     Ok(out)
 }
 

@@ -182,7 +182,7 @@ pub fn create_delta_changeset(
 /// was created. Returns the full document state as `Uint8Array`.
 ///
 /// Handles all changeset formats transparently:
-///   - v3 (bsdiff), v2 (XOR diff), v1 (zlib full snapshot)
+///   - v3 (bsdiff), v2 (XOR diff), v1 (gzip full snapshot)
 #[wasm_bindgen(js_name = "applyDeltaChangeset")]
 pub fn apply_delta_changeset(
     base_state: &[u8],

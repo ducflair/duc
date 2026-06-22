@@ -35,7 +35,7 @@ export default function HomePage() {
           <div className="p-6 rounded-lg bg-card border border-border">
             <h3 className="text-xl font-semibold mb-2">SQLite at the core</h3>
             <p className="text-muted-foreground">
-              A <code className="text-sm">.duc</code> file is a zlib-compressed SQLite database.
+              A <code className="text-sm">.duc</code> file is a gzip-compressed SQLite database.
               Query it directly, version it, or stream it, the same file works from a browser, a
               Python notebook, or a Rust service.
             </p>
