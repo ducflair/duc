@@ -3,7 +3,7 @@
   "version": "0.0.0-development",
   "private": true,
   "scripts": {
-    "build": "bash -c 'SETUPTOOLS_SCM_PRETEND_VERSION=${1} uv build' --",
+    "build": "bash -c 'SETUPTOOLS_SCM_PRETEND_VERSION=${1} uv build' --  && uv run maturin develop --release --manifest-path crate/Cargo.toml",
     "gen:docs": "bun clean:docs && cd docs && uv run make html",
     "dev:docs": "uv run --with sphinx-autobuild sphinx-autobuild docs docs/_build/html --port 8240 --open-browser",
     "clean:docs": "cd docs && uv run make clean",

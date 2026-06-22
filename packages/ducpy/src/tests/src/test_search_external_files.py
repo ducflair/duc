@@ -143,6 +143,21 @@ def test_scanned_pdf_page_content_is_not_searchable(test_output_dir, request):
 
 
 @pytest.mark.slow
+def test_scanned_pdf_page_content_is_searchable_with_ocr(test_output_dir, request):
+    if not _OCR_AVAILABLE:
+        pytest.skip("OCR is not available")
+    payload, _ = _run_external_file_search(
+        "RECIPRO SAW",
+        test_output_dir,
+        request,
+        search_all_external_files=True,
+    )
+    assert payload["total_hits"] == 1
+    assert payload["results"][0]["element_id"] == "vMotO7XwHbrgffP-Oy700"
+    assert "RECIPRO SAW" in payload["results"][0]["matches"][0]
+
+
+@pytest.mark.slow
 def test_search_pdf_results_include_structured_pages(test_output_dir, request):
     payload, _ = _run_external_file_search(
         "empire",

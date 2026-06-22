@@ -22,7 +22,9 @@ classifiers = [
 
 [project.optional-dependencies]
 ocr = [
-    "rapidocr-onnxruntime>=1.3.24",
+    "rapidocr==3.8.1",
+    "onnxruntime",
+    "huggingface-hub>=0.20.0",
     "numpy>=1.20.0",
 ]
 
@@ -52,6 +54,7 @@ where = ["src"]
 [dependency-groups]
 dev = [
     "ducpy[ocr]",
+    "maturin>=1.0,<2.0",
     "furo>=2024.8.6",
     "sphinx>=8.1.3",
     "sphinx-autoapi>=3.6.0",
