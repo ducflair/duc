@@ -610,12 +610,6 @@ impl DucToPdfBuilder {
         // Set title
         if let Some(title) = &self.context.options.metadata_title {
             info.set("Title", Object::string_literal(title.as_str()));
-        } else if let Some(global_state) = &self.context.exported_data.duc_global_state {
-            if let Some(name) = &global_state.name {
-                if !name.is_empty() {
-                    info.set("Title", Object::string_literal(name.as_str()));
-                }
-            }
         }
 
         // Set author

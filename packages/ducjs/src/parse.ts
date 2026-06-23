@@ -70,6 +70,15 @@ export async function parseDuc(
     restored.versionGraph = originalVG;
   }
 
+  // Keep charter and issues in the parsed output even though restore() does not
+  // currently populate them itself.
+  if (data.charter) {
+    restored.charter = data.charter;
+  }
+  if (data.issues) {
+    restored.issues = data.issues;
+  }
+
   return restored;
 }
 
@@ -127,6 +136,15 @@ export async function parseDucLazy(
   // Use the original version graph from Rust, bypassing restore's lossy filtering
   if (originalVG) {
     restored.versionGraph = originalVG;
+  }
+
+  // Keep charter and issues in the parsed output even though restore() does not
+  // currently populate them itself.
+  if (data.charter) {
+    restored.charter = data.charter;
+  }
+  if (data.issues) {
+    restored.issues = data.issues;
   }
 
   return restored;

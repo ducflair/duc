@@ -8,7 +8,9 @@ import {
   NEUTRAL_SCOPE,
 } from "../../technical/scopes";
 import {
+  DucCharter,
   DucGlobalState,
+  DucIssue,
   DucLocalState,
   RawValue,
   Scope,
@@ -51,12 +53,23 @@ export const getZoom = (
 
 export const getDefaultGlobalState = (): DucGlobalState => {
   return {
-    name: null,
     viewBackgroundColor: typeof window !== "undefined" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? COLOR_PALETTE.night : COLOR_PALETTE.white) : COLOR_PALETTE.white,
     scopeExponentThreshold: 3,
     mainScope: NEUTRAL_SCOPE,
   };
 };
+
+export const getDefaultCharter = (): DucCharter => ({
+  title: "",
+  objective: "",
+  phase: "intent",
+  requirements: [],
+  constraints: [],
+  decisions: [],
+  updatedAt: Date.now(),
+});
+
+export const getDefaultIssues = (): DucIssue[] => [];
 
 export const getDefaultLocalState = (): Omit<
   DucLocalState,

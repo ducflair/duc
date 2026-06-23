@@ -1,6 +1,6 @@
-import { Bounds, LineSegment } from "../../types/geometryTypes";
+import { Bounds, LineSegment } from "../../types/geometry.types";
 import { ScopedValue } from "../../types";
-import { GeometricPoint } from "../../types/geometryTypes";
+import { GeometricPoint } from "../../types/geometry.types";
 
 
 export function getBBox(line: LineSegment): Bounds {

@@ -30,12 +30,12 @@ def create_duc_with_external_files():
         .with_data(dummy_pdf_data)
         .build())
 
-    global_state = (duc.StateBuilder()
+    duc_global_state = (duc.StateBuilder()
         .build_global_state()
         .with_main_scope("mm")
         .build())
 
-    local_state = (duc.StateBuilder()
+    duc_local_state = (duc.StateBuilder()
         .build_local_state()
         .build())
 
@@ -43,7 +43,7 @@ def create_duc_with_external_files():
 
     print("DUC object with external files created successfully!")
     print(f"Total external files: {len(duc_object_files)}")
-    return duc_object_files, global_state, local_state
+    return duc_object_files, duc_global_state, duc_local_state
 
 
 def main():

@@ -154,9 +154,9 @@ def test_a_duc_with_everything(test_output_dir):
 
         # Global + local state
         db.sql(
-            "INSERT INTO duc_global_state (id, name, view_background_color, main_scope, scope_exponent_threshold) "
-            "VALUES (?,?,?,?,?)",
-            1, "Everything", "#F0F0F0", "m", 3,
+            "INSERT INTO duc_global_state (id, view_background_color, main_scope, scope_exponent_threshold) "
+            "VALUES (?,?,?,?)",
+            1, "#F0F0F0", "m", 3,
         )
         db.sql(
             "INSERT INTO duc_local_state (id, scope, scroll_x, scroll_y, zoom, is_binding_enabled, pen_mode, view_mode_enabled, objects_snap_mode_enabled, grid_mode_enabled, outline_mode_enabled) "
@@ -324,7 +324,11 @@ def test_a_duc_with_everything(test_output_dir):
         db.sql("INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)", "xlsx_tbl", "xlsx_tbl_rev1", now)
         db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved) VALUES (?,?,?,?,?,?)", "xlsx_tbl_rev1", "xlsx_tbl", len(b"fake-xlsx"), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", now, now)
         db.sql("INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)", "xlsx_tbl_rev1", b"fake-xlsx")
-        db.sql("INSERT INTO element_table (element_id, file_id) VALUES (?,?)", "tbl1", "xlsx_tbl")
+        db.sql(
+            "INSERT INTO document_grid_config (element_id, file_id, grid_columns, grid_gap_x, grid_gap_y, grid_first_page_alone, grid_scale) VALUES (?,?,?,?,?,?,?)",
+            "tbl1", "xlsx_tbl", 1, 0.0, 0.0, 0, 1.0,
+        )
+        db.sql("INSERT INTO element_table (element_id) VALUES (?)", "tbl1")
 
         # Blocks: SQL block definition that references both builder- and SQL-originated rectangles.
         db.sql("INSERT INTO blocks (id, label, description, version) VALUES (?,?,?,?)", "block_rects", "Rectangle Block", "Builder+SQL rectangle members", 1)

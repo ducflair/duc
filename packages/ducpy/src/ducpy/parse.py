@@ -71,8 +71,8 @@ def parse_duc(source: Union[bytes, bytearray, BinaryIO, str]) -> DucData:
     -------
     DucData
         An attribute-accessible dictionary matching the internal `ExportedDataState` 
-        schema with snake_case keys. Common keys include `elements`, `global_state`, 
-        `local_state`, and `version_graph`.
+        schema with snake_case keys. Common keys include `elements`, `duc_global_state`, 
+        `duc_local_state`, and `version_graph`.
         
     Examples
     --------

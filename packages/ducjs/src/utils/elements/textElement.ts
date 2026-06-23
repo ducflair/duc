@@ -3,8 +3,8 @@ import { SupportedMeasures, getPrecisionValueFromRaw, getScopedBezierPointFromDu
 import { DucLocalState, RawValue, Scope, ScopedValue } from "../../types";
 import { DucElement, DucElementType, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap, FontFamilyValues, FontString, NonDeletedDucElement } from "../../types/elements";
 import { isArrowElement, isBoundToContainer, isTextElement } from "../../types/elements/typeChecks";
-import { GeometricPoint } from "../../types/geometryTypes";
-import { ExtractSetType } from "../../types/utility-types";
+import { GeometricPoint } from "../../types/geometry.types";
+import { ExtractSetType } from "../../types/utility.types";
 import { getContainerElement, getElementAbsoluteCoords, getResizedElementAbsoluteCoords } from "../bounds";
 import { ARROW_LABEL_FONT_SIZE_TO_MIN_WIDTH_RATIO, ARROW_LABEL_WIDTH_FRACTION, BOUND_TEXT_PADDING, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, LEGACY_FONT_ID_TO_NAME, WINDOWS_EMOJI_FALLBACK_FONT } from "../constants";
 import { adjustXYWithRotation } from "../math";

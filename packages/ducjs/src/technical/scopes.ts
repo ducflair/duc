@@ -1,7 +1,7 @@
 import { UNIT_SYSTEM } from "../enums";
 import { PrecisionValue, RawValue, ScaledZoom, Scope, ScopedValue, ScopedZoomValue, ValueOf } from "../types";
 import { DucPoint } from "../types/elements";
-import { GeometricPoint } from "../types/geometryTypes";
+import { GeometricPoint } from "../types/geometry.types";
 
 export type UnitSystem = ValueOf<typeof UNIT_SYSTEM>;
 export type ZoomDirection = 'up' | 'down' | 'neutral';

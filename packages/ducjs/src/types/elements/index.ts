@@ -7,8 +7,8 @@ import {
   FONT_FAMILY,
   FREEDRAW_EASINGS,
 } from "../../utils/constants";
-import { GeometricPoint, Percentage, Radian, ScaleFactor } from "../geometryTypes";
-import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "../utility-types";
+import { GeometricPoint, Percentage, Radian, ScaleFactor } from "../geometry.types";
+import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "../utility.types";
 
 
 
@@ -689,6 +689,8 @@ export type DucPdfElement = _DucElementBase & {
 export type DucTableElement = _DucElementBase & {
   type: "table";
   fileId: ExternalFileId | null;
+  /** Configuration for rendering sheets in a grid layout */
+  gridConfig: DocumentGridConfig;
 };
 
 //// === IMAGE ELEMENTS ===
@@ -1282,7 +1284,7 @@ export type Viewer3DGridPlanes = {
 
 export type Viewer3DGrid =
   | { type: "uniform"; value: boolean }
-  | { type: "perPlane"; planes: Viewer3DGridPlanes };
+  | { type: "perPlane"; value: Viewer3DGridPlanes };
 
 export type Viewer3DDisplay = {
   wireframe: boolean;

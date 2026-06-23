@@ -72,9 +72,6 @@ def test_empire_state_floor_plan(test_output_dir):
         .build())
     elements.append(title_text)
 
-    global_state = (duc.StateBuilder().build_global_state().with_main_scope("ft").build())
-    local_state = (duc.StateBuilder().build_local_state().build())
-
     serialized_bytes = ducpy.serialize.serialize_duc(
         name="empire_state_floor_plan",
         elements=elements

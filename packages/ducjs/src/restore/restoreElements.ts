@@ -743,6 +743,7 @@ const restoreElement = (
         {
           fileId: (isValidString(tableElement.fileId) as ExternalFileId) ||
             defaultData.fileId,
+          gridConfig: restoreDocumentGridConfig((tableElement as any).gridConfig),
         },
         localState
       );
@@ -769,7 +770,7 @@ const restoreElement = (
         {
           modelType: isValidString(modelElement.modelType) || null,
           code: isValidString(modelElement.code) || null,
-          fileIds: modelElement.fileIds || [],
+          fileIds: modelElement.fileIds ? [...new Set(modelElement.fileIds)] : [],
           thumbnail: modelElement.thumbnail instanceof Uint8Array ? modelElement.thumbnail : null,
           viewerState: (modelElement.viewerState || null) as Viewer3DState | null,
         },

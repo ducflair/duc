@@ -2,6 +2,8 @@
 Pytest configuration file for the ducpy tests.
 """
 import os
+import shutil
+
 import pytest
 
 from _dev.dev_utils import (
@@ -9,6 +11,14 @@ from _dev.dev_utils import (
     get_asset_bytes,
     download_fixture_from_cdn,
 )
+
+
+def pytest_sessionstart(session):
+    """Clean the test output directory once at the start of the test session."""
+    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+    if os.path.isdir(output_dir):
+        shutil.rmtree(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
 
 @pytest.fixture
@@ -30,12 +40,11 @@ def load_test_asset():
 
 @pytest.fixture
 def test_output_dir():
-    """Return the path to the output directory and ensure it exists."""
+    """Return the path to the output directory (already cleaned at session start)."""
     output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
-    os.makedirs(output_dir, exist_ok=True)
-    return output_dir 
-  
-  
+    return output_dir
+
+
 @pytest.fixture
 def test_input_dir():
     """Return the path to the input directory and ensure it exists."""
