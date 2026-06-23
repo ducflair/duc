@@ -1,5 +1,5 @@
 import { AXIS } from "../enums";
-import { ScopedValue, ValueOf } from "./";
+import { ScopedValue, ValueOf } from ".";
 
 /**
  * Axis such as X, Y, Z

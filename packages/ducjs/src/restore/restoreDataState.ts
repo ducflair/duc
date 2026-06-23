@@ -23,11 +23,22 @@ import {
   ScaleFactors
 } from "../technical/scopes";
 import type {
+  Actor,
   Checkpoint,
   Delta,
   Dictionary,
+  DucCharter,
+  DucCharterConstraint,
+  DucCharterDecision,
+  DucCharterPhase,
+  DucCharterRequirement,
   DucExternalFiles,
   DucGlobalState,
+  DucIssue,
+  DucIssueAnchor,
+  DucIssueMessage,
+  DucIssueStatus,
+  ExportedDataState,
   ExternalFileRevisionMeta,
   ExternalFilesData,
   ImportedDataState,
@@ -37,6 +48,7 @@ import type {
   Scope,
   ScopedValue,
   VersionGraph,
+  Viewer3DState,
 } from "../types";
 import { DucLocalState } from "../types";
 import type {
@@ -68,10 +80,11 @@ import type {
   TextAlign,
   VerticalAlign,
 } from "../types/elements";
-import { Percentage, Radian } from "../types/geometryTypes";
-import { ValueOf } from "../types/utility-types";
+import { Percentage, Radian } from "../types/geometry.types";
+import { ValueOf } from "../types/utility.types";
 import {
   base64ToUint8Array,
+  getDefaultCharter,
   getDefaultGlobalState,
   getDefaultLocalState,
   getZoom,
@@ -98,16 +111,16 @@ export type RestoredLocalState = Omit<
 >;
 
 export type RestoredDataState = {
-  thumbnail: Uint8Array | undefined;
-  dictionary: Dictionary | undefined;
+  thumbnail: ExportedDataState["thumbnail"];
+  dictionary: ExportedDataState["dictionary"];
+
+  charter: ExportedDataState["charter"];
+  issues: ExportedDataState["issues"];
 
   elements: OrderedDucElement[];
 
   localState: RestoredLocalState;
-  globalState: DucGlobalState;
-
-  files: DucExternalFiles;
-  filesData: ExternalFilesData;
+  globalState: ExportedDataState["globalState"];
 
   blocks: DucBlock[];
   blockInstances: DucBlockInstance[];
@@ -117,8 +130,11 @@ export type RestoredDataState = {
   regions: DucRegion[];
   layers: DucLayer[];
 
-  versionGraph: VersionGraph | undefined;
-  id: string;
+  files: DucExternalFiles;
+  filesData: ExternalFilesData;
+
+  versionGraph: ExportedDataState["versionGraph"];
+  id: ExportedDataState["id"];
 };
 
 export interface ExportedLibraryData {
@@ -192,6 +208,8 @@ export const restore = (
   const restoredVersionGraph = restoreVersionGraph(data?.versionGraph);
   const restoredFilesData = restoreFilesData(data?.filesData, data?.files);
   const restoredFiles = restoreFiles(data?.files, restoredFilesData);
+  const restoredCharter = restoreCharter(data?.charter);
+  const restoredIssues = restoreIssues(data?.issues);
 
   // Generate a new ID if none exists or if it's empty
   const parsedId = data?.id;
@@ -200,6 +218,8 @@ export const restore = (
   return {
     dictionary: restoredDictionary,
     thumbnail: isValidUint8Array(data?.thumbnail),
+    charter: restoredCharter,
+    issues: restoredIssues,
     elements: restoredElements,
     blocks: restoredBlocks,
     blockInstances: restoredBlockInstances,
@@ -401,6 +421,274 @@ export const restoreFilesData = (
   }
 
   return result;
+};
+
+const VALID_CHARTER_PHASES: DucCharterPhase[] = ["intent", "review", "delivery", "closed"];
+const VALID_ISSUE_STATUSES: DucIssueStatus[] = ["open", "closed", "dismissed"];
+
+const isValidActor = (value: unknown): Actor | undefined => {
+  if (!value || typeof value !== "object") return undefined;
+  const obj = value as Record<string, unknown>;
+  const identifier = isValidString(obj.identifier);
+  if (!identifier) return undefined;
+  return {
+    identifier,
+    name: typeof obj.name === "string" ? obj.name : undefined,
+  };
+};
+
+const isValidStringList = (value: unknown): string[] | undefined => {
+  if (!Array.isArray(value)) return undefined;
+  const list = value
+    .map((item) => (typeof item === "string" ? item : undefined))
+    .filter((item): item is string => item !== undefined && item.length > 0);
+  return list.length > 0 ? list : undefined;
+};
+
+const isValidIdentifierList = (value: unknown): Actor["identifier"][] | undefined => {
+  const list = isValidStringList(value);
+  return list && list.length > 0 ? list : undefined;
+};
+
+const isValidReactions = (value: unknown): Record<string, Actor["identifier"][]>
+  | undefined => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const obj = value as Record<string, unknown>;
+  const result: Record<string, Actor["identifier"][]> = {};
+  for (const key in obj) {
+    if (!Object.prototype.hasOwnProperty.call(obj, key)) continue;
+    const identifiers = isValidIdentifierList(obj[key]);
+    if (identifiers) {
+      result[key] = identifiers;
+    }
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+};
+
+const restoreCharterRequirement = (value: unknown): DucCharterRequirement | undefined => {
+  if (!value || typeof value !== "object") return undefined;
+  const obj = value as Record<string, unknown>;
+  const id = isValidString(obj.id);
+  const statement = isValidString(obj.statement);
+  if (!id || !statement) return undefined;
+  return {
+    id,
+    statement,
+    must: typeof obj.must === "boolean" ? obj.must : false,
+    acceptanceCriteria: isValidStringList(obj.acceptanceCriteria),
+  };
+};
+
+const restoreCharterConstraint = (value: unknown): DucCharterConstraint | undefined => {
+  if (!value || typeof value !== "object") return undefined;
+  const obj = value as Record<string, unknown>;
+  const id = isValidString(obj.id);
+  const statement = isValidString(obj.statement);
+  if (!id || !statement) return undefined;
+  return {
+    id,
+    statement,
+    hard: typeof obj.hard === "boolean" ? obj.hard : false,
+  };
+};
+
+const restoreCharterDecision = (value: unknown): DucCharterDecision | undefined => {
+  if (!value || typeof value !== "object") return undefined;
+  const obj = value as Record<string, unknown>;
+  const id = isValidString(obj.id);
+  const decision = isValidString(obj.decision);
+  const rationale = isValidString(obj.rationale);
+  const decidedAt = isFiniteNumber(obj.decidedAt) ? (obj.decidedAt as number) : 0;
+  if (!id || !decision || !rationale) return undefined;
+  return {
+    id,
+    accepted: typeof obj.accepted === "boolean" ? obj.accepted : true,
+    decision,
+    rationale,
+    issueIds: isValidStringList(obj.issueIds),
+    decidedAt,
+  };
+};
+
+const restoreCharterStakeholder = (
+  value: unknown,
+): { actor: Actor; role: string } | undefined => {
+  if (!value || typeof value !== "object") return undefined;
+  const obj = value as Record<string, unknown>;
+  const actor = isValidActor(obj.actor);
+  const role = isValidString(obj.role);
+  if (!actor || !role) return undefined;
+  return { actor, role };
+};
+
+
+export const restoreCharter = (importedCharter: unknown): DucCharter => {
+  if (!importedCharter || typeof importedCharter !== "object") {
+    return getDefaultCharter();
+  }
+  const obj = importedCharter as Record<string, unknown>;
+  const title = isValidString(obj.title);
+  if (!title) {
+    return getDefaultCharter();
+  }
+
+  const objective = typeof obj.objective === "string" ? obj.objective : "";
+  const rawPhase = isValidString(obj.phase) || "intent";
+  if (!VALID_CHARTER_PHASES.includes(rawPhase as DucCharterPhase)) {
+    return getDefaultCharter();
+  }
+
+  const rawRequirements = Array.isArray(obj.requirements) ? obj.requirements : [];
+  const requirements = rawRequirements
+    .map((item) => restoreCharterRequirement(item))
+    .filter((item): item is DucCharterRequirement => item !== undefined);
+
+  const rawConstraints = Array.isArray(obj.constraints) ? obj.constraints : [];
+  const constraints = rawConstraints
+    .map((item) => restoreCharterConstraint(item))
+    .filter((item): item is DucCharterConstraint => item !== undefined);
+
+  const rawDecisions = Array.isArray(obj.decisions) ? obj.decisions : [];
+  const decisions = rawDecisions
+    .map((item) => restoreCharterDecision(item))
+    .filter((item): item is DucCharterDecision => item !== undefined);
+
+  const rawStakeholders = Array.isArray(obj.stakeholders) ? obj.stakeholders : [];
+  const stakeholders = rawStakeholders
+    .map((item) => restoreCharterStakeholder(item))
+    .filter((item): item is { actor: Actor; role: string } => item !== undefined);
+
+  return {
+    title,
+    description: typeof obj.description === "string" ? obj.description : undefined,
+    objective,
+    phase: rawPhase as DucCharterPhase,
+    closedReason: typeof obj.closedReason === "string" ? obj.closedReason : undefined,
+    requirements,
+    constraints,
+    decisions,
+    stakeholders: stakeholders.length > 0 ? stakeholders : undefined,
+    updatedAt: isFiniteNumber(obj.updatedAt) ? (obj.updatedAt as number) : Date.now(),
+  };
+};
+
+const isValidViewer3DState = (value: unknown): Viewer3DState | undefined => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const obj = value as Record<string, unknown>;
+  if (!obj.camera || typeof obj.camera !== "object") return undefined;
+  if (!obj.display || typeof obj.display !== "object") return undefined;
+  return obj as unknown as Viewer3DState;
+};
+
+const restoreIssueAnchor = (value: unknown): DucIssueAnchor | undefined => {
+  if (!value || typeof value !== "object") return undefined;
+  const obj = value as Record<string, unknown>;
+  const type = isValidString(obj.type);
+  if (!type) return undefined;
+  if (type === "canvas") {
+    const x = isValidNumber(obj.x, 0, false);
+    const y = isValidNumber(obj.y, 0, false);
+    return {
+      type: "canvas",
+      x,
+      y,
+      scope: typeof obj.scope === "string" ? (obj.scope as Scope) : undefined,
+    };
+  }
+  if (type === "element") {
+    const elementId = isValidString(obj.elementId);
+    if (!elementId) return undefined;
+    return {
+      type: "element",
+      elementId,
+      anchorX: typeof obj.anchorX === "number" && Number.isFinite(obj.anchorX) ? obj.anchorX : undefined,
+      anchorY: typeof obj.anchorY === "number" && Number.isFinite(obj.anchorY) ? obj.anchorY : undefined,
+    };
+  }
+  if (type === "model") {
+    const elementId = isValidString(obj.elementId);
+    if (!elementId) return undefined;
+    const point = Array.isArray(obj.point) && obj.point.length === 3
+      ? (obj.point as [number, number, number])
+      : undefined;
+    if (!point) return undefined;
+    return {
+      type: "model",
+      elementId,
+      point,
+      normal: Array.isArray(obj.normal) && obj.normal.length === 3
+        ? (obj.normal as [number, number, number])
+        : undefined,
+      viewerState: isValidViewer3DState(obj.viewerState),
+      topologyId: typeof obj.topologyId === "string" ? obj.topologyId : undefined,
+    };
+  }
+  return undefined;
+};
+
+const restoreIssueMessage = (value: unknown): DucIssueMessage | undefined => {
+  if (!value || typeof value !== "object") return undefined;
+  const obj = value as Record<string, unknown>;
+  const id = isValidString(obj.id);
+  const author = isValidActor(obj.author);
+  const content = isValidString(obj.content);
+  if (!id || !author || !content) return undefined;
+  return {
+    id,
+    author,
+    content,
+    replyToId: typeof obj.replyToId === "string" ? obj.replyToId : undefined,
+    reactions: isValidReactions(obj.reactions),
+    createdAt: isFiniteNumber(obj.createdAt) ? (obj.createdAt as number) : Date.now(),
+    editedAt: isFiniteNumber(obj.editedAt) ? (obj.editedAt as number) : undefined,
+    deletedAt: isFiniteNumber(obj.deletedAt) ? (obj.deletedAt as number) : undefined,
+  };
+};
+
+export const restoreIssue = (value: unknown): DucIssue | undefined => {
+  if (!value || typeof value !== "object") return undefined;
+  const obj = value as Record<string, unknown>;
+  const id = isValidString(obj.id);
+  const title = isValidString(obj.title);
+  const localId = isValidNumber(obj.localId, 0, true);
+  const status = isValidString(obj.status);
+  if (!id || !title || !status || !VALID_ISSUE_STATUSES.includes(status as DucIssueStatus)) {
+    return undefined;
+  }
+
+  const rawMessages = Array.isArray(obj.messages) ? obj.messages : [];
+  const messages = rawMessages
+    .map((item) => restoreIssueMessage(item))
+    .filter((item): item is DucIssueMessage => item !== undefined);
+
+  const authorId = isValidString(obj.authorId);
+  if (!authorId) return undefined;
+
+  return {
+    id,
+    localId,
+    title,
+    status: status as DucIssueStatus,
+    dismissedReason: typeof obj.dismissedReason === "string" ? obj.dismissedReason : undefined,
+    messages,
+    dueDate: isFiniteNumber(obj.dueDate) ? (obj.dueDate as number) : undefined,
+    anchor: restoreIssueAnchor(obj.anchor),
+    authorId,
+    assigneeIds: isValidIdentifierList(obj.assigneeIds),
+    followerIds: isValidIdentifierList(obj.followerIds),
+    createdAt: isFiniteNumber(obj.createdAt) ? (obj.createdAt as number) : Date.now(),
+    updatedAt: isFiniteNumber(obj.updatedAt) ? (obj.updatedAt as number) : Date.now(),
+    deletedAt: isFiniteNumber(obj.deletedAt) ? (obj.deletedAt as number) : undefined,
+  };
+};
+
+export const restoreIssues = (importedIssues: unknown): DucIssue[] => {
+  if (!Array.isArray(importedIssues)) {
+    return [];
+  }
+  return importedIssues
+    .map((item) => restoreIssue(item))
+    .filter((item): item is DucIssue => item !== undefined);
 };
 
 export const restoreDictionary = (importedDictionary: unknown): Dictionary => {
@@ -706,7 +994,6 @@ export const restoreGlobalState = (
 
   return {
     ...defaults,
-    name: importedState?.name ?? defaults.name,
     viewBackgroundColor:
       importedState?.viewBackgroundColor ?? defaults.viewBackgroundColor,
     mainScope:

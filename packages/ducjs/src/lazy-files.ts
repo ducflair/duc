@@ -122,6 +122,16 @@ export class LazyExternalFileStore {
     return this.runtimeFiles.delete(fileId);
   }
 
+  /** Unload a runtime file's data from memory while keeping metadata. */
+  unloadRuntimeFileData(fileId: string): boolean {
+    const file = this.runtimeFiles.get(fileId);
+    if (file) {
+      file.data = {};
+      return true;
+    }
+    return false;
+  }
+
   /** Export all files metadata as a DucExternalFiles record. */
   toExternalFiles(): DucExternalFiles {
     const result: DucExternalFiles = {};

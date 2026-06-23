@@ -8,6 +8,19 @@ members = [
     "packages/ducsvg/src/pdf2svg",
 ]
 
+[workspace.metadata.wasm-pack]
+"wasm-pack" = "0.14.0"
+
+[profile.dev]
+opt-level = 0
+
 [profile.release]
-lto = true
 opt-level = "s"
+lto = true
+
+[profile.release-small]
+inherits = "release"
+opt-level = "z"
+codegen-units = 1
+strip = true
+panic = "abort"

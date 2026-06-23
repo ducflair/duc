@@ -1056,6 +1056,7 @@ pub struct DucTableElement {
     pub base: DucElementBase,
     pub style: DucTableStyle,
     pub file_id: Option<String>, // Source of truth is the linked xlsx file
+    pub grid_config: DocumentGridConfig,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -1307,7 +1308,7 @@ pub struct DucRegion {
 #[serde(rename_all = "camelCase")]
 pub struct DucGlobalState {
     /** The name of the drawing */
-    pub name: Option<String>,
+    /** The background color of the drawing */
     /** The background color of the drawing */
     pub view_background_color: String,
     /** The master unit system for the entire drawing, used for block/file insertion scaling. */
@@ -1414,7 +1415,7 @@ pub struct Delta {
     #[serde(deserialize_with = "crate::serde_utils::trunc_i32")]
     pub schema_version: i32,
     pub base_checkpoint_id: String,
-    /** Compressed binary data for the delta (zlib). When present, patch_string is ignored. */
+    /** Compressed binary data for the delta (gzip). When present, patch_string is ignored. */
     #[serde(with = "serde_bytes")]
     pub payload: Vec<u8>,
     pub size_bytes: i64,
@@ -1527,6 +1528,151 @@ pub struct ExternalFileMeta {
     pub version: Option<i32>,
 }
 
+// =============== PROJECT CHARTER & ISSUES ===============
+
+/** A person, organization, team, system, or agent relevant to the project. */
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Actor {
+    /** Stable identifier within the project context. */
+    pub identifier: String,
+    pub name: Option<String>,
+}
+
+/** Current phase of the pre-execution cycle. */
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DucCharterPhase {
+    Intent,
+    Review,
+    Delivery,
+    Closed,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucCharterRequirement {
+    pub id: String,
+    pub statement: String,
+    pub must: bool,
+    pub acceptance_criteria: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucCharterConstraint {
+    pub id: String,
+    pub statement: String,
+    pub hard: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucCharterDecision {
+    pub id: String,
+    pub accepted: bool,
+    pub decision: String,
+    pub rationale: String,
+    pub issue_ids: Option<Vec<String>>,
+    pub decided_at: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucCharterStakeholder {
+    pub actor: Actor,
+    pub role: String,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucCharter {
+    pub title: String,
+    pub description: Option<String>,
+    pub objective: String,
+    pub phase: DucCharterPhase,
+    pub closed_reason: Option<String>,
+    pub requirements: Vec<DucCharterRequirement>,
+    pub constraints: Vec<DucCharterConstraint>,
+    pub decisions: Vec<DucCharterDecision>,
+    pub stakeholders: Option<Vec<DucCharterStakeholder>>,
+    pub updated_at: i64,
+}
+
+/** State of an issue thread. */
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DucIssueStatus {
+    Open,
+    Closed,
+    Dismissed,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucIssueMessage {
+    pub id: String,
+    pub author: Actor,
+    pub content: String,
+    pub reply_to_id: Option<String>,
+    pub reactions: Option<HashMap<String, Vec<String>>>,
+    pub created_at: i64,
+    pub edited_at: Option<i64>,
+    pub deleted_at: Option<i64>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum DucIssueAnchor {
+    Canvas {
+        x: f64,
+        y: f64,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        scope: Option<String>,
+    },
+    Element {
+        element_id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        anchor_x: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        anchor_y: Option<f64>,
+    },
+    Model {
+        element_id: String,
+        point: [f64; 3],
+        #[serde(skip_serializing_if = "Option::is_none")]
+        normal: Option<[f64; 3]>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        viewer_state: Option<Viewer3DState>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        topology_id: Option<String>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DucIssue {
+    pub id: String,
+    pub local_id: i64,
+    pub title: String,
+    pub status: DucIssueStatus,
+    pub dismissed_reason: Option<String>,
+    pub messages: Vec<DucIssueMessage>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub due_date: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub anchor: Option<DucIssueAnchor>,
+    pub author_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assignee_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub follower_ids: Option<Vec<String>>,
+    pub created_at: i64,
+    pub updated_at: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deleted_at: Option<i64>,
+}
+
 // =============== ROOT TYPE ===============
 
 /** Root data structure for the stored data state */
@@ -1542,6 +1688,10 @@ pub struct ExportedDataState {
     pub dictionary: Option<HashMap<String, String>>,
     #[serde(with = "serde_bytes", default, skip_serializing_if = "Option::is_none")]
     pub thumbnail: Option<Vec<u8>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub charter: Option<DucCharter>,
+    #[serde(default)]
+    pub issues: Vec<DucIssue>,
     pub elements: Vec<ElementWrapper>,
     pub blocks: Vec<DucBlock>,
     pub block_instances: Vec<DucBlockInstance>,

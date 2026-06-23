@@ -11,9 +11,9 @@ import type {
 } from "../../types";
 import { Scope, ScopedValue } from "../../types";
 import type { DucElement, DucLine, DucLinearElement, DucLinearLikeElement, DucLineReference, DucPoint, NonDeleted } from "../../types/elements";
-import type { Bounds, GeometricPoint, GeometricVector, Percentage, Radian } from "../../types/geometryTypes";
-import { Heading } from "../../types/geometryTypes";
-import { Mutable } from "../../types/utility-types";
+import type { Bounds, GeometricPoint, GeometricVector, Percentage, Radian } from "../../types/geometry.types";
+import { Heading } from "../../types/geometry.types";
+import { Mutable } from "../../types/utility.types";
 import {
     LINE_CONFIRM_THRESHOLD
 } from "../constants";

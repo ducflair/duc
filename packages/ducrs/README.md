@@ -14,7 +14,7 @@
 
 The `duc` crate is the canonical Rust implementation of the `.duc` 2D CAD file format and the **root of the entire Duc ecosystem**. [`ducpy`](https://pypi.org/project/ducpy/), [`ducjs`](https://www.npmjs.com/package/ducjs), and the rest of the toolchain are all built on top of the types, parsers and storage layer defined here.
 
-A `.duc` file is a standard zlib compressed **SQLite database file** following the schema in `schema/duc.sql`. This crate wraps that database in a strongly-typed Rust API for reading, writing and manipulating `.duc` documents.
+A `.duc` file is a standard gzip-compressed **SQLite database file** following the schema in `schema/duc.sql`. This crate wraps that database in a strongly-typed Rust API for reading, writing and manipulating `.duc` documents.
 
 
 ----

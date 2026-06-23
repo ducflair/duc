@@ -664,12 +664,6 @@ def _resolve_file_ids(conn: sqlite3.Connection, element_ids: list[str]) -> dict[
     ):
         file_ids[row["element_id"]] = row["file_id"]
 
-    for row in conn.execute(
-        f"SELECT element_id, file_id FROM element_table WHERE file_id IS NOT NULL AND element_id IN ({placeholders})",
-        bindings,
-    ):
-        file_ids[row["element_id"]] = row["file_id"]
-
     return file_ids
 
 

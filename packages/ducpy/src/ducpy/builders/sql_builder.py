@@ -62,24 +62,33 @@ def _normalize_sqlite_image(data: bytes) -> bytes:
     return bytes(image)
 
 
-def _inflate_duc_bytes(data: bytes) -> bytes:
+_GZIP_MAGIC = b"\x1f\x8b"
+
+
+def _is_gzip_bytes(data: bytes) -> bool:
+    return data.startswith(_GZIP_MAGIC)
+
+
+def _decompress_duc_bytes(data: bytes) -> bytes:
     if _is_sqlite_bytes(data):
         return _normalize_sqlite_image(data)
-    inflated = zlib.decompress(data, -zlib.MAX_WBITS)
+    # gzip magic -> gzip decompression; otherwise legacy raw deflate
+    wbits = 16 + zlib.MAX_WBITS if _is_gzip_bytes(data) else -zlib.MAX_WBITS
+    inflated = zlib.decompress(data, wbits)
     if not _is_sqlite_bytes(inflated):
         raise ValueError("decompressed .duc payload does not start with a SQLite header")
     return _normalize_sqlite_image(inflated)
 
 
-def _deflate_duc_bytes(data: bytes) -> bytes:
-    compressor = zlib.compressobj(level=-1, wbits=-zlib.MAX_WBITS)
+def _compress_duc_bytes(data: bytes) -> bytes:
+    compressor = zlib.compressobj(level=-1, wbits=16 + zlib.MAX_WBITS)  # gzip
     return compressor.compress(data) + compressor.flush()
 
 
 def _write_temp_sqlite(data: bytes) -> str:
     tmp = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
     try:
-        tmp.write(_inflate_duc_bytes(data))
+        tmp.write(_decompress_duc_bytes(data))
         tmp.close()
         return tmp.name
     except Exception:
@@ -297,7 +306,7 @@ class DucSQL:
             dst.close()
             with open(tmp.name, "rb") as f:
                 data = f.read()
-            return _deflate_duc_bytes(data) if compressed else data
+            return _compress_duc_bytes(data) if compressed else data
         finally:
             os.unlink(tmp.name)
 

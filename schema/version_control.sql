@@ -126,7 +126,7 @@ CREATE TABLE deltas (
     description         TEXT,
     is_manual_save      INTEGER NOT NULL DEFAULT 0,
     user_id             TEXT,
-    changeset           BLOB    NOT NULL,  -- zlib-compressed binary delta payload
+    changeset           BLOB    NOT NULL,  -- gzip-compressed binary delta payload
     changeset_checksum  TEXT,              -- SHA-256 of uncompressed changeset for integrity
     size_bytes          INTEGER,
     CHECK (schema_version >= 1),

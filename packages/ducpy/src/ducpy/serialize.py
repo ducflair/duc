@@ -413,6 +413,8 @@ def serialize_duc(
     regions: Optional[list] = None,
     layers: Optional[list] = None,
     external_files: Optional[list] = None,
+    charter: Any = None,
+    issues: Optional[list] = None,
     validate_embedded_code: bool = True,
     validation_timeout_seconds: Optional[float] = None,
 ) -> bytes:
@@ -420,7 +422,7 @@ def serialize_duc(
 
     This function accepts lists of elements created via the `ducpy.builders` API
     (e.g., `ElementBuilder`) and serializes them into the compressed format
-    expected by `.duc` files. Element instances and state dataclasses are 
+    expected by `.duc` files. Element instances and state dataclasses are
     automatically converted to the camelCase dicts expected by the Rust native module.
 
     Parameters
@@ -453,6 +455,10 @@ def serialize_duc(
         List of document layers.
     external_files : Optional[list], default=None
         List of external files (e.g., embedded images or PDFs).
+    charter : Any, default=None
+        Project charter object (DucCharter) or dict.
+    issues : Optional[list], default=None
+        List of issue objects (DucIssue) or dicts.
     validate_embedded_code : bool, default=True
         Validate model Python code and document source before native serialization.
         This is intended for server-side CPython usage and raises
@@ -497,6 +503,8 @@ def serialize_duc(
         "versionGraph": to_serializable(version_graph),
         "files": files_meta,
         "filesData": files_data,
+        "charter": to_serializable(charter),
+        "issues": _convert_list(issues) or [],
     }
 
     return ducpy_native.serialize_duc(data)

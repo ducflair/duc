@@ -20,7 +20,7 @@ import {
   scaleVector,
   subtractVectors,
 } from "./";
-import type { LineSegment } from "../../types/geometryTypes";
+import type { LineSegment } from "../../types/geometry.types";
 import { crossProduct } from "./bbox";
 import type {
   GeometricPoint,
@@ -30,7 +30,7 @@ import type {
   Ellipse,
   Polycurve,
   Polyline,
-} from "../../types/geometryTypes";
+} from "../../types/geometry.types";
 
 const DEFAULT_THRESHOLD = 10e-5;
 

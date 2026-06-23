@@ -153,7 +153,7 @@ export const createDeltaChangeset = async (
  * was created. Returns the full document state as `Uint8Array`.
  *
  * Handles all changeset formats transparently:
- *   - v3 (bsdiff), v2 (XOR diff), v1 (zlib full snapshot)
+ *   - v3 (bsdiff), v2 (XOR diff), v1 (gzip full snapshot)
  */
 export const applyDeltaChangeset = async (
   baseState: Uint8Array,
