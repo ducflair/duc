@@ -9,7 +9,7 @@ ducpy
     :doc:`builders <autoapi/ducpy/builders/index>` module.
 
 **SQL Builder (Low-level)**
-    A ``.duc`` file is a zlib-compressed SQLite database. Use the
+    A ``.duc`` file is a gzip-compressed SQLite database. Use the
     :doc:`sql_builder <autoapi/ducpy/builders/sql_builder/index>`
     for direct schema access, bulk queries, and low-level manipulation.
 

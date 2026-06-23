@@ -29,6 +29,8 @@ Classes
    ducpy.builders.state_builders.DeltaBuilder
    ducpy.builders.state_builders.ExternalFileBuilder
    ducpy.builders.state_builders.StackBaseBuilder
+   ducpy.builders.state_builders.CharterBuilder
+   ducpy.builders.state_builders.IssueBuilder
 
 
 Functions
@@ -36,6 +38,7 @@ Functions
 
 .. autoapisummary::
 
+   ducpy.builders.state_builders.now_ms
    ducpy.builders.state_builders.create_global_state_from_base
    ducpy.builders.state_builders.create_local_state_from_base
    ducpy.builders.state_builders.create_group_from_base
@@ -46,12 +49,20 @@ Functions
    ducpy.builders.state_builders.create_delta_from_base
    ducpy.builders.state_builders.create_external_file_from_base
    ducpy.builders.state_builders.create_stack_base_from_base
+   ducpy.builders.state_builders.create_actor
+   ducpy.builders.state_builders.create_viewer3d_grid_uniform
+   ducpy.builders.state_builders.create_viewer3d_grid_per_plane
    ducpy.builders.state_builders.create_block
    ducpy.builders.state_builders.create_string_value_entry
 
 
 Module Contents
 ---------------
+
+.. py:function:: now_ms() -> int
+
+   Current Unix timestamp in milliseconds.
+
 
 .. py:class:: BaseStateParams
 
@@ -139,6 +150,12 @@ Module Contents
 
 
    .. py:method:: build_stack_base()
+
+
+   .. py:method:: build_charter()
+
+
+   .. py:method:: build_issue()
 
 
 .. py:class:: StateSpecificBuilder(base: BaseStateParams, extra: dict)
@@ -458,6 +475,145 @@ Module Contents
 .. py:function:: create_external_file_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.DataStateClass.DucExternalFile
 
 .. py:function:: create_stack_base_from_base(base: BaseStateParams, **kwargs) -> ducpy.classes.ElementsClass.DucStackBase
+
+.. py:class:: CharterBuilder(base: BaseStateParams, extra: dict)
+
+   Bases: :py:obj:`StateSpecificBuilder`
+
+
+   .. py:attribute:: requirements
+      :type:  List[ducpy.classes.DataStateClass.DucCharterRequirement]
+      :value: []
+
+
+
+   .. py:attribute:: constraints
+      :type:  List[ducpy.classes.DataStateClass.DucCharterConstraint]
+      :value: []
+
+
+
+   .. py:attribute:: decisions
+      :type:  List[ducpy.classes.DataStateClass.DucCharterDecision]
+      :value: []
+
+
+
+   .. py:attribute:: stakeholders
+      :type:  List[ducpy.classes.DataStateClass.DucCharterStakeholder]
+      :value: []
+
+
+
+   .. py:method:: with_title(title: str)
+
+
+   .. py:method:: with_description(description: str)
+
+
+   .. py:method:: with_objective(objective: str)
+
+
+   .. py:method:: with_phase(phase: str)
+
+
+   .. py:method:: with_closed_reason(reason: str)
+
+
+   .. py:method:: with_updated_at(updated_at: int)
+
+
+   .. py:method:: add_requirement(statement: str, must: bool = True, *, id: Optional[str] = None, acceptance_criteria: Optional[List[str]] = None)
+
+
+   .. py:method:: add_constraint(statement: str, hard: bool = True, *, id: Optional[str] = None)
+
+
+   .. py:method:: add_decision(decision: str, rationale: str, accepted: bool = True, *, id: Optional[str] = None, issue_ids: Optional[List[str]] = None, decided_at: Optional[int] = None)
+
+
+   .. py:method:: add_stakeholder(identifier: str, role: str, *, name: Optional[str] = None)
+
+
+   .. py:method:: build() -> ducpy.classes.DataStateClass.DucCharter
+
+
+.. py:class:: IssueBuilder(base: BaseStateParams, extra: dict)
+
+   Bases: :py:obj:`StateSpecificBuilder`
+
+
+   .. py:attribute:: messages
+      :type:  List[ducpy.classes.DataStateClass.DucIssueMessage]
+      :value: []
+
+
+
+   .. py:attribute:: assignees
+      :type:  List[str]
+      :value: []
+
+
+
+   .. py:attribute:: followers
+      :type:  List[str]
+      :value: []
+
+
+
+   .. py:method:: with_local_id(local_id: int)
+
+
+   .. py:method:: with_title(title: str)
+
+
+   .. py:method:: with_status(status: str)
+
+
+   .. py:method:: with_author_id(author_id: str)
+
+
+   .. py:method:: with_dismissed_reason(reason: str)
+
+
+   .. py:method:: with_due_date(due_date: int)
+
+
+   .. py:method:: with_created_at(created_at: int)
+
+
+   .. py:method:: with_updated_at(updated_at: int)
+
+
+   .. py:method:: with_deleted_at(deleted_at: int)
+
+
+   .. py:method:: add_assignee(actor_identifier: str)
+
+
+   .. py:method:: add_follower(actor_identifier: str)
+
+
+   .. py:method:: add_message(author_id: str, content: str, *, name: Optional[str] = None, reply_to_id: Optional[str] = None, reactions: Optional[Dict[str, List[str]]] = None, created_at: Optional[int] = None, edited_at: Optional[int] = None, deleted_at: Optional[int] = None)
+
+
+   .. py:method:: with_canvas_anchor(x: float, y: float, *, scope: Optional[str] = None)
+
+
+   .. py:method:: with_element_anchor(element_id: str, *, anchor_x: Optional[float] = None, anchor_y: Optional[float] = None)
+
+
+   .. py:method:: with_model_anchor(element_id: str, point: List[float], *, normal: Optional[List[float]] = None, viewer_state: Optional[ducpy.classes.ElementsClass.Viewer3DState] = None, topology_id: Optional[str] = None)
+
+
+   .. py:method:: build() -> ducpy.classes.DataStateClass.DucIssue
+
+
+.. py:function:: create_actor(identifier: str, name: Optional[str] = None) -> ducpy.classes.DataStateClass.Actor
+
+.. py:function:: create_viewer3d_grid_uniform(value: bool = True) -> Dict[str, Any]
+
+.. py:function:: create_viewer3d_grid_per_plane(xy: bool = True, xz: bool = False, yz: bool = False) -> Dict[str, Any]
 
 .. py:function:: create_block(id: str, label: str, elements: Optional[List[ducpy.classes.ElementsClass.ElementWrapper]] = None, description: Optional[str] = None) -> ducpy.classes.ElementsClass.DucBlock
 

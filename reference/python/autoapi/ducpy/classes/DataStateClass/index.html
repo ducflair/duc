@@ -289,6 +289,18 @@
         <article role="main" id="furo-main-content">
           <section id="module-ducpy.classes.DataStateClass">
 <span id="ducpy-classes-datastateclass"></span><h1>ducpy.classes.DataStateClass<a class="headerlink" href="#module-ducpy.classes.DataStateClass" title="Link to this heading">¶</a></h1>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueAnchor" title="ducpy.classes.DataStateClass.DucIssueAnchor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucIssueAnchor</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">¶</a></h2>
 <div class="table-wrapper autosummary longtable docutils container">
@@ -297,43 +309,76 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DictionaryEntry" title="ducpy.classes.DataStateClass.DictionaryEntry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DictionaryEntry</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucGlobalState" title="ducpy.classes.DataStateClass.DucGlobalState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucGlobalState</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.Actor" title="ducpy.classes.DataStateClass.Actor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Actor</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucLocalState" title="ducpy.classes.DataStateClass.DucLocalState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucLocalState</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterRequirement" title="ducpy.classes.DataStateClass.DucCharterRequirement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucCharterRequirement</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.VersionBase" title="ducpy.classes.DataStateClass.VersionBase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VersionBase</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterConstraint" title="ducpy.classes.DataStateClass.DucCharterConstraint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucCharterConstraint</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.Checkpoint" title="ducpy.classes.DataStateClass.Checkpoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Checkpoint</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterDecision" title="ducpy.classes.DataStateClass.DucCharterDecision"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucCharterDecision</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.Delta" title="ducpy.classes.DataStateClass.Delta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Delta</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterStakeholder" title="ducpy.classes.DataStateClass.DucCharterStakeholder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucCharterStakeholder</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.SchemaMigration" title="ducpy.classes.DataStateClass.SchemaMigration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SchemaMigration</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter" title="ducpy.classes.DataStateClass.DucCharter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucCharter</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.VersionChain" title="ducpy.classes.DataStateClass.VersionChain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VersionChain</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueMessage" title="ducpy.classes.DataStateClass.DucIssueMessage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucIssueMessage</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.VersionGraphMetadata" title="ducpy.classes.DataStateClass.VersionGraphMetadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VersionGraphMetadata</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueCanvasAnchor" title="ducpy.classes.DataStateClass.DucIssueCanvasAnchor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucIssueCanvasAnchor</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.VersionGraph" title="ducpy.classes.DataStateClass.VersionGraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VersionGraph</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueElementAnchor" title="ducpy.classes.DataStateClass.DucIssueElementAnchor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucIssueElementAnchor</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DisplayPrecision" title="ducpy.classes.DataStateClass.DisplayPrecision"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DisplayPrecision</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor" title="ducpy.classes.DataStateClass.DucIssueModelAnchor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucIssueModelAnchor</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision" title="ducpy.classes.DataStateClass.ExternalFileRevision"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExternalFileRevision</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue" title="ducpy.classes.DataStateClass.DucIssue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucIssue</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFile" title="ducpy.classes.DataStateClass.DucExternalFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucExternalFile</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucGlobalState" title="ducpy.classes.DataStateClass.DucGlobalState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucGlobalState</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.ExportedDataState" title="ducpy.classes.DataStateClass.ExportedDataState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExportedDataState</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucLocalState" title="ducpy.classes.DataStateClass.DucLocalState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucLocalState</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.VersionBase" title="ducpy.classes.DataStateClass.VersionBase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VersionBase</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.Checkpoint" title="ducpy.classes.DataStateClass.Checkpoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Checkpoint</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.Delta" title="ducpy.classes.DataStateClass.Delta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Delta</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.SchemaMigration" title="ducpy.classes.DataStateClass.SchemaMigration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SchemaMigration</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.VersionChain" title="ducpy.classes.DataStateClass.VersionChain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VersionChain</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.VersionGraphMetadata" title="ducpy.classes.DataStateClass.VersionGraphMetadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VersionGraphMetadata</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.VersionGraph" title="ducpy.classes.DataStateClass.VersionGraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VersionGraph</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DisplayPrecision" title="ducpy.classes.DataStateClass.DisplayPrecision"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DisplayPrecision</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.ExternalFileRevision" title="ducpy.classes.DataStateClass.ExternalFileRevision"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExternalFileRevision</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.DucExternalFile" title="ducpy.classes.DataStateClass.DucExternalFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DucExternalFile</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.DataStateClass.ExportedDataState" title="ducpy.classes.DataStateClass.ExportedDataState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExportedDataState</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -358,6 +403,381 @@
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.Actor">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">Actor</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.Actor" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.Actor.identifier">
+<span class="sig-name descname"><span class="pre">identifier</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.Actor.identifier" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.Actor.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.Actor.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterRequirement">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucCharterRequirement</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterRequirement" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterRequirement.id">
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterRequirement.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterRequirement.statement">
+<span class="sig-name descname"><span class="pre">statement</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterRequirement.statement" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterRequirement.must">
+<span class="sig-name descname"><span class="pre">must</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterRequirement.must" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterRequirement.acceptance_criteria">
+<span class="sig-name descname"><span class="pre">acceptance_criteria</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterRequirement.acceptance_criteria" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterConstraint">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucCharterConstraint</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterConstraint" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterConstraint.id">
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterConstraint.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterConstraint.statement">
+<span class="sig-name descname"><span class="pre">statement</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterConstraint.statement" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterConstraint.hard">
+<span class="sig-name descname"><span class="pre">hard</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterConstraint.hard" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterDecision">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucCharterDecision</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterDecision" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterDecision.id">
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterDecision.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterDecision.decision">
+<span class="sig-name descname"><span class="pre">decision</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterDecision.decision" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterDecision.rationale">
+<span class="sig-name descname"><span class="pre">rationale</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterDecision.rationale" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterDecision.accepted">
+<span class="sig-name descname"><span class="pre">accepted</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterDecision.accepted" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterDecision.decided_at">
+<span class="sig-name descname"><span class="pre">decided_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterDecision.decided_at" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterDecision.issue_ids">
+<span class="sig-name descname"><span class="pre">issue_ids</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterDecision.issue_ids" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterStakeholder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucCharterStakeholder</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterStakeholder" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterStakeholder.actor">
+<span class="sig-name descname"><span class="pre">actor</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#ducpy.classes.DataStateClass.Actor" title="ducpy.classes.DataStateClass.Actor"><span class="pre">Actor</span></a></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterStakeholder.actor" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharterStakeholder.role">
+<span class="sig-name descname"><span class="pre">role</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharterStakeholder.role" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharter">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucCharter</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharter" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharter.title">
+<span class="sig-name descname"><span class="pre">title</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharter.title" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharter.objective">
+<span class="sig-name descname"><span class="pre">objective</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharter.objective" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharter.phase">
+<span class="sig-name descname"><span class="pre">phase</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharter.phase" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharter.requirements">
+<span class="sig-name descname"><span class="pre">requirements</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterRequirement" title="ducpy.classes.DataStateClass.DucCharterRequirement"><span class="pre">DucCharterRequirement</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharter.requirements" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharter.constraints">
+<span class="sig-name descname"><span class="pre">constraints</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterConstraint" title="ducpy.classes.DataStateClass.DucCharterConstraint"><span class="pre">DucCharterConstraint</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharter.constraints" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharter.decisions">
+<span class="sig-name descname"><span class="pre">decisions</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterDecision" title="ducpy.classes.DataStateClass.DucCharterDecision"><span class="pre">DucCharterDecision</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharter.decisions" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharter.updated_at">
+<span class="sig-name descname"><span class="pre">updated_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharter.updated_at" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharter.description">
+<span class="sig-name descname"><span class="pre">description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharter.description" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharter.closed_reason">
+<span class="sig-name descname"><span class="pre">closed_reason</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharter.closed_reason" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucCharter.stakeholders">
+<span class="sig-name descname"><span class="pre">stakeholders</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterStakeholder" title="ducpy.classes.DataStateClass.DucCharterStakeholder"><span class="pre">DucCharterStakeholder</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucCharter.stakeholders" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueMessage">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucIssueMessage</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueMessage" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueMessage.id">
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueMessage.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueMessage.author">
+<span class="sig-name descname"><span class="pre">author</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#ducpy.classes.DataStateClass.Actor" title="ducpy.classes.DataStateClass.Actor"><span class="pre">Actor</span></a></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueMessage.author" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueMessage.content">
+<span class="sig-name descname"><span class="pre">content</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueMessage.content" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueMessage.created_at">
+<span class="sig-name descname"><span class="pre">created_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueMessage.created_at" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueMessage.reply_to_id">
+<span class="sig-name descname"><span class="pre">reply_to_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueMessage.reply_to_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueMessage.reactions">
+<span class="sig-name descname"><span class="pre">reactions</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueMessage.reactions" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueMessage.edited_at">
+<span class="sig-name descname"><span class="pre">edited_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueMessage.edited_at" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueMessage.deleted_at">
+<span class="sig-name descname"><span class="pre">deleted_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueMessage.deleted_at" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueCanvasAnchor">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucIssueCanvasAnchor</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueCanvasAnchor" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueCanvasAnchor.x">
+<span class="sig-name descname"><span class="pre">x</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueCanvasAnchor.x" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueCanvasAnchor.y">
+<span class="sig-name descname"><span class="pre">y</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueCanvasAnchor.y" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueCanvasAnchor.scope">
+<span class="sig-name descname"><span class="pre">scope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueCanvasAnchor.scope" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueCanvasAnchor.type">
+<span class="sig-name descname"><span class="pre">type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'canvas'</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueCanvasAnchor.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueElementAnchor">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucIssueElementAnchor</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueElementAnchor" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueElementAnchor.element_id">
+<span class="sig-name descname"><span class="pre">element_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueElementAnchor.element_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueElementAnchor.anchor_x">
+<span class="sig-name descname"><span class="pre">anchor_x</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueElementAnchor.anchor_x" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueElementAnchor.anchor_y">
+<span class="sig-name descname"><span class="pre">anchor_y</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueElementAnchor.anchor_y" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueElementAnchor.type">
+<span class="sig-name descname"><span class="pre">type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'element'</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueElementAnchor.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueModelAnchor">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucIssueModelAnchor</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueModelAnchor.element_id">
+<span class="sig-name descname"><span class="pre">element_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor.element_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueModelAnchor.point">
+<span class="sig-name descname"><span class="pre">point</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor.point" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueModelAnchor.normal">
+<span class="sig-name descname"><span class="pre">normal</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor.normal" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueModelAnchor.viewer_state">
+<span class="sig-name descname"><span class="pre">viewer_state</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../ElementsClass/index.html#ducpy.classes.ElementsClass.Viewer3DState" title="ducpy.classes.ElementsClass.Viewer3DState"><span class="pre">ducpy.classes.ElementsClass.Viewer3DState</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor.viewer_state" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueModelAnchor.topology_id">
+<span class="sig-name descname"><span class="pre">topology_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor.topology_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueModelAnchor.type">
+<span class="sig-name descname"><span class="pre">type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'model'</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor.type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssueAnchor">
+<span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucIssueAnchor</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssueAnchor" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucIssue</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.id">
+<span class="sig-name descname"><span class="pre">id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.local_id">
+<span class="sig-name descname"><span class="pre">local_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.local_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.title">
+<span class="sig-name descname"><span class="pre">title</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.title" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.status" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.messages">
+<span class="sig-name descname"><span class="pre">messages</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueMessage" title="ducpy.classes.DataStateClass.DucIssueMessage"><span class="pre">DucIssueMessage</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.messages" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.author_id">
+<span class="sig-name descname"><span class="pre">author_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.author_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.created_at">
+<span class="sig-name descname"><span class="pre">created_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.created_at" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.updated_at">
+<span class="sig-name descname"><span class="pre">updated_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.updated_at" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.dismissed_reason">
+<span class="sig-name descname"><span class="pre">dismissed_reason</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.dismissed_reason" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.due_date">
+<span class="sig-name descname"><span class="pre">due_date</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.due_date" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.anchor">
+<span class="sig-name descname"><span class="pre">anchor</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueAnchor" title="ducpy.classes.DataStateClass.DucIssueAnchor"><span class="pre">DucIssueAnchor</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.anchor" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.assignee_ids">
+<span class="sig-name descname"><span class="pre">assignee_ids</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.assignee_ids" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.follower_ids">
+<span class="sig-name descname"><span class="pre">follower_ids</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.follower_ids" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucIssue.deleted_at">
+<span class="sig-name descname"><span class="pre">deleted_at</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucIssue.deleted_at" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucGlobalState">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ducpy.classes.DataStateClass.</span></span><span class="sig-name descname"><span class="pre">DucGlobalState</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucGlobalState" title="Link to this definition">¶</a></dt>
 <dd><dl class="py attribute">
@@ -373,11 +793,6 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucGlobalState.scope_exponent_threshold">
 <span class="sig-name descname"><span class="pre">scope_exponent_threshold</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucGlobalState.scope_exponent_threshold" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.DucGlobalState.name">
-<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.DucGlobalState.name" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -903,6 +1318,16 @@
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExportedDataState.charter">
+<span class="sig-name descname"><span class="pre">charter</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter" title="ducpy.classes.DataStateClass.DucCharter"><span class="pre">DucCharter</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExportedDataState.charter" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExportedDataState.issues">
+<span class="sig-name descname"><span class="pre">issues</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue" title="ducpy.classes.DataStateClass.DucIssue"><span class="pre">DucIssue</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExportedDataState.issues" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="ducpy.classes.DataStateClass.ExportedDataState.files_data">
 <span class="sig-name descname"><span class="pre">files_data</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ducpy.classes.DataStateClass.ExportedDataState.files_data" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -973,6 +1398,7 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">ducpy.classes.DataStateClass</a><ul>
+<li><a class="reference internal" href="#attributes">Attributes</a></li>
 <li><a class="reference internal" href="#classes">Classes</a></li>
 <li><a class="reference internal" href="#module-contents">Module Contents</a><ul>
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.DictionaryEntry"><code class="docutils literal notranslate"><span class="pre">DictionaryEntry</span></code></a><ul>
@@ -980,11 +1406,107 @@
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.DictionaryEntry.value"><code class="docutils literal notranslate"><span class="pre">DictionaryEntry.value</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.Actor"><code class="docutils literal notranslate"><span class="pre">Actor</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.Actor.identifier"><code class="docutils literal notranslate"><span class="pre">Actor.identifier</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.Actor.name"><code class="docutils literal notranslate"><span class="pre">Actor.name</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterRequirement"><code class="docutils literal notranslate"><span class="pre">DucCharterRequirement</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterRequirement.id"><code class="docutils literal notranslate"><span class="pre">DucCharterRequirement.id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterRequirement.statement"><code class="docutils literal notranslate"><span class="pre">DucCharterRequirement.statement</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterRequirement.must"><code class="docutils literal notranslate"><span class="pre">DucCharterRequirement.must</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterRequirement.acceptance_criteria"><code class="docutils literal notranslate"><span class="pre">DucCharterRequirement.acceptance_criteria</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterConstraint"><code class="docutils literal notranslate"><span class="pre">DucCharterConstraint</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterConstraint.id"><code class="docutils literal notranslate"><span class="pre">DucCharterConstraint.id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterConstraint.statement"><code class="docutils literal notranslate"><span class="pre">DucCharterConstraint.statement</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterConstraint.hard"><code class="docutils literal notranslate"><span class="pre">DucCharterConstraint.hard</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterDecision"><code class="docutils literal notranslate"><span class="pre">DucCharterDecision</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterDecision.id"><code class="docutils literal notranslate"><span class="pre">DucCharterDecision.id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterDecision.decision"><code class="docutils literal notranslate"><span class="pre">DucCharterDecision.decision</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterDecision.rationale"><code class="docutils literal notranslate"><span class="pre">DucCharterDecision.rationale</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterDecision.accepted"><code class="docutils literal notranslate"><span class="pre">DucCharterDecision.accepted</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterDecision.decided_at"><code class="docutils literal notranslate"><span class="pre">DucCharterDecision.decided_at</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterDecision.issue_ids"><code class="docutils literal notranslate"><span class="pre">DucCharterDecision.issue_ids</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterStakeholder"><code class="docutils literal notranslate"><span class="pre">DucCharterStakeholder</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterStakeholder.actor"><code class="docutils literal notranslate"><span class="pre">DucCharterStakeholder.actor</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharterStakeholder.role"><code class="docutils literal notranslate"><span class="pre">DucCharterStakeholder.role</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter"><code class="docutils literal notranslate"><span class="pre">DucCharter</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter.title"><code class="docutils literal notranslate"><span class="pre">DucCharter.title</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter.objective"><code class="docutils literal notranslate"><span class="pre">DucCharter.objective</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter.phase"><code class="docutils literal notranslate"><span class="pre">DucCharter.phase</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter.requirements"><code class="docutils literal notranslate"><span class="pre">DucCharter.requirements</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter.constraints"><code class="docutils literal notranslate"><span class="pre">DucCharter.constraints</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter.decisions"><code class="docutils literal notranslate"><span class="pre">DucCharter.decisions</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter.updated_at"><code class="docutils literal notranslate"><span class="pre">DucCharter.updated_at</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter.description"><code class="docutils literal notranslate"><span class="pre">DucCharter.description</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter.closed_reason"><code class="docutils literal notranslate"><span class="pre">DucCharter.closed_reason</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucCharter.stakeholders"><code class="docutils literal notranslate"><span class="pre">DucCharter.stakeholders</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueMessage"><code class="docutils literal notranslate"><span class="pre">DucIssueMessage</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueMessage.id"><code class="docutils literal notranslate"><span class="pre">DucIssueMessage.id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueMessage.author"><code class="docutils literal notranslate"><span class="pre">DucIssueMessage.author</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueMessage.content"><code class="docutils literal notranslate"><span class="pre">DucIssueMessage.content</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueMessage.created_at"><code class="docutils literal notranslate"><span class="pre">DucIssueMessage.created_at</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueMessage.reply_to_id"><code class="docutils literal notranslate"><span class="pre">DucIssueMessage.reply_to_id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueMessage.reactions"><code class="docutils literal notranslate"><span class="pre">DucIssueMessage.reactions</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueMessage.edited_at"><code class="docutils literal notranslate"><span class="pre">DucIssueMessage.edited_at</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueMessage.deleted_at"><code class="docutils literal notranslate"><span class="pre">DucIssueMessage.deleted_at</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueCanvasAnchor"><code class="docutils literal notranslate"><span class="pre">DucIssueCanvasAnchor</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueCanvasAnchor.x"><code class="docutils literal notranslate"><span class="pre">DucIssueCanvasAnchor.x</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueCanvasAnchor.y"><code class="docutils literal notranslate"><span class="pre">DucIssueCanvasAnchor.y</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueCanvasAnchor.scope"><code class="docutils literal notranslate"><span class="pre">DucIssueCanvasAnchor.scope</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueCanvasAnchor.type"><code class="docutils literal notranslate"><span class="pre">DucIssueCanvasAnchor.type</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueElementAnchor"><code class="docutils literal notranslate"><span class="pre">DucIssueElementAnchor</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueElementAnchor.element_id"><code class="docutils literal notranslate"><span class="pre">DucIssueElementAnchor.element_id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueElementAnchor.anchor_x"><code class="docutils literal notranslate"><span class="pre">DucIssueElementAnchor.anchor_x</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueElementAnchor.anchor_y"><code class="docutils literal notranslate"><span class="pre">DucIssueElementAnchor.anchor_y</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueElementAnchor.type"><code class="docutils literal notranslate"><span class="pre">DucIssueElementAnchor.type</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor"><code class="docutils literal notranslate"><span class="pre">DucIssueModelAnchor</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor.element_id"><code class="docutils literal notranslate"><span class="pre">DucIssueModelAnchor.element_id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor.point"><code class="docutils literal notranslate"><span class="pre">DucIssueModelAnchor.point</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor.normal"><code class="docutils literal notranslate"><span class="pre">DucIssueModelAnchor.normal</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor.viewer_state"><code class="docutils literal notranslate"><span class="pre">DucIssueModelAnchor.viewer_state</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor.topology_id"><code class="docutils literal notranslate"><span class="pre">DucIssueModelAnchor.topology_id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueModelAnchor.type"><code class="docutils literal notranslate"><span class="pre">DucIssueModelAnchor.type</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssueAnchor"><code class="docutils literal notranslate"><span class="pre">DucIssueAnchor</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue"><code class="docutils literal notranslate"><span class="pre">DucIssue</span></code></a><ul>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.id"><code class="docutils literal notranslate"><span class="pre">DucIssue.id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.local_id"><code class="docutils literal notranslate"><span class="pre">DucIssue.local_id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.title"><code class="docutils literal notranslate"><span class="pre">DucIssue.title</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.status"><code class="docutils literal notranslate"><span class="pre">DucIssue.status</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.messages"><code class="docutils literal notranslate"><span class="pre">DucIssue.messages</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.author_id"><code class="docutils literal notranslate"><span class="pre">DucIssue.author_id</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.created_at"><code class="docutils literal notranslate"><span class="pre">DucIssue.created_at</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.updated_at"><code class="docutils literal notranslate"><span class="pre">DucIssue.updated_at</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.dismissed_reason"><code class="docutils literal notranslate"><span class="pre">DucIssue.dismissed_reason</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.due_date"><code class="docutils literal notranslate"><span class="pre">DucIssue.due_date</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.anchor"><code class="docutils literal notranslate"><span class="pre">DucIssue.anchor</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.assignee_ids"><code class="docutils literal notranslate"><span class="pre">DucIssue.assignee_ids</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.follower_ids"><code class="docutils literal notranslate"><span class="pre">DucIssue.follower_ids</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucIssue.deleted_at"><code class="docutils literal notranslate"><span class="pre">DucIssue.deleted_at</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucGlobalState"><code class="docutils literal notranslate"><span class="pre">DucGlobalState</span></code></a><ul>
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucGlobalState.view_background_color"><code class="docutils literal notranslate"><span class="pre">DucGlobalState.view_background_color</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucGlobalState.main_scope"><code class="docutils literal notranslate"><span class="pre">DucGlobalState.main_scope</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucGlobalState.scope_exponent_threshold"><code class="docutils literal notranslate"><span class="pre">DucGlobalState.scope_exponent_threshold</span></code></a></li>
-<li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucGlobalState.name"><code class="docutils literal notranslate"><span class="pre">DucGlobalState.name</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.DucLocalState"><code class="docutils literal notranslate"><span class="pre">DucLocalState</span></code></a><ul>
@@ -1113,6 +1635,8 @@
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExportedDataState.duc_global_state"><code class="docutils literal notranslate"><span class="pre">ExportedDataState.duc_global_state</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExportedDataState.version_graph"><code class="docutils literal notranslate"><span class="pre">ExportedDataState.version_graph</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExportedDataState.files"><code class="docutils literal notranslate"><span class="pre">ExportedDataState.files</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExportedDataState.charter"><code class="docutils literal notranslate"><span class="pre">ExportedDataState.charter</span></code></a></li>
+<li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExportedDataState.issues"><code class="docutils literal notranslate"><span class="pre">ExportedDataState.issues</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExportedDataState.files_data"><code class="docutils literal notranslate"><span class="pre">ExportedDataState.files_data</span></code></a></li>
 <li><a class="reference internal" href="#ducpy.classes.DataStateClass.ExportedDataState.id"><code class="docutils literal notranslate"><span class="pre">ExportedDataState.id</span></code></a></li>
 </ul>

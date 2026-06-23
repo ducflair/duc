@@ -110,13 +110,13 @@ Module Contents
 
 .. py:function:: _validate_embedded_code(elements: List[Any], files_meta: Optional[Dict[str, Any]], files_data: Optional[Dict[str, bytes]], timeout_seconds: Optional[float]) -> None
 
-.. py:function:: serialize_duc(name: str, thumbnail: Optional[bytes] = None, dictionary: Optional[list] = None, elements: Optional[list] = None, duc_local_state: Any = None, duc_global_state: Any = None, version_graph: Any = None, blocks: Optional[list] = None, block_instances: Optional[list] = None, block_collections: Optional[list] = None, groups: Optional[list] = None, regions: Optional[list] = None, layers: Optional[list] = None, external_files: Optional[list] = None, validate_embedded_code: bool = True, validation_timeout_seconds: Optional[float] = None) -> bytes
+.. py:function:: serialize_duc(name: str, thumbnail: Optional[bytes] = None, dictionary: Optional[list] = None, elements: Optional[list] = None, duc_local_state: Any = None, duc_global_state: Any = None, version_graph: Any = None, blocks: Optional[list] = None, block_instances: Optional[list] = None, block_collections: Optional[list] = None, groups: Optional[list] = None, regions: Optional[list] = None, layers: Optional[list] = None, external_files: Optional[list] = None, charter: Any = None, issues: Optional[list] = None, validate_embedded_code: bool = True, validation_timeout_seconds: Optional[float] = None) -> bytes
 
    Serialize elements and document state to raw ``.duc`` binary format.
 
    This function accepts lists of elements created via the `ducpy.builders` API
    (e.g., `ElementBuilder`) and serializes them into the compressed format
-   expected by `.duc` files. Element instances and state dataclasses are 
+   expected by `.duc` files. Element instances and state dataclasses are
    automatically converted to the camelCase dicts expected by the Rust native module.
 
    Parameters
@@ -149,6 +149,10 @@ Module Contents
        List of document layers.
    external_files : Optional[list], default=None
        List of external files (e.g., embedded images or PDFs).
+   charter : Any, default=None
+       Project charter object (DucCharter) or dict.
+   issues : Optional[list], default=None
+       List of issue objects (DucIssue) or dicts.
    validate_embedded_code : bool, default=True
        Validate model Python code and document source before native serialization.
        This is intended for server-side CPython usage and raises

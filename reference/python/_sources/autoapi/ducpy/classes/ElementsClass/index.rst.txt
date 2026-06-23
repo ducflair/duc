@@ -1170,6 +1170,10 @@ Module Contents
       :type:  DucTableStyle
 
 
+   .. py:attribute:: grid_config
+      :type:  DocumentGridConfig
+
+
    .. py:attribute:: file_id
       :type:  Optional[str]
       :value: None

@@ -4,12 +4,31 @@ ducpy.classes.DataStateClass
 .. py:module:: ducpy.classes.DataStateClass
 
 
+Attributes
+----------
+
+.. autoapisummary::
+
+   ducpy.classes.DataStateClass.DucIssueAnchor
+
+
 Classes
 -------
 
 .. autoapisummary::
 
    ducpy.classes.DataStateClass.DictionaryEntry
+   ducpy.classes.DataStateClass.Actor
+   ducpy.classes.DataStateClass.DucCharterRequirement
+   ducpy.classes.DataStateClass.DucCharterConstraint
+   ducpy.classes.DataStateClass.DucCharterDecision
+   ducpy.classes.DataStateClass.DucCharterStakeholder
+   ducpy.classes.DataStateClass.DucCharter
+   ducpy.classes.DataStateClass.DucIssueMessage
+   ducpy.classes.DataStateClass.DucIssueCanvasAnchor
+   ducpy.classes.DataStateClass.DucIssueElementAnchor
+   ducpy.classes.DataStateClass.DucIssueModelAnchor
+   ducpy.classes.DataStateClass.DucIssue
    ducpy.classes.DataStateClass.DucGlobalState
    ducpy.classes.DataStateClass.DucLocalState
    ducpy.classes.DataStateClass.VersionBase
@@ -38,6 +57,332 @@ Module Contents
       :type:  str
 
 
+.. py:class:: Actor
+
+   .. py:attribute:: identifier
+      :type:  str
+
+
+   .. py:attribute:: name
+      :type:  Optional[str]
+      :value: None
+
+
+
+.. py:class:: DucCharterRequirement
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: statement
+      :type:  str
+
+
+   .. py:attribute:: must
+      :type:  bool
+
+
+   .. py:attribute:: acceptance_criteria
+      :type:  Optional[List[str]]
+      :value: None
+
+
+
+.. py:class:: DucCharterConstraint
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: statement
+      :type:  str
+
+
+   .. py:attribute:: hard
+      :type:  bool
+
+
+.. py:class:: DucCharterDecision
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: decision
+      :type:  str
+
+
+   .. py:attribute:: rationale
+      :type:  str
+
+
+   .. py:attribute:: accepted
+      :type:  bool
+
+
+   .. py:attribute:: decided_at
+      :type:  int
+
+
+   .. py:attribute:: issue_ids
+      :type:  Optional[List[str]]
+      :value: None
+
+
+
+.. py:class:: DucCharterStakeholder
+
+   .. py:attribute:: actor
+      :type:  Actor
+
+
+   .. py:attribute:: role
+      :type:  str
+
+
+.. py:class:: DucCharter
+
+   .. py:attribute:: title
+      :type:  str
+
+
+   .. py:attribute:: objective
+      :type:  str
+
+
+   .. py:attribute:: phase
+      :type:  str
+
+
+   .. py:attribute:: requirements
+      :type:  List[DucCharterRequirement]
+
+
+   .. py:attribute:: constraints
+      :type:  List[DucCharterConstraint]
+
+
+   .. py:attribute:: decisions
+      :type:  List[DucCharterDecision]
+
+
+   .. py:attribute:: updated_at
+      :type:  int
+
+
+   .. py:attribute:: description
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: closed_reason
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: stakeholders
+      :type:  Optional[List[DucCharterStakeholder]]
+      :value: None
+
+
+
+.. py:class:: DucIssueMessage
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: author
+      :type:  Actor
+
+
+   .. py:attribute:: content
+      :type:  str
+
+
+   .. py:attribute:: created_at
+      :type:  int
+
+
+   .. py:attribute:: reply_to_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: reactions
+      :type:  Optional[Dict[str, List[str]]]
+      :value: None
+
+
+
+   .. py:attribute:: edited_at
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: deleted_at
+      :type:  Optional[int]
+      :value: None
+
+
+
+.. py:class:: DucIssueCanvasAnchor
+
+   .. py:attribute:: x
+      :type:  float
+
+
+   .. py:attribute:: y
+      :type:  float
+
+
+   .. py:attribute:: scope
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: type
+      :type:  str
+      :value: 'canvas'
+
+
+
+.. py:class:: DucIssueElementAnchor
+
+   .. py:attribute:: element_id
+      :type:  str
+
+
+   .. py:attribute:: anchor_x
+      :type:  Optional[float]
+      :value: None
+
+
+
+   .. py:attribute:: anchor_y
+      :type:  Optional[float]
+      :value: None
+
+
+
+   .. py:attribute:: type
+      :type:  str
+      :value: 'element'
+
+
+
+.. py:class:: DucIssueModelAnchor
+
+   .. py:attribute:: element_id
+      :type:  str
+
+
+   .. py:attribute:: point
+      :type:  List[float]
+
+
+   .. py:attribute:: normal
+      :type:  Optional[List[float]]
+      :value: None
+
+
+
+   .. py:attribute:: viewer_state
+      :type:  Optional[ducpy.classes.ElementsClass.Viewer3DState]
+      :value: None
+
+
+
+   .. py:attribute:: topology_id
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: type
+      :type:  str
+      :value: 'model'
+
+
+
+.. py:data:: DucIssueAnchor
+
+.. py:class:: DucIssue
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: local_id
+      :type:  int
+
+
+   .. py:attribute:: title
+      :type:  str
+
+
+   .. py:attribute:: status
+      :type:  str
+
+
+   .. py:attribute:: messages
+      :type:  List[DucIssueMessage]
+
+
+   .. py:attribute:: author_id
+      :type:  str
+
+
+   .. py:attribute:: created_at
+      :type:  int
+
+
+   .. py:attribute:: updated_at
+      :type:  int
+
+
+   .. py:attribute:: dismissed_reason
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: due_date
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: anchor
+      :type:  Optional[DucIssueAnchor]
+      :value: None
+
+
+
+   .. py:attribute:: assignee_ids
+      :type:  Optional[List[str]]
+      :value: None
+
+
+
+   .. py:attribute:: follower_ids
+      :type:  Optional[List[str]]
+      :value: None
+
+
+
+   .. py:attribute:: deleted_at
+      :type:  Optional[int]
+      :value: None
+
+
+
 .. py:class:: DucGlobalState
 
    .. py:attribute:: view_background_color
@@ -50,10 +395,6 @@ Module Contents
 
    .. py:attribute:: scope_exponent_threshold
       :type:  int
-
-
-   .. py:attribute:: name
-      :type:  Optional[str]
 
 
 .. py:class:: DucLocalState
@@ -504,6 +845,18 @@ Module Contents
 
    .. py:attribute:: files
       :type:  Optional[Dict[str, DucExternalFile]]
+
+
+   .. py:attribute:: charter
+      :type:  Optional[DucCharter]
+      :value: None
+
+
+
+   .. py:attribute:: issues
+      :type:  Optional[List[DucIssue]]
+      :value: None
+
 
 
    .. py:attribute:: files_data

@@ -479,6 +479,9 @@ Module Contents
    .. py:method:: with_table_style(style: Optional[ducpy.classes.ElementsClass.DucTableStyle])
 
 
+   .. py:method:: with_grid_config(grid_config: ducpy.classes.ElementsClass.DocumentGridConfig)
+
+
    .. py:method:: build() -> ducpy.classes.ElementsClass.ElementWrapper
 
 
