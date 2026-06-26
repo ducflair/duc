@@ -751,12 +751,36 @@ const restoreElement = (
     case "doc": {
       const docElement = element as DucDocElement;
 
+      // Migration: old format stored the compiled PDF on fileId and the Typst
+      // source in referencedFileIds. New format stores the Typst source on
+      // fileId and the PDF cache in referencedFileIds with a doc_pdf_cache_ prefix.
+      let migratedFileId = (isValidString(docElement.fileId) as ExternalFileId) || null;
+      let migratedReferencedFileIds = docElement.referencedFileIds ?? [];
+
+      if (migratedFileId && typeof migratedFileId === "string" && migratedFileId.startsWith("doc_pdf_")) {
+        const typstSourceId = migratedReferencedFileIds.find(
+          (rid) => typeof rid === "string" && rid.startsWith("doc_typst_source_"),
+        );
+        if (typstSourceId) {
+          // Move old PDF cache to referencedFileIds with new prefix
+          const elementId = docElement.id ?? "";
+          const newCacheId = `doc_pdf_cache_${elementId}` as ExternalFileId;
+          migratedReferencedFileIds = migratedReferencedFileIds.filter(
+            (rid) => rid !== typstSourceId,
+          );
+          if (!migratedReferencedFileIds.includes(newCacheId)) {
+            migratedReferencedFileIds = [...migratedReferencedFileIds, newCacheId];
+          }
+          migratedFileId = typstSourceId as ExternalFileId;
+        }
+      }
+
       return restoreElementWithProperties(
         element,
         {
           text: isValidString(docElement.text),
-          fileId: (isValidString(docElement.fileId) as ExternalFileId) || null,
-          referencedFileIds: docElement.referencedFileIds || [],
+          fileId: migratedFileId,
+          referencedFileIds: migratedReferencedFileIds,
           gridConfig: restoreDocumentGridConfig(docElement.gridConfig),
         },
         localState
