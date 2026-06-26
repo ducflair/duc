@@ -3,33 +3,34 @@ import { assertNever } from "../../utils";
 import { Bounds, LineSegment, TuplePoint } from "../geometry.types";
 import type { MarkNonNullable } from "../utility.types";
 import type {
-    DucArrowElement,
-    DucBindableElement,
-    DucDocElement,
-    DucElbowArrowElement,
-    DucElement,
-    DucElementType,
-    DucEllipseElement,
-    DucEmbeddableElement,
-    DucFlowchartNodeElement,
-    DucFrameElement,
-    DucFrameLikeElement,
-    DucFreeDrawElement,
-    DucIframeLikeElement,
-    DucImageElement,
-    DucLinearElement,
-    DucNonSelectionElement,
-    DucPdfElement,
-    DucPlotElement,
-    DucPointBinding,
-    DucPolygonElement,
-    DucTableElement,
-    DucTextContainer,
-    DucTextElement,
-    DucTextElementWithContainer,
-    FixedPointBinding,
-    InitializedDucImageElement,
-    NonDeleted
+  DucArrowElement,
+  DucBindableElement,
+  DucDocElement,
+  DucElbowArrowElement,
+  DucElement,
+  DucElementType,
+  DucEllipseElement,
+  DucEmbeddableElement,
+  DucFlowchartNodeElement,
+  DucFrameElement,
+  DucFrameLikeElement,
+  DucFreeDrawElement,
+  DucIframeLikeElement,
+  DucImageElement,
+  DucLinearElement,
+  DucNonSelectionElement,
+  DucPdfElement,
+  DucPlotElement,
+  DucPointBinding,
+  DucPolygonElement,
+  DucTableElement,
+  DucTextContainer,
+  DucTextElement,
+  DucTextElementWithContainer,
+  ExternalFileId,
+  FixedPointBinding,
+  InitializedDucImageElement,
+  NonDeleted
 } from "./";
 
 export const isInitializedImageElement = (
@@ -56,6 +57,35 @@ export const isPdfLikeElement = (
   element: DucElement | null,
 ): element is DucPdfLikeElement => {
   return !!element && (element.type === "pdf" || element.type === "doc");
+};
+
+/**
+ * Resolves the file ID used for rendering a PDF-like element.
+ *
+ * For `pdf` elements, this is simply `element.fileId`.
+ * For `doc` elements, the `fileId` holds the Typst source file, and the
+ * compiled PDF cache is stored in `referencedFileIds` with a
+ * `doc_pdf_cache_` prefix. This function returns that cache file ID, or
+ * falls back to `element.fileId` for backward compatibility with older
+ * drawings where `fileId` was the PDF itself.
+ */
+const DOC_PDF_CACHE_FILE_ID_PREFIX = "doc_pdf_cache_";
+
+export const getRenderablePdfFileId = (
+  element: DucElement,
+): ExternalFileId | null => {
+  if (element.type === "pdf") {
+    return element.fileId;
+  }
+  if (element.type === "doc") {
+    const cacheId = `${DOC_PDF_CACHE_FILE_ID_PREFIX}${element.id}` as ExternalFileId;
+    if (element.referencedFileIds?.includes(cacheId)) {
+      return cacheId;
+    }
+    // Fallback for legacy drawings where fileId was the PDF
+    return element.fileId;
+  }
+  return null;
 };
 
 export const isEmbeddableElement = (
@@ -284,9 +314,9 @@ export const isDucElement = (
     case "model":
     case "plot":
     case "pdf":
-    {
-      return true;
-    }
+      {
+        return true;
+      }
     default: {
       assertNever(type, null);
       return false;

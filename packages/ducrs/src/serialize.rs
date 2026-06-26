@@ -1112,7 +1112,7 @@ fn write_element_file_ids(tx: &Transaction, element_id: &str, file_ids: &[String
 
 fn write_doc_referenced_file_ids(tx: &Transaction, element_id: &str, file_ids: &[String]) -> SerializeResult<()> {
     let mut stmt = tx.prepare_cached(
-        "INSERT INTO doc_element_referenced_files (element_id, file_id, sort_order) VALUES (?1, ?2, ?3)"
+        "INSERT OR IGNORE INTO doc_element_referenced_files (element_id, file_id, sort_order) VALUES (?1, ?2, ?3)"
     )?;
     for (i, fid) in file_ids.iter().enumerate() {
         stmt.execute(params![element_id, fid, i as i32])?;
