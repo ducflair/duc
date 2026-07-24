@@ -85,8 +85,8 @@ def test_image_with_external_file_via_sql(test_output_dir):
             "img_001_rev1", "img_001", len(image_bytes), "image/png", now, now,
         )
         db.sql(
-            "INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)",
-            "img_001_rev1", image_bytes,
+            "INSERT INTO external_file_revision_chunks (revision_id, chunk_index, offset_bytes, size_bytes, data) VALUES (?,?,?,?,?)",
+            "img_001_rev1", 0, 0, len(image_bytes), image_bytes,
         )
 
         # Insert image element referencing the file
@@ -101,12 +101,13 @@ def test_image_with_external_file_via_sql(test_output_dir):
             "img_el", "img_001", 11, 1.0, 1.0,  # IMAGE_STATUS.SAVED=11
         )
 
-        # Verify external file was stored (data lives in external_file_revision_data)
+        # Verify external file was stored in chunked revision data.
         ef = db.sql(
-            "SELECT ef.id, efr.mime_type, LENGTH(efrd.data) AS sz "
+            "SELECT ef.id, efr.mime_type, SUM(efrc.size_bytes) AS sz "
             "FROM external_files ef "
             "JOIN external_file_revisions efr ON efr.id = ef.active_revision_id "
-            "JOIN external_file_revision_data efrd ON efrd.revision_id = efr.id"
+            "JOIN external_file_revision_chunks efrc ON efrc.revision_id = efr.id "
+            "GROUP BY ef.id, efr.mime_type"
         )[0]
         assert ef["id"] == "img_001"
         assert ef["mime_type"] == "image/png"
@@ -127,9 +128,9 @@ def test_image_with_external_file_via_sql(test_output_dir):
     # Roundtrip: re-open and verify the binary data survived
     with DucSQL(output_file) as db2:
         stored = db2.sql(
-            "SELECT efrd.data FROM external_files ef "
+            "SELECT efrc.data FROM external_files ef "
             "JOIN external_file_revisions efr ON efr.id = ef.active_revision_id "
-            "JOIN external_file_revision_data efrd ON efrd.revision_id = efr.id "
+            "JOIN external_file_revision_chunks efrc ON efrc.revision_id = efr.id "
             "WHERE ef.id = ?",
             "img_001",
         )[0]

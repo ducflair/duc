@@ -20,13 +20,14 @@ export class LazyExternalFileStore {
   private buffer: Uint8Array | null;
   private metadataCache: Map<string, LazyFileMetadata> | null = null;
   private runtimeFiles: Map<string, ExternalFileLoaded> = new Map();
+  private released = false;
 
   constructor(buffer: Uint8Array) {
-    this.buffer = buffer;
+    this.buffer = buffer.byteLength > 0 ? buffer : null;
   }
 
   get isReleased(): boolean {
-    return this.buffer === null;
+    return this.released;
   }
 
   get size(): number {
@@ -245,6 +246,7 @@ export class LazyExternalFileStore {
   release(): void {
     this.buffer = null;
     this.metadataCache = null;
+    this.released = true;
   }
 
   private getMetadataMap(): Map<string, LazyFileMetadata> {
@@ -262,4 +264,3 @@ export class LazyExternalFileStore {
     return this.metadataCache;
   }
 }
-

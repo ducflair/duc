@@ -65,6 +65,7 @@ dev = [
     "build123d>=0.10.0",
     "ocp-vscode>=3.4.0",
     "ifcopenshell>=0.8.5",
+    "sphinx-llm>=0.4.1",
 ]
 
 

@@ -4,6 +4,8 @@ Example demonstrating the element creation functionality using the builders API.
 This demo shows how to create various types of elements using the modern builders pattern.
 """
 
+import tempfile
+
 import ducpy as duc
 from ducpy.builders.style_builders import (create_fill_and_stroke_style,
                                            create_simple_styles,
@@ -173,14 +175,17 @@ def main():
     elements.extend(demo_stack_elements())
     elements.extend(demo_custom_stack_base())
 
-    duc_bytes = duc.serialize_duc(
+    output = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+    output.close()
+    duc_path = duc.serialize_duc(
         name="element_creation_example",
+        output_path=output.name,
         elements=elements,
     )
 
-    print(f"\nCreated {len(elements)} elements → serialized {len(duc_bytes)} bytes.")
+    print(f"\nCreated {len(elements)} elements → serialized to {duc_path}.")
     print("✅ Element creation demo complete!")
-    return duc_bytes
+    return duc_path
 
 
 if __name__ == "__main__":

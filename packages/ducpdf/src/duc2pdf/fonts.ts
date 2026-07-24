@@ -102,7 +102,7 @@ const isValidFontFamily = (ff: unknown): ff is string =>
 /**
  * Extract unique font family names from parsed DUC elements.
  */
-function collectFontFamilies(parsed: ExportedDataState): Set<string> {
+export function collectFontFamilies(parsed: ExportedDataState): string[] {
   const families = new Set<string>();
   for (const el of (parsed.elements ?? [])) {
     if (el && typeof el === 'object' && 'fontFamily' in el) {
@@ -118,21 +118,16 @@ function collectFontFamilies(parsed: ExportedDataState): Set<string> {
   }
   const defaultFF = parsed?.localState?.currentItemFontFamily;
   if (isValidFontFamily(defaultFF)) families.add(defaultFF);
-  return families;
+  return [...families];
 }
 
-/**
- * Fetch font data for all detected families in a DUC file.
- * Returns fontMap and a list of warning messages for fonts that couldn't be fetched.
- */
-export async function fetchFontsForDuc(
-  parsed: ExportedDataState,
+export async function fetchFontsForFamilies(
+  families: readonly string[],
 ): Promise<{ fontMap: Map<string, Uint8Array>; warnings: string[] }> {
   const fontMap = new Map<string, Uint8Array>();
   const warnings: string[] = [];
-  const families = collectFontFamilies(parsed);
 
-  const toFetch = [...families].filter(f => !BUNDLED_FONTS.has(f));
+  const toFetch = [...new Set(families)].filter(f => !BUNDLED_FONTS.has(f));
   if (toFetch.length === 0) return { fontMap, warnings };
 
   const metadata = await getGoogleFontMetadata();
@@ -170,4 +165,14 @@ export async function fetchFontsForDuc(
   }
 
   return { fontMap, warnings };
+}
+
+/**
+ * Fetch font data for all detected families in a DUC file.
+ * Returns fontMap and a list of warning messages for fonts that couldn't be fetched.
+ */
+export async function fetchFontsForDuc(
+  parsed: ExportedDataState,
+): Promise<{ fontMap: Map<string, Uint8Array>; warnings: string[] }> {
+  return fetchFontsForFamilies(collectFontFamilies(parsed));
 }

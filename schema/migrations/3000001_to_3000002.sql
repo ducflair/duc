@@ -3,17 +3,18 @@
 -- `external_file_revision_data` table so metadata can be read without
 -- loading heavy blobs.
 
--- 1. Create the new data table
-CREATE TABLE external_file_revision_data (
-    revision_id TEXT PRIMARY KEY REFERENCES external_file_revisions(id) ON DELETE CASCADE,
+PRAGMA foreign_keys = OFF;
+
+-- 1. Stage existing data blobs before the parent table is renamed/recreated.
+CREATE TABLE _external_file_revision_data_v3000001 (
+    revision_id TEXT PRIMARY KEY,
     data        BLOB NOT NULL
 ) WITHOUT ROWID;
 
--- 2. Move existing data blobs into the new table
-INSERT INTO external_file_revision_data (revision_id, data)
+INSERT INTO _external_file_revision_data_v3000001 (revision_id, data)
     SELECT id, data FROM external_file_revisions;
 
--- 3. Recreate external_file_revisions without the data column
+-- 2. Recreate external_file_revisions without the data column.
 ALTER TABLE external_file_revisions RENAME TO _ext_revisions_old_v3000001;
 
 CREATE TABLE external_file_revisions (
@@ -35,6 +36,17 @@ INSERT INTO external_file_revisions (id, file_id, size_bytes, checksum, source_n
     SELECT id, file_id, size_bytes, checksum, source_name, mime_type, message, created, last_retrieved
     FROM _ext_revisions_old_v3000001;
 
-DROP TABLE _ext_revisions_old_v3000001;
+-- 3. Create the final data table after the new parent table exists.
+CREATE TABLE external_file_revision_data (
+    revision_id TEXT PRIMARY KEY REFERENCES external_file_revisions(id) ON DELETE CASCADE,
+    data        BLOB NOT NULL
+) WITHOUT ROWID;
 
+INSERT INTO external_file_revision_data (revision_id, data)
+    SELECT revision_id, data FROM _external_file_revision_data_v3000001;
+
+DROP TABLE _ext_revisions_old_v3000001;
+DROP TABLE _external_file_revision_data_v3000001;
+
+PRAGMA foreign_keys = ON;
 PRAGMA user_version = 3000002;

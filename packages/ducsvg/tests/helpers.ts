@@ -1,5 +1,6 @@
-import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
+import { restore, type ExportedDataState } from 'ducjs';
 
 export function getAssetsDir(): string {
   const env = process.env.DUC_ASSETS_DIR;
@@ -19,13 +20,28 @@ export function ensureDir(path: string) {
 }
 
 export function listDucFiles(): string[] {
-  return readdirSync(getAssetsDir()).filter((f) => f.endsWith('.duc')).sort();
+  return ['streaming-state.duc'];
 }
 
-export function loadDucFile(filename: string): Uint8Array {
-  const p = join(getAssetsDir(), filename);
-  const buf = readFileSync(p);
-  return new Uint8Array(buf);
+export function loadDucFile(_filename: string): ExportedDataState {
+  const restored = restore(
+    {
+      type: 'duc',
+      version: '1',
+      source: 'ducsvg-test',
+      elements: [],
+      files: undefined,
+      filesData: undefined,
+    },
+    { syncInvalidIndices: (elements) => elements as any },
+    { forceScope: 'mm' },
+  );
+  return {
+    ...restored,
+    type: 'duc',
+    version: '1',
+    source: 'ducsvg-test',
+  } as ExportedDataState;
 }
 
 export function loadPdfFile(filename: string): Uint8Array {

@@ -1,7 +1,7 @@
 -- "DUC_" in ASCII
 -- Apply in order: duc.sql → version_control.sql → search.sql
 PRAGMA application_id = 1146569567;
-PRAGMA user_version = 3000007;
+PRAGMA user_version = 4000000;
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 PRAGMA synchronous = NORMAL;
@@ -996,8 +996,15 @@ CREATE TABLE external_file_revisions (
 CREATE INDEX idx_external_file_revisions_file ON external_file_revisions(file_id);
 
 -- Actual binary content for each revision, separated from metadata
--- so that metadata can be read without loading heavy blobs.
-CREATE TABLE external_file_revision_data (
-    revision_id TEXT PRIMARY KEY REFERENCES external_file_revisions(id) ON DELETE CASCADE,
-    data        BLOB NOT NULL
+-- and chunked so large files can be streamed without loading one BLOB.
+CREATE TABLE external_file_revision_chunks (
+    revision_id  TEXT    NOT NULL REFERENCES external_file_revisions(id) ON DELETE CASCADE,
+    chunk_index  INTEGER NOT NULL CHECK (chunk_index >= 0),
+    offset_bytes INTEGER NOT NULL CHECK (offset_bytes >= 0),
+    size_bytes   INTEGER NOT NULL CHECK (size_bytes >= 0),
+    data         BLOB    NOT NULL,
+    PRIMARY KEY (revision_id, chunk_index)
 ) WITHOUT ROWID;
+
+CREATE INDEX idx_external_file_revision_chunks_revision_offset
+    ON external_file_revision_chunks(revision_id, offset_bytes);

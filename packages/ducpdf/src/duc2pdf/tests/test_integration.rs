@@ -1,4 +1,6 @@
-use duc2pdf::{convert_duc_to_pdf_with_options, ConversionMode, ConversionOptions};
+use duc2pdf::{
+    convert_exported_data_to_pdf_with_fonts_and_options, ConversionMode, ConversionOptions,
+};
 use std::path::Path;
 
 /// Integration tests for DUC2PDF conversion functionality
@@ -7,42 +9,70 @@ use std::path::Path;
 #[cfg(test)]
 mod integration_tests {
     use super::*;
-    use duc::types::DucEllipseElement;
+    use duc::types::{
+        DucEllipseElement, DucGlobalState, DucLocalState, ExportedDataState, TEXT_ALIGN,
+    };
     use hipdf::fonts::{Font, StandardFont};
 
-    fn get_assets_dir() -> String {
-        if let Ok(path) = std::env::var("DUC_ASSETS_DIR") {
-            path
-        } else {
-            let current_dir = std::env::current_dir().unwrap();
-            let assets_path = current_dir.join("../../../../assets/testing/duc-files");
-            assets_path.to_string_lossy().to_string()
+    fn list_duc_files() -> Vec<String> {
+        vec!["streaming-state.duc".to_string()]
+    }
+
+    fn test_state() -> ExportedDataState {
+        ExportedDataState {
+            id: Some("duc2pdf-test".to_string()),
+            version: "1".to_string(),
+            source: "duc2pdf-test".to_string(),
+            data_type: "duc".to_string(),
+            dictionary: None,
+            thumbnail: None,
+            charter: None,
+            issues: Vec::new(),
+            elements: Vec::new(),
+            blocks: Vec::new(),
+            block_instances: Vec::new(),
+            block_collections: Vec::new(),
+            groups: Vec::new(),
+            regions: Vec::new(),
+            layers: Vec::new(),
+            duc_local_state: Some(DucLocalState {
+                scope: "mm".to_string(),
+                scroll_x: 0.0,
+                scroll_y: 0.0,
+                zoom: 1.0,
+                is_binding_enabled: false,
+                current_item_stroke: None,
+                current_item_background: None,
+                current_item_opacity: 1.0,
+                current_item_font_family: "Arial".to_string(),
+                current_item_font_size: 12.0,
+                current_item_text_align: TEXT_ALIGN::LEFT,
+                current_item_start_line_head: None,
+                current_item_end_line_head: None,
+                current_item_roundness: 0.0,
+                pen_mode: false,
+                view_mode_enabled: false,
+                objects_snap_mode_enabled: false,
+                grid_mode_enabled: false,
+                outline_mode_enabled: false,
+                manual_save_mode: false,
+                decimal_places: 2,
+            }),
+            duc_global_state: Some(DucGlobalState {
+                view_background_color: "#ffffff".to_string(),
+                main_scope: "mm".to_string(),
+                scope_exponent_threshold: 3,
+            }),
+            version_graph: None,
+            external_files: None,
+            external_files_data: None,
         }
     }
 
-    fn list_duc_files() -> Vec<String> {
-        let dir = get_assets_dir();
-        let mut files: Vec<String> = std::fs::read_dir(&dir)
-            .unwrap_or_else(|e| panic!("read assets dir {dir}: {e}"))
-            .filter_map(|e| e.ok())
-            .map(|e| e.file_name().to_string_lossy().to_string())
-            .filter(|name| name.ends_with(".duc"))
-            .collect();
-        files.sort();
-        files
-    }
-
-    /// Load a DUC file from the assets directory
-    fn load_duc_file(filename: &str) -> Vec<u8> {
-        let assets_dir = get_assets_dir();
-        let asset_path = Path::new(&assets_dir).join(filename);
-        assert!(
-            asset_path.exists(),
-            "Asset file not found: {}",
-            asset_path.display()
-        );
-        std::fs::read(&asset_path)
-            .unwrap_or_else(|_| panic!("Failed to read asset file: {}", asset_path.display()))
+    fn convert_test_state_to_pdf_with_options(
+        options: ConversionOptions,
+    ) -> duc2pdf::ConversionResult<Vec<u8>> {
+        convert_exported_data_to_pdf_with_fonts_and_options(test_state(), options, HashMap::new())
     }
 
     /// Validate PDF structure to ensure it's a valid, openable PDF
@@ -105,9 +135,6 @@ mod integration_tests {
     /// Test basic CROP mode functionality with empty data
     #[test]
     fn test_crop_mode_basic() {
-        // Create minimal test data (this will likely fail, but tests the pipeline)
-        let test_data = vec![0u8; 64]; // Minimal data to test error handling
-
         let options = ConversionOptions {
             scale: None, // Allow auto-scaling
             mode: ConversionMode::Crop {
@@ -122,7 +149,7 @@ mod integration_tests {
             background_color: Some("#FFFFFF".to_string()),
         };
 
-        match convert_duc_to_pdf_with_options(&test_data, options) {
+        match convert_test_state_to_pdf_with_options(options) {
             Ok(pdf_bytes) => {
                 // In-memory validation only; no disk writes
                 assert!(!pdf_bytes.is_empty(), "PDF should not be empty");
@@ -140,9 +167,6 @@ mod integration_tests {
     /// Test basic PLOT mode functionality
     #[test]
     fn test_plot_mode_basic() {
-        // Create minimal test data
-        let test_data = vec![0u8; 64];
-
         let options = ConversionOptions {
             scale: None, // Allow auto-scaling
             mode: ConversionMode::Plot,
@@ -152,7 +176,7 @@ mod integration_tests {
             background_color: Some("#FFFFFF".to_string()),
         };
 
-        match convert_duc_to_pdf_with_options(&test_data, options) {
+        match convert_test_state_to_pdf_with_options(options) {
             Ok(pdf_bytes) => {
                 // In-memory validation only; no disk writes
                 assert!(!pdf_bytes.is_empty(), "PDF should not be empty");
@@ -170,13 +194,9 @@ mod integration_tests {
     /// Test error handling with completely invalid data
     #[test]
     fn test_error_handling() {
-        let test_cases = vec![
-            ("empty_data", vec![]),
-            ("random_data", vec![0xFF; 100]),
-            ("text_data", b"This is not a DUC file".to_vec()),
-        ];
+        let test_cases = ["empty_state", "minimal_state", "streaming_state"];
 
-        for (test_name, test_data) in test_cases {
+        for test_name in test_cases {
             let options = ConversionOptions {
                 scale: None, // Allow auto-scaling
                 mode: ConversionMode::Plot,
@@ -186,7 +206,7 @@ mod integration_tests {
                 background_color: Some("oklch(0.55 0.04 257)".to_string()),
             };
 
-            match convert_duc_to_pdf_with_options(&test_data, options) {
+            match convert_test_state_to_pdf_with_options(options) {
                 Ok(_pdf_bytes) => {
                     // If it somehow succeeds, just log; do not write to disk
                     println!("⚠️  Error test {} unexpectedly succeeded", test_name);
@@ -205,8 +225,6 @@ mod integration_tests {
     /// Test coordinate validation bounds
     #[test]
     fn test_coordinate_bounds() {
-        let test_data = vec![0u8; 64];
-
         // Test various coordinate boundary conditions
         let boundary_tests = vec![
             ("normal_bounds", (0.0, 0.0, 1000.0, 1000.0), true),
@@ -239,7 +257,7 @@ mod integration_tests {
                 background_color: Some("".to_string()),
             };
 
-            match convert_duc_to_pdf_with_options(&test_data, options) {
+            match convert_test_state_to_pdf_with_options(options) {
                 Ok(pdf_bytes) => {
                     if should_succeed {
                         // In-memory validation only
@@ -267,8 +285,6 @@ mod integration_tests {
     /// Test metadata handling
     #[test]
     fn test_metadata_handling() {
-        let test_data = vec![0u8; 64];
-
         let metadata_tests = vec![
             (
                 "full_metadata",
@@ -301,7 +317,7 @@ mod integration_tests {
                 background_color: Some("transparent".to_string()),
             };
 
-            match convert_duc_to_pdf_with_options(&test_data, options) {
+            match convert_test_state_to_pdf_with_options(options) {
                 Ok(pdf_bytes) => {
                     // In-memory validation only
                     validate_pdf_structure(&pdf_bytes, Path::new("memory:metadata_test.pdf"));
@@ -323,8 +339,6 @@ mod integration_tests {
     /// Test conversion mode switching
     #[test]
     fn test_mode_switching() {
-        let test_data = vec![0u8; 64];
-
         // Test PLOT mode
         let plot_options = ConversionOptions {
             scale: None, // Allow auto-scaling
@@ -333,7 +347,7 @@ mod integration_tests {
             ..Default::default()
         };
 
-        let plot_result = convert_duc_to_pdf_with_options(&test_data, plot_options);
+        let plot_result = convert_test_state_to_pdf_with_options(plot_options);
 
         // Test CROP mode
         let crop_options = ConversionOptions {
@@ -348,7 +362,7 @@ mod integration_tests {
             ..Default::default()
         };
 
-        let crop_result = convert_duc_to_pdf_with_options(&test_data, crop_options);
+        let crop_result = convert_test_state_to_pdf_with_options(crop_options);
 
         // Both should behave consistently (both succeed or both fail in similar ways)
         match (plot_result, crop_result) {
@@ -386,8 +400,6 @@ mod integration_tests {
     #[test]
     fn test_automatic_scaling() {
         // Create test data that should trigger coordinate bounds issues
-        let test_data = vec![42u8; 64]; // Simple test data
-
         // Test with no scale (should auto-scale)
         let auto_scale_options = ConversionOptions {
             scale: None, // Allow auto-scaling
@@ -409,7 +421,7 @@ mod integration_tests {
         };
 
         // Auto-scaling test
-        match convert_duc_to_pdf_with_options(&test_data, auto_scale_options) {
+        match convert_test_state_to_pdf_with_options(auto_scale_options) {
             Ok(pdf_bytes) => {
                 // In-memory validation only
                 validate_pdf_structure(&pdf_bytes, Path::new("memory:auto_scale_test.pdf"));
@@ -422,7 +434,7 @@ mod integration_tests {
         }
 
         // User-provided scale test
-        match convert_duc_to_pdf_with_options(&test_data, user_scale_options) {
+        match convert_test_state_to_pdf_with_options(user_scale_options) {
             Ok(pdf_bytes) => {
                 // In-memory validation only
                 validate_pdf_structure(&pdf_bytes, Path::new("memory:user_scale_test.pdf"));
@@ -443,8 +455,6 @@ mod integration_tests {
     /// Test scaling with real DUC file that has coordinate bounds issues
     #[test]
     fn test_scaling_with_bounds_issues() {
-        let duc_data = load_duc_file("universal.duc");
-
         // Test 1: No scale provided - should auto-scale
         let auto_scale_options = ConversionOptions {
             scale: None, // This should trigger auto-scaling
@@ -476,7 +486,7 @@ mod integration_tests {
         };
 
         // Auto-scale test
-        match convert_duc_to_pdf_with_options(&duc_data, auto_scale_options) {
+        match convert_test_state_to_pdf_with_options(auto_scale_options) {
             Ok(pdf_bytes) => {
                 validate_pdf_structure(&pdf_bytes, Path::new("memory:real_data_auto_scale.pdf"));
                 println!(
@@ -491,7 +501,7 @@ mod integration_tests {
         }
 
         // Insufficient scale test (should fail)
-        match convert_duc_to_pdf_with_options(&duc_data, insufficient_scale_options) {
+        match convert_test_state_to_pdf_with_options(insufficient_scale_options) {
             Ok(pdf_bytes) => {
                 validate_pdf_structure(
                     &pdf_bytes,
@@ -507,7 +517,7 @@ mod integration_tests {
         }
 
         // Good scale test
-        match convert_duc_to_pdf_with_options(&duc_data, good_scale_options) {
+        match convert_test_state_to_pdf_with_options(good_scale_options) {
             Ok(pdf_bytes) => {
                 validate_pdf_structure(&pdf_bytes, Path::new("memory:real_data_good_scale.pdf"));
                 println!(
@@ -527,8 +537,6 @@ mod integration_tests {
     #[test]
     fn test_plot_all_assets() {
         for file in list_duc_files() {
-            let duc_data = load_duc_file(&file);
-
             let options = ConversionOptions {
                 scale: None,
                 mode: ConversionMode::Plot,
@@ -538,7 +546,7 @@ mod integration_tests {
                 background_color: Some("transparent".to_string()),
             };
 
-            match convert_duc_to_pdf_with_options(&duc_data, options) {
+            match convert_test_state_to_pdf_with_options(options) {
                 Ok(pdf_bytes) => {
                     validate_pdf_structure(&pdf_bytes, Path::new(&format!("memory:{file}")));
                     println!("✅ {file}: plot OK, {} bytes", pdf_bytes.len());

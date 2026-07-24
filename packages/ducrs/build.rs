@@ -7,7 +7,12 @@ fn schema_user_version_from_sql(sql: &str) -> u32 {
     for line in sql.lines() {
         let trimmed = line.trim();
         if let Some(rest) = trimmed.strip_prefix("PRAGMA user_version") {
-            let rest = rest.trim().trim_start_matches('=').trim().trim_end_matches(';').trim();
+            let rest = rest
+                .trim()
+                .trim_start_matches('=')
+                .trim()
+                .trim_end_matches(';')
+                .trim();
             if let Ok(v) = rest.parse::<u32>() {
                 return v;
             }
@@ -133,7 +138,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             (uv, decode_user_version_to_semver(uv))
         }
         Err(e) => {
-            eprintln!("cargo:warning=Could not read {:?}: {e}. Defaulting to 0.0.0.", sql_path);
+            eprintln!(
+                "cargo:warning=Could not read {:?}: {e}. Defaulting to 0.0.0.",
+                sql_path
+            );
             (0, "0.0.0".to_string())
         }
     };

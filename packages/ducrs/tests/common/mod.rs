@@ -3,8 +3,12 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use duc::types::*;
+
+static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 pub fn assets_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/testing/duc-files")
@@ -26,6 +30,18 @@ pub fn all_duc_files() -> Vec<PathBuf> {
 
 pub fn load(path: &Path) -> Vec<u8> {
     fs::read(path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
+}
+
+pub fn temp_path(label: &str, extension: &str) -> PathBuf {
+    let counter = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .unwrap_or(0);
+    std::env::temp_dir().join(format!(
+        "ducrs-{label}-{}-{nanos}-{counter}.{extension}",
+        std::process::id(),
+    ))
 }
 
 pub fn element_id(el: &DucElementEnum) -> String {
@@ -388,7 +404,9 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
             }),
         },
         ElementWrapper {
-            element: DucElementEnum::DucEmbeddableElement(DucEmbeddableElement { base: embeddable_base }),
+            element: DucElementEnum::DucEmbeddableElement(DucEmbeddableElement {
+                base: embeddable_base,
+            }),
         },
         ElementWrapper {
             element: DucElementEnum::DucTextElement(DucTextElement {
@@ -796,7 +814,9 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
 }
 
 pub fn canonicalize_roundtrip_state(mut state: ExportedDataState) -> ExportedDataState {
-    state.elements.sort_by(|a, b| element_id(&a.element).cmp(&element_id(&b.element)));
+    state
+        .elements
+        .sort_by(|a, b| element_id(&a.element).cmp(&element_id(&b.element)));
     state.blocks.sort_by(|a, b| a.id.cmp(&b.id));
     state.block_instances.sort_by(|a, b| a.id.cmp(&b.id));
     for instance in &mut state.block_instances {

@@ -142,59 +142,6 @@ pub fn log_error_details(error: &ConversionError, duc_data_length: usize, contex
     }
 }
 
-/// Logs specific crop operation details
-pub fn log_crop_details(offset_x: f64, offset_y: f64, width: Option<f64>, height: Option<f64>) {
-    println!("Crop operation details:");
-    println!("  Offset: x={}, y={}", offset_x, offset_y);
-    if let Some(w) = width {
-        println!("  Width: {}", w);
-    }
-    if let Some(h) = height {
-        println!("  Height: {}", h);
-    }
-}
-
-/// Validates basic input parameters for conversion operations
-pub fn validate_basic_inputs(
-    duc_data: &[u8],
-    offset_x: Option<f64>,
-    offset_y: Option<f64>,
-    width: Option<f64>,
-    height: Option<f64>,
-) -> Result<(), String> {
-    // Validate DUC data
-    if duc_data.is_empty() {
-        return Err("DUC data is empty".to_string());
-    }
-
-    // Validate numeric parameters
-    if let Some(x) = offset_x {
-        if !x.is_finite() {
-            return Err(format!("Invalid offset_x: {} (must be finite)", x));
-        }
-    }
-
-    if let Some(y) = offset_y {
-        if !y.is_finite() {
-            return Err(format!("Invalid offset_y: {} (must be finite)", y));
-        }
-    }
-
-    if let Some(w) = width {
-        if !w.is_finite() || w <= 0.0 {
-            return Err(format!("Invalid width: {} (must be positive finite)", w));
-        }
-    }
-
-    if let Some(h) = height {
-        if !h.is_finite() || h <= 0.0 {
-            return Err(format!("Invalid height: {} (must be positive finite)", h));
-        }
-    }
-
-    Ok(())
-}
-
 /// Converts a ConversionError to a WASM-compatible byte vector
 pub fn error_to_wasm_bytes(error_info: &WasmErrorInfo) -> Vec<u8> {
     let error_json = serde_json::to_string(error_info).unwrap_or_else(|e| {

@@ -18,11 +18,9 @@ impl<'a> MetaTable<'a> {
     pub fn get(&self, key: &str) -> DbResult<Option<String>> {
         self.conn
             .with(|c| {
-                c.query_row(
-                    "SELECT value FROM _meta WHERE key = ?1",
-                    [key],
-                    |row| row.get(0),
-                )
+                c.query_row("SELECT value FROM _meta WHERE key = ?1", [key], |row| {
+                    row.get(0)
+                })
                 .optional()
             })
             .map_err(DbError::from)
@@ -54,8 +52,9 @@ impl<'a> MetaTable<'a> {
         self.conn
             .with(|c| -> rusqlite::Result<Vec<(String, String)>> {
                 let mut stmt = c.prepare("SELECT key, value FROM _meta ORDER BY key")?;
-                let rows: rusqlite::Result<Vec<(String, String)>> =
-                    stmt.query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?.collect();
+                let rows: rusqlite::Result<Vec<(String, String)>> = stmt
+                    .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+                    .collect();
                 rows
             })
             .map_err(DbError::from)

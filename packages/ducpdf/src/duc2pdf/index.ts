@@ -1,10 +1,25 @@
-import { ExportedDataState, getFreeDrawSvgPath, getNormalizedZoom, isFreeDrawElement, normalizeForSerializationScope, parseDuc, serializeDuc } from 'ducjs';
-import { fetchFontsForDuc } from './fonts';
+import { DUC_VERSION, ExportedDataState, getFreeDrawSvgPath, getNormalizedZoom, isFreeDrawElement, normalizeForSerializationScope, restore, transformToRust } from 'ducjs';
+import { collectFontFamilies, fetchFontsForFamilies } from './fonts';
 
 export interface PdfConversionResult {
   data: Uint8Array;
   warnings: string[];
 }
+
+export interface DucDocumentSource {
+  readDocumentState(): Partial<ExportedDataState> | Promise<Partial<ExportedDataState>>;
+}
+
+const PREPARED_DUC_PDF_SOURCE = 'ducpdf/prepared-v1' as const;
+
+export interface PreparedDucPdfSource {
+  kind: typeof PREPARED_DUC_PDF_SOURCE;
+  state: unknown;
+  fontFamilies: string[];
+  backgroundColor?: string;
+}
+
+export type DucPdfSource = Partial<ExportedDataState> | DucDocumentSource | PreparedDucPdfSource;
 
 /**
  * Fetch the raw duc2pdf WASM binary as an ArrayBuffer.
@@ -33,14 +48,6 @@ export async function initWasmFromBinary(wasmBinary: BufferSource): Promise<void
 
   const requiredFunctions = [
     'convert_exported_data_to_pdf_wasm',
-    'convert_duc_to_pdf_rs',
-    'convert_duc_to_pdf_with_scale_wasm',
-    'convert_duc_to_pdf_crop_wasm',
-    'convert_duc_to_pdf_crop_scaled_wasm',
-    'convert_duc_to_pdf_with_fonts_rs',
-    'convert_duc_to_pdf_with_fonts_scaled_wasm',
-    'convert_duc_to_pdf_crop_with_fonts_wasm',
-    'convert_duc_to_pdf_crop_with_fonts_scaled_wasm',
   ];
   for (const fnName of requiredFunctions) {
     if (typeof wasmBindings[fnName] !== 'function') {
@@ -79,14 +86,6 @@ async function initWasm(): Promise<any> {
       // Validate that required functions exist on the imported module
       const requiredFunctions = [
         'convert_exported_data_to_pdf_wasm',
-        'convert_duc_to_pdf_rs',
-        'convert_duc_to_pdf_with_scale_wasm',
-        'convert_duc_to_pdf_crop_wasm',
-        'convert_duc_to_pdf_crop_scaled_wasm',
-        'convert_duc_to_pdf_with_fonts_rs',
-        'convert_duc_to_pdf_with_fonts_scaled_wasm',
-        'convert_duc_to_pdf_crop_with_fonts_wasm',
-        'convert_duc_to_pdf_crop_with_fonts_scaled_wasm',
       ];
 
       for (const fnName of requiredFunctions) {
@@ -126,13 +125,11 @@ export interface ConversionOptions {
   };
 }
 
-function validateInput(ducData: Uint8Array, options?: ConversionOptions): void {
-  // Validate input data
-  if (!ducData || ducData.length === 0) {
-    throw new Error('DUC data is required and cannot be empty');
+function validateInput(source: DucPdfSource, options?: ConversionOptions): void {
+  if (!source || typeof source !== 'object') {
+    throw new Error('DUC document state or document source is required');
   }
 
-  // Validate options - focus on basic validation only since the scaling system handles large values
   if (options) {
     if (options.offsetX !== undefined) {
       if (typeof options.offsetX !== 'number' || !Number.isFinite(options.offsetX)) {
@@ -172,214 +169,156 @@ function validateInput(ducData: Uint8Array, options?: ConversionOptions): void {
   }
 }
 
+function isPreparedDucPdfSource(source: DucPdfSource): source is PreparedDucPdfSource {
+  return (source as PreparedDucPdfSource).kind === PREPARED_DUC_PDF_SOURCE;
+}
+
+async function resolveDocumentState(source: DucPdfSource): Promise<Partial<ExportedDataState>> {
+  if (typeof (source as DucDocumentSource).readDocumentState === 'function') {
+    return await (source as DucDocumentSource).readDocumentState();
+  }
+  return source as Partial<ExportedDataState>;
+}
+
+function prepareDocumentState(
+  state: Partial<ExportedDataState>,
+): { normalized: ExportedDataState; backgroundColor?: string } {
+  const restored = restore(
+    state,
+    { syncInvalidIndices: (elements) => elements as any },
+  );
+  const completeState = {
+    type: state.type ?? 'duc',
+    version: state.version ?? DUC_VERSION,
+    source: state.source ?? 'ducpdf',
+    ...restored,
+  } as ExportedDataState;
+  const scope = completeState.localState?.scope || completeState.globalState?.mainScope || 'mm';
+  const normalized: ExportedDataState = normalizeForSerializationScope(
+    completeState,
+    'mm',
+    scope,
+  );
+  (normalized as any).localState.scope = 'mm';
+  (normalized as any).globalState.mainScope = 'mm';
+
+  const localState = (normalized as any).localState;
+  if (!localState?.zoom) {
+    const normalizedZoomValue = getNormalizedZoom(1);
+    localState.zoom = {
+      value: normalizedZoomValue,
+      scoped: normalizedZoomValue as any,
+      scaled: normalizedZoomValue as any,
+    };
+  }
+
+  normalized.elements = (normalized.elements || []).map((element: any) => {
+    let normalizedElement = element;
+    if (element && isFreeDrawElement(element)) {
+      const svgPath = getFreeDrawSvgPath(element);
+      if (svgPath) {
+        normalizedElement = Object.assign({}, element, { svgPath });
+      }
+    }
+    if (element && element.type === 'model' && element.thumbnail != null) {
+      const tn = element.thumbnail;
+      if (!(tn instanceof Uint8Array)) {
+        try {
+          if (ArrayBuffer.isView(tn)) {
+            normalizedElement = Object.assign({}, normalizedElement, {
+              thumbnail: new Uint8Array((tn as ArrayBufferView).buffer, (tn as ArrayBufferView).byteOffset, (tn as ArrayBufferView).byteLength),
+            });
+          } else if (Array.isArray(tn)) {
+            normalizedElement = Object.assign({}, normalizedElement, { thumbnail: new Uint8Array(tn) });
+          } else if (typeof tn === 'object') {
+            normalizedElement = Object.assign({}, normalizedElement, {
+              thumbnail: new Uint8Array(Object.values(tn) as number[]),
+            });
+          }
+        } catch {
+          // Keep the original thumbnail if coercion fails.
+        }
+      }
+    }
+    return normalizedElement;
+  });
+
+  return {
+    normalized,
+    backgroundColor: (normalized as any).globalState?.viewBackgroundColor,
+  };
+}
+
+export async function prepareDucPdfSource(source: DucPdfSource): Promise<PreparedDucPdfSource> {
+  validateInput(source);
+  if (isPreparedDucPdfSource(source)) {
+    return source;
+  }
+
+  const state = await resolveDocumentState(source);
+  const { normalized, backgroundColor } = prepareDocumentState(state);
+
+  return {
+    kind: PREPARED_DUC_PDF_SOURCE,
+    state: transformToRust(normalized),
+    fontFamilies: collectFontFamilies(normalized),
+    backgroundColor,
+  };
+}
+
+function applyZoomToPreparedState(state: unknown, zoom?: number): unknown {
+  if (zoom === undefined || !state || typeof state !== 'object') {
+    return state;
+  }
+
+  const normalizedZoom = getNormalizedZoom(zoom);
+  const rustState = state as Record<string, any>;
+  return {
+    ...rustState,
+    localState: {
+      ...(rustState.localState ?? {}),
+      zoom: normalizedZoom,
+    },
+  };
+}
+
 export async function convertDucToPdf(
-  ducData: Uint8Array,
+  source: DucPdfSource,
   options?: ConversionOptions,
   debugMode: boolean = false
 ): Promise<PdfConversionResult> {
   const fontWarnings: string[] = [];
   try {
-    // Validate inputs
-    validateInput(ducData, options);
+    validateInput(source, options);
 
-    // Debug logging if enabled
+    const prepared = await prepareDucPdfSource(source);
     if (debugMode) {
-      debugConversionState(ducData, options);
+      debugConversionState(prepared.state as ExportedDataState, options);
     }
 
-    // Initialize WASM module
     const wasm = await initWasm();
 
-    let ducBytes = new Uint8Array(ducData);
-    let viewBackgroundColor;
-    let normalizedData: ExportedDataState | null = null;
-    let rustPayload: unknown = null;
-
-    try {
-      const latestBlob = new Blob([ducBytes]);
-      const parsed = await parseDuc(latestBlob);
-      if (parsed) {
-        const scope = parsed?.localState?.scope || parsed?.globalState?.mainScope || 'mm';
-        const normalized: ExportedDataState = normalizeForSerializationScope(
-          parsed as unknown as ExportedDataState,
-          'mm',
-          scope,
-        );
-        normalized.localState.scope = 'mm';
-        normalized.globalState.mainScope = 'mm';
-
-        // Apply zoom preference if provided
-        const rawZoom = options?.zoom;
-
-        const localState = normalized.localState;
-        if (rawZoom !== undefined) {
-          const normalizedZoomValue = getNormalizedZoom(rawZoom);
-          const exportZoom = normalizedZoomValue;
-          localState.zoom = {
-            value: exportZoom,
-            scoped: exportZoom as any,
-            scaled: exportZoom as any,
-          };
-        } else if (!normalized.localState?.zoom) {
-          const normalizedZoomValue = getNormalizedZoom(1);
-          localState.zoom = {
-            value: normalizedZoomValue,
-            scoped: normalizedZoomValue as any,
-            scaled: normalizedZoomValue as any,
-          };
-        }
-
-        // Process elements before serialization
-        let normalizedElements = normalized.elements || [];
-        normalizedElements = normalizedElements.map((element: any) => {
-          let normalizedElement = element;
-          if (element && isFreeDrawElement(element)) {
-            const svgPath = getFreeDrawSvgPath(element);
-            if (svgPath) {
-              normalizedElement = Object.assign({}, element, { svgPath });
-            }
-          }
-          // Ensure model element thumbnails are Uint8Array for serde_bytes compatibility.
-          // The normalizeForSerializationScope traversal creates plain objects by iterating
-          // own-keys, which can demote Uint8Array to a plain {0:…, 1:…} object.
-          if (element && element.type === 'model' && element.thumbnail != null) {
-            const tn = element.thumbnail;
-            if (!(tn instanceof Uint8Array)) {
-              try {
-                if (ArrayBuffer.isView(tn)) {
-                  normalizedElement = Object.assign({}, normalizedElement, {
-                    thumbnail: new Uint8Array((tn as ArrayBufferView).buffer, (tn as ArrayBufferView).byteOffset, (tn as ArrayBufferView).byteLength),
-                  });
-                } else if (Array.isArray(tn)) {
-                  normalizedElement = Object.assign({}, normalizedElement, { thumbnail: new Uint8Array(tn) });
-                } else if (typeof tn === 'object') {
-                  normalizedElement = Object.assign({}, normalizedElement, {
-                    thumbnail: new Uint8Array(Object.values(tn) as number[]),
-                  });
-                }
-              } catch {
-                // Leave as-is if coercion fails
-              }
-            }
-          }
-          return normalizedElement;
-        });
-
-        normalized.elements = normalizedElements;
-        viewBackgroundColor = normalized.globalState.viewBackgroundColor;
-        normalizedData = normalized;
-
-        // Re-serialize the DUC with normalized values and scope set to 'mm'
-        const serialized = await serializeDuc(
-          normalized,
-          { syncInvalidIndices: (elements: readonly any[]) => elements as any },
-          {
-            forceScope: 'mm'
-          }
-        );
-        if (serialized && serialized.length > 0) {
-          ducBytes = new Uint8Array(serialized);
-        } else {
-          console.warn('serializeDuc returned empty; falling back to original DUC bytes');
-        }
-      } else {
-        console.warn('parseDuc returned null/undefined; falling back to original DUC bytes');
-      }
-    } catch (e) {
-      console.warn('DUC parse/serialize normalization failed; using original bytes. Reason:', e);
-    }
-
-    // Fetch font data for all detected families (falls back gracefully if offline)
     let fontMap = new Map<string, Uint8Array>();
-    if (normalizedData) {
-      try {
-        const result = await fetchFontsForDuc(normalizedData);
-        fontMap = result.fontMap;
-        fontWarnings.push(...result.warnings);
-      } catch (e) {
-        fontWarnings.push('Font fetching failed. Text will use the default font.');
-      }
+    try {
+      const result = await fetchFontsForFamilies(prepared.fontFamilies);
+      fontMap = result.fontMap;
+      fontWarnings.push(...result.warnings);
+    } catch (e) {
+      fontWarnings.push('Font fetching failed. Text will use the default font.');
     }
 
-    // Call the appropriate WASM function based on options
-    let result: Uint8Array;
-    const hasFonts = fontMap.size > 0;
-
-    if (rustPayload) {
-      const backgroundColor = options?.backgroundColor ? options.backgroundColor.trim() : viewBackgroundColor;
-      result = wasm.convert_exported_data_to_pdf_wasm(
-        rustPayload,
-        options?.offsetX,
-        options?.offsetY,
-        typeof options?.width === 'number' ? options.width : undefined,
-        typeof options?.height === 'number' ? options.height : undefined,
-        backgroundColor === undefined ? undefined : backgroundColor,
-        typeof options?.scale === 'number' ? options.scale : undefined,
-        fontMap,
-      );
-    } else if (options && (options.offsetX !== undefined || options.offsetY !== undefined)) {
-      // Use crop mode with offset
-      const offsetX = options.offsetX || 0;
-      const offsetY = options.offsetY || 0;
-      const backgroundColor = options.backgroundColor ? options.backgroundColor.trim() : viewBackgroundColor;
-      const widthOption = typeof options.width === 'number' ? options.width : undefined;
-      const heightOption = typeof options.height === 'number' ? options.height : undefined;
-      const scaleOption = typeof options.scale === 'number' ? options.scale : undefined;
-      const backgroundOption = backgroundColor === undefined ? undefined : backgroundColor;
-
-      if (hasFonts) {
-        result = scaleOption !== undefined
-          ? wasm.convert_duc_to_pdf_crop_with_fonts_scaled_wasm(
-            ducBytes,
-            offsetX,
-            offsetY,
-            widthOption,
-            heightOption,
-            backgroundOption,
-            scaleOption,
-            fontMap
-          )
-          : wasm.convert_duc_to_pdf_crop_with_fonts_wasm(
-            ducBytes,
-            offsetX,
-            offsetY,
-            widthOption,
-            heightOption,
-            backgroundOption,
-            fontMap
-          );
-      } else {
-        result = scaleOption !== undefined
-          ? wasm.convert_duc_to_pdf_crop_scaled_wasm(
-            ducBytes,
-            offsetX,
-            offsetY,
-            widthOption,
-            heightOption,
-            backgroundOption,
-            scaleOption
-          )
-          : wasm.convert_duc_to_pdf_crop_wasm(
-            ducBytes,
-            offsetX,
-            offsetY,
-            widthOption,
-            heightOption,
-            backgroundOption
-          );
-      }
-    } else {
-      // Standard conversion
-      if (hasFonts) {
-        result = options?.scale !== undefined
-          ? wasm.convert_duc_to_pdf_with_fonts_scaled_wasm(ducBytes, options.scale, fontMap)
-          : wasm.convert_duc_to_pdf_with_fonts_rs(ducBytes, fontMap);
-      } else {
-        result = options?.scale !== undefined
-          ? wasm.convert_duc_to_pdf_with_scale_wasm(ducBytes, options.scale)
-          : wasm.convert_duc_to_pdf_rs(ducBytes);
-      }
-    }
+    const backgroundColor = options?.backgroundColor ? options.backgroundColor.trim() : prepared.backgroundColor;
+    const rustState = applyZoomToPreparedState(prepared.state, options?.zoom);
+    const result: Uint8Array = wasm.convert_exported_data_to_pdf_wasm(
+      rustState,
+      options?.offsetX,
+      options?.offsetY,
+      typeof options?.width === 'number' ? options.width : undefined,
+      typeof options?.height === 'number' ? options.height : undefined,
+      backgroundColor === undefined ? undefined : backgroundColor,
+      typeof options?.scale === 'number' ? options.scale : undefined,
+      fontMap,
+    );
 
     // Check if conversion was successful
     if (!result || result.length === 0) {
@@ -417,24 +356,11 @@ export async function convertDucToPdf(
         console.error('Error Type:', errorJson.error_type);
         console.error('Error Message:', errorJson.error);
         console.error('Details:', errorJson.details);
-        console.error('DUC Data Length:', `${errorJson.duc_data_length} bytes`);
-
-        // Log conversion context if available
         if (errorJson.conversion_context) {
           console.error('Conversion Context:', errorJson.conversion_context);
         }
 
-        // Log conversion options for debugging
         console.error('Conversion Options:', JSON.stringify(options, null, 2));
-
-        // Special handling for scaling-related errors
-        if (errorJson.details.includes('automatic scaling') || errorJson.details.includes('scaling logic')) {
-          console.error('⚠️  Scaling System Alert: This error indicates the automatic scaling system failed.');
-          console.error('   Please investigate the scaling logic in the Rust code:');
-          console.error('   - calculate_required_scale() function');
-          console.error('   - validate_all_coordinates_with_scale() function');
-          console.error('   - DucDataScaler scaling application');
-        }
 
         throw new Error(detailedError);
       }
@@ -456,13 +382,13 @@ export async function convertDucToPdf(
 }
 
 export async function convertDucToPdfCrop(
-  ducData: Uint8Array,
+  source: DucPdfSource,
   offsetX: number,
   offsetY: number,
   width?: number,
   height?: number
 ): Promise<PdfConversionResult> {
-  return convertDucToPdf(ducData, { offsetX, offsetY, width, height });
+  return convertDucToPdf(source, { offsetX, offsetY, width, height });
 }
 
 // Utility functions
@@ -497,68 +423,33 @@ export function resetWasmModule(): void {
   wasmInitPromise = null;
 }
 
-// Debug function to analyze DUC data before conversion
-export function analyzeDucData(ducData: Uint8Array): {
-  size: number;
-  headerInfo: string;
-  estimatedElements: number;
+// Debug function to analyze DUC state before conversion
+export function analyzeDucData(state: ExportedDataState): {
+  source: string;
+  elementCount: number;
+  externalFileCount: number;
   potentialIssues: string[];
 } {
   const issues: string[] = [];
-  let headerInfo = 'Unknown';
 
   try {
-    // Basic size check
-    if (ducData.length === 0) {
-      issues.push('DUC data is empty');
-      return {
-        size: 0,
-        headerInfo: 'Empty',
-        estimatedElements: 0,
-        potentialIssues: issues
-      };
+    if (!state.elements?.length) {
+      issues.push('DUC state has no elements');
     }
-
-    if (ducData.length < 100) {
-      issues.push(`DUC data is very small (${ducData.length} bytes), may be truncated`);
-    }
-
-    if (ducData.length > 50 * 1024 * 1024) { // 50MB
-      issues.push(`DUC data is very large (${(ducData.length / 1024 / 1024).toFixed(2)}MB), may cause memory issues`);
-    }
-
-    // Try to extract basic info from the binary data
-    const textDecoder = new TextDecoder('utf-8', { fatal: false });
-    const preview = textDecoder.decode(ducData.slice(0, Math.min(200, ducData.length)));
-
-    // Look for common DUC patterns
-    if (preview.includes('duc')) {
-      headerInfo = 'DUC format detected';
-    } else if (preview.includes('{') || preview.includes('[')) {
-      headerInfo = 'JSON-like structure detected';
-    } else {
-      headerInfo = 'Binary format';
-    }
-
-    // Estimate number of elements (rough heuristic)
-    let elementCount = 0;
-    const elementMatches = preview.match(/element/gi);
-    if (elementMatches) {
-      elementCount = elementMatches.length;
-    }
+    const externalFiles = (state as any).files ?? (state as any).externalFiles ?? {};
 
     return {
-      size: ducData.length,
-      headerInfo,
-      estimatedElements: elementCount,
+      source: state.source,
+      elementCount: state.elements?.length ?? 0,
+      externalFileCount: Object.keys(externalFiles).length,
       potentialIssues: issues
     };
   } catch (error) {
-    issues.push(`Error analyzing DUC data: ${error}`);
+    issues.push(`Error analyzing DUC state: ${error}`);
     return {
-      size: ducData.length,
-      headerInfo: 'Error analyzing',
-      estimatedElements: 0,
+      source: '',
+      elementCount: 0,
+      externalFileCount: 0,
       potentialIssues: issues
     };
   }
@@ -566,16 +457,16 @@ export function analyzeDucData(ducData: Uint8Array): {
 
 // Debug function to log conversion state
 export function debugConversionState(
-  ducData: Uint8Array,
+  state: ExportedDataState,
   options?: ConversionOptions
 ): void {
-  console.group('🔍 DUC to PDF Conversion Debug Info');
+  console.group('DUC to PDF Conversion Debug Info');
 
-  const analysis = analyzeDucData(ducData);
-  console.log('📄 DUC Data Analysis:', analysis);
+  const analysis = analyzeDucData(state);
+  console.log('DUC State Analysis:', analysis);
 
   if (options) {
-    console.log('⚙️ Conversion Options:', {
+    console.log('Conversion Options:', {
       offsetX: options.offsetX,
       offsetY: options.offsetY,
       width: options.width,
@@ -585,13 +476,13 @@ export function debugConversionState(
       hasMetadata: !!(options.metadata?.title || options.metadata?.author || options.metadata?.subject)
     });
   } else {
-    console.log('⚙️ Conversion Options: (default/none)');
+    console.log('Conversion Options: (default/none)');
   }
 
-  console.log('🌐 WASM Status:', {
+  console.log('WASM Status:', {
     initialized: isWasmInitialized(),
     // Note: We can't easily check the detailed status without async
   });
 
   console.groupEnd();
-} 
+}

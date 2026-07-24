@@ -13,10 +13,9 @@ use flate2::read::{GzDecoder, ZlibDecoder};
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use rusqlite::OptionalExtension;
-use std::os::raw::c_char;
 
 use crate::db::{DbError, DbResult, DucConnection};
-use crate::parse::{decompress_duc_bytes, is_sqlite_header};
+use crate::external_file_chunks::{self, DEFAULT_EXTERNAL_FILE_CHUNK_SIZE};
 use crate::types::{
     Checkpoint, Delta, SchemaMigration, VersionBase, VersionChain, VersionGraph,
     VersionGraphMetadata,
@@ -26,57 +25,8 @@ use crate::types::{
 ///
 /// This is generated at build time from `schema/duc.sql` (`PRAGMA user_version`).
 /// TypeScript reads this value via the WASM binding `getCurrentSchemaVersion()`.
-pub const CURRENT_SCHEMA_VERSION: i32 = include!(concat!(env!("OUT_DIR"), "/schema_user_version.rs"));
-
-/// Open a `.duc` byte buffer as a `DucConnection` for read operations.
-///
-/// Uses `sqlite3_deserialize` to load bytes into an in-memory connection,
-/// avoiding filesystem operations that would trap in WASM.
-pub fn open_duc_bytes(buf: &[u8]) -> DbResult<DucConnection> {
-    use rusqlite::Connection;
-
-    let conn = Connection::open_in_memory()
-        .map_err(DbError::Rusqlite)?;
-
-    let n = buf.len();
-    if n == 0 {
-        return Err(DbError::Bootstrap("empty .duc buffer".into()));
-    }
-
-    let db_name = b"main\0";
-    let mem = unsafe { rusqlite::ffi::sqlite3_malloc64(n as u64) as *mut u8 };
-    if mem.is_null() {
-        return Err(DbError::Bootstrap("sqlite3_malloc64 failed".into()));
-    }
-
-    unsafe {
-        std::ptr::copy_nonoverlapping(buf.as_ptr(), mem, n);
-    }
-
-    let flags = rusqlite::ffi::SQLITE_DESERIALIZE_FREEONCLOSE as u32;
-    let rc = unsafe {
-        rusqlite::ffi::sqlite3_deserialize(
-            conn.handle(),
-            db_name.as_ptr() as *const c_char,
-            mem,
-            n as i64,
-            n as i64,
-            flags,
-        )
-    };
-
-    if rc != rusqlite::ffi::SQLITE_OK {
-        unsafe { rusqlite::ffi::sqlite3_free(mem as *mut std::ffi::c_void) };
-        return Err(DbError::Bootstrap(format!(
-            "sqlite3_deserialize failed with code {rc}"
-        )));
-    }
-
-    conn.execute_batch("PRAGMA journal_mode = MEMORY; PRAGMA foreign_keys = ON;")
-        .map_err(|e| DbError::Bootstrap(format!("pragma apply failed: {e}")))?;
-
-    Ok(DucConnection::from_inner(conn))
-}
+pub const CURRENT_SCHEMA_VERSION: i32 =
+    include!(concat!(env!("OUT_DIR"), "/schema_user_version.rs"));
 
 /// The result of restoring a specific version.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -139,21 +89,22 @@ impl<'a> VersionControl<'a> {
     pub fn restore_version(&self, version_number: i64) -> DbResult<RestoredVersion> {
         self.conn.with(|c| {
             // 1) Try direct checkpoint hit
-            let direct: Option<(Vec<u8>, i32)> = c
+            let direct: Option<(String, i32)> = c
                 .query_row(
-                    "SELECT data, schema_version FROM checkpoints
+                    "SELECT id, schema_version FROM checkpoints
                      WHERE version_number = ?1",
                     [version_number],
                     |row| {
-                        let data: Vec<u8> = row.get(0)?;
+                        let id: String = row.get(0)?;
                         let sv: i32 = row.get(1)?;
-                        Ok((data, sv))
+                        Ok((id, sv))
                     },
                 )
                 .optional()
                 .map_err(DbError::from)?;
 
-            if let Some((data, schema_version)) = direct {
+            if let Some((checkpoint_id, schema_version)) = direct {
+                let data = read_checkpoint_data(c, &checkpoint_id)?;
                 return Ok(RestoredVersion {
                     version_number,
                     schema_version,
@@ -173,22 +124,17 @@ impl<'a> VersionControl<'a> {
                 .map_err(DbError::from)?;
 
             // 3) Load the base checkpoint data
-            let base_data: Vec<u8> = c
-                .query_row(
-                    "SELECT data FROM checkpoints WHERE id = ?1",
-                    [&target_base_cp_id],
-                    |row| row.get(0),
-                )
-                .map_err(DbError::from)?;
+            let base_data = read_checkpoint_data(c, &target_base_cp_id)?;
 
             // 4) Load the target delta's changeset
-            let target_changeset: Vec<u8> = c
+            let target_delta_id: String = c
                 .query_row(
-                    "SELECT changeset FROM deltas WHERE version_number = ?1",
+                    "SELECT id FROM deltas WHERE version_number = ?1",
                     [version_number],
                     |row| row.get(0),
                 )
                 .map_err(DbError::from)?;
+            let target_changeset = read_delta_changeset(c, &target_delta_id)?;
 
             // 5) Decode: auto-detects v3 (bsdiff) / v2 (XOR) / v1 (legacy snapshot)
             let final_data = apply_delta_changeset(&base_data, &target_changeset)?;
@@ -205,13 +151,14 @@ impl<'a> VersionControl<'a> {
     /// Restore the document state from a specific checkpoint (by checkpoint ID).
     pub fn restore_checkpoint(&self, checkpoint_id: &str) -> DbResult<RestoredVersion> {
         self.conn.with(|c| {
-            let (data, version_number, schema_version): (Vec<u8>, i64, i32) = c
+            let (version_number, schema_version): (i64, i32) = c
                 .query_row(
-                    "SELECT data, version_number, schema_version FROM checkpoints WHERE id = ?1",
+                    "SELECT version_number, schema_version FROM checkpoints WHERE id = ?1",
                     [checkpoint_id],
-                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                    |row| Ok((row.get(0)?, row.get(1)?)),
                 )
                 .map_err(DbError::from)?;
+            let data = read_checkpoint_data(c, checkpoint_id)?;
 
             Ok(RestoredVersion {
                 version_number,
@@ -225,9 +172,7 @@ impl<'a> VersionControl<'a> {
     /// Load the full `VersionGraph` from the database (same logic as `parse.rs`
     /// but accessible through the document API).
     pub fn read_version_graph(&self) -> DbResult<Option<VersionGraph>> {
-        self.conn.with(|c| {
-            read_version_graph_inner(c)
-        })
+        self.conn.with(|c| read_version_graph_inner(c))
     }
 
     // ────────────────────────────────────────────────────────────────────────
@@ -346,8 +291,8 @@ impl<'a> VersionControl<'a> {
                 "INSERT OR REPLACE INTO checkpoints
                     (id, parent_id, chain_id, version_number, schema_version,
                      timestamp, description, is_manual_save, is_schema_boundary,
-                     user_id, data, size_bytes)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+                     user_id, size_bytes)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
                 rusqlite::params![
                     checkpoint.base.id,
                     checkpoint.base.parent_id,
@@ -359,11 +304,17 @@ impl<'a> VersionControl<'a> {
                     checkpoint.base.is_manual_save as i32,
                     checkpoint.is_schema_boundary as i32,
                     checkpoint.base.user_id,
-                    checkpoint.data,
                     checkpoint.size_bytes,
                 ],
             )
             .map_err(DbError::from)?;
+            external_file_chunks::write_checkpoint_data_chunks_on_connection(
+                c,
+                &checkpoint.base.id,
+                &checkpoint.data,
+                DEFAULT_EXTERNAL_FILE_CHUNK_SIZE,
+            )
+            .map_err(chunk_error_to_db)?;
 
             self.update_version_graph_pointer(
                 c,
@@ -402,13 +353,7 @@ impl<'a> VersionControl<'a> {
                 .map_err(DbError::from)?;
 
             // Load the base checkpoint data for delta computation
-            let base_data: Vec<u8> = c
-                .query_row(
-                    "SELECT data FROM checkpoints WHERE id = ?1",
-                    [&delta.base_checkpoint_id],
-                    |row| row.get(0),
-                )
-                .map_err(DbError::from)?;
+            let base_data = read_checkpoint_data(c, &delta.base_checkpoint_id)?;
 
             // Compute checkpoint-relative fossil delta changeset
             let changeset = create_bsdiff_changeset(&base_data, &delta.payload)?;
@@ -418,8 +363,8 @@ impl<'a> VersionControl<'a> {
                 "INSERT OR REPLACE INTO deltas
                     (id, parent_id, base_checkpoint_id, chain_id, delta_sequence,
                      version_number, schema_version, timestamp, description,
-                     is_manual_save, user_id, changeset, size_bytes)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                     is_manual_save, user_id, size_bytes)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
                 rusqlite::params![
                     delta.base.id,
                     delta.base.parent_id,
@@ -432,11 +377,17 @@ impl<'a> VersionControl<'a> {
                     delta.base.description,
                     delta.base.is_manual_save as i32,
                     delta.base.user_id,
-                    changeset,
                     stored_size,
                 ],
             )
             .map_err(DbError::from)?;
+            external_file_chunks::write_delta_changeset_chunks_on_connection(
+                c,
+                &delta.base.id,
+                &changeset,
+                DEFAULT_EXTERNAL_FILE_CHUNK_SIZE,
+            )
+            .map_err(chunk_error_to_db)?;
 
             self.update_version_graph_pointer(
                 c,
@@ -546,11 +497,7 @@ impl<'a> VersionControl<'a> {
     }
 
     /// Find (or create) the chain_id for a given schema_version.
-    fn resolve_chain_id(
-        &self,
-        c: &rusqlite::Connection,
-        schema_version: i32,
-    ) -> DbResult<String> {
+    fn resolve_chain_id(&self, c: &rusqlite::Connection, schema_version: i32) -> DbResult<String> {
         let existing: Option<String> = c
             .query_row(
                 "SELECT id FROM version_chains
@@ -795,7 +742,7 @@ pub(crate) fn read_version_graph_inner(
     let mut cp_stmt = conn
         .prepare(
             "SELECT id, parent_id, version_number, schema_version, timestamp,
-                    description, is_manual_save, is_schema_boundary, user_id, data, size_bytes
+                    description, is_manual_save, is_schema_boundary, user_id, size_bytes
              FROM checkpoints ORDER BY version_number",
         )
         .map_err(DbError::from)?;
@@ -814,8 +761,8 @@ pub(crate) fn read_version_graph_inner(
                 version_number: row.get(2)?,
                 schema_version: row.get(3)?,
                 is_schema_boundary: row.get::<_, i32>(7)? != 0,
-                data: row.get::<_, Option<Vec<u8>>>(9)?.unwrap_or_default(),
-                size_bytes: row.get::<_, Option<i64>>(10)?.unwrap_or(0),
+                data: Vec::new(),
+                size_bytes: row.get::<_, Option<i64>>(9)?.unwrap_or(0),
             })
         })
         .map_err(DbError::from)?
@@ -826,7 +773,7 @@ pub(crate) fn read_version_graph_inner(
     let mut d_stmt = conn
         .prepare(
             "SELECT id, parent_id, base_checkpoint_id, version_number, schema_version,
-                    timestamp, description, is_manual_save, user_id, changeset, size_bytes
+                    timestamp, description, is_manual_save, user_id, size_bytes
              FROM deltas ORDER BY version_number",
         )
         .map_err(DbError::from)?;
@@ -845,8 +792,8 @@ pub(crate) fn read_version_graph_inner(
                 base_checkpoint_id: row.get(2)?,
                 version_number: row.get(3)?,
                 schema_version: row.get(4)?,
-                payload: row.get::<_, Option<Vec<u8>>>(9)?.unwrap_or_default(),
-                size_bytes: row.get::<_, Option<i64>>(10)?.unwrap_or(0),
+                payload: Vec::new(),
+                size_bytes: row.get::<_, Option<i64>>(9)?.unwrap_or(0),
             })
         })
         .map_err(DbError::from)?
@@ -863,16 +810,95 @@ pub(crate) fn read_version_graph_inner(
     }))
 }
 
+pub(crate) fn read_checkpoint_data(
+    conn: &rusqlite::Connection,
+    checkpoint_id: &str,
+) -> DbResult<Vec<u8>> {
+    if external_file_chunks::table_exists(conn, "checkpoint_data_chunks").map_err(DbError::from)? {
+        return external_file_chunks::read_checkpoint_data_chunks(conn, checkpoint_id)
+            .map_err(chunk_error_to_db);
+    }
+
+    if external_file_chunks::column_exists(conn, "checkpoints", "data").map_err(DbError::from)? {
+        return conn
+            .query_row(
+                "SELECT data FROM checkpoints WHERE id = ?1",
+                [checkpoint_id],
+                |row| row.get::<_, Option<Vec<u8>>>(0),
+            )
+            .map(|data| data.unwrap_or_default())
+            .map_err(DbError::from);
+    }
+
+    Ok(Vec::new())
+}
+
+pub(crate) fn read_delta_changeset(
+    conn: &rusqlite::Connection,
+    delta_id: &str,
+) -> DbResult<Vec<u8>> {
+    if external_file_chunks::table_exists(conn, "delta_changeset_chunks").map_err(DbError::from)? {
+        return external_file_chunks::read_delta_changeset_chunks(conn, delta_id)
+            .map_err(chunk_error_to_db);
+    }
+
+    if external_file_chunks::column_exists(conn, "deltas", "changeset").map_err(DbError::from)? {
+        return conn
+            .query_row(
+                "SELECT changeset FROM deltas WHERE id = ?1",
+                [delta_id],
+                |row| row.get::<_, Vec<u8>>(0),
+            )
+            .map_err(DbError::from);
+    }
+
+    Ok(Vec::new())
+}
+
+fn chunk_error_to_db(e: external_file_chunks::ExternalFileChunkError) -> DbError {
+    match e {
+        external_file_chunks::ExternalFileChunkError::Sqlite(e) => DbError::Rusqlite(e),
+        external_file_chunks::ExternalFileChunkError::Io(e) => DbError::Bootstrap(e.to_string()),
+        external_file_chunks::ExternalFileChunkError::InvalidData(e) => DbError::Bootstrap(e),
+    }
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Compression utilities
 // ────────────────────────────────────────────────────────────────────────────
 
 const GZIP_MAGIC: &[u8] = &[0x1f, 0x8b];
+const SQLITE_HEADER_MAGIC: &[u8; 16] = b"SQLite format 3\0";
 
 /// Returns true if the buffer starts with the gzip magic header.
 #[inline]
 fn is_gzip_header(buf: &[u8]) -> bool {
     buf.starts_with(GZIP_MAGIC)
+}
+
+#[inline]
+fn is_sqlite_header(buf: &[u8]) -> bool {
+    buf.len() >= SQLITE_HEADER_MAGIC.len()
+        && &buf[..SQLITE_HEADER_MAGIC.len()] == SQLITE_HEADER_MAGIC
+}
+
+fn decompress_duc_bytes(compressed: &[u8]) -> DbResult<Vec<u8>> {
+    use flate2::read::DeflateDecoder;
+    use std::io::Read;
+
+    let mut out = Vec::new();
+    if is_gzip_header(compressed) {
+        let mut decoder = GzDecoder::new(compressed);
+        decoder
+            .read_to_end(&mut out)
+            .map_err(|e| DbError::Bootstrap(format!("DUC gzip decompression failed: {e}")))?;
+    } else {
+        let mut decoder = DeflateDecoder::new(compressed);
+        decoder
+            .read_to_end(&mut out)
+            .map_err(|e| DbError::Bootstrap(format!("DUC deflate decompression failed: {e}")))?;
+    }
+    Ok(out)
 }
 
 /// Decompress a changeset payload, auto-detecting gzip vs legacy zlib/deflate.
@@ -910,7 +936,7 @@ fn compress_changeset_payload(raw: &[u8]) -> DbResult<Vec<u8>> {
 
 /// Ensure the input is raw (uncompressed) SQLite bytes.
 ///
-/// `.duc` files produced by `serializeDuc` are gzip (or legacy deflate) compressed.
+/// `.duc` files produced by the streaming exporters are gzip (or legacy deflate) compressed.
 /// This helper transparently inflates them so that fossil delta operates on the
 /// raw SQLite pages — producing compact patches. If the input is already
 /// raw SQLite, it is returned as-is (zero-copy via `Cow`).
@@ -918,8 +944,7 @@ fn ensure_raw_sqlite(buf: &[u8]) -> DbResult<std::borrow::Cow<'_, [u8]>> {
     if is_sqlite_header(buf) {
         Ok(std::borrow::Cow::Borrowed(buf))
     } else {
-        let raw = decompress_duc_bytes(buf)
-            .map_err(|e| DbError::Bootstrap(format!("failed to decompress .duc blob: {e}")))?;
+        let raw = decompress_duc_bytes(buf)?;
         if !is_sqlite_header(&raw) {
             return Err(DbError::Bootstrap(
                 "decompressed blob is not a valid SQLite database".into(),
@@ -1039,7 +1064,9 @@ fn nanoid() -> String {
         val /= 64;
     }
     // Add random suffix using a simple hash mix
-    val = now.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+    val = now
+        .wrapping_mul(6364136223846793005)
+        .wrapping_add(1442695040888963407);
     for _ in 0..11 {
         id.push(charset[(val % 64) as usize] as char);
         val /= 64;

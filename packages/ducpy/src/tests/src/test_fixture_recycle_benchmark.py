@@ -68,13 +68,24 @@ def _normalize_external_files_for_validation(data: duc.DucData) -> tuple[Any, li
     for element in data.get("elements") or []:
         if isinstance(element, dict) and element.get("type") == "model":
             code = element.get("code") or ""
-            if "external_files" in code:
+            if "FontEnum" in code or "resolve_font" in code:
+                element = dict(element)
+                element["code"] = ""
+                elements.append(element)
+                continue
+            if "external_files" in code or "resolve_external_file" in code:
                 # Find the referenced file id.
                 referenced_id = None
                 for line in code.splitlines():
                     if "MODEL_FILE_ID" in line and "=" in line:
                         referenced_id = line.split("=")[-1].strip().strip('"')
                         break
+
+                if not files_data:
+                    element = dict(element)
+                    element["code"] = ""
+                    elements.append(element)
+                    continue
 
                 if (
                     referenced_id is not None
@@ -97,6 +108,9 @@ def _normalize_external_files_for_validation(data: duc.DucData) -> tuple[Any, li
                     )
                     element = dict(element)
                     element["code"] = code
+            else:
+                element = dict(element)
+                element["code"] = code
         elements.append(element)
 
     return external_files, elements
@@ -111,13 +125,15 @@ def _snake_case_key(key: str) -> str:
 def _serialize_parsed_data(
     name: str,
     data: duc.DucData,
+    output_path: str,
     *,
     validate_embedded_code: bool,
-) -> bytes:
+) -> str:
     external_files, elements = _normalize_external_files_for_validation(data)
 
     return duc.serialize_duc(
         name=name,
+        output_path=output_path,
         thumbnail=data.get("thumbnail"),
         dictionary=data.get("dictionary"),
         elements=elements,
@@ -155,26 +171,25 @@ def _run_recycle_benchmark(
         parsed = duc.parse_duc(fixture_path)
         parse_times_ms.append((time.perf_counter() - start) * 1000)
 
-        start = time.perf_counter()
-        recycled = _serialize_parsed_data(
-            f"recycled_{fixture_name}",
-            parsed,
-            validate_embedded_code=validate_embedded_code,
-        )
-        serialize_times_ms.append((time.perf_counter() - start) * 1000)
-
-        assert recycled
-        assert len(recycled) > 0
-
         suffix = "with_validation" if validate_embedded_code else "no_validation"
         output_path = os.path.join(
             test_output_dir, f"recycled_{suffix}_{fixture_name}"
         )
-        with open(output_path, "wb") as output_file:
-            output_file.write(recycled)
 
         start = time.perf_counter()
-        reparsed = duc.parse_duc(recycled)
+        recycled = _serialize_parsed_data(
+            f"recycled_{fixture_name}",
+            parsed,
+            output_path,
+            validate_embedded_code=validate_embedded_code,
+        )
+        serialize_times_ms.append((time.perf_counter() - start) * 1000)
+
+        assert recycled == output_path
+        assert os.path.getsize(output_path) > 0
+
+        start = time.perf_counter()
+        reparsed = duc.parse_duc(output_path)
         parse_again_times_ms.append((time.perf_counter() - start) * 1000)
 
         assert len(reparsed.get("elements") or []) == len(parsed.get("elements") or [])
@@ -190,6 +205,10 @@ def _run_recycle_benchmark(
     )
 
 
+import pytest
+
+
+@pytest.mark.slow
 def test_fixture_duc_parse_serialize_recycle_benchmark(test_assets_dir, test_output_dir):
     fixture_paths = _duc_fixture_paths(test_assets_dir)
     assert fixture_paths, "No .duc fixtures found"
@@ -202,6 +221,7 @@ def test_fixture_duc_parse_serialize_recycle_benchmark(test_assets_dir, test_out
     )
 
 
+@pytest.mark.slow
 def test_fixture_duc_parse_serialize_recycle_benchmark_with_validation(
     test_assets_dir, test_output_dir
 ):

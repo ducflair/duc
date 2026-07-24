@@ -48,7 +48,7 @@ class TestLifecycle:
             row = db2.sql("SELECT x, y FROM elements WHERE id = ?", "r1")[0]
             assert row["x"] == 10.0 and row["y"] == 20.0
 
-    def test_from_serialized_duc_bytes(self):
+    def test_from_serialized_duc_path(self, tmp_path):
         element = (
             duc.ElementBuilder()
             .at_position(10, 20)
@@ -56,18 +56,17 @@ class TestLifecycle:
             .build_rectangle()
             .build()
         )
-        serialized = duc.serialize_duc(name="SqlSerializedBytes", elements=[element])
+        path = tmp_path / "serialized_bytes_replacement.duc"
+        duc.serialize_duc(name="SqlSerializedPath", output_path=path, elements=[element])
 
-        assert serialized[:6] != b"SQLite"
-        with DucSQL.from_bytes(serialized) as db:
+        with DucSQL(path) as db:
             rows = db.sql("SELECT id, element_type FROM elements")
             assert rows[0]["element_type"] == "rectangle"
 
     def test_open_serialized_duc_file(self, tmp_path):
         element = duc.ElementBuilder().build_text_element().with_text("Hello SQL").build()
-        serialized = duc.serialize_duc(name="SqlSerializedFile", elements=[element])
         path = tmp_path / "serialized.duc"
-        path.write_bytes(serialized)
+        duc.serialize_duc(name="SqlSerializedFile", output_path=path, elements=[element])
 
         with DucSQL(path) as db:
             rows = db.sql("SELECT element_type FROM elements")
@@ -78,7 +77,7 @@ class TestLifecycle:
         for index in range(2):
             element = duc.ElementBuilder().build_rectangle().build()
             path = tmp_path / f"drawing_{index}.duc"
-            path.write_bytes(duc.serialize_duc(name=f"SqlAttach{index}", elements=[element]))
+            duc.serialize_duc(name=f"SqlAttach{index}", output_path=path, elements=[element])
             paths.append(path)
 
         with DucSQL.attach_many(paths, aliases=["d0", "d1"]) as db:

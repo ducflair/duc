@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
-from ..parse import get_external_file
+from ..parse import parse_duc, stream_external_file_revision_to_path
 from .image_ocr import extract_image_text_with_ocr
 from .search_pdf import extract_pdf_text_for_search
 
@@ -255,19 +256,6 @@ def _external_active_revision_id(external: dict[str, Any]) -> str | None:
     return str(revision_id) if revision_id is not None else None
 
 
-def _external_revision_blob(external: dict[str, Any], revision_id: str) -> bytes | None:
-    data_map = external.get("data") or {}
-    revision_data = data_map.get(revision_id)
-    if revision_data is None:
-        revision_data = data_map.get(str(revision_id))
-    if revision_data is None and data_map:
-        first_key = next(iter(data_map.keys()))
-        revision_data = data_map[first_key]
-    if not revision_data:
-        return None
-    return bytes(revision_data)
-
-
 def _external_revision_meta(external: dict[str, Any], revision_id: str) -> dict[str, Any] | None:
     revisions = external.get("revisions")
     if revisions is None:
@@ -312,6 +300,23 @@ def extract_image_text_for_search(image_bytes: bytes, *, ocr_language: str) -> E
     return ExtractedExternalText(text=_compress_whitespace(text), used_ocr=used_ocr)
 
 
+def _stream_revision_bytes(duc_source: str | Path, revision_id: str) -> bytes | None:
+    tmp_path: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(prefix="ducpy-external-", suffix=".bin", delete=False) as tmp:
+            tmp_path = tmp.name
+        written = stream_external_file_revision_to_path(duc_source, revision_id, tmp_path)
+        if written <= 0:
+            return None
+        return Path(tmp_path).read_bytes()
+    finally:
+        if tmp_path:
+            try:
+                Path(tmp_path).unlink()
+            except FileNotFoundError:
+                pass
+
+
 def load_external_file_text(
     duc_source: str | Path,
     target: ResolvedExternalFileSearchTarget,
@@ -319,7 +324,9 @@ def load_external_file_text(
     fallback_element_type: str | None,
     ocr_language: str,
 ) -> ExtractedExternalText:
-    external = get_external_file(str(duc_source), str(target.file_id))
+    duc_data = parse_duc(str(duc_source))
+    files = duc_data.get("files") or {}
+    external = files.get(str(target.file_id))
     if not external:
         return ExtractedExternalText(text="")
 
@@ -327,7 +334,7 @@ def load_external_file_text(
     if revision_id is None:
         return ExtractedExternalText(text="")
 
-    data = _external_revision_blob(external, revision_id)
+    data = _stream_revision_bytes(duc_source, revision_id)
     if data is None:
         return ExtractedExternalText(text="")
 
@@ -366,10 +373,14 @@ def resolve_external_file_search_targets_from_parsed_duc(
         if element.get("id") and not element.get("is_deleted")
     }
     external_cache: dict[str, dict[str, Any] | None] = {}
+    files = duc_data.get("files") or {}
 
     def load_external(file_id: str) -> dict[str, Any] | None:
         if file_id not in external_cache:
-            external_cache[file_id] = get_external_file(str(duc_source), file_id)
+            external = files.get(file_id)
+            if external is None:
+                external = files.get(str(file_id))
+            external_cache[file_id] = external
         return external_cache[file_id]
 
     def active_revision_id(file_id: str) -> str | None:
@@ -429,38 +440,67 @@ def resolve_external_file_search_targets_from_parsed_duc(
     return _dedupe_targets(resolved)
 
 
-def _fetch_external_revision_row(conn: sqlite3.Connection, file_id: str, revision_id: str) -> sqlite3.Row | None:
-    try:
-        return conn.execute(
+def _fetch_external_revision_row(conn: sqlite3.Connection, file_id: str, revision_id: str) -> dict[str, Any] | None:
+    row = conn.execute(
+        """
+        SELECT
+            efr.file_id AS file_id,
+            efr.id AS revision_id,
+            efr.mime_type AS mime_type
+        FROM external_file_revisions AS efr
+        WHERE efr.file_id = ?
+          AND efr.id = ?
+        LIMIT 1
+        """,
+        (file_id, revision_id),
+    ).fetchone()
+    if row is None:
+        return None
+
+    blob: bytes | None = None
+    if _has_table(conn, "external_file_revision_chunks"):
+        chunks = conn.execute(
             """
-            SELECT
-                efr.file_id AS file_id,
-                efr.id AS revision_id,
-                efr.mime_type AS mime_type,
-                efrd.data AS data_blob
-            FROM external_file_revisions AS efr
-            LEFT JOIN external_file_revision_data AS efrd ON efrd.revision_id = efr.id
-            WHERE efr.file_id = ?
-              AND efr.id = ?
+            SELECT data
+            FROM external_file_revision_chunks
+            WHERE revision_id = ?
+            ORDER BY chunk_index
+            """,
+            (revision_id,),
+        ).fetchall()
+        blob = b"".join(bytes(chunk["data"]) for chunk in chunks)
+    elif _has_table(conn, "external_file_revision_data"):
+        data_row = conn.execute(
+            """
+            SELECT data
+            FROM external_file_revision_data
+            WHERE revision_id = ?
             LIMIT 1
             """,
-            (file_id, revision_id),
+            (revision_id,),
         ).fetchone()
-    except sqlite3.DatabaseError:
-        return conn.execute(
-            """
-            SELECT
-                efr.file_id AS file_id,
-                efr.id AS revision_id,
-                efr.mime_type AS mime_type,
-                efr.data AS data_blob
-            FROM external_file_revisions AS efr
-            WHERE efr.file_id = ?
-              AND efr.id = ?
-            LIMIT 1
-            """,
-            (file_id, revision_id),
-        ).fetchone()
+        blob = None if data_row is None else bytes(data_row["data"])
+    else:
+        try:
+            data_row = conn.execute(
+                """
+                SELECT data
+                FROM external_file_revisions
+                WHERE id = ?
+                LIMIT 1
+                """,
+                (revision_id,),
+            ).fetchone()
+            blob = None if data_row is None else bytes(data_row["data"])
+        except sqlite3.DatabaseError:
+            blob = None
+
+    return {
+        "file_id": row["file_id"],
+        "revision_id": row["revision_id"],
+        "mime_type": row["mime_type"],
+        "data_blob": blob,
+    }
 
 
 def ensure_external_file_search_index(

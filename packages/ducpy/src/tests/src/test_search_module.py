@@ -7,7 +7,7 @@ import pytest
 from collections import Counter
 from pathlib import Path
 
-from ducpy.parse import parse_duc_lazy
+from ducpy.parse import parse_duc
 from ducpy.search import search_duc_elements
 
 
@@ -34,7 +34,7 @@ def _run_asset_search(
 
     response = search_duc_elements(asset_path, query, output_path=json_path, limit=limit)
     payload = json.loads(json_path.read_text(encoding="utf-8"))
-    parsed_asset = parse_duc_lazy(str(asset_path))
+    parsed_asset = parse_duc(str(asset_path))
     return payload, response, json_path, parsed_asset
 
 
@@ -71,7 +71,7 @@ def test_search_exact_rectangle_result_from_blocks_instances_asset(test_output_d
 
 
 def test_search_groups_repeated_pdf_file_results(test_output_dir, request):
-    pdf_elements = [element for element in parse_duc_lazy(str(_asset_input_path("universal.duc")))["elements"] if element.get("type") == "pdf" and element.get("file_id") and not element.get("is_deleted")]
+    pdf_elements = [element for element in parse_duc(str(_asset_input_path("universal.duc")))["elements"] if element.get("type") == "pdf" and element.get("file_id") and not element.get("is_deleted")]
     duplicated_file_id = next(
         file_id for file_id, count in Counter(element["file_id"] for element in pdf_elements).items() if count > 1
     )
@@ -169,4 +169,3 @@ def test_search_respects_limit_parameter(test_output_dir, request):
     assert payload["query"] == "Rectangle"
     assert payload["total_hits"] >= 2
     assert len(payload["results"]) == 2
-
