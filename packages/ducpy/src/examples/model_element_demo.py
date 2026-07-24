@@ -4,6 +4,7 @@ Example demonstrating how to build, configure, and serialize Model elements in D
 """
 
 import os
+import tempfile
 
 import ducpy as duc
 from _dev.dev_utils import download_fixture_from_cdn, get_testing_assets_dir
@@ -164,15 +165,18 @@ def main():
         print(f"   ❌ Correctly rejected invalid model_type: {exc}")
 
     print("\n6. Serializing all valid model elements into .duc file...")
-    duc_bytes = duc.serialize_duc(
+    output = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+    output.close()
+    duc_path = duc.serialize_duc(
         name="model_element_example",
+        output_path=output.name,
         elements=[build123d_model, ifc_model, dxf_model, step_model],
         external_files=[ifc_external_file, dxf_external_file, step_external_file],
         validate_embedded_code=True
     )
-    print(f"   Successfully serialized DUC file containing {len(duc_bytes)} bytes.")
+    print(f"   Successfully serialized DUC file to {duc_path}.")
     print("\n✅ Model element demo complete!")
-    return duc_bytes
+    return duc_path
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import ducpy as duc
 
 
-def test_issues_roundtrip():
+def test_issues_roundtrip(test_output_dir):
     issues = [
         duc.StateBuilder()
             .with_id("issue-1")
@@ -42,8 +42,9 @@ def test_issues_roundtrip():
             .build(),
     ]
 
-    data = duc.serialize_duc(name="IssuesRoundtrip", issues=issues)
-    parsed = duc.parse_duc(data)
+    path = f"{test_output_dir}/issues_roundtrip.duc"
+    duc.serialize_duc(name="IssuesRoundtrip", output_path=path, issues=issues)
+    parsed = duc.parse_duc(path)
 
     assert len(parsed.issues) == 2
     assert parsed.issues[0].title == "Resolve lobby clearance"

@@ -83,8 +83,8 @@ CREATE TABLE version_chains (
 CREATE INDEX idx_version_chains_schema_version ON version_chains(schema_version, start_version);
 
 -- Full-state snapshots at specific version numbers.
--- Each checkpoint is fully self-contained: loading `data` alone reconstructs the
--- complete document state at that version_number.
+-- Each checkpoint is fully self-contained: loading its ordered data chunks
+-- reconstructs the complete document state at that version_number.
 CREATE TABLE checkpoints (
     id                  TEXT PRIMARY KEY,
     parent_id           TEXT,              -- previous checkpoint (for checkpoint chain traversal)
@@ -96,8 +96,7 @@ CREATE TABLE checkpoints (
     is_manual_save      INTEGER NOT NULL DEFAULT 0,
     is_schema_boundary  INTEGER NOT NULL DEFAULT 0, -- 1 if created at a schema migration boundary
     user_id             TEXT,
-    data                BLOB,              -- full state snapshot (application-defined binary format)
-    data_checksum       TEXT,              -- SHA-256 of `data` for integrity verification on restore
+    data_checksum       TEXT,              -- SHA-256 of snapshot bytes for integrity verification on restore
     storage_key         TEXT,              -- optional external storage reference if data is offloaded
     size_bytes          INTEGER,
     CHECK (schema_version >= 1),
@@ -111,9 +110,21 @@ CREATE INDEX idx_checkpoints_schema_version ON checkpoints(schema_version, versi
 CREATE INDEX idx_checkpoints_boundary ON checkpoints(is_schema_boundary)
     WHERE is_schema_boundary = 1;
 
+CREATE TABLE checkpoint_data_chunks (
+    checkpoint_id TEXT    NOT NULL REFERENCES checkpoints(id) ON DELETE CASCADE,
+    chunk_index   INTEGER NOT NULL CHECK (chunk_index >= 0),
+    offset_bytes  INTEGER NOT NULL CHECK (offset_bytes >= 0),
+    size_bytes    INTEGER NOT NULL CHECK (size_bytes >= 0),
+    data          BLOB    NOT NULL,
+    PRIMARY KEY (checkpoint_id, chunk_index)
+) WITHOUT ROWID;
+
+CREATE INDEX idx_checkpoint_data_chunks_checkpoint_offset
+    ON checkpoint_data_chunks(checkpoint_id, offset_bytes);
+
 -- Incremental deltas (lightweight patches between checkpoints).
 -- A delta is valid ONLY against the schema_version it was recorded with.
--- To apply: load base_checkpoint.data, then apply changesets in delta_sequence order.
+-- To apply: load base checkpoint chunks, then apply changeset chunks in delta_sequence order.
 CREATE TABLE deltas (
     id                  TEXT PRIMARY KEY,
     parent_id           TEXT,              -- previous delta or NULL if first after checkpoint
@@ -126,7 +137,6 @@ CREATE TABLE deltas (
     description         TEXT,
     is_manual_save      INTEGER NOT NULL DEFAULT 0,
     user_id             TEXT,
-    changeset           BLOB    NOT NULL,  -- gzip-compressed binary delta payload
     changeset_checksum  TEXT,              -- SHA-256 of uncompressed changeset for integrity
     size_bytes          INTEGER,
     CHECK (schema_version >= 1),
@@ -138,6 +148,18 @@ CREATE INDEX idx_deltas_parent ON deltas(parent_id);
 CREATE INDEX idx_deltas_chain ON deltas(chain_id, version_number);
 CREATE INDEX idx_deltas_schema_version ON deltas(schema_version, version_number);
 CREATE INDEX idx_deltas_base_checkpoint ON deltas(base_checkpoint_id, delta_sequence);
+
+CREATE TABLE delta_changeset_chunks (
+    delta_id     TEXT    NOT NULL REFERENCES deltas(id) ON DELETE CASCADE,
+    chunk_index  INTEGER NOT NULL CHECK (chunk_index >= 0),
+    offset_bytes INTEGER NOT NULL CHECK (offset_bytes >= 0),
+    size_bytes   INTEGER NOT NULL CHECK (size_bytes >= 0),
+    data         BLOB    NOT NULL,
+    PRIMARY KEY (delta_id, chunk_index)
+) WITHOUT ROWID;
+
+CREATE INDEX idx_delta_changeset_chunks_delta_offset
+    ON delta_changeset_chunks(delta_id, offset_bytes);
 
 -- Seed the singleton version graph row.
 INSERT INTO version_graph (id, current_version, current_schema_version, chain_count)

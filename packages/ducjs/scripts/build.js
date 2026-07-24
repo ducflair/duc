@@ -166,6 +166,12 @@ function copyWasmArtifactsToDist(pkgDir, distDir) {
 
     fs.copyFileSync(sourcePath, destinationPath);
   }
+
+  // Copy WASI binary if it was built
+  const wasiSource = path.join(pkgDir, 'ducjs_wasi.wasm');
+  if (fs.existsSync(wasiSource)) {
+    fs.copyFileSync(wasiSource, path.join(distDir, 'ducjs_wasi.wasm'));
+  }
 }
 
 // ── WASM build helpers (clang resolution matching ducpdf) ──────────────────
@@ -225,9 +231,57 @@ function buildWasm(cratePath, outDir, wasmPackBin) {
   });
 }
 
+// ── WASI build helper (Node.js backend) ────────────────────────────────────
+
+function buildWasi(cratePath, outDir) {
+  return new Promise((resolve, reject) => {
+    const env = {
+      ...process.env,
+      CC_wasm32_wasip1: process.env.CC_wasm32_wasip1 || '/opt/homebrew/opt/llvm/bin/clang',
+      CFLAGS_wasm32_wasip1: process.env.CFLAGS_wasm32_wasip1 || '--sysroot=/opt/homebrew/share/wasi-sysroot',
+    };
+
+    console.log('Building WASI (Node.js) binary...');
+    const child = spawn(
+      'cargo',
+      ['build', '--release', '--target', 'wasm32-wasip1', '--features', 'wasi-bin', '--bin', 'ducjs-wasi'],
+      { cwd: cratePath, env, stdio: 'inherit' },
+    );
+
+    child.on('error', (error) => reject(error));
+    child.on('close', (code) => {
+      if (code === 0) {
+          const targetDirs = [
+            path.join(cratePath, 'target', 'wasm32-wasip1', 'release'),
+            path.join(cratePath, '..', '..', '..', 'target', 'wasm32-wasip1', 'release'),
+          ];
+          try {
+          const src = targetDirs
+            .map((targetDir) => path.join(targetDir, 'ducjs-wasi.wasm'))
+            .find((candidate) => fs.existsSync(candidate));
+          if (!src) {
+            reject(new Error(`WASI binary not found. Tried: ${targetDirs.join(', ')}`));
+            return;
+          }
+          fs.mkdirSync(outDir, { recursive: true });
+          const dst = path.join(outDir, 'ducjs_wasi.wasm');
+          fs.copyFileSync(src, dst);
+          console.log(`WASI binary: ${dst} (${fs.statSync(dst).size} bytes)`);
+          resolve();
+        } catch (error) {
+          reject(new Error(`Failed to copy WASI binary: ${error.message}`));
+        }
+      } else {
+        reject(new Error(`cargo build --target wasm32-wasip1 exited with code ${code}`));
+      }
+    });
+  });
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 
 async function main() {
+  const buildWasiToo = process.argv.includes('--wasi');
   const manifestDir = __dirname;
   const packageRoot = path.join(manifestDir, '..');
   const schemaSqlPath = path.join(packageRoot, '..', '..', 'schema', 'duc.sql');
@@ -243,6 +297,11 @@ async function main() {
 
   // 1. Rebuild WASM from Rust crate (regenerates pkg/)
   await buildWasm(cratePath, pkgDir, wasmPackBin);
+
+  // 1b. Optionally build WASI binary for Node.js backend
+  if (buildWasiToo) {
+    await buildWasi(cratePath, pkgDir);
+  }
 
   // 2. Patch pkg JS/DTS with schema version shim (idempotent)
   ensurePkgSchemaVersionShim(pkgJsPath, pkgDtsPath, userVersion);

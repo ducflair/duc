@@ -8,7 +8,8 @@ via DucData wrapper.
 from __future__ import annotations
 
 import logging
-from typing import Any, BinaryIO, Dict, List, Optional, Union
+from os import PathLike, fspath
+from typing import Any, List, Union
 
 import ducpy_native
 from ducpy.utils.convert import deep_camel_to_snake
@@ -44,28 +45,27 @@ def _wrap(obj: Any) -> Any:
     return obj
 
 
-def _read_bytes(source: Union[bytes, bytearray, BinaryIO, str]) -> bytes:
-    """Accept bytes, a file-like object, or a file path and return raw bytes."""
-    if isinstance(source, (bytes, bytearray)):
-        return bytes(source)
-    if isinstance(source, str):
-        with open(source, "rb") as f:
-            return f.read()
-    return source.read()
+PathInput = Union[str, PathLike[str]]
 
 
-def parse_duc(source: Union[bytes, bytearray, BinaryIO, str]) -> DucData:
+def _path(source: PathInput) -> str:
+    if isinstance(source, (bytes, bytearray)) or hasattr(source, "read"):
+        raise TypeError("DUC streaming APIs require a filesystem path, not bytes or file objects")
+    return fspath(source)
+
+
+def parse_duc(source: PathInput) -> DucData:
     """Parse a ``.duc`` file into a :class:`DucData` dict.
 
-    This function reads a raw `.duc` binary blob or file path and parses it using 
-    the Rust native extension. It returns a specialized dictionary (`DucData`) 
+    This function streams a `.duc` file path through the Rust native extension.
+    It returns a specialized dictionary (`DucData`)
     that allows attribute-style access to the parsed properties (e.g. `data.elements[0].id`),
     using `snake_case` keys instead of the internal `camelCase` format.
 
     Parameters
     ----------
-    source : bytes | file | str
-        Raw bytes, an open binary file, or a string path to a ``.duc`` file.
+    source : str | PathLike
+        Path to a ``.duc`` file.
 
     Returns
     -------
@@ -77,43 +77,55 @@ def parse_duc(source: Union[bytes, bytearray, BinaryIO, str]) -> DucData:
     Examples
     --------
     >>> data = duc.parse_duc("path/to/file.duc")
-    >>> data = duc.parse_duc(binary_data)
     >>> print(f"Found {len(data.elements)} elements")
     >>> print(f"First element type: {data.elements[0].type}")
     """
-    buf = _read_bytes(source)
-    raw = ducpy_native.parse_duc(buf)
-    return _wrap(deep_camel_to_snake(raw))
-
-
-def parse_duc_lazy(source: Union[bytes, bytearray, BinaryIO, str]) -> DucData:
-    """Parse a ``.duc`` file lazily (external file data blobs are omitted).
-
-    Use :func:`get_external_file` or :func:`list_external_files` to retrieve
-    external file data on demand.
-    """
-    buf = _read_bytes(source)
-    raw = ducpy_native.parse_duc_lazy(buf)
-    return _wrap(deep_camel_to_snake(raw))
-
-
-def get_external_file(
-    source: Union[bytes, bytearray, BinaryIO, str],
-    file_id: str,
-) -> Optional[DucData]:
-    """Fetch a single external file entry from a ``.duc`` buffer."""
-    buf = _read_bytes(source)
-    raw = ducpy_native.get_external_file(buf, file_id)
-    if raw is None:
-        return None
+    raw = ducpy_native.parse_duc(_path(source))
     return _wrap(deep_camel_to_snake(raw))
 
 
 def list_external_files(
-    source: Union[bytes, bytearray, BinaryIO, str],
+    source: PathInput,
 ) -> List[DucData]:
     """List metadata for all external files (without data blobs)."""
-    buf = _read_bytes(source)
-    raw = ducpy_native.list_external_files(buf)
+    raw = ducpy_native.list_external_files(_path(source))
     return _wrap(deep_camel_to_snake(raw))
 
+
+def stream_external_file_revision_to_path(
+    source: PathInput,
+    revision_id: str,
+    output_path: PathInput,
+) -> int:
+    """Stream an external file revision from a ``.duc`` file into ``output_path``."""
+    return ducpy_native.stream_external_file_revision_to_path(
+        _path(source),
+        revision_id,
+        _path(output_path),
+    )
+
+
+def stream_checkpoint_data_to_path(
+    source: PathInput,
+    checkpoint_id: str,
+    output_path: PathInput,
+) -> int:
+    """Stream checkpoint data from a ``.duc`` file into ``output_path``."""
+    return ducpy_native.stream_checkpoint_data_to_path(
+        _path(source),
+        checkpoint_id,
+        _path(output_path),
+    )
+
+
+def stream_delta_changeset_to_path(
+    source: PathInput,
+    delta_id: str,
+    output_path: PathInput,
+) -> int:
+    """Stream delta changeset data from a ``.duc`` file into ``output_path``."""
+    return ducpy_native.stream_delta_changeset_to_path(
+        _path(source),
+        delta_id,
+        _path(output_path),
+    )

@@ -7,6 +7,7 @@ bold formatting, lists, tables) and serializes it into a .duc file.
 """
 
 import ducpy as duc
+import tempfile
 
 def main():
     print("Document Element Demo")
@@ -53,15 +54,18 @@ It supports advanced typesetting features, styles, and structured data layouts.
     
     print("3. Serializing to .duc format...")
     # serialize_duc runs validation on Typst elements if validate_embedded_code=True
-    duc_bytes = duc.serialize_duc(
+    output = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+    output.close()
+    duc_path = duc.serialize_duc(
         name="document_element_example",
+        output_path=output.name,
         elements=[doc_element],
         validate_embedded_code=True
     )
     
-    print(f"   Successfully serialized DUC file ({len(duc_bytes)} bytes).")
+    print(f"   Successfully serialized DUC file to {duc_path}.")
     print("\n✅ Document element demo complete!")
-    return duc_bytes
+    return duc_path
 
 if __name__ == "__main__":
     main()

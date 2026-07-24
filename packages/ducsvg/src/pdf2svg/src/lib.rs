@@ -42,7 +42,10 @@ pub fn convert_pdf_to_svg_rs(pdf_data: &[u8]) -> Result<String, JsValue> {
             let pages: Vec<SvgPage> = svg_strings
                 .into_iter()
                 .enumerate()
-                .map(|(i, svg)| SvgPage { svg, page_index: i + 1 })
+                .map(|(i, svg)| SvgPage {
+                    svg,
+                    page_index: i + 1,
+                })
                 .collect();
 
             let result = ConversionResult { pages };

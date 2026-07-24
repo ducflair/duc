@@ -6,7 +6,7 @@
 -- No application-level sync needed.
 --
 -- Depends on: duc.sql (elements, element_text, element_doc, element_model, blocks,
---   external_files, external_file_revisions, external_file_revision_data, document_grid_config)
+--   external_files, external_file_revisions, external_file_revision_chunks, document_grid_config)
 --
 -- Query examples:
 --   SELECT rowid, rank FROM search_elements WHERE search_elements MATCH 'motor';

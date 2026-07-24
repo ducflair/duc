@@ -1,5 +1,5 @@
-import { restore, type ElementsConfig, type RestoreConfig, type RestoredDataState } from "./restore";
-import { transformFromRust } from "./transform";
+import type { ElementsConfig, RestoreConfig, RestoredDataState } from "./restore";
+import { restoreParsedData } from "./restore-parsed";
 import type { DucExternalFiles, ExportedDataState, ExternalFilesData } from "./types";
 import { ensureWasm, wasmParseDuc, wasmParseDucLazy } from "./wasm";
 
@@ -49,37 +49,7 @@ export async function parseDuc(
     );
   }
 
-  const data = transformFromRust(raw) as ExportedDataState;
-
-  // Preserve the original version graph from Rust before restore() can
-  // filter out entries through restoreCheckpoint/restoreDelta validation.
-  // The VG data is already validated by the Rust parser.
-  const originalVG = data.versionGraph;
-  const restored = restore(
-    {
-      ...data,
-      // Preserve versionGraph from Rust separately; do not run it through restore()
-      versionGraph: undefined,
-    },
-    elementsConfig ?? { syncInvalidIndices: (els) => els as any },
-    restoreConfig,
-  );
-
-  // Use the original version graph from Rust, bypassing restore's lossy filtering
-  if (originalVG) {
-    restored.versionGraph = originalVG;
-  }
-
-  // Keep charter and issues in the parsed output even though restore() does not
-  // currently populate them itself.
-  if (data.charter) {
-    restored.charter = data.charter;
-  }
-  if (data.issues) {
-    restored.issues = data.issues;
-  }
-
-  return restored;
+  return restoreParsedData(raw, elementsConfig, restoreConfig);
 }
 
 /**
@@ -111,41 +81,17 @@ export async function parseDucLazy(
     );
   }
 
-  const data = transformFromRust(raw) as ExportedDataState;
-
-  // Preserve the original version graph from Rust before restore() filters
-  const originalVG = data.versionGraph;
-
   const lazyFileStore = new LazyExternalFileStore(buffer);
   const files: DucExternalFiles = {};
   const filesData: ExternalFilesData = {};
 
-  const restored = restore(
-    {
-      ...data,
-      files,
-      filesData,
-      // Preserve versionGraph from Rust separately; do not run it through restore()
-      versionGraph: undefined,
-    },
-    elementsConfig ?? { syncInvalidIndices: (els) => els as any },
+  const restored = restoreParsedData(
+    raw,
+    elementsConfig,
     restoreConfig,
+    { files, filesData },
   ) as LazyRestoredDataState;
   restored.lazyFileStore = lazyFileStore;
-
-  // Use the original version graph from Rust, bypassing restore's lossy filtering
-  if (originalVG) {
-    restored.versionGraph = originalVG;
-  }
-
-  // Keep charter and issues in the parsed output even though restore() does not
-  // currently populate them itself.
-  if (data.charter) {
-    restored.charter = data.charter;
-  }
-  if (data.issues) {
-    restored.issues = data.issues;
-  }
 
   return restored;
 }

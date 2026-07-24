@@ -4,7 +4,16 @@ use std::collections::HashMap;
  * Aligns text vertically within its bounding box.
  */
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum VERTICAL_ALIGN {
     /** Aligns text to the top of its bounding box. */
@@ -19,7 +28,16 @@ pub enum VERTICAL_ALIGN {
  * Aligns text horizontally within its bounding box.
  */
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum TEXT_ALIGN {
     /** Aligns text to the left of its bounding box. */
@@ -34,7 +52,16 @@ pub enum TEXT_ALIGN {
  * Determines how line spacing is interpreted.
  */
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum LINE_SPACING_TYPE {
     /**
@@ -60,7 +87,16 @@ pub enum LINE_SPACING_TYPE {
  * Placement of stroke relative to the element boundary.
  */
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum STROKE_PLACEMENT {
     /** Places the stroke inside the element's boundary. */
@@ -75,7 +111,16 @@ pub enum STROKE_PLACEMENT {
  * Preferred stroke rendering style.
  */
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum STROKE_PREFERENCE {
     /** Renders the stroke as a continuous solid line. */
@@ -92,7 +137,16 @@ pub enum STROKE_PREFERENCE {
  * Applies stroke to specific sides of an element.
  */
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum STROKE_SIDE_PREFERENCE {
     /** Applies the stroke to the top side. */
@@ -113,7 +167,16 @@ pub enum STROKE_SIDE_PREFERENCE {
  * Shape used at the end of stroked segments.
  */
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum STROKE_CAP {
     /** A butt cap cuts off the line at the endpoint. */
@@ -128,7 +191,16 @@ pub enum STROKE_CAP {
  * Join style for adjacent stroked segments.
  */
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum STROKE_JOIN {
     /** A miter join creates a sharp corner. */
@@ -140,7 +212,16 @@ pub enum STROKE_JOIN {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum LINE_HEAD {
     /** An arrow-shaped line end. */
@@ -176,7 +257,16 @@ pub enum LINE_HEAD {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum BEZIER_MIRRORING {
     /** No mirroring of Bezier handles. */
@@ -188,7 +278,16 @@ pub enum BEZIER_MIRRORING {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum BLENDING {
     /** Multiplies the colors of overlapping elements. */
@@ -208,7 +307,16 @@ pub enum BLENDING {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum ELEMENT_CONTENT_PREFERENCE {
     /** Fills the element with a solid color. */
@@ -226,7 +334,16 @@ pub enum ELEMENT_CONTENT_PREFERENCE {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum HATCH_STYLE {
     /** Normal hatch, fills closed boundaries. */
@@ -238,7 +355,16 @@ pub enum HATCH_STYLE {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum IMAGE_STATUS {
     /** Image is pending upload/saving. */
@@ -253,7 +379,16 @@ pub enum IMAGE_STATUS {
  * Defines the types of boolean operations that can be performed.
  */
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+)]
 #[repr(i32)]
 pub enum BOOLEAN_OPERATION {
     /** Combines all child shapes into a single shape. */
@@ -1622,7 +1757,11 @@ pub struct DucIssueMessage {
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "type",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 pub enum DucIssueAnchor {
     Canvas {
         x: f64,

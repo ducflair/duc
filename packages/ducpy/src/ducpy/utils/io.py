@@ -32,8 +32,9 @@ def write_duc_file(
     """
     Serializes an ExportedDataState object to a .duc file.
     """
-    serialized_data = serialize_duc(
+    serialize_duc(
       name=name,
+      output_path=file_path,
       thumbnail=thumbnail,
       dictionary=dictionary,
       elements=elements,
@@ -50,8 +51,6 @@ def write_duc_file(
       charter=charter,
       issues=issues,
     )
-    with open(file_path, "wb") as f:
-        f.write(serialized_data)
 
 def read_duc_file(file_path: str) -> DucData:
     """

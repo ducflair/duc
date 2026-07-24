@@ -22,28 +22,48 @@ def test_cspmds_version_graph(test_output_dir):
 
         db.sql(
             "INSERT INTO checkpoints "
-            "(id, parent_id, chain_id, version_number, schema_version, timestamp, description, data, size_bytes) "
-            "VALUES (?,?,?,?,?,?,?,?,?)",
-            "cp_1", None, "chain_1", 1, 1, now, "Initial snapshot", b"state_v1", 8,
+            "(id, parent_id, chain_id, version_number, schema_version, timestamp, description, size_bytes) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            "cp_1", None, "chain_1", 1, 1, now, "Initial snapshot", 8,
+        )
+        db.sql(
+            "INSERT INTO checkpoint_data_chunks (checkpoint_id, chunk_index, offset_bytes, size_bytes, data) "
+            "VALUES (?,?,?,?,?)",
+            "cp_1", 0, 0, len(b"state_v1"), b"state_v1",
         )
         db.sql(
             "INSERT INTO checkpoints "
-            "(id, parent_id, chain_id, version_number, schema_version, timestamp, description, data, size_bytes) "
-            "VALUES (?,?,?,?,?,?,?,?,?)",
-            "cp_2", "cp_1", "chain_1", 2, 1, now + 1, "Second snapshot", b"state_v2", 8,
+            "(id, parent_id, chain_id, version_number, schema_version, timestamp, description, size_bytes) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            "cp_2", "cp_1", "chain_1", 2, 1, now + 1, "Second snapshot", 8,
+        )
+        db.sql(
+            "INSERT INTO checkpoint_data_chunks (checkpoint_id, chunk_index, offset_bytes, size_bytes, data) "
+            "VALUES (?,?,?,?,?)",
+            "cp_2", 0, 0, len(b"state_v2"), b"state_v2",
         )
 
         db.sql(
             "INSERT INTO deltas "
-            "(id, parent_id, base_checkpoint_id, chain_id, delta_sequence, version_number, schema_version, timestamp, description, changeset, size_bytes) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            "d_1", None, "cp_2", "chain_1", 1, 3, 1, now + 2, "move element", b"delta_1", 7,
+            "(id, parent_id, base_checkpoint_id, chain_id, delta_sequence, version_number, schema_version, timestamp, description, size_bytes) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "d_1", None, "cp_2", "chain_1", 1, 3, 1, now + 2, "move element", 7,
+        )
+        db.sql(
+            "INSERT INTO delta_changeset_chunks (delta_id, chunk_index, offset_bytes, size_bytes, data) "
+            "VALUES (?,?,?,?,?)",
+            "d_1", 0, 0, len(b"delta_1"), b"delta_1",
         )
         db.sql(
             "INSERT INTO deltas "
-            "(id, parent_id, base_checkpoint_id, chain_id, delta_sequence, version_number, schema_version, timestamp, description, changeset, size_bytes) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            "d_2", "d_1", "cp_2", "chain_1", 2, 4, 1, now + 3, "scale element", b"delta_2", 7,
+            "(id, parent_id, base_checkpoint_id, chain_id, delta_sequence, version_number, schema_version, timestamp, description, size_bytes) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "d_2", "d_1", "cp_2", "chain_1", 2, 4, 1, now + 3, "scale element", 7,
+        )
+        db.sql(
+            "INSERT INTO delta_changeset_chunks (delta_id, chunk_index, offset_bytes, size_bytes, data) "
+            "VALUES (?,?,?,?,?)",
+            "d_2", 0, 0, len(b"delta_2"), b"delta_2",
         )
 
         db.sql(
@@ -66,9 +86,14 @@ def test_cspmds_version_graph(test_output_dir):
         )
         db.sql(
             "INSERT INTO checkpoints "
-            "(id, parent_id, chain_id, version_number, schema_version, timestamp, description, is_schema_boundary, data, size_bytes) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?)",
-            "cp_3", None, "chain_2", 5, 2, now + 5, "Schema boundary", 1, b"state_v3", 8,
+            "(id, parent_id, chain_id, version_number, schema_version, timestamp, description, is_schema_boundary, size_bytes) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            "cp_3", None, "chain_2", 5, 2, now + 5, "Schema boundary", 1, 8,
+        )
+        db.sql(
+            "INSERT INTO checkpoint_data_chunks (checkpoint_id, chunk_index, offset_bytes, size_bytes, data) "
+            "VALUES (?,?,?,?,?)",
+            "cp_3", 0, 0, len(b"state_v3"), b"state_v3",
         )
 
         db.sql("UPDATE deltas SET description = ? WHERE id = ?", "move element updated", "d_1")

@@ -62,7 +62,7 @@ Read and write `.duc` files using the `duc.parse` and `duc.serialize` modules.
 
 See the worked examples:
 
-- [Parsing](src/examples/parsing_demo.py) — `parse_duc` / `parse_duc_lazy` / `get_external_file` / `list_external_files`.
+- [Parsing](src/examples/parsing_demo.py) — `parse_duc` / `list_external_files` / streaming revision helpers.
 - [Serialization](src/examples/serialization_demo.py) — `serialize_duc` from builder-created elements.
 - [External files](src/examples/external_files_demo.py) — attaching binary blobs (images, PDFs) to a `.duc` document.
 

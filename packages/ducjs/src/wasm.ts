@@ -1,17 +1,19 @@
 import init, {
+    DucOpfsDocument as _DucOpfsDocument,
+    DucOpfsImporter as _DucOpfsImporter,
     applyDeltaChangeset as _applyDeltaChangeset,
     createDeltaChangeset as _createDeltaChangeset,
     getCurrentSchemaVersion as _getCurrentSchemaVersion,
-    getExternalFile as _getExternalFile,
-    listExternalFiles as _listExternalFiles,
-    listVersions as _listVersions,
     parseDuc as _parseDuc,
     parseDucLazy as _parseDucLazy,
-    readVersionGraph as _readVersionGraph,
-    restoreCheckpoint as _restoreCheckpoint,
-    restoreVersion as _restoreVersion,
-    revertToVersion as _revertToVersion,
     serializeDuc as _serializeDuc,
+    getExternalFile as _getExternalFile,
+    listExternalFiles as _listExternalFiles,
+    restoreVersion as _restoreVersion,
+    restoreCheckpoint as _restoreCheckpoint,
+    listVersions as _listVersions,
+    readVersionGraph as _readVersionGraph,
+    revertToVersion as _revertToVersion,
 } from "../dist/ducjs_wasm";
 
 let initialized = false;
@@ -75,18 +77,21 @@ export async function getWasmBinary(): Promise<ArrayBuffer> {
   return resp.arrayBuffer();
 }
 
+export const wasmGetCurrentSchemaVersion = _getCurrentSchemaVersion;
+
+export const wasmCreateDeltaChangeset = _createDeltaChangeset;
+export const wasmApplyDeltaChangeset = _applyDeltaChangeset;
+export const DucOpfsDocument = _DucOpfsDocument;
+export const DucOpfsImporter = _DucOpfsImporter;
+
+// Byte-buffer compatibility API
 export const wasmParseDuc = _parseDuc;
 export const wasmParseDucLazy = _parseDucLazy;
 export const wasmSerializeDuc = _serializeDuc;
 export const wasmGetExternalFile = _getExternalFile;
 export const wasmListExternalFiles = _listExternalFiles;
-
 export const wasmRestoreVersion = _restoreVersion;
 export const wasmRestoreCheckpoint = _restoreCheckpoint;
 export const wasmListVersions = _listVersions;
 export const wasmReadVersionGraph = _readVersionGraph;
 export const wasmRevertToVersion = _revertToVersion;
-export const wasmGetCurrentSchemaVersion = _getCurrentSchemaVersion;
-
-export const wasmCreateDeltaChangeset = _createDeltaChangeset;
-export const wasmApplyDeltaChangeset = _applyDeltaChangeset;

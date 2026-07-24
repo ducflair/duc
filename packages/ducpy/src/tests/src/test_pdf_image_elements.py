@@ -19,10 +19,10 @@ def test_csp_pdf_image_elements(test_output_dir):
     with DucSQL.new(output_file) as db:
         db.sql("INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)", "file_pdf", "file_pdf_rev1", now)
         db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved) VALUES (?,?,?,?,?,?)", "file_pdf_rev1", "file_pdf", len(pdf_bytes), "application/pdf", now, now)
-        db.sql("INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)", "file_pdf_rev1", pdf_bytes)
+        db.sql("INSERT INTO external_file_revision_chunks (revision_id, chunk_index, offset_bytes, size_bytes, data) VALUES (?,?,?,?,?)", "file_pdf_rev1", 0, 0, len(pdf_bytes), pdf_bytes)
         db.sql("INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)", "file_img", "file_img_rev1", now)
         db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved) VALUES (?,?,?,?,?,?)", "file_img_rev1", "file_img", len(image_bytes), "image/jpeg", now, now)
-        db.sql("INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)", "file_img_rev1", image_bytes)
+        db.sql("INSERT INTO external_file_revision_chunks (revision_id, chunk_index, offset_bytes, size_bytes, data) VALUES (?,?,?,?,?)", "file_img_rev1", 0, 0, len(image_bytes), image_bytes)
 
         db.sql("INSERT INTO elements (id, element_type, x, y, width, height, label) VALUES (?,?,?,?,?,?,?)", "pdf_el", "pdf", 100, 100, 300, 400, "PDF")
         db.sql("INSERT INTO document_grid_config (element_id, file_id, grid_columns, grid_scale) VALUES (?,?,?,?)", "pdf_el", "file_pdf", 1, 1.0)

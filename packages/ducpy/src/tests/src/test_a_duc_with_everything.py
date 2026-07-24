@@ -183,13 +183,13 @@ def test_a_duc_with_everything(test_output_dir):
         # External files
         db.sql("INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)", "pdf_file", "pdf_file_rev1", now)
         db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved) VALUES (?,?,?,?,?,?)", "pdf_file_rev1", "pdf_file", len(pdf_bytes), "application/pdf", now, now)
-        db.sql("INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)", "pdf_file_rev1", pdf_bytes)
+        db.sql("INSERT INTO external_file_revision_chunks (revision_id, chunk_index, offset_bytes, size_bytes, data) VALUES (?,?,?,?,?)", "pdf_file_rev1", 0, 0, len(pdf_bytes), pdf_bytes)
         db.sql("INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)", "step_file", "step_file_rev1", now)
         db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved) VALUES (?,?,?,?,?,?)", "step_file_rev1", "step_file", len(step_bytes), "model/step", now, now)
-        db.sql("INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)", "step_file_rev1", step_bytes)
+        db.sql("INSERT INTO external_file_revision_chunks (revision_id, chunk_index, offset_bytes, size_bytes, data) VALUES (?,?,?,?,?)", "step_file_rev1", 0, 0, len(step_bytes), step_bytes)
         db.sql("INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)", "jpg_file", "jpg_file_rev1", now)
         db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved) VALUES (?,?,?,?,?,?)", "jpg_file_rev1", "jpg_file", len(jpg_bytes), "image/jpeg", now, now)
-        db.sql("INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)", "jpg_file_rev1", jpg_bytes)
+        db.sql("INSERT INTO external_file_revision_chunks (revision_id, chunk_index, offset_bytes, size_bytes, data) VALUES (?,?,?,?,?)", "jpg_file_rev1", 0, 0, len(jpg_bytes), jpg_bytes)
 
         # Core elements (broad type coverage in new schema): each family has builder+SQL-created members.
         rect_base = rect_from_builder.element.base
@@ -323,7 +323,7 @@ def test_a_duc_with_everything(test_output_dir):
         db.sql("INSERT INTO elements (id, element_type, x, y, width, height, label, z_index) VALUES (?,?,?,?,?,?,?,?)", "tbl1", "table", 100, 400, 300, 120, "Table", 9.0)
         db.sql("INSERT INTO external_files (id, active_revision_id, updated) VALUES (?,?,?)", "xlsx_tbl", "xlsx_tbl_rev1", now)
         db.sql("INSERT INTO external_file_revisions (id, file_id, size_bytes, mime_type, created, last_retrieved) VALUES (?,?,?,?,?,?)", "xlsx_tbl_rev1", "xlsx_tbl", len(b"fake-xlsx"), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", now, now)
-        db.sql("INSERT INTO external_file_revision_data (revision_id, data) VALUES (?,?)", "xlsx_tbl_rev1", b"fake-xlsx")
+        db.sql("INSERT INTO external_file_revision_chunks (revision_id, chunk_index, offset_bytes, size_bytes, data) VALUES (?,?,?,?,?)", "xlsx_tbl_rev1", 0, 0, len(b"fake-xlsx"), b"fake-xlsx")
         db.sql(
             "INSERT INTO document_grid_config (element_id, file_id, grid_columns, grid_gap_x, grid_gap_y, grid_first_page_alone, grid_scale) VALUES (?,?,?,?,?,?,?)",
             "tbl1", "xlsx_tbl", 1, 0.0, 0.0, 0, 1.0,
@@ -355,8 +355,10 @@ def test_a_duc_with_everything(test_output_dir):
 
         # Version graph essentials
         db.sql("INSERT INTO version_chains (id, schema_version, start_version, root_checkpoint_id) VALUES (?,?,?,?)", "chain_1", 1, 0, "cp_1")
-        db.sql("INSERT INTO checkpoints (id, chain_id, version_number, schema_version, timestamp, description, data, size_bytes) VALUES (?,?,?,?,?,?,?,?)", "cp_1", "chain_1", 1, 1, now, "initial", b"snapshot", 8)
-        db.sql("INSERT INTO deltas (id, base_checkpoint_id, chain_id, delta_sequence, version_number, schema_version, timestamp, description, changeset, size_bytes) VALUES (?,?,?,?,?,?,?,?,?,?)", "d_1", "cp_1", "chain_1", 1, 2, 1, now + 1, "delta", b"changes", 7)
+        db.sql("INSERT INTO checkpoints (id, chain_id, version_number, schema_version, timestamp, description, size_bytes) VALUES (?,?,?,?,?,?,?)", "cp_1", "chain_1", 1, 1, now, "initial", 8)
+        db.sql("INSERT INTO checkpoint_data_chunks (checkpoint_id, chunk_index, offset_bytes, size_bytes, data) VALUES (?,?,?,?,?)", "cp_1", 0, 0, len(b"snapshot"), b"snapshot")
+        db.sql("INSERT INTO deltas (id, base_checkpoint_id, chain_id, delta_sequence, version_number, schema_version, timestamp, description, size_bytes) VALUES (?,?,?,?,?,?,?,?,?)", "d_1", "cp_1", "chain_1", 1, 2, 1, now + 1, "delta", 7)
+        db.sql("INSERT INTO delta_changeset_chunks (delta_id, chunk_index, offset_bytes, size_bytes, data) VALUES (?,?,?,?,?)", "d_1", 0, 0, len(b"changes"), b"changes")
         db.sql("UPDATE version_graph SET current_version = ?, current_schema_version = ?, user_checkpoint_version_id = ?, latest_version_id = ? WHERE id = 1", 2, 1, "cp_1", "d_1")
 
         # Memberships

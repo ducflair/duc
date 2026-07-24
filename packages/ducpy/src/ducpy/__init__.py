@@ -25,8 +25,10 @@ File I/O:
 from .builders import *
 from .classes import *
 from .enums import *
-from .parse import (DucData, get_external_file, list_external_files, parse_duc,
-                    parse_duc_lazy)
+from .parse import (DucData, list_external_files, parse_duc,
+                    stream_checkpoint_data_to_path,
+                    stream_delta_changeset_to_path,
+                    stream_external_file_revision_to_path)
 from .serialize import DUC_SCHEMA_VERSION, DucSerializationValidationError, serialize_duc
 from .search import *
 from .utils import *

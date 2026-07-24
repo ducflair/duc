@@ -8,8 +8,10 @@
 
 use rusqlite::Connection;
 #[cfg(feature = "opfs")]
-use sqlite_wasm_vfs::sahpool::{install as install_opfs_sahpool, OpfsSAHPoolCfg};
+use sqlite_wasm_vfs::sahpool::install as install_opfs_sahpool;
 
+#[cfg(feature = "opfs")]
+use crate::db::DbError;
 use crate::db::{bootstrap, DbResult, DucConnection};
 
 /// Open (or reopen) a persistent OPFS-backed database.
@@ -20,8 +22,33 @@ use crate::db::{bootstrap, DbResult, DucConnection};
 /// `postMessage` / `SharedArrayBuffer` or a `BroadcastChannel`.
 #[cfg(feature = "opfs")]
 pub(crate) async fn open_file_opfs(name: &str) -> DbResult<DucConnection> {
+    open_file_opfs_in_namespace(name, None).await
+}
+
+#[cfg(feature = "opfs")]
+pub(crate) async fn open_file_opfs_in_namespace(
+    name: &str,
+    namespace: Option<&str>,
+) -> DbResult<DucConnection> {
+    use sqlite_wasm_vfs::sahpool::OpfsSAHPoolCfgBuilder;
+
+    let mut builder = OpfsSAHPoolCfgBuilder::new().initial_capacity(12);
+    if let Some(namespace) = namespace {
+        if namespace.is_empty()
+            || !namespace
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
+        {
+            return Err(DbError::Opfs("invalid OPFS pool namespace".into()));
+        }
+        let vfs_name = format!("opfs-sahpool-{namespace}");
+        let directory = format!(".opfs-sahpool-{namespace}");
+        builder = builder.vfs_name(&vfs_name).directory(&directory);
+    }
+    let cfg = builder.build();
+
     // Install the OPFS SAH-pool VFS and make it the default for this Worker.
-    install_opfs_sahpool::<rusqlite::ffi::WasmOsCallback>(&OpfsSAHPoolCfg::default(), true)
+    install_opfs_sahpool::<rusqlite::ffi::WasmOsCallback>(&cfg, true)
         .await
         .map_err(|e| DbError::Opfs(format!("{e:?}")))?;
 

@@ -2071,6 +2071,54 @@ impl DucToPdfBuilder {
     }
 }
 
+#[cfg(test)]
+mod scaling_tests {
+    use super::*;
+
+    fn empty_state() -> ExportedDataState {
+        duc::api::DucDocument::open_memory()
+            .expect("open in-memory DUC document")
+            .read_document_state()
+            .expect("read empty DUC state")
+    }
+
+    #[test]
+    fn preserves_valid_explicit_scale_for_exported_state() {
+        let builder = DucToPdfBuilder::new(
+            empty_state(),
+            ConversionOptions {
+                scale: Some(0.02),
+                ..Default::default()
+            },
+            HashMap::new(),
+        )
+        .expect("build PDF converter");
+
+        assert_eq!(builder.context.scale, 0.02);
+    }
+
+    #[test]
+    fn auto_scales_oversized_crop_dimensions() {
+        let builder = DucToPdfBuilder::new(
+            empty_state(),
+            ConversionOptions {
+                mode: ConversionMode::Crop {
+                    offset_x: 0.0,
+                    offset_y: 0.0,
+                    width: Some(10_000.0),
+                    height: Some(8_000.0),
+                },
+                ..Default::default()
+            },
+            HashMap::new(),
+        )
+        .expect("build PDF converter");
+
+        assert!(builder.context.scale < 1.0);
+        assert!(builder.context.scale > 0.0);
+    }
+}
+
 impl DucToPdfBuilder {
     #[cfg(debug_assertions)]
     fn debug_validate_operations(operations: &[Operation]) {

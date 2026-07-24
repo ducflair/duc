@@ -65,11 +65,11 @@ export const isPdfLikeElement = (
  * For `pdf` elements, this is simply `element.fileId`.
  * For `doc` elements, the `fileId` holds the Typst source file, and the
  * compiled PDF cache is stored in `referencedFileIds` with a
- * `doc_pdf_cache_` prefix. This function returns that cache file ID, or
- * falls back to `element.fileId` for backward compatibility with older
- * drawings where `fileId` was the PDF itself.
+ * `doc_pdf_cache_` prefix. This function returns that cache file ID. Older
+ * drawings may still use `element.fileId` when it is not a known Typst source.
  */
 const DOC_PDF_CACHE_FILE_ID_PREFIX = "doc_pdf_cache_";
+const DOC_TYPST_SOURCE_FILE_ID_PREFIX = "doc_typst_source_";
 
 export const getRenderablePdfFileId = (
   element: DucElement,
@@ -81,6 +81,9 @@ export const getRenderablePdfFileId = (
     const cacheId = `${DOC_PDF_CACHE_FILE_ID_PREFIX}${element.id}` as ExternalFileId;
     if (element.referencedFileIds?.includes(cacheId)) {
       return cacheId;
+    }
+    if (element.fileId?.startsWith(DOC_TYPST_SOURCE_FILE_ID_PREFIX)) {
+      return null;
     }
     // Fallback for legacy drawings where fileId was the PDF
     return element.fileId;

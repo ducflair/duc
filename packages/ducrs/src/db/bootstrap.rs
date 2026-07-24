@@ -74,7 +74,7 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
     let user_version: i64 = conn.pragma_query_value(None, "user_version", |r| r.get(0))?;
 
     if user_version == 0 {
-        // New database — apply schemas in order.
+        // Apply schemas in order.
         conn.execute_batch(DUC_SCHEMA)
             .map_err(|e| DbError::Bootstrap(format!("duc.sql apply failed: {e}")))?;
         conn.execute_batch(VERSION_CONTROL_SCHEMA)
@@ -108,12 +108,14 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
         loop {
             match MIGRATIONS.iter().find(|(from, _, _)| *from == current) {
                 Some((from, to, sql)) => {
-                    conn.execute_batch(sql).map_err(|e| {
-                        DbError::Bootstrap(format!("migration {from}\u{2192}{to} failed: {e}"))
-                    })?;
+                    if let Err(error) = conn.execute_batch(sql) {
+                        let _ = conn.execute_batch("ROLLBACK");
+                        return Err(DbError::Bootstrap(format!(
+                            "migration {from}\u{2192}{to} failed: {error}"
+                        )));
+                    }
                     // Re-read the version the migration SQL set via PRAGMA user_version.
-                    current =
-                        conn.pragma_query_value(None, "user_version", |r| r.get(0))?;
+                    current = conn.pragma_query_value(None, "user_version", |r| r.get(0))?;
                     if current == CURRENT_VERSION {
                         break;
                     }
@@ -141,21 +143,29 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
 fn normalize_legacy_schema(conn: &Connection, user_version: i64) -> Result<(), DbError> {
     // 3000003→3000004 migration expects `element_model.svg_path`.
     if user_version <= 3000004 {
-        let has_column: bool = conn.query_row(
-            "SELECT 1 FROM pragma_table_info('element_model') WHERE name = 'svg_path'",
-            [],
-            |_| Ok(true),
-        ).unwrap_or(false);
+        let has_column: bool = conn
+            .query_row(
+                "SELECT 1 FROM pragma_table_info('element_model') WHERE name = 'svg_path'",
+                [],
+                |_| Ok(true),
+            )
+            .unwrap_or(false);
         if !has_column {
             conn.execute(
                 "ALTER TABLE element_model ADD COLUMN svg_path TEXT DEFAULT NULL",
                 [],
             )
-            .map_err(|e| DbError::Bootstrap(format!(
-                "legacy normalization: add element_model.svg_path failed: {e}"
-            )))?;
+            .map_err(|e| {
+                DbError::Bootstrap(format!(
+                    "legacy normalization: add element_model.svg_path failed: {e}"
+                ))
+            })?;
         }
     }
 
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "bootstrap_tests.rs"]
+mod tests;

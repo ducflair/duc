@@ -67,12 +67,10 @@ def test_create_flywheel(test_output_dir):
         .build_text_element().with_text("Flywheel").build())
     elements.append(label)
 
-    duc_bytes = duc.serialize_duc(name="flywheel", elements=elements)
-    
     output_file_path = os.path.join(test_output_dir, "test_flywheel.duc")
-    with open(output_file_path, "wb") as f:
-        f.write(duc_bytes)
+    serialized_path = duc.serialize_duc(name="flywheel", output_path=output_file_path, elements=elements)
         
+    assert serialized_path == output_file_path
     assert os.path.exists(output_file_path)
     assert os.path.getsize(output_file_path) > 0
     print(f"Flywheel created successfully at {output_file_path}")

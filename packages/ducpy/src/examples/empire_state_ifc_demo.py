@@ -6,6 +6,7 @@ using the ElementBuilder API.
 
 import os
 import sys
+import tempfile
 import ducpy as duc
 
 # Detailed Empire State Building IFC model code
@@ -1081,16 +1082,18 @@ def main():
     print(f"   Created Model Element ID: {esb_element.element.base.id}")
     print(f"   Class: {type(esb_element.element).__name__}, Model Type: {esb_element.element.model_type}")
 
-    # 2. Serialize to binary .duc file
-    duc_bytes = duc.serialize_duc(
+    # 2. Serialize to .duc file
+    output = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+    output.close()
+    duc_path = duc.serialize_duc(
         name="empire_state_detailed",
+        output_path=output.name,
         elements=[esb_element],
         validate_embedded_code=True
     )
-    print(f"   Successfully serialized DUC file containing {len(duc_bytes)} bytes.")
+    print(f"   Successfully serialized DUC file to {duc_path}.")
     print("✅ Empire State Building IFC example successfully complete!")
-    return duc_bytes
+    return duc_path
 
 if __name__ == "__main__":
     main()
-

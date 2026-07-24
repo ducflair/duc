@@ -11,7 +11,7 @@ Topics covered:
   2. Insert elements and style data
   3. Query rows back as dict-like objects
   4. Update elements in place
-  5. Export to / round-trip from bytes
+  5. Export to / round-trip from a file path
   6. Open an existing .duc file
   7. Round-trip SQL-built data through the high-level parser
 """
@@ -84,8 +84,8 @@ def demo_open_existing(path: str):
     os.unlink(path)
 
 
-def demo_bytes_roundtrip():
-    print("\n=== Bytes round-trip ===")
+def demo_file_roundtrip():
+    print("\n=== File round-trip ===")
 
     with DucSQL.new() as db:
         db.sql(
@@ -93,15 +93,17 @@ def demo_bytes_roundtrip():
             "VALUES (?,?,?,?,?,?,?)",
             "t1", "text", 10, 10, 300, 40, "Hello, DUC!",
         )
-        raw = db.to_bytes()
+        tmp = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+        tmp.close()
+        db.save(tmp.name)
 
-    print(f"  Serialised to {len(raw):,} bytes")
+    print(f"  Serialised to {tmp.name}")
 
-    with DucSQL.from_bytes(raw) as db:
+    with DucSQL(tmp.name) as db:
         row = db.sql("SELECT label FROM elements WHERE id = 't1'")[0]
         print(f"  Restored label: '{row['label']}'")
 
-    return raw
+    return tmp.name
 
 
 def demo_advanced_connection():
@@ -139,12 +141,14 @@ def demo_serialize_via_sql():
             "VALUES (?,?,?,?,?,?,?,?)",
             "s1", "rectangle", 0, 0, 100, 50, "From SQL", 1.0,
         )
-        raw = db.to_bytes()
+        tmp = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+        tmp.close()
+        db.save(tmp.name)
 
-    parsed = duc.parse_duc(raw)
+    parsed = duc.parse_duc(tmp.name)
     print(f"  Parsed {len(parsed.elements)} element(s) built via raw SQL.")
 
-    return raw
+    return tmp.name
 
 
 def main():
@@ -153,12 +157,12 @@ def main():
 
     saved_path = demo_create_new()
     demo_open_existing(saved_path)
-    raw_bytes = demo_bytes_roundtrip()
+    roundtrip_path = demo_file_roundtrip()
     demo_advanced_connection()
     demo_serialize_via_sql()
 
-    print(f"\nAll DucSQL demos completed successfully! ({len(raw_bytes):,} byte round-trip payload)")
-    return raw_bytes
+    print(f"\nAll DucSQL demos completed successfully! (round-trip file: {roundtrip_path})")
+    return roundtrip_path
 
 
 if __name__ == "__main__":
