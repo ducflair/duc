@@ -53,7 +53,7 @@ jobs:
       - name: Install sq CLI
         run: |
           mkdir -p $HOME/.local/bin
-          /bin/sh -c "$(curl -fsSL https://sq.io/install.sh)" || true
+          BINDIR=$HOME/.local/bin /bin/sh -c "$(curl -fsSL https://sq.io/install.sh)" || true
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Build SQL HTML Documentation

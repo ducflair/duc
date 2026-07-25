@@ -40,6 +40,8 @@ def main():
     candidates = [
         shutil.which("sq"),
         str(Path.home() / ".local" / "bin" / "sq"),
+        str(Path.home() / "bin" / "sq"),
+        str(repo_root / "bin" / "sq"),
         "/usr/local/bin/sq",
         "/opt/homebrew/bin/sq",
     ]
