@@ -77,14 +77,19 @@ jobs:
           mkdir -p _site/reference/python
           cp -r packages/ducpy/docs/_build/html/. _site/reference/python/
 
-      # 2. Setup Node.js for TypeDoc builds
+      # 2. Setup Node.js & Bun for TypeDoc builds
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
       - name: Install Node dependencies
-        run: bun install || npm ci
+        run: bun install
 
       # 3. TypeScript API Docs (ducjs TypeDoc -> /reference/typescript/)
       - name: Build TypeScript TypeDoc documentation (ducjs)

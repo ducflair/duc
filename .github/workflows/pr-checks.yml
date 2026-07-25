@@ -355,6 +355,9 @@ jobs:
             echo "### ✅ All package tests passed" >> "$GITHUB_STEP_SUMMARY"
           elif [ "$TEST_RESULT" = "skipped" ]; then
             echo "### ⏭️ Package tests were skipped" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$TEST_RESULT" = "cancelled" ]; then
+            echo "### 🛑 Package tests cancelled (interrupted by workflow failure)" >> "$GITHUB_STEP_SUMMARY"
+            FAILED="true"
           else
             echo "### ❌ Package tests failed" >> "$GITHUB_STEP_SUMMARY"
             FAILED="true"
@@ -364,6 +367,9 @@ jobs:
             echo "### ✅ API Documentation staging dry-run passed" >> "$GITHUB_STEP_SUMMARY"
           elif [ "$DOCS_RESULT" = "skipped" ]; then
             echo "### ⏭️ API Documentation dry-run was skipped" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$DOCS_RESULT" = "cancelled" ]; then
+            echo "### 🛑 API Documentation dry-run cancelled (interrupted by workflow failure)" >> "$GITHUB_STEP_SUMMARY"
+            FAILED="true"
           else
             echo "### ❌ API Documentation staging dry-run failed" >> "$GITHUB_STEP_SUMMARY"
             FAILED="true"
@@ -397,6 +403,10 @@ jobs:
                 test_icon="✅ Passed"
               elif [ "$TEST_RESULT" = "failure" ]; then
                 test_icon="❌ Failed"
+              elif [ "$TEST_RESULT" = "cancelled" ]; then
+                test_icon="🛑 Cancelled"
+              elif [ "$TEST_RESULT" = "skipped" ]; then
+                test_icon="⏭️ Skipped"
               else
                 test_icon="⏳ Pending"
               fi
@@ -411,6 +421,8 @@ jobs:
             docs_status="✅ Passed"
           elif [ "$DOCS_RESULT" = "failure" ]; then
             docs_status="❌ Failed"
+          elif [ "$DOCS_RESULT" = "cancelled" ]; then
+            docs_status="🛑 Cancelled"
           elif [ "$DOCS_RESULT" = "skipped" ]; then
             docs_status="⏭️ Skipped"
           fi
