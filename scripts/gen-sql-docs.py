@@ -37,17 +37,22 @@ def main():
     conn.close()
 
     # Find sq CLI
-    sq_bin = shutil.which("sq") or "/tmp/sq"
-    if not Path(sq_bin).exists():
-        # Try local brew or path
-        candidate = Path("/opt/homebrew/bin/sq")
-        if candidate.exists():
-            sq_bin = str(candidate)
+    candidates = [
+        shutil.which("sq"),
+        str(Path.home() / ".local" / "bin" / "sq"),
+        "/usr/local/bin/sq",
+        "/opt/homebrew/bin/sq",
+    ]
+    sq_bin = None
+    for cand in candidates:
+        if cand and Path(cand).exists():
+            sq_bin = cand
+            break
 
     out_file = out_dir / "index.html"
 
-    if Path(sq_bin).exists() or shutil.which("sq"):
-        sq_cmd = sq_bin if Path(sq_bin).exists() else "sq"
+    if sq_bin:
+        sq_cmd = sq_bin
         print(f"Generating HTML documentation using {sq_cmd} inspect...")
         
         # Remove handle if exists

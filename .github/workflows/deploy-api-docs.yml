@@ -51,7 +51,10 @@ jobs:
 
       # SQL API Docs (sq inspect -> /reference/sql/)
       - name: Install sq CLI
-        run: /bin/sh -c "$(curl -fsSL https://sq.io/install.sh)" || true
+        run: |
+          mkdir -p $HOME/.local/bin
+          /bin/sh -c "$(curl -fsSL https://sq.io/install.sh)" || true
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Build SQL HTML Documentation
         run: python3 scripts/gen-sql-docs.py
