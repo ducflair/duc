@@ -177,6 +177,12 @@ jobs:
           fi
           echo "═══════════════════════════════"
 
+      - name: Cancel workflow run on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run cancel ${{ github.run_id }} || true
+
   # ──────────────────────────────────────────────────────────────────────
   # Phase 2: Build & test only packages with pending releases
   # Uses turbo to orchestrate the dependency graph — if ducsvg needs
@@ -266,6 +272,12 @@ jobs:
             echo "ERROR: Wheel filename does not contain expected tag '$EXPECTED_TAG'"
             exit 1
           fi
+
+      - name: Cancel workflow run on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run cancel ${{ github.run_id }} || true
 
   # ──────────────────────────────────────────────────────────────────────
   # Phase 2b: Reusable API Documentation build dry-run

@@ -50,6 +50,11 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
       # SQL API Docs (sq inspect -> /reference/sql/)
       - name: Install sq CLI
         run: |
@@ -57,13 +62,14 @@ jobs:
           sudo rm -rf /tmp/sq* /tmp/go-graphviz* /tmp/wazero*
 
       - name: Build SQL HTML Documentation
-        run: python3 scripts/gen-sql-docs.py
+        run: uv run python3 scripts/gen-sql-docs.py
 
-      - name: Install Sphinx dependencies
-        run: pip install sphinx furo sphinx-autoapi
+      - name: Install Python dependencies with uv
+        run: uv sync --frozen || uv sync
+        working-directory: packages/ducpy
 
       - name: Build Python Sphinx documentation
-        run: sphinx-build -M html . _build
+        run: uv run sphinx-build -M html . _build
         working-directory: packages/ducpy/docs
 
       - name: Stage Python API Docs
@@ -148,6 +154,12 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./_site
           publish_branch: gh-pages
+
+      - name: Cancel workflow run on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run cancel ${{ github.run_id }} || true
 
   deploy:
     if: ${{ inputs.dry_run != true }}
