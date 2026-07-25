@@ -735,7 +735,7 @@ pub struct DucElementBase {
     /** Epoch timestamp (ms) of last element update */
     pub updated: i64,
     /**
-     * String in a fractional form defined by https://github.com/rocicorp/fractional-indexing.
+     * String in a fractional form defined by <https://github.com/rocicorp/fractional-indexing>.
      * Used for ordering in multiplayer scenarios, such as during reconciliation or undo / redo.
      * Could be null for new elements which were not yet assigned to the scene.
      */

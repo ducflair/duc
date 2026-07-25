@@ -109,17 +109,6 @@
       "outputs": []
     },
 
-    "ducpy#gen:docs": {
-      "cache": false,
-      "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
-    },
-
-    "ducpy#dev:docs": {
-      "cache": false,
-      "persistent": true,
-      "inputs": ["$TURBO_DEFAULT$"]
-    },
-
     "@duc/docs#build": {
       "env": [
         "NEXT_PUBLIC_*",

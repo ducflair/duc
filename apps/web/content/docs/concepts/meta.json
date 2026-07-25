@@ -1,7 +1,17 @@
 {
+  "title": "Concepts",
   "pages": [
+    "architecture",
+    "why-duc-exists",
+    "charter-and-issues",
+    "version-control",
+    "streaming",
+    "external-files",
     "systems",
-    "theory",
-    "blocks"
+    "scopes",
+    "precision",
+    "elements",
+    "blocks",
+    "ai-compatibility"
   ]
 }

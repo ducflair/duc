@@ -29,6 +29,8 @@
     "copy:wasm-to-dist": "mkdir -p dist && cp pkg/pdf2svg_bg.wasm dist/ && cp pkg/pdf2svg.js dist/pdf2svg-wasm.js && cp pkg/pdf2svg.d.ts dist/pdf2svg-wasm.d.ts && cp pkg/pdf2svg_bg.wasm.d.ts dist/",
     "clean": "rm -rf dist pkg",
     "check-types": "tsc --noEmit",
+    "gen:docs": "bunx typedoc",
+    "dev:docs": "bun run gen:docs && python3 -m http.server 8244 --directory docs",
     "test": "bun test",
     "semantic-release": "semantic-release"
   },
@@ -42,6 +44,7 @@
     "@xmldom/xmldom": "^0.8.11",
     "happy-dom": "^20.0.5",
     "semantic-release": "^24.1.2",
+    "typedoc": "^0.27.9",
     "typescript": "^5.8.3",
     "vite": "^6.0.0",
     "vite-plugin-compression": "^0.5.1",

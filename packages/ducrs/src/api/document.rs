@@ -303,7 +303,7 @@ impl DucDocument {
     }
 
     /// Return the estimated database file size in bytes, computed as
-    /// `page_count * page_size`.  After [`checkpoint_wal`] this is a
+    /// `page_count * page_size`.  After [`Self::checkpoint_wal`] this is a
     /// good approximation of the on-disk file size.
     pub fn db_size_bytes(&self) -> DbResult<i64> {
         self.conn.with(|c| {

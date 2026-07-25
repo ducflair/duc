@@ -86,31 +86,31 @@ jobs:
 
   release-ducjs:
     needs: [release-gate, release-ducrs]
-    if: always() && needs.release-gate.outputs.ducjs == 'true' && needs.release-gate.result == 'success' && (needs.release-ducrs.result == 'success' || needs.release-ducrs.result == 'skipped')
+    if: always() && needs.release-gate.outputs.ducjs == 'true' && needs.release-gate.result == 'success' && (needs.release-gate.outputs.ducrs != 'true' || needs.release-ducrs.result == 'success')
     uses: ./.github/workflows/release-ducjs.yml
     secrets: inherit
 
   release-ducpy:
     needs: [release-gate, release-ducrs]
-    if: always() && needs.release-gate.outputs.ducpy == 'true' && needs.release-gate.result == 'success' && (needs.release-ducrs.result == 'success' || needs.release-ducrs.result == 'skipped')
+    if: always() && needs.release-gate.outputs.ducpy == 'true' && needs.release-gate.result == 'success' && (needs.release-gate.outputs.ducrs != 'true' || needs.release-ducrs.result == 'success')
     uses: ./.github/workflows/release-ducpy.yml
     secrets: inherit
 
   release-duc2pdf:
     needs: [release-gate, release-ducrs]
-    if: always() && needs.release-gate.outputs.duc2pdf == 'true' && needs.release-gate.result == 'success' && (needs.release-ducrs.result == 'success' || needs.release-ducrs.result == 'skipped')
+    if: always() && needs.release-gate.outputs.duc2pdf == 'true' && needs.release-gate.result == 'success' && (needs.release-gate.outputs.ducrs != 'true' || needs.release-ducrs.result == 'success')
     uses: ./.github/workflows/release-duc2pdf.yml
     secrets: inherit
 
   release-ducpdf:
-    needs: [release-gate, release-ducjs, release-duc2pdf]
-    if: always() && needs.release-gate.outputs.ducpdf == 'true' && needs.release-gate.result == 'success' && (needs.release-ducjs.result == 'success' || needs.release-ducjs.result == 'skipped') && (needs.release-duc2pdf.result == 'success' || needs.release-duc2pdf.result == 'skipped')
+    needs: [release-gate, release-ducrs, release-ducjs, release-duc2pdf]
+    if: always() && needs.release-gate.outputs.ducpdf == 'true' && needs.release-gate.result == 'success' && (needs.release-gate.outputs.ducrs != 'true' || needs.release-ducrs.result == 'success') && (needs.release-gate.outputs.ducjs != 'true' || needs.release-ducjs.result == 'success') && (needs.release-gate.outputs.duc2pdf != 'true' || needs.release-duc2pdf.result == 'success')
     uses: ./.github/workflows/release-ducpdf.yml
     secrets: inherit
 
   release-ducsvg:
-    needs: [release-gate, release-ducpdf]
-    if: always() && needs.release-gate.outputs.ducsvg == 'true' && needs.release-gate.result == 'success' && (needs.release-ducpdf.result == 'success' || needs.release-ducpdf.result == 'skipped')
+    needs: [release-gate, release-ducrs, release-ducpdf]
+    if: always() && needs.release-gate.outputs.ducsvg == 'true' && needs.release-gate.result == 'success' && (needs.release-gate.outputs.ducrs != 'true' || needs.release-ducrs.result == 'success') && (needs.release-gate.outputs.ducpdf != 'true' || needs.release-ducpdf.result == 'success')
     uses: ./.github/workflows/release-ducsvg.yml
     secrets: inherit
 

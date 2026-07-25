@@ -1,0 +1,101 @@
+---
+title: "Why DUC Exists"
+description: "Why engineering workflows need a persistent document layer across design, review, and revision cycles."
+date: 2026-07-25
+authors: [jorgedanisc]
+---
+
+Engineering projects do not move from design to delivery in a single pass.
+
+Drawings and models are developed, reviewed, changed, and reviewed again. Each cycle creates new information around the design: references, annotations, external files, revisions, relationships, and application state.
+
+The main design files usually survive. The structure connecting everything around them often does not.
+
+## The recurring engineering cycle
+
+```mermaid
+%%{init: {
+  "flowchart": {
+    "curve": "basis",
+    "nodeSpacing": 50,
+    "rankSpacing": 55,
+    "htmlLabels": true
+  }
+}}%%
+
+flowchart TB
+    classDef blueNode fill:#EAF4FC,stroke:#54A0E2,stroke-width:3px,color:#1F2937;
+    classDef greenNode fill:#EDF7F1,stroke:#52B755,stroke-width:3px,color:#1F2937;
+    classDef orangeNode fill:#FDF3E7,stroke:#F5A642,stroke-width:3px,color:#1F2937;
+    classDef ducNode fill:#F3EEFC,stroke:#8B5CF6,stroke-width:3px,color:#1F2937;
+
+    subgraph EngineeringCycle["Recurring engineering cycle"]
+        direction LR
+
+        A["Design Intent<br/>Development"]:::blueNode
+        B["Design<br/>Review"]:::greenNode
+        C["Change and<br/>Delivery"]:::orangeNode
+
+        A --> B
+        B --> C
+        C -->|"Next revision"| A
+    end
+
+    D[".duc document"]:::ducNode
+
+    EngineeringCycle -.-> D
+
+    style EngineeringCycle fill:none,stroke:#6B7280,stroke-width:1.5px;
+````
+
+Different tools may be used at each stage.
+
+A CAD or BIM application may create the design. Another application may prepare the review. Feedback may arrive through annotations, documents, or imported files. The next revision may then return to the original authoring tool.
+
+Without a shared document model, the technical workspace has to be reconstructed at every transition.
+
+## Where DUC fits
+
+DUC provides a persistent document layer beneath this cycle.
+
+Applications can read from and write to the same structured document as the project moves through development, review, change, and delivery.
+
+A `.duc` document can preserve the wider workspace around the design, including:
+
+* Native drawing entities;
+* External models, documents, and media;
+* Revisions of external files;
+* Annotations and metadata;
+* Relationships between elements;
+* Views and document organization;
+* Extensible application state.
+
+This information becomes part of the document instead of remaining trapped inside one application or scattered across unrelated files.
+
+## More than a folder of files
+
+A folder can contain every asset used by a project without representing how those assets relate to each other.
+
+It does not inherently describe which revision is being used, which annotation belongs to which element, how objects are arranged, or which views are meaningful.
+
+DUC makes this structure explicit.
+
+The document represents not only the assets, but also the technical workspace built around them.
+
+## A foundation, not a replacement
+
+DUC does not replace specialized formats such as STEP, IFC, DXF, PDF, or other engineering file types.
+
+It also does not replace the tools used to create, review, or deliver technical work.
+
+Those assets and tools continue to serve their existing purposes. DUC provides the document structure that allows them to participate in the same workspace.
+
+The applications may change throughout the project. The underlying technical context does not need to be discarded and rebuilt each time.
+
+## The underlying idea
+
+Engineering work is more than its final drawing or model.
+
+The references, external assets, relationships, revisions, and document state surrounding that design are also part of the technical artifact.
+
+DUC exists to give that wider technical workspace a structured and portable form.

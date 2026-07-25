@@ -261,13 +261,25 @@ jobs:
           fi
 
   # ──────────────────────────────────────────────────────────────────────
+  # Phase 2b: Reusable API Documentation build dry-run
+  # Leverages deploy-api-docs.yml in dry_run mode to test production staging.
+  # ──────────────────────────────────────────────────────────────────────
+  test-docs:
+    name: API Docs Staging Dry-Run
+    needs: release-check
+    if: needs.release-check.outputs.any_release == 'true'
+    uses: ./.github/workflows/deploy-api-docs.yml
+    with:
+      dry_run: true
+
+  # ──────────────────────────────────────────────────────────────────────
   # Phase 3: Summary & gate check
   # Acts as a single required status check for branch protection.
   # Produces a step summary visible in the Actions UI.
   # ──────────────────────────────────────────────────────────────────────
   results:
     name: PR Check Results
-    needs: [release-check, test]
+    needs: [release-check, test, test-docs]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -305,6 +317,7 @@ jobs:
 
           RELEASE_CHECK="${{ needs.release-check.result }}"
           TEST_RESULT="${{ needs.test.result }}"
+          DOCS_RESULT="${{ needs.test-docs.result }}"
           ANY_RELEASE="${{ needs.release-check.outputs.any_release }}"
 
           if [ "$RELEASE_CHECK" != "success" ]; then
@@ -317,12 +330,27 @@ jobs:
             exit 0
           fi
 
+          FAILED="false"
+
           if [ "$TEST_RESULT" = "success" ]; then
-            echo "### ✅ All tests passed for affected packages" >> "$GITHUB_STEP_SUMMARY"
+            echo "### ✅ All package tests passed" >> "$GITHUB_STEP_SUMMARY"
           elif [ "$TEST_RESULT" = "skipped" ]; then
-            echo "### ⏭️ Tests were skipped" >> "$GITHUB_STEP_SUMMARY"
+            echo "### ⏭️ Package tests were skipped" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "### ❌ Tests failed" >> "$GITHUB_STEP_SUMMARY"
+            echo "### ❌ Package tests failed" >> "$GITHUB_STEP_SUMMARY"
+            FAILED="true"
+          fi
+
+          if [ "$DOCS_RESULT" = "success" ]; then
+            echo "### ✅ API Documentation staging dry-run passed" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$DOCS_RESULT" = "skipped" ]; then
+            echo "### ⏭️ API Documentation dry-run was skipped" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### ❌ API Documentation staging dry-run failed" >> "$GITHUB_STEP_SUMMARY"
+            FAILED="true"
+          fi
+
+          if [ "$FAILED" = "true" ]; then
             exit 1
           fi
 
@@ -334,6 +362,7 @@ jobs:
           PR_NUMBER="${{ github.event.pull_request.number }}"
           REPO="${{ github.repository }}"
           TEST_RESULT="${{ needs.test.result }}"
+          DOCS_RESULT="${{ needs.test-docs.result }}"
           DETECTION="${{ needs.release-check.result }}"
 
           format_row() {
@@ -358,6 +387,15 @@ jobs:
             fi
           }
 
+          docs_status="⏳ Pending"
+          if [ "$DOCS_RESULT" = "success" ]; then
+            docs_status="✅ Passed"
+          elif [ "$DOCS_RESULT" = "failure" ]; then
+            docs_status="❌ Failed"
+          elif [ "$DOCS_RESULT" = "skipped" ]; then
+            docs_status="⏭️ Skipped"
+          fi
+
           {
             echo "<!-- duc-release-preview -->"
             echo "## 📋 Release Preview"
@@ -374,6 +412,8 @@ jobs:
             format_row "ducpdf" "${{ needs.release-check.outputs.ducpdf }}" "${{ needs.release-check.outputs.ducpdf_current }}" "${{ needs.release-check.outputs.ducpdf_version }}"
             format_row "ducsvg" "${{ needs.release-check.outputs.ducsvg }}" "${{ needs.release-check.outputs.ducsvg_current }}" "${{ needs.release-check.outputs.ducsvg_version }}"
             format_row "duc2pdf" "${{ needs.release-check.outputs.duc2pdf }}" "${{ needs.release-check.outputs.duc2pdf_current }}" "${{ needs.release-check.outputs.duc2pdf_version }}"
+            echo ""
+            echo "**API Documentation Staging Dry-Run**: ${docs_status}"
           } > /tmp/pr-comment.md
 
           # Upsert PR comment (find existing by marker, update or create)

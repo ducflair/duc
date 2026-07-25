@@ -1,0 +1,11 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "docs",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "includeVersion": true,
+  "searchInComments": true,
+  "skipErrorChecking": true,
+  "readme": "README.md"
+}

@@ -38,3 +38,5 @@ build_logs
 
 tsconfig.tsbuildinfo
 __pycache__
+
+_site
