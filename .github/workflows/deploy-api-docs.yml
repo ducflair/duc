@@ -32,6 +32,7 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: pages
@@ -53,6 +54,7 @@ jobs:
       - name: Install sq CLI
         run: |
           sudo /bin/sh -c "$(curl -fsSL https://sq.io/install.sh)"
+          sudo rm -rf /tmp/go-graphviz /tmp/wazero*
 
       - name: Build SQL HTML Documentation
         run: python3 scripts/gen-sql-docs.py
@@ -146,6 +148,12 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./_site
           publish_branch: gh-pages
+
+      - name: Cancel workflow run on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run cancel ${{ github.run_id }} || true
 
   deploy:
     if: ${{ inputs.dry_run != true }}
