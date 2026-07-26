@@ -1,0 +1,11 @@
+{
+  "title": "Elements",
+  "pages": [
+    "overview",
+    "linear-element",
+    "model-element",
+    "document-element",
+    "plot-element",
+    "blocks"
+  ]
+}

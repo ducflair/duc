@@ -1,19 +1,30 @@
 ---
 title: "Measurement Systems"
-description: "In the realm of Computer-Aided Design (CAD), the most commonly used measurement systems are the Metric and Imperial systems. The choice between these systems typically depends on the regional standards, the specific industry's conventions, and the project requirements."
-date: 2024-04-22
+description: "Metric, Imperial, and custom measurement systems supported by the duc format."
+date: 2026-02-27
 authors: [jorgedanisc]
 ---
 
+## Overview
+
+The `.duc` format supports seamless switching between global measurement systems and unit scales.
+
+---
+
+## Supported Measurement Systems
 
 ### Metric System
-- **Widely used globally**, except in a few countries.
-- Measurements are based on meters, centimeters, millimeters, and so on.
-- Preferred in fields like engineering, architecture, science, and most manufacturing sectors outside of the United States.
-- Offers ease of calculation and conversion due to its decimal-based structure.
+- **Units**: Millimeters (`mm`), Centimeters (`cm`), Meters (`m`), Kilometers (`km`), Nanometers (`nm`), Angstroms (`Å`), Picometers (`pm`), Gigameters (`Gm`), etc.
+- Standard system for international engineering, science, architecture, and manufacturing.
 
 ### Imperial System
-- **Predominantly used in the United States** and to some extent in the United Kingdom (though the UK has officially adopted the metric system, some industries still use imperial measurements).
-- Measurements include inches, feet, yards, and miles.
-- Commonly used in construction, real estate, and many manufacturing sectors within the United States.
-- Differs from the metric system in terms of the number of units and the conversion factors between them.
+- **Units**: Microinches (`µin`), Inches (`in`), Feet (`ft`), Yards (`yd`), Miles (`mi`), Light Years (`ly`), Parsecs (`pc`).
+- Standard system for construction and building industries in the United States and global legacy workflows.
+
+---
+
+## Unit Conversions
+
+All spatial coordinates and geometry stored inside a `.duc` SQLite container are normalized relative to a reference base unit (`NEUTRAL_SCOPE = "m"`). When switching measurement systems, values are converted dynamically using unit scale factors.
+
+For detailed information on how dynamic unit scopes, infinite zoom thresholds, and gravity wells work, see the [Scopes](/docs/concepts/scopes) page.

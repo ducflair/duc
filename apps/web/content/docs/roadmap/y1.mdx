@@ -1,13 +1,15 @@
 ---
-title: "(Year 1) Initial Commits"
-description: "2024-2025"
-date: 2024-05-28
+title: "Year 1: SQLite Schema, SDKs & Converters"
+description: "Transitioning to SQLite storage, FTS5 search, version control, and multi-language packages."
+date: 2026-02-27
 authors: [jorgedanisc]
 ---
 
-## Continue working on the library internally but get closer to publishing
-  - **Enrich `CAD features` significantly**
-    - Expand the library’s toolset to include more advanced CAD functionalities.
-  - **Achieve `90% completion` of the file base format**
-    - Finalize the `duc` file format, ensuring it can handle a wide range of CAD use cases and is robust enough for production use.
-    - Conduct `extensive testing` to validate the format’s performance and reliability.
+## Implementation Stage
+
+- **SQLite Database Architecture**: Design `duc.sql` schema, WAL mode, normalized element tables, strokes, and backgrounds.
+- **Embedded DAG Version Control**: Implement checkpoints, deltas, and schema migration boundary logging (`version_control.sql`).
+- **Real-Time FTS5 Search**: Build automated triggers for instant indexing of elements, text, docs, models, blocks, and PDF contents (`search.sql`).
+- **Embedded Project Charter**: Introduce native requirements, acceptance criteria, constraints, and decision logs (`duc_charter`).
+- **Interoperability Packages**: Build `ducsvg` (SVG), `ducpdf` (PDF), and `ducdxf` (DXF) converter libraries.
+- **WebAssembly Engine (`ducjs`)**: Compile WASM SQLite engine for browser and server runtime execution.

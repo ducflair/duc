@@ -1,6 +1,7 @@
 export * from "./enums";
 export * from "./lazy-files";
 export * from "./opfs";
+export * from "./opfs-import";
 export * from "./restore";
 export * from "./technical";
 export * from "./transform";

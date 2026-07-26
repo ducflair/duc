@@ -44,7 +44,7 @@ export const offset = (x: number, y: number): GADirection => [
 
 /// This is the "implementation" part of the library
 
-type NVector = readonly [
+export type NVector = readonly [
   number,
   number,
   number,

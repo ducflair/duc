@@ -5,7 +5,36 @@ import {
   defineDocs
 } from 'fumadocs-mdx/config'
 import remarkSmartypants from 'remark-smartypants'
+import type { Root } from 'mdast'
+import type { Transformer } from 'unified'
 import { z } from 'zod'
+
+function remarkMermaid(): Transformer<Root, Root> {
+  return (tree) => {
+    const visit = (node: any) => {
+      if (!node || typeof node !== 'object') return;
+
+      if (node.type === 'code' && node.lang === 'mermaid') {
+        node.type = 'mdxJsxFlowElement';
+        node.name = 'Mermaid';
+        node.attributes = [
+          {
+            type: 'mdxJsxAttribute',
+            name: 'chart',
+            value: node.value,
+          },
+        ];
+        node.children = [];
+      }
+
+      if (Array.isArray(node.children)) {
+        node.children.forEach(visit);
+      }
+    };
+
+    visit(tree);
+  };
+}
 
 const baseSchema = z.object({
   title: z.string().min(1),
@@ -27,7 +56,7 @@ const pageMetaSchema = baseSchema.extend({});
 export default defineConfig({
   lastModifiedTime: 'git',
   mdxOptions: {
-    remarkPlugins: [remarkSmartypants],
+    remarkPlugins: [remarkSmartypants, remarkMermaid],
     rehypePlugins: [rehypeCode],
   }
 })
@@ -80,4 +109,3 @@ export const pageMeta = defineCollections({
   dir: pageDir,
   schema: pageMetaSchema,
 });
-

@@ -1,0 +1,38 @@
+---
+title: "AI Compatibility"
+description: "Why the SQLite database container design and native Python adapter make .duc seamlessly compatible with foundation AI models."
+date: 2026-07-25
+authors: [jorgedanisc]
+---
+
+## SQLite Core & Universal SQL Querying
+
+The `.duc` file format is built natively as an **SQLite database container by design**. Rather than wrapping physical-engineering state in opaque binary streams or massive proprietary formats, `.duc` stores all document data, elements, geometry, symbol blocks, version history, and project charters, inside a standard relational schema.
+
+Because **SQL is a universally understood query paradigm for foundation AI models** (LLMs, multimodal models, and autonomous agents), AI tools can immediately inspect, query, and mutate project state without having to guess internal structures or rely on fragile custom parsers:
+
+- **Direct Schema Inspection**: Models can inspect table structures, columns, and relationships using standard relational SQL statements.
+- **Selective Operations**: Read or update specific elements, properties, or project charter requirements without loading or re-serializing the entire document into context memory.
+- **Zero Structural Guesswork**: Rely on standardized relational DDL schemas (`elements`, `checkpoints`, `version_graph`, `search_fts`) rather than proprietary black-box formats.
+
+For complete details on our database schema and querying capabilities, visit the [SQL Documentation](/docs/sql/overview) and [SQL API Reference](/docs/sql/api).
+
+---
+
+## Python Adapter Integration (`ducpy`)
+
+Python is the primary language used globally for data evaluation, data manipulation, machine learning, and AI agent execution.
+
+`.duc` provides a first-class **Python SDK (`ducpy`)**, opening all doors for AI foundation models to interact with the file format programmatically:
+
+- **Data Evaluation & Analytics**: AI models can leverage `ducpy` alongside popular data analysis libraries (`numpy`, `pandas`, `shapely`) to evaluate spatial geometry and physical constraints.
+- **Programmatic CAD Generation**: AI models can generate or modify CAD project state directly using Pythonic builder patterns (`DucStateBuilder`, `DucElementBuilder`).
+- **Seamless Agent Tooling**: LLMs can invoke `ducpy` methods as native function calls in agentic workflows to inspect, filter, convert, or export `.duc` documents.
+
+For SDK setup and usage, visit the [Python Adapter Documentation](/docs/python/overview) and [Python API Reference](/docs/python/api).
+
+---
+
+## Unlocking AI-Native Engineering
+
+By combining an **SQLite database core** with a **first-class Python adapter**, the `.duc` format provides a fully open, AI-compatible foundation for next-generation automated physical-engineering tools.

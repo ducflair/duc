@@ -86,7 +86,7 @@ export const getSizeFromPoints = (points: readonly GeometricPoint[]): { width: S
   };
 };
 
-/** @arg dimension, 0 for rescaling only x, 1 for y */
+/** @param dimension 0 for rescaling only x, 1 for y */
 export const rescalePoints = (
   dimension: 'x' | 'y',
   newSize: ScopedValue,
@@ -1322,7 +1322,7 @@ export const aabbForElement = (
   return bounds;
 };
 
-type PolarCoords = [number, number];
+export type PolarCoords = [number, number];
 
 /**
  * Returns the polar coordinates for the given cartesian point represented by
@@ -1338,7 +1338,7 @@ export const carthesian2Polar = ({ x, y }: GeometricPoint): PolarCoords => [
  * Angles are in radians and centered on 0, 0. Zero radians on a 1 radius circle
  * corresponds to (1, 0) carthesian coordinates (point), i.e. to the "right".
  */
-type SymmetricArc = { radius: number; startAngle: number; endAngle: number };
+export type SymmetricArc = { radius: number; startAngle: number; endAngle: number };
 
 /**
  * Determines if a carthesian point lies on a symmetric arc, i.e. an arc which

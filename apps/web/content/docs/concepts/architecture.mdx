@@ -1,0 +1,57 @@
+---
+title: "Architecture"
+description: "Binary SQLite container structure, scale capacity, AI compatibility, schema migrations, and relational architecture."
+date: 2026-07-24
+authors: [jorgedanisc]
+---
+
+## SQLite Container Architecture
+
+The `.duc` file format is an **SQLite-based project-state format for physical-engineering work before execution**. Rather than storing designs or project state as loose files, JSON documents, or unstructured binary blobs, `.duc` uses SQLite database containers to store elements, physical geometry, project metadata, version control DAGs, and decision records.
+
+---
+
+## Why SQLite? Architectural Rationale
+
+### 1. Unrivaled Capacity & Scalability (Up to 140 Terabytes)
+Traditional CAD file formats, XML structures, and JSON documents collapse when scaling up to massive datasets, leading to parse bottlenecks, memory bloat, and file corruption. 
+
+We faced this exact limitation: no existing file format supported our multi-scale physical-engineering schema to the required extent. SQLite fundamentally solves this by supporting up to **140 Terabytes (140 TB)** in a single file database container. This allows `.duc` to scale seamlessly from lightweight schematics to multi-gigabyte and terabyte engineering project files without breaking a sweat.
+
+### 2. Built for the AI Era
+A file format for the new generation must be natively compatible with foundation AI models. In an era rapidly shifting toward AI-agentic workflows, having SQL as the underlying foundation of `.duc` is an extraordinarily powerful advantage. 
+
+Because SQL is a universally understood query paradigm for LLMs and autonomous agents, AI models can inspect, query, and modify `.duc` project state directly without needing to guess proprietary binary or XML structures.
+
+For more information on how foundation models leverage `.duc`, see the [AI Compatibility](/docs/concepts/theory/aiCompatibility) documentation.
+
+### 3. Effortless Schema Migrations Over Time
+One of the greatest advantages of choosing SQLite is the unmatched maturity and consistency of SQL schema migrations.
+
+Unlike custom binary encodings or JSON/XML formats that force developers to write brittle, custom-coded deserializers for every format version bump, SQL provides decades of proven, transactional migration primitives (`ALTER TABLE`, version-bounded migration scripts, and `PRAGMA user_version` tracking). As `.duc` evolves over years of updates, migrating older documents to new file format versions is transparent, highly tweakable, and completely automated.
+
+---
+
+## Binary Container Header & Configuration
+
+- **Application ID**: The magic integer `1146569567` (`DUC_` in ASCII) identifies `.duc` files at the binary header level.
+- **User Version**: Tracks integer schema version migrations (`PRAGMA user_version` for semantic versioning).
+- **WAL Journaling**: Write-Ahead Logging (`PRAGMA journal_mode = WAL`) enables concurrent reading, non-blocking transactions, and high-frequency incremental writes without corruption risks.
+- **Foreign Key Constraints**: Strict relational integrity (`PRAGMA foreign_keys = ON`) enforced across elements, styles, version chains, and binary chunk tables.
+
+---
+
+## Architectural Modules
+
+1. **Document & Viewport State**: `duc_global_state` and `duc_local_state` maintain root document metadata, scope units (`mm`, `cm`, `m`, `in`, `ft`, `nm`), zoom level, scroll offset, and viewport modes (`pen_mode`, `view_mode`, `objects_snap_mode`, `grid_mode`, `outline_mode`).
+2. **Physical Engineering Geometry (`elements`)**: Relational tables storing elements (`rectangle`, `ellipse`, `polygon`, `table`, `text`, `line`, `arrow`, `freedraw`, `image`, `frame`, `plot`, `doc`, `model`, `embeddable`, `pdf`) alongside spatial bounds, z-indexes, and layer bindings.
+3. **Visual Styling (`strokes` & `backgrounds`)**: Normalized styling tables supporting solid colors, linear/radial gradients, image fills, pattern hatches, line caps, line joins, and custom line heads.
+4. **Reusable Symbol Libraries (`blocks`)**: Block definition and instance tables for modular engineering symbol libraries.
+5. **DAG Version Control (`checkpoints` & `deltas`)**: Built-in git-like versioning tracking self-contained snapshots, incremental deltas, schema migration boundaries, and SHA-256 data integrity checksums.
+6. **Binary Media Storage (`external_files`)**: Chunked binary blob storage for embedded images, fonts, and external assets, keeping `.duc` completely self-contained.
+
+---
+
+## Dynamic SQLite Schema Reference
+
+For full table definitions and interactive entity-relationship diagrams, visit the [SQL API Reference](/docs/sql/api).

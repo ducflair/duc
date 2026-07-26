@@ -1,13 +1,53 @@
 ---
-title: "Setup"
-description: "Here you can find the setup instructions for the `duc` file format."
-date: 2024-04-22
+title: "Setup & Quick Start"
+description: "Getting started with the duc file format, SDKs, and converter packages."
+date: 2026-02-27
 authors: [jorgedanisc]
 ---
 
-import { Callout } from 'fumadocs-ui/components/callout';
+## Installation
 
-<Callout emoji="🏗️">
-  This page is subject to change as the project is still in development.
-</Callout>
+The `duc` ecosystem provides dedicated SDKs and tools for TypeScript, Python, Rust, and file format conversion workflows.
 
+### TypeScript / JavaScript (`ducjs`)
+
+Install `ducjs` via your preferred package manager:
+
+```bash
+bun add ducjs
+# or
+npm install ducjs
+```
+
+`ducjs` uses an embedded WebAssembly SQLite engine, enabling `.duc` file reading and writing across Node.js, Bun, Deno, and web browsers without native binary compilation.
+
+### Python (`ducpy`)
+
+Install `ducpy` via `uv` or `pip`:
+
+```bash
+uv add ducpy
+# or
+pip install ducpy
+```
+
+### Rust (`ducrs`)
+
+Add `duc` to your `Cargo.toml`:
+
+```toml
+[dependencies]
+duc = "*"
+```
+
+---
+
+## Interoperability Packages
+
+The repository provides format converters for integrating `.duc` with industry standards:
+
+| Package | Format | Purpose |
+|---|---|---|
+| `ducpdf` | PDF | Vector PDF export and PDF text extraction |
+| `ducsvg` | SVG | Bidirectional SVG import and export |
+{/* | `ducdxf` | DXF | AutoCAD DXF file interchange import and export | */}

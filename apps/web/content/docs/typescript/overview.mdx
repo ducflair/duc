@@ -1,38 +1,19 @@
 ---
-title: "Overview"
+title: "TypeScript (ducjs)"
+description: "TypeScript/JavaScript library  with embedded WASM SQLite engine for reading and writing .duc containers across browser and server runtimes."
 date: 2026-02-27
 authors: [jorgedanisc]
-description: "TypeScript / JavaScript library for reading, writing and manipulating .duc files — backed by SQLite."
 ---
 
-import { Callout } from 'fumadocs-ui/components/callout';
+## Overview
 
-<Callout type="warning" icon="⚠️">
-  This page is subject to change as the project is still in development.
-</Callout>
 
-## How it works
+Because `.duc` is a standard **SQLite database**, `ducjs` packages an embedded WebAssembly SQLite engine. This allows it to run seamlessly in Node.js, Bun, Deno, and web browsers without requiring native binary dependencies.
 
-A `.duc` file is a standard **SQLite database**. `ducjs` compiles to WebAssembly and uses
-an embedded SQLite engine so it works in Node.js, Deno, Bun and the browser without any
-native dependencies.
+---
 
-## Installation
+## Capabilities
 
-```bash
-npm install ducjs
-# or
-bun add ducjs
-
-# or any other JavaScript package manager
-```
-
-## Basic Usage
-
-```ts
-import { DucFile } from 'ducjs';
-
-const doc = await DucFile.open('drawing.duc');
-const elements = await doc.elements();
-console.log(elements);
-```
+- **Zero-Native Setup**: WebAssembly build ensures cross-platform runtime execution across browser and server environments.
+- **Typed Schema Access**: High-level TypeScript interfaces for document state, elements, strokes, backgrounds, blocks, and charter tables.
+- **Browser & Node Support**: Supports browser `File` / `Blob` inputs, `ArrayBuffer` serialization, and server-side file streams.

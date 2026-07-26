@@ -1,0 +1,92 @@
+---
+title: "Scopes"
+description: "How dynamic unit scopes, main scope gravity wells, and logarithmic infinite zoom work in duc."
+date: 2026-02-27
+authors: [jorgedanisc]
+---
+
+## Overview
+
+The `.duc` format features a logarithmic **Infinite Zoom** and **Unit Scope** engine capable of spanning 64 orders of magnitude (10⁻³² to 10³²). 
+
+Instead of hardcoding a fixed unit for a canvas, `.duc` manages document geometry through unit scopes (`mm`, `µm`, `nm`, `m`, `km`, `in`, `ft`, `mi`), dynamically determining the active unit scale based on zoom depth and document settings.
+
+---
+
+## Core Scope Concepts
+
+### 1. Base Reference Unit (`NEUTRAL_SCOPE`)
+All raw spatial data (element positions, stroke widths, bounding boxes, vector paths) are normalized relative to the meter (`NEUTRAL_SCOPE = "m"`). This guarantees zero coordinate distortion when rendering the same file across different CAD applications or unit systems.
+
+### 2. Main Scope (`main_scope`)
+The designated master unit of the document (e.g. `mm` for mechanical components, `m` for architectural site plans, `mi` for civil infrastructure). Stored in `duc_global_state`:
+
+- `main_scope`: The primary measure (e.g., `mm`, `in`, `m`).
+- `scope_exponent_threshold`: Defines the gravity well threshold for unit transitions.
+
+### 3. Main Scope Gravity Well
+To prevent rapid, jarring unit transitions when zooming near a project's primary unit scale, `.duc` implements a **gravity well effect**. 
+
+When the current zoom exponent is within the `scope_exponent_threshold` from `main_scope`, the engine locks the active display unit to `main_scope`. Beyond this threshold, it smoothly falls back to natural logarithmic unit selection.
+
+---
+
+## Supported Measurement Definitions
+
+`.duc` supports both **Metric** and **Imperial** measurement unit definitions:
+
+### Metric Units (Powers of 10)
+| Prefix | Unit Name | Full Name | Exponent (10ˣ m) | Scale Factor (m) |
+| :--- | :--- | :--- | :--- | :--- |
+| `qm` | Quecto | Quectometer | -30 | 1 × 10⁻³⁰ |
+| `rm` | Ronto | Rontometer | -27 | 1 × 10⁻²⁷ |
+| `ym` | Yocto | Yoctometer | -24 | 1 × 10⁻²⁴ |
+| `zm` | Zepto | Zeptometer | -21 | 1 × 10⁻²¹ |
+| `am` | Atto | Attometer | -18 | 1 × 10⁻¹⁸ |
+| `fm` | Femto | Femtometer | -15 | 1 × 10⁻¹⁵ |
+| `pm` | Pico | Picometer | -12 | 1 × 10⁻¹² |
+| `Å` | Angstrom | Angstrom | -10 | 1 × 10⁻¹⁰ |
+| `nm` | Nano | Nanometer | -9 | 1 × 10⁻⁹ |
+| `µm` | Micro | Micrometer | -6 | 1 × 10⁻⁶ |
+| `mm` | Milli | Millimeter | -3 | 0.001 |
+| `cm` | Centi | Centimeter | -2 | 0.01 |
+| `dm` | Deci | Decimeter | -1 | 0.1 |
+| **`m`** | **Base** | **Meter** | **0** | **1.0** |
+| `dam` | Deca | Decameter | 1 | 10.0 |
+| `hm` | Hecto | Hectometer | 2 | 100.0 |
+| `km` | Kilo | Kilometer | 3 | 1000.0 |
+| `Mm` | Mega | Megameter | 6 | 1 × 10⁶ |
+| `Gm` | Giga | Gigameter | 9 | 1 × 10⁹ |
+| `Tm` | Tera | Terameter | 12 | 1 × 10¹² |
+| `Pm` | Peta | Petameter | 15 | 1 × 10¹⁵ |
+| `Em` | Exa | Exameter | 18 | 1 × 10¹⁸ |
+| `Zm` | Zetta | Zettameter | 21 | 1 × 10²¹ |
+| `Ym` | Yotta | Yottameter | 24 | 1 × 10²⁴ |
+| `Rm` | Ronna | Ronnameter | 27 | 1 × 10²⁷ |
+| `Qm` | Quetta | Quettameter | 30 | 1 × 10³⁰ |
+
+### Imperial Units (Meter Equivalents)
+| Prefix | Unit Name | Full Name | Log10 Exponent (m) | Scale Factor (m) |
+| :--- | :--- | :--- | :--- | :--- |
+| `µin` | Microinch | Microinch | -7.595 | 2.54 × 10⁻⁸ |
+| `th` | Thou | Thou | -4.595 | 0.0000254 |
+| `mil` | Mil | Mil | -4.595 | 0.0000254 |
+| `ln` | Line | Line | -2.674 | 0.00211667 |
+| `in` | Inch | Inch | -1.595 | 0.0254 |
+| `h` | Hand | Hand | -0.993 | 0.1016 |
+| `ft` | Foot | Foot | -0.516 | 0.3048 |
+| `yd` | Yard | Yard | -0.039 | 0.9144 |
+| `rd` | Rod | Rod | 0.701 | 5.0292 |
+| `ch` | Chain | Chain | 1.304 | 20.1168 |
+| `fur` | Furlong | Furlong | 2.304 | 201.168 |
+| `mi` | Mile | Mile | 3.207 | 1609.344 |
+| `lea` | League | League | 3.684 | 4828.032 |
+| `au` | Astronomical Unit | Astronomical Unit | 11.175 | 1.496 × 10¹¹ |
+| `ly` | Light Year | Light Year | 15.976 | 9.461 × 10¹⁵ |
+| `pc` | Parsec | Parsec | 16.489 | 3.086 × 10¹⁶ |
+
+---
+
+## Dynamic Unit Scaling
+
+For details on how `.duc` preserves lossless geometric precision across different scopes without modifying an element's original measure, see the [Infinite Precision & Scoped Values](/docs/concepts/precision) page.

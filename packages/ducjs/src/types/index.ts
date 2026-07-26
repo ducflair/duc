@@ -323,7 +323,7 @@ export declare class GestureEvent extends UIEvent {
 /** @deprecated legacy: do not use outside of migration paths */
 export type LibraryItem_v1 = readonly NonDeleted<DucElement>[];
 /** @deprecated legacy: do not use outside of migration paths */
-type LibraryItems_v1 = readonly LibraryItem_v1[];
+export type LibraryItems_v1 = readonly LibraryItem_v1[];
 
 /** v2 library item */
 export type LibraryItem = {

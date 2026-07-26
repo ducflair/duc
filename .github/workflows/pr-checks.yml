@@ -8,6 +8,13 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  pages: write
+  id-token: write
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # ──────────────────────────────────────────────────────────────────────
@@ -170,6 +177,12 @@ jobs:
           fi
           echo "═══════════════════════════════"
 
+      - name: Cancel workflow run on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run cancel ${{ github.run_id }} || true
+
   # ──────────────────────────────────────────────────────────────────────
   # Phase 2: Build & test only packages with pending releases
   # Uses turbo to orchestrate the dependency graph — if ducsvg needs
@@ -260,6 +273,24 @@ jobs:
             exit 1
           fi
 
+      - name: Cancel workflow run on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run cancel ${{ github.run_id }} || true
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Phase 2b: Reusable API Documentation build dry-run
+  # Leverages deploy-api-docs.yml in dry_run mode to test production staging.
+  # ──────────────────────────────────────────────────────────────────────
+  test-docs:
+    name: API Docs Staging Dry-Run
+    needs: release-check
+    if: needs.release-check.outputs.any_release == 'true'
+    uses: ./.github/workflows/deploy-api-docs.yml
+    with:
+      dry_run: true
+
   # ──────────────────────────────────────────────────────────────────────
   # Phase 3: Summary & gate check
   # Acts as a single required status check for branch protection.
@@ -267,7 +298,7 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────
   results:
     name: PR Check Results
-    needs: [release-check, test]
+    needs: [release-check, test, test-docs]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -305,6 +336,7 @@ jobs:
 
           RELEASE_CHECK="${{ needs.release-check.result }}"
           TEST_RESULT="${{ needs.test.result }}"
+          DOCS_RESULT="${{ needs.test-docs.result }}"
           ANY_RELEASE="${{ needs.release-check.outputs.any_release }}"
 
           if [ "$RELEASE_CHECK" != "success" ]; then
@@ -317,12 +349,33 @@ jobs:
             exit 0
           fi
 
+          FAILED="false"
+
           if [ "$TEST_RESULT" = "success" ]; then
-            echo "### ✅ All tests passed for affected packages" >> "$GITHUB_STEP_SUMMARY"
+            echo "### ✅ All package tests passed" >> "$GITHUB_STEP_SUMMARY"
           elif [ "$TEST_RESULT" = "skipped" ]; then
-            echo "### ⏭️ Tests were skipped" >> "$GITHUB_STEP_SUMMARY"
+            echo "### ⏭️ Package tests were skipped" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$TEST_RESULT" = "cancelled" ]; then
+            echo "### 🛑 Package tests cancelled (interrupted by workflow failure)" >> "$GITHUB_STEP_SUMMARY"
+            FAILED="true"
           else
-            echo "### ❌ Tests failed" >> "$GITHUB_STEP_SUMMARY"
+            echo "### ❌ Package tests failed" >> "$GITHUB_STEP_SUMMARY"
+            FAILED="true"
+          fi
+
+          if [ "$DOCS_RESULT" = "success" ]; then
+            echo "### ✅ API Documentation staging dry-run passed" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$DOCS_RESULT" = "skipped" ]; then
+            echo "### ⏭️ API Documentation dry-run was skipped" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$DOCS_RESULT" = "cancelled" ]; then
+            echo "### 🛑 API Documentation dry-run cancelled (interrupted by workflow failure)" >> "$GITHUB_STEP_SUMMARY"
+            FAILED="true"
+          else
+            echo "### ❌ API Documentation staging dry-run failed" >> "$GITHUB_STEP_SUMMARY"
+            FAILED="true"
+          fi
+
+          if [ "$FAILED" = "true" ]; then
             exit 1
           fi
 
@@ -334,6 +387,7 @@ jobs:
           PR_NUMBER="${{ github.event.pull_request.number }}"
           REPO="${{ github.repository }}"
           TEST_RESULT="${{ needs.test.result }}"
+          DOCS_RESULT="${{ needs.test-docs.result }}"
           DETECTION="${{ needs.release-check.result }}"
 
           format_row() {
@@ -349,6 +403,10 @@ jobs:
                 test_icon="✅ Passed"
               elif [ "$TEST_RESULT" = "failure" ]; then
                 test_icon="❌ Failed"
+              elif [ "$TEST_RESULT" = "cancelled" ]; then
+                test_icon="🛑 Cancelled"
+              elif [ "$TEST_RESULT" = "skipped" ]; then
+                test_icon="⏭️ Skipped"
               else
                 test_icon="⏳ Pending"
               fi
@@ -357,6 +415,17 @@ jobs:
               echo "| ${name} | ${cur_display} | – | ⏭️ No release |"
             fi
           }
+
+          docs_status="⏳ Pending"
+          if [ "$DOCS_RESULT" = "success" ]; then
+            docs_status="✅ Passed"
+          elif [ "$DOCS_RESULT" = "failure" ]; then
+            docs_status="❌ Failed"
+          elif [ "$DOCS_RESULT" = "cancelled" ]; then
+            docs_status="🛑 Cancelled"
+          elif [ "$DOCS_RESULT" = "skipped" ]; then
+            docs_status="⏭️ Skipped"
+          fi
 
           {
             echo "<!-- duc-release-preview -->"
@@ -374,6 +443,8 @@ jobs:
             format_row "ducpdf" "${{ needs.release-check.outputs.ducpdf }}" "${{ needs.release-check.outputs.ducpdf_current }}" "${{ needs.release-check.outputs.ducpdf_version }}"
             format_row "ducsvg" "${{ needs.release-check.outputs.ducsvg }}" "${{ needs.release-check.outputs.ducsvg_current }}" "${{ needs.release-check.outputs.ducsvg_version }}"
             format_row "duc2pdf" "${{ needs.release-check.outputs.duc2pdf }}" "${{ needs.release-check.outputs.duc2pdf_current }}" "${{ needs.release-check.outputs.duc2pdf_version }}"
+            echo ""
+            echo "**API Documentation Staging Dry-Run**: ${docs_status}"
           } > /tmp/pr-comment.md
 
           # Upsert PR comment (find existing by marker, update or create)

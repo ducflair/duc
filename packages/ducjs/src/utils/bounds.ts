@@ -5,7 +5,7 @@ import { Bounds, GeometricPoint } from "../types/geometry.types";
 import { getBoundTextElementPosition, getLinearElementAbsoluteCoords } from "./elements/linearElement";
 import { getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, rescaleLines, rescalePoints, rotate } from "./math";
 
-type SV = ScopedValue;
+export type SV = ScopedValue;
 
 /**
  * Common bounds calculation interface

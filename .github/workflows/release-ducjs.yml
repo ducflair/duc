@@ -68,3 +68,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: ./packages/ducjs
         run: npx semantic-release ${{ steps.setup-release-environment.outputs.release-mode }}
+
+      - name: Deploy API documentation
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-api-docs-deployment
+          token: ${{ secrets.GITHUB_TOKEN }}
