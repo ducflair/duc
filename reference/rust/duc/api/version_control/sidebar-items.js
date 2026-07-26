@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CURRENT_SCHEMA_VERSION"],"fn":["apply_delta_changeset","create_bsdiff_changeset"],"struct":["RestoredVersion","VersionControl","VersionEntry"]};

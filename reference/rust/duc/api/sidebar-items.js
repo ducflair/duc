@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["document","meta","version_control"]};

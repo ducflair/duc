@@ -44,10 +44,10 @@ Functions
    ducpy.search.search_external_files._fetch_element_external_refs
    ducpy.search.search_external_files.resolve_external_file_search_targets
    ducpy.search.search_external_files._external_active_revision_id
-   ducpy.search.search_external_files._external_revision_blob
    ducpy.search.search_external_files._external_revision_meta
    ducpy.search.search_external_files._external_revision_mime_type
    ducpy.search.search_external_files.extract_image_text_for_search
+   ducpy.search.search_external_files._stream_revision_bytes
    ducpy.search.search_external_files.load_external_file_text
    ducpy.search.search_external_files.resolve_external_file_search_targets_from_parsed_duc
    ducpy.search.search_external_files._fetch_external_revision_row
@@ -142,19 +142,19 @@ Module Contents
 
 .. py:function:: _external_active_revision_id(external: dict[str, Any]) -> str | None
 
-.. py:function:: _external_revision_blob(external: dict[str, Any], revision_id: str) -> bytes | None
-
 .. py:function:: _external_revision_meta(external: dict[str, Any], revision_id: str) -> dict[str, Any] | None
 
 .. py:function:: _external_revision_mime_type(external: dict[str, Any], revision_id: str, *, fallback_element_type: str | None) -> str
 
 .. py:function:: extract_image_text_for_search(image_bytes: bytes, *, ocr_language: str) -> ExtractedExternalText
 
+.. py:function:: _stream_revision_bytes(duc_source: str | pathlib.Path, revision_id: str) -> bytes | None
+
 .. py:function:: load_external_file_text(duc_source: str | pathlib.Path, target: ResolvedExternalFileSearchTarget, *, fallback_element_type: str | None, ocr_language: str) -> ExtractedExternalText
 
 .. py:function:: resolve_external_file_search_targets_from_parsed_duc(duc_source: str | pathlib.Path, duc_data: dict[str, Any], *, search_all_external_files: bool = False, external_file_targets: Iterable[ExternalFileSearchTarget | dict[str, Any] | tuple[Any, Ellipsis] | str] | None = None, external_file_element_ids: Iterable[str] | None = None) -> tuple[ResolvedExternalFileSearchTarget, Ellipsis]
 
-.. py:function:: _fetch_external_revision_row(conn: sqlite3.Connection, file_id: str, revision_id: str) -> sqlite3.Row | None
+.. py:function:: _fetch_external_revision_row(conn: sqlite3.Connection, file_id: str, revision_id: str) -> dict[str, Any] | None
 
 .. py:function:: ensure_external_file_search_index(conn: sqlite3.Connection, *, targets: Iterable[ResolvedExternalFileSearchTarget], ocr_language: str = 'eng') -> dict[tuple[str, str], ExtractedExternalText]
 

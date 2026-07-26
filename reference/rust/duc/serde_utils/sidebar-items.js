@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["trunc_i32","trunc_vec_i32"]};

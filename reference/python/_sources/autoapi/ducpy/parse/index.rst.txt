@@ -18,6 +18,7 @@ Attributes
 .. autoapisummary::
 
    ducpy.parse.logger
+   ducpy.parse.PathInput
 
 
 Classes
@@ -34,11 +35,12 @@ Functions
 .. autoapisummary::
 
    ducpy.parse._wrap
-   ducpy.parse._read_bytes
+   ducpy.parse._path
    ducpy.parse.parse_duc
-   ducpy.parse.parse_duc_lazy
-   ducpy.parse.get_external_file
    ducpy.parse.list_external_files
+   ducpy.parse.stream_external_file_revision_to_path
+   ducpy.parse.stream_checkpoint_data_to_path
+   ducpy.parse.stream_delta_changeset_to_path
 
 
 Module Contents
@@ -76,24 +78,23 @@ Module Contents
    Recursively wrap dicts as DucData for attribute access.
 
 
-.. py:function:: _read_bytes(source: Union[bytes, bytearray, BinaryIO, str]) -> bytes
+.. py:data:: PathInput
 
-   Accept bytes, a file-like object, or a file path and return raw bytes.
+.. py:function:: _path(source: PathInput) -> str
 
-
-.. py:function:: parse_duc(source: Union[bytes, bytearray, BinaryIO, str]) -> DucData
+.. py:function:: parse_duc(source: PathInput) -> DucData
 
    Parse a ``.duc`` file into a :class:`DucData` dict.
 
-   This function reads a raw `.duc` binary blob or file path and parses it using 
-   the Rust native extension. It returns a specialized dictionary (`DucData`) 
+   This function streams a `.duc` file path through the Rust native extension.
+   It returns a specialized dictionary (`DucData`)
    that allows attribute-style access to the parsed properties (e.g. `data.elements[0].id`),
    using `snake_case` keys instead of the internal `camelCase` format.
 
    Parameters
    ----------
-   source : bytes | file | str
-       Raw bytes, an open binary file, or a string path to a ``.duc`` file.
+   source : str | PathLike
+       Path to a ``.duc`` file.
 
    Returns
    -------
@@ -105,26 +106,27 @@ Module Contents
    Examples
    --------
    >>> data = duc.parse_duc("path/to/file.duc")
-   >>> data = duc.parse_duc(binary_data)
    >>> print(f"Found {len(data.elements)} elements")
    >>> print(f"First element type: {data.elements[0].type}")
 
 
-.. py:function:: parse_duc_lazy(source: Union[bytes, bytearray, BinaryIO, str]) -> DucData
-
-   Parse a ``.duc`` file lazily (external file data blobs are omitted).
-
-   Use :func:`get_external_file` or :func:`list_external_files` to retrieve
-   external file data on demand.
-
-
-.. py:function:: get_external_file(source: Union[bytes, bytearray, BinaryIO, str], file_id: str) -> Optional[DucData]
-
-   Fetch a single external file entry from a ``.duc`` buffer.
-
-
-.. py:function:: list_external_files(source: Union[bytes, bytearray, BinaryIO, str]) -> List[DucData]
+.. py:function:: list_external_files(source: PathInput) -> List[DucData]
 
    List metadata for all external files (without data blobs).
+
+
+.. py:function:: stream_external_file_revision_to_path(source: PathInput, revision_id: str, output_path: PathInput) -> int
+
+   Stream an external file revision from a ``.duc`` file into ``output_path``.
+
+
+.. py:function:: stream_checkpoint_data_to_path(source: PathInput, checkpoint_id: str, output_path: PathInput) -> int
+
+   Stream checkpoint data from a ``.duc`` file into ``output_path``.
+
+
+.. py:function:: stream_delta_changeset_to_path(source: PathInput, delta_id: str, output_path: PathInput) -> int
+
+   Stream delta changeset data from a ``.duc`` file into ``output_path``.
 
 

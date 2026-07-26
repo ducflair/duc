@@ -110,9 +110,9 @@ Module Contents
 
 .. py:function:: _validate_embedded_code(elements: List[Any], files_meta: Optional[Dict[str, Any]], files_data: Optional[Dict[str, bytes]], timeout_seconds: Optional[float]) -> None
 
-.. py:function:: serialize_duc(name: str, thumbnail: Optional[bytes] = None, dictionary: Optional[list] = None, elements: Optional[list] = None, duc_local_state: Any = None, duc_global_state: Any = None, version_graph: Any = None, blocks: Optional[list] = None, block_instances: Optional[list] = None, block_collections: Optional[list] = None, groups: Optional[list] = None, regions: Optional[list] = None, layers: Optional[list] = None, external_files: Optional[list] = None, charter: Any = None, issues: Optional[list] = None, validate_embedded_code: bool = True, validation_timeout_seconds: Optional[float] = None) -> bytes
+.. py:function:: serialize_duc(name: str, output_path: Optional[Union[str, pathlib.Path]] = None, thumbnail: Optional[bytes] = None, dictionary: Optional[list] = None, elements: Optional[list] = None, duc_local_state: Any = None, duc_global_state: Any = None, version_graph: Any = None, blocks: Optional[list] = None, block_instances: Optional[list] = None, block_collections: Optional[list] = None, groups: Optional[list] = None, regions: Optional[list] = None, layers: Optional[list] = None, external_files: Optional[list] = None, charter: Any = None, issues: Optional[list] = None, validate_embedded_code: bool = True, validation_timeout_seconds: Optional[float] = None) -> str
 
-   Serialize elements and document state to raw ``.duc`` binary format.
+   Serialize elements and document state directly to a ``.duc`` file path.
 
    This function accepts lists of elements created via the `ducpy.builders` API
    (e.g., `ElementBuilder`) and serializes them into the compressed format
@@ -123,6 +123,9 @@ Module Contents
    ----------
    name : str
        The document name or identifier (used to populate the `source` field).
+   output_path : str | Path, optional
+       Target path for the generated ``.duc`` file. When omitted, a temporary
+       ``.duc`` file is created and its path is returned.
    thumbnail : Optional[bytes], default=None
        Raw PNG bytes representing a thumbnail of the document.
    dictionary : Optional[list], default=None
@@ -162,7 +165,7 @@ Module Contents
 
    Returns
    -------
-   bytes
-       The raw `.duc` binary data, ready to be written to a file.
+   str
+       The output path that was written.
 
 

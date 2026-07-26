@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CURRENT_SCHEMA_VERSION_SEMVER","DUC_SCHEMA_SQL","SEARCH_SCHEMA_SQL","VERSION_CONTROL_SCHEMA_SQL"],"fn":["current_schema_version_int"],"static":["MIGRATIONS"]};

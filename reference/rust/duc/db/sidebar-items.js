@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DbError"],"fn":["open_file","open_memory","open_memory_compact"],"mod":["bootstrap"],"struct":["DucConnection"],"type":["DbResult"]};
