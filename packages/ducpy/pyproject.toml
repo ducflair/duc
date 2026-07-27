@@ -1,7 +1,7 @@
 [project]
 name = "ducpy"
 dynamic = ["version"]
-description = "The library for the Duc 2D CAD file format"
+description = "Python library for the .duc project-state format for physical-engineering work before execution"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

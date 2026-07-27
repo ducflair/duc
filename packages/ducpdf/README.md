@@ -3,7 +3,7 @@
 <p align="center">
   <br/>
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" /></a>
-  <p align="center">PDF Adapter for the duc 2D CAD File Format</p>
+  <p align="center">PDF Adapter for the .duc project-state format</p>
   <p align="center" style="align: center;">
     <a href="https://www.npmjs.com/package/ducpdf"><img src="https://shields.io/badge/NPM-cc3534?logo=Npm&logoColor=white&style=round-square" alt="NPM" /></a>
     <a href="https://www.npmjs.com/package/ducpdf"><img src="https://img.shields.io/npm/v/ducpdf/latest?style=round-square&label=latest%20stable" alt="NPM ducpdf@latest release" /></a>
@@ -11,7 +11,7 @@
   </p>
 </p>
 
-`ducpdf` is a lightweight adapter for rendering `duc` CAD documents to PDF. It's built on top of `ducjs` and focuses on accurate, standards-compliant PDF output for professional document sharing and printing.
+`ducpdf` is a lightweight adapter for rendering `duc` documents to PDF. It's built on top of `ducjs` and focuses on accurate, standards-compliant PDF output for professional document sharing and printing.
 
 - Convert duc files to PDF documents
 - Strongly typed with TypeScript

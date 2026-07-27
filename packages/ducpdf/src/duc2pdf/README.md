@@ -12,19 +12,19 @@
   </p>
 </p>
 
-The `duc2pdf` crate provides a robust Rust implementation for converting `duc` 2D CAD files to PDF format. Designed for professionals seeking precision and efficiency, this crate ensures industry-grade PDF output that adheres to ISO 32000-2 standards.
+The `duc2pdf` crate provides a robust Rust implementation for converting `duc` project-state files to PDF format. Designed for professionals seeking precision and efficiency, this crate ensures industry-grade PDF output that adheres to ISO 32000-2 standards.
 
 ## Introduction
 
-The `duc2pdf` crate offers comprehensive Rust types and helper functions to convert `duc` CAD files to high-quality PDF documents. Built with efficiency and performance in mind, this crate enables you to process complex CAD data and generate professional PDF output for sharing, printing, and archiving.
+The `duc2pdf` crate offers comprehensive Rust types and helper functions to convert `duc` project files to high-quality PDF documents. Built with efficiency and performance in mind, this crate enables you to process complex project data and generate professional PDF output for sharing, printing, and archiving.
 
-For a 2D CAD industry grade PDF export, we need to adhere to the ISO 32000-2 which PDFs support, ensuring precise vector graphics, proper scaling, and accurate color representation.
+For an industry-grade PDF export, we need to adhere to the ISO 32000-2 which PDFs support, ensuring precise vector graphics, proper scaling, and accurate color representation.
 
 ## Features
 
 - **Rust Support:** Strongly-typed interfaces for all aspects of the `duc` to PDF conversion process, ensuring type safety and performance.
-- **Industry Standards Compliance:** Full compliance with ISO 32000-2 PDF standards for professional CAD output.
-- **High Performance:** Optimized processing to handle complex CAD data and generate PDFs efficiently.
+- **Industry Standards Compliance:** Full compliance with ISO 32000-2 PDF standards for professional document output.
+- **High Performance:** Optimized processing to handle complex project data and generate PDFs efficiently.
 - **CLI Tool:** Command-line interface for easy integration into build pipelines and workflows.
 - **Precision Output:** Maintains exact vector precision, dimensions, and styling from the original duc files.
 

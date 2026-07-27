@@ -8,7 +8,7 @@ import {
 import { notFound } from 'next/navigation';
 import { InlineTOC } from 'fumadocs-ui/components/inline-toc';
 import mdxComponents from '@/components/mdxComponents';
-import { getGithubLastEdit } from 'fumadocs-core/server';
+import { getGithubLastEdit } from 'fumadocs-core/content/github';
 import { githubDocsPath } from '@/app/layout.config';
 
 
@@ -19,7 +19,7 @@ export default async function Page(props: {
   const page = source.getPage(params.slug);
   if (!page) notFound();
   
-  const path = `${githubDocsPath}/${page.file.path}`
+  const path = `${githubDocsPath}/${page.path}`
   const time = await getGithubLastEdit({
     owner: 'ducflair',
     repo: 'duc',

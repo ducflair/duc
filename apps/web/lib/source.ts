@@ -1,5 +1,5 @@
-import { docsCollection, docsMeta, pageCollection, blogCollection, pageMeta, blogMeta } from '@/.source'
-import { createMDXSource } from 'fumadocs-mdx';
+import { docsCollection, docsMeta, pageCollection, blogCollection, pageMeta, blogMeta } from '@/.source/server'
+import { toFumadocsSource as createMDXSource } from 'fumadocs-mdx/runtime/server';
 import { loader } from 'fumadocs-core/source';
 
 export const source = loader({

@@ -292,13 +292,47 @@ jobs:
       dry_run: true
 
   # ──────────────────────────────────────────────────────────────────────
+  # Phase 2c: Next.js Docs Website Build Verification
+  # Validates that apps/web (@duc/docs) compiles and builds cleanly.
+  # ──────────────────────────────────────────────────────────────────────
+  test-web:
+    name: Next.js Docs Site Build Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.x
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build Next.js docs website
+        run: bun run docs:build
+
+      - name: Cancel workflow run on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run cancel ${{ github.run_id }} || true
+
+  # ──────────────────────────────────────────────────────────────────────
   # Phase 3: Summary & gate check
   # Acts as a single required status check for branch protection.
   # Produces a step summary visible in the Actions UI.
   # ──────────────────────────────────────────────────────────────────────
   results:
     name: PR Check Results
-    needs: [release-check, test, test-docs]
+    needs: [release-check, test, test-docs, test-web]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -337,6 +371,7 @@ jobs:
           RELEASE_CHECK="${{ needs.release-check.result }}"
           TEST_RESULT="${{ needs.test.result }}"
           DOCS_RESULT="${{ needs.test-docs.result }}"
+          WEB_RESULT="${{ needs.test-web.result }}"
           ANY_RELEASE="${{ needs.release-check.outputs.any_release }}"
 
           if [ "$RELEASE_CHECK" != "success" ]; then
@@ -344,35 +379,44 @@ jobs:
             exit 1
           fi
 
-          if [ "$ANY_RELEASE" != "true" ]; then
-            echo "### ✅ No pending releases — tests skipped" >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-
           FAILED="false"
 
-          if [ "$TEST_RESULT" = "success" ]; then
-            echo "### ✅ All package tests passed" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "$TEST_RESULT" = "skipped" ]; then
-            echo "### ⏭️ Package tests were skipped" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "$TEST_RESULT" = "cancelled" ]; then
-            echo "### 🛑 Package tests cancelled (interrupted by workflow failure)" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$WEB_RESULT" = "success" ]; then
+            echo "### ✅ Next.js docs website build passed" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$WEB_RESULT" = "cancelled" ]; then
+            echo "### 🛑 Next.js docs website build cancelled" >> "$GITHUB_STEP_SUMMARY"
             FAILED="true"
           else
-            echo "### ❌ Package tests failed" >> "$GITHUB_STEP_SUMMARY"
+            echo "### ❌ Next.js docs website build failed" >> "$GITHUB_STEP_SUMMARY"
             FAILED="true"
           fi
 
-          if [ "$DOCS_RESULT" = "success" ]; then
-            echo "### ✅ API Documentation staging dry-run passed" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "$DOCS_RESULT" = "skipped" ]; then
-            echo "### ⏭️ API Documentation dry-run was skipped" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "$DOCS_RESULT" = "cancelled" ]; then
-            echo "### 🛑 API Documentation dry-run cancelled (interrupted by workflow failure)" >> "$GITHUB_STEP_SUMMARY"
-            FAILED="true"
+          if [ "$ANY_RELEASE" = "true" ]; then
+            if [ "$TEST_RESULT" = "success" ]; then
+              echo "### ✅ All package tests passed" >> "$GITHUB_STEP_SUMMARY"
+            elif [ "$TEST_RESULT" = "skipped" ]; then
+              echo "### ⏭️ Package tests were skipped" >> "$GITHUB_STEP_SUMMARY"
+            elif [ "$TEST_RESULT" = "cancelled" ]; then
+              echo "### 🛑 Package tests cancelled (interrupted by workflow failure)" >> "$GITHUB_STEP_SUMMARY"
+              FAILED="true"
+            else
+              echo "### ❌ Package tests failed" >> "$GITHUB_STEP_SUMMARY"
+              FAILED="true"
+            fi
+
+            if [ "$DOCS_RESULT" = "success" ]; then
+              echo "### ✅ API Documentation staging dry-run passed" >> "$GITHUB_STEP_SUMMARY"
+            elif [ "$DOCS_RESULT" = "skipped" ]; then
+              echo "### ⏭️ API Documentation dry-run was skipped" >> "$GITHUB_STEP_SUMMARY"
+            elif [ "$DOCS_RESULT" = "cancelled" ]; then
+              echo "### 🛑 API Documentation dry-run cancelled (interrupted by workflow failure)" >> "$GITHUB_STEP_SUMMARY"
+              FAILED="true"
+            else
+              echo "### ❌ API Documentation staging dry-run failed" >> "$GITHUB_STEP_SUMMARY"
+              FAILED="true"
+            fi
           else
-            echo "### ❌ API Documentation staging dry-run failed" >> "$GITHUB_STEP_SUMMARY"
-            FAILED="true"
+            echo "### ℹ️ No pending package releases — package tests skipped" >> "$GITHUB_STEP_SUMMARY"
           fi
 
           if [ "$FAILED" = "true" ]; then
@@ -388,6 +432,7 @@ jobs:
           REPO="${{ github.repository }}"
           TEST_RESULT="${{ needs.test.result }}"
           DOCS_RESULT="${{ needs.test-docs.result }}"
+          WEB_RESULT="${{ needs.test-web.result }}"
           DETECTION="${{ needs.release-check.result }}"
 
           format_row() {
@@ -427,6 +472,17 @@ jobs:
             docs_status="⏭️ Skipped"
           fi
 
+          web_status="⏳ Pending"
+          if [ "$WEB_RESULT" = "success" ]; then
+            web_status="✅ Passed"
+          elif [ "$WEB_RESULT" = "failure" ]; then
+            web_status="❌ Failed"
+          elif [ "$WEB_RESULT" = "cancelled" ]; then
+            web_status="🛑 Cancelled"
+          elif [ "$WEB_RESULT" = "skipped" ]; then
+            web_status="⏭️ Skipped"
+          fi
+
           {
             echo "<!-- duc-release-preview -->"
             echo "## 📋 Release Preview"
@@ -445,6 +501,7 @@ jobs:
             format_row "duc2pdf" "${{ needs.release-check.outputs.duc2pdf }}" "${{ needs.release-check.outputs.duc2pdf_current }}" "${{ needs.release-check.outputs.duc2pdf_version }}"
             echo ""
             echo "**API Documentation Staging Dry-Run**: ${docs_status}"
+            echo "**Next.js Docs Website Build**: ${web_status}"
           } > /tmp/pr-comment.md
 
           # Upsert PR comment (find existing by marker, update or create)

@@ -3,7 +3,7 @@
 <p align="center">
   <br/>
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" /></a>
-  <p align="center">2D CAD File Format</p>
+  <p align="center">SQLite-backed project-state format for physical-engineering work before execution</p>
   <p align="center" style="align: center;">
     <a href="https://pypi.org/project/ducpy/"><img src="https://shields.io/badge/Pip-blue?logo=Pypi&logoColor=white&style=round-square" alt="Pip" /></a>
     <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/pypi/v/ducpy?style=round-square&label=latest%20stable" alt="PyPI ducpy@latest release" /></a>
@@ -12,7 +12,7 @@
   </p>
 </p>
 
-The `ducpy` package is the official Python implementation of the `.duc` 2D CAD file format. It is built on top of the [`duc`](../ducrs) Rust crate, exposed as the `ducpy_native` extension. A `.duc` file is a gzip-compressed SQLite database — `ducpy` gives you both a high-level builder DSL and direct low-level access to that schema, plus parsing, serialization, and search helpers.
+The `ducpy` package is the official Python implementation of the `.duc` project-state format. It is built on top of the [`duc`](../ducrs) Rust crate, exposed as the `ducpy_native` extension. A `.duc` file is a gzip-compressed SQLite database — `ducpy` gives you both a high-level builder DSL and direct low-level access to that schema, plus parsing, serialization, and search helpers.
 
 ## Installation
 

@@ -24,7 +24,7 @@ const currentYear = new Date().getFullYear();
 export function Footer() {
   return (
     <footer className="border-t bg-background">
-      <div className="container flex flex-col items-center space-y-8 py-12 md:py-16 lg:py-24">
+      <div className="container mx-auto flex flex-col items-center space-y-8 py-12 md:py-16 lg:py-24">
         <nav className="flex flex-wrap items-center justify-center gap-4 md:gap-8">
           {links.map((link, index) => (
             <Link
