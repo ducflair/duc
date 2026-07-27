@@ -58,7 +58,7 @@ def main():
     print(f"  Resolved ducpy version: {py_ver}")
     if ducpy_docs_dir.exists():
         subprocess.run(
-            ["uv", "run", "--with", "sphinx", "--with", "furo", "--with", "sphinx-autoapi", "sphinx-build", "-D", f"version={py_ver}", "-D", f"release={py_ver}", "-M", "html", ".", "_build"],
+            ["uv", "run", "--with", "sphinx", "--with", "furo", "--with", "sphinx-autoapi", "sphinx-build", "-b", "html", "-D", f"version={py_ver}", "-D", f"release={py_ver}", ".", "_build/html"],
             cwd=ducpy_docs_dir,
             check=False
         )

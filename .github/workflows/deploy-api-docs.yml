@@ -47,7 +47,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -87,7 +87,7 @@ jobs:
             TAG_VERSION=$(node -p "require('./package.json').version")
           fi
           echo "Resolved ducpy version: $TAG_VERSION"
-          uv run sphinx-build -D version="$TAG_VERSION" -D release="$TAG_VERSION" -M html . _build
+          uv run sphinx-build -b html -D version="$TAG_VERSION" -D release="$TAG_VERSION" . _build/html
         working-directory: packages/ducpy/docs
 
       - name: Stage Python API Docs
