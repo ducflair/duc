@@ -317,6 +317,8 @@ jobs:
         run: bun install
 
       - name: Build Next.js docs website
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bun run docs:build
 
       - name: Cancel workflow run on failure

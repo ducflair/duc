@@ -24,7 +24,8 @@ export default async function Page(props: {
     owner: 'ducflair',
     repo: 'duc',
     path,
-  });
+    token: process.env.GITHUB_TOKEN,
+  }).catch(() => null);
   const { body: MDX, toc } = await page.data.load();
 
   return (
