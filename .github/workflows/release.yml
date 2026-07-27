@@ -37,7 +37,7 @@ jobs:
       ducsvg: ${{ steps.check.outputs.ducsvg }}
       duc2pdf: ${{ steps.check.outputs.duc2pdf }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ github.ref_name }}

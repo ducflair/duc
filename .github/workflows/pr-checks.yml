@@ -51,7 +51,7 @@ jobs:
       needs_wasm: ${{ steps.check.outputs.needs_wasm }}
       needs_python: ${{ steps.check.outputs.needs_python }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -195,7 +195,7 @@ jobs:
     if: needs.release-check.outputs.any_release == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -299,7 +299,7 @@ jobs:
     name: Next.js Docs Site Build Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
