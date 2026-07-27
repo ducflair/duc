@@ -33,8 +33,20 @@ def main():
             sql_script = f.read()
             conn.executescript(sql_script)
             
+    cur = conn.cursor()
+    cur.execute("PRAGMA user_version;")
+    row = cur.fetchone()
+    pragma_user_version = row[0] if row else 0
     conn.commit()
     conn.close()
+
+    pragma_version_str = ""
+    if pragma_user_version > 0:
+        major = pragma_user_version // 1000000
+        minor = (pragma_user_version // 1000) % 1000
+        patch = pragma_user_version % 1000
+        pragma_version_str = f"{major}.{minor}.{patch}"
+        print(f"→ SQLite PRAGMA user_version: {pragma_user_version} ({pragma_version_str})")
 
     # Find sq CLI
     candidates = [
@@ -68,6 +80,22 @@ def main():
             [sq_cmd, "inspect", "@duc_schema", "--html", "-o", str(out_file)],
             check=True
         )
+
+        version = os.environ.get("SQL_DOCS_VERSION", "").strip()
+        if len(sys.argv) > 1 and sys.argv[1]:
+            version = sys.argv[1].strip()
+        if not version and pragma_version_str:
+            version = pragma_version_str
+
+        if version and out_file.exists():
+            content = out_file.read_text(encoding="utf-8")
+            content = content.replace("<title>@duc_schema</title>", f"<title>DUC SQL Schema Reference (v{version})</title>")
+            version_badge = f'<div style="background:#1e1e2e;color:#cdd6f4;padding:8px 16px;font-family:sans-serif;font-size:14px;border-bottom:1px solid #313244;">DUC SQL Schema Reference &mdash; <strong>Version {version}</strong></div>'
+            if "<body>" in content:
+                content = content.replace("<body>", f"<body>\n{version_badge}")
+            out_file.write_text(content, encoding="utf-8")
+            print(f"✅ Injected version v{version} into SQL HTML documentation")
+
         print(f"✅ Generated SQL HTML documentation at {out_file}")
     else:
         print("Error: 'sq' CLI not found on system. Please install sq via 'brew install sq' or '/bin/sh -c \"$(curl -fsSL https://sq.io/install.sh)\"'.")

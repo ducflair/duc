@@ -27,6 +27,11 @@ on:
       - 'packages/ducrs/src/**'
       - 'packages/ducpdf/src/**'
       - 'packages/ducsvg/src/**'
+      - 'apps/web/content/docs/**'
+      - 'schema/**'
+      - 'scripts/gen-sql-docs.py'
+      - '**.md'
+      - '**.mdx'
 
 permissions:
   contents: write
@@ -43,7 +48,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -62,14 +68,26 @@ jobs:
           sudo rm -rf /tmp/sq* /tmp/go-graphviz* /tmp/wazero*
 
       - name: Build SQL HTML Documentation
-        run: uv run python3 scripts/gen-sql-docs.py
+        run: |
+          TAG_VERSION=$(git tag -l 'duc.sql@*' -l 'ducsql@*' -l 'duc@*' | sed -E 's/(duc\.sql@|ducsql@|duc@)//' | sort -V | tail -n1)
+          if [ -z "$TAG_VERSION" ]; then
+            TAG_VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "Resolved SQL version: $TAG_VERSION"
+          SQL_DOCS_VERSION="$TAG_VERSION" uv run python3 scripts/gen-sql-docs.py
 
       - name: Install Python dependencies with uv
         run: uv sync --frozen || uv sync
         working-directory: packages/ducpy
 
       - name: Build Python Sphinx documentation
-        run: uv run sphinx-build -M html . _build
+        run: |
+          TAG_VERSION=$(git tag -l 'ducpy@*' | sed 's/ducpy@//' | sort -V | tail -n1)
+          if [ -z "$TAG_VERSION" ]; then
+            TAG_VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "Resolved ducpy version: $TAG_VERSION"
+          uv run sphinx-build -D version="$TAG_VERSION" -D release="$TAG_VERSION" -M html . _build
         working-directory: packages/ducpy/docs
 
       - name: Stage Python API Docs
@@ -93,7 +111,16 @@ jobs:
 
       # 3. TypeScript API Docs (ducjs TypeDoc -> /reference/typescript/)
       - name: Build TypeScript TypeDoc documentation (ducjs)
-        run: npx typedoc
+        run: |
+          TAG_VERSION=$(git tag -l 'ducjs@*' | sed 's/ducjs@//' | sort -V | tail -n1)
+          if [ -z "$TAG_VERSION" ]; then
+            TAG_VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "Resolved ducjs version: $TAG_VERSION"
+          if [ -n "$TAG_VERSION" ] && [ "$TAG_VERSION" != "undefined" ]; then
+            node "../../scripts/semrel-set-version.js" "packages/ducjs" "$TAG_VERSION"
+          fi
+          npx typedoc
         working-directory: packages/ducjs
 
       - name: Stage TypeScript API Docs (ducjs)
@@ -103,7 +130,16 @@ jobs:
 
       # 4. TypeScript API Docs (ducpdf TypeDoc -> /reference/pdf/)
       - name: Build TypeScript TypeDoc documentation (ducpdf)
-        run: npx typedoc
+        run: |
+          TAG_VERSION=$(git tag -l 'ducpdf@*' | sed 's/ducpdf@//' | sort -V | tail -n1)
+          if [ -z "$TAG_VERSION" ]; then
+            TAG_VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "Resolved ducpdf version: $TAG_VERSION"
+          if [ -n "$TAG_VERSION" ] && [ "$TAG_VERSION" != "undefined" ]; then
+            node "../../scripts/semrel-set-version.js" "packages/ducpdf" "$TAG_VERSION"
+          fi
+          npx typedoc
         working-directory: packages/ducpdf
 
       - name: Stage TypeScript API Docs (ducpdf)
@@ -113,7 +149,16 @@ jobs:
 
       # 5. TypeScript API Docs (ducsvg TypeDoc -> /reference/svg/)
       - name: Build TypeScript TypeDoc documentation (ducsvg)
-        run: npx typedoc
+        run: |
+          TAG_VERSION=$(git tag -l 'ducsvg@*' | sed 's/ducsvg@//' | sort -V | tail -n1)
+          if [ -z "$TAG_VERSION" ]; then
+            TAG_VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "Resolved ducsvg version: $TAG_VERSION"
+          if [ -n "$TAG_VERSION" ] && [ "$TAG_VERSION" != "undefined" ]; then
+            node "../../scripts/semrel-set-version.js" "packages/ducsvg" "$TAG_VERSION"
+          fi
+          npx typedoc
         working-directory: packages/ducsvg
 
       - name: Stage TypeScript API Docs (ducsvg)
@@ -126,7 +171,16 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build Rust cargo documentation
-        run: cargo doc --no-deps
+        run: |
+          TAG_VERSION=$(git tag -l 'ducrs@*' | sed 's/ducrs@//' | sort -V | tail -n1)
+          if [ -z "$TAG_VERSION" ]; then
+            TAG_VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "Resolved ducrs version: $TAG_VERSION"
+          if [ -n "$TAG_VERSION" ] && [ "$TAG_VERSION" != "undefined" ]; then
+            node "../../scripts/cargo-set-pkg-version.js" "packages/ducrs/Cargo.toml" "$TAG_VERSION"
+          fi
+          cargo doc --no-deps
         working-directory: packages/ducrs
 
       - name: Stage Rust API Docs
@@ -135,6 +189,18 @@ jobs:
           cp -r target/doc/. _site/reference/rust/
           mkdir -p _site/reference/static.files
           cp -r target/doc/static.files/. _site/reference/static.files/
+          cat << 'EOF' > _site/reference/rust/index.html
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta http-equiv="refresh" content="0; url=duc/index.html">
+            <title>duc Rust API Documentation</title>
+          </head>
+          <body>
+            <p>Redirecting to <a href="duc/index.html">duc documentation</a>...</p>
+          </body>
+          </html>
+          EOF
 
       # 7. PEP 503 Simple Package Index
       - name: Build PEP 503 Simple Package Index

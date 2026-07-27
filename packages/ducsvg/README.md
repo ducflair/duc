@@ -3,7 +3,7 @@
 <p align="center">
   <br/>
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" /></a>
-  <p align="center">SVG Adapter for the duc 2D CAD File Format</p>
+  <p align="center">SVG Adapter for the .duc project-state format</p>
   <p align="center" style="align: center;">
     <a href="https://www.npmjs.com/package/ducsvg"><img src="https://shields.io/badge/NPM-cc3534?logo=Npm&logoColor=white&style=round-square" alt="NPM" /></a>
     <a href="https://www.npmjs.com/package/ducsvg"><img src="https://img.shields.io/npm/v/ducsvg/latest?style=round-square&label=latest%20stable" alt="NPM ducsvg@latest release" /></a>
@@ -12,7 +12,7 @@
 </p>
 
 
-`ducsvg` is a lightweight adapter for rendering `duc` CAD documents to SVG. It’s built on top of `ducjs` and focuses on accurate, standards-compliant SVG output you can embed in browsers or export from Node.js.
+`ducsvg` is a lightweight adapter for rendering `duc` documents to SVG. It's built on top of `ducjs` and focuses on accurate, standards-compliant SVG output you can embed in browsers or export from Node.js.
 
 > This library leverages the stable renderer from `ducpdf`, first converting the `duc` document to PDF format before transforming it into SVG using `hayro` and `hayro_svg`. This approach ensures high fidelity in the SVG output by utilizing the robust rendering capabilities of the PDF format.
 

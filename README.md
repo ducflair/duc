@@ -1,7 +1,7 @@
 <p align="center">
   <br/>
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" /></a>
-  <p align="center">2D CAD File Format</p>
+  <p align="center">SQLite-backed project-state format for physical-engineering work before execution</p>
   <br/><br/>
     <p align="center" style="align: center;">
     <a href="https://github.com/ducflair/duc/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-780000" alt="MIT" /></a>
@@ -27,7 +27,7 @@
 
 </p>
 
-The `duc` 2D CAD file format is a cornerstone of our advanced design system, conceived to cater to professionals seeking precision and efficiency in their design work. It integrates seamlessly with [Scopture](https://scopture.com), leveraging the power of modern computing and graphical rendering technologies. 
+The `.duc` project-state format is a cornerstone of our advanced physical-engineering design system, conceived to cater to professionals seeking precision and efficiency in their design work before execution. It integrates seamlessly with [Scopture](https://scopture.com), leveraging the power of modern computing and graphical rendering technologies. 
 
 
 ## Introduction
@@ -57,4 +57,4 @@ Join our growing community to discuss, collaborate, and share insights about the
 
 ---
 
-> The duc format and libraries are constantly evolving, with the aim to set new standards in the 2D CAD industry. Be a part of this change and help shape the future of design technology!
+> The duc format and libraries are constantly evolving, with the aim to set new standards for physical-engineering project formats. Be a part of this change and help shape the future of design technology!

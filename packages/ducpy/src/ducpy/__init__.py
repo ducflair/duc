@@ -1,4 +1,4 @@
-"""Python library for the DUC 2D CAD file format.
+"""Python library for the .duc project-state format for physical-engineering work before execution.
 
 Usage:
     ``import ducpy as duc``

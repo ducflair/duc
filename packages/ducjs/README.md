@@ -3,7 +3,7 @@
 <p align="center">
   <br/>
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" /></a>
-  <p align="center">2D CAD File Format</p>
+  <p align="center">SQLite-backed project-state format for physical-engineering work before execution</p>
   <p align="center" style="align: center;">
     <a href="https://www.npmjs.com/package/ducjs"><img src="https://shields.io/badge/NPM-cc3534?logo=Npm&logoColor=white&style=round-square" alt="NPM" /></a>
     <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/npm/v/ducjs/latest?style=round-square&label=latest%20stable" alt="NPM ducjs@latest release" /></a>
@@ -12,7 +12,7 @@
   </p>
 </p>
 
-The `ducjs` package offers comprehensive TypeScript types and helper functions to work effortlessly with the `duc` CAD file format. Built with SQLite and optimized for performance, this package enables you to parse, validate, and manipulate `duc` files with ease.
+The `ducjs` package offers comprehensive TypeScript types and helper functions to work effortlessly with the `.duc` project-state format. Built with SQLite and optimized for performance, this package enables you to parse, validate, and manipulate `duc` files with ease.
 
 ## Documentation
 

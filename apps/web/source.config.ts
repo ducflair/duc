@@ -48,13 +48,15 @@ const baseSchema = z.object({
 export type BaseDocSchemaType = z.infer<typeof baseSchema>;
 
 const docsMetaSchema = baseSchema.extend({});
+const metaSchema = baseSchema.partial().extend({
+  pages: z.array(z.string()).optional(),
+});
 const updatesMetaSchema = baseSchema.extend({
   date: z.string().date().or(z.date()),
 });
 const pageMetaSchema = baseSchema.extend({});
 
 export default defineConfig({
-  lastModifiedTime: 'git',
   mdxOptions: {
     remarkPlugins: [remarkSmartypants, remarkMermaid],
     rehypePlugins: [rehypeCode],
@@ -65,9 +67,12 @@ export const { docs: docsCollection, meta: docsMeta } = defineDocs({
   docs: {
     async: true,
     schema: docsMetaSchema,
+    postprocess: {
+      includeProcessedMarkdown: true,
+    },
   },
   meta: {
-    schema: docsMetaSchema,
+    schema: metaSchema,
   }
 })
 
@@ -77,11 +82,14 @@ export const blogCollection = defineCollections({
   dir: blogDir,
   async: true,
   schema: baseSchema,
+  postprocess: {
+    includeProcessedMarkdown: true,
+  },
 });
 export const blogMeta = defineCollections({
   type: 'meta',
   dir: blogDir,
-  schema: baseSchema,
+  schema: metaSchema,
 });
 
 const updatesDir = 'content/updates'
@@ -90,11 +98,14 @@ export const updatesCollection = defineCollections({
   dir: updatesDir,
   async: true,
   schema: updatesMetaSchema,
+  postprocess: {
+    includeProcessedMarkdown: true,
+  },
 });
 export const updatesMeta = defineCollections({
   type: 'meta',
   dir: updatesDir,
-  schema: updatesMetaSchema,
+  schema: metaSchema,
 });
 
 const pageDir = 'content/pages'
@@ -103,9 +114,12 @@ export const pageCollection = defineCollections({
   dir: pageDir,
   async: true,
   schema: pageMetaSchema,
+  postprocess: {
+    includeProcessedMarkdown: true,
+  },
 });
 export const pageMeta = defineCollections({
   type: 'meta',
   dir: pageDir,
-  schema: pageMetaSchema,
+  schema: metaSchema,
 });
