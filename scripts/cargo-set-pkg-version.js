@@ -17,10 +17,16 @@ if (!cargoTomlPath || !version) {
   process.exit(1);
 }
 
-const fullPath = path.resolve(process.cwd(), cargoTomlPath);
+const repoRoot = path.resolve(__dirname, "..");
+let fullPath = path.resolve(process.cwd(), cargoTomlPath);
 if (!fs.existsSync(fullPath)) {
-  console.error(`File not found: ${fullPath}`);
-  process.exit(1);
+  const altPath = path.resolve(repoRoot, cargoTomlPath);
+  if (fs.existsSync(altPath)) {
+    fullPath = altPath;
+  } else {
+    console.error(`File not found: ${fullPath}`);
+    process.exit(1);
+  }
 }
 
 let content = fs.readFileSync(fullPath, "utf8");
