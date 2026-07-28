@@ -468,7 +468,11 @@ impl DucOpfsDocument {
     /// committed data. JavaScript can gzip successive chunks without loading
     /// the whole database into WASM memory.
     #[wasm_bindgen(js_name = "exportDbChunk")]
-    pub async fn export_db_chunk(&self, offset_bytes: f64, length: u32) -> Result<Vec<u8>, JsError> {
+    pub async fn export_db_chunk(
+        &self,
+        offset_bytes: f64,
+        length: u32,
+    ) -> Result<Vec<u8>, JsError> {
         if !offset_bytes.is_finite()
             || offset_bytes < 0.0
             || offset_bytes.fract() != 0.0
@@ -538,17 +542,7 @@ fn optional_bytes_to_js(data: Option<Vec<u8>>) -> Result<JsValue, JsError> {
 #[cfg(all(target_family = "wasm", target_os = "unknown"))]
 #[wasm_bindgen(js_name = "parseDuc")]
 pub fn parse_duc(buf: &[u8]) -> Result<JsValue, JsError> {
-    let state = duc::parse::parse_duc_bytes(buf)
-        .map_err(|e| JsError::new(&format!("{e}")))?;
-    to_js(&state)
-}
-
-/// Parse a `.duc` file lazily — returns everything EXCEPT external file data blobs.
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
-#[wasm_bindgen(js_name = "parseDucLazy")]
-pub fn parse_duc_lazy(buf: &[u8]) -> Result<JsValue, JsError> {
-    let state = duc::parse::parse_duc_bytes_lazy(buf)
-        .map_err(|e| JsError::new(&format!("{e}")))?;
+    let state = duc::parse::parse_duc_bytes(buf).map_err(|e| JsError::new(&format!("{e}")))?;
     to_js(&state)
 }
 
@@ -557,33 +551,8 @@ pub fn parse_duc_lazy(buf: &[u8]) -> Result<JsValue, JsError> {
 #[wasm_bindgen(js_name = "serializeDuc")]
 pub fn serialize_duc(data: JsValue) -> Result<Vec<u8>, JsError> {
     let state: duc::types::ExportedDataState =
-        serde_wasm_bindgen::from_value(data)
-            .map_err(|e| JsError::new(&format!("{e}")))?;
-    duc::serialize::serialize_duc_to_bytes(&state)
-        .map_err(|e| JsError::new(&format!("{e}")))
-}
-
-/// Fetch a single external file from a `.duc` buffer by file ID.
-///
-/// Returns the file's binary data as a Uint8Array, or `undefined` if not found.
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
-#[wasm_bindgen(js_name = "getExternalFile")]
-pub fn get_external_file(buf: &[u8], file_id: &str) -> Result<JsValue, JsError> {
-    let entry = duc::parse::get_external_file_from_bytes(buf, file_id)
-        .map_err(|e| JsError::new(&format!("{e}")))?;
-    match entry {
-        Some(data) => Ok(js_sys::Uint8Array::from(data.as_slice()).into()),
-        None => Ok(JsValue::UNDEFINED),
-    }
-}
-
-/// List metadata for all external files (without loading the heavy data blobs).
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
-#[wasm_bindgen(js_name = "listExternalFiles")]
-pub fn list_external_files(buf: &[u8]) -> Result<JsValue, JsError> {
-    let meta = duc::parse::list_external_files_from_bytes(buf)
-        .map_err(|e| JsError::new(&format!("{e}")))?;
-    to_js(&meta)
+        serde_wasm_bindgen::from_value(data).map_err(|e| JsError::new(&format!("{e}")))?;
+    duc::serialize::serialize_duc_to_bytes(&state).map_err(|e| JsError::new(&format!("{e}")))
 }
 
 /// Restore the document state at `version_number` from a `.duc` file buffer.

@@ -144,6 +144,192 @@ fn migration_chain_preserves_the_prerelease_schema_step() {
 }
 
 #[test]
+fn migrates_prerelease_3000001_split_revision_storage_without_data_loss() {
+    let conn = Connection::open_in_memory().expect("open database");
+    conn.execute_batch(
+        r#"
+        PRAGMA application_id = 1146569567;
+        PRAGMA user_version = 3000001;
+        PRAGMA foreign_keys = ON;
+
+        CREATE TABLE external_files (
+            id TEXT PRIMARY KEY,
+            active_revision_id TEXT NOT NULL,
+            updated INTEGER NOT NULL,
+            version INTEGER
+        ) WITHOUT ROWID;
+        CREATE TABLE external_file_revisions (
+            id TEXT PRIMARY KEY,
+            file_id TEXT NOT NULL REFERENCES external_files(id) ON DELETE CASCADE,
+            size_bytes INTEGER NOT NULL DEFAULT 0,
+            checksum TEXT,
+            source_name TEXT,
+            mime_type TEXT NOT NULL,
+            message TEXT,
+            created INTEGER NOT NULL,
+            last_retrieved INTEGER
+        ) WITHOUT ROWID;
+        CREATE TABLE external_file_revision_data (
+            revision_id TEXT PRIMARY KEY REFERENCES external_file_revisions(id) ON DELETE CASCADE,
+            data BLOB NOT NULL
+        ) WITHOUT ROWID;
+        CREATE TABLE _external_file_revision_data_v3000001 (
+            revision_id TEXT PRIMARY KEY,
+            data BLOB NOT NULL
+        ) WITHOUT ROWID;
+        CREATE TABLE external_file_revision_chunks (
+            revision_id TEXT NOT NULL REFERENCES external_file_revisions(id) ON DELETE CASCADE,
+            chunk_index INTEGER NOT NULL,
+            offset_bytes INTEGER NOT NULL,
+            size_bytes INTEGER NOT NULL,
+            data BLOB NOT NULL,
+            PRIMARY KEY (revision_id, chunk_index)
+        ) WITHOUT ROWID;
+
+        INSERT INTO external_files (id, active_revision_id, updated)
+        VALUES ('file-1', 'revision-1', 1),
+               ('file-2', 'revision-2', 1);
+        INSERT INTO external_file_revisions (
+            id, file_id, size_bytes, mime_type, created
+        ) VALUES ('revision-1', 'file-1', 4, 'application/octet-stream', 1),
+                 ('revision-2', 'file-2', 4, 'application/octet-stream', 1);
+        INSERT INTO external_file_revision_data (revision_id, data)
+        VALUES ('revision-1', X'01020304');
+        INSERT INTO external_file_revision_chunks (
+            revision_id, chunk_index, offset_bytes, size_bytes, data
+        ) VALUES ('revision-2', 0, 0, 2, X'0506'),
+                 ('revision-2', 1, 2, 2, X'0708');
+        "#,
+    )
+    .expect("create split prerelease schema");
+
+    normalize_external_revision_storage(&conn).expect("normalize split storage");
+    normalize_external_revision_storage(&conn).expect("retry normalized split storage");
+    let (_, _, migration) = MIGRATIONS
+        .iter()
+        .find(|(from, to, _)| *from == 3_000_001 && *to == 3_000_002)
+        .expect("find revision split migration");
+    conn.execute_batch(migration)
+        .expect("run canonical migration");
+
+    let data: Vec<u8> = conn
+        .query_row(
+            "SELECT data FROM external_file_revision_data WHERE revision_id = 'revision-1'",
+            [],
+            |row| row.get(0),
+        )
+        .expect("read migrated revision data");
+    assert_eq!(data, vec![1, 2, 3, 4]);
+    let chunked_data: Vec<u8> = conn
+        .query_row(
+            "SELECT data FROM external_file_revision_data WHERE revision_id = 'revision-2'",
+            [],
+            |row| row.get(0),
+        )
+        .expect("read migrated chunked revision data");
+    assert_eq!(chunked_data, vec![5, 6, 7, 8]);
+    assert_eq!(
+        conn.pragma_query_value::<i64, _>(None, "user_version", |row| row.get(0))
+            .expect("read user version"),
+        3_000_002
+    );
+    assert_eq!(
+        conn.query_row("SELECT count(*) FROM pragma_foreign_key_check", [], |row| {
+            row.get::<_, i64>(0)
+        },)
+            .expect("check foreign keys"),
+        0
+    );
+}
+
+#[test]
+fn table_grid_migration_preserves_tables_without_files() {
+    let conn = Connection::open_in_memory().expect("open database");
+    conn.execute_batch(
+        r#"
+        PRAGMA foreign_keys = ON;
+        PRAGMA user_version = 3000005;
+
+        CREATE TABLE elements (
+            id TEXT PRIMARY KEY
+        ) WITHOUT ROWID;
+        CREATE TABLE document_grid_config (
+            element_id            TEXT PRIMARY KEY REFERENCES elements(id) ON DELETE CASCADE,
+            file_id               TEXT,
+            grid_columns          INTEGER NOT NULL DEFAULT 1,
+            grid_gap_x            REAL NOT NULL DEFAULT 0.0,
+            grid_gap_y            REAL NOT NULL DEFAULT 0.0,
+            grid_first_page_alone INTEGER NOT NULL DEFAULT 0,
+            grid_scale            REAL NOT NULL DEFAULT 1.0
+        ) WITHOUT ROWID;
+        CREATE TABLE element_table (
+            element_id TEXT PRIMARY KEY REFERENCES elements(id) ON DELETE CASCADE,
+            file_id    TEXT
+        ) WITHOUT ROWID;
+
+        INSERT INTO elements (id) VALUES ('table-without-file'), ('table-with-config');
+        INSERT INTO element_table (element_id, file_id)
+        VALUES ('table-without-file', NULL), ('table-with-config', 'legacy-file');
+        INSERT INTO document_grid_config (
+            element_id, file_id, grid_columns, grid_gap_x, grid_gap_y,
+            grid_first_page_alone, grid_scale
+        ) VALUES ('table-with-config', 'current-file', 2, 3.0, 4.0, 1, 0.5);
+
+        CREATE TABLE element_table_new (
+            element_id TEXT PRIMARY KEY REFERENCES document_grid_config(element_id) ON DELETE CASCADE
+        ) WITHOUT ROWID;
+        INSERT INTO element_table_new (element_id) VALUES ('table-with-config');
+        "#,
+    )
+    .expect("create legacy table schema");
+
+    let (_, _, migration) = MIGRATIONS
+        .iter()
+        .find(|(from, to, _)| *from == 3_000_005 && *to == 3_000_006)
+        .expect("find table grid migration");
+    conn.execute_batch(migration)
+        .expect("migrate table grid config");
+
+    let migrated_without_file: (Option<String>, i64, f64) = conn
+        .query_row(
+            "SELECT file_id, grid_columns, grid_scale
+             FROM document_grid_config
+             WHERE element_id = 'table-without-file'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )
+        .expect("read migrated table config");
+    assert_eq!(migrated_without_file, (None, 1, 1.0));
+
+    let preserved_config: (Option<String>, i64, f64) = conn
+        .query_row(
+            "SELECT file_id, grid_columns, grid_scale
+             FROM document_grid_config
+             WHERE element_id = 'table-with-config'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )
+        .expect("read existing table config");
+    assert_eq!(preserved_config, (Some("current-file".to_string()), 2, 0.5));
+
+    let migrated_table_count: i64 = conn
+        .query_row("SELECT count(*) FROM element_table", [], |row| row.get(0))
+        .expect("count migrated tables");
+    assert_eq!(migrated_table_count, 2);
+    assert_eq!(
+        conn.pragma_query_value::<i64, _>(None, "user_version", |row| row.get(0))
+            .expect("read user version"),
+        3_000_006
+    );
+    let foreign_key_errors: i64 = conn
+        .query_row("SELECT count(*) FROM pragma_foreign_key_check", [], |row| {
+            row.get(0)
+        })
+        .expect("check foreign keys");
+    assert_eq!(foreign_key_errors, 0);
+}
+
+#[test]
 fn migrates_legacy_payloads_losslessly_into_bounded_chunks() {
     let conn = Connection::open_in_memory().expect("open database");
     conn.execute_batch(LEGACY_SCHEMA)

@@ -158,6 +158,26 @@ export class BrowserDucDocument {
     return this.document.listExternalFiles();
   }
 
+  readCheckpointDataChunk(
+    checkpointId: string,
+    chunkIndex: number,
+  ): Uint8Array | undefined {
+    return this.document.readCheckpointDataChunk(
+      checkpointId,
+      chunkIndex,
+    ) as Uint8Array | undefined;
+  }
+
+  readDeltaChangesetChunk(
+    deltaId: string,
+    chunkIndex: number,
+  ): Uint8Array | undefined {
+    return this.document.readDeltaChangesetChunk(
+      deltaId,
+      chunkIndex,
+    ) as Uint8Array | undefined;
+  }
+
   clearExternalFileRevisionChunks(revisionId: string): void {
     this.document.clearExternalFileRevisionChunks(revisionId);
   }

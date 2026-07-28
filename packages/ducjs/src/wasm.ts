@@ -5,10 +5,7 @@ import init, {
     createDeltaChangeset as _createDeltaChangeset,
     getCurrentSchemaVersion as _getCurrentSchemaVersion,
     parseDuc as _parseDuc,
-    parseDucLazy as _parseDucLazy,
     serializeDuc as _serializeDuc,
-    getExternalFile as _getExternalFile,
-    listExternalFiles as _listExternalFiles,
     restoreVersion as _restoreVersion,
     restoreCheckpoint as _restoreCheckpoint,
     listVersions as _listVersions,
@@ -101,10 +98,7 @@ export const DucOpfsImporter = _DucOpfsImporter;
 
 // Byte-buffer compatibility API
 export const wasmParseDuc = _parseDuc;
-export const wasmParseDucLazy = _parseDucLazy;
 export const wasmSerializeDuc = _serializeDuc;
-export const wasmGetExternalFile = _getExternalFile;
-export const wasmListExternalFiles = _listExternalFiles;
 export const wasmRestoreVersion = _restoreVersion;
 export const wasmRestoreCheckpoint = _restoreCheckpoint;
 export const wasmListVersions = _listVersions;

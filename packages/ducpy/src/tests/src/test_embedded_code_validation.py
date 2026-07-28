@@ -114,6 +114,7 @@ def test_typst_validation_failure():
     
     assert "Typst validation failed" in str(excinfo.value)
     assert "unclosed delimiter" in str(excinfo.value).lower()
+    assert "<ducpy-embedded-doc>:" in str(excinfo.value)
 
 
 def test_build123d_validation_success(test_output_dir):

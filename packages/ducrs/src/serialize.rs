@@ -1827,7 +1827,11 @@ pub fn serialize_duc_to_bytes(state: &ExportedDataState) -> SerializeResult<Vec<
     if let Some(files) = &state.external_files {
         for (file_id, file) in files {
             let revision_id = &file.active_revision_id;
-            if let Some(data) = state.external_files_data.as_ref().and_then(|d| d.get(revision_id)) {
+            if let Some(data) = state
+                .external_files_data
+                .as_ref()
+                .and_then(|d| d.get(revision_id))
+            {
                 let tx = conn.transaction()?;
                 let mut reader = Cursor::new(data.as_slice());
                 external_file_chunks::write_reader_chunks(
@@ -1852,7 +1856,8 @@ pub fn serialize_duc_to_bytes(state: &ExportedDataState) -> SerializeResult<Vec<
     {
         // On WASM, use sqlite3_serialize via rusqlite's serialize feature
         use rusqlite::MAIN_DB;
-        let raw_sqlite: Vec<u8> = conn.serialize(MAIN_DB)
+        let raw_sqlite: Vec<u8> = conn
+            .serialize(MAIN_DB)
             .map_err(|e| SerializeError::Io(format!("serialize: {e}")))?
             .to_vec();
 
@@ -1870,7 +1875,8 @@ pub fn serialize_duc_to_bytes(state: &ExportedDataState) -> SerializeResult<Vec<
     {
         // On native/WASI, use sqlite3_serialize to get raw bytes
         use rusqlite::MAIN_DB;
-        let raw_sqlite: Vec<u8> = conn.serialize(MAIN_DB)
+        let raw_sqlite: Vec<u8> = conn
+            .serialize(MAIN_DB)
             .map_err(|e| SerializeError::Io(format!("serialize: {e}")))?
             .to_vec();
 

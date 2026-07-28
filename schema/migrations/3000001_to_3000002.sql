@@ -4,6 +4,7 @@
 -- loading heavy blobs.
 
 PRAGMA foreign_keys = OFF;
+BEGIN IMMEDIATE;
 
 -- 1. Stage existing data blobs before the parent table is renamed/recreated.
 CREATE TABLE _external_file_revision_data_v3000001 (
@@ -48,5 +49,6 @@ INSERT INTO external_file_revision_data (revision_id, data)
 DROP TABLE _ext_revisions_old_v3000001;
 DROP TABLE _external_file_revision_data_v3000001;
 
+COMMIT;
 PRAGMA foreign_keys = ON;
 PRAGMA user_version = 3000002;

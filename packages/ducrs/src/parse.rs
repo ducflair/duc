@@ -2600,10 +2600,7 @@ pub fn list_external_files_from_bytes(buf: &[u8]) -> ParseResult<Vec<ExternalFil
 /// Get a single external file revision's chunk data from a `.duc` byte buffer.
 ///
 /// Returns `None` if the file ID is not found.
-pub fn get_external_file_from_bytes(
-    buf: &[u8],
-    file_id: &str,
-) -> ParseResult<Option<Vec<u8>>> {
+pub fn get_external_file_from_bytes(buf: &[u8], file_id: &str) -> ParseResult<Option<Vec<u8>>> {
     let conn = open_duc_bytes_connection(buf)?;
 
     // Find the active revision for this file ID.
@@ -2622,11 +2619,7 @@ pub fn get_external_file_from_bytes(
     match revision_id {
         Some(rev_id) => {
             let mut chunks = Vec::new();
-            external_file_chunks::stream_revision_chunks_to_writer(
-                &conn,
-                &rev_id,
-                &mut chunks,
-            )?;
+            external_file_chunks::stream_revision_chunks_to_writer(&conn, &rev_id, &mut chunks)?;
             Ok(Some(chunks))
         }
         None => Ok(None),
