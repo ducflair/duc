@@ -21,15 +21,15 @@ on:
     branches:
       - main
     paths:
+      - 'packages/ducrs/Cargo.toml'
       - 'packages/ducpy/docs/**'
-      - 'packages/ducpy/src/ducpy/**'
-      - 'packages/ducjs/src/**'
-      - 'packages/ducrs/src/**'
-      - 'packages/ducpdf/src/**'
-      - 'packages/ducsvg/src/**'
+      - 'packages/ducjs/typedoc.json'
+      - 'packages/ducpdf/typedoc.json'
+      - 'packages/ducsvg/typedoc.json'
       - 'apps/web/content/docs/**'
       - 'schema/**'
       - 'scripts/gen-sql-docs.py'
+      - 'scripts/build-all-api-docs.py'
       - '**.md'
       - '**.mdx'
 
@@ -68,13 +68,7 @@ jobs:
           sudo rm -rf /tmp/sq* /tmp/go-graphviz* /tmp/wazero*
 
       - name: Build SQL HTML Documentation
-        run: |
-          TAG_VERSION=$(git tag -l 'duc.sql@*' -l 'ducsql@*' -l 'duc@*' | sed -E 's/(duc\.sql@|ducsql@|duc@)//' | sort -V | tail -n1)
-          if [ -z "$TAG_VERSION" ]; then
-            TAG_VERSION=$(node -p "require('./package.json').version")
-          fi
-          echo "Resolved SQL version: $TAG_VERSION"
-          SQL_DOCS_VERSION="$TAG_VERSION" uv run python3 scripts/gen-sql-docs.py
+        run: uv run python3 scripts/gen-sql-docs.py
 
       - name: Install Python dependencies with uv
         run: uv sync --frozen || uv sync

@@ -286,7 +286,6 @@ jobs:
   test-docs:
     name: API Docs Staging Dry-Run
     needs: release-check
-    if: needs.release-check.outputs.any_release == 'true'
     uses: ./.github/workflows/deploy-api-docs.yml
     with:
       dry_run: true
@@ -405,20 +404,20 @@ jobs:
               echo "### ❌ Package tests failed" >> "$GITHUB_STEP_SUMMARY"
               FAILED="true"
             fi
-
-            if [ "$DOCS_RESULT" = "success" ]; then
-              echo "### ✅ API Documentation staging dry-run passed" >> "$GITHUB_STEP_SUMMARY"
-            elif [ "$DOCS_RESULT" = "skipped" ]; then
-              echo "### ⏭️ API Documentation dry-run was skipped" >> "$GITHUB_STEP_SUMMARY"
-            elif [ "$DOCS_RESULT" = "cancelled" ]; then
-              echo "### 🛑 API Documentation dry-run cancelled (interrupted by workflow failure)" >> "$GITHUB_STEP_SUMMARY"
-              FAILED="true"
-            else
-              echo "### ❌ API Documentation staging dry-run failed" >> "$GITHUB_STEP_SUMMARY"
-              FAILED="true"
-            fi
           else
             echo "### ℹ️ No pending package releases — package tests skipped" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ "$DOCS_RESULT" = "success" ]; then
+            echo "### ✅ API Documentation staging dry-run passed" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$DOCS_RESULT" = "skipped" ]; then
+            echo "### ⏭️ API Documentation dry-run was skipped" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$DOCS_RESULT" = "cancelled" ]; then
+            echo "### 🛑 API Documentation dry-run cancelled (interrupted by workflow failure)" >> "$GITHUB_STEP_SUMMARY"
+            FAILED="true"
+          else
+            echo "### ❌ API Documentation staging dry-run failed" >> "$GITHUB_STEP_SUMMARY"
+            FAILED="true"
           fi
 
           if [ "$FAILED" = "true" ]; then
