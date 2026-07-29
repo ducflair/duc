@@ -64,8 +64,7 @@ fn run_state_json(
         .map_err(|e| format!("parse state JSON: {e}"))?;
 
     eprintln!("Opening database: {db_path}");
-    let mut doc = DucDocument::open(&db_path)
-        .map_err(|e| format!("open failed: {e}"))?;
+    let mut doc = DucDocument::open(&db_path).map_err(|e| format!("open failed: {e}"))?;
     doc.write_document_state(&state)
         .map_err(|e| format!("write state failed: {e}"))?;
 
@@ -77,7 +76,10 @@ fn run_state_json(
         for entry in &entries {
             stream_file_data(&mut doc, entry, &mut total_bytes)?;
         }
-        eprintln!("Streamed {} external revisions, {total_bytes} bytes total.", entries.len());
+        eprintln!(
+            "Streamed {} external revisions, {total_bytes} bytes total.",
+            entries.len()
+        );
     }
     doc.checkpoint_wal()
         .map_err(|e| format!("checkpoint failed: {e}"))?;
@@ -97,15 +99,14 @@ fn run(output_path: &str, manifest_path: Option<String>) -> Result<(), String> {
     let _ = fs::remove_file(&db_path);
 
     eprintln!("Opening database: {db_path}");
-    let mut doc = DucDocument::open(&db_path)
-        .map_err(|e| format!("open failed: {e}"))?;
+    let mut doc = DucDocument::open(&db_path).map_err(|e| format!("open failed: {e}"))?;
 
     eprintln!("Database opened and bootstrapped.");
 
     let entries: Vec<ManifestEntry> = match manifest_path {
         Some(ref path) => {
-            let file = fs::File::open(path)
-                .map_err(|e| format!("cannot open manifest {path}: {e}"))?;
+            let file =
+                fs::File::open(path).map_err(|e| format!("cannot open manifest {path}: {e}"))?;
             read_manifest(file)?
         }
         None => {
@@ -131,19 +132,24 @@ fn run(output_path: &str, manifest_path: Option<String>) -> Result<(), String> {
     doc.checkpoint_wal()
         .map_err(|e| format!("checkpoint failed: {e}"))?;
 
-    let db_size = doc.db_size_bytes()
+    let db_size = doc
+        .db_size_bytes()
         .map_err(|e| format!("db_size_bytes failed: {e}"))?;
-    eprintln!("Database size: {db_size} bytes ({:.2} GB)", db_size as f64 / (1024.0 * 1024.0 * 1024.0));
+    eprintln!(
+        "Database size: {db_size} bytes ({:.2} GB)",
+        db_size as f64 / (1024.0 * 1024.0 * 1024.0)
+    );
 
     drop(doc);
 
     eprintln!("Compressing to .duc (gzip)...");
     compress_to_gzip(&db_path, output_path)?;
 
-    let compressed_size = fs::metadata(output_path)
-        .map(|m| m.len())
-        .unwrap_or(0);
-    eprintln!("Compressed: {compressed_size} bytes ({:.2} GB)", compressed_size as f64 / (1024.0 * 1024.0 * 1024.0));
+    let compressed_size = fs::metadata(output_path).map(|m| m.len()).unwrap_or(0);
+    eprintln!(
+        "Compressed: {compressed_size} bytes ({:.2} GB)",
+        compressed_size as f64 / (1024.0 * 1024.0 * 1024.0)
+    );
 
     let _ = fs::remove_file(&db_path);
 
@@ -187,9 +193,10 @@ fn stream_file(
     total_bytes: &mut u64,
 ) -> Result<(), String> {
     let path = Path::new(&entry.source_path);
-    let file = fs::File::open(path)
-        .map_err(|e| format!("cannot open {}: {e}", entry.source_path))?;
-    let file_size = file.metadata()
+    let file =
+        fs::File::open(path).map_err(|e| format!("cannot open {}: {e}", entry.source_path))?;
+    let file_size = file
+        .metadata()
         .map(|m| m.len() as i64)
         .unwrap_or(entry.size_bytes);
 
@@ -230,7 +237,8 @@ fn stream_file(
     let mut offset: i64 = 0;
 
     loop {
-        let bytes_read = reader.read(&mut chunk)
+        let bytes_read = reader
+            .read(&mut chunk)
             .map_err(|e| format!("read chunk {chunk_index}: {e}"))?;
         if bytes_read == 0 {
             break;
@@ -266,8 +274,8 @@ fn stream_file_data(
     total_bytes: &mut u64,
 ) -> Result<(), String> {
     let path = Path::new(&entry.source_path);
-    let file = fs::File::open(path)
-        .map_err(|e| format!("cannot open {}: {e}", entry.source_path))?;
+    let file =
+        fs::File::open(path).map_err(|e| format!("cannot open {}: {e}", entry.source_path))?;
     doc.clear_external_file_revision_chunks(&entry.revision_id)
         .map_err(|e| format!("clear external revision {}: {e}", entry.revision_id))?;
 
@@ -276,7 +284,8 @@ fn stream_file_data(
     let mut chunk_index: i64 = 0;
     let mut offset: i64 = 0;
     loop {
-        let bytes_read = reader.read(&mut chunk)
+        let bytes_read = reader
+            .read(&mut chunk)
             .map_err(|e| format!("read chunk {chunk_index}: {e}"))?;
         if bytes_read == 0 {
             break;
@@ -306,10 +315,8 @@ fn compress_to_gzip(input_path: &str, output_path: &str) -> Result<(), String> {
     use flate2::write::GzEncoder;
     use flate2::Compression;
 
-    let input = fs::File::open(input_path)
-        .map_err(|e| format!("open input: {e}"))?;
-    let output = fs::File::create(output_path)
-        .map_err(|e| format!("create output: {e}"))?;
+    let input = fs::File::open(input_path).map_err(|e| format!("open input: {e}"))?;
+    let output = fs::File::create(output_path).map_err(|e| format!("create output: {e}"))?;
 
     let reader = BufReader::new(input);
     let writer = BufWriter::new(output);
@@ -318,15 +325,16 @@ fn compress_to_gzip(input_path: &str, output_path: &str) -> Result<(), String> {
     let mut buf = vec![0u8; 1024 * 1024];
     let mut reader = reader;
     loop {
-        let n = reader.read(&mut buf)
-            .map_err(|e| format!("read: {e}"))?;
-        if n == 0 { break; }
-        encoder.write_all(&buf[..n])
+        let n = reader.read(&mut buf).map_err(|e| format!("read: {e}"))?;
+        if n == 0 {
+            break;
+        }
+        encoder
+            .write_all(&buf[..n])
             .map_err(|e| format!("write: {e}"))?;
     }
 
-    encoder.finish()
-        .map_err(|e| format!("gzip finish: {e}"))?;
+    encoder.finish().map_err(|e| format!("gzip finish: {e}"))?;
 
     Ok(())
 }

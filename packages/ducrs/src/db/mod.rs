@@ -112,10 +112,7 @@ pub async fn open_file_opfs(name: &str) -> DbResult<DucConnection> {
 }
 
 #[cfg(all(target_family = "wasm", target_os = "unknown", feature = "opfs"))]
-pub async fn open_file_opfs_in_namespace(
-    name: &str,
-    namespace: &str,
-) -> DbResult<DucConnection> {
+pub async fn open_file_opfs_in_namespace(name: &str, namespace: &str) -> DbResult<DucConnection> {
     wasm::open_file_opfs_in_namespace(name, Some(namespace)).await
 }
 

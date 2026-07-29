@@ -88,8 +88,9 @@ If the schema itself changed (new columns, tables, type modifications), create a
 2. Create a new file on top of the last one, e.g. `3000015_to_3000016.sql`
 3. Make destructive/rebuild migrations transactional and backfill data before dropping source tables
 4. Test the migration against a database created with the previous schema; verify payload bytes/lengths, row counts, `PRAGMA foreign_key_check`, and the final `PRAGMA user_version`
-5. If existing readers cannot open the new file format or a published API is removed, evaluate a major schema version rather than a patch increment
-6. When promoting a prerelease schema to a major version, retain its natural sequential migration, add a final explicit major-version bridge, and scan checked-in fixtures for every represented `user_version`
+5. When repairing a migration that may already have failed in the field, clean up its known partial DDL artifacts and test retrying from that partial state
+6. If existing readers cannot open the new file format or a published API is removed, evaluate a major schema version rather than a patch increment
+7. When promoting a prerelease schema to a major version, retain its natural sequential migration, add a final explicit major-version bridge, and scan checked-in fixtures for every represented `user_version`
 
 ```bash
 ls -1 duc/schema/migrations/ | sort | tail -5   # see last migrations

@@ -335,6 +335,15 @@ def _write_typst_external_files(project_dir: Path, files_meta: Optional[Dict[str
         target.write_bytes(bytes(data))
 
 
+def _format_typst_validation_error(exc: Exception, main_path: Path) -> str:
+    diagnostic = getattr(exc, "diagnostic", None)
+    detail = diagnostic.strip() if isinstance(diagnostic, str) and diagnostic.strip() else str(exc)
+    return detail.replace(str(main_path), "<ducpy-embedded-doc>").replace(
+        main_path.name,
+        "<ducpy-embedded-doc>",
+    )
+
+
 def _run_typst_validation(
     code: str,
     label: str,
@@ -359,7 +368,7 @@ def _run_typst_validation(
             except TypeError:
                 typst.compile(str(main_path))
         except Exception as exc:
-            return f"{label}: Typst validation failed\n{exc}"
+            return f"{label}: Typst validation failed\n{_format_typst_validation_error(exc, main_path)}"
 
     return None
 

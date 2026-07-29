@@ -178,7 +178,7 @@ jobs:
           fi
           echo "Resolved ducrs version: $TAG_VERSION"
           if [ -n "$TAG_VERSION" ] && [ "$TAG_VERSION" != "undefined" ]; then
-            node "../../scripts/cargo-set-pkg-version.js" "packages/ducrs/Cargo.toml" "$TAG_VERSION"
+            node "../../scripts/cargo-set-pkg-version.js" "Cargo.toml" "$TAG_VERSION"
           fi
           cargo doc --no-deps
         working-directory: packages/ducrs

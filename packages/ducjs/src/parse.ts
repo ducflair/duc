@@ -1,17 +1,9 @@
 import type { ElementsConfig, RestoreConfig, RestoredDataState } from "./restore";
 import { restoreParsedData } from "./restore-parsed";
-import type { DucExternalFiles, ExportedDataState, ExternalFilesData } from "./types";
-import { ensureWasm, wasmParseDuc, wasmParseDucLazy } from "./wasm";
+import type { ExportedDataState } from "./types";
+import { ensureWasm, wasmParseDuc } from "./wasm";
 
 export type { RestoredDataState };
-
-export type LazyRestoredDataState = RestoredDataState & {
-  lazyFileStore: LazyExternalFileStore;
-};
-
-// Re-export from lazy-files for backwards compatibility
-import { LazyExternalFileStore } from "./lazy-files";
-export { LazyExternalFileStore };
 
 /**
  * Parse a `.duc` file (Blob/File) into a RestoredDataState.
@@ -50,48 +42,4 @@ export async function parseDuc(
   }
 
   return restoreParsedData(raw, elementsConfig, restoreConfig);
-}
-
-/**
- * Parse a `.duc` file lazily — returns everything EXCEPT external file data blobs.
- * Use `LazyExternalFileStore` for on-demand file access.
- */
-export async function parseDucLazy(
-  buffer: Uint8Array,
-  elementsConfig?: ElementsConfig,
-  restoreConfig?: RestoreConfig,
-): Promise<LazyRestoredDataState> {
-  await ensureWasm();
-
-  if (buffer.byteLength === 0) {
-    throw new Error(`[parseDucLazy] buffer too small (${buffer.byteLength} bytes) — not a valid .duc file`);
-  }
-
-  const header = new TextDecoder().decode(buffer.slice(0, 15));
-
-  let raw: ExportedDataState;
-  try {
-    raw = wasmParseDucLazy(buffer) as ExportedDataState;
-  } catch (error) {
-    const prefixHex = Array.from(buffer.slice(0, 16))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join(" ");
-    throw new Error(
-      `[parseDucLazy] wasm parse failed (size=${buffer.byteLength}, header="${header}", prefix=${prefixHex}): ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
-
-  const lazyFileStore = new LazyExternalFileStore(buffer);
-  const files: DucExternalFiles = {};
-  const filesData: ExternalFilesData = {};
-
-  const restored = restoreParsedData(
-    raw,
-    elementsConfig,
-    restoreConfig,
-    { files, filesData },
-  ) as LazyRestoredDataState;
-  restored.lazyFileStore = lazyFileStore;
-
-  return restored;
 }

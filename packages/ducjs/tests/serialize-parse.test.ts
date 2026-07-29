@@ -8,17 +8,6 @@ import { importDucStreamToOpfs } from "../src/opfs-import";
 import { parseDuc } from "../src/parse";
 
 describe("DUC streaming API", () => {
-  test("treats an empty lazy-file buffer as a runtime-only store", () => {
-    const store = new ducjs.LazyExternalFileStore(new Uint8Array());
-
-    expect(store.isReleased).toBe(false);
-    expect(store.size).toBe(0);
-    expect(store.toExternalFiles()).toEqual({});
-    expect(store.toExternalFilesData()).toEqual({});
-    store.release();
-    expect(store.isReleased).toBe(true);
-  });
-
   test("parses a standalone raw SQLite database exported with WAL header bytes", async () => {
     const fixture = join(
       import.meta.dir,
@@ -41,6 +30,7 @@ describe("DUC streaming API", () => {
     expect("parseDuc" in ducjs).toBe(false);
     expect("parseDucLazy" in ducjs).toBe(false);
     expect("serializeDuc" in ducjs).toBe(false);
+    expect("LazyExternalFileStore" in ducjs).toBe(false);
 
     const methodNames = [
       "readDocumentState",
@@ -61,6 +51,29 @@ describe("DUC streaming API", () => {
     for (const methodName of methodNames) {
       expect(methodName in ducjs.DucOpfsDocument.prototype).toBe(true);
     }
+
+    expect("readCheckpointDataChunk" in ducjs.BrowserDucDocument.prototype).toBe(true);
+    expect("readDeltaChangesetChunk" in ducjs.BrowserDucDocument.prototype).toBe(true);
+  });
+
+  test("forwards version artifact chunk reads through BrowserDucDocument", () => {
+    const checkpointChunk = new Uint8Array([1, 2, 3]);
+    const deltaChunk = new Uint8Array([4, 5]);
+    const handle = {
+      readCheckpointDataChunk: (id: string, index: number) =>
+        id === "checkpoint-1" && index === 0 ? checkpointChunk : undefined,
+      readDeltaChangesetChunk: (id: string, index: number) =>
+        id === "delta-1" && index === 0 ? deltaChunk : undefined,
+    };
+    const document = new (ducjs.BrowserDucDocument as unknown as new (
+      handle: typeof handle,
+      chunkSize: number,
+    ) => ducjs.BrowserDucDocument)(handle, 1024);
+
+    expect(document.readCheckpointDataChunk("checkpoint-1", 0)).toEqual(checkpointChunk);
+    expect(document.readCheckpointDataChunk("missing", 0)).toBeUndefined();
+    expect(document.readDeltaChangesetChunk("delta-1", 0)).toEqual(deltaChunk);
+    expect(document.readDeltaChangesetChunk("missing", 0)).toBeUndefined();
   });
 
   test("streams version payload chunks through the document-facing helpers", async () => {
