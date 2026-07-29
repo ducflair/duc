@@ -2600,114 +2600,107 @@
 <a href=#2600 id=2600 data-nosnippet>2600</a><span class="doccomment">/// Get a single external file revision's chunk data from a `.duc` byte buffer.
 <a href=#2601 id=2601 data-nosnippet>2601</a>///
 <a href=#2602 id=2602 data-nosnippet>2602</a>/// Returns `None` if the file ID is not found.
-<a href=#2603 id=2603 data-nosnippet>2603</a></span><span class="kw">pub fn </span>get_external_file_from_bytes(
-<a href=#2604 id=2604 data-nosnippet>2604</a>    buf: <span class="kw-2">&amp;</span>[u8],
-<a href=#2605 id=2605 data-nosnippet>2605</a>    file_id: <span class="kw-2">&amp;</span>str,
-<a href=#2606 id=2606 data-nosnippet>2606</a>) -&gt; ParseResult&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; {
-<a href=#2607 id=2607 data-nosnippet>2607</a>    <span class="kw">let </span>conn = open_duc_bytes_connection(buf)<span class="question-mark">?</span>;
-<a href=#2608 id=2608 data-nosnippet>2608</a>
-<a href=#2609 id=2609 data-nosnippet>2609</a>    <span class="comment">// Find the active revision for this file ID.
-<a href=#2610 id=2610 data-nosnippet>2610</a>    </span><span class="kw">let </span>revision_id: <span class="prelude-ty">Option</span>&lt;String&gt; = conn
-<a href=#2611 id=2611 data-nosnippet>2611</a>        .query_row(
-<a href=#2612 id=2612 data-nosnippet>2612</a>            <span class="string">"SELECT active_revision_id FROM external_files WHERE id = ?1"</span>,
-<a href=#2613 id=2613 data-nosnippet>2613</a>            <span class="macro">params!</span>[file_id],
-<a href=#2614 id=2614 data-nosnippet>2614</a>            |row| row.get(<span class="number">0</span>),
-<a href=#2615 id=2615 data-nosnippet>2615</a>        )
-<a href=#2616 id=2616 data-nosnippet>2616</a>        .or_else(|e| <span class="kw">match </span>e {
-<a href=#2617 id=2617 data-nosnippet>2617</a>            rusqlite::Error::QueryReturnedNoRows =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-<a href=#2618 id=2618 data-nosnippet>2618</a>            e =&gt; <span class="prelude-val">Err</span>(e),
-<a href=#2619 id=2619 data-nosnippet>2619</a>        })
-<a href=#2620 id=2620 data-nosnippet>2620</a>        .map_err(ParseError::Sqlite)<span class="question-mark">?</span>;
-<a href=#2621 id=2621 data-nosnippet>2621</a>
-<a href=#2622 id=2622 data-nosnippet>2622</a>    <span class="kw">match </span>revision_id {
-<a href=#2623 id=2623 data-nosnippet>2623</a>        <span class="prelude-val">Some</span>(rev_id) =&gt; {
-<a href=#2624 id=2624 data-nosnippet>2624</a>            <span class="kw">let </span><span class="kw-2">mut </span>chunks = Vec::new();
-<a href=#2625 id=2625 data-nosnippet>2625</a>            external_file_chunks::stream_revision_chunks_to_writer(
-<a href=#2626 id=2626 data-nosnippet>2626</a>                <span class="kw-2">&amp;</span>conn,
-<a href=#2627 id=2627 data-nosnippet>2627</a>                <span class="kw-2">&amp;</span>rev_id,
-<a href=#2628 id=2628 data-nosnippet>2628</a>                <span class="kw-2">&amp;mut </span>chunks,
-<a href=#2629 id=2629 data-nosnippet>2629</a>            )<span class="question-mark">?</span>;
-<a href=#2630 id=2630 data-nosnippet>2630</a>            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(chunks))
-<a href=#2631 id=2631 data-nosnippet>2631</a>        }
-<a href=#2632 id=2632 data-nosnippet>2632</a>        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-<a href=#2633 id=2633 data-nosnippet>2633</a>    }
-<a href=#2634 id=2634 data-nosnippet>2634</a>}
-<a href=#2635 id=2635 data-nosnippet>2635</a>
-<a href=#2636 id=2636 data-nosnippet>2636</a><span class="doccomment">/// Open a `.duc` byte buffer as a [`rusqlite::Connection`].
-<a href=#2637 id=2637 data-nosnippet>2637</a>///
-<a href=#2638 id=2638 data-nosnippet>2638</a>/// Decompresses gzip to raw SQLite bytes, then opens an in-memory database
-<a href=#2639 id=2639 data-nosnippet>2639</a>/// (on WASM) or a temp file (on native targets).
-<a href=#2640 id=2640 data-nosnippet>2640</a></span><span class="kw">pub fn </span>open_duc_bytes_connection(buf: <span class="kw-2">&amp;</span>[u8]) -&gt; ParseResult&lt;Connection&gt; {
-<a href=#2641 id=2641 data-nosnippet>2641</a>    <span class="kw">use </span>flate2::read::GzDecoder;
-<a href=#2642 id=2642 data-nosnippet>2642</a>    <span class="kw">use </span>std::io::Read;
-<a href=#2643 id=2643 data-nosnippet>2643</a>
-<a href=#2644 id=2644 data-nosnippet>2644</a>    <span class="comment">// Check for gzip magic header
-<a href=#2645 id=2645 data-nosnippet>2645</a>    </span><span class="kw">let </span>is_gzip = buf.len() &gt;= <span class="number">2 </span>&amp;&amp; buf[<span class="number">0</span>] == <span class="number">0x1f </span>&amp;&amp; buf[<span class="number">1</span>] == <span class="number">0x8b</span>;
-<a href=#2646 id=2646 data-nosnippet>2646</a>
-<a href=#2647 id=2647 data-nosnippet>2647</a>    <span class="kw">let </span><span class="kw-2">mut </span>raw_sqlite: Vec&lt;u8&gt; = <span class="kw">if </span>is_gzip {
-<a href=#2648 id=2648 data-nosnippet>2648</a>        <span class="kw">let </span><span class="kw-2">mut </span>decoder = GzDecoder::new(buf);
-<a href=#2649 id=2649 data-nosnippet>2649</a>        <span class="kw">let </span><span class="kw-2">mut </span>out = Vec::new();
-<a href=#2650 id=2650 data-nosnippet>2650</a>        decoder
-<a href=#2651 id=2651 data-nosnippet>2651</a>            .read_to_end(<span class="kw-2">&amp;mut </span>out)
-<a href=#2652 id=2652 data-nosnippet>2652</a>            .map_err(|e| ParseError::Io(<span class="macro">format!</span>(<span class="string">"gzip decompress: {e}"</span>)))<span class="question-mark">?</span>;
-<a href=#2653 id=2653 data-nosnippet>2653</a>        out
-<a href=#2654 id=2654 data-nosnippet>2654</a>    } <span class="kw">else </span>{
-<a href=#2655 id=2655 data-nosnippet>2655</a>        buf.to_vec()
-<a href=#2656 id=2656 data-nosnippet>2656</a>    };
+<a href=#2603 id=2603 data-nosnippet>2603</a></span><span class="kw">pub fn </span>get_external_file_from_bytes(buf: <span class="kw-2">&amp;</span>[u8], file_id: <span class="kw-2">&amp;</span>str) -&gt; ParseResult&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; {
+<a href=#2604 id=2604 data-nosnippet>2604</a>    <span class="kw">let </span>conn = open_duc_bytes_connection(buf)<span class="question-mark">?</span>;
+<a href=#2605 id=2605 data-nosnippet>2605</a>
+<a href=#2606 id=2606 data-nosnippet>2606</a>    <span class="comment">// Find the active revision for this file ID.
+<a href=#2607 id=2607 data-nosnippet>2607</a>    </span><span class="kw">let </span>revision_id: <span class="prelude-ty">Option</span>&lt;String&gt; = conn
+<a href=#2608 id=2608 data-nosnippet>2608</a>        .query_row(
+<a href=#2609 id=2609 data-nosnippet>2609</a>            <span class="string">"SELECT active_revision_id FROM external_files WHERE id = ?1"</span>,
+<a href=#2610 id=2610 data-nosnippet>2610</a>            <span class="macro">params!</span>[file_id],
+<a href=#2611 id=2611 data-nosnippet>2611</a>            |row| row.get(<span class="number">0</span>),
+<a href=#2612 id=2612 data-nosnippet>2612</a>        )
+<a href=#2613 id=2613 data-nosnippet>2613</a>        .or_else(|e| <span class="kw">match </span>e {
+<a href=#2614 id=2614 data-nosnippet>2614</a>            rusqlite::Error::QueryReturnedNoRows =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+<a href=#2615 id=2615 data-nosnippet>2615</a>            e =&gt; <span class="prelude-val">Err</span>(e),
+<a href=#2616 id=2616 data-nosnippet>2616</a>        })
+<a href=#2617 id=2617 data-nosnippet>2617</a>        .map_err(ParseError::Sqlite)<span class="question-mark">?</span>;
+<a href=#2618 id=2618 data-nosnippet>2618</a>
+<a href=#2619 id=2619 data-nosnippet>2619</a>    <span class="kw">match </span>revision_id {
+<a href=#2620 id=2620 data-nosnippet>2620</a>        <span class="prelude-val">Some</span>(rev_id) =&gt; {
+<a href=#2621 id=2621 data-nosnippet>2621</a>            <span class="kw">let </span><span class="kw-2">mut </span>chunks = Vec::new();
+<a href=#2622 id=2622 data-nosnippet>2622</a>            external_file_chunks::stream_revision_chunks_to_writer(<span class="kw-2">&amp;</span>conn, <span class="kw-2">&amp;</span>rev_id, <span class="kw-2">&amp;mut </span>chunks)<span class="question-mark">?</span>;
+<a href=#2623 id=2623 data-nosnippet>2623</a>            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(chunks))
+<a href=#2624 id=2624 data-nosnippet>2624</a>        }
+<a href=#2625 id=2625 data-nosnippet>2625</a>        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+<a href=#2626 id=2626 data-nosnippet>2626</a>    }
+<a href=#2627 id=2627 data-nosnippet>2627</a>}
+<a href=#2628 id=2628 data-nosnippet>2628</a>
+<a href=#2629 id=2629 data-nosnippet>2629</a><span class="doccomment">/// Open a `.duc` byte buffer as a [`rusqlite::Connection`].
+<a href=#2630 id=2630 data-nosnippet>2630</a>///
+<a href=#2631 id=2631 data-nosnippet>2631</a>/// Decompresses gzip to raw SQLite bytes, then opens an in-memory database
+<a href=#2632 id=2632 data-nosnippet>2632</a>/// (on WASM) or a temp file (on native targets).
+<a href=#2633 id=2633 data-nosnippet>2633</a></span><span class="kw">pub fn </span>open_duc_bytes_connection(buf: <span class="kw-2">&amp;</span>[u8]) -&gt; ParseResult&lt;Connection&gt; {
+<a href=#2634 id=2634 data-nosnippet>2634</a>    <span class="kw">use </span>flate2::read::GzDecoder;
+<a href=#2635 id=2635 data-nosnippet>2635</a>    <span class="kw">use </span>std::io::Read;
+<a href=#2636 id=2636 data-nosnippet>2636</a>
+<a href=#2637 id=2637 data-nosnippet>2637</a>    <span class="comment">// Check for gzip magic header
+<a href=#2638 id=2638 data-nosnippet>2638</a>    </span><span class="kw">let </span>is_gzip = buf.len() &gt;= <span class="number">2 </span>&amp;&amp; buf[<span class="number">0</span>] == <span class="number">0x1f </span>&amp;&amp; buf[<span class="number">1</span>] == <span class="number">0x8b</span>;
+<a href=#2639 id=2639 data-nosnippet>2639</a>
+<a href=#2640 id=2640 data-nosnippet>2640</a>    <span class="kw">let </span><span class="kw-2">mut </span>raw_sqlite: Vec&lt;u8&gt; = <span class="kw">if </span>is_gzip {
+<a href=#2641 id=2641 data-nosnippet>2641</a>        <span class="kw">let </span><span class="kw-2">mut </span>decoder = GzDecoder::new(buf);
+<a href=#2642 id=2642 data-nosnippet>2642</a>        <span class="kw">let </span><span class="kw-2">mut </span>out = Vec::new();
+<a href=#2643 id=2643 data-nosnippet>2643</a>        decoder
+<a href=#2644 id=2644 data-nosnippet>2644</a>            .read_to_end(<span class="kw-2">&amp;mut </span>out)
+<a href=#2645 id=2645 data-nosnippet>2645</a>            .map_err(|e| ParseError::Io(<span class="macro">format!</span>(<span class="string">"gzip decompress: {e}"</span>)))<span class="question-mark">?</span>;
+<a href=#2646 id=2646 data-nosnippet>2646</a>        out
+<a href=#2647 id=2647 data-nosnippet>2647</a>    } <span class="kw">else </span>{
+<a href=#2648 id=2648 data-nosnippet>2648</a>        buf.to_vec()
+<a href=#2649 id=2649 data-nosnippet>2649</a>    };
+<a href=#2650 id=2650 data-nosnippet>2650</a>
+<a href=#2651 id=2651 data-nosnippet>2651</a>    <span class="kw">if </span>raw_sqlite.len() &lt; <span class="number">100 </span>{
+<a href=#2652 id=2652 data-nosnippet>2652</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ParseError::Io(<span class="macro">format!</span>(
+<a href=#2653 id=2653 data-nosnippet>2653</a>            <span class="string">"buffer too small ({} bytes) — not a valid .duc file"</span>,
+<a href=#2654 id=2654 data-nosnippet>2654</a>            raw_sqlite.len()
+<a href=#2655 id=2655 data-nosnippet>2655</a>        )));
+<a href=#2656 id=2656 data-nosnippet>2656</a>    }
 <a href=#2657 id=2657 data-nosnippet>2657</a>
-<a href=#2658 id=2658 data-nosnippet>2658</a>    <span class="kw">if </span>raw_sqlite.len() &lt; <span class="number">100 </span>{
-<a href=#2659 id=2659 data-nosnippet>2659</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ParseError::Io(<span class="macro">format!</span>(
-<a href=#2660 id=2660 data-nosnippet>2660</a>            <span class="string">"buffer too small ({} bytes) — not a valid .duc file"</span>,
-<a href=#2661 id=2661 data-nosnippet>2661</a>            raw_sqlite.len()
-<a href=#2662 id=2662 data-nosnippet>2662</a>        )));
-<a href=#2663 id=2663 data-nosnippet>2663</a>    }
-<a href=#2664 id=2664 data-nosnippet>2664</a>
-<a href=#2665 id=2665 data-nosnippet>2665</a>    <span class="comment">// A standalone database cannot use WAL mode because a `.duc` carries only
-<a href=#2666 id=2666 data-nosnippet>2666</a>    // the main SQLite file, never its `-wal` sidecar. OPFS/raw exports can retain
-<a href=#2667 id=2667 data-nosnippet>2667</a>    // WAL read/write version bytes even after checkpointing, which makes the
-<a href=#2668 id=2668 data-nosnippet>2668</a>    // in-memory WASM connection fail with "unable to open database file".
-<a href=#2669 id=2669 data-nosnippet>2669</a>    </span><span class="kw">if </span>raw_sqlite.starts_with(<span class="string">b"SQLite format 3\0"</span>) &amp;&amp; (raw_sqlite[<span class="number">18</span>] == <span class="number">2 </span>|| raw_sqlite[<span class="number">19</span>] == <span class="number">2</span>)
-<a href=#2670 id=2670 data-nosnippet>2670</a>    {
-<a href=#2671 id=2671 data-nosnippet>2671</a>        raw_sqlite[<span class="number">18</span>] = <span class="number">1</span>;
-<a href=#2672 id=2672 data-nosnippet>2672</a>        raw_sqlite[<span class="number">19</span>] = <span class="number">1</span>;
-<a href=#2673 id=2673 data-nosnippet>2673</a>    }
-<a href=#2674 id=2674 data-nosnippet>2674</a>
-<a href=#2675 id=2675 data-nosnippet>2675</a>    <span class="comment">// On WASM, use in-memory database with deserialize. On native, use a temp file.
-<a href=#2676 id=2676 data-nosnippet>2676</a>    </span><span class="attr">#[cfg(all(target_family = <span class="string">"wasm"</span>, target_os = <span class="string">"unknown"</span>))]
-<a href=#2677 id=2677 data-nosnippet>2677</a>    </span>{
-<a href=#2678 id=2678 data-nosnippet>2678</a>        <span class="kw">use </span>rusqlite::MAIN_DB;
-<a href=#2679 id=2679 data-nosnippet>2679</a>        <span class="kw">let </span><span class="kw-2">mut </span>conn = Connection::open_in_memory().map_err(ParseError::Sqlite)<span class="question-mark">?</span>;
-<a href=#2680 id=2680 data-nosnippet>2680</a>        conn.deserialize_read_exact(MAIN_DB, <span class="kw-2">&amp;</span>raw_sqlite[..], raw_sqlite.len(), <span class="bool-val">false</span>)
-<a href=#2681 id=2681 data-nosnippet>2681</a>            .map_err(|e| ParseError::Io(<span class="macro">format!</span>(<span class="string">"deserialize: {e}"</span>)))<span class="question-mark">?</span>;
-<a href=#2682 id=2682 data-nosnippet>2682</a>        <span class="prelude-val">Ok</span>(conn)
-<a href=#2683 id=2683 data-nosnippet>2683</a>    }
-<a href=#2684 id=2684 data-nosnippet>2684</a>
-<a href=#2685 id=2685 data-nosnippet>2685</a>    <span class="attr">#[cfg(not(all(target_family = <span class="string">"wasm"</span>, target_os = <span class="string">"unknown"</span>)))]
-<a href=#2686 id=2686 data-nosnippet>2686</a>    </span>{
-<a href=#2687 id=2687 data-nosnippet>2687</a>        <span class="kw">let </span>(path, <span class="kw-2">mut </span>file) = create_temp_sqlite_file_for_parse()
-<a href=#2688 id=2688 data-nosnippet>2688</a>            .map_err(|e| ParseError::Io(<span class="macro">format!</span>(<span class="string">"temp file: {e}"</span>)))<span class="question-mark">?</span>;
-<a href=#2689 id=2689 data-nosnippet>2689</a>        <span class="kw">use </span>std::io::Write;
-<a href=#2690 id=2690 data-nosnippet>2690</a>        file.write_all(<span class="kw-2">&amp;</span>raw_sqlite)
-<a href=#2691 id=2691 data-nosnippet>2691</a>            .map_err(|e| ParseError::Io(<span class="macro">format!</span>(<span class="string">"write temp: {e}"</span>)))<span class="question-mark">?</span>;
-<a href=#2692 id=2692 data-nosnippet>2692</a>        drop(file);
-<a href=#2693 id=2693 data-nosnippet>2693</a>
-<a href=#2694 id=2694 data-nosnippet>2694</a>        <span class="kw">let </span>conn = Connection::open(<span class="kw-2">&amp;</span>path).map_err(ParseError::Sqlite)<span class="question-mark">?</span>;
-<a href=#2695 id=2695 data-nosnippet>2695</a>        <span class="prelude-val">Ok</span>(conn)
-<a href=#2696 id=2696 data-nosnippet>2696</a>    }
-<a href=#2697 id=2697 data-nosnippet>2697</a>}
-<a href=#2698 id=2698 data-nosnippet>2698</a>
-<a href=#2699 id=2699 data-nosnippet>2699</a><span class="attr">#[cfg(not(all(target_family = <span class="string">"wasm"</span>, target_os = <span class="string">"unknown"</span>)))]
-<a href=#2700 id=2700 data-nosnippet>2700</a></span><span class="kw">fn </span>create_temp_sqlite_file_for_parse() -&gt; std::io::Result&lt;(std::path::PathBuf, std::fs::File)&gt; {
-<a href=#2701 id=2701 data-nosnippet>2701</a>    <span class="kw">use </span>std::fs::File;
-<a href=#2702 id=2702 data-nosnippet>2702</a>    <span class="kw">use </span>std::path::PathBuf;
-<a href=#2703 id=2703 data-nosnippet>2703</a>
-<a href=#2704 id=2704 data-nosnippet>2704</a>    <span class="kw">let </span>dir = std::env::temp_dir();
-<a href=#2705 id=2705 data-nosnippet>2705</a>    <span class="kw">let </span>id = std::time::SystemTime::now()
-<a href=#2706 id=2706 data-nosnippet>2706</a>        .duration_since(std::time::UNIX_EPOCH)
-<a href=#2707 id=2707 data-nosnippet>2707</a>        .map(|d| d.as_nanos())
-<a href=#2708 id=2708 data-nosnippet>2708</a>        .unwrap_or(<span class="number">0</span>);
-<a href=#2709 id=2709 data-nosnippet>2709</a>    <span class="kw">let </span>path: PathBuf = dir.join(<span class="macro">format!</span>(<span class="string">"duc-parse-{id}.sqlite"</span>));
-<a href=#2710 id=2710 data-nosnippet>2710</a>    <span class="kw">let </span>file = File::create(<span class="kw-2">&amp;</span>path)<span class="question-mark">?</span>;
-<a href=#2711 id=2711 data-nosnippet>2711</a>    <span class="prelude-val">Ok</span>((path, file))
-<a href=#2712 id=2712 data-nosnippet>2712</a>}
+<a href=#2658 id=2658 data-nosnippet>2658</a>    <span class="comment">// A standalone database cannot use WAL mode because a `.duc` carries only
+<a href=#2659 id=2659 data-nosnippet>2659</a>    // the main SQLite file, never its `-wal` sidecar. OPFS/raw exports can retain
+<a href=#2660 id=2660 data-nosnippet>2660</a>    // WAL read/write version bytes even after checkpointing, which makes the
+<a href=#2661 id=2661 data-nosnippet>2661</a>    // in-memory WASM connection fail with "unable to open database file".
+<a href=#2662 id=2662 data-nosnippet>2662</a>    </span><span class="kw">if </span>raw_sqlite.starts_with(<span class="string">b"SQLite format 3\0"</span>) &amp;&amp; (raw_sqlite[<span class="number">18</span>] == <span class="number">2 </span>|| raw_sqlite[<span class="number">19</span>] == <span class="number">2</span>)
+<a href=#2663 id=2663 data-nosnippet>2663</a>    {
+<a href=#2664 id=2664 data-nosnippet>2664</a>        raw_sqlite[<span class="number">18</span>] = <span class="number">1</span>;
+<a href=#2665 id=2665 data-nosnippet>2665</a>        raw_sqlite[<span class="number">19</span>] = <span class="number">1</span>;
+<a href=#2666 id=2666 data-nosnippet>2666</a>    }
+<a href=#2667 id=2667 data-nosnippet>2667</a>
+<a href=#2668 id=2668 data-nosnippet>2668</a>    <span class="comment">// On WASM, use in-memory database with deserialize. On native, use a temp file.
+<a href=#2669 id=2669 data-nosnippet>2669</a>    </span><span class="attr">#[cfg(all(target_family = <span class="string">"wasm"</span>, target_os = <span class="string">"unknown"</span>))]
+<a href=#2670 id=2670 data-nosnippet>2670</a>    </span>{
+<a href=#2671 id=2671 data-nosnippet>2671</a>        <span class="kw">use </span>rusqlite::MAIN_DB;
+<a href=#2672 id=2672 data-nosnippet>2672</a>        <span class="kw">let </span><span class="kw-2">mut </span>conn = Connection::open_in_memory().map_err(ParseError::Sqlite)<span class="question-mark">?</span>;
+<a href=#2673 id=2673 data-nosnippet>2673</a>        conn.deserialize_read_exact(MAIN_DB, <span class="kw-2">&amp;</span>raw_sqlite[..], raw_sqlite.len(), <span class="bool-val">false</span>)
+<a href=#2674 id=2674 data-nosnippet>2674</a>            .map_err(|e| ParseError::Io(<span class="macro">format!</span>(<span class="string">"deserialize: {e}"</span>)))<span class="question-mark">?</span>;
+<a href=#2675 id=2675 data-nosnippet>2675</a>        <span class="prelude-val">Ok</span>(conn)
+<a href=#2676 id=2676 data-nosnippet>2676</a>    }
+<a href=#2677 id=2677 data-nosnippet>2677</a>
+<a href=#2678 id=2678 data-nosnippet>2678</a>    <span class="attr">#[cfg(not(all(target_family = <span class="string">"wasm"</span>, target_os = <span class="string">"unknown"</span>)))]
+<a href=#2679 id=2679 data-nosnippet>2679</a>    </span>{
+<a href=#2680 id=2680 data-nosnippet>2680</a>        <span class="kw">let </span>(path, <span class="kw-2">mut </span>file) = create_temp_sqlite_file_for_parse()
+<a href=#2681 id=2681 data-nosnippet>2681</a>            .map_err(|e| ParseError::Io(<span class="macro">format!</span>(<span class="string">"temp file: {e}"</span>)))<span class="question-mark">?</span>;
+<a href=#2682 id=2682 data-nosnippet>2682</a>        <span class="kw">use </span>std::io::Write;
+<a href=#2683 id=2683 data-nosnippet>2683</a>        file.write_all(<span class="kw-2">&amp;</span>raw_sqlite)
+<a href=#2684 id=2684 data-nosnippet>2684</a>            .map_err(|e| ParseError::Io(<span class="macro">format!</span>(<span class="string">"write temp: {e}"</span>)))<span class="question-mark">?</span>;
+<a href=#2685 id=2685 data-nosnippet>2685</a>        drop(file);
+<a href=#2686 id=2686 data-nosnippet>2686</a>
+<a href=#2687 id=2687 data-nosnippet>2687</a>        <span class="kw">let </span>conn = Connection::open(<span class="kw-2">&amp;</span>path).map_err(ParseError::Sqlite)<span class="question-mark">?</span>;
+<a href=#2688 id=2688 data-nosnippet>2688</a>        <span class="prelude-val">Ok</span>(conn)
+<a href=#2689 id=2689 data-nosnippet>2689</a>    }
+<a href=#2690 id=2690 data-nosnippet>2690</a>}
+<a href=#2691 id=2691 data-nosnippet>2691</a>
+<a href=#2692 id=2692 data-nosnippet>2692</a><span class="attr">#[cfg(not(all(target_family = <span class="string">"wasm"</span>, target_os = <span class="string">"unknown"</span>)))]
+<a href=#2693 id=2693 data-nosnippet>2693</a></span><span class="kw">fn </span>create_temp_sqlite_file_for_parse() -&gt; std::io::Result&lt;(std::path::PathBuf, std::fs::File)&gt; {
+<a href=#2694 id=2694 data-nosnippet>2694</a>    <span class="kw">use </span>std::fs::File;
+<a href=#2695 id=2695 data-nosnippet>2695</a>    <span class="kw">use </span>std::path::PathBuf;
+<a href=#2696 id=2696 data-nosnippet>2696</a>
+<a href=#2697 id=2697 data-nosnippet>2697</a>    <span class="kw">let </span>dir = std::env::temp_dir();
+<a href=#2698 id=2698 data-nosnippet>2698</a>    <span class="kw">let </span>id = std::time::SystemTime::now()
+<a href=#2699 id=2699 data-nosnippet>2699</a>        .duration_since(std::time::UNIX_EPOCH)
+<a href=#2700 id=2700 data-nosnippet>2700</a>        .map(|d| d.as_nanos())
+<a href=#2701 id=2701 data-nosnippet>2701</a>        .unwrap_or(<span class="number">0</span>);
+<a href=#2702 id=2702 data-nosnippet>2702</a>    <span class="kw">let </span>path: PathBuf = dir.join(<span class="macro">format!</span>(<span class="string">"duc-parse-{id}.sqlite"</span>));
+<a href=#2703 id=2703 data-nosnippet>2703</a>    <span class="kw">let </span>file = File::create(<span class="kw-2">&amp;</span>path)<span class="question-mark">?</span>;
+<a href=#2704 id=2704 data-nosnippet>2704</a>    <span class="prelude-val">Ok</span>((path, file))
+<a href=#2705 id=2705 data-nosnippet>2705</a>}
 </code></pre></div></section></main></body></html>
