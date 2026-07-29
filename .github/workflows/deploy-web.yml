@@ -6,6 +6,13 @@ on:
   workflow_dispatch:
   repository_dispatch:
     types: [trigger-web-deployment]
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/web/**'
+      - 'package.json'
+      - 'bun.lock'
 
 jobs:
   check-deploy-conditions:

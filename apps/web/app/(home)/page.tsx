@@ -21,6 +21,7 @@ export default function HomePage() {
             width={1400}
             height={788}
             priority
+            unoptimized
             className="mx-auto w-full md:w-auto rounded-xl object-contain md:h-[500px]"
           />
         </Link>

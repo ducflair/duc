@@ -9,6 +9,9 @@ const config = {
   turbopack: {
     root: path.resolve(import.meta.dirname, '../../'),
   },
+  images: {
+    unoptimized: true,
+  },
   async rewrites() {
     return [
       {

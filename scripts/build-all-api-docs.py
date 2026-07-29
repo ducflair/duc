@@ -45,11 +45,7 @@ def main():
     # Step 0. SQL API Docs (sq inspect -> /reference/sql/)
     print("\n--> Step 0: SQL API Docs (gen-sql-docs.py)")
     gen_sql_script = repo_root / "scripts" / "gen-sql-docs.py"
-    sql_ver = get_latest_tag_version(repo_root, "duc.sql@*") or get_latest_tag_version(repo_root, "duc@*") or "1.0.0"
-    print(f"  Resolved SQL version: {sql_ver}")
-    env = os.environ.copy()
-    env["SQL_DOCS_VERSION"] = sql_ver
-    subprocess.run([sys.executable, str(gen_sql_script)], cwd=repo_root, env=env, check=True)
+    subprocess.run([sys.executable, str(gen_sql_script)], cwd=repo_root, check=True)
 
     # Step 1. Python API Docs (Sphinx -> /reference/python/)
     print("\n--> Step 1: Python API Docs (Sphinx)")

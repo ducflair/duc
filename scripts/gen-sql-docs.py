@@ -81,11 +81,11 @@ def main():
             check=True
         )
 
-        version = os.environ.get("SQL_DOCS_VERSION", "").strip()
+        version = pragma_version_str
         if len(sys.argv) > 1 and sys.argv[1]:
             version = sys.argv[1].strip()
-        if not version and pragma_version_str:
-            version = pragma_version_str
+        elif not version and os.environ.get("SQL_DOCS_VERSION", "").strip():
+            version = os.environ.get("SQL_DOCS_VERSION").strip()
 
         if version and out_file.exists():
             content = out_file.read_text(encoding="utf-8")
