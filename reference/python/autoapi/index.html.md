@@ -1,0 +1,32 @@
+# API Reference
+
+This page contains auto-generated API reference documentation <sup>[1](#f1)</sup>.
+
+* [ducpy](ducpy/index.md)
+  * [ducpy.builders](ducpy/builders/index.md)
+    * [ducpy.builders.block_instance_builder](ducpy/builders/block_instance_builder/index.md)
+    * [ducpy.builders.block_utils](ducpy/builders/block_utils/index.md)
+    * [ducpy.builders.element_builders](ducpy/builders/element_builders/index.md)
+    * [ducpy.builders.mutate_builder](ducpy/builders/mutate_builder/index.md)
+    * [ducpy.builders.sql_builder](ducpy/builders/sql_builder/index.md)
+    * [ducpy.builders.state_builders](ducpy/builders/state_builders/index.md)
+    * [ducpy.builders.style_builders](ducpy/builders/style_builders/index.md)
+  * [ducpy.classes](ducpy/classes/index.md)
+    * [ducpy.classes.DataStateClass](ducpy/classes/DataStateClass/index.md)
+    * [ducpy.classes.ElementsClass](ducpy/classes/ElementsClass/index.md)
+  * [ducpy.enums](ducpy/enums/index.md)
+  * [ducpy.parse](ducpy/parse/index.md)
+  * [ducpy.search](ducpy/search/index.md)
+    * [ducpy.search.image_ocr](ducpy/search/image_ocr/index.md)
+    * [ducpy.search.search_elements](ducpy/search/search_elements/index.md)
+    * [ducpy.search.search_external_files](ducpy/search/search_external_files/index.md)
+    * [ducpy.search.search_pdf](ducpy/search/search_pdf/index.md)
+  * [ducpy.serialize](ducpy/serialize/index.md)
+  * [ducpy.utils](ducpy/utils/index.md)
+    * [ducpy.utils.constants](ducpy/utils/constants/index.md)
+    * [ducpy.utils.convert](ducpy/utils/convert/index.md)
+    * [ducpy.utils.io](ducpy/utils/io/index.md)
+    * [ducpy.utils.mutate_utils](ducpy/utils/mutate_utils/index.md)
+    * [ducpy.utils.rand_utils](ducpy/utils/rand_utils/index.md)
+
+* <a id='f1'>**[1]**</a> Created with [sphinx-autoapi](https://github.com/readthedocs/sphinx-autoapi)

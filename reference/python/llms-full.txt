@@ -1,0 +1,4465 @@
+# index.html.md
+
+# ducpy
+
+**Builders API (High-level)**
+: The easy way to build, manage `.duc` files.
+  Construct elements, apply styles, manage layers, build blocks,
+  and handle document state with the
+  [builders](autoapi/ducpy/builders/index.md) module.
+
+**SQL Builder (Low-level)**
+: A `.duc` file is a gzip-compressed SQLite database. Use the
+  [sql_builder](autoapi/ducpy/builders/sql_builder/index.md)
+  for direct schema access, bulk queries, and low-level manipulation.
+
+**Search**
+: Query/search elements and files programmatically via the
+  [search](autoapi/ducpy/search/index.md) API.
+
+**File I/O**
+: Read and write `.duc` files using the
+  [parse](autoapi/ducpy/parse/index.md) and
+  [serialize](autoapi/ducpy/serialize/index.md) modules.
+
+# Contents:
+
+* [API Reference](autoapi/index.md)
+  * [ducpy](autoapi/ducpy/index.md)
+* [Examples](examples.md)
+  * [Element Creation](examples.md#element-creation)
+  * [Mutating Elements](examples.md#mutating-elements)
+  * [External Files](examples.md#external-files)
+  * [SQL Builder](examples.md#sql-builder)
+  * [Serialization](examples.md#serialization)
+  * [Parsing](examples.md#parsing)
+* [Downloads & Installation](downloads.md)
+  * [Install from PyPI](downloads.md#install-from-pypi)
+  * [Install from Package Index](downloads.md#install-from-package-index)
+  * [Direct CDN Access](downloads.md#direct-cdn-access)
+  * [Browse Packages](downloads.md#browse-packages)
+
+
+# index.html.md
+
+# API Reference
+
+This page contains auto-generated API reference documentation <sup>[1](#f1)</sup>.
+
+* [ducpy](ducpy/index.md)
+  * [ducpy.builders](ducpy/builders/index.md)
+    * [ducpy.builders.block_instance_builder](ducpy/builders/block_instance_builder/index.md)
+    * [ducpy.builders.block_utils](ducpy/builders/block_utils/index.md)
+    * [ducpy.builders.element_builders](ducpy/builders/element_builders/index.md)
+    * [ducpy.builders.mutate_builder](ducpy/builders/mutate_builder/index.md)
+    * [ducpy.builders.sql_builder](ducpy/builders/sql_builder/index.md)
+    * [ducpy.builders.state_builders](ducpy/builders/state_builders/index.md)
+    * [ducpy.builders.style_builders](ducpy/builders/style_builders/index.md)
+  * [ducpy.classes](ducpy/classes/index.md)
+    * [ducpy.classes.DataStateClass](ducpy/classes/DataStateClass/index.md)
+    * [ducpy.classes.ElementsClass](ducpy/classes/ElementsClass/index.md)
+  * [ducpy.enums](ducpy/enums/index.md)
+  * [ducpy.parse](ducpy/parse/index.md)
+  * [ducpy.search](ducpy/search/index.md)
+    * [ducpy.search.image_ocr](ducpy/search/image_ocr/index.md)
+    * [ducpy.search.search_elements](ducpy/search/search_elements/index.md)
+    * [ducpy.search.search_external_files](ducpy/search/search_external_files/index.md)
+    * [ducpy.search.search_pdf](ducpy/search/search_pdf/index.md)
+  * [ducpy.serialize](ducpy/serialize/index.md)
+  * [ducpy.utils](ducpy/utils/index.md)
+    * [ducpy.utils.constants](ducpy/utils/constants/index.md)
+    * [ducpy.utils.convert](ducpy/utils/convert/index.md)
+    * [ducpy.utils.io](ducpy/utils/io/index.md)
+    * [ducpy.utils.mutate_utils](ducpy/utils/mutate_utils/index.md)
+    * [ducpy.utils.rand_utils](ducpy/utils/rand_utils/index.md)
+
+* <a id='f1'>**[1]**</a> Created with [sphinx-autoapi](https://github.com/readthedocs/sphinx-autoapi)
+
+
+# index.html.md
+
+# ducpy
+
+Python library for the .duc project-state format for physical-engineering work before execution.
+
+Usage:
+: `import ducpy as duc`
+
+Builders API (High-level):
+: The easy way to build, manage `.duc` files.
+  Construct elements, apply styles, manage layers, build blocks,
+  and handle document state with the `duc.builders` module.
+
+SQL Builder (Low-level):
+: A `.duc` file is a gzip-compressed SQLite database. Use
+  `duc.builders.sql_builder` for direct schema access, bulk
+  queries, and low-level manipulation.
+
+Search:
+: Query/search elements and files programmatically via the
+  `duc.search` API.
+
+File I/O:
+: Read and write `.duc` files using the `duc.parse`
+  and `duc.serialize` modules.
+
+## Submodules
+
+* [ducpy.builders](builders/index.md)
+* [ducpy.classes](classes/index.md)
+* [ducpy.enums](enums/index.md)
+* [ducpy.parse](parse/index.md)
+* [ducpy.search](search/index.md)
+* [ducpy.serialize](serialize/index.md)
+* [ducpy.utils](utils/index.md)
+
+
+# index.html.md
+
+# ducpy.search
+
+Search helpers for DUC SQLite databases.
+
+## Submodules
+
+* [ducpy.search.image_ocr](image_ocr/index.md)
+* [ducpy.search.search_elements](search_elements/index.md)
+* [ducpy.search.search_external_files](search_external_files/index.md)
+* [ducpy.search.search_pdf](search_pdf/index.md)
+
+
+# index.html.md
+
+# ducpy.builders
+
+User-friendly helper functions for creating DUC elements without verbose dataclass construction.
+
+## Submodules
+
+* [ducpy.builders.block_instance_builder](block_instance_builder/index.md)
+* [ducpy.builders.block_utils](block_utils/index.md)
+* [ducpy.builders.element_builders](element_builders/index.md)
+* [ducpy.builders.mutate_builder](mutate_builder/index.md)
+* [ducpy.builders.sql_builder](sql_builder/index.md)
+* [ducpy.builders.state_builders](state_builders/index.md)
+* [ducpy.builders.style_builders](style_builders/index.md)
+
+
+# index.html.md
+
+# ducpy.utils
+
+## Submodules
+
+* [ducpy.utils.constants](constants/index.md)
+* [ducpy.utils.convert](convert/index.md)
+* [ducpy.utils.io](io/index.md)
+* [ducpy.utils.mutate_utils](mutate_utils/index.md)
+* [ducpy.utils.rand_utils](rand_utils/index.md)
+
+
+# index.html.md
+
+# ducpy.enums
+
+Native enum definitions for DUC types.
+Source of truth: types.rs / duc.sql
+
+## Classes
+
+| [`VERTICAL_ALIGN`](#ducpy.enums.VERTICAL_ALIGN)                         | Enum where members are also (and must be) ints   |
+|-------------------------------------------------------------------------|--------------------------------------------------|
+| [`TEXT_ALIGN`](#ducpy.enums.TEXT_ALIGN)                                 | Enum where members are also (and must be) ints   |
+| [`LINE_SPACING_TYPE`](#ducpy.enums.LINE_SPACING_TYPE)                   | Enum where members are also (and must be) ints   |
+| [`STROKE_PLACEMENT`](#ducpy.enums.STROKE_PLACEMENT)                     | Enum where members are also (and must be) ints   |
+| [`STROKE_PREFERENCE`](#ducpy.enums.STROKE_PREFERENCE)                   | Enum where members are also (and must be) ints   |
+| [`STROKE_SIDE_PREFERENCE`](#ducpy.enums.STROKE_SIDE_PREFERENCE)         | Enum where members are also (and must be) ints   |
+| [`STROKE_CAP`](#ducpy.enums.STROKE_CAP)                                 | Enum where members are also (and must be) ints   |
+| [`STROKE_JOIN`](#ducpy.enums.STROKE_JOIN)                               | Enum where members are also (and must be) ints   |
+| [`LINE_HEAD`](#ducpy.enums.LINE_HEAD)                                   | Enum where members are also (and must be) ints   |
+| [`BEZIER_MIRRORING`](#ducpy.enums.BEZIER_MIRRORING)                     | Enum where members are also (and must be) ints   |
+| [`BLENDING`](#ducpy.enums.BLENDING)                                     | Enum where members are also (and must be) ints   |
+| [`ELEMENT_CONTENT_PREFERENCE`](#ducpy.enums.ELEMENT_CONTENT_PREFERENCE) | Enum where members are also (and must be) ints   |
+| [`HATCH_STYLE`](#ducpy.enums.HATCH_STYLE)                               | Enum where members are also (and must be) ints   |
+| [`IMAGE_STATUS`](#ducpy.enums.IMAGE_STATUS)                             | Enum where members are also (and must be) ints   |
+| [`BOOLEAN_OPERATION`](#ducpy.enums.BOOLEAN_OPERATION)                   | Enum where members are also (and must be) ints   |
+
+## Module Contents
+
+### *class* ducpy.enums.VERTICAL_ALIGN
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### TOP *= 10*
+
+#### MIDDLE *= 11*
+
+#### BOTTOM *= 12*
+
+### *class* ducpy.enums.TEXT_ALIGN
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### LEFT *= 10*
+
+#### CENTER *= 11*
+
+#### RIGHT *= 12*
+
+### *class* ducpy.enums.LINE_SPACING_TYPE
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### AT_LEAST *= 10*
+
+#### EXACTLY *= 11*
+
+#### MULTIPLE *= 12*
+
+### *class* ducpy.enums.STROKE_PLACEMENT
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### INSIDE *= 10*
+
+#### CENTER *= 11*
+
+#### OUTSIDE *= 12*
+
+### *class* ducpy.enums.STROKE_PREFERENCE
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### SOLID *= 10*
+
+#### DASHED *= 11*
+
+#### DOTTED *= 12*
+
+#### CUSTOM *= 13*
+
+### *class* ducpy.enums.STROKE_SIDE_PREFERENCE
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### TOP *= 10*
+
+#### BOTTOM *= 11*
+
+#### LEFT *= 12*
+
+#### RIGHT *= 13*
+
+#### CUSTOM *= 14*
+
+#### ALL *= 15*
+
+### *class* ducpy.enums.STROKE_CAP
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### BUTT *= 10*
+
+#### ROUND *= 11*
+
+#### SQUARE *= 12*
+
+### *class* ducpy.enums.STROKE_JOIN
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### MITER *= 10*
+
+#### ROUND *= 11*
+
+#### BEVEL *= 12*
+
+### *class* ducpy.enums.LINE_HEAD
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### ARROW *= 10*
+
+#### BAR *= 11*
+
+#### CIRCLE *= 12*
+
+#### CIRCLE_OUTLINED *= 13*
+
+#### TRIANGLE *= 14*
+
+#### TRIANGLE_OUTLINED *= 15*
+
+#### DIAMOND *= 16*
+
+#### DIAMOND_OUTLINED *= 17*
+
+#### CROSS *= 18*
+
+#### OPEN_ARROW *= 19*
+
+#### REVERSED_ARROW *= 20*
+
+#### REVERSED_TRIANGLE *= 21*
+
+#### REVERSED_TRIANGLE_OUTLINED *= 22*
+
+#### CONE *= 23*
+
+#### HALF_CONE *= 24*
+
+### *class* ducpy.enums.BEZIER_MIRRORING
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### NONE *= 10*
+
+#### ANGLE *= 11*
+
+#### ANGLE_LENGTH *= 12*
+
+### *class* ducpy.enums.BLENDING
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### MULTIPLY *= 11*
+
+#### SCREEN *= 12*
+
+#### OVERLAY *= 13*
+
+#### DARKEN *= 14*
+
+#### LIGHTEN *= 15*
+
+#### DIFFERENCE *= 16*
+
+#### EXCLUSION *= 17*
+
+### *class* ducpy.enums.ELEMENT_CONTENT_PREFERENCE
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### SOLID *= 12*
+
+#### FILL *= 14*
+
+#### FIT *= 15*
+
+#### TILE *= 16*
+
+#### STRETCH *= 17*
+
+#### HATCH *= 18*
+
+### *class* ducpy.enums.HATCH_STYLE
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### NORMAL *= 10*
+
+#### OUTER *= 11*
+
+#### IGNORE *= 12*
+
+### *class* ducpy.enums.IMAGE_STATUS
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### PENDING *= 10*
+
+#### SAVED *= 11*
+
+#### ERROR *= 12*
+
+### *class* ducpy.enums.BOOLEAN_OPERATION
+
+Bases: `enum.IntEnum`
+
+Enum where members are also (and must be) ints
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### UNION *= 10*
+
+#### SUBTRACT *= 11*
+
+#### INTERSECT *= 12*
+
+#### EXCLUDE *= 13*
+
+
+# index.html.md
+
+# ducpy.parse
+
+Parse .duc files using the Rust native extension (ducpy_native).
+
+Returns plain dicts with snake_case keys. Attribute-style access is available
+via DucData wrapper.
+
+## Attributes
+
+| [`logger`](#ducpy.parse.logger)       |    |
+|---------------------------------------|----|
+| [`PathInput`](#ducpy.parse.PathInput) |    |
+
+## Classes
+
+| [`DucData`](#ducpy.parse.DucData)   | Dict subclass allowing attribute-style access (`data.elements`).   |
+|-------------------------------------|--------------------------------------------------------------------|
+
+## Functions
+
+| [`_wrap`](#ducpy.parse._wrap)(→ Any)                                                                 | Recursively wrap dicts as DucData for attribute access.                 |
+|------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| [`_path`](#ducpy.parse._path)(→ str)                                                                 |                                                                         |
+| [`parse_duc`](#ducpy.parse.parse_duc)(→ DucData)                                                     | Parse a `.duc` file into a [`DucData`](#ducpy.parse.DucData) dict.      |
+| [`list_external_files`](#ducpy.parse.list_external_files)(→ List[DucData])                           | List metadata for all external files (without data blobs).              |
+| [`stream_external_file_revision_to_path`](#ducpy.parse.stream_external_file_revision_to_path)(→ int) | Stream an external file revision from a `.duc` file into `output_path`. |
+| [`stream_checkpoint_data_to_path`](#ducpy.parse.stream_checkpoint_data_to_path)(→ int)               | Stream checkpoint data from a `.duc` file into `output_path`.           |
+| [`stream_delta_changeset_to_path`](#ducpy.parse.stream_delta_changeset_to_path)(→ int)               | Stream delta changeset data from a `.duc` file into `output_path`.      |
+
+## Module Contents
+
+### ducpy.parse.logger
+
+### *class* ducpy.parse.DucData
+
+Bases: `dict`
+
+Dict subclass allowing attribute-style access (`data.elements`).
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### \_\_getattr_\_(key: str) → Any
+
+#### \_\_setattr_\_(key: str, value: Any) → None
+
+Implement setattr(self, name, value).
+
+#### \_\_delattr_\_(key: str) → None
+
+Implement delattr(self, name).
+
+### ducpy.parse.\_wrap(obj: Any) → Any
+
+Recursively wrap dicts as DucData for attribute access.
+
+### ducpy.parse.PathInput
+
+### ducpy.parse.\_path(source: PathInput) → str
+
+### ducpy.parse.parse_duc(source: PathInput) → [DucData](#ducpy.parse.DucData)
+
+Parse a `.duc` file into a [`DucData`](#ducpy.parse.DucData) dict.
+
+This function streams a .duc file path through the Rust native extension.
+It returns a specialized dictionary (DucData)
+that allows attribute-style access to the parsed properties (e.g. data.elements[0].id),
+using snake_case keys instead of the internal camelCase format.
+
+### Parameters
+
+source
+: Path to a `.duc` file.
+
+### Returns
+
+DucData
+: An attribute-accessible dictionary matching the internal ExportedDataState
+  schema with snake_case keys. Common keys include elements, duc_global_state,
+  duc_local_state, and version_graph.
+
+### Examples
+
+```pycon
+>>> data = duc.parse_duc("path/to/file.duc")
+>>> print(f"Found {len(data.elements)} elements")
+>>> print(f"First element type: {data.elements[0].type}")
+```
+
+### ducpy.parse.list_external_files(source: PathInput) → List[[DucData](#ducpy.parse.DucData)]
+
+List metadata for all external files (without data blobs).
+
+### ducpy.parse.stream_external_file_revision_to_path(source: PathInput, revision_id: str, output_path: PathInput) → int
+
+Stream an external file revision from a `.duc` file into `output_path`.
+
+### ducpy.parse.stream_checkpoint_data_to_path(source: PathInput, checkpoint_id: str, output_path: PathInput) → int
+
+Stream checkpoint data from a `.duc` file into `output_path`.
+
+### ducpy.parse.stream_delta_changeset_to_path(source: PathInput, delta_id: str, output_path: PathInput) → int
+
+Stream delta changeset data from a `.duc` file into `output_path`.
+
+
+# index.html.md
+
+# ducpy.serialize
+
+Serialize DUC data using the Rust native extension (ducpy_native).
+
+## Attributes
+
+| [`logger`](#ducpy.serialize.logger)                                 |    |
+|---------------------------------------------------------------------|----|
+| [`DUC_SCHEMA_VERSION`](#ducpy.serialize.DUC_SCHEMA_VERSION)         |    |
+| [`_ELEMENT_CLASS_TO_TYPE`](#ducpy.serialize._ELEMENT_CLASS_TO_TYPE) |    |
+
+## Exceptions
+
+| [`DucSerializationValidationError`](#ducpy.serialize.DucSerializationValidationError)   | Raised when embedded element code fails validation before serialization.   |
+|-----------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
+
+## Functions
+
+| [`_element_to_camel`](#ducpy.serialize._element_to_camel)(→ dict)                                          | Convert an element (or ElementWrapper) to the camelCase dict Rust expects.          |
+|------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| [`_convert_external_files`](#ducpy.serialize._convert_external_files)(→ Tuple[Optional[Dict[str, ...)      | Convert DucExternalFile dict (or legacy list) to camelCase dicts for serialization. |
+| [`_convert_dict_entries`](#ducpy.serialize._convert_dict_entries)(→ Optional[Dict[str, str]])              | Convert a list of DictionaryEntry to a `{key: value}` dict.                         |
+| [`_convert_list`](#ducpy.serialize._convert_list)(→ Optional[list])                                        | Convert a list of dataclass instances to camelCase dicts.                           |
+| [`_element_label`](#ducpy.serialize._element_label)(→ str)                                                 |                                                                                     |
+| [`_find_revision`](#ducpy.serialize._find_revision)(→ Optional[Dict[str, Any]])                            |                                                                                     |
+| [`_write_python_external_files`](#ducpy.serialize._write_python_external_files)(→ Dict[str, str])          |                                                                                     |
+| [`_run_python_validation`](#ducpy.serialize._run_python_validation)(→ Optional[str])                       |                                                                                     |
+| [`_run_python_validation_in_process`](#ducpy.serialize._run_python_validation_in_process)(→ Optional[str]) |                                                                                     |
+| [`_write_typst_external_files`](#ducpy.serialize._write_typst_external_files)(→ None)                      |                                                                                     |
+| [`_format_typst_validation_error`](#ducpy.serialize._format_typst_validation_error)(→ str)                 |                                                                                     |
+| [`_run_typst_validation`](#ducpy.serialize._run_typst_validation)(→ Optional[str])                         |                                                                                     |
+| [`_validate_embedded_code`](#ducpy.serialize._validate_embedded_code)(→ None)                              |                                                                                     |
+| [`serialize_duc`](#ducpy.serialize.serialize_duc)(→ str)                                                   | Serialize elements and document state directly to a `.duc` file path.               |
+
+## Module Contents
+
+### ducpy.serialize.logger
+
+### *exception* ducpy.serialize.DucSerializationValidationError(failures: List[str])
+
+Bases: `ValueError`
+
+Raised when embedded element code fails validation before serialization.
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### failures
+
+### ducpy.serialize.DUC_SCHEMA_VERSION
+
+### ducpy.serialize.\_ELEMENT_CLASS_TO_TYPE *: Dict[str, str]*
+
+### ducpy.serialize.\_element_to_camel(wrapper_or_element: Any) → dict
+
+Convert an element (or ElementWrapper) to the camelCase dict Rust expects.
+
+### ducpy.serialize.\_convert_external_files(entries: Any | None) → Tuple[Dict[str, Any] | None, Dict[str, bytes] | None]
+
+Convert DucExternalFile dict (or legacy list) to camelCase dicts for serialization.
+
+Returns `(files_meta, files_data)` where *files_meta* contains revision
+metadata (no blobs) and *files_data* maps revision-id → raw bytes for the
+separate `filesData` key expected by the Rust serializer.
+
+### ducpy.serialize.\_convert_dict_entries(entries: list | None) → Dict[str, str] | None
+
+Convert a list of DictionaryEntry to a `{key: value}` dict.
+
+### ducpy.serialize.\_convert_list(items: list | None) → list | None
+
+Convert a list of dataclass instances to camelCase dicts.
+
+### ducpy.serialize.\_element_label(element: Dict[str, Any]) → str
+
+### ducpy.serialize.\_find_revision(revisions: Any, active_revision_id: str) → Dict[str, Any] | None
+
+### ducpy.serialize.\_write_python_external_files(project_dir: pathlib.Path, files_meta: Dict[str, Any] | None, files_data: Dict[str, bytes] | None) → Dict[str, str]
+
+### ducpy.serialize.\_run_python_validation(code: str, label: str, timeout_seconds: float | None, files_meta: Dict[str, Any] | None = None, files_data: Dict[str, bytes] | None = None) → str | None
+
+### ducpy.serialize.\_run_python_validation_in_process(code: str, label: str, project_dir: pathlib.Path, resolved_files: Dict[str, str]) → str | None
+
+### ducpy.serialize.\_write_typst_external_files(project_dir: pathlib.Path, files_meta: Dict[str, Any] | None, files_data: Dict[str, bytes] | None) → None
+
+### ducpy.serialize.\_format_typst_validation_error(exc: Exception, main_path: pathlib.Path) → str
+
+### ducpy.serialize.\_run_typst_validation(code: str, label: str, timeout_seconds: float, files_meta: Dict[str, Any] | None, files_data: Dict[str, bytes] | None) → str | None
+
+### ducpy.serialize.\_validate_embedded_code(elements: List[Any], files_meta: Dict[str, Any] | None, files_data: Dict[str, bytes] | None, timeout_seconds: float | None) → None
+
+### ducpy.serialize.serialize_duc(name: str, output_path: str | pathlib.Path | None = None, thumbnail: bytes | None = None, dictionary: list | None = None, elements: list | None = None, duc_local_state: Any = None, duc_global_state: Any = None, version_graph: Any = None, blocks: list | None = None, block_instances: list | None = None, block_collections: list | None = None, groups: list | None = None, regions: list | None = None, layers: list | None = None, external_files: list | None = None, charter: Any = None, issues: list | None = None, validate_embedded_code: bool = True, validation_timeout_seconds: float | None = None) → str
+
+Serialize elements and document state directly to a `.duc` file path.
+
+This function accepts lists of elements created via the ducpy.builders API
+(e.g., ElementBuilder) and serializes them into the compressed format
+expected by .duc files. Element instances and state dataclasses are
+automatically converted to the camelCase dicts expected by the Rust native module.
+
+### Parameters
+
+name
+: The document name or identifier (used to populate the source field).
+
+output_path
+: Target path for the generated `.duc` file. When omitted, a temporary
+  `.duc` file is created and its path is returned.
+
+thumbnail
+: Raw PNG bytes representing a thumbnail of the document.
+
+dictionary
+: List of Key-Value string pairs for dictionary entries.
+
+elements
+: A list of elements (e.g., created via ElementBuilder) to include.
+
+duc_local_state
+: A DucLocalState object representing viewport state (pan, zoom, etc).
+
+duc_global_state
+: A DucGlobalState object representing document-wide settings.
+
+version_graph
+: Version history metadata of the document.
+
+blocks
+: List of block definitions.
+
+block_instances
+: List of block instances.
+
+block_collections
+: List of block collections (libraries).
+
+groups
+: List of element groups.
+
+regions
+: List of boolean regions.
+
+layers
+: List of document layers.
+
+external_files
+: List of external files (e.g., embedded images or PDFs).
+
+charter
+: Project charter object (DucCharter) or dict.
+
+issues
+: List of issue objects (DucIssue) or dicts.
+
+validate_embedded_code
+: Validate model Python code and document source before native serialization.
+  This is intended for server-side CPython usage and raises
+  DucSerializationValidationError with per-element diagnostics on failure.
+
+validation_timeout_seconds
+: Timeout used for each embedded code validation step. If None, no timeout is applied.
+
+### Returns
+
+str
+: The output path that was written.
+
+
+# index.html.md
+
+# ducpy.classes
+
+## Submodules
+
+* [ducpy.classes.DataStateClass](DataStateClass/index.md)
+* [ducpy.classes.ElementsClass](ElementsClass/index.md)
+
+
+# index.html.md
+
+# ducpy.search.image_ocr
+
+Server-side image OCR helpers for DUC search.
+
+Uses `rapidocr-onnxruntime` with custom PP-OCRv6_tiny ONNX models when the `ocr` extra is installed, otherwise
+OCR is gracefully skipped.
+
+## Attributes
+
+| [`logger`](#ducpy.search.image_ocr.logger)                                             |    |
+|----------------------------------------------------------------------------------------|----|
+| [`_RAPID_OCR_ENGINE`](#ducpy.search.image_ocr._RAPID_OCR_ENGINE)                       |    |
+| [`_server_side_ocr_available`](#ducpy.search.image_ocr._server_side_ocr_available)     |    |
+| [`_extract_image_text_with_ocr`](#ducpy.search.image_ocr._extract_image_text_with_ocr) |    |
+
+## Functions
+
+| [`server_side_ocr_available`](#ducpy.search.image_ocr.server_side_ocr_available)(→ bool)                 | Return whether the `ocr` extra (RapidOCR) is installed and usable.   |
+|----------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| [`_get_local_cache_dir`](#ducpy.search.image_ocr._get_local_cache_dir)(→ str | None)                     |                                                                      |
+| [`_get_rapid_engine`](#ducpy.search.image_ocr._get_rapid_engine)(→ Any)                                  |                                                                      |
+| [`extract_image_text_with_ocr`](#ducpy.search.image_ocr.extract_image_text_with_ocr)(→ tuple[str, bool]) | OCR an image using the `ocr` extra, or skip when unavailable.        |
+
+## Module Contents
+
+### ducpy.search.image_ocr.logger
+
+### ducpy.search.image_ocr.\_RAPID_OCR_ENGINE *: Any | None* *= None*
+
+### ducpy.search.image_ocr.server_side_ocr_available() → bool
+
+Return whether the `ocr` extra (RapidOCR) is installed and usable.
+
+### ducpy.search.image_ocr.\_get_local_cache_dir(repo_id: str) → str | None
+
+### ducpy.search.image_ocr.\_get_rapid_engine() → Any
+
+### ducpy.search.image_ocr.extract_image_text_with_ocr(image_bytes: bytes, , ocr_language: str) → tuple[str, bool]
+
+OCR an image using the `ocr` extra, or skip when unavailable.
+
+### ducpy.search.image_ocr.\_server_side_ocr_available
+
+### ducpy.search.image_ocr.\_extract_image_text_with_ocr
+
+
+# index.html.md
+
+# ducpy.search.search_elements
+
+Element search helpers for `.duc` SQLite databases.
+
+This module uses a hybrid strategy:
+
+1. SQLite FTS5 narrows candidates quickly from the searchable DUC tables.
+2. Python applies a second ranking pass that combines:
+   : - FTS rank
+     - exact / prefix / substring behavior
+     - token coverage
+     - string similarity
+
+The JSON output is shaped for downstream consumers that need:
+
+- the original query
+- total raw element hits
+- the ordered list of all matching element ids
+- result rows for individual elements or grouped file-backed elements
+
+## Attributes
+
+| [`DucSearchResult`](#id0)   |    |
+|-----------------------------|----|
+
+## Classes
+
+| [`DucSearchResult`](#id0)                                                        |                                                           |
+|----------------------------------------------------------------------------------|-----------------------------------------------------------|
+| [`DucElementSearchResult`](#ducpy.search.search_elements.DucElementSearchResult) | One result row for a single element.                      |
+| [`DucFileSearchResult`](#ducpy.search.search_elements.DucFileSearchResult)       | One grouped result row for repeated file-backed elements. |
+| [`DucSearchResponse`](#ducpy.search.search_elements.DucSearchResponse)           | Search response and JSON export metadata.                 |
+
+## Functions
+
+| [`search_duc_elements`](#ducpy.search.search_elements.search_duc_elements)(→ DucSearchResponse)   | Search DUC elements and export ordered results to JSON.   |
+|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------|
+
+## Module Contents
+
+### *class* ducpy.search.search_elements.DucSearchResult
+
+Compatibility placeholder for exported result types.
+
+### *class* ducpy.search.search_elements.DucElementSearchResult
+
+One result row for a single element.
+
+`match_pages[i]` is the starting page number (as a string) for the text
+in `matches[i]`.  The two lists always have the same length, and
+`match_pages` is `None` for results that are not backed by a
+PDF/image external file.
+
+#### element_id *: str*
+
+#### element_type *: str*
+
+#### matches *: list[str]*
+
+#### score *: float*
+
+#### match_pages *: list[str] | None* *= None*
+
+#### to_dict() → dict[str, Any]
+
+### *class* ducpy.search.search_elements.DucFileSearchResult
+
+One grouped result row for repeated file-backed elements.
+
+`match_pages[i]` is the starting page number (as a string) for the text
+in `matches[i]`.  The two lists always have the same length, and
+`match_pages` is `None` for results that are not backed by a
+PDF/image external file.
+
+#### file_id *: str*
+
+#### element_type *: str*
+
+#### matches *: list[str]*
+
+#### score *: float*
+
+#### hits *: int*
+
+#### element_ids *: list[str]*
+
+#### match_pages *: list[str] | None* *= None*
+
+#### to_dict() → dict[str, Any]
+
+### ducpy.search.search_elements.DucSearchResult
+
+### *class* ducpy.search.search_elements.DucSearchResponse
+
+Search response and JSON export metadata.
+
+#### query *: str*
+
+#### results *: list[DucSearchResult]*
+
+#### total_hits *: int*
+
+#### all_element_ids *: list[str]*
+
+#### output_path *: str | None* *= None*
+
+#### to_dict() → dict[str, Any]
+
+Convert the response to a JSON-friendly dictionary.
+
+### ducpy.search.search_elements.search_duc_elements(duc_path: str | pathlib.Path, query: str, , output_path: str | pathlib.Path | None = None, limit: int = 50, ocr_language: str = 'eng', search_all_external_files: bool = False, external_file_targets: list[[ducpy.search.search_external_files.ExternalFileSearchTarget](../search_external_files/index.md#ducpy.search.search_external_files.ExternalFileSearchTarget) | dict[str, Any] | tuple[Any, Ellipsis] | str] | None = None, external_file_element_ids: list[str] | None = None) → [DucSearchResponse](#ducpy.search.search_elements.DucSearchResponse)
+
+Search DUC elements and export ordered results to JSON.
+
+
+# index.html.md
+
+# ducpy.search.search_pdf
+
+PDF text extraction for search.
+
+## Attributes
+
+| [`logger`](#ducpy.search.search_pdf.logger)   |    |
+|-----------------------------------------------|----|
+
+## Functions
+
+| [`_compress_whitespace`](#ducpy.search.search_pdf._compress_whitespace)(→ str)                          |    |
+|---------------------------------------------------------------------------------------------------------|----|
+| [`extract_pdf_text_for_search`](#ducpy.search.search_pdf.extract_pdf_text_for_search)(→ tuple[str, ...) |    |
+
+## Module Contents
+
+### ducpy.search.search_pdf.logger
+
+### ducpy.search.search_pdf.\_compress_whitespace(value: str | None) → str
+
+### ducpy.search.search_pdf.extract_pdf_text_for_search(pdf_bytes: bytes, , ocr_language: str) → tuple[str, tuple[tuple[int, int, int], Ellipsis], bool]
+
+
+# index.html.md
+
+# ducpy.search.search_external_files
+
+Scoped external-file search helpers.
+
+## Attributes
+
+| [`logger`](#ducpy.search.search_external_files.logger)                                                       |    |
+|--------------------------------------------------------------------------------------------------------------|----|
+| [`_SUPPORTED_EXTERNAL_ELEMENT_TYPES`](#ducpy.search.search_external_files._SUPPORTED_EXTERNAL_ELEMENT_TYPES) |    |
+
+## Classes
+
+| [`ExternalFileSearchTarget`](#ducpy.search.search_external_files.ExternalFileSearchTarget)                 |    |
+|------------------------------------------------------------------------------------------------------------|----|
+| [`PageSpan`](#ducpy.search.search_external_files.PageSpan)                                                 |    |
+| [`ExtractedExternalText`](#ducpy.search.search_external_files.ExtractedExternalText)                       |    |
+| [`ResolvedExternalFileSearchTarget`](#ducpy.search.search_external_files.ResolvedExternalFileSearchTarget) |    |
+
+## Functions
+
+| [`_compress_whitespace`](#ducpy.search.search_external_files._compress_whitespace)(→ str)                                                               |    |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------|----|
+| [`element_file_id`](#ducpy.search.search_external_files.element_file_id)(→ str | None)                                                                  |    |
+| [`_normalize_target`](#ducpy.search.search_external_files._normalize_target)(→ ExternalFileSearchTarget)                                                |    |
+| [`_dedupe_targets`](#ducpy.search.search_external_files._dedupe_targets)(...)                                                                           |    |
+| [`_has_table`](#ducpy.search.search_external_files._has_table)(→ bool)                                                                                  |    |
+| [`_fetch_active_revision_ids`](#ducpy.search.search_external_files._fetch_active_revision_ids)(→ dict[str, str])                                        |    |
+| [`_fetch_live_external_file_ids`](#ducpy.search.search_external_files._fetch_live_external_file_ids)(→ set[str])                                        |    |
+| [`_fetch_element_external_refs`](#ducpy.search.search_external_files._fetch_element_external_refs)(→ list[tuple[str, str]])                             |    |
+| [`resolve_external_file_search_targets`](#ducpy.search.search_external_files.resolve_external_file_search_targets)(...)                                 |    |
+| [`_external_active_revision_id`](#ducpy.search.search_external_files._external_active_revision_id)(→ str | None)                                        |    |
+| [`_external_revision_meta`](#ducpy.search.search_external_files._external_revision_meta)(→ dict[str, Any] | None)                                       |    |
+| [`_external_revision_mime_type`](#ducpy.search.search_external_files._external_revision_mime_type)(→ str)                                               |    |
+| [`extract_image_text_for_search`](#ducpy.search.search_external_files.extract_image_text_for_search)(→ ExtractedExternalText)                           |    |
+| [`_stream_revision_bytes`](#ducpy.search.search_external_files._stream_revision_bytes)(→ bytes | None)                                                  |    |
+| [`load_external_file_text`](#ducpy.search.search_external_files.load_external_file_text)(→ ExtractedExternalText)                                       |    |
+| [`resolve_external_file_search_targets_from_parsed_duc`](#ducpy.search.search_external_files.resolve_external_file_search_targets_from_parsed_duc)(...) |    |
+| [`_fetch_external_revision_row`](#ducpy.search.search_external_files._fetch_external_revision_row)(→ dict[str, Any] | None)                             |    |
+| [`ensure_external_file_search_index`](#ducpy.search.search_external_files.ensure_external_file_search_index)(→ dict[tuple[str, ...)                     |    |
+| [`query_external_file_search_rows`](#ducpy.search.search_external_files.query_external_file_search_rows)(→ list[sqlite3.Row])                           |    |
+
+## Module Contents
+
+### ducpy.search.search_external_files.logger
+
+### ducpy.search.search_external_files.\_SUPPORTED_EXTERNAL_ELEMENT_TYPES
+
+### *class* ducpy.search.search_external_files.ExternalFileSearchTarget
+
+#### file_id *: str*
+
+#### revision_id *: str | None* *= None*
+
+### *class* ducpy.search.search_external_files.PageSpan
+
+#### page *: int*
+
+#### start *: int*
+
+#### end *: int*
+
+### *class* ducpy.search.search_external_files.ExtractedExternalText
+
+#### text *: str*
+
+#### pages *: tuple[[PageSpan](#ducpy.search.search_external_files.PageSpan), Ellipsis]* *= ()*
+
+#### used_ocr *: bool* *= False*
+
+### *class* ducpy.search.search_external_files.ResolvedExternalFileSearchTarget
+
+#### file_id *: str*
+
+#### revision_id *: str*
+
+#### element_id *: str | None* *= None*
+
+### ducpy.search.search_external_files.\_compress_whitespace(value: str | None) → str
+
+### ducpy.search.search_external_files.element_file_id(element: dict[str, Any]) → str | None
+
+### ducpy.search.search_external_files.\_normalize_target(value: [ExternalFileSearchTarget](#ducpy.search.search_external_files.ExternalFileSearchTarget) | dict[str, Any] | tuple[Any, Ellipsis] | str) → [ExternalFileSearchTarget](#ducpy.search.search_external_files.ExternalFileSearchTarget)
+
+### ducpy.search.search_external_files.\_dedupe_targets(targets: Iterable[[ResolvedExternalFileSearchTarget](#ducpy.search.search_external_files.ResolvedExternalFileSearchTarget)]) → tuple[[ResolvedExternalFileSearchTarget](#ducpy.search.search_external_files.ResolvedExternalFileSearchTarget), Ellipsis]
+
+### ducpy.search.search_external_files.\_has_table(conn: sqlite3.Connection, table_name: str) → bool
+
+### ducpy.search.search_external_files.\_fetch_active_revision_ids(conn: sqlite3.Connection, file_ids: Iterable[str]) → dict[str, str]
+
+### ducpy.search.search_external_files.\_fetch_live_external_file_ids(conn: sqlite3.Connection) → set[str]
+
+### ducpy.search.search_external_files.\_fetch_element_external_refs(conn: sqlite3.Connection, element_ids: Iterable[str]) → list[tuple[str, str]]
+
+### ducpy.search.search_external_files.resolve_external_file_search_targets(conn: sqlite3.Connection, , search_all_external_files: bool = False, external_file_targets: Iterable[[ExternalFileSearchTarget](#ducpy.search.search_external_files.ExternalFileSearchTarget) | dict[str, Any] | tuple[Any, Ellipsis] | str] | None = None, external_file_element_ids: Iterable[str] | None = None) → tuple[[ResolvedExternalFileSearchTarget](#ducpy.search.search_external_files.ResolvedExternalFileSearchTarget), Ellipsis]
+
+### ducpy.search.search_external_files.\_external_active_revision_id(external: dict[str, Any]) → str | None
+
+### ducpy.search.search_external_files.\_external_revision_meta(external: dict[str, Any], revision_id: str) → dict[str, Any] | None
+
+### ducpy.search.search_external_files.\_external_revision_mime_type(external: dict[str, Any], revision_id: str, , fallback_element_type: str | None) → str
+
+### ducpy.search.search_external_files.extract_image_text_for_search(image_bytes: bytes, , ocr_language: str) → [ExtractedExternalText](#ducpy.search.search_external_files.ExtractedExternalText)
+
+### ducpy.search.search_external_files.\_stream_revision_bytes(duc_source: str | pathlib.Path, revision_id: str) → bytes | None
+
+### ducpy.search.search_external_files.load_external_file_text(duc_source: str | pathlib.Path, target: [ResolvedExternalFileSearchTarget](#ducpy.search.search_external_files.ResolvedExternalFileSearchTarget), , fallback_element_type: str | None, ocr_language: str) → [ExtractedExternalText](#ducpy.search.search_external_files.ExtractedExternalText)
+
+### ducpy.search.search_external_files.resolve_external_file_search_targets_from_parsed_duc(duc_source: str | pathlib.Path, duc_data: dict[str, Any], , search_all_external_files: bool = False, external_file_targets: Iterable[[ExternalFileSearchTarget](#ducpy.search.search_external_files.ExternalFileSearchTarget) | dict[str, Any] | tuple[Any, Ellipsis] | str] | None = None, external_file_element_ids: Iterable[str] | None = None) → tuple[[ResolvedExternalFileSearchTarget](#ducpy.search.search_external_files.ResolvedExternalFileSearchTarget), Ellipsis]
+
+### ducpy.search.search_external_files.\_fetch_external_revision_row(conn: sqlite3.Connection, file_id: str, revision_id: str) → dict[str, Any] | None
+
+### ducpy.search.search_external_files.ensure_external_file_search_index(conn: sqlite3.Connection, , targets: Iterable[[ResolvedExternalFileSearchTarget](#ducpy.search.search_external_files.ResolvedExternalFileSearchTarget)], ocr_language: str = 'eng') → dict[tuple[str, str], [ExtractedExternalText](#ducpy.search.search_external_files.ExtractedExternalText)]
+
+### ducpy.search.search_external_files.query_external_file_search_rows(conn: sqlite3.Connection, , expression: str, limit: int, targets: Iterable[[ResolvedExternalFileSearchTarget](#ducpy.search.search_external_files.ResolvedExternalFileSearchTarget)]) → list[sqlite3.Row]
+
+
+# index.html.md
+
+# ducpy.builders.sql_builder
+
+Thin wrapper to open .duc files as SQLite databases and run raw SQL.
+
+A .duc file is a standard SQLite database. This builder just handles
+opening/creating/exporting and exposes the raw `sqlite3.Connection`
+so you can write whatever SQL you want.
+
+Usage:
+
+```default
+import ducpy as duc
+
+# Open existing .duc
+with duc.DucSQL("drawing.duc") as db:
+    rows = db.sql("SELECT id, label FROM elements WHERE element_type = ?", "rectangle")
+    db.sql("UPDATE elements SET label = ? WHERE id = ?", "new-label", rows[0]["id"])
+
+# Create new .duc from scratch
+with duc.DucSQL.new() as db:
+    db.sql("INSERT INTO elements (id, element_type, x, y, width, height) VALUES (?,?,?,?,?,?)",
+           "r1", "rectangle", 0, 0, 100, 50)
+    db.save("output.duc")
+
+# From bytes
+with duc.DucSQL.from_bytes(raw) as db:
+    print(db.sql("SELECT COUNT(*) AS n FROM elements")[0]["n"])
+    modified = db.to_bytes()
+```
+
+## Classes
+
+| [`DucSQL`](#ducpy.builders.sql_builder.DucSQL)   | Raw SQL access to a `.duc` SQLite database.   |
+|--------------------------------------------------|-----------------------------------------------|
+
+## Functions
+
+| [`quote_sql_identifier`](#ducpy.builders.sql_builder.quote_sql_identifier)(→ str)   | Quote a SQLite identifier such as an attached database alias.   |
+|-------------------------------------------------------------------------------------|-----------------------------------------------------------------|
+
+## Module Contents
+
+### ducpy.builders.sql_builder.quote_sql_identifier(value: str) → str
+
+Quote a SQLite identifier such as an attached database alias.
+
+### *class* ducpy.builders.sql_builder.DucSQL(path: str | pathlib.Path)
+
+Raw SQL access to a `.duc` SQLite database.
+
+Attributes:
+: conn: The underlying `sqlite3.Connection`.
+  : Use it directly for cursor-level ops, `conn.executemany`, etc.
+
+Open an existing `.duc` file.
+
+#### conn *: sqlite3.Connection*
+
+#### \_path *: str | None* *= ''*
+
+#### \_temp *: str | None* *= None*
+
+#### \_attached_temps *: list[str]* *= []*
+
+#### \_closed *= False*
+
+#### *classmethod* new(path: str | pathlib.Path | None = None) → [DucSQL](#ducpy.builders.sql_builder.DucSQL)
+
+Create a new `.duc` database with the full schema bootstrapped.
+
+Pass a *path* to write to disk, or omit for in-memory.
+
+#### *classmethod* from_bytes(data: bytes) → [DucSQL](#ducpy.builders.sql_builder.DucSQL)
+
+Open a `.duc` from raw bytes (temp file, cleaned up on close).
+
+#### *classmethod* attach_many(paths: Sequence[str | pathlib.Path], aliases: Sequence[str] | None = None, read_only: bool = True) → [DucSQL](#ducpy.builders.sql_builder.DucSQL)
+
+Open an in-memory SQLite connection with multiple `.duc` files attached.
+
+This is useful for querying multiple drawings in one SQL statement. The
+returned `DucSQL` owns only the in-memory connection; attached files are
+not deleted on close.
+
+#### sql(query: str, \*args: Any) → List[sqlite3.Row]
+
+Run a SQL statement with positional `?` params. Returns rows.
+
+#### sql_dict(query: str, params: dict) → List[sqlite3.Row]
+
+Run a SQL statement with named `:key` params. Returns rows.
+
+#### commit() → None
+
+#### rollback() → None
+
+#### save(path: str | pathlib.Path | None = None) → None
+
+Write the database to a file. Omit *path* to save in-place.
+
+#### to_bytes(compressed: bool = False) → bytes
+
+Export the database as raw bytes.
+
+#### close() → None
+
+#### \_\_enter_\_() → [DucSQL](#ducpy.builders.sql_builder.DucSQL)
+
+#### \_\_exit_\_(\*exc: Any) → None
+
+#### \_\_del_\_() → None
+
+#### \_\_repr_\_() → str
+
+
+# index.html.md
+
+# ducpy.builders.state_builders
+
+Helper functions for creating DUC state-related objects with a user-friendly API.
+Follows the same hierarchical builder pattern as element_builders.py.
+Only types from types.rs / duc.sql are supported.
+
+## Classes
+
+| [`BaseStateParams`](#ducpy.builders.state_builders.BaseStateParams)           |    |
+|-------------------------------------------------------------------------------|----|
+| [`StateBuilder`](#ducpy.builders.state_builders.StateBuilder)                 |    |
+| [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder) |    |
+| [`GlobalStateBuilder`](#ducpy.builders.state_builders.GlobalStateBuilder)     |    |
+| [`LocalStateBuilder`](#ducpy.builders.state_builders.LocalStateBuilder)       |    |
+| [`GroupBuilder`](#ducpy.builders.state_builders.GroupBuilder)                 |    |
+| [`LayerBuilder`](#ducpy.builders.state_builders.LayerBuilder)                 |    |
+| [`RegionBuilder`](#ducpy.builders.state_builders.RegionBuilder)               |    |
+| [`VersionGraphBuilder`](#ducpy.builders.state_builders.VersionGraphBuilder)   |    |
+| [`CheckpointBuilder`](#ducpy.builders.state_builders.CheckpointBuilder)       |    |
+| [`DeltaBuilder`](#ducpy.builders.state_builders.DeltaBuilder)                 |    |
+| [`ExternalFileBuilder`](#ducpy.builders.state_builders.ExternalFileBuilder)   |    |
+| [`StackBaseBuilder`](#ducpy.builders.state_builders.StackBaseBuilder)         |    |
+| [`CharterBuilder`](#ducpy.builders.state_builders.CharterBuilder)             |    |
+| [`IssueBuilder`](#ducpy.builders.state_builders.IssueBuilder)                 |    |
+
+## Functions
+
+| [`now_ms`](#ducpy.builders.state_builders.now_ms)(→ int)                                                            | Current Unix timestamp in milliseconds.   |
+|---------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
+| [`create_global_state_from_base`](#ducpy.builders.state_builders.create_global_state_from_base)(...)                |                                           |
+| [`create_local_state_from_base`](#ducpy.builders.state_builders.create_local_state_from_base)(...)                  |                                           |
+| [`create_group_from_base`](#ducpy.builders.state_builders.create_group_from_base)(...)                              |                                           |
+| [`create_layer_from_base`](#ducpy.builders.state_builders.create_layer_from_base)(...)                              |                                           |
+| [`create_region_from_base`](#ducpy.builders.state_builders.create_region_from_base)(...)                            |                                           |
+| [`create_version_graph_from_base`](#ducpy.builders.state_builders.create_version_graph_from_base)(...)              |                                           |
+| [`create_checkpoint_from_base`](#ducpy.builders.state_builders.create_checkpoint_from_base)(...)                    |                                           |
+| [`create_delta_from_base`](#ducpy.builders.state_builders.create_delta_from_base)(...)                              |                                           |
+| [`create_external_file_from_base`](#ducpy.builders.state_builders.create_external_file_from_base)(...)              |                                           |
+| [`create_stack_base_from_base`](#ducpy.builders.state_builders.create_stack_base_from_base)(...)                    |                                           |
+| [`create_actor`](#ducpy.builders.state_builders.create_actor)(→ ducpy.classes.DataStateClass.Actor)                 |                                           |
+| [`create_viewer3d_grid_uniform`](#ducpy.builders.state_builders.create_viewer3d_grid_uniform)(→ Dict[str, Any])     |                                           |
+| [`create_viewer3d_grid_per_plane`](#ducpy.builders.state_builders.create_viewer3d_grid_per_plane)(→ Dict[str, Any]) |                                           |
+| [`create_block`](#ducpy.builders.state_builders.create_block)(→ ducpy.classes.ElementsClass.DucBlock)               |                                           |
+| [`create_string_value_entry`](#ducpy.builders.state_builders.create_string_value_entry)(...)                        |                                           |
+
+## Module Contents
+
+### ducpy.builders.state_builders.now_ms() → int
+
+Current Unix timestamp in milliseconds.
+
+### *class* ducpy.builders.state_builders.BaseStateParams
+
+#### id *: str | None* *= None*
+
+#### name *: str* *= ''*
+
+#### description *: str* *= ''*
+
+#### version *: str* *= '1.0'*
+
+#### readonly *: bool* *= False*
+
+### *class* ducpy.builders.state_builders.StateBuilder
+
+#### base
+
+#### extra
+
+#### with_id(id: str)
+
+#### with_name(name: str)
+
+#### with_description(description: str)
+
+#### with_version(version: str)
+
+#### with_readonly(readonly: bool)
+
+#### with_extra(\*\*kwargs)
+
+#### build_global_state()
+
+#### build_local_state()
+
+#### build_group()
+
+#### build_layer()
+
+#### build_region()
+
+#### build_version_graph()
+
+#### build_checkpoint()
+
+#### build_delta()
+
+#### build_external_file()
+
+#### build_stack_base()
+
+#### build_charter()
+
+#### build_issue()
+
+### *class* ducpy.builders.state_builders.StateSpecificBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+#### base
+
+#### extra
+
+### *class* ducpy.builders.state_builders.GlobalStateBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder)
+
+#### with_name(name: str)
+
+#### with_view_background_color(color: str)
+
+#### with_main_scope(scope: str)
+
+#### with_scope_exponent_threshold(threshold: int)
+
+#### build() → [ducpy.classes.DataStateClass.DucGlobalState](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucGlobalState)
+
+### *class* ducpy.builders.state_builders.LocalStateBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder)
+
+#### with_scope(scope: str)
+
+#### with_scroll_x(scroll_x: float)
+
+#### with_scroll_y(scroll_y: float)
+
+#### with_zoom(zoom: float)
+
+#### with_is_binding_enabled(enabled: bool)
+
+#### with_pen_mode(pen_mode: bool)
+
+#### with_view_mode_enabled(enabled: bool)
+
+#### with_objects_snap_mode_enabled(enabled: bool)
+
+#### with_grid_mode_enabled(enabled: bool)
+
+#### with_outline_mode_enabled(enabled: bool)
+
+#### with_manual_save_mode(enabled: bool)
+
+#### with_decimal_places(places: int)
+
+#### with_current_item_opacity(opacity: float)
+
+#### with_current_item_font_family(font_family: str)
+
+#### with_current_item_font_size(font_size: float)
+
+#### with_current_item_text_align(text_align: [ducpy.enums.TEXT_ALIGN](../../enums/index.md#ducpy.enums.TEXT_ALIGN))
+
+#### with_current_item_roundness(roundness: float)
+
+#### build() → [ducpy.classes.DataStateClass.DucLocalState](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucLocalState)
+
+### *class* ducpy.builders.state_builders.GroupBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder)
+
+#### with_label(label: str)
+
+#### with_is_collapsed(is_collapsed: bool)
+
+#### with_is_plot(is_plot: bool)
+
+#### with_is_visible(is_visible: bool)
+
+#### with_locked(locked: bool)
+
+#### with_opacity(opacity: float)
+
+#### with_id(id: str)
+
+#### build() → [ducpy.classes.ElementsClass.DucGroup](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucGroup)
+
+### *class* ducpy.builders.state_builders.LayerBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder)
+
+#### with_label(label: str)
+
+#### with_readonly(readonly: bool)
+
+#### with_is_collapsed(is_collapsed: bool)
+
+#### with_is_plot(is_plot: bool)
+
+#### with_is_visible(is_visible: bool)
+
+#### with_locked(locked: bool)
+
+#### with_opacity(opacity: float)
+
+#### with_stroke_color(color: str)
+
+#### with_background_color(color: str)
+
+#### with_id(id: str)
+
+#### build() → [ducpy.classes.ElementsClass.DucLayer](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucLayer)
+
+### *class* ducpy.builders.state_builders.RegionBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder)
+
+#### with_label(label: str)
+
+#### with_boolean_operation(operation: [ducpy.enums.BOOLEAN_OPERATION](../../enums/index.md#ducpy.enums.BOOLEAN_OPERATION))
+
+#### with_is_collapsed(is_collapsed: bool)
+
+#### with_is_plot(is_plot: bool)
+
+#### with_is_visible(is_visible: bool)
+
+#### with_locked(locked: bool)
+
+#### with_opacity(opacity: float)
+
+#### with_id(id: str)
+
+#### build() → [ducpy.classes.ElementsClass.DucRegion](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucRegion)
+
+### *class* ducpy.builders.state_builders.VersionGraphBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder)
+
+#### with_checkpoints(checkpoints: List[[ducpy.classes.DataStateClass.Checkpoint](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.Checkpoint)])
+
+#### with_deltas(deltas: List[[ducpy.classes.DataStateClass.Delta](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.Delta)])
+
+#### with_user_checkpoint_version_id(version_id: str)
+
+#### with_latest_version_id(version_id: str)
+
+#### build() → [ducpy.classes.DataStateClass.VersionGraph](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.VersionGraph)
+
+### *class* ducpy.builders.state_builders.CheckpointBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder)
+
+#### with_id(id: str)
+
+#### with_parent_id(parent_id: str)
+
+#### with_is_manual_save(is_manual: bool)
+
+#### with_data(data: bytes)
+
+#### with_description(description: str)
+
+#### build() → [ducpy.classes.DataStateClass.Checkpoint](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.Checkpoint)
+
+### *class* ducpy.builders.state_builders.DeltaBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder)
+
+#### with_id(id: str)
+
+#### with_payload(payload: bytes)
+
+#### with_parent_id(parent_id: str)
+
+#### with_is_manual_save(is_manual: bool)
+
+#### with_description(description: str)
+
+#### build() → [ducpy.classes.DataStateClass.Delta](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.Delta)
+
+### *class* ducpy.builders.state_builders.ExternalFileBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder)
+
+#### with_key(key: str)
+
+#### with_mime_type(mime_type: str)
+
+#### with_data(data: bytes)
+
+#### with_last_retrieved(last_retrieved: int)
+
+#### build() → [ducpy.classes.DataStateClass.DucExternalFile](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucExternalFile)
+
+### *class* ducpy.builders.state_builders.StackBaseBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder)
+
+#### with_label(label: str)
+
+#### with_is_collapsed(is_collapsed: bool)
+
+#### with_is_plot(is_plot: bool)
+
+#### with_is_visible(is_visible: bool)
+
+#### with_locked(locked: bool)
+
+#### with_styles(styles: [ducpy.classes.ElementsClass.DucStackLikeStyles](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucStackLikeStyles))
+
+#### build() → [ducpy.classes.ElementsClass.DucStackBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucStackBase)
+
+### ducpy.builders.state_builders.create_global_state_from_base(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), \*\*kwargs) → [ducpy.classes.DataStateClass.DucGlobalState](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucGlobalState)
+
+### ducpy.builders.state_builders.create_local_state_from_base(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), \*\*kwargs) → [ducpy.classes.DataStateClass.DucLocalState](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucLocalState)
+
+### ducpy.builders.state_builders.create_group_from_base(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), \*\*kwargs) → [ducpy.classes.ElementsClass.DucGroup](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucGroup)
+
+### ducpy.builders.state_builders.create_layer_from_base(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), \*\*kwargs) → [ducpy.classes.ElementsClass.DucLayer](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucLayer)
+
+### ducpy.builders.state_builders.create_region_from_base(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), \*\*kwargs) → [ducpy.classes.ElementsClass.DucRegion](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucRegion)
+
+### ducpy.builders.state_builders.create_version_graph_from_base(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), \*\*kwargs) → [ducpy.classes.DataStateClass.VersionGraph](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.VersionGraph)
+
+### ducpy.builders.state_builders.create_checkpoint_from_base(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), \*\*kwargs) → [ducpy.classes.DataStateClass.Checkpoint](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.Checkpoint)
+
+### ducpy.builders.state_builders.create_delta_from_base(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), \*\*kwargs) → [ducpy.classes.DataStateClass.Delta](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.Delta)
+
+### ducpy.builders.state_builders.create_external_file_from_base(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), \*\*kwargs) → [ducpy.classes.DataStateClass.DucExternalFile](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucExternalFile)
+
+### ducpy.builders.state_builders.create_stack_base_from_base(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), \*\*kwargs) → [ducpy.classes.ElementsClass.DucStackBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucStackBase)
+
+### *class* ducpy.builders.state_builders.CharterBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder)
+
+#### requirements *: List[[ducpy.classes.DataStateClass.DucCharterRequirement](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucCharterRequirement)]* *= []*
+
+#### constraints *: List[[ducpy.classes.DataStateClass.DucCharterConstraint](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucCharterConstraint)]* *= []*
+
+#### decisions *: List[[ducpy.classes.DataStateClass.DucCharterDecision](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucCharterDecision)]* *= []*
+
+#### stakeholders *: List[[ducpy.classes.DataStateClass.DucCharterStakeholder](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucCharterStakeholder)]* *= []*
+
+#### with_title(title: str)
+
+#### with_description(description: str)
+
+#### with_objective(objective: str)
+
+#### with_phase(phase: str)
+
+#### with_closed_reason(reason: str)
+
+#### with_updated_at(updated_at: int)
+
+#### add_requirement(statement: str, must: bool = True, , id: str | None = None, acceptance_criteria: List[str] | None = None)
+
+#### add_constraint(statement: str, hard: bool = True, , id: str | None = None)
+
+#### add_decision(decision: str, rationale: str, accepted: bool = True, , id: str | None = None, issue_ids: List[str] | None = None, decided_at: int | None = None)
+
+#### add_stakeholder(identifier: str, role: str, , name: str | None = None)
+
+#### build() → [ducpy.classes.DataStateClass.DucCharter](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucCharter)
+
+### *class* ducpy.builders.state_builders.IssueBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)
+
+Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuilder)
+
+#### messages *: List[[ducpy.classes.DataStateClass.DucIssueMessage](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucIssueMessage)]* *= []*
+
+#### assignees *: List[str]* *= []*
+
+#### followers *: List[str]* *= []*
+
+#### with_local_id(local_id: int)
+
+#### with_title(title: str)
+
+#### with_status(status: str)
+
+#### with_author_id(author_id: str)
+
+#### with_dismissed_reason(reason: str)
+
+#### with_due_date(due_date: int)
+
+#### with_created_at(created_at: int)
+
+#### with_updated_at(updated_at: int)
+
+#### with_deleted_at(deleted_at: int)
+
+#### add_assignee(actor_identifier: str)
+
+#### add_follower(actor_identifier: str)
+
+#### add_message(author_id: str, content: str, , name: str | None = None, reply_to_id: str | None = None, reactions: Dict[str, List[str]] | None = None, created_at: int | None = None, edited_at: int | None = None, deleted_at: int | None = None)
+
+#### with_canvas_anchor(x: float, y: float, , scope: str | None = None)
+
+#### with_element_anchor(element_id: str, , anchor_x: float | None = None, anchor_y: float | None = None)
+
+#### with_model_anchor(element_id: str, point: List[float], , normal: List[float] | None = None, viewer_state: [ducpy.classes.ElementsClass.Viewer3DState](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.Viewer3DState) | None = None, topology_id: str | None = None)
+
+#### build() → [ducpy.classes.DataStateClass.DucIssue](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucIssue)
+
+### ducpy.builders.state_builders.create_actor(identifier: str, name: str | None = None) → [ducpy.classes.DataStateClass.Actor](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.Actor)
+
+### ducpy.builders.state_builders.create_viewer3d_grid_uniform(value: bool = True) → Dict[str, Any]
+
+### ducpy.builders.state_builders.create_viewer3d_grid_per_plane(xy: bool = True, xz: bool = False, yz: bool = False) → Dict[str, Any]
+
+### ducpy.builders.state_builders.create_block(id: str, label: str, elements: List[[ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)] | None = None, description: str | None = None) → [ducpy.classes.ElementsClass.DucBlock](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucBlock)
+
+### ducpy.builders.state_builders.create_string_value_entry(key: str, value: str) → [ducpy.classes.ElementsClass.StringValueEntry](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.StringValueEntry)
+
+
+# index.html.md
+
+# ducpy.builders.block_utils
+
+## Functions
+
+| [`_get_base`](#ducpy.builders.block_utils._get_base)(element)             |                                                        |
+|---------------------------------------------------------------------------|--------------------------------------------------------|
+| [`instantiate_block`](#ducpy.builders.block_utils.instantiate_block)(...) | Creates an instance of a block at a specific position. |
+
+## Module Contents
+
+### ducpy.builders.block_utils.\_get_base(element)
+
+### ducpy.builders.block_utils.instantiate_block(state: [ducpy.classes.DataStateClass.ExportedDataState](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.ExportedDataState), block_id: str, position_x: float, position_y: float, instance_id: str | None = None) → ducpy.classes.DataStateClass.DucBlockInstance
+
+Creates an instance of a block at a specific position.
+
+This function:
+1. Creates a DucBlockInstance metadata object.
+2. Finds all elements associated with the block_id.
+3. Clones those elements.
+4. Updates their positions relative to the new insertion point.
+5. Sets their instance_id.
+6. Adds the cloned elements and the block instance to the state.
+
+Args:
+: state: The ExportedDataState object to modify.
+  block_id: The ID of the block to instantiate.
+  position_x: The X coordinate for the instance insertion point.
+  position_y: The Y coordinate for the instance insertion point.
+  instance_id: Optional custom ID for the instance. If None, one is generated.
+
+Returns:
+: The created DucBlockInstance object.
+
+
+# index.html.md
+
+# ducpy.builders.element_builders
+
+Helper functions for creating DUC elements with a user-friendly API.
+Only the 15 element types from duc.sql / types.rs are supported.
+
+## Classes
+
+| [`BaseElementParams`](#ducpy.builders.element_builders.BaseElementParams)               |    |
+|-----------------------------------------------------------------------------------------|----|
+| [`ElementBuilder`](#ducpy.builders.element_builders.ElementBuilder)                     |    |
+| [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)     |    |
+| [`RectangleElementBuilder`](#ducpy.builders.element_builders.RectangleElementBuilder)   |    |
+| [`EllipseElementBuilder`](#ducpy.builders.element_builders.EllipseElementBuilder)       |    |
+| [`PolygonElementBuilder`](#ducpy.builders.element_builders.PolygonElementBuilder)       |    |
+| [`LinearElementBuilder`](#ducpy.builders.element_builders.LinearElementBuilder)         |    |
+| [`ArrowElementBuilder`](#ducpy.builders.element_builders.ArrowElementBuilder)           |    |
+| [`ImageElementBuilder`](#ducpy.builders.element_builders.ImageElementBuilder)           |    |
+| [`PdfElementBuilder`](#ducpy.builders.element_builders.PdfElementBuilder)               |    |
+| [`TextElementBuilder`](#ducpy.builders.element_builders.TextElementBuilder)             |    |
+| [`TableElementBuilder`](#ducpy.builders.element_builders.TableElementBuilder)           |    |
+| [`FrameElementBuilder`](#ducpy.builders.element_builders.FrameElementBuilder)           |    |
+| [`PlotElementBuilder`](#ducpy.builders.element_builders.PlotElementBuilder)             |    |
+| [`FreeDrawElementBuilder`](#ducpy.builders.element_builders.FreeDrawElementBuilder)     |    |
+| [`DocElementBuilder`](#ducpy.builders.element_builders.DocElementBuilder)               |    |
+| [`EmbeddableElementBuilder`](#ducpy.builders.element_builders.EmbeddableElementBuilder) |    |
+| [`ModelElementBuilder`](#ducpy.builders.element_builders.ModelElementBuilder)           |    |
+
+## Functions
+
+| [`_create_element_wrapper`](#ducpy.builders.element_builders._create_element_wrapper)(element_class, base_params, ...)   | Helper function to create an ElementWrapper with the given parameters.   |
+|--------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| [`create_duc_path`](#ducpy.builders.element_builders.create_duc_path)(→ ducpy.classes.ElementsClass.DucPath)             |                                                                          |
+| [`create_bound_element`](#ducpy.builders.element_builders.create_bound_element)(...)                                     |                                                                          |
+
+## Module Contents
+
+### ducpy.builders.element_builders.\_create_element_wrapper(element_class, base_params, element_params, explicit_properties_override=None)
+
+Helper function to create an ElementWrapper with the given parameters.
+
+### *class* ducpy.builders.element_builders.BaseElementParams
+
+#### x *: float*
+
+#### y *: float*
+
+#### width *: float*
+
+#### height *: float*
+
+#### scope *: str*
+
+#### angle *: float* *= 0.0*
+
+#### styles *: [ducpy.classes.ElementsClass.DucElementStylesBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucElementStylesBase) | None* *= None*
+
+#### id *: str | None* *= None*
+
+#### label *: str* *= ''*
+
+#### locked *: bool* *= False*
+
+#### is_visible *: bool* *= True*
+
+#### z_index *: float* *= 0.0*
+
+#### description *: str* *= ''*
+
+#### group_ids *: List[str] | None* *= []*
+
+#### region_ids *: List[str] | None* *= []*
+
+#### layer_id *: str* *= ''*
+
+#### frame_id *: str | None* *= None*
+
+#### bound_elements *: List[[ducpy.classes.ElementsClass.BoundElement](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.BoundElement)] | None* *= []*
+
+#### link *: str* *= ''*
+
+#### custom_data *: str* *= ''*
+
+#### is_plot *: bool* *= True*
+
+#### is_deleted *: bool* *= False*
+
+#### index *: str | None* *= None*
+
+#### instance_id *: str | None* *= None*
+
+### *class* ducpy.builders.element_builders.ElementBuilder(x: float = 0.0, y: float = 0.0, width: float = 1.0, height: float = 1.0, scope: str = DEFAULT_SCOPE)
+
+#### base
+
+#### extra
+
+#### at_position(x: float, y: float)
+
+#### with_size(width: float, height: float)
+
+#### with_angle(angle: float)
+
+#### with_styles(styles: [ducpy.classes.ElementsClass.DucElementStylesBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucElementStylesBase))
+
+#### with_id(id: str)
+
+#### with_label(label: str)
+
+#### with_scope(scope: str)
+
+#### with_locked(locked: bool)
+
+#### with_visible(is_visible: bool)
+
+#### with_instance_id(instance_id: str)
+
+#### with_z_index(z_index: float)
+
+#### with_description(description: str)
+
+#### with_group_ids(group_ids: List[str])
+
+#### with_region_ids(region_ids: List[str])
+
+#### with_layer_id(layer_id: str)
+
+#### with_frame_id(frame_id: str)
+
+#### with_bound_elements(bound_elements: List[[ducpy.classes.ElementsClass.BoundElement](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.BoundElement)])
+
+#### with_bound_element(element_id: str, element_type: str)
+
+#### with_link(link: str)
+
+#### with_custom_data(custom_data: str)
+
+#### with_plot(is_plot: bool)
+
+#### with_deleted(is_deleted: bool)
+
+#### with_index(index: str)
+
+#### with_extra(\*\*kwargs)
+
+#### build_rectangle()
+
+#### build_ellipse()
+
+#### build_polygon()
+
+#### build_linear_element()
+
+#### build_arrow_element()
+
+#### build_image_element()
+
+#### build_pdf_element()
+
+#### build_text_element()
+
+#### build_table_element()
+
+#### build_frame_element()
+
+#### build_plot_element()
+
+#### build_freedraw_element()
+
+#### build_doc_element()
+
+#### build_embeddable_element()
+
+#### build_model_element()
+
+### ducpy.builders.element_builders.create_duc_path(line_indices: List[int], background: [ducpy.classes.ElementsClass.ElementBackground](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementBackground) | None = None, stroke: [ducpy.classes.ElementsClass.ElementStroke](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementStroke) | None = None) → [ducpy.classes.ElementsClass.DucPath](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucPath)
+
+### ducpy.builders.element_builders.create_bound_element(element_id: str, element_type: str) → [ducpy.classes.ElementsClass.BoundElement](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.BoundElement)
+
+### *class* ducpy.builders.element_builders.ElementSpecificBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+#### base
+
+#### extra
+
+### *class* ducpy.builders.element_builders.RectangleElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.EllipseElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_ratio(ratio: float)
+
+#### with_start_angle(start_angle: float)
+
+#### with_end_angle(end_angle: float)
+
+#### with_show_aux_crosshair(show_aux_crosshair: bool)
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.PolygonElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_sides(sides: int)
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.LinearElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_points(points: List[tuple])
+
+#### with_lines(lines: List[[ducpy.classes.ElementsClass.DucLine](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucLine)] | None)
+
+#### with_path_overrides(path_overrides: List[[ducpy.classes.ElementsClass.DucPath](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucPath)] | None)
+
+#### with_last_committed_point(lcp: [ducpy.classes.ElementsClass.DucPoint](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucPoint) | None)
+
+#### with_start_binding(sb: [ducpy.classes.ElementsClass.DucPointBinding](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucPointBinding) | None)
+
+#### with_end_binding(eb: [ducpy.classes.ElementsClass.DucPointBinding](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucPointBinding) | None)
+
+#### with_wipeout_below(wipeout_below: bool)
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.ArrowElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_points(points: List[tuple])
+
+#### with_start_binding(sb: [ducpy.classes.ElementsClass.DucPointBinding](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucPointBinding) | None)
+
+#### with_end_binding(eb: [ducpy.classes.ElementsClass.DucPointBinding](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucPointBinding) | None)
+
+#### with_elbowed(elbowed: bool)
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.ImageElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_file_id(file_id: str)
+
+#### with_scale(scale: List[float])
+
+#### with_status(status: [ducpy.enums.IMAGE_STATUS](../../enums/index.md#ducpy.enums.IMAGE_STATUS))
+
+#### with_crop(crop: [ducpy.classes.ElementsClass.ImageCrop](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ImageCrop) | None)
+
+#### with_filter(f: [ducpy.classes.ElementsClass.DucImageFilter](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucImageFilter) | None)
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.PdfElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_file_id(file_id: str)
+
+#### with_grid_config(grid_config: [ducpy.classes.ElementsClass.DocumentGridConfig](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DocumentGridConfig))
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.TextElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_text(text: str)
+
+#### with_text_style(text_style: [ducpy.classes.ElementsClass.DucTextStyle](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucTextStyle) | None)
+
+#### with_auto_resize(auto_resize: bool)
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.TableElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_file_id(file_id: str)
+
+#### with_table_style(style: [ducpy.classes.ElementsClass.DucTableStyle](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucTableStyle) | None)
+
+#### with_grid_config(grid_config: [ducpy.classes.ElementsClass.DocumentGridConfig](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DocumentGridConfig))
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.FrameElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_stack_base(stack_base: [ducpy.classes.ElementsClass.DucStackBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucStackBase) | None)
+
+#### with_clip(clip: bool)
+
+#### with_label_visible(label_visible: bool)
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.PlotElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_margins(margins: [ducpy.classes.ElementsClass.Margins](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.Margins) | None)
+
+#### with_style(style: [ducpy.classes.ElementsClass.DucPlotStyle](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucPlotStyle) | None)
+
+#### with_stack_base(stack_base: [ducpy.classes.ElementsClass.DucStackBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucStackBase) | None)
+
+#### with_clip(clip: bool)
+
+#### with_label_visible(label_visible: bool)
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.FreeDrawElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_points(points: list)
+
+#### with_pressures(pressures: list)
+
+#### with_size_thickness(size: float)
+
+#### with_thinning(thinning: float)
+
+#### with_smoothing(smoothing: float)
+
+#### with_streamline(streamline: float)
+
+#### with_easing(easing: str)
+
+#### with_simulate_pressure(simulate_pressure: bool)
+
+#### with_start_cap(cap: bool)
+
+#### with_start_taper(taper: float)
+
+#### with_start_easing(easing: str)
+
+#### with_end_cap(cap: bool)
+
+#### with_end_taper(taper: float)
+
+#### with_end_easing(easing: str)
+
+#### with_last_committed_point(lcp: [ducpy.classes.ElementsClass.DucPoint](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucPoint) | None)
+
+#### with_svg_path(svg_path: str | None)
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.DocElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_text(text: str)
+
+#### with_doc_style(style: [ducpy.classes.ElementsClass.DucDocStyle](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucDocStyle) | None)
+
+#### with_file_id(file_id: str)
+
+#### with_referenced_file_ids(referenced_file_ids: List[str])
+
+#### with_grid_config(grid_config: [ducpy.classes.ElementsClass.DocumentGridConfig](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DocumentGridConfig))
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.EmbeddableElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_link(link: str)
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+### *class* ducpy.builders.element_builders.ModelElementBuilder(base: [BaseElementParams](#ducpy.builders.element_builders.BaseElementParams), extra: dict)
+
+Bases: [`ElementSpecificBuilder`](#ducpy.builders.element_builders.ElementSpecificBuilder)
+
+#### with_model_type(model_type: str)
+
+#### with_code(code: str)
+
+#### with_file_ids(file_ids: List[str])
+
+#### with_viewer_state(viewer_state)
+
+#### build() → [ducpy.classes.ElementsClass.ElementWrapper](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)
+
+
+# index.html.md
+
+# ducpy.builders.style_builders
+
+Helper functions for creating element styles with a user-friendly API.
+Each ELEMENT_CONTENT_PREFERENCE has its own dedicated method.
+
+## Functions
+
+| [`_create_default_tiling_properties`](#ducpy.builders.style_builders._create_default_tiling_properties)(...)     | Create default tiling settings used by content builders.             |
+|------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| [`_create_default_hatch_style`](#ducpy.builders.style_builders._create_default_hatch_style)(...)                 | Create a neutral/default hatch style.                                |
+| [`_create_default_image_filter`](#ducpy.builders.style_builders._create_default_image_filter)(...)               | Create a neutral image filter (no brightness/contrast changes).      |
+| [`create_solid_content`](#ducpy.builders.style_builders.create_solid_content)(...)                               | Create solid color content.                                          |
+| [`create_fill_content`](#ducpy.builders.style_builders.create_fill_content)(...)                                 | Create generic fill content.                                         |
+| [`create_image_content`](#ducpy.builders.style_builders.create_image_content)(...)                               | Create image content.                                                |
+| [`create_hatch_content`](#ducpy.builders.style_builders.create_hatch_content)(...)                               | Create hatch pattern content.                                        |
+| [`create_background`](#ducpy.builders.style_builders.create_background)(...)                                     | Create a background wrapper from content.                            |
+| [`create_stroke`](#ducpy.builders.style_builders.create_stroke)(→ ducpy.classes.ElementsClass.ElementStroke)     | Create a stroke wrapper from content and stroke settings.            |
+| [`create_simple_styles`](#ducpy.builders.style_builders.create_simple_styles)(...)                               | Create base element styles from backgrounds and strokes.             |
+| [`create_fill_style`](#ducpy.builders.style_builders.create_fill_style)(...)                                     | Create styles configured with fill only.                             |
+| [`create_stroke_style`](#ducpy.builders.style_builders.create_stroke_style)(...)                                 | Create styles configured with stroke only.                           |
+| [`create_fill_and_stroke_style`](#ducpy.builders.style_builders.create_fill_and_stroke_style)(...)               | Create styles configured with both fill and stroke.                  |
+| [`create_solid_style`](#ducpy.builders.style_builders.create_solid_style)(color[, opacity])                      | Convenience helper that returns solid content for style composition. |
+| [`create_hatch_style`](#ducpy.builders.style_builders.create_hatch_style)(pattern[, opacity])                    | Convenience helper that returns hatch content for style composition. |
+| [`create_text_style`](#ducpy.builders.style_builders.create_text_style)(...)                                     | Create a text style instance.                                        |
+| [`create_doc_style`](#ducpy.builders.style_builders.create_doc_style)(→ ducpy.classes.ElementsClass.DucDocStyle) | DucDocStyle is empty in the current schema.                          |
+| [`create_table_style`](#ducpy.builders.style_builders.create_table_style)(...)                                   | DucTableStyle is empty in the current schema.                        |
+| [`create_margins`](#ducpy.builders.style_builders.create_margins)(→ ducpy.classes.ElementsClass.Margins)         | Create margin values in top/right/bottom/left order.                 |
+
+## Module Contents
+
+### ducpy.builders.style_builders.\_create_default_tiling_properties() → [ducpy.classes.ElementsClass.TilingProperties](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.TilingProperties)
+
+Create default tiling settings used by content builders.
+
+### ducpy.builders.style_builders.\_create_default_hatch_style() → [ducpy.classes.ElementsClass.DucHatchStyle](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucHatchStyle)
+
+Create a neutral/default hatch style.
+
+### ducpy.builders.style_builders.\_create_default_image_filter() → [ducpy.classes.ElementsClass.DucImageFilter](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucImageFilter)
+
+Create a neutral image filter (no brightness/contrast changes).
+
+### ducpy.builders.style_builders.create_solid_content(color: str, opacity: float = 1.0, visible: bool = True) → [ducpy.classes.ElementsClass.ElementContentBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementContentBase)
+
+Create solid color content.
+
+Args:
+: color: Hex color string (for example, “#FF0000”).
+  opacity: Content opacity from 0.0 to 1.0.
+  visible: Whether content should be visible.
+
+### ducpy.builders.style_builders.create_fill_content(color: str, opacity: float = 1.0, visible: bool = True) → [ducpy.classes.ElementsClass.ElementContentBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementContentBase)
+
+Create generic fill content.
+
+Args:
+: color: Color or fill source string.
+  opacity: Content opacity from 0.0 to 1.0.
+  visible: Whether content should be visible.
+
+### ducpy.builders.style_builders.create_image_content(image_src: str, opacity: float = 1.0, visible: bool = True, fit_mode: str | None = None) → [ducpy.classes.ElementsClass.ElementContentBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementContentBase)
+
+Create image content.
+
+Args:
+: image_src: Image source (file id, URL, or supported element reference).
+  opacity: Content opacity from 0.0 to 1.0.
+  visible: Whether content should be visible.
+  fit_mode: Reserved for fit mode behavior.
+
+### ducpy.builders.style_builders.create_hatch_content(pattern: str, opacity: float = 1.0, visible: bool = True) → [ducpy.classes.ElementsClass.ElementContentBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementContentBase)
+
+Create hatch pattern content.
+
+Args:
+: pattern: Hatch pattern source/identifier.
+  opacity: Content opacity from 0.0 to 1.0.
+  visible: Whether content should be visible.
+
+### ducpy.builders.style_builders.create_background(content: [ducpy.classes.ElementsClass.ElementContentBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementContentBase) | None = None) → [ducpy.classes.ElementsClass.ElementBackground](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementBackground)
+
+Create a background wrapper from content.
+
+If no content is provided, a solid white background is used.
+
+### ducpy.builders.style_builders.create_stroke(content: [ducpy.classes.ElementsClass.ElementContentBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementContentBase) | None = None, width: float = 1.0, placement: [ducpy.enums.STROKE_PLACEMENT](../../enums/index.md#ducpy.enums.STROKE_PLACEMENT) = STROKE_PLACEMENT.INSIDE, style: [ducpy.classes.ElementsClass.StrokeStyle](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.StrokeStyle) | None = None, sides: [ducpy.classes.ElementsClass.StrokeSides](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.StrokeSides) | None = None) → [ducpy.classes.ElementsClass.ElementStroke](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementStroke)
+
+Create a stroke wrapper from content and stroke settings.
+
+If content is omitted, a solid black stroke is used.
+
+### ducpy.builders.style_builders.create_simple_styles(roundness: float = 0.0, opacity: float = 1.0, backgrounds: List[[ducpy.classes.ElementsClass.ElementBackground](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementBackground)] | None = None, strokes: List[[ducpy.classes.ElementsClass.ElementStroke](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementStroke)] | None = None, blending: [ducpy.enums.BLENDING](../../enums/index.md#ducpy.enums.BLENDING) | None = None) → [ducpy.classes.ElementsClass.DucElementStylesBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucElementStylesBase)
+
+Create base element styles from backgrounds and strokes.
+
+Falls back to one default background and one default stroke when omitted.
+
+### ducpy.builders.style_builders.create_fill_style(content, roundness: float = 0.0, opacity: float = 1.0) → [ducpy.classes.ElementsClass.DucElementStylesBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucElementStylesBase)
+
+Create styles configured with fill only.
+
+### ducpy.builders.style_builders.create_stroke_style(content, width: float = 1.0, placement: [ducpy.enums.STROKE_PLACEMENT](../../enums/index.md#ducpy.enums.STROKE_PLACEMENT) = STROKE_PLACEMENT.INSIDE, opacity: float = 1.0) → [ducpy.classes.ElementsClass.DucElementStylesBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucElementStylesBase)
+
+Create styles configured with stroke only.
+
+### ducpy.builders.style_builders.create_fill_and_stroke_style(fill_content: [ducpy.classes.ElementsClass.ElementContentBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementContentBase), stroke_content: [ducpy.classes.ElementsClass.ElementContentBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.ElementContentBase), stroke_width: float = 1.0, roundness: float = 0.0, opacity: float = 1.0, placement: [ducpy.enums.STROKE_PLACEMENT](../../enums/index.md#ducpy.enums.STROKE_PLACEMENT) = STROKE_PLACEMENT.INSIDE) → [ducpy.classes.ElementsClass.DucElementStylesBase](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucElementStylesBase)
+
+Create styles configured with both fill and stroke.
+
+### ducpy.builders.style_builders.create_solid_style(color: str, opacity: float = 1.0)
+
+Convenience helper that returns solid content for style composition.
+
+### ducpy.builders.style_builders.create_hatch_style(pattern: str, opacity: float = 1.0)
+
+Convenience helper that returns hatch content for style composition.
+
+### ducpy.builders.style_builders.create_text_style(font_family: str = 'Arial', font_size: float = 12, is_ltr: bool = True, text_align: [ducpy.enums.TEXT_ALIGN](../../enums/index.md#ducpy.enums.TEXT_ALIGN) | None = None, vertical_align: [ducpy.enums.VERTICAL_ALIGN](../../enums/index.md#ducpy.enums.VERTICAL_ALIGN) | None = None, line_height: float = 1.0, line_spacing_value: float = 1.0, line_spacing_type: [ducpy.enums.LINE_SPACING_TYPE](../../enums/index.md#ducpy.enums.LINE_SPACING_TYPE) | None = None, oblique_angle: float = 0.0, width_factor: float = 1.0, is_upside_down: bool = False, is_backwards: bool = False) → [ducpy.classes.ElementsClass.DucTextStyle](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucTextStyle)
+
+Create a text style instance.
+
+This helper provides safe defaults for alignment and line spacing.
+
+### ducpy.builders.style_builders.create_doc_style() → [ducpy.classes.ElementsClass.DucDocStyle](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucDocStyle)
+
+DucDocStyle is empty in the current schema.
+
+### ducpy.builders.style_builders.create_table_style() → [ducpy.classes.ElementsClass.DucTableStyle](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucTableStyle)
+
+DucTableStyle is empty in the current schema.
+
+### ducpy.builders.style_builders.create_margins(top: float = 0.0, right: float = 0.0, bottom: float = 0.0, left: float = 0.0) → [ducpy.classes.ElementsClass.Margins](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.Margins)
+
+Create margin values in top/right/bottom/left order.
+
+
+# index.html.md
+
+# ducpy.builders.block_instance_builder
+
+## Classes
+
+| [`BlockInstanceBuilder`](#ducpy.builders.block_instance_builder.BlockInstanceBuilder)   |    |
+|-----------------------------------------------------------------------------------------|----|
+
+## Module Contents
+
+### *class* ducpy.builders.block_instance_builder.BlockInstanceBuilder(id: str, block_id: str, version: int)
+
+#### \_id
+
+#### \_block_id
+
+#### \_version
+
+#### \_element_overrides *: List[[ducpy.classes.ElementsClass.StringValueEntry](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.StringValueEntry)]* *= []*
+
+#### \_duplication_array *: [ducpy.classes.ElementsClass.DucBlockDuplicationArray](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucBlockDuplicationArray) | None* *= None*
+
+#### with_element_override(key: str, value: str) → [BlockInstanceBuilder](#ducpy.builders.block_instance_builder.BlockInstanceBuilder)
+
+#### with_duplication_array(rows: int, cols: int, row_spacing: float, col_spacing: float) → [BlockInstanceBuilder](#ducpy.builders.block_instance_builder.BlockInstanceBuilder)
+
+#### build() → [ducpy.classes.ElementsClass.DucBlockInstance](../../classes/ElementsClass/index.md#ducpy.classes.ElementsClass.DucBlockInstance)
+
+
+# index.html.md
+
+# ducpy.builders.mutate_builder
+
+## Functions
+
+| [`mutate_element`](#ducpy.builders.mutate_builder.mutate_element)(el, \*\*kwargs)                     | Mutate any property of an element (ElementWrapper or direct dataclass instance) using keyword arguments.   |
+|-------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| [`mutate_version_graph`](#ducpy.builders.mutate_builder.mutate_version_graph)(graph, \*\*kwargs)      |                                                                                                            |
+| [`mutate_checkpoint`](#ducpy.builders.mutate_builder.mutate_checkpoint)(checkpoint, \*\*kwargs)       |                                                                                                            |
+| [`mutate_delta`](#ducpy.builders.mutate_builder.mutate_delta)(delta, \*\*kwargs)                      |                                                                                                            |
+| [`mutate_global_state`](#ducpy.builders.mutate_builder.mutate_global_state)(state, \*\*kwargs)        |                                                                                                            |
+| [`mutate_local_state`](#ducpy.builders.mutate_builder.mutate_local_state)(state, \*\*kwargs)          |                                                                                                            |
+| [`mutate_external_file`](#ducpy.builders.mutate_builder.mutate_external_file)(file_entry, \*\*kwargs) |                                                                                                            |
+
+## Module Contents
+
+### ducpy.builders.mutate_builder.mutate_element(el, \*\*kwargs)
+
+Mutate any property of an element (ElementWrapper or direct dataclass instance) using keyword arguments.
+Recursively traverses all nested dataclasses and sets matching properties.
+Applies versioning updates (seed, updated, version, version_nonce) to top-level elements or elements with a ‘base’ attribute.
+Example: mutate_element(el, x=…, label=…, points=[…], style=…, …)
+
+### ducpy.builders.mutate_builder.mutate_version_graph(graph: [ducpy.classes.DataStateClass.VersionGraph](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.VersionGraph), \*\*kwargs)
+
+### ducpy.builders.mutate_builder.mutate_checkpoint(checkpoint: [ducpy.classes.DataStateClass.Checkpoint](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.Checkpoint), \*\*kwargs)
+
+### ducpy.builders.mutate_builder.mutate_delta(delta: [ducpy.classes.DataStateClass.Delta](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.Delta), \*\*kwargs)
+
+### ducpy.builders.mutate_builder.mutate_global_state(state: [ducpy.classes.DataStateClass.DucGlobalState](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucGlobalState), \*\*kwargs)
+
+### ducpy.builders.mutate_builder.mutate_local_state(state: [ducpy.classes.DataStateClass.DucLocalState](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucLocalState), \*\*kwargs)
+
+### ducpy.builders.mutate_builder.mutate_external_file(file_entry: [ducpy.classes.DataStateClass.DucExternalFile](../../classes/DataStateClass/index.md#ducpy.classes.DataStateClass.DucExternalFile), \*\*kwargs)
+
+
+# index.html.md
+
+# ducpy.utils.mutate_utils
+
+Utility function for recursively mutating dataclass objects.
+
+## Functions
+
+| [`recursive_mutate`](#ducpy.utils.mutate_utils.recursive_mutate)(obj, updates)   | Recursively set attributes on dataclass objects matching keys in updates.   |
+|----------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+
+## Module Contents
+
+### ducpy.utils.mutate_utils.recursive_mutate(obj, updates)
+
+Recursively set attributes on dataclass objects matching keys in updates.
+
+
+# index.html.md
+
+# ducpy.utils.rand_utils
+
+## Functions
+
+| [`generate_random_id`](#ducpy.utils.rand_utils.generate_random_id)([length])   | Generate a random string ID.                        |
+|--------------------------------------------------------------------------------|-----------------------------------------------------|
+| [`generate_random_color`](#ducpy.utils.rand_utils.generate_random_color)()     | Generate a random hex color.                        |
+| [`random_versioning`](#ducpy.utils.rand_utils.random_versioning)()             | Generate random versioning properties for mutation. |
+
+## Module Contents
+
+### ducpy.utils.rand_utils.generate_random_id(length=16)
+
+Generate a random string ID.
+
+### ducpy.utils.rand_utils.generate_random_color()
+
+Generate a random hex color.
+
+### ducpy.utils.rand_utils.random_versioning()
+
+Generate random versioning properties for mutation.
+
+
+# index.html.md
+
+# ducpy.utils.io
+
+This module provides high-level functions for reading and writing DUC files.
+
+## Functions
+
+| [`write_duc_file`](#ducpy.utils.io.write_duc_file)(file_path, name[, thumbnail, ...])   | Serializes an ExportedDataState object to a .duc file.        |
+|-----------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| [`read_duc_file`](#ducpy.utils.io.read_duc_file)(→ ducpy.parse.DucData)                 | Parses a .duc file into a DucData dict with attribute access. |
+
+## Module Contents
+
+### ducpy.utils.io.write_duc_file(file_path: str, name: str, thumbnail: bytes | None = None, dictionary: list | None = None, elements: list | None = None, duc_local_state: Any = None, duc_global_state: Any = None, version_graph: Any = None, blocks: list | None = None, block_instances: list | None = None, block_collections: list | None = None, groups: list | None = None, regions: list | None = None, layers: list | None = None, external_files: list | None = None, charter: Any = None, issues: list | None = None)
+
+Serializes an ExportedDataState object to a .duc file.
+
+### ducpy.utils.io.read_duc_file(file_path: str) → [ducpy.parse.DucData](../../parse/index.md#ducpy.parse.DucData)
+
+Parses a .duc file into a DucData dict with attribute access.
+
+
+# index.html.md
+
+# ducpy.utils.constants
+
+Utility constants for DucPy package.
+
+## Attributes
+
+| [`DEFAULT_SCOPE`](#ducpy.utils.constants.DEFAULT_SCOPE)               |    |
+|-----------------------------------------------------------------------|----|
+| [`DEFAULT_STROKE_COLOR`](#ducpy.utils.constants.DEFAULT_STROKE_COLOR) |    |
+| [`DEFAULT_FILL_COLOR`](#ducpy.utils.constants.DEFAULT_FILL_COLOR)     |    |
+| [`DEFAULT_TEXT_COLOR`](#ducpy.utils.constants.DEFAULT_TEXT_COLOR)     |    |
+| [`DEFAULT_STROKE_WIDTH`](#ducpy.utils.constants.DEFAULT_STROKE_WIDTH) |    |
+| [`DEFAULT_TEXT_SIZE`](#ducpy.utils.constants.DEFAULT_TEXT_SIZE)       |    |
+| [`DEFAULT_FONT`](#ducpy.utils.constants.DEFAULT_FONT)                 |    |
+
+## Module Contents
+
+### ducpy.utils.constants.DEFAULT_SCOPE *= 'mm'*
+
+### ducpy.utils.constants.DEFAULT_STROKE_COLOR *= '#000000'*
+
+### ducpy.utils.constants.DEFAULT_FILL_COLOR *= '#ffffff'*
+
+### ducpy.utils.constants.DEFAULT_TEXT_COLOR *= '#000000'*
+
+### ducpy.utils.constants.DEFAULT_STROKE_WIDTH *= 1.0*
+
+### ducpy.utils.constants.DEFAULT_TEXT_SIZE *= 12.0*
+
+### ducpy.utils.constants.DEFAULT_FONT *= 'Arial'*
+
+
+# index.html.md
+
+# ducpy.utils.convert
+
+Utilities for converting between Python snake_case and Rust/JSON camelCase naming,
+and for flattening/nesting element structures to match the Rust serde layout.
+
+## Attributes
+
+| [`_CAMEL_RE1`](#ducpy.utils.convert._CAMEL_RE1)                               |    |
+|-------------------------------------------------------------------------------|----|
+| [`_CAMEL_RE2`](#ducpy.utils.convert._CAMEL_RE2)                               |    |
+| [`_SNAKE_TO_CAMEL_OVERRIDES`](#ducpy.utils.convert._SNAKE_TO_CAMEL_OVERRIDES) |    |
+| [`_FLATTEN_KEYS`](#ducpy.utils.convert._FLATTEN_KEYS)                         |    |
+
+## Functions
+
+| [`camel_to_snake`](#ducpy.utils.convert.camel_to_snake)(→ str)               |                                                                                  |
+|------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| [`snake_to_camel`](#ducpy.utils.convert.snake_to_camel)(→ str)               |                                                                                  |
+| [`deep_camel_to_snake`](#ducpy.utils.convert.deep_camel_to_snake)(→ Any)     |                                                                                  |
+| [`deep_snake_to_camel`](#ducpy.utils.convert.deep_snake_to_camel)(→ Any)     |                                                                                  |
+| [`_flatten_dict`](#ducpy.utils.convert._flatten_dict)(→ dict)                | Recursively flatten keys that Rust serde #[serde(flatten)] would flatten.        |
+| [`to_serializable`](#ducpy.utils.convert.to_serializable)(→ Any)             | Convert a value to a JSON-serializable form suitable for the Rust native module. |
+| [`extract_embedded_code`](#ducpy.utils.convert.extract_embedded_code)(→ str) | Extracts the body of a Python function as a clean standalone script.             |
+
+## Module Contents
+
+### ducpy.utils.convert.\_CAMEL_RE1
+
+### ducpy.utils.convert.\_CAMEL_RE2
+
+### ducpy.utils.convert.camel_to_snake(name: str) → str
+
+### ducpy.utils.convert.snake_to_camel(name: str) → str
+
+### ducpy.utils.convert.\_SNAKE_TO_CAMEL_OVERRIDES *: Dict[str, str]*
+
+### ducpy.utils.convert.\_FLATTEN_KEYS
+
+### ducpy.utils.convert.deep_camel_to_snake(obj: Any) → Any
+
+### ducpy.utils.convert.deep_snake_to_camel(obj: Any) → Any
+
+### ducpy.utils.convert.\_flatten_dict(d: dict) → dict
+
+Recursively flatten keys that Rust serde #[serde(flatten)] would flatten.
+
+Walks the entire dict so that nested flatten keys (e.g. `stack_element_base`
+-> `stack_base` -> `styles`) are all merged into the appropriate level.
+
+### ducpy.utils.convert.to_serializable(obj: Any) → Any
+
+Convert a value to a JSON-serializable form suitable for the Rust native module.
+
+Handles:
+- Dataclass instances → dict (recursively)
+- bytes → bytes (native serializer accepts PyBytes for binary fields)
+- Nested base/styles/linear_base/stack_element_base → flattened
+- snake_case keys → camelCase keys
+
+### ducpy.utils.convert.extract_embedded_code(func) → str
+
+Extracts the body of a Python function as a clean standalone script.
+
+This is highly useful for defining CAD/BIM model generation code as actual,
+syntax-highlighted Python functions inside examples/tests, and then serializing
+them to DUC.
+
+Args:
+: func: The Python function/callable to extract the body from.
+
+Returns:
+: The body of the function as a clean, dedented string.
+
+
+# index.html.md
+
+# ducpy.classes.DataStateClass
+
+## Attributes
+
+| [`DucIssueAnchor`](#ducpy.classes.DataStateClass.DucIssueAnchor)   |    |
+|--------------------------------------------------------------------|----|
+
+## Classes
+
+| [`DictionaryEntry`](#ducpy.classes.DataStateClass.DictionaryEntry)             |    |
+|--------------------------------------------------------------------------------|----|
+| [`Actor`](#ducpy.classes.DataStateClass.Actor)                                 |    |
+| [`DucCharterRequirement`](#ducpy.classes.DataStateClass.DucCharterRequirement) |    |
+| [`DucCharterConstraint`](#ducpy.classes.DataStateClass.DucCharterConstraint)   |    |
+| [`DucCharterDecision`](#ducpy.classes.DataStateClass.DucCharterDecision)       |    |
+| [`DucCharterStakeholder`](#ducpy.classes.DataStateClass.DucCharterStakeholder) |    |
+| [`DucCharter`](#ducpy.classes.DataStateClass.DucCharter)                       |    |
+| [`DucIssueMessage`](#ducpy.classes.DataStateClass.DucIssueMessage)             |    |
+| [`DucIssueCanvasAnchor`](#ducpy.classes.DataStateClass.DucIssueCanvasAnchor)   |    |
+| [`DucIssueElementAnchor`](#ducpy.classes.DataStateClass.DucIssueElementAnchor) |    |
+| [`DucIssueModelAnchor`](#ducpy.classes.DataStateClass.DucIssueModelAnchor)     |    |
+| [`DucIssue`](#ducpy.classes.DataStateClass.DucIssue)                           |    |
+| [`DucGlobalState`](#ducpy.classes.DataStateClass.DucGlobalState)               |    |
+| [`DucLocalState`](#ducpy.classes.DataStateClass.DucLocalState)                 |    |
+| [`VersionBase`](#ducpy.classes.DataStateClass.VersionBase)                     |    |
+| [`Checkpoint`](#ducpy.classes.DataStateClass.Checkpoint)                       |    |
+| [`Delta`](#ducpy.classes.DataStateClass.Delta)                                 |    |
+| [`SchemaMigration`](#ducpy.classes.DataStateClass.SchemaMigration)             |    |
+| [`VersionChain`](#ducpy.classes.DataStateClass.VersionChain)                   |    |
+| [`VersionGraphMetadata`](#ducpy.classes.DataStateClass.VersionGraphMetadata)   |    |
+| [`VersionGraph`](#ducpy.classes.DataStateClass.VersionGraph)                   |    |
+| [`DisplayPrecision`](#ducpy.classes.DataStateClass.DisplayPrecision)           |    |
+| [`ExternalFileRevision`](#ducpy.classes.DataStateClass.ExternalFileRevision)   |    |
+| [`DucExternalFile`](#ducpy.classes.DataStateClass.DucExternalFile)             |    |
+| [`ExportedDataState`](#ducpy.classes.DataStateClass.ExportedDataState)         |    |
+
+## Module Contents
+
+### *class* ducpy.classes.DataStateClass.DictionaryEntry
+
+#### key *: str*
+
+#### value *: str*
+
+### *class* ducpy.classes.DataStateClass.Actor
+
+#### identifier *: str*
+
+#### name *: str | None* *= None*
+
+### *class* ducpy.classes.DataStateClass.DucCharterRequirement
+
+#### id *: str*
+
+#### statement *: str*
+
+#### must *: bool*
+
+#### acceptance_criteria *: List[str] | None* *= None*
+
+### *class* ducpy.classes.DataStateClass.DucCharterConstraint
+
+#### id *: str*
+
+#### statement *: str*
+
+#### hard *: bool*
+
+### *class* ducpy.classes.DataStateClass.DucCharterDecision
+
+#### id *: str*
+
+#### decision *: str*
+
+#### rationale *: str*
+
+#### accepted *: bool*
+
+#### decided_at *: int*
+
+#### issue_ids *: List[str] | None* *= None*
+
+### *class* ducpy.classes.DataStateClass.DucCharterStakeholder
+
+#### actor *: [Actor](#ducpy.classes.DataStateClass.Actor)*
+
+#### role *: str*
+
+### *class* ducpy.classes.DataStateClass.DucCharter
+
+#### title *: str*
+
+#### objective *: str*
+
+#### phase *: str*
+
+#### requirements *: List[[DucCharterRequirement](#ducpy.classes.DataStateClass.DucCharterRequirement)]*
+
+#### constraints *: List[[DucCharterConstraint](#ducpy.classes.DataStateClass.DucCharterConstraint)]*
+
+#### decisions *: List[[DucCharterDecision](#ducpy.classes.DataStateClass.DucCharterDecision)]*
+
+#### updated_at *: int*
+
+#### description *: str | None* *= None*
+
+#### closed_reason *: str | None* *= None*
+
+#### stakeholders *: List[[DucCharterStakeholder](#ducpy.classes.DataStateClass.DucCharterStakeholder)] | None* *= None*
+
+### *class* ducpy.classes.DataStateClass.DucIssueMessage
+
+#### id *: str*
+
+#### author *: [Actor](#ducpy.classes.DataStateClass.Actor)*
+
+#### content *: str*
+
+#### created_at *: int*
+
+#### reply_to_id *: str | None* *= None*
+
+#### reactions *: Dict[str, List[str]] | None* *= None*
+
+#### edited_at *: int | None* *= None*
+
+#### deleted_at *: int | None* *= None*
+
+### *class* ducpy.classes.DataStateClass.DucIssueCanvasAnchor
+
+#### x *: float*
+
+#### y *: float*
+
+#### scope *: str | None* *= None*
+
+#### type *: str* *= 'canvas'*
+
+### *class* ducpy.classes.DataStateClass.DucIssueElementAnchor
+
+#### element_id *: str*
+
+#### anchor_x *: float | None* *= None*
+
+#### anchor_y *: float | None* *= None*
+
+#### type *: str* *= 'element'*
+
+### *class* ducpy.classes.DataStateClass.DucIssueModelAnchor
+
+#### element_id *: str*
+
+#### point *: List[float]*
+
+#### normal *: List[float] | None* *= None*
+
+#### viewer_state *: [ducpy.classes.ElementsClass.Viewer3DState](../ElementsClass/index.md#ducpy.classes.ElementsClass.Viewer3DState) | None* *= None*
+
+#### topology_id *: str | None* *= None*
+
+#### type *: str* *= 'model'*
+
+### ducpy.classes.DataStateClass.DucIssueAnchor
+
+### *class* ducpy.classes.DataStateClass.DucIssue
+
+#### id *: str*
+
+#### local_id *: int*
+
+#### title *: str*
+
+#### status *: str*
+
+#### messages *: List[[DucIssueMessage](#ducpy.classes.DataStateClass.DucIssueMessage)]*
+
+#### author_id *: str*
+
+#### created_at *: int*
+
+#### updated_at *: int*
+
+#### dismissed_reason *: str | None* *= None*
+
+#### due_date *: int | None* *= None*
+
+#### anchor *: DucIssueAnchor | None* *= None*
+
+#### assignee_ids *: List[str] | None* *= None*
+
+#### follower_ids *: List[str] | None* *= None*
+
+#### deleted_at *: int | None* *= None*
+
+### *class* ducpy.classes.DataStateClass.DucGlobalState
+
+#### view_background_color *: str*
+
+#### main_scope *: str*
+
+#### scope_exponent_threshold *: int*
+
+### *class* ducpy.classes.DataStateClass.DucLocalState
+
+#### scope *: str*
+
+#### scroll_x *: float*
+
+#### scroll_y *: float*
+
+#### zoom *: float*
+
+#### is_binding_enabled *: bool*
+
+#### pen_mode *: bool*
+
+#### view_mode_enabled *: bool*
+
+#### objects_snap_mode_enabled *: bool*
+
+#### grid_mode_enabled *: bool*
+
+#### outline_mode_enabled *: bool*
+
+#### current_item_stroke *: [ducpy.classes.ElementsClass.ElementStroke](../ElementsClass/index.md#ducpy.classes.ElementsClass.ElementStroke) | None*
+
+#### current_item_background *: [ducpy.classes.ElementsClass.ElementBackground](../ElementsClass/index.md#ducpy.classes.ElementsClass.ElementBackground) | None*
+
+#### current_item_opacity *: float | None*
+
+#### current_item_font_family *: str | None*
+
+#### current_item_font_size *: float | None*
+
+#### current_item_text_align *: [ducpy.enums.TEXT_ALIGN](../../enums/index.md#ducpy.enums.TEXT_ALIGN) | None*
+
+#### current_item_roundness *: float | None*
+
+#### current_item_start_line_head *: [ducpy.classes.ElementsClass.DucHead](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucHead) | None*
+
+#### current_item_end_line_head *: [ducpy.classes.ElementsClass.DucHead](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucHead) | None*
+
+#### manual_save_mode *: bool | None* *= None*
+
+#### decimal_places *: int* *= 2*
+
+### *class* ducpy.classes.DataStateClass.VersionBase
+
+#### id *: str*
+
+#### timestamp *: int*
+
+#### is_manual_save *: bool*
+
+#### parent_id *: str | None*
+
+#### description *: str | None*
+
+#### user_id *: str | None*
+
+### *class* ducpy.classes.DataStateClass.Checkpoint
+
+Bases: [`VersionBase`](#ducpy.classes.DataStateClass.VersionBase)
+
+#### version_number *: int* *= 0*
+
+#### schema_version *: int* *= 0*
+
+#### is_schema_boundary *: bool* *= False*
+
+#### data *: bytes* *= b''*
+
+#### size_bytes *: int* *= 0*
+
+#### type *: str* *= 'checkpoint'*
+
+### *class* ducpy.classes.DataStateClass.Delta
+
+Bases: [`VersionBase`](#ducpy.classes.DataStateClass.VersionBase)
+
+#### version_number *: int* *= 0*
+
+#### schema_version *: int* *= 0*
+
+#### base_checkpoint_id *: str* *= ''*
+
+#### payload *: bytes* *= b''*
+
+#### size_bytes *: int* *= 0*
+
+#### type *: str* *= 'delta'*
+
+### *class* ducpy.classes.DataStateClass.SchemaMigration
+
+#### from_schema_version *: int*
+
+#### to_schema_version *: int*
+
+#### migration_name *: str*
+
+#### applied_at *: int*
+
+#### migration_checksum *: str | None* *= None*
+
+#### boundary_checkpoint_id *: str | None* *= None*
+
+### *class* ducpy.classes.DataStateClass.VersionChain
+
+#### id *: str*
+
+#### schema_version *: int*
+
+#### start_version *: int*
+
+#### end_version *: int | None* *= None*
+
+#### migration *: [SchemaMigration](#ducpy.classes.DataStateClass.SchemaMigration) | None* *= None*
+
+#### root_checkpoint_id *: str | None* *= None*
+
+### *class* ducpy.classes.DataStateClass.VersionGraphMetadata
+
+#### current_version *: int*
+
+#### current_schema_version *: int*
+
+#### chain_count *: int*
+
+#### total_size *: int*
+
+### *class* ducpy.classes.DataStateClass.VersionGraph
+
+#### checkpoints *: List[[Checkpoint](#ducpy.classes.DataStateClass.Checkpoint)]*
+
+#### deltas *: List[[Delta](#ducpy.classes.DataStateClass.Delta)]*
+
+#### chains *: List[[VersionChain](#ducpy.classes.DataStateClass.VersionChain)]*
+
+#### metadata *: [VersionGraphMetadata](#ducpy.classes.DataStateClass.VersionGraphMetadata)*
+
+#### user_checkpoint_version_id *: str*
+
+#### latest_version_id *: str*
+
+### *class* ducpy.classes.DataStateClass.DisplayPrecision
+
+#### linear *: int* *= 2*
+
+#### angular *: int* *= 2*
+
+### *class* ducpy.classes.DataStateClass.ExternalFileRevision
+
+#### id *: str*
+
+#### size_bytes *: int*
+
+#### mime_type *: str*
+
+#### created *: int*
+
+#### checksum *: str | None* *= None*
+
+#### source_name *: str | None* *= None*
+
+#### message *: str | None* *= None*
+
+#### last_retrieved *: int | None* *= None*
+
+### *class* ducpy.classes.DataStateClass.DucExternalFile
+
+#### id *: str*
+
+#### active_revision_id *: str*
+
+#### updated *: int*
+
+#### revisions *: Dict[str, [ExternalFileRevision](#ducpy.classes.DataStateClass.ExternalFileRevision)]*
+
+#### version *: int | None* *= None*
+
+### *class* ducpy.classes.DataStateClass.ExportedDataState
+
+#### type *: str*
+
+#### version *: str*
+
+#### source *: str*
+
+#### thumbnail *: bytes*
+
+#### elements *: List[[ducpy.classes.ElementsClass.ElementWrapper](../ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)]*
+
+#### blocks *: List[[ducpy.classes.ElementsClass.DucBlock](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucBlock)]*
+
+#### block_instances *: List[[ducpy.classes.ElementsClass.DucBlockInstance](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucBlockInstance)]*
+
+#### block_collections *: List[[ducpy.classes.ElementsClass.DucBlockCollection](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucBlockCollection)]*
+
+#### groups *: List[[ducpy.classes.ElementsClass.DucGroup](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucGroup)]*
+
+#### regions *: List[[ducpy.classes.ElementsClass.DucRegion](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucRegion)]*
+
+#### layers *: List[[ducpy.classes.ElementsClass.DucLayer](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucLayer)]*
+
+#### dictionary *: Dict[str, str]*
+
+#### duc_local_state *: [DucLocalState](#ducpy.classes.DataStateClass.DucLocalState) | None*
+
+#### duc_global_state *: [DucGlobalState](#ducpy.classes.DataStateClass.DucGlobalState) | None*
+
+#### version_graph *: [VersionGraph](#ducpy.classes.DataStateClass.VersionGraph) | None*
+
+#### files *: Dict[str, [DucExternalFile](#ducpy.classes.DataStateClass.DucExternalFile)] | None*
+
+#### charter *: [DucCharter](#ducpy.classes.DataStateClass.DucCharter) | None* *= None*
+
+#### issues *: List[[DucIssue](#ducpy.classes.DataStateClass.DucIssue)] | None* *= None*
+
+#### files_data *: Dict[str, bytes] | None* *= None*
+
+#### id *: str | None* *= None*
+
+
+# index.html.md
+
+# ducpy.classes.ElementsClass
+
+## Attributes
+
+| [`DucElement`](#ducpy.classes.ElementsClass.DucElement)   |    |
+|-----------------------------------------------------------|----|
+
+## Classes
+
+| [`DictionaryEntry`](#ducpy.classes.ElementsClass.DictionaryEntry)                   |                                                                                                       |
+|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| [`StringValueEntry`](#ducpy.classes.ElementsClass.StringValueEntry)                 |                                                                                                       |
+| [`GeometricPoint`](#ducpy.classes.ElementsClass.GeometricPoint)                     |                                                                                                       |
+| [`DucPoint`](#ducpy.classes.ElementsClass.DucPoint)                                 |                                                                                                       |
+| [`Margins`](#ducpy.classes.ElementsClass.Margins)                                   |                                                                                                       |
+| [`Viewer3DClipPlane`](#ducpy.classes.ElementsClass.Viewer3DClipPlane)               |                                                                                                       |
+| [`Viewer3DMaterial`](#ducpy.classes.ElementsClass.Viewer3DMaterial)                 |                                                                                                       |
+| [`Viewer3DZebra`](#ducpy.classes.ElementsClass.Viewer3DZebra)                       |                                                                                                       |
+| [`Viewer3DCamera`](#ducpy.classes.ElementsClass.Viewer3DCamera)                     |                                                                                                       |
+| [`Viewer3DGridPlanes`](#ducpy.classes.ElementsClass.Viewer3DGridPlanes)             |                                                                                                       |
+| [`Viewer3DGrid`](#ducpy.classes.ElementsClass.Viewer3DGrid)                         | Tagged union: {"type": "uniform", "value": bool} or {"type": "perPlane", "value": Viewer3DGridPlanes} |
+| [`Viewer3DDisplay`](#ducpy.classes.ElementsClass.Viewer3DDisplay)                   |                                                                                                       |
+| [`Viewer3DClipping`](#ducpy.classes.ElementsClass.Viewer3DClipping)                 |                                                                                                       |
+| [`Viewer3DExplode`](#ducpy.classes.ElementsClass.Viewer3DExplode)                   |                                                                                                       |
+| [`Viewer3DState`](#ducpy.classes.ElementsClass.Viewer3DState)                       |                                                                                                       |
+| [`TilingProperties`](#ducpy.classes.ElementsClass.TilingProperties)                 |                                                                                                       |
+| [`HatchPatternLine`](#ducpy.classes.ElementsClass.HatchPatternLine)                 |                                                                                                       |
+| [`CustomHatchPattern`](#ducpy.classes.ElementsClass.CustomHatchPattern)             |                                                                                                       |
+| [`DucHatchStyle`](#ducpy.classes.ElementsClass.DucHatchStyle)                       |                                                                                                       |
+| [`DucImageFilter`](#ducpy.classes.ElementsClass.DucImageFilter)                     |                                                                                                       |
+| [`ElementContentBase`](#ducpy.classes.ElementsClass.ElementContentBase)             |                                                                                                       |
+| [`StrokeStyle`](#ducpy.classes.ElementsClass.StrokeStyle)                           |                                                                                                       |
+| [`StrokeSides`](#ducpy.classes.ElementsClass.StrokeSides)                           |                                                                                                       |
+| [`ElementStroke`](#ducpy.classes.ElementsClass.ElementStroke)                       |                                                                                                       |
+| [`ElementBackground`](#ducpy.classes.ElementsClass.ElementBackground)               |                                                                                                       |
+| [`DucElementStylesBase`](#ducpy.classes.ElementsClass.DucElementStylesBase)         |                                                                                                       |
+| [`BoundElement`](#ducpy.classes.ElementsClass.BoundElement)                         |                                                                                                       |
+| [`DucElementBase`](#ducpy.classes.ElementsClass.DucElementBase)                     |                                                                                                       |
+| [`DucHead`](#ducpy.classes.ElementsClass.DucHead)                                   |                                                                                                       |
+| [`PointBindingPoint`](#ducpy.classes.ElementsClass.PointBindingPoint)               |                                                                                                       |
+| [`DucPointBinding`](#ducpy.classes.ElementsClass.DucPointBinding)                   |                                                                                                       |
+| [`DucLineReference`](#ducpy.classes.ElementsClass.DucLineReference)                 |                                                                                                       |
+| [`DucLine`](#ducpy.classes.ElementsClass.DucLine)                                   |                                                                                                       |
+| [`DucPath`](#ducpy.classes.ElementsClass.DucPath)                                   |                                                                                                       |
+| [`DucLinearElementBase`](#ducpy.classes.ElementsClass.DucLinearElementBase)         |                                                                                                       |
+| [`DucStackLikeStyles`](#ducpy.classes.ElementsClass.DucStackLikeStyles)             |                                                                                                       |
+| [`DucStackBase`](#ducpy.classes.ElementsClass.DucStackBase)                         |                                                                                                       |
+| [`DucStackElementBase`](#ducpy.classes.ElementsClass.DucStackElementBase)           |                                                                                                       |
+| [`LineSpacing`](#ducpy.classes.ElementsClass.LineSpacing)                           |                                                                                                       |
+| [`DucTextStyle`](#ducpy.classes.ElementsClass.DucTextStyle)                         |                                                                                                       |
+| [`DucTableStyle`](#ducpy.classes.ElementsClass.DucTableStyle)                       |                                                                                                       |
+| [`DucDocStyle`](#ducpy.classes.ElementsClass.DucDocStyle)                           |                                                                                                       |
+| [`DucPlotStyle`](#ducpy.classes.ElementsClass.DucPlotStyle)                         |                                                                                                       |
+| [`DucRectangleElement`](#ducpy.classes.ElementsClass.DucRectangleElement)           |                                                                                                       |
+| [`DucPolygonElement`](#ducpy.classes.ElementsClass.DucPolygonElement)               |                                                                                                       |
+| [`DucEllipseElement`](#ducpy.classes.ElementsClass.DucEllipseElement)               |                                                                                                       |
+| [`DucEmbeddableElement`](#ducpy.classes.ElementsClass.DucEmbeddableElement)         |                                                                                                       |
+| [`DocumentGridConfig`](#ducpy.classes.ElementsClass.DocumentGridConfig)             |                                                                                                       |
+| [`DucPdfElement`](#ducpy.classes.ElementsClass.DucPdfElement)                       |                                                                                                       |
+| [`DucDocElement`](#ducpy.classes.ElementsClass.DucDocElement)                       |                                                                                                       |
+| [`DucTableElement`](#ducpy.classes.ElementsClass.DucTableElement)                   |                                                                                                       |
+| [`ImageCrop`](#ducpy.classes.ElementsClass.ImageCrop)                               |                                                                                                       |
+| [`DucImageElement`](#ducpy.classes.ElementsClass.DucImageElement)                   |                                                                                                       |
+| [`DucTextElement`](#ducpy.classes.ElementsClass.DucTextElement)                     |                                                                                                       |
+| [`DucLinearElement`](#ducpy.classes.ElementsClass.DucLinearElement)                 |                                                                                                       |
+| [`DucArrowElement`](#ducpy.classes.ElementsClass.DucArrowElement)                   |                                                                                                       |
+| [`DucFreeDrawEnds`](#ducpy.classes.ElementsClass.DucFreeDrawEnds)                   |                                                                                                       |
+| [`DucFreeDrawElement`](#ducpy.classes.ElementsClass.DucFreeDrawElement)             |                                                                                                       |
+| [`DucFrameElement`](#ducpy.classes.ElementsClass.DucFrameElement)                   |                                                                                                       |
+| [`PlotLayout`](#ducpy.classes.ElementsClass.PlotLayout)                             |                                                                                                       |
+| [`DucPlotElement`](#ducpy.classes.ElementsClass.DucPlotElement)                     |                                                                                                       |
+| [`DucModelElement`](#ducpy.classes.ElementsClass.DucModelElement)                   |                                                                                                       |
+| [`DucBlockDuplicationArray`](#ducpy.classes.ElementsClass.DucBlockDuplicationArray) |                                                                                                       |
+| [`DucBlockMetadata`](#ducpy.classes.ElementsClass.DucBlockMetadata)                 |                                                                                                       |
+| [`DucBlock`](#ducpy.classes.ElementsClass.DucBlock)                                 |                                                                                                       |
+| [`DucBlockInstance`](#ducpy.classes.ElementsClass.DucBlockInstance)                 |                                                                                                       |
+| [`DucBlockCollectionEntry`](#ducpy.classes.ElementsClass.DucBlockCollectionEntry)   |                                                                                                       |
+| [`DucBlockCollection`](#ducpy.classes.ElementsClass.DucBlockCollection)             |                                                                                                       |
+| [`DucGroup`](#ducpy.classes.ElementsClass.DucGroup)                                 |                                                                                                       |
+| [`DucRegion`](#ducpy.classes.ElementsClass.DucRegion)                               |                                                                                                       |
+| [`DucLayerOverrides`](#ducpy.classes.ElementsClass.DucLayerOverrides)               |                                                                                                       |
+| [`DucLayer`](#ducpy.classes.ElementsClass.DucLayer)                                 |                                                                                                       |
+| [`ElementWrapper`](#ducpy.classes.ElementsClass.ElementWrapper)                     |                                                                                                       |
+
+## Module Contents
+
+### *class* ducpy.classes.ElementsClass.DictionaryEntry
+
+#### key *: str*
+
+#### value *: str*
+
+### *class* ducpy.classes.ElementsClass.StringValueEntry
+
+#### key *: str*
+
+#### value *: str*
+
+### *class* ducpy.classes.ElementsClass.GeometricPoint
+
+#### x *: float*
+
+#### y *: float*
+
+### *class* ducpy.classes.ElementsClass.DucPoint
+
+#### x *: float*
+
+#### y *: float*
+
+#### mirroring *: [ducpy.enums.BEZIER_MIRRORING](../../enums/index.md#ducpy.enums.BEZIER_MIRRORING) | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.Margins
+
+#### top *: float*
+
+#### right *: float*
+
+#### bottom *: float*
+
+#### left *: float*
+
+### *class* ducpy.classes.ElementsClass.Viewer3DClipPlane
+
+#### enabled *: bool*
+
+#### value *: float*
+
+#### normal *: List[float] | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.Viewer3DMaterial
+
+#### metalness *: float*
+
+#### roughness *: float*
+
+#### default_opacity *: float*
+
+#### edge_color *: int*
+
+#### ambient_intensity *: float*
+
+#### direct_intensity *: float*
+
+### *class* ducpy.classes.ElementsClass.Viewer3DZebra
+
+#### active *: bool*
+
+#### stripe_count *: int*
+
+#### stripe_direction *: float*
+
+#### color_scheme *: str*
+
+#### opacity *: float*
+
+#### mapping_mode *: str*
+
+### *class* ducpy.classes.ElementsClass.Viewer3DCamera
+
+#### control *: str*
+
+#### ortho *: bool*
+
+#### up *: str*
+
+#### position *: List[float]*
+
+#### quaternion *: List[float]*
+
+#### target *: List[float]*
+
+#### zoom *: float*
+
+#### pan_speed *: float*
+
+#### rotate_speed *: float*
+
+#### zoom_speed *: float*
+
+#### holroyd *: bool*
+
+### *class* ducpy.classes.ElementsClass.Viewer3DGridPlanes
+
+#### xy *: bool*
+
+#### xz *: bool*
+
+#### yz *: bool*
+
+### *class* ducpy.classes.ElementsClass.Viewer3DGrid
+
+Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “perPlane”, “value”: Viewer3DGridPlanes}
+
+#### type *: str*
+
+#### value *: Any*
+
+### *class* ducpy.classes.ElementsClass.Viewer3DDisplay
+
+#### wireframe *: bool*
+
+#### transparent *: bool*
+
+#### black_edges *: bool*
+
+#### grid *: [Viewer3DGrid](#ducpy.classes.ElementsClass.Viewer3DGrid)*
+
+#### axes_visible *: bool*
+
+#### axes_at_origin *: bool*
+
+### *class* ducpy.classes.ElementsClass.Viewer3DClipping
+
+#### x *: [Viewer3DClipPlane](#ducpy.classes.ElementsClass.Viewer3DClipPlane)*
+
+#### y *: [Viewer3DClipPlane](#ducpy.classes.ElementsClass.Viewer3DClipPlane)*
+
+#### z *: [Viewer3DClipPlane](#ducpy.classes.ElementsClass.Viewer3DClipPlane)*
+
+#### intersection *: bool*
+
+#### show_planes *: bool*
+
+#### object_color_caps *: bool*
+
+### *class* ducpy.classes.ElementsClass.Viewer3DExplode
+
+#### active *: bool*
+
+#### value *: float*
+
+### *class* ducpy.classes.ElementsClass.Viewer3DState
+
+#### camera *: [Viewer3DCamera](#ducpy.classes.ElementsClass.Viewer3DCamera)*
+
+#### display *: [Viewer3DDisplay](#ducpy.classes.ElementsClass.Viewer3DDisplay)*
+
+#### material *: [Viewer3DMaterial](#ducpy.classes.ElementsClass.Viewer3DMaterial)*
+
+#### clipping *: [Viewer3DClipping](#ducpy.classes.ElementsClass.Viewer3DClipping)*
+
+#### explode *: [Viewer3DExplode](#ducpy.classes.ElementsClass.Viewer3DExplode)*
+
+#### zebra *: [Viewer3DZebra](#ducpy.classes.ElementsClass.Viewer3DZebra)*
+
+### *class* ducpy.classes.ElementsClass.TilingProperties
+
+#### size_in_percent *: float*
+
+#### angle *: float*
+
+#### spacing *: float | None* *= None*
+
+#### offset_x *: float | None* *= None*
+
+#### offset_y *: float | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.HatchPatternLine
+
+#### angle *: float*
+
+#### origin *: [DucPoint](#ducpy.classes.ElementsClass.DucPoint)*
+
+#### offset *: List[float]*
+
+#### dash_pattern *: List[float]*
+
+### *class* ducpy.classes.ElementsClass.CustomHatchPattern
+
+#### name *: str*
+
+#### lines *: List[[HatchPatternLine](#ducpy.classes.ElementsClass.HatchPatternLine)]*
+
+#### description *: str | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucHatchStyle
+
+#### hatch_style *: [ducpy.enums.HATCH_STYLE](../../enums/index.md#ducpy.enums.HATCH_STYLE)*
+
+#### pattern_name *: str*
+
+#### pattern_scale *: float*
+
+#### pattern_angle *: float*
+
+#### pattern_origin *: [DucPoint](#ducpy.classes.ElementsClass.DucPoint)*
+
+#### pattern_double *: bool*
+
+#### custom_pattern *: [CustomHatchPattern](#ducpy.classes.ElementsClass.CustomHatchPattern) | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucImageFilter
+
+#### brightness *: float*
+
+#### contrast *: float*
+
+### *class* ducpy.classes.ElementsClass.ElementContentBase
+
+#### src *: str*
+
+#### visible *: bool*
+
+#### opacity *: float*
+
+#### preference *: [ducpy.enums.ELEMENT_CONTENT_PREFERENCE](../../enums/index.md#ducpy.enums.ELEMENT_CONTENT_PREFERENCE) | None* *= None*
+
+#### tiling *: [TilingProperties](#ducpy.classes.ElementsClass.TilingProperties) | None* *= None*
+
+#### hatch *: [DucHatchStyle](#ducpy.classes.ElementsClass.DucHatchStyle) | None* *= None*
+
+#### image_filter *: [DucImageFilter](#ducpy.classes.ElementsClass.DucImageFilter) | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.StrokeStyle
+
+#### preference *: [ducpy.enums.STROKE_PREFERENCE](../../enums/index.md#ducpy.enums.STROKE_PREFERENCE) | None* *= None*
+
+#### cap *: [ducpy.enums.STROKE_CAP](../../enums/index.md#ducpy.enums.STROKE_CAP) | None* *= None*
+
+#### join *: [ducpy.enums.STROKE_JOIN](../../enums/index.md#ducpy.enums.STROKE_JOIN) | None* *= None*
+
+#### dash *: List[float] | None* *= None*
+
+#### dash_line_override *: str | None* *= None*
+
+#### dash_cap *: [ducpy.enums.STROKE_CAP](../../enums/index.md#ducpy.enums.STROKE_CAP) | None* *= None*
+
+#### miter_limit *: float | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.StrokeSides
+
+#### preference *: [ducpy.enums.STROKE_SIDE_PREFERENCE](../../enums/index.md#ducpy.enums.STROKE_SIDE_PREFERENCE) | None* *= None*
+
+#### values *: List[float] | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.ElementStroke
+
+#### content *: [ElementContentBase](#ducpy.classes.ElementsClass.ElementContentBase)*
+
+#### width *: float*
+
+#### style *: [StrokeStyle](#ducpy.classes.ElementsClass.StrokeStyle)*
+
+#### placement *: [ducpy.enums.STROKE_PLACEMENT](../../enums/index.md#ducpy.enums.STROKE_PLACEMENT) | None* *= None*
+
+#### stroke_sides *: [StrokeSides](#ducpy.classes.ElementsClass.StrokeSides) | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.ElementBackground
+
+#### content *: [ElementContentBase](#ducpy.classes.ElementsClass.ElementContentBase)*
+
+### *class* ducpy.classes.ElementsClass.DucElementStylesBase
+
+#### roundness *: float*
+
+#### background *: List[[ElementBackground](#ducpy.classes.ElementsClass.ElementBackground)]*
+
+#### stroke *: List[[ElementStroke](#ducpy.classes.ElementsClass.ElementStroke)]*
+
+#### opacity *: float*
+
+#### blending *: [ducpy.enums.BLENDING](../../enums/index.md#ducpy.enums.BLENDING) | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.BoundElement
+
+#### id *: str*
+
+#### type *: str*
+
+### *class* ducpy.classes.ElementsClass.DucElementBase
+
+#### id *: str*
+
+#### styles *: [DucElementStylesBase](#ducpy.classes.ElementsClass.DucElementStylesBase)*
+
+#### x *: float*
+
+#### y *: float*
+
+#### width *: float*
+
+#### height *: float*
+
+#### angle *: float*
+
+#### scope *: str*
+
+#### label *: str*
+
+#### is_visible *: bool*
+
+#### seed *: int*
+
+#### version *: int*
+
+#### version_nonce *: int*
+
+#### updated *: int*
+
+#### is_plot *: bool*
+
+#### is_deleted *: bool*
+
+#### group_ids *: List[str]*
+
+#### block_ids *: List[str]*
+
+#### region_ids *: List[str]*
+
+#### z_index *: float*
+
+#### locked *: bool*
+
+#### description *: str | None* *= None*
+
+#### index *: str | None* *= None*
+
+#### instance_id *: str | None* *= None*
+
+#### layer_id *: str | None* *= None*
+
+#### frame_id *: str | None* *= None*
+
+#### bound_elements *: List[[BoundElement](#ducpy.classes.ElementsClass.BoundElement)] | None* *= None*
+
+#### link *: str | None* *= None*
+
+#### custom_data *: str | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucHead
+
+#### size *: float*
+
+#### type *: [ducpy.enums.LINE_HEAD](../../enums/index.md#ducpy.enums.LINE_HEAD) | None* *= None*
+
+#### block_id *: str | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.PointBindingPoint
+
+#### index *: int*
+
+#### offset *: float*
+
+### *class* ducpy.classes.ElementsClass.DucPointBinding
+
+#### element_id *: str*
+
+#### focus *: float*
+
+#### gap *: float*
+
+#### fixed_point *: [GeometricPoint](#ducpy.classes.ElementsClass.GeometricPoint) | None* *= None*
+
+#### point *: [PointBindingPoint](#ducpy.classes.ElementsClass.PointBindingPoint) | None* *= None*
+
+#### head *: [DucHead](#ducpy.classes.ElementsClass.DucHead) | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucLineReference
+
+#### index *: int*
+
+#### handle *: [GeometricPoint](#ducpy.classes.ElementsClass.GeometricPoint) | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucLine
+
+#### start *: [DucLineReference](#ducpy.classes.ElementsClass.DucLineReference)*
+
+#### end *: [DucLineReference](#ducpy.classes.ElementsClass.DucLineReference)*
+
+### *class* ducpy.classes.ElementsClass.DucPath
+
+#### line_indices *: List[int]*
+
+#### background *: [ElementBackground](#ducpy.classes.ElementsClass.ElementBackground) | None* *= None*
+
+#### stroke *: [ElementStroke](#ducpy.classes.ElementsClass.ElementStroke) | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucLinearElementBase
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+#### points *: List[[DucPoint](#ducpy.classes.ElementsClass.DucPoint)]*
+
+#### lines *: List[[DucLine](#ducpy.classes.ElementsClass.DucLine)]*
+
+#### path_overrides *: List[[DucPath](#ducpy.classes.ElementsClass.DucPath)]*
+
+#### last_committed_point *: [DucPoint](#ducpy.classes.ElementsClass.DucPoint) | None* *= None*
+
+#### start_binding *: [DucPointBinding](#ducpy.classes.ElementsClass.DucPointBinding) | None* *= None*
+
+#### end_binding *: [DucPointBinding](#ducpy.classes.ElementsClass.DucPointBinding) | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucStackLikeStyles
+
+#### opacity *: float*
+
+### *class* ducpy.classes.ElementsClass.DucStackBase
+
+#### label *: str*
+
+#### is_collapsed *: bool*
+
+#### is_plot *: bool*
+
+#### is_visible *: bool*
+
+#### locked *: bool*
+
+#### styles *: [DucStackLikeStyles](#ducpy.classes.ElementsClass.DucStackLikeStyles)*
+
+#### description *: str | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucStackElementBase
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+#### stack_base *: [DucStackBase](#ducpy.classes.ElementsClass.DucStackBase)*
+
+#### clip *: bool*
+
+#### label_visible *: bool*
+
+### *class* ducpy.classes.ElementsClass.LineSpacing
+
+#### value *: float*
+
+#### type *: [ducpy.enums.LINE_SPACING_TYPE](../../enums/index.md#ducpy.enums.LINE_SPACING_TYPE) | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucTextStyle
+
+#### is_ltr *: bool*
+
+#### font_family *: str*
+
+#### big_font_family *: str*
+
+#### text_align *: [ducpy.enums.TEXT_ALIGN](../../enums/index.md#ducpy.enums.TEXT_ALIGN)*
+
+#### vertical_align *: [ducpy.enums.VERTICAL_ALIGN](../../enums/index.md#ducpy.enums.VERTICAL_ALIGN)*
+
+#### line_height *: float*
+
+#### line_spacing *: [LineSpacing](#ducpy.classes.ElementsClass.LineSpacing)*
+
+#### oblique_angle *: float*
+
+#### font_size *: float*
+
+#### width_factor *: float*
+
+#### is_upside_down *: bool*
+
+#### is_backwards *: bool*
+
+### *class* ducpy.classes.ElementsClass.DucTableStyle
+
+### *class* ducpy.classes.ElementsClass.DucDocStyle
+
+### *class* ducpy.classes.ElementsClass.DucPlotStyle
+
+### *class* ducpy.classes.ElementsClass.DucRectangleElement
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+### *class* ducpy.classes.ElementsClass.DucPolygonElement
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+#### sides *: int*
+
+### *class* ducpy.classes.ElementsClass.DucEllipseElement
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+#### ratio *: float*
+
+#### start_angle *: float*
+
+#### end_angle *: float*
+
+#### show_aux_crosshair *: bool*
+
+### *class* ducpy.classes.ElementsClass.DucEmbeddableElement
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+### *class* ducpy.classes.ElementsClass.DocumentGridConfig
+
+#### columns *: int*
+
+#### gap_x *: float*
+
+#### gap_y *: float*
+
+#### first_page_alone *: bool*
+
+#### scale *: float*
+
+### *class* ducpy.classes.ElementsClass.DucPdfElement
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+#### grid_config *: [DocumentGridConfig](#ducpy.classes.ElementsClass.DocumentGridConfig)*
+
+#### file_id *: str | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucDocElement
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+#### style *: [DucDocStyle](#ducpy.classes.ElementsClass.DucDocStyle)*
+
+#### text *: str*
+
+#### grid_config *: [DocumentGridConfig](#ducpy.classes.ElementsClass.DocumentGridConfig)*
+
+#### file_id *: str | None* *= None*
+
+#### referenced_file_ids *: List[str] | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucTableElement
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+#### style *: [DucTableStyle](#ducpy.classes.ElementsClass.DucTableStyle)*
+
+#### grid_config *: [DocumentGridConfig](#ducpy.classes.ElementsClass.DocumentGridConfig)*
+
+#### file_id *: str | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.ImageCrop
+
+#### x *: float*
+
+#### y *: float*
+
+#### width *: float*
+
+#### height *: float*
+
+#### natural_width *: float*
+
+#### natural_height *: float*
+
+### *class* ducpy.classes.ElementsClass.DucImageElement
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+#### status *: [ducpy.enums.IMAGE_STATUS](../../enums/index.md#ducpy.enums.IMAGE_STATUS)*
+
+#### scale *: List[float]*
+
+#### file_id *: str | None* *= None*
+
+#### crop *: [ImageCrop](#ducpy.classes.ElementsClass.ImageCrop) | None* *= None*
+
+#### filter *: [DucImageFilter](#ducpy.classes.ElementsClass.DucImageFilter) | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucTextElement
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+#### style *: [DucTextStyle](#ducpy.classes.ElementsClass.DucTextStyle)*
+
+#### text *: str*
+
+#### auto_resize *: bool*
+
+#### original_text *: str*
+
+#### container_id *: str | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucLinearElement
+
+#### linear_base *: [DucLinearElementBase](#ducpy.classes.ElementsClass.DucLinearElementBase)*
+
+#### wipeout_below *: bool*
+
+### *class* ducpy.classes.ElementsClass.DucArrowElement
+
+#### linear_base *: [DucLinearElementBase](#ducpy.classes.ElementsClass.DucLinearElementBase)*
+
+#### elbowed *: bool*
+
+### *class* ducpy.classes.ElementsClass.DucFreeDrawEnds
+
+#### cap *: bool*
+
+#### taper *: float*
+
+#### easing *: str*
+
+### *class* ducpy.classes.ElementsClass.DucFreeDrawElement
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+#### points *: List[[DucPoint](#ducpy.classes.ElementsClass.DucPoint)]*
+
+#### size *: float*
+
+#### thinning *: float*
+
+#### smoothing *: float*
+
+#### streamline *: float*
+
+#### easing *: str*
+
+#### pressures *: List[float]*
+
+#### simulate_pressure *: bool*
+
+#### start *: [DucFreeDrawEnds](#ducpy.classes.ElementsClass.DucFreeDrawEnds) | None* *= None*
+
+#### end *: [DucFreeDrawEnds](#ducpy.classes.ElementsClass.DucFreeDrawEnds) | None* *= None*
+
+#### last_committed_point *: [DucPoint](#ducpy.classes.ElementsClass.DucPoint) | None* *= None*
+
+#### svg_path *: str | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucFrameElement
+
+#### stack_element_base *: [DucStackElementBase](#ducpy.classes.ElementsClass.DucStackElementBase)*
+
+### *class* ducpy.classes.ElementsClass.PlotLayout
+
+#### margins *: [Margins](#ducpy.classes.ElementsClass.Margins)*
+
+### *class* ducpy.classes.ElementsClass.DucPlotElement
+
+#### stack_element_base *: [DucStackElementBase](#ducpy.classes.ElementsClass.DucStackElementBase)*
+
+#### style *: [DucPlotStyle](#ducpy.classes.ElementsClass.DucPlotStyle)*
+
+#### layout *: [PlotLayout](#ducpy.classes.ElementsClass.PlotLayout)*
+
+### *class* ducpy.classes.ElementsClass.DucModelElement
+
+#### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
+
+#### file_ids *: List[str]*
+
+#### model_type *: str | None* *= None*
+
+#### code *: str | None* *= None*
+
+#### thumbnail *: bytes | None* *= None*
+
+#### viewer_state *: [Viewer3DState](#ducpy.classes.ElementsClass.Viewer3DState) | None* *= None*
+
+#### \_\_post_init_\_()
+
+### *class* ducpy.classes.ElementsClass.DucBlockDuplicationArray
+
+#### rows *: int*
+
+#### cols *: int*
+
+#### row_spacing *: float*
+
+#### col_spacing *: float*
+
+### *class* ducpy.classes.ElementsClass.DucBlockMetadata
+
+#### usage_count *: int*
+
+#### created_at *: int*
+
+#### updated_at *: int*
+
+#### source *: str | None* *= None*
+
+#### localization *: str | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucBlock
+
+#### id *: str*
+
+#### label *: str*
+
+#### version *: int*
+
+#### description *: str | None* *= None*
+
+#### metadata *: [DucBlockMetadata](#ducpy.classes.ElementsClass.DucBlockMetadata) | None* *= None*
+
+#### thumbnail *: bytes | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucBlockInstance
+
+#### id *: str*
+
+#### block_id *: str*
+
+#### version *: int*
+
+#### element_overrides *: List[[StringValueEntry](#ducpy.classes.ElementsClass.StringValueEntry)] | None* *= None*
+
+#### duplication_array *: [DucBlockDuplicationArray](#ducpy.classes.ElementsClass.DucBlockDuplicationArray) | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucBlockCollectionEntry
+
+#### id *: str*
+
+#### is_collection *: bool*
+
+### *class* ducpy.classes.ElementsClass.DucBlockCollection
+
+#### id *: str*
+
+#### label *: str*
+
+#### children *: List[[DucBlockCollectionEntry](#ducpy.classes.ElementsClass.DucBlockCollectionEntry)]*
+
+#### metadata *: [DucBlockMetadata](#ducpy.classes.ElementsClass.DucBlockMetadata) | None* *= None*
+
+#### thumbnail *: bytes | None* *= None*
+
+### *class* ducpy.classes.ElementsClass.DucGroup
+
+#### id *: str*
+
+#### stack_base *: [DucStackBase](#ducpy.classes.ElementsClass.DucStackBase)*
+
+### *class* ducpy.classes.ElementsClass.DucRegion
+
+#### id *: str*
+
+#### stack_base *: [DucStackBase](#ducpy.classes.ElementsClass.DucStackBase)*
+
+#### boolean_operation *: [ducpy.enums.BOOLEAN_OPERATION](../../enums/index.md#ducpy.enums.BOOLEAN_OPERATION)*
+
+### *class* ducpy.classes.ElementsClass.DucLayerOverrides
+
+#### stroke *: [ElementStroke](#ducpy.classes.ElementsClass.ElementStroke)*
+
+#### background *: [ElementBackground](#ducpy.classes.ElementsClass.ElementBackground)*
+
+### *class* ducpy.classes.ElementsClass.DucLayer
+
+#### id *: str*
+
+#### stack_base *: [DucStackBase](#ducpy.classes.ElementsClass.DucStackBase)*
+
+#### readonly *: bool*
+
+#### overrides *: [DucLayerOverrides](#ducpy.classes.ElementsClass.DucLayerOverrides) | None* *= None*
+
+### ducpy.classes.ElementsClass.DucElement
+
+### *class* ducpy.classes.ElementsClass.ElementWrapper
+
+#### element *: DucElement*
+
+
+# downloads.html.md
+
+# Downloads & Installation
+
+## Install from PyPI
+
+The recommended way to install ducpy:
+
+```bash
+pip install ducpy
+```
+
+## Install from Package Index
+
+You can also install ducpy directly from our package index hosted on GitHub Pages:
+
+```bash
+pip install ducpy --extra-index-url https://ducflair.github.io/duc/simple/
+```
+
+This is useful for accessing pre-release or platform-specific builds that may not
+yet be published to PyPI.
+
+## Direct CDN Access
+
+All wheels are served directly from GitHub Pages, so you can also fetch them via CDN:
+
+```text
+https://cdn.jsdelivr.net/gh/ducflair/duc@gh-pages/simple/ducpy/<wheel-filename>
+```
+
+This is particularly useful for Pyodide and other browser-based Python runtimes.
+
+## Browse Packages
+
+See all available wheels and source distributions in the
+[Package Index](https://ducflair.github.io/duc/simple/ducpy/).
+
+
+# examples.html.md
+
+# Examples
+
+The source for all examples lives in `packages/ducpy/src/examples/`.
+
+---
+
+## Element Creation
+
+Demonstrates building rectangles, ellipses, polygons, lines, arrows, text,
+frames and plots using the fluent builder DSL.
+
+```python
+#!/usr/bin/env python3
+"""
+Example demonstrating the element creation functionality using the builders API.
+This demo shows how to create various types of elements using the modern builders pattern.
+"""
+
+import tempfile
+
+import ducpy as duc
+from ducpy.builders.style_builders import (create_fill_and_stroke_style,
+                                           create_simple_styles,
+                                           create_solid_content)
+
+
+def demo_basic_elements():
+    """Demo basic elements using the builders API."""
+    print("=== Basic Elements Demo ===")
+
+    rect = (duc.ElementBuilder()
+        .at_position(0, 0)
+        .with_size(100, 50)
+        .with_label("Sample Rectangle")
+        .with_styles(create_fill_and_stroke_style(
+            fill_content=create_solid_content("#FF6B6B"),
+            stroke_content=create_solid_content("#2C3E50"),
+            stroke_width=2.0,
+            roundness=5.0
+        ))
+        .build_rectangle()
+        .build())
+
+    ellipse = (duc.ElementBuilder()
+        .at_position(120, 0)
+        .with_size(60, 40)
+        .with_label("Sample Ellipse")
+        .with_styles(create_fill_and_stroke_style(
+            fill_content=create_solid_content("#4ECDC4"),
+            stroke_content=create_solid_content("#34495E"),
+            stroke_width=1.5
+        ))
+        .build_ellipse()
+        .build())
+
+    poly = (duc.ElementBuilder()
+        .at_position(200, 0)
+        .with_size(50, 50)
+        .with_label("Hexagon")
+        .with_styles(create_fill_and_stroke_style(
+            fill_content=create_solid_content("#45B7D1"),
+            stroke_content=create_solid_content("#2C3E50"),
+            stroke_width=1.0,
+            roundness=0.0
+        ))
+        .build_polygon()
+        .with_sides(6)
+        .build())
+
+    print(f"Rectangle ID: {rect.element.base.id}")
+    print(f"Ellipse ID: {ellipse.element.base.id}")
+    print(f"Polygon sides: {poly.element.sides}")
+
+    # Demonstrate mutation with random versioning
+    duc.mutate_element(rect, x=10, label="Moved Rectangle")
+
+    return [rect, ellipse, poly]
+
+
+def demo_linear_elements():
+    """Demo linear and arrow elements with styles."""
+    print("\n=== Linear Elements Demo ===")
+
+    line_points = [(0, 0), (50, 25), (100, 0)]
+    line = (duc.ElementBuilder()
+        .with_label("Sample Line")
+        .with_styles(create_simple_styles(
+            strokes=[duc.create_stroke(duc.create_solid_content("#E74C3C"), width=3.0)]
+        ))
+        .build_linear_element()
+        .with_points(line_points)
+        .build())
+    print(f"Line has {len(line.element.linear_base.points)} points")
+
+    arrow_points = [(0, 50), (75, 100)]
+    arrow = (duc.ElementBuilder()
+        .with_label("Sample Arrow")
+        .with_styles(create_simple_styles(
+            strokes=[duc.create_stroke(duc.create_solid_content("#8E44AD"), width=2.5)]
+        ))
+        .build_arrow_element()
+        .with_points(arrow_points)
+        .build())
+    print(f"Arrow element type: {type(arrow.element).__name__}")
+
+    return [line, arrow]
+
+
+def demo_text_elements():
+    """Demo text elements with styles and document formatting."""
+    print("\n=== Text Elements Demo ===")
+
+    text = (duc.ElementBuilder()
+        .at_position(0, 100)
+        .with_size(150, 25)
+        .with_label("Sample Text")
+        .with_styles(create_simple_styles(opacity=0.9))
+        .build_text_element()
+        .with_text("Hello, DucPy!")
+        .build())
+    print(f"Text content: '{text.element.text}'")
+
+    return [text]
+
+
+def demo_stack_elements():
+    """Demo new stack-based elements with styles."""
+    print("\n=== Stack Elements Demo ===")
+
+    frame = (duc.ElementBuilder()
+        .at_position(0, 150)
+        .with_size(200, 100)
+        .with_label("Technical Frame")
+        .with_styles(create_fill_and_stroke_style(
+            fill_content=create_solid_content("#F8F9FA"),
+            stroke_content=create_solid_content("#495057"),
+            stroke_width=2.0,
+            roundness=3.0
+        ))
+        .build_frame_element()
+        .build())
+    print(f"Frame stack label: {frame.element.stack_element_base.stack_base.label}")
+
+    plot = (duc.ElementBuilder()
+        .at_position(220, 150)
+        .with_size(180, 120)
+        .with_label("Engineering Plot")
+        .with_styles(create_fill_and_stroke_style(
+            fill_content=create_solid_content("#E9ECEF"),
+            stroke_content=create_solid_content("#6C757D"),
+            stroke_width=1.5
+        ))
+        .build_plot_element()
+        .with_margins(duc.Margins(top=5, right=5, bottom=5, left=5))
+        .build())
+
+    return [frame, plot]
+
+
+def demo_custom_stack_base():
+    """Demo custom stack base creation."""
+    print("\n=== Custom Stack Base Demo ===")
+
+    custom_frame = (duc.ElementBuilder()
+        .at_position(50, 280)
+        .with_size(150, 80)
+        .with_label("Custom Container")
+        .build_frame_element()
+        .with_stack_base(duc.StateBuilder().build_stack_base()
+            .with_is_collapsed(False)
+            .with_styles(duc.DucStackLikeStyles(opacity=0.8))
+            .build())
+        .build())
+
+    return [custom_frame]
+
+
+def main():
+    """Run all element creation demos."""
+    print("DucPy Element Creation Demo")
+    print("=" * 40)
+
+    elements = []
+    elements.extend(demo_basic_elements())
+    elements.extend(demo_linear_elements())
+    elements.extend(demo_text_elements())
+    elements.extend(demo_stack_elements())
+    elements.extend(demo_custom_stack_base())
+
+    output = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+    output.close()
+    duc_path = duc.serialize_duc(
+        name="element_creation_example",
+        output_path=output.name,
+        elements=elements,
+    )
+
+    print(f"\nCreated {len(elements)} elements → serialized to {duc_path}.")
+    print("✅ Element creation demo complete!")
+    return duc_path
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## Mutating Elements
+
+Shows how to update element properties in place and observe version changes.
+
+```python
+#!/usr/bin/env python3
+"""
+Example demonstrating the `mutate` API for elements, global state, and
+external file entries in DUC.
+
+This demo shows how to:
+  1. Build an initial set of elements and supporting state via the
+     standard builder API.
+  2. Apply targeted mutations to the elements, the global state, and an
+     external file entry using `duc.mutate_*` helpers.
+  3. Serialize the resulting DUC object into a `.duc` file.
+"""
+
+import tempfile
+
+import ducpy as duc
+
+
+def main():
+    print("Mutation Demo")
+    print("=" * 30)
+
+    # ------------------------------------------------------------------
+    # 1. Build the initial elements + state using the existing builders.
+    # ------------------------------------------------------------------
+    rect = (duc.ElementBuilder()
+        .at_position(0, 0)
+        .with_size(100, 50)
+        .with_label("Initial Rectangle")
+        .build_rectangle()
+        .build())
+
+    ellipse = (duc.ElementBuilder()
+        .at_position(140, 0)
+        .with_size(60, 40)
+        .with_label("Initial Ellipse")
+        .build_ellipse()
+        .build())
+
+    elements = [rect, ellipse]
+
+    duc_global_state = (duc.StateBuilder()
+        .build_global_state()
+        .with_name("mutation_demo")
+        .with_main_scope("mm")
+        .build())
+
+    duc_local_state = (duc.StateBuilder()
+        .build_local_state()
+        .build())
+
+    # A sample external file entry to exercise mutate_external_file.
+    external_file = (duc.StateBuilder()
+        .build_external_file()
+        .with_key("logo")
+        .with_mime_type("image/png")
+        .with_data(b"\x89PNG\r\n\x1a\n" + b"\x00" * 16)
+        .build())
+
+    # ------------------------------------------------------------------
+    # 2. Apply mutations using the duc.mutate_* API.
+    #    Each helper mutates in place and also stamps fresh versioning
+    #    metadata (seed, updated, version, version_nonce) where
+    #    applicable.
+    # ------------------------------------------------------------------
+
+    # 2a. Mutate the rectangle: move it, resize it, rename, hide it.
+    duc.mutate_element(
+        rect,
+        x=20,
+        y=30,
+        width=150,
+        label="Mutated Rectangle",
+        is_visible=False,
+    )
+
+    # 2b. Mutate the ellipse: rename and move (size stays the same).
+    duc.mutate_element(
+        ellipse,
+        x=200,
+        y=75,
+        label="Mutated Ellipse",
+    )
+
+    # 2c. Mutate the global state (zoom level, background, name).
+    duc.mutate_global_state(
+        duc_global_state,
+        view_background_color="#1E1E2E",
+        name="mutation_demo_updated",
+    )
+
+    # 2d. Mutate the local state (scroll position, grid mode).
+    duc.mutate_local_state(
+        duc_local_state,
+        scroll_x=42.0,
+        scroll_y=17.5,
+        grid_mode_enabled=False,
+    )
+
+    # 2e. Mutate the external file entry's metadata.
+    duc.mutate_external_file(
+        external_file,
+        version=2,
+    )
+
+    # ------------------------------------------------------------------
+    # 3. Serialize the mutated objects into a .duc file.
+    # ------------------------------------------------------------------
+    output = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+    output.close()
+    duc_path = duc.serialize_duc(
+        name="mutation_demo",
+        output_path=output.name,
+        elements=elements,
+        duc_global_state=duc_global_state,
+        duc_local_state=duc_local_state,
+        external_files=[external_file],
+    )
+
+    print(f"   Mutated {len(elements)} elements.")
+    print(f"   Global state main scope -> {duc_global_state.main_scope!r}")
+    print(f"   Local state scroll -> ({duc_local_state.scroll_x}, {duc_local_state.scroll_y})")
+    print(f"   External file version -> {external_file.version}")
+    print(f"   Serialized to {duc_path}.")
+    print("\n✅ Mutation demo complete!")
+    return duc_path
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## External Files
+
+Attaching binary blobs (images, PDFs) to a `duc` document.
+
+```python
+"""
+Example demonstrating the creation and management of external files within a DUC object.
+"""
+
+import ducpy as duc
+
+
+def create_duc_with_external_files():
+    """
+    Creates a DUC object and adds multiple external file entries to it
+    using the builder pattern.
+    """
+    print("Creating a DUC object with external files...")
+
+    # Create dummy data for external files
+    dummy_image_data = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x0cIDATx\xda\xed\xc1\x01\x01\x00\x00\x00\xc2\xa0\xf7Om\x00\x00\x00\x00IEND\xaeB`\x82"
+    dummy_pdf_data = b"%PDF-1.4\n1 0 obj <</Type/Catalog/Pages 2 0 R>> endobj\n2 0 obj <</Type/Pages/Count 0>> endobj\nxref\n0 3\n0000000000 65535 f\n0000000009 00000 n\n0000000074 00000 n\ntrailer<</Size 3/Root 1 0 R>>startxref\n123\n%%EOF"
+
+    image_file_entry = (duc.StateBuilder()
+        .build_external_file()
+        .with_key("my_image_key")
+        .with_mime_type("image/png")
+        .with_data(dummy_image_data)
+        .build())
+
+    pdf_file_entry = (duc.StateBuilder()
+        .build_external_file()
+        .with_key("document_123")
+        .with_mime_type("application/pdf")
+        .with_data(dummy_pdf_data)
+        .build())
+
+    duc_global_state = (duc.StateBuilder()
+        .build_global_state()
+        .with_main_scope("mm")
+        .build())
+
+    duc_local_state = (duc.StateBuilder()
+        .build_local_state()
+        .build())
+
+    duc_object_files = {image_file_entry.id: image_file_entry, pdf_file_entry.id: pdf_file_entry}
+
+    print("DUC object with external files created successfully!")
+    print(f"Total external files: {len(duc_object_files)}")
+    return duc_object_files, duc_global_state, duc_local_state
+
+
+def main():
+    """Run the external files demo."""
+    print("External Files Demo")
+    print("=" * 30)
+    create_duc_with_external_files()
+    print("\nExternal files demo complete!")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## SQL Builder
+
+Direct SQLite access via [`DucSQL`](autoapi/ducpy/builders/sql_builder/index.md#ducpy.builders.sql_builder.DucSQL).
+Use this when you need raw queries, bulk inserts, schema introspection, or
+anything beyond what the high-level builders expose.
+
+```python
+#!/usr/bin/env python3
+"""
+Example demonstrating direct SQLite access to .duc files via DucSQL.
+
+A .duc file is a plain SQLite database.  DucSQL exposes the raw sqlite3
+connection so you can run any SQL you want while handling the open/save/
+export lifecycle for you.
+
+Topics covered:
+  1. Create a new .duc file with the full schema bootstrapped
+  2. Insert elements and style data
+  3. Query rows back as dict-like objects
+  4. Update elements in place
+  5. Export to / round-trip from a file path
+  6. Open an existing .duc file
+  7. Round-trip SQL-built data through the high-level parser
+"""
+
+import os
+import tempfile
+
+import ducpy as duc
+from ducpy.builders.sql_builder import DucSQL
+
+
+def demo_create_new():
+    print("=== Create new .duc ===")
+
+    with DucSQL.new() as db:
+        db.sql(
+            "INSERT INTO elements (id, element_type, x, y, width, height, label, opacity) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            "r1", "rectangle", 0, 0, 200, 100, "Main Rectangle", 1.0,
+        )
+        db.sql(
+            "INSERT INTO elements (id, element_type, x, y, width, height, label, opacity) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            "e1", "ellipse", 250, 0, 120, 80, "Side Ellipse", 0.9,
+        )
+
+        for owner_id, colour in [("r1", "#4ECDC4"), ("e1", "#FF6B6B")]:
+            db.sql(
+                "INSERT INTO backgrounds (owner_type, owner_id, src, opacity) "
+                "VALUES (?,?,?,?)",
+                "element", owner_id, colour, 1.0,
+            )
+
+        rows = db.sql("SELECT id, element_type, label FROM elements ORDER BY id")
+        for row in rows:
+            print(f"  [{row['id']}] {row['element_type']} — {row['label']}")
+
+        db.sql_dict(
+            "UPDATE elements SET label = :label WHERE id = :id",
+            {"label": "Renamed Rectangle", "id": "r1"},
+        )
+
+        updated = db.sql("SELECT label FROM elements WHERE id = ?", "r1")[0]
+        print(f"  After rename: '{updated['label']}'")
+
+        tmp = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+        tmp.close()
+        db.save(tmp.name)
+        print(f"  Saved to: {tmp.name}")
+
+    return tmp.name
+
+
+def demo_open_existing(path: str):
+    print("\n=== Open existing .duc ===")
+
+    with DucSQL(path) as db:
+        count = db.sql("SELECT COUNT(*) AS n FROM elements")[0]["n"]
+        print(f"  Total elements: {count}")
+
+        rows = db.sql(
+            "SELECT e.id, e.label, b.src AS colour "
+            "FROM elements e "
+            "LEFT JOIN backgrounds b ON b.owner_type = 'element' AND b.owner_id = e.id "
+            "ORDER BY e.id"
+        )
+        for row in rows:
+            print(f"  {row['label']} → fill: {row['colour']}")
+
+    os.unlink(path)
+
+
+def demo_file_roundtrip():
+    print("\n=== File round-trip ===")
+
+    with DucSQL.new() as db:
+        db.sql(
+            "INSERT INTO elements (id, element_type, x, y, width, height, label) "
+            "VALUES (?,?,?,?,?,?,?)",
+            "t1", "text", 10, 10, 300, 40, "Hello, DUC!",
+        )
+        tmp = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+        tmp.close()
+        db.save(tmp.name)
+
+    print(f"  Serialised to {tmp.name}")
+
+    with DucSQL(tmp.name) as db:
+        row = db.sql("SELECT label FROM elements WHERE id = 't1'")[0]
+        print(f"  Restored label: '{row['label']}'")
+
+    return tmp.name
+
+
+def demo_advanced_connection():
+    print("\n=== Advanced: direct connection access ===")
+
+    with DucSQL.new() as db:
+        records = [
+            (f"el{i}", "rectangle", i * 110, 0, 100, 60, f"Box {i}", 1.0)
+            for i in range(5)
+        ]
+        db.conn.executemany(
+            "INSERT INTO elements (id, element_type, x, y, width, height, label, opacity) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            records,
+        )
+
+        total = db.sql("SELECT COUNT(*) AS n FROM elements")[0]["n"]
+        print(f"  Bulk-inserted {total} elements")
+
+        tables = [
+            row["name"]
+            for row in db.sql(
+                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+            )
+        ]
+        print(f"  Schema tables: {', '.join(tables[:6])} …")
+
+
+def demo_serialize_via_sql():
+    print("\n=== Build with SQL, serialize with the high-level API ===")
+
+    with DucSQL.new() as db:
+        db.sql(
+            "INSERT INTO elements (id, element_type, x, y, width, height, label, opacity) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            "s1", "rectangle", 0, 0, 100, 50, "From SQL", 1.0,
+        )
+        tmp = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+        tmp.close()
+        db.save(tmp.name)
+
+    parsed = duc.parse_duc(tmp.name)
+    print(f"  Parsed {len(parsed.elements)} element(s) built via raw SQL.")
+
+    return tmp.name
+
+
+def main():
+    print("DucSQL Builder Demo")
+    print("=" * 40)
+
+    saved_path = demo_create_new()
+    demo_open_existing(saved_path)
+    roundtrip_path = demo_file_roundtrip()
+    demo_advanced_connection()
+    demo_serialize_via_sql()
+
+    print(f"\nAll DucSQL demos completed successfully! (round-trip file: {roundtrip_path})")
+    return roundtrip_path
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## Serialization
+
+Demonstrates how to serialize builder-created elements directly to a .duc file using duc.serialize_duc.
+
+```python
+#!/usr/bin/env python3
+"""
+Example demonstrating how to serialize elements created by the Builder API into a .duc file.
+
+This demo shows the correct pattern for taking in-memory python elements
+and streaming them to a `.duc` file.
+"""
+
+import ducpy as duc
+import tempfile
+from ducpy.builders.style_builders import create_fill_and_stroke_style, create_solid_content
+
+def main():
+    print("Serialization Demo")
+    print("=" * 30)
+    
+    print("1. Creating elements via Builder API...")
+    elements = []
+    
+    # Create some basic elements
+    rect = (duc.ElementBuilder()
+        .at_position(0, 0)
+        .with_size(100, 50)
+        .with_label("Sample Rectangle")
+        .with_styles(create_fill_and_stroke_style(
+            fill_content=create_solid_content("#FF6B6B"),
+            stroke_content=create_solid_content("#2C3E50"),
+            stroke_width=2.0
+        ))
+        .build_rectangle()
+        .build())
+    elements.append(rect)
+    
+    ellipse = (duc.ElementBuilder()
+        .at_position(120, 0)
+        .with_size(60, 40)
+        .with_label("Sample Ellipse")
+        .with_styles(create_fill_and_stroke_style(
+            fill_content=create_solid_content("#4ECDC4"),
+            stroke_content=create_solid_content("#34495E"),
+            stroke_width=1.5
+        ))
+        .build_ellipse()
+        .build())
+    elements.append(ellipse)
+    
+    print(f"   Created {len(elements)} elements.")
+    
+    print("2. Serializing to .duc format...")
+    output = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+    output.close()
+    duc_path = duc.serialize_duc(
+        name="serialization_example",
+        output_path=output.name,
+        elements=elements
+    )
+    
+    print(f"   Successfully serialized to {duc_path}.")
+    print("\n✅ Serialization demo complete!")
+    return duc_path
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## Parsing
+
+Demonstrates how to parse a .duc file or raw binary bytes using duc.parse_duc, allowing attribute-style access to the document’s content.
+
+```python
+#!/usr/bin/env python3
+"""
+Example demonstrating how to parse a .duc file using the parsing API.
+
+This demo shows how to read a `.duc` file path and access
+the parsed data using attribute-style access via DucData.
+"""
+
+import os
+import tempfile
+import ducpy as duc
+
+def main():
+    print("Parsing Demo")
+    print("=" * 30)
+
+    # First, let's create a temporary .duc file to parse
+    from ducpy.builders.style_builders import create_fill_and_stroke_style, create_solid_content
+    elements = [
+        duc.ElementBuilder()
+            .at_position(10, 20)
+            .with_size(100, 50)
+            .with_label("Parsed Rectangle")
+            .with_styles(create_fill_and_stroke_style(
+                fill_content=create_solid_content("#FF6B6B"),
+                stroke_content=create_solid_content("#2C3E50"),
+                stroke_width=2.0
+            ))
+            .build_rectangle()
+            .build()
+    ]
+    tmp = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+    tmp.close()
+    tmp_path = duc.serialize_duc(name="parsing_example", output_path=tmp.name, elements=elements)
+
+    print("1. Parsing a .duc file from a file path...")
+    
+    # You can pass a string path directly to parse_duc
+    parsed_data = duc.parse_duc(tmp_path)
+    
+    print(f"   Document Source: {parsed_data.source}")
+    print(f"   Parsed {len(parsed_data.elements)} elements.")
+    
+    print("\n2. Accessing element attributes (snake_case)...")
+    
+    # Element properties are accessible via dot-notation with snake_case keys
+    # because parse_duc returns a DucData object.
+    first_element = parsed_data.elements[0]
+    print(f"   Element ID: {first_element.id}")
+    print(f"   Element Type: {first_element.type}")
+    print(f"   Element Label: {first_element.label}")
+    print(f"   Element Position: (X: {first_element.x}, Y: {first_element.y})")
+    
+    print("\n3. Re-parsing from the streamed file path...")
+    
+    parsed_again = duc.parse_duc(tmp_path)
+    print(f"   Parsed successfully from path. Found {len(parsed_again.elements)} elements.")
+    
+    # Clean up the temporary file
+    os.unlink(tmp_path)
+    
+    print("\n✅ Parsing demo complete!")
+
+if __name__ == "__main__":
+    main()
+```
+
+
