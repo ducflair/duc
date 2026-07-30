@@ -11,6 +11,18 @@ export type OpfsChunkImporter = {
 export type DucStreamImportOptions = {
   compressedChunkSize?: number;
   writeBufferSize?: number;
+  progressIntervalMs?: number;
+  onProgress?: (progress: DucStreamImportProgress) => void;
+};
+
+export type DucStreamImportProgress = {
+  phase: "streaming" | "complete";
+  compressedBytes: number;
+  uncompressedBytes: number;
+  elapsedMs: number;
+  readWaitMs: number;
+  processingMs: number;
+  opfsWriteMs: number;
 };
 
 class BufferedImporterWriter {
@@ -21,6 +33,7 @@ class BufferedImporterWriter {
   constructor(
     private readonly importer: OpfsChunkImporter,
     bufferSize: number,
+    private readonly onWrite?: (byteLength: number, elapsedMs: number) => void,
   ) {
     if (!Number.isSafeInteger(bufferSize) || bufferSize <= 0) {
       throw new RangeError("writeBufferSize must be a positive safe integer");
@@ -53,9 +66,19 @@ class BufferedImporterWriter {
     return this.totalBytes;
   }
 
+  get pendingByteLength(): number {
+    return this.offset;
+  }
+
+  get writtenByteLength(): number {
+    return this.totalBytes;
+  }
+
   private flush(): void {
     if (this.offset === 0) return;
+    const startedAt = performance.now();
     this.importer.writeChunk(this.buffer.subarray(0, this.offset));
+    this.onWrite?.(this.offset, performance.now() - startedAt);
     this.totalBytes += this.offset;
     this.offset = 0;
   }
@@ -76,10 +99,41 @@ export async function importDucStreamToOpfs(
     throw new RangeError("compressedChunkSize must be a positive safe integer");
   }
 
+  const startedAt = performance.now();
+  const progressIntervalMs = options.progressIntervalMs ?? 500;
+  if (!Number.isFinite(progressIntervalMs) || progressIntervalMs <= 0) {
+    throw new RangeError("progressIntervalMs must be a positive number");
+  }
+  let lastProgressAt = startedAt;
+  let compressedBytes = 0;
+  let readWaitMs = 0;
+  let processingMs = 0;
+  let opfsWriteMs = 0;
   const writer = new BufferedImporterWriter(
     importer,
     options.writeBufferSize ?? DEFAULT_WRITE_BUFFER_SIZE,
+    (_byteLength, elapsedMs) => {
+      opfsWriteMs += elapsedMs;
+    },
   );
+
+  const emitProgress = (phase: DucStreamImportProgress["phase"]): void => {
+    if (!options.onProgress) return;
+    const now = performance.now();
+    if (phase === "streaming" && now - lastProgressAt < progressIntervalMs) {
+      return;
+    }
+    options.onProgress({
+      phase,
+      compressedBytes,
+      uncompressedBytes: writer.writtenByteLength + writer.pendingByteLength,
+      elapsedMs: now - startedAt,
+      readWaitMs,
+      processingMs,
+      opfsWriteMs,
+    });
+    lastProgressAt = now;
+  };
   const decompressor = new Decompress((chunk) => writer.write(chunk));
   const reader = stream.getReader();
   const header = new Uint8Array(SQLITE_HEADER.byteLength);
@@ -105,10 +159,14 @@ export async function importDucStreamToOpfs(
 
   try {
     while (true) {
+      const readStartedAt = performance.now();
       const { done, value } = await reader.read();
+      readWaitMs += performance.now() - readStartedAt;
       if (done) break;
       if (!value?.byteLength) continue;
+      compressedBytes += value.byteLength;
 
+      const processingStartedAt = performance.now();
       let valueOffset = 0;
       if (isRawSqlite === null) {
         const headerBytes = Math.min(
@@ -128,8 +186,11 @@ export async function importDucStreamToOpfs(
       if (isRawSqlite !== null && valueOffset < value.byteLength) {
         writeDetected(value.subarray(valueOffset));
       }
+      processingMs += performance.now() - processingStartedAt;
+      emitProgress("streaming");
     }
 
+    const finalProcessingStartedAt = performance.now();
     if (isRawSqlite === null) {
       isRawSqlite = false;
       writeCompressed(header.subarray(0, headerLength));
@@ -137,7 +198,10 @@ export async function importDucStreamToOpfs(
     if (!isRawSqlite) {
       decompressor.push(new Uint8Array(), true);
     }
-    return writer.finish();
+    const writtenBytes = writer.finish();
+    processingMs += performance.now() - finalProcessingStartedAt;
+    emitProgress("complete");
+    return writtenBytes;
   } finally {
     reader.releaseLock();
   }

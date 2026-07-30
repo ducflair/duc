@@ -4,7 +4,10 @@ import { join } from "node:path";
 import { gunzipSync, gzipSync } from "fflate";
 
 import * as ducjs from "../src";
-import { importDucStreamToOpfs } from "../src/opfs-import";
+import {
+  importDucStreamToOpfs,
+  type DucStreamImportProgress,
+} from "../src/opfs-import";
 import { parseDuc } from "../src/parse";
 
 describe("DUC streaming API", () => {
@@ -172,6 +175,38 @@ describe("DUC streaming API", () => {
     expect(written).toBe(payload.byteLength);
     expect(Math.max(...writes.map((chunk) => chunk.byteLength))).toBeLessThanOrEqual(32);
     expect(restored).toEqual(payload);
+  });
+
+  test("reports cumulative stream wait and processing progress", async () => {
+    const payload = new Uint8Array(16 + 257);
+    payload.set(new TextEncoder().encode("SQLite format 3\0"));
+    const compressed = gzipSync(payload);
+    const progress: DucStreamImportProgress[] = [];
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(compressed);
+        controller.close();
+      },
+    });
+
+    await importDucStreamToOpfs(
+      stream,
+      { writeChunk() {} },
+      {
+        writeBufferSize: 32,
+        progressIntervalMs: Number.MAX_SAFE_INTEGER,
+        onProgress: (event) => progress.push(event),
+      },
+    );
+
+    expect(progress).toHaveLength(1);
+    expect(progress[0]).toMatchObject({
+      phase: "complete",
+      compressedBytes: compressed.byteLength,
+      uncompressedBytes: payload.byteLength,
+    });
+    expect(progress[0].readWaitMs).toBeGreaterThanOrEqual(0);
+    expect(progress[0].processingMs).toBeGreaterThanOrEqual(progress[0].opfsWriteMs);
   });
 
   test("copies raw SQLite into bounded OPFS importer writes", async () => {
