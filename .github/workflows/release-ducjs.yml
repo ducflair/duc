@@ -39,7 +39,12 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown,wasm32-wasip1
+
+      - name: Install WASI toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang wasi-libc
 
       - name: Install wasm-pack (pinned 0.14.x)
         run: cargo install wasm-pack --version 0.14.0 --locked --force
@@ -49,7 +54,13 @@ jobs:
         run: bun install
 
       - name: Build
-        run: bun ducjs:build
+        env:
+          CC_wasm32_wasip1: /usr/bin/clang
+          CFLAGS_wasm32_wasip1: --sysroot=/usr
+        run: bun run --cwd packages/ducjs build:wasi
+
+      - name: Verify WASI package artifact
+        run: test -s packages/ducjs/dist/ducjs_wasi.wasm
 
       - name: Prepare workspace dependencies for publish
         run: node scripts/fix-workspace-deps.mjs packages/ducjs/package.json

@@ -38,38 +38,54 @@ const isSuccessfulWasiExit = (error: unknown) => {
     || candidate?.message === "Exited with status 0";
 };
 
+let wasiBinaryReady: Promise<Uint8Array> | null = null;
+
 /**
- * Resolve the WASI binary path.
- * In development, it's in the ducjs dist directory.
- * In production, it should be bundled or downloaded.
+ * Load the WASI binary from a local package/path or a remote URL.
  */
-function resolveWasiBinary(): string {
-  // Check for explicit override
-  const env = (globalThis as typeof globalThis & {
-    process?: { env?: Record<string, string | undefined> };
-  }).process?.env;
+function loadWasiBinary(): Promise<Uint8Array> {
+  if (wasiBinaryReady) return wasiBinaryReady;
 
-  if (env?.DUCJS_WASI_PATH) {
-    return env.DUCJS_WASI_PATH;
-  }
+  wasiBinaryReady = (async () => {
+    const env = (globalThis as typeof globalThis & {
+      process?: { env?: Record<string, string | undefined> };
+    }).process?.env;
 
-  // Try to find it relative to ducjs package
-  const candidates = [
-    // Relative to this file (if in node_modules)
-    resolve(_dirname, "..", "node_modules", "ducjs", "dist", "ducjs_wasi.wasm"),
-    // Relative to ducjs dist (if running from source)
-    resolve(_dirname, "..", "ducjs", "dist", "ducjs_wasi.wasm"),
-    // Direct path from ducjs package
-    resolve(_dirname, "ducjs_wasi.wasm"),
-  ];
+    if (env?.DUCJS_WASI_PATH) {
+      return readFileSync(env.DUCJS_WASI_PATH);
+    }
 
-  for (const candidate of candidates) {
-    if (existsSync(candidate)) return candidate;
-  }
+    if (env?.DUCJS_WASI_URL) {
+      const response = await fetch(env.DUCJS_WASI_URL);
+      if (!response.ok) {
+        throw new Error(`Failed to download ducjs WASI binary: ${response.status} ${response.statusText}`);
+      }
+      const binary = new Uint8Array(await response.arrayBuffer());
+      if (binary.byteLength === 0) {
+        throw new Error("Downloaded ducjs WASI binary is empty");
+      }
+      return binary;
+    }
 
-  throw new Error(
-    `ducjs WASI binary not found. Set DUCJS_WASI_PATH or ensure ducjs/dist/ducjs_wasi.wasm exists. Tried: ${candidates.join(", ")}`,
-  );
+    const candidates = [
+      resolve(_dirname, "..", "node_modules", "ducjs", "dist", "ducjs_wasi.wasm"),
+      resolve(_dirname, "..", "ducjs", "dist", "ducjs_wasi.wasm"),
+      resolve(_dirname, "ducjs_wasi.wasm"),
+    ];
+
+    for (const candidate of candidates) {
+      if (existsSync(candidate)) return readFileSync(candidate);
+    }
+
+    throw new Error(
+      `ducjs WASI binary not found. Set DUCJS_WASI_PATH, set DUCJS_WASI_URL, or ensure ducjs/dist/ducjs_wasi.wasm exists. Tried: ${candidates.join(", ")}`,
+    );
+  })().catch((error) => {
+    wasiBinaryReady = null;
+    throw error;
+  });
+
+  return wasiBinaryReady;
 }
 
 export interface StreamFileEntry {
@@ -222,7 +238,7 @@ const writeExternalFileSidecars = (
 };
 
 const runWasi = async (args: string[], preopens: Record<string, string>) => {
-  const wasmBinary = readFileSync(resolveWasiBinary());
+  const wasmBinary = await loadWasiBinary();
   const wasi = new WASI({
     version: "preview1",
     args,
