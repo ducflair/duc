@@ -28,5 +28,5 @@ authors: [jorgedanisc]
 - `ducpy.builders.sql_builder`: `DucSQL` class for raw SQLite connections and migrations.
 - `ducpy.classes`: Dataclass definitions matching the relational database schema.
 - `ducpy.enums`: Python enum constants matching `.duc` integer schema codes (`LINE_HEAD`, `TEXT_ALIGN`, `STROKE_PLACEMENT`, etc.).
-- `ducpy.parse`: Functions for eager (`parse_duc`) and lazy (`parse_duc_lazy`) binary parsing.
-- `ducpy.serialize`: Serialization utilities for generating `.duc` database bytes.
+- `ducpy.parse`: Path-based drawing-state parsing plus streamed external-file, checkpoint, and delta payload access.
+- `ducpy.serialize`: Serialization utilities that write `.duc` files and return their output paths.

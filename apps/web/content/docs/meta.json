@@ -4,6 +4,7 @@
     "get_started",
     "--- Definition ---",
     "concepts",
+    "guidelines",
     "sql",
     "--- Adapters & Reference ---",
     "rust",
