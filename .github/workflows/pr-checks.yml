@@ -214,6 +214,16 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
+      - name: Setup WASI Rust target
+        if: needs.release-check.outputs.ducjs == 'true'
+        run: rustup target add wasm32-wasip1
+
+      - name: Install WASI toolchain
+        if: needs.release-check.outputs.ducjs == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang wasi-libc
+
       - name: Install wasm-pack
         if: needs.release-check.outputs.needs_wasm == 'true'
         run: cargo install wasm-pack --version 0.14.0 --locked --force
@@ -235,6 +245,17 @@ jobs:
 
       - name: Run package tests
         run: bun turbo test ${{ needs.release-check.outputs.test_filters }}
+
+      - name: Build and verify ducjs WASI package artifact
+        if: needs.release-check.outputs.ducjs == 'true'
+        working-directory: ./packages/ducjs
+        env:
+          CC_wasm32_wasip1: /usr/bin/clang
+          CFLAGS_wasm32_wasip1: --sysroot=/usr -isystem /usr/include/wasm32-wasi
+        run: |
+          bun run build:wasi
+          test -s dist/ducjs_wasi.wasm
+          npm_config_cache=/tmp/ducjs-npm-cache npm pack --dry-run --json | grep -q '"path": "dist/ducjs_wasi.wasm"'
 
       - name: Validate Pyodide build tooling
         id: pyodide-tooling
