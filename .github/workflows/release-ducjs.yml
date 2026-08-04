@@ -56,7 +56,7 @@ jobs:
       - name: Build
         env:
           CC_wasm32_wasip1: /usr/bin/clang
-          CFLAGS_wasm32_wasip1: --sysroot=/usr
+          CFLAGS_wasm32_wasip1: --sysroot=/usr -isystem /usr/include/wasm32-wasi
         run: bun run --cwd packages/ducjs build:wasi
 
       - name: Verify WASI package artifact
