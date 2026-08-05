@@ -17,6 +17,8 @@ and two dwg models that need conversion).
 from __future__ import annotations
 
 import json
+import ssl
+import urllib.error
 from pathlib import Path
 
 import ezdxf
@@ -25,7 +27,7 @@ from ezdxf.math import Vec2
 from ezdxf.render import mleader
 
 from ducpy.builders.sql_builder import DucSQL
-from ducpy.parse import parse_duc_lazy
+from ducpy.parse import list_external_files, parse_duc
 from ducpy.search import (
     DWGDXF_WASM_PATH_ENV,
     DWGDXF_WASM_URL,
@@ -65,7 +67,8 @@ def _run_model_search(query, *, test_output_dir, test_name, limit=50, run_code=F
     asset_path = _asset_input_path(ASSET)
     assert asset_path.exists(), f"Missing asset file: {asset_path}"
 
-    output_dir = Path(test_output_dir) / "model_search_results"
+    output_dir = Path(test_output_dir) / "search_results" / "model_elements"
+
     output_dir.mkdir(parents=True, exist_ok=True)
     json_path = output_dir / f"{test_name}.json"
     if json_path.exists():
@@ -130,8 +133,9 @@ def _build_sqlite_dxf_model(tmp_path: Path, dxf_bytes: bytes) -> tuple[Path, dic
             (revision_id, file_id, len(dxf_bytes), "application/dxf", 1),
         )
         db.conn.execute(
-            "INSERT INTO external_file_revision_data (revision_id, data) VALUES (?, ?)",
-            (revision_id, dxf_bytes),
+            "INSERT INTO external_file_revision_chunks "
+            "(revision_id, chunk_index, offset_bytes, size_bytes, data) VALUES (?, ?, ?, ?, ?)",
+            (revision_id, 0, 0, len(dxf_bytes), dxf_bytes),
         )
         db.conn.execute(
             "INSERT INTO model_element_files (element_id, file_id, sort_order) "
@@ -200,7 +204,7 @@ def test_extract_python_imports_top_level_modules():
 # Engine detection — against the universal.duc asset
 # --------------------------------------------------------------------------- #
 def test_universal_model_engine_classification():
-    parsed = parse_duc_lazy(str(_asset_input_path(ASSET)))
+    parsed = parse_duc(str(_asset_input_path(ASSET)))
     targets = resolve_model_search_targets(parsed)
     engines_by_label = {target.label: target.engine for target in targets}
 
@@ -342,12 +346,52 @@ def test_wasm_path_environment_variable_is_honored(tmp_path, monkeypatch):
         convert_dwg_to_dxf(b"AC1027-env-path")
 
 
+def test_wasm_download_retries_with_certifi_after_certificate_failure(monkeypatch):
+    calls = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return b"wasm"
+
+    def urlopen(_url, *, context, timeout):
+        calls.append((context, timeout))
+        if len(calls) == 1:
+            raise urllib.error.URLError(ssl.SSLCertVerificationError("certificate verify failed"))
+        return Response()
+
+    monkeypatch.setattr(search_ezdxf_module.urllib.request, "urlopen", urlopen)
+
+    assert search_ezdxf_module._download_wasm("https://example.test/dwgdxf.wasm", timeout_seconds=3) == b"wasm"
+    assert len(calls) == 2
+    assert all(isinstance(context, ssl.SSLContext) for context, _timeout in calls)
+
+
+def _require_dwg_converter() -> None:
+    try:
+        search_ezdxf_module._resolve_wasm_path(
+            None,
+            wasm_url=DWGDXF_WASM_URL,
+            timeout_seconds=30.0,
+        )
+    except DwgConversionNotAvailable as exc:
+        pytest.skip(f"DWG converter is unavailable: {exc}")
+
+
 # --------------------------------------------------------------------------- #
 # ezdxf extraction — against the universal.duc asset
 # --------------------------------------------------------------------------- #
 def test_sqlite_backed_dxf_model_searches_active_revision(tmp_path):
     dxf_bytes = _build_sample_dxf_bytes(tmp_path)
     duc_path, element = _build_sqlite_dxf_model(tmp_path, dxf_bytes)
+
+    file_meta = list_external_files(duc_path)
+    assert file_meta[0].active_revision_id == "sqlite-dxf-r1"
 
     extracted = extract_model_dxf_text(duc_path, element, run_code=False)
     assert "Hello Drawing Text" in extracted.text
@@ -363,11 +407,11 @@ def test_sqlite_backed_dxf_model_searches_active_revision(tmp_path):
 
 def test_python_model_supports_legacy_external_files_mapping(tmp_path, monkeypatch):
     dxf_bytes = _build_sample_dxf_bytes(tmp_path)
-    monkeypatch.setattr(
-        search_ezdxf_module,
-        "_external_file_bytes",
-        lambda _source, _file_id: dxf_bytes,
-    )
+    def stream_fixture(_source, _file_id, output_path):
+        Path(output_path).write_bytes(dxf_bytes)
+        return len(dxf_bytes)
+
+    monkeypatch.setattr(search_ezdxf_module, "stream_active_external_file_to_path", stream_fixture)
     element = {
         "type": "model",
         "model_type": "python",
@@ -386,7 +430,7 @@ def test_python_model_supports_legacy_external_files_mapping(tmp_path, monkeypat
 
 def test_extract_text_from_external_dxf_model():
     """The dxf-file model ("Model 7") yields its MTEXT notes — no code executed."""
-    parsed = parse_duc_lazy(str(_asset_input_path(ASSET)))
+    parsed = parse_duc(str(_asset_input_path(ASSET)))
     element = _model_by_label(parsed, "Model 7")
     assert (element.get("model_type") or "").lower() == "dxf"
 
@@ -398,7 +442,7 @@ def test_extract_text_from_external_dxf_model():
 @pytest.mark.slow
 def test_extract_text_from_python_ezdxf_model_runs_code():
     """The python/ezdxf model ("Model 7 (3)") generates its text in code."""
-    parsed = parse_duc_lazy(str(_asset_input_path(ASSET)))
+    parsed = parse_duc(str(_asset_input_path(ASSET)))
     element = _model_by_label(parsed, "Model 7 (3)")
     assert (element.get("model_type") or "").lower() == "python"
 
@@ -409,7 +453,8 @@ def test_extract_text_from_python_ezdxf_model_runs_code():
 @pytest.mark.slow
 def test_extract_text_from_dwg_model_via_wasm():
     """The pinned WASM converts Model 11's DWG before ezdxf extracts its text."""
-    parsed = parse_duc_lazy(str(_asset_input_path(ASSET)))
+    _require_dwg_converter()
+    parsed = parse_duc(str(_asset_input_path(ASSET)))
     element = _model_by_label(parsed, "Model 11")
     assert model_element_info(element).engine is ModelEngine.EZDXF
     assert (element.get("model_type") or "").lower() == "dwg"
@@ -423,7 +468,7 @@ def test_extract_text_from_dwg_model_via_wasm():
 # Ranked search — search_duc_models against the asset
 # --------------------------------------------------------------------------- #
 def test_search_finds_external_dxf_content(test_output_dir, request):
-    parsed = parse_duc_lazy(str(_asset_input_path(ASSET)))
+    parsed = parse_duc(str(_asset_input_path(ASSET)))
     expected_id = _model_by_label(parsed, "Model 7")["id"]
 
     payload, response, json_path = _run_model_search(
@@ -439,7 +484,7 @@ def test_search_finds_external_dxf_content(test_output_dir, request):
 
 @pytest.mark.slow
 def test_search_finds_python_generated_content(test_output_dir, request):
-    parsed = parse_duc_lazy(str(_asset_input_path(ASSET)))
+    parsed = parse_duc(str(_asset_input_path(ASSET)))
     expected_ids = {
         _model_by_label(parsed, "Model 7 (3)")["id"],  # Python-generated DXF
         _model_by_label(parsed, "Model 1 (5)")["id"],  # Python-generated IFC
@@ -457,7 +502,8 @@ def test_search_finds_python_generated_content(test_output_dir, request):
 
 @pytest.mark.slow
 def test_search_finds_dwg_content_after_wasm_conversion(test_output_dir, request):
-    parsed = parse_duc_lazy(str(_asset_input_path(ASSET)))
+    _require_dwg_converter()
+    parsed = parse_duc(str(_asset_input_path(ASSET)))
     expected_id = _model_by_label(parsed, "Model 11")["id"]
 
     payload, _response, _json_path = _run_model_search(
@@ -482,7 +528,7 @@ def test_search_ignores_python_syntax(test_output_dir, request):
 
 
 def test_search_matches_model_label(test_output_dir, request):
-    parsed = parse_duc_lazy(str(_asset_input_path(ASSET)))
+    parsed = parse_duc(str(_asset_input_path(ASSET)))
     expected_id = _model_by_label(parsed, "Scopture Model")["id"]
 
     payload, _response, _json_path = _run_model_search(

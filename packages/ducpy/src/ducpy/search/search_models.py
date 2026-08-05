@@ -38,7 +38,7 @@ from pathlib import Path
 from typing import Any, Iterable, Iterator
 
 from ..builders.sql_builder import DucSQL
-from ..parse import parse_duc_lazy
+from ..parse import parse_duc
 from .search_elements import (
     DucSearchResponse,
     _build_match_contexts,
@@ -419,7 +419,7 @@ def search_duc_models(
         with DucSQL(duc_file) as db:
             elements = _model_elements_from_sqlite(db.conn)
     except sqlite3.DatabaseError:
-        duc_data = parse_duc_lazy(str(duc_file))
+        duc_data = parse_duc(str(duc_file))
         elements = list(iter_model_elements(duc_data))
 
     candidates = _collect_model_candidates(duc_file, elements, query, run_code=run_code)[:limit]

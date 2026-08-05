@@ -7,9 +7,10 @@ from pathlib import Path
 import ifcopenshell
 
 from ducpy.builders.sql_builder import DucSQL
-from ducpy.parse import parse_duc_lazy
+from ducpy.parse import parse_duc
 from ducpy.search import (
     extract_ifc_file_text,
+    extract_ifc_path_text,
     extract_ifc_text,
     extract_model_ifc_text,
     search_duc_models,
@@ -198,8 +199,9 @@ def _build_sqlite_ifc_model(tmp_path: Path, ifc_bytes: bytes) -> tuple[Path, dic
             (revision_id, file_id, len(ifc_bytes), "application/x-step", 1),
         )
         db.conn.execute(
-            "INSERT INTO external_file_revision_data (revision_id, data) VALUES (?, ?)",
-            (revision_id, ifc_bytes),
+            "INSERT INTO external_file_revision_chunks "
+            "(revision_id, chunk_index, offset_bytes, size_bytes, data) VALUES (?, ?, ?, ?, ?)",
+            (revision_id, 0, 0, len(ifc_bytes), ifc_bytes),
         )
         db.conn.execute(
             "INSERT INTO model_element_files (element_id, file_id, sort_order) "
@@ -268,6 +270,13 @@ def test_extract_ifc_text_handles_empty_and_invalid_data():
     assert extract_ifc_text(b"not an IFC STEP file").items == ()
 
 
+def test_extract_ifc_path_text_ignores_non_ifc_files(tmp_path):
+    source = tmp_path / "model.ifc"
+    source.write_text("print('this is Python source, not IFC')", encoding="utf-8")
+
+    assert extract_ifc_path_text(source).items == ()
+
+
 def test_python_ifc_execution_is_opt_in_and_ignores_source_only_text():
     element = {
         "id": "python-ifc",
@@ -313,7 +322,7 @@ def test_sqlite_backed_ifc_model_is_ranked_by_authored_property(tmp_path):
 
 def test_universal_external_ifc_model_extracts_real_bim_content():
     asset_path = _asset_input_path(ASSET)
-    parsed = parse_duc_lazy(str(asset_path))
+    parsed = parse_duc(str(asset_path))
     element = _model_by_label(parsed, "Model 8")
 
     result = extract_model_ifc_text(asset_path, element)

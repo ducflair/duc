@@ -30,13 +30,15 @@ import hashlib
 import io
 import logging
 import os
+import ssl
 import tempfile
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
-from ._model_files import external_file_bytes as _external_file_bytes
+from ._model_files import stream_active_external_file_to_path
 
 logger = logging.getLogger(__name__)
 
@@ -340,6 +342,20 @@ def _load_doc_from_bytes(dxf_bytes: bytes) -> Any:
             os.unlink(tmp_path)
 
 
+def _load_doc_from_path(path: str | Path) -> Any:
+    """Parse a file-backed DXF without materializing it in Python memory."""
+
+    import ezdxf
+    from ezdxf import recover
+
+    try:
+        return ezdxf.readfile(path)
+    except Exception as exc:
+        logger.debug("ezdxf.readfile failed (%s); retrying with recover", exc)
+        doc, _auditor = recover.readfile(path)
+        return doc
+
+
 def extract_dxf_text(dxf_bytes: bytes) -> DxfText:
     """Extract user text from raw DXF bytes. Returns empty on any failure."""
 
@@ -376,9 +392,32 @@ def _cached_wasm_path() -> Path:
 
 
 def _download_wasm(url: str, *, timeout_seconds: float) -> bytes:
+    contexts: list[ssl.SSLContext] = [ssl.create_default_context()]
     try:
-        with urllib.request.urlopen(url, timeout=timeout_seconds) as response:
-            return response.read()
+        import certifi
+
+        contexts.append(ssl.create_default_context(cafile=certifi.where()))
+    except Exception as exc:  # pragma: no cover - certifi is a package dependency
+        logger.debug("Could not load the certifi CA bundle: %s", exc)
+
+    last_error: Exception | None = None
+    for index, context in enumerate(contexts):
+        try:
+            with urllib.request.urlopen(url, context=context, timeout=timeout_seconds) as response:
+                return response.read()
+        except Exception as exc:
+            last_error = exc
+            reason = exc.reason if isinstance(exc, urllib.error.URLError) else exc
+            is_certificate_error = isinstance(reason, ssl.SSLCertVerificationError) or (
+                "CERTIFICATE_VERIFY_FAILED" in str(reason)
+            )
+            if index == 0 and is_certificate_error:
+                logger.debug("Default CA lookup failed; retrying with certifi")
+                continue
+            break
+
+    try:
+        raise last_error or RuntimeError("unknown download failure")
     except Exception as exc:
         raise DwgConversionNotAvailable(
             f"Could not download the dwgdxf WASM module from {url}: {exc}"
@@ -540,12 +579,9 @@ def _run_and_capture_drawings(
     with tempfile.TemporaryDirectory(prefix="ducpy-ezdxf-") as tmpdir:
         resolved: dict[str, str] = {}
         for file_id in file_ids:
-            blob = _external_file_bytes(duc_source, file_id)
-            if blob is None:
-                continue
             target = Path(tmpdir) / str(file_id)
-            target.write_bytes(blob)
-            resolved[file_id] = str(target)
+            if stream_active_external_file_to_path(duc_source, file_id, target) > 0:
+                resolved[file_id] = str(target)
 
         def resolve_external_file(file_id: str) -> str:
             if file_id in resolved:
@@ -645,16 +681,20 @@ def extract_model_dxf_text(
 
     # Direct file path: read each linked external DXF/DWG file.
     items = []
-    for file_id in file_ids:
-        blob = _external_file_bytes(duc_source, file_id)
-        if not blob:
-            continue
-        try:
-            if model_type == "dwg" or blob[:4] in _DWG_MAGIC:
-                blob = convert_dwg_to_dxf(blob)
-            items.extend(extract_dxf_text(blob).items)
-        except DwgConversionNotAvailable as exc:
-            logger.info("Skipping DWG model file %s: %s", file_id, exc)
-        except Exception as exc:
-            logger.debug("Failed to extract text from external file %s: %s", file_id, exc)
+    with tempfile.TemporaryDirectory(prefix="ducpy-ezdxf-") as tmpdir:
+        for file_id in file_ids:
+            target = Path(tmpdir) / str(file_id)
+            if stream_active_external_file_to_path(duc_source, file_id, target) <= 0:
+                continue
+            try:
+                with target.open("rb") as source:
+                    is_dwg = model_type == "dwg" or source.read(4) in _DWG_MAGIC
+                if is_dwg:
+                    items.extend(extract_dxf_text(target.read_bytes()).items)
+                else:
+                    items.extend(extract_drawing_text(_load_doc_from_path(target)).items)
+            except DwgConversionNotAvailable as exc:
+                logger.info("Skipping DWG model file %s: %s", file_id, exc)
+            except Exception as exc:
+                logger.debug("Failed to extract text from external file %s: %s", file_id, exc)
     return DxfText(_dedupe(items))

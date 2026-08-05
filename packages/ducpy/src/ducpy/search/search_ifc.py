@@ -23,7 +23,7 @@ from numbers import Number
 from pathlib import Path
 from typing import Any, Iterator
 
-from ._model_files import external_file_bytes
+from ._model_files import stream_active_external_file_to_path
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ __all__ = [
     "IfcText",
     "IfcTextItem",
     "extract_ifc_file_text",
+    "extract_ifc_path_text",
     "extract_ifc_text",
     "extract_model_ifc_text",
     "ifcopenshell_available",
@@ -236,6 +237,25 @@ def extract_ifc_text(ifc_bytes: bytes) -> IfcText:
     return extract_ifc_file_text(model)
 
 
+def extract_ifc_path_text(path: str | Path) -> IfcText:
+    """Open and extract an IFC file from disk without first reading its bytes."""
+
+    if not ifcopenshell_available():
+        return IfcText()
+    try:
+        with Path(path).open("rb") as source:
+            prefix = source.read(128).lstrip(b"\xef\xbb\xbf \t\r\n").upper()
+        if not prefix.startswith(b"ISO-10303-21;"):
+            return IfcText()
+
+        import ifcopenshell
+
+        return extract_ifc_file_text(ifcopenshell.open(str(path)))
+    except Exception as exc:
+        logger.debug("Failed to load IFC for search: %s", exc)
+        return IfcText()
+
+
 def _capture_ifc_values(
     value: Any,
     ifcopenshell_module: Any,
@@ -290,12 +310,9 @@ def _run_and_capture_ifc_files(
     with tempfile.TemporaryDirectory(prefix="ducpy-ifc-") as tmpdir:
         resolved: dict[str, str] = {}
         for file_id in file_ids:
-            blob = external_file_bytes(duc_source, file_id)
-            if blob is None:
-                continue
             target = Path(tmpdir) / f"{file_id}.ifc"
-            target.write_bytes(blob)
-            resolved[file_id] = str(target)
+            if stream_active_external_file_to_path(duc_source, file_id, target) > 0:
+                resolved[file_id] = str(target)
 
         def resolve_external_file(file_id: str) -> str:
             key = str(file_id)
@@ -394,9 +411,10 @@ def extract_model_ifc_text(
         logger.debug("Code execution captured no IFC files; falling back to external files")
 
     items: list[IfcTextItem] = []
-    for file_id in file_ids:
-        blob = external_file_bytes(duc_source, file_id)
-        if not blob:
-            continue
-        items.extend(extract_ifc_text(blob).items)
+    with tempfile.TemporaryDirectory(prefix="ducpy-ifc-") as tmpdir:
+        for file_id in file_ids:
+            target = Path(tmpdir) / f"{file_id}.ifc"
+            if stream_active_external_file_to_path(duc_source, file_id, target) <= 0:
+                continue
+            items.extend(extract_ifc_path_text(target).items)
     return IfcText(_dedupe(items))

@@ -22,6 +22,7 @@ from .search_ifc import (
     IfcText,
     IfcTextItem,
     extract_ifc_file_text,
+    extract_ifc_path_text,
     extract_ifc_text,
     extract_model_ifc_text,
 )
@@ -53,6 +54,7 @@ __all__ = [
     "extract_model_dxf_text",
     "search_duc_elements",
     "extract_ifc_file_text",
+    "extract_ifc_path_text",
     "extract_ifc_text",
     "extract_model_ifc_text",
     "search_duc_models",
