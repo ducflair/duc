@@ -20,14 +20,15 @@ build123d     ``model_type`` ``step`` / ``stl``, or Python importing ``build123d
 unsupported   anything we can't classify
 ============  ===========================================================
 
-This module currently only *detects* the engine for each model element and
-reports what would be searched; the actual per-engine text/geometry extraction
-will be layered on later.
+This module detects each engine and searches user-facing content for the ezdxf
+and IFC engines. Build123d elements currently remain searchable through their
+DUC label and description.
 """
 
 from __future__ import annotations
 
 import ast
+import json
 import logging
 import re
 import sqlite3
@@ -38,10 +39,22 @@ from typing import Any, Iterable, Iterator
 
 from ..builders.sql_builder import DucSQL
 from ..parse import parse_duc_lazy
+from .search_elements import (
+    DucSearchResponse,
+    _build_match_contexts,
+    _build_query_variants,
+    _build_result_payloads,
+    _ElementAggregate,
+    _evaluate_match_text,
+    _tokenize,
+)
+from .search_ezdxf import extract_model_dxf_text
+from .search_ifc import extract_model_ifc_text
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "DucSearchResponse",
     "ModelElementInfo",
     "ModelEngine",
     "detect_model_engine",
@@ -92,11 +105,38 @@ _IMPORT_ENGINES: dict[str, ModelEngine] = {
 # Fallback parser for code that ``ast`` can't handle (fragments / syntax errors).
 _IMPORT_RE = re.compile(r"^\s*(?:from\s+([.\w]+)\s+import\b|import\s+(.+))", re.MULTILINE)
 
-_ENGINE_MESSAGES: dict[ModelEngine, str] = {
-    ModelEngine.EZDXF: "Searching ezdxf model",
-    ModelEngine.IFC: "Searching IFC model",
-    ModelEngine.BUILD123D: "Searching build123d model",
-    ModelEngine.UNSUPPORTED: "Unsupported model — skipping",
+# Relevance weights for an element's own text fields.
+_BASE_FIELD_WEIGHTS: dict[str, float] = {"label": 0.8, "description": 0.9}
+
+# Relevance weights per extracted-text kind. Human annotations rank above the
+# structural names (layers/blocks/layouts) and extended data.
+_DXF_KIND_WEIGHTS: dict[str, float] = {
+    "text": 0.97,
+    "mtext": 0.97,
+    "attrib": 0.95,
+    "dimension": 0.95,
+    "mleader": 0.95,
+    "table": 0.95,
+    "attdef": 0.9,
+    "hyperlink": 0.7,
+    "xdata": 0.7,
+    "doc_property": 0.7,
+    "layer": 0.6,
+    "block": 0.6,
+    "layout": 0.6,
+}
+
+_IFC_KIND_WEIGHTS: dict[str, float] = {
+    "property": 0.97,
+    "quantity": 0.95,
+    "document": 0.95,
+    "classification": 0.9,
+    "material": 0.9,
+    "actor": 0.8,
+    "address": 0.8,
+    "attribute": 0.85,
+    "presentation_layer": 0.65,
+    "header": 0.7,
 }
 
 
@@ -248,31 +288,125 @@ def _model_elements_from_sqlite(conn: sqlite3.Connection) -> list[dict[str, Any]
     return elements
 
 
-def _report_targets(targets: list[ModelElementInfo], query: str) -> None:
-    for info in targets:
-        label = info.label or info.element_id or "<unnamed>"
-        source = "python code" if info.is_python else f"{info.model_type} file"
-        message = _ENGINE_MESSAGES[info.engine]
-        if info.engine is ModelEngine.UNSUPPORTED:
-            print(f"{message}: '{label}' (model_type={info.model_type}, source={source})")
-        else:
-            print(f"{message}: '{label}' (source={source}) — query={query!r}")
+def _model_content_texts(
+    duc_source: str | Path,
+    element: dict[str, Any],
+    info: ModelElementInfo,
+    *,
+    run_code: bool,
+) -> list[tuple[str, float]]:
+    """Return ``(text, source_weight)`` pairs for an element's engine content.
+
+    Ezdxf and IFC content extraction are implemented. Build123d currently
+    returns no content text and remains searchable via label/description.
+    """
+
+    if info.engine is ModelEngine.EZDXF:
+        dxf_text = extract_model_dxf_text(duc_source, element, run_code=run_code)
+        return [
+            (item.text, _DXF_KIND_WEIGHTS.get(item.kind, 0.8))
+            for item in dxf_text.items
+            if item.text
+        ]
+    if info.engine is ModelEngine.IFC:
+        ifc_text = extract_model_ifc_text(duc_source, element, run_code=run_code)
+        return [
+            (item.text, _IFC_KIND_WEIGHTS.get(item.kind, 0.8))
+            for item in ifc_text.items
+            if item.text
+        ]
+
+    return []
+
+
+def _collect_model_candidates(
+    duc_source: str | Path,
+    elements: list[dict[str, Any]],
+    query: str,
+    *,
+    run_code: bool,
+) -> list[_ElementAggregate]:
+    """Score model elements against ``query`` using the shared ranking helpers."""
+
+    # Extract engine content once per element up front — running embedded code is
+    # expensive, so it must not happen inside the per-variant loop below.
+    content_by_element: dict[str, list[tuple[str, float]]] = {}
+    for element in elements:
+        element_id = element.get("id")
+        if not element_id:
+            continue
+        info = model_element_info(element)
+        content_by_element[element_id] = _model_content_texts(
+            duc_source, element, info, run_code=run_code
+        )
+
+    aggregates: dict[str, _ElementAggregate] = {}
+    for _variant_name, _expression, variant_boost in _build_query_variants(query):
+        for element in elements:
+            element_id = element.get("id")
+            if not element_id:
+                continue
+
+            aggregate = aggregates.get(element_id)
+            if aggregate is None:
+                aggregate = _ElementAggregate(
+                    element_id=element_id,
+                    raw_element_type=element.get("type") or MODEL_ELEMENT_TYPE,
+                    label=element.get("label") or "",
+                    description=element.get("description"),
+                )
+                aggregates[element_id] = aggregate
+
+            scored_texts: list[tuple[str, float]] = [
+                (element.get(field_name), weight)
+                for field_name, weight in _BASE_FIELD_WEIGHTS.items()
+            ]
+            scored_texts.extend(content_by_element.get(element_id, []))
+
+            for raw_text, source_weight in scored_texts:
+                score, _similarity = _evaluate_match_text(
+                    query,
+                    raw_text,
+                    fts_rank=None,
+                    source_weight=source_weight,
+                    variant_boost=variant_boost,
+                )
+                if score > 0.0 and raw_text:
+                    for match in _build_match_contexts(query, str(raw_text)):
+                        aggregate.add_match(match.text, score, match.pages)
+
+    results = [aggregate for aggregate in aggregates.values() if aggregate.best_score > 0.0]
+    results.sort(key=lambda item: (-item.best_score, item.raw_element_type.casefold(), item.element_id))
+    return results
+
+
+def _default_model_output_path(duc_path: Path, query: str) -> Path:
+    slug_tokens = _tokenize(query)
+    slug = "-".join(slug_tokens[:8]) if slug_tokens else "search"
+    return duc_path.with_name(f"{duc_path.stem}.{slug}.model-search-results.json")
 
 
 def search_duc_models(
     duc_path: str | Path,
     query: str,
     *,
+    output_path: str | Path | None = None,
     limit: int = 50,
-) -> list[ModelElementInfo]:
-    """Detect the engine behind every model element in a ``.duc`` file.
+    run_code: bool = False,
+) -> DucSearchResponse:
+    """Search the user-authored text inside model elements and rank the results.
 
-    This is the scaffolding step: it loads the ``.duc`` (SQLite-backed or native
-    binary), classifies each model element (ezdxf / IFC / build123d /
-    unsupported) and reports what *would* be searched. Actual per-engine content
-    search is not implemented yet.
+    Loads the ``.duc`` (SQLite-backed or native binary), classifies each model
+    element, extracts searchable DXF/DWG or IFC content, and scores it against
+    ``query`` with the same ranking machinery as :func:`search_duc_elements`.
+    Build123d models currently fall back to their label and description.
 
-    Returns the list of :class:`ModelElementInfo` classifications.
+    ``run_code`` is a trusted-input opt-in. The default (``False``) searches
+    linked model files only. Setting it to ``True`` executes embedded Python
+    model code in-process to capture generated DXF or IFC content; never enable
+    it for untrusted DUC files. Results are written to ``output_path``
+    (or a default path beside the ``.duc``) and returned as a
+    :class:`DucSearchResponse`.
     """
 
     duc_file = Path(duc_path)
@@ -288,6 +422,20 @@ def search_duc_models(
         duc_data = parse_duc_lazy(str(duc_file))
         elements = list(iter_model_elements(duc_data))
 
-    targets = [model_element_info(element) for element in elements][:limit]
-    _report_targets(targets, query)
-    return targets
+    candidates = _collect_model_candidates(duc_file, elements, query, run_code=run_code)[:limit]
+    all_element_ids, results = _build_result_payloads(candidates)
+
+    destination = Path(output_path) if output_path else _default_model_output_path(duc_file, query)
+    response = DucSearchResponse(
+        query=query,
+        results=results,
+        total_hits=len(all_element_ids),
+        all_element_ids=all_element_ids,
+        output_path=str(destination),
+    )
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(
+        json.dumps(response.to_dict(), indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    return response
