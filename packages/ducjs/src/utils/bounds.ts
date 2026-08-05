@@ -1,11 +1,11 @@
 import { Scope, ScopedValue } from "../types";
 import { DucElement, DucFreeDrawElement, DucLine, DucLinearElement, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap } from "../types/elements";
 import { isArrowElement, isFreeDrawElement, isLinearElement, isTextElement } from "../types/elements/typeChecks";
-import { Bounds, GeometricPoint } from "../types/geometryTypes";
+import { Bounds, GeometricPoint } from "../types/geometry.types";
 import { getBoundTextElementPosition, getLinearElementAbsoluteCoords } from "./elements/linearElement";
 import { getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, rescaleLines, rescalePoints, rotate } from "./math";
 
-type SV = ScopedValue;
+export type SV = ScopedValue;
 
 /**
  * Common bounds calculation interface

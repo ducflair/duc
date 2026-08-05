@@ -1,108 +1,32 @@
 ---
-title: "Overview"
-date: 2026-02-27
+title: "Python (ducpy)"
+description: "Python library featuring fluent Dataclass Builders and direct DucSQL database access."
+date: 2026-07-25
 authors: [jorgedanisc]
-description: "Python library for reading, writing and manipulating .duc CAD files — backed by SQLite."
 ---
 
-## Installation
+## Overview
 
-```bash
-pip install ducpy
-```
+`ducpy` is the official Python SDK for parsing, creating, and manipulating `.duc` files.
 
-or
+---
 
-```bash
-uv add ducpy
-```
+## Dual API Architecture
 
-## How it works
+`ducpy` provides two complementary approaches for working with `.duc` CAD files:
 
-A `.duc` file is a standard **SQLite database**. `ducpy` provides two complementary APIs
-for working with these files:
+| API Module | Purpose | Best for |
+|---|---|---|
+| **Builders DSL** (`ducpy.builders`) | Fluent, type-safe Python builder classes for elements, styles, and states | Constructing elements and documents programmatically |
+| **`DucSQL`** (`ducpy.builders.sql_builder`) | Direct SQLite database connection and SQL query execution | Batch inserts, direct schema introspection, FTS queries |
 
-| API | Best for |
-|-----|----------|
-| **Builders** | Constructing elements programmatically with type-safe Python classes |
-| **DucSQL** | Raw SQL access — batch inserts, complex queries, schema introspection |
+---
 
-## Builders API
+## Package Architecture
 
-Use the fluent builder DSL to create elements, then serialize to bytes or a `.duc` file.
-
-```python
-import ducpy as duc
-
-# Build elements
-rect = (
-    duc.ElementBuilder()
-    .at_position(0, 0)
-    .with_size(100, 50)
-    .with_label("My Rectangle")
-    .with_styles(duc.create_fill_and_stroke_style(
-        fill_content=duc.create_solid_content("#4ECDC4"),
-        stroke_content=duc.create_solid_content("#2C3E50"),
-        stroke_width=2.0,
-    ))
-    .build_rectangle()
-    .build()
-)
-
-# Serialize to bytes, then write to disk
-data = duc.serialize_duc(name="my-drawing", elements=[rect])
-with open("output.duc", "wb") as f:
-    f.write(data)
-```
-
-## SQL Builder API
-
-For direct, low-level access to the SQLite schema:
-
-```python
-from ducpy.builders.sql_builder import DucSQL
-
-# Create a brand-new .duc file with the full schema bootstrapped
-with DucSQL.new() as db:
-    db.sql(
-        "INSERT INTO elements (id, element_type, x, y, width, height, label) "
-        "VALUES (?,?,?,?,?,?,?)",
-        "r1", "rectangle", 0, 0, 200, 100, "SQL Rectangle",
-    )
-    db.sql(
-        "INSERT INTO backgrounds (owner_type, owner_id, src, opacity) "
-        "VALUES (?,?,?,?)",
-        "element", "r1", "#FF6B6B", 1.0,
-    )
-    db.save("output.duc")
-
-# Open and query an existing .duc file
-with DucSQL("output.duc") as db:
-    rows = db.sql("SELECT id, label, element_type FROM elements")
-    for row in rows:
-        print(dict(row))
-```
-
-## Parsing an existing file
-
-```python
-import ducpy as duc
-
-with open("drawing.duc", "rb") as f:
-    data = duc.parse_duc(f)
-
-print(f"Elements: {len(data.elements)}")
-print(f"Source: {data.source}")
-```
-
-## Package structure
-
-| Module | Purpose |
-|--------|---------|
-| `builders` | Fluent builders for elements, states, styles |
-| `builders.sql_builder` | `DucSQL` — raw SQLite access |
-| `classes` | Dataclass definitions for all duc entities |
-| `enums` | Integer enum constants matching the schema |
-| `parse` | `parse_duc()`, `parse_duc_lazy()`, `get_external_file()` |
-| `serialize` | `serialize_duc()` |
-| `utils` | Helper utilities |
+- `ducpy.builders`: Fluent builder classes (`ElementBuilder`, style generators).
+- `ducpy.builders.sql_builder`: `DucSQL` class for raw SQLite connections and migrations.
+- `ducpy.classes`: Dataclass definitions matching the relational database schema.
+- `ducpy.enums`: Python enum constants matching `.duc` integer schema codes (`LINE_HEAD`, `TEXT_ALIGN`, `STROKE_PLACEMENT`, etc.).
+- `ducpy.parse`: Path-based drawing-state parsing plus streamed external-file, checkpoint, and delta payload access.
+- `ducpy.serialize`: Serialization utilities that write `.duc` files and return their output paths.

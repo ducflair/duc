@@ -29,8 +29,8 @@ import {
   ElementUpdate,
   NonDeleted
 } from "../../types/elements";
-import { Percentage, Radian, ScaleFactor } from "../../types/geometryTypes";
-import { Merge, Mutable } from "../../types/utility-types";
+import { Percentage, Radian, ScaleFactor } from "../../types/geometry.types";
+import { Merge, Mutable } from "../../types/utility.types";
 import {
   DEFAULT_ELEMENT_PROPS,
   DEFAULT_ELLIPSE_ELEMENT,
@@ -407,6 +407,13 @@ export const newTableElement = (
 ): NonDeleted<DucTableElement> => ({
   ..._newElementBase<DucTableElement>("table", currentScope, opts),
   fileId: opts.fileId ?? null,
+  gridConfig: {
+    columns: opts.gridConfig?.columns ?? 1,
+    gapX: opts.gridConfig?.gapX ?? 0,
+    gapY: opts.gridConfig?.gapY ?? 0,
+    firstPageAlone: opts.gridConfig?.firstPageAlone ?? false,
+    scale: opts.gridConfig?.scale ?? 1,
+  },
   type: "table",
 });
 

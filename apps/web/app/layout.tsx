@@ -1,7 +1,7 @@
 import { baseUrl, description, siteName } from '@/app/layout.config';
 import { BASE_OG_IMG } from '@/constants/images';
 import './global.css';
-import { RootProvider } from 'fumadocs-ui/provider';
+import { RootProvider } from 'fumadocs-ui/provider/next';
 import { Metadata } from 'next';
 import { Roboto_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
@@ -16,7 +16,7 @@ const robotoMono = Roboto_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Duc CAD File",
+    default: "Duc File",
     template: `%s | ${siteName}`,
   },
   description,
@@ -38,13 +38,38 @@ export const metadata: Metadata = {
       },
     ],
   },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
+    ],
+    shortcut: ['/favicon.ico'],
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  manifest: '/manifest.json',
 };
 
 
 export default function Layout({ children }: { children: ReactNode }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: siteName,
+    url: baseUrl,
+    logo: `${baseUrl}/icon.png`,
+  };
+
   return (
     <html lang="en" className={robotoMono.className} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
+        <Script
+          id="organization-jsonld"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {process.env.NODE_ENV === 'production' && (
           <Script
             defer

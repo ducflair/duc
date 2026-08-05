@@ -16,7 +16,7 @@ import tempfile
 import traceback
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import ducpy_native
 from ducpy.utils.convert import (deep_snake_to_camel, snake_to_camel,
@@ -335,6 +335,15 @@ def _write_typst_external_files(project_dir: Path, files_meta: Optional[Dict[str
         target.write_bytes(bytes(data))
 
 
+def _format_typst_validation_error(exc: Exception, main_path: Path) -> str:
+    diagnostic = getattr(exc, "diagnostic", None)
+    detail = diagnostic.strip() if isinstance(diagnostic, str) and diagnostic.strip() else str(exc)
+    return detail.replace(str(main_path), "<ducpy-embedded-doc>").replace(
+        main_path.name,
+        "<ducpy-embedded-doc>",
+    )
+
+
 def _run_typst_validation(
     code: str,
     label: str,
@@ -359,7 +368,7 @@ def _run_typst_validation(
             except TypeError:
                 typst.compile(str(main_path))
         except Exception as exc:
-            return f"{label}: Typst validation failed\n{exc}"
+            return f"{label}: Typst validation failed\n{_format_typst_validation_error(exc, main_path)}"
 
     return None
 
@@ -400,6 +409,7 @@ def _validate_embedded_code(
 
 def serialize_duc(
     name: str,
+    output_path: Optional[Union[str, Path]] = None,
     thumbnail: Optional[bytes] = None,
     dictionary: Optional[list] = None,
     elements: Optional[list] = None,
@@ -413,20 +423,25 @@ def serialize_duc(
     regions: Optional[list] = None,
     layers: Optional[list] = None,
     external_files: Optional[list] = None,
+    charter: Any = None,
+    issues: Optional[list] = None,
     validate_embedded_code: bool = True,
     validation_timeout_seconds: Optional[float] = None,
-) -> bytes:
-    """Serialize elements and document state to raw ``.duc`` binary format.
+) -> str:
+    """Serialize elements and document state directly to a ``.duc`` file path.
 
     This function accepts lists of elements created via the `ducpy.builders` API
     (e.g., `ElementBuilder`) and serializes them into the compressed format
-    expected by `.duc` files. Element instances and state dataclasses are 
+    expected by `.duc` files. Element instances and state dataclasses are
     automatically converted to the camelCase dicts expected by the Rust native module.
 
     Parameters
     ----------
     name : str
         The document name or identifier (used to populate the `source` field).
+    output_path : str | Path, optional
+        Target path for the generated ``.duc`` file. When omitted, a temporary
+        ``.duc`` file is created and its path is returned.
     thumbnail : Optional[bytes], default=None
         Raw PNG bytes representing a thumbnail of the document.
     dictionary : Optional[list], default=None
@@ -453,6 +468,10 @@ def serialize_duc(
         List of document layers.
     external_files : Optional[list], default=None
         List of external files (e.g., embedded images or PDFs).
+    charter : Any, default=None
+        Project charter object (DucCharter) or dict.
+    issues : Optional[list], default=None
+        List of issue objects (DucIssue) or dicts.
     validate_embedded_code : bool, default=True
         Validate model Python code and document source before native serialization.
         This is intended for server-side CPython usage and raises
@@ -462,8 +481,8 @@ def serialize_duc(
 
     Returns
     -------
-    bytes
-        The raw `.duc` binary data, ready to be written to a file.
+    str
+        The output path that was written.
     """
     thumb = bytes(thumbnail) if thumbnail is not None else None
 
@@ -497,6 +516,15 @@ def serialize_duc(
         "versionGraph": to_serializable(version_graph),
         "files": files_meta,
         "filesData": files_data,
+        "charter": to_serializable(charter),
+        "issues": _convert_list(issues) or [],
     }
 
-    return ducpy_native.serialize_duc(data)
+    if output_path is None:
+        fd, generated_path = tempfile.mkstemp(prefix="ducpy-", suffix=".duc")
+        os.close(fd)
+        output = generated_path
+    else:
+        output = str(output_path)
+    ducpy_native.serialize_duc(data, output)
+    return output

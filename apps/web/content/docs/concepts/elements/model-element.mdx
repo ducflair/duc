@@ -1,0 +1,98 @@
+---
+title: "Model Elements"
+description: "Parametric CAD models, procedural Python scripting, external file references, and 3D viewer state data structures in .duc."
+date: 2026-07-25
+authors: [jorgedanisc]
+---
+
+## Overview
+
+In `.duc`, a **Model Element** (`DucModelElement` with `type: "model"`) embeds 3D CAD geometry, parametric models, 2D vector engineering drawings, or procedural scripts directly on the canvas.
+
+While traditional graphics formats treat 3D models as detached external attachments, `.duc` integrates 3D models directly into the document data tree. A Model Element bridges 3D spatial geometry with the 2D surface of a drawing page.
+
+---
+
+## Dual Model Source Paradigms
+
+A Model Element can derive its geometry from two distinct sources (`modelType`):
+
+```mermaid
+flowchart TD
+    M["Model Element (type: 'model')"]
+    M --> P["Procedural Python Scripting<br/>(modelType: 'python')"]
+    M --> E["External CAD Files<br/>(modelType: 'ifc', 'step', 'dxf', 'dwg', 'stl', 'obj')"]
+
+    P --> P1["build123d (3D Parametric CAD)"]
+    P --> P2["ezdxf (2D Vector DXF)"]
+    P --> P3["ifcopenshell (BIM / IFC)"]
+
+    E --> E1["Linked via ExternalFiles (fileIds)"]
+
+    classDef python fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#ffffff;
+    classDef external fill:#4c1d95,stroke:#a855f7,stroke-width:2px,color:#ffffff;
+
+    class P,P1,P2,P3 python;
+    class E,E1 external;
+```
+
+### 1. Procedural Python Scripting (`modelType: "python"`)
+
+When set to `modelType: "python"`, the element stores Python source code (`code`) that evaluates geometry procedurally.
+
+When processing or serializing a `.duc` file, the [`ducpy`](/docs/python/overview) Python adapter compiles and executes this code. The execution runtime equips Python scripts with major open-source CAD and BIM libraries:
+- **`build123d`**: Parametric 3D CAD modeling (solids, extrusions, sweeps, fillets, boolean operations).
+- **`ezdxf`**: 2D DXF vector drawing generation.
+- **`ifcopenshell`**: Open-standard Building Information Modeling (BIM) data structures.
+
+This allows a `.duc` document to store fully parametric, code-driven geometry definitions directly inside the file container while remaining executable across runtimes.
+
+### 2. External Binary CAD Files (`modelType: "ifc" | "step" | "dxf" | "dwg" | "stl" | "obj"`)
+
+When referencing existing CAD assets, the Model Element links to binary file payloads stored in **External Files** (`fileIds`).
+
+Supported file formats include:
+- **`IFC`**: Architectural and building information models.
+- **`STEP` (`.step`, `.stp`)**: Precise boundary representation (BREP) 3D CAD solids.
+- **`DXF` / `DWG`**: 2D vector CAD drawings.
+- **`STL` / `OBJ`**: 3D surface mesh geometry.
+
+---
+
+## Bridging 3D Depth to the 2D Canvas via `viewerState`
+
+Physical engineering review and project documentation rely on 2D projections (plans, elevations, sections, and callouts).
+
+The Model Element handles 3D spatial geometry by storing an explicit 3D camera projection state inside its `viewerState` attribute.
+
+```ts
+export type DucModelElement = _DucElementBase & {
+  type: "model";
+  modelType: string | null;
+  code: string | null;
+  thumbnail: Uint8Array | null;
+  fileIds: ExternalFileId[];
+  viewerState: Viewer3DState | null;
+};
+```
+
+### The 3D Viewer State Data Structure (`viewerState`)
+
+The `viewerState` field records spatial camera and projection parameters:
+
+- **Camera Spatial State**: Camera position coordinates, target focus point, quaternion rotation, and zoom scale.
+- **Projection Mode**: Orthographic versus perspective projection settings.
+- **Orientation Presets**: Standard view direction indicators (Top, Bottom, Front, Back, Left, Right, Isometric).
+- **Section Clipping**: Active 3D cross-section clipping plane definitions along X, Y, and Z axes.
+- **Material & Analysis Settings**: Surface lighting parameters, metalness, roughness, and zebra line reflection analysis modes.
+
+By storing `viewerState` directly inside the element record, `.duc` preserves an exact 3D spatial viewpoint projection on the 2D canvas, allowing runtimes to render the defined perspective while maintaining complete 3D spatial parameters in the file format.
+
+---
+
+## Parametric Data Model
+
+All model elements in `.duc` maintain parametric data capabilities regardless of their source:
+
+- **Procedural Script Variables**: Python model elements define structured input variables in code, allowing runtimes to re-evaluate model geometry when input values change.
+- **External File Attribute Preservation**: External IFC, STEP, and DXF files are stored with their underlying data structures intact. BIM properties, material attributes, structural metadata, and CAD object hierarchies remain queryable within the `.duc` container.

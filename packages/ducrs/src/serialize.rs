@@ -1,14 +1,12 @@
-//! Serializes an [`ExportedDataState`] into a `.duc` SQLite binary (byte vector).
+//! Writes an [`ExportedDataState`] into an open DUC SQLite database.
 //!
-//! Flow: ExportedDataState → in-memory SQLite DB → raw bytes
-//!
-//! The schema is applied via [`crate::db::open_memory`] so every output is a
-//! valid `.duc` file that can be opened again with [`crate::parse::parse`].
+//! File and stream output lives in [`crate::session`] for native builds and in
+//! the OPFS document APIs exposed by the WASM bindings.
 
 use rusqlite::{params, Connection, Transaction};
-use std::os::raw::c_char;
 
 use crate::db;
+use crate::external_file_chunks::{self, ExternalFileChunkError};
 use crate::types::*;
 
 #[derive(Debug)]
@@ -16,6 +14,7 @@ pub enum SerializeError {
     Db(db::DbError),
     Sqlite(rusqlite::Error),
     Io(String),
+    InvalidData(String),
 }
 
 impl std::fmt::Display for SerializeError {
@@ -24,6 +23,7 @@ impl std::fmt::Display for SerializeError {
             SerializeError::Db(e) => write!(f, "db: {e}"),
             SerializeError::Sqlite(e) => write!(f, "sqlite: {e}"),
             SerializeError::Io(e) => write!(f, "io: {e}"),
+            SerializeError::InvalidData(e) => write!(f, "invalid data: {e}"),
         }
     }
 }
@@ -31,99 +31,144 @@ impl std::fmt::Display for SerializeError {
 impl std::error::Error for SerializeError {}
 
 impl From<db::DbError> for SerializeError {
-    fn from(e: db::DbError) -> Self { SerializeError::Db(e) }
+    fn from(e: db::DbError) -> Self {
+        SerializeError::Db(e)
+    }
 }
 impl From<rusqlite::Error> for SerializeError {
-    fn from(e: rusqlite::Error) -> Self { SerializeError::Sqlite(e) }
+    fn from(e: rusqlite::Error) -> Self {
+        SerializeError::Sqlite(e)
+    }
 }
 impl From<std::io::Error> for SerializeError {
-    fn from(e: std::io::Error) -> Self { SerializeError::Io(e.to_string()) }
+    fn from(e: std::io::Error) -> Self {
+        SerializeError::Io(e.to_string())
+    }
+}
+impl From<ExternalFileChunkError> for SerializeError {
+    fn from(e: ExternalFileChunkError) -> Self {
+        match e {
+            ExternalFileChunkError::Sqlite(e) => SerializeError::Sqlite(e),
+            ExternalFileChunkError::Io(e) => SerializeError::Io(e.to_string()),
+            ExternalFileChunkError::InvalidData(e) => SerializeError::InvalidData(e),
+        }
+    }
 }
 
 pub type SerializeResult<T> = Result<T, SerializeError>;
 
-// ─── Public entry point ──────────────────────────────────────────────────────
+pub(crate) fn write_state_to_connection(
+    conn: &mut Connection,
+    state: &ExportedDataState,
+    chunk_size: usize,
+) -> SerializeResult<()> {
+    external_file_chunks::validate_chunk_size(chunk_size)?;
 
-/// Serialize an [`ExportedDataState`] into a compressed `.duc` file (raw bytes).
-///
-/// Uses `page_size = 1024` and zlib compression for minimal output size.
-/// The result can be parsed back with [`crate::parse::parse`].
-pub fn serialize(state: &ExportedDataState) -> SerializeResult<Vec<u8>> {
-    let conn = db::open_memory_compact()?;
-    let mut inner = conn.into_inner();
+    // Temporarily disable FK checks during bulk insert so that
+    // partially-consistent app state (e.g. elements referencing
+    // groups/layers that weren't exported) doesn't abort the write.
+    // FKs are re-enabled after the transaction so the resulting
+    // file is still a valid database that enforces FKs on open.
+    conn.execute_batch("PRAGMA foreign_keys = OFF;")?;
 
-    {
-        // Temporarily disable FK checks during bulk insert so that
-        // partially-consistent app state (e.g. elements referencing
-        // groups/layers that weren't exported) doesn't abort the write.
-        // FKs are re-enabled after the transaction so the resulting
-        // file is still a valid database that enforces FKs on open.
-        inner.execute_batch("PRAGMA foreign_keys = OFF;")?;
+    let tx = conn.transaction()?;
+    reset_connection_data(&tx)?;
+    write_document(&tx, state)?;
+    write_charter(&tx, &state.charter)?;
+    write_issues(&tx, &state.issues)?;
+    write_global_state(&tx, &state.duc_global_state)?;
+    write_local_state(&tx, &state.duc_local_state)?;
+    write_dictionary(&tx, &state.dictionary)?;
+    write_stack_and_containers(&tx, state)?;
+    write_blocks(&tx, state)?;
+    write_elements(&tx, state)?;
+    write_external_files(
+        &tx,
+        &state.external_files,
+        &state.external_files_data,
+        chunk_size,
+    )?;
+    write_version_graph(&tx, &state.version_graph, chunk_size)?;
+    tx.commit()?;
 
-        let tx = inner.transaction()?;
-        write_document(&tx, state)?;
-        write_global_state(&tx, &state.duc_global_state)?;
-        write_local_state(&tx, &state.duc_local_state)?;
-        write_dictionary(&tx, &state.dictionary)?;
-        write_stack_and_containers(&tx, state)?;
-        write_blocks(&tx, state)?;
-        write_elements(&tx, state)?;
-        write_external_files(&tx, &state.external_files, &state.external_files_data)?;
-        write_version_graph(&tx, &state.version_graph)?;
-        tx.commit()?;
-
-        inner.execute_batch("PRAGMA foreign_keys = ON;")?;
-    }
-
-    // Reclaim any wasted pages before exporting.
-    inner.execute_batch("VACUUM;")?;
-
-    let raw = export_db_bytes(&inner)?;
-    compress_duc_bytes(&raw)
+    conn.execute_batch("PRAGMA foreign_keys = ON;")?;
+    Ok(())
 }
 
-// ─── Database export ─────────────────────────────────────────────────────────
-
-fn export_db_bytes(conn: &Connection) -> SerializeResult<Vec<u8>> {
-    // Use SQLite's in-memory serializer instead of filesystem temp files.
-    // This works on native and wasm targets.
-    let schema = b"main\0";
-
-    let mut size: rusqlite::ffi::sqlite3_int64 = 0;
-    let ptr = unsafe {
-        rusqlite::ffi::sqlite3_serialize(
-            conn.handle(),
-            schema.as_ptr() as *const c_char,
-            &mut size,
-            0,
-        )
-    };
-
-    if ptr.is_null() || size < 0 {
-        return Err(SerializeError::Io(
-            "sqlite3_serialize failed to export database bytes".into(),
-        ));
-    }
-
-    let bytes = unsafe {
-        let slice = std::slice::from_raw_parts(ptr as *const u8, size as usize);
-        let out = slice.to_vec();
-        rusqlite::ffi::sqlite3_free(ptr as *mut std::ffi::c_void);
-        out
-    };
-
-    Ok(bytes)
-}
-
-/// Compress raw SQLite bytes using a zlib/deflate stream.
-fn compress_duc_bytes(raw: &[u8]) -> SerializeResult<Vec<u8>> {
-    use flate2::write::DeflateEncoder;
-    use flate2::Compression;
-    use std::io::Write;
-
-    let mut encoder = DeflateEncoder::new(Vec::with_capacity(raw.len() / 4), Compression::default());
-    encoder.write_all(raw)?;
-    Ok(encoder.finish()?)
+fn reset_connection_data(tx: &Transaction) -> SerializeResult<()> {
+    tx.execute_batch(
+        "
+        DELETE FROM external_file_text_index;
+        DELETE FROM delta_changeset_chunks;
+        DELETE FROM deltas;
+        DELETE FROM checkpoint_data_chunks;
+        DELETE FROM checkpoints;
+        DELETE FROM version_chains;
+        DELETE FROM version_graph;
+        DELETE FROM external_file_revision_chunks;
+        DELETE FROM external_file_revisions;
+        DELETE FROM external_files;
+        DELETE FROM model_element_files;
+        DELETE FROM model_viewer_state;
+        DELETE FROM element_model;
+        DELETE FROM element_table;
+        DELETE FROM doc_element_referenced_files;
+        DELETE FROM element_doc;
+        DELETE FROM element_pdf;
+        DELETE FROM document_grid_config;
+        DELETE FROM element_plot;
+        DELETE FROM element_frame;
+        DELETE FROM element_stack_properties;
+        DELETE FROM freedraw_element_points;
+        DELETE FROM element_freedraw;
+        DELETE FROM element_image;
+        DELETE FROM linear_path_override_indices;
+        DELETE FROM linear_path_overrides;
+        DELETE FROM linear_element_lines;
+        DELETE FROM linear_element_points;
+        DELETE FROM element_linear;
+        DELETE FROM element_text;
+        DELETE FROM element_ellipse;
+        DELETE FROM element_polygon;
+        DELETE FROM element_bound_elements;
+        DELETE FROM element_region_memberships;
+        DELETE FROM element_block_memberships;
+        DELETE FROM element_group_memberships;
+        DELETE FROM element_embeddable;
+        DELETE FROM elements;
+        DELETE FROM hatch_pattern_lines;
+        DELETE FROM strokes;
+        DELETE FROM backgrounds;
+        DELETE FROM block_collection_entries;
+        DELETE FROM block_collections;
+        DELETE FROM block_instance_overrides;
+        DELETE FROM block_instances;
+        DELETE FROM blocks;
+        DELETE FROM block_metadata;
+        DELETE FROM regions;
+        DELETE FROM groups;
+        DELETE FROM layers;
+        DELETE FROM stack_properties;
+        DELETE FROM duc_issue_anchors;
+        DELETE FROM duc_issue_message_reactions;
+        DELETE FROM duc_issue_messages;
+        DELETE FROM duc_issue_followers;
+        DELETE FROM duc_issue_assignees;
+        DELETE FROM duc_issues;
+        DELETE FROM duc_charter_stakeholders;
+        DELETE FROM duc_charter_decision_issue_ids;
+        DELETE FROM duc_charter_decisions;
+        DELETE FROM duc_charter_constraints;
+        DELETE FROM duc_charter_requirement_acceptance_criteria;
+        DELETE FROM duc_charter_requirements;
+        DELETE FROM duc_charter;
+        DELETE FROM document_dictionary;
+        DELETE FROM duc_document;
+        DELETE FROM duc_local_state;
+        DELETE FROM duc_global_state;
+        ",
+    )?;
+    Ok(())
 }
 
 // ─── duc_document ────────────────────────────────────────────────────────────
@@ -143,16 +188,289 @@ fn write_document(tx: &Transaction, state: &ExportedDataState) -> SerializeResul
     Ok(())
 }
 
+fn charter_phase_to_str(phase: DucCharterPhase) -> &'static str {
+    match phase {
+        DucCharterPhase::Intent => "intent",
+        DucCharterPhase::Review => "review",
+        DucCharterPhase::Delivery => "delivery",
+        DucCharterPhase::Closed => "closed",
+    }
+}
+
+fn issue_status_to_str(status: DucIssueStatus) -> &'static str {
+    match status {
+        DucIssueStatus::Open => "open",
+        DucIssueStatus::Closed => "closed",
+        DucIssueStatus::Dismissed => "dismissed",
+    }
+}
+
+fn write_charter(tx: &Transaction, charter: &Option<DucCharter>) -> SerializeResult<()> {
+    let Some(charter) = charter else {
+        return Ok(());
+    };
+
+    tx.execute(
+        "INSERT OR REPLACE INTO duc_charter
+            (id, title, description, objective, phase, closed_reason, updated_at)
+         VALUES (1, ?1, ?2, ?3, ?4, ?5, ?6)",
+        params![
+            charter.title,
+            charter.description,
+            charter.objective,
+            charter_phase_to_str(charter.phase),
+            charter.closed_reason,
+            charter.updated_at,
+        ],
+    )?;
+
+    let mut req_stmt = tx.prepare_cached(
+        "INSERT INTO duc_charter_requirements (id, statement, must, sort_order)
+         VALUES (?1, ?2, ?3, ?4)",
+    )?;
+    let mut criteria_stmt = tx.prepare_cached(
+        "INSERT INTO duc_charter_requirement_acceptance_criteria (requirement_id, sort_order, criterion)
+         VALUES (?1, ?2, ?3)"
+    )?;
+    for (i, requirement) in charter.requirements.iter().enumerate() {
+        req_stmt.execute(params![
+            requirement.id,
+            requirement.statement,
+            requirement.must as i32,
+            i as i32
+        ])?;
+        if let Some(criteria) = &requirement.acceptance_criteria {
+            for (j, criterion) in criteria.iter().enumerate() {
+                criteria_stmt.execute(params![requirement.id, j as i32, criterion])?;
+            }
+        }
+    }
+
+    let mut constraint_stmt = tx.prepare_cached(
+        "INSERT INTO duc_charter_constraints (id, statement, hard, sort_order)
+         VALUES (?1, ?2, ?3, ?4)",
+    )?;
+    for (i, constraint) in charter.constraints.iter().enumerate() {
+        constraint_stmt.execute(params![
+            constraint.id,
+            constraint.statement,
+            constraint.hard as i32,
+            i as i32
+        ])?;
+    }
+
+    let mut decision_stmt = tx.prepare_cached(
+        "INSERT INTO duc_charter_decisions (id, accepted, decision, rationale, decided_at, sort_order)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)"
+    )?;
+    let mut decision_issue_stmt = tx.prepare_cached(
+        "INSERT INTO duc_charter_decision_issue_ids (decision_id, issue_id, sort_order)
+         VALUES (?1, ?2, ?3)",
+    )?;
+    for (i, decision) in charter.decisions.iter().enumerate() {
+        decision_stmt.execute(params![
+            decision.id,
+            decision.accepted as i32,
+            decision.decision,
+            decision.rationale,
+            decision.decided_at,
+            i as i32,
+        ])?;
+        if let Some(issue_ids) = &decision.issue_ids {
+            for (j, issue_id) in issue_ids.iter().enumerate() {
+                decision_issue_stmt.execute(params![decision.id, issue_id, j as i32])?;
+            }
+        }
+    }
+
+    if let Some(stakeholders) = &charter.stakeholders {
+        let mut stakeholder_stmt = tx.prepare_cached(
+            "INSERT INTO duc_charter_stakeholders (sort_order, actor_identifier, actor_name, role)
+             VALUES (?1, ?2, ?3, ?4)",
+        )?;
+        for (i, stakeholder) in stakeholders.iter().enumerate() {
+            stakeholder_stmt.execute(params![
+                i as i32,
+                stakeholder.actor.identifier,
+                stakeholder.actor.name,
+                stakeholder.role,
+            ])?;
+        }
+    }
+
+    Ok(())
+}
+
+fn write_issues(tx: &Transaction, issues: &[DucIssue]) -> SerializeResult<()> {
+    let mut issue_stmt = tx.prepare_cached(
+        "INSERT INTO duc_issues
+            (id, local_id, title, status, dismissed_reason, due_date, author_id,
+             created_at, updated_at, deleted_at, sort_order)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+    )?;
+
+    for (i, issue) in issues.iter().enumerate() {
+        issue_stmt.execute(params![
+            issue.id,
+            issue.local_id,
+            issue.title,
+            issue_status_to_str(issue.status),
+            issue.dismissed_reason,
+            issue.due_date,
+            issue.author_id,
+            issue.created_at,
+            issue.updated_at,
+            issue.deleted_at,
+            i as i32,
+        ])?;
+        write_issue_actor_ids(
+            tx,
+            "duc_issue_assignees",
+            &issue.id,
+            issue.assignee_ids.as_deref(),
+        )?;
+        write_issue_actor_ids(
+            tx,
+            "duc_issue_followers",
+            &issue.id,
+            issue.follower_ids.as_deref(),
+        )?;
+        write_issue_messages(tx, &issue.id, &issue.messages)?;
+        if let Some(anchor) = &issue.anchor {
+            write_issue_anchor(tx, &issue.id, anchor)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn write_issue_actor_ids(
+    tx: &Transaction,
+    table: &str,
+    issue_id: &str,
+    actor_ids: Option<&[String]>,
+) -> SerializeResult<()> {
+    let Some(actor_ids) = actor_ids else {
+        return Ok(());
+    };
+    let sql = format!(
+        "INSERT OR REPLACE INTO {table} (issue_id, actor_identifier, sort_order) VALUES (?1, ?2, ?3)"
+    );
+    let mut stmt = tx.prepare_cached(&sql)?;
+    for (i, actor_id) in actor_ids.iter().enumerate() {
+        stmt.execute(params![issue_id, actor_id, i as i32])?;
+    }
+    Ok(())
+}
+
+fn write_issue_messages(
+    tx: &Transaction,
+    issue_id: &str,
+    messages: &[DucIssueMessage],
+) -> SerializeResult<()> {
+    let mut message_stmt = tx.prepare_cached(
+        "INSERT INTO duc_issue_messages
+            (id, issue_id, author_identifier, author_name, content, reply_to_id,
+             created_at, edited_at, deleted_at, sort_order)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+    )?;
+    let mut reaction_stmt = tx.prepare_cached(
+        "INSERT OR REPLACE INTO duc_issue_message_reactions
+            (message_id, emoji, actor_identifier, sort_order)
+         VALUES (?1, ?2, ?3, ?4)",
+    )?;
+
+    for (i, message) in messages.iter().enumerate() {
+        message_stmt.execute(params![
+            message.id,
+            issue_id,
+            message.author.identifier,
+            message.author.name,
+            message.content,
+            message.reply_to_id,
+            message.created_at,
+            message.edited_at,
+            message.deleted_at,
+            i as i32,
+        ])?;
+        if let Some(reactions) = &message.reactions {
+            for (emoji, actor_ids) in reactions {
+                for (j, actor_id) in actor_ids.iter().enumerate() {
+                    reaction_stmt.execute(params![message.id, emoji, actor_id, j as i32])?;
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn write_issue_anchor(
+    tx: &Transaction,
+    issue_id: &str,
+    anchor: &DucIssueAnchor,
+) -> SerializeResult<()> {
+    match anchor {
+        DucIssueAnchor::Canvas { x, y, scope } => {
+            tx.execute(
+                "INSERT INTO duc_issue_anchors (issue_id, anchor_type, canvas_x, canvas_y, canvas_scope)
+                 VALUES (?1, 'canvas', ?2, ?3, ?4)",
+                params![issue_id, x, y, scope],
+            )?;
+        }
+        DucIssueAnchor::Element {
+            element_id,
+            anchor_x,
+            anchor_y,
+        } => {
+            tx.execute(
+                "INSERT INTO duc_issue_anchors (issue_id, anchor_type, element_id, anchor_x, anchor_y)
+                 VALUES (?1, 'element', ?2, ?3, ?4)",
+                params![issue_id, element_id, anchor_x, anchor_y],
+            )?;
+        }
+        DucIssueAnchor::Model {
+            element_id,
+            point,
+            normal,
+            viewer_state,
+            topology_id,
+        } => {
+            tx.execute(
+                "INSERT INTO duc_issue_anchors (
+                    issue_id, anchor_type, element_id,
+                    model_point_x, model_point_y, model_point_z,
+                    model_normal_x, model_normal_y, model_normal_z, topology_id
+                 ) VALUES (?1, 'model', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                params![
+                    issue_id,
+                    element_id,
+                    point[0],
+                    point[1],
+                    point[2],
+                    normal.as_ref().map(|n| n[0]),
+                    normal.as_ref().map(|n| n[1]),
+                    normal.as_ref().map(|n| n[2]),
+                    topology_id,
+                ],
+            )?;
+            if let Some(viewer_state) = viewer_state {
+                write_model_viewer_state(tx, "issue_anchor", issue_id, viewer_state)?;
+            }
+        }
+    }
+    Ok(())
+}
+
 // ─── duc_global_state ────────────────────────────────────────────────────────
 
 fn write_global_state(tx: &Transaction, gs: &Option<DucGlobalState>) -> SerializeResult<()> {
     let Some(gs) = gs else { return Ok(()) };
     tx.execute(
         "INSERT OR REPLACE INTO duc_global_state
-            (id, name, view_background_color, main_scope, scope_exponent_threshold)
-         VALUES (1, ?1, ?2, ?3, ?4)",
+            (id, view_background_color, main_scope, scope_exponent_threshold)
+         VALUES (1, ?1, ?2, ?3)",
         params![
-            gs.name,
             gs.view_background_color,
             gs.main_scope,
             gs.scope_exponent_threshold,
@@ -192,11 +510,19 @@ fn write_local_state(tx: &Transaction, ls: &Option<DucLocalState>) -> SerializeR
             ls.current_item_font_size,
             ls.current_item_text_align as i32,
             ls.current_item_roundness,
-            ls.current_item_start_line_head.as_ref().and_then(|h| h.head_type.map(|t| t as i32)),
-            ls.current_item_start_line_head.as_ref().and_then(|h| h.block_id.clone()),
+            ls.current_item_start_line_head
+                .as_ref()
+                .and_then(|h| h.head_type.map(|t| t as i32)),
+            ls.current_item_start_line_head
+                .as_ref()
+                .and_then(|h| h.block_id.clone()),
             ls.current_item_start_line_head.as_ref().map(|h| h.size),
-            ls.current_item_end_line_head.as_ref().and_then(|h| h.head_type.map(|t| t as i32)),
-            ls.current_item_end_line_head.as_ref().and_then(|h| h.block_id.clone()),
+            ls.current_item_end_line_head
+                .as_ref()
+                .and_then(|h| h.head_type.map(|t| t as i32)),
+            ls.current_item_end_line_head
+                .as_ref()
+                .and_then(|h| h.block_id.clone()),
             ls.current_item_end_line_head.as_ref().map(|h| h.size),
             ls.pen_mode as i32,
             ls.view_mode_enabled as i32,
@@ -220,10 +546,13 @@ fn write_local_state(tx: &Transaction, ls: &Option<DucLocalState>) -> SerializeR
 
 // ─── dictionary ──────────────────────────────────────────────────────────────
 
-fn write_dictionary(tx: &Transaction, dict: &Option<std::collections::HashMap<String, String>>) -> SerializeResult<()> {
+fn write_dictionary(
+    tx: &Transaction,
+    dict: &Option<std::collections::HashMap<String, String>>,
+) -> SerializeResult<()> {
     let Some(dict) = dict else { return Ok(()) };
     let mut stmt = tx.prepare_cached(
-        "INSERT OR REPLACE INTO document_dictionary (key, value) VALUES (?1, ?2)"
+        "INSERT OR REPLACE INTO document_dictionary (key, value) VALUES (?1, ?2)",
     )?;
     for (key, value) in dict {
         stmt.execute(params![key, value])?;
@@ -297,19 +626,32 @@ fn write_blocks(tx: &Transaction, state: &ExportedDataState) -> SerializeResult<
 
     for inst in &state.block_instances {
         let (dup_rows, dup_cols, dup_row_sp, dup_col_sp) = match &inst.duplication_array {
-            Some(da) => (Some(da.rows), Some(da.cols), Some(da.row_spacing), Some(da.col_spacing)),
+            Some(da) => (
+                Some(da.rows),
+                Some(da.cols),
+                Some(da.row_spacing),
+                Some(da.col_spacing),
+            ),
             None => (None, None, None, None),
         };
         tx.execute(
             "INSERT OR REPLACE INTO block_instances
                 (id, block_id, version, dup_rows, dup_cols, dup_row_spacing, dup_col_spacing)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-            params![inst.id, inst.block_id, inst.version, dup_rows, dup_cols, dup_row_sp, dup_col_sp],
+            params![
+                inst.id,
+                inst.block_id,
+                inst.version,
+                dup_rows,
+                dup_cols,
+                dup_row_sp,
+                dup_col_sp
+            ],
         )?;
         if let Some(ref overrides) = inst.element_overrides {
             let mut stmt = tx.prepare_cached(
                 "INSERT OR REPLACE INTO block_instance_overrides (instance_id, key, value)
-                 VALUES (?1, ?2, ?3)"
+                 VALUES (?1, ?2, ?3)",
             )?;
             for ov in overrides {
                 stmt.execute(params![inst.id, ov.key, ov.value])?;
@@ -460,9 +802,10 @@ fn write_element_wrapper(tx: &Transaction, wrapper: &ElementWrapper) -> Serializ
         }
         DucElementEnum::DucTableElement(e) => {
             write_base_element(tx, "table", &e.base)?;
+            write_document_grid_config(tx, &e.base.id, e.file_id.as_deref(), &e.grid_config)?;
             tx.execute(
-                "INSERT INTO element_table (element_id, file_id) VALUES (?1, ?2)",
-                params![e.base.id, e.file_id],
+                "INSERT INTO element_table (element_id) VALUES (?1)",
+                params![e.base.id],
             )?;
         }
         DucElementEnum::DucModelElement(e) => {
@@ -475,7 +818,11 @@ fn write_element_wrapper(tx: &Transaction, wrapper: &ElementWrapper) -> Serializ
 
 // ─── base element ────────────────────────────────────────────────────────────
 
-fn write_base_element(tx: &Transaction, element_type: &str, base: &DucElementBase) -> SerializeResult<()> {
+fn write_base_element(
+    tx: &Transaction,
+    element_type: &str,
+    base: &DucElementBase,
+) -> SerializeResult<()> {
     tx.execute(
         "INSERT INTO elements (
             id, element_type,
@@ -497,14 +844,34 @@ fn write_base_element(tx: &Transaction, element_type: &str, base: &DucElementBas
             ?25, ?26, ?27, ?28
         )",
         params![
-            base.id, element_type,
-            base.x, base.y, base.width, base.height, base.angle,
-            base.scope, base.label, base.description, base.is_visible as i32,
-            base.seed, base.version, base.version_nonce, base.updated, base.index,
-            base.is_plot as i32, base.is_deleted as i32,
-            base.styles.roundness, base.styles.blending.map(|b| b as i32), base.styles.opacity,
-            base.instance_id, base.layer_id, base.frame_id,
-            base.z_index, base.link, base.locked as i32, base.custom_data,
+            base.id,
+            element_type,
+            base.x,
+            base.y,
+            base.width,
+            base.height,
+            base.angle,
+            base.scope,
+            base.label,
+            base.description,
+            base.is_visible as i32,
+            base.seed,
+            base.version,
+            base.version_nonce,
+            base.updated,
+            base.index,
+            base.is_plot as i32,
+            base.is_deleted as i32,
+            base.styles.roundness,
+            base.styles.blending.map(|b| b as i32),
+            base.styles.opacity,
+            base.instance_id,
+            base.layer_id,
+            base.frame_id,
+            base.z_index,
+            base.link,
+            base.locked as i32,
+            base.custom_data,
         ],
     )?;
 
@@ -678,17 +1045,25 @@ fn write_freedraw_element(tx: &Transaction, e: &DucFreeDrawElement) -> Serialize
             e.simulate_pressure as i32,
             e.last_committed_point.as_ref().map(|p| p.x),
             e.last_committed_point.as_ref().map(|p| p.y),
-            e.last_committed_point.as_ref().and_then(|p| p.mirroring.map(|m| m as i32)),
+            e.last_committed_point
+                .as_ref()
+                .and_then(|p| p.mirroring.map(|m| m as i32)),
             e.svg_path,
         ],
     )?;
 
     let mut stmt = tx.prepare_cached(
         "INSERT INTO freedraw_element_points (element_id, sort_order, x, y, mirroring)
-         VALUES (?1, ?2, ?3, ?4, ?5)"
+         VALUES (?1, ?2, ?3, ?4, ?5)",
     )?;
     for (i, pt) in e.points.iter().enumerate() {
-        stmt.execute(params![e.base.id, i as i32, pt.x, pt.y, pt.mirroring.map(|m| m as i32)])?;
+        stmt.execute(params![
+            e.base.id,
+            i as i32,
+            pt.x,
+            pt.y,
+            pt.mirroring.map(|m| m as i32)
+        ])?;
     }
 
     Ok(())
@@ -728,27 +1103,57 @@ fn write_linear_element(
             id,
             lb.last_committed_point.as_ref().map(|p| p.x),
             lb.last_committed_point.as_ref().map(|p| p.y),
-            lb.last_committed_point.as_ref().and_then(|p| p.mirroring.map(|m| m as i32)),
+            lb.last_committed_point
+                .as_ref()
+                .and_then(|p| p.mirroring.map(|m| m as i32)),
             lb.start_binding.as_ref().map(|b| b.element_id.clone()),
             lb.start_binding.as_ref().map(|b| b.focus),
             lb.start_binding.as_ref().map(|b| b.gap),
-            lb.start_binding.as_ref().and_then(|b| b.fixed_point.as_ref().map(|fp| fp.x)),
-            lb.start_binding.as_ref().and_then(|b| b.fixed_point.as_ref().map(|fp| fp.y)),
-            lb.start_binding.as_ref().and_then(|b| b.point.as_ref().map(|p| p.index)),
-            lb.start_binding.as_ref().and_then(|b| b.point.as_ref().map(|p| p.offset)),
-            lb.start_binding.as_ref().and_then(|b| b.head.as_ref().and_then(|h| h.head_type.map(|t| t as i32))),
-            lb.start_binding.as_ref().and_then(|b| b.head.as_ref().and_then(|h| h.block_id.clone())),
-            lb.start_binding.as_ref().and_then(|b| b.head.as_ref().map(|h| h.size)),
+            lb.start_binding
+                .as_ref()
+                .and_then(|b| b.fixed_point.as_ref().map(|fp| fp.x)),
+            lb.start_binding
+                .as_ref()
+                .and_then(|b| b.fixed_point.as_ref().map(|fp| fp.y)),
+            lb.start_binding
+                .as_ref()
+                .and_then(|b| b.point.as_ref().map(|p| p.index)),
+            lb.start_binding
+                .as_ref()
+                .and_then(|b| b.point.as_ref().map(|p| p.offset)),
+            lb.start_binding
+                .as_ref()
+                .and_then(|b| b.head.as_ref().and_then(|h| h.head_type.map(|t| t as i32))),
+            lb.start_binding
+                .as_ref()
+                .and_then(|b| b.head.as_ref().and_then(|h| h.block_id.clone())),
+            lb.start_binding
+                .as_ref()
+                .and_then(|b| b.head.as_ref().map(|h| h.size)),
             lb.end_binding.as_ref().map(|b| b.element_id.clone()),
             lb.end_binding.as_ref().map(|b| b.focus),
             lb.end_binding.as_ref().map(|b| b.gap),
-            lb.end_binding.as_ref().and_then(|b| b.fixed_point.as_ref().map(|fp| fp.x)),
-            lb.end_binding.as_ref().and_then(|b| b.fixed_point.as_ref().map(|fp| fp.y)),
-            lb.end_binding.as_ref().and_then(|b| b.point.as_ref().map(|p| p.index)),
-            lb.end_binding.as_ref().and_then(|b| b.point.as_ref().map(|p| p.offset)),
-            lb.end_binding.as_ref().and_then(|b| b.head.as_ref().and_then(|h| h.head_type.map(|t| t as i32))),
-            lb.end_binding.as_ref().and_then(|b| b.head.as_ref().and_then(|h| h.block_id.clone())),
-            lb.end_binding.as_ref().and_then(|b| b.head.as_ref().map(|h| h.size)),
+            lb.end_binding
+                .as_ref()
+                .and_then(|b| b.fixed_point.as_ref().map(|fp| fp.x)),
+            lb.end_binding
+                .as_ref()
+                .and_then(|b| b.fixed_point.as_ref().map(|fp| fp.y)),
+            lb.end_binding
+                .as_ref()
+                .and_then(|b| b.point.as_ref().map(|p| p.index)),
+            lb.end_binding
+                .as_ref()
+                .and_then(|b| b.point.as_ref().map(|p| p.offset)),
+            lb.end_binding
+                .as_ref()
+                .and_then(|b| b.head.as_ref().and_then(|h| h.head_type.map(|t| t as i32))),
+            lb.end_binding
+                .as_ref()
+                .and_then(|b| b.head.as_ref().and_then(|h| h.block_id.clone())),
+            lb.end_binding
+                .as_ref()
+                .and_then(|b| b.head.as_ref().map(|h| h.size)),
             wipeout_below as i32,
             elbowed as i32,
         ],
@@ -757,10 +1162,16 @@ fn write_linear_element(
     {
         let mut stmt = tx.prepare_cached(
             "INSERT INTO linear_element_points (element_id, sort_order, x, y, mirroring)
-             VALUES (?1, ?2, ?3, ?4, ?5)"
+             VALUES (?1, ?2, ?3, ?4, ?5)",
         )?;
         for (i, pt) in lb.points.iter().enumerate() {
-            stmt.execute(params![id, i as i32, pt.x, pt.y, pt.mirroring.map(|m| m as i32)])?;
+            stmt.execute(params![
+                id,
+                i as i32,
+                pt.x,
+                pt.y,
+                pt.mirroring.map(|m| m as i32)
+            ])?;
         }
     }
 
@@ -792,7 +1203,7 @@ fn write_linear_element(
 
         let mut idx_stmt = tx.prepare_cached(
             "INSERT INTO linear_path_override_indices (path_override_id, sort_order, line_index)
-             VALUES (?1, ?2, ?3)"
+             VALUES (?1, ?2, ?3)",
         )?;
         for (j, &line_idx) in path.line_indices.iter().enumerate() {
             idx_stmt.execute(params![path_id, j as i32, line_idx])?;
@@ -838,15 +1249,19 @@ fn write_model_element(tx: &Transaction, e: &DucModelElement) -> SerializeResult
     write_element_file_ids(tx, &e.base.id, &e.file_ids)?;
 
     if let Some(ref vs) = e.viewer_state {
-        write_model_viewer_state(tx, &e.base.id, vs)?;
+        write_model_viewer_state(tx, "element", &e.base.id, vs)?;
     }
 
     Ok(())
 }
 
-fn write_element_file_ids(tx: &Transaction, element_id: &str, file_ids: &[String]) -> SerializeResult<()> {
+fn write_element_file_ids(
+    tx: &Transaction,
+    element_id: &str,
+    file_ids: &[String],
+) -> SerializeResult<()> {
     let mut stmt = tx.prepare_cached(
-        "INSERT INTO model_element_files (element_id, file_id, sort_order) VALUES (?1, ?2, ?3)"
+        "INSERT OR IGNORE INTO model_element_files (element_id, file_id, sort_order) VALUES (?1, ?2, ?3)"
     )?;
     for (i, fid) in file_ids.iter().enumerate() {
         stmt.execute(params![element_id, fid, i as i32])?;
@@ -854,9 +1269,13 @@ fn write_element_file_ids(tx: &Transaction, element_id: &str, file_ids: &[String
     Ok(())
 }
 
-fn write_doc_referenced_file_ids(tx: &Transaction, element_id: &str, file_ids: &[String]) -> SerializeResult<()> {
+fn write_doc_referenced_file_ids(
+    tx: &Transaction,
+    element_id: &str,
+    file_ids: &[String],
+) -> SerializeResult<()> {
     let mut stmt = tx.prepare_cached(
-        "INSERT INTO doc_element_referenced_files (element_id, file_id, sort_order) VALUES (?1, ?2, ?3)"
+        "INSERT OR IGNORE INTO doc_element_referenced_files (element_id, file_id, sort_order) VALUES (?1, ?2, ?3)"
     )?;
     for (i, fid) in file_ids.iter().enumerate() {
         stmt.execute(params![element_id, fid, i as i32])?;
@@ -864,7 +1283,12 @@ fn write_doc_referenced_file_ids(tx: &Transaction, element_id: &str, file_ids: &
     Ok(())
 }
 
-fn write_model_viewer_state(tx: &Transaction, element_id: &str, vs: &Viewer3DState) -> SerializeResult<()> {
+fn write_model_viewer_state(
+    tx: &Transaction,
+    owner_type: &str,
+    owner_id: &str,
+    vs: &Viewer3DState,
+) -> SerializeResult<()> {
     let cam = &vs.camera;
     let disp = &vs.display;
     let mat = &vs.material;
@@ -879,7 +1303,7 @@ fn write_model_viewer_state(tx: &Transaction, element_id: &str, vs: &Viewer3DSta
 
     tx.execute(
         "INSERT INTO model_viewer_state (
-            element_id,
+            owner_type, owner_id,
             camera_control, camera_ortho, camera_up,
             camera_position_x, camera_position_y, camera_position_z,
             camera_quaternion_x, camera_quaternion_y, camera_quaternion_z, camera_quaternion_w,
@@ -898,53 +1322,87 @@ fn write_model_viewer_state(tx: &Transaction, element_id: &str, vs: &Viewer3DSta
             zebra_active, zebra_stripe_count, zebra_stripe_direction,
             zebra_color_scheme, zebra_opacity, zebra_mapping_mode
         ) VALUES (
-            ?1,
-            ?2, ?3, ?4,
-            ?5, ?6, ?7,
-            ?8, ?9, ?10, ?11,
-            ?12, ?13, ?14,
-            ?15, ?16, ?17, ?18, ?19,
-            ?20, ?21, ?22,
-            ?23, ?24, ?25, ?26,
-            ?27, ?28,
-            ?29, ?30, ?31,
-            ?32, ?33, ?34,
-            ?35, ?36, ?37, ?38, ?39,
-            ?40, ?41, ?42, ?43, ?44,
-            ?45, ?46, ?47, ?48, ?49,
-            ?50, ?51, ?52,
-            ?53, ?54,
-            ?55, ?56, ?57,
-            ?58, ?59, ?60
+            ?, ?,
+            ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?, ?,
+            ?, ?,
+            ?, ?, ?,
+            ?, ?, ?,
+            ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?,
+            ?, ?, ?,
+            ?, ?,
+            ?, ?, ?,
+            ?, ?, ?
         )",
         params![
-            element_id,
-            cam.control, cam.ortho as i32, cam.up,
-            cam.position[0], cam.position[1], cam.position[2],
-            cam.quaternion[0], cam.quaternion[1], cam.quaternion[2], cam.quaternion[3],
-            cam.target[0], cam.target[1], cam.target[2],
-            cam.zoom, cam.pan_speed, cam.rotate_speed, cam.zoom_speed, cam.holroyd as i32,
-            disp.wireframe as i32, disp.transparent as i32, disp.black_edges as i32,
-            grid_uniform, grid_xy, grid_xz, grid_yz,
-            disp.axes_visible as i32, disp.axes_at_origin as i32,
-            mat.metalness, mat.roughness, mat.default_opacity,
-            mat.edge_color, mat.ambient_intensity, mat.direct_intensity,
-            clip.x.enabled as i32, clip.x.value,
+            owner_type,
+            owner_id,
+            cam.control,
+            cam.ortho as i32,
+            cam.up,
+            cam.position[0],
+            cam.position[1],
+            cam.position[2],
+            cam.quaternion[0],
+            cam.quaternion[1],
+            cam.quaternion[2],
+            cam.quaternion[3],
+            cam.target[0],
+            cam.target[1],
+            cam.target[2],
+            cam.zoom,
+            cam.pan_speed,
+            cam.rotate_speed,
+            cam.zoom_speed,
+            cam.holroyd as i32,
+            disp.wireframe as i32,
+            disp.transparent as i32,
+            disp.black_edges as i32,
+            grid_uniform,
+            grid_xy,
+            grid_xz,
+            grid_yz,
+            disp.axes_visible as i32,
+            disp.axes_at_origin as i32,
+            mat.metalness,
+            mat.roughness,
+            mat.default_opacity,
+            mat.edge_color,
+            mat.ambient_intensity,
+            mat.direct_intensity,
+            clip.x.enabled as i32,
+            clip.x.value,
             clip.x.normal.as_ref().map(|n| n[0]),
             clip.x.normal.as_ref().map(|n| n[1]),
             clip.x.normal.as_ref().map(|n| n[2]),
-            clip.y.enabled as i32, clip.y.value,
+            clip.y.enabled as i32,
+            clip.y.value,
             clip.y.normal.as_ref().map(|n| n[0]),
             clip.y.normal.as_ref().map(|n| n[1]),
             clip.y.normal.as_ref().map(|n| n[2]),
-            clip.z.enabled as i32, clip.z.value,
+            clip.z.enabled as i32,
+            clip.z.value,
             clip.z.normal.as_ref().map(|n| n[0]),
             clip.z.normal.as_ref().map(|n| n[1]),
             clip.z.normal.as_ref().map(|n| n[2]),
-            clip.intersection as i32, clip.show_planes as i32, clip.object_color_caps as i32,
-            expl.active as i32, expl.value,
-            zeb.active as i32, zeb.stripe_count, zeb.stripe_direction,
-            zeb.color_scheme, zeb.opacity, zeb.mapping_mode,
+            clip.intersection as i32,
+            clip.show_planes as i32,
+            clip.object_color_caps as i32,
+            expl.active as i32,
+            expl.value,
+            zeb.active as i32,
+            zeb.stripe_count,
+            zeb.stripe_direction,
+            zeb.color_scheme,
+            zeb.opacity,
+            zeb.mapping_mode,
         ],
     )?;
     Ok(())
@@ -976,8 +1434,13 @@ fn write_background(
             ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24
         )",
         params![
-            owner_type, owner_id, sort_order,
-            c.preference.map(|p| p as i32), c.src, c.visible as i32, c.opacity,
+            owner_type,
+            owner_id,
+            sort_order,
+            c.preference.map(|p| p as i32),
+            c.src,
+            c.visible as i32,
+            c.opacity,
             c.tiling.as_ref().map(|t| t.size_in_percent),
             c.tiling.as_ref().map(|t| t.angle),
             c.tiling.as_ref().and_then(|t| t.spacing),
@@ -989,10 +1452,17 @@ fn write_background(
             c.hatch.as_ref().map(|h| h.pattern_angle),
             c.hatch.as_ref().map(|h| h.pattern_origin.x),
             c.hatch.as_ref().map(|h| h.pattern_origin.y),
-            c.hatch.as_ref().and_then(|h| h.pattern_origin.mirroring.map(|m| m as i32)),
+            c.hatch
+                .as_ref()
+                .and_then(|h| h.pattern_origin.mirroring.map(|m| m as i32)),
             c.hatch.as_ref().map(|h| h.pattern_double as i32),
-            c.hatch.as_ref().and_then(|h| h.custom_pattern.as_ref().map(|cp| cp.name.clone())),
-            c.hatch.as_ref().and_then(|h| h.custom_pattern.as_ref().and_then(|cp| cp.description.clone())),
+            c.hatch
+                .as_ref()
+                .and_then(|h| h.custom_pattern.as_ref().map(|cp| cp.name.clone())),
+            c.hatch.as_ref().and_then(|h| h
+                .custom_pattern
+                .as_ref()
+                .and_then(|cp| cp.description.clone())),
             c.image_filter.as_ref().map(|f| f.brightness),
             c.image_filter.as_ref().map(|f| f.contrast),
         ],
@@ -1000,9 +1470,7 @@ fn write_background(
 
     if let Some(ref hatch) = c.hatch {
         if let Some(ref cp) = hatch.custom_pattern {
-            let bg_id: i64 = tx.query_row(
-                "SELECT last_insert_rowid()", [], |row| row.get(0),
-            )?;
+            let bg_id: i64 = tx.query_row("SELECT last_insert_rowid()", [], |row| row.get(0))?;
             write_hatch_pattern_lines(tx, "background", bg_id, &cp.lines)?;
         }
     }
@@ -1018,11 +1486,15 @@ fn write_stroke(
     st: &ElementStroke,
 ) -> SerializeResult<()> {
     let c = &st.content;
-    let dash_blob: Option<Vec<u8>> = st.style.dash.as_ref().map(|d| {
-        d.iter().flat_map(|v| v.to_le_bytes()).collect()
-    });
+    let dash_blob: Option<Vec<u8>> = st
+        .style
+        .dash
+        .as_ref()
+        .map(|d| d.iter().flat_map(|v| v.to_le_bytes()).collect());
     let sides_blob: Option<Vec<u8>> = st.stroke_sides.as_ref().and_then(|s| {
-        s.values.as_ref().map(|v| v.iter().flat_map(|val| val.to_le_bytes()).collect())
+        s.values
+            .as_ref()
+            .map(|v| v.iter().flat_map(|val| val.to_le_bytes()).collect())
     });
 
     tx.execute(
@@ -1085,9 +1557,7 @@ fn write_stroke(
 
     if let Some(ref hatch) = c.hatch {
         if let Some(ref cp) = hatch.custom_pattern {
-            let st_id: i64 = tx.query_row(
-                "SELECT last_insert_rowid()", [], |row| row.get(0),
-            )?;
+            let st_id: i64 = tx.query_row("SELECT last_insert_rowid()", [], |row| row.get(0))?;
             write_hatch_pattern_lines(tx, "stroke", st_id, &cp.lines)?;
         }
     }
@@ -1106,7 +1576,7 @@ fn write_hatch_pattern_lines(
             owner_type, owner_id, sort_order,
             angle, origin_x, origin_y, origin_mirroring,
             offset_x, offset_y, dash_pattern
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
     )?;
     for (i, line) in lines.iter().enumerate() {
         let offset_x = line.offset.first().copied().unwrap_or(0.0);
@@ -1114,7 +1584,12 @@ fn write_hatch_pattern_lines(
         let dash_blob: Option<Vec<u8>> = if line.dash_pattern.is_empty() {
             None
         } else {
-            Some(line.dash_pattern.iter().flat_map(|v| v.to_le_bytes()).collect())
+            Some(
+                line.dash_pattern
+                    .iter()
+                    .flat_map(|v| v.to_le_bytes())
+                    .collect(),
+            )
         };
         stmt.execute(params![
             owner_type,
@@ -1138,20 +1613,17 @@ fn write_external_files(
     tx: &Transaction,
     files: &Option<std::collections::HashMap<String, DucExternalFile>>,
     files_data: &Option<std::collections::HashMap<String, serde_bytes::ByteBuf>>,
+    chunk_size: usize,
 ) -> SerializeResult<()> {
     let Some(files) = files else { return Ok(()) };
     let mut file_stmt = tx.prepare_cached(
         "INSERT OR REPLACE INTO external_files (id, active_revision_id, updated, version)
-         VALUES (?1, ?2, ?3, ?4)"
+         VALUES (?1, ?2, ?3, ?4)",
     )?;
     let mut rev_stmt = tx.prepare_cached(
         "INSERT OR REPLACE INTO external_file_revisions
             (id, file_id, size_bytes, checksum, source_name, mime_type, message, created, last_retrieved)
          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"
-    )?;
-    let mut data_stmt = tx.prepare_cached(
-        "INSERT OR REPLACE INTO external_file_revision_data (revision_id, data)
-         VALUES (?1, ?2)"
     )?;
     for (_key, file) in files {
         file_stmt.execute(params![
@@ -1174,10 +1646,9 @@ fn write_external_files(
             ])?;
         }
     }
-    // Write data blobs from the separate filesData map
     if let Some(data_map) = files_data {
         for (rev_id, blob) in data_map {
-            data_stmt.execute(params![rev_id, blob.as_ref()])?;
+            external_file_chunks::write_blob_chunks(tx, rev_id, blob.as_ref(), chunk_size)?;
         }
     }
     Ok(())
@@ -1185,18 +1656,23 @@ fn write_external_files(
 
 // ─── version_graph ───────────────────────────────────────────────────────────
 
-fn write_version_graph(tx: &Transaction, vg: &Option<VersionGraph>) -> SerializeResult<()> {
+fn write_version_graph(
+    tx: &Transaction,
+    vg: &Option<VersionGraph>,
+    chunk_size: usize,
+) -> SerializeResult<()> {
     let Some(vg) = vg else { return Ok(()) };
 
     tx.execute(
-        "UPDATE version_graph SET
-            current_version = ?1,
-            current_schema_version = ?2,
-            user_checkpoint_version_id = ?3,
-            latest_version_id = ?4,
-            chain_count = ?5,
-            total_size = ?6
-         WHERE id = 1",
+        "INSERT OR REPLACE INTO version_graph (
+            id,
+            current_version,
+            current_schema_version,
+            user_checkpoint_version_id,
+            latest_version_id,
+            chain_count,
+            total_size
+         ) VALUES (1, ?1, ?2, ?3, ?4, ?5, ?6)",
         params![
             vg.metadata.current_version,
             vg.metadata.current_schema_version,
@@ -1211,7 +1687,7 @@ fn write_version_graph(tx: &Transaction, vg: &Option<VersionGraph>) -> Serialize
         let mut stmt = tx.prepare_cached(
             "INSERT OR REPLACE INTO version_chains
                 (id, schema_version, start_version, end_version, migration_id, root_checkpoint_id)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6)"
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
         )?;
         for chain in &vg.chains {
             let migration_id: Option<i64> = if let Some(ref mig) = chain.migration {
@@ -1250,11 +1726,13 @@ fn write_version_graph(tx: &Transaction, vg: &Option<VersionGraph>) -> Serialize
         let mut cp_stmt = tx.prepare_cached(
             "INSERT OR REPLACE INTO checkpoints
                 (id, parent_id, chain_id, version_number, schema_version, timestamp,
-                 description, is_manual_save, is_schema_boundary, user_id, data, size_bytes)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)"
+                 description, is_manual_save, is_schema_boundary, user_id, size_bytes)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
         )?;
         for cp in &vg.checkpoints {
-            let chain_id = vg.chains.iter()
+            let chain_id = vg
+                .chains
+                .iter()
                 .find(|c| c.schema_version == cp.schema_version)
                 .map(|c| c.id.as_str())
                 .unwrap_or("");
@@ -1269,9 +1747,14 @@ fn write_version_graph(tx: &Transaction, vg: &Option<VersionGraph>) -> Serialize
                 cp.base.is_manual_save as i32,
                 cp.is_schema_boundary as i32,
                 cp.base.user_id,
-                cp.data,
                 cp.size_bytes,
             ])?;
+            external_file_chunks::write_checkpoint_data_chunks(
+                &tx,
+                &cp.base.id,
+                &cp.data,
+                chunk_size,
+            )?;
         }
     }
 
@@ -1279,11 +1762,13 @@ fn write_version_graph(tx: &Transaction, vg: &Option<VersionGraph>) -> Serialize
         let mut d_stmt = tx.prepare_cached(
             "INSERT OR REPLACE INTO deltas
                 (id, parent_id, base_checkpoint_id, chain_id, delta_sequence, version_number,
-                 schema_version, timestamp, description, is_manual_save, user_id, changeset, size_bytes)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)"
+                 schema_version, timestamp, description, is_manual_save, user_id, size_bytes)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
         )?;
         for (i, delta) in vg.deltas.iter().enumerate() {
-            let chain_id = vg.chains.iter()
+            let chain_id = vg
+                .chains
+                .iter()
                 .find(|c| c.schema_version == delta.schema_version)
                 .map(|c| c.id.as_str())
                 .unwrap_or("");
@@ -1299,11 +1784,109 @@ fn write_version_graph(tx: &Transaction, vg: &Option<VersionGraph>) -> Serialize
                 delta.base.description,
                 delta.base.is_manual_save as i32,
                 delta.base.user_id,
-                delta.payload,
                 delta.size_bytes,
             ])?;
+            external_file_chunks::write_delta_changeset_chunks(
+                &tx,
+                &delta.base.id,
+                &delta.payload,
+                chunk_size,
+            )?;
         }
     }
 
     Ok(())
+}
+
+// ── Byte-buffer convenience function ───────────────────────────────────────
+//
+// Serializes an ExportedDataState into gzip-compressed .duc bytes.
+// This is the byte-buffer equivalent of DucSession::finish_to_writer.
+
+/// Serialize an [`ExportedDataState`] into `.duc` bytes (gzip-compressed SQLite).
+///
+/// Creates an in-memory database, writes the document state and external files,
+/// checkpoints the WAL, reads the raw SQLite bytes, and gzip-compresses them.
+///
+/// This is the backward-compatible API for consumers that expect a `Vec<u8>`
+/// result. For streaming (unlimited file size), use [`crate::session::DucSession`]
+/// or [`crate::api::DucDocument`] instead.
+pub fn serialize_duc_to_bytes(state: &ExportedDataState) -> SerializeResult<Vec<u8>> {
+    use flate2::write::GzEncoder;
+    use flate2::Compression;
+    use std::io::{Cursor, Write};
+
+    // Open an in-memory database with the full schema
+    let duc_conn = crate::db::open_memory_compact()?;
+    let mut conn = duc_conn.into_inner();
+
+    // Write the document state
+    write_state_to_connection(&mut conn, state, 8 * 1024 * 1024)?;
+
+    // Write external file chunks
+    if let Some(files) = &state.external_files {
+        for (file_id, file) in files {
+            let revision_id = &file.active_revision_id;
+            if let Some(data) = state
+                .external_files_data
+                .as_ref()
+                .and_then(|d| d.get(revision_id))
+            {
+                let tx = conn.transaction()?;
+                let mut reader = Cursor::new(data.as_slice());
+                external_file_chunks::write_reader_chunks(
+                    &tx,
+                    revision_id,
+                    &mut reader,
+                    8 * 1024 * 1024,
+                    Some(data.len() as i64),
+                )?;
+                tx.commit()?;
+            }
+            let _ = file_id;
+        }
+    }
+
+    // Checkpoint WAL into main database
+    conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")
+        .map_err(SerializeError::Sqlite)?;
+
+    // Read the raw SQLite bytes from the in-memory database
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    {
+        // On WASM, use sqlite3_serialize via rusqlite's serialize feature
+        use rusqlite::MAIN_DB;
+        let raw_sqlite: Vec<u8> = conn
+            .serialize(MAIN_DB)
+            .map_err(|e| SerializeError::Io(format!("serialize: {e}")))?
+            .to_vec();
+
+        // Gzip-compress
+        let mut compressed = Vec::new();
+        {
+            let mut encoder = GzEncoder::new(&mut compressed, Compression::default());
+            encoder.write_all(&raw_sqlite)?;
+            encoder.finish()?;
+        }
+        Ok(compressed)
+    }
+
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    {
+        // On native/WASI, use sqlite3_serialize to get raw bytes
+        use rusqlite::MAIN_DB;
+        let raw_sqlite: Vec<u8> = conn
+            .serialize(MAIN_DB)
+            .map_err(|e| SerializeError::Io(format!("serialize: {e}")))?
+            .to_vec();
+
+        // Gzip-compress
+        let mut compressed = Vec::new();
+        {
+            let mut encoder = GzEncoder::new(&mut compressed, Compression::default());
+            encoder.write_all(&raw_sqlite)?;
+            encoder.finish()?;
+        }
+        Ok(compressed)
+    }
 }

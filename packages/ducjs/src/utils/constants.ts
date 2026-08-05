@@ -2,7 +2,7 @@ import { ELEMENT_CONTENT_PREFERENCE, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFE
 import { MAX_ZOOM, MIN_ZOOM, NEUTRAL_SCOPE } from "../technical/scopes";
 import { RawValue, ScopedValue } from "../types";
 import { DucElement, DucEllipseElement, DucFreeDrawElement, DucTextElement, ElementBackground, ElementStroke, FontFamilyValues } from "../types/elements";
-import { Percentage, Radian } from "../types/geometryTypes";
+import { Percentage, Radian } from "../types/geometry.types";
 
 
 export const COLOR_PALETTE = {

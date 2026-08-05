@@ -1,7 +1,7 @@
 [project]
 name = "ducpy"
 dynamic = ["version"]
-description = "The library for the Duc 2D CAD file format"
+description = "Python library for the .duc project-state format for physical-engineering work before execution"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -67,6 +67,8 @@ dev = [
     "typst>=0.14.9",
     "build123d>=0.10.0",
     "ocp-vscode>=3.4.0",
+    "ifcopenshell>=0.8.5",
+    "sphinx-llm>=0.4.1",
 ]
 
 

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from ducpy.enums import TEXT_ALIGN
 
@@ -10,7 +10,8 @@ from ducpy.classes.ElementsClass import (DucBlock, DucBlockCollection,
                                          DucBlockInstance, DucGroup, DucHead,
                                          DucLayer, DucRegion,
                                          ElementBackground, ElementStroke,
-                                         ElementWrapper, GeometricPoint)
+                                         ElementWrapper, GeometricPoint,
+                                         Viewer3DState)
 
 
 @dataclass
@@ -19,11 +20,121 @@ class DictionaryEntry:
     value: str
 
 @dataclass
+class Actor:
+    identifier: str
+    name: Optional[str] = None
+
+
+@dataclass
+class DucCharterRequirement:
+    id: str
+    statement: str
+    must: bool
+    acceptance_criteria: Optional[List[str]] = None
+
+
+@dataclass
+class DucCharterConstraint:
+    id: str
+    statement: str
+    hard: bool
+
+
+@dataclass
+class DucCharterDecision:
+    id: str
+    decision: str
+    rationale: str
+    accepted: bool
+    decided_at: int
+    issue_ids: Optional[List[str]] = None
+
+
+@dataclass
+class DucCharterStakeholder:
+    actor: Actor
+    role: str
+
+
+@dataclass
+class DucCharter:
+    title: str
+    objective: str
+    phase: str
+    requirements: List[DucCharterRequirement]
+    constraints: List[DucCharterConstraint]
+    decisions: List[DucCharterDecision]
+    updated_at: int
+    description: Optional[str] = None
+    closed_reason: Optional[str] = None
+    stakeholders: Optional[List[DucCharterStakeholder]] = None
+
+
+@dataclass
+class DucIssueMessage:
+    id: str
+    author: Actor
+    content: str
+    created_at: int
+    reply_to_id: Optional[str] = None
+    reactions: Optional[Dict[str, List[str]]] = None
+    edited_at: Optional[int] = None
+    deleted_at: Optional[int] = None
+
+
+@dataclass
+class DucIssueCanvasAnchor:
+    x: float
+    y: float
+    scope: Optional[str] = None
+    type: str = "canvas"
+
+
+@dataclass
+class DucIssueElementAnchor:
+    element_id: str
+    anchor_x: Optional[float] = None
+    anchor_y: Optional[float] = None
+    type: str = "element"
+
+
+@dataclass
+class DucIssueModelAnchor:
+    element_id: str
+    point: List[float]
+    normal: Optional[List[float]] = None
+    viewer_state: Optional[Viewer3DState] = None
+    topology_id: Optional[str] = None
+    type: str = "model"
+
+
+DucIssueAnchor = Union[DucIssueCanvasAnchor, DucIssueElementAnchor, DucIssueModelAnchor]
+
+
+@dataclass
+class DucIssue:
+    id: str
+    local_id: int
+    title: str
+    status: str
+    messages: List[DucIssueMessage]
+    author_id: str
+    created_at: int
+    updated_at: int
+    dismissed_reason: Optional[str] = None
+    due_date: Optional[int] = None
+    anchor: Optional[DucIssueAnchor] = None
+    assignee_ids: Optional[List[str]] = None
+    follower_ids: Optional[List[str]] = None
+    deleted_at: Optional[int] = None
+
+
+@dataclass
 class DucGlobalState:
     view_background_color: str
     main_scope: str
     scope_exponent_threshold: int
-    name: Optional[str]
+
 
 @dataclass
 class DucLocalState:
@@ -152,5 +263,7 @@ class ExportedDataState:
     duc_global_state: Optional[DucGlobalState]
     version_graph: Optional[VersionGraph]
     files: Optional[Dict[str, DucExternalFile]]
+    charter: Optional[DucCharter] = None
+    issues: Optional[List[DucIssue]] = None
     files_data: Optional[Dict[str, bytes]] = None
     id: Optional[str] = None

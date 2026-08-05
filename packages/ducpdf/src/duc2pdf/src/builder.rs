@@ -610,12 +610,6 @@ impl DucToPdfBuilder {
         // Set title
         if let Some(title) = &self.context.options.metadata_title {
             info.set("Title", Object::string_literal(title.as_str()));
-        } else if let Some(global_state) = &self.context.exported_data.duc_global_state {
-            if let Some(name) = &global_state.name {
-                if !name.is_empty() {
-                    info.set("Title", Object::string_literal(name.as_str()));
-                }
-            }
         }
 
         // Set author
@@ -2074,6 +2068,54 @@ impl DucToPdfBuilder {
             .set("Root", Object::Reference(catalog_id));
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod scaling_tests {
+    use super::*;
+
+    fn empty_state() -> ExportedDataState {
+        duc::api::DucDocument::open_memory()
+            .expect("open in-memory DUC document")
+            .read_document_state()
+            .expect("read empty DUC state")
+    }
+
+    #[test]
+    fn preserves_valid_explicit_scale_for_exported_state() {
+        let builder = DucToPdfBuilder::new(
+            empty_state(),
+            ConversionOptions {
+                scale: Some(0.02),
+                ..Default::default()
+            },
+            HashMap::new(),
+        )
+        .expect("build PDF converter");
+
+        assert_eq!(builder.context.scale, 0.02);
+    }
+
+    #[test]
+    fn auto_scales_oversized_crop_dimensions() {
+        let builder = DucToPdfBuilder::new(
+            empty_state(),
+            ConversionOptions {
+                mode: ConversionMode::Crop {
+                    offset_x: 0.0,
+                    offset_y: 0.0,
+                    width: Some(10_000.0),
+                    height: Some(8_000.0),
+                },
+                ..Default::default()
+            },
+            HashMap::new(),
+        )
+        .expect("build PDF converter");
+
+        assert!(builder.context.scale < 1.0);
+        assert!(builder.context.scale > 0.0);
     }
 }
 

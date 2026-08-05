@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Any
 
 from ..builders.sql_builder import DucSQL
-from ..parse import parse_duc_lazy
+from ..parse import parse_duc
 from .search_external_files import (
     ExternalFileSearchTarget,
     ExtractedExternalText,
@@ -664,12 +664,6 @@ def _resolve_file_ids(conn: sqlite3.Connection, element_ids: list[str]) -> dict[
     ):
         file_ids[row["element_id"]] = row["file_id"]
 
-    for row in conn.execute(
-        f"SELECT element_id, file_id FROM element_table WHERE file_id IS NOT NULL AND element_id IN ({placeholders})",
-        bindings,
-    ):
-        file_ids[row["element_id"]] = row["file_id"]
-
     return file_ids
 
 
@@ -801,7 +795,7 @@ def _search_non_sqlite_duc(
     external_file_targets: list[ExternalFileSearchTarget | dict[str, Any] | tuple[Any, ...] | str] | None,
     external_file_element_ids: list[str] | None,
 ) -> DucSearchResponse:
-    duc_data = parse_duc_lazy(str(duc_file))
+    duc_data = parse_duc(str(duc_file))
     candidates = _collect_candidates_from_parsed_duc(
         duc_file,
         duc_data,

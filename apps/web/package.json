@@ -1,11 +1,15 @@
 {
   "name": "@duc/docs",
   "version": "0.0.0",
-  "type": "module",
   "private": true,
   "scripts": {
     "build": "next build",
     "dev": "next dev --turbo",
     "start": "next start"
+  },
+  "type": "module",
+  "dependencies": {
+    "mermaid": "^11.16.0",
+    "next-themes": "^0.4.6"
   }
 }

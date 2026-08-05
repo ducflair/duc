@@ -3,7 +3,7 @@
 <p align="center">
   <br/>
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" /></a>
-  <p align="center">2D CAD File Format</p>
+  <p align="center">SQLite-backed project-state format for physical-engineering work before execution</p>
   <p align="center" style="align: center;">
     <a href="https://crates.io/crates/duc"><img src="https://shields.io/badge/Crates-FFC933?logo=Rust&logoColor=646464&style=round-square" alt="Crates" /></a>
     <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/crates/v/duc?style=round-square&label=latest%20stable" alt="crates.io duc@latest release" /></a>
@@ -12,9 +12,9 @@
   </p>
 </p>
 
-The `duc` crate is the canonical Rust implementation of the `.duc` 2D CAD file format and the **root of the entire Duc ecosystem**. [`ducpy`](https://pypi.org/project/ducpy/), [`ducjs`](https://www.npmjs.com/package/ducjs), and the rest of the toolchain are all built on top of the types, parsers and storage layer defined here.
+The `duc` crate is the canonical Rust implementation of the `.duc` project-state format and the **root of the entire Duc ecosystem**. [`ducpy`](https://pypi.org/project/ducpy/), [`ducjs`](https://www.npmjs.com/package/ducjs), and the rest of the toolchain are all built on top of the types, parsers and storage layer defined here.
 
-A `.duc` file is a standard zlib compressed **SQLite database file** following the schema in `schema/duc.sql`. This crate wraps that database in a strongly-typed Rust API for reading, writing and manipulating `.duc` documents.
+A `.duc` file is a standard gzip-compressed **SQLite database file** following the schema in `schema/duc.sql`. This crate wraps that database in a strongly-typed Rust API for reading, writing and manipulating `.duc` documents.
 
 
 ----

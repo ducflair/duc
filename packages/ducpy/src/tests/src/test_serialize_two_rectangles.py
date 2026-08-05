@@ -45,18 +45,15 @@ def test_serialize_two_rectangles():
     output_file_name = "test_two_rectangles.duc"
     output_file_path = os.path.join(output_dir, output_file_name)
 
-    # Serialize using the new io API
-    serialized_bytes = duc.serialize_duc(
+    # Serialize using the path-based streaming API
+    serialized_path = duc.serialize_duc(
         name="TwoRectanglesTest",
+        output_path=output_file_path,
         elements=elements
     )
 
-    assert serialized_bytes is not None, "Serialization returned None"
-    assert len(serialized_bytes) > 0, "Serialization returned empty bytes"
-
-    # Write the serialized bytes to a .duc file
-    with open(output_file_path, "wb") as f:
-        f.write(serialized_bytes)
+    assert serialized_path == output_file_path
+    assert os.path.getsize(output_file_path) > 0, "Serialization returned empty file"
 
     print(f"Successfully serialized two rectangle elements to: {output_file_path}")
 
@@ -122,4 +119,4 @@ test_serialize_two_rectangles = test_two_rectangles_via_sql
 
 if __name__ == "__main__":
     # Allow running the test directly for quick checks, e.g., during development
-    pytest.main([__file__]) # type: ignore 
+    pytest.main([__file__]) # type: ignore

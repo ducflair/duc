@@ -3,8 +3,12 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use duc::types::*;
+
+static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 pub fn assets_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/testing/duc-files")
@@ -26,6 +30,18 @@ pub fn all_duc_files() -> Vec<PathBuf> {
 
 pub fn load(path: &Path) -> Vec<u8> {
     fs::read(path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
+}
+
+pub fn temp_path(label: &str, extension: &str) -> PathBuf {
+    let counter = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .unwrap_or(0);
+    std::env::temp_dir().join(format!(
+        "ducrs-{label}-{}-{nanos}-{counter}.{extension}",
+        std::process::id(),
+    ))
 }
 
 pub fn element_id(el: &DucElementEnum) -> String {
@@ -156,7 +172,6 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
     ];
 
     let global_state = Some(DucGlobalState {
-        name: Some("Synthetic Parser Audit".to_string()),
         view_background_color: "#101820".to_string(),
         main_scope: "mm".to_string(),
         scope_exponent_threshold: 3,
@@ -389,7 +404,9 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
             }),
         },
         ElementWrapper {
-            element: DucElementEnum::DucEmbeddableElement(DucEmbeddableElement { base: embeddable_base }),
+            element: DucElementEnum::DucEmbeddableElement(DucEmbeddableElement {
+                base: embeddable_base,
+            }),
         },
         ElementWrapper {
             element: DucElementEnum::DucTextElement(DucTextElement {
@@ -667,6 +684,13 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
                 base: table_base,
                 style: DucTableStyle {},
                 file_id: Some("file-image".to_string()),
+                grid_config: DocumentGridConfig {
+                    columns: 1,
+                    gap_x: 0.0,
+                    gap_y: 0.0,
+                    first_page_alone: false,
+                    scale: 1.0,
+                },
             }),
         },
         ElementWrapper {
@@ -691,6 +715,80 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
         },
     ];
 
+    let sample_requirement = DucCharterRequirement {
+        id: "req-1".to_string(),
+        statement: "The outcome must be correct.".to_string(),
+        must: true,
+        acceptance_criteria: Some(vec!["passes tests".to_string()]),
+    };
+
+    let sample_constraint = DucCharterConstraint {
+        id: "con-1".to_string(),
+        statement: "Use metric units.".to_string(),
+        hard: true,
+    };
+
+    let sample_decision = DucCharterDecision {
+        id: "dec-1".to_string(),
+        accepted: true,
+        decision: "Use JSONB columns for charter/issues.".to_string(),
+        rationale: "Keeps top-level document metadata together.".to_string(),
+        issue_ids: None,
+        decided_at: 1_700_000_000,
+    };
+
+    let charter = Some(DucCharter {
+        title: "Synthetic Audit".to_string(),
+        description: Some("Charter for the synthetic roundtrip test.".to_string()),
+        objective: "Verify serialize/parse roundtrip integrity.".to_string(),
+        phase: DucCharterPhase::Review,
+        closed_reason: None,
+        requirements: vec![sample_requirement],
+        constraints: vec![sample_constraint],
+        decisions: vec![sample_decision],
+        stakeholders: Some(vec![DucCharterStakeholder {
+            actor: Actor {
+                identifier: "agent:test".to_string(),
+                name: Some("Test Agent".to_string()),
+            },
+            role: "auditor".to_string(),
+        }]),
+        updated_at: 1_700_000_000,
+    });
+
+    let issues = vec![DucIssue {
+        id: "issue-1".to_string(),
+        local_id: 1,
+        title: "Roundtrip issue".to_string(),
+        status: DucIssueStatus::Open,
+        dismissed_reason: None,
+        messages: vec![DucIssueMessage {
+            id: "msg-1".to_string(),
+            author: Actor {
+                identifier: "agent:test".to_string(),
+                name: None,
+            },
+            content: "Ensure this survives roundtrip.".to_string(),
+            reply_to_id: None,
+            reactions: None,
+            created_at: 1_700_000_000,
+            edited_at: None,
+            deleted_at: None,
+        }],
+        due_date: None,
+        anchor: Some(DucIssueAnchor::Canvas {
+            x: 10.0,
+            y: 20.0,
+            scope: Some("mm".to_string()),
+        }),
+        author_id: "agent:test".to_string(),
+        assignee_ids: None,
+        follower_ids: None,
+        created_at: 1_700_000_000,
+        updated_at: 1_700_000_000,
+        deleted_at: None,
+    }];
+
     ExportedDataState {
         id: Some("synthetic-audit-doc".to_string()),
         version: "1.0.0".to_string(),
@@ -698,6 +796,8 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
         data_type: "drawing".to_string(),
         dictionary: Some(dictionary),
         thumbnail: Some(vec![7, 6, 5, 4]),
+        charter,
+        issues,
         elements,
         blocks,
         block_instances,
@@ -714,7 +814,9 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
 }
 
 pub fn canonicalize_roundtrip_state(mut state: ExportedDataState) -> ExportedDataState {
-    state.elements.sort_by(|a, b| element_id(&a.element).cmp(&element_id(&b.element)));
+    state
+        .elements
+        .sort_by(|a, b| element_id(&a.element).cmp(&element_id(&b.element)));
     state.blocks.sort_by(|a, b| a.id.cmp(&b.id));
     state.block_instances.sort_by(|a, b| a.id.cmp(&b.id));
     for instance in &mut state.block_instances {
@@ -925,7 +1027,7 @@ fn sample_viewer_state_per_plane() -> Viewer3DState {
             },
             intersection: true,
             show_planes: false,
-            object_color_caps: true,
+            object_color_caps: false,
         },
         explode: Viewer3DExplode {
             active: true,

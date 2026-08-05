@@ -3,7 +3,7 @@
 <p align="center">
   <br/>
   <a href="https://duc.ducflair.com" target="_blank"><img width="256px" src="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" /></a>
-  <p align="center">2D CAD File Format</p>
+  <p align="center">SQLite-backed project-state format for physical-engineering work before execution</p>
   <p align="center" style="align: center;">
     <a href="https://pypi.org/project/ducpy/"><img src="https://shields.io/badge/Pip-blue?logo=Pypi&logoColor=white&style=round-square" alt="Pip" /></a>
     <a href="https://github.com/ducflair/duc/releases"><img src="https://img.shields.io/pypi/v/ducpy?style=round-square&label=latest%20stable" alt="PyPI ducpy@latest release" /></a>
@@ -12,7 +12,7 @@
   </p>
 </p>
 
-The `ducpy` package is the official Python implementation of the `.duc` 2D CAD file format. It is built on top of the [`duc`](../ducrs) Rust crate, exposed as the `ducpy_native` extension. A `.duc` file is a zlib-compressed SQLite database — `ducpy` gives you both a high-level builder DSL and direct low-level access to that schema, plus parsing, serialization, and search helpers.
+The `ducpy` package is the official Python implementation of the `.duc` project-state format. It is built on top of the [`duc`](../ducrs) Rust crate, exposed as the `ducpy_native` extension. A `.duc` file is a gzip-compressed SQLite database — `ducpy` gives you both a high-level builder DSL and direct low-level access to that schema, plus parsing, serialization, and search helpers.
 
 ## Installation
 
@@ -48,7 +48,7 @@ See the worked examples:
 
 ### SQL Builder (Low-level)
 
-A `.duc` file is a zlib-compressed SQLite database. Use `duc.builders.sql_builder` (`DucSQL`) for direct schema access, bulk queries, and low-level manipulation.
+A `.duc` file is a gzip-compressed SQLite database. Use `duc.builders.sql_builder` (`DucSQL`) for direct schema access, bulk queries, and low-level manipulation.
 
 See the worked example: [SQL Builder](src/examples/sql_builder_demo.py) — `DucSQL.new()` to create a `.duc` from scratch, `DucSQL(path)` to query an existing one.
 
@@ -62,7 +62,7 @@ Read and write `.duc` files using the `duc.parse` and `duc.serialize` modules.
 
 See the worked examples:
 
-- [Parsing](src/examples/parsing_demo.py) — `parse_duc` / `parse_duc_lazy` / `get_external_file` / `list_external_files`.
+- [Parsing](src/examples/parsing_demo.py) — `parse_duc` / `list_external_files` / streaming revision helpers.
 - [Serialization](src/examples/serialization_demo.py) — `serialize_duc` from builder-created elements.
 - [External files](src/examples/external_files_demo.py) — attaching binary blobs (images, PDFs) to a `.duc` document.
 

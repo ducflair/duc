@@ -3,10 +3,11 @@
 Example demonstrating how to serialize elements created by the Builder API into a .duc file.
 
 This demo shows the correct pattern for taking in-memory python elements
-and writing them to a raw `.duc` binary blob.
+and streaming them to a `.duc` file.
 """
 
 import ducpy as duc
+import tempfile
 from ducpy.builders.style_builders import create_fill_and_stroke_style, create_solid_content
 
 def main():
@@ -46,16 +47,17 @@ def main():
     print(f"   Created {len(elements)} elements.")
     
     print("2. Serializing to .duc format...")
-    # NOTE: The serialize_duc function takes keyword arguments for elements, 
-    # blocks, global state, etc. and bridges to the Rust native backend.
-    duc_bytes = duc.serialize_duc(
+    output = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+    output.close()
+    duc_path = duc.serialize_duc(
         name="serialization_example",
+        output_path=output.name,
         elements=elements
     )
     
-    print(f"   Successfully serialized {len(duc_bytes)} bytes.")
+    print(f"   Successfully serialized to {duc_path}.")
     print("\n✅ Serialization demo complete!")
-    return duc_bytes
+    return duc_path
 
 if __name__ == "__main__":
     main()

@@ -17,7 +17,7 @@ jobs:
       group: release-ducjs
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ github.ref_name }}
@@ -39,7 +39,12 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown,wasm32-wasip1
+
+      - name: Install WASI toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang wasi-libc
 
       - name: Install wasm-pack (pinned 0.14.x)
         run: cargo install wasm-pack --version 0.14.0 --locked --force
@@ -49,7 +54,16 @@ jobs:
         run: bun install
 
       - name: Build
-        run: bun ducjs:build
+        env:
+          CC_wasm32_wasip1: /usr/bin/clang
+          CFLAGS_wasm32_wasip1: --sysroot=/usr -isystem /usr/include/wasm32-wasi
+        run: bun run --cwd packages/ducjs build:wasi
+
+      - name: Verify WASI package artifact
+        working-directory: ./packages/ducjs
+        run: |
+          test -s dist/ducjs_wasi.wasm
+          npm_config_cache=/tmp/ducjs-npm-cache npm pack --dry-run --json | grep -q '"path": "dist/ducjs_wasi.wasm"'
 
       - name: Prepare workspace dependencies for publish
         run: node scripts/fix-workspace-deps.mjs packages/ducjs/package.json
@@ -68,3 +82,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: ./packages/ducjs
         run: npx semantic-release ${{ steps.setup-release-environment.outputs.release-mode }}
+
+      - name: Deploy API documentation
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-api-docs-deployment
+          token: ${{ secrets.GITHUB_TOKEN }}

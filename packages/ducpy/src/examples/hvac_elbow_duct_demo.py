@@ -6,6 +6,7 @@ using the ElementBuilder API.
 
 import os
 import sys
+import tempfile
 import ducpy as duc
 
 
@@ -223,16 +224,18 @@ def main():
     print(f"   Created Model Element ID: {elbow_duct_element.element.base.id}")
     print(f"   Class: {type(elbow_duct_element.element).__name__}, Model Type: {elbow_duct_element.element.model_type}")
 
-    # 2. Serialize to binary .duc file
-    duc_bytes = duc.serialize_duc(
+    # 2. Serialize to .duc file
+    output = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+    output.close()
+    duc_path = duc.serialize_duc(
         name="hvac_elbow_duct_example",
+        output_path=output.name,
         elements=[elbow_duct_element],
         validate_embedded_code=True
     )
-    print(f"   Successfully serialized DUC file containing {len(duc_bytes)} bytes.")
+    print(f"   Successfully serialized DUC file to {duc_path}.")
     print("✅ HVAC Elbow Duct example successfully complete!")
-    return duc_bytes
+    return duc_path
 
 if __name__ == "__main__":
     main()
-

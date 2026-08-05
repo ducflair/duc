@@ -47,6 +47,14 @@ impl DucConnection {
         f(&self.0)
     }
 
+    /// Run a closure with mutable access to the inner [`rusqlite::Connection`].
+    pub fn with_mut<F, R>(&mut self, f: F) -> R
+    where
+        F: FnOnce(&mut Connection) -> R,
+    {
+        f(&mut self.0)
+    }
+
     /// Consume and return the inner connection (escape hatch).
     pub fn into_inner(self) -> Connection {
         self.0
@@ -101,6 +109,11 @@ pub fn open_memory() -> DbResult<DucConnection> {
 #[cfg(all(target_family = "wasm", target_os = "unknown", feature = "opfs"))]
 pub async fn open_file_opfs(name: &str) -> DbResult<DucConnection> {
     wasm::open_file_opfs(name).await
+}
+
+#[cfg(all(target_family = "wasm", target_os = "unknown", feature = "opfs"))]
+pub async fn open_file_opfs_in_namespace(name: &str, namespace: &str) -> DbResult<DucConnection> {
+    wasm::open_file_opfs_in_namespace(name, Some(namespace)).await
 }
 
 /// Open a transient in-memory `.duc` database in WASM (no persistence).

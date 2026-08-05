@@ -2,7 +2,7 @@
 name = "duc"
 version = "0.0.0-development"
 edition = "2021"
-description = "The duc 2D CAD file format Rust implementation."
+description = "Rust implementation of the .duc project-state format for physical-engineering work before execution."
 license = "MIT"
 authors = ["Ducflair support@ducflair.com"]
 repository = "https://github.com/ducflair/duc/tree/main/packages/ducrs"
@@ -28,11 +28,11 @@ serde_json = "1.0"
 serde_repr = "0.1"
 serde_bytes = "0.11"
 lazy_static = "1.4"
-rusqlite = { version = "0.38", features = ["bundled"] }
+rusqlite = { version = "0.38", features = ["bundled", "serialize"] }
 thiserror = "2"
 
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
-sqlite-wasm-vfs = { version = "0.2", optional = true }
+sqlite-wasm-vfs = { path = "../../patches/sqlite-wasm-vfs", version = "0.2", optional = true }
 wasm-bindgen = "0.2"
 
 [dev-dependencies]

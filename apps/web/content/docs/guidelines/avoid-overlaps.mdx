@@ -1,0 +1,98 @@
+---
+title: "Coordinate Placement and Avoiding Overlaps"
+description: "Place and update DUC elements without incorrect offsets, accidental duplicates, clipping, or unreadable stacking."
+date: 2026-08-04
+authors: [jorgedanisc]
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## Coordinate Model
+
+DUC uses a top-left element origin on the 2D canvas:
+
+- `x` and `y` locate the element's top-left position.
+- Positive X moves right; positive Y moves down.
+- `width` and `height` extend from that origin.
+- `angle` is measured in radians.
+- Coordinates and dimensions are interpreted in the element's declared `scope`.
+
+Linear, arrow, and freedraw points are **local offsets from the element origin**. A point at `(0, 0)` coincides with the element's `x`, `y` position. Do not combine an absolute or midpoint origin with absolute path points, because the renderer adds the element origin to every local point.
+
+<Callout type="info" title="Keep position and path coordinates in the same model">
+  For a line whose global endpoints are `(x1, y1)` and `(x2, y2)`, use `(x1, y1)` as the element origin and local points `(0, 0)` and `(x2 - x1, y2 - y1)`. Keep its stored width and height consistent with the local point extents.
+</Callout>
+
+---
+
+## Relative Placement
+
+For two top-left-aligned rectangular bounds:
+
+| Placement | Coordinate rule |
+| :--- | :--- |
+| B immediately right of A | `b.x = a.x + a.width + horizontal_gap` |
+| B immediately below A | `b.y = a.y + a.height + vertical_gap` |
+| B centered horizontally on A | `b.x = a.x + (a.width - b.width) / 2` |
+| B centered vertically on A | `b.y = a.y + (a.height - b.height) / 2` |
+| B immediately above A | `b.y = a.y - b.height - vertical_gap` |
+| B immediately left of A | `b.x = a.x - b.width - horizontal_gap` |
+
+Apply the same rules to the elements' actual stored bounds, not an assumed center point. When rotation matters, compute or retrieve rotated bounds before testing collisions.
+
+---
+
+## Prevent Accidental Duplication
+
+Before adding a component, decide whether the request means **create another element** or **update an existing element**.
+
+1. Prefer a stable element ID when one is known.
+2. Otherwise search by a meaningful label, type, layer, frame, or bounding region.
+3. If the intended element already exists, preserve its ID and update it instead of constructing a replacement.
+4. Create a new ID only when the drawing genuinely needs an additional element.
+5. Verify that loops generate distinct intended components with deliberate offsets rather than repeated elements at the same position.
+
+Use the version-matched mutation API for the active DUC adapter so versioning fields are refreshed. Parsed elements may have adapter-specific representations, so update them through that adapter's supported fields or mutation methods. In every case, preserve bindings and memberships.
+
+<Callout type="warn" title="Preserve drawing relationships">
+  Recreating an existing element can lose its ID, bound elements, group/region/block memberships, layer or frame association, and block-instance relationship. Those losses can look like overlap bugs even when the new geometry is visually identical.
+</Callout>
+
+---
+
+## Bounds, Text, and Z-Order
+
+- Give ordinary elements meaningful width and height values that match the intended visual bounds.
+- Keep linear-element bounds consistent with their local path-point extents.
+- Give text a useful initial bounding box and use the current auto-resize behavior when the label should grow with its content.
+- Place labels and dimensions with deliberate clearance from the geometry they describe.
+- Higher `zIndex` values render above lower values. Choose z-order relative to the existing drawing rather than assuming one universal numeric scale.
+- Keep annotations above the geometry they describe, but do not hide selectable or semantically important elements behind opaque overlays.
+
+---
+
+## Collision Review
+
+For axis-aligned elements, bounds A and B do not overlap when at least one of these is true:
+
+- A's right edge is at or left of B's left edge.
+- B's right edge is at or left of A's left edge.
+- A's bottom edge is at or above B's top edge.
+- B's bottom edge is at or above A's top edge.
+
+If none is true, the axis-aligned bounds overlap. Add the intended clearance to the edge comparisons when elements need a gap rather than simple non-intersection.
+
+Axis-aligned checks are only a broad phase for rotated, curved, or irregular geometry. Use the geometry utilities documented for the installed DUC version when precise collision testing is required.
+
+---
+
+## Verification Checklist
+
+After creating or updating drawing elements:
+
+- Confirm there is exactly one element for each intended logical component.
+- Confirm updated elements retained their IDs, bindings, memberships, layer, and frame.
+- Confirm path points are local to their element origins.
+- Inspect gaps, alignment, rotation, clipping, z-order, label clearance, and contrast.
+- Compare the final element count and target IDs with the requested add, update, and delete operations.
+- In a visual host such as Scopture, capture and inspect the rendered canvas before declaring success.

@@ -22,7 +22,7 @@ jobs:
     outputs:
       release_status: ${{ steps.release.outputs.status }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ github.ref_name }}
@@ -125,11 +125,11 @@ jobs:
             gh release upload "$TAG" "$file" --clobber
           done
 
-      - name: Deploy Python documentation
+      - name: Deploy API documentation
         if: steps.release.outputs.status == 'success'
         uses: peter-evans/repository-dispatch@v3
         with:
-          event-type: trigger-ducpy-docs-deployment
+          event-type: trigger-api-docs-deployment
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Notify web deployment

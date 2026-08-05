@@ -1,39 +1,39 @@
 ---
-title: "Overview"
-date: 2026-02-27
+title: "Rust (ducrs)"
+description: "Foundational Rust crate powering the core logic, parsing, serialization, and WebAssembly bindings for all .duc ecosystem adapters."
+date: 2026-07-25
 authors: [jorgedanisc]
-description: "Rust library for reading, writing and manipulating .duc CAD files — backed by SQLite."
 ---
 
-import { Callout } from 'fumadocs-ui/components/callout';
+## Overview
 
-<Callout type="warning" icon="⚠️">
-  This page is subject to change as the project is still in development.
-</Callout>
 
-## How it works
+While the SQLite database schema defines the relational container format and schema, `ducrs` implements the core engine logic for binary parsing, gzip envelope decompression, DAG version control, chunk streaming, and serialization.
 
-A `.duc` file is a standard **SQLite database**. `ducrs` wraps it with a typed, idiomatic Rust API.
+---
 
-## Installation
+## Foundational Architecture
 
-Add the crate to your `Cargo.toml`:
+Every ecosystem SDK and adapter builds directly on top of `ducrs`:
 
-```toml
-[dependencies]
-ducrs = "*"
+```mermaid
+flowchart TD
+    S["SQLite Database Schema (.duc Container)"] --> R["ducrs (Rust Core Engine)"]
+
+    R --> JS["ducjs (TypeScript / WASM Engine)"]
+    R --> PY["ducpy (Python / PyO3 Bindings)"]
+    R --> PDF["ducpdf / duc2pdf (PDF WASM Exporter)"]
+    R --> SVG["ducsvg (SVG Exporter)"]
 ```
 
-## Basic Usage
+- **Core Engine Foundation**: `ducrs` serves as the primary implementation of all binary container operations, validation rules, and schema migrations.
+- **Python Bindings (`ducpy`)**: Exposes native CPython extension modules compiled via PyO3 for high-performance Python execution.
+- **WebAssembly Bindings (`ducjs`, `duc2pdf`)**: Compiles to WebAssembly (`wasm32-unknown-unknown`) to power browser and Node.js JavaScript runtimes.
 
-```rust
-use ducrs::DucFile;
+---
 
-fn main() -> anyhow::Result<()> {
-    let doc = DucFile::open("drawing.duc")?;
-    for element in doc.elements()? {
-        println!("{:?}", element);
-    }
-    Ok(())
-}
-```
+## Core Capabilities
+
+- **Zero-Cost Abstractions**: High-performance, type-safe structures mapping directly to SQLite relational tables without runtime overhead.
+- **Memory Safety & Speed**: Memory-safe parsing, fast stream serialization, and low-latency database transactions.
+- **Universal Compilation**: Compiles natively across macOS, Linux, Windows, iOS, Android, and WebAssembly targets.

@@ -1,14 +1,13 @@
-//! Parses a `.duc` SQLite binary (byte vector) into an [`ExportedDataState`].
+//! Reads DUC document state from an open SQLite connection.
 //!
-//! Flow: raw bytes → in-memory SQLite DB → ExportedDataState
-//!
-//! The inverse of [`crate::serialize::serialize`].
+//! File and stream handling lives in [`crate::session`]; this module owns the
+//! SQL-to-type mapping once a database connection already exists.
 
 use rusqlite::{params, Connection};
-use std::os::raw::c_char;
 use std::collections::HashMap;
 
 use crate::db;
+use crate::external_file_chunks::{self, ExternalFileChunkError};
 use crate::types::*;
 
 #[derive(Debug)]
@@ -33,22 +32,41 @@ impl std::fmt::Display for ParseError {
 impl std::error::Error for ParseError {}
 
 impl From<db::DbError> for ParseError {
-    fn from(e: db::DbError) -> Self { ParseError::Db(e) }
+    fn from(e: db::DbError) -> Self {
+        ParseError::Db(e)
+    }
 }
 impl From<rusqlite::Error> for ParseError {
-    fn from(e: rusqlite::Error) -> Self { ParseError::Sqlite(e) }
+    fn from(e: rusqlite::Error) -> Self {
+        ParseError::Sqlite(e)
+    }
+}
+impl From<ExternalFileChunkError> for ParseError {
+    fn from(e: ExternalFileChunkError) -> Self {
+        match e {
+            ExternalFileChunkError::Sqlite(e) => ParseError::Sqlite(e),
+            ExternalFileChunkError::Io(e) => ParseError::Io(e.to_string()),
+            ExternalFileChunkError::InvalidData(e) => ParseError::InvalidData(e),
+        }
+    }
 }
 
 pub type ParseResult<T> = Result<T, ParseError>;
-const SQLITE_HEADER_MAGIC: &[u8; 16] = b"SQLite format 3\0";
+pub(crate) fn read_document_state_from_connection(
+    conn: &Connection,
+) -> ParseResult<ExportedDataState> {
+    let mut state = read_state_from_connection(conn, false)?;
+    state.external_files = read_external_file_metadata(conn)?;
+    Ok(state)
+}
 
-// ─── Public entry point ──────────────────────────────────────────────────────
-
-/// Parse a `.duc` file (raw bytes) into an [`ExportedDataState`].
-pub fn parse(buf: &[u8]) -> ParseResult<ExportedDataState> {
-    let conn = load_db_bytes(buf)?;
-
+fn read_state_from_connection(
+    conn: &Connection,
+    include_external_files: bool,
+) -> ParseResult<ExportedDataState> {
     let (id, version, source, data_type, thumbnail) = read_document(&conn)?;
+    let charter = read_charter(&conn)?;
+    let issues = read_issues(&conn)?;
     let duc_global_state = read_global_state(&conn)?;
     let duc_local_state = read_local_state(&conn)?;
     let dictionary = read_dictionary(&conn)?;
@@ -57,8 +75,12 @@ pub fn parse(buf: &[u8]) -> ParseResult<ExportedDataState> {
     let regions = read_regions(&conn)?;
     let (blocks, block_instances, block_collections) = read_blocks(&conn)?;
     let elements = read_elements(&conn)?;
-    let (external_files, external_files_data) = read_external_files(&conn)?;
     let version_graph = read_version_graph(&conn)?;
+    let (external_files, external_files_data) = if include_external_files {
+        read_external_files(&conn)?
+    } else {
+        (None, None)
+    };
 
     Ok(ExportedDataState {
         id,
@@ -67,6 +89,8 @@ pub fn parse(buf: &[u8]) -> ParseResult<ExportedDataState> {
         data_type,
         dictionary,
         thumbnail,
+        charter,
+        issues,
         elements,
         blocks,
         block_instances,
@@ -82,192 +106,9 @@ pub fn parse(buf: &[u8]) -> ParseResult<ExportedDataState> {
     })
 }
 
-/// Parse a `.duc` file but skip the heavy external-file data blobs.
-///
-/// Returns `external_files: None` — callers can fetch individual files
-/// later via [`get_external_file`].
-pub fn parse_lazy(buf: &[u8]) -> ParseResult<ExportedDataState> {
-    let conn = load_db_bytes(buf)?;
-
-    let (id, version, source, data_type, thumbnail) = read_document(&conn)?;
-    let duc_global_state = read_global_state(&conn)?;
-    let duc_local_state = read_local_state(&conn)?;
-    let dictionary = read_dictionary(&conn)?;
-    let layers = read_layers(&conn)?;
-    let groups = read_groups(&conn)?;
-    let regions = read_regions(&conn)?;
-    let (blocks, block_instances, block_collections) = read_blocks(&conn)?;
-    let elements = read_elements(&conn)?;
-    let version_graph = read_version_graph(&conn)?;
-
-    Ok(ExportedDataState {
-        id,
-        version,
-        source,
-        data_type,
-        dictionary,
-        thumbnail,
-        elements,
-        blocks,
-        block_instances,
-        block_collections,
-        groups,
-        regions,
-        layers,
-        duc_local_state,
-        duc_global_state,
-        version_graph,
-        external_files: None,
-        external_files_data: None,
-    })
-}
-
-/// Fetch a single external file from a `.duc` buffer by file ID.
-/// Returns metadata + data blobs as an `ExternalFileLoaded`.
-pub fn get_external_file(buf: &[u8], file_id: &str) -> ParseResult<Option<ExternalFileLoaded>> {
-    let conn = load_db_bytes(buf)?;
-    let has_revisions_table: bool = conn.prepare(
-        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='external_file_revisions'"
-    )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
-
-    let has_data_table: bool = conn.prepare(
-        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='external_file_revision_data'"
-    )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
-
-    if has_revisions_table {
-        // New schema: load file header + revisions.
-        let file = conn.prepare(
-            "SELECT id, active_revision_id, updated, version FROM external_files WHERE id = ?1"
-        )?.query_row(params![file_id], |row| {
-            Ok(DucExternalFile {
-                id:                 row.get(0)?,
-                active_revision_id: row.get(1)?,
-                updated:            row.get(2)?,
-                revisions:          HashMap::new(),
-                version:            row.get(3)?,
-            })
-        });
-        let mut file = match file {
-            Ok(f) => f,
-            Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
-            Err(e) => return Err(e.into()),
-        };
-
-        let mut data_map: HashMap<String, serde_bytes::ByteBuf> = HashMap::new();
-
-        if has_data_table {
-            // Split schema: metadata in external_file_revisions, data in external_file_revision_data
-            let mut meta_stmt = conn.prepare(
-                "SELECT id, size_bytes, checksum, source_name, mime_type, message,
-                        created, last_retrieved
-                 FROM external_file_revisions WHERE file_id = ?1"
-            )?;
-            let meta_rows = meta_stmt.query_map(params![file_id], |row| {
-                let id: String = row.get(0)?;
-                Ok((id.clone(), ExternalFileRevisionMeta {
-                    id,
-                    size_bytes:     row.get(1)?,
-                    checksum:       row.get(2)?,
-                    source_name:    row.get(3)?,
-                    mime_type:      row.get(4)?,
-                    message:        row.get(5)?,
-                    created:        row.get(6)?,
-                    last_retrieved: row.get(7)?,
-                }))
-            })?;
-            for row in meta_rows {
-                let (rev_id, meta) = row?;
-                file.revisions.insert(rev_id, meta);
-            }
-
-            let mut data_stmt = conn.prepare(
-                "SELECT d.revision_id, d.data
-                 FROM external_file_revision_data d
-                 JOIN external_file_revisions r ON r.id = d.revision_id
-                 WHERE r.file_id = ?1"
-            )?;
-            let data_rows = data_stmt.query_map(params![file_id], |row| {
-                let rev_id: String = row.get(0)?;
-                let blob: Vec<u8> = row.get(1)?;
-                Ok((rev_id, blob))
-            })?;
-            for row in data_rows {
-                let (rev_id, blob) = row?;
-                data_map.insert(rev_id, serde_bytes::ByteBuf::from(blob));
-            }
-        } else {
-            // Pre-split schema: data still in external_file_revisions
-            let mut rev_stmt = conn.prepare(
-                "SELECT id, size_bytes, checksum, source_name, mime_type, message,
-                        created, last_retrieved, data
-                 FROM external_file_revisions WHERE file_id = ?1"
-            )?;
-            let rev_rows = rev_stmt.query_map(params![file_id], |row| {
-                let id: String = row.get(0)?;
-                let data: Vec<u8> = row.get(8)?;
-                Ok((id.clone(), ExternalFileRevisionMeta {
-                    id,
-                    size_bytes:     row.get(1)?,
-                    checksum:       row.get(2)?,
-                    source_name:    row.get(3)?,
-                    mime_type:      row.get(4)?,
-                    message:        row.get(5)?,
-                    created:        row.get(6)?,
-                    last_retrieved: row.get(7)?,
-                }, data))
-            })?;
-            for row in rev_rows {
-                let (rev_id, meta, blob) = row?;
-                file.revisions.insert(rev_id.clone(), meta);
-                data_map.insert(rev_id, serde_bytes::ByteBuf::from(blob));
-            }
-        }
-
-        Ok(Some(ExternalFileLoaded { file, data: data_map }))
-    } else {
-        // Legacy schema: wrap flat row into a single-revision DucExternalFile.
-        let result = conn.prepare(
-            "SELECT id, mime_type, data, created, last_retrieved, version FROM external_files WHERE id = ?1"
-        )?.query_row(params![file_id], |row| {
-            let id: String = row.get(0)?;
-            let rev_id = format!("{}_rev1", id);
-            let blob: Vec<u8> = row.get(2)?;
-            let meta = ExternalFileRevisionMeta {
-                id: rev_id.clone(),
-                size_bytes: blob.len() as i64,
-                checksum: None,
-                source_name: None,
-                mime_type: row.get(1)?,
-                message: None,
-                created: row.get(3)?,
-                last_retrieved: row.get(4)?,
-            };
-            let mut revisions = HashMap::new();
-            revisions.insert(rev_id.clone(), meta);
-            let mut data_map = HashMap::new();
-            data_map.insert(rev_id.clone(), serde_bytes::ByteBuf::from(blob));
-            Ok(ExternalFileLoaded {
-                file: DucExternalFile {
-                    id: id.clone(),
-                    active_revision_id: rev_id,
-                    updated: row.get(3)?,
-                    version: row.get(5)?,
-                    revisions,
-                },
-                data: data_map,
-            })
-        });
-        match result {
-            Ok(loaded) => Ok(Some(loaded)),
-            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(e.into()),
-        }
-    }
-}
-
-/// List metadata summary for all external files (no data blobs loaded).
-pub fn list_external_files(buf: &[u8]) -> ParseResult<Vec<ExternalFileMeta>> {
-    let conn = load_db_bytes(buf)?;
+pub(crate) fn list_external_files_from_connection(
+    conn: &Connection,
+) -> ParseResult<Vec<ExternalFileMeta>> {
     let has_revisions_table: bool = conn.prepare(
         "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='external_file_revisions'"
     )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
@@ -276,228 +117,38 @@ pub fn list_external_files(buf: &[u8]) -> ParseResult<Vec<ExternalFileMeta>> {
         let mut stmt = conn.prepare(
             "SELECT f.id, r.mime_type, r.created, r.last_retrieved, f.version
              FROM external_files f
-             JOIN external_file_revisions r ON r.id = f.active_revision_id"
+             JOIN external_file_revisions r ON r.id = f.active_revision_id",
         )?;
-        let files: Vec<ExternalFileMeta> = stmt.query_map([], |row| {
-            Ok(ExternalFileMeta {
-                id:             row.get(0)?,
-                mime_type:      row.get(1)?,
-                created:        row.get(2)?,
-                last_retrieved: row.get(3)?,
-                version:        row.get(4)?,
-            })
-        })?.collect::<Result<Vec<_>, _>>()?;
+        let files: Vec<ExternalFileMeta> = stmt
+            .query_map([], |row| {
+                Ok(ExternalFileMeta {
+                    id: row.get(0)?,
+                    mime_type: row.get(1)?,
+                    created: row.get(2)?,
+                    last_retrieved: row.get(3)?,
+                    version: row.get(4)?,
+                })
+            })?
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(files)
     } else {
         // Legacy schema flat table.
         let mut stmt = conn.prepare(
-            "SELECT id, mime_type, created, last_retrieved, version FROM external_files"
+            "SELECT id, mime_type, created, last_retrieved, version FROM external_files",
         )?;
-        let files: Vec<ExternalFileMeta> = stmt.query_map([], |row| {
-            Ok(ExternalFileMeta {
-                id:             row.get(0)?,
-                mime_type:      row.get(1)?,
-                created:        row.get(2)?,
-                last_retrieved: row.get(3)?,
-                version:        row.get(4)?,
-            })
-        })?.collect::<Result<Vec<_>, _>>()?;
+        let files: Vec<ExternalFileMeta> = stmt
+            .query_map([], |row| {
+                Ok(ExternalFileMeta {
+                    id: row.get(0)?,
+                    mime_type: row.get(1)?,
+                    created: row.get(2)?,
+                    last_retrieved: row.get(3)?,
+                    version: row.get(4)?,
+                })
+            })?
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(files)
     }
-}
-
-// ─── Database import ─────────────────────────────────────────────────────────
-
-fn load_db_bytes(buf: &[u8]) -> ParseResult<Connection> {
-    if buf.is_empty() {
-        return Err(ParseError::InvalidData("empty .duc buffer".into()));
-    }
-
-    // New format: compressed by default (no custom header).
-    // Backward compatibility: accept legacy raw SQLite bytes as-is.
-    let decompressed;
-    let raw = if is_sqlite_header(buf) {
-        buf
-    } else {
-        decompressed = decompress_duc_bytes(buf).map_err(|e| {
-            ParseError::InvalidData(format!(
-                "input is neither raw SQLite nor valid compressed SQLite stream: {e}"
-            ))
-        })?;
-        if !is_sqlite_header(&decompressed) {
-            return Err(ParseError::InvalidData(
-                "decompressed payload does not start with SQLite header".into(),
-            ));
-        }
-        &decompressed
-    };
-
-    let info = parse_sqlite_header(raw)?;
-
-    let mut candidates: Vec<(&str, &[u8])> = vec![("full", raw)];
-    if info.expected_size <= raw.len() && info.expected_size > 0 && info.expected_size != raw.len() {
-        candidates.push(("header-expected", &raw[..info.expected_size]));
-    }
-    let page_aligned = (raw.len() / info.page_size) * info.page_size;
-    if page_aligned > 0 && page_aligned != raw.len() && page_aligned != info.expected_size {
-        candidates.push(("page-aligned", &raw[..page_aligned]));
-    }
-
-    let mut errors = Vec::new();
-    for (label, candidate) in candidates {
-        match deserialize_image(candidate) {
-            Ok(conn) => return Ok(conn),
-            Err(err) => {
-                errors.push(format!("{label}({} bytes): {err}", candidate.len()));
-            }
-        }
-    }
-
-    Err(ParseError::InvalidData(format!(
-        "failed to deserialize/read sqlite image (input={} bytes, page_size={}, page_count={}, expected={}): {}",
-        raw.len(),
-        info.page_size,
-        info.page_count,
-        info.expected_size,
-        errors.join(" | ")
-    )))
-}
-
-#[inline]
-pub fn is_sqlite_header(buf: &[u8]) -> bool {
-    buf.len() >= SQLITE_HEADER_MAGIC.len() && &buf[..SQLITE_HEADER_MAGIC.len()] == SQLITE_HEADER_MAGIC
-}
-
-/// Inflate a compressed deflate payload.
-pub fn decompress_duc_bytes(compressed: &[u8]) -> ParseResult<Vec<u8>> {
-    use flate2::read::DeflateDecoder;
-    use std::io::Read;
-
-    let mut decoder = DeflateDecoder::new(compressed);
-    let mut out = Vec::new();
-    decoder
-        .read_to_end(&mut out)
-        .map_err(|e| ParseError::Io(format!("DUCz decompression failed: {e}")))?;
-    Ok(out)
-}
-
-fn deserialize_image(buf: &[u8]) -> ParseResult<Connection> {
-    let conn = Connection::open_in_memory().map_err(ParseError::Sqlite)?;
-    let mut image = buf.to_vec();
-
-    // Header bytes 18/19 are read/write format versions:
-    // 1 = rollback journal, 2 = WAL.
-    // For standalone deserialized images in wasm (no sidecar files), WAL mode
-    // can lead SQLite to attempt journal/wal handling that surfaces CANTOPEN.
-    // Normalize to rollback mode for read-only parsing.
-    if image.len() > 19 {
-        if image[18] == 2 {
-            image[18] = 1;
-        }
-        if image[19] == 2 {
-            image[19] = 1;
-        }
-    }
-
-    let n = image.len();
-    let db_name = b"main\0";
-
-    let mem = unsafe { rusqlite::ffi::sqlite3_malloc64(n as u64) as *mut u8 };
-    if mem.is_null() {
-        return Err(ParseError::Io("sqlite3_malloc64 failed".into()));
-    }
-
-    unsafe {
-        std::ptr::copy_nonoverlapping(image.as_ptr(), mem, n);
-    }
-
-    // Allow SQLite to manage deserialized pages in-memory without touching files.
-    let flags = (rusqlite::ffi::SQLITE_DESERIALIZE_FREEONCLOSE
-        | rusqlite::ffi::SQLITE_DESERIALIZE_RESIZEABLE) as u32;
-    let rc = unsafe {
-        rusqlite::ffi::sqlite3_deserialize(
-            conn.handle(),
-            db_name.as_ptr() as *const c_char,
-            mem,
-            n as i64,
-            n as i64,
-            flags,
-        )
-    };
-
-    if rc != rusqlite::ffi::SQLITE_OK {
-        unsafe { rusqlite::ffi::sqlite3_free(mem as *mut std::ffi::c_void) };
-        return Err(ParseError::InvalidData(format!(
-            "sqlite3_deserialize failed with code {rc}"
-        )));
-    }
-
-    // Read-only parse path. Avoid journal transitions.
-    conn.execute_batch("PRAGMA query_only = ON;")
-        .map_err(|e| ParseError::InvalidData(format!(
-            "failed to enable query_only after deserialize: {e}"
-        )))?;
-
-    conn.query_row("SELECT count(*) FROM sqlite_master", [], |_row| Ok(()))
-        .map_err(|e| ParseError::InvalidData(format!(
-            "deserialized database is not readable: {e}"
-        )))?;
-
-    Ok(conn)
-}
-
-struct SqliteHeaderInfo {
-    page_size: usize,
-    page_count: usize,
-    expected_size: usize,
-}
-
-fn parse_sqlite_header(buf: &[u8]) -> ParseResult<SqliteHeaderInfo> {
-    if buf.len() < 100 {
-        return Err(ParseError::InvalidData(
-            "buffer too small for SQLite header".into(),
-        ));
-    }
-
-    let magic = b"SQLite format 3\0";
-    if &buf[..16] != magic {
-        return Err(ParseError::InvalidData(
-            "missing SQLite header magic".into(),
-        ));
-    }
-
-    let page_size_raw = u16::from_be_bytes([buf[16], buf[17]]) as usize;
-    let page_size = if page_size_raw == 1 { 65_536 } else { page_size_raw };
-    if page_size < 512 || page_size > 65_536 || (page_size & (page_size - 1)) != 0 {
-        return Err(ParseError::InvalidData(format!(
-            "invalid SQLite page_size in header: {page_size}"
-        )));
-    }
-
-    let page_count = u32::from_be_bytes([buf[28], buf[29], buf[30], buf[31]]) as usize;
-    if page_count == 0 {
-        return Err(ParseError::InvalidData(
-            "invalid SQLite page_count=0 in header".into(),
-        ));
-    }
-
-    let expected_size = page_size
-        .checked_mul(page_count)
-        .ok_or_else(|| ParseError::InvalidData("SQLite size overflow".into()))?;
-
-    if buf.len() < expected_size {
-        return Err(ParseError::InvalidData(format!(
-            "truncated SQLite image: have {} bytes, expected at least {}",
-            buf.len(),
-            expected_size
-        )));
-    }
-
-    Ok(SqliteHeaderInfo {
-        page_size,
-        page_count,
-        expected_size,
-    })
 }
 
 // ─── Enum helpers ────────────────────────────────────────────────────────────
@@ -663,8 +314,11 @@ fn blob_to_f32_vec(blob: &[u8]) -> Vec<f32> {
 
 // ─── duc_document ────────────────────────────────────────────────────────────
 
-fn read_document(conn: &Connection) -> ParseResult<(Option<String>, String, String, String, Option<Vec<u8>>)> {
-    let mut stmt = conn.prepare("SELECT id, version, source, data_type, thumbnail FROM duc_document LIMIT 1")?;
+fn read_document(
+    conn: &Connection,
+) -> ParseResult<(Option<String>, String, String, String, Option<Vec<u8>>)> {
+    let mut stmt =
+        conn.prepare("SELECT id, version, source, data_type, thumbnail FROM duc_document LIMIT 1")?;
     let result = stmt.query_row([], |row| {
         let id: String = row.get(0)?;
         let version: String = row.get(1)?;
@@ -677,24 +331,374 @@ fn read_document(conn: &Connection) -> ParseResult<(Option<String>, String, Stri
 
     match result {
         Ok(v) => Ok(v),
-        Err(rusqlite::Error::QueryReturnedNoRows) => Ok((None, String::new(), String::new(), String::new(), None)),
+        Err(rusqlite::Error::QueryReturnedNoRows) => {
+            Ok((None, String::new(), String::new(), String::new(), None))
+        }
         Err(e) => Err(e.into()),
     }
+}
+
+fn str_to_charter_phase(value: &str) -> DucCharterPhase {
+    match value {
+        "review" => DucCharterPhase::Review,
+        "delivery" => DucCharterPhase::Delivery,
+        "closed" => DucCharterPhase::Closed,
+        _ => DucCharterPhase::Intent,
+    }
+}
+
+fn str_to_issue_status(value: &str) -> DucIssueStatus {
+    match value {
+        "closed" => DucIssueStatus::Closed,
+        "dismissed" => DucIssueStatus::Dismissed,
+        _ => DucIssueStatus::Open,
+    }
+}
+
+fn read_charter(conn: &Connection) -> ParseResult<Option<DucCharter>> {
+    if !table_exists(conn, "duc_charter")? {
+        return Ok(None);
+    }
+
+    let result = conn.query_row(
+        "SELECT title, description, objective, phase, closed_reason, updated_at FROM duc_charter WHERE id = 1",
+        [],
+        |row| {
+            let phase: String = row.get(3)?;
+            Ok(DucCharter {
+                title: row.get(0)?,
+                description: row.get(1)?,
+                objective: row.get(2)?,
+                phase: str_to_charter_phase(&phase),
+                closed_reason: row.get(4)?,
+                requirements: Vec::new(),
+                constraints: Vec::new(),
+                decisions: Vec::new(),
+                stakeholders: None,
+                updated_at: row.get(5)?,
+            })
+        },
+    );
+
+    let mut charter = match result {
+        Ok(charter) => charter,
+        Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
+        Err(e) => return Err(e.into()),
+    };
+
+    charter.requirements = read_charter_requirements(conn)?;
+    charter.constraints = read_charter_constraints(conn)?;
+    charter.decisions = read_charter_decisions(conn)?;
+    let stakeholders = read_charter_stakeholders(conn)?;
+    charter.stakeholders = if stakeholders.is_empty() {
+        None
+    } else {
+        Some(stakeholders)
+    };
+
+    Ok(Some(charter))
+}
+
+fn read_charter_requirements(conn: &Connection) -> ParseResult<Vec<DucCharterRequirement>> {
+    let mut stmt = conn
+        .prepare("SELECT id, statement, must FROM duc_charter_requirements ORDER BY sort_order")?;
+    let rows = stmt.query_map([], |row| {
+        Ok(DucCharterRequirement {
+            id: row.get(0)?,
+            statement: row.get(1)?,
+            must: row.get::<_, i32>(2)? != 0,
+            acceptance_criteria: None,
+        })
+    })?;
+
+    let mut requirements = Vec::new();
+    for row in rows {
+        let mut requirement = row?;
+        let criteria = read_string_list(
+            conn,
+            "SELECT criterion FROM duc_charter_requirement_acceptance_criteria WHERE requirement_id = ?1 ORDER BY sort_order",
+            &requirement.id,
+        )?;
+        requirement.acceptance_criteria = if criteria.is_empty() {
+            None
+        } else {
+            Some(criteria)
+        };
+        requirements.push(requirement);
+    }
+    Ok(requirements)
+}
+
+fn read_charter_constraints(conn: &Connection) -> ParseResult<Vec<DucCharterConstraint>> {
+    let mut stmt = conn
+        .prepare("SELECT id, statement, hard FROM duc_charter_constraints ORDER BY sort_order")?;
+    let constraints = stmt
+        .query_map([], |row| {
+            Ok(DucCharterConstraint {
+                id: row.get(0)?,
+                statement: row.get(1)?,
+                hard: row.get::<_, i32>(2)? != 0,
+            })
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(constraints)
+}
+
+fn read_charter_decisions(conn: &Connection) -> ParseResult<Vec<DucCharterDecision>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, accepted, decision, rationale, decided_at FROM duc_charter_decisions ORDER BY sort_order"
+    )?;
+    let rows = stmt.query_map([], |row| {
+        Ok(DucCharterDecision {
+            id: row.get(0)?,
+            accepted: row.get::<_, i32>(1)? != 0,
+            decision: row.get(2)?,
+            rationale: row.get(3)?,
+            issue_ids: None,
+            decided_at: row.get(4)?,
+        })
+    })?;
+
+    let mut decisions = Vec::new();
+    for row in rows {
+        let mut decision = row?;
+        let issue_ids = read_string_list(
+            conn,
+            "SELECT issue_id FROM duc_charter_decision_issue_ids WHERE decision_id = ?1 ORDER BY sort_order",
+            &decision.id,
+        )?;
+        decision.issue_ids = if issue_ids.is_empty() {
+            None
+        } else {
+            Some(issue_ids)
+        };
+        decisions.push(decision);
+    }
+    Ok(decisions)
+}
+
+fn read_charter_stakeholders(conn: &Connection) -> ParseResult<Vec<DucCharterStakeholder>> {
+    let mut stmt = conn.prepare(
+        "SELECT actor_identifier, actor_name, role FROM duc_charter_stakeholders ORDER BY sort_order"
+    )?;
+    let stakeholders = stmt
+        .query_map([], |row| {
+            Ok(DucCharterStakeholder {
+                actor: Actor {
+                    identifier: row.get(0)?,
+                    name: row.get(1)?,
+                },
+                role: row.get(2)?,
+            })
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(stakeholders)
+}
+
+fn read_issues(conn: &Connection) -> ParseResult<Vec<DucIssue>> {
+    if !table_exists(conn, "duc_issues")? {
+        return Ok(Vec::new());
+    }
+
+    let mut stmt = conn.prepare(
+        "SELECT id, local_id, title, status, dismissed_reason, due_date, author_id,
+                created_at, updated_at, deleted_at
+         FROM duc_issues ORDER BY sort_order, local_id",
+    )?;
+    let rows = stmt.query_map([], |row| {
+        let status: String = row.get(3)?;
+        Ok(DucIssue {
+            id: row.get(0)?,
+            local_id: row.get(1)?,
+            title: row.get(2)?,
+            status: str_to_issue_status(&status),
+            dismissed_reason: row.get(4)?,
+            messages: Vec::new(),
+            due_date: row.get(5)?,
+            anchor: None,
+            author_id: row.get(6)?,
+            assignee_ids: None,
+            follower_ids: None,
+            created_at: row.get(7)?,
+            updated_at: row.get(8)?,
+            deleted_at: row.get(9)?,
+        })
+    })?;
+
+    let mut issues = Vec::new();
+    for row in rows {
+        let mut issue = row?;
+        issue.assignee_ids = optional_string_list(read_issue_actor_ids(
+            conn,
+            "duc_issue_assignees",
+            &issue.id,
+        )?);
+        issue.follower_ids = optional_string_list(read_issue_actor_ids(
+            conn,
+            "duc_issue_followers",
+            &issue.id,
+        )?);
+        issue.messages = read_issue_messages(conn, &issue.id)?;
+        issue.anchor = read_issue_anchor(conn, &issue.id)?;
+        issues.push(issue);
+    }
+    Ok(issues)
+}
+
+fn optional_string_list(list: Vec<String>) -> Option<Vec<String>> {
+    if list.is_empty() {
+        None
+    } else {
+        Some(list)
+    }
+}
+
+fn read_issue_actor_ids(
+    conn: &Connection,
+    table: &str,
+    issue_id: &str,
+) -> ParseResult<Vec<String>> {
+    let sql =
+        format!("SELECT actor_identifier FROM {table} WHERE issue_id = ?1 ORDER BY sort_order");
+    let mut stmt = conn.prepare_cached(&sql)?;
+    let actor_ids = stmt
+        .query_map(params![issue_id], |row| row.get(0))?
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(actor_ids)
+}
+
+fn read_issue_messages(conn: &Connection, issue_id: &str) -> ParseResult<Vec<DucIssueMessage>> {
+    let mut stmt = conn.prepare_cached(
+        "SELECT id, author_identifier, author_name, content, reply_to_id,
+                created_at, edited_at, deleted_at
+         FROM duc_issue_messages WHERE issue_id = ?1 ORDER BY sort_order",
+    )?;
+    let rows = stmt.query_map(params![issue_id], |row| {
+        Ok(DucIssueMessage {
+            id: row.get(0)?,
+            author: Actor {
+                identifier: row.get(1)?,
+                name: row.get(2)?,
+            },
+            content: row.get(3)?,
+            reply_to_id: row.get(4)?,
+            reactions: None,
+            created_at: row.get(5)?,
+            edited_at: row.get(6)?,
+            deleted_at: row.get(7)?,
+        })
+    })?;
+
+    let mut messages = Vec::new();
+    for row in rows {
+        let mut message = row?;
+        message.reactions = read_issue_message_reactions(conn, &message.id)?;
+        messages.push(message);
+    }
+    Ok(messages)
+}
+
+fn read_issue_message_reactions(
+    conn: &Connection,
+    message_id: &str,
+) -> ParseResult<Option<HashMap<String, Vec<String>>>> {
+    let mut stmt = conn.prepare_cached(
+        "SELECT emoji, actor_identifier
+         FROM duc_issue_message_reactions WHERE message_id = ?1 ORDER BY emoji, sort_order",
+    )?;
+    let rows = stmt.query_map(params![message_id], |row| {
+        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+    })?;
+
+    let mut reactions: HashMap<String, Vec<String>> = HashMap::new();
+    for row in rows {
+        let (emoji, actor_identifier) = row?;
+        reactions.entry(emoji).or_default().push(actor_identifier);
+    }
+    Ok(if reactions.is_empty() {
+        None
+    } else {
+        Some(reactions)
+    })
+}
+
+fn read_issue_anchor(conn: &Connection, issue_id: &str) -> ParseResult<Option<DucIssueAnchor>> {
+    let mut stmt = conn.prepare_cached(
+        "SELECT anchor_type, canvas_x, canvas_y, canvas_scope, element_id, anchor_x, anchor_y,
+                model_point_x, model_point_y, model_point_z, model_normal_x, model_normal_y,
+                model_normal_z, topology_id
+         FROM duc_issue_anchors WHERE issue_id = ?1",
+    )?;
+    let result = stmt.query_row(params![issue_id], |row| {
+        let anchor_type: String = row.get(0)?;
+        match anchor_type.as_str() {
+            "canvas" => Ok(DucIssueAnchor::Canvas {
+                x: row.get::<_, Option<f64>>(1)?.unwrap_or(0.0),
+                y: row.get::<_, Option<f64>>(2)?.unwrap_or(0.0),
+                scope: row.get(3)?,
+            }),
+            "element" => Ok(DucIssueAnchor::Element {
+                element_id: row.get::<_, Option<String>>(4)?.unwrap_or_default(),
+                anchor_x: row.get(5)?,
+                anchor_y: row.get(6)?,
+            }),
+            "model" => {
+                let normal_x: Option<f64> = row.get(10)?;
+                Ok(DucIssueAnchor::Model {
+                    element_id: row.get::<_, Option<String>>(4)?.unwrap_or_default(),
+                    point: [
+                        row.get::<_, Option<f64>>(7)?.unwrap_or(0.0),
+                        row.get::<_, Option<f64>>(8)?.unwrap_or(0.0),
+                        row.get::<_, Option<f64>>(9)?.unwrap_or(0.0),
+                    ],
+                    normal: normal_x.map(|x| {
+                        [
+                            x,
+                            row.get::<_, Option<f64>>(11).ok().flatten().unwrap_or(0.0),
+                            row.get::<_, Option<f64>>(12).ok().flatten().unwrap_or(0.0),
+                        ]
+                    }),
+                    viewer_state: None,
+                    topology_id: row.get(13)?,
+                })
+            }
+            _ => Ok(DucIssueAnchor::Canvas {
+                x: 0.0,
+                y: 0.0,
+                scope: None,
+            }),
+        }
+    });
+
+    let mut anchor = match result {
+        Ok(anchor) => anchor,
+        Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
+        Err(e) => return Err(e.into()),
+    };
+
+    if let DucIssueAnchor::Model {
+        ref mut viewer_state,
+        ..
+    } = anchor
+    {
+        *viewer_state = read_model_viewer_state(conn, "issue_anchor", issue_id)?;
+    }
+
+    Ok(Some(anchor))
 }
 
 // ─── duc_global_state ────────────────────────────────────────────────────────
 
 fn read_global_state(conn: &Connection) -> ParseResult<Option<DucGlobalState>> {
     let mut stmt = conn.prepare(
-        "SELECT name, view_background_color, main_scope, scope_exponent_threshold
-         FROM duc_global_state WHERE id = 1"
+        "SELECT view_background_color, main_scope, scope_exponent_threshold
+         FROM duc_global_state WHERE id = 1",
     )?;
     let result = stmt.query_row([], |row| {
         Ok(DucGlobalState {
-            name: row.get(0)?,
-            view_background_color: row.get(1)?,
-            main_scope: row.get(2)?,
-            scope_exponent_threshold: row.get(3)?,
+            view_background_color: row.get(0)?,
+            main_scope: row.get(1)?,
+            scope_exponent_threshold: row.get(2)?,
         })
     });
 
@@ -717,7 +721,7 @@ fn read_local_state(conn: &Connection) -> ParseResult<Option<DucLocalState>> {
                 pen_mode, view_mode_enabled, objects_snap_mode_enabled,
                 grid_mode_enabled, outline_mode_enabled, manual_save_mode,
                 decimal_places
-         FROM duc_local_state WHERE id = 1"
+         FROM duc_local_state WHERE id = 1",
     )?;
     let result = stmt.query_row([], |row| {
         let start_head_type: Option<i32> = row.get(10)?;
@@ -746,7 +750,7 @@ fn read_local_state(conn: &Connection) -> ParseResult<Option<DucLocalState>> {
             scroll_y: row.get(2)?,
             zoom: row.get(3)?,
             is_binding_enabled: row.get::<_, i32>(4)? != 0,
-            current_item_stroke: None, // loaded below
+            current_item_stroke: None,     // loaded below
             current_item_background: None, // loaded below
             current_item_opacity: row.get(5)?,
             current_item_font_family: row.get(6)?,
@@ -791,7 +795,11 @@ fn read_dictionary(conn: &Connection) -> ParseResult<Option<HashMap<String, Stri
         map.insert(k, v);
     }
 
-    if map.is_empty() { Ok(None) } else { Ok(Some(map)) }
+    if map.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(map))
+    }
 }
 
 // ─── layers, groups, regions ─────────────────────────────────────────────────
@@ -799,7 +807,7 @@ fn read_dictionary(conn: &Connection) -> ParseResult<Option<HashMap<String, Stri
 fn read_stack_base(conn: &Connection, id: &str) -> ParseResult<DucStackBase> {
     let mut stmt = conn.prepare_cached(
         "SELECT label, description, is_collapsed, is_plot, is_visible, locked, opacity
-         FROM stack_properties WHERE id = ?1"
+         FROM stack_properties WHERE id = ?1",
     )?;
     Ok(stmt.query_row(params![id], |row| {
         Ok(DucStackBase {
@@ -809,16 +817,18 @@ fn read_stack_base(conn: &Connection, id: &str) -> ParseResult<DucStackBase> {
             is_plot: row.get::<_, i32>(3)? != 0,
             is_visible: row.get::<_, i32>(4)? != 0,
             locked: row.get::<_, i32>(5)? != 0,
-            styles: DucStackLikeStyles { opacity: row.get(6)? },
+            styles: DucStackLikeStyles {
+                opacity: row.get(6)?,
+            },
         })
     })?)
 }
 
 fn read_layers(conn: &Connection) -> ParseResult<Vec<DucLayer>> {
     let mut stmt = conn.prepare("SELECT id, readonly FROM layers")?;
-    let rows: Vec<(String, i32)> = stmt.query_map([], |row| {
-        Ok((row.get(0)?, row.get(1)?))
-    })?.collect::<Result<Vec<_>, _>>()?;
+    let rows: Vec<(String, i32)> = stmt
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+        .collect::<Result<Vec<_>, _>>()?;
 
     let mut layers = Vec::with_capacity(rows.len());
     for (id, readonly) in rows {
@@ -847,7 +857,9 @@ fn read_layers(conn: &Connection) -> ParseResult<Vec<DucLayer>> {
 
 fn read_groups(conn: &Connection) -> ParseResult<Vec<DucGroup>> {
     let mut stmt = conn.prepare("SELECT id FROM groups")?;
-    let ids: Vec<String> = stmt.query_map([], |row| row.get(0))?.collect::<Result<Vec<_>, _>>()?;
+    let ids: Vec<String> = stmt
+        .query_map([], |row| row.get(0))?
+        .collect::<Result<Vec<_>, _>>()?;
 
     let mut groups = Vec::with_capacity(ids.len());
     for id in ids {
@@ -859,9 +871,9 @@ fn read_groups(conn: &Connection) -> ParseResult<Vec<DucGroup>> {
 
 fn read_regions(conn: &Connection) -> ParseResult<Vec<DucRegion>> {
     let mut stmt = conn.prepare("SELECT id, boolean_operation FROM regions")?;
-    let rows: Vec<(String, i32)> = stmt.query_map([], |row| {
-        Ok((row.get(0)?, row.get(1)?))
-    })?.collect::<Result<Vec<_>, _>>()?;
+    let rows: Vec<(String, i32)> = stmt
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+        .collect::<Result<Vec<_>, _>>()?;
 
     let mut regions = Vec::with_capacity(rows.len());
     for (id, bool_op) in rows {
@@ -877,83 +889,134 @@ fn read_regions(conn: &Connection) -> ParseResult<Vec<DucRegion>> {
 
 // ─── blocks ──────────────────────────────────────────────────────────────────
 
-fn read_blocks(conn: &Connection) -> ParseResult<(Vec<DucBlock>, Vec<DucBlockInstance>, Vec<DucBlockCollection>)> {
+fn read_blocks(
+    conn: &Connection,
+) -> ParseResult<(
+    Vec<DucBlock>,
+    Vec<DucBlockInstance>,
+    Vec<DucBlockCollection>,
+)> {
     // Blocks
-    let mut b_stmt = conn.prepare(
-        "SELECT id, label, description, version FROM blocks"
-    )?;
-    let blocks: Vec<DucBlock> = b_stmt.query_map([], |row| {
-        let id: String = row.get(0)?;
-        Ok((id, row.get(1)?, row.get(2)?, row.get(3)?))
-    })?.collect::<Result<Vec<(String, String, Option<String>, i32)>, _>>()?
-    .into_iter()
-    .map(|(id, label, description, version)| {
-        let (metadata, thumbnail) = read_block_metadata(conn, "block", &id).unwrap_or((None, None));
-        DucBlock { id, label, description, version, metadata, thumbnail }
-    }).collect();
+    let mut b_stmt = conn.prepare("SELECT id, label, description, version FROM blocks")?;
+    let blocks: Vec<DucBlock> = b_stmt
+        .query_map([], |row| {
+            let id: String = row.get(0)?;
+            Ok((id, row.get(1)?, row.get(2)?, row.get(3)?))
+        })?
+        .collect::<Result<Vec<(String, String, Option<String>, i32)>, _>>()?
+        .into_iter()
+        .map(|(id, label, description, version)| {
+            let (metadata, thumbnail) =
+                read_block_metadata(conn, "block", &id).unwrap_or((None, None));
+            DucBlock {
+                id,
+                label,
+                description,
+                version,
+                metadata,
+                thumbnail,
+            }
+        })
+        .collect();
 
     // Block instances
     let mut i_stmt = conn.prepare(
         "SELECT id, block_id, version, dup_rows, dup_cols, dup_row_spacing, dup_col_spacing
-         FROM block_instances"
+         FROM block_instances",
     )?;
-    let instances: Vec<DucBlockInstance> = i_stmt.query_map([], |row| {
-        let id: String = row.get(0)?;
-        let dup_rows: Option<i32> = row.get(3)?;
-        let duplication_array = dup_rows.map(|rows| DucBlockDuplicationArray {
-            rows,
-            cols: row.get::<_, i32>(4).unwrap_or(1),
-            row_spacing: row.get::<_, f64>(5).unwrap_or(0.0),
-            col_spacing: row.get::<_, f64>(6).unwrap_or(0.0),
-        });
-        Ok(DucBlockInstance {
-            id: id.clone(),
-            block_id: row.get(1)?,
-            version: row.get(2)?,
-            element_overrides: None, // loaded below
-            duplication_array,
-        })
-    })?.collect::<Result<Vec<_>, _>>()?;
+    let instances: Vec<DucBlockInstance> = i_stmt
+        .query_map([], |row| {
+            let id: String = row.get(0)?;
+            let dup_rows: Option<i32> = row.get(3)?;
+            let duplication_array = dup_rows.map(|rows| DucBlockDuplicationArray {
+                rows,
+                cols: row.get::<_, i32>(4).unwrap_or(1),
+                row_spacing: row.get::<_, f64>(5).unwrap_or(0.0),
+                col_spacing: row.get::<_, f64>(6).unwrap_or(0.0),
+            });
+            Ok(DucBlockInstance {
+                id: id.clone(),
+                block_id: row.get(1)?,
+                version: row.get(2)?,
+                element_overrides: None, // loaded below
+                duplication_array,
+            })
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
 
-    let instances: Vec<DucBlockInstance> = instances.into_iter().map(|mut inst| {
-        let mut ov_stmt = conn.prepare_cached(
-            "SELECT key, value FROM block_instance_overrides WHERE instance_id = ?1"
-        ).unwrap();
-        let overrides: Vec<StringValueEntry> = ov_stmt.query_map(params![inst.id], |row| {
-            Ok(StringValueEntry { key: row.get(0)?, value: row.get(1)? })
-        }).unwrap().collect::<Result<Vec<_>, _>>().unwrap_or_default();
-        inst.element_overrides = if overrides.is_empty() { None } else { Some(overrides) };
-        inst
-    }).collect();
+    let instances: Vec<DucBlockInstance> = instances
+        .into_iter()
+        .map(|mut inst| {
+            let mut ov_stmt = conn
+                .prepare_cached(
+                    "SELECT key, value FROM block_instance_overrides WHERE instance_id = ?1",
+                )
+                .unwrap();
+            let overrides: Vec<StringValueEntry> = ov_stmt
+                .query_map(params![inst.id], |row| {
+                    Ok(StringValueEntry {
+                        key: row.get(0)?,
+                        value: row.get(1)?,
+                    })
+                })
+                .unwrap()
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap_or_default();
+            inst.element_overrides = if overrides.is_empty() {
+                None
+            } else {
+                Some(overrides)
+            };
+            inst
+        })
+        .collect();
 
     // Block collections
     let mut c_stmt = conn.prepare("SELECT id, label FROM block_collections")?;
-    let collections: Vec<DucBlockCollection> = c_stmt.query_map([], |row| {
-        let id: String = row.get(0)?;
-        Ok((id, row.get(1)?))
-    })?.collect::<Result<Vec<(String, String)>, _>>()?
-    .into_iter()
-    .map(|(id, label)| {
-        let (metadata, thumbnail) = read_block_metadata(conn, "collection", &id).unwrap_or((None, None));
-        let mut e_stmt = conn.prepare_cached(
+    let collections: Vec<DucBlockCollection> = c_stmt
+        .query_map([], |row| {
+            let id: String = row.get(0)?;
+            Ok((id, row.get(1)?))
+        })?
+        .collect::<Result<Vec<(String, String)>, _>>()?
+        .into_iter()
+        .map(|(id, label)| {
+            let (metadata, thumbnail) =
+                read_block_metadata(conn, "collection", &id).unwrap_or((None, None));
+            let mut e_stmt = conn.prepare_cached(
             "SELECT child_id, is_collection FROM block_collection_entries WHERE collection_id = ?1"
         ).unwrap();
-        let children: Vec<DucBlockCollectionEntry> = e_stmt.query_map(params![id], |row| {
-            Ok(DucBlockCollectionEntry {
-                id: row.get(0)?,
-                is_collection: row.get::<_, i32>(1)? != 0,
-            })
-        }).unwrap().collect::<Result<Vec<_>, _>>().unwrap_or_default();
-        DucBlockCollection { id, label, children, metadata, thumbnail }
-    }).collect();
+            let children: Vec<DucBlockCollectionEntry> = e_stmt
+                .query_map(params![id], |row| {
+                    Ok(DucBlockCollectionEntry {
+                        id: row.get(0)?,
+                        is_collection: row.get::<_, i32>(1)? != 0,
+                    })
+                })
+                .unwrap()
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap_or_default();
+            DucBlockCollection {
+                id,
+                label,
+                children,
+                metadata,
+                thumbnail,
+            }
+        })
+        .collect();
 
     Ok((blocks, instances, collections))
 }
 
-fn read_block_metadata(conn: &Connection, owner_type: &str, owner_id: &str) -> ParseResult<(Option<DucBlockMetadata>, Option<Vec<u8>>)> {
+fn read_block_metadata(
+    conn: &Connection,
+    owner_type: &str,
+    owner_id: &str,
+) -> ParseResult<(Option<DucBlockMetadata>, Option<Vec<u8>>)> {
     let mut stmt = conn.prepare_cached(
         "SELECT source, usage_count, created_at, updated_at, localization, thumbnail
-         FROM block_metadata WHERE owner_type = ?1 AND owner_id = ?2"
+         FROM block_metadata WHERE owner_type = ?1 AND owner_id = ?2",
     )?;
     let result = stmt.query_row(params![owner_type, owner_id], |row| {
         Ok((
@@ -987,53 +1050,55 @@ fn read_elements(conn: &Connection) -> ParseResult<Vec<ElementWrapper>> {
                 roundness, blending, opacity,
                 instance_id, layer_id, frame_id,
                 z_index, link, locked, custom_data
-         FROM elements ORDER BY z_index ASC"
+         FROM elements ORDER BY z_index ASC",
     )?;
 
-    let rows: Vec<(String, String, DucElementBase)> = stmt.query_map([], |row| {
-        let id: String = row.get(0)?;
-        let element_type: String = row.get(1)?;
+    let rows: Vec<(String, String, DucElementBase)> = stmt
+        .query_map([], |row| {
+            let id: String = row.get(0)?;
+            let element_type: String = row.get(1)?;
 
-        let base = DucElementBase {
-            id: id.clone(),
-            x: row.get(2)?,
-            y: row.get(3)?,
-            width: row.get(4)?,
-            height: row.get(5)?,
-            angle: row.get(6)?,
-            scope: row.get(7)?,
-            label: row.get(8)?,
-            description: row.get(9)?,
-            is_visible: row.get::<_, i32>(10)? != 0,
-            seed: row.get(11)?,
-            version: row.get(12)?,
-            version_nonce: row.get(13)?,
-            updated: row.get(14)?,
-            index: row.get(15)?,
-            is_plot: row.get::<_, i32>(16)? != 0,
-            is_deleted: row.get::<_, i32>(17)? != 0,
-            styles: DucElementStylesBase {
-                roundness: row.get(18)?,
-                blending: row.get::<_, Option<i32>>(19)?.map(int_to_blending),
-                opacity: row.get(20)?,
-                background: Vec::new(), // loaded below
-                stroke: Vec::new(),     // loaded below
-            },
-            instance_id: row.get(21)?,
-            layer_id: row.get(22)?,
-            frame_id: row.get(23)?,
-            z_index: row.get(24)?,
-            link: row.get(25)?,
-            locked: row.get::<_, i32>(26)? != 0,
-            custom_data: row.get(27)?,
-            group_ids: Vec::new(),  // loaded below
-            block_ids: Vec::new(),  // loaded below
-            region_ids: Vec::new(), // loaded below
-            bound_elements: None,   // loaded below
-        };
+            let base = DucElementBase {
+                id: id.clone(),
+                x: row.get(2)?,
+                y: row.get(3)?,
+                width: row.get(4)?,
+                height: row.get(5)?,
+                angle: row.get(6)?,
+                scope: row.get(7)?,
+                label: row.get(8)?,
+                description: row.get(9)?,
+                is_visible: row.get::<_, i32>(10)? != 0,
+                seed: row.get(11)?,
+                version: row.get(12)?,
+                version_nonce: row.get(13)?,
+                updated: row.get(14)?,
+                index: row.get(15)?,
+                is_plot: row.get::<_, i32>(16)? != 0,
+                is_deleted: row.get::<_, i32>(17)? != 0,
+                styles: DucElementStylesBase {
+                    roundness: row.get(18)?,
+                    blending: row.get::<_, Option<i32>>(19)?.map(int_to_blending),
+                    opacity: row.get(20)?,
+                    background: Vec::new(), // loaded below
+                    stroke: Vec::new(),     // loaded below
+                },
+                instance_id: row.get(21)?,
+                layer_id: row.get(22)?,
+                frame_id: row.get(23)?,
+                z_index: row.get(24)?,
+                link: row.get(25)?,
+                locked: row.get::<_, i32>(26)? != 0,
+                custom_data: row.get(27)?,
+                group_ids: Vec::new(),  // loaded below
+                block_ids: Vec::new(),  // loaded below
+                region_ids: Vec::new(), // loaded below
+                bound_elements: None,   // loaded below
+            };
 
-        Ok((id, element_type, base))
-    })?.collect::<Result<Vec<_>, _>>()?;
+            Ok((id, element_type, base))
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
 
     let mut elements = Vec::with_capacity(rows.len());
     for (id, element_type, mut base) in rows {
@@ -1068,7 +1133,11 @@ fn read_elements(conn: &Connection) -> ParseResult<Vec<ElementWrapper>> {
             "doc" => read_doc_element(conn, base)?,
             "table" => read_table_element(conn, base)?,
             "model" => read_model_element(conn, base)?,
-            _ => return Err(ParseError::InvalidData(format!("unknown element type: {element_type}"))),
+            _ => {
+                return Err(ParseError::InvalidData(format!(
+                    "unknown element type: {element_type}"
+                )))
+            }
         };
 
         elements.push(ElementWrapper { element });
@@ -1079,32 +1148,46 @@ fn read_elements(conn: &Connection) -> ParseResult<Vec<ElementWrapper>> {
 
 fn read_string_list(conn: &Connection, sql: &str, id: &str) -> ParseResult<Vec<String>> {
     let mut stmt = conn.prepare_cached(sql)?;
-    let list: Vec<String> = stmt.query_map(params![id], |row| row.get(0))?
+    let list: Vec<String> = stmt
+        .query_map(params![id], |row| row.get(0))?
         .collect::<Result<Vec<_>, _>>()?;
     Ok(list)
 }
 
-fn read_bound_elements(conn: &Connection, element_id: &str) -> ParseResult<Option<Vec<BoundElement>>> {
+fn read_bound_elements(
+    conn: &Connection,
+    element_id: &str,
+) -> ParseResult<Option<Vec<BoundElement>>> {
     let mut stmt = conn.prepare_cached(
         "SELECT bound_element_id, bound_type FROM element_bound_elements
-         WHERE element_id = ?1 ORDER BY sort_order"
+         WHERE element_id = ?1 ORDER BY sort_order",
     )?;
-    let bound: Vec<BoundElement> = stmt.query_map(params![element_id], |row| {
-        Ok(BoundElement {
-            id: row.get(0)?,
-            element_type: row.get(1)?,
-        })
-    })?.collect::<Result<Vec<_>, _>>()?;
+    let bound: Vec<BoundElement> = stmt
+        .query_map(params![element_id], |row| {
+            Ok(BoundElement {
+                id: row.get(0)?,
+                element_type: row.get(1)?,
+            })
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
 
-    if bound.is_empty() { Ok(None) } else { Ok(Some(bound)) }
+    if bound.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(bound))
+    }
 }
 
 // ─── element type readers ────────────────────────────────────────────────────
 
 fn read_polygon_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucElementEnum> {
-    let mut stmt = conn.prepare_cached("SELECT sides FROM element_polygon WHERE element_id = ?1")?;
+    let mut stmt =
+        conn.prepare_cached("SELECT sides FROM element_polygon WHERE element_id = ?1")?;
     let sides: i32 = stmt.query_row(params![base.id], |row| row.get(0))?;
-    Ok(DucElementEnum::DucPolygonElement(DucPolygonElement { base, sides }))
+    Ok(DucElementEnum::DucPolygonElement(DucPolygonElement {
+        base,
+        sides,
+    }))
 }
 
 fn read_ellipse_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucElementEnum> {
@@ -1132,7 +1215,7 @@ fn read_text_element(conn: &Connection, base: DucElementBase) -> ParseResult<Duc
                 line_height, line_spacing_value, line_spacing_type,
                 oblique_angle, font_size, width_factor,
                 is_upside_down, is_backwards
-         FROM element_text WHERE element_id = ?1"
+         FROM element_text WHERE element_id = ?1",
     )?;
     let e = stmt.query_row(params![id], |row| {
         Ok(DucTextElement {
@@ -1169,7 +1252,7 @@ fn read_image_element(conn: &Connection, base: DucElementBase) -> ParseResult<Du
         "SELECT file_id, status, scale_x, scale_y,
                 crop_x, crop_y, crop_width, crop_height, crop_natural_width, crop_natural_height,
                 filter_brightness, filter_contrast
-         FROM element_image WHERE element_id = ?1"
+         FROM element_image WHERE element_id = ?1",
     )?;
     let e = stmt.query_row(params![id], |row| {
         let crop_x: Option<f64> = row.get(4)?;
@@ -1208,7 +1291,7 @@ fn read_freedraw_element(conn: &Connection, base: DucElementBase) -> ParseResult
                 pressures, simulate_pressure,
                 last_committed_point_x, last_committed_point_y, last_committed_point_mirror,
                 svg_path
-         FROM element_freedraw WHERE element_id = ?1"
+         FROM element_freedraw WHERE element_id = ?1",
     )?;
     let mut e = stmt.query_row(params![id], |row| {
         let start_cap: Option<i32> = row.get(5)?;
@@ -1225,13 +1308,19 @@ fn read_freedraw_element(conn: &Connection, base: DucElementBase) -> ParseResult
         });
 
         let pressures_blob: Option<Vec<u8>> = row.get(11)?;
-        let pressures = pressures_blob.map(|b| blob_to_f32_vec(&b)).unwrap_or_default();
+        let pressures = pressures_blob
+            .map(|b| blob_to_f32_vec(&b))
+            .unwrap_or_default();
 
         let lcp_x: Option<f64> = row.get(13)?;
         let last_committed_point = lcp_x.map(|x| DucPoint {
             x,
             y: row.get::<_, f64>(14).unwrap_or(0.0),
-            mirroring: row.get::<_, Option<i32>>(15).ok().flatten().map(int_to_bezier_mirroring),
+            mirroring: row
+                .get::<_, Option<i32>>(15)
+                .ok()
+                .flatten()
+                .map(int_to_bezier_mirroring),
         });
 
         Ok(DucFreeDrawElement {
@@ -1258,7 +1347,11 @@ fn read_freedraw_element(conn: &Connection, base: DucElementBase) -> ParseResult
     Ok(DucElementEnum::DucFreeDrawElement(e))
 }
 
-fn read_linear_element(conn: &Connection, base: DucElementBase, is_arrow: bool) -> ParseResult<DucElementEnum> {
+fn read_linear_element(
+    conn: &Connection,
+    base: DucElementBase,
+    is_arrow: bool,
+) -> ParseResult<DucElementEnum> {
     let id = base.id.clone();
     let mut stmt = conn.prepare_cached(
         "SELECT last_committed_point_x, last_committed_point_y, last_committed_point_mirror,
@@ -1271,7 +1364,7 @@ fn read_linear_element(conn: &Connection, base: DucElementBase, is_arrow: bool) 
                 end_binding_point_index, end_binding_point_offset,
                 end_binding_head_type, end_binding_head_block_id, end_binding_head_size,
                 wipeout_below, elbowed
-         FROM element_linear WHERE element_id = ?1"
+         FROM element_linear WHERE element_id = ?1",
     )?;
 
     let (mut linear_base, wipeout_below, elbowed) = stmt.query_row(params![id], |row| {
@@ -1279,7 +1372,11 @@ fn read_linear_element(conn: &Connection, base: DucElementBase, is_arrow: bool) 
         let last_committed_point = lcp_x.map(|x| DucPoint {
             x,
             y: row.get::<_, f64>(1).unwrap_or(0.0),
-            mirroring: row.get::<_, Option<i32>>(2).ok().flatten().map(int_to_bezier_mirroring),
+            mirroring: row
+                .get::<_, Option<i32>>(2)
+                .ok()
+                .flatten()
+                .map(int_to_bezier_mirroring),
         });
 
         let start_binding = read_binding_from_row(row, 3)?;
@@ -1314,24 +1411,32 @@ fn read_linear_element(conn: &Connection, base: DucElementBase, is_arrow: bool) 
             "SELECT start_index, start_handle_x, start_handle_y, end_index, end_handle_x, end_handle_y
              FROM linear_element_lines WHERE element_id = ?1 ORDER BY sort_order"
         )?;
-        linear_base.lines = l_stmt.query_map(params![id], |row| {
-            Ok(DucLine {
-                start: DucLineReference {
-                    index: row.get(0)?,
-                    handle: match row.get::<_, Option<f64>>(1)? {
-                        Some(x) => Some(GeometricPoint { x, y: row.get::<_, f64>(2).unwrap_or(0.0) }),
-                        None => None,
+        linear_base.lines = l_stmt
+            .query_map(params![id], |row| {
+                Ok(DucLine {
+                    start: DucLineReference {
+                        index: row.get(0)?,
+                        handle: match row.get::<_, Option<f64>>(1)? {
+                            Some(x) => Some(GeometricPoint {
+                                x,
+                                y: row.get::<_, f64>(2).unwrap_or(0.0),
+                            }),
+                            None => None,
+                        },
                     },
-                },
-                end: DucLineReference {
-                    index: row.get(3)?,
-                    handle: match row.get::<_, Option<f64>>(4)? {
-                        Some(x) => Some(GeometricPoint { x, y: row.get::<_, f64>(5).unwrap_or(0.0) }),
-                        None => None,
+                    end: DucLineReference {
+                        index: row.get(3)?,
+                        handle: match row.get::<_, Option<f64>>(4)? {
+                            Some(x) => Some(GeometricPoint {
+                                x,
+                                y: row.get::<_, f64>(5).unwrap_or(0.0),
+                            }),
+                            None => None,
+                        },
                     },
-                },
-            })
-        })?.collect::<Result<Vec<_>, _>>()?;
+                })
+            })?
+            .collect::<Result<Vec<_>, _>>()?;
     }
 
     // Path overrides
@@ -1339,16 +1444,17 @@ fn read_linear_element(conn: &Connection, base: DucElementBase, is_arrow: bool) 
         let mut po_stmt = conn.prepare_cached(
             "SELECT id, sort_order FROM linear_path_overrides WHERE element_id = ?1 ORDER BY sort_order"
         )?;
-        let path_rows: Vec<(i64, i32)> = po_stmt.query_map(params![id], |row| {
-            Ok((row.get(0)?, row.get(1)?))
-        })?.collect::<Result<Vec<_>, _>>()?;
+        let path_rows: Vec<(i64, i32)> = po_stmt
+            .query_map(params![id], |row| Ok((row.get(0)?, row.get(1)?)))?
+            .collect::<Result<Vec<_>, _>>()?;
 
         for (path_id, _sort) in path_rows {
             let mut idx_stmt = conn.prepare_cached(
                 "SELECT line_index FROM linear_path_override_indices
-                 WHERE path_override_id = ?1 ORDER BY sort_order"
+                 WHERE path_override_id = ?1 ORDER BY sort_order",
             )?;
-            let line_indices: Vec<i32> = idx_stmt.query_map(params![path_id], |row| row.get(0))?
+            let line_indices: Vec<i32> = idx_stmt
+                .query_map(params![path_id], |row| row.get(0))?
                 .collect::<Result<Vec<_>, _>>()?;
 
             let pid_str = path_id.to_string();
@@ -1364,15 +1470,26 @@ fn read_linear_element(conn: &Connection, base: DucElementBase, is_arrow: bool) 
     }
 
     if is_arrow {
-        Ok(DucElementEnum::DucArrowElement(DucArrowElement { linear_base, elbowed }))
+        Ok(DucElementEnum::DucArrowElement(DucArrowElement {
+            linear_base,
+            elbowed,
+        }))
     } else {
-        Ok(DucElementEnum::DucLinearElement(DucLinearElement { linear_base, wipeout_below }))
+        Ok(DucElementEnum::DucLinearElement(DucLinearElement {
+            linear_base,
+            wipeout_below,
+        }))
     }
 }
 
-fn read_binding_from_row(row: &rusqlite::Row, offset: usize) -> rusqlite::Result<Option<DucPointBinding>> {
+fn read_binding_from_row(
+    row: &rusqlite::Row,
+    offset: usize,
+) -> rusqlite::Result<Option<DucPointBinding>> {
     let elem_id: Option<String> = row.get(offset)?;
-    let Some(element_id) = elem_id else { return Ok(None) };
+    let Some(element_id) = elem_id else {
+        return Ok(None);
+    };
 
     let fixed_x: Option<f64> = row.get(offset + 3)?;
     let fixed_point = fixed_x.map(|x| GeometricPoint {
@@ -1405,14 +1522,16 @@ fn read_binding_from_row(row: &rusqlite::Row, offset: usize) -> rusqlite::Result
 
 fn read_frame_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucElementEnum> {
     let stack_element_base = read_stack_element_base(conn, base)?;
-    Ok(DucElementEnum::DucFrameElement(DucFrameElement { stack_element_base }))
+    Ok(DucElementEnum::DucFrameElement(DucFrameElement {
+        stack_element_base,
+    }))
 }
 
 fn read_plot_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucElementEnum> {
     let stack_element_base = read_stack_element_base(conn, base)?;
     let mut stmt = conn.prepare_cached(
         "SELECT margin_top, margin_right, margin_bottom, margin_left
-         FROM element_plot WHERE element_id = ?1"
+         FROM element_plot WHERE element_id = ?1",
     )?;
     let margins = stmt.query_row(params![stack_element_base.base.id], |row| {
         Ok(Margins {
@@ -1430,7 +1549,10 @@ fn read_plot_element(conn: &Connection, base: DucElementBase) -> ParseResult<Duc
     }))
 }
 
-fn read_stack_element_base(conn: &Connection, base: DucElementBase) -> ParseResult<DucStackElementBase> {
+fn read_stack_element_base(
+    conn: &Connection,
+    base: DucElementBase,
+) -> ParseResult<DucStackElementBase> {
     let id = base.id.clone();
     let mut stmt = conn.prepare_cached(
         "SELECT label, description, is_collapsed, is_plot, is_visible, locked, opacity, clip, label_visible
@@ -1446,7 +1568,9 @@ fn read_stack_element_base(conn: &Connection, base: DucElementBase) -> ParseResu
                 is_plot: row.get::<_, i32>(3)? != 0,
                 is_visible: row.get::<_, i32>(4)? != 0,
                 locked: row.get::<_, i32>(5)? != 0,
-                styles: DucStackLikeStyles { opacity: row.get(6)? },
+                styles: DucStackLikeStyles {
+                    opacity: row.get(6)?,
+                },
             },
             clip: row.get::<_, i32>(7)? != 0,
             label_visible: row.get::<_, i32>(8)? != 0,
@@ -1456,15 +1580,17 @@ fn read_stack_element_base(conn: &Connection, base: DucElementBase) -> ParseResu
 
 fn read_pdf_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucElementEnum> {
     let (file_id, grid_config) = read_document_grid_config(conn, &base.id)?;
-    Ok(DucElementEnum::DucPdfElement(DucPdfElement { base, file_id, grid_config }))
+    Ok(DucElementEnum::DucPdfElement(DucPdfElement {
+        base,
+        file_id,
+        grid_config,
+    }))
 }
 
 fn read_doc_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucElementEnum> {
     let id = base.id.clone();
     let (file_id, grid_config) = read_document_grid_config(conn, &base.id)?;
-    let mut stmt = conn.prepare_cached(
-        "SELECT text FROM element_doc WHERE element_id = ?1"
-    )?;
+    let mut stmt = conn.prepare_cached("SELECT text FROM element_doc WHERE element_id = ?1")?;
     let text: String = stmt.query_row(params![base.id], |row| row.get(0))?;
     let referenced_file_ids = read_doc_referenced_file_ids(conn, &id)?;
     Ok(DucElementEnum::DucDocElement(DucDocElement {
@@ -1477,10 +1603,13 @@ fn read_doc_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucE
     }))
 }
 
-fn read_document_grid_config(conn: &Connection, element_id: &str) -> ParseResult<(Option<String>, DocumentGridConfig)> {
+fn read_document_grid_config(
+    conn: &Connection,
+    element_id: &str,
+) -> ParseResult<(Option<String>, DocumentGridConfig)> {
     let mut stmt = conn.prepare_cached(
         "SELECT file_id, grid_columns, grid_gap_x, grid_gap_y, grid_first_page_alone, grid_scale
-         FROM document_grid_config WHERE element_id = ?1"
+         FROM document_grid_config WHERE element_id = ?1",
     )?;
     Ok(stmt.query_row(params![element_id], |row| {
         Ok((
@@ -1497,38 +1626,84 @@ fn read_document_grid_config(conn: &Connection, element_id: &str) -> ParseResult
 }
 
 fn read_table_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucElementEnum> {
-    let mut stmt = conn.prepare_cached("SELECT file_id FROM element_table WHERE element_id = ?1")?;
-    let file_id: Option<String> = stmt.query_row(params![base.id], |row| row.get(0))?;
+    let (file_id, grid_config) = match read_document_grid_config(conn, &base.id) {
+        Ok(value) => value,
+        Err(ParseError::Sqlite(rusqlite::Error::QueryReturnedNoRows)) => {
+            let legacy_file_id = read_legacy_table_file_id(conn, &base.id)?;
+            (legacy_file_id, default_document_grid_config())
+        }
+        Err(error) => return Err(error),
+    };
     Ok(DucElementEnum::DucTableElement(DucTableElement {
         base,
         style: DucTableStyle {},
         file_id,
+        grid_config,
     }))
+}
+
+fn default_document_grid_config() -> DocumentGridConfig {
+    DocumentGridConfig {
+        columns: 1,
+        gap_x: 0.0,
+        gap_y: 0.0,
+        first_page_alone: false,
+        scale: 1.0,
+    }
+}
+
+fn read_legacy_table_file_id(conn: &Connection, element_id: &str) -> ParseResult<Option<String>> {
+    let mut stmt =
+        match conn.prepare_cached("SELECT file_id FROM element_table WHERE element_id = ?1") {
+            Ok(stmt) => stmt,
+            Err(rusqlite::Error::SqliteFailure(_, Some(message)))
+                if message.contains("no such column") =>
+            {
+                return Ok(None);
+            }
+            Err(error) => return Err(error.into()),
+        };
+
+    match stmt.query_row(params![element_id], |row| row.get(0)) {
+        Ok(file_id) => Ok(file_id),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(error) => Err(error.into()),
+    }
 }
 
 fn read_model_element(conn: &Connection, base: DucElementBase) -> ParseResult<DucElementEnum> {
     let id = base.id.clone();
     let mut stmt = conn.prepare_cached(
-        "SELECT model_type, code, thumbnail FROM element_model WHERE element_id = ?1"
+        "SELECT model_type, code, thumbnail FROM element_model WHERE element_id = ?1",
     )?;
     let (model_type, code, thumbnail) = stmt.query_row(params![id], |row| {
-        Ok((row.get::<_, Option<String>>(0)?, row.get::<_, Option<String>>(1)?, row.get::<_, Option<Vec<u8>>>(2)?))
+        Ok((
+            row.get::<_, Option<String>>(0)?,
+            row.get::<_, Option<String>>(1)?,
+            row.get::<_, Option<Vec<u8>>>(2)?,
+        ))
     })?;
 
     let file_ids = read_element_file_ids(conn, &id)?;
 
-    let viewer_state = read_model_viewer_state(conn, &id)?;
+    let viewer_state = read_model_viewer_state(conn, "element", &id)?;
 
     Ok(DucElementEnum::DucModelElement(DucModelElement {
-        base, model_type, code, thumbnail, file_ids, viewer_state,
+        base,
+        model_type,
+        code,
+        thumbnail,
+        file_ids,
+        viewer_state,
     }))
 }
 
 fn read_element_file_ids(conn: &Connection, element_id: &str) -> ParseResult<Vec<String>> {
     let mut stmt = conn.prepare_cached(
-        "SELECT file_id FROM model_element_files WHERE element_id = ?1 ORDER BY sort_order"
+        "SELECT file_id FROM model_element_files WHERE element_id = ?1 ORDER BY sort_order",
     )?;
-    let file_ids = stmt.query_map(params![element_id], |row| row.get(0))?
+    let file_ids = stmt
+        .query_map(params![element_id], |row| row.get(0))?
         .collect::<Result<Vec<_>, _>>()?;
     Ok(file_ids)
 }
@@ -1541,7 +1716,8 @@ fn read_doc_referenced_file_ids(conn: &Connection, element_id: &str) -> ParseRes
     let mut stmt = conn.prepare_cached(
         "SELECT file_id FROM doc_element_referenced_files WHERE element_id = ?1 ORDER BY sort_order"
     )?;
-    let file_ids = stmt.query_map(params![element_id], |row| row.get(0))?
+    let file_ids = stmt
+        .query_map(params![element_id], |row| row.get(0))?
         .collect::<Result<Vec<_>, _>>()?;
     Ok(file_ids)
 }
@@ -1554,9 +1730,20 @@ fn table_exists(conn: &Connection, table_name: &str) -> ParseResult<bool> {
     )? != 0)
 }
 
-fn read_model_viewer_state(conn: &Connection, element_id: &str) -> ParseResult<Option<Viewer3DState>> {
-    let mut stmt = conn.prepare_cached(
-        "SELECT
+fn column_exists(conn: &Connection, table_name: &str, column_name: &str) -> ParseResult<bool> {
+    Ok(conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM pragma_table_info(?1) WHERE name = ?2)",
+        params![table_name, column_name],
+        |row| row.get::<_, i64>(0),
+    )? != 0)
+}
+
+fn read_model_viewer_state(
+    conn: &Connection,
+    owner_type: &str,
+    owner_id: &str,
+) -> ParseResult<Option<Viewer3DState>> {
+    let select_columns = "
             camera_control, camera_ortho, camera_up,
             camera_position_x, camera_position_y, camera_position_z,
             camera_quaternion_x, camera_quaternion_y, camera_quaternion_z, camera_quaternion_w,
@@ -1573,87 +1760,21 @@ fn read_model_viewer_state(conn: &Connection, element_id: &str) -> ParseResult<O
             clip_intersection, clip_show_planes, clip_object_color_caps,
             explode_active, explode_value,
             zebra_active, zebra_stripe_count, zebra_stripe_direction,
-            zebra_color_scheme, zebra_opacity, zebra_mapping_mode
-         FROM model_viewer_state WHERE element_id = ?1"
-    )?;
+            zebra_color_scheme, zebra_opacity, zebra_mapping_mode";
 
-    let result = stmt.query_row(params![element_id], |row| {
-        let grid_uniform: Option<i32> = row.get(21)?;
-        let grid = match grid_uniform {
-            Some(v) => Viewer3DGrid::Uniform(v != 0),
-            None => Viewer3DGrid::PerPlane(Viewer3DGridPlanes {
-                xy: row.get::<_, i32>(22)? != 0,
-                xz: row.get::<_, i32>(23)? != 0,
-                yz: row.get::<_, i32>(24)? != 0,
-            }),
-        };
-
-        fn read_clip(row: &rusqlite::Row, offset: usize) -> rusqlite::Result<Viewer3DClipPlane> {
-            let nx: Option<f64> = row.get(offset + 2)?;
-            let normal = nx.map(|x| [
-                x,
-                row.get::<_, f64>(offset + 3).unwrap_or(0.0),
-                row.get::<_, f64>(offset + 4).unwrap_or(0.0),
-            ]);
-            Ok(Viewer3DClipPlane {
-                enabled: row.get::<_, i32>(offset)? != 0,
-                value: row.get(offset + 1)?,
-                normal,
-            })
-        }
-
-        Ok(Viewer3DState {
-            camera: Viewer3DCamera {
-                control: row.get(0)?,
-                ortho: row.get::<_, i32>(1)? != 0,
-                up: row.get(2)?,
-                position: [row.get(3)?, row.get(4)?, row.get(5)?],
-                quaternion: [row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?],
-                target: [row.get(10)?, row.get(11)?, row.get(12)?],
-                zoom: row.get(13)?,
-                pan_speed: row.get(14)?,
-                rotate_speed: row.get(15)?,
-                zoom_speed: row.get(16)?,
-                holroyd: row.get::<_, i32>(17)? != 0,
-            },
-            display: Viewer3DDisplay {
-                wireframe: row.get::<_, i32>(18)? != 0,
-                transparent: row.get::<_, i32>(19)? != 0,
-                black_edges: row.get::<_, i32>(20)? != 0,
-                grid,
-                axes_visible: row.get::<_, i32>(25)? != 0,
-                axes_at_origin: row.get::<_, i32>(26)? != 0,
-            },
-            material: Viewer3DMaterial {
-                metalness: row.get(27)?,
-                roughness: row.get(28)?,
-                default_opacity: row.get(29)?,
-                edge_color: row.get(30)?,
-                ambient_intensity: row.get(31)?,
-                direct_intensity: row.get(32)?,
-            },
-            clipping: Viewer3DClipping {
-                x: read_clip(row, 33)?,
-                y: read_clip(row, 38)?,
-                z: read_clip(row, 43)?,
-                intersection: row.get::<_, i32>(48)? != 0,
-                show_planes: row.get::<_, i32>(49)? != 0,
-                object_color_caps: row.get::<_, i32>(50)? != 0,
-            },
-            explode: Viewer3DExplode {
-                active: row.get::<_, i32>(51)? != 0,
-                value: row.get(52)?,
-            },
-            zebra: Viewer3DZebra {
-                active: row.get::<_, i32>(53)? != 0,
-                stripe_count: row.get(54)?,
-                stripe_direction: row.get(55)?,
-                color_scheme: row.get(56)?,
-                opacity: row.get(57)?,
-                mapping_mode: row.get(58)?,
-            },
-        })
-    });
+    let result = if column_exists(conn, "model_viewer_state", "owner_type")? {
+        let sql = format!(
+            "SELECT {select_columns} FROM model_viewer_state WHERE owner_type = ?1 AND owner_id = ?2"
+        );
+        let mut stmt = conn.prepare_cached(&sql)?;
+        stmt.query_row(params![owner_type, owner_id], read_viewer3d_state_row)
+    } else if owner_type == "element" {
+        let sql = format!("SELECT {select_columns} FROM model_viewer_state WHERE element_id = ?1");
+        let mut stmt = conn.prepare_cached(&sql)?;
+        stmt.query_row(params![owner_id], read_viewer3d_state_row)
+    } else {
+        return Ok(None);
+    };
 
     match result {
         Ok(vs) => Ok(Some(vs)),
@@ -1662,23 +1783,109 @@ fn read_model_viewer_state(conn: &Connection, element_id: &str) -> ParseResult<O
     }
 }
 
+fn read_viewer3d_state_row(row: &rusqlite::Row) -> rusqlite::Result<Viewer3DState> {
+    let grid_uniform: Option<i32> = row.get(21)?;
+    let grid = match grid_uniform {
+        Some(v) => Viewer3DGrid::Uniform(v != 0),
+        None => Viewer3DGrid::PerPlane(Viewer3DGridPlanes {
+            xy: row.get::<_, i32>(22)? != 0,
+            xz: row.get::<_, i32>(23)? != 0,
+            yz: row.get::<_, i32>(24)? != 0,
+        }),
+    };
+
+    fn read_clip(row: &rusqlite::Row, offset: usize) -> rusqlite::Result<Viewer3DClipPlane> {
+        let nx: Option<f64> = row.get(offset + 2)?;
+        let normal = nx.map(|x| {
+            [
+                x,
+                row.get::<_, f64>(offset + 3).unwrap_or(0.0),
+                row.get::<_, f64>(offset + 4).unwrap_or(0.0),
+            ]
+        });
+        Ok(Viewer3DClipPlane {
+            enabled: row.get::<_, i32>(offset)? != 0,
+            value: row.get(offset + 1)?,
+            normal,
+        })
+    }
+
+    Ok(Viewer3DState {
+        camera: Viewer3DCamera {
+            control: row.get(0)?,
+            ortho: row.get::<_, i32>(1)? != 0,
+            up: row.get(2)?,
+            position: [row.get(3)?, row.get(4)?, row.get(5)?],
+            quaternion: [row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?],
+            target: [row.get(10)?, row.get(11)?, row.get(12)?],
+            zoom: row.get(13)?,
+            pan_speed: row.get(14)?,
+            rotate_speed: row.get(15)?,
+            zoom_speed: row.get(16)?,
+            holroyd: row.get::<_, i32>(17)? != 0,
+        },
+        display: Viewer3DDisplay {
+            wireframe: row.get::<_, i32>(18)? != 0,
+            transparent: row.get::<_, i32>(19)? != 0,
+            black_edges: row.get::<_, i32>(20)? != 0,
+            grid,
+            axes_visible: row.get::<_, i32>(25)? != 0,
+            axes_at_origin: row.get::<_, i32>(26)? != 0,
+        },
+        material: Viewer3DMaterial {
+            metalness: row.get(27)?,
+            roughness: row.get(28)?,
+            default_opacity: row.get(29)?,
+            edge_color: row.get(30)?,
+            ambient_intensity: row.get(31)?,
+            direct_intensity: row.get(32)?,
+        },
+        clipping: Viewer3DClipping {
+            x: read_clip(row, 33)?,
+            y: read_clip(row, 38)?,
+            z: read_clip(row, 43)?,
+            intersection: row.get::<_, i32>(48)? != 0,
+            show_planes: row.get::<_, i32>(49)? != 0,
+            object_color_caps: row.get::<_, i32>(50)? != 0,
+        },
+        explode: Viewer3DExplode {
+            active: row.get::<_, i32>(51)? != 0,
+            value: row.get(52)?,
+        },
+        zebra: Viewer3DZebra {
+            active: row.get::<_, i32>(53)? != 0,
+            stripe_count: row.get(54)?,
+            stripe_direction: row.get(55)?,
+            color_scheme: row.get(56)?,
+            opacity: row.get(57)?,
+            mapping_mode: row.get(58)?,
+        },
+    })
+}
+
 // ─── shared point reader ─────────────────────────────────────────────────────
 
 fn read_duc_points(conn: &Connection, sql: &str, id: &str) -> ParseResult<Vec<DucPoint>> {
     let mut stmt = conn.prepare_cached(sql)?;
-    let points: Vec<DucPoint> = stmt.query_map(params![id], |row| {
-        Ok(DucPoint {
-            x: row.get(0)?,
-            y: row.get(1)?,
-            mirroring: row.get::<_, Option<i32>>(2)?.map(int_to_bezier_mirroring),
-        })
-    })?.collect::<Result<Vec<_>, _>>()?;
+    let points: Vec<DucPoint> = stmt
+        .query_map(params![id], |row| {
+            Ok(DucPoint {
+                x: row.get(0)?,
+                y: row.get(1)?,
+                mirroring: row.get::<_, Option<i32>>(2)?.map(int_to_bezier_mirroring),
+            })
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
     Ok(points)
 }
 
 // ─── backgrounds & strokes ───────────────────────────────────────────────────
 
-fn read_backgrounds(conn: &Connection, owner_type: &str, owner_id: &str) -> ParseResult<Vec<ElementBackground>> {
+fn read_backgrounds(
+    conn: &Connection,
+    owner_type: &str,
+    owner_id: &str,
+) -> ParseResult<Vec<ElementBackground>> {
     let mut stmt = conn.prepare_cached(
         "SELECT id, preference, src, visible, opacity,
                 tiling_size_in_percent, tiling_angle, tiling_spacing, tiling_offset_x, tiling_offset_y,
@@ -1690,11 +1897,13 @@ fn read_backgrounds(conn: &Connection, owner_type: &str, owner_id: &str) -> Pars
          FROM backgrounds WHERE owner_type = ?1 AND owner_id = ?2 ORDER BY sort_order"
     )?;
 
-    let rows: Vec<(i64, ElementBackground)> = stmt.query_map(params![owner_type, owner_id], |row| {
-        let bg_id: i64 = row.get(0)?;
-        let content = read_element_content_base(row, 1)?;
-        Ok((bg_id, ElementBackground { content }))
-    })?.collect::<Result<Vec<_>, _>>()?;
+    let rows: Vec<(i64, ElementBackground)> = stmt
+        .query_map(params![owner_type, owner_id], |row| {
+            let bg_id: i64 = row.get(0)?;
+            let content = read_element_content_base(row, 1)?;
+            Ok((bg_id, ElementBackground { content }))
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
 
     let mut bgs = Vec::with_capacity(rows.len());
     for (bg_id, mut bg) in rows {
@@ -1708,7 +1917,11 @@ fn read_backgrounds(conn: &Connection, owner_type: &str, owner_id: &str) -> Pars
     Ok(bgs)
 }
 
-fn read_strokes(conn: &Connection, owner_type: &str, owner_id: &str) -> ParseResult<Vec<ElementStroke>> {
+fn read_strokes(
+    conn: &Connection,
+    owner_type: &str,
+    owner_id: &str,
+) -> ParseResult<Vec<ElementStroke>> {
     let mut stmt = conn.prepare_cached(
         "SELECT id, preference, src, visible, opacity,
                 tiling_size_in_percent, tiling_angle, tiling_spacing, tiling_offset_x, tiling_offset_y,
@@ -1724,40 +1937,45 @@ fn read_strokes(conn: &Connection, owner_type: &str, owner_id: &str) -> ParseRes
          FROM strokes WHERE owner_type = ?1 AND owner_id = ?2 ORDER BY sort_order"
     )?;
 
-    let rows: Vec<(i64, ElementStroke)> = stmt.query_map(params![owner_type, owner_id], |row| {
-        let st_id: i64 = row.get(0)?;
-        let content = read_element_content_base(row, 1)?;
+    let rows: Vec<(i64, ElementStroke)> = stmt
+        .query_map(params![owner_type, owner_id], |row| {
+            let st_id: i64 = row.get(0)?;
+            let content = read_element_content_base(row, 1)?;
 
-        let dash_blob: Option<Vec<u8>> = row.get(26)?;
-        let dash = dash_blob.map(|b| blob_to_f64_vec(&b));
+            let dash_blob: Option<Vec<u8>> = row.get(26)?;
+            let dash = dash_blob.map(|b| blob_to_f64_vec(&b));
 
-        let sides_blob: Option<Vec<u8>> = row.get(32)?;
-        let sides_pref: Option<i32> = row.get(31)?;
-        let stroke_sides = if sides_pref.is_some() || sides_blob.is_some() {
-            Some(StrokeSides {
-                preference: sides_pref.map(int_to_stroke_side_preference),
-                values: sides_blob.map(|b| blob_to_f64_vec(&b)),
-            })
-        } else {
-            None
-        };
+            let sides_blob: Option<Vec<u8>> = row.get(32)?;
+            let sides_pref: Option<i32> = row.get(31)?;
+            let stroke_sides = if sides_pref.is_some() || sides_blob.is_some() {
+                Some(StrokeSides {
+                    preference: sides_pref.map(int_to_stroke_side_preference),
+                    values: sides_blob.map(|b| blob_to_f64_vec(&b)),
+                })
+            } else {
+                None
+            };
 
-        Ok((st_id, ElementStroke {
-            content,
-            width: row.get(22)?,
-            style: StrokeStyle {
-                preference: row.get::<_, Option<i32>>(23)?.map(int_to_stroke_preference),
-                cap: row.get::<_, Option<i32>>(24)?.map(int_to_stroke_cap),
-                join: row.get::<_, Option<i32>>(25)?.map(int_to_stroke_join),
-                dash,
-                dash_line_override: row.get(27)?,
-                dash_cap: row.get::<_, Option<i32>>(28)?.map(int_to_stroke_cap),
-                miter_limit: row.get(29)?,
-            },
-            placement: row.get::<_, Option<i32>>(30)?.map(int_to_stroke_placement),
-            stroke_sides,
-        }))
-    })?.collect::<Result<Vec<_>, _>>()?;
+            Ok((
+                st_id,
+                ElementStroke {
+                    content,
+                    width: row.get(22)?,
+                    style: StrokeStyle {
+                        preference: row.get::<_, Option<i32>>(23)?.map(int_to_stroke_preference),
+                        cap: row.get::<_, Option<i32>>(24)?.map(int_to_stroke_cap),
+                        join: row.get::<_, Option<i32>>(25)?.map(int_to_stroke_join),
+                        dash,
+                        dash_line_override: row.get(27)?,
+                        dash_cap: row.get::<_, Option<i32>>(28)?.map(int_to_stroke_cap),
+                        miter_limit: row.get(29)?,
+                    },
+                    placement: row.get::<_, Option<i32>>(30)?.map(int_to_stroke_placement),
+                    stroke_sides,
+                },
+            ))
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
 
     let mut strokes = Vec::with_capacity(rows.len());
     for (st_id, mut st) in rows {
@@ -1771,7 +1989,10 @@ fn read_strokes(conn: &Connection, owner_type: &str, owner_id: &str) -> ParseRes
     Ok(strokes)
 }
 
-fn read_element_content_base(row: &rusqlite::Row, offset: usize) -> rusqlite::Result<ElementContentBase> {
+fn read_element_content_base(
+    row: &rusqlite::Row,
+    offset: usize,
+) -> rusqlite::Result<ElementContentBase> {
     let tiling_size: Option<f32> = row.get(offset + 4)?;
     let tiling = tiling_size.map(|size_in_percent| TilingProperties {
         size_in_percent,
@@ -1798,9 +2019,18 @@ fn read_element_content_base(row: &rusqlite::Row, offset: usize) -> rusqlite::Re
             pattern_origin: DucPoint {
                 x: row.get::<_, f64>(offset + 13).unwrap_or(0.0),
                 y: row.get::<_, f64>(offset + 14).unwrap_or(0.0),
-                mirroring: row.get::<_, Option<i32>>(offset + 15).ok().flatten().map(int_to_bezier_mirroring),
+                mirroring: row
+                    .get::<_, Option<i32>>(offset + 15)
+                    .ok()
+                    .flatten()
+                    .map(int_to_bezier_mirroring),
             },
-            pattern_double: row.get::<_, Option<i32>>(offset + 16).ok().flatten().unwrap_or(0) != 0,
+            pattern_double: row
+                .get::<_, Option<i32>>(offset + 16)
+                .ok()
+                .flatten()
+                .unwrap_or(0)
+                != 0,
             custom_pattern,
         }
     });
@@ -1812,7 +2042,9 @@ fn read_element_content_base(row: &rusqlite::Row, offset: usize) -> rusqlite::Re
     });
 
     Ok(ElementContentBase {
-        preference: row.get::<_, Option<i32>>(offset)?.map(int_to_content_preference),
+        preference: row
+            .get::<_, Option<i32>>(offset)?
+            .map(int_to_content_preference),
         src: row.get(offset + 1)?,
         visible: row.get::<_, i32>(offset + 2)? != 0,
         opacity: row.get(offset + 3)?,
@@ -1822,25 +2054,31 @@ fn read_element_content_base(row: &rusqlite::Row, offset: usize) -> rusqlite::Re
     })
 }
 
-fn read_hatch_pattern_lines(conn: &Connection, owner_type: &str, owner_id: i64) -> ParseResult<Vec<HatchPatternLine>> {
+fn read_hatch_pattern_lines(
+    conn: &Connection,
+    owner_type: &str,
+    owner_id: i64,
+) -> ParseResult<Vec<HatchPatternLine>> {
     let mut stmt = conn.prepare_cached(
         "SELECT angle, origin_x, origin_y, origin_mirroring, offset_x, offset_y, dash_pattern
-         FROM hatch_pattern_lines WHERE owner_type = ?1 AND owner_id = ?2 ORDER BY sort_order"
+         FROM hatch_pattern_lines WHERE owner_type = ?1 AND owner_id = ?2 ORDER BY sort_order",
     )?;
-    let lines: Vec<HatchPatternLine> = stmt.query_map(params![owner_type, owner_id], |row| {
-        let dash_blob: Option<Vec<u8>> = row.get(6)?;
-        let dash_pattern = dash_blob.map(|b| blob_to_f64_vec(&b)).unwrap_or_default();
-        Ok(HatchPatternLine {
-            angle: row.get(0)?,
-            origin: DucPoint {
-                x: row.get(1)?,
-                y: row.get(2)?,
-                mirroring: row.get::<_, Option<i32>>(3)?.map(int_to_bezier_mirroring),
-            },
-            offset: vec![row.get(4)?, row.get(5)?],
-            dash_pattern,
-        })
-    })?.collect::<Result<Vec<_>, _>>()?;
+    let lines: Vec<HatchPatternLine> = stmt
+        .query_map(params![owner_type, owner_id], |row| {
+            let dash_blob: Option<Vec<u8>> = row.get(6)?;
+            let dash_pattern = dash_blob.map(|b| blob_to_f64_vec(&b)).unwrap_or_default();
+            Ok(HatchPatternLine {
+                angle: row.get(0)?,
+                origin: DucPoint {
+                    x: row.get(1)?,
+                    y: row.get(2)?,
+                    mirroring: row.get::<_, Option<i32>>(3)?.map(int_to_bezier_mirroring),
+                },
+                offset: vec![row.get(4)?, row.get(5)?],
+                dash_pattern,
+            })
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
     Ok(lines)
 }
 
@@ -1858,11 +2096,14 @@ fn read_external_files(conn: &Connection) -> ParseResult<ExternalFilesResult> {
     )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
 
     if has_revisions_table {
-        let has_data_table: bool = conn.prepare(
-            "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='external_file_revision_data'"
-        )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
+        let has_chunks_table =
+            external_file_chunks::table_exists(conn, "external_file_revision_chunks")?;
+        let has_data_table =
+            external_file_chunks::table_exists(conn, "external_file_revision_data")?;
 
-        if has_data_table {
+        if has_chunks_table {
+            read_external_files_v4(conn)
+        } else if has_data_table {
             read_external_files_v3(conn)
         } else {
             read_external_files_v2(conn)
@@ -1872,38 +2113,240 @@ fn read_external_files(conn: &Connection) -> ParseResult<ExternalFilesResult> {
     }
 }
 
+fn read_external_file_metadata(
+    conn: &Connection,
+) -> ParseResult<Option<HashMap<String, DucExternalFile>>> {
+    let has_revisions_table: bool = conn.prepare(
+        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='external_file_revisions'"
+    )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
+
+    if has_revisions_table {
+        let mut rev_stmt = conn.prepare(
+            "SELECT id, file_id, size_bytes, checksum, source_name, mime_type, message,
+                    created, last_retrieved
+             FROM external_file_revisions",
+        )?;
+        let mut revisions_by_file: HashMap<String, HashMap<String, ExternalFileRevisionMeta>> =
+            HashMap::new();
+        let rev_rows = rev_stmt.query_map([], |row| {
+            let rev_id: String = row.get(0)?;
+            let file_id: String = row.get(1)?;
+            Ok((
+                file_id,
+                rev_id.clone(),
+                ExternalFileRevisionMeta {
+                    id: rev_id,
+                    size_bytes: row.get(2)?,
+                    checksum: row.get(3)?,
+                    source_name: row.get(4)?,
+                    mime_type: row.get(5)?,
+                    message: row.get(6)?,
+                    created: row.get(7)?,
+                    last_retrieved: row.get(8)?,
+                },
+            ))
+        })?;
+        for row in rev_rows {
+            let (file_id, rev_id, meta) = row?;
+            revisions_by_file
+                .entry(file_id)
+                .or_default()
+                .insert(rev_id, meta);
+        }
+
+        let mut file_stmt =
+            conn.prepare("SELECT id, active_revision_id, updated, version FROM external_files")?;
+        let mut files: HashMap<String, DucExternalFile> = HashMap::new();
+        let file_rows = file_stmt.query_map([], |row| {
+            let id: String = row.get(0)?;
+            Ok((
+                id.clone(),
+                DucExternalFile {
+                    id,
+                    active_revision_id: row.get(1)?,
+                    updated: row.get(2)?,
+                    revisions: HashMap::new(),
+                    version: row.get(3)?,
+                },
+            ))
+        })?;
+        for row in file_rows {
+            let (file_id, mut file) = row?;
+            file.revisions = revisions_by_file.remove(&file_id).unwrap_or_default();
+            files.insert(file_id, file);
+        }
+
+        return Ok(if files.is_empty() { None } else { Some(files) });
+    }
+
+    let mut stmt = conn.prepare(
+        "SELECT id, mime_type, length(data), created, last_retrieved, version FROM external_files",
+    )?;
+    let mut files = HashMap::new();
+    let rows = stmt.query_map([], |row| {
+        let id: String = row.get(0)?;
+        let rev_id = format!("{}_rev1", id);
+        let size_bytes: Option<i64> = row.get(2)?;
+        let meta = ExternalFileRevisionMeta {
+            id: rev_id.clone(),
+            size_bytes: size_bytes.unwrap_or(0),
+            checksum: None,
+            source_name: None,
+            mime_type: row.get(1)?,
+            message: None,
+            created: row.get(3)?,
+            last_retrieved: row.get(4)?,
+        };
+        let mut revisions = HashMap::new();
+        revisions.insert(rev_id.clone(), meta);
+        Ok((
+            id.clone(),
+            DucExternalFile {
+                id,
+                active_revision_id: rev_id,
+                updated: row.get(3)?,
+                version: row.get(5)?,
+                revisions,
+            },
+        ))
+    })?;
+    for row in rows {
+        let (file_id, file) = row?;
+        files.insert(file_id, file);
+    }
+
+    Ok(if files.is_empty() { None } else { Some(files) })
+}
+
+/// Read from the chunked schema (external_file_revisions metadata + ordered data chunks).
+fn read_external_files_v4(conn: &Connection) -> ParseResult<ExternalFilesResult> {
+    let mut rev_stmt = conn.prepare(
+        "SELECT id, file_id, size_bytes, checksum, source_name, mime_type, message,
+                created, last_retrieved
+         FROM external_file_revisions",
+    )?;
+    let mut revisions_by_file: HashMap<String, HashMap<String, ExternalFileRevisionMeta>> =
+        HashMap::new();
+    let mut data_buffers: HashMap<String, Vec<u8>> = HashMap::new();
+    let rev_rows = rev_stmt.query_map([], |row| {
+        let rev_id: String = row.get(0)?;
+        let file_id: String = row.get(1)?;
+        Ok((
+            file_id,
+            rev_id.clone(),
+            ExternalFileRevisionMeta {
+                id: rev_id,
+                size_bytes: row.get(2)?,
+                checksum: row.get(3)?,
+                source_name: row.get(4)?,
+                mime_type: row.get(5)?,
+                message: row.get(6)?,
+                created: row.get(7)?,
+                last_retrieved: row.get(8)?,
+            },
+        ))
+    })?;
+    for row in rev_rows {
+        let (file_id, rev_id, meta) = row?;
+        revisions_by_file
+            .entry(file_id)
+            .or_default()
+            .insert(rev_id.clone(), meta);
+        data_buffers.insert(rev_id, Vec::new());
+    }
+
+    let mut data_stmt = conn.prepare(
+        "SELECT revision_id, data
+         FROM external_file_revision_chunks
+         ORDER BY revision_id, chunk_index",
+    )?;
+    let data_rows = data_stmt.query_map([], |row| {
+        let rev_id: String = row.get(0)?;
+        let blob: Vec<u8> = row.get(1)?;
+        Ok((rev_id, blob))
+    })?;
+    for row in data_rows {
+        let (rev_id, blob) = row?;
+        data_buffers
+            .entry(rev_id)
+            .or_default()
+            .extend_from_slice(&blob);
+    }
+
+    let mut file_stmt =
+        conn.prepare("SELECT id, active_revision_id, updated, version FROM external_files")?;
+    let mut map: HashMap<String, DucExternalFile> = HashMap::new();
+    let file_rows = file_stmt.query_map([], |row| {
+        let id: String = row.get(0)?;
+        Ok((
+            id.clone(),
+            DucExternalFile {
+                id,
+                active_revision_id: row.get(1)?,
+                updated: row.get(2)?,
+                revisions: HashMap::new(),
+                version: row.get(3)?,
+            },
+        ))
+    })?;
+    for row in file_rows {
+        let (k, mut v) = row?;
+        v.revisions = revisions_by_file.remove(&k).unwrap_or_default();
+        map.insert(k, v);
+    }
+
+    let files = if map.is_empty() { None } else { Some(map) };
+    let data_map: HashMap<String, serde_bytes::ByteBuf> = data_buffers
+        .into_iter()
+        .map(|(rev_id, blob)| (rev_id, serde_bytes::ByteBuf::from(blob)))
+        .collect();
+    let data = if data_map.is_empty() {
+        None
+    } else {
+        Some(data_map)
+    };
+    Ok((files, data))
+}
+
 /// Read from the split schema (external_file_revisions metadata + external_file_revision_data).
 fn read_external_files_v3(conn: &Connection) -> ParseResult<ExternalFilesResult> {
     // Load revision metadata
     let mut rev_stmt = conn.prepare(
         "SELECT id, file_id, size_bytes, checksum, source_name, mime_type, message,
                 created, last_retrieved
-         FROM external_file_revisions"
+         FROM external_file_revisions",
     )?;
-    let mut revisions_by_file: HashMap<String, HashMap<String, ExternalFileRevisionMeta>> = HashMap::new();
+    let mut revisions_by_file: HashMap<String, HashMap<String, ExternalFileRevisionMeta>> =
+        HashMap::new();
     let rev_rows = rev_stmt.query_map([], |row| {
         let rev_id: String = row.get(0)?;
         let file_id: String = row.get(1)?;
-        Ok((file_id, rev_id.clone(), ExternalFileRevisionMeta {
-            id:             rev_id,
-            size_bytes:     row.get(2)?,
-            checksum:       row.get(3)?,
-            source_name:    row.get(4)?,
-            mime_type:      row.get(5)?,
-            message:        row.get(6)?,
-            created:        row.get(7)?,
-            last_retrieved: row.get(8)?,
-        }))
+        Ok((
+            file_id,
+            rev_id.clone(),
+            ExternalFileRevisionMeta {
+                id: rev_id,
+                size_bytes: row.get(2)?,
+                checksum: row.get(3)?,
+                source_name: row.get(4)?,
+                mime_type: row.get(5)?,
+                message: row.get(6)?,
+                created: row.get(7)?,
+                last_retrieved: row.get(8)?,
+            },
+        ))
     })?;
     for row in rev_rows {
         let (file_id, rev_id, meta) = row?;
-        revisions_by_file.entry(file_id).or_default().insert(rev_id, meta);
+        revisions_by_file
+            .entry(file_id)
+            .or_default()
+            .insert(rev_id, meta);
     }
 
     // Load data blobs
-    let mut data_stmt = conn.prepare(
-        "SELECT revision_id, data FROM external_file_revision_data"
-    )?;
+    let mut data_stmt =
+        conn.prepare("SELECT revision_id, data FROM external_file_revision_data")?;
     let mut data_map: HashMap<String, serde_bytes::ByteBuf> = HashMap::new();
     let data_rows = data_stmt.query_map([], |row| {
         let rev_id: String = row.get(0)?;
@@ -1916,19 +2359,21 @@ fn read_external_files_v3(conn: &Connection) -> ParseResult<ExternalFilesResult>
     }
 
     // Load file headers
-    let mut file_stmt = conn.prepare(
-        "SELECT id, active_revision_id, updated, version FROM external_files"
-    )?;
+    let mut file_stmt =
+        conn.prepare("SELECT id, active_revision_id, updated, version FROM external_files")?;
     let mut map: HashMap<String, DucExternalFile> = HashMap::new();
     let file_rows = file_stmt.query_map([], |row| {
         let id: String = row.get(0)?;
-        Ok((id.clone(), DucExternalFile {
-            id,
-            active_revision_id: row.get(1)?,
-            updated: row.get(2)?,
-            revisions: HashMap::new(),
-            version: row.get(3)?,
-        }))
+        Ok((
+            id.clone(),
+            DucExternalFile {
+                id,
+                active_revision_id: row.get(1)?,
+                updated: row.get(2)?,
+                revisions: HashMap::new(),
+                version: row.get(3)?,
+            },
+        ))
     })?;
     for row in file_rows {
         let (k, mut v) = row?;
@@ -1937,7 +2382,11 @@ fn read_external_files_v3(conn: &Connection) -> ParseResult<ExternalFilesResult>
     }
 
     let files = if map.is_empty() { None } else { Some(map) };
-    let data = if data_map.is_empty() { None } else { Some(data_map) };
+    let data = if data_map.is_empty() {
+        None
+    } else {
+        Some(data_map)
+    };
     Ok((files, data))
 }
 
@@ -1946,46 +2395,57 @@ fn read_external_files_v2(conn: &Connection) -> ParseResult<ExternalFilesResult>
     let mut rev_stmt = conn.prepare(
         "SELECT id, file_id, size_bytes, checksum, source_name, mime_type, message,
                 created, last_retrieved, data
-         FROM external_file_revisions"
+         FROM external_file_revisions",
     )?;
-    let mut revisions_by_file: HashMap<String, HashMap<String, ExternalFileRevisionMeta>> = HashMap::new();
+    let mut revisions_by_file: HashMap<String, HashMap<String, ExternalFileRevisionMeta>> =
+        HashMap::new();
     let mut data_map: HashMap<String, serde_bytes::ByteBuf> = HashMap::new();
 
     let rev_rows = rev_stmt.query_map([], |row| {
         let rev_id: String = row.get(0)?;
         let file_id: String = row.get(1)?;
         let blob: Vec<u8> = row.get(9)?;
-        Ok((file_id, rev_id.clone(), ExternalFileRevisionMeta {
-            id:             rev_id,
-            size_bytes:     row.get(2)?,
-            checksum:       row.get(3)?,
-            source_name:    row.get(4)?,
-            mime_type:      row.get(5)?,
-            message:        row.get(6)?,
-            created:        row.get(7)?,
-            last_retrieved: row.get(8)?,
-        }, blob))
+        Ok((
+            file_id,
+            rev_id.clone(),
+            ExternalFileRevisionMeta {
+                id: rev_id,
+                size_bytes: row.get(2)?,
+                checksum: row.get(3)?,
+                source_name: row.get(4)?,
+                mime_type: row.get(5)?,
+                message: row.get(6)?,
+                created: row.get(7)?,
+                last_retrieved: row.get(8)?,
+            },
+            blob,
+        ))
     })?;
     for row in rev_rows {
         let (file_id, rev_id, meta, blob) = row?;
-        revisions_by_file.entry(file_id).or_default().insert(rev_id.clone(), meta);
+        revisions_by_file
+            .entry(file_id)
+            .or_default()
+            .insert(rev_id.clone(), meta);
         data_map.insert(rev_id, serde_bytes::ByteBuf::from(blob));
     }
 
     // Load the file headers.
-    let mut file_stmt = conn.prepare(
-        "SELECT id, active_revision_id, updated, version FROM external_files"
-    )?;
+    let mut file_stmt =
+        conn.prepare("SELECT id, active_revision_id, updated, version FROM external_files")?;
     let mut map: HashMap<String, DucExternalFile> = HashMap::new();
     let file_rows = file_stmt.query_map([], |row| {
         let id: String = row.get(0)?;
-        Ok((id.clone(), DucExternalFile {
-            id,
-            active_revision_id: row.get(1)?,
-            updated: row.get(2)?,
-            revisions: HashMap::new(),
-            version: row.get(3)?,
-        }))
+        Ok((
+            id.clone(),
+            DucExternalFile {
+                id,
+                active_revision_id: row.get(1)?,
+                updated: row.get(2)?,
+                revisions: HashMap::new(),
+                version: row.get(3)?,
+            },
+        ))
     })?;
     for row in file_rows {
         let (k, mut v) = row?;
@@ -1994,7 +2454,11 @@ fn read_external_files_v2(conn: &Connection) -> ParseResult<ExternalFilesResult>
     }
 
     let files = if map.is_empty() { None } else { Some(map) };
-    let data = if data_map.is_empty() { None } else { Some(data_map) };
+    let data = if data_map.is_empty() {
+        None
+    } else {
+        Some(data_map)
+    };
     Ok((files, data))
 }
 
@@ -2002,7 +2466,7 @@ fn read_external_files_v2(conn: &Connection) -> ParseResult<ExternalFilesResult>
 /// Wraps each row in a single-revision DucExternalFile.
 fn read_external_files_v1_legacy(conn: &Connection) -> ParseResult<ExternalFilesResult> {
     let mut stmt = conn.prepare(
-        "SELECT id, mime_type, data, created, last_retrieved, version FROM external_files"
+        "SELECT id, mime_type, data, created, last_retrieved, version FROM external_files",
     )?;
     let mut map = HashMap::new();
     let mut data_map: HashMap<String, serde_bytes::ByteBuf> = HashMap::new();
@@ -2020,17 +2484,22 @@ fn read_external_files_v1_legacy(conn: &Connection) -> ParseResult<ExternalFiles
             created: row.get(3)?,
             last_retrieved: row.get(4)?,
         };
-        Ok((id.clone(), rev_id.clone(), DucExternalFile {
-            id,
-            active_revision_id: rev_id.clone(),
-            updated: row.get(3)?,
-            version: row.get(5)?,
-            revisions: {
-                let mut revs = HashMap::new();
-                revs.insert(rev_id.clone(), meta);
-                revs
+        Ok((
+            id.clone(),
+            rev_id.clone(),
+            DucExternalFile {
+                id,
+                active_revision_id: rev_id.clone(),
+                updated: row.get(3)?,
+                version: row.get(5)?,
+                revisions: {
+                    let mut revs = HashMap::new();
+                    revs.insert(rev_id.clone(), meta);
+                    revs
+                },
             },
-        }, blob))
+            blob,
+        ))
     })?;
     for row in rows {
         let (k, rev_id, v, blob) = row?;
@@ -2038,135 +2507,18 @@ fn read_external_files_v1_legacy(conn: &Connection) -> ParseResult<ExternalFiles
         map.insert(k, v);
     }
     let files = if map.is_empty() { None } else { Some(map) };
-    let data = if data_map.is_empty() { None } else { Some(data_map) };
+    let data = if data_map.is_empty() {
+        None
+    } else {
+        Some(data_map)
+    };
     Ok((files, data))
 }
 
 // ─── version_graph ───────────────────────────────────────────────────────────
 
 fn read_version_graph(conn: &Connection) -> ParseResult<Option<VersionGraph>> {
-    // Check if version_graph table exists and has data
-    let has_table: bool = conn.prepare(
-        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='version_graph'"
-    )?.query_row([], |row| row.get::<_, i32>(0)).unwrap_or(0) > 0;
-
-    if !has_table {
-        return Ok(None);
-    }
-
-    let mut vg_stmt = conn.prepare(
-        "SELECT current_version, current_schema_version, user_checkpoint_version_id,
-                latest_version_id, chain_count, total_size
-         FROM version_graph WHERE id = 1"
-    )?;
-    let (metadata, user_cp_id, latest_id) = match vg_stmt.query_row([], |row| {
-        Ok((
-            VersionGraphMetadata {
-                current_version: row.get(0)?,
-                current_schema_version: row.get(1)?,
-                chain_count: row.get(4)?,
-                total_size: row.get::<_, Option<i64>>(5)?.unwrap_or(0),
-            },
-            row.get::<_, Option<String>>(2)?.unwrap_or_default(),
-            row.get::<_, Option<String>>(3)?.unwrap_or_default(),
-        ))
-    }) {
-        Ok(v) => v,
-        Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
-        Err(e) => return Err(e.into()),
-    };
-
-    // Read migrations keyed by id
-    let mut m_stmt = conn.prepare(
-        "SELECT id, from_schema_version, to_schema_version, migration_name,
-                migration_checksum, applied_at, boundary_checkpoint_id
-         FROM schema_migrations"
-    )?;
-    let migrations: HashMap<i64, SchemaMigration> = m_stmt.query_map([], |row| {
-        let id: i64 = row.get(0)?;
-        Ok((id, SchemaMigration {
-            from_schema_version: row.get(1)?,
-            to_schema_version: row.get(2)?,
-            migration_name: row.get(3)?,
-            migration_checksum: row.get(4)?,
-            applied_at: row.get(5)?,
-            boundary_checkpoint_id: row.get(6)?,
-        }))
-    })?.collect::<Result<HashMap<_, _>, _>>().unwrap_or_default();
-
-    // Version chains
-    let mut ch_stmt = conn.prepare(
-        "SELECT id, schema_version, start_version, end_version, migration_id, root_checkpoint_id
-         FROM version_chains ORDER BY start_version"
-    )?;
-    let chains: Vec<VersionChain> = ch_stmt.query_map([], |row| {
-        let mig_id: Option<i64> = row.get(4)?;
-        Ok(VersionChain {
-            id: row.get(0)?,
-            schema_version: row.get(1)?,
-            start_version: row.get(2)?,
-            end_version: row.get(3)?,
-            migration: mig_id.and_then(|mid| migrations.get(&mid).cloned()),
-            root_checkpoint_id: row.get(5)?,
-        })
-    })?.collect::<Result<Vec<_>, _>>()?;
-
-    // Checkpoints
-    let mut cp_stmt = conn.prepare(
-        "SELECT id, parent_id, version_number, schema_version, timestamp,
-                description, is_manual_save, is_schema_boundary, user_id, data, size_bytes
-         FROM checkpoints ORDER BY version_number"
-    )?;
-    let checkpoints: Vec<Checkpoint> = cp_stmt.query_map([], |row| {
-        Ok(Checkpoint {
-            base: VersionBase {
-                id: row.get(0)?,
-                parent_id: row.get(1)?,
-                timestamp: row.get(4)?,
-                description: row.get(5)?,
-                is_manual_save: row.get::<_, i32>(6)? != 0,
-                user_id: row.get(8)?,
-            },
-            version_number: row.get(2)?,
-            schema_version: row.get(3)?,
-            is_schema_boundary: row.get::<_, i32>(7)? != 0,
-            data: row.get::<_, Option<Vec<u8>>>(9)?.unwrap_or_default(),
-            size_bytes: row.get::<_, Option<i64>>(10)?.unwrap_or(0),
-        })
-    })?.collect::<Result<Vec<_>, _>>()?;
-
-    // Deltas
-    let mut d_stmt = conn.prepare(
-        "SELECT id, parent_id, base_checkpoint_id, version_number, schema_version,
-                timestamp, description, is_manual_save, user_id, changeset, size_bytes
-         FROM deltas ORDER BY version_number"
-    )?;
-    let deltas: Vec<Delta> = d_stmt.query_map([], |row| {
-        Ok(Delta {
-            base: VersionBase {
-                id: row.get(0)?,
-                parent_id: row.get(1)?,
-                timestamp: row.get(5)?,
-                description: row.get(6)?,
-                is_manual_save: row.get::<_, i32>(7)? != 0,
-                user_id: row.get(8)?,
-            },
-            base_checkpoint_id: row.get(2)?,
-            version_number: row.get(3)?,
-            schema_version: row.get(4)?,
-            payload: row.get::<_, Option<Vec<u8>>>(9)?.unwrap_or_default(),
-            size_bytes: row.get::<_, Option<i64>>(10)?.unwrap_or(0),
-        })
-    })?.collect::<Result<Vec<_>, _>>()?;
-
-    Ok(Some(VersionGraph {
-        user_checkpoint_version_id: user_cp_id,
-        latest_version_id: latest_id,
-        chains,
-        checkpoints,
-        deltas,
-        metadata,
-    }))
+    crate::api::version_control::read_version_graph_inner(conn).map_err(ParseError::from)
 }
 
 // ─── defaults ────────────────────────────────────────────────────────────────
@@ -2209,4 +2561,145 @@ fn default_background() -> ElementBackground {
             image_filter: None,
         },
     }
+}
+
+// ── Byte-buffer convenience functions ──────────────────────────────────────
+//
+// These functions provide a backward-compatible API for parsing .duc files
+// from byte buffers. They decompress gzip, create a temp SQLite file (or
+// in-memory database on WASM), and read the document state.
+
+/// Parse a `.duc` file (gzip-compressed SQLite bytes) into an [`ExportedDataState`].
+///
+/// This is the byte-buffer equivalent of [`crate::session::DucSession::open_path`].
+/// On non-WASM targets it writes the decompressed SQLite to a temp file.
+/// On WASM targets it uses an in-memory database.
+pub fn parse_duc_bytes(buf: &[u8]) -> ParseResult<ExportedDataState> {
+    let conn = open_duc_bytes_connection(buf)?;
+    let state = read_document_state_from_connection(&conn)?;
+    Ok(state)
+}
+
+/// Parse a `.duc` file lazily — returns everything EXCEPT external file data blobs.
+///
+/// External file metadata is included; use [`get_external_file_from_bytes`]
+/// or [`list_external_files_from_bytes`] for on-demand file access.
+pub fn parse_duc_bytes_lazy(buf: &[u8]) -> ParseResult<ExportedDataState> {
+    let conn = open_duc_bytes_connection(buf)?;
+    let state = read_state_from_connection(&conn, false)?;
+    Ok(state)
+}
+
+/// List metadata for all external files in a `.duc` byte buffer (without loading blobs).
+pub fn list_external_files_from_bytes(buf: &[u8]) -> ParseResult<Vec<ExternalFileMeta>> {
+    let conn = open_duc_bytes_connection(buf)?;
+    let meta = list_external_files_from_connection(&conn)?;
+    Ok(meta)
+}
+
+/// Get a single external file revision's chunk data from a `.duc` byte buffer.
+///
+/// Returns `None` if the file ID is not found.
+pub fn get_external_file_from_bytes(buf: &[u8], file_id: &str) -> ParseResult<Option<Vec<u8>>> {
+    let conn = open_duc_bytes_connection(buf)?;
+
+    // Find the active revision for this file ID.
+    let revision_id: Option<String> = conn
+        .query_row(
+            "SELECT active_revision_id FROM external_files WHERE id = ?1",
+            params![file_id],
+            |row| row.get(0),
+        )
+        .or_else(|e| match e {
+            rusqlite::Error::QueryReturnedNoRows => Ok(None),
+            e => Err(e),
+        })
+        .map_err(ParseError::Sqlite)?;
+
+    match revision_id {
+        Some(rev_id) => {
+            let mut chunks = Vec::new();
+            external_file_chunks::stream_revision_chunks_to_writer(&conn, &rev_id, &mut chunks)?;
+            Ok(Some(chunks))
+        }
+        None => Ok(None),
+    }
+}
+
+/// Open a `.duc` byte buffer as a [`rusqlite::Connection`].
+///
+/// Decompresses gzip to raw SQLite bytes, then opens an in-memory database
+/// (on WASM) or a temp file (on native targets).
+pub fn open_duc_bytes_connection(buf: &[u8]) -> ParseResult<Connection> {
+    use flate2::read::GzDecoder;
+    use std::io::Read;
+
+    // Check for gzip magic header
+    let is_gzip = buf.len() >= 2 && buf[0] == 0x1f && buf[1] == 0x8b;
+
+    let mut raw_sqlite: Vec<u8> = if is_gzip {
+        let mut decoder = GzDecoder::new(buf);
+        let mut out = Vec::new();
+        decoder
+            .read_to_end(&mut out)
+            .map_err(|e| ParseError::Io(format!("gzip decompress: {e}")))?;
+        out
+    } else {
+        buf.to_vec()
+    };
+
+    if raw_sqlite.len() < 100 {
+        return Err(ParseError::Io(format!(
+            "buffer too small ({} bytes) — not a valid .duc file",
+            raw_sqlite.len()
+        )));
+    }
+
+    // A standalone database cannot use WAL mode because a `.duc` carries only
+    // the main SQLite file, never its `-wal` sidecar. OPFS/raw exports can retain
+    // WAL read/write version bytes even after checkpointing, which makes the
+    // in-memory WASM connection fail with "unable to open database file".
+    if raw_sqlite.starts_with(b"SQLite format 3\0") && (raw_sqlite[18] == 2 || raw_sqlite[19] == 2)
+    {
+        raw_sqlite[18] = 1;
+        raw_sqlite[19] = 1;
+    }
+
+    // On WASM, use in-memory database with deserialize. On native, use a temp file.
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    {
+        use rusqlite::MAIN_DB;
+        let mut conn = Connection::open_in_memory().map_err(ParseError::Sqlite)?;
+        conn.deserialize_read_exact(MAIN_DB, &raw_sqlite[..], raw_sqlite.len(), false)
+            .map_err(|e| ParseError::Io(format!("deserialize: {e}")))?;
+        Ok(conn)
+    }
+
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    {
+        let (path, mut file) = create_temp_sqlite_file_for_parse()
+            .map_err(|e| ParseError::Io(format!("temp file: {e}")))?;
+        use std::io::Write;
+        file.write_all(&raw_sqlite)
+            .map_err(|e| ParseError::Io(format!("write temp: {e}")))?;
+        drop(file);
+
+        let conn = Connection::open(&path).map_err(ParseError::Sqlite)?;
+        Ok(conn)
+    }
+}
+
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+fn create_temp_sqlite_file_for_parse() -> std::io::Result<(std::path::PathBuf, std::fs::File)> {
+    use std::fs::File;
+    use std::path::PathBuf;
+
+    let dir = std::env::temp_dir();
+    let id = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    let path: PathBuf = dir.join(format!("duc-parse-{id}.sqlite"));
+    let file = File::create(&path)?;
+    Ok((path, file))
 }

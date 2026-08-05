@@ -2,7 +2,7 @@
 """
 Example demonstrating how to parse a .duc file using the parsing API.
 
-This demo shows how to read a `.duc` binary blob or file path and access
+This demo shows how to read a `.duc` file path and access
 the parsed data using attribute-style access via DucData.
 """
 
@@ -29,11 +29,9 @@ def main():
             .build_rectangle()
             .build()
     ]
-    duc_bytes = duc.serialize_duc(name="parsing_example", elements=elements)
-    
-    with tempfile.NamedTemporaryFile(suffix=".duc", delete=False) as tmp:
-        tmp.write(duc_bytes)
-        tmp_path = tmp.name
+    tmp = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+    tmp.close()
+    tmp_path = duc.serialize_duc(name="parsing_example", output_path=tmp.name, elements=elements)
 
     print("1. Parsing a .duc file from a file path...")
     
@@ -53,11 +51,10 @@ def main():
     print(f"   Element Label: {first_element.label}")
     print(f"   Element Position: (X: {first_element.x}, Y: {first_element.y})")
     
-    print("\n3. Parsing directly from raw bytes...")
+    print("\n3. Re-parsing from the streamed file path...")
     
-    # You can also pass raw bytes directly to parse_duc
-    parsed_from_bytes = duc.parse_duc(duc_bytes)
-    print(f"   Parsed successfully from bytes. Found {len(parsed_from_bytes.elements)} elements.")
+    parsed_again = duc.parse_duc(tmp_path)
+    print(f"   Parsed successfully from path. Found {len(parsed_again.elements)} elements.")
     
     # Clean up the temporary file
     os.unlink(tmp_path)

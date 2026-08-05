@@ -19,7 +19,7 @@ module.exports = {
       {
         // Prepare step: Set the crate version and build the project
         prepareCmd:
-          "cargo set-version ${nextRelease.version} && cargo build --release",
+          "cargo set-version --package duc ${nextRelease.version} && cargo build --release && cargo package --allow-dirty --no-verify",
 
         // Publish step: Publish the crate to crates.io
         publishCmd:

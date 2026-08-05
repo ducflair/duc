@@ -20,20 +20,11 @@ const decodeUserVersionToSemver = (userVersion: number): string => {
 
 export const DUC_SCHEMA_VERSION = getSchemaVersionFromEnv();
 
-/**
- * Serialize an ExportedDataState into `.duc` bytes (Uint8Array).
- *
- * 1. restore() for defaults & migrations
- * 2. Element fixups (re-wrap stack elements)
- * 3. WASM serialize (JS → Rust via serde-wasm-bindgen → SQLite → bytes)
- */
-export async function serializeDuc(
+export function prepareStateForSerialization(
   data: Partial<ExportedDataState>,
   elementsConfig?: ElementsConfig,
   restoreConfig?: RestoreConfig,
-): Promise<Uint8Array> {
-  await ensureWasm();
-
+): unknown {
   const inputVG = (data as any)?.versionGraph;
 
   const restored = restore(
@@ -50,12 +41,6 @@ export async function serializeDuc(
     inputVG,
   );
 
-  // Use the ORIGINAL version graph data instead of the restored one.
-  // The restore pipeline (restoreCheckpoint/restoreDelta) filters checkpoints
-  // and deltas through isValidUint8Array which can reject valid in-memory 
-  // Uint8Array data (e.g. empty remote placeholders or detached buffers),
-  // silently dropping version history.
-  // hasLegacyVersionGraphShape already validates structural integrity.
   const versionGraphForPayload = shouldDropLegacyVersionGraph
     ? undefined
     : prepareVersionGraphForSerialization(inputVG);
@@ -72,7 +57,23 @@ export async function serializeDuc(
     versionGraph: normalizedVersionGraphForPayload,
   };
 
-  const prepared = transformToRust(payloadForRust);
+  return transformToRust(payloadForRust);
+}
+
+/**
+ * Serialize an ExportedDataState into `.duc` bytes (Uint8Array).
+ *
+ * 1. restore() for defaults & migrations
+ * 2. Element fixups (re-wrap stack elements)
+ * 3. WASM serialize (JS → Rust via serde-wasm-bindgen → SQLite → bytes)
+ */
+export async function serializeDuc(
+  data: Partial<ExportedDataState>,
+  elementsConfig?: ElementsConfig,
+  restoreConfig?: RestoreConfig,
+): Promise<Uint8Array> {
+  await ensureWasm();
+  const prepared = prepareStateForSerialization(data, elementsConfig, restoreConfig);
   const serialized = wasmSerializeDuc(prepared);
 
   return serialized;

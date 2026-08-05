@@ -17,7 +17,7 @@ jobs:
       group: release-ducpdf
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ github.ref_name }}
@@ -67,3 +67,9 @@ jobs:
           # DEBUG: "semantic-release:*" # For verbose logging
         working-directory: ./packages/ducpdf
         run: npx semantic-release ${{ steps.setup-release-environment-ducpdf.outputs.release-mode }}
+
+      - name: Deploy API documentation
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: trigger-api-docs-deployment
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -4,19 +4,7 @@ import {
     wasmApplyDeltaChangeset,
     wasmCreateDeltaChangeset,
     wasmGetCurrentSchemaVersion,
-    wasmListVersions,
-    wasmReadVersionGraph,
-    wasmRestoreCheckpoint,
-    wasmRestoreVersion,
-    wasmRevertToVersion,
 } from "./wasm";
-
-export interface RestoredVersion {
-  versionNumber: number;
-  schemaVersion: number;
-  data: Uint8Array;
-  fromCheckpoint: boolean;
-}
 
 export interface VersionEntry {
   id: string;
@@ -30,84 +18,49 @@ export interface VersionEntry {
   sizeBytes: number;
 }
 
-/**
- * Restore the full document state at a specific version number.
- *
- * If the version corresponds to a checkpoint, the raw data is returned directly.
- * Otherwise, the nearest preceding checkpoint is loaded and deltas are replayed
- * on top of it to reconstruct the state.
- *
- * All heavy lifting (SQLite access, decompression, delta replay) happens in
- * Rust/WASM.
- */
-export const restoreVersion = async (
-  ducBuffer: Uint8Array,
-  versionNumber: number,
-): Promise<RestoredVersion> => {
-  await ensureWasm();
-  const result = wasmRestoreVersion(ducBuffer, versionNumber);
-  if (!result) {
-    throw new Error(`Failed to restore version ${versionNumber}`);
-  }
-  return result as RestoredVersion;
-};
-
-/**
- * Restore a specific checkpoint by its ID.
- */
-export const restoreCheckpoint = async (
-  ducBuffer: Uint8Array,
-  checkpointId: string,
-): Promise<RestoredVersion> => {
-  await ensureWasm();
-  const result = wasmRestoreCheckpoint(ducBuffer, checkpointId);
-  if (!result) {
-    throw new Error(`Failed to restore checkpoint ${checkpointId}`);
-  }
-  return result as RestoredVersion;
-};
+export interface VersionControlDocument {
+  listVersions(): VersionEntry[];
+  readVersionGraph(): VersionGraph | undefined;
+  readCheckpointDataChunk(checkpointId: string, chunkIndex: number): Uint8Array | undefined;
+  readDeltaChangesetChunk(deltaId: string, chunkIndex: number): Uint8Array | undefined;
+}
 
 /**
  * List all versions (checkpoints and deltas) in the .duc file,
  * ordered by version number descending. Does not load data blobs.
  */
 export const listVersions = async (
-  ducBuffer: Uint8Array,
+  document: VersionControlDocument,
 ): Promise<VersionEntry[]> => {
-  await ensureWasm();
-  const result = wasmListVersions(ducBuffer);
+  const result = document.listVersions();
   return (result ?? []) as VersionEntry[];
 };
 
 /**
- * Read the full version graph from the .duc file, including all
- * checkpoints, deltas, chains, and metadata.
+ * Read version graph metadata from the document. Checkpoint `data` and delta
+ * `payload` arrays are intentionally empty; use the chunk readers below for
+ * payload bytes.
  */
 export const readVersionGraph = async (
-  ducBuffer: Uint8Array,
+  document: VersionControlDocument,
 ): Promise<VersionGraph | undefined> => {
-  await ensureWasm();
-  return wasmReadVersionGraph(ducBuffer) as VersionGraph | undefined;
+  return document.readVersionGraph() as VersionGraph | undefined;
 };
 
-/**
- * Revert the document to a specific version, deleting all versions
- * newer than the target. Returns the restored state at that version.
- *
- * **Warning**: This mutates the .duc buffer in-place (via the WASM
- * SQLite connection). The returned `RestoredVersion.data` contains the
- * full document state at the target version.
- */
-export const revertToVersion = async (
-  ducBuffer: Uint8Array,
-  targetVersion: number,
-): Promise<RestoredVersion> => {
-  await ensureWasm();
-  const result = wasmRevertToVersion(ducBuffer, targetVersion);
-  if (!result) {
-    throw new Error(`Failed to revert to version ${targetVersion}`);
-  }
-  return result as RestoredVersion;
+export const readCheckpointDataChunk = async (
+  document: VersionControlDocument,
+  checkpointId: string,
+  chunkIndex: number,
+): Promise<Uint8Array | undefined> => {
+  return document.readCheckpointDataChunk(checkpointId, chunkIndex);
+};
+
+export const readDeltaChangesetChunk = async (
+  document: VersionControlDocument,
+  deltaId: string,
+  chunkIndex: number,
+): Promise<Uint8Array | undefined> => {
+  return document.readDeltaChangesetChunk(deltaId, chunkIndex);
 };
 
 /**
@@ -135,8 +88,8 @@ export const getCurrentSchemaVersion = async (): Promise<number> => {
  * offsets, which is critical for SQLite databases where internal page
  * reordering makes simple byte-level diffs ineffective.
  *
- * Use this when constructing `Delta` objects for the `VersionGraph`
- * before calling `serializeDuc()`.
+ * Use this when constructing `Delta` objects for the `VersionGraph` before
+ * calling `writeDocumentState()` and streaming the resulting payload chunks.
  */
 export const createDeltaChangeset = async (
   baseState: Uint8Array,
@@ -153,7 +106,7 @@ export const createDeltaChangeset = async (
  * was created. Returns the full document state as `Uint8Array`.
  *
  * Handles all changeset formats transparently:
- *   - v3 (bsdiff), v2 (XOR diff), v1 (zlib full snapshot)
+ *   - v3 (bsdiff), v2 (XOR diff), v1 (gzip full snapshot)
  */
 export const applyDeltaChangeset = async (
   baseState: Uint8Array,

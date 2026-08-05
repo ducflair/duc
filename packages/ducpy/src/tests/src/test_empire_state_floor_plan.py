@@ -72,18 +72,14 @@ def test_empire_state_floor_plan(test_output_dir):
         .build())
     elements.append(title_text)
 
-    global_state = (duc.StateBuilder().build_global_state().with_main_scope("ft").build())
-    local_state = (duc.StateBuilder().build_local_state().build())
-
-    serialized_bytes = ducpy.serialize.serialize_duc(
+    output_file_path = os.path.join(test_output_dir, "test_empire_state_floor_plan.duc")
+    serialized_path = ducpy.serialize.serialize_duc(
         name="empire_state_floor_plan",
+        output_path=output_file_path,
         elements=elements
     )
 
-    output_file_path = os.path.join(test_output_dir, "test_empire_state_floor_plan.duc")
-    with open(output_file_path, "wb") as f:
-        f.write(serialized_bytes)
-
+    assert serialized_path == output_file_path
     assert os.path.exists(output_file_path)
     assert os.path.getsize(output_file_path) > 0
     print(f"Empire State floor plan created successfully at {output_file_path}")

@@ -1,0 +1,239 @@
+name: Deploy API Documentation & Package Index
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (skip deployment to GitHub Pages)'
+        type: boolean
+        required: false
+        default: false
+  workflow_call:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (skip deployment to GitHub Pages)'
+        type: boolean
+        required: false
+        default: false
+  repository_dispatch:
+    types: [trigger-api-docs-deployment, trigger-ducpy-docs-deployment]
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/ducrs/Cargo.toml'
+      - 'packages/ducpy/docs/**'
+      - 'packages/ducjs/typedoc.json'
+      - 'packages/ducpdf/typedoc.json'
+      - 'packages/ducsvg/typedoc.json'
+      - 'apps/web/content/docs/**'
+      - 'schema/**'
+      - 'scripts/gen-sql-docs.py'
+      - 'scripts/build-all-api-docs.py'
+      - '**.md'
+      - '**.mdx'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  actions: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # SQL API Docs (sq inspect -> /reference/sql/)
+      - name: Install sq CLI
+        run: |
+          sudo /bin/sh -c "$(curl -fsSL https://sq.io/install.sh)"
+          sudo rm -rf /tmp/sq* /tmp/go-graphviz* /tmp/wazero*
+
+      - name: Build SQL HTML Documentation
+        run: uv run python3 scripts/gen-sql-docs.py
+
+      - name: Install Python dependencies with uv
+        run: uv sync --frozen || uv sync
+        working-directory: packages/ducpy
+
+      - name: Build Python Sphinx documentation
+        run: |
+          TAG_VERSION=$(git tag -l 'ducpy@*' | sed 's/ducpy@//' | sort -V | tail -n1)
+          if [ -z "$TAG_VERSION" ]; then
+            TAG_VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "Resolved ducpy version: $TAG_VERSION"
+          uv run sphinx-build -b html -D version="$TAG_VERSION" -D release="$TAG_VERSION" . _build/html
+        working-directory: packages/ducpy/docs
+
+      - name: Stage Python API Docs
+        run: |
+          mkdir -p _site/reference/python
+          cp -r packages/ducpy/docs/_build/html/. _site/reference/python/
+
+      # 2. Setup Node.js & Bun for TypeDoc builds
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
+      - name: Install Node dependencies
+        run: bun install
+
+      # 3. TypeScript API Docs (ducjs TypeDoc -> /reference/typescript/)
+      - name: Build TypeScript TypeDoc documentation (ducjs)
+        run: |
+          TAG_VERSION=$(git tag -l 'ducjs@*' | sed 's/ducjs@//' | sort -V | tail -n1)
+          if [ -z "$TAG_VERSION" ]; then
+            TAG_VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "Resolved ducjs version: $TAG_VERSION"
+          if [ -n "$TAG_VERSION" ] && [ "$TAG_VERSION" != "undefined" ]; then
+            node "../../scripts/semrel-set-version.js" "packages/ducjs" "$TAG_VERSION"
+          fi
+          npx typedoc
+        working-directory: packages/ducjs
+
+      - name: Stage TypeScript API Docs (ducjs)
+        run: |
+          mkdir -p _site/reference/typescript
+          cp -r packages/ducjs/docs/. _site/reference/typescript/
+
+      # 4. TypeScript API Docs (ducpdf TypeDoc -> /reference/pdf/)
+      - name: Build TypeScript TypeDoc documentation (ducpdf)
+        run: |
+          TAG_VERSION=$(git tag -l 'ducpdf@*' | sed 's/ducpdf@//' | sort -V | tail -n1)
+          if [ -z "$TAG_VERSION" ]; then
+            TAG_VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "Resolved ducpdf version: $TAG_VERSION"
+          if [ -n "$TAG_VERSION" ] && [ "$TAG_VERSION" != "undefined" ]; then
+            node "../../scripts/semrel-set-version.js" "packages/ducpdf" "$TAG_VERSION"
+          fi
+          npx typedoc
+        working-directory: packages/ducpdf
+
+      - name: Stage TypeScript API Docs (ducpdf)
+        run: |
+          mkdir -p _site/reference/pdf
+          cp -r packages/ducpdf/docs/. _site/reference/pdf/
+
+      # 5. TypeScript API Docs (ducsvg TypeDoc -> /reference/svg/)
+      - name: Build TypeScript TypeDoc documentation (ducsvg)
+        run: |
+          TAG_VERSION=$(git tag -l 'ducsvg@*' | sed 's/ducsvg@//' | sort -V | tail -n1)
+          if [ -z "$TAG_VERSION" ]; then
+            TAG_VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "Resolved ducsvg version: $TAG_VERSION"
+          if [ -n "$TAG_VERSION" ] && [ "$TAG_VERSION" != "undefined" ]; then
+            node "../../scripts/semrel-set-version.js" "packages/ducsvg" "$TAG_VERSION"
+          fi
+          npx typedoc
+        working-directory: packages/ducsvg
+
+      - name: Stage TypeScript API Docs (ducsvg)
+        run: |
+          mkdir -p _site/reference/svg
+          cp -r packages/ducsvg/docs/. _site/reference/svg/
+
+      # 6. Rust API Docs (cargo doc -> /reference/rust/)
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust cargo documentation
+        run: |
+          TAG_VERSION=$(git tag -l 'ducrs@*' | sed 's/ducrs@//' | sort -V | tail -n1)
+          if [ -z "$TAG_VERSION" ]; then
+            TAG_VERSION=$(node -p "require('./package.json').version")
+          fi
+          echo "Resolved ducrs version: $TAG_VERSION"
+          if [ -n "$TAG_VERSION" ] && [ "$TAG_VERSION" != "undefined" ]; then
+            node "../../scripts/cargo-set-pkg-version.js" "Cargo.toml" "$TAG_VERSION"
+          fi
+          cargo doc --no-deps
+        working-directory: packages/ducrs
+
+      - name: Stage Rust API Docs
+        run: |
+          mkdir -p _site/reference/rust
+          cp -r target/doc/. _site/reference/rust/
+          mkdir -p _site/reference/static.files
+          cp -r target/doc/static.files/. _site/reference/static.files/
+          cat << 'EOF' > _site/reference/rust/index.html
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta http-equiv="refresh" content="0; url=duc/index.html">
+            <title>duc Rust API Documentation</title>
+          </head>
+          <body>
+            <p>Redirecting to <a href="duc/index.html">duc documentation</a>...</p>
+          </body>
+          </html>
+          EOF
+
+      # 7. PEP 503 Simple Package Index
+      - name: Build PEP 503 Simple Package Index
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/build-ducpy-simple-index.py _site
+
+      - name: Setup Pages
+        if: ${{ inputs.dry_run != true }}
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        if: ${{ inputs.dry_run != true }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to gh-pages branch (for jsDelivr CDN)
+        if: ${{ inputs.dry_run != true }}
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          publish_branch: gh-pages
+
+      - name: Cancel workflow run on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run cancel ${{ github.run_id }} || true
+
+  deploy:
+    if: ${{ inputs.dry_run != true }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

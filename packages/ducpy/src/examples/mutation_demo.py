@@ -8,9 +8,10 @@ This demo shows how to:
      standard builder API.
   2. Apply targeted mutations to the elements, the global state, and an
      external file entry using `duc.mutate_*` helpers.
-  3. Serialize the resulting DUC object into a raw `.duc` byte string,
-     matching the pattern used by the other example scripts.
+  3. Serialize the resulting DUC object into a `.duc` file.
 """
+
+import tempfile
 
 import ducpy as duc
 
@@ -38,13 +39,13 @@ def main():
 
     elements = [rect, ellipse]
 
-    global_state = (duc.StateBuilder()
+    duc_global_state = (duc.StateBuilder()
         .build_global_state()
         .with_name("mutation_demo")
         .with_main_scope("mm")
         .build())
 
-    local_state = (duc.StateBuilder()
+    duc_local_state = (duc.StateBuilder()
         .build_local_state()
         .build())
 
@@ -83,14 +84,14 @@ def main():
 
     # 2c. Mutate the global state (zoom level, background, name).
     duc.mutate_global_state(
-        global_state,
+        duc_global_state,
         view_background_color="#1E1E2E",
         name="mutation_demo_updated",
     )
 
     # 2d. Mutate the local state (scroll position, grid mode).
     duc.mutate_local_state(
-        local_state,
+        duc_local_state,
         scroll_x=42.0,
         scroll_y=17.5,
         grid_mode_enabled=False,
@@ -103,24 +104,26 @@ def main():
     )
 
     # ------------------------------------------------------------------
-    # 3. Serialize the mutated objects into a raw .duc byte string,
-    #    mirroring the pattern used by the other example scripts.
+    # 3. Serialize the mutated objects into a .duc file.
     # ------------------------------------------------------------------
-    duc_bytes = duc.serialize_duc(
+    output = tempfile.NamedTemporaryFile(suffix=".duc", delete=False)
+    output.close()
+    duc_path = duc.serialize_duc(
         name="mutation_demo",
+        output_path=output.name,
         elements=elements,
-        duc_global_state=global_state,
-        duc_local_state=local_state,
+        duc_global_state=duc_global_state,
+        duc_local_state=duc_local_state,
         external_files=[external_file],
     )
 
     print(f"   Mutated {len(elements)} elements.")
-    print(f"   Global state name -> {global_state.name!r}")
-    print(f"   Local state scroll -> ({local_state.scroll_x}, {local_state.scroll_y})")
+    print(f"   Global state main scope -> {duc_global_state.main_scope!r}")
+    print(f"   Local state scroll -> ({duc_local_state.scroll_x}, {duc_local_state.scroll_y})")
     print(f"   External file version -> {external_file.version}")
-    print(f"   Serialized {len(duc_bytes)} bytes.")
+    print(f"   Serialized to {duc_path}.")
     print("\n✅ Mutation demo complete!")
-    return duc_bytes
+    return duc_path
 
 
 if __name__ == "__main__":

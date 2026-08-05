@@ -1,3 +1,4 @@
+pub mod external_file_chunks;
 #[allow(unused_imports)]
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
@@ -8,5 +9,8 @@ pub mod serialize;
 pub mod types;
 
 // SQLite storage layer and high-level document API
-pub mod db;
 pub mod api;
+pub mod db;
+
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+pub mod session;

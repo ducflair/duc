@@ -1,6 +1,8 @@
 """
 This module provides high-level functions for reading and writing DUC files.
 """
+from __future__ import annotations
+
 import os
 from typing import Any, List, Optional
 
@@ -24,12 +26,15 @@ def write_duc_file(
   regions: Optional[list] = None,
   layers: Optional[list] = None,
   external_files: Optional[list] = None,
+  charter: Any = None,
+  issues: Optional[list] = None,
 ):
     """
     Serializes an ExportedDataState object to a .duc file.
     """
-    serialized_data = serialize_duc(
+    serialize_duc(
       name=name,
+      output_path=file_path,
       thumbnail=thumbnail,
       dictionary=dictionary,
       elements=elements,
@@ -38,13 +43,14 @@ def write_duc_file(
       version_graph=version_graph,
       blocks=blocks,
       block_instances=block_instances,
+      block_collections=block_collections,
       groups=groups,
       regions=regions,
       layers=layers,
       external_files=external_files,
+      charter=charter,
+      issues=issues,
     )
-    with open(file_path, "wb") as f:
-        f.write(serialized_data)
 
 def read_duc_file(file_path: str) -> DucData:
     """

@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "build": "cargo build --release",
+    "gen:docs": "cargo doc --no-deps",
+    "dev:docs": "cargo doc --no-deps && node -e 'require(\"fs\").writeFileSync(\"../../target/doc/index.html\", \"<!DOCTYPE html><html><head><script>window.location.replace(\\\"/duc/index.html\\\");</script><meta http-equiv=\\\"refresh\\\" content=\\\"0; url=/duc/index.html\\\"></head><body><a href=\\\"/duc/index.html\\\">Redirecting...</a></body></html>\")' && python3 -m http.server 8242 --directory ../../target/doc",
     "test": "cargo test",
     "semantic-release": "semantic-release"
   },

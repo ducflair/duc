@@ -1,0 +1,89 @@
+---
+title: "Precision"
+description: "How duc achieves infinite precision through RawValue immutability, uniform point density, and superficial ScopedValue scaling."
+date: 2026-07-25
+authors: [jorgedanisc]
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout type="info">
+  This paradigm ensures uniform point density and infinite precision across all measurement scales using the [Scope System](/docs/concepts/scopes).
+</Callout>
+
+![Infinite Surface Graph](/img/densityGraph.png)
+
+## Overview
+
+The `.duc` format achieves **infinite precision** by decoupling an element's original physical measurement from the active viewing scale of the canvas. 
+
+Unlike traditional graphics formats that suffer from floating-point degradation when zooming in or converting units, `.duc` guarantees that an element's original measurement is never corrupted.
+
+---
+
+## The Foundation of Infinite Precision
+
+The infinite precision of the `.duc` format relies on a core architectural principle:
+
+> **Precision comes from recording the scope in which an element was created, preserving its original measure intact regardless of how or where it is rendered.**
+
+Even when looking at a document objectively, outside of user zoom interactions, an element's true magnitude is defined by its **creation scope**. Whether an engineer draws a micro-chip trace in nanometers (`nm`) or a highway bridge in kilometers (`km`), the original measurement is recorded in that scope and preserved forever.
+
+---
+
+## `RawValue` vs `ScopedValue`
+
+To enforce coordinate integrity at the engine level, `.duc` distinguishes strictly between two types of numeric values:
+
+### 1. `RawValue` (Immutable Original Measurement)
+`RawValue` represents the immutable, exact physical measure of an element as defined when created in its native scope. 
+
+- **Immutability**: `RawValue` is never mutated or re-calculated when panning, zooming, or changing document display units.
+- **Lossless Storage**: Stored inside `.duc` database tables as the ground truth of geometric state.
+
+### 2. `ScopedValue` (Superficial Visual Scaling)
+`ScopedValue` is an ephemeral, calculated value generated dynamically relative to the active canvas scope and viewport zoom.
+
+- **Superficial Scaling**: `ScopedValue` exists solely for rendering, grid snapping, and UI display.
+- **Zero Side Effects**: Computing a `ScopedValue` never alters or degrades the underlying `RawValue`.
+
+```ts
+export type PrecisionValue = {
+  /** The immutable raw value of the element in its native scope */
+  value: RawValue;
+  /** The calculated value relative to the current active scope */
+  scoped: ScopedValue;
+};
+```
+
+---
+
+## Why Scaling Is Always Superficial
+
+When working across different scopes or converting between Metric and Imperial systems, the engine calculates a translation factor between the element's creation scope and the target scope:
+
+`translationFactor = ScaleFactor[providedScope] / ScaleFactor[currentScope]`
+
+`scopedValue = rawValue * translationFactor`
+
+Because this calculation only produces a transient `ScopedValue`, **the raw value of the element is never touched**. 
+
+Even if an element is rendered at micro-scale or macro-scale through millions of zoom operations, returning to the element's native scope yields its exact, uncorrupted `RawValue`.
+
+---
+
+## Decimal Tolerances & Adaptive Grids
+
+In addition to structural `RawValue` immutability, `.duc` supports configurable precision settings stored within `duc_global_state` and `duc_local_state`:
+
+- **Decimal Precision (`decimal_places`)**: Controls display rounding tolerance for distance measurements, coordinate readouts, and geometry serialization without affecting stored raw coordinates.
+- **Adaptive Grid Snapping**: Adjusts reference grid resolution dynamically based on `scope_exponent_threshold` as the user zooms in or out, maintaining sub-millimeter snapping precision.
+
+---
+
+## Summary of Precision Guarantees
+
+1. **Native Creation Scope**: Every element records the scope in which it was authored.
+2. **Immutable Ground Truth**: `RawValue` stores the exact physical measure and remains immune to floating-point drift.
+3. **Superficial `ScopedValue`**: Canvas operations and zoom transformations compute transient `ScopedValue` instances on demand.
+4. **Multi-Scope Coexistence**: Microscopic details and astronomical structures coexist in the same `.duc` container without precision loss.

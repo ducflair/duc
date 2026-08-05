@@ -75,18 +75,16 @@ def test_typst_validation_success(test_output_dir):
         .build()
     )
     
-    serialized_bytes = duc.serialize_duc(
+    output_path = os.path.join(test_output_dir, "test_typst_validation_success.duc")
+    serialized_path = duc.serialize_duc(
         name="ValidTypstDocTest",
+        output_path=output_path,
         elements=[doc_element],
         validate_embedded_code=True
     )
     
-    assert serialized_bytes is not None
-    assert len(serialized_bytes) > 0
-
-    output_path = os.path.join(test_output_dir, "test_typst_validation_success.duc")
-    with open(output_path, "wb") as f:
-        f.write(serialized_bytes)
+    assert serialized_path == output_path
+    assert os.path.getsize(output_path) > 0
 
 
 def test_typst_validation_failure():
@@ -116,6 +114,7 @@ def test_typst_validation_failure():
     
     assert "Typst validation failed" in str(excinfo.value)
     assert "unclosed delimiter" in str(excinfo.value).lower()
+    assert "<ducpy-embedded-doc>:" in str(excinfo.value)
 
 
 def test_build123d_validation_success(test_output_dir):
@@ -134,18 +133,16 @@ def test_build123d_validation_success(test_output_dir):
     
     assert model_element.element.model_type == "python"
 
-    serialized_bytes = duc.serialize_duc(
+    output_path = os.path.join(test_output_dir, "test_build123d_validation_success.duc")
+    serialized_path = duc.serialize_duc(
         name="ValidBuild123dModelTest",
+        output_path=output_path,
         elements=[model_element],
         validate_embedded_code=True
     )
     
-    assert serialized_bytes is not None
-    assert len(serialized_bytes) > 0
-
-    output_path = os.path.join(test_output_dir, "test_build123d_validation_success.duc")
-    with open(output_path, "wb") as f:
-        f.write(serialized_bytes)
+    assert serialized_path == output_path
+    assert os.path.getsize(output_path) > 0
 
 
 def test_build123d_validation_failure():
@@ -203,19 +200,17 @@ def test_ifcopenshell_validation_success(test_output_dir):
     
     assert model_element.element.model_type == "python"
 
-    serialized_bytes = duc.serialize_duc(
+    output_path = os.path.join(test_output_dir, "test_ifc_validation_success.duc")
+    serialized_path = duc.serialize_duc(
         name="ValidIfcModelTest",
+        output_path=output_path,
         elements=[model_element],
         external_files=[external_file],
         validate_embedded_code=True
     )
     
-    assert serialized_bytes is not None
-    assert len(serialized_bytes) > 0
-
-    output_path = os.path.join(test_output_dir, "test_ifc_validation_success.duc")
-    with open(output_path, "wb") as f:
-        f.write(serialized_bytes)
+    assert serialized_path == output_path
+    assert os.path.getsize(output_path) > 0
 
 
 def test_ifcopenshell_validation_failure():
@@ -272,19 +267,17 @@ def test_ezdxf_validation_success(test_output_dir):
     
     assert model_element.element.model_type == "python"
 
-    serialized_bytes = duc.serialize_duc(
+    output_path = os.path.join(test_output_dir, "test_ezdxf_validation_success.duc")
+    serialized_path = duc.serialize_duc(
         name="ValidEzdxfModelTest",
+        output_path=output_path,
         elements=[model_element],
         external_files=[external_file],
         validate_embedded_code=True
     )
     
-    assert serialized_bytes is not None
-    assert len(serialized_bytes) > 0
-
-    output_path = os.path.join(test_output_dir, "test_ezdxf_validation_success.duc")
-    with open(output_path, "wb") as f:
-        f.write(serialized_bytes)
+    assert serialized_path == output_path
+    assert os.path.getsize(output_path) > 0
 
 
 def test_ezdxf_validation_failure():
@@ -346,13 +339,13 @@ def test_python_validation_falls_back_when_subprocess_is_blocked(monkeypatch):
         .build()
     )
 
-    serialized_bytes = duc.serialize_duc(
+    serialized_path = duc.serialize_duc(
         name="InProcessValidationFallbackTest",
         elements=[model_element],
         validate_embedded_code=True,
     )
 
-    assert serialized_bytes
+    assert serialized_path
 
 
 def test_python_validation_fallback_reports_runtime_failure(monkeypatch):

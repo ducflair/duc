@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ducpy.parse import parse_duc_lazy
+from ducpy.parse import parse_duc
 from ducpy.search import ExternalFileSearchTarget, search_duc_elements
 from ducpy.search.image_ocr import server_side_ocr_available
 
@@ -60,7 +60,7 @@ def _run_external_file_search(
 
 
 def _empire_pdf_elements() -> list[dict]:
-    parsed = parse_duc_lazy(str(_asset_input_path("empire-state-building.duc")))
+    parsed = parse_duc(str(_asset_input_path("empire-state-building.duc")))
     return [
         element
         for element in parsed["elements"]

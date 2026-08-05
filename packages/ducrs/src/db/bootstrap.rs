@@ -74,7 +74,7 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
     let user_version: i64 = conn.pragma_query_value(None, "user_version", |r| r.get(0))?;
 
     if user_version == 0 {
-        // New database — apply schemas in order.
+        // Apply schemas in order.
         conn.execute_batch(DUC_SCHEMA)
             .map_err(|e| DbError::Bootstrap(format!("duc.sql apply failed: {e}")))?;
         conn.execute_batch(VERSION_CONTROL_SCHEMA)
@@ -94,6 +94,23 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
         conn.execute_batch(CONN_PRAGMAS)
             .map_err(|e| DbError::Bootstrap(format!("pragma apply failed: {e}")))?;
     } else {
+        // Older database: normalize any known schema drift before running the
+        // canonical migration chain. Fixtures written by prerelease code may
+        // have applied parts of later schemas without bumping user_version, so
+        // we add columns/indexes migrations expect when missing and recreate
+        // objects that already exist to keep the migration SQL idempotent.
+        conn.execute_batch("SAVEPOINT duc_legacy_normalization")
+            .map_err(|e| DbError::Bootstrap(format!("legacy normalization begin failed: {e}")))?;
+        if let Err(error) = normalize_legacy_schema(conn, user_version) {
+            let _ = conn.execute_batch(
+                "ROLLBACK TO duc_legacy_normalization;
+                 RELEASE duc_legacy_normalization;",
+            );
+            return Err(error);
+        }
+        conn.execute_batch("RELEASE duc_legacy_normalization")
+            .map_err(|e| DbError::Bootstrap(format!("legacy normalization commit failed: {e}")))?;
+
         // Walk the migration chain until we reach CURRENT_VERSION.
         // build.rs generates MIGRATIONS sorted by from_version, so chaining
         // (e.g. 3000000→3000001→3000002) works without any code changes here.
@@ -101,12 +118,14 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
         loop {
             match MIGRATIONS.iter().find(|(from, _, _)| *from == current) {
                 Some((from, to, sql)) => {
-                    conn.execute_batch(sql).map_err(|e| {
-                        DbError::Bootstrap(format!("migration {from}\u{2192}{to} failed: {e}"))
-                    })?;
+                    if let Err(error) = conn.execute_batch(sql) {
+                        let _ = conn.execute_batch("ROLLBACK");
+                        return Err(DbError::Bootstrap(format!(
+                            "migration {from}\u{2192}{to} failed: {error}"
+                        )));
+                    }
                     // Re-read the version the migration SQL set via PRAGMA user_version.
-                    current =
-                        conn.pragma_query_value(None, "user_version", |r| r.get(0))?;
+                    current = conn.pragma_query_value(None, "user_version", |r| r.get(0))?;
                     if current == CURRENT_VERSION {
                         break;
                     }
@@ -124,3 +143,188 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
 
     Ok(())
 }
+
+/// Add missing columns/objects that later migrations expect.
+///
+/// Some test fixtures were produced by intermediate code that created tables
+/// such as `search_elements` or renamed `element_model.svg_path` to `thumbnail`
+/// while still reporting an older `user_version`. Adding the missing legacy
+/// columns back lets the canonical migration SQL run without modification.
+fn normalize_legacy_schema(conn: &Connection, user_version: i64) -> Result<(), DbError> {
+    if user_version <= 3000001 {
+        normalize_external_revision_storage(conn)?;
+    }
+
+    // 3000003→3000004 migration expects `element_model.svg_path`.
+    if user_version <= 3000004 {
+        let has_column: bool = conn
+            .query_row(
+                "SELECT 1 FROM pragma_table_info('element_model') WHERE name = 'svg_path'",
+                [],
+                |_| Ok(true),
+            )
+            .unwrap_or(false);
+        if !has_column {
+            conn.execute(
+                "ALTER TABLE element_model ADD COLUMN svg_path TEXT DEFAULT NULL",
+                [],
+            )
+            .map_err(|e| {
+                DbError::Bootstrap(format!(
+                    "legacy normalization: add element_model.svg_path failed: {e}"
+                ))
+            })?;
+        }
+    }
+
+    Ok(())
+}
+
+fn normalize_external_revision_storage(conn: &Connection) -> Result<(), DbError> {
+    let table_exists = |table: &str| -> rusqlite::Result<bool> {
+        conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?1
+             )",
+            [table],
+            |row| row.get(0),
+        )
+    };
+    let column_exists = |table: &str, column: &str| -> rusqlite::Result<bool> {
+        conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM pragma_table_info(?1) WHERE name = ?2
+             )",
+            [table, column],
+            |row| row.get(0),
+        )
+    };
+
+    if !table_exists("external_file_revisions")? {
+        return Ok(());
+    }
+
+    if !column_exists("external_file_revisions", "data")? {
+        conn.execute(
+            "ALTER TABLE external_file_revisions ADD COLUMN data BLOB",
+            [],
+        )
+        .map_err(|error| {
+            DbError::Bootstrap(format!(
+                "legacy normalization: add external_file_revisions.data failed: {error}"
+            ))
+        })?;
+    }
+
+    for source_table in [
+        "_external_file_revision_data_v3000001",
+        "external_file_revision_data",
+    ] {
+        if table_exists(source_table)? {
+            let sql = format!(
+                "UPDATE external_file_revisions
+                 SET data = (
+                     SELECT source.data FROM {source_table} AS source
+                     WHERE source.revision_id = external_file_revisions.id
+                 )
+                 WHERE data IS NULL AND EXISTS (
+                     SELECT 1 FROM {source_table} AS source
+                     WHERE source.revision_id = external_file_revisions.id
+                 )"
+            );
+            conn.execute(&sql, []).map_err(|error| {
+                DbError::Bootstrap(format!(
+                    "legacy normalization: restore revision data from {source_table} failed: {error}"
+                ))
+            })?;
+        }
+    }
+
+    if table_exists("external_file_revision_chunks")? {
+        let revision_ids = {
+            let mut statement = conn
+                .prepare(
+                    "SELECT id FROM external_file_revisions
+                     WHERE data IS NULL
+                     ORDER BY id",
+                )
+                .map_err(|error| {
+                    DbError::Bootstrap(format!(
+                        "legacy normalization: list chunked revisions failed: {error}"
+                    ))
+                })?;
+            let rows = statement
+                .query_map([], |row| row.get::<_, String>(0))
+                .map_err(|error| {
+                    DbError::Bootstrap(format!(
+                        "legacy normalization: query chunked revisions failed: {error}"
+                    ))
+                })?;
+            rows.collect::<rusqlite::Result<Vec<_>>>()
+                .map_err(|error| {
+                    DbError::Bootstrap(format!(
+                        "legacy normalization: read chunked revisions failed: {error}"
+                    ))
+                })?
+        };
+
+        for revision_id in revision_ids {
+            let data = crate::external_file_chunks::read_revision_chunks(conn, &revision_id)
+                .map_err(|error| {
+                    DbError::Bootstrap(format!(
+                        "legacy normalization: read chunks for revision {revision_id} failed: {error}"
+                    ))
+                })?;
+            if !data.is_empty() {
+                conn.execute(
+                    "UPDATE external_file_revisions SET data = ?2 WHERE id = ?1",
+                    rusqlite::params![revision_id, data],
+                )
+                .map_err(|error| {
+                    DbError::Bootstrap(format!(
+                        "legacy normalization: restore chunks for revision failed: {error}"
+                    ))
+                })?;
+            }
+        }
+    }
+
+    conn.execute(
+        "UPDATE external_file_revisions
+         SET data = X''
+         WHERE data IS NULL AND size_bytes = 0",
+        [],
+    )?;
+    let missing_data: i64 = conn.query_row(
+        "SELECT count(*) FROM external_file_revisions
+         WHERE data IS NULL",
+        [],
+        |row| row.get(0),
+    )?;
+    if missing_data > 0 {
+        return Err(DbError::Bootstrap(format!(
+            "legacy normalization: {missing_data} external file revisions have metadata but no recoverable data"
+        )));
+    }
+
+    for table in [
+        "external_file_revision_chunks",
+        "external_file_revision_data",
+        "_external_file_revision_data_v3000001",
+    ] {
+        if table_exists(table)? {
+            conn.execute_batch(&format!("DROP TABLE {table}"))
+                .map_err(|error| {
+                    DbError::Bootstrap(format!(
+                        "legacy normalization: drop superseded {table} failed: {error}"
+                    ))
+                })?;
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(test)]
+#[path = "bootstrap_tests.rs"]
+mod tests;

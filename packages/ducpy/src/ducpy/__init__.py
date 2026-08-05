@@ -1,4 +1,4 @@
-"""Python library for the DUC 2D CAD file format.
+"""Python library for the .duc project-state format for physical-engineering work before execution.
 
 Usage:
     ``import ducpy as duc``
@@ -9,7 +9,7 @@ Builders API (High-level):
     and handle document state with the ``duc.builders`` module.
 
 SQL Builder (Low-level):
-    A ``.duc`` file is a zlib-compressed SQLite database. Use
+    A ``.duc`` file is a gzip-compressed SQLite database. Use
     ``duc.builders.sql_builder`` for direct schema access, bulk
     queries, and low-level manipulation.
 
@@ -25,8 +25,10 @@ File I/O:
 from .builders import *
 from .classes import *
 from .enums import *
-from .parse import (DucData, get_external_file, list_external_files, parse_duc,
-                    parse_duc_lazy)
+from .parse import (DucData, list_external_files, parse_duc,
+                    stream_checkpoint_data_to_path,
+                    stream_delta_changeset_to_path,
+                    stream_external_file_revision_to_path)
 from .serialize import DUC_SCHEMA_VERSION, DucSerializationValidationError, serialize_duc
 from .search import *
 from .utils import *

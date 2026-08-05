@@ -26,27 +26,15 @@ import hvac_elbow_duct_demo
 import empire_state_ifc_demo
 
 
-def _run_demo(demo_module, output_dir: str | None = None) -> tuple[str, bytes | None]:
-    """Run a demo's ``main()``, capture stdout, and persist any returned bytes.
-
-    If the demo returns a ``bytes`` payload (i.e. serialized .duc content) and
-    ``output_dir`` is provided, write it to ``<output_dir>/<module>.duc`` so
-    the file is available for inspection / CI artifacts.
-
-    Returns ``(captured_stdout, returned_bytes_or_none)``.
-    """
+def _run_demo(demo_module, output_dir: str | None = None) -> tuple[str, str | None]:
+    """Run a demo's ``main()``, capture stdout, and return any .duc path."""
     buf = StringIO()
     with redirect_stdout(buf):
         result = demo_module.main()
 
-    duc_bytes = result if isinstance(result, (bytes, bytearray)) else None
-    if duc_bytes is not None and output_dir is not None:
-        os.makedirs(output_dir, exist_ok=True)
-        out_path = os.path.join(output_dir, f"{demo_module.__name__}.duc")
-        with open(out_path, "wb") as f:
-            f.write(duc_bytes)
+    duc_path = result if isinstance(result, str) and result.endswith(".duc") else None
 
-    return buf.getvalue(), duc_bytes
+    return buf.getvalue(), duc_path
 
 
 class TestElementCreationDemo:
@@ -75,12 +63,12 @@ class TestMutationDemo:
 
     def test_mutation_demo_runs_successfully(self, test_output_dir):
         """Test that the mutation demo runs without errors."""
-        output_text, duc_bytes = _run_demo(mutation_demo, test_output_dir)
+        output_text, duc_path = _run_demo(mutation_demo, test_output_dir)
 
         assert "Mutation Demo" in output_text
         assert "Mutation demo complete" in output_text
-        assert duc_bytes is not None
-        assert os.path.isfile(os.path.join(test_output_dir, f"{mutation_demo.__name__}.duc"))
+        assert duc_path is not None
+        assert os.path.isfile(duc_path)
 
 
 class TestExternalFilesDemo:
@@ -102,17 +90,17 @@ class TestSQLBuilderDemo:
 
     def test_sql_builder_demo_runs_successfully(self, test_output_dir):
         """Test that the SQL builder demo runs without errors."""
-        output_text, duc_bytes = _run_demo(sql_builder_demo, test_output_dir)
+        output_text, duc_path = _run_demo(sql_builder_demo, test_output_dir)
 
         assert "DucSQL Builder Demo" in output_text
         assert "Create new .duc" in output_text
         assert "Open existing .duc" in output_text
-        assert "Bytes round-trip" in output_text
+        assert "File round-trip" in output_text
         assert "Advanced" in output_text
         assert "Build with SQL, serialize with the high-level API" in output_text
         assert "All DucSQL demos completed successfully!" in output_text
-        assert duc_bytes is not None
-        assert os.path.isfile(os.path.join(test_output_dir, f"{sql_builder_demo.__name__}.duc"))
+        assert duc_path is not None
+        assert os.path.isfile(duc_path)
 
 
 class TestSerializationDemo:
@@ -120,15 +108,15 @@ class TestSerializationDemo:
 
     def test_serialization_demo_runs_successfully(self, test_output_dir):
         """Test that the serialization demo runs without errors."""
-        output_text, duc_bytes = _run_demo(serialization_demo, test_output_dir)
+        output_text, duc_path = _run_demo(serialization_demo, test_output_dir)
 
         assert "Serialization Demo" in output_text
         assert "Creating elements via Builder API" in output_text
         assert "Serializing to .duc format" in output_text
         assert "Successfully serialized" in output_text
         assert "Serialization demo complete" in output_text
-        assert duc_bytes is not None
-        assert os.path.isfile(os.path.join(test_output_dir, f"{serialization_demo.__name__}.duc"))
+        assert duc_path is not None
+        assert os.path.isfile(duc_path)
 
 
 class TestParsingDemo:
@@ -141,7 +129,7 @@ class TestParsingDemo:
         assert "Parsing Demo" in output_text
         assert "Parsing a .duc file from a file path" in output_text
         assert "Accessing element attributes" in output_text
-        assert "Parsing directly from raw bytes" in output_text
+        assert "Re-parsing from the streamed file path" in output_text
         assert "Parsing demo complete" in output_text
 
 
@@ -150,14 +138,14 @@ class TestDocumentElementDemo:
     
     def test_document_element_demo_runs_successfully(self, test_output_dir):
         """Test that the document element demo runs without errors."""
-        output_text, duc_bytes = _run_demo(document_element_demo, test_output_dir)
+        output_text, duc_path = _run_demo(document_element_demo, test_output_dir)
 
         assert "Document Element Demo" in output_text
         assert "Designing rich Typst document content" in output_text
         assert "Building the Document element" in output_text
         assert "Successfully serialized DUC file" in output_text
-        assert duc_bytes is not None
-        assert os.path.isfile(os.path.join(test_output_dir, f"{document_element_demo.__name__}.duc"))
+        assert duc_path is not None
+        assert os.path.isfile(duc_path)
         
         
 class TestModelElementDemo:
@@ -165,7 +153,7 @@ class TestModelElementDemo:
     
     def test_model_element_demo_runs_successfully(self, test_output_dir):
         """Test that the model element demo runs without errors."""
-        output_text, duc_bytes = _run_demo(model_element_demo, test_output_dir)
+        output_text, duc_path = _run_demo(model_element_demo, test_output_dir)
 
         assert "Model Element Demo" in output_text
         assert "Creating Python model element with build123d" in output_text
@@ -174,9 +162,9 @@ class TestModelElementDemo:
         assert "Demonstrating Non-Python model imports" in output_text
         assert "Testing model type validation" in output_text
         assert "Correctly rejected invalid model_type" in output_text
-        assert "Successfully serialized DUC file containing" in output_text
-        assert duc_bytes is not None
-        assert os.path.isfile(os.path.join(test_output_dir, f"{model_element_demo.__name__}.duc"))
+        assert "Successfully serialized DUC file to" in output_text
+        assert duc_path is not None
+        assert os.path.isfile(duc_path)
 
 
 class TestHvacElbowDuctDemo:
@@ -184,11 +172,11 @@ class TestHvacElbowDuctDemo:
     
     def test_hvac_elbow_duct_demo_runs_successfully(self, test_output_dir):
         """Test that the HVAC elbow duct example demo runs without errors."""
-        output_text, duc_bytes = _run_demo(hvac_elbow_duct_demo, test_output_dir)
+        output_text, duc_path = _run_demo(hvac_elbow_duct_demo, test_output_dir)
 
         assert "Successfully serialized DUC file" in output_text
-        assert duc_bytes is not None
-        assert os.path.isfile(os.path.join(test_output_dir, f"{hvac_elbow_duct_demo.__name__}.duc"))
+        assert duc_path is not None
+        assert os.path.isfile(duc_path)
 
 
 class TestEmpireStateIfcDemo:
@@ -196,11 +184,11 @@ class TestEmpireStateIfcDemo:
     
     def test_empire_state_ifc_demo_runs_successfully(self, test_output_dir):
         """Test that the Empire State Building IFC example demo runs without errors."""
-        output_text, duc_bytes = _run_demo(empire_state_ifc_demo, test_output_dir)
+        output_text, duc_path = _run_demo(empire_state_ifc_demo, test_output_dir)
 
         assert "Successfully serialized DUC file" in output_text
-        assert duc_bytes is not None
-        assert os.path.isfile(os.path.join(test_output_dir, f"{empire_state_ifc_demo.__name__}.duc"))
+        assert duc_path is not None
+        assert os.path.isfile(duc_path)
 
 
 class TestStyleBuilders:

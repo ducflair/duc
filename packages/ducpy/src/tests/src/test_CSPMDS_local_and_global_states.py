@@ -43,9 +43,8 @@ def test_cspmds_local_and_global_states(test_output_dir):
               .build())
     
     # Create global state using the builder API
-    global_state = (duc.StateBuilder()
+    duc_global_state = (duc.StateBuilder()
         .with_id("global_state_1")
-        .with_name("Test Global State")
         .with_description("Test global state for CSPMDS")
         .with_version("1.0")
         .with_readonly(False)
@@ -64,9 +63,8 @@ def test_cspmds_local_and_global_states(test_output_dir):
         .build())
     
     # Create local state using the builder API
-    local_state = (duc.StateBuilder()
+    duc_local_state = (duc.StateBuilder()
         .with_id("local_state_1")
-        .with_name("Test Local State")
         .with_description("Test local state for CSPMDS")
         .with_version("1.0")
         .with_readonly(False)
@@ -96,8 +94,8 @@ def test_cspmds_local_and_global_states(test_output_dir):
         file_path=output_file,
         name="LocalAndGlobalStatesTest",
         elements=elements,
-        duc_global_state=global_state,
-        duc_local_state=local_state
+        duc_global_state=duc_global_state,
+        duc_local_state=duc_local_state
     )
     
     assert os.path.exists(output_file) and os.path.getsize(output_file) > 0
@@ -170,9 +168,9 @@ def test_local_and_global_states_via_sql():
         # Insert global state
         db.sql(
             "INSERT INTO duc_global_state "
-            "(id, name, view_background_color, main_scope, scope_exponent_threshold) "
-            "VALUES (?,?,?,?,?)",
-            1, "Test Drawing", "#FFFFFF", "mm", 6,
+            "(id, view_background_color, main_scope, scope_exponent_threshold) "
+            "VALUES (?,?,?,?)",
+            1, "#FFFFFF", "mm", 6,
         )
 
         # Insert local state
@@ -185,19 +183,19 @@ def test_local_and_global_states_via_sql():
             1, "mm", 0.0, 0.0, 1.0, 1, 0, 0, 1, 1, 0, 2,
         )
 
-        # Add default current-item stroke/background via local_state owner
+        # Add default current-item stroke/background via duc_local_state owner
         db.sql(
             "INSERT INTO backgrounds (owner_type, owner_id, src, opacity) VALUES (?,?,?,?)",
-            "local_state", "1", "#3498db", 1.0,
+            "duc_local_state", "1", "#3498db", 1.0,
         )
         db.sql(
             "INSERT INTO strokes (owner_type, owner_id, src, width) VALUES (?,?,?,?)",
-            "local_state", "1", "#000000", 1.0,
+            "duc_local_state", "1", "#000000", 1.0,
         )
 
         # Verify
         gs = db.sql("SELECT * FROM duc_global_state")[0]
-        assert gs["name"] == "Test Drawing"
+        assert gs["view_background_color"] == "#FFFFFF"
         assert gs["main_scope"] == "mm"
 
         ls = db.sql("SELECT * FROM duc_local_state")[0]
