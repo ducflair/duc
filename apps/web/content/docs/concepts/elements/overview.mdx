@@ -1,6 +1,6 @@
 ---
 title: "Overview"
-description: "An element is a fundamental spatial building blocks of .duc, base properties (_DucElementBase), and full catalog of geometric, document, model, and layout elements."
+description: "Elements are the fundamental spatial building blocks of .duc, including geometric, document, model, and layout elements."
 date: 2026-07-25
 authors: [jorgedanisc]
 ---
@@ -8,6 +8,8 @@ authors: [jorgedanisc]
 ## What is an Element?
 
 Every visual entity on the 2D canvas whether it is a simple geometric line, a rich text note, a spatial spreadsheet table, a 3D CAD model, an embedded PDF document, an artboard frame, or a reusable block instance is represented as an Element.
+
+**Model Elements are the only element type that can produce an interactive 3D model in a `.duc` file.** Other element types can depict depth or contain a 2D projection of 3D geometry, but they do not carry executable model source, external CAD model data, or a persistent 3D viewer state. Model Elements are not limited to 3D content: they also represent interactive 2D CAD sources such as DXF and DWG.
 
 ---
 
@@ -60,8 +62,8 @@ All elements inherit a core set of base spatial, structural, and identity proper
 - **`doc`**: Embedded `typst` code document containers for rich project notes and technical specifications that is compiled to a PDF.
 - **`pdf`**: Vector PDF overlays rendering multi-page document attachments in vector resolution.
 
-### 4. 3D Models & Procedural Code
-- **`model`**: Parametric CAD model elements supporting embedded 3D viewer states, camera inspection angles, and procedural code scripts. Can be `python` code or a reference to an external file containing any of `STEP`, `STL`, `IFC`, `DXF` and `DWG`.
+### 4. Interactive Models & Procedural Code
+- **`model`**: The exclusive container for interactive 3D models in `.duc`, with persistent viewer and camera state. Its source can be procedural `python` code or an external `IFC`, `STEP`, `STL`, `DXF`, or `DWG` file. The same element type also supports interactive 2D CAD content from DXF and DWG.
 
 ### 5. Media & External Embeds
 - **`image`**: Raster image asset attachments and SVG vector graphics.
