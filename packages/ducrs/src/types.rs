@@ -1657,6 +1657,7 @@ pub struct ExternalFileLoaded {
 #[serde(rename_all = "camelCase")]
 pub struct ExternalFileMeta {
     pub id: String,
+    pub active_revision_id: Option<String>,
     pub mime_type: String,
     pub created: i64,
     pub last_retrieved: Option<i64>,
