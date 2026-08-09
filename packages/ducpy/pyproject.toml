@@ -5,8 +5,12 @@ description = "Python library for the .duc project-state format for physical-eng
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "certifi>=2024.8.30",
     "nanoid>=2.0.0",
-    "pypdf>=4.2.0"
+    "pypdf>=4.2.0",
+    "ezdxf>=1.1.0",
+    "ifcopenshell>=0.8.5",
+    "wasmtime>=30.0.0"
 ]
 
 license = { text = "MIT" }

@@ -115,7 +115,7 @@ pub(crate) fn list_external_files_from_connection(
 
     if has_revisions_table {
         let mut stmt = conn.prepare(
-            "SELECT f.id, r.mime_type, r.created, r.last_retrieved, f.version
+            "SELECT f.id, f.active_revision_id, r.mime_type, r.created, r.last_retrieved, f.version
              FROM external_files f
              JOIN external_file_revisions r ON r.id = f.active_revision_id",
         )?;
@@ -123,10 +123,11 @@ pub(crate) fn list_external_files_from_connection(
             .query_map([], |row| {
                 Ok(ExternalFileMeta {
                     id: row.get(0)?,
-                    mime_type: row.get(1)?,
-                    created: row.get(2)?,
-                    last_retrieved: row.get(3)?,
-                    version: row.get(4)?,
+                    active_revision_id: Some(row.get(1)?),
+                    mime_type: row.get(2)?,
+                    created: row.get(3)?,
+                    last_retrieved: row.get(4)?,
+                    version: row.get(5)?,
                 })
             })?
             .collect::<Result<Vec<_>, _>>()?;
@@ -140,6 +141,7 @@ pub(crate) fn list_external_files_from_connection(
             .query_map([], |row| {
                 Ok(ExternalFileMeta {
                     id: row.get(0)?,
+                    active_revision_id: None,
                     mime_type: row.get(1)?,
                     created: row.get(2)?,
                     last_retrieved: row.get(3)?,
