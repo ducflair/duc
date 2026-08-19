@@ -1765,19 +1765,24 @@ fn write_version_graph(
                  schema_version, timestamp, description, is_manual_save, user_id, size_bytes)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
         )?;
-        for (i, delta) in vg.deltas.iter().enumerate() {
+        let mut delta_sequences = std::collections::HashMap::<&str, i64>::new();
+        for delta in &vg.deltas {
             let chain_id = vg
                 .chains
                 .iter()
                 .find(|c| c.schema_version == delta.schema_version)
                 .map(|c| c.id.as_str())
                 .unwrap_or("");
+            let delta_sequence = delta_sequences
+                .entry(delta.base_checkpoint_id.as_str())
+                .and_modify(|sequence| *sequence += 1)
+                .or_insert(1);
             d_stmt.execute(params![
                 delta.base.id,
                 delta.base.parent_id,
                 delta.base_checkpoint_id,
                 chain_id,
-                (i + 1) as i64,
+                *delta_sequence,
                 delta.version_number,
                 delta.schema_version,
                 delta.base.timestamp,

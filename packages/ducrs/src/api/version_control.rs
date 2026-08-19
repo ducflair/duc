@@ -284,46 +284,75 @@ impl<'a> VersionControl<'a> {
     /// automatically (close old chain, record migration, open new chain).
     pub fn create_checkpoint(&self, checkpoint: &Checkpoint) -> DbResult<()> {
         self.conn.with(|c| {
-            self.maybe_migrate_schema(c, checkpoint.schema_version)?;
-            let chain_id = self.resolve_chain_id(c, checkpoint.schema_version)?;
+            with_version_control_savepoint(c, || {
+                validate_new_version(
+                    c,
+                    &checkpoint.base.id,
+                    checkpoint.version_number,
+                    checkpoint.schema_version,
+                )?;
+                let migration_id = self.maybe_migrate_schema(
+                    c,
+                    checkpoint.schema_version,
+                    &checkpoint.base.id,
+                    checkpoint.is_schema_boundary,
+                )?;
+                let chain_id = self.resolve_chain_id(
+                    c,
+                    checkpoint.schema_version,
+                    checkpoint.version_number,
+                    migration_id,
+                )?;
+                let stored_size = i64::try_from(checkpoint.data.len()).map_err(|_| {
+                    version_control_error("checkpoint payload size exceeds SQLite INTEGER range")
+                })?;
 
-            c.execute(
-                "INSERT OR REPLACE INTO checkpoints
+                c.execute(
+                    "INSERT INTO checkpoints
                     (id, parent_id, chain_id, version_number, schema_version,
                      timestamp, description, is_manual_save, is_schema_boundary,
                      user_id, size_bytes)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
-                rusqlite::params![
-                    checkpoint.base.id,
-                    checkpoint.base.parent_id,
-                    chain_id,
+                    rusqlite::params![
+                        checkpoint.base.id,
+                        checkpoint.base.parent_id,
+                        chain_id,
+                        checkpoint.version_number,
+                        checkpoint.schema_version,
+                        checkpoint.base.timestamp,
+                        checkpoint.base.description,
+                        checkpoint.base.is_manual_save as i32,
+                        checkpoint.is_schema_boundary as i32,
+                        checkpoint.base.user_id,
+                        stored_size,
+                    ],
+                )
+                .map_err(DbError::from)?;
+                external_file_chunks::write_checkpoint_data_chunks_on_connection(
+                    c,
+                    &checkpoint.base.id,
+                    &checkpoint.data,
+                    DEFAULT_EXTERNAL_FILE_CHUNK_SIZE,
+                )
+                .map_err(chunk_error_to_db)?;
+
+                c.execute(
+                    "UPDATE version_chains
+                     SET root_checkpoint_id = COALESCE(root_checkpoint_id, ?1)
+                     WHERE id = ?2",
+                    rusqlite::params![checkpoint.base.id, chain_id],
+                )
+                .map_err(DbError::from)?;
+
+                self.update_version_graph_pointer(
+                    c,
+                    &checkpoint.base.id,
                     checkpoint.version_number,
                     checkpoint.schema_version,
-                    checkpoint.base.timestamp,
-                    checkpoint.base.description,
-                    checkpoint.base.is_manual_save as i32,
-                    checkpoint.is_schema_boundary as i32,
-                    checkpoint.base.user_id,
-                    checkpoint.size_bytes,
-                ],
-            )
-            .map_err(DbError::from)?;
-            external_file_chunks::write_checkpoint_data_chunks_on_connection(
-                c,
-                &checkpoint.base.id,
-                &checkpoint.data,
-                DEFAULT_EXTERNAL_FILE_CHUNK_SIZE,
-            )
-            .map_err(chunk_error_to_db)?;
+                )?;
 
-            self.update_version_graph_pointer(
-                c,
-                &checkpoint.base.id,
-                checkpoint.version_number,
-                checkpoint.schema_version,
-            )?;
-
-            Ok(())
+                Ok(())
+            })
         })
     }
 
@@ -334,75 +363,136 @@ impl<'a> VersionControl<'a> {
     /// (uncompressed). The method automatically computes a fossil delta
     /// against the base checkpoint, producing a compact changeset.
     ///
-    /// If the delta's `schema_version` is higher than the stored
-    /// `current_schema_version`, the migration bookkeeping is performed
-    /// automatically.
+    /// The delta schema must match both its base checkpoint and the active
+    /// version chain. Schema transitions must begin with a boundary checkpoint.
     pub fn create_delta(&self, delta: &Delta) -> DbResult<()> {
         self.conn.with(|c| {
-            self.maybe_migrate_schema(c, delta.schema_version)?;
-            let chain_id = self.resolve_chain_id(c, delta.schema_version)?;
+            with_version_control_savepoint(c, || {
+                validate_new_version(
+                    c,
+                    &delta.base.id,
+                    delta.version_number,
+                    delta.schema_version,
+                )?;
 
-            // Compute delta_sequence within the base checkpoint group
-            let delta_sequence: i64 = c
-                .query_row(
-                    "SELECT COALESCE(MAX(delta_sequence), 0) + 1
-                     FROM deltas WHERE base_checkpoint_id = ?1",
-                    [&delta.base_checkpoint_id],
-                    |row| row.get(0),
-                )
-                .map_err(DbError::from)?;
+                let (base_schema_version, chain_id): (i32, String) = c
+                    .query_row(
+                        "SELECT schema_version, chain_id FROM checkpoints WHERE id = ?1",
+                        [&delta.base_checkpoint_id],
+                        |row| Ok((row.get(0)?, row.get(1)?)),
+                    )
+                    .map_err(DbError::from)?;
+                if base_schema_version != delta.schema_version {
+                    return Err(version_control_error(format!(
+                        "delta schema version {} does not match base checkpoint schema version {}",
+                        delta.schema_version, base_schema_version
+                    )));
+                }
 
-            // Load the base checkpoint data for delta computation
-            let base_data = read_checkpoint_data(c, &delta.base_checkpoint_id)?;
+                let current_schema_version: i32 = c
+                    .query_row(
+                        "SELECT current_schema_version FROM version_graph WHERE id = 1",
+                        [],
+                        |row| row.get(0),
+                    )
+                    .map_err(DbError::from)?;
+                if delta.schema_version != current_schema_version {
+                    return Err(version_control_error(format!(
+                        "delta schema version {} is not the active schema version {}",
+                        delta.schema_version, current_schema_version
+                    )));
+                }
 
-            // Compute checkpoint-relative fossil delta changeset
-            let changeset = create_bsdiff_changeset(&base_data, &delta.payload)?;
-            let stored_size = changeset.len() as i64;
+                let active_chain: bool = c
+                    .query_row(
+                        "SELECT end_version IS NULL FROM version_chains WHERE id = ?1",
+                        [&chain_id],
+                        |row| row.get(0),
+                    )
+                    .map_err(DbError::from)?;
+                if !active_chain {
+                    return Err(version_control_error(
+                        "delta base checkpoint belongs to a closed version chain",
+                    ));
+                }
 
-            c.execute(
-                "INSERT OR REPLACE INTO deltas
+                // Compute delta_sequence within the base checkpoint group.
+                let delta_sequence: i64 = c
+                    .query_row(
+                        "SELECT COALESCE(MAX(delta_sequence), 0) + 1
+                         FROM deltas WHERE base_checkpoint_id = ?1",
+                        [&delta.base_checkpoint_id],
+                        |row| row.get(0),
+                    )
+                    .map_err(DbError::from)?;
+
+                // Load the base checkpoint data for delta computation.
+                let base_data = read_checkpoint_data(c, &delta.base_checkpoint_id)?;
+
+                // Compute checkpoint-relative fossil delta changeset.
+                let changeset = create_bsdiff_changeset(&base_data, &delta.payload)?;
+                let stored_size = i64::try_from(changeset.len()).map_err(|_| {
+                    version_control_error("delta payload size exceeds SQLite INTEGER range")
+                })?;
+
+                c.execute(
+                    "INSERT INTO deltas
                     (id, parent_id, base_checkpoint_id, chain_id, delta_sequence,
                      version_number, schema_version, timestamp, description,
                      is_manual_save, user_id, size_bytes)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
-                rusqlite::params![
-                    delta.base.id,
-                    delta.base.parent_id,
-                    delta.base_checkpoint_id,
-                    chain_id,
-                    delta_sequence,
+                    rusqlite::params![
+                        delta.base.id,
+                        delta.base.parent_id,
+                        delta.base_checkpoint_id,
+                        chain_id,
+                        delta_sequence,
+                        delta.version_number,
+                        delta.schema_version,
+                        delta.base.timestamp,
+                        delta.base.description,
+                        delta.base.is_manual_save as i32,
+                        delta.base.user_id,
+                        stored_size,
+                    ],
+                )
+                .map_err(DbError::from)?;
+                external_file_chunks::write_delta_changeset_chunks_on_connection(
+                    c,
+                    &delta.base.id,
+                    &changeset,
+                    DEFAULT_EXTERNAL_FILE_CHUNK_SIZE,
+                )
+                .map_err(chunk_error_to_db)?;
+
+                self.update_version_graph_pointer(
+                    c,
+                    &delta.base.id,
                     delta.version_number,
                     delta.schema_version,
-                    delta.base.timestamp,
-                    delta.base.description,
-                    delta.base.is_manual_save as i32,
-                    delta.base.user_id,
-                    stored_size,
-                ],
-            )
-            .map_err(DbError::from)?;
-            external_file_chunks::write_delta_changeset_chunks_on_connection(
-                c,
-                &delta.base.id,
-                &changeset,
-                DEFAULT_EXTERNAL_FILE_CHUNK_SIZE,
-            )
-            .map_err(chunk_error_to_db)?;
+                )?;
 
-            self.update_version_graph_pointer(
-                c,
-                &delta.base.id,
-                delta.version_number,
-                delta.schema_version,
-            )?;
-
-            Ok(())
+                Ok(())
+            })
         })
     }
 
     /// Set the user-designated checkpoint version id.
     pub fn set_user_checkpoint(&self, version_id: &str) -> DbResult<()> {
         self.conn.with(|c| {
+            let exists: bool = c
+                .query_row(
+                    "SELECT EXISTS(SELECT 1 FROM checkpoints WHERE id = ?1)",
+                    [version_id],
+                    |row| row.get(0),
+                )
+                .map_err(DbError::from)?;
+            if !exists {
+                return Err(version_control_error(format!(
+                    "checkpoint {version_id} does not exist"
+                )));
+            }
+
             c.execute(
                 "UPDATE version_graph SET user_checkpoint_version_id = ?1 WHERE id = 1",
                 [version_id],
@@ -425,45 +515,78 @@ impl<'a> VersionControl<'a> {
         let restored = self.restore_version(target_version)?;
 
         self.conn.with(|c| -> DbResult<()> {
-            // Delete all deltas newer than the target
-            c.execute(
-                "DELETE FROM deltas WHERE version_number > ?1",
-                [target_version],
-            )
-            .map_err(DbError::from)?;
-
-            // Delete all checkpoints newer than the target
-            c.execute(
-                "DELETE FROM checkpoints WHERE version_number > ?1",
-                [target_version],
-            )
-            .map_err(DbError::from)?;
-
-            // Find the id of the version at target_version
-            let version_id: String = c
-                .query_row(
-                    "SELECT id FROM checkpoints WHERE version_number = ?1
-                     UNION ALL
-                     SELECT id FROM deltas WHERE version_number = ?1
-                     LIMIT 1",
+            with_version_control_savepoint(c, || {
+                // Delete all versions newer than the target. Payload chunks are
+                // removed through their ON DELETE CASCADE foreign keys.
+                c.execute(
+                    "DELETE FROM deltas WHERE version_number > ?1",
                     [target_version],
-                    |row| row.get(0),
+                )
+                .map_err(DbError::from)?;
+                c.execute(
+                    "DELETE FROM checkpoints WHERE version_number > ?1",
+                    [target_version],
                 )
                 .map_err(DbError::from)?;
 
-            // Update pointers
-            c.execute(
-                "UPDATE version_graph
-                 SET current_version = ?1,
-                     latest_version_id = ?2
-                 WHERE id = 1",
-                rusqlite::params![target_version, version_id],
-            )
-            .map_err(DbError::from)?;
+                let (version_id, chain_id): (String, String) = c
+                    .query_row(
+                        "SELECT id, chain_id FROM checkpoints WHERE version_number = ?1
+                         UNION ALL
+                         SELECT id, chain_id FROM deltas WHERE version_number = ?1
+                         LIMIT 1",
+                        [target_version],
+                        |row| Ok((row.get(0)?, row.get(1)?)),
+                    )
+                    .map_err(DbError::from)?;
 
-            self.recalculate_total_size(c)?;
+                // Remove chains and migrations that no longer own any retained
+                // versions, then reopen the target chain for future versions.
+                c.execute(
+                    "DELETE FROM version_chains
+                     WHERE NOT EXISTS (
+                         SELECT 1 FROM checkpoints WHERE checkpoints.chain_id = version_chains.id
+                     ) AND NOT EXISTS (
+                         SELECT 1 FROM deltas WHERE deltas.chain_id = version_chains.id
+                     )",
+                    [],
+                )
+                .map_err(DbError::from)?;
+                c.execute(
+                    "DELETE FROM schema_migrations
+                     WHERE id NOT IN (
+                         SELECT migration_id FROM version_chains WHERE migration_id IS NOT NULL
+                     )",
+                    [],
+                )
+                .map_err(DbError::from)?;
+                c.execute(
+                    "UPDATE version_chains SET end_version = NULL WHERE id = ?1",
+                    [&chain_id],
+                )
+                .map_err(DbError::from)?;
 
-            Ok(())
+                c.execute(
+                    "UPDATE version_graph
+                     SET current_version = ?1,
+                         current_schema_version = ?2,
+                         latest_version_id = ?3,
+                         user_checkpoint_version_id = CASE
+                             WHEN EXISTS (
+                                 SELECT 1 FROM checkpoints
+                                 WHERE id = version_graph.user_checkpoint_version_id
+                             ) THEN user_checkpoint_version_id
+                             ELSE NULL
+                         END,
+                         chain_count = (SELECT COUNT(*) FROM version_chains)
+                     WHERE id = 1",
+                    rusqlite::params![target_version, restored.schema_version, version_id],
+                )
+                .map_err(DbError::from)?;
+
+                self.recalculate_total_size(c)?;
+                Ok(())
+            })
         })?;
 
         Ok(restored)
@@ -483,7 +606,7 @@ impl<'a> VersionControl<'a> {
     ) -> DbResult<()> {
         c.execute(
             "UPDATE version_graph
-             SET current_version = MAX(current_version, ?1),
+             SET current_version = ?1,
                  current_schema_version = ?2,
                  latest_version_id = ?3
              WHERE id = 1",
@@ -497,7 +620,13 @@ impl<'a> VersionControl<'a> {
     }
 
     /// Find (or create) the chain_id for a given schema_version.
-    fn resolve_chain_id(&self, c: &rusqlite::Connection, schema_version: i32) -> DbResult<String> {
+    fn resolve_chain_id(
+        &self,
+        c: &rusqlite::Connection,
+        schema_version: i32,
+        start_version: i64,
+        migration_id: Option<i64>,
+    ) -> DbResult<String> {
         let existing: Option<String> = c
             .query_row(
                 "SELECT id FROM version_chains
@@ -513,26 +642,18 @@ impl<'a> VersionControl<'a> {
             Some(id) => Ok(id),
             None => {
                 let new_id = nanoid();
-                let start_version: i64 = c
-                    .query_row(
-                        "SELECT COALESCE(MAX(version_number), 0) FROM checkpoints
-                         UNION ALL
-                         SELECT COALESCE(MAX(version_number), 0) FROM deltas",
-                        [],
-                        |row| row.get(0),
-                    )
-                    .unwrap_or(0);
-
                 c.execute(
-                    "INSERT INTO version_chains (id, schema_version, start_version)
-                     VALUES (?1, ?2, ?3)",
-                    rusqlite::params![new_id, schema_version, start_version],
+                    "INSERT INTO version_chains
+                        (id, schema_version, start_version, migration_id)
+                     VALUES (?1, ?2, ?3, ?4)",
+                    rusqlite::params![new_id, schema_version, start_version, migration_id],
                 )
                 .map_err(DbError::from)?;
 
-                // Update chain_count
                 c.execute(
-                    "UPDATE version_graph SET chain_count = chain_count + 1 WHERE id = 1",
+                    "UPDATE version_graph
+                     SET chain_count = (SELECT COUNT(*) FROM version_chains)
+                     WHERE id = 1",
                     [],
                 )
                 .map_err(DbError::from)?;
@@ -578,7 +699,9 @@ impl<'a> VersionControl<'a> {
         &self,
         c: &rusqlite::Connection,
         new_schema_version: i32,
-    ) -> DbResult<()> {
+        boundary_checkpoint_id: &str,
+        is_schema_boundary: bool,
+    ) -> DbResult<Option<i64>> {
         let current_sv: i32 = c
             .query_row(
                 "SELECT current_schema_version FROM version_graph WHERE id = 1",
@@ -587,8 +710,35 @@ impl<'a> VersionControl<'a> {
             )
             .map_err(DbError::from)?;
 
-        if new_schema_version <= current_sv {
-            return Ok(());
+        let version_count: i64 = c
+            .query_row(
+                "SELECT (SELECT COUNT(*) FROM checkpoints) +
+                        (SELECT COUNT(*) FROM deltas)",
+                [],
+                |row| row.get(0),
+            )
+            .map_err(DbError::from)?;
+        if version_count == 0 {
+            c.execute(
+                "UPDATE version_graph SET current_schema_version = ?1 WHERE id = 1",
+                [new_schema_version],
+            )
+            .map_err(DbError::from)?;
+            return Ok(None);
+        }
+
+        if new_schema_version < current_sv {
+            return Err(version_control_error(format!(
+                "schema version cannot move backwards from {current_sv} to {new_schema_version}"
+            )));
+        }
+        if new_schema_version == current_sv {
+            return Ok(None);
+        }
+        if !is_schema_boundary {
+            return Err(version_control_error(format!(
+                "checkpoint {boundary_checkpoint_id} must be marked as a schema boundary when moving from schema {current_sv} to {new_schema_version}"
+            )));
         }
 
         let current_max_version: i64 = c
@@ -617,18 +767,23 @@ impl<'a> VersionControl<'a> {
             .unwrap_or_default()
             .as_millis() as i64;
 
-        c.execute(
-            "INSERT OR IGNORE INTO schema_migrations
-                (from_schema_version, to_schema_version, migration_name, applied_at)
-             VALUES (?1, ?2, ?3, ?4)",
-            rusqlite::params![
-                current_sv,
-                new_schema_version,
-                format!("auto_migration_v{}_to_v{}", current_sv, new_schema_version),
-                now_ms,
-            ],
-        )
-        .map_err(DbError::from)?;
+        let migration_id: i64 = c
+            .query_row(
+                "INSERT INTO schema_migrations
+                    (from_schema_version, to_schema_version, migration_name, applied_at,
+                     boundary_checkpoint_id)
+                 VALUES (?1, ?2, ?3, ?4, ?5)
+                 RETURNING id",
+                rusqlite::params![
+                    current_sv,
+                    new_schema_version,
+                    format!("auto_migration_v{}_to_v{}", current_sv, new_schema_version),
+                    now_ms,
+                    boundary_checkpoint_id,
+                ],
+                |row| row.get(0),
+            )
+            .map_err(DbError::from)?;
 
         log::info!(
             "Schema migration: {} → {} (closed old chains, recorded migration)",
@@ -636,7 +791,103 @@ impl<'a> VersionControl<'a> {
             new_schema_version
         );
 
-        Ok(())
+        Ok(Some(migration_id))
+    }
+}
+
+fn version_control_error(message: impl Into<String>) -> DbError {
+    DbError::Bootstrap(format!("version control: {}", message.into()))
+}
+
+fn validate_new_version(
+    c: &rusqlite::Connection,
+    version_id: &str,
+    version_number: i64,
+    schema_version: i32,
+) -> DbResult<()> {
+    if version_id.is_empty() {
+        return Err(version_control_error("version id must not be empty"));
+    }
+    if version_number < 0 {
+        return Err(version_control_error("version number must be non-negative"));
+    }
+    if schema_version < 1 {
+        return Err(version_control_error("schema version must be positive"));
+    }
+
+    let duplicate_id: bool = c
+        .query_row(
+            "SELECT EXISTS(SELECT 1 FROM checkpoints WHERE id = ?1)
+                 OR EXISTS(SELECT 1 FROM deltas WHERE id = ?1)",
+            [version_id],
+            |row| row.get(0),
+        )
+        .map_err(DbError::from)?;
+    if duplicate_id {
+        return Err(version_control_error(format!(
+            "version id {version_id} already exists"
+        )));
+    }
+
+    let duplicate_number: bool = c
+        .query_row(
+            "SELECT EXISTS(SELECT 1 FROM checkpoints WHERE version_number = ?1)
+                 OR EXISTS(SELECT 1 FROM deltas WHERE version_number = ?1)",
+            [version_number],
+            |row| row.get(0),
+        )
+        .map_err(DbError::from)?;
+    if duplicate_number {
+        return Err(version_control_error(format!(
+            "version number {version_number} already exists"
+        )));
+    }
+
+    let latest_version: Option<i64> = c
+        .query_row(
+            "SELECT MAX(version_number) FROM (
+                 SELECT version_number FROM checkpoints
+                 UNION ALL
+                 SELECT version_number FROM deltas
+             )",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(DbError::from)?;
+    if latest_version.is_some_and(|latest| version_number <= latest) {
+        return Err(version_control_error(format!(
+            "version number {version_number} must be greater than the latest version {}",
+            latest_version.unwrap_or_default()
+        )));
+    }
+
+    Ok(())
+}
+
+fn with_version_control_savepoint<T>(
+    c: &rusqlite::Connection,
+    operation: impl FnOnce() -> DbResult<T>,
+) -> DbResult<T> {
+    c.execute_batch("SAVEPOINT duc_version_control_write")
+        .map_err(DbError::from)?;
+    match operation() {
+        Ok(value) => {
+            if let Err(error) = c.execute_batch("RELEASE duc_version_control_write") {
+                let _ = c.execute_batch(
+                    "ROLLBACK TO duc_version_control_write;
+                     RELEASE duc_version_control_write;",
+                );
+                return Err(DbError::from(error));
+            }
+            Ok(value)
+        }
+        Err(error) => {
+            let _ = c.execute_batch(
+                "ROLLBACK TO duc_version_control_write;
+                 RELEASE duc_version_control_write;",
+            );
+            Err(error)
+        }
     }
 }
 
@@ -686,6 +937,8 @@ pub(crate) fn read_version_graph_inner(
         Err(e) => return Err(DbError::from(e)),
     };
 
+    validate_version_graph_integrity(conn, &metadata, &user_cp_id, &latest_id)?;
+
     // Migrations keyed by id
     let mut m_stmt = conn
         .prepare(
@@ -712,7 +965,7 @@ pub(crate) fn read_version_graph_inner(
         })
         .map_err(DbError::from)?
         .collect::<Result<HashMap<_, _>, _>>()
-        .unwrap_or_default();
+        .map_err(DbError::from)?;
 
     // Chains
     let mut ch_stmt = conn
@@ -810,13 +1063,230 @@ pub(crate) fn read_version_graph_inner(
     }))
 }
 
+fn validate_version_graph_integrity(
+    conn: &rusqlite::Connection,
+    metadata: &VersionGraphMetadata,
+    user_checkpoint_id: &str,
+    latest_version_id: &str,
+) -> DbResult<()> {
+    let duplicate_version: Option<i64> = conn
+        .query_row(
+            "SELECT checkpoints.version_number
+             FROM checkpoints
+             INNER JOIN deltas USING (version_number)
+             LIMIT 1",
+            [],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(DbError::from)?;
+    if let Some(version) = duplicate_version {
+        return Err(version_control_error(format!(
+            "version number {version} is used by both a checkpoint and a delta"
+        )));
+    }
+
+    let invalid_checkpoint_relations: i64 = conn
+        .query_row(
+            "SELECT COUNT(*)
+             FROM checkpoints
+             LEFT JOIN version_chains ON version_chains.id = checkpoints.chain_id
+             WHERE version_chains.id IS NULL
+                OR checkpoints.schema_version != version_chains.schema_version
+                OR checkpoints.version_number < version_chains.start_version
+                OR (version_chains.end_version IS NOT NULL
+                    AND checkpoints.version_number > version_chains.end_version)",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(DbError::from)?;
+    if invalid_checkpoint_relations != 0 {
+        return Err(version_control_error(format!(
+            "{invalid_checkpoint_relations} checkpoints violate their version chain"
+        )));
+    }
+
+    let invalid_delta_relations: i64 = conn
+        .query_row(
+            "SELECT COUNT(*)
+             FROM deltas
+             LEFT JOIN checkpoints AS base ON base.id = deltas.base_checkpoint_id
+             LEFT JOIN version_chains ON version_chains.id = deltas.chain_id
+             WHERE base.id IS NULL
+                OR version_chains.id IS NULL
+                OR deltas.schema_version != base.schema_version
+                OR deltas.chain_id != base.chain_id
+                OR deltas.schema_version != version_chains.schema_version
+                OR deltas.version_number < version_chains.start_version
+                OR (version_chains.end_version IS NOT NULL
+                    AND deltas.version_number > version_chains.end_version)",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(DbError::from)?;
+    if invalid_delta_relations != 0 {
+        return Err(version_control_error(format!(
+            "{invalid_delta_relations} deltas violate their base checkpoint or version chain"
+        )));
+    }
+
+    let invalid_roots: i64 = conn
+        .query_row(
+            "SELECT COUNT(*)
+             FROM version_chains
+             WHERE root_checkpoint_id IS NOT NULL
+               AND NOT EXISTS (
+                   SELECT 1 FROM checkpoints
+                   WHERE checkpoints.id = version_chains.root_checkpoint_id
+                     AND checkpoints.chain_id = version_chains.id
+               )",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(DbError::from)?;
+    if invalid_roots != 0 {
+        return Err(version_control_error(format!(
+            "{invalid_roots} version chains reference an invalid root checkpoint"
+        )));
+    }
+
+    let invalid_migrations: i64 = conn
+        .query_row(
+            "SELECT COUNT(*)
+             FROM version_chains
+             LEFT JOIN schema_migrations ON schema_migrations.id = version_chains.migration_id
+             WHERE version_chains.migration_id IS NOT NULL
+               AND (schema_migrations.id IS NULL
+                OR schema_migrations.to_schema_version != version_chains.schema_version
+                OR schema_migrations.to_schema_version <= schema_migrations.from_schema_version)",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(DbError::from)?;
+    if invalid_migrations != 0 {
+        return Err(version_control_error(format!(
+            "{invalid_migrations} version chains reference an incompatible schema migration"
+        )));
+    }
+
+    let invalid_sequences: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM (
+                 SELECT base_checkpoint_id
+                 FROM deltas
+                 GROUP BY base_checkpoint_id
+                 HAVING MIN(delta_sequence) != 1
+                    OR MAX(delta_sequence) != COUNT(*)
+                    OR COUNT(DISTINCT delta_sequence) != COUNT(*)
+             )",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(DbError::from)?;
+    if invalid_sequences != 0 {
+        return Err(version_control_error(format!(
+            "{invalid_sequences} checkpoint delta sequences contain gaps or duplicates"
+        )));
+    }
+
+    if !user_checkpoint_id.is_empty() {
+        let user_checkpoint_exists: bool = conn
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM checkpoints WHERE id = ?1)",
+                [user_checkpoint_id],
+                |row| row.get(0),
+            )
+            .map_err(DbError::from)?;
+        if !user_checkpoint_exists {
+            return Err(version_control_error(format!(
+                "user checkpoint {user_checkpoint_id} does not exist"
+            )));
+        }
+    }
+
+    let chain_count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM version_chains", [], |row| row.get(0))
+        .map_err(DbError::from)?;
+    let expected_chain_count = if chain_count == 0 { 1 } else { chain_count };
+    if i64::from(metadata.chain_count) != expected_chain_count {
+        return Err(version_control_error(format!(
+            "version graph declares {} chains but stores {chain_count}",
+            metadata.chain_count
+        )));
+    }
+
+    let stored_total_size: i64 = conn
+        .query_row(
+            "SELECT COALESCE((SELECT SUM(COALESCE(size_bytes, 0)) FROM checkpoints), 0)
+                  + COALESCE((SELECT SUM(COALESCE(size_bytes, 0)) FROM deltas), 0)",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(DbError::from)?;
+    if metadata.total_size != stored_total_size {
+        return Err(version_control_error(format!(
+            "version graph declares {} total bytes but versions declare {stored_total_size}",
+            metadata.total_size
+        )));
+    }
+
+    let latest: Option<(String, i64, i32)> = conn
+        .query_row(
+            "SELECT id, version_number, schema_version FROM (
+                 SELECT id, version_number, schema_version FROM checkpoints
+                 UNION ALL
+                 SELECT id, version_number, schema_version FROM deltas
+             )
+             ORDER BY version_number DESC
+             LIMIT 1",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )
+        .optional()
+        .map_err(DbError::from)?;
+    match latest {
+        Some((id, version, schema_version)) => {
+            if latest_version_id != id
+                || metadata.current_version != version
+                || metadata.current_schema_version != schema_version
+            {
+                return Err(version_control_error(format!(
+                    "version graph latest pointer does not match stored version {version} ({id})"
+                )));
+            }
+        }
+        None if metadata.current_version != 0 || !latest_version_id.is_empty() => {
+            return Err(version_control_error(
+                "empty version graph has a non-empty latest pointer",
+            ));
+        }
+        None => {}
+    }
+
+    Ok(())
+}
+
 pub(crate) fn read_checkpoint_data(
     conn: &rusqlite::Connection,
     checkpoint_id: &str,
 ) -> DbResult<Vec<u8>> {
     if external_file_chunks::table_exists(conn, "checkpoint_data_chunks").map_err(DbError::from)? {
-        return external_file_chunks::read_checkpoint_data_chunks(conn, checkpoint_id)
-            .map_err(chunk_error_to_db);
+        let data = external_file_chunks::read_checkpoint_data_chunks(conn, checkpoint_id)
+            .map_err(chunk_error_to_db)?;
+        let (expected_size, storage_key): (Option<i64>, Option<String>) = conn
+            .query_row(
+                "SELECT size_bytes, storage_key FROM checkpoints WHERE id = ?1",
+                [checkpoint_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .map_err(DbError::from)?;
+        if data.is_empty() && storage_key.is_some() {
+            return Err(version_control_error(format!(
+                "checkpoint {checkpoint_id} payload is stored externally and is not locally available"
+            )));
+        }
+        validate_payload_size("checkpoint", checkpoint_id, expected_size, data.len())?;
+        return Ok(data);
     }
 
     if external_file_chunks::column_exists(conn, "checkpoints", "data").map_err(DbError::from)? {
@@ -838,8 +1308,17 @@ pub(crate) fn read_delta_changeset(
     delta_id: &str,
 ) -> DbResult<Vec<u8>> {
     if external_file_chunks::table_exists(conn, "delta_changeset_chunks").map_err(DbError::from)? {
-        return external_file_chunks::read_delta_changeset_chunks(conn, delta_id)
-            .map_err(chunk_error_to_db);
+        let changeset = external_file_chunks::read_delta_changeset_chunks(conn, delta_id)
+            .map_err(chunk_error_to_db)?;
+        let expected_size: Option<i64> = conn
+            .query_row(
+                "SELECT size_bytes FROM deltas WHERE id = ?1",
+                [delta_id],
+                |row| row.get(0),
+            )
+            .map_err(DbError::from)?;
+        validate_payload_size("delta", delta_id, expected_size, changeset.len())?;
+        return Ok(changeset);
     }
 
     if external_file_chunks::column_exists(conn, "deltas", "changeset").map_err(DbError::from)? {
@@ -853,6 +1332,25 @@ pub(crate) fn read_delta_changeset(
     }
 
     Ok(Vec::new())
+}
+
+fn validate_payload_size(
+    payload_type: &str,
+    id: &str,
+    expected_size: Option<i64>,
+    actual_size: usize,
+) -> DbResult<()> {
+    let Some(expected_size) = expected_size else {
+        return Ok(());
+    };
+    let actual_size = i64::try_from(actual_size)
+        .map_err(|_| version_control_error(format!("{payload_type} {id} payload is too large")))?;
+    if expected_size != actual_size {
+        return Err(version_control_error(format!(
+            "{payload_type} {id} declares {expected_size} payload bytes but stores {actual_size}"
+        )));
+    }
+    Ok(())
 }
 
 fn chunk_error_to_db(e: external_file_chunks::ExternalFileChunkError) -> DbError {
@@ -1001,7 +1499,8 @@ pub fn create_bsdiff_changeset(base: &[u8], current: &[u8]) -> DbResult<Vec<u8>>
     let raw_delta = fossil_delta::delta(&raw_current, &raw_base);
     let compressed_delta = compress_changeset_payload(&raw_delta)?;
 
-    let new_len = raw_current.len() as u32;
+    let new_len = u32::try_from(raw_current.len())
+        .map_err(|_| version_control_error("delta target exceeds the 4 GiB fossil format limit"))?;
     let mut encoded = Vec::with_capacity(FOSSIL_HEADER_SIZE + compressed_delta.len());
     encoded.extend_from_slice(&DELTA_MAGIC_FOSSIL);
     encoded.push(DELTA_FORMAT_V5);
@@ -1024,12 +1523,29 @@ pub fn create_bsdiff_changeset(base: &[u8], current: &[u8]) -> DbResult<Vec<u8>>
 /// Returns raw (uncompressed) SQLite bytes.
 fn apply_fossil_changeset(base: &[u8], changeset: &[u8]) -> DbResult<Vec<u8>> {
     let raw_base = ensure_raw_sqlite(base)?;
+    let expected_len = u32::from_le_bytes(
+        changeset[3..FOSSIL_HEADER_SIZE]
+            .try_into()
+            .map_err(|_| version_control_error("fossil delta header is truncated"))?,
+    ) as usize;
 
     let compressed_delta = &changeset[FOSSIL_HEADER_SIZE..];
     let raw_delta = decompress_changeset_payload(compressed_delta)?;
 
-    fossil_delta::apply(&raw_base, &raw_delta)
-        .map_err(|e| DbError::Bootstrap(format!("fossil delta apply failed: {e:?}")))
+    let result = fossil_delta::apply(&raw_base, &raw_delta)
+        .map_err(|e| DbError::Bootstrap(format!("fossil delta apply failed: {e:?}")))?;
+    if result.len() != expected_len {
+        return Err(version_control_error(format!(
+            "fossil delta declared {expected_len} output bytes but reconstructed {}",
+            result.len()
+        )));
+    }
+    if !is_sqlite_header(&result) {
+        return Err(version_control_error(
+            "fossil delta reconstructed a non-SQLite payload",
+        ));
+    }
+    Ok(result)
 }
 
 /// Decode a stored changeset.
@@ -1041,9 +1557,20 @@ fn apply_fossil_changeset(base: &[u8], changeset: &[u8]) -> DbResult<Vec<u8>> {
 pub fn apply_delta_changeset(base_data: &[u8], changeset: &[u8]) -> DbResult<Vec<u8>> {
     if is_fossil_format(changeset) {
         apply_fossil_changeset(base_data, changeset)
+    } else if changeset.starts_with(&DELTA_MAGIC_FOSSIL) {
+        Err(version_control_error(format!(
+            "unsupported fossil delta format version {}",
+            changeset.get(2).copied().unwrap_or_default()
+        )))
     } else {
         // Snapshot fallback: gzip-compressed full state
-        decompress_changeset_payload(changeset)
+        let snapshot = decompress_changeset_payload(changeset)?;
+        if !is_sqlite_header(&snapshot) {
+            return Err(version_control_error(
+                "snapshot changeset decompressed to a non-SQLite payload",
+            ));
+        }
+        Ok(snapshot)
     }
 }
 
@@ -1073,3 +1600,7 @@ fn nanoid() -> String {
     }
     id
 }
+
+#[cfg(test)]
+#[path = "version_control_tests.rs"]
+mod tests;

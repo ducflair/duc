@@ -9,21 +9,20 @@
 --              ├────────── chain 1 ─────────────────────────┤                ├────── chain 2 ─────────
 --
 --   C = checkpoint (full snapshot, self-contained, always recoverable alone)
---   D = delta (lightweight patch, must be applied sequentially from its base checkpoint)
+--   D = delta (lightweight checkpoint-relative patch)
 --
 -- To restore any version N:
---   1. Find the nearest checkpoint C where C.version_number <= N and C.schema_version matches
---   2. Replay deltas D where D.base_checkpoint_id = C.id AND D.delta_sequence <= needed,
---      ordered by delta_sequence
---   3. Result is the document state at version N in that schema_version
+--   1. If N is a checkpoint, load its ordered chunks directly.
+--   2. If N is a delta, load its base checkpoint and apply that delta's changeset.
+--   3. The result is the document state at version N in that schema_version.
 --
 -- Schema migration boundaries:
 --   - When schema changes, a boundary checkpoint is created in BOTH the old and new schema.
 --   - The old-schema boundary checkpoint (is_schema_boundary=1) is the last valid snapshot
 --     before migration. Its data_checksum allows integrity verification.
 --   - The new-schema boundary checkpoint is linked via schema_migrations.boundary_checkpoint_id.
---   - Deltas NEVER cross schema boundaries. A delta's schema_version must match its
---     base_checkpoint's schema_version. The CHECK constraint enforces this implicitly.
+--   - Deltas NEVER cross schema boundaries. Writers validate that a delta's schema_version
+--     and chain match its base checkpoint because SQLite CHECK constraints cannot query it.
 --
 -- Visiting old versions across migrations:
 --   - Checkpoints are self-contained → can always be loaded as-is for that schema_version.

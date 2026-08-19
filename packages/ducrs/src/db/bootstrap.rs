@@ -4,7 +4,7 @@
 //! The canonical schema lives at `duc.sql` in the workspace root; it is
 //! embedded at compile time so the binary carries no file-system dependency.
 
-use rusqlite::Connection;
+use rusqlite::{Connection, OptionalExtension};
 
 use crate::db::DbError;
 
@@ -57,12 +57,14 @@ pub const SEARCH_SCHEMA_SQL: &str = SEARCH_SCHEMA;
 const CONN_PRAGMAS: &str = "
     PRAGMA journal_mode = WAL;
     PRAGMA foreign_keys  = ON;
+    PRAGMA synchronous   = NORMAL;
 ";
 
 #[cfg(all(target_family = "wasm", target_os = "unknown"))]
 const CONN_PRAGMAS: &str = "
     PRAGMA journal_mode = MEMORY;
     PRAGMA foreign_keys  = ON;
+    PRAGMA synchronous   = NORMAL;
 ";
 
 /// Apply the full schema to `conn` if it is a new (empty) database, then
@@ -74,26 +76,34 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
     let user_version: i64 = conn.pragma_query_value(None, "user_version", |r| r.get(0))?;
 
     if user_version == 0 {
-        // Apply schemas in order.
-        conn.execute_batch(DUC_SCHEMA)
-            .map_err(|e| DbError::Bootstrap(format!("duc.sql apply failed: {e}")))?;
-        conn.execute_batch(VERSION_CONTROL_SCHEMA)
-            .map_err(|e| DbError::Bootstrap(format!("version_control.sql apply failed: {e}")))?;
-        conn.execute_batch(SEARCH_SCHEMA)
-            .map_err(|e| DbError::Bootstrap(format!("search.sql apply failed: {e}")))?;
-
-        // Verify the schema set the expected application_id.
-        let app_id: i64 = conn.pragma_query_value(None, "application_id", |r| r.get(0))?;
-        if app_id != APP_ID {
-            return Err(DbError::Bootstrap(format!(
-                "unexpected application_id after bootstrap: {app_id} (expected {APP_ID})"
-            )));
-        }
+        bootstrap_fresh_database(conn)?;
     } else if user_version == CURRENT_VERSION {
-        // Current schema — just ensure per-connection pragmas are active.
+        // Current schema — ensure per-connection pragmas are active and repair
+        // legacy version graphs written without their referenced chain row.
         conn.execute_batch(CONN_PRAGMAS)
             .map_err(|e| DbError::Bootstrap(format!("pragma apply failed: {e}")))?;
+        conn.execute_batch("SAVEPOINT duc_current_version_graph_normalization")
+            .map_err(|error| {
+                DbError::Bootstrap(format!(
+                    "current version graph normalization begin failed: {error}"
+                ))
+            })?;
+        if let Err(error) = normalize_legacy_version_graph(conn) {
+            let _ = conn.execute_batch(
+                "ROLLBACK TO duc_current_version_graph_normalization;
+                 RELEASE duc_current_version_graph_normalization;",
+            );
+            return Err(error);
+        }
+        conn.execute_batch("RELEASE duc_current_version_graph_normalization")
+            .map_err(|error| {
+                DbError::Bootstrap(format!(
+                    "current version graph normalization commit failed: {error}"
+                ))
+            })?;
     } else {
+        validate_migration_path(user_version)?;
+
         // Older database: normalize any known schema drift before running the
         // canonical migration chain. Fixtures written by prerelease code may
         // have applied parts of later schemas without bumping user_version, so
@@ -118,14 +128,7 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
         loop {
             match MIGRATIONS.iter().find(|(from, _, _)| *from == current) {
                 Some((from, to, sql)) => {
-                    if let Err(error) = conn.execute_batch(sql) {
-                        let _ = conn.execute_batch("ROLLBACK");
-                        return Err(DbError::Bootstrap(format!(
-                            "migration {from}\u{2192}{to} failed: {error}"
-                        )));
-                    }
-                    // Re-read the version the migration SQL set via PRAGMA user_version.
-                    current = conn.pragma_query_value(None, "user_version", |r| r.get(0))?;
+                    current = apply_migration(conn, *from, *to, sql)?;
                     if current == CURRENT_VERSION {
                         break;
                     }
@@ -141,6 +144,191 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
             .map_err(|e| DbError::Bootstrap(format!("pragma apply failed: {e}")))?;
     }
 
+    validate_current_database(conn)?;
+    Ok(())
+}
+
+fn bootstrap_fresh_database(conn: &Connection) -> Result<(), DbError> {
+    bootstrap_fresh_database_with_schemas(conn, DUC_SCHEMA, VERSION_CONTROL_SCHEMA, SEARCH_SCHEMA)
+}
+
+fn bootstrap_fresh_database_with_schemas(
+    conn: &Connection,
+    duc_schema: &str,
+    version_control_schema: &str,
+    search_schema: &str,
+) -> Result<(), DbError> {
+    conn.execute_batch(CONN_PRAGMAS)
+        .map_err(|error| DbError::Bootstrap(format!("pragma apply failed: {error}")))?;
+
+    // Connection-scoped pragmas cannot run inside a transaction. Apply them
+    // above, then omit their duplicate declarations from duc.sql so all DDL is
+    // one rollback-safe unit.
+    let transactional_duc_schema = duc_schema
+        .lines()
+        .filter(|line| {
+            let line = line.trim_start();
+            !line.starts_with("PRAGMA journal_mode")
+                && !line.starts_with("PRAGMA foreign_keys")
+                && !line.starts_with("PRAGMA synchronous")
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    conn.execute_batch("SAVEPOINT duc_fresh_bootstrap")
+        .map_err(|error| DbError::Bootstrap(format!("bootstrap begin failed: {error}")))?;
+    let result = (|| {
+        conn.execute_batch(&transactional_duc_schema)
+            .map_err(|error| DbError::Bootstrap(format!("duc.sql apply failed: {error}")))?;
+        conn.execute_batch(version_control_schema)
+            .map_err(|error| {
+                DbError::Bootstrap(format!("version_control.sql apply failed: {error}"))
+            })?;
+        conn.execute_batch(search_schema)
+            .map_err(|error| DbError::Bootstrap(format!("search.sql apply failed: {error}")))?;
+
+        let app_id: i64 = conn.pragma_query_value(None, "application_id", |row| row.get(0))?;
+        if app_id != APP_ID {
+            return Err(DbError::Bootstrap(format!(
+                "unexpected application_id after bootstrap: {app_id} (expected {APP_ID})"
+            )));
+        }
+        let schema_version: i64 =
+            conn.pragma_query_value(None, "user_version", |row| row.get(0))?;
+        if schema_version != CURRENT_VERSION {
+            return Err(DbError::Bootstrap(format!(
+                "unexpected schema version after bootstrap: {schema_version} (expected {CURRENT_VERSION})"
+            )));
+        }
+        validate_current_database(conn)?;
+        Ok(())
+    })();
+
+    match result {
+        Ok(()) => conn
+            .execute_batch("RELEASE duc_fresh_bootstrap")
+            .map_err(|error| DbError::Bootstrap(format!("bootstrap commit failed: {error}"))),
+        Err(error) => {
+            let _ = conn.execute_batch(
+                "ROLLBACK TO duc_fresh_bootstrap;
+                 RELEASE duc_fresh_bootstrap;",
+            );
+            Err(error)
+        }
+    }
+}
+
+fn validate_current_database(conn: &Connection) -> Result<(), DbError> {
+    let app_id: i64 = conn.pragma_query_value(None, "application_id", |row| row.get(0))?;
+    if app_id != APP_ID {
+        return Err(DbError::Bootstrap(format!(
+            "unexpected application_id: {app_id} (expected {APP_ID})"
+        )));
+    }
+    let schema_version: i64 = conn.pragma_query_value(None, "user_version", |row| row.get(0))?;
+    if schema_version != CURRENT_VERSION {
+        return Err(DbError::Bootstrap(format!(
+            "unexpected schema version: {schema_version} (expected {CURRENT_VERSION})"
+        )));
+    }
+
+    for table in [
+        "version_graph",
+        "schema_migrations",
+        "version_chains",
+        "checkpoints",
+        "checkpoint_data_chunks",
+        "deltas",
+        "delta_changeset_chunks",
+    ] {
+        let exists: bool = conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?1
+             )",
+            [table],
+            |row| row.get(0),
+        )?;
+        if !exists {
+            return Err(DbError::Bootstrap(format!(
+                "current schema is missing required table {table}"
+            )));
+        }
+    }
+
+    let graph_rows: i64 =
+        conn.query_row("SELECT COUNT(*) FROM version_graph", [], |row| row.get(0))?;
+    if graph_rows > 1 {
+        return Err(DbError::Bootstrap(format!(
+            "version_graph may contain at most one row, found {graph_rows}"
+        )));
+    }
+
+    let version_control_foreign_key_errors: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM pragma_foreign_key_check
+         WHERE \"table\" IN (
+             'version_chains', 'checkpoints', 'checkpoint_data_chunks',
+             'deltas', 'delta_changeset_chunks'
+         )",
+        [],
+        |row| row.get(0),
+    )?;
+    if version_control_foreign_key_errors != 0 {
+        return Err(DbError::Bootstrap(format!(
+            "version-control tables contain {version_control_foreign_key_errors} foreign key violations"
+        )));
+    }
+
+    Ok(())
+}
+
+fn apply_migration(
+    conn: &Connection,
+    from_version: i64,
+    to_version: i64,
+    sql: &str,
+) -> Result<i64, DbError> {
+    if let Err(error) = conn.execute_batch(sql) {
+        let _ = conn.execute_batch("ROLLBACK");
+        let _ = conn.execute_batch(CONN_PRAGMAS);
+        return Err(DbError::Bootstrap(format!(
+            "migration {from_version}\u{2192}{to_version} failed: {error}"
+        )));
+    }
+
+    let current = conn.pragma_query_value(None, "user_version", |row| row.get(0))?;
+    if current != to_version {
+        return Err(DbError::Bootstrap(format!(
+            "migration {from_version}\u{2192}{to_version} set unexpected schema version {current}"
+        )));
+    }
+    Ok(current)
+}
+
+fn validate_migration_path(start_version: i64) -> Result<(), DbError> {
+    let mut current = start_version;
+    let mut steps = 0usize;
+
+    while current != CURRENT_VERSION {
+        if current > CURRENT_VERSION || steps >= MIGRATIONS.len() {
+            return Err(DbError::Bootstrap(format!(
+                "unsupported schema version {start_version}; expected 0 or {CURRENT_VERSION}"
+            )));
+        }
+        let mut matches = MIGRATIONS.iter().filter(|(from, _, _)| *from == current);
+        let Some((_, to, _)) = matches.next() else {
+            return Err(DbError::Bootstrap(format!(
+                "unsupported schema version {start_version}; expected 0 or {CURRENT_VERSION}"
+            )));
+        };
+        if matches.next().is_some() || *to <= current {
+            return Err(DbError::Bootstrap(format!(
+                "invalid migration registry at schema version {current}"
+            )));
+        }
+        current = *to;
+        steps += 1;
+    }
+
     Ok(())
 }
 
@@ -151,6 +339,8 @@ pub(crate) fn bootstrap(conn: &Connection) -> Result<(), DbError> {
 /// while still reporting an older `user_version`. Adding the missing legacy
 /// columns back lets the canonical migration SQL run without modification.
 fn normalize_legacy_schema(conn: &Connection, user_version: i64) -> Result<(), DbError> {
+    normalize_legacy_version_graph(conn)?;
+
     if user_version <= 3000001 {
         normalize_external_revision_storage(conn)?;
     }
@@ -176,6 +366,146 @@ fn normalize_legacy_schema(conn: &Connection, user_version: i64) -> Result<(), D
             })?;
         }
     }
+
+    Ok(())
+}
+
+fn normalize_legacy_version_graph(conn: &Connection) -> Result<(), DbError> {
+    let has_version_control_tables: bool = conn.query_row(
+        "SELECT EXISTS(
+             SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'version_graph'
+         ) AND EXISTS(
+             SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'version_chains'
+         ) AND EXISTS(
+             SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'checkpoints'
+         ) AND EXISTS(
+             SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'deltas'
+         )",
+        [],
+        |row| row.get(0),
+    )?;
+    if !has_version_control_tables {
+        return Ok(());
+    }
+
+    let invalid_groups = {
+        let mut statement = conn.prepare(
+            "SELECT versions.chain_id, versions.schema_version
+             FROM (
+                 SELECT chain_id, schema_version FROM checkpoints
+                 UNION
+                 SELECT chain_id, schema_version FROM deltas
+             ) AS versions
+             LEFT JOIN version_chains ON version_chains.id = versions.chain_id
+             WHERE version_chains.id IS NULL
+                OR version_chains.schema_version != versions.schema_version
+             ORDER BY versions.schema_version, versions.chain_id",
+        )?;
+        let groups = statement
+            .query_map([], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, i32>(1)?))
+            })?
+            .collect::<rusqlite::Result<Vec<_>>>()?;
+        groups
+    };
+    if invalid_groups.is_empty() {
+        return Ok(());
+    }
+
+    let current_schema_version: i32 = conn
+        .query_row(
+            "SELECT current_schema_version FROM version_graph WHERE id = 1",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap_or(1);
+
+    for (group_index, (legacy_chain_id, schema_version)) in invalid_groups.into_iter().enumerate() {
+        let (start_version, end_version): (Option<i64>, Option<i64>) = conn.query_row(
+            "SELECT MIN(version_number), MAX(version_number) FROM (
+                 SELECT version_number FROM checkpoints
+                 WHERE chain_id = ?1 AND schema_version = ?2
+                 UNION ALL
+                 SELECT version_number FROM deltas
+                 WHERE chain_id = ?1 AND schema_version = ?2
+             )",
+            rusqlite::params![legacy_chain_id, schema_version],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )?;
+        let (Some(start_version), Some(last_version)) = (start_version, end_version) else {
+            continue;
+        };
+        let root_checkpoint_id: Option<String> = conn
+            .query_row(
+                "SELECT id FROM checkpoints
+                 WHERE chain_id = ?1 AND schema_version = ?2
+                 ORDER BY version_number
+                 LIMIT 1",
+                rusqlite::params![legacy_chain_id, schema_version],
+                |row| row.get(0),
+            )
+            .optional()?;
+
+        let legacy_id_available: bool = !legacy_chain_id.is_empty()
+            && !conn.query_row(
+                "SELECT EXISTS(SELECT 1 FROM version_chains WHERE id = ?1)",
+                [&legacy_chain_id],
+                |row| row.get(0),
+            )?;
+        let mut repaired_chain_id = if legacy_id_available {
+            legacy_chain_id.clone()
+        } else {
+            format!("legacy-chain-{schema_version}")
+        };
+        let mut suffix = group_index;
+        while conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM version_chains WHERE id = ?1)",
+            [&repaired_chain_id],
+            |row| row.get::<_, bool>(0),
+        )? {
+            suffix += 1;
+            repaired_chain_id = format!("legacy-chain-{schema_version}-{suffix}");
+        }
+
+        let repaired_end_version =
+            (schema_version != current_schema_version).then_some(last_version);
+        conn.execute(
+            "INSERT INTO version_chains
+                (id, schema_version, start_version, end_version, root_checkpoint_id)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            rusqlite::params![
+                repaired_chain_id,
+                schema_version,
+                start_version,
+                repaired_end_version,
+                root_checkpoint_id,
+            ],
+        )?;
+        conn.execute(
+            "UPDATE checkpoints SET chain_id = ?1
+             WHERE chain_id = ?2 AND schema_version = ?3",
+            rusqlite::params![repaired_chain_id, legacy_chain_id, schema_version],
+        )?;
+        conn.execute(
+            "UPDATE deltas SET chain_id = ?1
+             WHERE chain_id = ?2 AND schema_version = ?3",
+            rusqlite::params![repaired_chain_id, legacy_chain_id, schema_version],
+        )?;
+        conn.execute(
+            "DELETE FROM version_chains
+             WHERE id = ?1
+               AND NOT EXISTS (SELECT 1 FROM checkpoints WHERE chain_id = ?1)
+               AND NOT EXISTS (SELECT 1 FROM deltas WHERE chain_id = ?1)",
+            [&legacy_chain_id],
+        )?;
+    }
+
+    conn.execute(
+        "UPDATE version_graph
+         SET chain_count = MAX(1, (SELECT COUNT(*) FROM version_chains))
+         WHERE id = 1",
+        [],
+    )?;
 
     Ok(())
 }
