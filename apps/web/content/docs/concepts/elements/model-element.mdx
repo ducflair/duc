@@ -46,6 +46,8 @@ The runtime supports three output pipelines:
 - **`ezdxf`**: 2D DXF vector drawing generation.
 - **`ifcopenshell`**: Open-standard Building Information Modeling (BIM) data structures.
 
+All three pipelines support text with custom fonts, but Build123d, ezdxf, and IfcOpenShell consume the resolved font differently. See [Using Fonts](/docs/guidelines/using-fonts#python-model-elements) for the shared `resolve_font(...)` and `FontEnum(...)` globals and the required syntax for each library.
+
 For a Python Model Element, the **first recognized CAD import in the source selects the output pipeline**. Imports inside comments are ignored.
 
 | First recognized import | Selected output | What the script must expose |
