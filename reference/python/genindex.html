@@ -232,9 +232,13 @@
 <li class="toctree-l3"><a class="reference internal" href="autoapi/ducpy/enums/index.html">ducpy.enums</a></li>
 <li class="toctree-l3"><a class="reference internal" href="autoapi/ducpy/parse/index.html">ducpy.parse</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="autoapi/ducpy/search/index.html">ducpy.search</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of ducpy.search</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="autoapi/ducpy/search/_model_files/index.html">ducpy.search._model_files</a></li>
 <li class="toctree-l4"><a class="reference internal" href="autoapi/ducpy/search/image_ocr/index.html">ducpy.search.image_ocr</a></li>
 <li class="toctree-l4"><a class="reference internal" href="autoapi/ducpy/search/search_elements/index.html">ducpy.search.search_elements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="autoapi/ducpy/search/search_external_files/index.html">ducpy.search.search_external_files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="autoapi/ducpy/search/search_ezdxf/index.html">ducpy.search.search_ezdxf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="autoapi/ducpy/search/search_ifc/index.html">ducpy.search.search_ifc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="autoapi/ducpy/search/search_models/index.html">ducpy.search.search_models</a></li>
 <li class="toctree-l4"><a class="reference internal" href="autoapi/ducpy/search/search_pdf/index.html">ducpy.search.search_pdf</a></li>
 </ul>
 </li>
@@ -690,6 +694,8 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelEngine.BUILD123D">BUILD123D (ducpy.search.search_models.ModelEngine attribute)</a>
+</li>
         <li><a href="autoapi/ducpy/builders/element_builders/index.html#ducpy.builders.element_builders.ElementBuilder.build_arrow_element">build_arrow_element() (ducpy.builders.element_builders.ElementBuilder method)</a>
 </li>
         <li><a href="autoapi/ducpy/builders/state_builders/index.html#ducpy.builders.state_builders.StateBuilder.build_charter">build_charter() (ducpy.builders.state_builders.StateBuilder method)</a>
@@ -835,6 +841,8 @@
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucImageFilter.contrast">contrast (ducpy.classes.ElementsClass.DucImageFilter attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.Viewer3DCamera.control">control (ducpy.classes.ElementsClass.Viewer3DCamera attribute)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.convert_dwg_to_dxf">convert_dwg_to_dxf() (in module ducpy.search.search_ezdxf)</a>
 </li>
         <li><a href="autoapi/ducpy/builders/state_builders/index.html#ducpy.builders.state_builders.create_actor">create_actor() (in module ducpy.builders.state_builders)</a>
 </li>
@@ -1040,6 +1048,8 @@
           <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucStackBase.description">(ducpy.classes.ElementsClass.DucStackBase attribute)</a>
 </li>
         </ul></li>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.detect_model_engine">detect_model_engine() (in module ducpy.search.search_models)</a>
+</li>
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.LINE_HEAD.DIAMOND">DIAMOND (ducpy.enums.LINE_HEAD attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.LINE_HEAD.DIAMOND_OUTLINED">DIAMOND_OUTLINED (ducpy.enums.LINE_HEAD attribute)</a>
@@ -1144,8 +1154,6 @@
 </li>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DucIssueCanvasAnchor">DucIssueCanvasAnchor (class in ducpy.classes.DataStateClass)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DucIssueElementAnchor">DucIssueElementAnchor (class in ducpy.classes.DataStateClass)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DucIssueMessage">DucIssueMessage (class in ducpy.classes.DataStateClass)</a>
@@ -1158,6 +1166,8 @@
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucLine">DucLine (class in ducpy.classes.ElementsClass)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucLinearElement">DucLinearElement (class in ducpy.classes.ElementsClass)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucLinearElementBase">DucLinearElementBase (class in ducpy.classes.ElementsClass)</a>
@@ -1288,6 +1298,13 @@
 </li>
         </ul></li>
         <li>
+    ducpy.search._model_files
+
+        <ul>
+          <li><a href="autoapi/ducpy/search/_model_files/index.html#module-ducpy.search._model_files">module</a>
+</li>
+        </ul></li>
+        <li>
     ducpy.search.image_ocr
 
         <ul>
@@ -1306,6 +1323,27 @@
 
         <ul>
           <li><a href="autoapi/ducpy/search/search_external_files/index.html#module-ducpy.search.search_external_files">module</a>
+</li>
+        </ul></li>
+        <li>
+    ducpy.search.search_ezdxf
+
+        <ul>
+          <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#module-ducpy.search.search_ezdxf">module</a>
+</li>
+        </ul></li>
+        <li>
+    ducpy.search.search_ifc
+
+        <ul>
+          <li><a href="autoapi/ducpy/search/search_ifc/index.html#module-ducpy.search.search_ifc">module</a>
+</li>
+        </ul></li>
+        <li>
+    ducpy.search.search_models
+
+        <ul>
+          <li><a href="autoapi/ducpy/search/search_models/index.html#module-ducpy.search.search_models">module</a>
 </li>
         </ul></li>
         <li>
@@ -1398,6 +1436,16 @@
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucBlockInstance.duplication_array">duplication_array (ducpy.classes.ElementsClass.DucBlockInstance attribute)</a>
 </li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.DwgConversionNotAvailable">DwgConversionNotAvailable</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.DWGDXF_WASM_PATH_ENV">DWGDXF_WASM_PATH_ENV (in module ducpy.search.search_ezdxf)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.DWGDXF_WASM_URL">DWGDXF_WASM_URL (in module ducpy.search.search_ezdxf)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.DxfText">DxfText (class in ducpy.search.search_ezdxf)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.DxfTextItem">DxfTextItem (class in ducpy.search.search_ezdxf)</a>
+</li>
     </ul></td>
   </tr></table>
 </section>
@@ -1435,6 +1483,8 @@
 </li>
           <li><a href="autoapi/ducpy/search/search_external_files/index.html#ducpy.search.search_external_files.ResolvedExternalFileSearchTarget.element_id">(ducpy.search.search_external_files.ResolvedExternalFileSearchTarget attribute)</a>
 </li>
+          <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelElementInfo.element_id">(ducpy.search.search_models.ModelElementInfo attribute)</a>
+</li>
         </ul></li>
         <li><a href="autoapi/ducpy/search/search_elements/index.html#ducpy.search.search_elements.DucFileSearchResult.element_ids">element_ids (ducpy.search.search_elements.DucFileSearchResult attribute)</a>
 </li>
@@ -1464,8 +1514,6 @@
 </li>
         <li><a href="autoapi/ducpy/builders/element_builders/index.html#ducpy.builders.element_builders.EmbeddableElementBuilder">EmbeddableElementBuilder (class in ducpy.builders.element_builders)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.Viewer3DClipPlane.enabled">enabled (ducpy.classes.ElementsClass.Viewer3DClipPlane attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucFreeDrawElement.end">end (ducpy.classes.ElementsClass.DucFreeDrawElement attribute)</a>
@@ -1480,9 +1528,17 @@
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucLinearElementBase.end_binding">end_binding (ducpy.classes.ElementsClass.DucLinearElementBase attribute)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.VersionChain.end_version">end_version (ducpy.classes.DataStateClass.VersionChain attribute)</a>
 </li>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelElementInfo.engine">engine (ducpy.search.search_models.ModelElementInfo attribute)</a>
+</li>
         <li><a href="autoapi/ducpy/search/search_external_files/index.html#ducpy.search.search_external_files.ensure_external_file_search_index">ensure_external_file_search_index() (in module ducpy.search.search_external_files)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.IfcTextItem.entity_id">entity_id (ducpy.search.search_ifc.IfcTextItem attribute)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.IfcTextItem.entity_type">entity_type (ducpy.search.search_ifc.IfcTextItem attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.IMAGE_STATUS.ERROR">ERROR (ducpy.enums.IMAGE_STATUS attribute)</a>
 </li>
@@ -1512,15 +1568,35 @@
           <li><a href="autoapi/ducpy/builders/state_builders/index.html#ducpy.builders.state_builders.StateSpecificBuilder.extra">(ducpy.builders.state_builders.StateSpecificBuilder attribute)</a>
 </li>
         </ul></li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.extract_drawing_text">extract_drawing_text() (in module ducpy.search.search_ezdxf)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.extract_dxf_text">extract_dxf_text() (in module ducpy.search.search_ezdxf)</a>
+</li>
         <li><a href="autoapi/ducpy/utils/convert/index.html#ducpy.utils.convert.extract_embedded_code">extract_embedded_code() (in module ducpy.utils.convert)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.extract_ifc_file_text">extract_ifc_file_text() (in module ducpy.search.search_ifc)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.extract_ifc_path_text">extract_ifc_path_text() (in module ducpy.search.search_ifc)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.extract_ifc_text">extract_ifc_text() (in module ducpy.search.search_ifc)</a>
 </li>
         <li><a href="autoapi/ducpy/search/search_external_files/index.html#ducpy.search.search_external_files.extract_image_text_for_search">extract_image_text_for_search() (in module ducpy.search.search_external_files)</a>
 </li>
         <li><a href="autoapi/ducpy/search/image_ocr/index.html#ducpy.search.image_ocr.extract_image_text_with_ocr">extract_image_text_with_ocr() (in module ducpy.search.image_ocr)</a>
 </li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.extract_model_dxf_text">extract_model_dxf_text() (in module ducpy.search.search_ezdxf)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.extract_model_ifc_text">extract_model_ifc_text() (in module ducpy.search.search_ifc)</a>
+</li>
         <li><a href="autoapi/ducpy/search/search_pdf/index.html#ducpy.search.search_pdf.extract_pdf_text_for_search">extract_pdf_text_for_search() (in module ducpy.search.search_pdf)</a>
 </li>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.extract_python_imports">extract_python_imports() (in module ducpy.search.search_models)</a>
+</li>
         <li><a href="autoapi/ducpy/search/search_external_files/index.html#ducpy.search.search_external_files.ExtractedExternalText">ExtractedExternalText (class in ducpy.search.search_external_files)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelEngine.EZDXF">EZDXF (ducpy.search.search_models.ModelEngine attribute)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.ezdxf_available">ezdxf_available() (in module ducpy.search.search_ezdxf)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -1531,6 +1607,8 @@
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="autoapi/ducpy/serialize/index.html#ducpy.serialize.DucSerializationValidationError.failures">failures (ducpy.serialize.DucSerializationValidationError attribute)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.IfcTextItem.field">field (ducpy.search.search_ifc.IfcTextItem attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucDocElement.file_id">file_id (ducpy.classes.ElementsClass.DucDocElement attribute)</a>
 
@@ -1549,17 +1627,21 @@
 </li>
         </ul></li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucModelElement.file_ids">file_ids (ducpy.classes.ElementsClass.DucModelElement attribute)</a>
+
+        <ul>
+          <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelElementInfo.file_ids">(ducpy.search.search_models.ModelElementInfo attribute)</a>
 </li>
+        </ul></li>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.ExportedDataState.files">files (ducpy.classes.DataStateClass.ExportedDataState attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.ExportedDataState.files_data">files_data (ducpy.classes.DataStateClass.ExportedDataState attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.ELEMENT_CONTENT_PREFERENCE.FILL">FILL (ducpy.enums.ELEMENT_CONTENT_PREFERENCE attribute)</a>
 </li>
-        <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucImageElement.filter">filter (ducpy.classes.ElementsClass.DucImageElement attribute)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucImageElement.filter">filter (ducpy.classes.ElementsClass.DucImageElement attribute)</a>
+</li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DocumentGridConfig.first_page_alone">first_page_alone (ducpy.classes.ElementsClass.DocumentGridConfig attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.ELEMENT_CONTENT_PREFERENCE.FIT">FIT (ducpy.enums.ELEMENT_CONTENT_PREFERENCE attribute)</a>
@@ -1650,16 +1732,18 @@
 </li>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DucCharterConstraint.hard">hard (ducpy.classes.DataStateClass.DucCharterConstraint attribute)</a>
 </li>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelElementInfo.has_code">has_code (ducpy.search.search_models.ModelElementInfo attribute)</a>
+</li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementContentBase.hatch">hatch (ducpy.classes.ElementsClass.ElementContentBase attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.ELEMENT_CONTENT_PREFERENCE.HATCH">HATCH (ducpy.enums.ELEMENT_CONTENT_PREFERENCE attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.HATCH_STYLE">HATCH_STYLE (class in ducpy.enums)</a>
 </li>
-        <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucHatchStyle.hatch_style">hatch_style (ducpy.classes.ElementsClass.DucHatchStyle attribute)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucHatchStyle.hatch_style">hatch_style (ducpy.classes.ElementsClass.DucHatchStyle attribute)</a>
+</li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.HatchPatternLine">HatchPatternLine (class in ducpy.classes.ElementsClass)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucPointBinding.head">head (ducpy.classes.ElementsClass.DucPointBinding attribute)</a>
@@ -1730,6 +1814,14 @@
         </ul></li>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.Actor.identifier">identifier (ducpy.classes.DataStateClass.Actor attribute)</a>
 </li>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelEngine.IFC">IFC (ducpy.search.search_models.ModelEngine attribute)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.ifcopenshell_available">ifcopenshell_available() (in module ducpy.search.search_ifc)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.IfcText">IfcText (class in ducpy.search.search_ifc)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.IfcTextItem">IfcTextItem (class in ducpy.search.search_ifc)</a>
+</li>
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.HATCH_STYLE.IGNORE">IGNORE (ducpy.enums.HATCH_STYLE attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.ElementContentBase.image_filter">image_filter (ducpy.classes.ElementsClass.ElementContentBase attribute)</a>
@@ -1792,6 +1884,8 @@
           <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucStackBase.is_plot">(ducpy.classes.ElementsClass.DucStackBase attribute)</a>
 </li>
         </ul></li>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelElementInfo.is_python">is_python (ducpy.search.search_models.ModelElementInfo attribute)</a>
+</li>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.Checkpoint.is_schema_boundary">is_schema_boundary (ducpy.classes.DataStateClass.Checkpoint attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucTextStyle.is_upside_down">is_upside_down (ducpy.classes.ElementsClass.DucTextStyle attribute)</a>
@@ -1809,6 +1903,14 @@
         <li><a href="autoapi/ducpy/builders/state_builders/index.html#ducpy.builders.state_builders.IssueBuilder">IssueBuilder (class in ducpy.builders.state_builders)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.ExportedDataState.issues">issues (ducpy.classes.DataStateClass.ExportedDataState attribute)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.DxfText.items">items (ducpy.search.search_ezdxf.DxfText attribute)</a>
+
+        <ul>
+          <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.IfcText.items">(ducpy.search.search_ifc.IfcText attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.iter_model_elements">iter_model_elements() (in module ducpy.search.search_models)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -1837,6 +1939,14 @@
 </li>
         </ul></li>
     </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.DxfTextItem.kind">kind (ducpy.search.search_ezdxf.DxfTextItem attribute)</a>
+
+        <ul>
+          <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.IfcTextItem.kind">(ducpy.search.search_ifc.IfcTextItem attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
   </tr></table>
 </section>
 
@@ -1855,6 +1965,8 @@
 </li>
           <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucStackBase.label">(ducpy.classes.ElementsClass.DucStackBase attribute)</a>
 </li>
+          <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelElementInfo.label">(ducpy.search.search_models.ModelElementInfo attribute)</a>
+</li>
         </ul></li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucStackElementBase.label_visible">label_visible (ducpy.classes.ElementsClass.DucStackElementBase attribute)</a>
 </li>
@@ -1867,6 +1979,8 @@
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.ExternalFileRevision.last_retrieved">last_retrieved (ducpy.classes.DataStateClass.ExternalFileRevision attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.VersionGraph.latest_version_id">latest_version_id (ducpy.classes.DataStateClass.VersionGraph attribute)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.DxfTextItem.layer">layer (ducpy.search.search_ezdxf.DxfTextItem attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/builders/element_builders/index.html#ducpy.builders.element_builders.BaseElementParams.layer_id">layer_id (ducpy.builders.element_builders.BaseElementParams attribute)</a>
 
@@ -1896,10 +2010,10 @@
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucPath.line_indices">line_indices (ducpy.classes.ElementsClass.DucPath attribute)</a>
 </li>
-        <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucTextStyle.line_spacing">line_spacing (ducpy.classes.ElementsClass.DucTextStyle attribute)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucTextStyle.line_spacing">line_spacing (ducpy.classes.ElementsClass.DucTextStyle attribute)</a>
+</li>
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.LINE_SPACING_TYPE">LINE_SPACING_TYPE (class in ducpy.enums)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DisplayPrecision.linear">linear (ducpy.classes.DataStateClass.DisplayPrecision attribute)</a>
@@ -1947,6 +2061,8 @@
         <li><a href="autoapi/ducpy/parse/index.html#ducpy.parse.logger">logger (in module ducpy.parse)</a>
 
         <ul>
+          <li><a href="autoapi/ducpy/search/_model_files/index.html#ducpy.search._model_files.logger">(in module ducpy.search._model_files)</a>
+</li>
           <li><a href="autoapi/ducpy/search/image_ocr/index.html#ducpy.search.image_ocr.logger">(in module ducpy.search.image_ocr)</a>
 </li>
           <li><a href="autoapi/ducpy/search/search_external_files/index.html#ducpy.search.search_external_files.logger">(in module ducpy.search.search_external_files)</a>
@@ -2022,9 +2138,19 @@
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.StrokeStyle.miter_limit">miter_limit (ducpy.classes.ElementsClass.StrokeStyle attribute)</a>
 </li>
-        <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucModelElement.model_type">model_type (ducpy.classes.ElementsClass.DucModelElement attribute)</a>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.model_element_info">model_element_info() (in module ducpy.search.search_models)</a>
 </li>
+        <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucModelElement.model_type">model_type (ducpy.classes.ElementsClass.DucModelElement attribute)</a>
+
+        <ul>
+          <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelElementInfo.model_type">(ducpy.search.search_models.ModelElementInfo attribute)</a>
+</li>
+        </ul></li>
         <li><a href="autoapi/ducpy/builders/element_builders/index.html#ducpy.builders.element_builders.ModelElementBuilder">ModelElementBuilder (class in ducpy.builders.element_builders)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelElementInfo">ModelElementInfo (class in ducpy.search.search_models)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelEngine">ModelEngine (class in ducpy.search.search_models)</a>
 </li>
         <li>
     module
@@ -2060,11 +2186,19 @@
 </li>
           <li><a href="autoapi/ducpy/search/index.html#module-ducpy.search">ducpy.search</a>
 </li>
+          <li><a href="autoapi/ducpy/search/_model_files/index.html#module-ducpy.search._model_files">ducpy.search._model_files</a>
+</li>
           <li><a href="autoapi/ducpy/search/image_ocr/index.html#module-ducpy.search.image_ocr">ducpy.search.image_ocr</a>
 </li>
           <li><a href="autoapi/ducpy/search/search_elements/index.html#module-ducpy.search.search_elements">ducpy.search.search_elements</a>
 </li>
           <li><a href="autoapi/ducpy/search/search_external_files/index.html#module-ducpy.search.search_external_files">ducpy.search.search_external_files</a>
+</li>
+          <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#module-ducpy.search.search_ezdxf">ducpy.search.search_ezdxf</a>
+</li>
+          <li><a href="autoapi/ducpy/search/search_ifc/index.html#module-ducpy.search.search_ifc">ducpy.search.search_ifc</a>
+</li>
+          <li><a href="autoapi/ducpy/search/search_models/index.html#module-ducpy.search.search_models">ducpy.search.search_models</a>
 </li>
           <li><a href="autoapi/ducpy/search/search_pdf/index.html#module-ducpy.search.search_pdf">ducpy.search.search_pdf</a>
 </li>
@@ -2198,6 +2332,8 @@
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.BLENDING.OVERLAY">OVERLAY (ducpy.enums.BLENDING attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucLayer.overrides">overrides (ducpy.classes.ElementsClass.DucLayer attribute)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.DxfTextItem.owner">owner (ducpy.search.search_ezdxf.DxfTextItem attribute)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -2349,10 +2485,12 @@
 </li>
         <li><a href="autoapi/ducpy/search/search_external_files/index.html#ducpy.search.search_external_files.resolve_external_file_search_targets_from_parsed_duc">resolve_external_file_search_targets_from_parsed_duc() (in module ducpy.search.search_external_files)</a>
 </li>
-        <li><a href="autoapi/ducpy/search/search_external_files/index.html#ducpy.search.search_external_files.ResolvedExternalFileSearchTarget">ResolvedExternalFileSearchTarget (class in ducpy.search.search_external_files)</a>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.resolve_model_search_targets">resolve_model_search_targets() (in module ducpy.search.search_models)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="autoapi/ducpy/search/search_external_files/index.html#ducpy.search.search_external_files.ResolvedExternalFileSearchTarget">ResolvedExternalFileSearchTarget (class in ducpy.search.search_external_files)</a>
+</li>
         <li><a href="autoapi/ducpy/search/search_elements/index.html#ducpy.search.search_elements.DucSearchResponse.results">results (ducpy.search.search_elements.DucSearchResponse attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.LINE_HEAD.REVERSED_ARROW">REVERSED_ARROW (ducpy.enums.LINE_HEAD attribute)</a>
@@ -2452,6 +2590,8 @@
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DucLocalState.scroll_y">scroll_y (ducpy.classes.DataStateClass.DucLocalState attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/search/search_elements/index.html#ducpy.search.search_elements.search_duc_elements">search_duc_elements() (in module ducpy.search.search_elements)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.search_duc_models">search_duc_models() (in module ducpy.search.search_models)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucElementBase.seed">seed (ducpy.classes.ElementsClass.DucElementBase attribute)</a>
 </li>
@@ -2567,6 +2707,8 @@
           <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucImageElement.status">(ducpy.classes.ElementsClass.DucImageElement attribute)</a>
 </li>
         </ul></li>
+        <li><a href="autoapi/ducpy/search/_model_files/index.html#ducpy.search._model_files.stream_active_external_file_to_path">stream_active_external_file_to_path() (in module ducpy.search._model_files)</a>
+</li>
         <li><a href="autoapi/ducpy/parse/index.html#ducpy.parse.stream_checkpoint_data_to_path">stream_checkpoint_data_to_path() (in module ducpy.parse)</a>
 </li>
         <li><a href="autoapi/ducpy/parse/index.html#ducpy.parse.stream_delta_changeset_to_path">stream_delta_changeset_to_path() (in module ducpy.parse)</a>
@@ -2652,6 +2794,14 @@
 </li>
           <li><a href="autoapi/ducpy/search/search_external_files/index.html#ducpy.search.search_external_files.ExtractedExternalText.text">(ducpy.search.search_external_files.ExtractedExternalText attribute)</a>
 </li>
+          <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.DxfText.text">(ducpy.search.search_ezdxf.DxfText property)</a>
+</li>
+          <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.DxfTextItem.text">(ducpy.search.search_ezdxf.DxfTextItem attribute)</a>
+</li>
+          <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.IfcText.text">(ducpy.search.search_ifc.IfcText property)</a>
+</li>
+          <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.IfcTextItem.text">(ducpy.search.search_ifc.IfcTextItem attribute)</a>
+</li>
         </ul></li>
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.TEXT_ALIGN">TEXT_ALIGN (class in ducpy.enums)</a>
 </li>
@@ -2659,6 +2809,12 @@
 </li>
         <li><a href="autoapi/ducpy/builders/element_builders/index.html#ducpy.builders.element_builders.TextElementBuilder">TextElementBuilder (class in ducpy.builders.element_builders)</a>
 </li>
+        <li><a href="autoapi/ducpy/search/search_ezdxf/index.html#ducpy.search.search_ezdxf.DxfText.texts_by_kind">texts_by_kind() (ducpy.search.search_ezdxf.DxfText method)</a>
+
+        <ul>
+          <li><a href="autoapi/ducpy/search/search_ifc/index.html#ducpy.search.search_ifc.IfcText.texts_by_kind">(ducpy.search.search_ifc.IfcText method)</a>
+</li>
+        </ul></li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.DucFreeDrawElement.thinning">thinning (ducpy.classes.ElementsClass.DucFreeDrawElement attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.ExportedDataState.thumbnail">thumbnail (ducpy.classes.DataStateClass.ExportedDataState attribute)</a>
@@ -2685,6 +2841,8 @@
           <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.DucIssue.title">(ducpy.classes.DataStateClass.DucIssue attribute)</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="autoapi/ducpy/builders/sql_builder/index.html#ducpy.builders.sql_builder.DucSQL.to_bytes">to_bytes() (ducpy.builders.sql_builder.DucSQL method)</a>
 </li>
         <li><a href="autoapi/ducpy/search/search_elements/index.html#ducpy.search.search_elements.DucElementSearchResult.to_dict">to_dict() (ducpy.search.search_elements.DucElementSearchResult method)</a>
@@ -2695,8 +2853,6 @@
           <li><a href="autoapi/ducpy/search/search_elements/index.html#ducpy.search.search_elements.DucSearchResponse.to_dict">(ducpy.search.search_elements.DucSearchResponse method)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="autoapi/ducpy/classes/DataStateClass/index.html#ducpy.classes.DataStateClass.SchemaMigration.to_schema_version">to_schema_version (ducpy.classes.DataStateClass.SchemaMigration attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/utils/convert/index.html#ducpy.utils.convert.to_serializable">to_serializable() (in module ducpy.utils.convert)</a>
@@ -2752,6 +2908,8 @@
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="autoapi/ducpy/enums/index.html#ducpy.enums.BOOLEAN_OPERATION.UNION">UNION (ducpy.enums.BOOLEAN_OPERATION attribute)</a>
+</li>
+        <li><a href="autoapi/ducpy/search/search_models/index.html#ducpy.search.search_models.ModelEngine.UNSUPPORTED">UNSUPPORTED (ducpy.search.search_models.ModelEngine attribute)</a>
 </li>
         <li><a href="autoapi/ducpy/classes/ElementsClass/index.html#ducpy.classes.ElementsClass.Viewer3DCamera.up">up (ducpy.classes.ElementsClass.Viewer3DCamera attribute)</a>
 </li>

@@ -1,0 +1,172 @@
+ducpy.search.search_ezdxf
+=========================
+
+.. py:module:: ducpy.search.search_ezdxf
+
+.. autoapi-nested-parse::
+
+   DXF text extraction for model-element search (the ``ezdxf`` engine).
+
+   This module pulls **user-authored text** out of a DXF drawing — the things a
+   person types as drawing content rather than the surrounding Python that loads
+   or builds the drawing. Per the agreed scope we "extract everything":
+
+   * annotation text — ``TEXT``, ``MTEXT``, block attributes (``ATTRIB`` /
+     ``ATTDEF``), ``DIMENSION`` text overrides, ``MULTILEADER`` / ``LEADER`` notes,
+     and ``ACAD_TABLE`` cells;
+   * structural names — layer, block and layout names;
+   * extended data — entity hyperlinks, ``XDATA`` strings and custom drawing
+     properties.
+
+   Acquisition searches linked DXF/DWG files by default. For trusted DUC files,
+   :func:`extract_model_dxf_text` can opt into embedded Python execution to capture
+   generated entities such as ``msp.add_text("Room 101")``.
+
+   DWG is converted to DXF by :func:`convert_dwg_to_dxf`, using the standalone
+   Rust/wasm-bindgen module published by ``dwgdxf`` 2.0.1 and executed directly
+   from Python with ``wasmtime``.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   ducpy.search.search_ezdxf.DWGDXF_WASM_URL
+   ducpy.search.search_ezdxf.DWGDXF_WASM_PATH_ENV
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   ducpy.search.search_ezdxf.DwgConversionNotAvailable
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.search.search_ezdxf.DxfTextItem
+   ducpy.search.search_ezdxf.DxfText
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.search.search_ezdxf.ezdxf_available
+   ducpy.search.search_ezdxf.extract_drawing_text
+   ducpy.search.search_ezdxf.extract_dxf_text
+   ducpy.search.search_ezdxf.convert_dwg_to_dxf
+   ducpy.search.search_ezdxf.extract_model_dxf_text
+
+
+Module Contents
+---------------
+
+.. py:data:: DWGDXF_WASM_URL
+   :value: 'https://cdn.jsdelivr.net/npm/dwgdxf@2.0.1/dist/wasm/dwgdxf_bg.wasm'
+
+
+.. py:data:: DWGDXF_WASM_PATH_ENV
+   :value: 'DUCPY_DWGDXF_WASM_PATH'
+
+
+.. py:exception:: DwgConversionNotAvailable
+
+   Bases: :py:obj:`RuntimeError`
+
+
+   Raised when the DWG WASM converter cannot be loaded or executed.
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+.. py:class:: DxfTextItem
+
+   A single piece of text pulled from a drawing, with its provenance.
+
+
+   .. py:attribute:: text
+      :type:  str
+
+
+   .. py:attribute:: kind
+      :type:  str
+
+
+   .. py:attribute:: owner
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: layer
+      :type:  str | None
+      :value: None
+
+
+
+.. py:class:: DxfText
+
+   Result of extracting text from one or more drawings.
+
+
+   .. py:attribute:: items
+      :type:  tuple[DxfTextItem, Ellipsis]
+      :value: ()
+
+
+
+   .. py:property:: text
+      :type: str
+
+
+      All item texts joined with newlines (handy for a quick search blob).
+
+
+
+   .. py:method:: texts_by_kind(kind: str) -> list[str]
+
+
+.. py:function:: ezdxf_available() -> bool
+
+   Return ``True`` if the optional ``ezdxf`` dependency can be imported.
+
+
+.. py:function:: extract_drawing_text(doc: Any) -> DxfText
+
+   Extract every piece of user text from an in-memory ``ezdxf`` drawing.
+
+
+.. py:function:: extract_dxf_text(dxf_bytes: bytes) -> DxfText
+
+   Extract user text from raw DXF bytes. Returns empty on any failure.
+
+
+.. py:function:: convert_dwg_to_dxf(dwg_bytes: bytes, *, wasm_path: str | pathlib.Path | None = None, wasm_url: str = DWGDXF_WASM_URL, timeout_seconds: float = 30.0) -> bytes
+
+   Convert DWG bytes to DXF bytes.
+
+   By default the pinned ``dwgdxf`` 2.0.1 module is downloaded from
+   :data:`DWGDXF_WASM_URL`, verified against its published SHA-256 digest,
+   and cached under the system temporary directory. Pass ``wasm_path`` or set
+   :data:`DWGDXF_WASM_PATH_ENV` to use an already-downloaded copy; local copies
+   are still integrity checked.
+
+
+.. py:function:: extract_model_dxf_text(duc_source: str | pathlib.Path, element: dict[str, Any], *, run_code: bool = False) -> DxfText
+
+   Hybrid extraction of user text from an ``ezdxf`` model element.
+
+   Linked DXF/DWG files are searched without executing code. If ``run_code`` is
+   explicitly enabled, trusted Python model code is executed and text is read
+   from the resulting drawing(s), including generated entities such as
+   ``add_text("Room 101")``. Never enable this for untrusted DUC files.
+
+

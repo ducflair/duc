@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `packages/ducrs/src/serialize.rs`."><title>serialize.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="duc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.97.1 (8bab26f4f 2026-07-14)" data-channel="1.97.1" data-search-js="search-fd9372ac.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-fcd733ba.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">duc/</div>serialize.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Writes an [`ExportedDataState`] into an open DUC SQLite database.
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `packages/ducrs/src/serialize.rs`."><title>serialize.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1ed95124.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="duc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.98.0 (88d9e12ae 2026-08-18)" data-channel="1.98.0" data-search-js="search-9944d736.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">duc/</div>serialize.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Writes an [`ExportedDataState`] into an open DUC SQLite database.
 <a href=#2 id=2 data-nosnippet>2</a>//!
 <a href=#3 id=3 data-nosnippet>3</a>//! File and stream output lives in [`crate::session`] for native builds and in
 <a href=#4 id=4 data-nosnippet>4</a>//! the OPFS document APIs exposed by the WASM bindings.
@@ -1765,129 +1765,134 @@
 <a href=#1765 id=1765 data-nosnippet>1765</a>                 schema_version, timestamp, description, is_manual_save, user_id, size_bytes)
 <a href=#1766 id=1766 data-nosnippet>1766</a>             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)"</span>,
 <a href=#1767 id=1767 data-nosnippet>1767</a>        )<span class="question-mark">?</span>;
-<a href=#1768 id=1768 data-nosnippet>1768</a>        <span class="kw">for </span>(i, delta) <span class="kw">in </span>vg.deltas.iter().enumerate() {
-<a href=#1769 id=1769 data-nosnippet>1769</a>            <span class="kw">let </span>chain_id = vg
-<a href=#1770 id=1770 data-nosnippet>1770</a>                .chains
-<a href=#1771 id=1771 data-nosnippet>1771</a>                .iter()
-<a href=#1772 id=1772 data-nosnippet>1772</a>                .find(|c| c.schema_version == delta.schema_version)
-<a href=#1773 id=1773 data-nosnippet>1773</a>                .map(|c| c.id.as_str())
-<a href=#1774 id=1774 data-nosnippet>1774</a>                .unwrap_or(<span class="string">""</span>);
-<a href=#1775 id=1775 data-nosnippet>1775</a>            d_stmt.execute(<span class="macro">params!</span>[
-<a href=#1776 id=1776 data-nosnippet>1776</a>                delta.base.id,
-<a href=#1777 id=1777 data-nosnippet>1777</a>                delta.base.parent_id,
-<a href=#1778 id=1778 data-nosnippet>1778</a>                delta.base_checkpoint_id,
-<a href=#1779 id=1779 data-nosnippet>1779</a>                chain_id,
-<a href=#1780 id=1780 data-nosnippet>1780</a>                (i + <span class="number">1</span>) <span class="kw">as </span>i64,
-<a href=#1781 id=1781 data-nosnippet>1781</a>                delta.version_number,
-<a href=#1782 id=1782 data-nosnippet>1782</a>                delta.schema_version,
-<a href=#1783 id=1783 data-nosnippet>1783</a>                delta.base.timestamp,
-<a href=#1784 id=1784 data-nosnippet>1784</a>                delta.base.description,
-<a href=#1785 id=1785 data-nosnippet>1785</a>                delta.base.is_manual_save <span class="kw">as </span>i32,
-<a href=#1786 id=1786 data-nosnippet>1786</a>                delta.base.user_id,
-<a href=#1787 id=1787 data-nosnippet>1787</a>                delta.size_bytes,
-<a href=#1788 id=1788 data-nosnippet>1788</a>            ])<span class="question-mark">?</span>;
-<a href=#1789 id=1789 data-nosnippet>1789</a>            external_file_chunks::write_delta_changeset_chunks(
-<a href=#1790 id=1790 data-nosnippet>1790</a>                <span class="kw-2">&amp;</span>tx,
-<a href=#1791 id=1791 data-nosnippet>1791</a>                <span class="kw-2">&amp;</span>delta.base.id,
-<a href=#1792 id=1792 data-nosnippet>1792</a>                <span class="kw-2">&amp;</span>delta.payload,
-<a href=#1793 id=1793 data-nosnippet>1793</a>                chunk_size,
-<a href=#1794 id=1794 data-nosnippet>1794</a>            )<span class="question-mark">?</span>;
-<a href=#1795 id=1795 data-nosnippet>1795</a>        }
-<a href=#1796 id=1796 data-nosnippet>1796</a>    }
-<a href=#1797 id=1797 data-nosnippet>1797</a>
-<a href=#1798 id=1798 data-nosnippet>1798</a>    <span class="prelude-val">Ok</span>(())
-<a href=#1799 id=1799 data-nosnippet>1799</a>}
-<a href=#1800 id=1800 data-nosnippet>1800</a>
-<a href=#1801 id=1801 data-nosnippet>1801</a><span class="comment">// ── Byte-buffer convenience function ───────────────────────────────────────
-<a href=#1802 id=1802 data-nosnippet>1802</a>//
-<a href=#1803 id=1803 data-nosnippet>1803</a>// Serializes an ExportedDataState into gzip-compressed .duc bytes.
-<a href=#1804 id=1804 data-nosnippet>1804</a>// This is the byte-buffer equivalent of DucSession::finish_to_writer.
+<a href=#1768 id=1768 data-nosnippet>1768</a>        <span class="kw">let </span><span class="kw-2">mut </span>delta_sequences = std::collections::HashMap::&lt;<span class="kw-2">&amp;</span>str, i64&gt;::new();
+<a href=#1769 id=1769 data-nosnippet>1769</a>        <span class="kw">for </span>delta <span class="kw">in </span><span class="kw-2">&amp;</span>vg.deltas {
+<a href=#1770 id=1770 data-nosnippet>1770</a>            <span class="kw">let </span>chain_id = vg
+<a href=#1771 id=1771 data-nosnippet>1771</a>                .chains
+<a href=#1772 id=1772 data-nosnippet>1772</a>                .iter()
+<a href=#1773 id=1773 data-nosnippet>1773</a>                .find(|c| c.schema_version == delta.schema_version)
+<a href=#1774 id=1774 data-nosnippet>1774</a>                .map(|c| c.id.as_str())
+<a href=#1775 id=1775 data-nosnippet>1775</a>                .unwrap_or(<span class="string">""</span>);
+<a href=#1776 id=1776 data-nosnippet>1776</a>            <span class="kw">let </span>delta_sequence = delta_sequences
+<a href=#1777 id=1777 data-nosnippet>1777</a>                .entry(delta.base_checkpoint_id.as_str())
+<a href=#1778 id=1778 data-nosnippet>1778</a>                .and_modify(|sequence| <span class="kw-2">*</span>sequence += <span class="number">1</span>)
+<a href=#1779 id=1779 data-nosnippet>1779</a>                .or_insert(<span class="number">1</span>);
+<a href=#1780 id=1780 data-nosnippet>1780</a>            d_stmt.execute(<span class="macro">params!</span>[
+<a href=#1781 id=1781 data-nosnippet>1781</a>                delta.base.id,
+<a href=#1782 id=1782 data-nosnippet>1782</a>                delta.base.parent_id,
+<a href=#1783 id=1783 data-nosnippet>1783</a>                delta.base_checkpoint_id,
+<a href=#1784 id=1784 data-nosnippet>1784</a>                chain_id,
+<a href=#1785 id=1785 data-nosnippet>1785</a>                <span class="kw-2">*</span>delta_sequence,
+<a href=#1786 id=1786 data-nosnippet>1786</a>                delta.version_number,
+<a href=#1787 id=1787 data-nosnippet>1787</a>                delta.schema_version,
+<a href=#1788 id=1788 data-nosnippet>1788</a>                delta.base.timestamp,
+<a href=#1789 id=1789 data-nosnippet>1789</a>                delta.base.description,
+<a href=#1790 id=1790 data-nosnippet>1790</a>                delta.base.is_manual_save <span class="kw">as </span>i32,
+<a href=#1791 id=1791 data-nosnippet>1791</a>                delta.base.user_id,
+<a href=#1792 id=1792 data-nosnippet>1792</a>                delta.size_bytes,
+<a href=#1793 id=1793 data-nosnippet>1793</a>            ])<span class="question-mark">?</span>;
+<a href=#1794 id=1794 data-nosnippet>1794</a>            external_file_chunks::write_delta_changeset_chunks(
+<a href=#1795 id=1795 data-nosnippet>1795</a>                <span class="kw-2">&amp;</span>tx,
+<a href=#1796 id=1796 data-nosnippet>1796</a>                <span class="kw-2">&amp;</span>delta.base.id,
+<a href=#1797 id=1797 data-nosnippet>1797</a>                <span class="kw-2">&amp;</span>delta.payload,
+<a href=#1798 id=1798 data-nosnippet>1798</a>                chunk_size,
+<a href=#1799 id=1799 data-nosnippet>1799</a>            )<span class="question-mark">?</span>;
+<a href=#1800 id=1800 data-nosnippet>1800</a>        }
+<a href=#1801 id=1801 data-nosnippet>1801</a>    }
+<a href=#1802 id=1802 data-nosnippet>1802</a>
+<a href=#1803 id=1803 data-nosnippet>1803</a>    <span class="prelude-val">Ok</span>(())
+<a href=#1804 id=1804 data-nosnippet>1804</a>}
 <a href=#1805 id=1805 data-nosnippet>1805</a>
-<a href=#1806 id=1806 data-nosnippet>1806</a></span><span class="doccomment">/// Serialize an [`ExportedDataState`] into `.duc` bytes (gzip-compressed SQLite).
-<a href=#1807 id=1807 data-nosnippet>1807</a>///
-<a href=#1808 id=1808 data-nosnippet>1808</a>/// Creates an in-memory database, writes the document state and external files,
-<a href=#1809 id=1809 data-nosnippet>1809</a>/// checkpoints the WAL, reads the raw SQLite bytes, and gzip-compresses them.
-<a href=#1810 id=1810 data-nosnippet>1810</a>///
-<a href=#1811 id=1811 data-nosnippet>1811</a>/// This is the backward-compatible API for consumers that expect a `Vec&lt;u8&gt;`
-<a href=#1812 id=1812 data-nosnippet>1812</a>/// result. For streaming (unlimited file size), use [`crate::session::DucSession`]
-<a href=#1813 id=1813 data-nosnippet>1813</a>/// or [`crate::api::DucDocument`] instead.
-<a href=#1814 id=1814 data-nosnippet>1814</a></span><span class="kw">pub fn </span>serialize_duc_to_bytes(state: <span class="kw-2">&amp;</span>ExportedDataState) -&gt; SerializeResult&lt;Vec&lt;u8&gt;&gt; {
-<a href=#1815 id=1815 data-nosnippet>1815</a>    <span class="kw">use </span>flate2::write::GzEncoder;
-<a href=#1816 id=1816 data-nosnippet>1816</a>    <span class="kw">use </span>flate2::Compression;
-<a href=#1817 id=1817 data-nosnippet>1817</a>    <span class="kw">use </span>std::io::{Cursor, Write};
-<a href=#1818 id=1818 data-nosnippet>1818</a>
-<a href=#1819 id=1819 data-nosnippet>1819</a>    <span class="comment">// Open an in-memory database with the full schema
-<a href=#1820 id=1820 data-nosnippet>1820</a>    </span><span class="kw">let </span>duc_conn = <span class="kw">crate</span>::db::open_memory_compact()<span class="question-mark">?</span>;
-<a href=#1821 id=1821 data-nosnippet>1821</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = duc_conn.into_inner();
-<a href=#1822 id=1822 data-nosnippet>1822</a>
-<a href=#1823 id=1823 data-nosnippet>1823</a>    <span class="comment">// Write the document state
-<a href=#1824 id=1824 data-nosnippet>1824</a>    </span>write_state_to_connection(<span class="kw-2">&amp;mut </span>conn, state, <span class="number">8 </span>* <span class="number">1024 </span>* <span class="number">1024</span>)<span class="question-mark">?</span>;
-<a href=#1825 id=1825 data-nosnippet>1825</a>
-<a href=#1826 id=1826 data-nosnippet>1826</a>    <span class="comment">// Write external file chunks
-<a href=#1827 id=1827 data-nosnippet>1827</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(files) = <span class="kw-2">&amp;</span>state.external_files {
-<a href=#1828 id=1828 data-nosnippet>1828</a>        <span class="kw">for </span>(file_id, file) <span class="kw">in </span>files {
-<a href=#1829 id=1829 data-nosnippet>1829</a>            <span class="kw">let </span>revision_id = <span class="kw-2">&amp;</span>file.active_revision_id;
-<a href=#1830 id=1830 data-nosnippet>1830</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(data) = state
-<a href=#1831 id=1831 data-nosnippet>1831</a>                .external_files_data
-<a href=#1832 id=1832 data-nosnippet>1832</a>                .as_ref()
-<a href=#1833 id=1833 data-nosnippet>1833</a>                .and_then(|d| d.get(revision_id))
-<a href=#1834 id=1834 data-nosnippet>1834</a>            {
-<a href=#1835 id=1835 data-nosnippet>1835</a>                <span class="kw">let </span>tx = conn.transaction()<span class="question-mark">?</span>;
-<a href=#1836 id=1836 data-nosnippet>1836</a>                <span class="kw">let </span><span class="kw-2">mut </span>reader = Cursor::new(data.as_slice());
-<a href=#1837 id=1837 data-nosnippet>1837</a>                external_file_chunks::write_reader_chunks(
-<a href=#1838 id=1838 data-nosnippet>1838</a>                    <span class="kw-2">&amp;</span>tx,
-<a href=#1839 id=1839 data-nosnippet>1839</a>                    revision_id,
-<a href=#1840 id=1840 data-nosnippet>1840</a>                    <span class="kw-2">&amp;mut </span>reader,
-<a href=#1841 id=1841 data-nosnippet>1841</a>                    <span class="number">8 </span>* <span class="number">1024 </span>* <span class="number">1024</span>,
-<a href=#1842 id=1842 data-nosnippet>1842</a>                    <span class="prelude-val">Some</span>(data.len() <span class="kw">as </span>i64),
-<a href=#1843 id=1843 data-nosnippet>1843</a>                )<span class="question-mark">?</span>;
-<a href=#1844 id=1844 data-nosnippet>1844</a>                tx.commit()<span class="question-mark">?</span>;
-<a href=#1845 id=1845 data-nosnippet>1845</a>            }
-<a href=#1846 id=1846 data-nosnippet>1846</a>            <span class="kw">let _ </span>= file_id;
-<a href=#1847 id=1847 data-nosnippet>1847</a>        }
-<a href=#1848 id=1848 data-nosnippet>1848</a>    }
-<a href=#1849 id=1849 data-nosnippet>1849</a>
-<a href=#1850 id=1850 data-nosnippet>1850</a>    <span class="comment">// Checkpoint WAL into main database
-<a href=#1851 id=1851 data-nosnippet>1851</a>    </span>conn.execute_batch(<span class="string">"PRAGMA wal_checkpoint(TRUNCATE);"</span>)
-<a href=#1852 id=1852 data-nosnippet>1852</a>        .map_err(SerializeError::Sqlite)<span class="question-mark">?</span>;
-<a href=#1853 id=1853 data-nosnippet>1853</a>
-<a href=#1854 id=1854 data-nosnippet>1854</a>    <span class="comment">// Read the raw SQLite bytes from the in-memory database
-<a href=#1855 id=1855 data-nosnippet>1855</a>    </span><span class="attr">#[cfg(all(target_family = <span class="string">"wasm"</span>, target_os = <span class="string">"unknown"</span>))]
-<a href=#1856 id=1856 data-nosnippet>1856</a>    </span>{
-<a href=#1857 id=1857 data-nosnippet>1857</a>        <span class="comment">// On WASM, use sqlite3_serialize via rusqlite's serialize feature
-<a href=#1858 id=1858 data-nosnippet>1858</a>        </span><span class="kw">use </span>rusqlite::MAIN_DB;
-<a href=#1859 id=1859 data-nosnippet>1859</a>        <span class="kw">let </span>raw_sqlite: Vec&lt;u8&gt; = conn
-<a href=#1860 id=1860 data-nosnippet>1860</a>            .serialize(MAIN_DB)
-<a href=#1861 id=1861 data-nosnippet>1861</a>            .map_err(|e| SerializeError::Io(<span class="macro">format!</span>(<span class="string">"serialize: {e}"</span>)))<span class="question-mark">?
-<a href=#1862 id=1862 data-nosnippet>1862</a>            </span>.to_vec();
-<a href=#1863 id=1863 data-nosnippet>1863</a>
-<a href=#1864 id=1864 data-nosnippet>1864</a>        <span class="comment">// Gzip-compress
-<a href=#1865 id=1865 data-nosnippet>1865</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>compressed = Vec::new();
-<a href=#1866 id=1866 data-nosnippet>1866</a>        {
-<a href=#1867 id=1867 data-nosnippet>1867</a>            <span class="kw">let </span><span class="kw-2">mut </span>encoder = GzEncoder::new(<span class="kw-2">&amp;mut </span>compressed, Compression::default());
-<a href=#1868 id=1868 data-nosnippet>1868</a>            encoder.write_all(<span class="kw-2">&amp;</span>raw_sqlite)<span class="question-mark">?</span>;
-<a href=#1869 id=1869 data-nosnippet>1869</a>            encoder.finish()<span class="question-mark">?</span>;
-<a href=#1870 id=1870 data-nosnippet>1870</a>        }
-<a href=#1871 id=1871 data-nosnippet>1871</a>        <span class="prelude-val">Ok</span>(compressed)
-<a href=#1872 id=1872 data-nosnippet>1872</a>    }
-<a href=#1873 id=1873 data-nosnippet>1873</a>
-<a href=#1874 id=1874 data-nosnippet>1874</a>    <span class="attr">#[cfg(not(all(target_family = <span class="string">"wasm"</span>, target_os = <span class="string">"unknown"</span>)))]
-<a href=#1875 id=1875 data-nosnippet>1875</a>    </span>{
-<a href=#1876 id=1876 data-nosnippet>1876</a>        <span class="comment">// On native/WASI, use sqlite3_serialize to get raw bytes
-<a href=#1877 id=1877 data-nosnippet>1877</a>        </span><span class="kw">use </span>rusqlite::MAIN_DB;
-<a href=#1878 id=1878 data-nosnippet>1878</a>        <span class="kw">let </span>raw_sqlite: Vec&lt;u8&gt; = conn
-<a href=#1879 id=1879 data-nosnippet>1879</a>            .serialize(MAIN_DB)
-<a href=#1880 id=1880 data-nosnippet>1880</a>            .map_err(|e| SerializeError::Io(<span class="macro">format!</span>(<span class="string">"serialize: {e}"</span>)))<span class="question-mark">?
-<a href=#1881 id=1881 data-nosnippet>1881</a>            </span>.to_vec();
-<a href=#1882 id=1882 data-nosnippet>1882</a>
-<a href=#1883 id=1883 data-nosnippet>1883</a>        <span class="comment">// Gzip-compress
-<a href=#1884 id=1884 data-nosnippet>1884</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>compressed = Vec::new();
-<a href=#1885 id=1885 data-nosnippet>1885</a>        {
-<a href=#1886 id=1886 data-nosnippet>1886</a>            <span class="kw">let </span><span class="kw-2">mut </span>encoder = GzEncoder::new(<span class="kw-2">&amp;mut </span>compressed, Compression::default());
-<a href=#1887 id=1887 data-nosnippet>1887</a>            encoder.write_all(<span class="kw-2">&amp;</span>raw_sqlite)<span class="question-mark">?</span>;
-<a href=#1888 id=1888 data-nosnippet>1888</a>            encoder.finish()<span class="question-mark">?</span>;
-<a href=#1889 id=1889 data-nosnippet>1889</a>        }
-<a href=#1890 id=1890 data-nosnippet>1890</a>        <span class="prelude-val">Ok</span>(compressed)
-<a href=#1891 id=1891 data-nosnippet>1891</a>    }
-<a href=#1892 id=1892 data-nosnippet>1892</a>}
+<a href=#1806 id=1806 data-nosnippet>1806</a><span class="comment">// ── Byte-buffer convenience function ───────────────────────────────────────
+<a href=#1807 id=1807 data-nosnippet>1807</a>//
+<a href=#1808 id=1808 data-nosnippet>1808</a>// Serializes an ExportedDataState into gzip-compressed .duc bytes.
+<a href=#1809 id=1809 data-nosnippet>1809</a>// This is the byte-buffer equivalent of DucSession::finish_to_writer.
+<a href=#1810 id=1810 data-nosnippet>1810</a>
+<a href=#1811 id=1811 data-nosnippet>1811</a></span><span class="doccomment">/// Serialize an [`ExportedDataState`] into `.duc` bytes (gzip-compressed SQLite).
+<a href=#1812 id=1812 data-nosnippet>1812</a>///
+<a href=#1813 id=1813 data-nosnippet>1813</a>/// Creates an in-memory database, writes the document state and external files,
+<a href=#1814 id=1814 data-nosnippet>1814</a>/// checkpoints the WAL, reads the raw SQLite bytes, and gzip-compresses them.
+<a href=#1815 id=1815 data-nosnippet>1815</a>///
+<a href=#1816 id=1816 data-nosnippet>1816</a>/// This is the backward-compatible API for consumers that expect a `Vec&lt;u8&gt;`
+<a href=#1817 id=1817 data-nosnippet>1817</a>/// result. For streaming (unlimited file size), use [`crate::session::DucSession`]
+<a href=#1818 id=1818 data-nosnippet>1818</a>/// or [`crate::api::DucDocument`] instead.
+<a href=#1819 id=1819 data-nosnippet>1819</a></span><span class="kw">pub fn </span>serialize_duc_to_bytes(state: <span class="kw-2">&amp;</span>ExportedDataState) -&gt; SerializeResult&lt;Vec&lt;u8&gt;&gt; {
+<a href=#1820 id=1820 data-nosnippet>1820</a>    <span class="kw">use </span>flate2::write::GzEncoder;
+<a href=#1821 id=1821 data-nosnippet>1821</a>    <span class="kw">use </span>flate2::Compression;
+<a href=#1822 id=1822 data-nosnippet>1822</a>    <span class="kw">use </span>std::io::{Cursor, Write};
+<a href=#1823 id=1823 data-nosnippet>1823</a>
+<a href=#1824 id=1824 data-nosnippet>1824</a>    <span class="comment">// Open an in-memory database with the full schema
+<a href=#1825 id=1825 data-nosnippet>1825</a>    </span><span class="kw">let </span>duc_conn = <span class="kw">crate</span>::db::open_memory_compact()<span class="question-mark">?</span>;
+<a href=#1826 id=1826 data-nosnippet>1826</a>    <span class="kw">let </span><span class="kw-2">mut </span>conn = duc_conn.into_inner();
+<a href=#1827 id=1827 data-nosnippet>1827</a>
+<a href=#1828 id=1828 data-nosnippet>1828</a>    <span class="comment">// Write the document state
+<a href=#1829 id=1829 data-nosnippet>1829</a>    </span>write_state_to_connection(<span class="kw-2">&amp;mut </span>conn, state, <span class="number">8 </span>* <span class="number">1024 </span>* <span class="number">1024</span>)<span class="question-mark">?</span>;
+<a href=#1830 id=1830 data-nosnippet>1830</a>
+<a href=#1831 id=1831 data-nosnippet>1831</a>    <span class="comment">// Write external file chunks
+<a href=#1832 id=1832 data-nosnippet>1832</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(files) = <span class="kw-2">&amp;</span>state.external_files {
+<a href=#1833 id=1833 data-nosnippet>1833</a>        <span class="kw">for </span>(file_id, file) <span class="kw">in </span>files {
+<a href=#1834 id=1834 data-nosnippet>1834</a>            <span class="kw">let </span>revision_id = <span class="kw-2">&amp;</span>file.active_revision_id;
+<a href=#1835 id=1835 data-nosnippet>1835</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(data) = state
+<a href=#1836 id=1836 data-nosnippet>1836</a>                .external_files_data
+<a href=#1837 id=1837 data-nosnippet>1837</a>                .as_ref()
+<a href=#1838 id=1838 data-nosnippet>1838</a>                .and_then(|d| d.get(revision_id))
+<a href=#1839 id=1839 data-nosnippet>1839</a>            {
+<a href=#1840 id=1840 data-nosnippet>1840</a>                <span class="kw">let </span>tx = conn.transaction()<span class="question-mark">?</span>;
+<a href=#1841 id=1841 data-nosnippet>1841</a>                <span class="kw">let </span><span class="kw-2">mut </span>reader = Cursor::new(data.as_slice());
+<a href=#1842 id=1842 data-nosnippet>1842</a>                external_file_chunks::write_reader_chunks(
+<a href=#1843 id=1843 data-nosnippet>1843</a>                    <span class="kw-2">&amp;</span>tx,
+<a href=#1844 id=1844 data-nosnippet>1844</a>                    revision_id,
+<a href=#1845 id=1845 data-nosnippet>1845</a>                    <span class="kw-2">&amp;mut </span>reader,
+<a href=#1846 id=1846 data-nosnippet>1846</a>                    <span class="number">8 </span>* <span class="number">1024 </span>* <span class="number">1024</span>,
+<a href=#1847 id=1847 data-nosnippet>1847</a>                    <span class="prelude-val">Some</span>(data.len() <span class="kw">as </span>i64),
+<a href=#1848 id=1848 data-nosnippet>1848</a>                )<span class="question-mark">?</span>;
+<a href=#1849 id=1849 data-nosnippet>1849</a>                tx.commit()<span class="question-mark">?</span>;
+<a href=#1850 id=1850 data-nosnippet>1850</a>            }
+<a href=#1851 id=1851 data-nosnippet>1851</a>            <span class="kw">let _ </span>= file_id;
+<a href=#1852 id=1852 data-nosnippet>1852</a>        }
+<a href=#1853 id=1853 data-nosnippet>1853</a>    }
+<a href=#1854 id=1854 data-nosnippet>1854</a>
+<a href=#1855 id=1855 data-nosnippet>1855</a>    <span class="comment">// Checkpoint WAL into main database
+<a href=#1856 id=1856 data-nosnippet>1856</a>    </span>conn.execute_batch(<span class="string">"PRAGMA wal_checkpoint(TRUNCATE);"</span>)
+<a href=#1857 id=1857 data-nosnippet>1857</a>        .map_err(SerializeError::Sqlite)<span class="question-mark">?</span>;
+<a href=#1858 id=1858 data-nosnippet>1858</a>
+<a href=#1859 id=1859 data-nosnippet>1859</a>    <span class="comment">// Read the raw SQLite bytes from the in-memory database
+<a href=#1860 id=1860 data-nosnippet>1860</a>    </span><span class="attr">#[cfg(all(target_family = <span class="string">"wasm"</span>, target_os = <span class="string">"unknown"</span>))]
+<a href=#1861 id=1861 data-nosnippet>1861</a>    </span>{
+<a href=#1862 id=1862 data-nosnippet>1862</a>        <span class="comment">// On WASM, use sqlite3_serialize via rusqlite's serialize feature
+<a href=#1863 id=1863 data-nosnippet>1863</a>        </span><span class="kw">use </span>rusqlite::MAIN_DB;
+<a href=#1864 id=1864 data-nosnippet>1864</a>        <span class="kw">let </span>raw_sqlite: Vec&lt;u8&gt; = conn
+<a href=#1865 id=1865 data-nosnippet>1865</a>            .serialize(MAIN_DB)
+<a href=#1866 id=1866 data-nosnippet>1866</a>            .map_err(|e| SerializeError::Io(<span class="macro">format!</span>(<span class="string">"serialize: {e}"</span>)))<span class="question-mark">?
+<a href=#1867 id=1867 data-nosnippet>1867</a>            </span>.to_vec();
+<a href=#1868 id=1868 data-nosnippet>1868</a>
+<a href=#1869 id=1869 data-nosnippet>1869</a>        <span class="comment">// Gzip-compress
+<a href=#1870 id=1870 data-nosnippet>1870</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>compressed = Vec::new();
+<a href=#1871 id=1871 data-nosnippet>1871</a>        {
+<a href=#1872 id=1872 data-nosnippet>1872</a>            <span class="kw">let </span><span class="kw-2">mut </span>encoder = GzEncoder::new(<span class="kw-2">&amp;mut </span>compressed, Compression::default());
+<a href=#1873 id=1873 data-nosnippet>1873</a>            encoder.write_all(<span class="kw-2">&amp;</span>raw_sqlite)<span class="question-mark">?</span>;
+<a href=#1874 id=1874 data-nosnippet>1874</a>            encoder.finish()<span class="question-mark">?</span>;
+<a href=#1875 id=1875 data-nosnippet>1875</a>        }
+<a href=#1876 id=1876 data-nosnippet>1876</a>        <span class="prelude-val">Ok</span>(compressed)
+<a href=#1877 id=1877 data-nosnippet>1877</a>    }
+<a href=#1878 id=1878 data-nosnippet>1878</a>
+<a href=#1879 id=1879 data-nosnippet>1879</a>    <span class="attr">#[cfg(not(all(target_family = <span class="string">"wasm"</span>, target_os = <span class="string">"unknown"</span>)))]
+<a href=#1880 id=1880 data-nosnippet>1880</a>    </span>{
+<a href=#1881 id=1881 data-nosnippet>1881</a>        <span class="comment">// On native/WASI, use sqlite3_serialize to get raw bytes
+<a href=#1882 id=1882 data-nosnippet>1882</a>        </span><span class="kw">use </span>rusqlite::MAIN_DB;
+<a href=#1883 id=1883 data-nosnippet>1883</a>        <span class="kw">let </span>raw_sqlite: Vec&lt;u8&gt; = conn
+<a href=#1884 id=1884 data-nosnippet>1884</a>            .serialize(MAIN_DB)
+<a href=#1885 id=1885 data-nosnippet>1885</a>            .map_err(|e| SerializeError::Io(<span class="macro">format!</span>(<span class="string">"serialize: {e}"</span>)))<span class="question-mark">?
+<a href=#1886 id=1886 data-nosnippet>1886</a>            </span>.to_vec();
+<a href=#1887 id=1887 data-nosnippet>1887</a>
+<a href=#1888 id=1888 data-nosnippet>1888</a>        <span class="comment">// Gzip-compress
+<a href=#1889 id=1889 data-nosnippet>1889</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>compressed = Vec::new();
+<a href=#1890 id=1890 data-nosnippet>1890</a>        {
+<a href=#1891 id=1891 data-nosnippet>1891</a>            <span class="kw">let </span><span class="kw-2">mut </span>encoder = GzEncoder::new(<span class="kw-2">&amp;mut </span>compressed, Compression::default());
+<a href=#1892 id=1892 data-nosnippet>1892</a>            encoder.write_all(<span class="kw-2">&amp;</span>raw_sqlite)<span class="question-mark">?</span>;
+<a href=#1893 id=1893 data-nosnippet>1893</a>            encoder.finish()<span class="question-mark">?</span>;
+<a href=#1894 id=1894 data-nosnippet>1894</a>        }
+<a href=#1895 id=1895 data-nosnippet>1895</a>        <span class="prelude-val">Ok</span>(compressed)
+<a href=#1896 id=1896 data-nosnippet>1896</a>    }
+<a href=#1897 id=1897 data-nosnippet>1897</a>}
 </code></pre></div></section></main></body></html>

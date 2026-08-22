@@ -1,0 +1,123 @@
+ducpy.search.search_ifc
+=======================
+
+.. py:module:: ducpy.search.search_ifc
+
+.. autoapi-nested-parse::
+
+   IFC text extraction for model-element search (the IfcOpenShell engine).
+
+   The extractor indexes values that exist in the IFC model itself: human-facing
+   entity attributes, properties, quantities, materials, classifications,
+   documents, presentation-layer names, addresses, actors, and selected file-header
+   metadata. It does not index raw STEP records, IFC entity class names, generated
+   GlobalIds, or embedded Python source.
+
+   Linked IFC files are searched by default. Trusted Python model code can be
+   executed explicitly to capture IfcOpenShell files it opens or creates.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.search.search_ifc.IfcTextItem
+   ducpy.search.search_ifc.IfcText
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.search.search_ifc.ifcopenshell_available
+   ducpy.search.search_ifc.extract_ifc_file_text
+   ducpy.search.search_ifc.extract_ifc_text
+   ducpy.search.search_ifc.extract_ifc_path_text
+   ducpy.search.search_ifc.extract_model_ifc_text
+
+
+Module Contents
+---------------
+
+.. py:class:: IfcTextItem
+
+   A searchable value read from a specific IFC entity attribute.
+
+
+   .. py:attribute:: text
+      :type:  str
+
+
+   .. py:attribute:: kind
+      :type:  str
+
+
+   .. py:attribute:: entity_type
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: entity_id
+      :type:  int | None
+      :value: None
+
+
+
+   .. py:attribute:: field
+      :type:  str | None
+      :value: None
+
+
+
+.. py:class:: IfcText
+
+   Result of extracting user-facing text from one or more IFC files.
+
+
+   .. py:attribute:: items
+      :type:  tuple[IfcTextItem, Ellipsis]
+      :value: ()
+
+
+
+   .. py:property:: text
+      :type: str
+
+
+
+   .. py:method:: texts_by_kind(kind: str) -> list[str]
+
+
+.. py:function:: ifcopenshell_available() -> bool
+
+   Return whether IfcOpenShell can be imported.
+
+
+.. py:function:: extract_ifc_file_text(model: Any) -> IfcText
+
+   Extract searchable values from a loaded IfcOpenShell file.
+
+
+.. py:function:: extract_ifc_text(ifc_bytes: bytes) -> IfcText
+
+   Parse IFC STEP bytes and extract searchable values, or return empty.
+
+
+.. py:function:: extract_ifc_path_text(path: str | pathlib.Path) -> IfcText
+
+   Open and extract an IFC file from disk without first reading its bytes.
+
+
+.. py:function:: extract_model_ifc_text(duc_source: str | pathlib.Path, element: dict[str, Any], *, run_code: bool = False) -> IfcText
+
+   Extract searchable values from a DUC IFC model element.
+
+   Linked files are read without code execution. Enabling run_code executes
+   trusted Python/IfcOpenShell code in-process and indexes only values that are
+   materialized into captured IFC entities. Python source itself is not searched.
+
+

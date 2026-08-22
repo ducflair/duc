@@ -1,0 +1,168 @@
+ducpy.search.search_models
+==========================
+
+.. py:module:: ducpy.search.search_models
+
+.. autoapi-nested-parse::
+
+   Scoped model-element search helpers.
+
+   Model elements (``DucModelElement``, element type ``"model"``) embed CAD/BIM
+   content in one of two ways:
+
+   1. **Embedded Python code** (``model_type == "python"``) whose imports reveal
+      the real engine — ``ezdxf``, ``ifcopenshell`` or ``build123d``.
+   2. **Linked external files** (``model_type`` is ``dxf`` / ``ifc`` / ``step`` /
+      ...) whose blobs live in the connected external files (``file_ids``).
+
+   Before any content can be searched we must classify each model into the engine
+   that produced it:
+
+   ============  ===========================================================
+   Engine        Sources
+   ============  ===========================================================
+   ezdxf         ``model_type`` ``dxf`` / ``dwg``, or Python importing ``ezdxf``
+   ifc           ``model_type`` ``ifc``, or Python importing ``ifcopenshell``
+   build123d     ``model_type`` ``step`` / ``stl``, or Python importing ``build123d``
+   unsupported   anything we can't classify
+   ============  ===========================================================
+
+   This module detects each engine and searches user-facing content for the ezdxf
+   and IFC engines. Build123d elements currently remain searchable through their
+   DUC label and description.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.search.search_models.ModelEngine
+   ducpy.search.search_models.ModelElementInfo
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.search.search_models.extract_python_imports
+   ducpy.search.search_models.detect_model_engine
+   ducpy.search.search_models.model_element_info
+   ducpy.search.search_models.iter_model_elements
+   ducpy.search.search_models.resolve_model_search_targets
+   ducpy.search.search_models.search_duc_models
+
+
+Module Contents
+---------------
+
+.. py:class:: ModelEngine
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+
+   CAD/BIM engine responsible for a model element's content.
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: EZDXF
+      :value: 'ezdxf'
+
+
+
+   .. py:attribute:: IFC
+      :value: 'ifc'
+
+
+
+   .. py:attribute:: BUILD123D
+      :value: 'build123d'
+
+
+
+   .. py:attribute:: UNSUPPORTED
+      :value: 'unsupported'
+
+
+
+.. py:class:: ModelElementInfo
+
+   Engine classification of a single model element.
+
+
+   .. py:attribute:: element_id
+      :type:  str
+
+
+   .. py:attribute:: label
+      :type:  str
+
+
+   .. py:attribute:: model_type
+      :type:  str
+
+
+   .. py:attribute:: engine
+      :type:  ModelEngine
+
+
+   .. py:attribute:: is_python
+      :type:  bool
+
+
+   .. py:attribute:: has_code
+      :type:  bool
+
+
+   .. py:attribute:: file_ids
+      :type:  tuple[str, Ellipsis]
+
+
+.. py:function:: extract_python_imports(code: str | None) -> set[str]
+
+   Return the top-level module names imported by ``code``.
+
+   Uses :mod:`ast` for accuracy and falls back to a line-based regex when the
+   source can't be parsed (e.g. an extracted fragment or a syntax error).
+
+
+.. py:function:: detect_model_engine(element: dict[str, Any]) -> ModelEngine
+
+   Classify a parsed model element into a :class:`ModelEngine`.
+
+
+.. py:function:: model_element_info(element: dict[str, Any]) -> ModelElementInfo
+
+   Build a :class:`ModelElementInfo` from a parsed model element dict.
+
+
+.. py:function:: iter_model_elements(duc_data: dict[str, Any]) -> Iterator[dict[str, Any]]
+
+   Yield non-deleted model elements from parsed duc data.
+
+
+.. py:function:: resolve_model_search_targets(duc_data: dict[str, Any]) -> list[ModelElementInfo]
+
+   Classify every live model element in parsed duc data.
+
+
+.. py:function:: search_duc_models(duc_path: str | pathlib.Path, query: str, *, output_path: str | pathlib.Path | None = None, limit: int = 50, run_code: bool = False) -> ducpy.search.search_elements.DucSearchResponse
+
+   Search the user-authored text inside model elements and rank the results.
+
+   Loads the ``.duc`` (SQLite-backed or native binary), classifies each model
+   element, extracts searchable DXF/DWG or IFC content, and scores it against
+   ``query`` with the same ranking machinery as :func:`search_duc_elements`.
+   Build123d models currently fall back to their label and description.
+
+   ``run_code`` is a trusted-input opt-in. The default (``False``) searches
+   linked model files only. Setting it to ``True`` executes embedded Python
+   model code in-process to capture generated DXF or IFC content; never enable
+   it for untrusted DUC files. Results are written to ``output_path``
+   (or a default path beside the ``.duc``) and returned as a
+   :class:`DucSearchResponse`.
+
+

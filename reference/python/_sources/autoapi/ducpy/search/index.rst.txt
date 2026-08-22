@@ -15,9 +15,13 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
+   /autoapi/ducpy/search/_model_files/index
    /autoapi/ducpy/search/image_ocr/index
    /autoapi/ducpy/search/search_elements/index
    /autoapi/ducpy/search/search_external_files/index
+   /autoapi/ducpy/search/search_ezdxf/index
+   /autoapi/ducpy/search/search_ifc/index
+   /autoapi/ducpy/search/search_models/index
    /autoapi/ducpy/search/search_pdf/index
 
 
