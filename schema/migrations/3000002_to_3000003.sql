@@ -3,6 +3,8 @@
 -- This migration is necessary because FTS5 virtual tables cannot be altered
 -- to change tokenizer or prefix options - they must be dropped and recreated.
 
+BEGIN IMMEDIATE;
+
 -- 1. Drop old FTS tables (triggers are automatically dropped)
 DROP TABLE IF EXISTS search_elements;
 DROP TABLE IF EXISTS search_element_text;
@@ -157,3 +159,4 @@ INSERT INTO search_element_model(search_element_model) VALUES ('rebuild');
 INSERT INTO search_blocks(search_blocks) VALUES ('rebuild');
 
 PRAGMA user_version = 3000003;
+COMMIT;

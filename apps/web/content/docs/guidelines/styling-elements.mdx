@@ -1,0 +1,256 @@
+---
+title: "Styling Elements"
+description: "Compose ordered backgrounds and strokes, control their visibility and geometry, and style closed paths within linear elements."
+date: 2026-08-21
+authors: [jorgedanisc]
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## The Element Style Model
+
+Every visual element inherits the same base style structure:
+
+```ts
+type _DucElementStylesBase = {
+  roundness: PrecisionValue;
+  blending?: Blending;
+  background: ElementBackground[];
+  stroke: ElementStroke[];
+  opacity: Percentage;
+};
+```
+
+`background` and `stroke` are ordered arrays rather than single values. Entry `0` is rendered first; later entries are painted over earlier entries. This makes layered fills, outlines, and casing strokes possible without duplicating the element.
+
+<Callout type="warn" title="Preserve the complete arrays when updating styles">
+  Changing an element's `background` or `stroke` field replaces that list in mutation and patch workflows. Read or retain the existing entries, modify the intended index, and submit the complete resulting list. Sending only one entry intentionally removes the other layers.
+</Callout>
+
+---
+
+## Visibility and Opacity
+
+Visibility is evaluated at three levels:
+
+1. `element.isVisible` hides the entire element.
+2. `element.opacity` applies to the element's combined rendered result.
+3. `content.visible` and `content.opacity` control one background or stroke layer.
+
+The effective alpha of a visible layer is its content opacity multiplied by the element opacity. Set `content.visible` to `false` when a layer should remain stored but not render; an opacity of `0` is visually transparent but does not communicate the same explicit disabled state.
+
+`roundness` changes compatible element geometry before backgrounds and strokes are applied. `blending` records how the element should composite with content beneath it; support for individual blend modes depends on the renderer.
+
+---
+
+## Background Layers
+
+An `ElementBackground` wraps an `ElementContentBase`:
+
+```ts
+type ElementBackground = {
+  content: {
+    preference: FillStyle;
+    src: string;
+    visible: boolean;
+    opacity: Percentage;
+    tiling?: TilingProperties;
+    hatch?: DucHatchStyle;
+    imageFilter?: DucImageFilter;
+  };
+};
+```
+
+For the most portable fill, use `ELEMENT_CONTENT_PREFERENCE.SOLID` and a CSS color in `src`, preferably a six- or eight-digit hex value. Eight-digit hex alpha and `content.opacity` are multiplied together.
+
+The content preference tells a renderer how to interpret `src` and the optional configuration:
+
+| Preference | Intended content |
+| :--- | :--- |
+| `SOLID` | A color value |
+| `FILL` | A general fill source, such as a gradient or renderer-supported content reference |
+| `FIT` | Image or referenced content fitted within the element bounds |
+| `TILE` | Repeated content controlled by `tiling` size, angle, spacing, and offsets |
+| `STRETCH` | Image or referenced content stretched to the element bounds |
+| `HATCH` | A predefined or custom line pattern described by `hatch` |
+
+`src` may store a color, gradient description, image or External File reference, URL, Block reference, or an element reference such as `@el/{elementId}`. The chosen preference and target renderer determine which source forms are meaningful. Do not assume that successful serialization means every adapter can render that content type.
+
+A hatch definition contains:
+
+- `hatchStyle`: normal, outer, or ignore behavior.
+- `pattern.name`, `scale`, `angle`, `origin`, and `double`.
+- An optional `customPattern` containing ordered pattern lines. Each line defines its angle, origin, parallel offset, and dash pattern.
+
+---
+
+## Stroke Layers
+
+An `ElementStroke` combines the same content structure with line geometry:
+
+```ts
+type ElementStroke = {
+  content: ElementContentBase;
+  width: PrecisionValue;
+  style: StrokeStyle;
+  placement: StrokePlacement;
+  strokeSides?: StrokeSides;
+};
+```
+
+### Width and placement
+
+`width` is interpreted in the element's declared `scope`. Placement controls how that width relates to a closed boundary:
+
+| Placement | Result |
+| :--- | :--- |
+| `INSIDE` | The complete stroke lies inside the element boundary |
+| `CENTER` | Half of the stroke lies on each side of the boundary |
+| `OUTSIDE` | The complete stroke lies outside the element boundary |
+
+For an open line or arrow, use `CENTER` unless the target renderer defines a side for inside and outside. Placement is unambiguous on closed shapes such as rectangles and ellipses.
+
+### Line pattern and finishes
+
+`style.preference` selects `SOLID`, `DASHED`, `DOTTED`, or `CUSTOM` behavior. A dash array alternates painted and unpainted lengths:
+
+- `[8, 4]` means an 8-unit dash followed by a 4-unit gap.
+- `[0, 4]` with a round cap produces dots separated by 4 units.
+- A custom array follows `[dash, gap, dash, gap, ...]` and should contain an even number of non-negative values.
+
+`cap` controls open path ends (`BUTT`, `ROUND`, or `SQUARE`). `join` controls corners (`MITER`, `ROUND`, or `BEVEL`). `miterLimit` prevents acute miter joins from extending without bound. `dashCap` applies to individual dash ends, while `dashLineOverride` can reference a Block Instance used as the repeated dash shape.
+
+For rectangular elements, `strokeSides.preference` can select all, top, bottom, left, right, or custom sides. Custom `values` use `[top, bottom, left, right]` order.
+
+---
+
+## Creating Layered Styles with `ducpy`
+
+Build each background and stroke independently, then pass the ordered lists to `create_simple_styles(...)`:
+
+```python
+import ducpy as duc
+
+base_fill = duc.create_background(
+    duc.create_solid_content("#16324F", opacity=1.0)
+)
+highlight = duc.create_background(
+    duc.create_solid_content("#3DA5D9", opacity=0.35)
+)
+
+outline = duc.create_stroke(
+    duc.create_solid_content("#F4F7FA"),
+    width=2.0,
+    placement=duc.STROKE_PLACEMENT.CENTER,
+    style=duc.StrokeStyle(
+        preference=duc.STROKE_PREFERENCE.DASHED,
+        dash=[8.0, 4.0],
+        cap=duc.STROKE_CAP.ROUND,
+        join=duc.STROKE_JOIN.ROUND,
+        dash_cap=duc.STROKE_CAP.ROUND,
+        miter_limit=4.0,
+    ),
+)
+
+styles = duc.create_simple_styles(
+    roundness=6.0,
+    opacity=0.9,
+    backgrounds=[base_fill, highlight],
+    strokes=[outline],
+)
+```
+
+Attach `styles` through `ElementBuilder.with_styles(styles)` before selecting the element-specific builder. Adapter field names follow their language conventions: for example, TypeScript uses `background`, `stroke`, and `strokeSides`, while Python uses `background`, `stroke`, and `stroke_sides`.
+
+---
+
+## Styling Linear Elements
+
+Linear elements use the base background and stroke lists, but their geometry is a graph of `points` and indexed `lines` rather than one implicit outline.
+
+### Base strokes and closed-cycle fills
+
+Base strokes apply to the element's connected paths. A background can fill only a closed cycle in the line graph. Open chains and branches can be stroked, but they do not enclose an area and therefore cannot receive a background fill.
+
+The line order is significant because every path-specific style refers to indices in the `lines` array. Reordering or deleting lines requires updating the affected overrides.
+
+### Path overrides
+
+`pathOverrides` (`path_overrides` in Python) contains `DucPath` records:
+
+```ts
+type DucPath = {
+  lineIndices: readonly number[];
+  background: ElementBackground | null;
+  stroke: ElementStroke | null;
+};
+```
+
+Each override identifies one closed cycle by **line indices, not point indices**. Its non-null `background` and `stroke` replace the corresponding base style for that cycle; a null field inherits the base style.
+
+A valid path override must:
+
+- Reference existing integer indices in `lines`.
+- Contain at least three lines.
+- Form one connected closed loop in which every participating point has two connections.
+- Avoid sharing a line index with another path override on the same element.
+
+Invalid, open, or overlapping overrides are discarded when elements are restored. The order of indices inside one override does not need to match traversal order, but preserving geometric order makes the data easier to inspect.
+
+### Fill only selected regions
+
+To fill only one cycle of a multi-region linear element, make the base background invisible and give the selected closed path a visible background:
+
+```python
+import ducpy as duc
+
+hidden_base = duc.create_background(
+    duc.create_solid_content("#000000", visible=False)
+)
+selected_fill = duc.create_background(
+    duc.create_solid_content("#2E8B57", opacity=0.65)
+)
+
+selected_region = duc.create_duc_path(
+    line_indices=[0, 1, 2, 3],
+    background=selected_fill,
+    stroke=None,  # Keep the element's base stroke for this cycle.
+)
+
+linear_styles = duc.create_simple_styles(
+    backgrounds=[hidden_base],
+    strokes=[duc.create_stroke(
+        duc.create_solid_content("#173D2B"),
+        width=1.5,
+        placement=duc.STROKE_PLACEMENT.CENTER,
+    )],
+)
+
+linear = (
+    duc.ElementBuilder()
+    .with_styles(linear_styles)
+    .build_linear_element()
+    .with_points(points)
+    .with_lines(lines)
+    .with_path_overrides([selected_region])
+    .build()
+)
+```
+
+This example assumes `points` and `lines` already describe the network. The selected indices must be the exact lines enclosing the intended region. See [Linear Elements](/docs/concepts/elements/linear-element) for point, line, and Bezier construction.
+
+An invisible path-override background can also mark a closed cycle as a hole in renderers that support path-specific filling.
+
+<Callout type="info" title="Renderer support is capability-dependent">
+  DUC stores the complete style contract even when a host renders only a subset. The current Scopture Pixi canvas applies solid color layers, per-content opacity, cap/join/miter settings, and simple-shape stroke placement, but it does not yet apply every stored hatch, tile, dash, side, or `pathOverrides` field uniformly. The DUC PDF path renderer supports closed-cycle background overrides, including invisible override backgrounds as holes. Verify advanced styles in every target canvas and export adapter.
+</Callout>
+
+---
+
+## Verification Checklist
+
+- Confirm `isVisible`, element opacity, and each layer's visibility and opacity independently.
+- Confirm the background and stroke arrays remain in the intended order after mutation and round-trip serialization.
+- Inspect stroke width in the element's scope, placement, cap, join, miter limit, and dash sequence.
+- For rectangular side overrides, confirm custom values use top, bottom, left, right order.
+- For a linear fill, verify that the selected line indices form the intended closed cycle and do not overlap another override.

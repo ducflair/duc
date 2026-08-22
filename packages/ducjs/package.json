@@ -50,10 +50,10 @@
     "undici-types": "^6.21.0"
   },
   "dependencies": {
-    "@braintree/sanitize-url": "6.0.2",
-    "browser-fs-access": "0.35.0",
-    "fflate": "^0.8.2",
-    "nanoid": "5.1.5",
+    "@braintree/sanitize-url": "^7.1.1",
+    "browser-fs-access": "^0.38.0",
+    "fflate": "^0.8.3",
+    "nanoid": "^5.1.6",
     "perfect-freehand": "1.2.2",
     "tinycolor2": "1.6.0"
   },

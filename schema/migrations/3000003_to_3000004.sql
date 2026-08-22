@@ -2,6 +2,8 @@
 -- Rename element_model.svg_path (TEXT) to thumbnail (BLOB), and add dedicated
 -- references for external files used by doc element Typst source.
 
+BEGIN IMMEDIATE;
+
 CREATE TABLE element_model_new (
     element_id TEXT PRIMARY KEY REFERENCES elements(id) ON DELETE CASCADE,
     model_type TEXT,
@@ -39,3 +41,4 @@ DELETE FROM model_element_files
 WHERE element_id IN (SELECT element_id FROM element_doc);
 
 PRAGMA user_version = 3000004;
+COMMIT;

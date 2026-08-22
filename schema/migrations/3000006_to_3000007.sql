@@ -2,6 +2,8 @@
 -- Remove duc_global_state.name, migrate it into duc_charter.title, and add
 -- normalized charter/issue tables.
 
+BEGIN IMMEDIATE;
+
 CREATE TEMP TABLE _duc_global_state_name AS
 SELECT name FROM duc_global_state WHERE id = 1;
 
@@ -278,3 +280,4 @@ BEGIN
 END;
 
 PRAGMA user_version = 3000007;
+COMMIT;

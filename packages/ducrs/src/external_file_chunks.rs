@@ -754,7 +754,7 @@ fn stream_chunks_to_writer<W: Write>(
     writer: &mut W,
 ) -> ExternalFileChunkResult<u64> {
     let sql = format!(
-        "SELECT data
+        "SELECT chunk_index, offset_bytes, size_bytes, data
          FROM {}
          WHERE {} = ?1
          ORDER BY chunk_index",
@@ -763,9 +763,32 @@ fn stream_chunks_to_writer<W: Write>(
     let mut stmt = conn.prepare_cached(&sql)?;
     let mut rows = stmt.query(params![owner_id])?;
     let mut total = 0u64;
+    let mut expected_chunk_index = 0i64;
 
     while let Some(row) = rows.next()? {
-        let data: Vec<u8> = row.get(0)?;
+        let chunk_index: i64 = row.get(0)?;
+        let offset_bytes: i64 = row.get(1)?;
+        let size_bytes: i64 = row.get(2)?;
+        let data: Vec<u8> = row.get(3)?;
+        if chunk_index != expected_chunk_index {
+            return Err(ExternalFileChunkError::InvalidData(format!(
+                "{} {owner_id} expected chunk index {expected_chunk_index}, found {chunk_index}",
+                table.owner_label
+            )));
+        }
+        if offset_bytes < 0 || offset_bytes as u64 != total {
+            return Err(ExternalFileChunkError::InvalidData(format!(
+                "{} {owner_id} expected chunk offset {total}, found {offset_bytes}",
+                table.owner_label
+            )));
+        }
+        if size_bytes < 0 || size_bytes as usize != data.len() {
+            return Err(ExternalFileChunkError::InvalidData(format!(
+                "{} {owner_id} chunk {chunk_index} declares {size_bytes} bytes but stores {}",
+                table.owner_label,
+                data.len()
+            )));
+        }
         writer.write_all(&data)?;
         total = total.checked_add(data.len() as u64).ok_or_else(|| {
             ExternalFileChunkError::InvalidData(format!(
@@ -773,6 +796,7 @@ fn stream_chunks_to_writer<W: Write>(
                 table.owner_label
             ))
         })?;
+        expected_chunk_index += 1;
     }
 
     Ok(total)

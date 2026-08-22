@@ -857,7 +857,7 @@ CREATE TABLE element_table (
 CREATE TABLE element_model (
     element_id TEXT PRIMARY KEY REFERENCES elements(id) ON DELETE CASCADE,
     model_type TEXT,                      -- e.g. PYTHON, DXF, IFC, STL, OBJ, STEP
-    code       TEXT,                      -- build123d python source code
+    code       TEXT,                      -- build123d, ifcopenshell or ezdxf python source code
     thumbnail  BLOB                       -- cached image thumbnail for canvas rendering
 );  -- no WITHOUT ROWID: implicit integer rowid needed for FTS5 content sync
 

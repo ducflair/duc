@@ -144,6 +144,7 @@ fn session_export_streams_version_graph_payload_chunks() {
         .expect("delta");
     delta.payload = delta_bytes.clone();
     delta.size_bytes = delta_bytes.len() as i64;
+    version_graph.metadata.total_size = checkpoint_bytes.len() as i64 + delta_bytes.len() as i64;
 
     let options =
         DucSessionOptions::with_chunk_size(MIN_EXTERNAL_FILE_CHUNK_SIZE).expect("valid chunk size");
@@ -177,5 +178,54 @@ fn session_export_streams_version_graph_payload_chunks() {
     let parsed_graph = parsed.version_graph.as_ref().expect("parsed version graph");
     assert!(parsed_graph.checkpoints[0].data.is_empty());
     assert!(parsed_graph.deltas[0].payload.is_empty());
+    let _ = fs::remove_file(path);
+}
+
+#[test]
+fn synthetic_roundtrip_numbers_deltas_per_base_checkpoint() {
+    let mut state = common::synthetic_roundtrip_state();
+    let graph = state.version_graph.as_mut().expect("version graph");
+
+    let mut checkpoint = graph.checkpoints[0].clone();
+    checkpoint.base.id = "checkpoint-3".to_string();
+    checkpoint.base.parent_id = Some("checkpoint-1".to_string());
+    checkpoint.version_number = 3;
+    checkpoint.data = vec![21, 34, 55, 89, 144];
+    checkpoint.size_bytes = checkpoint.data.len() as i64;
+    graph.checkpoints.push(checkpoint);
+
+    let mut delta = graph.deltas[0].clone();
+    delta.base.id = "delta-4".to_string();
+    delta.base.parent_id = Some("checkpoint-3".to_string());
+    delta.version_number = 4;
+    delta.base_checkpoint_id = "checkpoint-3".to_string();
+    delta.payload = vec![2, 3, 5, 7, 11, 13];
+    delta.size_bytes = delta.payload.len() as i64;
+    graph.deltas.push(delta);
+
+    graph.latest_version_id = "delta-4".to_string();
+    graph.metadata.current_version = 4;
+    graph.metadata.total_size = graph
+        .checkpoints
+        .iter()
+        .map(|checkpoint| checkpoint.size_bytes)
+        .chain(graph.deltas.iter().map(|delta| delta.size_bytes))
+        .sum();
+    graph.chains[0].end_version = Some(4);
+
+    let mut export_session = DucSession::create_export_session().expect("create export session");
+    export_session
+        .write_document_state(&state)
+        .expect("write multi-checkpoint state");
+    let path = finish_session_to_temp_path(export_session, "multi-checkpoint-version-graph");
+    let read_session = DucSession::open_path(&path).expect("open multi-checkpoint state");
+    let parsed = read_session
+        .read_document_state()
+        .expect("read multi-checkpoint state");
+    let parsed_graph = parsed.version_graph.expect("parsed version graph");
+    assert_eq!(parsed_graph.checkpoints.len(), 2);
+    assert_eq!(parsed_graph.deltas.len(), 2);
+    assert_eq!(parsed_graph.metadata.current_version, 4);
+    assert_eq!(parsed_graph.latest_version_id, "delta-4");
     let _ = fs::remove_file(path);
 }
