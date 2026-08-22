@@ -370,6 +370,46 @@ fn db_open_memory_and_schema() {
 }
 
 #[test]
+fn all_assets_migrate_to_current_schema_with_valid_version_control_foreign_keys() {
+    for path in common::all_duc_files() {
+        let bytes = common::load(&path);
+        let conn = duc::parse::open_duc_bytes_connection(&bytes)
+            .unwrap_or_else(|error| panic!("migrate {}: {error}", path.display()));
+        let user_version: i64 = conn
+            .pragma_query_value(None, "user_version", |row| row.get(0))
+            .unwrap_or_else(|error| panic!("read {} user_version: {error}", path.display()));
+        assert_eq!(
+            user_version,
+            duc::db::bootstrap::current_schema_version_int(),
+            "{} did not reach the current schema",
+            path.display()
+        );
+        let version_control_foreign_key_errors: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM pragma_foreign_key_check
+                 WHERE \"table\" IN (
+                     'version_chains', 'checkpoints', 'checkpoint_data_chunks',
+                     'deltas', 'delta_changeset_chunks'
+                 )",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap_or_else(|error| {
+                panic!(
+                    "check {} version-control foreign keys: {error}",
+                    path.display()
+                )
+            });
+        assert_eq!(
+            version_control_foreign_key_errors,
+            0,
+            "{} has version-control foreign key violations after migration",
+            path.display()
+        );
+    }
+}
+
+#[test]
 fn serialized_is_compressed() {
     for path in common::all_duc_files() {
         let mut header = [0u8; 16];

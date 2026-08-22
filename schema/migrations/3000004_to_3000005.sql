@@ -1,5 +1,7 @@
--- Migration: 3000003 → 3000004
+-- Migration: 3000004 → 3000005
 -- Add searchable index for extracted external-file text (PDF content search).
+
+BEGIN IMMEDIATE;
 
 CREATE TABLE IF NOT EXISTS external_file_text_index (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,3 +51,4 @@ END;
 INSERT INTO search_external_file_text(search_external_file_text) VALUES ('rebuild');
 
 PRAGMA user_version = 3000005;
+COMMIT;

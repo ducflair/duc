@@ -1,0 +1,179 @@
+---
+title: "Using Fonts"
+description: "Select and resolve fonts correctly in DUC text, document, and Python model elements."
+date: 2026-08-18
+authors: [jorgedanisc]
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## Font Names and Font Files
+
+DUC elements preserve a font choice, but they do not all consume fonts in the same way:
+
+| Element | Stored or generated font reference | How the font is resolved |
+| :--- | :--- | :--- |
+| Text | A CSS font-family name in `fontFamily` (`font_family` in Python) | The application rendering the canvas loads that family |
+| Document | A Typst family name in the document's `text` source | The Typst compiler loads the requested faces and embeds them in the compiled PDF output |
+| Python model | A family declared in the Python source | Scopture mounts a TrueType font and exposes `resolve_font(...)`; the model library then consumes the family, file name, or file path it requires |
+
+Use the exact family name, including spaces, such as `"Source Sans 3"`. Font availability belongs to the application or compilation environment, not the `.duc` schema itself. A reader that cannot resolve the requested family may substitute a fallback and produce different text metrics.
+
+<Callout type="info" title="Scopture resolves Google Fonts by family name">
+  Current Scopture runtimes can resolve families such as Inter, Roboto, Montserrat, Poppins, Open Sans, Source Sans 3, IBM Plex Sans, Noto Sans, Fira Sans, Lato, Merriweather, Playfair Display, JetBrains Mono, and Fira Code. Use the exact Google Fonts family name rather than a filename or an informal alias.
+</Callout>
+
+---
+
+## Text Elements
+
+A Text Element stores its primary family in `fontFamily`. Adapters expose the same field using their language's naming convention; for example, `ducpy` accepts `font_family` through `create_text_style(...)`:
+
+```python
+from ducpy.builders.style_builders import create_text_style
+
+text_style = create_text_style(
+    font_family="Inter",
+    font_size=24,
+)
+```
+
+Assign that style to the Text Element with the adapter's text-element builder or mutation API. `bigFontFamily` (`big_font_family`) is the fallback family used for characters that the primary family cannot cover. `ducpy.create_text_style(...)` currently initializes it to the same family as `font_family`; set a broader fallback explicitly when the adapter exposes that field and the content needs additional scripts, symbols, or emoji.
+
+The DUC Text Element stores family names, not font bytes. For portable output, choose a family that every intended renderer can load and verify the resulting bounds after the font has loaded, because a fallback can change wrapping and alignment.
+
+---
+
+## Document Elements
+
+A Document Element stores Typst source in `text`. Select the family with Typst's `font` property:
+
+```typ
+#set text(font: "Inter")
+
+#text(size: 24pt, weight: "bold")[Inter]
+```
+
+Use a tuple when the document needs an ordered fallback chain:
+
+```typ
+#set text(font: ("Inter", "Noto Sans"))
+```
+
+Scopture detects literal `font: "Family"` declarations and fallback tuples, then loads the requested normal, italic, and weight variants before compiling. If no family is declared, the current compiler uses Source Serif 4. Keep family names as literal strings in the source so the host can discover them before compilation.
+
+When authoring or testing the same source with the local Typst CLI, inspect the fonts available in that environment first:
+
+```bash
+typst fonts
+```
+
+To test a local font directory, pass it to the local compiler:
+
+```bash
+typst compile --font-path ./fonts test.typ test.pdf
+```
+
+`--font-path` configures that local CLI invocation; it is not Typst markup and is not stored in a Document Element. A locally installed font is therefore not automatically available to another DUC host.
+
+---
+
+## Python Model Elements
+
+Scopture scans Python model source for literal font families before execution, downloads the matching Google Fonts TTF files, mounts them in the sandbox, and provides two globals:
+
+- `resolve_font("Inter")` returns the sandbox-local path of a mounted TTF.
+- `FontEnum(["Inter", "Noto Sans"])` declares a finite family manifest and supports iteration, key access, and identifier-safe attribute access such as `FONTS.Noto_Sans`.
+
+Declare selectable families at module scope so the host can discover them without running the program:
+
+```python
+FONTS = FontEnum(["Inter", "Noto Sans"])
+FONT_FAMILY = FONTS.Inter
+```
+
+A computed family name that is not also present in a literal `font=...` argument, a top-level font variable, or a `FontEnum` manifest may not be mounted. For a custom font, attach a TrueType `.ttf` External File to the Model Element through `fileIds`; `resolve_font(...)` can then address it by its mounted family or filename alias.
+
+### Build123d
+
+Pass the family to Build123d's `Text` object. Scopture supplies the resolved `font_path` automatically:
+
+```python
+from build123d import Text
+from ocp_vscode import show
+
+FONT_FAMILY = "Inter"
+label = Text("Name 2026", font_size=10, font=FONT_FAMILY)
+
+show(label)
+```
+
+The terminal `show(...)` is still required to emit the interactive model preview; selecting a font does not change the [Build123d output contract](/docs/concepts/elements/model-element#build123d-output-contract).
+
+### ezdxf
+
+DXF text refers to a named text style. Resolve the font, store its filename on the style, and use that style on each text entity:
+
+```python
+from pathlib import Path
+import ezdxf
+
+FONT_FAMILY = "Inter"
+font_name = Path(resolve_font(FONT_FAMILY)).name
+
+drawing = ezdxf.new()
+drawing.styles.new("SCOPTURE_TEXT", dxfattribs={"font": font_name})
+drawing.modelspace().add_text(
+    "Name 2026",
+    dxfattribs={"style": "SCOPTURE_TEXT", "height": 10},
+)
+```
+
+Leaving the font only in a Python variable does not style a DXF entity. The entity must reference a DXF text style whose `font` attribute matches the mounted font filename or a viewer-recognized alias.
+
+### IfcOpenShell
+
+IFC stores the family name in an `IfcTextStyleFontModel`, not a sandbox path. Call `resolve_font(...)` first to ensure that the requested family is available to the preview runtime, then attach the font model through an `IfcTextStyle` and `IfcStyledItem`:
+
+```python
+FONT_FAMILY = "Inter"
+resolve_font(FONT_FAMILY)
+
+font_model = model.create_entity(
+    "IfcTextStyleFontModel",
+    Name=FONT_FAMILY,
+    FontFamily=(FONT_FAMILY,),
+    FontStyle="normal",
+    FontVariant="normal",
+    FontWeight="normal",
+    FontSize=model.create_entity("IfcLengthMeasure", 10.0),
+)
+text_style = model.create_entity(
+    "IfcTextStyle",
+    Name="Annotation text",
+    TextCharacterAppearance=None,
+    TextStyle=None,
+    TextFontStyle=font_model,
+    ModelOrDraughting=True,
+)
+model.create_entity(
+    "IfcStyledItem",
+    Item=text_literal,
+    Styles=(text_style,),
+    Name=None,
+)
+```
+
+Here, `text_literal` must be an `IfcTextLiteral` included in an annotation representation. Creating an `IfcTextStyleFontModel` without connecting it to the literal does not affect the rendered annotation. The completed IFC file must also follow the [IfcOpenShell output contract](/docs/concepts/elements/model-element#ifcopenshell-output-contract).
+
+---
+
+## Verification
+
+After choosing a font:
+
+- Confirm the exact family resolves instead of silently falling back.
+- Exercise the weights, italics, scripts, symbols, and glyphs the content actually uses.
+- Recheck text bounds, wrapping, and alignment after the real face has loaded.
+- For Typst, compile the Document Element and inspect the generated PDF.
+- For Build123d, verify that text became geometry; for DXF, inspect the entity's text style; for IFC, verify that the styled text literal appears in the model preview.

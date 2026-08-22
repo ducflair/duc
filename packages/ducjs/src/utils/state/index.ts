@@ -53,7 +53,7 @@ export const getZoom = (
 
 export const getDefaultGlobalState = (): DucGlobalState => {
   return {
-    viewBackgroundColor: typeof window !== "undefined" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? COLOR_PALETTE.night : COLOR_PALETTE.white) : COLOR_PALETTE.white,
+    viewBackgroundColor: COLOR_PALETTE.white,
     scopeExponentThreshold: 3,
     mainScope: NEUTRAL_SCOPE,
   };

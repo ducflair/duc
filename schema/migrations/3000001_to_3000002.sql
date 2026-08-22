@@ -49,6 +49,6 @@ INSERT INTO external_file_revision_data (revision_id, data)
 DROP TABLE _ext_revisions_old_v3000001;
 DROP TABLE _external_file_revision_data_v3000001;
 
+PRAGMA user_version = 3000002;
 COMMIT;
 PRAGMA foreign_keys = ON;
-PRAGMA user_version = 3000002;

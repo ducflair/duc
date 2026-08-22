@@ -91,6 +91,7 @@ If the schema itself changed (new columns, tables, type modifications), create a
 5. When repairing a migration that may already have failed in the field, clean up its known partial DDL artifacts and test retrying from that partial state
 6. If existing readers cannot open the new file format or a published API is removed, evaluate a major schema version rather than a patch increment
 7. When promoting a prerelease schema to a major version, retain its natural sequential migration, add a final explicit major-version bridge, and scan checked-in fixtures for every represented `user_version`
+8. Keep registry tests for a unique contiguous forward path and transactional `user_version` updates, and migrate checked-in `.duc` fixtures through both session and byte-buffer open paths
 
 ```bash
 ls -1 duc/schema/migrations/ | sort | tail -5   # see last migrations

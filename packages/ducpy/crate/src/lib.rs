@@ -3,7 +3,7 @@ use std::fs::File;
 
 /// Parse a `.duc` file path into a Python dict (ExportedDataState).
 #[pyfunction]
-fn parse_duc(py: Python<'_>, path: &str) -> PyResult<PyObject> {
+fn parse_duc(py: Python<'_>, path: &str) -> PyResult<Py<PyAny>> {
     let session = duc::session::DucSession::open_path(path)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{e}")))?;
     let state = session
@@ -31,7 +31,7 @@ fn serialize_duc(data: &Bound<'_, pyo3::types::PyAny>, output_path: &str) -> PyR
 
 /// List metadata for all external files without loading data blobs.
 #[pyfunction]
-fn list_external_files(py: Python<'_>, path: &str) -> PyResult<PyObject> {
+fn list_external_files(py: Python<'_>, path: &str) -> PyResult<Py<PyAny>> {
     let session = duc::session::DucSession::open_path(path)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{e}")))?;
     let meta = session

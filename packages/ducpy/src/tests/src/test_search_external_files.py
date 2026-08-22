@@ -33,7 +33,7 @@ def _run_external_file_search(
     asset_path = _asset_input_path(filename)
     assert asset_path.exists(), f"Missing asset file: {asset_path}"
 
-    output_dir = Path(test_output_dir) / "search_results"
+    output_dir = Path(test_output_dir) / "search_results" / "external_files"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     json_file_stem = output_file_name or request.node.name

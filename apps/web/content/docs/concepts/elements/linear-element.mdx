@@ -248,5 +248,5 @@ const tJunctionNetwork: DucLinearElement = {
 
 ## Additional Path Properties
 
-- **`pathOverrides` (`DucPath[]`)**: Overrides background and stroke properties for specific sub-paths within a line network.
+- **`pathOverrides` (`DucPath[]`)**: Overrides background and stroke properties for non-overlapping closed cycles selected by their indices in `lines`. See [Styling Linear Elements](/docs/guidelines/styling-elements#styling-linear-elements) for validation rules and selective-fill examples.
 - **`wipeoutBelow`**: Boolean flag on `DucLinearElement` that masks out underlying canvas content beneath the stroke path.

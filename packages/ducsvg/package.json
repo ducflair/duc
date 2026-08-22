@@ -41,14 +41,14 @@
     "ducpdf": "workspace:*"
   },
   "devDependencies": {
-    "@xmldom/xmldom": "^0.8.11",
-    "happy-dom": "^20.0.5",
-    "semantic-release": "^24.1.2",
+    "@xmldom/xmldom": "^0.9.8",
+    "happy-dom": "^20.8.9",
+    "semantic-release": "^25.0.2",
     "typedoc": "^0.27.9",
-    "typescript": "^5.8.3",
-    "vite": "^6.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.6",
     "vite-plugin-compression": "^0.5.1",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.6"
   },
   "files": [
     "dist",
