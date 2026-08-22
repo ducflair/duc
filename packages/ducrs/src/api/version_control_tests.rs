@@ -509,6 +509,74 @@ fn graph_read_rejects_delta_sequence_gaps() {
     assert!(error
         .to_string()
         .contains("delta sequences contain gaps or duplicates"));
+
+    let graph = conn
+        .with(read_version_graph_for_document_open)
+        .expect("document read should tolerate sequence bookkeeping drift")
+        .expect("graph exists");
+    assert_eq!(graph.deltas.len(), 2);
+    assert_eq!(graph.latest_version_id, "delta-3");
+}
+
+#[test]
+fn document_read_normalizes_stale_version_graph_metadata() {
+    let conn = open_connection();
+    let vc = VersionControl::from_connection(&conn);
+    let base = sqlite_state(18, 8 * 1024);
+    let mut current = base.clone();
+    current[1_000] = 19;
+    vc.create_checkpoint(&checkpoint("checkpoint-1", 1, 7, base, false))
+        .expect("create checkpoint");
+    vc.create_delta(&delta("delta-2", 2, 7, "checkpoint-1", current))
+        .expect("create delta");
+
+    conn.with(|raw| {
+        raw.execute(
+            "UPDATE version_graph
+             SET current_version = 99,
+                 current_schema_version = 99,
+                 user_checkpoint_version_id = 'missing-checkpoint',
+                 latest_version_id = 'missing-version',
+                 chain_count = 99,
+                 total_size = 155907176
+             WHERE id = 1",
+            [],
+        )
+        .expect("corrupt derived metadata");
+    });
+
+    vc.read_version_graph()
+        .expect_err("strict graph read must report stale metadata");
+    let graph = conn
+        .with(read_version_graph_for_document_open)
+        .expect("document read should normalize stale metadata")
+        .expect("graph exists");
+
+    assert_eq!(graph.user_checkpoint_version_id, "");
+    assert_eq!(graph.latest_version_id, "delta-2");
+    assert_eq!(graph.metadata.current_version, 2);
+    assert_eq!(graph.metadata.current_schema_version, 7);
+    assert_eq!(graph.metadata.chain_count, 1);
+    assert_eq!(
+        graph.metadata.total_size,
+        graph
+            .checkpoints
+            .iter()
+            .map(|checkpoint| checkpoint.size_bytes)
+            .chain(graph.deltas.iter().map(|delta| delta.size_bytes))
+            .sum()
+    );
+
+    let document = conn
+        .with(crate::parse::read_document_state_from_connection)
+        .expect("stale version bookkeeping must not block the drawing");
+    assert_eq!(
+        document
+            .version_graph
+            .expect("document retains normalized version history")
+            .latest_version_id,
+        "delta-2"
+    );
 }
 
 #[test]

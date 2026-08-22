@@ -6,9 +6,6 @@ const withMDX = createMDX();
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
-  turbopack: {
-    root: path.resolve(import.meta.dirname, '../../'),
-  },
   images: {
     unoptimized: true,
   },

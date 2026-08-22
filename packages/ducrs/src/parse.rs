@@ -2520,7 +2520,8 @@ fn read_external_files_v1_legacy(conn: &Connection) -> ParseResult<ExternalFiles
 // ─── version_graph ───────────────────────────────────────────────────────────
 
 fn read_version_graph(conn: &Connection) -> ParseResult<Option<VersionGraph>> {
-    crate::api::version_control::read_version_graph_inner(conn).map_err(ParseError::from)
+    crate::api::version_control::read_version_graph_for_document_open(conn)
+        .map_err(ParseError::from)
 }
 
 // ─── defaults ────────────────────────────────────────────────────────────────

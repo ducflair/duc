@@ -900,6 +900,50 @@ fn with_version_control_savepoint<T>(
 pub(crate) fn read_version_graph_inner(
     conn: &rusqlite::Connection,
 ) -> DbResult<Option<VersionGraph>> {
+    let graph = read_version_graph_unchecked(conn)?;
+    if let Some(graph) = &graph {
+        validate_version_graph_integrity(
+            conn,
+            &graph.metadata,
+            &graph.user_checkpoint_version_id,
+            &graph.latest_version_id,
+            true,
+        )?;
+    }
+    Ok(graph)
+}
+
+/// Read version history as optional document metadata. Recoverable bookkeeping
+/// drift must not prevent the current drawing state from opening.
+pub(crate) fn read_version_graph_for_document_open(
+    conn: &rusqlite::Connection,
+) -> DbResult<Option<VersionGraph>> {
+    let Some(mut graph) = read_version_graph_unchecked(conn)? else {
+        return Ok(None);
+    };
+
+    if let Err(error) = validate_version_graph_integrity(
+        conn,
+        &graph.metadata,
+        &graph.user_checkpoint_version_id,
+        &graph.latest_version_id,
+        true,
+    ) {
+        validate_version_graph_integrity(
+            conn,
+            &graph.metadata,
+            &graph.user_checkpoint_version_id,
+            &graph.latest_version_id,
+            false,
+        )?;
+        log::warn!("{error}; opening drawing with normalized version graph metadata");
+        normalize_version_graph_metadata(&mut graph);
+    }
+
+    Ok(Some(graph))
+}
+
+fn read_version_graph_unchecked(conn: &rusqlite::Connection) -> DbResult<Option<VersionGraph>> {
     use std::collections::HashMap;
 
     let has_table: bool = conn
@@ -936,8 +980,6 @@ pub(crate) fn read_version_graph_inner(
         Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
         Err(e) => return Err(DbError::from(e)),
     };
-
-    validate_version_graph_integrity(conn, &metadata, &user_cp_id, &latest_id)?;
 
     // Migrations keyed by id
     let mut m_stmt = conn
@@ -1068,6 +1110,7 @@ fn validate_version_graph_integrity(
     metadata: &VersionGraphMetadata,
     user_checkpoint_id: &str,
     latest_version_id: &str,
+    validate_bookkeeping: bool,
 ) -> DbResult<()> {
     let duplicate_version: Option<i64> = conn
         .query_row(
@@ -1169,6 +1212,10 @@ fn validate_version_graph_integrity(
         )));
     }
 
+    if !validate_bookkeeping {
+        return Ok(());
+    }
+
     let invalid_sequences: i64 = conn
         .query_row(
             "SELECT COUNT(*) FROM (
@@ -1264,6 +1311,53 @@ fn validate_version_graph_integrity(
     }
 
     Ok(())
+}
+
+fn normalize_version_graph_metadata(graph: &mut VersionGraph) {
+    if !graph.user_checkpoint_version_id.is_empty()
+        && !graph
+            .checkpoints
+            .iter()
+            .any(|checkpoint| checkpoint.base.id == graph.user_checkpoint_version_id)
+    {
+        graph.user_checkpoint_version_id.clear();
+    }
+
+    graph.metadata.chain_count = if graph.chains.is_empty() {
+        1
+    } else {
+        i32::try_from(graph.chains.len()).unwrap_or(i32::MAX)
+    };
+    graph.metadata.total_size = graph
+        .checkpoints
+        .iter()
+        .map(|checkpoint| checkpoint.size_bytes)
+        .chain(graph.deltas.iter().map(|delta| delta.size_bytes))
+        .fold(0_i64, i64::saturating_add);
+
+    let latest_checkpoint = graph.checkpoints.iter().map(|checkpoint| {
+        (
+            checkpoint.version_number,
+            checkpoint.schema_version,
+            checkpoint.base.id.as_str(),
+        )
+    });
+    let latest_delta = graph.deltas.iter().map(|delta| {
+        (
+            delta.version_number,
+            delta.schema_version,
+            delta.base.id.as_str(),
+        )
+    });
+
+    if let Some((version, schema_version, id)) = latest_checkpoint.chain(latest_delta).max() {
+        graph.latest_version_id = id.to_owned();
+        graph.metadata.current_version = version;
+        graph.metadata.current_schema_version = schema_version;
+    } else {
+        graph.latest_version_id.clear();
+        graph.metadata.current_version = 0;
+    }
 }
 
 pub(crate) fn read_checkpoint_data(

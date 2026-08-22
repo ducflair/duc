@@ -693,16 +693,16 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "certifi", specifier = ">=2024.8.30" },
-    { name = "ezdxf", specifier = ">=1.1.0" },
-    { name = "huggingface-hub", marker = "extra == 'ocr'", specifier = ">=0.20.0" },
+    { name = "certifi", specifier = ">=2025.1.31" },
+    { name = "ezdxf", specifier = ">=1.4.1" },
+    { name = "huggingface-hub", marker = "extra == 'ocr'", specifier = ">=0.28.0" },
     { name = "ifcopenshell", specifier = ">=0.8.5" },
     { name = "nanoid", specifier = ">=2.0.0" },
-    { name = "numpy", marker = "extra == 'ocr'", specifier = ">=1.20.0" },
+    { name = "numpy", marker = "extra == 'ocr'", specifier = ">=1.26.0" },
     { name = "onnxruntime", marker = "extra == 'ocr'" },
-    { name = "pypdf", specifier = ">=4.2.0" },
+    { name = "pypdf", specifier = ">=5.3.1" },
     { name = "rapidocr", marker = "extra == 'ocr'", specifier = "==3.8.1" },
-    { name = "wasmtime", specifier = ">=30.0.0" },
+    { name = "wasmtime", specifier = ">=38.0.0" },
 ]
 provides-extras = ["ocr"]
 
