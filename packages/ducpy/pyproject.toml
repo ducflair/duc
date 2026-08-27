@@ -5,6 +5,7 @@ description = "Python library for the .duc project-state format for physical-eng
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "build123d>=0.10.0",
     "certifi>=2024.8.30",
     "nanoid>=2.0.0",
     "pypdf>=4.2.0",
@@ -66,7 +67,6 @@ dev = [
     "rich>=13.0.0",
     "numpy>=1.20.0",
     "typst>=0.14.9",
-    "build123d>=0.10.0",
     "ocp-vscode>=3.4.0",
     "ifcopenshell>=0.8.5",
     "sphinx-llm>=0.4.1",
