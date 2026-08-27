@@ -31,6 +31,8 @@ All elements inherit a core set of base spatial, structural, and identity proper
 - **`layerId`**: Reference to the drawing layer the element belongs to.
 - **`frameId`**: Reference to the parent artboard frame container, if enclosed within one.
 
+Every element also carries ordered background and stroke lists. See [Styling Elements](/docs/guidelines/styling-elements) for layering, opacity, stroke geometry, content preferences, and adapter-safe mutation.
+
 ### 3. Structural Relationships & Grouping
 - **`groupIds`**: Ordered array of parent group IDs, supporting nested selection and manipulation.
 - **`regionIds`**: List of boolean operation region boundaries the element participates in.
@@ -56,6 +58,8 @@ All elements inherit a core set of base spatial, structural, and identity proper
 
 ### 2. Typography & Annotation
 - **`text`**: Rich typography supporting custom font families, font sizes, line spacing, text alignments (`left`, `center`, `right`), and vertical alignments.
+
+Text Elements store their primary and fallback font family names rather than font files. See [Using Fonts](/docs/guidelines/using-fonts) for the cross-element font contract and adapter examples.
 
 ### 3. Structured Data & Documents
 - **`table`**: Interactive spatial spreadsheets holding tabular data cells, rows, and columns directly on the canvas.

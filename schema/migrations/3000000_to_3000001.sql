@@ -2,6 +2,8 @@
 -- Restructures the flat `external_files` table into
 -- `external_files` (logical file record) + `external_file_revisions` (snapshots).
 
+BEGIN IMMEDIATE;
+
 ALTER TABLE external_files RENAME TO _ext_files_old_v3000000;
 
 CREATE TABLE external_files (
@@ -37,3 +39,4 @@ INSERT INTO external_file_revisions (id, file_id, size_bytes, checksum, source_n
 DROP TABLE _ext_files_old_v3000000;
 
 PRAGMA user_version = 3000001;
+COMMIT;

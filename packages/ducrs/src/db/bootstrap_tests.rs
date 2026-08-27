@@ -129,6 +129,365 @@ fn chunk_layout(
         .expect("read chunk layout")
 }
 
+fn declared_user_versions(sql: &str) -> Vec<i64> {
+    sql.lines()
+        .filter_map(|line| {
+            line.trim()
+                .strip_prefix("PRAGMA user_version")
+                .and_then(|value| value.trim().strip_prefix('='))
+                .map(|value| value.trim().trim_end_matches(';').trim())
+                .and_then(|value| value.parse().ok())
+        })
+        .collect()
+}
+
+#[test]
+fn migration_registry_is_contiguous_atomic_and_self_describing() {
+    assert!(
+        !MIGRATIONS.is_empty(),
+        "migration registry must not be empty"
+    );
+    assert_eq!(MIGRATIONS[0].0, 3_000_000);
+    assert_eq!(
+        MIGRATIONS.last().map(|(_, to, _)| *to),
+        Some(CURRENT_VERSION)
+    );
+
+    for (index, (from, to, sql)) in MIGRATIONS.iter().enumerate() {
+        assert!(to > from, "migration {from}→{to} must move forward");
+        assert_eq!(
+            declared_user_versions(sql),
+            vec![*to],
+            "migration {from}→{to} must declare exactly its target version"
+        );
+
+        let begin = sql
+            .find("BEGIN IMMEDIATE;")
+            .unwrap_or_else(|| panic!("migration {from}→{to} must begin a transaction"));
+        let version = sql
+            .find("PRAGMA user_version")
+            .expect("migration target pragma");
+        let commit = sql
+            .find("COMMIT;")
+            .unwrap_or_else(|| panic!("migration {from}→{to} must commit its transaction"));
+        assert!(
+            begin < version && version < commit,
+            "migration {from}→{to} must update user_version inside its transaction"
+        );
+
+        if let Some((next_from, _, _)) = MIGRATIONS.get(index + 1) {
+            assert_eq!(
+                *to, *next_from,
+                "migration chain has a gap or branch after {from}→{to}"
+            );
+        }
+    }
+}
+
+#[test]
+fn fresh_bootstrap_is_complete_idempotent_and_enforces_core_constraints() {
+    let conn = Connection::open_in_memory().expect("open database");
+    bootstrap(&conn).expect("bootstrap fresh database");
+    bootstrap(&conn).expect("bootstrap current database again");
+
+    assert_eq!(
+        conn.pragma_query_value::<i64, _>(None, "application_id", |row| row.get(0))
+            .expect("read application id"),
+        APP_ID
+    );
+    assert_eq!(
+        conn.pragma_query_value::<i64, _>(None, "user_version", |row| row.get(0))
+            .expect("read user version"),
+        CURRENT_VERSION
+    );
+    assert_eq!(
+        conn.pragma_query_value::<i64, _>(None, "foreign_keys", |row| row.get(0))
+            .expect("read foreign key mode"),
+        1
+    );
+
+    for table in [
+        "schema_migrations",
+        "version_graph",
+        "version_chains",
+        "checkpoints",
+        "checkpoint_data_chunks",
+        "deltas",
+        "delta_changeset_chunks",
+    ] {
+        let exists: bool = conn
+            .query_row(
+                "SELECT EXISTS(
+                    SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?1
+                 )",
+                [table],
+                |row| row.get(0),
+            )
+            .expect("query version-control table");
+        assert!(exists, "fresh bootstrap is missing {table}");
+    }
+
+    let graph_rows: i64 = conn
+        .query_row("SELECT COUNT(*) FROM version_graph", [], |row| row.get(0))
+        .expect("count version graph rows");
+    assert_eq!(graph_rows, 1);
+    assert!(conn
+        .execute(
+            "INSERT INTO schema_migrations
+                (from_schema_version, to_schema_version, migration_name, applied_at)
+             VALUES (2, 1, 'backwards', 1)",
+            [],
+        )
+        .is_err());
+    assert!(conn
+        .execute(
+            "INSERT INTO checkpoints
+                (id, chain_id, version_number, schema_version, timestamp)
+             VALUES ('orphan', 'missing-chain', 1, 1, 1)",
+            [],
+        )
+        .is_err());
+
+    let foreign_key_errors: i64 = conn
+        .query_row("SELECT COUNT(*) FROM pragma_foreign_key_check", [], |row| {
+            row.get(0)
+        })
+        .expect("check foreign keys");
+    assert_eq!(foreign_key_errors, 0);
+}
+
+#[test]
+fn failed_fresh_bootstrap_rolls_back_every_schema_object() {
+    let conn = Connection::open_in_memory().expect("open database");
+    let broken_search_schema = "
+        CREATE TABLE bootstrap_probe (id INTEGER PRIMARY KEY);
+        SELECT * FROM table_that_does_not_exist;
+    ";
+
+    let error = bootstrap_fresh_database_with_schemas(
+        &conn,
+        DUC_SCHEMA,
+        VERSION_CONTROL_SCHEMA,
+        broken_search_schema,
+    )
+    .expect_err("broken final schema must fail bootstrap");
+    assert!(error.to_string().contains("search.sql apply failed"));
+
+    assert_eq!(
+        conn.pragma_query_value::<i64, _>(None, "user_version", |row| row.get(0))
+            .expect("read rolled-back version"),
+        0
+    );
+    let leaked_objects: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM sqlite_master
+             WHERE name IN ('elements', 'version_graph', 'bootstrap_probe')",
+            [],
+            |row| row.get(0),
+        )
+        .expect("count leaked schema objects");
+    assert_eq!(leaked_objects, 0);
+
+    bootstrap(&conn).expect("retry canonical bootstrap after rollback");
+    assert_eq!(
+        conn.pragma_query_value::<i64, _>(None, "user_version", |row| row.get(0))
+            .expect("read retried version"),
+        CURRENT_VERSION
+    );
+}
+
+#[test]
+fn failed_migration_rolls_back_ddl_and_restores_connection_pragmas() {
+    let conn = Connection::open_in_memory().expect("open database");
+    conn.execute_batch(
+        "PRAGMA user_version = 123;
+         PRAGMA foreign_keys = ON;",
+    )
+    .expect("initialize legacy connection");
+    let broken_migration = "
+        PRAGMA foreign_keys = OFF;
+        BEGIN IMMEDIATE;
+        CREATE TABLE leaked_migration_table (id INTEGER PRIMARY KEY);
+        SELECT * FROM table_that_does_not_exist;
+        PRAGMA user_version = 124;
+        COMMIT;
+    ";
+
+    let error =
+        apply_migration(&conn, 123, 124, broken_migration).expect_err("broken migration must fail");
+    assert!(error.to_string().contains("migration 123→124 failed"));
+    assert_eq!(
+        conn.pragma_query_value::<i64, _>(None, "user_version", |row| row.get(0))
+            .expect("read preserved version"),
+        123
+    );
+    assert_eq!(
+        conn.pragma_query_value::<i64, _>(None, "foreign_keys", |row| row.get(0))
+            .expect("read restored foreign key mode"),
+        1
+    );
+    let leaked_table: bool = conn
+        .query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM sqlite_master
+                WHERE type = 'table' AND name = 'leaked_migration_table'
+             )",
+            [],
+            |row| row.get(0),
+        )
+        .expect("query leaked migration table");
+    assert!(!leaked_table);
+}
+
+#[test]
+fn unsupported_schema_version_is_rejected_before_normalization() {
+    let conn = Connection::open_in_memory().expect("open database");
+    conn.execute_batch(
+        "PRAGMA user_version = 2999999;
+         CREATE TABLE legacy_marker (value TEXT);
+         INSERT INTO legacy_marker (value) VALUES ('untouched');",
+    )
+    .expect("create unsupported database");
+
+    let error = bootstrap(&conn).expect_err("unsupported version must fail");
+    assert!(error
+        .to_string()
+        .contains("unsupported schema version 2999999"));
+    assert_eq!(
+        conn.pragma_query_value::<i64, _>(None, "user_version", |row| row.get(0))
+            .expect("read unsupported version"),
+        2_999_999
+    );
+    let marker: String = conn
+        .query_row("SELECT value FROM legacy_marker", [], |row| row.get(0))
+        .expect("read untouched marker");
+    assert_eq!(marker, "untouched");
+}
+
+#[test]
+fn current_version_requires_the_duc_identity_and_version_control_schema() {
+    let missing_schema = Connection::open_in_memory().expect("open database");
+    missing_schema
+        .execute_batch(&format!(
+            "PRAGMA application_id = {APP_ID};
+             PRAGMA user_version = {CURRENT_VERSION};"
+        ))
+        .expect("mark partial database current");
+    let missing_error = bootstrap(&missing_schema).expect_err("partial current schema must fail");
+    assert!(missing_error
+        .to_string()
+        .contains("missing required table version_graph"));
+
+    let wrong_identity = Connection::open_in_memory().expect("open database");
+    bootstrap(&wrong_identity).expect("bootstrap valid database");
+    wrong_identity
+        .pragma_update(None, "application_id", 7)
+        .expect("corrupt application id");
+    let identity_error = bootstrap(&wrong_identity).expect_err("wrong application id must fail");
+    assert!(identity_error
+        .to_string()
+        .contains("unexpected application_id: 7"));
+}
+
+#[test]
+fn legacy_version_graph_normalization_repairs_missing_checkpoint_chain() {
+    let conn = Connection::open_in_memory().expect("open database");
+    conn.execute_batch(VERSION_CONTROL_SCHEMA)
+        .expect("apply version-control schema");
+    conn.execute_batch(
+        "PRAGMA foreign_keys = OFF;
+         UPDATE version_graph
+         SET current_version = 1,
+             current_schema_version = 3000000,
+             user_checkpoint_version_id = 'checkpoint-1',
+             latest_version_id = 'checkpoint-1',
+             total_size = 4
+         WHERE id = 1;
+         INSERT INTO checkpoints
+             (id, chain_id, version_number, schema_version, timestamp, size_bytes)
+         VALUES ('checkpoint-1', '', 1, 3000000, 1, 4);",
+    )
+    .expect("create legacy graph without chain metadata");
+
+    let errors_before: i64 = conn
+        .query_row("SELECT COUNT(*) FROM pragma_foreign_key_check", [], |row| {
+            row.get(0)
+        })
+        .expect("count legacy foreign key errors");
+    assert_eq!(errors_before, 1);
+
+    normalize_legacy_version_graph(&conn).expect("normalize legacy version graph");
+
+    let repaired: (String, i32, i64, Option<i64>, Option<String>) = conn
+        .query_row(
+            "SELECT version_chains.id, version_chains.schema_version,
+                    version_chains.start_version, version_chains.end_version,
+                    version_chains.root_checkpoint_id
+             FROM checkpoints
+             INNER JOIN version_chains ON version_chains.id = checkpoints.chain_id
+             WHERE checkpoints.id = 'checkpoint-1'",
+            [],
+            |row| {
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                ))
+            },
+        )
+        .expect("read repaired chain");
+    assert_eq!(repaired.0, "legacy-chain-3000000");
+    assert_eq!(repaired.1, 3_000_000);
+    assert_eq!(repaired.2, 1);
+    assert_eq!(repaired.3, None);
+    assert_eq!(repaired.4.as_deref(), Some("checkpoint-1"));
+    let errors_after: i64 = conn
+        .query_row("SELECT COUNT(*) FROM pragma_foreign_key_check", [], |row| {
+            row.get(0)
+        })
+        .expect("count repaired foreign key errors");
+    assert_eq!(errors_after, 0);
+}
+
+#[test]
+fn current_schema_reopen_repairs_missing_checkpoint_chain() {
+    let conn = Connection::open_in_memory().expect("open database");
+    bootstrap(&conn).expect("bootstrap current database");
+    conn.execute_batch(
+        "PRAGMA foreign_keys = OFF;
+         UPDATE version_graph
+         SET current_version = 1,
+             current_schema_version = 4000000,
+             user_checkpoint_version_id = 'checkpoint-1',
+             latest_version_id = 'checkpoint-1',
+             total_size = 4
+         WHERE id = 1;
+         INSERT INTO checkpoints
+             (id, chain_id, version_number, schema_version, timestamp, size_bytes)
+         VALUES ('checkpoint-1', '', 1, 4000000, 1, 4);",
+    )
+    .expect("create current graph without chain metadata");
+
+    bootstrap(&conn).expect("reopen and normalize current database");
+
+    let repaired_chain: String = conn
+        .query_row(
+            "SELECT chain_id FROM checkpoints WHERE id = 'checkpoint-1'",
+            [],
+            |row| row.get(0),
+        )
+        .expect("read repaired checkpoint chain");
+    assert_eq!(repaired_chain, "legacy-chain-4000000");
+    let foreign_key_errors: i64 = conn
+        .query_row("SELECT COUNT(*) FROM pragma_foreign_key_check", [], |row| {
+            row.get(0)
+        })
+        .expect("check repaired foreign keys");
+    assert_eq!(foreign_key_errors, 0);
+}
+
 #[test]
 fn migration_chain_preserves_the_prerelease_schema_step() {
     let next_version = |from_version| {
@@ -480,4 +839,15 @@ fn migrates_legacy_payloads_losslessly_into_bounded_chunks() {
         })
         .expect("check foreign keys");
     assert_eq!(foreign_key_errors, 0);
+
+    bootstrap(&conn).expect("reopen migrated database");
+    assert_eq!(
+        read_chunks(
+            &conn,
+            "checkpoint_data_chunks",
+            "checkpoint_id",
+            "checkpoint-1"
+        ),
+        payload
+    );
 }

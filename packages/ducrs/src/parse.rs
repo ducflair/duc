@@ -2520,7 +2520,8 @@ fn read_external_files_v1_legacy(conn: &Connection) -> ParseResult<ExternalFiles
 // ─── version_graph ───────────────────────────────────────────────────────────
 
 fn read_version_graph(conn: &Connection) -> ParseResult<Option<VersionGraph>> {
-    crate::api::version_control::read_version_graph_inner(conn).map_err(ParseError::from)
+    crate::api::version_control::read_version_graph_for_document_open(conn)
+        .map_err(ParseError::from)
 }
 
 // ─── defaults ────────────────────────────────────────────────────────────────
@@ -2636,7 +2637,8 @@ pub fn open_duc_bytes_connection(buf: &[u8]) -> ParseResult<Connection> {
     use flate2::read::GzDecoder;
     use std::io::Read;
 
-    // Check for gzip magic header
+    // Check for gzip magic header. Legacy `.duc` fixtures used raw DEFLATE,
+    // while current exports use gzip and some callers provide raw SQLite.
     let is_gzip = buf.len() >= 2 && buf[0] == 0x1f && buf[1] == 0x8b;
 
     let mut raw_sqlite: Vec<u8> = if is_gzip {
@@ -2646,13 +2648,20 @@ pub fn open_duc_bytes_connection(buf: &[u8]) -> ParseResult<Connection> {
             .read_to_end(&mut out)
             .map_err(|e| ParseError::Io(format!("gzip decompress: {e}")))?;
         out
-    } else {
+    } else if buf.starts_with(b"SQLite format 3\0") {
         buf.to_vec()
+    } else {
+        let mut decoder = flate2::read::DeflateDecoder::new(buf);
+        let mut out = Vec::new();
+        decoder
+            .read_to_end(&mut out)
+            .map_err(|e| ParseError::Io(format!("deflate decompress: {e}")))?;
+        out
     };
 
-    if raw_sqlite.len() < 100 {
+    if raw_sqlite.len() < 100 || !raw_sqlite.starts_with(b"SQLite format 3\0") {
         return Err(ParseError::Io(format!(
-            "buffer too small ({} bytes) — not a valid .duc file",
+            "decompressed buffer is not a valid SQLite .duc file ({} bytes)",
             raw_sqlite.len()
         )));
     }
@@ -2674,6 +2683,7 @@ pub fn open_duc_bytes_connection(buf: &[u8]) -> ParseResult<Connection> {
         let mut conn = Connection::open_in_memory().map_err(ParseError::Sqlite)?;
         conn.deserialize_read_exact(MAIN_DB, &raw_sqlite[..], raw_sqlite.len(), false)
             .map_err(|e| ParseError::Io(format!("deserialize: {e}")))?;
+        crate::db::bootstrap::bootstrap(&conn)?;
         Ok(conn)
     }
 
@@ -2687,6 +2697,7 @@ pub fn open_duc_bytes_connection(buf: &[u8]) -> ParseResult<Connection> {
         drop(file);
 
         let conn = Connection::open(&path).map_err(ParseError::Sqlite)?;
+        crate::db::bootstrap::bootstrap(&conn)?;
         Ok(conn)
     }
 }

@@ -6,12 +6,12 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "build123d>=0.10.0",
-    "certifi>=2024.8.30",
+    "certifi>=2025.1.31",
     "nanoid>=2.0.0",
-    "pypdf>=4.2.0",
-    "ezdxf>=1.1.0",
+    "pypdf>=5.3.1",
+    "ezdxf>=1.4.1",
     "ifcopenshell>=0.8.5",
-    "wasmtime>=30.0.0"
+    "wasmtime>=38.0.0"
 ]
 
 license = { text = "MIT" }
@@ -29,8 +29,8 @@ classifiers = [
 ocr = [
     "rapidocr==3.8.1",
     "onnxruntime",
-    "huggingface-hub>=0.20.0",
-    "numpy>=1.20.0",
+    "huggingface-hub>=0.28.0",
+    "numpy>=1.26.0",
 ]
 
 [project.urls]
