@@ -73,6 +73,12 @@ def _normalize_external_files_for_validation(data: duc.DucData) -> tuple[Any, li
                 element["code"] = ""
                 elements.append(element)
                 continue
+            if re.search(r"(?m)^\s*show\s*\(", code) and not re.search(
+                r"(?m)^\s*(?:from\s+ocp_vscode\s+import\s+.*\bshow\b|import\s+ocp_vscode\b)",
+                code,
+            ):
+                # Older fixtures relied on the CAD viewer injecting ``show``.
+                code = "from ocp_vscode import show\n" + code
             if "external_files" in code or "resolve_external_file" in code:
                 # Find the referenced file id.
                 referenced_id = None
