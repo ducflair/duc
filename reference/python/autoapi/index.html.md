@@ -19,6 +19,8 @@ This page contains auto-generated API reference documentation <sup>[1](#f1)</sup
   * [ducpy.search](ducpy/search/index.md)
     * [ducpy.search._model_files](ducpy/search/_model_files/index.md)
     * [ducpy.search.image_ocr](ducpy/search/image_ocr/index.md)
+    * [ducpy.search.search_build123d](ducpy/search/search_build123d/index.md)
+    * [ducpy.search.search_charter_issues](ducpy/search/search_charter_issues/index.md)
     * [ducpy.search.search_elements](ducpy/search/search_elements/index.md)
     * [ducpy.search.search_external_files](ducpy/search/search_external_files/index.md)
     * [ducpy.search.search_ezdxf](ducpy/search/search_ezdxf/index.md)

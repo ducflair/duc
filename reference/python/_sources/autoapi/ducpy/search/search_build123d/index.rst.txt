@@ -1,0 +1,113 @@
+ducpy.search.search_build123d
+=============================
+
+.. py:module:: ducpy.search.search_build123d
+
+.. autoapi-nested-parse::
+
+   Semantic text extraction for build123d model elements.
+
+   Only metadata materialized into a CAD model is indexed: shape/assembly labels,
+   materials, joints, viewer names, STEP product metadata, and ASCII STL solid
+   names. Python source, raw STEP syntax, geometry, coordinates, and binary STL
+   headers are deliberately excluded.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.search.search_build123d.Build123dTextItem
+   ducpy.search.search_build123d.Build123dText
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.search.search_build123d.build123d_available
+   ducpy.search.search_build123d.extract_build123d_shape_text
+   ducpy.search.search_build123d.extract_build123d_path_text
+   ducpy.search.search_build123d.extract_build123d_text
+   ducpy.search.search_build123d.extract_model_build123d_text
+
+
+Module Contents
+---------------
+
+.. py:class:: Build123dTextItem
+
+   One semantic text value extracted from a build123d-backed model.
+
+
+   .. py:attribute:: text
+      :type:  str
+
+
+   .. py:attribute:: kind
+      :type:  str
+
+
+   .. py:attribute:: owner
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: field
+      :type:  str | None
+      :value: None
+
+
+
+.. py:class:: Build123dText
+
+   Searchable text extracted from one or more build123d-backed models.
+
+
+   .. py:attribute:: items
+      :type:  tuple[Build123dTextItem, Ellipsis]
+      :value: ()
+
+
+
+   .. py:property:: text
+      :type: str
+
+
+
+   .. py:method:: texts_by_kind(kind: str) -> list[str]
+
+
+.. py:function:: build123d_available() -> bool
+
+   Return whether build123d can be imported.
+
+
+.. py:function:: extract_build123d_shape_text(shape: Any | Sequence[Any], *, viewer_names: Sequence[str] = ()) -> Build123dText
+
+   Extract labels/materials/joints from loaded shapes and viewer names.
+
+
+.. py:function:: extract_build123d_path_text(path: str | pathlib.Path, model_type: str | None = None) -> Build123dText
+
+   Extract semantic text from a STEP/STP or STL path.
+
+
+.. py:function:: extract_build123d_text(data: bytes, model_type: str) -> Build123dText
+
+   Extract semantic build123d-backed text from in-memory file data.
+
+
+.. py:function:: extract_model_build123d_text(duc_source: str | pathlib.Path, element: dict[str, Any], *, run_code: bool = False) -> Build123dText
+
+   Extract semantic text from a DUC build123d model element.
+
+   ``run_code=True`` executes arbitrary embedded Python in-process and must only
+   be used for trusted DUC files. Source code and execution output are never
+   indexed.
+
+

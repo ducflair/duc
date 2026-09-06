@@ -7,7 +7,7 @@
         <link rel="canonical" href="https://ducflair.github.io/duc/reference/python/autoapi/ducpy/search/search_models/index.html" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
-        <title>ducpy.search.search_models - ducpy 4.0.2 documentation</title>
+        <title>ducpy.search.search_models - ducpy 4.0.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
@@ -168,7 +168,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../../../index.html"><div class="brand">ducpy 4.0.2 documentation</div></a>
+      <a href="../../../../index.html"><div class="brand">ducpy 4.0.3 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -195,7 +195,7 @@
     <img class="sidebar-logo" src="https://cdn.jsdelivr.net/gh/ducflair/assets@main/src/duc/duc-extended.png" alt="Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">ducpy 4.0.2 documentation</span>
+  <span class="sidebar-brand-text">ducpy 4.0.3 documentation</span>
   
 </a>
 
@@ -236,6 +236,8 @@
 <li class="toctree-l3 current has-children"><a class="reference internal" href="../index.html">ducpy.search</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of ducpy.search</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../_model_files/index.html">ducpy.search._model_files</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../image_ocr/index.html">ducpy.search.image_ocr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../search_build123d/index.html">ducpy.search.search_build123d</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../search_charter_issues/index.html">ducpy.search.search_charter_issues</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../search_elements/index.html">ducpy.search.search_elements</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../search_external_files/index.html">ducpy.search.search_external_files</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../search_ezdxf/index.html">ducpy.search.search_ezdxf</a></li>
@@ -488,13 +490,13 @@ source can’t be parsed (e.g. an extracted fragment or a syntax error).</p>
 <span class="sig-prename descclassname"><span class="pre">ducpy.search.search_models.</span></span><span class="sig-name descname"><span class="pre">search_duc_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duc_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../search_elements/index.html#ducpy.search.search_elements.DucSearchResponse" title="ducpy.search.search_elements.DucSearchResponse"><span class="pre">ducpy.search.search_elements.DucSearchResponse</span></a></span></span><a class="headerlink" href="#ducpy.search.search_models.search_duc_models" title="Link to this definition">¶</a></dt>
 <dd><p>Search the user-authored text inside model elements and rank the results.</p>
 <p>Loads the <code class="docutils literal notranslate"><span class="pre">.duc</span></code> (SQLite-backed or native binary), classifies each model
-element, extracts searchable DXF/DWG or IFC content, and scores it against
-<code class="docutils literal notranslate"><span class="pre">query</span></code> with the same ranking machinery as <code class="xref py py-func docutils literal notranslate"><span class="pre">search_duc_elements()</span></code>.
-Build123d models currently fall back to their label and description.</p>
+element, extracts searchable DXF/DWG, IFC, or build123d content, and scores
+it against <code class="docutils literal notranslate"><span class="pre">query</span></code> with the same ranking machinery as
+<code class="xref py py-func docutils literal notranslate"><span class="pre">search_duc_elements()</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">run_code</span></code> is a trusted-input opt-in. The default (<code class="docutils literal notranslate"><span class="pre">False</span></code>) searches
 linked model files only. Setting it to <code class="docutils literal notranslate"><span class="pre">True</span></code> executes embedded Python
-model code in-process to capture generated DXF or IFC content; never enable
-it for untrusted DUC files. Results are written to <code class="docutils literal notranslate"><span class="pre">output_path</span></code>
+model code in-process to capture generated DXF, IFC, or build123d content;
+never enable it for untrusted DUC files. Results are written to <code class="docutils literal notranslate"><span class="pre">output_path</span></code>
 (or a default path beside the <code class="docutils literal notranslate"><span class="pre">.duc</span></code>) and returned as a
 <code class="xref py py-class docutils literal notranslate"><span class="pre">DucSearchResponse</span></code>.</p>
 </dd></dl>
@@ -597,7 +599,7 @@ it for untrusted DUC files. Results are written to <code class="docutils literal
       
     </aside>
   </div>
-</div><script src="../../../../_static/documentation_options.js?v=a084f797"></script>
+</div><script src="../../../../_static/documentation_options.js?v=04fc738e"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/scripts/furo.js?v=5fa4622c"></script>

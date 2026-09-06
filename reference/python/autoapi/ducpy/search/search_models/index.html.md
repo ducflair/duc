@@ -104,13 +104,13 @@ Classify every live model element in parsed duc data.
 Search the user-authored text inside model elements and rank the results.
 
 Loads the `.duc` (SQLite-backed or native binary), classifies each model
-element, extracts searchable DXF/DWG or IFC content, and scores it against
-`query` with the same ranking machinery as `search_duc_elements()`.
-Build123d models currently fall back to their label and description.
+element, extracts searchable DXF/DWG, IFC, or build123d content, and scores
+it against `query` with the same ranking machinery as
+`search_duc_elements()`.
 
 `run_code` is a trusted-input opt-in. The default (`False`) searches
 linked model files only. Setting it to `True` executes embedded Python
-model code in-process to capture generated DXF or IFC content; never enable
-it for untrusted DUC files. Results are written to `output_path`
+model code in-process to capture generated DXF, IFC, or build123d content;
+never enable it for untrusted DUC files. Results are written to `output_path`
 (or a default path beside the `.duc`) and returned as a
 `DucSearchResponse`.

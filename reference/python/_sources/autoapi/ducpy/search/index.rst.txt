@@ -17,6 +17,8 @@ Submodules
 
    /autoapi/ducpy/search/_model_files/index
    /autoapi/ducpy/search/image_ocr/index
+   /autoapi/ducpy/search/search_build123d/index
+   /autoapi/ducpy/search/search_charter_issues/index
    /autoapi/ducpy/search/search_elements/index
    /autoapi/ducpy/search/search_external_files/index
    /autoapi/ducpy/search/search_ezdxf/index

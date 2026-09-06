@@ -1,5 +1,5 @@
 (function() {
-    const implementors = Object.fromEntries([["duc",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.98.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"duc/session/struct.DucSessionOptions.html\" title=\"struct duc::session::DucSessionOptions\">DucSessionOptions</a>",0]]]]);
+    const implementors = Object.fromEntries([["duc",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.98.1/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"duc/session/struct.DucSessionOptions.html\" title=\"struct duc::session::DucSessionOptions\">DucSessionOptions</a>",0]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {

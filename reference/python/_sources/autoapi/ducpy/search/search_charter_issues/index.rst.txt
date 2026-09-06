@@ -1,0 +1,171 @@
+ducpy.search.search_charter_issues
+==================================
+
+.. py:module:: ducpy.search.search_charter_issues
+
+.. autoapi-nested-parse::
+
+   Search user-authored project Charter and Issue content in DUC files.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   ducpy.search.search_charter_issues.DucCharterIssueSearchResult
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.search.search_charter_issues.DucCharterSearchResult
+   ducpy.search.search_charter_issues.DucIssueSearchResult
+   ducpy.search.search_charter_issues.DucCharterIssueSearchResponse
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.search.search_charter_issues.search_duc_charter
+   ducpy.search.search_charter_issues.search_duc_issues
+   ducpy.search.search_charter_issues.search_duc_charter_and_issues
+
+
+Module Contents
+---------------
+
+.. py:class:: DucCharterSearchResult
+
+   One matching Charter section or record.
+
+
+   .. py:attribute:: kind
+      :type:  str
+
+
+   .. py:attribute:: record_id
+      :type:  str
+
+
+   .. py:attribute:: matches
+      :type:  list[str]
+
+
+   .. py:attribute:: match_fields
+      :type:  list[str]
+
+
+   .. py:attribute:: score
+      :type:  float
+
+
+   .. py:method:: to_dict() -> dict[str, Any]
+
+
+.. py:class:: DucIssueSearchResult
+
+   One matching issue, aggregating matches from its discussion thread.
+
+
+   .. py:attribute:: issue_id
+      :type:  str
+
+
+   .. py:attribute:: local_id
+      :type:  int
+
+
+   .. py:attribute:: title
+      :type:  str
+
+
+   .. py:attribute:: status
+      :type:  str
+
+
+   .. py:attribute:: matches
+      :type:  list[str]
+
+
+   .. py:attribute:: match_fields
+      :type:  list[str]
+
+
+   .. py:attribute:: matched_message_ids
+      :type:  list[str]
+
+
+   .. py:attribute:: score
+      :type:  float
+
+
+   .. py:attribute:: anchor
+      :type:  dict[str, Any] | None
+      :value: None
+
+
+
+   .. py:method:: to_dict() -> dict[str, Any]
+
+
+.. py:data:: DucCharterIssueSearchResult
+
+.. py:class:: DucCharterIssueSearchResponse
+
+   Combined Charter and Issue search response.
+
+
+   .. py:attribute:: query
+      :type:  str
+
+
+   .. py:attribute:: results
+      :type:  list[DucCharterIssueSearchResult]
+
+
+   .. py:attribute:: total_hits
+      :type:  int
+
+
+   .. py:attribute:: charter_hits
+      :type:  int
+
+
+   .. py:attribute:: issue_hits
+      :type:  int
+
+
+   .. py:attribute:: all_issue_ids
+      :type:  list[str]
+
+
+   .. py:attribute:: output_path
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:method:: to_dict() -> dict[str, Any]
+
+
+.. py:function:: search_duc_charter(duc_path: str | pathlib.Path, query: str, *, output_path: str | pathlib.Path | None = None, limit: int = 50, phase: str | None = None) -> DucCharterIssueSearchResponse
+
+   Search user-authored fields in the project Charter.
+
+
+.. py:function:: search_duc_issues(duc_path: str | pathlib.Path, query: str, *, output_path: str | pathlib.Path | None = None, limit: int = 50, status: str | None = None, include_deleted: bool = False) -> DucCharterIssueSearchResponse
+
+   Search issue titles, discussions, people, and exact reference fields.
+
+
+.. py:function:: search_duc_charter_and_issues(duc_path: str | pathlib.Path, query: str, *, output_path: str | pathlib.Path | None = None, limit: int = 50, phase: str | None = None, status: str | None = None, include_deleted: bool = False) -> DucCharterIssueSearchResponse
+
+   Search the project Charter and Issues in one ranked response.
+
+
