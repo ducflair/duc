@@ -26,6 +26,7 @@
 use crate::scaling::DucDataScaler;
 use crate::streaming::pdf_linear::PdfLinearRenderer;
 use crate::streaming::stream_resources::ResourceStreamer;
+use crate::utils::document_pdf::get_renderable_doc_pdf_file_id;
 use crate::utils::freedraw_bounds::FreeDrawBounds;
 use crate::utils::style_resolver::{ResolvedStyles, StyleResolver};
 use crate::{ConversionError, ConversionResult};
@@ -2995,18 +2996,18 @@ impl ElementStreamer {
         Ok(ops)
     }
 
-    /// Stream DucDocElement as an embedded PDF (compiled from Typst via file_id)
+    /// Stream DucDocElement as its compiled embedded PDF.
     fn stream_doc_element(
         &mut self,
         doc: &DucDocElement,
         document: &mut Document,
         pdf_embedder: &mut PdfEmbedder,
     ) -> ConversionResult<Vec<Operation>> {
-        let file_id = match &doc.file_id {
-            Some(fid) => fid.clone(),
+        let file_id = match get_renderable_doc_pdf_file_id(doc) {
+            Some(fid) => fid,
             None => {
                 return Ok(vec![Operation::new(
-                    "% DucDocElement without file_id",
+                    "% DucDocElement without compiled PDF",
                     vec![],
                 )]);
             }
