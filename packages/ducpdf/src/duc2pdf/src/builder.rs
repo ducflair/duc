@@ -1,6 +1,7 @@
 use crate::scaling::DucDataScaler;
 use crate::streaming::stream_elements::ElementStreamer;
 use crate::streaming::stream_resources::ResourceStreamer;
+use crate::utils::document_pdf::get_renderable_doc_pdf_file_id;
 use crate::utils::freedraw_bounds::{
     calculate_freedraw_bbox, calculate_freedraw_point_bbox, format_number, FreeDrawBounds,
     UNIT_EPSILON as FREEDRAW_EPSILON,
@@ -1726,10 +1727,8 @@ impl DucToPdfBuilder {
                     .file_id
                     .as_ref()
                     .map(|file_id| (file_id.clone(), pdf_elem.base.width, pdf_elem.base.height)),
-                DucElementEnum::DucDocElement(doc_elem) => doc_elem
-                    .file_id
-                    .as_ref()
-                    .map(|file_id| (file_id.clone(), doc_elem.base.width, doc_elem.base.height)),
+                DucElementEnum::DucDocElement(doc_elem) => get_renderable_doc_pdf_file_id(doc_elem)
+                    .map(|file_id| (file_id, doc_elem.base.width, doc_elem.base.height)),
                 _ => None,
             })
             .collect();

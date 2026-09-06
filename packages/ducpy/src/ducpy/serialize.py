@@ -220,14 +220,11 @@ def _run_python_validation(
     with tempfile.TemporaryDirectory(prefix="ducpy-model-") as tmpdir:
         tmp_path = Path(tmpdir)
         resolved_files = _write_python_external_files(tmp_path, files_meta, files_data)
-
         import json
         resolved_files_json = json.dumps(resolved_files)
 
-        header = f"""
-import json
-import os
-import sys
+        sitecustomize_code = f"""import json
+import builtins
 
 _RESOLVED_EXTERNAL_FILES = json.loads({repr(resolved_files_json)})
 
@@ -236,12 +233,26 @@ def resolve_external_file(file_id):
         return _RESOLVED_EXTERNAL_FILES[file_id]
     raise FileNotFoundError(f"External file '{{file_id}}' not found in validation sandbox.")
 
-globals()["resolve_external_file"] = resolve_external_file
-import builtins
 builtins.resolve_external_file = resolve_external_file
+try:
+    import __main__
+    __main__.resolve_external_file = resolve_external_file
+except Exception:
+    pass
 """
+        sitecustomize_path = tmp_path / "sitecustomize.py"
+        sitecustomize_path.write_text(sitecustomize_code, encoding="utf-8")
+
         script_path = tmp_path / "model.py"
-        script_path.write_text(header + "\n" + code, encoding="utf-8")
+        script_path.write_text(code, encoding="utf-8")
+
+        env = dict(os.environ)
+        existing_pythonpath = env.get("PYTHONPATH")
+        env["PYTHONPATH"] = (
+            f"{tmpdir}{os.pathsep}{existing_pythonpath}"
+            if existing_pythonpath
+            else tmpdir
+        )
 
         run_kwargs = {
             "cwd": tmpdir,
@@ -249,6 +260,7 @@ builtins.resolve_external_file = resolve_external_file
             "stdout": subprocess.PIPE,
             "stderr": subprocess.PIPE,
             "check": False,
+            "env": env,
         }
         if timeout_seconds is not None:
             run_kwargs["timeout"] = timeout_seconds
@@ -383,6 +395,9 @@ def _validate_embedded_code(
 
     for element in elements:
         if not isinstance(element, dict):
+            continue
+
+        if element.get("isDeleted") or element.get("is_deleted"):
             continue
 
         element_type = element.get("type")
