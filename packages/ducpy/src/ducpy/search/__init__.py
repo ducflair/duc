@@ -1,5 +1,22 @@
 """Search helpers for DUC SQLite databases."""
 
+from .search_build123d import (
+    Build123dText,
+    Build123dTextItem,
+    extract_build123d_path_text,
+    extract_build123d_shape_text,
+    extract_build123d_text,
+    extract_model_build123d_text,
+)
+from .search_charter_issues import (
+    DucCharterIssueSearchResponse,
+    DucCharterIssueSearchResult,
+    DucCharterSearchResult,
+    DucIssueSearchResult,
+    search_duc_charter,
+    search_duc_charter_and_issues,
+    search_duc_issues,
+)
 from .search_elements import (
     DucElementSearchResult,
     DucFileSearchResult,
@@ -34,12 +51,18 @@ from .search_models import (
 )
 
 __all__ = [
-    "DucElementSearchResult",
-    "DucFileSearchResult",
-    "DucSearchResponse",
-    "DucSearchResult",
     "DWGDXF_WASM_PATH_ENV",
     "DWGDXF_WASM_URL",
+    "Build123dText",
+    "Build123dTextItem",
+    "DucCharterIssueSearchResponse",
+    "DucCharterIssueSearchResult",
+    "DucCharterSearchResult",
+    "DucElementSearchResult",
+    "DucFileSearchResult",
+    "DucIssueSearchResult",
+    "DucSearchResponse",
+    "DucSearchResult",
     "DwgConversionNotAvailable",
     "DxfText",
     "DxfTextItem",
@@ -50,12 +73,19 @@ __all__ = [
     "ModelEngine",
     "convert_dwg_to_dxf",
     "detect_model_engine",
+    "extract_build123d_path_text",
+    "extract_build123d_shape_text",
+    "extract_build123d_text",
     "extract_dxf_text",
-    "extract_model_dxf_text",
-    "search_duc_elements",
     "extract_ifc_file_text",
     "extract_ifc_path_text",
     "extract_ifc_text",
+    "extract_model_build123d_text",
+    "extract_model_dxf_text",
     "extract_model_ifc_text",
+    "search_duc_charter",
+    "search_duc_charter_and_issues",
+    "search_duc_elements",
+    "search_duc_issues",
     "search_duc_models",
 ]

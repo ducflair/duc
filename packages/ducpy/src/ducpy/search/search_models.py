@@ -48,6 +48,7 @@ from .search_elements import (
     _evaluate_match_text,
     _tokenize,
 )
+from .search_build123d import extract_model_build123d_text
 from .search_ezdxf import extract_model_dxf_text
 from .search_ifc import extract_model_ifc_text
 
@@ -139,6 +140,22 @@ _IFC_KIND_WEIGHTS: dict[str, float] = {
     "header": 0.7,
 }
 
+
+_BUILD123D_KIND_WEIGHTS: dict[str, float] = {
+    "viewer_name": 0.98,
+    "label": 0.96,
+    "step_label": 0.94,
+    "step_product_name": 0.94,
+    "joint": 0.9,
+    "material": 0.88,
+    "step_material": 0.86,
+    "step_product_description": 0.84,
+    "step_document": 0.78,
+    "step_classification": 0.76,
+    "stl_solid": 0.75,
+    "step_role": 0.6,
+    "step_party": 0.55,
+}
 
 @dataclass(frozen=True, slots=True)
 class ModelElementInfo:
@@ -297,8 +314,7 @@ def _model_content_texts(
 ) -> list[tuple[str, float]]:
     """Return ``(text, source_weight)`` pairs for an element's engine content.
 
-    Ezdxf and IFC content extraction are implemented. Build123d currently
-    returns no content text and remains searchable via label/description.
+    Ezdxf, IFC, and build123d semantic content extraction are implemented.
     """
 
     if info.engine is ModelEngine.EZDXF:
@@ -316,6 +332,15 @@ def _model_content_texts(
             if item.text
         ]
 
+    if info.engine is ModelEngine.BUILD123D:
+        build123d_text = extract_model_build123d_text(
+            duc_source, element, run_code=run_code
+        )
+        return [
+            (item.text, _BUILD123D_KIND_WEIGHTS.get(item.kind, 0.75))
+            for item in build123d_text.items
+            if item.text
+        ]
     return []
 
 
@@ -397,14 +422,14 @@ def search_duc_models(
     """Search the user-authored text inside model elements and rank the results.
 
     Loads the ``.duc`` (SQLite-backed or native binary), classifies each model
-    element, extracts searchable DXF/DWG or IFC content, and scores it against
-    ``query`` with the same ranking machinery as :func:`search_duc_elements`.
-    Build123d models currently fall back to their label and description.
+    element, extracts searchable DXF/DWG, IFC, or build123d content, and scores
+    it against ``query`` with the same ranking machinery as
+    :func:`search_duc_elements`.
 
     ``run_code`` is a trusted-input opt-in. The default (``False``) searches
     linked model files only. Setting it to ``True`` executes embedded Python
-    model code in-process to capture generated DXF or IFC content; never enable
-    it for untrusted DUC files. Results are written to ``output_path``
+    model code in-process to capture generated DXF, IFC, or build123d content;
+    never enable it for untrusted DUC files. Results are written to ``output_path``
     (or a default path beside the ``.duc``) and returned as a
     :class:`DucSearchResponse`.
     """

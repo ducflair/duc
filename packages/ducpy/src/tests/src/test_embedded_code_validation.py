@@ -370,3 +370,64 @@ def test_python_validation_fallback_reports_runtime_failure(monkeypatch):
 
     assert "Python validation failed" in str(excinfo.value)
     assert "embedded boom" in str(excinfo.value)
+
+
+def test_python_validation_with_future_annotations(test_output_dir):
+    """Verify that a Model element with 'from __future__ import annotations' validates successfully."""
+    code = (
+        "from __future__ import annotations\n"
+        "\n"
+        "def compute(val: int) -> int:\n"
+        "    return val * 2\n"
+        "\n"
+        "res = compute(21)\n"
+        "assert res == 42\n"
+    )
+    model_element = (
+        duc.ElementBuilder()
+        .build_model_element()
+        .with_code(code)
+        .build()
+    )
+
+    output_path = os.path.join(test_output_dir, "test_future_annotations_success.duc")
+    serialized_path = duc.serialize_duc(
+        name="FutureAnnotationsTest",
+        output_path=output_path,
+        elements=[model_element],
+        validate_embedded_code=True,
+    )
+
+    assert serialized_path == output_path
+    assert os.path.getsize(output_path) > 0
+
+
+def test_deleted_element_code_skipped_during_validation(test_output_dir):
+    """Verify that deleted Model and Document elements with broken code are skipped during validation."""
+    broken_model = (
+        duc.ElementBuilder()
+        .with_deleted(True)
+        .build_model_element()
+        .with_code("raise RuntimeError('should never execute because element is deleted')")
+        .build()
+    )
+
+    broken_doc = (
+        duc.ElementBuilder()
+        .with_deleted(True)
+        .build_doc_element()
+        .with_text("= Broken Typst [\nUnclosed delimiter")
+        .build()
+    )
+
+    output_path = os.path.join(test_output_dir, "test_deleted_elements_skipped.duc")
+    serialized_path = duc.serialize_duc(
+        name="DeletedElementsSkippedTest",
+        output_path=output_path,
+        elements=[broken_model, broken_doc],
+        validate_embedded_code=True,
+    )
+
+    assert serialized_path == output_path
+    assert os.path.getsize(output_path) > 0
+
