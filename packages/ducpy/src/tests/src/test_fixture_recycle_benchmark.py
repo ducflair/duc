@@ -67,6 +67,9 @@ def _normalize_external_files_for_validation(data: duc.DucData) -> tuple[Any, li
     elements: list[dict] = []
     for element in data.get("elements") or []:
         if isinstance(element, dict) and element.get("type") == "model":
+            if element.get("is_deleted") or element.get("isDeleted"):
+                elements.append(element)
+                continue
             code = element.get("code") or ""
             if "FontEnum" in code or "resolve_font" in code:
                 element = dict(element)
@@ -78,7 +81,12 @@ def _normalize_external_files_for_validation(data: duc.DucData) -> tuple[Any, li
                 code,
             ):
                 # Older fixtures relied on the CAD viewer injecting ``show``.
-                code = "from ocp_vscode import show\n" + code
+                future_matches = list(re.finditer(r"(?m)^from\s+__future__\s+import\s+.*$", code))
+                if future_matches:
+                    pos = future_matches[-1].end()
+                    code = code[:pos] + "\nfrom ocp_vscode import show" + code[pos:]
+                else:
+                    code = "from ocp_vscode import show\n" + code
             if "external_files" in code or "resolve_external_file" in code:
                 # Find the referenced file id.
                 referenced_id = None
