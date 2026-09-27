@@ -22,6 +22,7 @@ import serialization_demo
 import parsing_demo
 import document_element_demo
 import model_element_demo
+import modular_model_elements_demo
 import hvac_elbow_duct_demo
 import empire_state_ifc_demo
 
@@ -162,6 +163,44 @@ class TestModelElementDemo:
         assert "Demonstrating Non-Python model imports" in output_text
         assert "Testing model type validation" in output_text
         assert "Correctly rejected invalid model_type" in output_text
+        assert "Successfully serialized DUC file to" in output_text
+        assert duc_path is not None
+        assert os.path.isfile(duc_path)
+
+
+class TestModularModelElementsDemo:
+    """Test the modular Python Model elements demo."""
+
+    def test_socket_head_screw_model_code_validates(self, test_output_dir):
+        """Execute the reusable component code during embedded-code validation."""
+        import ducpy as duc
+
+        screw_model = (
+            duc.ElementBuilder()
+            .with_id(modular_model_elements_demo.SCREW_MODEL_ID)
+            .build_model_element()
+            .with_code(
+                duc.extract_embedded_code(
+                    modular_model_elements_demo.socket_head_screw_model_code
+                )
+            )
+            .build()
+        )
+
+        duc.serialize_duc(
+            name="validated_socket_head_screw",
+            output_path=os.path.join(test_output_dir, "validated_socket_head_screw.duc"),
+            elements=[screw_model],
+            validate_embedded_code=True,
+        )
+
+    def test_modular_model_elements_demo_runs_successfully(self, test_output_dir):
+        """Test that the dependency example serializes both Model elements."""
+        output_text, duc_path = _run_demo(modular_model_elements_demo, test_output_dir)
+
+        assert "Modular Model Elements Demo" in output_text
+        assert "Created reusable screw Model element" in output_text
+        assert "Created importing housing Model element" in output_text
         assert "Successfully serialized DUC file to" in output_text
         assert duc_path is not None
         assert os.path.isfile(duc_path)

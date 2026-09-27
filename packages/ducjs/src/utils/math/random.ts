@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { customAlphabet } from "nanoid";
 
 export function randomSeed(): number {
   return Math.floor(Math.random() * 2 ** 31);
@@ -30,4 +30,11 @@ export const reseed = (seed: number) => {
   testIdBase = 0;
 };
 
-export const randomId = () => nanoid();
+// Python-identifier-safe alphabet: letters, digits, underscore (no hyphens)
+const ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_";
+const ID_INITIAL_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+const generateBody = customAlphabet(ID_ALPHABET, 20);
+const generateInitial = customAlphabet(ID_INITIAL_ALPHABET, 1);
+
+export const randomId = (): string => `${generateInitial()}${generateBody()}`;
