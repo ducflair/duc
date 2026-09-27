@@ -58,6 +58,34 @@ For a Python Model Element, the **first recognized CAD import in the source sele
 
 This order is significant. For IFC Python, place `import ifcopenshell` **before** `from ocp_vscode import show`; otherwise `ocp_vscode` selects the parametric pipeline before the runtime reaches the IFC import.
 
+#### Importing other Model Elements
+
+Compatible Python runtimes can expose other Python Model Elements through the virtual `duc_model` package. This lets one element own reusable values, functions, or domain rules while another element composes them into a renderable result.
+
+For example, a logic-only Model Element with ID `mmBUBjTesxYfxL0HDjXWg` can define dimensions without emitting geometry:
+
+```python
+width = 120
+height = 80
+wall_thickness = 5
+```
+
+A second Model Element can import those values and own the final preview:
+
+```python
+from duc_model.mmBUBjTesxYfxL0HDjXWg import width, height, wall_thickness
+from build123d import Box
+from ocp_vscode import show
+
+wall = Box(width, wall_thickness, height)
+show(wall)
+```
+
+The imported element does not need to call `show(...)` or produce a file. Its source is a normal Python module whose public variables and functions become available to its consumers. Imports may be transitive, so a renderable root can depend on a helper that imports a separate configuration element.
+
+
+For the dependency-graph model, naming rules, composition patterns, and ID-remapping guidance, see [Model Element Modularization](/docs/concepts/model-modularization).
+
 #### Build123d output contract
 
 Use the Build123d import as the header and finish by passing the completed object or objects to `show(...)`:

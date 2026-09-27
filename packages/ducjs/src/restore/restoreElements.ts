@@ -97,6 +97,7 @@ import {
   validateBackground,
   validateStroke
 } from "./restoreDataState";
+import { updateModelCodeElementIds } from "./updateModelCode";
 
 import {
   LINE_SPACING_TYPE,
@@ -1175,6 +1176,7 @@ export const restoreElements = (
   }
 ): OrderedDucElement[] => {
   const existingIds = new Set<string>();
+  const idMap = new Map<string, string>();
 
   // First restore all elements with their original properties
   const restored = (elements || []).reduce((elements, element) => {
@@ -1204,7 +1206,10 @@ export const restoreElements = (
         (isPassThrough || !isInvisiblySmallElement(migratedElement))
       ) {
         if (existingIds.has(migratedElement.id)) {
-          migratedElement = { ...migratedElement, id: randomId() };
+          const oldId = migratedElement.id;
+          const newId = randomId();
+          migratedElement = { ...migratedElement, id: newId };
+          idMap.set(oldId, newId);
         }
         existingIds.add(migratedElement.id);
 
@@ -1213,6 +1218,14 @@ export const restoreElements = (
     }
     return elements;
   }, [] as DucElement[]);
+
+  if (idMap.size > 0) {
+    for (const el of restored) {
+      if (el.type === "model" && typeof (el as DucModelElement).code === "string" && (el as DucModelElement).code) {
+        (el as Mutable<DucModelElement>).code = updateModelCodeElementIds((el as DucModelElement).code!, idMap);
+      }
+    }
+  }
 
   let restoredElements: OrderedDucElement[] = opts?.syncInvalidIndices
     ? opts.syncInvalidIndices(restored, currentScope)

@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { randomId } from "../utils/math/random";
 import tinycolor from "tinycolor2";
 import {
   BEZIER_MIRRORING,
@@ -213,7 +213,7 @@ export const restore = (
 
   // Generate a new ID if none exists or if it's empty
   const parsedId = data?.id;
-  const restoredId = (parsedId && parsedId.trim().length > 0) ? parsedId : nanoid();
+  const restoredId = (parsedId && parsedId.trim().length > 0) ? parsedId : randomId();
 
   return {
     dictionary: restoredDictionary,
