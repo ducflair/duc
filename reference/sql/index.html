@@ -113,7 +113,7 @@ mermaid.initialize({ startOnLoad: true });
 <body>
 <div style="background:#1e1e2e;color:#cdd6f4;padding:8px 16px;font-family:sans-serif;font-size:14px;border-bottom:1px solid #313244;">DUC SQL Schema Reference &mdash; <strong>Version 4.0.0</strong></div>
 <h1>@duc_schema</h1>
-<p class="sq-gen"><code><a href="https://sq.io/docs/inspect">sq inspect</a></code> @ <code>2026-09-06T18:08:45Z</code></p>
+<p class="sq-gen"><code><a href="https://sq.io/docs/inspect">sq inspect</a></code> @ <code>2026-09-27T14:07:52Z</code></p>
 <table>
 <thead>
 <tr><th>Property</th><th>Value</th></tr>
@@ -122,8 +122,9 @@ mermaid.initialize({ startOnLoad: true });
 <tr><td>Name</td><td><code>duc_schema.sqlite</code></td></tr>
 <tr><td>FQ name</td><td><code>duc_schema.sqlite.main</code></td></tr>
 <tr><td>Driver</td><td><code>sqlite3</code></td></tr>
-<tr><td>DB product</td><td><code>SQLite3 v3.53.2</code></td></tr>
-<tr><td>DB version</td><td><code>3.53.2</code></td></tr>
+<tr><td>DB product</td><td><code>SQLite3 v3.53.4</code></td></tr>
+<tr><td>DB version</td><td><code>3.53.4</code></td></tr>
+<tr><td>DB semver</td><td><code>v3.53.4</code></td></tr>
 <tr><td>Schema</td><td><code>main</code></td></tr>
 <tr><td>Catalog</td><td><code>default</code></td></tr>
 <tr><td>Size</td><td><code>712.0KB</code></td></tr>
@@ -1140,34 +1141,34 @@ erDiagram
 <table>
 <caption id="backgrounds-columns"><a class="sq-anchor" href="#backgrounds-columns">Columns</a></caption>
 <thead>
-<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th><th>Default</th></tr>
+<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th><th>Auto</th><th>Default</th></tr>
 </thead>
 <tbody>
-<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td></td></tr>
-<tr><td><code>owner_type</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td></tr>
-<tr><td><code>owner_id</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td></tr>
-<tr><td><code>sort_order</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>0</code></td></tr>
-<tr><td><code>preference</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>src</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td><code>&#39;&#39;</code></td></tr>
-<tr><td><code>visible</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>1</code></td></tr>
-<tr><td><code>opacity</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>1.0</code></td></tr>
-<tr><td><code>tiling_size_in_percent</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>tiling_angle</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>tiling_spacing</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>tiling_offset_x</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>tiling_offset_y</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_style</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_name</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_scale</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_angle</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_origin_x</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_origin_y</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_origin_mirror</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_double</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_custom_pattern_name</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_custom_pattern_desc</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>image_filter_brightness</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>image_filter_contrast</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
+<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td>auto_inc</td><td></td></tr>
+<tr><td><code>owner_type</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>owner_id</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>sort_order</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td><td><code>0</code></td></tr>
+<tr><td><code>preference</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>src</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td><td><code>&#39;&#39;</code></td></tr>
+<tr><td><code>visible</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td><td><code>1</code></td></tr>
+<tr><td><code>opacity</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td></td><td><code>1.0</code></td></tr>
+<tr><td><code>tiling_size_in_percent</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>tiling_angle</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>tiling_spacing</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>tiling_offset_x</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>tiling_offset_y</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_style</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_name</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_scale</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_angle</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_origin_x</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_origin_y</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_origin_mirror</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_double</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_custom_pattern_name</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_custom_pattern_desc</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>image_filter_brightness</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>image_filter_contrast</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
 </tbody>
 </table>
 <table>
@@ -1444,6 +1445,28 @@ erDiagram
 <tr><td><code>sqlite_autoindex_blocks_1</code></td><td><code>id</code></td><td>✓</td><td>✓</td><td></td></tr>
 </tbody>
 </table>
+<table>
+<caption id="blocks-triggers"><a class="sq-anchor" href="#blocks-triggers">Triggers</a></caption>
+<thead>
+<tr><th>Trigger</th><th>Timing</th><th>Events</th><th>Definition</th></tr>
+</thead>
+<tbody>
+<tr><td><code>trg_blocks_ad</code></td><td>AFTER</td><td>DELETE</td><td><code>CREATE TRIGGER trg_blocks_ad AFTER DELETE ON blocks BEGIN
+    INSERT INTO search_blocks(search_blocks, rowid, label, description)
+    VALUES (&#39;delete&#39;, OLD.rowid, OLD.label, OLD.description);
+END</code></td></tr>
+<tr><td><code>trg_blocks_ai</code></td><td>AFTER</td><td>INSERT</td><td><code>CREATE TRIGGER trg_blocks_ai AFTER INSERT ON blocks BEGIN
+    INSERT INTO search_blocks(rowid, label, description)
+    VALUES (NEW.rowid, NEW.label, NEW.description);
+END</code></td></tr>
+<tr><td><code>trg_blocks_au</code></td><td>AFTER</td><td>UPDATE</td><td><code>CREATE TRIGGER trg_blocks_au AFTER UPDATE OF label, description ON blocks BEGIN
+    INSERT INTO search_blocks(search_blocks, rowid, label, description)
+    VALUES (&#39;delete&#39;, OLD.rowid, OLD.label, OLD.description);
+    INSERT INTO search_blocks(rowid, label, description)
+    VALUES (NEW.rowid, NEW.label, NEW.description);
+END</code></td></tr>
+</tbody>
+</table>
 <h3 id="checkpoint_data_chunks" class="sq-table"><a class="sq-anchor" href="#checkpoint_data_chunks"><code>checkpoint_data_chunks</code></a></h3>
 <p class="summary">table · 0 rows</p>
 <h4 id="checkpoint_data_chunks-erd"><a class="sq-anchor" href="#checkpoint_data_chunks-erd">Entity Relationship Diagram</a></h4>
@@ -1488,6 +1511,17 @@ erDiagram
 <tbody>
 <tr><td><code>idx_checkpoint_data_chunks_checkpoint_offset</code></td><td><code>checkpoint_id, offset_bytes</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>sqlite_autoindex_checkpoint_data_chunks_1</code></td><td><code>checkpoint_id, chunk_index</code></td><td>✓</td><td>✓</td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="checkpoint_data_chunks-check-constraints"><a class="sq-anchor" href="#checkpoint_data_chunks-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>chunk_index &gt;= 0</td></tr>
+<tr><td></td><td>offset_bytes &gt;= 0</td></tr>
+<tr><td></td><td>size_bytes &gt;= 0</td></tr>
 </tbody>
 </table>
 <h3 id="checkpoints" class="sq-table"><a class="sq-anchor" href="#checkpoints"><code>checkpoints</code></a></h3>
@@ -1569,6 +1603,16 @@ erDiagram
 <tr><td><code>sqlite_autoindex_checkpoints_2</code></td><td><code>version_number</code></td><td>✓</td><td></td><td></td></tr>
 </tbody>
 </table>
+<table>
+<caption id="checkpoints-check-constraints"><a class="sq-anchor" href="#checkpoints-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>schema_version &gt;= 1</td></tr>
+<tr><td></td><td>is_schema_boundary IN (0, 1)</td></tr>
+</tbody>
+</table>
 <h3 id="delta_changeset_chunks" class="sq-table"><a class="sq-anchor" href="#delta_changeset_chunks"><code>delta_changeset_chunks</code></a></h3>
 <p class="summary">table · 0 rows</p>
 <h4 id="delta_changeset_chunks-erd"><a class="sq-anchor" href="#delta_changeset_chunks-erd">Entity Relationship Diagram</a></h4>
@@ -1613,6 +1657,17 @@ erDiagram
 <tbody>
 <tr><td><code>idx_delta_changeset_chunks_delta_offset</code></td><td><code>delta_id, offset_bytes</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>sqlite_autoindex_delta_changeset_chunks_1</code></td><td><code>delta_id, chunk_index</code></td><td>✓</td><td>✓</td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="delta_changeset_chunks-check-constraints"><a class="sq-anchor" href="#delta_changeset_chunks-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>chunk_index &gt;= 0</td></tr>
+<tr><td></td><td>offset_bytes &gt;= 0</td></tr>
+<tr><td></td><td>size_bytes &gt;= 0</td></tr>
 </tbody>
 </table>
 <h3 id="deltas" class="sq-table"><a class="sq-anchor" href="#deltas"><code>deltas</code></a></h3>
@@ -1692,6 +1747,16 @@ erDiagram
 <tr><td><code>idx_deltas_schema_version</code></td><td><code>schema_version, version_number</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>sqlite_autoindex_deltas_1</code></td><td><code>id</code></td><td>✓</td><td>✓</td><td></td></tr>
 <tr><td><code>sqlite_autoindex_deltas_2</code></td><td><code>version_number</code></td><td>✓</td><td></td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="deltas-check-constraints"><a class="sq-anchor" href="#deltas-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>schema_version &gt;= 1</td></tr>
+<tr><td></td><td>delta_sequence &gt;= 1</td></tr>
 </tbody>
 </table>
 <h3 id="doc_element_referenced_files" class="sq-table"><a class="sq-anchor" href="#doc_element_referenced_files"><code>doc_element_referenced_files</code></a></h3>
@@ -1849,6 +1914,16 @@ erDiagram
 <tr><td><code>phase</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td><code>&#39;intent&#39;</code></td></tr>
 <tr><td><code>closed_reason</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td><code>updated_at</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>0</code></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="duc_charter-check-constraints"><a class="sq-anchor" href="#duc_charter-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>id = 1</td></tr>
+<tr><td></td><td>phase IN (&#39;intent&#39;, &#39;review&#39;, &#39;delivery&#39;, &#39;closed&#39;)</td></tr>
 </tbody>
 </table>
 <h3 id="duc_charter_constraints" class="sq-table"><a class="sq-anchor" href="#duc_charter_constraints"><code>duc_charter_constraints</code></a></h3>
@@ -2139,6 +2214,15 @@ erDiagram
 <tr><td><code>scope_exponent_threshold</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>3</code></td></tr>
 </tbody>
 </table>
+<table>
+<caption id="duc_global_state-check-constraints"><a class="sq-anchor" href="#duc_global_state-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>id = 1</td></tr>
+</tbody>
+</table>
 <h3 id="duc_issue_anchors" class="sq-table"><a class="sq-anchor" href="#duc_issue_anchors"><code>duc_issue_anchors</code></a></h3>
 <p class="summary">table · 0 rows</p>
 <h4 id="duc_issue_anchors-erd"><a class="sq-anchor" href="#duc_issue_anchors-erd">Entity Relationship Diagram</a></h4>
@@ -2202,6 +2286,28 @@ erDiagram
 </thead>
 <tbody>
 <tr><td><code>sqlite_autoindex_duc_issue_anchors_1</code></td><td><code>issue_id</code></td><td>✓</td><td>✓</td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="duc_issue_anchors-check-constraints"><a class="sq-anchor" href="#duc_issue_anchors-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>anchor_type IN (&#39;canvas&#39;, &#39;element&#39;, &#39;model&#39;)</td></tr>
+</tbody>
+</table>
+<table>
+<caption id="duc_issue_anchors-triggers"><a class="sq-anchor" href="#duc_issue_anchors-triggers">Triggers</a></caption>
+<thead>
+<tr><th>Trigger</th><th>Timing</th><th>Events</th><th>Definition</th></tr>
+</thead>
+<tbody>
+<tr><td><code>model_viewer_state_delete_issue_anchor</code></td><td>AFTER</td><td>DELETE</td><td><code>CREATE TRIGGER model_viewer_state_delete_issue_anchor
+AFTER DELETE ON duc_issue_anchors
+BEGIN
+    DELETE FROM model_viewer_state WHERE owner_type = &#39;issue_anchor&#39; AND owner_id = OLD.issue_id;
+END</code></td></tr>
 </tbody>
 </table>
 <h3 id="duc_issue_assignees" class="sq-table"><a class="sq-anchor" href="#duc_issue_assignees"><code>duc_issue_assignees</code></a></h3>
@@ -2453,6 +2559,15 @@ erDiagram
 <tr><td><code>sqlite_autoindex_duc_issues_1</code></td><td><code>id</code></td><td>✓</td><td>✓</td><td></td></tr>
 </tbody>
 </table>
+<table>
+<caption id="duc_issues-check-constraints"><a class="sq-anchor" href="#duc_issues-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>status IN (&#39;open&#39;, &#39;closed&#39;, &#39;dismissed&#39;)</td></tr>
+</tbody>
+</table>
 <h3 id="duc_local_state" class="sq-table"><a class="sq-anchor" href="#duc_local_state"><code>duc_local_state</code></a></h3>
 <p class="summary">table · 0 rows</p>
 <h4 id="duc_local_state-erd"><a class="sq-anchor" href="#duc_local_state-erd">Entity Relationship Diagram</a></h4>
@@ -2515,6 +2630,15 @@ erDiagram
 <tr><td><code>outline_mode_enabled</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>0</code></td></tr>
 <tr><td><code>manual_save_mode</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>0</code></td></tr>
 <tr><td><code>decimal_places</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>2</code></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="duc_local_state-check-constraints"><a class="sq-anchor" href="#duc_local_state-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>id = 1</td></tr>
 </tbody>
 </table>
 <h3 id="element_block_memberships" class="sq-table"><a class="sq-anchor" href="#element_block_memberships"><code>element_block_memberships</code></a></h3>
@@ -2644,6 +2768,28 @@ erDiagram
 </thead>
 <tbody>
 <tr><td><code>sqlite_autoindex_element_doc_1</code></td><td><code>element_id</code></td><td>✓</td><td>✓</td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="element_doc-triggers"><a class="sq-anchor" href="#element_doc-triggers">Triggers</a></caption>
+<thead>
+<tr><th>Trigger</th><th>Timing</th><th>Events</th><th>Definition</th></tr>
+</thead>
+<tbody>
+<tr><td><code>trg_element_doc_ad</code></td><td>AFTER</td><td>DELETE</td><td><code>CREATE TRIGGER trg_element_doc_ad AFTER DELETE ON element_doc BEGIN
+    INSERT INTO search_element_doc(search_element_doc, rowid, text)
+    VALUES (&#39;delete&#39;, OLD.rowid, OLD.text);
+END</code></td></tr>
+<tr><td><code>trg_element_doc_ai</code></td><td>AFTER</td><td>INSERT</td><td><code>CREATE TRIGGER trg_element_doc_ai AFTER INSERT ON element_doc BEGIN
+    INSERT INTO search_element_doc(rowid, text)
+    VALUES (NEW.rowid, NEW.text);
+END</code></td></tr>
+<tr><td><code>trg_element_doc_au</code></td><td>AFTER</td><td>UPDATE</td><td><code>CREATE TRIGGER trg_element_doc_au AFTER UPDATE OF text ON element_doc BEGIN
+    INSERT INTO search_element_doc(search_element_doc, rowid, text)
+    VALUES (&#39;delete&#39;, OLD.rowid, OLD.text);
+    INSERT INTO search_element_doc(rowid, text)
+    VALUES (NEW.rowid, NEW.text);
+END</code></td></tr>
 </tbody>
 </table>
 <h3 id="element_ellipse" class="sq-table"><a class="sq-anchor" href="#element_ellipse"><code>element_ellipse</code></a></h3>
@@ -3076,6 +3222,28 @@ erDiagram
 <tr><td><code>sqlite_autoindex_element_model_1</code></td><td><code>element_id</code></td><td>✓</td><td>✓</td><td></td></tr>
 </tbody>
 </table>
+<table>
+<caption id="element_model-triggers"><a class="sq-anchor" href="#element_model-triggers">Triggers</a></caption>
+<thead>
+<tr><th>Trigger</th><th>Timing</th><th>Events</th><th>Definition</th></tr>
+</thead>
+<tbody>
+<tr><td><code>trg_element_model_ad</code></td><td>AFTER</td><td>DELETE</td><td><code>CREATE TRIGGER trg_element_model_ad AFTER DELETE ON element_model BEGIN
+    INSERT INTO search_element_model(search_element_model, rowid, code)
+    VALUES (&#39;delete&#39;, OLD.rowid, OLD.code);
+END</code></td></tr>
+<tr><td><code>trg_element_model_ai</code></td><td>AFTER</td><td>INSERT</td><td><code>CREATE TRIGGER trg_element_model_ai AFTER INSERT ON element_model BEGIN
+    INSERT INTO search_element_model(rowid, code)
+    VALUES (NEW.rowid, NEW.code);
+END</code></td></tr>
+<tr><td><code>trg_element_model_au</code></td><td>AFTER</td><td>UPDATE</td><td><code>CREATE TRIGGER trg_element_model_au AFTER UPDATE OF code ON element_model BEGIN
+    INSERT INTO search_element_model(search_element_model, rowid, code)
+    VALUES (&#39;delete&#39;, OLD.rowid, OLD.code);
+    INSERT INTO search_element_model(rowid, code)
+    VALUES (NEW.rowid, NEW.code);
+END</code></td></tr>
+</tbody>
+</table>
 <h3 id="element_pdf" class="sq-table"><a class="sq-anchor" href="#element_pdf"><code>element_pdf</code></a></h3>
 <p class="summary">table · 0 rows</p>
 <h4 id="element_pdf-erd"><a class="sq-anchor" href="#element_pdf-erd">Entity Relationship Diagram</a></h4>
@@ -3410,6 +3578,28 @@ erDiagram
 <tr><td><code>sqlite_autoindex_element_text_1</code></td><td><code>element_id</code></td><td>✓</td><td>✓</td><td></td></tr>
 </tbody>
 </table>
+<table>
+<caption id="element_text-triggers"><a class="sq-anchor" href="#element_text-triggers">Triggers</a></caption>
+<thead>
+<tr><th>Trigger</th><th>Timing</th><th>Events</th><th>Definition</th></tr>
+</thead>
+<tbody>
+<tr><td><code>trg_element_text_ad</code></td><td>AFTER</td><td>DELETE</td><td><code>CREATE TRIGGER trg_element_text_ad AFTER DELETE ON element_text BEGIN
+    INSERT INTO search_element_text(search_element_text, rowid, text, original_text)
+    VALUES (&#39;delete&#39;, OLD.rowid, OLD.text, OLD.original_text);
+END</code></td></tr>
+<tr><td><code>trg_element_text_ai</code></td><td>AFTER</td><td>INSERT</td><td><code>CREATE TRIGGER trg_element_text_ai AFTER INSERT ON element_text BEGIN
+    INSERT INTO search_element_text(rowid, text, original_text)
+    VALUES (NEW.rowid, NEW.text, NEW.original_text);
+END</code></td></tr>
+<tr><td><code>trg_element_text_au</code></td><td>AFTER</td><td>UPDATE</td><td><code>CREATE TRIGGER trg_element_text_au AFTER UPDATE OF text, original_text ON element_text BEGIN
+    INSERT INTO search_element_text(search_element_text, rowid, text, original_text)
+    VALUES (&#39;delete&#39;, OLD.rowid, OLD.text, OLD.original_text);
+    INSERT INTO search_element_text(rowid, text, original_text)
+    VALUES (NEW.rowid, NEW.text, NEW.original_text);
+END</code></td></tr>
+</tbody>
+</table>
 <h3 id="elements" class="sq-table"><a class="sq-anchor" href="#elements"><code>elements</code></a></h3>
 <p class="summary">table · 0 rows</p>
 <h4 id="elements-erd"><a class="sq-anchor" href="#elements-erd">Entity Relationship Diagram</a></h4>
@@ -3551,6 +3741,33 @@ erDiagram
 <tr><td><code>sqlite_autoindex_elements_1</code></td><td><code>id</code></td><td>✓</td><td>✓</td><td></td></tr>
 </tbody>
 </table>
+<table>
+<caption id="elements-triggers"><a class="sq-anchor" href="#elements-triggers">Triggers</a></caption>
+<thead>
+<tr><th>Trigger</th><th>Timing</th><th>Events</th><th>Definition</th></tr>
+</thead>
+<tbody>
+<tr><td><code>model_viewer_state_delete_element</code></td><td>AFTER</td><td>DELETE</td><td><code>CREATE TRIGGER model_viewer_state_delete_element
+AFTER DELETE ON elements
+BEGIN
+    DELETE FROM model_viewer_state WHERE owner_type = &#39;element&#39; AND owner_id = OLD.id;
+END</code></td></tr>
+<tr><td><code>trg_elements_ad</code></td><td>AFTER</td><td>DELETE</td><td><code>CREATE TRIGGER trg_elements_ad AFTER DELETE ON elements BEGIN
+    INSERT INTO search_elements(search_elements, rowid, label, description)
+    VALUES (&#39;delete&#39;, OLD.rowid, OLD.label, OLD.description);
+END</code></td></tr>
+<tr><td><code>trg_elements_ai</code></td><td>AFTER</td><td>INSERT</td><td><code>CREATE TRIGGER trg_elements_ai AFTER INSERT ON elements BEGIN
+    INSERT INTO search_elements(rowid, label, description)
+    VALUES (NEW.rowid, NEW.label, NEW.description);
+END</code></td></tr>
+<tr><td><code>trg_elements_au</code></td><td>AFTER</td><td>UPDATE</td><td><code>CREATE TRIGGER trg_elements_au AFTER UPDATE OF label, description ON elements BEGIN
+    INSERT INTO search_elements(search_elements, rowid, label, description)
+    VALUES (&#39;delete&#39;, OLD.rowid, OLD.label, OLD.description);
+    INSERT INTO search_elements(rowid, label, description)
+    VALUES (NEW.rowid, NEW.label, NEW.description);
+END</code></td></tr>
+</tbody>
+</table>
 <h3 id="external_file_revision_chunks" class="sq-table"><a class="sq-anchor" href="#external_file_revision_chunks"><code>external_file_revision_chunks</code></a></h3>
 <p class="summary">table · 0 rows</p>
 <h4 id="external_file_revision_chunks-erd"><a class="sq-anchor" href="#external_file_revision_chunks-erd">Entity Relationship Diagram</a></h4>
@@ -3595,6 +3812,17 @@ erDiagram
 <tbody>
 <tr><td><code>idx_external_file_revision_chunks_revision_offset</code></td><td><code>revision_id, offset_bytes</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>sqlite_autoindex_external_file_revision_chunks_1</code></td><td><code>revision_id, chunk_index</code></td><td>✓</td><td>✓</td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="external_file_revision_chunks-check-constraints"><a class="sq-anchor" href="#external_file_revision_chunks-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>chunk_index &gt;= 0</td></tr>
+<tr><td></td><td>offset_bytes &gt;= 0</td></tr>
+<tr><td></td><td>size_bytes &gt;= 0</td></tr>
 </tbody>
 </table>
 <h3 id="external_file_revisions" class="sq-table"><a class="sq-anchor" href="#external_file_revisions"><code>external_file_revisions</code></a></h3>
@@ -3671,16 +3899,16 @@ erDiagram
 <table>
 <caption id="external_file_text_index-columns"><a class="sq-anchor" href="#external_file_text_index-columns">Columns</a></caption>
 <thead>
-<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th><th>Default</th></tr>
+<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th><th>Auto</th><th>Default</th></tr>
 </thead>
 <tbody>
-<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td></td></tr>
-<tr><td><code>file_id</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td></tr>
-<tr><td><code>revision_id</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td></tr>
-<tr><td><code>mime_type</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td></tr>
-<tr><td><code>extracted_text</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td><code>&#39;&#39;</code></td></tr>
-<tr><td><code>has_ocr</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>0</code></td></tr>
-<tr><td><code>updated</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td>auto_inc</td><td></td></tr>
+<tr><td><code>file_id</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>revision_id</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>mime_type</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>extracted_text</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td><td><code>&#39;&#39;</code></td></tr>
+<tr><td><code>has_ocr</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td><td><code>0</code></td></tr>
+<tr><td><code>updated</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td><td></td></tr>
 </tbody>
 </table>
 <table>
@@ -3701,6 +3929,31 @@ erDiagram
 <tr><td><code>idx_external_file_text_index_file_id</code></td><td><code>file_id</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>idx_external_file_text_index_revision_id</code></td><td><code>revision_id</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>sqlite_autoindex_external_file_text_index_1</code></td><td><code>file_id, revision_id</code></td><td>✓</td><td></td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="external_file_text_index-triggers"><a class="sq-anchor" href="#external_file_text_index-triggers">Triggers</a></caption>
+<thead>
+<tr><th>Trigger</th><th>Timing</th><th>Events</th><th>Definition</th></tr>
+</thead>
+<tbody>
+<tr><td><code>trg_external_file_text_index_ad</code></td><td>AFTER</td><td>DELETE</td><td><code>CREATE TRIGGER trg_external_file_text_index_ad
+AFTER DELETE ON external_file_text_index BEGIN
+    INSERT INTO search_external_file_text(search_external_file_text, rowid, extracted_text)
+    VALUES (&#39;delete&#39;, OLD.id, OLD.extracted_text);
+END</code></td></tr>
+<tr><td><code>trg_external_file_text_index_ai</code></td><td>AFTER</td><td>INSERT</td><td><code>CREATE TRIGGER trg_external_file_text_index_ai
+AFTER INSERT ON external_file_text_index BEGIN
+    INSERT INTO search_external_file_text(rowid, extracted_text)
+    VALUES (NEW.id, NEW.extracted_text);
+END</code></td></tr>
+<tr><td><code>trg_external_file_text_index_au</code></td><td>AFTER</td><td>UPDATE</td><td><code>CREATE TRIGGER trg_external_file_text_index_au
+AFTER UPDATE OF extracted_text ON external_file_text_index BEGIN
+    INSERT INTO search_external_file_text(search_external_file_text, rowid, extracted_text)
+    VALUES (&#39;delete&#39;, OLD.id, OLD.extracted_text);
+    INSERT INTO search_external_file_text(rowid, extracted_text)
+    VALUES (NEW.id, NEW.extracted_text);
+END</code></td></tr>
 </tbody>
 </table>
 <h3 id="external_files" class="sq-table"><a class="sq-anchor" href="#external_files"><code>external_files</code></a></h3>
@@ -3853,20 +4106,20 @@ erDiagram
 <table>
 <caption id="hatch_pattern_lines-columns"><a class="sq-anchor" href="#hatch_pattern_lines-columns">Columns</a></caption>
 <thead>
-<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th><th>Default</th></tr>
+<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th><th>Auto</th><th>Default</th></tr>
 </thead>
 <tbody>
-<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td></td></tr>
-<tr><td><code>owner_type</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td></tr>
-<tr><td><code>owner_id</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td></tr>
-<tr><td><code>sort_order</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>0</code></td></tr>
-<tr><td><code>angle</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
-<tr><td><code>origin_x</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
-<tr><td><code>origin_y</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
-<tr><td><code>origin_mirroring</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>offset_x</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
-<tr><td><code>offset_y</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
-<tr><td><code>dash_pattern</code></td><td><code>BLOB</code></td><td>✓</td><td></td><td></td><td></td></tr>
+<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td>auto_inc</td><td></td></tr>
+<tr><td><code>owner_type</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>owner_id</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>sort_order</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td><td><code>0</code></td></tr>
+<tr><td><code>angle</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
+<tr><td><code>origin_x</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
+<tr><td><code>origin_y</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
+<tr><td><code>origin_mirroring</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>offset_x</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
+<tr><td><code>offset_y</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
+<tr><td><code>dash_pattern</code></td><td><code>BLOB</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
 </tbody>
 </table>
 <table>
@@ -4072,12 +4325,12 @@ erDiagram
 <table>
 <caption id="linear_path_overrides-columns"><a class="sq-anchor" href="#linear_path_overrides-columns">Columns</a></caption>
 <thead>
-<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th></tr>
+<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th><th>Auto</th></tr>
 </thead>
 <tbody>
-<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td></tr>
-<tr><td><code>element_id</code></td><td><code>TEXT</code></td><td></td><td></td><td>✓</td></tr>
-<tr><td><code>sort_order</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td></tr>
+<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td>auto_inc</td></tr>
+<tr><td><code>element_id</code></td><td><code>TEXT</code></td><td></td><td></td><td>✓</td><td></td></tr>
+<tr><td><code>sort_order</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td></tr>
 </tbody>
 </table>
 <table>
@@ -4288,6 +4541,15 @@ erDiagram
 <tr><td><code>sqlite_autoindex_model_viewer_state_1</code></td><td><code>owner_type, owner_id</code></td><td>✓</td><td>✓</td><td></td></tr>
 </tbody>
 </table>
+<table>
+<caption id="model_viewer_state-check-constraints"><a class="sq-anchor" href="#model_viewer_state-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>owner_type IN (&#39;element&#39;, &#39;issue_anchor&#39;)</td></tr>
+</tbody>
+</table>
 <h3 id="regions" class="sq-table"><a class="sq-anchor" href="#regions"><code>regions</code></a></h3>
 <p class="summary">table · 0 rows</p>
 <h4 id="regions-erd"><a class="sq-anchor" href="#regions-erd">Entity Relationship Diagram</a></h4>
@@ -4350,18 +4612,18 @@ erDiagram
 <table>
 <caption id="schema_migrations-columns"><a class="sq-anchor" href="#schema_migrations-columns">Columns</a></caption>
 <thead>
-<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th></tr>
+<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th><th>Auto</th></tr>
 </thead>
 <tbody>
-<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td></tr>
-<tr><td><code>from_schema_version</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td></tr>
-<tr><td><code>to_schema_version</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td></tr>
-<tr><td><code>migration_name</code></td><td><code>TEXT</code></td><td></td><td></td><td></td></tr>
-<tr><td><code>migration_sql</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td></tr>
-<tr><td><code>reverse_migration_sql</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td></tr>
-<tr><td><code>migration_checksum</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td></tr>
-<tr><td><code>applied_at</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td></tr>
-<tr><td><code>boundary_checkpoint_id</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td></tr>
+<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td>auto_inc</td></tr>
+<tr><td><code>from_schema_version</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>to_schema_version</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>migration_name</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>migration_sql</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
+<tr><td><code>reverse_migration_sql</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
+<tr><td><code>migration_checksum</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
+<tr><td><code>applied_at</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>boundary_checkpoint_id</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
 </tbody>
 </table>
 <table>
@@ -4390,6 +4652,15 @@ erDiagram
 <tbody>
 <tr><td><code>idx_schema_migrations_to_version</code></td><td><code>to_schema_version</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>sqlite_autoindex_schema_migrations_1</code></td><td><code>from_schema_version, to_schema_version</code></td><td>✓</td><td></td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="schema_migrations-check-constraints"><a class="sq-anchor" href="#schema_migrations-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>to_schema_version &gt; from_schema_version</td></tr>
 </tbody>
 </table>
 <h3 id="search_blocks_config" class="sq-table"><a class="sq-anchor" href="#search_blocks_config"><code>search_blocks_config</code></a></h3>
@@ -5095,45 +5366,45 @@ erDiagram
 <table>
 <caption id="strokes-columns"><a class="sq-anchor" href="#strokes-columns">Columns</a></caption>
 <thead>
-<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th><th>Default</th></tr>
+<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th><th>Auto</th><th>Default</th></tr>
 </thead>
 <tbody>
-<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td></td></tr>
-<tr><td><code>owner_type</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td></tr>
-<tr><td><code>owner_id</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td></tr>
-<tr><td><code>sort_order</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>0</code></td></tr>
-<tr><td><code>preference</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>src</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td><code>&#39;&#39;</code></td></tr>
-<tr><td><code>visible</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>1</code></td></tr>
-<tr><td><code>opacity</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>1.0</code></td></tr>
-<tr><td><code>tiling_size_in_percent</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>tiling_angle</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>tiling_spacing</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>tiling_offset_x</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>tiling_offset_y</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_style</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_name</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_scale</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_angle</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_origin_x</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_origin_y</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_origin_mirror</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_pattern_double</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_custom_pattern_name</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>hatch_custom_pattern_desc</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>image_filter_brightness</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>image_filter_contrast</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>width</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>1.0</code></td></tr>
-<tr><td><code>style_preference</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>style_cap</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>style_join</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>style_dash</code></td><td><code>BLOB</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>style_dash_line_override</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>style_dash_cap</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>style_miter_limit</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>placement</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>sides_preference</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td><code>sides_values</code></td><td><code>BLOB</code></td><td>✓</td><td></td><td></td><td></td></tr>
+<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td>auto_inc</td><td></td></tr>
+<tr><td><code>owner_type</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>owner_id</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>sort_order</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td><td><code>0</code></td></tr>
+<tr><td><code>preference</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>src</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td><td><code>&#39;&#39;</code></td></tr>
+<tr><td><code>visible</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td></td><td><code>1</code></td></tr>
+<tr><td><code>opacity</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td></td><td><code>1.0</code></td></tr>
+<tr><td><code>tiling_size_in_percent</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>tiling_angle</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>tiling_spacing</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>tiling_offset_x</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>tiling_offset_y</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_style</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_name</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_scale</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_angle</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_origin_x</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_origin_y</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_origin_mirror</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_pattern_double</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_custom_pattern_name</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>hatch_custom_pattern_desc</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>image_filter_brightness</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>image_filter_contrast</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>width</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td></td><td><code>1.0</code></td></tr>
+<tr><td><code>style_preference</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>style_cap</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>style_join</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>style_dash</code></td><td><code>BLOB</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>style_dash_line_override</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>style_dash_cap</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>style_miter_limit</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>placement</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>sides_preference</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>sides_values</code></td><td><code>BLOB</code></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
 </tbody>
 </table>
 <table>
@@ -5208,6 +5479,16 @@ erDiagram
 <tr><td><code>sqlite_autoindex_version_chains_2</code></td><td><code>schema_version, start_version</code></td><td>✓</td><td></td><td></td></tr>
 </tbody>
 </table>
+<table>
+<caption id="version_chains-check-constraints"><a class="sq-anchor" href="#version_chains-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>schema_version &gt;= 1</td></tr>
+<tr><td></td><td>end_version IS NULL OR end_version &gt;= start_version</td></tr>
+</tbody>
+</table>
 <h3 id="version_graph" class="sq-table"><a class="sq-anchor" href="#version_graph"><code>version_graph</code></a></h3>
 <p class="summary">table · 1 rows</p>
 <h4 id="version_graph-erd"><a class="sq-anchor" href="#version_graph-erd">Entity Relationship Diagram</a></h4>
@@ -5236,6 +5517,17 @@ erDiagram
 <tr><td><code>latest_version_id</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td><code>chain_count</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>1</code></td></tr>
 <tr><td><code>total_size</code></td><td><code>INTEGER</code></td><td>✓</td><td></td><td></td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="version_graph-check-constraints"><a class="sq-anchor" href="#version_graph-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>id = 1</td></tr>
+<tr><td></td><td>current_schema_version &gt;= 1</td></tr>
+<tr><td></td><td>chain_count &gt;= 1</td></tr>
 </tbody>
 </table>
 <h3 id="search_blocks" class="sq-table"><a class="sq-anchor" href="#search_blocks"><code>search_blocks</code></a></h3>
