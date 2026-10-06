@@ -1,0 +1,34 @@
+[package]
+name = "ducdxf"
+version = "0.0.0-development"
+edition = "2021"
+authors = ["Jorge Soares <jorge@ducflair.com>"]
+description = "A library to convert CAD files (DXF, DWG, DWF) to DUC format."
+license = "MIT"
+
+[lib]
+name = "ducdxf"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "ducdxf"
+path = "src/main.rs"
+
+[dependencies]
+duc = { version = "0.0.0-development", path = "../ducrs" }
+acadrust = "0.5.5"
+dxf = "0.6.1"
+zip = { version = "2.2", default-features = false, features = ["deflate"] }
+roxmltree = "0.20"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_bytes = "0.11"
+thiserror = "2.0"
+log = "0.4"
+clap = { version = "4.5", features = ["derive"], optional = true }
+
+[features]
+default = ["cli"]
+cli = ["dep:clap"]
