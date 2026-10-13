@@ -9,9 +9,9 @@ use crate::utils::freedraw_bounds::{
 use crate::utils::style_resolver::StyleResolver;
 use crate::utils::svg_to_pdf::{svg_to_pdf, svg_to_pdf_with_dimensions};
 use crate::{
-    calculate_required_scale, calculate_required_scale_with_crop_dimensions,
-    validate_coordinates_with_scale, ConversionError, ConversionMode, ConversionOptions,
-    ConversionResult, PDF_USER_UNIT,
+    calculate_bounding_box, calculate_required_scale,
+    calculate_required_scale_with_crop_dimensions, ConversionError, ConversionMode,
+    ConversionOptions, ConversionResult, PDF_USER_UNIT,
 };
 use bigcolor::BigColor;
 use duc::types::{
@@ -520,53 +520,41 @@ impl DucToPdfBuilder {
         scale: Option<f64>,
         crop_offset: Option<(f64, f64)>,
     ) -> ConversionResult<()> {
-        // If crop offset is specified, only validate coordinates after applying the offset
-        if let Some((offset_x_mm, offset_y_mm)) = crop_offset {
-            // Assume all coordinates are already in millimeters
+        let eff_scale = scale.unwrap_or(1.0);
 
-            // With crop offset, we're adjusting the viewport, so we need to validate
-            // that all elements when adjusted by the offset are still within bounds
+        let has_plots = data.elements.iter().any(|elem| {
+            if let DucElementEnum::DucPlotElement(plot) = &elem.element {
+                !plot.stack_element_base.base.is_deleted
+            } else {
+                false
+            }
+        });
+
+        if has_plots && crop_offset.is_none() {
             for element_wrapper in &data.elements {
-                let base = Self::get_element_base(&element_wrapper.element);
-
-                // Assume all coordinates are already in millimeters
-                let (x_mm, y_mm, width_mm, height_mm) = (base.x, base.y, base.width, base.height);
-
-                let adjusted_x = x_mm - offset_x_mm;
-                let adjusted_y = y_mm - offset_y_mm;
-
-                // CRITICAL: Validate that coordinates don't exceed limits
-                let final_scale = validate_coordinates_with_scale(adjusted_x, adjusted_y, scale)?;
-                let final_scale2 = validate_coordinates_with_scale(
-                    adjusted_x + width_mm,
-                    adjusted_y + height_mm,
-                    scale,
-                )?;
-
-                // If auto-scaling was applied, ensure we use the most restrictive scale
-                if scale.is_none() && (final_scale < 1.0 || final_scale2 < 1.0) {
-                    let required_scale = final_scale.min(final_scale2);
-                    if required_scale < 1.0 {
-                        return Err(ConversionError::InvalidDucData(format!(
-                            "Crop specifications result in coordinates that exceed PDF limits. Required scale: {:.6}", 
-                            required_scale
-                        )));
+                if let DucElementEnum::DucPlotElement(plot) = &element_wrapper.element {
+                    let base = &plot.stack_element_base.base;
+                    if !base.is_deleted {
+                        if base.width * eff_scale > crate::MAX_COMFORTABLE_MM
+                            || base.height * eff_scale > crate::MAX_COMFORTABLE_MM
+                        {
+                            return Err(ConversionError::ScaleExceedsBounds(
+                                base.width,
+                                base.height,
+                                eff_scale,
+                            ));
+                        }
                     }
                 }
             }
             return Ok(());
         }
 
-        // Otherwise validate all elements - assume all coordinates are in millimeters
-        for element_wrapper in &data.elements {
-            let base = Self::get_element_base(&element_wrapper.element);
-
-            // Assume all coordinates are already in millimeters
-            let (x_mm, y_mm, width_mm, height_mm) = (base.x, base.y, base.width, base.height);
-
-            validate_coordinates_with_scale(x_mm, y_mm, scale)?;
-            validate_coordinates_with_scale(x_mm + width_mm, y_mm + height_mm, scale)?;
+        let (_min_x, _min_y, width, height) = calculate_bounding_box(data);
+        if width * eff_scale > crate::MAX_COMFORTABLE_MM || height * eff_scale > crate::MAX_COMFORTABLE_MM {
+            return Err(ConversionError::ScaleExceedsBounds(width, height, eff_scale));
         }
+
         Ok(())
     }
 
@@ -618,23 +606,21 @@ impl DucToPdfBuilder {
             info.set("Author", Object::string_literal(author.as_str()));
         }
 
-        // Set subject
-        if let Some(subject) = &self.context.options.metadata_subject {
-            info.set("Subject", Object::string_literal(subject.as_str()));
-        }
-
         // Set creator and producer
-        info.set("Creator", Object::string_literal("DUC to PDF Converter"));
+        // info.set("Creator", Object::string_literal(""));
         info.set("Producer", Object::string_literal("ducpdf"));
 
-        // Set version info with scale information
-        let scale_info = if self.context.scale < 1.0 {
-            format!("Scale: 1:{:.4}", 1.0 / self.context.scale)
-        } else if self.context.scale > 1.0 {
-            format!("Scale: {:.4}:1", self.context.scale)
-        } else {
-            "Scale: 1:1".to_string()
+        // Format scale information cleanly (e.g. "Scale: 1:1", "Scale: 1:20", "Scale: 10:1")
+        let scale_info = crate::format_scale_string(self.context.scale);
+
+        // Set subject / description to clearly communicate scale to PDF viewers
+        let subject_text = match &self.context.options.metadata_subject {
+            Some(subject) if !subject.trim().is_empty() => {
+                format!("{}, {}", subject.trim(), scale_info)
+            }
+            _ => scale_info.clone(),
         };
+        info.set("Subject", Object::string_literal(subject_text.as_str()));
 
         let keywords = format!(
             "DUC version: {}, Source: {}, {}",
@@ -1349,6 +1335,9 @@ impl DucToPdfBuilder {
         // Setup page resources including XObjects
         let resources = self.create_page_resources()?;
 
+        let page_width_pt = (page_width * PDF_USER_UNIT as f64) as f32;
+        let page_height_pt = (page_height * PDF_USER_UNIT as f64) as f32;
+
         // Create page dictionary
         let mut page = Dictionary::new();
         page.set("Type", Object::Name("Page".as_bytes().to_vec()));
@@ -1357,8 +1346,8 @@ impl DucToPdfBuilder {
             Object::Array(vec![
                 Object::Real(0.0),
                 Object::Real(0.0),
-                Object::Real(page_width as f32),
-                Object::Real(page_height as f32),
+                Object::Real(page_width_pt),
+                Object::Real(page_height_pt),
             ]),
         );
         page.set(
@@ -1366,12 +1355,11 @@ impl DucToPdfBuilder {
             Object::Array(vec![
                 Object::Real(0.0),
                 Object::Real(0.0),
-                Object::Real(page_width as f32),
-                Object::Real(page_height as f32),
+                Object::Real(page_width_pt),
+                Object::Real(page_height_pt),
             ]),
         );
 
-        page.set("UserUnit", Object::Real(PDF_USER_UNIT));
         page.set("Contents", Object::Reference(content_id));
         page.set("Resources", Object::Dictionary(resources));
 
@@ -1409,6 +1397,9 @@ impl DucToPdfBuilder {
         // Setup page resources including XObjects
         let resources = self.create_page_resources()?;
 
+        let page_width_pt = (page_width * PDF_USER_UNIT as f64) as f32;
+        let page_height_pt = (page_height * PDF_USER_UNIT as f64) as f32;
+
         // Create page dictionary
         let mut page = Dictionary::new();
         page.set("Type", Object::Name("Page".as_bytes().to_vec()));
@@ -1417,8 +1408,8 @@ impl DucToPdfBuilder {
             Object::Array(vec![
                 Object::Real(0.0),
                 Object::Real(0.0),
-                Object::Real(page_width as f32),
-                Object::Real(page_height as f32),
+                Object::Real(page_width_pt),
+                Object::Real(page_height_pt),
             ]),
         );
         page.set(
@@ -1426,12 +1417,11 @@ impl DucToPdfBuilder {
             Object::Array(vec![
                 Object::Real(0.0),
                 Object::Real(0.0),
-                Object::Real(page_width as f32),
-                Object::Real(page_height as f32),
+                Object::Real(page_width_pt),
+                Object::Real(page_height_pt),
             ]),
         );
 
-        page.set("UserUnit", Object::Real(PDF_USER_UNIT));
         page.set("Contents", Object::Reference(content_id));
         page.set("Resources", Object::Dictionary(resources));
 
@@ -1514,6 +1504,20 @@ impl DucToPdfBuilder {
 
         // Save graphics state once for the entire page
         operations.push(Operation::new("q", vec![]));
+
+        // Scale from millimeters to PDF points (1 mm = 72.0 / 25.4 pt)
+        // This ensures the content drawn in millimeters matches standard point-based PDF user space
+        operations.push(Operation::new(
+            "cm",
+            vec![
+                Object::Real(PDF_USER_UNIT),
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(PDF_USER_UNIT),
+                Object::Real(0.0),
+                Object::Real(0.0),
+            ],
+        ));
 
         // Determine which background color to use:
         // - In PLOT mode: use plot element's background (passed as page_background_color)
