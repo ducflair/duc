@@ -86,7 +86,6 @@ class DucIssueMessage:
 class DucIssueCanvasAnchor:
     x: float
     y: float
-    scope: Optional[str] = None
     type: str = "canvas"
 
 
@@ -132,13 +131,10 @@ class DucIssue:
 @dataclass
 class DucGlobalState:
     view_background_color: str
-    main_scope: str
-    scope_exponent_threshold: int
 
 
 @dataclass
 class DucLocalState:
-    scope: str
     scroll_x: float
     scroll_y: float
     zoom: float

@@ -1,6 +1,4 @@
 import { BEZIER_MIRRORING } from "../enums";
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped } from "../technical/scopes";
-import { RawValue, Scope, ScopedValue } from "../types";
 import { DucElement, DucFreeDrawElement, DucLine, DucLinearElement, DucNonSelectionElement, DucPath, DucPoint, NonDeletedDucElement } from "../types/elements";
 import { isArrowElement, isEllipseElement, isFreeDrawElement, isLinearElement, isPolygonElement } from "../types/elements/typeChecks";
 import { calculateShapeBounds } from "./bounds";
@@ -13,15 +11,14 @@ import { rotatePoint } from "./math";
  * Converts a shape (rectangle, polygon, ellipse) to a linear element
  */
 export const convertShapeToLinearElement = (
-  currentScope: Scope,
   element: DucNonSelectionElement,
 ): DucLinearElement | null => {
   if (!element) return null;
 
-  const { points, lines, pathOverrides } = getElementRelativePoints(element, currentScope);
+  const { points, lines, pathOverrides } = getElementRelativePoints(element);
 
   // Create a new linear element based on the shape's points
-  const linearElement = newLinearElement(currentScope, {
+  const linearElement = newLinearElement({
     ...getBaseElementProps(element),
     type: "line",
     points,
@@ -29,11 +26,7 @@ export const convertShapeToLinearElement = (
     pathOverrides,
   });
 
-  const normalizedLinearElement = getNormalizedPoints(
-    linearElement,
-    currentScope,
-  );
-
+  const normalizedLinearElement = getNormalizedPoints(linearElement);
 
   return {
     ...linearElement,
@@ -50,12 +43,11 @@ const getNonLinearElementRelativePoints = (
     NonDeletedDucElement,
     DucLinearElement | DucFreeDrawElement
   >,
-  currentScope: Scope,
 ): { points: DucPoint[], lines: DucLine[], pathOverrides?: DucPath[] } => {
   if (isPolygonElement(element)) {
     const numSides = element.sides;
-    const width = element.width.scoped;
-    const height = element.height.scoped;
+    const width = typeof element.width === "number" ? element.width : ((element.width as any)?.value ?? 0);
+    const height = typeof element.height === "number" ? element.height : ((element.height as any)?.value ?? 0);
     const centerX = width / 2;
     const centerY = height / 2;
     const radiusX = width / 2;
@@ -71,12 +63,12 @@ const getNonLinearElementRelativePoints = (
       const baseAngle = (2 * Math.PI * i) / numSides - Math.PI / 2; // Start at top
       
       // Calculate point on ellipse using the rotated angle
-      const x = centerX + radiusX * Math.cos(baseAngle) as ScopedValue;
-      const y = centerY + radiusY * Math.sin(baseAngle) as ScopedValue;
+      const x = centerX + radiusX * Math.cos(baseAngle);
+      const y = centerY + radiusY * Math.sin(baseAngle);
       
       points.push({
-        x: getPrecisionValueFromScoped(x, element.scope, currentScope),
-        y: getPrecisionValueFromScoped(y, element.scope, currentScope),
+        x,
+        y,
       });
     }
 
@@ -96,24 +88,25 @@ const getNonLinearElementRelativePoints = (
       element,
       points,
       lines,
-      currentScope,
     );
 
     return { points: corrected.points, lines: corrected.lines, pathOverrides };
   }
 
   if (isEllipseElement(element)) {
-    const { width, ratio, startAngle, endAngle } = element;
-    const height = element.height ?? width;
+    const { ratio, startAngle, endAngle } = element;
+    const toNum = (v: any) => typeof v === "number" ? v : (v?.value ?? 0);
+    const w = toNum(element.width);
+    const h = element.height !== undefined ? toNum(element.height) : w;
 
-    if (width.scoped <= 0 || height.scoped <= 0) {
+    if (w <= 0 || h <= 0) {
       return { points: [], lines: [] };
     }
 
-    const rx = width.scoped / 2;
-    const ry = height.scoped / 2;
-    const cx = width.scoped / 2;
-    const cy = height.scoped / 2;
+    const rx = w / 2;
+    const ry = h / 2;
+    const cx = w / 2;
+    const cy = h / 2;
     const epsilon = 1e-6;
 
     const sweepAngle = endAngle - startAngle;
@@ -147,16 +140,16 @@ const getNonLinearElementRelativePoints = (
         const p0 = { x: cx + radiusX * Math.cos(angle0), y: cy + radiusY * Math.sin(angle0) };
         if (i === 0) {
           arcPoints.push({
-            x: getPrecisionValueFromScoped(p0.x as ScopedValue, element.scope, currentScope),
-            y: getPrecisionValueFromScoped(p0.y as ScopedValue, element.scope, currentScope),
+            x: p0.x,
+            y: p0.y,
             mirroring: BEZIER_MIRRORING.ANGLE_LENGTH,
           });
         }
 
         const p3 = { x: cx + radiusX * Math.cos(angle1), y: cy + radiusY * Math.sin(angle1) };
         arcPoints.push({
-          x: getPrecisionValueFromScoped(p3.x as ScopedValue, element.scope, currentScope),
-          y: getPrecisionValueFromScoped(p3.y as ScopedValue, element.scope, currentScope),
+          x: p3.x,
+          y: p3.y,
           mirroring: BEZIER_MIRRORING.ANGLE_LENGTH,
         });
 
@@ -171,15 +164,15 @@ const getNonLinearElementRelativePoints = (
           {
             index: i,
             handle: {
-              x: getPrecisionValueFromScoped(cp1.x as ScopedValue, element.scope, currentScope),
-              y: getPrecisionValueFromScoped(cp1.y as ScopedValue, element.scope, currentScope),
+              x: cp1.x,
+              y: cp1.y,
             },
           },
           {
             index: i + 1,
             handle: {
-              x: getPrecisionValueFromScoped(cp2.x as ScopedValue, element.scope, currentScope),
-              y: getPrecisionValueFromScoped(cp2.y as ScopedValue, element.scope, currentScope),
+              x: cp2.x,
+              y: cp2.y,
             },
           },
         ]);
@@ -251,8 +244,8 @@ const getNonLinearElementRelativePoints = (
       }
     } else if (!isFullShape) { // Pie slice (no hole)
       const centerPoint = {
-        x: getPrecisionValueFromScoped(cx as ScopedValue, element.scope, currentScope),
-        y: getPrecisionValueFromScoped(cy as ScopedValue, element.scope, currentScope),
+        x: cx,
+        y: cy,
         mirroring: BEZIER_MIRRORING.NONE,
       };
       const centerIndex = allPoints.length;
@@ -278,46 +271,32 @@ const getNonLinearElementRelativePoints = (
     const corrected = getCorrectedOrthodoxElementPoints(
       element, 
       merged.points, 
-      merged.lines, 
-      currentScope
+      merged.lines,
     );
     
     return { points: corrected.points, lines: corrected.lines, pathOverrides };
   }
 
   // Default case: rectangle/square
+  const elWidth = typeof element.width === "number" ? element.width : ((element.width as any)?.value ?? 0);
+  const elHeight = typeof element.height === "number" ? element.height : ((element.height as any)?.value ?? 0);
+
   const points: DucPoint[] = [
     {
-      x: getPrecisionValueFromRaw(0 as RawValue, element.scope, currentScope),
-      y: getPrecisionValueFromRaw(0 as RawValue, element.scope, currentScope),
+      x: 0,
+      y: 0,
     },
     {
-      x: getPrecisionValueFromScoped(
-        element.width.scoped,
-        element.scope,
-        currentScope
-      ),
-      y: getPrecisionValueFromRaw(0 as RawValue, element.scope, currentScope),
+      x: elWidth,
+      y: 0,
     },
     {
-      x: getPrecisionValueFromScoped(
-        element.width.scoped,
-        element.scope,
-        currentScope
-      ),
-      y: getPrecisionValueFromScoped(
-        element.height.scoped,
-        element.scope,
-        currentScope
-      ),
+      x: elWidth,
+      y: elHeight,
     },
     {
-      x: getPrecisionValueFromRaw(0 as RawValue, element.scope, currentScope),
-      y: getPrecisionValueFromScoped(
-        element.height.scoped,
-        element.scope,
-        currentScope
-      ),
+      x: 0,
+      y: elHeight,
     },
   ];
 
@@ -336,13 +315,15 @@ export const getCorrectedOrthodoxElementPoints = (
   element: DucElement,
   points: readonly DucPoint[],
   lines: readonly DucLine[],
-  currentScope: Scope,
 ): { points: DucPoint[], lines: DucLine[] } => {
   const { minX, minY, maxX, maxY } = calculateShapeBounds(points, lines);
 
+  const elWidth = typeof element.width === "number" ? element.width : ((element.width as any)?.value ?? 0);
+  const elHeight = typeof element.height === "number" ? element.height : ((element.height as any)?.value ?? 0);
+
   const polygonCenter = {
-    x: element.width.scoped / 2,
-    y: element.height.scoped / 2,
+    x: elWidth / 2,
+    y: elHeight / 2,
   };
 
   const bboxCenter = {
@@ -362,35 +343,49 @@ export const getCorrectedOrthodoxElementPoints = (
     y: offset.y - rotatedOffset.y,
   };
 
-  const correctedPoints = points.map((p) => ({
-    ...p,
-    x: getPrecisionValueFromScoped(
-      (p.x.scoped + correction.x) as ScopedValue,
-      element.scope,
-      currentScope,
-    ),
-    y: getPrecisionValueFromScoped(
-      (p.y.scoped + correction.y) as ScopedValue,
-      element.scope,
-      currentScope,
-    ),
-  }));
+  const correctedPoints = points.map((p) => {
+    const px = typeof p.x === "number" ? p.x : ((p.x as any)?.value ?? 0);
+    const py = typeof p.y === "number" ? p.y : ((p.y as any)?.value ?? 0);
+    return {
+      ...p,
+      x: px + correction.x,
+      y: py + correction.y,
+    };
+  });
 
   const correctedLines = lines.map((line) => ([
-      { ...line[0], handle: line[0].handle ? { ...line[0].handle, x: getPrecisionValueFromScoped(line[0].handle.x.scoped + correction.x as ScopedValue, element.scope, currentScope), y: getPrecisionValueFromScoped(line[0].handle.y.scoped + correction.y as ScopedValue, element.scope, currentScope) } : null },
-      { ...line[1], handle: line[1].handle ? { ...line[1].handle, x: getPrecisionValueFromScoped(line[1].handle.x.scoped + correction.x as ScopedValue, element.scope, currentScope), y: getPrecisionValueFromScoped(line[1].handle.y.scoped + correction.y as ScopedValue, element.scope, currentScope) } : null },
+      {
+        ...line[0],
+        handle: line[0].handle
+          ? {
+            ...line[0].handle,
+            x: (typeof line[0].handle.x === "number" ? line[0].handle.x : ((line[0].handle.x as any)?.value ?? 0)) + correction.x,
+            y: (typeof line[0].handle.y === "number" ? line[0].handle.y : ((line[0].handle.y as any)?.value ?? 0)) + correction.y,
+          }
+          : null,
+      },
+      {
+        ...line[1],
+        handle: line[1].handle
+          ? {
+            ...line[1].handle,
+            x: (typeof line[1].handle.x === "number" ? line[1].handle.x : ((line[1].handle.x as any)?.value ?? 0)) + correction.x,
+            y: (typeof line[1].handle.y === "number" ? line[1].handle.y : ((line[1].handle.y as any)?.value ?? 0)) + correction.y,
+          }
+          : null,
+      },
     ] as DucLine),
   );
 
   return { points: correctedPoints, lines: correctedLines };
 };
 
-export const getElementRelativePoints = (element: DucElement, currentScope: Scope): { points: DucLinearElement["points"], lines: DucLinearElement["lines"], pathOverrides?: DucPath[] } => {
+export const getElementRelativePoints = (element: DucElement): { points: DucLinearElement["points"], lines: DucLinearElement["lines"], pathOverrides?: DucPath[] } => {
   if (isLinearElement(element)) {
     return { points: element.points, lines: element.lines };
   }
   if (isFreeDrawElement(element) || isArrowElement(element)) {
     return { points: element.points, lines: [] };
   }
-  return getNonLinearElementRelativePoints(element, currentScope);
+  return getNonLinearElementRelativePoints(element);
 };

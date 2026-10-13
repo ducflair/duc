@@ -1,28 +1,29 @@
-import { Scope, ScopedValue } from "../types";
 import { DucElement, DucFreeDrawElement, DucLine, DucLinearElement, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap } from "../types/elements";
 import { isArrowElement, isFreeDrawElement, isLinearElement, isTextElement } from "../types/elements/typeChecks";
 import { Bounds, GeometricPoint } from "../types/geometry.types";
 import { getBoundTextElementPosition, getLinearElementAbsoluteCoords } from "./elements/linearElement";
 import { getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, rescaleLines, rescalePoints, rotate } from "./math";
 
-export type SV = ScopedValue;
+export type SV = number;
+
+const toNum = (v: any): number => typeof v === "number" ? v : (v?.value ?? 0);
 
 /**
  * Common bounds calculation interface
  */
 export interface BoundsResult {
-  minX: ScopedValue;
-  minY: ScopedValue;
-  maxX: ScopedValue;
-  maxY: ScopedValue;
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
 }
 
 /**
  * Extended bounds calculation interface with center coordinates
  */
 export interface ExtendedBoundsResult extends BoundsResult {
-  cx: ScopedValue;
-  cy: ScopedValue;
+  cx: number;
+  cy: number;
 }
 
 // Scene -> Scene coords, but in x1,x2,y1,y2 format.
@@ -33,7 +34,6 @@ export type ElementAbsoluteCoords = [SV, SV, SV, SV, SV, SV];
 export const getElementAbsoluteCoords = (
   element: DucElement,
   elementsMap: ElementsMap,
-  currentScope: Scope,
   includeBoundText: boolean = false,
   returnUnrotatedBoundsOnly: boolean = true,
 ): ElementAbsoluteCoords => {
@@ -44,7 +44,6 @@ export const getElementAbsoluteCoords = (
       element,
       elementsMap,
       includeBoundText,
-      currentScope,
       returnUnrotatedBoundsOnly,
     );
   } else if (isTextElement(element)) {
@@ -56,35 +55,44 @@ export const getElementAbsoluteCoords = (
         container,
         element as DucTextElementWithContainer,
         elementsMap,
-        currentScope,
       );
       if (coords === null) {
+        const ex = toNum(element.x);
+        const ey = toNum(element.y);
+        const ew = toNum(element.width);
+        const eh = toNum(element.height);
         return [
-          element.x.scoped as SV,
-          element.y.scoped as SV,
-          element.x.scoped + element.width.scoped as SV,
-          element.y.scoped + element.height.scoped as SV,
-          element.x.scoped + element.width.scoped / 2 as SV,
-          element.y.scoped + element.height.scoped / 2 as SV,
+          ex as SV,
+          ey as SV,
+          (ex + ew) as SV,
+          (ey + eh) as SV,
+          (ex + ew / 2) as SV,
+          (ey + eh / 2) as SV,
         ];
       }
+      const ew = toNum(element.width);
+      const eh = toNum(element.height);
       return [
         coords.x as SV,
         coords.y as SV,
-        coords.x + element.width.scoped as SV,
-        coords.y + element.height.scoped as SV,
-        coords.x + element.width.scoped / 2 as SV,
-        coords.y + element.height.scoped / 2 as SV,
+        (coords.x + ew) as SV,
+        (coords.y + eh) as SV,
+        (coords.x + ew / 2) as SV,
+        (coords.y + eh / 2) as SV,
       ];
     }
   }
+  const ex = toNum(element.x);
+  const ey = toNum(element.y);
+  const ew = toNum(element.width);
+  const eh = toNum(element.height);
   return [
-    element.x.scoped as SV,
-    element.y.scoped as SV,
-    element.x.scoped + element.width.scoped as SV,
-    element.y.scoped + element.height.scoped as SV,
-    element.x.scoped + element.width.scoped / 2 as SV,
-    element.y.scoped + element.height.scoped / 2 as SV,
+    ex as SV,
+    ey as SV,
+    (ex + ew) as SV,
+    (ey + eh) as SV,
+    (ex + ew / 2) as SV,
+    (ey + eh / 2) as SV,
   ];
 };
 
@@ -94,25 +102,25 @@ export const getElementAbsoluteCoords = (
 export const calculatePointsBounds = (points: readonly DucPoint[]): BoundsResult => {
   if (points.length === 0) {
     return {
-      minX: 0 as ScopedValue,
-      minY: 0 as ScopedValue,
-      maxX: 0 as ScopedValue,
-      maxY: 0 as ScopedValue,
+      minX: 0,
+      minY: 0,
+      maxX: 0,
+      maxY: 0,
     };
   }
 
   return points.reduce(
     (limits, { x, y }) => ({
-      minX: Math.min(limits.minX, x.scoped) as ScopedValue,
-      minY: Math.min(limits.minY, y.scoped) as ScopedValue,
-      maxX: Math.max(limits.maxX, x.scoped) as ScopedValue,
-      maxY: Math.max(limits.maxY, y.scoped) as ScopedValue,
+      minX: Math.min(limits.minX, toNum(x)),
+      minY: Math.min(limits.minY, toNum(y)),
+      maxX: Math.max(limits.maxX, toNum(x)),
+      maxY: Math.max(limits.maxY, toNum(y)),
     }),
     {
-      minX: Infinity as ScopedValue,
-      minY: Infinity as ScopedValue,
-      maxX: -Infinity as ScopedValue,
-      maxY: -Infinity as ScopedValue,
+      minX: Infinity,
+      minY: Infinity,
+      maxX: -Infinity,
+      maxY: -Infinity,
     },
   );
 };
@@ -123,10 +131,10 @@ export const calculatePointsBounds = (points: readonly DucPoint[]): BoundsResult
 export const calculateGeometricPointsBounds = (points: GeometricPoint[]): BoundsResult => {
   if (points.length === 0) {
     return {
-      minX: 0 as ScopedValue,
-      minY: 0 as ScopedValue,
-      maxX: 0 as ScopedValue,
-      maxY: 0 as ScopedValue,
+      minX: 0,
+      minY: 0,
+      maxX: 0,
+      maxY: 0,
     };
   }
 
@@ -143,10 +151,10 @@ export const calculateGeometricPointsBounds = (points: GeometricPoint[]): Bounds
   }
 
   return {
-    minX: minX as ScopedValue,
-    minY: minY as ScopedValue,
-    maxX: maxX as ScopedValue,
-    maxY: maxY as ScopedValue,
+    minX,
+    minY,
+    maxX,
+    maxY,
   };
 };
 
@@ -178,28 +186,28 @@ export const processBezierCurveBounds = (
 
     if (startHandle && endHandle) {
       // Cubic Bezier curve segment (both handles present)
-      const p0 = { x: startPoint.x.scoped, y: startPoint.y.scoped };
-      const p1 = { x: startHandle.x.scoped, y: startHandle.y.scoped };
-      const p2 = { x: endHandle.x.scoped, y: endHandle.y.scoped };
-      const p3 = { x: endPoint.x.scoped, y: endPoint.y.scoped };
+      const p0 = { x: toNum(startPoint.x), y: toNum(startPoint.y) };
+      const p1 = { x: toNum(startHandle.x), y: toNum(startHandle.y) };
+      const p2 = { x: toNum(endHandle.x), y: toNum(endHandle.y) };
+      const p3 = { x: toNum(endPoint.x), y: toNum(endPoint.y) };
 
       const bbox = getCubicBezierBoundingBox(p0, p1, p2, p3);
-      minX = Math.min(minX, bbox.minX) as ScopedValue;
-      minY = Math.min(minY, bbox.minY) as ScopedValue;
-      maxX = Math.max(maxX, bbox.maxX) as ScopedValue;
-      maxY = Math.max(maxY, bbox.maxY) as ScopedValue;
+      minX = Math.min(minX, bbox.minX);
+      minY = Math.min(minY, bbox.minY);
+      maxX = Math.max(maxX, bbox.maxX);
+      maxY = Math.max(maxY, bbox.maxY);
     } else if (startHandle || endHandle) {
       // Quadratic Bezier curve segment (one handle present)
       const controlHandle = startHandle || endHandle!;
-      const p0 = { x: startPoint.x.scoped, y: startPoint.y.scoped };
-      const p1 = { x: controlHandle.x.scoped, y: controlHandle.y.scoped };
-      const p2 = { x: endPoint.x.scoped, y: endPoint.y.scoped };
+      const p0 = { x: toNum(startPoint.x), y: toNum(startPoint.y) };
+      const p1 = { x: toNum(controlHandle.x), y: toNum(controlHandle.y) };
+      const p2 = { x: toNum(endPoint.x), y: toNum(endPoint.y) };
 
       const bbox = getQuadraticBezierBoundingBox(p0, p1, p2);
-      minX = Math.min(minX, bbox.minX) as ScopedValue;
-      minY = Math.min(minY, bbox.minY) as ScopedValue;
-      maxX = Math.max(maxX, bbox.maxX) as ScopedValue;
-      maxY = Math.max(maxY, bbox.maxY) as ScopedValue;
+      minX = Math.min(minX, bbox.minX);
+      minY = Math.min(minY, bbox.minY);
+      maxX = Math.max(maxX, bbox.maxX);
+      maxY = Math.max(maxY, bbox.maxY);
     }
     // For straight line segments, the points already cover the bounds
   }
@@ -214,10 +222,10 @@ export const processBezierCurveBounds = (
 export const processRotatedAbsoluteBezierBounds = (
   points: readonly DucPoint[],
   lines: readonly DucLine[],
-  elementX: ScopedValue,
-  elementY: ScopedValue,
-  centerX: ScopedValue,
-  centerY: ScopedValue,
+  elementX: number,
+  elementY: number,
+  centerX: number,
+  centerY: number,
   angle: number,
 ): { minX: number; minY: number; maxX: number; maxY: number } => {
   let minX = Infinity;
@@ -240,25 +248,27 @@ export const processRotatedAbsoluteBezierBounds = (
 
     if (!startPoint || !endPoint) continue;
 
+    const elX = toNum(elementX);
+    const elY = toNum(elementY);
     // Convert to absolute coordinates
     const absoluteStartPoint = {
-      x: elementX + startPoint.x.scoped,
-      y: elementY + startPoint.y.scoped,
+      x: elX + toNum(startPoint.x),
+      y: elY + toNum(startPoint.y),
     };
     const absoluteEndPoint = {
-      x: elementX + endPoint.x.scoped,
-      y: elementY + endPoint.y.scoped,
+      x: elX + toNum(endPoint.x),
+      y: elY + toNum(endPoint.y),
     };
 
     if (startHandle && endHandle) {
       // Cubic Bezier curve segment
       const absoluteStartHandle = {
-        x: elementX + startHandle.x.scoped,
-        y: elementY + startHandle.y.scoped,
+        x: elX + toNum(startHandle.x),
+        y: elY + toNum(startHandle.y),
       };
       const absoluteEndHandle = {
-        x: elementX + endHandle.x.scoped,
-        y: elementY + endHandle.y.scoped,
+        x: elX + toNum(endHandle.x),
+        y: elY + toNum(endHandle.y),
       };
 
       const p0 = rotate(absoluteStartPoint.x, absoluteStartPoint.y, centerX, centerY, angle);
@@ -275,8 +285,8 @@ export const processRotatedAbsoluteBezierBounds = (
       // Quadratic Bezier curve segment
       const controlHandle = startHandle || endHandle;
       const absoluteControlHandle = {
-        x: elementX + controlHandle!.x.scoped,
-        y: elementY + controlHandle!.y.scoped,
+        x: elX + toNum(controlHandle!.x),
+        y: elY + toNum(controlHandle!.y),
       };
 
       const p0 = rotate(absoluteStartPoint.x, absoluteStartPoint.y, centerX, centerY, angle);
@@ -330,30 +340,30 @@ export const processRelativeBezierBounds = (
     const p2 = points[p2_idx];
 
     if (line[0].handle || line[1].handle) {
-      const p0 = { x: p1.x.scoped, y: p1.y.scoped };
-      const p3 = { x: p2.x.scoped, y: p2.y.scoped };
+      const p0 = { x: toNum(p1.x), y: toNum(p1.y) };
+      const p3 = { x: toNum(p2.x), y: toNum(p2.y) };
 
       const h1 = line[0].handle;
       const h2 = line[1].handle;
 
       try {
         if (h1 && h2) {
-          const cp1 = { x: h1.x.scoped, y: h1.y.scoped };
-          const cp2 = { x: h2.x.scoped, y: h2.y.scoped };
+          const cp1 = { x: toNum(h1.x), y: toNum(h1.y) };
+          const cp2 = { x: toNum(h2.x), y: toNum(h2.y) };
           const bbox = getCubicBezierBoundingBox(p0, cp1, cp2, p3);
           minX = Math.min(minX, bbox.minX);
           minY = Math.min(minY, bbox.minY);
           maxX = Math.max(maxX, bbox.maxX);
           maxY = Math.max(maxY, bbox.maxY);
         } else if (h1) {
-          const cp1 = { x: h1.x.scoped, y: h1.y.scoped };
+          const cp1 = { x: toNum(h1.x), y: toNum(h1.y) };
           const bbox = getQuadraticBezierBoundingBox(p0, cp1, p3);
           minX = Math.min(minX, bbox.minX);
           minY = Math.min(minY, bbox.minY);
           maxX = Math.max(maxX, bbox.maxX);
           maxY = Math.max(maxY, bbox.maxY);
         } else if (h2) {
-          const cp2 = { x: h2.x.scoped, y: h2.y.scoped };
+          const cp2 = { x: toNum(h2.x), y: toNum(h2.y) };
           const bbox = getQuadraticBezierBoundingBox(p0, cp2, p3);
           minX = Math.min(minX, bbox.minX);
           minY = Math.min(minY, bbox.minY);
@@ -388,8 +398,8 @@ export const calculatePointsBoundsWithCenter = (points: readonly DucPoint[]): Ex
   
   return {
     ...bounds,
-    cx: ((bounds.maxX + bounds.minX) / 2) as ScopedValue,
-    cy: ((bounds.maxY + bounds.minY) / 2) as ScopedValue,
+    cx: (bounds.maxX + bounds.minX) / 2,
+    cy: (bounds.maxY + bounds.minY) / 2,
   };
 }; 
 
@@ -397,12 +407,14 @@ export const getElementPointsCoords = (
   element: DucLinearElement,
   points: readonly DucPoint[],
 ): Bounds => {
+  const ex = toNum(element.x);
+  const ey = toNum(element.y);
   if (!points || !Array.isArray(points) || points.length === 0) {
     return [
-      element.x.scoped,
-      element.y.scoped,
-      element.x.scoped,
-      element.y.scoped,
+      ex,
+      ey,
+      ex,
+      ey,
     ] as const;
   }
 
@@ -413,10 +425,10 @@ export const getElementPointsCoords = (
 
   // First, include all the actual points (these are always on the path)
   for (const point of points) {
-    minX = Math.min(minX, point.x.scoped);
-    minY = Math.min(minY, point.y.scoped);
-    maxX = Math.max(maxX, point.x.scoped);
-    maxY = Math.max(maxY, point.y.scoped);
+    minX = Math.min(minX, toNum(point.x));
+    minY = Math.min(minY, toNum(point.y));
+    maxX = Math.max(maxX, toNum(point.x));
+    maxY = Math.max(maxY, toNum(point.y));
   }
 
   const lines = element.lines || [];
@@ -434,7 +446,7 @@ export const getElementPointsCoords = (
   maxY = bezierBounds.maxY;
 
   // Account for stroke width
-  const strokeWidth = element.stroke?.[0]?.width?.scoped || 0;
+  const strokeWidth = toNum(element.stroke?.[0]?.width) || 0;
   const strokeOffset = strokeWidth / 2;
 
   minX -= strokeOffset;
@@ -443,10 +455,10 @@ export const getElementPointsCoords = (
   maxY += strokeOffset;
 
   return [
-    (minX + element.x.scoped) as SV,
-    (minY + element.y.scoped) as SV,
-    (maxX + element.x.scoped) as SV,
-    (maxY + element.y.scoped) as SV,
+    (minX + ex) as SV,
+    (minY + ey) as SV,
+    (maxX + ex) as SV,
+    (maxY + ey) as SV,
   ];
 };
 
@@ -474,11 +486,13 @@ export const getBoundsFromPoints = (
 export const getFreeDrawElementAbsoluteCoords = (
   element: DucFreeDrawElement,
 ): ElementAbsoluteCoords => {
-  const [minX, minY, maxX, maxY] = getBoundsFromPoints(element.points.map((p) => ({x: p.x.scoped, y: p.y.scoped})));
-  const x1 = minX + element.x.scoped;
-  const y1 = minY + element.y.scoped;
-  const x2 = maxX + element.x.scoped;
-  const y2 = maxY + element.y.scoped;
+  const [minX, minY, maxX, maxY] = getBoundsFromPoints(element.points.map((p) => ({ x: toNum(p.x), y: toNum(p.y) })));
+  const ex = toNum(element.x);
+  const ey = toNum(element.y);
+  const x1 = minX + ex;
+  const y1 = minY + ey;
+  const x2 = maxX + ex;
+  const y2 = maxY + ey;
   return [
     x1 as SV,
     y1 as SV,
@@ -516,17 +530,20 @@ export const getBoundTextElement = (
 
 export const getResizedElementAbsoluteCoords = (
   element: DucElement,
-  nextWidth: ScopedValue,
-  nextHeight: ScopedValue,
+  nextWidth: number,
+  nextHeight: number,
   normalizePoints: boolean,
-  currentScope: Scope,
 ): Bounds => {
+  const ex = toNum(element.x);
+  const ey = toNum(element.y);
+  const nw = toNum(nextWidth);
+  const nh = toNum(nextHeight);
   if (!(isLinearElement(element) || isFreeDrawElement(element))) {
     return [
-      element.x.scoped,
-      element.y.scoped,
-      (element.x.scoped + nextWidth) as SV,
-      (element.y.scoped + nextHeight) as SV,
+      ex,
+      ey,
+      (ex + nw) as SV,
+      (ey + nh) as SV,
     ];
   }
 
@@ -535,28 +552,24 @@ export const getResizedElementAbsoluteCoords = (
     nextHeight,
     element.points,
     normalizePoints,
-    element.scope,
-    currentScope,
   );
   const points = rescalePoints(
     "x",
     nextWidth,
     pointsAfterYRescale,
     normalizePoints,
-    element.scope,
-    currentScope,
   );
 
   if (isFreeDrawElement(element)) {
     const bounds = getBoundsFromPoints(
-      points.map((p) => ({ x: p.x.scoped, y: p.y.scoped })),
+      points.map((p) => ({ x: toNum(p.x), y: toNum(p.y) })),
     );
     const [minX, minY, maxX, maxY] = bounds;
     return [
-      (minX + element.x.scoped) as SV,
-      (minY + element.y.scoped) as SV,
-      (maxX + element.x.scoped) as SV,
-      (maxY + element.y.scoped) as SV,
+      (minX + ex) as SV,
+      (minY + ey) as SV,
+      (maxX + ex) as SV,
+      (maxY + ey) as SV,
     ];
   } else {
     // Linear element
@@ -568,8 +581,6 @@ export const getResizedElementAbsoluteCoords = (
             element.lines,
             element.points,
             normalizePoints,
-            element.scope,
-            currentScope,
           )
         : [];
     const rescaledLines =
@@ -580,8 +591,6 @@ export const getResizedElementAbsoluteCoords = (
             linesAfterYRescale,
             element.points,
             normalizePoints,
-            element.scope,
-            currentScope,
           )
         : [];
 

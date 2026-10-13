@@ -62,7 +62,7 @@ export function transformFromRust(data: any): any {
 
 /**
  * Pre-serialize transformation: re-wrap stack element fields
- * and flatten PrecisionValue objects to plain numbers for Rust.
+ * and unwrap numeric values to plain numbers for Rust.
  */
 export function transformToRust(data: any): any {
   if (!data) return data;
@@ -71,7 +71,7 @@ export function transformToRust(data: any): any {
 
   if (result.elements) {
     result.elements = result.elements.map((el: any) =>
-      coerceElementIntegerFields(flattenPrecisionValues(fixElementToRust(el))),
+      coerceElementIntegerFields(unwrapNumericValues(fixElementToRust(el))),
     );
   }
 
@@ -100,7 +100,7 @@ export function transformToRust(data: any): any {
       if (l.overrides) {
         l.overrides = fixLayerOverridesHatch(l.overrides, false);
       }
-      return flattenPrecisionValues(l);
+      return unwrapNumericValues(l);
     });
   }
 
@@ -110,7 +110,7 @@ export function transformToRust(data: any): any {
       if (b.elementOverrides && !Array.isArray(b.elementOverrides) && typeof b.elementOverrides === "object") {
         b.elementOverrides = Object.entries(b.elementOverrides).map(([key, value]) => ({ key, value: String(value) }));
       }
-      return flattenPrecisionValues(b);
+      return unwrapNumericValues(b);
     });
   }
 
@@ -464,16 +464,15 @@ function fixElementToRust(el: any): any {
 }
 
 /**
- * Recursively convert PrecisionValue objects ({value, scoped}) to plain
- * numbers (extracting `.value` — the raw/unscoped value) so Rust's serde
- * can deserialize them as f64.
+ * Recursively unwrap any wrapped numeric values ({value: number}) to plain
+ * numbers so Rust's serde can deserialize them as f64.
  */
-function flattenPrecisionValues(obj: any): any {
+function unwrapNumericValues(obj: any): any {
   if (obj === null || obj === undefined) return obj;
 
-  if (isPrecisionValueLike(obj)) return obj.value;
+  if (isNumericWrapper(obj)) return obj.value;
 
-  if (Array.isArray(obj)) return obj.map(flattenPrecisionValues);
+  if (Array.isArray(obj)) return obj.map(unwrapNumericValues);
 
   if (ArrayBuffer.isView(obj) || obj instanceof ArrayBuffer) {
     return obj;
@@ -483,7 +482,7 @@ function flattenPrecisionValues(obj: any): any {
     const out: Record<string, any> = {};
     for (const key in obj) {
       if (!Object.prototype.hasOwnProperty.call(obj, key)) continue;
-      out[key] = flattenPrecisionValues(obj[key]);
+      out[key] = unwrapNumericValues(obj[key]);
     }
     return out;
   }
@@ -491,21 +490,20 @@ function flattenPrecisionValues(obj: any): any {
   return obj;
 }
 
-function isPrecisionValueLike(v: any): v is { value: number; scoped: number } {
+function isNumericWrapper(v: any): v is { value: number } {
   return (
     v !== null &&
     typeof v === "object" &&
     !Array.isArray(v) &&
     typeof v.value === "number" &&
-    typeof v.scoped === "number" &&
-    Object.keys(v).length === 2
+    Object.keys(v).every((k) => k === "value" || k === "scaled")
   );
 }
 
-function toNumberFromPrecisionLike(value: any, fallback: number): number {
-  const flattened = flattenPrecisionValues(value);
-  if (typeof flattened === "number" && Number.isFinite(flattened)) {
-    return flattened;
+function toNumberFromNumeric(value: any, fallback: number): number {
+  const unwrapped = unwrapNumericValues(value);
+  if (typeof unwrapped === "number" && Number.isFinite(unwrapped)) {
+    return unwrapped;
   }
   return fallback;
 }
@@ -531,16 +529,16 @@ function normalizeLocalStateForRust(localState: any): any {
 
   return {
     ...localState,
-    scrollX: toNumberFromPrecisionLike(localState.scrollX, 0),
-    scrollY: toNumberFromPrecisionLike(localState.scrollY, 0),
+    scrollX: toNumberFromNumeric(localState.scrollX, 0),
+    scrollY: toNumberFromNumeric(localState.scrollY, 0),
     zoom:
       localState.zoom && typeof localState.zoom === "object"
-        ? toNumberFromPrecisionLike(localState.zoom.value, 1)
-        : toNumberFromPrecisionLike(localState.zoom, 1),
-    currentItemStroke: flattenPrecisionValues(localState.currentItemStroke),
-    currentItemBackground: flattenPrecisionValues(localState.currentItemBackground),
-    currentItemFontSize: toNumberFromPrecisionLike(localState.currentItemFontSize, 16),
-    currentItemRoundness: toNumberFromPrecisionLike(localState.currentItemRoundness, 0),
+        ? toNumberFromNumeric(localState.zoom.value, 1)
+        : toNumberFromNumeric(localState.zoom, 1),
+    currentItemStroke: unwrapNumericValues(localState.currentItemStroke),
+    currentItemBackground: unwrapNumericValues(localState.currentItemBackground),
+    currentItemFontSize: toNumberFromNumeric(localState.currentItemFontSize, 16),
+    currentItemRoundness: toNumberFromNumeric(localState.currentItemRoundness, 0),
     currentItemTextAlign: toInteger(localState.currentItemTextAlign, 10),
     decimalPlaces: toInteger(localState.decimalPlaces, 2),
   };
@@ -551,7 +549,6 @@ function normalizeGlobalStateForRust(globalState: any): any {
 
   return {
     ...globalState,
-    scopeExponentThreshold: toInteger(globalState.scopeExponentThreshold, 4),
   };
 }
 

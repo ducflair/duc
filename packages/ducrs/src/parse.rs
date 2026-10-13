@@ -626,7 +626,7 @@ fn read_issue_message_reactions(
 
 fn read_issue_anchor(conn: &Connection, issue_id: &str) -> ParseResult<Option<DucIssueAnchor>> {
     let mut stmt = conn.prepare_cached(
-        "SELECT anchor_type, canvas_x, canvas_y, canvas_scope, element_id, anchor_x, anchor_y,
+        "SELECT anchor_type, canvas_x, canvas_y, element_id, anchor_x, anchor_y,
                 model_point_x, model_point_y, model_point_z, model_normal_x, model_normal_y,
                 model_normal_z, topology_id
          FROM duc_issue_anchors WHERE issue_id = ?1",
@@ -637,37 +637,35 @@ fn read_issue_anchor(conn: &Connection, issue_id: &str) -> ParseResult<Option<Du
             "canvas" => Ok(DucIssueAnchor::Canvas {
                 x: row.get::<_, Option<f64>>(1)?.unwrap_or(0.0),
                 y: row.get::<_, Option<f64>>(2)?.unwrap_or(0.0),
-                scope: row.get(3)?,
             }),
             "element" => Ok(DucIssueAnchor::Element {
-                element_id: row.get::<_, Option<String>>(4)?.unwrap_or_default(),
-                anchor_x: row.get(5)?,
-                anchor_y: row.get(6)?,
+                element_id: row.get::<_, Option<String>>(3)?.unwrap_or_default(),
+                anchor_x: row.get(4)?,
+                anchor_y: row.get(5)?,
             }),
             "model" => {
-                let normal_x: Option<f64> = row.get(10)?;
+                let normal_x: Option<f64> = row.get(9)?;
                 Ok(DucIssueAnchor::Model {
-                    element_id: row.get::<_, Option<String>>(4)?.unwrap_or_default(),
+                    element_id: row.get::<_, Option<String>>(3)?.unwrap_or_default(),
                     point: [
+                        row.get::<_, Option<f64>>(6)?.unwrap_or(0.0),
                         row.get::<_, Option<f64>>(7)?.unwrap_or(0.0),
                         row.get::<_, Option<f64>>(8)?.unwrap_or(0.0),
-                        row.get::<_, Option<f64>>(9)?.unwrap_or(0.0),
                     ],
                     normal: normal_x.map(|x| {
                         [
                             x,
+                            row.get::<_, Option<f64>>(10).ok().flatten().unwrap_or(0.0),
                             row.get::<_, Option<f64>>(11).ok().flatten().unwrap_or(0.0),
-                            row.get::<_, Option<f64>>(12).ok().flatten().unwrap_or(0.0),
                         ]
                     }),
                     viewer_state: None,
-                    topology_id: row.get(13)?,
+                    topology_id: row.get(12)?,
                 })
             }
             _ => Ok(DucIssueAnchor::Canvas {
                 x: 0.0,
                 y: 0.0,
-                scope: None,
             }),
         }
     });
@@ -693,14 +691,12 @@ fn read_issue_anchor(conn: &Connection, issue_id: &str) -> ParseResult<Option<Du
 
 fn read_global_state(conn: &Connection) -> ParseResult<Option<DucGlobalState>> {
     let mut stmt = conn.prepare(
-        "SELECT view_background_color, main_scope, scope_exponent_threshold
+        "SELECT view_background_color
          FROM duc_global_state WHERE id = 1",
     )?;
     let result = stmt.query_row([], |row| {
         Ok(DucGlobalState {
             view_background_color: row.get(0)?,
-            main_scope: row.get(1)?,
-            scope_exponent_threshold: row.get(2)?,
         })
     });
 
@@ -715,7 +711,7 @@ fn read_global_state(conn: &Connection) -> ParseResult<Option<DucGlobalState>> {
 
 fn read_local_state(conn: &Connection) -> ParseResult<Option<DucLocalState>> {
     let mut stmt = conn.prepare(
-        "SELECT scope, scroll_x, scroll_y, zoom, is_binding_enabled,
+        "SELECT scroll_x, scroll_y, zoom, is_binding_enabled,
                 current_item_opacity, current_item_font_family, current_item_font_size,
                 current_item_text_align, current_item_roundness,
                 start_head_type, start_head_block_id, start_head_size,
@@ -726,48 +722,47 @@ fn read_local_state(conn: &Connection) -> ParseResult<Option<DucLocalState>> {
          FROM duc_local_state WHERE id = 1",
     )?;
     let result = stmt.query_row([], |row| {
-        let start_head_type: Option<i32> = row.get(10)?;
+        let start_head_type: Option<i32> = row.get(9)?;
         let start_head = match start_head_type {
             Some(_) => Some(DucHead {
-                head_type: row.get::<_, Option<i32>>(10)?.map(int_to_line_head),
-                block_id: row.get(11)?,
-                size: row.get::<_, Option<f64>>(12)?.unwrap_or(1.0),
+                head_type: row.get::<_, Option<i32>>(9)?.map(int_to_line_head),
+                block_id: row.get(10)?,
+                size: row.get::<_, Option<f64>>(11)?.unwrap_or(1.0),
             }),
             None => None,
         };
 
-        let end_head_type: Option<i32> = row.get(13)?;
+        let end_head_type: Option<i32> = row.get(12)?;
         let end_head = match end_head_type {
             Some(_) => Some(DucHead {
-                head_type: row.get::<_, Option<i32>>(13)?.map(int_to_line_head),
-                block_id: row.get(14)?,
-                size: row.get::<_, Option<f64>>(15)?.unwrap_or(1.0),
+                head_type: row.get::<_, Option<i32>>(12)?.map(int_to_line_head),
+                block_id: row.get(13)?,
+                size: row.get::<_, Option<f64>>(14)?.unwrap_or(1.0),
             }),
             None => None,
         };
 
         Ok(DucLocalState {
-            scope: row.get(0)?,
-            scroll_x: row.get(1)?,
-            scroll_y: row.get(2)?,
-            zoom: row.get(3)?,
-            is_binding_enabled: row.get::<_, i32>(4)? != 0,
+            scroll_x: row.get(0)?,
+            scroll_y: row.get(1)?,
+            zoom: row.get(2)?,
+            is_binding_enabled: row.get::<_, i32>(3)? != 0,
             current_item_stroke: None,     // loaded below
             current_item_background: None, // loaded below
-            current_item_opacity: row.get(5)?,
-            current_item_font_family: row.get(6)?,
-            current_item_font_size: row.get(7)?,
-            current_item_text_align: int_to_text_align(row.get(8)?),
+            current_item_opacity: row.get(4)?,
+            current_item_font_family: row.get(5)?,
+            current_item_font_size: row.get(6)?,
+            current_item_text_align: int_to_text_align(row.get(7)?),
             current_item_start_line_head: start_head,
             current_item_end_line_head: end_head,
-            current_item_roundness: row.get(9)?,
-            pen_mode: row.get::<_, i32>(16)? != 0,
-            view_mode_enabled: row.get::<_, i32>(17)? != 0,
-            objects_snap_mode_enabled: row.get::<_, i32>(18)? != 0,
-            grid_mode_enabled: row.get::<_, i32>(19)? != 0,
-            outline_mode_enabled: row.get::<_, i32>(20)? != 0,
-            manual_save_mode: row.get::<_, i32>(21)? != 0,
-            decimal_places: row.get(22)?,
+            current_item_roundness: row.get(8)?,
+            pen_mode: row.get::<_, i32>(15)? != 0,
+            view_mode_enabled: row.get::<_, i32>(16)? != 0,
+            objects_snap_mode_enabled: row.get::<_, i32>(17)? != 0,
+            grid_mode_enabled: row.get::<_, i32>(18)? != 0,
+            outline_mode_enabled: row.get::<_, i32>(19)? != 0,
+            manual_save_mode: row.get::<_, i32>(20)? != 0,
+            decimal_places: row.get(21)?,
         })
     });
 
@@ -1046,7 +1041,7 @@ fn read_elements(conn: &Connection) -> ParseResult<Vec<ElementWrapper>> {
     let mut stmt = conn.prepare(
         "SELECT id, element_type,
                 x, y, width, height, angle,
-                scope, label, description, is_visible,
+                label, description, is_visible,
                 seed, version, version_nonce, updated, \"index\",
                 is_plot, is_deleted,
                 roundness, blending, opacity,
@@ -1067,31 +1062,30 @@ fn read_elements(conn: &Connection) -> ParseResult<Vec<ElementWrapper>> {
                 width: row.get(4)?,
                 height: row.get(5)?,
                 angle: row.get(6)?,
-                scope: row.get(7)?,
-                label: row.get(8)?,
-                description: row.get(9)?,
-                is_visible: row.get::<_, i32>(10)? != 0,
-                seed: row.get(11)?,
-                version: row.get(12)?,
-                version_nonce: row.get(13)?,
-                updated: row.get(14)?,
-                index: row.get(15)?,
-                is_plot: row.get::<_, i32>(16)? != 0,
-                is_deleted: row.get::<_, i32>(17)? != 0,
+                label: row.get(7)?,
+                description: row.get(8)?,
+                is_visible: row.get::<_, i32>(9)? != 0,
+                seed: row.get(10)?,
+                version: row.get(11)?,
+                version_nonce: row.get(12)?,
+                updated: row.get(13)?,
+                index: row.get(14)?,
+                is_plot: row.get::<_, i32>(15)? != 0,
+                is_deleted: row.get::<_, i32>(16)? != 0,
                 styles: DucElementStylesBase {
-                    roundness: row.get(18)?,
-                    blending: row.get::<_, Option<i32>>(19)?.map(int_to_blending),
-                    opacity: row.get(20)?,
+                    roundness: row.get(17)?,
+                    blending: row.get::<_, Option<i32>>(18)?.map(int_to_blending),
+                    opacity: row.get(19)?,
                     background: Vec::new(), // loaded below
                     stroke: Vec::new(),     // loaded below
                 },
-                instance_id: row.get(21)?,
-                layer_id: row.get(22)?,
-                frame_id: row.get(23)?,
-                z_index: row.get(24)?,
-                link: row.get(25)?,
-                locked: row.get::<_, i32>(26)? != 0,
-                custom_data: row.get(27)?,
+                instance_id: row.get(20)?,
+                layer_id: row.get(21)?,
+                frame_id: row.get(22)?,
+                z_index: row.get(23)?,
+                link: row.get(24)?,
+                locked: row.get::<_, i32>(25)? != 0,
+                custom_data: row.get(26)?,
                 group_ids: Vec::new(),  // loaded below
                 block_ids: Vec::new(),  // loaded below
                 region_ids: Vec::new(), // loaded below

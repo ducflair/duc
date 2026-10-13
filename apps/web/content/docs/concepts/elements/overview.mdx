@@ -19,10 +19,9 @@ All elements inherit a core set of base spatial, structural, and identity proper
 
 ### 1. Spatial Identity & Placement
 - **`id`**: Unique string identifier for the element.
-- **`x`, `y`**: Spatial origin coordinates (`PrecisionValue`), stored normalized to the meter (`NEUTRAL_SCOPE = "m"`).
-- **`width`, `height`**: Physical bounding dimensions (`PrecisionValue`).
+- **`x`, `y`**: Spatial origin coordinates (`number`), represented directly in world millimeters.
+- **`width`, `height`**: Physical bounding dimensions (`number`).
 - **`angle`**: Rotation angle in radians.
-- **`scope`**: The measurement unit scope (`mm`, `cm`, `m`, `in`, `ft`, `mi`) in which the element was created.
 
 ### 2. Visibility & Layering
 - **`isVisible`**: Boolean flag determining viewport visibility.

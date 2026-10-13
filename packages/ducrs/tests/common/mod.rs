@@ -173,12 +173,9 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
 
     let global_state = Some(DucGlobalState {
         view_background_color: "#101820".to_string(),
-        main_scope: "mm".to_string(),
-        scope_exponent_threshold: 3,
     });
 
     let local_state = Some(DucLocalState {
-        scope: "mm".to_string(),
         scroll_x: 125.5,
         scroll_y: -42.25,
         zoom: 1.75,
@@ -779,7 +776,6 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
         anchor: Some(DucIssueAnchor::Canvas {
             x: 10.0,
             y: 20.0,
-            scope: Some("mm".to_string()),
         }),
         author_id: "agent:test".to_string(),
         assignee_ids: None,
@@ -876,7 +872,6 @@ fn sample_base(id: &str, z_index: f32) -> DucElementBase {
         width: 100.0 + f64::from(z_index),
         height: 50.0 + f64::from(z_index),
         angle: 0.25 * f64::from(z_index),
-        scope: "mm".to_string(),
         label: format!("Element {id}"),
         description: Some(format!("Element description for {id}")),
         is_visible: true,

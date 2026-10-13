@@ -36,7 +36,6 @@ mod integration_tests {
             regions: Vec::new(),
             layers: Vec::new(),
             duc_local_state: Some(DucLocalState {
-                scope: "mm".to_string(),
                 scroll_x: 0.0,
                 scroll_y: 0.0,
                 zoom: 1.0,
@@ -60,8 +59,6 @@ mod integration_tests {
             }),
             duc_global_state: Some(DucGlobalState {
                 view_background_color: "#ffffff".to_string(),
-                main_scope: "mm".to_string(),
-                scope_exponent_threshold: 3,
             }),
             version_graph: None,
             external_files: None,
@@ -573,7 +570,6 @@ mod integration_tests {
             width: 100.0,
             height: 80.0,
             angle: 0.0,
-            scope: "m".to_string(),
             label: "Ellipse Test".to_string(),
             description: None,
             is_visible: true,

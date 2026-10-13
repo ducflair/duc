@@ -154,14 +154,14 @@ def test_a_duc_with_everything(test_output_dir):
 
         # Global + local state
         db.sql(
-            "INSERT INTO duc_global_state (id, view_background_color, main_scope, scope_exponent_threshold) "
-            "VALUES (?,?,?,?)",
-            1, "#F0F0F0", "m", 3,
+            "INSERT INTO duc_global_state (id, view_background_color) "
+            "VALUES (?,?)",
+            1, "#F0F0F0",
         )
         db.sql(
-            "INSERT INTO duc_local_state (id, scope, scroll_x, scroll_y, zoom, is_binding_enabled, pen_mode, view_mode_enabled, objects_snap_mode_enabled, grid_mode_enabled, outline_mode_enabled) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            1, "cm", 50.0, 75.0, 2.0, 0, 1, 1, 0, 0, 1,
+            "INSERT INTO duc_local_state (id, scroll_x, scroll_y, zoom, is_binding_enabled, pen_mode, view_mode_enabled, objects_snap_mode_enabled, grid_mode_enabled, outline_mode_enabled) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            1, 50.0, 75.0, 2.0, 0, 1, 1, 0, 0, 1,
         )
 
         # Layers / groups / regions: one from builders, one from SQL (mashup within same families).

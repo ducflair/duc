@@ -339,7 +339,7 @@ def _public_anchor(anchor: Any) -> dict[str, Any] | None:
         return None
     anchor_type = anchor.get("type")
     fields_by_type = {
-        "canvas": ("type", "x", "y", "scope"),
+        "canvas": ("type", "x", "y"),
         "element": ("type", "element_id", "anchor_x", "anchor_y"),
         "model": ("type", "element_id", "point", "normal", "topology_id"),
     }

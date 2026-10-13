@@ -33,8 +33,9 @@ function getSvgPathFromStroke(points: number[][]): string {
 }
 
 function buildStrokeOptions(element: DucFreeDrawElement): StrokeOptions {
+  const size = (element.size as any)?.value ?? element.size;
   return {
-    size: element.size.scoped,
+    size,
     simulatePressure: element.simulatePressure,
     thinning: element.thinning,
     smoothing: element.smoothing,
@@ -55,9 +56,10 @@ const normalizeStrokePressure = (pressure: number | undefined): number => {
 };
 
 function buildInputPoints(element: DucFreeDrawElement): number[][] {
+  const toNum = (v: any) => typeof v === "number" ? v : (v?.value ?? 0);
   return element.simulatePressure
-    ? element.points.map(({x, y}) => [x.scoped, y.scoped])
-    : element.points.map(({x, y}, i) => [x.scoped, y.scoped, normalizeStrokePressure(element.pressures[i])]);
+    ? element.points.map(({ x, y }) => [toNum(x), toNum(y)])
+    : element.points.map(({ x, y }, i) => [toNum(x), toNum(y), normalizeStrokePressure(element.pressures[i])]);
 }
 
 export function getFreeDrawSvgPath(element: DucFreeDrawElement) {

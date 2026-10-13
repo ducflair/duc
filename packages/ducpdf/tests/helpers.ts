@@ -29,8 +29,7 @@ export function loadDucFile(_filename: string): ExportedDataState {
       files: undefined,
       filesData: undefined,
     },
-    { syncInvalidIndices: (elements) => elements as any },
-    { forceScope: 'mm' },
+    { syncInvalidIndices: (elements) => elements as any }
   );
   return {
     ...restored,

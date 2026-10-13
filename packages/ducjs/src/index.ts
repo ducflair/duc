@@ -2,7 +2,6 @@ export * from "./enums";
 export * from "./opfs";
 export * from "./opfs-import";
 export * from "./restore";
-export * from "./technical";
 export * from "./transform";
 export * from "./types";
 export * from "./utils";

@@ -2,10 +2,8 @@ export * from "./charter.types";
 export * from "./elements";
 export * from "./geometry.types";
 export * from "./issues.types";
-export * from "./typeChecks";
 export * from "./utility.types";
 
-import { SupportedMeasures } from "../technical/scopes";
 import { DucCharter } from "./charter.types";
 import {
   DucBindableElement,
@@ -96,8 +94,6 @@ export interface Actor {
   identifier: string;
   name?: string;
 }
-
-export type Scope = SupportedMeasures;
 
 export type ExternalFileRevisionMeta = {
   id: string;
@@ -191,28 +187,11 @@ export type DucGlobalState = {
    * The background color of the drawing
    */
   viewBackgroundColor: string;
-  /**
-   * The master unit system for the entire drawing, used for block/file insertion scaling.
-   */
-  mainScope: Scope;
-
-  /**
-   * Exponent threshold for determining when to change measurement scope (up or down).
-   * This value defines a +/- tolerance range around the exponent of the current scope.
-   */
-  scopeExponentThreshold: number;
-
 };
 
 export type DucLocalState = {
-  /**
-   * The current scope of the design
-   * mm, cm, m, in, ft, yd, mi, etc...
-   */
-  scope: Scope;
-
-  scrollX: PrecisionValue;
-  scrollY: PrecisionValue;
+  scrollX: number;
+  scrollY: number;
   zoom: Zoom;
 
   isBindingEnabled: boolean;
@@ -255,25 +234,7 @@ export type DucLocalState = {
 
 export type NormalizedZoomValue = number & { _brand: "normalizedZoom" };
 
-/**
- * A value that accurate/relative to the current scope
- */
-export type ScopedValue = number & { _brand: "scopedValue" };
-
-/**
- * A value that represent the raw value of the element on its scope
- */
-export type RawValue = number & { _brand: "rawValue" };
-
-/**
- * A value that accurate to the current scope particularly for zoom, it works in reverse for zoom
- */
-export type ScopedZoomValue = number & { _brand: "scopedZoomValue" };
-
-/**
- * A value that represent the scaled zoom value relative to a scale bar
- */
-export type ScaledZoom = number & { _brand: "scaledZoom" };
+export type ScaledZoom = number;
 
 export type Zoom = Readonly<{
   /**
@@ -281,25 +242,10 @@ export type Zoom = Readonly<{
    */
   value: NormalizedZoomValue;
   /**
-   * The value of the zoom relative to the current scope
+   * The value of the zoom adapted to the UI scale bar
    */
-  scoped: ScopedZoomValue;
-  /**
-   * The value of the zoom adapted to the UI scale bar, for real life measurements
-   */
-  scaled: ScaledZoom;
+  scaled?: ScaledZoom;
 }>;
-
-export type PrecisionValue = {
-  /**
-   * The raw value of the scroll
-   */
-  value: RawValue;
-  /**
-   * The value of the scroll relative to the current scope
-   */
-  scoped: ScopedValue;
-};
 
 export type PointerCoords = Readonly<{
   x: number;

@@ -1,7 +1,7 @@
 -- "DUC_" in ASCII
 -- Apply in order: duc.sql → version_control.sql → search.sql
 PRAGMA application_id = 1146569567;
-PRAGMA user_version = 4000000;
+PRAGMA user_version = 4000001;
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 PRAGMA synchronous = NORMAL;
@@ -42,16 +42,13 @@ PRAGMA synchronous = NORMAL;
 -- Project-wide settings shared by all users, saved with the document.
 CREATE TABLE duc_global_state (
     id                                          INTEGER PRIMARY KEY CHECK (id = 1),
-    view_background_color                       TEXT    NOT NULL, -- drawing background color
-    main_scope                                  TEXT    NOT NULL, -- master unit (mm, cm, m, in, ft…)
-    scope_exponent_threshold                    INTEGER NOT NULL DEFAULT 3    -- +/- tolerance for scope switching
+    view_background_color                       TEXT    NOT NULL -- drawing background color
 );
 
 -- Per-user session state (not shared). DucHead fields flattened inline.
 -- Current item stroke/background stored in backgrounds/strokes tables with owner_type='local_state'.
 CREATE TABLE duc_local_state (
     id                              INTEGER PRIMARY KEY CHECK (id = 1),
-    scope                           TEXT    NOT NULL DEFAULT 'mm',     -- current unit scope (mm, cm, m, in, ft…)
     scroll_x                        REAL    NOT NULL DEFAULT 0.0,
     scroll_y                        REAL    NOT NULL DEFAULT 0.0,
     zoom                            REAL    NOT NULL DEFAULT 1.0,
@@ -223,7 +220,6 @@ CREATE TABLE duc_issue_anchors (
     anchor_type     TEXT NOT NULL CHECK (anchor_type IN ('canvas', 'element', 'model')),
     canvas_x        REAL,
     canvas_y        REAL,
-    canvas_scope    TEXT,
     element_id      TEXT,
     anchor_x        REAL,
     anchor_y        REAL,
@@ -497,7 +493,6 @@ CREATE TABLE elements (
     angle           REAL    NOT NULL DEFAULT 0.0,
 
     -- Metadata
-    scope           TEXT    NOT NULL DEFAULT 'mm', -- unit scope (mm, cm, m, in, ft…)
     label           TEXT    NOT NULL DEFAULT '',
     description     TEXT,
     is_visible      INTEGER NOT NULL DEFAULT 1,
@@ -536,7 +531,6 @@ CREATE INDEX idx_elements_deleted     ON elements(is_deleted);
 CREATE INDEX idx_elements_updated     ON elements(updated);
 CREATE INDEX idx_elements_z_index     ON elements(z_index);
 CREATE INDEX idx_elements_label       ON elements(label) WHERE label != '';
-CREATE INDEX idx_elements_scope       ON elements(scope);
 -- Spatial bounding-box index for rectangle-range queries on non-deleted elements
 CREATE INDEX idx_elements_spatial     ON elements(x, y, width, height) WHERE is_deleted = 0;
 

@@ -15,7 +15,7 @@ DUC uses a top-left element origin on the 2D canvas:
 - Positive X moves right; positive Y moves down.
 - `width` and `height` extend from that origin.
 - `angle` is measured in radians.
-- Coordinates and dimensions are interpreted in the element's declared `scope`.
+- Coordinates and dimensions are interpreted in physical world units (millimeters).
 
 Linear, arrow, and freedraw points are **local offsets from the element origin**. A point at `(0, 0)` coincides with the element's `x`, `y` position. Do not combine an absolute or midpoint origin with absolute path points, because the renderer adds the element origin to every local point.
 

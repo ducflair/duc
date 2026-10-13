@@ -6,8 +6,6 @@ export * from "./textElement";
 
 import { getUpdatedTimestamp } from "..";
 import { LINE_SPACING_TYPE } from "../../enums";
-import { getPrecisionValueFromRaw } from "../../technical/scopes";
-import { RawValue, Scope } from "../../types";
 import { _DucStackBase, DucElement, DucNonSelectionElement, DucTableElement, DucTextStyle, ElementConstructorOpts, NonDeleted } from "../../types/elements";
 import { isFreeDrawElement, isLinearElement } from "../../types/elements/typeChecks";
 import { GeometricPoint, Percentage, Radian, ScaleFactor, TuplePoint } from "../../types/geometry.types";
@@ -15,10 +13,7 @@ import { Mutable } from "../../types/utility.types";
 import { DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_TEXT_ALIGN, DEFAULT_VERTICAL_ALIGN } from "../constants";
 import { randomInteger } from "../math/random";
 
-/**
- * Returns a default DucTextStyle object for the given scope.
- */
-export function getDefaultTextStyle(currentScope: Scope): DucTextStyle {
+export function getDefaultTextStyle(): DucTextStyle {
   return {
     isLtr: true,
     fontFamily: DEFAULT_FONT_FAMILY,
@@ -28,7 +23,7 @@ export function getDefaultTextStyle(currentScope: Scope): DucTextStyle {
     lineHeight: 1.2 as any,
     lineSpacing: { type: LINE_SPACING_TYPE.MULTIPLE, value: 1.2 as any },
     obliqueAngle: 0 as Radian,
-    fontSize: getPrecisionValueFromRaw(DEFAULT_FONT_SIZE as RawValue, currentScope, currentScope),
+    fontSize: DEFAULT_FONT_SIZE,
     widthFactor: 1 as ScaleFactor,
     isUpsideDown: false,
     isBackwards: false,
@@ -67,7 +62,7 @@ export const getDefaultStackProperties = (): _DucStackBase => {
  * This does not include base element properties like x, y, width, etc.,
  * which are added during element creation.
  */
-export const getDefaultTableData = (currentScope: Scope): {
+export const getDefaultTableData = (): {
   fileId: DucTableElement["fileId"];
   gridConfig: DucTableElement["gridConfig"];
 } => {
@@ -87,7 +82,6 @@ export const getBaseElementProps = (element: DucNonSelectionElement): ElementCon
   return {
     x: element.x,
     y: element.y,
-    scope: element.scope,
     label: element.label,
     isVisible: element.isVisible,
     isPlot: element.isPlot,
@@ -139,7 +133,7 @@ export const isInvisiblySmallElement = (
   if (isLinearElement(element) || isFreeDrawElement(element)) {
     return element.points.length < 2;
   }
-  return element.width.scoped === 0 && element.height.scoped === 0;
+  return element.width === 0 && element.height === 0;
 };
 
 /**

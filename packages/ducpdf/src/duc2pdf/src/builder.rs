@@ -1293,7 +1293,6 @@ impl DucToPdfBuilder {
         } else {
             // If no local state exists, create one with the offset
             let new_local_state = duc::types::DucLocalState {
-                scope: "mm".to_string(), // Always use mm for internal processing
                 scroll_x: offset_x_mm,
                 scroll_y: offset_y_mm,
                 zoom: 1.0,

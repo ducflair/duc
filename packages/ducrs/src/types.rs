@@ -705,11 +705,6 @@ pub struct DucElementBase {
     pub width: f64,
     pub height: f64,
     pub angle: f64,
-    /**
-     * The scope where the element is currently.
-     * mm, cm, m, in, ft, yd, mi, etc...
-     */
-    pub scope: String,
     pub label: String,
     pub description: Option<String>,
     pub is_visible: bool,
@@ -1446,23 +1441,11 @@ pub struct DucGlobalState {
     /** The background color of the drawing */
     /** The background color of the drawing */
     pub view_background_color: String,
-    /** The master unit system for the entire drawing, used for block/file insertion scaling. */
-    pub main_scope: String,
-    /**
-     * Exponent threshold for determining when to change measurement scope (up or down).
-     * This value defines a +/- tolerance range around the exponent of the current scope.
-     */
-    pub scope_exponent_threshold: i8,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DucLocalState {
-    /**
-     * The current scope of the design.
-     * mm, cm, m, in, ft, yd, mi, etc...
-     */
-    pub scope: String,
     pub scroll_x: f64,
     pub scroll_y: f64,
     pub zoom: f64,
@@ -1767,8 +1750,6 @@ pub enum DucIssueAnchor {
     Canvas {
         x: f64,
         y: f64,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        scope: Option<String>,
     },
     Element {
         element_id: String,

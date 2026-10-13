@@ -1,11 +1,4 @@
 import {
-  getPrecisionValueFromRaw,
-  getPrecisionValueFromScoped,
-  getScopedBezierPointFromDucPoint,
-  NEUTRAL_SCOPE,
-  ScaleFactors
-} from "../technical/scopes";
-import {
   _DucElementBase,
   _DucStackElementBase,
   BezierMirroring,
@@ -41,11 +34,8 @@ import {
   OrderedDucElement,
   Percentage,
   PlotLayout,
-  PrecisionValue,
   Radian,
-  RawValue,
   ScaleFactor,
-  Scope,
   Viewer3DState,
 } from "../types";
 import {
@@ -93,7 +83,7 @@ import {
   isValidVerticalAlignValue,
   RestoredDataState,
   restoreDucStackProperties,
-  restorePrecisionValue,
+  restoreNumber,
   validateBackground,
   validateStroke
 } from "./restoreDataState";
@@ -117,14 +107,6 @@ const restoreElementWithProperties = <
   globalState?: Readonly<Partial<DucGlobalState>> | null
 ): T => {
   const _element = { ...element, ...extra };
-  const elementScope = isValidElementScopeValue(
-    _element.scope,
-    globalState?.mainScope
-  );
-  const currentScope = isValidElementScopeValue(
-    localState?.scope,
-    globalState?.mainScope
-  );
   // Handle legacy stroke properties first
   let stroke = [DEFAULT_ELEMENT_PROPS.stroke];
   if (_element.strokeColor) {
@@ -136,19 +118,17 @@ const restoreElementWithProperties = <
           _element.strokeColor,
           DEFAULT_ELEMENT_PROPS.stroke.content
         ),
-        width: restorePrecisionValue(
-          (_element as any).strokeWidth ||
-          DEFAULT_ELEMENT_PROPS.stroke.width.value,
-          elementScope,
-          currentScope,
-          DEFAULT_ELEMENT_PROPS.stroke.width.value
+        width: restoreNumber(
+          (_element as any).strokeWidth ??
+          DEFAULT_ELEMENT_PROPS.stroke.width,
+          DEFAULT_ELEMENT_PROPS.stroke.width
         ),
       },
     ];
   } else if (_element.stroke) {
     // New stroke array property
     stroke = _element.stroke.map((s) =>
-      validateStroke(s, elementScope, currentScope)
+      validateStroke(s)
     );
   }
 
@@ -184,9 +164,8 @@ const restoreElementWithProperties = <
       DEFAULT_ELEMENT_PROPS.opacity
     ),
     angle: isValidRadianValue(_element.angle, DEFAULT_ELEMENT_PROPS.angle),
-    x: restorePrecisionValue(_element.x, elementScope, currentScope, 0),
-    y: restorePrecisionValue(_element.y, elementScope, currentScope, 0),
-    scope: elementScope,
+    x: restoreNumber(_element.x, 0),
+    y: restoreNumber(_element.y, 0),
     label: _element.label ?? "Lost Element Label",
     isVisible: isValidBoolean(
       _element.isVisible,
@@ -195,23 +174,16 @@ const restoreElementWithProperties = <
     isPlot: isValidBoolean(_element.isPlot, DEFAULT_ELEMENT_PROPS.isPlot),
     layerId: _element.layerId ?? null,
     regionIds: Array.isArray(_element.regionIds) ? _element.regionIds : [],
-    width: restorePrecisionValue(_element.width, elementScope, currentScope, 0),
-    height: restorePrecisionValue(
-      _element.height,
-      elementScope,
-      currentScope,
-      0
-    ),
+    width: restoreNumber(_element.width, 0),
+    height: restoreNumber(_element.height, 0),
     seed: _element.seed ?? 1,
     groupIds: _element.groupIds ?? [],
     blockIds: Array.isArray(_element.blockIds) ? _element.blockIds : [],
     instanceId: _element.instanceId ?? null,
     frameId: _element.frameId ?? null,
-    roundness: restorePrecisionValue(
+    roundness: restoreNumber(
       _element.roundness,
-      elementScope,
-      currentScope,
-      DEFAULT_ELEMENT_PROPS.roundness.value
+      DEFAULT_ELEMENT_PROPS.roundness
     ),
     boundElements: _element.boundElements ?? undefined,
     updated: _element.updated ?? getUpdatedTimestamp(),
@@ -228,34 +200,10 @@ const restoreElementWithProperties = <
     base as Required<Pick<DucElement, "width" | "height" | "x" | "y">>
   );
   const normalized = {
-    x: restorePrecisionValue(
-      normalizedRaw.x,
-      elementScope,
-      currentScope,
-      0,
-      true
-    ),
-    y: restorePrecisionValue(
-      normalizedRaw.y,
-      elementScope,
-      currentScope,
-      0,
-      true
-    ),
-    width: restorePrecisionValue(
-      normalizedRaw.width,
-      elementScope,
-      currentScope,
-      0,
-      true
-    ),
-    height: restorePrecisionValue(
-      normalizedRaw.height,
-      elementScope,
-      currentScope,
-      0,
-      true
-    ),
+    x: normalizedRaw.x,
+    y: normalizedRaw.y,
+    width: normalizedRaw.width,
+    height: normalizedRaw.height,
   };
 
   return {
@@ -268,19 +216,18 @@ const restoreElementWithProperties = <
 
 const restoreElement = (
   element: Exclude<DucElement, DucSelectionElement>,
-  currentScope: Scope,
-  restoredBlocks: RestoredDataState["blocks"],
+  restoredBlocks?: RestoredDataState["blocks"],
   localState?: Readonly<Partial<DucLocalState>> | null,
   globalState?: Readonly<Partial<DucGlobalState>> | null
 ): typeof element | null => {
   // Migration: convert deprecated 'diamond' to 'polygon' with 4 sides
   if ((element as any).type === "diamond") {
     const migrated = { ...element, type: "polygon", sides: 4 } as any;
-    return restoreElement(migrated, currentScope, restoredBlocks, localState);
+    return restoreElement(migrated, restoredBlocks, localState);
   }
   switch (element.type) {
     case "text": {
-      let fontSize: PrecisionValue | number = element.fontSize;
+      let fontSize: number | any = element.fontSize;
       let fontFamily = element.fontFamily;
       // Restore condition: if font family is "10", change to DEFAULT_FONT_FAMILY
       if (fontFamily === "10") {
@@ -315,18 +262,11 @@ const restoreElement = (
 
       const restoredLineSpacing = restoreLineSpacing(
         element.lineSpacing,
-        lineHeight,
-        currentScope
+        lineHeight
       );
 
-      const textElementScope = isValidElementScopeValue(
-        element.scope,
-        globalState?.mainScope
-      );
-      const finalFontSize = restorePrecisionValue(
+      const finalFontSize = restoreNumber(
         fontSize,
-        textElementScope,
-        currentScope,
         DEFAULT_FONT_SIZE
       );
 
@@ -368,36 +308,24 @@ const restoreElement = (
       return restoredTextElement;
     }
     case "freedraw": {
-      const elementScope = isValidElementScopeValue(
-        element.scope,
-        globalState?.mainScope
-      );
       const points = restoreElementPoints({
         points: element.points as DucPoint[],
         x: element.x,
         y: element.y,
         width: element.width,
         height: element.height,
-        elementScope,
-        currentScope,
       });
 
       return restoreElementWithProperties(
         element,
         {
           points,
-          size: restorePrecisionValue(
+          size: restoreNumber(
             element.size,
-            elementScope,
-            currentScope,
             DEFAULT_FREEDRAW_ELEMENT.size
           ),
           lastCommittedPoint: element.lastCommittedPoint
-            ? restorePoint(
-              element.lastCommittedPoint as DucPoint,
-              elementScope,
-              currentScope
-            )
+            ? restorePoint(element.lastCommittedPoint as DucPoint)
             : null,
           simulatePressure: isValidBoolean(element.simulatePressure, false),
           pressures: Array.isArray(element.pressures) ? element.pressures : [],
@@ -440,10 +368,6 @@ const restoreElement = (
     case "line": {
       // Don't normalize points if there are bindings
       const hasBindings = !!(element.startBinding || element.endBinding);
-      const elementScope = isValidElementScopeValue(
-        element.scope,
-        globalState?.mainScope
-      );
 
       const { points, lines } = restoreLinearElementPointsAndLines({
         points: element.points as DucPoint[],
@@ -452,8 +376,6 @@ const restoreElement = (
         y: element.y,
         width: element.width,
         height: element.height,
-        elementScope,
-        currentScope,
         skipNormalization: hasBindings,
       });
 
@@ -462,31 +384,13 @@ const restoreElement = (
       let finalPoints = points;
       // Ensure we have at least 2 points for visibility check
       if (finalPoints.length < 2 && !isEditing) {
-        const elementWidth = restorePrecisionValue(
-          element.width,
-          elementScope,
-          currentScope,
-          0
-        );
-        const elementHeight = restorePrecisionValue(
-          element.height,
-          elementScope,
-          currentScope,
-          0
-        );
+        const elementWidth = restoreNumber(element.width, 0);
+        const elementHeight = restoreNumber(element.height, 0);
 
         finalPoints = [
           {
-            x: getPrecisionValueFromRaw(
-              0 as RawValue,
-              elementScope,
-              currentScope
-            ),
-            y: getPrecisionValueFromRaw(
-              0 as RawValue,
-              elementScope,
-              currentScope
-            ),
+            x: 0,
+            y: 0,
             mirroring: undefined,
           },
           {
@@ -508,14 +412,12 @@ const restoreElement = (
           (!startBinding.elementId || startBinding.elementId === "")
           ? createHeadOnlyBinding(
             startBinding.head,
-            restoredBlocks,
-            currentScope
+            restoredBlocks
           )
           : startBinding
             ? repairBinding(
               element,
               startBinding,
-              currentScope,
               restoredBlocks
             )
             : null;
@@ -524,12 +426,11 @@ const restoreElement = (
         endBinding &&
           endBinding.head !== undefined &&
           (!endBinding.elementId || endBinding.elementId === "")
-          ? createHeadOnlyBinding(endBinding.head, restoredBlocks, currentScope)
+          ? createHeadOnlyBinding(endBinding.head, restoredBlocks)
           : endBinding
             ? repairBinding(
               element,
               endBinding,
-              currentScope,
               restoredBlocks
             )
             : null;
@@ -541,18 +442,14 @@ const restoreElement = (
       const sizeFromPoints =
         !hasBindings &&
         !isBlockInstanceElement &&
-        getSizeFromPoints(finalPoints.map(getScopedBezierPointFromDucPoint));
+        getSizeFromPoints(finalPoints.map((p) => ({ x: p.x, y: p.y })));
       let restoredElement = restoreElementWithProperties(
         element,
         {
           points: finalPoints,
           lines,
           lastCommittedPoint: element.lastCommittedPoint
-            ? restorePoint(
-              element.lastCommittedPoint,
-              element.scope,
-              currentScope
-            )
+            ? restorePoint(element.lastCommittedPoint)
             : null,
           startBinding: processedStartBinding,
           wipeoutBelow: isValidBooleanValue(element.wipeoutBelow, false),
@@ -564,16 +461,8 @@ const restoreElement = (
           ...(!sizeFromPoints
             ? {}
             : {
-              width: getPrecisionValueFromScoped(
-                sizeFromPoints.width,
-                element.scope,
-                currentScope
-              ),
-              height: getPrecisionValueFromScoped(
-                sizeFromPoints.height,
-                element.scope,
-                currentScope
-              ),
+              width: sizeFromPoints.width,
+              height: sizeFromPoints.height,
             }),
         },
         localState
@@ -583,7 +472,7 @@ const restoreElement = (
         mergeOverlappingPoints(
           finalPoints,
           lines,
-          LINE_CONFIRM_THRESHOLD as RawValue
+          LINE_CONFIRM_THRESHOLD
         );
 
       restoredElement = {
@@ -595,9 +484,7 @@ const restoreElement = (
       // Validate path overrides after we have the final points and lines
       const validatedPathOverrides = validatePathOverrides(
         element.pathOverrides,
-        restoredElement,
-        elementScope,
-        currentScope
+        restoredElement
       );
 
       return {
@@ -614,7 +501,6 @@ const restoreElement = (
           type: "line",
           wipeoutBelow: false,
         },
-        currentScope,
         restoredBlocks,
         localState
       );
@@ -665,51 +551,26 @@ const restoreElement = (
       return restoreElementWithProperties(
         frameElement,
         {
-          ...restoreStackElementProperties(frameElement, currentScope),
+          ...restoreStackElementProperties(frameElement),
         },
         localState
       );
     }
     case "plot": {
       const plotElement = element as DucPlotElement;
-      const elementScope = isValidElementScopeValue(
-        plotElement.scope,
-        globalState?.mainScope
-      );
 
       // Restore base stack element properties (label, visibility, etc.)
       const stackProperties = restoreStackElementProperties(
-        plotElement,
-        currentScope
+        plotElement
       );
 
       // Restore layout-specific properties
       const layout: PlotLayout = {
         margins: {
-          top: restorePrecisionValue(
-            plotElement.layout?.margins?.top,
-            elementScope,
-            currentScope,
-            0
-          ),
-          right: restorePrecisionValue(
-            plotElement.layout?.margins?.right,
-            elementScope,
-            currentScope,
-            0
-          ),
-          bottom: restorePrecisionValue(
-            plotElement.layout?.margins?.bottom,
-            elementScope,
-            currentScope,
-            0
-          ),
-          left: restorePrecisionValue(
-            plotElement.layout?.margins?.left,
-            elementScope,
-            currentScope,
-            0
-          ),
+          top: restoreNumber(plotElement.layout?.margins?.top, 0),
+          right: restoreNumber(plotElement.layout?.margins?.right, 0),
+          bottom: restoreNumber(plotElement.layout?.margins?.bottom, 0),
+          left: restoreNumber(plotElement.layout?.margins?.left, 0),
         },
       };
 
@@ -738,7 +599,7 @@ const restoreElement = (
     // Complex elements requiring specific restore logic
     case "table": {
       const tableElement = element as DucTableElement;
-      const defaultData = getDefaultTableData(currentScope);
+      const defaultData = getDefaultTableData();
       return restoreElementWithProperties(
         tableElement,
         {
@@ -810,36 +671,29 @@ const restoreElement = (
 /**
  * Restores a point that might have legacy format (x,y as numbers)
  * @param point - The point to restore
- * @param elementScope - The scope to use for the precision values
  * @returns A properly formatted DucPoint
  */
 export const restorePoint = (
   point:
     | Partial<DucPoint>
     | {
-      x: number | PrecisionValue;
-      y: number | PrecisionValue;
+      x: number;
+      y: number;
       isCurve?: boolean;
       mirroring?: BezierMirroring;
-      handleIn?: { x: number | PrecisionValue; y: number | PrecisionValue };
-      handleOut?: { x: number | PrecisionValue; y: number | PrecisionValue };
-      borderRadius?: number | PrecisionValue;
+      handleIn?: { x: number; y: number };
+      handleOut?: { x: number; y: number };
+      borderRadius?: number;
     }
     | undefined,
-  elementScope: Scope,
-  currentScope: Scope
 ): DucPoint | null => {
   if (!point) {
     return null;
   }
 
   // Handle x and y conversion
-  const xValue = restorePrecisionValue(point.x, elementScope, currentScope);
-  const yValue = restorePrecisionValue(point.y, elementScope, currentScope);
-
-  if (!xValue || !yValue) {
-    return null;
-  }
+  const xValue = restoreNumber(point.x, 0);
+  const yValue = restoreNumber(point.y, 0);
 
   // Only keep the new DucPoint structure, ignore legacy properties
   return {
@@ -855,30 +709,16 @@ const restoreElementPoints = ({
   y,
   width,
   height,
-  elementScope,
-  currentScope,
 }: {
   points: any[];
-  x: number | PrecisionValue;
-  y: number | PrecisionValue;
-  width: number | PrecisionValue;
-  height: number | PrecisionValue;
-  elementScope: Scope;
-  currentScope: Scope;
+  x: number | any;
+  y: number | any;
+  width: number | any;
+  height: number | any;
 }) => {
-  // Convert input parameters to plain numbers if they're precision values
-  const validatedWidth = restorePrecisionValue(
-    width,
-    elementScope,
-    currentScope,
-    0
-  );
-  const validatedHeight = restorePrecisionValue(
-    height,
-    elementScope,
-    currentScope,
-    0
-  );
+  // Convert input parameters to plain numbers
+  const validatedWidth = restoreNumber(width, 0);
+  const validatedHeight = restoreNumber(height, 0);
 
   // Process the points array with proper conversion
   let points: DucPoint[] = [];
@@ -887,7 +727,7 @@ const restoreElementPoints = ({
     const migratedPoints = migratePoints(oldPoints);
     points = migratedPoints
       .map((point) => {
-        const restoredPoint = restorePoint(point, elementScope, currentScope);
+        const restoredPoint = restorePoint(point);
         if (!restoredPoint) {
           return null;
         }
@@ -907,8 +747,8 @@ const restoreElementPoints = ({
     // Default two points
     points = [
       {
-        x: getPrecisionValueFromRaw(0 as RawValue, elementScope, currentScope),
-        y: getPrecisionValueFromRaw(0 as RawValue, elementScope, currentScope),
+        x: 0,
+        y: 0,
         mirroring: undefined,
       },
       {
@@ -921,13 +761,13 @@ const restoreElementPoints = ({
 
   if (
     points.length === 2 &&
-    points[1] && // Should always be true if points.length === 2
-    points[1].x.value === 0 &&
-    points[1].y.value === 0 &&
-    (validatedWidth.value !== 0 || validatedHeight.value !== 0)
+    points[1] &&
+    points[1].x === 0 &&
+    points[1].y === 0 &&
+    (validatedWidth !== 0 || validatedHeight !== 0)
   ) {
     points[1] = {
-      ...points[1], // Preserve other properties like isCurve, etc.
+      ...points[1],
       x: validatedWidth,
       y: validatedHeight,
     };
@@ -943,34 +783,20 @@ const restoreLinearElementPointsAndLines = ({
   y,
   width,
   height,
-  elementScope,
-  currentScope,
   skipNormalization,
 }: {
   points: any[];
   lines: DucLine[] | undefined;
-  x: number | PrecisionValue;
-  y: number | PrecisionValue;
-  width: number | PrecisionValue;
-  height: number | PrecisionValue;
-  elementScope: Scope;
-  currentScope: Scope;
+  x: number | any;
+  y: number | any;
+  width: number | any;
+  height: number | any;
   skipNormalization?: boolean;
 }) => {
-  const validatedX = restorePrecisionValue(x, elementScope, currentScope, 0);
-  const validatedY = restorePrecisionValue(y, elementScope, currentScope, 0);
-  const validatedWidth = restorePrecisionValue(
-    width,
-    elementScope,
-    currentScope,
-    0
-  );
-  const validatedHeight = restorePrecisionValue(
-    height,
-    elementScope,
-    currentScope,
-    0
-  );
+  const validatedX = restoreNumber(x, 0);
+  const validatedY = restoreNumber(y, 0);
+  const validatedWidth = restoreNumber(width, 0);
+  const validatedHeight = restoreNumber(height, 0);
 
   let points: DucPoint[] = restoreElementPoints({
     points: oldPoints,
@@ -978,8 +804,6 @@ const restoreLinearElementPointsAndLines = ({
     y,
     width,
     height,
-    elementScope,
-    currentScope,
   });
   let lines = oldLines;
 
@@ -997,13 +821,13 @@ const restoreLinearElementPointsAndLines = ({
         {
           index: line[0].index,
           handle: line[0].handle
-            ? restorePoint(line[0].handle, elementScope, currentScope)
+            ? restorePoint(line[0].handle)
             : null,
         },
         {
           index: line[1].index,
           handle: line[1].handle
-            ? restorePoint(line[1].handle, elementScope, currentScope)
+            ? restorePoint(line[1].handle)
             : null,
         },
       ];
@@ -1013,7 +837,7 @@ const restoreLinearElementPointsAndLines = ({
   if (
     !skipNormalization &&
     points.length >= 2 &&
-    (points[0].x.value !== 0 || points[0].y.value !== 0)
+    (points[0].x !== 0 || points[0].y !== 0)
   ) {
     const normalizedResult = getNormalizedPoints(
       {
@@ -1021,9 +845,7 @@ const restoreLinearElementPointsAndLines = ({
         lines,
         x: validatedX,
         y: validatedY,
-        scope: elementScope,
       },
-      currentScope
     );
 
     const firstPoint = points[0];
@@ -1033,12 +855,12 @@ const restoreLinearElementPointsAndLines = ({
     lines = normalizedResult.lines;
 
     if (oldPoints && oldPoints.length === points.length) {
-      if (firstPoint.x.value !== 0 || firstPoint.y.value !== 0) {
+      if (firstPoint.x !== 0 || firstPoint.y !== 0) {
         points[0] = { ...points[0] };
       }
       if (
-        lastPoint.x.value !== validatedWidth.value ||
-        lastPoint.y.value !== validatedHeight.value
+        lastPoint.x !== validatedWidth ||
+        lastPoint.y !== validatedHeight
       ) {
         points[points.length - 1] = { ...points[points.length - 1] };
       }
@@ -1169,12 +991,27 @@ export const migrateArrayOrderToZIndex = (
 
 export const restoreElements = (
   elements: ImportedDataState["elements"],
-  currentScope: Scope,
-  restoredBlocks: RestoredDataState["blocks"],
-  opts?: ElementsConfig & {
-    localState?: Readonly<Partial<DucLocalState>> | null;
-  }
+  second?: any,
+  third?: any,
+  fourth?: any
 ): OrderedDucElement[] => {
+  let restoredBlocks: RestoredDataState["blocks"] = [];
+  let opts: (ElementsConfig & {
+    localState?: Readonly<Partial<DucLocalState>> | null;
+  }) | undefined;
+
+  if (Array.isArray(second)) {
+    restoredBlocks = second;
+    opts = third;
+  } else if (second && typeof second === "object" && ("syncInvalidIndices" in second || "localState" in second || "passThroughElementIds" in second)) {
+    opts = second;
+  } else if (Array.isArray(third)) {
+    restoredBlocks = third;
+    opts = fourth;
+  } else if (third && typeof third === "object") {
+    opts = third;
+  }
+
   const existingIds = new Set<string>();
   const idMap = new Map<string, string>();
 
@@ -1183,7 +1020,6 @@ export const restoreElements = (
     if (element.type !== "selection") {
       let migratedElement: DucElement | null = restoreElement(
         element,
-        currentScope,
         restoredBlocks,
         opts?.localState
       );
@@ -1228,7 +1064,7 @@ export const restoreElements = (
   }
 
   let restoredElements: OrderedDucElement[] = opts?.syncInvalidIndices
-    ? opts.syncInvalidIndices(restored, currentScope)
+    ? opts.syncInvalidIndices(restored)
     : (restored as OrderedDucElement[]);
 
   // Migrate array ordering to explicit z-index values if needed
@@ -1259,7 +1095,6 @@ export const restoreElements = (
           element,
           getContainerElement(element, restoredElementsMap),
           restoredElementsMap,
-          currentScope
         )
       );
     }
@@ -1342,31 +1177,16 @@ export const restoreElements = (
   return restoredElements;
 };
 
-export const isValidElementScopeValue = (
-  value: string | undefined,
-  mainScope: Scope = NEUTRAL_SCOPE
-): Scope => {
-  // Only check if the provided value is valid
-  if (value !== undefined && Object.keys(ScaleFactors).includes(value)) {
-    return value as Scope;
-  }
-  return mainScope;
-};
-
 const restoreLineSpacing = (
   lineSpacing: any,
   legacyLineHeight: number,
-  currentScope: Scope
 ): DucTextStyle["lineSpacing"] => {
   if (lineSpacing && lineSpacing.type && lineSpacing.value) {
     return {
       type: isValidLineSpacingTypeValue(lineSpacing.type),
-      value: restorePrecisionValue(
+      value: restoreNumber(
         lineSpacing.value,
-        currentScope,
-        currentScope,
-        1.15,
-        true
+        1.15
       ),
     };
   }
@@ -1411,8 +1231,7 @@ const getFontFamilyByName = (fontFamilyName: string): FontFamilyValues => {
 const repairBinding = (
   element: DucBinderElement | undefined,
   binding: DucPointBinding | null,
-  currentScope: Scope,
-  restoredBlocks: RestoredDataState["blocks"]
+  restoredBlocks?: RestoredDataState["blocks"]
 ): DucPointBinding | null => {
   if (!binding) {
     return null;
@@ -1423,11 +1242,8 @@ const repairBinding = (
     binding.head !== undefined &&
     (!binding.elementId || binding.elementId === "")
   ) {
-    return createHeadOnlyBinding(binding.head, restoredBlocks, currentScope);
+    return createHeadOnlyBinding(binding.head, restoredBlocks);
   }
-
-  // Get the element's scope for conversion
-  const elementScope = element ? element.scope : NEUTRAL_SCOPE;
 
   // Ensure we preserve the point attribute for linear-to-linear bindings
   const pointData = binding.point
@@ -1447,14 +1263,10 @@ const repairBinding = (
   return {
     elementId: binding.elementId || "",
     focus: typeof binding.focus === "number" ? binding.focus : 0,
-    gap: restorePrecisionValue(
-      typeof binding.gap === "number" ? Math.max(0, binding.gap) : 0,
-      elementScope,
-      currentScope
-    ),
+    gap: restoreNumber(binding.gap, 0),
     head: isValidDucHead(
       binding.head,
-      restoredBlocks
+      restoredBlocks || []
     ),
     fixedPoint: element && isElbowArrow(element)
       ? normalizeFixedPoint(binding.fixedPoint ?? { x: 0.5, y: 0.5 })
@@ -1469,8 +1281,6 @@ const repairBinding = (
 const validateDucPath = (
   path: Partial<DucPath> | undefined,
   element: DucLinearElement,
-  elementScope: Scope,
-  currentScope: Scope
 ): DucPath | null => {
   if (!path || !path.lineIndices || !Array.isArray(path.lineIndices)) {
     return null;
@@ -1503,7 +1313,7 @@ const validateDucPath = (
     lineIndices: validLineIndices,
     background: path.background ? validateBackground(path.background) : null,
     stroke: path.stroke
-      ? validateStroke(path.stroke, elementScope, currentScope)
+      ? validateStroke(path.stroke)
       : null,
   };
 };
@@ -1513,9 +1323,7 @@ const validateDucPath = (
  */
 const validatePathOverrides = (
   pathOverrides: readonly DucPath[] | Partial<DucPath>[] | undefined,
-  element: DucLinearElement,
-  elementScope: Scope,
-  currentScope: Scope
+  element: DucLinearElement
 ): DucPath[] => {
   if (!pathOverrides || !Array.isArray(pathOverrides)) {
     return [];
@@ -1527,9 +1335,7 @@ const validatePathOverrides = (
   for (const pathOverride of pathOverrides) {
     const validatedPath = validateDucPath(
       pathOverride,
-      element,
-      elementScope,
-      currentScope
+      element
     );
 
     if (validatedPath) {
@@ -1589,16 +1395,15 @@ const isValidCutAngleValue = (
 
 const createHeadOnlyBinding = (
   head: DucHead | null | undefined,
-  restoredBlocks: RestoredDataState["blocks"],
-  currentScope: Scope
+  restoredBlocks?: RestoredDataState["blocks"]
 ): DucPointBinding => {
   return {
     elementId: "",
     focus: 0,
-    gap: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
+    gap: 0,
     fixedPoint: null,
     point: null,
-    head: isValidDucHead(head, restoredBlocks),
+    head: isValidDucHead(head, restoredBlocks || []),
   };
 };
 
@@ -1623,8 +1428,7 @@ const isValidLineSpacingTypeValue = (value: any) => {
  * Restore properties specific to Stack-like elements (_DucStackElementBase)
  */
 const restoreStackElementProperties = (
-  element: Partial<_DucStackElementBase>,
-  currentScope: Scope
+  element: Partial<_DucStackElementBase>
 ) => {
   return {
     ...restoreDucStackProperties(element),

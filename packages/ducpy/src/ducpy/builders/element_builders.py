@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Union
 from ducpy.enums import (IMAGE_STATUS, STROKE_CAP, STROKE_JOIN,
                          STROKE_PLACEMENT, STROKE_PREFERENCE, TEXT_ALIGN,
                          VERTICAL_ALIGN)
-from ducpy.utils import (DEFAULT_FILL_COLOR, DEFAULT_SCOPE,
+from ducpy.utils import (DEFAULT_FILL_COLOR,
                          DEFAULT_STROKE_COLOR, DEFAULT_STROKE_WIDTH,
                          generate_random_id)
 from ducpy.utils.rand_utils import random_versioning
@@ -236,7 +236,6 @@ class BaseElementParams:
     y: float
     width: float
     height: float
-    scope: str
     angle: float = 0.0
     styles: Optional[DucElementStylesBase] = None
     id: Optional[str] = None
@@ -265,9 +264,8 @@ class ElementBuilder:
         y: float = 0.0,
         width: float = 1.0,
         height: float = 1.0,
-        scope: str = DEFAULT_SCOPE
     ):
-        self.base = BaseElementParams(x=x, y=y, width=width, height=height, scope=scope)
+        self.base = BaseElementParams(x=x, y=y, width=width, height=height)
         self.extra = {}
 
     def at_position(self, x: float, y: float):
@@ -287,9 +285,6 @@ class ElementBuilder:
 
     def with_label(self, label: str):
         self.base.label = label; return self
-
-    def with_scope(self, scope: str):
-        self.base.scope = scope; return self
 
     def with_locked(self, locked: bool):
         self.base.locked = locked; return self

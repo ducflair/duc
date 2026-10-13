@@ -122,23 +122,11 @@ class GlobalStateBuilder(StateSpecificBuilder):
         self.extra["view_background_color"] = color
         return self
 
-    def with_main_scope(self, scope: str):
-        self.extra["main_scope"] = scope
-        return self
-
-    def with_scope_exponent_threshold(self, threshold: int):
-        self.extra["scope_exponent_threshold"] = threshold
-        return self
-
     def build(self) -> DucGlobalState:
         return create_global_state_from_base(self.base, **self.extra)
 
 
 class LocalStateBuilder(StateSpecificBuilder):
-    def with_scope(self, scope: str):
-        self.extra["scope"] = scope
-        return self
-
     def with_scroll_x(self, scroll_x: float):
         self.extra["scroll_x"] = scroll_x
         return self
@@ -448,14 +436,11 @@ class StackBaseBuilder(StateSpecificBuilder):
 def create_global_state_from_base(base: BaseStateParams, **kwargs) -> DucGlobalState:
     return DucGlobalState(
         view_background_color=kwargs.get('view_background_color', "#FFFFFF"),
-        main_scope=kwargs.get('main_scope', "mm"),
-        scope_exponent_threshold=kwargs.get('scope_exponent_threshold', 6),
     )
 
 
 def create_local_state_from_base(base: BaseStateParams, **kwargs) -> DucLocalState:
     return DucLocalState(
-        scope=kwargs.get('scope', "mm"),
         scroll_x=kwargs.get('scroll_x', 0.0),
         scroll_y=kwargs.get('scroll_y', 0.0),
         zoom=kwargs.get('zoom', 1.0),
@@ -806,8 +791,8 @@ class IssueBuilder(StateSpecificBuilder):
         ))
         return self
 
-    def with_canvas_anchor(self, x: float, y: float, *, scope: Optional[str] = None):
-        self.extra["anchor"] = DucIssueCanvasAnchor(x=x, y=y, scope=scope)
+    def with_canvas_anchor(self, x: float, y: float):
+        self.extra["anchor"] = DucIssueCanvasAnchor(x=x, y=y)
         return self
 
     def with_element_anchor(self, element_id: str, *, anchor_x: Optional[float] = None,

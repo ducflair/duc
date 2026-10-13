@@ -15,13 +15,6 @@ import {
   TEXT_ALIGN,
   VERTICAL_ALIGN,
 } from "../enums";
-import { getPrecisionScope } from "../technical/measurements";
-import {
-  getPrecisionValueFromRaw,
-  getPrecisionValueFromScoped,
-  NEUTRAL_SCOPE,
-  ScaleFactors
-} from "../technical/scopes";
 import type {
   Actor,
   Checkpoint,
@@ -43,10 +36,6 @@ import type {
   ExternalFilesData,
   ImportedDataState,
   LibraryItems,
-  PrecisionValue,
-  RawValue,
-  Scope,
-  ScopedValue,
   VersionGraph,
   Viewer3DState,
 } from "../types";
@@ -151,8 +140,7 @@ export interface ImportedLibraryData extends Partial<ExportedLibraryData> {
 
 export type ElementsConfig = {
   syncInvalidIndices: (
-    elements: readonly DucElement[],
-    currentScope: Scope
+    elements: readonly DucElement[]
   ) => OrderedDucElement[];
   refreshDimensions?: boolean;
   repairBindings?: boolean;
@@ -163,21 +151,18 @@ export type ElementsConfig = {
   passThroughElementIds?: string[];
 };
 
-export type RestoreConfig = {
-  forceScope?: Scope;
-};
+export type RestoreConfig = {};
 
 export const restore = (
   data: ImportedDataState | null,
   elementsConfig: ElementsConfig,
-  restoreConfig: RestoreConfig = {},
+  _restoreConfig: RestoreConfig = {},
 ): RestoredDataState => {
   const restoredDictionary = restoreDictionary(data?.dictionary);
   const restoredGlobalState = restoreGlobalState(data?.globalState);
   const restoredLocalState = restoreLocalState(
     data?.localState,
-    restoredGlobalState,
-    restoreConfig.forceScope
+    restoredGlobalState
   );
 
   const restoredElementsConfig = {
@@ -187,7 +172,6 @@ export const restore = (
 
   const restoredBlocks = restoreBlocks(
     data?.blocks,
-    restoredLocalState.scope,
     restoredElementsConfig
   );
 
@@ -195,12 +179,11 @@ export const restore = (
 
   const restoredRegions = restoreRegions(data?.regions);
   const restoredGroups = restoreGroups(data?.groups);
-  const restoredLayers = restoreLayers(data?.layers, restoredLocalState.scope);
-  const restoredBlockInstances = restoreBlockInstances(data?.blockInstances, restoredLocalState.scope);
+  const restoredLayers = restoreLayers(data?.layers);
+  const restoredBlockInstances = restoreBlockInstances(data?.blockInstances);
 
   const restoredElements = restoreElements(
     data?.elements,
-    restoredLocalState.scope,
     restoredBlocks,
     restoredElementsConfig
   );
@@ -592,7 +575,6 @@ const restoreIssueAnchor = (value: unknown): DucIssueAnchor | undefined => {
       type: "canvas",
       x,
       y,
-      scope: typeof obj.scope === "string" ? (obj.scope as Scope) : undefined,
     };
   }
   if (type === "element") {
@@ -745,13 +727,10 @@ export const restoreGroups = (
  * missing or invalid properties.
  *
  * @param layers - The raw, untrusted array of layer-like objects.
- * @param currentScope - The current drawing scope, required for restoring
- *   scope-dependent properties like stroke width.
  * @returns A validated array of DucLayer objects, or an empty array if the input is invalid.
  */
 export const restoreLayers = (
   layers: unknown,
-  currentScope: Scope
 ): RestoredDataState["layers"] => {
   if (!Array.isArray(layers)) {
     return [];
@@ -770,7 +749,7 @@ export const restoreLayers = (
         ...restoreDucStackProperties(l),
         readonly: isValidBoolean(l.readonly, false),
         overrides: overridesSource ? {
-          stroke: validateStroke(overridesSource.stroke, currentScope, currentScope),
+          stroke: validateStroke(overridesSource.stroke),
           background: validateBackground(overridesSource.background),
         } : null,
       };
@@ -816,8 +795,8 @@ export const restoreRegions = (regions: unknown): RestoredDataState["regions"] =
  */
 export const restoreBlocks = (
   blocks: unknown,
-  currentScope: Scope,
-  elementsConfig: ElementsConfig
+  _second?: any,
+  _third?: any,
 ): RestoredDataState["blocks"] => {
   if (!Array.isArray(blocks)) {
     return [];
@@ -894,7 +873,6 @@ export const restoreBlockCollections = (
  */
 export const restoreBlockInstances = (
   blockInstances: unknown,
-  currentScope: Scope,
 ): RestoredDataState["blockInstances"] => {
   if (!Array.isArray(blockInstances)) {
     return [];
@@ -935,8 +913,8 @@ export const restoreBlockInstances = (
           ? {
             rows: typeof dupArray.rows === "number" ? dupArray.rows : 1,
             cols: typeof dupArray.cols === "number" ? dupArray.cols : 1,
-            rowSpacing: restorePrecisionValue(dupArray.rowSpacing, NEUTRAL_SCOPE, currentScope),
-            colSpacing: restorePrecisionValue(dupArray.colSpacing, NEUTRAL_SCOPE, currentScope),
+            rowSpacing: restoreNumber(dupArray.rowSpacing),
+            colSpacing: restoreNumber(dupArray.colSpacing),
           }
           : null,
       };
@@ -996,19 +974,11 @@ export const restoreGlobalState = (
     ...defaults,
     viewBackgroundColor:
       importedState?.viewBackgroundColor ?? defaults.viewBackgroundColor,
-    mainScope:
-      isValidAppStateScopeValue(importedState?.mainScope) ?? defaults.mainScope,
-    scopeExponentThreshold: isValidAppStateScopeExponentThresholdValue(
-      importedState?.scopeExponentThreshold,
-      defaults.scopeExponentThreshold
-    ),
   };
 };
 
 /**
  * Restores the user's local session state from imported data.
- * It requires the already-restored global state to correctly calculate dependent values
- * like zoom and scope.
  *
  * @param importedState - The partially imported local state data.
  * @param restoredGlobalState - The complete and valid global state for the document.
@@ -1016,43 +986,34 @@ export const restoreGlobalState = (
  */
 export const restoreLocalState = (
   importedState: Partial<DucLocalState> = {},
-  restoredGlobalState: RestoredDataState["globalState"],
-  forceScope?: Scope
+  _restoredGlobalState?: RestoredDataState["globalState"]
 ): DucLocalState => {
   const defaults = getDefaultLocalState();
 
-  // Rust sends zoom as a plain f64, TS stores it as { value, scoped, scaled }.
+  // Rust sends zoom as a plain f64, TS stores it as { value, scaled }.
   // Handle both formats.
   const rawZoom = typeof importedState?.zoom === "number"
     ? importedState.zoom
     : importedState?.zoom?.value;
-  const zoom = getZoom(rawZoom ?? defaults.zoom.value, restoredGlobalState.mainScope, restoredGlobalState.scopeExponentThreshold);
-  const scope = forceScope
-    ? isValidScopeValue(forceScope)
-    : isValidPrecisionScopeValue(
-      zoom.value,
-      restoredGlobalState.mainScope,
-      restoredGlobalState.scopeExponentThreshold
-    );
+  const zoom = getZoom(rawZoom ?? defaults.zoom.value);
 
   return {
     ...defaults,
     ...importedState,
-    scope,
     isBindingEnabled: isValidBoolean(
       importedState?.isBindingEnabled,
       defaults.isBindingEnabled
     ),
     penMode: isValidBoolean(importedState?.penMode, defaults.penMode),
     scrollX: importedState?.scrollX != null
-      ? restorePrecisionValue(importedState.scrollX, NEUTRAL_SCOPE, scope)
-      : getPrecisionValueFromRaw(defaults.scrollX.value, NEUTRAL_SCOPE, scope),
+      ? restoreNumber(importedState.scrollX)
+      : defaults.scrollX,
     scrollY: importedState?.scrollY != null
-      ? restorePrecisionValue(importedState.scrollY, NEUTRAL_SCOPE, scope)
-      : getPrecisionValueFromRaw(defaults.scrollY.value, NEUTRAL_SCOPE, scope),
+      ? restoreNumber(importedState.scrollY)
+      : defaults.scrollY,
     zoom,
     currentItemStroke:
-      validateStroke(importedState?.currentItemStroke, scope, scope) ??
+      validateStroke(importedState?.currentItemStroke) ??
       defaults.currentItemStroke,
     currentItemBackground:
       validateBackground(importedState?.currentItemBackground) ??
@@ -1061,11 +1022,9 @@ export const restoreLocalState = (
       typeof importedState?.currentItemFontFamily === "string"
         ? importedState.currentItemFontFamily
         : defaults.currentItemFontFamily,
-    currentItemFontSize: restorePrecisionValue(
+    currentItemFontSize: restoreNumber(
       importedState?.currentItemFontSize,
-      scope,
-      scope,
-      defaults.currentItemFontSize.value
+      defaults.currentItemFontSize
     ),
     currentItemTextAlign: isValidTextAlignValue(
       importedState?.currentItemTextAlign
@@ -1074,11 +1033,9 @@ export const restoreLocalState = (
       importedState?.currentItemOpacity,
       defaults.currentItemOpacity
     ),
-    currentItemRoundness: restorePrecisionValue(
+    currentItemRoundness: restoreNumber(
       importedState?.currentItemRoundness,
-      scope,
-      scope,
-      defaults.currentItemRoundness.value
+      defaults.currentItemRoundness
     ),
     currentItemStartLineHead:
       isValidLineHeadValue(importedState?.currentItemStartLineHead) ??
@@ -1290,66 +1247,37 @@ export const restoreDucStackProperties = (
   };
 };
 
-export const isValidAppStateScopeValue = (value: string | undefined): Scope => {
-  if (value !== undefined && Object.keys(ScaleFactors).includes(value)) {
-    return value as Scope;
-  }
-  return NEUTRAL_SCOPE;
-};
-
-export const isValidAppStateScopeExponentThresholdValue = (
-  value: number | undefined,
-  defaultValue: number
-): number => {
-  const finite = isValidFinitePositiveByteValue(value, defaultValue);
-  if (finite >= 1 && finite <= 36) {
-    return finite;
-  }
-  return defaultValue;
-};
-
-export const isValidPrecisionScopeValue = (
-  zoom: number,
-  mainScope: Scope,
-  scopeExponentThreshold: number
-): Scope => {
-  return getPrecisionScope(zoom, mainScope, scopeExponentThreshold);
-};
-
 /**
- * Converts a plain number or legacy value to a PrecisionValue object
- * @param value - The value to convert (can be a raw number or legacy value)
- * @param elementScope - The scope to use for the precision value
- * @returns A properly formatted PrecisionValue object
+ * Converts a plain number or legacy value to a primitive number
+ * @param value - The value to convert (can be a raw number or { value } object)
+ * @returns A primitive number
  */
-export const restorePrecisionValue = (
-  value: number | PrecisionValue | undefined,
-  elementScope: Scope,
-  currentScope: Scope,
-  defaultValue?: number,
-  fromScoped: boolean = false
-): PrecisionValue => {
-  const fallbackValue = getPrecisionValueFromRaw(
-    (defaultValue ?? 0) as RawValue,
-    currentScope,
-    currentScope
-  );
+export const restoreNumber = (
+  value: any,
+  arg2?: any,
+  arg3?: any,
+  arg4?: any
+): number => {
+  let defaultValue = 0;
+  if (typeof arg2 === "number") {
+    defaultValue = arg2;
+  } else if (typeof arg4 === "number") {
+    defaultValue = arg4;
+  }
   if (value === undefined || value === null) {
-    return fallbackValue;
+    return defaultValue;
   }
   if (typeof value === "number") {
-    if (!Number.isFinite(value)) {
-      return fallbackValue;
-    }
-    return fromScoped
-      ? getPrecisionValueFromScoped(
-        value as ScopedValue,
-        elementScope,
-        currentScope
-      )
-      : getPrecisionValueFromRaw(value as RawValue, elementScope, currentScope);
+    return Number.isFinite(value) ? value : defaultValue;
   }
-  return getPrecisionValueFromRaw(value.value, elementScope, currentScope);
+  if (typeof value === "object" && value !== null) {
+    const num =
+      typeof value.value === "number"
+        ? value.value
+        : defaultValue;
+    return Number.isFinite(num) ? num : defaultValue;
+  }
+  return defaultValue;
 };
 
 export const isValidFillStyleValue = (
@@ -1401,26 +1329,6 @@ export const isValidDecimalPlacesValue = (
   }
 
   return truncated;
-};
-
-export const isValidScopeValue = (
-  value: string | undefined,
-  localState?: Readonly<Partial<DucLocalState>> | null,
-  mainScope?: Scope
-): Scope => {
-  if (value !== undefined && Object.keys(ScaleFactors).includes(value)) {
-    return value as Scope;
-  }
-  if (mainScope && Object.keys(ScaleFactors).includes(mainScope)) {
-    return mainScope;
-  }
-  if (
-    localState?.scope &&
-    Object.keys(ScaleFactors).includes(localState.scope)
-  ) {
-    return localState.scope;
-  }
-  return NEUTRAL_SCOPE;
 };
 
 export const isValidImageStatusValue = (
@@ -1582,9 +1490,7 @@ const validateStrokeSides = (
 };
 
 export const validateStroke = (
-  stroke: ElementStroke | undefined,
-  elementScope: Scope,
-  currentScope: Scope
+  stroke: ElementStroke | undefined
 ): ElementStroke => {
   return {
     content: validateElementContent({
@@ -1592,11 +1498,9 @@ export const validateStroke = (
       defaultContent: DEFAULT_ELEMENT_PROPS.stroke.content,
     }),
     placement: stroke?.placement ?? STROKE_PLACEMENT.CENTER,
-    width: restorePrecisionValue(
+    width: restoreNumber(
       stroke?.width,
-      elementScope,
-      currentScope,
-      DEFAULT_ELEMENT_PROPS.stroke.width.value
+      DEFAULT_ELEMENT_PROPS.stroke.width
     ),
     style: validateStrokeStyle(stroke?.style),
     strokeSides: validateStrokeSides(stroke?.strokeSides),

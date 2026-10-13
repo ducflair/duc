@@ -447,7 +447,6 @@ fn global_state_valid() {
         let parsed = read_state(&path);
         if let Some(gs) = parsed.duc_global_state.as_ref() {
             assert!(!gs.view_background_color.is_empty(), "{}", path.display());
-            assert!(!gs.main_scope.is_empty(), "{}", path.display());
         }
     }
 }

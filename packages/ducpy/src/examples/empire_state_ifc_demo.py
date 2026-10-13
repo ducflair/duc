@@ -1065,7 +1065,6 @@ def main():
         .at_position(2852.6047165, -870.1664371557827)
         .with_size(81.42883455202997, 197.16424830999995)
         .with_angle(0.0)
-        .with_scope("m")
         .with_label("EmpireState BIM Model")
         .with_styles(esb_styles)
     )

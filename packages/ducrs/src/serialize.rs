@@ -411,11 +411,11 @@ fn write_issue_anchor(
     anchor: &DucIssueAnchor,
 ) -> SerializeResult<()> {
     match anchor {
-        DucIssueAnchor::Canvas { x, y, scope } => {
+        DucIssueAnchor::Canvas { x, y } => {
             tx.execute(
-                "INSERT INTO duc_issue_anchors (issue_id, anchor_type, canvas_x, canvas_y, canvas_scope)
-                 VALUES (?1, 'canvas', ?2, ?3, ?4)",
-                params![issue_id, x, y, scope],
+                "INSERT INTO duc_issue_anchors (issue_id, anchor_type, canvas_x, canvas_y)
+                 VALUES (?1, 'canvas', ?2, ?3)",
+                params![issue_id, x, y],
             )?;
         }
         DucIssueAnchor::Element {
@@ -468,12 +468,10 @@ fn write_global_state(tx: &Transaction, gs: &Option<DucGlobalState>) -> Serializ
     let Some(gs) = gs else { return Ok(()) };
     tx.execute(
         "INSERT OR REPLACE INTO duc_global_state
-            (id, view_background_color, main_scope, scope_exponent_threshold)
-         VALUES (1, ?1, ?2, ?3)",
+            (id, view_background_color)
+         VALUES (1, ?1)",
         params![
             gs.view_background_color,
-            gs.main_scope,
-            gs.scope_exponent_threshold,
         ],
     )?;
     Ok(())
@@ -485,7 +483,7 @@ fn write_local_state(tx: &Transaction, ls: &Option<DucLocalState>) -> SerializeR
     let Some(ls) = ls else { return Ok(()) };
     tx.execute(
         "INSERT OR REPLACE INTO duc_local_state (
-            id, scope, scroll_x, scroll_y, zoom,
+            id, scroll_x, scroll_y, zoom,
             is_binding_enabled,
             current_item_opacity, current_item_font_family, current_item_font_size,
             current_item_text_align, current_item_roundness,
@@ -495,12 +493,11 @@ fn write_local_state(tx: &Transaction, ls: &Option<DucLocalState>) -> SerializeR
             grid_mode_enabled, outline_mode_enabled, manual_save_mode,
             decimal_places
         ) VALUES (
-            1, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10,
-            ?11, ?12, ?13, ?14, ?15, ?16,
-            ?17, ?18, ?19, ?20, ?21, ?22, ?23
+            1, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9,
+            ?10, ?11, ?12, ?13, ?14, ?15,
+            ?16, ?17, ?18, ?19, ?20, ?21, ?22
         )",
         params![
-            ls.scope,
             ls.scroll_x,
             ls.scroll_y,
             ls.zoom,
@@ -827,7 +824,7 @@ fn write_base_element(
         "INSERT INTO elements (
             id, element_type,
             x, y, width, height, angle,
-            scope, label, description, is_visible,
+            label, description, is_visible,
             seed, version, version_nonce, updated, \"index\",
             is_plot, is_deleted,
             roundness, blending, opacity,
@@ -836,12 +833,12 @@ fn write_base_element(
         ) VALUES (
             ?1, ?2,
             ?3, ?4, ?5, ?6, ?7,
-            ?8, ?9, ?10, ?11,
-            ?12, ?13, ?14, ?15, ?16,
-            ?17, ?18,
-            ?19, ?20, ?21,
-            ?22, ?23, ?24,
-            ?25, ?26, ?27, ?28
+            ?8, ?9, ?10,
+            ?11, ?12, ?13, ?14, ?15,
+            ?16, ?17,
+            ?18, ?19, ?20,
+            ?21, ?22, ?23,
+            ?24, ?25, ?26, ?27
         )",
         params![
             base.id,
@@ -851,7 +848,6 @@ fn write_base_element(
             base.width,
             base.height,
             base.angle,
-            base.scope,
             base.label,
             base.description,
             base.is_visible as i32,
