@@ -704,12 +704,16 @@ impl DucToPdfBuilder {
                     file.id
                 ))
             })?;
-        let svg_data = rev_data.ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!(
-                "No data blob for revision {}",
-                file.active_revision_id
-            ))
-        })?;
+        let svg_data = match rev_data {
+            Some(data) => data,
+            None => {
+                log_warn!(
+                    "No data blob for revision {}, skipping SVG preload",
+                    file.active_revision_id
+                );
+                return Ok(0);
+            }
+        };
 
         // Convert SVG to PDF using the utility and get dimensions
         let (pdf_bytes, svg_width, svg_height) =
@@ -786,12 +790,16 @@ impl DucToPdfBuilder {
                     file.id
                 ))
             })?;
-        let image_data = rev_data.ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!(
-                "No data blob for revision {}",
-                file.active_revision_id
-            ))
-        })?;
+        let image_data = match rev_data {
+            Some(data) => data,
+            None => {
+                log_warn!(
+                    "No data blob for revision {}, skipping image preload",
+                    file.active_revision_id
+                );
+                return Ok(0);
+            }
+        };
         let mime_type = &revision.mime_type;
 
         // Create image directly from bytes (WASM-compatible)
@@ -853,12 +861,16 @@ impl DucToPdfBuilder {
                     file.id
                 ))
             })?;
-        let pdf_data = rev_data.ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!(
-                "No data blob for revision {}",
-                file.active_revision_id
-            ))
-        })?;
+        let pdf_data = match rev_data {
+            Some(data) => data,
+            None => {
+                log_warn!(
+                    "No data blob for revision {}, skipping PDF preload",
+                    file.active_revision_id
+                );
+                return Ok(0);
+            }
+        };
         let mime_type = &revision.mime_type;
         let embed_id = format!("pdf_{}", file.id);
 
@@ -1708,9 +1720,7 @@ impl DucToPdfBuilder {
 
         Ok(Stream::new(stream_dict, content_bytes))
     }
-    /// Stream elements organized by layers
-    /// This function organizes elements into unlayered and layered groups,
-    /// ensuring all elements are rendered within the same transformation context
+    /// Preserve global paint order while marking contiguous OCG layer runs.
     fn stream_elements_by_layer(
         &mut self,
         bounds: (f64, f64, f64, f64),
@@ -1754,33 +1764,30 @@ impl DucToPdfBuilder {
         self.element_streamer
             .set_svg_dimensions(self.context.resource_cache.svg_dimensions.clone());
 
-        let is_plot_mode = matches!(self.context.options.mode, ConversionMode::Plot);
-        let (scroll_x, scroll_y) = if is_plot_mode {
-            (0.0, 0.0)
-        } else if let Some(state) = &self.context.exported_data.duc_local_state {
-            (state.scroll_x, state.scroll_y)
-        } else {
-            (0.0, 0.0)
-        };
-
-        // === Phase 1: Stream unlayered elements ===
-        // These elements don't belong to any layer and render first
-        let unlayered_elements: Vec<ElementWrapper> = self
-            .context
-            .exported_data
-            .elements
-            .iter()
-            .filter(|element_wrapper| {
-                let base =
-                    crate::builder::DucToPdfBuilder::get_element_base(&element_wrapper.element);
-                base.layer_id.is_none()
-            })
-            .cloned()
-            .collect();
-
-        if !unlayered_elements.is_empty() {
-            let ops = self.element_streamer.stream_elements_within_bounds(
-                &unlayered_elements,
+        // OCG membership must not reorder paint. Batch only adjacent elements of
+        // the same layer after a stable global z-order sort.
+        let mut ordered = self.context.exported_data.elements.clone();
+        ordered.sort_by(|a, b| {
+            Self::get_element_base(&a.element).z_index
+                .partial_cmp(&Self::get_element_base(&b.element).z_index)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        let mut start = 0;
+        while start < ordered.len() {
+            let layer_id = &Self::get_element_base(&ordered[start].element).layer_id;
+            let mut end = start + 1;
+            while end < ordered.len()
+                && &Self::get_element_base(&ordered[end].element).layer_id == layer_id {
+                end += 1;
+            }
+            let prop = layer_id.as_ref().and_then(|id| self.layer_prop_names.get(id));
+            if let Some(prop) = prop {
+                all_operations.push(Operation::new("BDC", vec![
+                    Object::Name(b"OC".to_vec()), Object::Name(prop.as_bytes().to_vec()),
+                ]));
+            }
+            all_operations.extend(self.element_streamer.stream_elements_within_bounds(
+                &ordered[start..end],
                 &self.context.exported_data.elements,
                 bounds,
                 self.context.exported_data.duc_local_state.as_ref(),
@@ -1790,115 +1797,12 @@ impl DucToPdfBuilder {
                 &mut self.image_manager,
                 &self.ocg_manager,
                 &mut self.document,
-            )?;
-            all_operations.extend(ops);
-        }
-
-        // === Phase 2: Stream layered elements with OCG marking ===
-        // Each layer is wrapped in BDC/EMC markers for proper layer visibility control
-        for layer in &self.context.exported_data.layers {
-            let layer_elements: Vec<ElementWrapper> = self
-                .context
-                .exported_data
-                .elements
-                .iter()
-                .filter(|element_wrapper| {
-                    let base =
-                        crate::builder::DucToPdfBuilder::get_element_base(&element_wrapper.element);
-
-                    // Check if element belongs to this layer
-                    let belongs_to_layer = base
-                        .layer_id
-                        .as_ref()
-                        .map_or(false, |layer_id| layer_id == &layer.id);
-
-                    if !belongs_to_layer {
-                        return false;
-                    }
-
-                    // Verify element (including duplications) intersects with page bounds
-                    let (bounds_x, bounds_y, bounds_width, bounds_height) = bounds;
-                    let bounds_max_x = bounds_x + bounds_width;
-                    let bounds_max_y = bounds_y + bounds_height;
-
-                    let offsets = self
-                        .element_streamer
-                        .get_element_duplication_offsets(&element_wrapper.element)
-                        .unwrap_or_else(|| vec![(0.0, 0.0)]);
-
-                    let mut intersects = false;
-                    for (x_off, y_off) in offsets {
-                        let elem_x = base.x + scroll_x + x_off;
-                        let elem_y = base.y + scroll_y + y_off;
-                        let elem_max_x = elem_x + base.width;
-                        let elem_max_y = elem_y + base.height;
-
-                        let this_intersects = !(elem_x > bounds_max_x
-                            || elem_max_x < bounds_x
-                            || elem_y > bounds_max_y
-                            || elem_max_y < bounds_y);
-
-                        if this_intersects {
-                            intersects = true;
-                            break;
-                        }
-                    }
-
-                    if !intersects {
-                        let base_id = &base.id;
-                        let instance_id = base.instance_id.as_deref().unwrap_or("<none>");
-                        log_info!(
-                            "Skipping layered element '{}' (instance {}) - no duplicated instance intersects bounds. bounds=({},{},{},{}) scroll=({}, {})",
-                            base_id,
-                            instance_id,
-                            bounds_x,
-                            bounds_y,
-                            bounds_width,
-                            bounds_height,
-                            scroll_x,
-                            scroll_y
-                        );
-                    }
-
-                    intersects
-                })
-                .cloned()
-                .collect();
-
-            if layer_elements.is_empty() {
-                continue;
+            )?);
+            if prop.is_some() {
+                all_operations.push(Operation::new("EMC", vec![]));
             }
-
-            // Begin marked content for layer (BDC)
-            if let Some(prop_name) = self.layer_prop_names.get(&layer.id) {
-                all_operations.push(Operation::new(
-                    "BDC",
-                    vec![
-                        Object::Name(b"OC".to_vec()),
-                        Object::Name(prop_name.as_bytes().to_vec()),
-                    ],
-                ));
-            }
-
-            // Stream all elements within this layer
-            let layer_ops = self.element_streamer.stream_elements_within_bounds(
-                &layer_elements,
-                &self.context.exported_data.elements,
-                bounds,
-                self.context.exported_data.duc_local_state.as_ref(),
-                &mut self.resource_streamer,
-                &mut self.hatching_manager,
-                &mut self.pdf_embedder,
-                &mut self.image_manager,
-                &self.ocg_manager,
-                &mut self.document,
-            )?;
-            all_operations.extend(layer_ops);
-
-            // End marked content for layer (EMC)
-            all_operations.push(Operation::new("EMC", vec![]));
+            start = end;
         }
-
         Ok(all_operations)
     }
 

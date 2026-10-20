@@ -736,7 +736,7 @@ impl ElementStreamer {
         let is_plot_mode = matches!(self.current_mode, StreamMode::Plot);
         let (_bounds_x, _bounds_y, _bounds_width, _bounds_height) = bounds;
 
-        self.precompute_group_cell_pitches(elements);
+        self.precompute_group_cell_pitches(all_elements);
 
         // Filter and sort elements by z-index and visibility criteria
         let mut filtered_elements: Vec<_> = elements
@@ -880,7 +880,9 @@ impl ElementStreamer {
         // Apply transformation (position, rotation) with scroll offset
         let base = Self::get_element_base(element);
         let center_override = Self::compute_element_center_override(element);
-        if base.x != 0.0 || base.y != 0.0 || base.angle != 0.0 {
+        // Even an element at the DUC origin needs the page-height/Y-axis
+        // translation and crop scroll offset before painting local geometry.
+        {
             let transform_ops = if is_plot_mode && base.frame_id.is_some() {
                 // This is a child element of a plot/ frame, use relative positioning
                 // Find the parent plot element to get its position
@@ -2149,7 +2151,7 @@ impl ElementStreamer {
         })
     }
 
-    fn convert_polygon_to_linear_element(polygon: &DucPolygonElement) -> DucLinearElement {
+    pub fn convert_polygon_to_linear_element(polygon: &DucPolygonElement) -> DucLinearElement {
         let sides = polygon.sides.max(3);
         let base_points =
             Self::generate_polygon_points(sides, polygon.base.width, polygon.base.height);

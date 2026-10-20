@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
 pub mod builder;
+pub mod canvas_session;
 
 // Initialize logger for WASM
 #[cfg(target_arch = "wasm32")]

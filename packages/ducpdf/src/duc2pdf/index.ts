@@ -110,6 +110,9 @@ async function initWasm(): Promise<any> {
   return wasmInitPromise;
 }
 
+/** Internal binding access for persistent canvas sessions; shares WASM initialization. */
+export const getCanvasPdfBindings = initWasm;
+
 export interface ConversionOptions {
   offsetX?: number;
   offsetY?: number;
