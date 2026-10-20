@@ -31,4 +31,5 @@ from .parse import (DucData, list_external_files, parse_duc,
                     stream_external_file_revision_to_path)
 from .serialize import DUC_SCHEMA_VERSION, DucSerializationValidationError, serialize_duc
 from .search import *
+from .tessellate import *
 from .utils import *

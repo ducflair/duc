@@ -326,7 +326,35 @@ async function main() {
 
   const tsc = spawn('npx', ['tsc'], { env, stdio: 'inherit' });
 
-  tsc.on('close', (code) => process.exit(code));
+  tsc.on('close', (code) => {
+    if (code !== 0) {
+      process.exit(code);
+    }
+
+    // 6. Bundle clientEntry.ts into dist/thumbnails/lib/clientBundle.min.js for headless thumbnail rendering
+    const clientEntrySrc = path.join(packageRoot, 'src', 'thumbnails', 'lib', 'clientEntry.ts');
+    const clientBundleDst = path.join(distDir, 'thumbnails', 'lib', 'clientBundle.min.js');
+    if (fs.existsSync(clientEntrySrc)) {
+      try {
+        fs.mkdirSync(path.dirname(clientBundleDst), { recursive: true });
+        console.log('Bundling clientEntry for headless thumbnails...');
+        const bundleProc = spawnSync(
+          'bun',
+          ['build', clientEntrySrc, '--outfile', clientBundleDst, '--minify', '--external', 'three', '--external', 'three-cad-viewer'],
+          { stdio: 'inherit' },
+        );
+        if (bundleProc.status === 0) {
+          console.log(`Client bundle: ${clientBundleDst} (${fs.statSync(clientBundleDst).size} bytes)`);
+        } else {
+          console.warn('Warning: bun build for clientEntry exited with code', bundleProc.status);
+        }
+      } catch (err) {
+        console.warn('Warning: Failed to bundle clientEntry:', err.message);
+      }
+    }
+
+    process.exit(0);
+  });
   tsc.on('error', (error) => {
     console.error('Error running TypeScript compiler:', error);
     process.exit(1);

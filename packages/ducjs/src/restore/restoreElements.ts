@@ -174,8 +174,12 @@ const restoreElementWithProperties = <
     isPlot: isValidBoolean(_element.isPlot, DEFAULT_ELEMENT_PROPS.isPlot),
     layerId: _element.layerId ?? null,
     regionIds: Array.isArray(_element.regionIds) ? _element.regionIds : [],
-    width: restoreNumber(_element.width, 0),
-    height: restoreNumber(_element.height, 0),
+    width: ((_element.type === "doc" || _element.type === "pdf") && restoreNumber(_element.width, 0) > 50000)
+      ? restoreNumber(_element.width, 0) / 1000
+      : restoreNumber(_element.width, 0),
+    height: ((_element.type === "doc" || _element.type === "pdf") && restoreNumber(_element.height, 0) > 50000)
+      ? restoreNumber(_element.height, 0) / 1000
+      : restoreNumber(_element.height, 0),
     seed: _element.seed ?? 1,
     groupIds: _element.groupIds ?? [],
     blockIds: Array.isArray(_element.blockIds) ? _element.blockIds : [],
@@ -1215,7 +1219,7 @@ const restoreDocumentGridConfig = (
     gapX: typeof gridConfig.gapX === "number" ? gridConfig.gapX : 0,
     gapY: typeof gridConfig.gapY === "number" ? gridConfig.gapY : 0,
     firstPageAlone: typeof gridConfig.firstPageAlone === "boolean" ? gridConfig.firstPageAlone : false,
-    scale: typeof gridConfig.scale === "number" ? gridConfig.scale : 1,
+    scale: typeof gridConfig.scale === "number" && gridConfig.scale > 0 && gridConfig.scale <= 50 ? gridConfig.scale : 1,
   };
 };
 

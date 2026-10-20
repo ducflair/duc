@@ -680,9 +680,8 @@ export const restoreDictionary = (importedDictionary: unknown): Dictionary => {
   const restoredDictionary: Dictionary = {};
   const dict = importedDictionary as Record<string, unknown>;
   for (const key in dict) {
-    if (Object.prototype.hasOwnProperty.call(dict, key)) {
-      restoredDictionary[key] = typeof dict[key] === "string" ? dict[key] : String(dict[key]);
-    }
+      const val = dict[key];
+      restoredDictionary[key] = typeof val === "string" ? val : String(val);
   }
   return restoredDictionary;
 };
