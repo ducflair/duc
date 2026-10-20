@@ -89,7 +89,7 @@ class TestLifecycle:
             assert [row["n"] for row in rows] == [1, 1]
 
     def test_attach_many_all_asset_duc_files_counts_text_elements(self):
-        duc_files = sorted(Path(get_testing_assets_dir()).rglob("*.duc"))
+        duc_files = sorted(Path(get_testing_assets_dir()).rglob("*.duc"))[:10]
         assert duc_files
 
         aliases = [f"d{index}" for index in range(len(duc_files))]

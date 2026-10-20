@@ -10,8 +10,47 @@ use duc::types::*;
 
 static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
+pub const FIXTURE_BASE_URL: &str = "https://raw.githubusercontent.com/ducflair/fixtures/main/src";
+
+pub const OFFICIAL_DUC_FILES: &[&str] = &[
+    "barrel-sauna.duc",
+    "blocks_instances.duc",
+    "colosseum.duc",
+    "empire-state-building.duc",
+    "fielconforto-electric-cable-layout.duc",
+    "heads.duc",
+    "microscope-core.duc",
+    "model-element-fonts.duc",
+    "ponte-d-antonia-ferreira.duc",
+    "satellite.duc",
+    "universal.duc",
+    "welcome-to-scopture.duc",
+];
+
+pub fn ensure_fixtures() -> PathBuf {
+    static INIT: std::sync::Once = std::sync::Once::new();
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let cache_dir = manifest_dir.join("../../.cache/fixtures/duc-files");
+    let _ = fs::create_dir_all(&cache_dir);
+
+    INIT.call_once(|| {
+        for file in OFFICIAL_DUC_FILES {
+            let target_path = cache_dir.join(file);
+            if target_path.exists() && fs::metadata(&target_path).map(|m| m.len()).unwrap_or(0) > 0 {
+                continue;
+            }
+            let url = format!("{}/duc-files/{}", FIXTURE_BASE_URL, file);
+            let _ = std::process::Command::new("curl")
+                .args(["-fsSL", &url, "-o", target_path.to_str().unwrap()])
+                .status();
+        }
+    });
+
+    cache_dir
+}
+
 pub fn assets_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/testing/duc-files")
+    ensure_fixtures()
 }
 
 pub fn all_duc_files() -> Vec<PathBuf> {

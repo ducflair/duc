@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, basename } from "node:path";
 import { gunzipSync, gzipSync } from "fflate";
 
 import * as ducjs from "../src";
@@ -10,12 +10,11 @@ import {
 } from "../src/opfs-import";
 import { parseDuc } from "../src/parse";
 
+import { getDucFixturePath, ensureAllDucFixtures } from "./fixtures";
+
 describe("DUC streaming API", () => {
   test("parses a standalone raw SQLite database exported with WAL header bytes", async () => {
-    const fixture = join(
-      import.meta.dir,
-      "../../../assets/testing/duc-files/universal.duc",
-    );
+    const fixture = await getDucFixturePath("universal.duc");
     const compressed = new Uint8Array(await Bun.file(fixture).arrayBuffer());
     const rawSqlite = gunzipSync(compressed);
     rawSqlite[18] = 2;
@@ -291,12 +290,12 @@ describe("DUC streaming API", () => {
     expect(rustState.localState.zoom).toBe(1);
   });
 
-  test("covers all checked-in .duc fixtures in the streaming recycle benchmark input set", () => {
-    const fixtureDir = join(import.meta.dir, "../../../assets/testing/duc-files");
-    const fixtures = readdirSync(fixtureDir)
-      .filter((name) => name.endsWith(".duc"))
-      .sort()
-      .map((name) => ({ name, size: statSync(join(fixtureDir, name)).size }));
+  test("covers all checked-in .duc fixtures in the streaming recycle benchmark input set", async () => {
+    const fixturePaths = await ensureAllDucFixtures();
+    const fixtures = fixturePaths.map((filePath) => ({
+      name: basename(filePath),
+      size: statSync(filePath).size,
+    }));
 
     expect(fixtures.length).toBeGreaterThan(0);
     expect(fixtures.every((fixture) => fixture.size > 0)).toBe(true);

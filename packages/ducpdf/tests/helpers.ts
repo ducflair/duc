@@ -5,7 +5,9 @@ import { restore, type ExportedDataState } from 'ducjs';
 export function getAssetsDir(): string {
   const env = process.env.DUC_ASSETS_DIR;
   if (env && env.length > 0) return env;
-  // tests run from package root; assets live at ../../../assets/testing/duc-files
+  const repoRoot = join(__dirname, '../../..');
+  const cacheDir = join(repoRoot, '.cache/fixtures/duc-files');
+  if (existsSync(cacheDir)) return cacheDir;
   return join(__dirname, '../../../assets/testing/duc-files');
 }
 
