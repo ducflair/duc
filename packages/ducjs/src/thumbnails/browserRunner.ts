@@ -7,6 +7,7 @@ export type BrowserRendererMode = "auto" | "gpu" | "cpu";
 
 export interface BrowserRunnerOptions {
   executablePath?: string;
+  userDataDir?: string;
   useSoftwareRenderer?: boolean;
   mode?: BrowserRendererMode;
   timeoutMs?: number;
@@ -84,6 +85,7 @@ interface CdpResponse {
  */
 export class HeadlessBrowserRunner {
   private executablePath: string;
+  private userDataDir?: string;
   private browserProcess: ChildProcess | null = null;
   private ws: WebSocket | null = null;
   private wsUrl: string | null = null;
@@ -102,6 +104,7 @@ export class HeadlessBrowserRunner {
       );
     }
     this.executablePath = resolved;
+    this.userDataDir = options.userDataDir;
     if (options.mode === "cpu" || options.useSoftwareRenderer === true) {
       this.mode = "cpu";
       this.useSoftwareRenderer = true;
@@ -128,6 +131,10 @@ export class HeadlessBrowserRunner {
       "--hide-scrollbars",
       "--no-first-run",
       "--no-default-browser-check",
+      "--disable-notifications",
+      "--disable-extensions",
+      "--disable-component-update",
+      "--deny-permission-prompts",
       "--disable-background-networking",
       "--disable-background-timer-throttling",
       "--disable-client-side-phishing-detection",
@@ -144,6 +151,8 @@ export class HeadlessBrowserRunner {
       "--disable-web-security",
       "about:blank",
     ];
+
+    if (this.userDataDir) args.push(`--user-data-dir=${this.userDataDir}`);
 
     if (this.useSoftwareRenderer) {
       args.push(

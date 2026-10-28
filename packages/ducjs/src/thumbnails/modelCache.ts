@@ -2,13 +2,15 @@ import crypto from "crypto";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import type { DucModelElement, DucExternalFiles } from "../types";
 
 export type ModelCacheKind =
   | "dwg-dxf"
   | "parametric-json"
   | "ifc-json"
   | "python-ifc"
-  | "python-dxf";
+  | "python-dxf"
+  | "model-artifact";
 
 export interface ModelCacheKeyInput {
   kind: ModelCacheKind;
@@ -26,6 +28,8 @@ export interface ModelCacheEntry {
   sizeBytes: number;
   data: Uint8Array;
   created: number;
+  outputKind?: ModelCacheKind;
+  modelType?: string;
 }
 
 const DEFAULT_MODEL_CACHE_MIME_TYPES: Record<ModelCacheKind, string> = {
@@ -34,6 +38,7 @@ const DEFAULT_MODEL_CACHE_MIME_TYPES: Record<ModelCacheKind, string> = {
   "ifc-json": "application/json",
   "python-ifc": "application/x-ifc",
   "python-dxf": "application/dxf",
+  "model-artifact": "application/json",
 };
 
 function sha256Hex(value: string): string {
@@ -103,6 +108,14 @@ export class ModelElementCacheManager {
             data: new Uint8Array(data.buffer, data.byteOffset, data.byteLength),
             created: Date.now(),
           };
+          const metadataPath = path.join(this.diskCacheDir, `${key}.json`);
+          if (fs.existsSync(metadataPath)) {
+            const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+            if (metadata.key === key && metadata.sizeBytes === data.byteLength) {
+              entry.outputKind = metadata.outputKind;
+              entry.modelType = metadata.modelType;
+            }
+          }
           this.memoryCache.set(key, entry);
           return entry;
         }
@@ -118,7 +131,7 @@ export class ModelElementCacheManager {
    * Stores a model entry in memory and on disk.
    */
   public async save(
-    input: ModelCacheKeyInput & { mimeType?: string },
+    input: ModelCacheKeyInput & { mimeType?: string; outputKind?: ModelCacheKind; modelType?: string },
     data: Uint8Array,
   ): Promise<ModelCacheEntry> {
     const key = this.createKey(input);
@@ -131,6 +144,8 @@ export class ModelElementCacheManager {
       sizeBytes: data.byteLength,
       data,
       created: Date.now(),
+      outputKind: input.outputKind,
+      modelType: input.modelType,
     };
 
     this.memoryCache.set(key, entry);
@@ -139,6 +154,8 @@ export class ModelElementCacheManager {
       try {
         const filePath = path.join(this.diskCacheDir, `${key}.bin`);
         fs.writeFileSync(filePath, data);
+        const { data: _data, ...metadata } = entry;
+        fs.writeFileSync(path.join(this.diskCacheDir, `${key}.json`), JSON.stringify(metadata));
       } catch {
         // Best-effort disk write
       }
@@ -154,6 +171,14 @@ export class ModelElementCacheManager {
     this.memoryCache.clear();
   }
 }
+
+export const createModelElementCacheInput = (element: DucModelElement, files?: DucExternalFiles): ModelCacheKeyInput => {
+  const modelType = (element.modelType || "python").toLowerCase();
+  const kind: ModelCacheKind = modelType === "ifc" ? "ifc-json" : modelType === "dxf" || modelType === "dwg" ? "python-dxf" : "parametric-json";
+  const inputs = (element.fileIds || []).filter(id => !id.startsWith("model_output_") && !id.startsWith("model_preview_") && !id.startsWith("dwg_dxf_cache_") && !(modelType === "python" && id.startsWith("model_python_")))
+    .sort().map(id => [id, files?.[id]?.activeRevisionId || ""]);
+  return { kind, sourceFileId: `model:${element.id}`, sourceRevisionId: sha256Hex(JSON.stringify(inputs)), variant: `v2:${modelType}:${kind}:${sha256Hex(element.code || "")}` };
+};
 
 let sharedCacheManager: ModelElementCacheManager | null = null;
 

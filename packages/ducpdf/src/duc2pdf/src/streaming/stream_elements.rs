@@ -1475,7 +1475,8 @@ impl ElementStreamer {
 
         // Transform y-coordinate from top-left (duc) to bottom-left (PDF) origin
         let transformed_y =
-            DucDataScaler::transform_point_y_to_pdf_system(adjusted_y, self.page_height);
+            DucDataScaler::transform_point_y_to_pdf_system(adjusted_y, self.page_height)
+                + if matches!(self.current_mode, StreamMode::Plot) { 2.0 * self.page_origin.1 } else { 0.0 };
 
         self.create_transformation_matrix(
             adjusted_x,

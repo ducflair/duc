@@ -104,10 +104,13 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
             DucPoint(x=float(p[0]), y=float(p[1]), mirroring=None) if isinstance(p, tuple) else p
             for p in points
         ]
+        lines = element_params.get('lines')
+        if lines is None:
+            lines = [DucLine(DucLineReference(index), DucLineReference(index + 1)) for index in range(len(duc_points) - 1)]
         linear_base = DucLinearElementBase(
             base=base_element,
             points=duc_points,
-            lines=element_params.get('lines', []),
+            lines=lines,
             path_overrides=element_params.get('path_overrides', []),
             last_committed_point=element_params.get('last_committed_point'),
             start_binding=element_params.get('start_binding'),
@@ -126,7 +129,7 @@ def _create_element_wrapper(element_class, base_params, element_params, explicit
         linear_base = DucLinearElementBase(
             base=base_element,
             points=duc_points,
-            lines=[],
+            lines=[DucLine(DucLineReference(index), DucLineReference(index + 1)) for index in range(len(duc_points) - 1)],
             path_overrides=[],
             last_committed_point=None,
             start_binding=element_params.get('start_binding'),
@@ -464,7 +467,7 @@ class LinearElementBuilder(ElementSpecificBuilder):
         base_params = self.base.__dict__.copy()
         element_params = {
             "points": self.extra.get('points', []),
-            "lines": self.extra.get('lines', []),
+            "lines": self.extra.get('lines'),
             "path_overrides": self.extra.get('path_overrides', []),
             "last_committed_point": self.extra.get('last_committed_point'),
             "start_binding": self.extra.get('start_binding'),

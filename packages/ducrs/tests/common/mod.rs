@@ -320,6 +320,7 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
                             message: Some("initial".to_string()),
                             created: 1_700_000_601,
                             last_retrieved: Some(1_700_000_602),
+                            locator: None,
                         },
                     ),
                     (
@@ -333,6 +334,7 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
                             message: Some("updated".to_string()),
                             created: 1_700_000_603,
                             last_retrieved: None,
+                            locator: None,
                         },
                     ),
                 ]),
@@ -356,6 +358,7 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
                         message: None,
                         created: 1_700_000_701,
                         last_retrieved: Some(1_700_000_702),
+                        locator: None,
                     },
                 )]),
                 version: Some(4),

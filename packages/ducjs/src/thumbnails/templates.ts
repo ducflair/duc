@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "node:url";
 import type { ResolvedModelViewConfig } from "./cameraPresets";
 
 /**
@@ -313,9 +314,7 @@ function createDefaultCadShapes() {
 }
 `;
 
-const CURRENT_DIR = typeof import.meta !== "undefined" && (import.meta as any).dir
-  ? (import.meta as any).dir
-  : (typeof __dirname !== "undefined" ? __dirname : ".");
+const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 let cachedClientBundleCode: string | null = null;
 
@@ -353,11 +352,9 @@ function getClientBundleCode(): string {
             "bun",
             "build",
             entryPath,
+            "--target",
+            "browser",
             "--minify",
-            "--external",
-            "three",
-            "--external",
-            "three-cad-viewer",
           ]);
           if (proc.success) {
             const code = proc.stdout.toString("utf8");
@@ -371,7 +368,7 @@ function getClientBundleCode(): string {
     }
   }
 
-  return "";
+  throw new Error("Missing thumbnail client bundle. Build ducjs and package dist/thumbnails/lib/clientBundle.min.js alongside the thumbnail handler.");
 }
 
 /**

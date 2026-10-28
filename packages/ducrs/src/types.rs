@@ -1592,6 +1592,22 @@ pub struct VersionGraph {
 
 // =============== EXTERNAL FILES ===============
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ExternalFileLocatorKind {
+    Relative,
+    Absolute,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExternalFileLocator {
+    pub kind: ExternalFileLocatorKind,
+    pub path: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub original_path: Option<String>,
+}
+
 /// Revision metadata without the heavy data blob.
 /// Used inside `DucExternalFile.revisions` so the file record stays lightweight.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -1610,6 +1626,8 @@ pub struct ExternalFileRevisionMeta {
     pub created: i64,
     /// Epoch ms when this revision was last loaded onto the scene.
     pub last_retrieved: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locator: Option<ExternalFileLocator>,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]

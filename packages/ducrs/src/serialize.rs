@@ -88,6 +88,7 @@ pub(crate) fn write_state_to_connection(
         &state.external_files_data,
         chunk_size,
     )?;
+    crate::external_file_locators::write(&tx, &state.external_files)?;
     write_version_graph(&tx, &state.version_graph, chunk_size)?;
     tx.commit()?;
 

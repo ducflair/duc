@@ -14,6 +14,7 @@ import {
 import { getModelThumbnailBoundsUpdate } from "./bounds";
 import { buildCadViewerHtml, buildDxfViewerHtml } from "./templates";
 import { tessellateModelElement } from "./tessellator";
+import { readPersistedModelArtifact, parseModelArtifactPayload, renderModelArtifact } from "./modelOutputArtifact";
 import type {
   ModelThumbnailInput,
   ModelThumbnailResult,
@@ -33,6 +34,8 @@ export interface RenderThumbnailOptions {
   shapes?: unknown;
   dxf?: Uint8Array | string;
   format?: "png" | "webp" | "jpeg";
+  viewConfig?: ModelViewConfig;
+  rasterizePdf?: (data: Uint8Array, maxDimension: number) => Promise<Uint8Array>;
 }
 
 /**
@@ -162,14 +165,18 @@ export async function renderModelElementThumbnailWithResult(
 ): Promise<ModelThumbnailResult> {
   const startTime = Date.now();
   const fileData = resolveElementFileData(element, options.files, options.filesData);
-  const isDxf = element.modelType?.toUpperCase() === "DXF";
+  const artifact = readPersistedModelArtifact(element, options.files, options.filesData);
+  if (artifact && ['image', 'svg', 'pdf', 'table'].includes(artifact.envelope.renderer)) return renderModelArtifact(artifact, element, options);
+  let isDxf = artifact?.envelope.renderer === 'dxf' || element.modelType?.toUpperCase() === "DXF";
 
   let shapes =
     options.shapes ??
-    (element as unknown as { shapes?: unknown }).shapes;
+    (element as unknown as { shapes?: unknown }).shapes ??
+    (artifact && (artifact.envelope.renderer === "parametric" || artifact.preview) ? JSON.parse(new TextDecoder().decode(artifact.preview || artifact.data)) : undefined);
 
-  const dxf =
+  let dxf =
     options.dxf ??
+    (artifact?.envelope.renderer === "dxf" ? artifact.data : undefined) ??
     (isDxf ? fileData ?? (element as unknown as { dxf?: Uint8Array }).dxf : undefined);
 
   if (!isDxf && !shapes) {
@@ -181,6 +188,8 @@ export async function renderModelElementThumbnailWithResult(
         ducpyDir: options.ducpyDir,
         timeoutMs: options.timeoutMs,
       });
+      if (tessRes.kind === "model-artifact") return renderModelArtifact(parseModelArtifactPayload(tessRes.rawPayload), element, options);
+      if (tessRes.dxf) { dxf = tessRes.dxf; isDxf = true; }
       if (tessRes?.shapes) {
         shapes = tessRes.shapes;
       }
@@ -197,7 +206,7 @@ export async function renderModelElementThumbnailWithResult(
 
   const result = await renderModelViewThumbnail(
     {
-      modelType: element.modelType,
+      modelType: isDxf ? "dxf" : element.modelType,
       viewerState: element.viewerState,
       viewConfig: options.viewConfig,
       shapes,

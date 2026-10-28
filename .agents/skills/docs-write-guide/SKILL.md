@@ -20,7 +20,7 @@ Each guide solves **one specific problem**. Not a category of problems. If the o
 
 1. **Research**: Read existing docs for context and linking opportunities.
 2. **Plan**: Outline sections. Verify scope. Each step needs a friction point and resolution.
-3. **Write**: Follow the template above. Apply the rules below.
+3. **Write**: Follow the outline and apply the rules below.
 4. **Review**: Re-read the rules, verify, then present.
 
 ## Rules

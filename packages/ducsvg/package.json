@@ -1,7 +1,7 @@
 {
   "name": "ducsvg",
   "version": "0.0.0-development",
-  "description": "Adapter for converting duc CAD documents to SVG. Built on top of ducjs.",
+  "description": "Adapter for converting duc files to SVG",
   "private": false,
   "type": "module",
   "main": "dist/index.js",

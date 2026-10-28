@@ -276,6 +276,8 @@ def scopture_tessellate_to_buffer_json(*objs: Any, **kwargs: Any) -> str:
     if "names" not in kwargs and "name" in kwargs:
         kwargs["names"] = [kwargs["name"]]
 
+    if kwargs.get("default_color") is None:
+        kwargs["default_color"] = "#2650fe"
     part_group, instances = to_ocpgroup(*objs, **kwargs)
     meshed_instances, shapes, _map = tessellate_group(part_group, instances)
 
@@ -500,7 +502,7 @@ def scopture_collect_ifc_preview(
     except Exception as exc:
         raise RuntimeError(f"IfcOpenShell geometry support is unavailable: {exc}") from exc
 
-    default_color = "#b8b8b1"
+    default_color = "#2650fe"
 
     def safe_string(value: Any, fallback: str) -> str:
         if value is None:

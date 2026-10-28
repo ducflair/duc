@@ -24,10 +24,21 @@ export class CanvasPdfSession {
   private unsupported = new Set<string>();
   private fontFamilies = new Set<string>();
 
+  constructor(private readonly suppliedFonts: ReadonlyMap<string, Uint8Array> = new Map()) {}
+
+  private async resolveFonts(families: readonly string[]) {
+    const fetched = await fetchFontsForFamilies(families.filter(family => !this.suppliedFonts.has(family)));
+    for (const family of families) {
+      const bytes = this.suppliedFonts.get(family);
+      if (bytes) fetched.fontMap.set(family, bytes);
+    }
+    return fetched;
+  }
+
   async initialize(state: Partial<ExportedDataState>): Promise<void> {
     this.dispose();
     const prepared = await prepareDucPdfSource(state);
-    const fonts = await fetchFontsForFamilies(prepared.fontFamilies);
+    const fonts = await this.resolveFonts(prepared.fontFamilies);
     const wasm = await getCanvasPdfBindings();
     if (!wasm.CanvasPdfSession) throw new Error('Canvas PDF compiler version mismatch');
     this.native = new wasm.CanvasPdfSession(prepared.state, fonts.fontMap);
@@ -43,7 +54,7 @@ export class CanvasPdfSession {
     }
     const prepared = await prepareDucPdfSource(state);
     const missingFonts = prepared.fontFamilies.filter(family => !this.fontFamilies.has(family));
-    const fonts = await fetchFontsForFamilies(missingFonts);
+    const fonts = await this.resolveFonts(missingFonts);
     this.native.apply_patch(expected, sequence, prepared.state, removed, fonts.fontMap, retainedRevisions ?? null);
     for (const id of removed) this.unsupported.delete(id);
     for (const element of state.elements ?? []) {

@@ -45,11 +45,9 @@ export const IMAGE_MIME_TYPES = {
 
 export const MIME_TYPES = {
   json: "application/json",
-  // excalidraw data
-  duc: "application/vnd.duc-cad",
+  duc: "application/vnd.duc",
   ducfig: "application/vnd.duc-config",
   excalidrawlib: "application/vnd.excalidrawlib+json",
-  // image-encoded excalidraw data
   "excalidraw.svg": "image/svg+xml",
   "excalidraw.png": "image/png",
   binary: "application/octet-stream",

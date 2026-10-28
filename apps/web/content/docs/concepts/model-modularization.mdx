@@ -1,7 +1,7 @@
 ---
 title: "Model Element Modularization"
 description: "Compose Python Model Elements as reusable modules with stable imports, transitive dependencies, and a single rendering root."
-date: 2026-09-24
+date: 2026-10-20
 authors: [jorgedanisc]
 ---
 
@@ -14,11 +14,11 @@ This changes a large procedural model from one monolithic script into a dependen
 ```mermaid
 flowchart LR
     P["Parameters<br/>dimensions and material rules"] --> G["Geometry helper<br/>build_wall(...)"]
-    G --> A["Assembly root<br/>show(model)"]
+    G --> A["Assembly root<br/>emit_output(...)"]
     P --> A
 ```
 
-The leaf and intermediate elements may have no visual output. The root element imports them, composes the final object, and satisfies the relevant Build123d, IfcOpenShell, or ezdxf output contract.
+The leaf and intermediate elements may have no visual output. The root element imports them, composes the result, and calls `emit_output(...)` once with its output kind. The result can be parametric CAD, IFC, DXF, image, SVG, PDF, or table content.
 
 ## The `duc_model` Package
 
@@ -70,13 +70,12 @@ def build_wall():
 
 ```python
 from duc_model.model_wall_geometry import build_wall
-from ocp_vscode import show
 
 model = build_wall()
-show(model)
+emit_output(model, kind="parametric")
 ```
 
-Only the rendering root should own the final `show(...)` call or generated-file output. Imported modules should expose data and callable building blocks. This keeps previews deterministic and allows the same parameter or geometry module to serve several assemblies.
+Only the rendering root should call `emit_output(...)` for the final artifact. Imported modules should expose data and callable building blocks. This keeps previews deterministic and allows the same parameter or geometry module to serve several assemblies.
 
 ## Change Propagation
 
@@ -90,4 +89,4 @@ This separation is especially useful for:
 - logic-only elements that make domain rules inspectable without adding canvas output; and
 - focused version review, where a small source change has an explicit downstream dependency path.
 
-Modularization does not change the stored `DucModelElement` shape: source remains in each element's `code`, external runtime files remain in `fileIds`, and presentation state remains in `viewerState`. The module graph is reconstructed from the explicit `duc_model` imports.
+Modularization does not change the stored `DucModelElement` shape: source remains in each element's `code`, source and generated file references remain in `fileIds`, and presentation state remains in `viewerState`. Generated output is excluded from runtime inputs, and the root's output envelope records its source and input fingerprints. The module graph is reconstructed from the explicit `duc_model` imports.

@@ -79,14 +79,9 @@ export const getModelThumbnailBoundsUpdate = (
   if (!Number.isFinite(currentRatio) || !Number.isFinite(thumbnailRatio)) return null;
   if (Math.abs(currentRatio - thumbnailRatio) <= THUMBNAIL_RATIO_EPSILON) return null;
 
-  let nextWidth = absoluteWidth;
-  let nextHeight = absoluteHeight;
-
-  if (currentRatio > thumbnailRatio) {
-    nextWidth = absoluteHeight * thumbnailRatio;
-  } else {
-    nextHeight = absoluteWidth / thumbnailRatio;
-  }
+  const longEdge = Math.max(absoluteWidth, absoluteHeight);
+  const nextWidth = thumbnailRatio >= 1 ? longEdge : longEdge * thumbnailRatio;
+  const nextHeight = thumbnailRatio >= 1 ? longEdge / thumbnailRatio : longEdge;
 
   if (!(nextWidth > 0) || !(nextHeight > 0)) return null;
 

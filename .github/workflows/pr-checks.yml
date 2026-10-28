@@ -255,6 +255,7 @@ jobs:
         run: |
           bun run build:wasi
           test -s dist/ducjs_wasi.wasm
+          bun test tests/wasi-state.test.ts
           npm_config_cache=/tmp/ducjs-npm-cache npm pack --dry-run --json | grep -q '"path": "dist/ducjs_wasi.wasm"'
 
       - name: Validate Pyodide build tooling

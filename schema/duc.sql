@@ -989,6 +989,12 @@ CREATE TABLE external_file_revisions (
 
 CREATE INDEX idx_external_file_revisions_file ON external_file_revisions(file_id);
 
+-- Optional native locators; absence means the revision is embedded or cloud-managed.
+CREATE TABLE IF NOT EXISTS external_file_locators (
+    revision_id TEXT PRIMARY KEY REFERENCES external_file_revisions(id) ON DELETE CASCADE,
+    locator TEXT NOT NULL CHECK(json_valid(locator))
+) WITHOUT ROWID;
+
 -- Actual binary content for each revision, separated from metadata
 -- and chunked so large files can be streamed without loading one BLOB.
 CREATE TABLE external_file_revision_chunks (

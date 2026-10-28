@@ -242,7 +242,7 @@ This example assumes `points` and `lines` already describe the network. The sele
 An invisible path-override background can also mark a closed cycle as a hole in renderers that support path-specific filling.
 
 <Callout type="info" title="Renderer support is capability-dependent">
-  DUC stores the complete style contract even when a host renders only a subset. The current Scopture Pixi canvas applies solid color layers, per-content opacity, cap/join/miter settings, and simple-shape stroke placement, but it does not yet apply every stored hatch, tile, dash, side, or `pathOverrides` field uniformly. The DUC PDF path renderer supports closed-cycle background overrides, including invisible override backgrounds as holes. Verify advanced styles in every target canvas and export adapter.
+  DUC stores the complete style contract even when a host renders only a subset. A renderer may apply solid color layers, per-content opacity, cap/join/miter settings, and simple-shape stroke placement, without applying every stored hatch, tile, dash, side, or `pathOverrides` field uniformly. The DUC PDF path renderer supports closed-cycle background overrides, including invisible override backgrounds as holes. Verify advanced styles in every target canvas and export adapter.
 </Callout>
 
 ---

@@ -362,6 +362,12 @@ impl DucToPdfBuilder {
             (primary_font.clone(), font_resource_name.clone()),
         );
 
+        let mut font_data = font_data;
+        for family in ["Arial", "Helvetica", "Liberation Sans", "sans-serif"] {
+            font_data.entry(family.to_string()).or_insert_with(|| include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"), "/fonts/LiberationSans-Regular.ttf"
+            )).to_vec());
+        }
         for (family_name, ttf_bytes) in font_data {
             match Font::from_bytes(ttf_bytes, Some(format!("{}.ttf", family_name))) {
                 Ok(font) => match font_manager.embed_font(&mut document, font.clone()) {

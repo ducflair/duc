@@ -8,6 +8,7 @@ import {
   fitThreeCadViewerCameraToVisibleScene,
 } from "./thumbnail-camera-fit";
 import type { Viewer3DState } from "../../types";
+import type { Mesh } from "three";
 import { Display, type RenderOptions, type Shapes, type ViewerOptions } from "three-cad-viewer";
 
 const DEFAULT_WIDTH = 1200;
@@ -172,6 +173,15 @@ export const renderOffscreenModelThumbnail = async ({
       rendererMode: "parametric",
       parametricViewer: viewer,
     });
+
+    if (viewerState?.display.wireframe) {
+      scene.traverse((object: Mesh) => {
+        if (!object.isMesh) return;
+        for (const material of Array.isArray(object.material) ? object.material : [object.material]) {
+          if ("wireframe" in material) material.wireframe = true;
+        }
+      });
+    }
 
     try {
       if (!hasExplicitCamera) {

@@ -12,6 +12,16 @@
       "import": "./dist/index.js",
       "require": "./dist/index.js"
     },
+    "./thumbnails": {
+      "types": "./dist/thumbnails/index.d.ts",
+      "import": "./dist/thumbnails/index.js",
+      "require": "./dist/thumbnails/index.js"
+    },
+    "./thumbnails/*": {
+      "types": "./dist/thumbnails/*.d.ts",
+      "import": "./dist/thumbnails/*.js",
+      "require": "./dist/thumbnails/*.js"
+    },
     "./*": {
       "types": [
         "./dist/*.d.ts",

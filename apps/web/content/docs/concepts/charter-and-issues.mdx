@@ -36,6 +36,7 @@ export interface DucCharter {
   /** Why this project exists and what concrete outcome it must reach */
   objective: string;
   phase: DucCharterPhase; // "intent" | "review" | "delivery" | "closed"
+  closedReason?: string;
   requirements: DucCharterRequirement[];
   constraints: DucCharterConstraint[];
   decisions: DucCharterDecision[];
@@ -74,6 +75,7 @@ export interface DucIssue {
   localId: number; // Displayed as #1, #2, etc.
   title: string;
   status: DucIssueStatus; // "open" | "closed" | "dismissed"
+  dismissedReason?: string;
   messages: DucIssueMessage[];
   anchor?: DucIssueAnchor;
   authorId: Actor["identifier"];
@@ -93,6 +95,29 @@ Under the **Carrot methodology**, issue tracking is stripped of administrative o
    - `topologyId`: Stable CAD/BREP/IFC topology identifier for persistent geometric tracking.
 
 > 🥕 **Why the name "Carrot"?** While designing issue status badges in Scopture, we assigned orange to `open`, green to `closed`, and greenish-grey to `dismissed`. We accidentally realized the color palette matched a carrot and placing an uncollected issue pin on the canvas felt just like a carrot planted in the soil waiting to be harvested.
+
+### Status History
+
+`DucIssue.messages` can preserve status changes as attributed, timestamped records alongside discussion. Keep each dismissal reason in its history entry; `dismissedReason` can retain the last reason after reopening or closing. The format stores these values but does not enforce a host application's transition policy.
+
+### Messages and References
+
+Issue messages store Markdown content, author identity, and timestamps. Threaded replies reference their parent message through `replyToId`. Mentions and attachments retain their referenced identities in the message data; hosts decide how to resolve permissions and render interactive references:
+
+
+| Syntax | Meaning |
+| --- | --- |
+| `@email` or `@name` | Render a user mention. |
+| `#42` | Reference Issue 42 by its drawing-local number, not its global ID. |
+| `![label](attachment:<fileId>)` | Embed an attachment already uploaded to the drawing. |
+| `[label](canvas-selection:elements?elementIds=<id1>,<id2>,...)` | Reference canvas elements by ID; URL-encode the comma-separated ID list. |
+| A fenced code block with the `mermaid` language | Render a Mermaid diagram. |
+
+Conventions such as `#42` for a drawing-local issue, `attachment:<fileId>` for an attachment, and `canvas-selection:elements?elementIds=<id1>,<id2>` for element selections can be interpreted by a host. These are content conventions, not executable commands or guarantees that every reader implements the same UI.
+
+### Lifecycle
+
+Issue statuses are `open`, `closed`, and `dismissed`. Charter phases are `intent`, `review`, `delivery`, and `closed`; `closedReason` stores the reason for closing. Changes to lifecycle fields and their history must be written by the host or adapter. User authorization, automation restrictions, deletion policy, and account membership are outside the file format.
 
 ---
 

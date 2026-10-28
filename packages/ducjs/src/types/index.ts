@@ -95,6 +95,14 @@ export interface Actor {
   name?: string;
 }
 
+export type ExternalFileLocatorKind = "relative" | "absolute";
+
+export type ExternalFileLocator = {
+  kind: ExternalFileLocatorKind;
+  path: string;
+  originalPath?: string;
+};
+
 export type ExternalFileRevisionMeta = {
   id: string;
   sizeBytes: number;
@@ -112,6 +120,8 @@ export type ExternalFileRevisionMeta = {
    * the scene. Used to determine whether to delete unused files from storage.
    */
   lastRetrieved?: number;
+  /** Durable external-file locator on disk or host device. */
+  locator?: ExternalFileLocator;
 };
 
 /**

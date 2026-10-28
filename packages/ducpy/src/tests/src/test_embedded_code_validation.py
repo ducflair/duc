@@ -2,11 +2,31 @@
 
 import os
 import pytest
+import json
 
 from _dev.dev_utils import download_fixture_from_cdn
 
 import ducpy as duc
 import ducpy.serialize as duc_serialize
+
+
+def test_svg_output_is_available_during_standalone_validation(tmp_path):
+    element = (duc.ElementBuilder().with_id("svg-output").with_size(10, 10)
+               .build_model_element().with_model_type("python")
+               .with_code("emit_output('<svg/>', kind='svg')").build())
+    output = tmp_path / "output.duc"
+    duc.serialize_duc(name="svg-output", output_path=output, elements=[element])
+    assert output.is_file()
+
+
+def test_custom_data_accepts_objects_and_does_not_store_empty_json(tmp_path):
+    elements = [duc.ElementBuilder().with_id("empty").with_size(10, 10).with_custom_data("").build_rectangle().build(),
+                duc.ElementBuilder().with_id("structured").with_size(10, 10).with_custom_data({"modelOutput": {"status": "fresh"}}).build_rectangle().build()]
+    output = tmp_path / "metadata.duc"
+    duc.serialize_duc(name="metadata", output_path=output, elements=elements)
+    parsed = {element["id"]: element for element in duc.parse_duc(output)["elements"]}
+    assert parsed["empty"].get("custom_data") is None
+    assert json.loads(parsed["structured"]["custom_data"])["modelOutput"]["status"] == "fresh"
 
 
 # --- Helper Functions representing embedded code blocks ---

@@ -14,12 +14,15 @@ path = "src/bin/wasi.rs"
 required-features = ["wasi-bin"]
 
 [features]
-default = ["opfs"]
-opfs = ["duc/opfs"]
-wasi-bin = []
+default = ["document", "opfs"]
+document = ["dep:duc", "dep:rusqlite", "dep:sqlite-wasm-vfs"]
+opfs = ["document", "duc/opfs"]
+wasi-bin = ["document"]
+# Synchronous path helpers share this crate without loading SQLite into callers.
+locator-only = []
 
 [dependencies]
-duc = { path = "../../ducrs" }
+duc = { path = "../../ducrs", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 flate2 = "1.0"
@@ -31,5 +34,5 @@ wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 serde-wasm-bindgen = "0.6"
 js-sys = "0.3"
-rusqlite = { version = "0.38", features = ["bundled", "serialize"] }
-sqlite-wasm-vfs = "0.2"
+rusqlite = { version = "0.38", features = ["bundled", "serialize"], optional = true }
+sqlite-wasm-vfs = { version = "0.2", optional = true }

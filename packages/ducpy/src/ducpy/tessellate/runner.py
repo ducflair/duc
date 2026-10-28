@@ -20,6 +20,7 @@ import tempfile
 import types
 from pathlib import Path
 from typing import Any, Callable
+from ducpy.model_output import ModelOutputCollector
 
 from ducpy.tessellate.shims import (
     scopture_collect_ifc_preview,
@@ -279,6 +280,9 @@ def tessellate_model_code(
             "__scopture_ifc_show_candidates__": [],
         })
 
+        output_collector = ModelOutputCollector({"code": code, "modelModules": model_modules or []}, mounted_files, work_path, 50 * 1024 * 1024, 1024 * 1024 * 1024)
+        globals_dict["emit_output"] = output_collector.emit_output
+        builtins.emit_output = output_collector.emit_output
         builtins.resolve_external_file = resolve_external_file  # type: ignore
         builtins.show = show  # type: ignore
 
@@ -292,6 +296,21 @@ def tessellate_model_code(
 
         with contextlib.redirect_stdout(stdout_buf), contextlib.redirect_stderr(stderr_buf):
             exec(compile(code, "<duc-model-code>", "exec"), globals_dict)
+
+        if output_collector.declaration is not None:
+            events = []
+            artifact = output_collector.collect(events, globals_dict, output_path, resolved_kind, "")
+            renderer = artifact["envelope"]["renderer"]
+            kind = {"parametric": "parametric-json", "ifc": "ifc-json", "dxf": "python-dxf"}.get(renderer, "model-artifact")
+            if renderer == "parametric":
+                payload = artifact["content"]
+            elif renderer == "ifc":
+                payload = next(event["content"] for event in events if event["type"] == "preview")
+            elif renderer == "dxf":
+                payload = base64.b64decode(artifact["dataBase64"]).decode("utf-8")
+            else:
+                payload = json.dumps(artifact)
+            return {"success": True, "kind": kind, "modelType": renderer, "payload": payload, "artifact": artifact, "stdout": stdout_buf.getvalue(), "stderr": stderr_buf.getvalue()}
 
         if resolved_kind == "ifc":
             preview_payload = scopture_collect_ifc_preview(globals_dict, output_path=output_path)

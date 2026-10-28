@@ -74,8 +74,23 @@ def _element_to_camel(wrapper_or_element: Any) -> dict:
     else:
         return el
 
-    d = _flatten_dict(d)
-    return deep_snake_to_camel(d)
+    d = _flatten_dict(d, preserve_stack_base=d.get('type') in ('frame', 'plot'))
+    result = deep_snake_to_camel(d)
+    if result.get("type") == "image" and "scale" in result:
+        result.setdefault("scaleFlip", result.pop("scale"))
+    custom = result.get("customData")
+    if custom == "":
+        result["customData"] = None
+    elif custom is not None:
+        import json
+        if not isinstance(custom, str):
+            result["customData"] = json.dumps(custom)
+        else:
+            try:
+                json.loads(custom)
+            except ValueError:
+                result["customData"] = json.dumps(custom)
+    return result
 
 
 def _convert_external_files(
@@ -234,6 +249,13 @@ def resolve_external_file(file_id):
     raise FileNotFoundError(f"External file '{{file_id}}' not found in validation sandbox.")
 
 builtins.resolve_external_file = resolve_external_file
+_output_declared = False
+def emit_output(*args, kind, **kwargs):
+    global _output_declared
+    if _output_declared:
+        raise ValueError("Declare exactly one model output artifact per model")
+    _output_declared = True
+builtins.emit_output = emit_output
 try:
     import __main__
     __main__.resolve_external_file = resolve_external_file
@@ -293,6 +315,21 @@ def _run_python_validation_in_process(
     previous_cwd = os.getcwd()
     had_resolver = hasattr(builtins, "resolve_external_file")
     previous_resolver = getattr(builtins, "resolve_external_file", None)
+    isolated_names = ("emit_output", "show", "show_object", "update_drawing")
+    previous_helpers = {name: getattr(builtins, name) for name in isolated_names if hasattr(builtins, name)}
+    declared = False
+
+    def emit_output(*args, kind, **kwargs):
+        nonlocal declared
+        if declared:
+            raise ValueError("Declare exactly one model output artifact per model")
+        declared = True
+
+    def no_capture(*args, **kwargs):
+        pass
+
+    def no_update(*args, **kwargs):
+        raise PermissionError("Embedded model validation cannot update the drawing")
 
     def resolve_external_file(file_id: str) -> str:
         if file_id in resolved_files:
@@ -304,9 +341,16 @@ def _run_python_validation_in_process(
     try:
         os.chdir(project_dir)
         builtins.resolve_external_file = resolve_external_file
+        builtins.emit_output = emit_output
+        builtins.show = builtins.show_object = no_capture
+        builtins.update_drawing = no_update
         globals_dict = {
             "__name__": "__main__",
             "resolve_external_file": resolve_external_file,
+            "emit_output": emit_output,
+            "show": no_capture,
+            "show_object": no_capture,
+            "update_drawing": no_update,
         }
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             exec(compile(code, "<ducpy-embedded-model>", "exec"), globals_dict)
@@ -318,6 +362,11 @@ def _run_python_validation_in_process(
             builtins.resolve_external_file = previous_resolver
         elif hasattr(builtins, "resolve_external_file"):
             delattr(builtins, "resolve_external_file")
+        for name in isolated_names:
+            if name in previous_helpers:
+                setattr(builtins, name, previous_helpers[name])
+            elif hasattr(builtins, name):
+                delattr(builtins, name)
 
     return None
 

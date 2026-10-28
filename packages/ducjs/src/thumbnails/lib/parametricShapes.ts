@@ -1,3 +1,4 @@
+import { applyDefaultModelColors } from "./defaultModelColor";
 const isObjectRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
@@ -81,6 +82,7 @@ const isWellFormedParametricNode = (value: unknown): boolean => {
 };
 
 export const sanitizeParametricShapes = (value: unknown): unknown => {
+  value = applyDefaultModelColors(value);
   if (isInstancedFormat(value)) {
     return value;
   }

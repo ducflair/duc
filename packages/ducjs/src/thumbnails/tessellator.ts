@@ -2,10 +2,12 @@ import { spawn } from "child_process";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { fileURLToPath } from "node:url";
 import type { DucModelElement } from "../types/elements";
 import type { DucExternalFiles, DucExternalFile, ExternalFilesData } from "../types";
 import {
   getSharedModelCacheManager,
+  createModelElementCacheInput,
   type ModelCacheKeyInput,
   type ModelCacheKind,
 } from "./modelCache";
@@ -41,7 +43,7 @@ function resolveDucpyDir(customDir?: string): string {
     return envDir;
   }
 
-  const baseDir = typeof __dirname !== "undefined" ? __dirname : process.cwd();
+  const baseDir = path.dirname(fileURLToPath(import.meta.url));
   const candidates = [
     path.resolve(baseDir, "../../ducpy"),
     path.resolve(baseDir, "../../../ducpy"),
@@ -140,7 +142,7 @@ export async function tessellateDucFileElement(
   const mtimeStr = String(ducStat.mtimeMs);
 
   // Check cache before running Python sidecar
-  for (const candidateKind of ["parametric-json", "ifc-json", "python-dxf"] as const) {
+  for (const candidateKind of ["parametric-json", "ifc-json", "python-dxf", "model-artifact"] as const) {
     const candidateInput: ModelCacheKeyInput = {
       kind: candidateKind,
       sourceFileId: `duc:${path.basename(ducPath)}:${elementId}`,
@@ -323,30 +325,23 @@ export async function tessellateModelElement(
         : "parametric-json";
 
   const cache = getSharedModelCacheManager();
-  const primaryFileId = element.fileIds?.[0] ?? `model:${element.id}`;
-  const revKey = (options.files?.[primaryFileId]?.activeRevisionId) ?? "v1";
-
-  const cacheInput: ModelCacheKeyInput = {
-    kind,
-    sourceFileId: primaryFileId,
-    sourceRevisionId: revKey,
-    variant: `${modelType}:${kind}`,
-  };
+  const cacheInput = createModelElementCacheInput(element, options.files);
 
   const cached = await cache.get(cacheInput);
   if (cached?.data?.byteLength) {
     const rawPayload = Buffer.from(cached.data).toString("utf8");
+    const cachedKind = cached.outputKind || kind;
     let shapes: unknown;
     let dxf: string | undefined;
-    if (kind === "parametric-json" || kind === "ifc-json") {
+    if (cachedKind === "parametric-json" || cachedKind === "ifc-json") {
       shapes = JSON.parse(rawPayload);
-    } else {
+    } else if (cachedKind === "python-dxf" || cachedKind === "dwg-dxf") {
       dxf = rawPayload;
     }
     return {
       success: true,
-      kind,
-      modelType,
+      kind: cachedKind,
+      modelType: cached.modelType || modelType,
       shapes,
       dxf,
       rawPayload,
@@ -367,7 +362,7 @@ export async function tessellateModelElement(
     const externalFilesList: Array<{ id: string; localPath: string; name: string }> = [];
 
     if (element.fileIds && options.files && options.filesData) {
-      for (const fid of element.fileIds) {
+      for (const fid of element.fileIds.filter(id => !id.startsWith("model_output_") && !id.startsWith("model_preview_") && !id.startsWith("dwg_dxf_cache_") && !(modelType === "python" && id.startsWith("model_python_")))) {
         const fileEntry: DucExternalFile | undefined = options.files[fid];
         const revId = fileEntry?.activeRevisionId;
         if (revId && options.filesData[revId]) {
@@ -406,21 +401,22 @@ export async function tessellateModelElement(
 
     const rawPayload = fs.readFileSync(tempOutputFile, "utf8");
     const meta = JSON.parse(stdout.trim());
+    const outputKind = (meta.kind || kind) as ModelCacheKind;
     let shapes: unknown;
     let dxf: string | undefined;
 
-    if (kind === "parametric-json" || kind === "ifc-json") {
+    if (outputKind === "parametric-json" || outputKind === "ifc-json") {
       shapes = JSON.parse(rawPayload);
-    } else {
+    } else if (outputKind === "python-dxf" || outputKind === "dwg-dxf") {
       dxf = rawPayload;
     }
 
-    await cache.save(cacheInput, Buffer.from(rawPayload, "utf8"));
+    await cache.save({ ...cacheInput, outputKind, modelType: meta.modelType || modelType }, Buffer.from(rawPayload, "utf8"));
 
     return {
       success: true,
-      kind,
-      modelType,
+      kind: outputKind,
+      modelType: meta.modelType || modelType,
       shapes,
       dxf,
       rawPayload,

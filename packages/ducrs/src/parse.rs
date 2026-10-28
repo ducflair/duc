@@ -57,6 +57,7 @@ pub(crate) fn read_document_state_from_connection(
 ) -> ParseResult<ExportedDataState> {
     let mut state = read_state_from_connection(conn, false)?;
     state.external_files = read_external_file_metadata(conn)?;
+    crate::external_file_locators::read(conn, &mut state.external_files)?;
     Ok(state)
 }
 
@@ -76,12 +77,13 @@ fn read_state_from_connection(
     let (blocks, block_instances, block_collections) = read_blocks(&conn)?;
     let elements = read_elements(&conn)?;
     let version_graph = read_version_graph(&conn)?;
-    let (external_files, external_files_data) = if include_external_files {
+    let (mut external_files, external_files_data) = if include_external_files {
         read_external_files(&conn)?
     } else {
         (None, None)
     };
 
+    crate::external_file_locators::read(conn, &mut external_files)?;
     Ok(ExportedDataState {
         id,
         version,
@@ -2139,6 +2141,7 @@ fn read_external_file_metadata(
                     message: row.get(6)?,
                     created: row.get(7)?,
                     last_retrieved: row.get(8)?,
+                    locator: None,
                 },
             ))
         })?;
@@ -2192,6 +2195,7 @@ fn read_external_file_metadata(
             message: None,
             created: row.get(3)?,
             last_retrieved: row.get(4)?,
+            locator: None,
         };
         let mut revisions = HashMap::new();
         revisions.insert(rev_id.clone(), meta);
@@ -2239,6 +2243,7 @@ fn read_external_files_v4(conn: &Connection) -> ParseResult<ExternalFilesResult>
                 message: row.get(6)?,
                 created: row.get(7)?,
                 last_retrieved: row.get(8)?,
+                locator: None,
             },
         ))
     })?;
@@ -2329,6 +2334,7 @@ fn read_external_files_v3(conn: &Connection) -> ParseResult<ExternalFilesResult>
                 message: row.get(6)?,
                 created: row.get(7)?,
                 last_retrieved: row.get(8)?,
+                locator: None,
             },
         ))
     })?;
@@ -2413,6 +2419,7 @@ fn read_external_files_v2(conn: &Connection) -> ParseResult<ExternalFilesResult>
                 message: row.get(6)?,
                 created: row.get(7)?,
                 last_retrieved: row.get(8)?,
+                locator: None,
             },
             blob,
         ))
@@ -2479,6 +2486,7 @@ fn read_external_files_v1_legacy(conn: &Connection) -> ParseResult<ExternalFiles
             message: None,
             created: row.get(3)?,
             last_retrieved: row.get(4)?,
+            locator: None,
         };
         Ok((
             id.clone(),

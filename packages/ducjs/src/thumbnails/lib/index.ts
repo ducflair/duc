@@ -9,3 +9,4 @@ export * from "./thumbnail-capture";
 export * from "./parametricViewerState";
 export * from "./offscreen-model-thumbnail";
 export * from "./offscreen-dxf-thumbnail";
+export * from "./defaultModelColor";
