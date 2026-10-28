@@ -453,8 +453,11 @@ def _validate_embedded_code(
         label = _element_label(element)
 
         if element_type == "model":
+            model_type = (
+                element.get("modelType") or element.get("model_type") or "python"
+            )
             code = element.get("code")
-            if isinstance(code, str) and code.strip():
+            if model_type == "python" and isinstance(code, str) and code.strip():
                 error = _run_python_validation(code, label, timeout_seconds, files_meta, files_data)
                 if error:
                     failures.append(error)

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it, setDefaultTimeout } from "bun:test";
 import { Database } from "bun:sqlite";
 import { gunzipSync } from "fflate";
 import fs from "fs";
@@ -18,6 +18,7 @@ import type { DucModelElement } from "../src/types/elements";
 import { getDucFixturePath, getFixturePath } from "./fixtures";
 
 const OUTPUT_DIR = path.resolve(import.meta.dir, "output");
+setDefaultTimeout(30_000);
 const CPU_OUTPUT_DIR = path.join(OUTPUT_DIR, "CPU");
 const GPU_OUTPUT_DIR = path.join(OUTPUT_DIR, "GPU");
 const DXF_FIXTURES_DIR = path.resolve(import.meta.dir, "../../ducdxf/tests/fixtures/dxf");

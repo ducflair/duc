@@ -122,7 +122,10 @@ fn checkpoint_and_delta_roundtrip_keep_graph_metadata_consistent() {
     assert_eq!(graph.metadata.chain_count, 1);
     assert_eq!(
         graph.metadata.total_size,
-        versions.iter().map(|version| version.size_bytes).sum()
+        versions
+            .iter()
+            .map(|version| version.size_bytes)
+            .sum::<i64>()
     );
     assert_eq!(graph.chains.len(), 1);
     assert_eq!(graph.chains[0].start_version, 1);
@@ -564,7 +567,7 @@ fn document_read_normalizes_stale_version_graph_metadata() {
             .iter()
             .map(|checkpoint| checkpoint.size_bytes)
             .chain(graph.deltas.iter().map(|delta| delta.size_bytes))
-            .sum()
+            .sum::<i64>()
     );
 
     let document = conn

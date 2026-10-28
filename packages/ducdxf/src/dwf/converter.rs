@@ -110,8 +110,10 @@ pub fn convert_dwf_to_duc_state(
     if sheets.is_empty() || sheets.iter().all(|s| s.image_bytes.is_none()) {
         for i in 0..archive.len() {
             if let Ok(mut f) = archive.by_index(i) {
-                let name = f.name().to_string();
-                let lower = name.to_lowercase();
+                let lower = match f.name() {
+                    Ok(name) => name.to_lowercase(),
+                    Err(_) => continue,
+                };
                 if lower.ends_with(".jpg") || lower.ends_with(".png") || lower.ends_with(".jpeg") {
                     let mut bytes = Vec::new();
                     if f.read_to_end(&mut bytes).is_ok() && bytes.len() > 1024 {
@@ -259,6 +261,7 @@ pub fn convert_dwf_to_duc_state(
                     message: None,
                     created: now,
                     last_retrieved: Some(now),
+                    locator: None,
                 },
             );
 

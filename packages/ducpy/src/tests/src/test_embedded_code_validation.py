@@ -19,6 +19,27 @@ def test_svg_output_is_available_during_standalone_validation(tmp_path):
     assert output.is_file()
 
 
+@pytest.mark.parametrize("model_type", ["ifc", "dxf", "dwg", "step", "stl"])
+def test_native_model_types_do_not_execute_python_code(tmp_path, model_type):
+    element = (
+        duc.ElementBuilder()
+        .build_model_element()
+        .with_model_type(model_type)
+        .with_code("raise RuntimeError('native model code must not be executed')")
+        .build()
+    )
+    output = tmp_path / f"{model_type}.duc"
+
+    duc.serialize_duc(
+        name=f"{model_type}-model",
+        output_path=output,
+        elements=[element],
+        validate_embedded_code=True,
+    )
+
+    assert output.is_file()
+
+
 def test_custom_data_accepts_objects_and_does_not_store_empty_json(tmp_path):
     elements = [duc.ElementBuilder().with_id("empty").with_size(10, 10).with_custom_data("").build_rectangle().build(),
                 duc.ElementBuilder().with_id("structured").with_size(10, 10).with_custom_data({"modelOutput": {"status": "fresh"}}).build_rectangle().build()]
