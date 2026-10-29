@@ -1313,6 +1313,9 @@ impl ElementStreamer {
             DucElementEnum::DucLinearElement(linear) => {
                 Self::compute_linear_center(&linear.linear_base)
             }
+            DucElementEnum::DucFreeDrawElement(freedraw) => {
+                Self::compute_freedraw_center(freedraw)
+            }
             DucElementEnum::DucPolygonElement(polygon) => {
                 // Rotate regular polygons around the centre of the bounding ellipse to keep
                 // inscribed shapes aligned regardless of the number of sides. Odd-sided
@@ -1326,6 +1329,35 @@ impl ElementStreamer {
                 Self::compute_linear_center(&linear.linear_base)
             }
             _ => None,
+        }
+    }
+
+    fn compute_freedraw_center(freedraw: &DucFreeDrawElement) -> Option<(f64, f64)> {
+        if freedraw.points.is_empty() {
+            return None;
+        }
+
+        let mut min_x = f64::INFINITY;
+        let mut min_y = f64::INFINITY;
+        let mut max_x = f64::NEG_INFINITY;
+        let mut max_y = f64::NEG_INFINITY;
+
+        for point in &freedraw.points {
+            let x = point.x;
+            let y = -point.y;
+            if !x.is_finite() || !y.is_finite() {
+                continue;
+            }
+            min_x = min_x.min(x);
+            min_y = min_y.min(y);
+            max_x = max_x.max(x);
+            max_y = max_y.max(y);
+        }
+
+        if min_x.is_finite() && min_y.is_finite() && max_x.is_finite() && max_y.is_finite() {
+            Some(((min_x + max_x) / 2.0, (min_y + max_y) / 2.0))
+        } else {
+            None
         }
     }
 
@@ -2112,7 +2144,7 @@ impl ElementStreamer {
             wrap_strategy,
         );
 
-        Ok(operations)
+        Ok(super::text_positions::absolute_line_positions(operations))
     }
 
     /// Stream table element
@@ -2662,30 +2694,32 @@ impl ElementStreamer {
             let embed_id = format!("freedraw_{}", freedraw.base.id);
 
             // Use cached bounding box to get the offset that was applied during SVG creation
-            // The SVG was normalized with translate(-min_x, -min_y), so we need to account for this
-            let bbox_offset = if let Some(bounds) = self.freedraw_bboxes.get(&freedraw.base.id) {
-                (bounds.min_x as f32, bounds.min_y as f32)
-            } else {
-                // Fallback: calculate if not cached (shouldn't happen in normal flow)
+            let bbox_bounds = if let Some(bounds) = self.freedraw_bboxes.get(&freedraw.base.id) {
+                *bounds
+            } else if let Some(bounds) = calculate_freedraw_bbox(freedraw) {
                 web_sys::console::log_1(&JsValue::from_str(&format!(
                     "Warning: No cached bounding box found for freedraw {}, calculating fallback",
                     freedraw.base.id
                 )));
-                if let Some(bounds) = calculate_freedraw_bbox(freedraw) {
-                    (bounds.min_x as f32, bounds.min_y as f32)
-                } else {
-                    (0.0, 0.0)
+                bounds
+            } else {
+                FreeDrawBounds {
+                    min_x: 0.0,
+                    min_y: 0.0,
+                    max_x: freedraw.base.width,
+                    max_y: freedraw.base.height,
                 }
             };
 
             let options = EmbedOptions {
                 page_range: Some(PageRange::Single(0)), // Freedraw SVG-PDFs have only one page
                 // Element transform has already translated to (base.x, base.y)
-                // But we need to offset by the bounding box min values because the SVG was normalized
-                position: (bbox_offset.0, -bbox_offset.1),
-                max_width: Some(freedraw.base.width as f32),
-                max_height: Some(freedraw.base.height as f32),
-                preserve_aspect_ratio: true,
+                // The Form XObject origin (0, 0) is at its bottom-left, which corresponds to
+                // path coordinates (bounds.min_x, bounds.max_y). In PDF coordinates (where Y is inverted),
+                // this is (bounds.min_x, -bounds.max_y).
+                position: (bbox_bounds.min_x as f32, -bbox_bounds.max_y as f32),
+                scale: (1.0, 1.0),
+                preserve_aspect_ratio: false,
                 ..Default::default()
             };
 
@@ -2697,21 +2731,7 @@ impl ElementStreamer {
                         self.new_xobjects.push((name.clone(), obj_ref.clone()));
                     }
 
-                    // PDF draws from bottom-left, so we need to offset by -height
-                    ops.push(Operation::new("q", vec![])); // Save state
-                    ops.push(Operation::new(
-                        "cm",
-                        vec![
-                            Object::Real(1.0),
-                            Object::Real(0.0),
-                            Object::Real(0.0),
-                            Object::Real(1.0),
-                            Object::Real(0.0),
-                            Object::Real(-(freedraw.base.height as f32)),
-                        ],
-                    ));
                     ops.extend(result.operations);
-                    ops.push(Operation::new("Q", vec![])); // Restore state
                 }
                 Err(e) => {
                     web_sys::console::log_1(&JsValue::from_str(&format!(

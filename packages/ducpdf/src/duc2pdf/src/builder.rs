@@ -372,7 +372,6 @@ impl DucToPdfBuilder {
             match Font::from_bytes(ttf_bytes, Some(format!("{}.ttf", family_name))) {
                 Ok(font) => match font_manager.embed_font(&mut document, font.clone()) {
                     Ok((_, res_name)) => {
-                        log_info!("Embedded font '{}' as {}", family_name, res_name);
                         font_map.insert(family_name, (font, res_name));
                     }
                     Err(e) => {
@@ -1008,15 +1007,9 @@ impl DucToPdfBuilder {
                         };
 
                         // Calculate bounding box using the SVG path when available for accurate bounds
-                        let svg_document = if let Some(bounds) =
+                        let (svg_document, calculated_bounds) = if let Some(bounds) =
                             self.select_freedraw_bounds(freedraw)
                         {
-                            // Cache the calculated bounding box for later use in stream_freedraw
-                            self.context
-                                .resource_cache
-                                .freedraw_bboxes
-                                .insert(freedraw.base.id.clone(), bounds);
-
                             let mut width = bounds.width();
                             let mut height = bounds.height();
 
@@ -1070,8 +1063,15 @@ impl DucToPdfBuilder {
                             let translate_x = format_number(-bounds.min_x);
                             let translate_y = format_number(-bounds.min_y);
 
+                            let effective_bounds = FreeDrawBounds {
+                                min_x: bounds.min_x,
+                                min_y: bounds.min_y,
+                                max_x: bounds.min_x + width,
+                                max_y: bounds.min_y + height,
+                            };
+
                             // Normalize the path so the viewport starts at (0,0)
-                            format!(
+                            let doc = format!(
                                 r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}"><g transform="translate({tx} {ty})"><path d="{path}" fill="{fill}" fill-opacity="{opacity}" /></g></svg>"#,
                                 width = width_str,
                                 height = height_str,
@@ -1080,16 +1080,37 @@ impl DucToPdfBuilder {
                                 path = svg_path,
                                 fill = stroke_color.as_str(),
                                 opacity = stroke_opacity,
-                            )
+                            );
+
+                            (doc, Some(effective_bounds))
                         } else {
-                            // Fallback to document without viewBox if bbox calculation fails
-                            format!(
-                                r#"<svg xmlns="http://www.w3.org/2000/svg"><path d="{}" fill="{}" fill-opacity="{}" /></svg>"#,
-                                svg_path,
-                                stroke_color.as_str(),
-                                stroke_opacity
-                            )
+                            let width = freedraw.base.width.abs().max(freedraw.size.abs()).max(1.0);
+                            let height = freedraw.base.height.abs().max(freedraw.size.abs()).max(1.0);
+                            let width_str = format_number(width);
+                            let height_str = format_number(height);
+                            let fallback_bounds = FreeDrawBounds {
+                                min_x: 0.0,
+                                min_y: 0.0,
+                                max_x: width,
+                                max_y: height,
+                            };
+                            let doc = format!(
+                                r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}"><path d="{path}" fill="{fill}" fill-opacity="{opacity}" /></svg>"#,
+                                width = width_str,
+                                height = height_str,
+                                path = svg_path,
+                                fill = stroke_color.as_str(),
+                                opacity = stroke_opacity,
+                            );
+                            (doc, Some(fallback_bounds))
                         };
+
+                        if let Some(bounds) = calculated_bounds {
+                            self.context
+                                .resource_cache
+                                .freedraw_bboxes
+                                .insert(freedraw.base.id.clone(), bounds);
+                        }
 
                         // Convert SVG content to PDF
                         match svg_to_pdf(svg_document.as_bytes()) {

@@ -8,3 +8,4 @@ pub mod stream_linear;
 pub mod stream_resources;
 pub mod stream_shapes;
 pub mod tile_streamer;
+mod text_positions;
