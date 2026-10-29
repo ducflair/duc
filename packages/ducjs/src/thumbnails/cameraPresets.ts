@@ -197,7 +197,7 @@ const DEFAULT_MATERIAL: Viewer3DMaterial = {
 
 const DEFAULT_DISPLAY: Viewer3DDisplay = {
   wireframe: false,
-  transparent: true,
+  transparent: false,
   blackEdges: true,
   grid: { type: "uniform", value: false },
   axesVisible: false,

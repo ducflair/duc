@@ -101,6 +101,8 @@ describe("thumbnails camera presets and config resolver", () => {
     // Default when none provided is transparent
     const defaultResolved = resolveModelViewConfig({});
     expect(defaultResolved.background).toBe("transparent");
+    expect(defaultResolved.display.transparent).toBe(false);
+    expect(resolveModelViewConfig({ display: { transparent: true } }).display.transparent).toBe(true);
 
     // Explicit background is preserved
     const chromaticResolved = resolveModelViewConfig({ background: "#3b82f6" });

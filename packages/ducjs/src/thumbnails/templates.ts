@@ -496,7 +496,7 @@ ${configJson}
       const b64 = btoa(binary);
 
       const img = new Image();
-      img.src = "data:image/png;base64," + b64;
+      img.src = "data:image/" + (cfg.format || "png") + ";base64," + b64;
       document.body.innerHTML = "";
       document.body.style.width = result.width + "px";
       document.body.style.height = result.height + "px";

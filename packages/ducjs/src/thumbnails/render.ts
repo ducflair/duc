@@ -5,7 +5,6 @@ import type {
 import type { DucModelElement } from "../types/elements";
 import {
   resolveModelViewConfig,
-  type ResolvedModelViewConfig,
 } from "./cameraPresets";
 import {
   getSharedBrowserRunner,
@@ -82,10 +81,10 @@ export async function renderModelViewThumbnail(
 ): Promise<ModelThumbnailResult> {
   const startTime = Date.now();
 
-  const config: ResolvedModelViewConfig = resolveModelViewConfig(
+  const config = { ...resolveModelViewConfig(
     input.viewConfig,
     input.viewerState,
-  );
+  ), format: input.format ?? "png" };
 
   const isDxf =
     (input.modelType && input.modelType.toUpperCase() === "DXF") ||
