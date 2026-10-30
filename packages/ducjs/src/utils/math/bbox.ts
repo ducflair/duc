@@ -1,14 +1,11 @@
-import { Bounds, LineSegment } from "../../types/geometry.types";
-import { ScopedValue } from "../../types";
-import { GeometricPoint } from "../../types/geometry.types";
-
+import { Bounds, GeometricPoint, LineSegment } from "../../types/geometry.types";
 
 export function getBBox(line: LineSegment): Bounds {
   return [
-    Math.min(line[0].x, line[1].x) as ScopedValue,
-    Math.min(line[0].y, line[1].y) as ScopedValue,
-    Math.max(line[0].x, line[1].x) as ScopedValue,
-    Math.max(line[0].y, line[1].y) as ScopedValue,
+    Math.min(line[0].x, line[1].x),
+    Math.min(line[0].y, line[1].y),
+    Math.max(line[0].x, line[1].x),
+    Math.max(line[0].y, line[1].y),
   ];
 }
 

@@ -107,7 +107,6 @@ impl DucDataScaler {
     /// Scale text style fields
     fn scale_text_style(style: &mut types::DucTextStyle, scale: f64) {
         style.font_size *= scale;
-        style.line_height *= scale as f32;
     }
 
     /// Scale linear element base (points, lines, etc.)
@@ -237,5 +236,32 @@ impl DucDataScaler {
     /// Transform a single point y-coordinate from top-left to bottom-left origin
     pub fn transform_point_y_to_pdf_system(y: f64, page_height: f64) -> f64 {
         page_height - y
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unit_conversion_preserves_line_height_multipliers() {
+        let mut style = types::DucTextStyle {
+            is_ltr: true,
+            font_family: "Liberation Sans".into(),
+            big_font_family: String::new(),
+            text_align: types::TEXT_ALIGN::LEFT,
+            vertical_align: types::VERTICAL_ALIGN::TOP,
+            line_height: 1.25,
+            line_spacing: types::LineSpacing { value: 1.0, line_type: None },
+            oblique_angle: 0.0,
+            font_size: 20.0,
+            width_factor: 1.0,
+            is_upside_down: false,
+            is_backwards: false,
+        };
+        DucDataScaler::scale_text_style(&mut style, 72.0 / 25.4);
+        assert!((style.font_size - 20.0 * 72.0 / 25.4).abs() < 1e-9);
+        assert_eq!(style.line_height, 1.25);
+        assert_eq!(style.line_spacing.value, 1.0);
     }
 }

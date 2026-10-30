@@ -1,6 +1,5 @@
 export * from "./typeChecks";
 
-import { PrecisionValue, Scope } from "..";
 import { BEZIER_MIRRORING, BLENDING, BOOLEAN_OPERATION, ELEMENT_CONTENT_PREFERENCE, HATCH_STYLE, IMAGE_STATUS, LINE_HEAD, LINE_SPACING_TYPE, STROKE_CAP, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, STROKE_SIDE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "../../enums";
 
 import {
@@ -16,7 +15,7 @@ import { MakeBrand, MarkNonNullable, MarkOptional, Merge, ValueOf } from "../uti
  * Base styles that all elements share
  */
 export type _DucElementStylesBase = {
-  roundness: PrecisionValue;
+  roundness: number;
 
   blending?: Blending;
 
@@ -40,20 +39,14 @@ export type _DucElementStylesBase = {
  */
 export type _DucElementBase = Readonly<_DucElementStylesBase & {
   id: string;
-  x: PrecisionValue;
-  y: PrecisionValue;
-
-  /**
-   * The scope where the element is currently
-   * mm, cm, m, in, ft, yd, mi, etc...
-   */
-  scope: Scope;
+  x: number;
+  y: number;
 
   label: string;
   isVisible: boolean;
 
-  width: PrecisionValue;
-  height: PrecisionValue;
+  width: number;
+  height: number;
   angle: Radian;
   /** Random integer used to seed shape generation
       doesn't differ across renders. */
@@ -207,7 +200,6 @@ export const DUC_ELEMENT_SELECTABLE_FIELDS = [
   "isVisible",
   "groupIds",
   "frameId",
-  "scope",
   "layerId",
   "zIndex",
   "description",
@@ -417,7 +409,6 @@ export type ElementConstructorOpts = MarkOptional<
   | "customData"
   | "isVisible"
   | "description"
-  | "scope"
   | "blending"
   | "isPlot"
   | "regionIds"
@@ -504,9 +495,9 @@ export type HatchPatternLine = {
   /** Line origin point */
   origin: DucPoint;
   /** Offset between parallel lines [x, y] */
-  offset: [PrecisionValue, PrecisionValue];
+  offset: [number, number];
   /** Dash pattern (empty array = solid line) */
-  dashPattern: PrecisionValue[];
+  dashPattern: number[];
 };
 
 /**
@@ -612,7 +603,7 @@ export type ElementContentBase = {
 
 export type ElementStroke = {
   content: ElementContentBase;
-  width: PrecisionValue;
+  width: number;
   style: StrokeStyle;
   placement: StrokePlacement;
   strokeSides?: StrokeSides; // if not provided, all sides are used
@@ -776,7 +767,7 @@ export type DucTextStyle = {
      * The numerical value for the line spacing.
      * Its interpretation depends on the `type` property.
      */
-    value: PrecisionValue | ScaleFactor;
+    value: number | ScaleFactor;
 
     /**
      * Determines how the line spacing factor is applied.
@@ -800,7 +791,7 @@ export type DucTextStyle = {
    * Text height in drawing units (primary size parameter)
    * This determines the height of capital letters
    */
-  fontSize: PrecisionValue;
+  fontSize: number;
   /**
    * Character width as a ratio of text height
    * Controls horizontal spacing and character proportions
@@ -872,7 +863,7 @@ export type DucPointBinding = {
   /** 
    * The gap distance between the bound element and the binding element.
    */
-  gap: PrecisionValue;
+  gap: number;
 
   /** 
    * Represents a fixed point inside the bound element, defined as a normalized coordinate.
@@ -916,8 +907,8 @@ export type DucHead = {
 }
 
 export interface DucPointPosition {
-  x: PrecisionValue;
-  y: PrecisionValue;
+  x: number;
+  y: number;
 }
 export type BezierMirroring = ValueOf<typeof BEZIER_MIRRORING>;
 
@@ -995,7 +986,7 @@ export type DucFreeDrawEnds = {
 export type DucFreeDrawElement = _DucElementBase & {
   type: "freedraw";
   points: readonly DucPoint[];
-  size: PrecisionValue;
+  size: number;
   thinning: Percentage;
   smoothing: Percentage;
   streamline: Percentage;
@@ -1017,8 +1008,8 @@ export type DucFreeDrawElement = _DucElementBase & {
 export type DucBlockDuplicationArray = {
   rows: number;
   cols: number;
-  rowSpacing: PrecisionValue;
-  colSpacing: PrecisionValue;
+  rowSpacing: number;
+  colSpacing: number;
 }
 
 /**
@@ -1186,10 +1177,10 @@ export type DucLayer = _DucStackBase & {
 export type PlotLayout = {
   /** Margins inset from the edge of the paper. */
   margins: {
-    top: PrecisionValue;
-    right: PrecisionValue;
-    bottom: PrecisionValue;
-    left: PrecisionValue;
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
   };
 };
 export type DucPlotStyle = {};

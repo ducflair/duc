@@ -22,7 +22,7 @@
     "ducdxf#build": {
       "cache": false,
       "dependsOn": [
-        "ducpy#build"
+        "ducrs#build"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env.*", ".env.local"]
     },

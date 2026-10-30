@@ -6,6 +6,30 @@ const LEGACY_SCHEMA: &str = r#"
     PRAGMA user_version = 3000007;
     PRAGMA foreign_keys = ON;
 
+    CREATE TABLE duc_global_state (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        view_background_color TEXT NOT NULL,
+        main_scope TEXT NOT NULL,
+        scope_exponent_threshold INTEGER NOT NULL DEFAULT 3
+    );
+    CREATE TABLE duc_local_state (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        scope TEXT NOT NULL DEFAULT 'mm'
+    );
+    CREATE TABLE duc_issues (
+        id TEXT PRIMARY KEY
+    );
+    CREATE TABLE duc_issue_anchors (
+        issue_id TEXT PRIMARY KEY REFERENCES duc_issues(id) ON DELETE CASCADE,
+        anchor_type TEXT NOT NULL,
+        canvas_scope TEXT
+    );
+    CREATE TABLE elements (
+        id TEXT PRIMARY KEY,
+        scope TEXT NOT NULL DEFAULT 'mm'
+    );
+    CREATE INDEX idx_elements_scope ON elements(scope);
+
     CREATE TABLE external_files (
         id TEXT PRIMARY KEY,
         active_revision_id TEXT NOT NULL,
@@ -758,7 +782,7 @@ fn migrates_legacy_payloads_losslessly_into_bounded_chunks() {
     assert_eq!(
         conn.pragma_query_value::<i64, _>(None, "user_version", |row| row.get(0))
             .expect("read user_version"),
-        4_000_000
+        CURRENT_VERSION
     );
     let expected_layout = vec![(0, 0, 8_388_608), (1, 8_388_608, 17)];
     assert_eq!(

@@ -1,4 +1,4 @@
-import { DUC_VERSION, ExportedDataState, getFreeDrawSvgPath, getNormalizedZoom, isFreeDrawElement, normalizeForSerializationScope, restore, transformToRust } from 'ducjs';
+import { DUC_VERSION, ExportedDataState, getFreeDrawSvgPath, getNormalizedZoom, isFreeDrawElement, restore, transformToRust } from 'ducjs';
 import { collectFontFamilies, fetchFontsForFamilies } from './fonts';
 
 export interface PdfConversionResult {
@@ -110,6 +110,9 @@ async function initWasm(): Promise<any> {
   return wasmInitPromise;
 }
 
+/** Internal binding access for persistent canvas sessions; shares WASM initialization. */
+export const getCanvasPdfBindings = initWasm;
+
 export interface ConversionOptions {
   offsetX?: number;
   offsetY?: number;
@@ -193,21 +196,13 @@ function prepareDocumentState(
     source: state.source ?? 'ducpdf',
     ...restored,
   } as ExportedDataState;
-  const scope = completeState.localState?.scope || completeState.globalState?.mainScope || 'mm';
-  const normalized: ExportedDataState = normalizeForSerializationScope(
-    completeState,
-    'mm',
-    scope,
-  );
-  (normalized as any).localState.scope = 'mm';
-  (normalized as any).globalState.mainScope = 'mm';
+  const normalized: ExportedDataState = completeState;
 
   const localState = (normalized as any).localState;
   if (!localState?.zoom) {
     const normalizedZoomValue = getNormalizedZoom(1);
     localState.zoom = {
       value: normalizedZoomValue,
-      scoped: normalizedZoomValue as any,
       scaled: normalizedZoomValue as any,
     };
   }

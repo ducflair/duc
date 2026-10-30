@@ -40,7 +40,7 @@ export type DucDocElement = _DucElementBase & {
 
 [Typst](https://typst.app/docs/) is a modern, markup-based document typesetting language designed as a fast alternative to LaTeX. Storing Typst markup in `text` ensures that document source code remains text-based, version-controllable, and inspectable inside the `.duc` data structure.
 
-Typst source selects fonts by exact family name. See [Using Fonts](/docs/guidelines/using-fonts#document-elements) for family declarations, fallback chains, Scopture's font resolution behavior, and local CLI testing.
+Typst source selects fonts by exact family name. See [Using Fonts](/docs/guidelines/using-fonts#document-elements) for family declarations, fallback chains, host font resolution requirements, and local CLI testing.
 
 ---
 
@@ -97,7 +97,7 @@ When `firstPageAlone` is set to `true`, the first page of the document renders s
 PDF documents follow ISO paper standards (such as A4, A3, or A0) with real-world physical dimensions.
 
 - **Unitless Scale Ratio**: The `scale` attribute stores the unitless scale ratio (`Drawing Units / Real World Units`, for example `1:40` => `0.025`, `1:100` => `0.01`, `1:1000` => `0.001`).
-- **Spatial Traceability**: Storing the physical scale factor relative to the element's canvas `scope` and dimensions preserves spatial scale traceability, allowing runtimes to reconstruct original real-world paper sizes.
+- **Spatial Traceability**: Storing the physical scale factor relative to the element's canvas dimensions preserves spatial scale traceability, allowing runtimes to reconstruct original real-world paper sizes.
 
 ---
 

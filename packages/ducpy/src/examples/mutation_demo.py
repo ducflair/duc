@@ -42,7 +42,6 @@ def main():
     duc_global_state = (duc.StateBuilder()
         .build_global_state()
         .with_name("mutation_demo")
-        .with_main_scope("mm")
         .build())
 
     duc_local_state = (duc.StateBuilder()
@@ -118,7 +117,6 @@ def main():
     )
 
     print(f"   Mutated {len(elements)} elements.")
-    print(f"   Global state main scope -> {duc_global_state.main_scope!r}")
     print(f"   Local state scroll -> ({duc_local_state.scroll_x}, {duc_local_state.scroll_y})")
     print(f"   External file version -> {external_file.version}")
     print(f"   Serialized to {duc_path}.")

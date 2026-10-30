@@ -1,7 +1,7 @@
 ---
 title: "Using Fonts"
 description: "Select and resolve fonts correctly in DUC text, document, and Python model elements."
-date: 2026-08-18
+date: 2026-10-20
 authors: [jorgedanisc]
 ---
 
@@ -15,12 +15,12 @@ DUC elements preserve a font choice, but they do not all consume fonts in the sa
 | :--- | :--- | :--- |
 | Text | A CSS font-family name in `fontFamily` (`font_family` in Python) | The application rendering the canvas loads that family |
 | Document | A Typst family name in the document's `text` source | The Typst compiler loads the requested faces and embeds them in the compiled PDF output |
-| Python model | A family declared in the Python source | Scopture mounts a TrueType font and exposes `resolve_font(...)`; the model library then consumes the family, file name, or file path it requires |
+| Python model | A family declared in the Python source | The execution host supplies font files, and may expose `resolve_font(...)`; the model library consumes the family, file name, or path it requires |
 
 Use the exact family name, including spaces, such as `"Source Sans 3"`. Font availability belongs to the application or compilation environment, not the `.duc` schema itself. A reader that cannot resolve the requested family may substitute a fallback and produce different text metrics.
 
-<Callout type="info" title="Scopture resolves Google Fonts by family name">
-  Current Scopture runtimes can resolve families such as Inter, Roboto, Montserrat, Poppins, Open Sans, Source Sans 3, IBM Plex Sans, Noto Sans, Fira Sans, Lato, Merriweather, Playfair Display, JetBrains Mono, and Fira Code. Use the exact Google Fonts family name rather than a filename or an informal alias.
+<Callout type="info" title="Font availability depends on the host">
+  A host may load fonts from Google Fonts, a local font directory, or attached files. Use exact family names and verify availability in each target runtime. The format does not require a particular font service.
 </Callout>
 
 ---
@@ -60,7 +60,7 @@ Use a tuple when the document needs an ordered fallback chain:
 #set text(font: ("Inter", "Noto Sans"))
 ```
 
-Scopture detects literal `font: "Family"` declarations and fallback tuples, then loads the requested normal, italic, and weight variants before compiling. If no family is declared, the current compiler uses Source Serif 4. Keep family names as literal strings in the source so the host can discover them before compilation.
+The compilation host must provide the requested normal, italic, and weight variants. Default families and source scanning are host policies. Literal family declarations make it easier for hosts to discover dependencies before compilation.
 
 When authoring or testing the same source with the local Typst CLI, inspect the fonts available in that environment first:
 
@@ -80,7 +80,7 @@ typst compile --font-path ./fonts test.typ test.pdf
 
 ## Python Model Elements
 
-Scopture scans Python model source for literal font families before execution, downloads the matching Google Fonts TTF files, mounts them in the sandbox, and provides two globals:
+A Python execution host can scan literal font families, mount matching TTF files, and provide font helpers. The following examples assume these optional host globals:
 
 - `resolve_font("Inter")` returns the sandbox-local path of a mounted TTF.
 - `FontEnum(["Inter", "Noto Sans"])` declares a finite family manifest and supports iteration, key access, and identifier-safe attribute access such as `FONTS.Noto_Sans`.
@@ -96,19 +96,18 @@ A computed family name that is not also present in a literal `font=...` argument
 
 ### Build123d
 
-Pass the family to Build123d's `Text` object. Scopture supplies the resolved `font_path` automatically:
+Pass the resolved font path explicitly to Build123d's `Text` object:
 
 ```python
 from build123d import Text
-from ocp_vscode import show
 
 FONT_FAMILY = "Inter"
-label = Text("Name 2026", font_size=10, font=FONT_FAMILY)
+label = Text("Name 2026", font_size=10, font=FONT_FAMILY, font_path=resolve_font(FONT_FAMILY))
 
-show(label)
+emit_output(label, kind="parametric")
 ```
 
-The terminal `show(...)` is still required to emit the interactive model preview; selecting a font does not change the [Build123d output contract](/docs/concepts/elements/model-element#build123d-output-contract).
+Emit the completed geometry with `emit_output(label, kind="parametric")`. Font selection controls the text geometry; the declared kind selects the [model output renderer](/docs/concepts/elements/model-element#output-kinds).
 
 ### ezdxf
 
@@ -122,14 +121,14 @@ FONT_FAMILY = "Inter"
 font_name = Path(resolve_font(FONT_FAMILY)).name
 
 drawing = ezdxf.new()
-drawing.styles.new("SCOPTURE_TEXT", dxfattribs={"font": font_name})
+drawing.styles.new("DUC_TEXT", dxfattribs={"font": font_name})
 drawing.modelspace().add_text(
     "Name 2026",
-    dxfattribs={"style": "SCOPTURE_TEXT", "height": 10},
+    dxfattribs={"style": "DUC_TEXT", "height": 10},
 )
 ```
 
-Leaving the font only in a Python variable does not style a DXF entity. The entity must reference a DXF text style whose `font` attribute matches the mounted font filename or a viewer-recognized alias.
+Emit the completed drawing with `emit_output(drawing, kind="dxf")`. Leaving the font only in a Python variable does not style a DXF entity. The entity must reference a DXF text style whose `font` attribute matches the mounted font filename or a viewer-recognized alias.
 
 ### IfcOpenShell
 

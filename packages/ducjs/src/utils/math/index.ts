@@ -3,13 +3,9 @@ export * from "./bbox";
 export * from "./geometry";
 export * from "./random";
 
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint, SupportedMeasures } from "../../technical/scopes";
 import type {
-    RawValue,
-    ScopedZoomValue,
     Zoom
 } from "../../types";
-import { Scope, ScopedValue } from "../../types";
 import type { DucElement, DucLine, DucLinearElement, DucLinearLikeElement, DucLineReference, DucPoint, NonDeleted } from "../../types/elements";
 import type { Bounds, GeometricPoint, GeometricVector, Percentage, Radian } from "../../types/geometry.types";
 import { Heading } from "../../types/geometry.types";
@@ -19,7 +15,7 @@ import {
 } from "../constants";
 import { pointFrom } from "./geometry";
 
-type SV = ScopedValue;
+type SV = number;
 export type NullableGridSize = number | null;
 
 
@@ -77,38 +73,37 @@ export const rotatePoint = (
 ): GeometricPoint => rotate(point.x, point.y, center.x, center.y, angle);
 
 
-export const getSizeFromPoints = (points: readonly GeometricPoint[]): { width: ScopedValue; height: ScopedValue } => {
+export const getSizeFromPoints = (points: readonly GeometricPoint[]): { width: number; height: number } => {
   const xs = points.map((point) => point.x);
   const ys = points.map((point) => point.y);
   return {
-    width: Math.max(...xs) - Math.min(...xs) as ScopedValue,
-    height: Math.max(...ys) - Math.min(...ys) as ScopedValue,
+    width: Math.max(...xs) - Math.min(...xs),
+    height: Math.max(...ys) - Math.min(...ys),
   };
 };
 
 /** @param dimension 0 for rescaling only x, 1 for y */
+const getCoord = (p: any, dim: 'x' | 'y'): number =>
+  typeof p[dim] === "number" ? p[dim] : (p[dim]?.value ?? 0);
+
 export const rescalePoints = (
   dimension: 'x' | 'y',
-  newSize: ScopedValue,
+  newSize: number,
   points: readonly DucPoint[],
   normalize: boolean,
-  elementScope: SupportedMeasures,
-  currentScope: Scope,
 ): DucPoint[] => {
-  const coordinates = points.map((point) => point[dimension].scoped);
+  const coordinates = points.map((point) => getCoord(point, dimension));
   const maxCoordinate = Math.max(...coordinates);
   const minCoordinate = Math.min(...coordinates);
   const size = maxCoordinate - minCoordinate;
   const scale = size === 0 ? 1 : newSize / size;
 
   const scaledPoints = points.map((point): DucPoint => {
-    const newPoint = { ...point };
-    newPoint[dimension] = getPrecisionValueFromScoped(
-      (point[dimension].scoped * scale) as ScopedValue,
-      elementScope,
-      currentScope,
-    );
-    return newPoint;
+    const val = getCoord(point, dimension);
+    return {
+      ...point,
+      [dimension]: val * scale,
+    };
   });
 
   if (!normalize || points.length === 0) {
@@ -117,19 +112,14 @@ export const rescalePoints = (
 
   // With normalization, we move the points so that the first point
   // is at the same position as original.
-  const translation = (points[0][dimension].scoped -
-    scaledPoints[0][dimension].scoped) as ScopedValue;
+  const translation = getCoord(points[0], dimension) - getCoord(scaledPoints[0], dimension);
 
   const nextPoints = scaledPoints.map((scaledPoint) => {
-    const translatedPoint = {
+    const val = getCoord(scaledPoint, dimension);
+    return {
       ...scaledPoint,
-      [dimension]: getPrecisionValueFromScoped(
-        (scaledPoint[dimension].scoped + translation) as ScopedValue,
-        elementScope,
-        currentScope,
-      ),
+      [dimension]: val + translation,
     };
-    return translatedPoint;
   });
 
   return nextPoints;
@@ -138,25 +128,22 @@ export const rescalePoints = (
 // Helper function to rescale DucLine handles
 export const rescaleLines = (
   dimension: 'x' | 'y',
-  newSize: ScopedValue,
+  newSize: number,
   lines: readonly DucLine[],
   points: readonly DucPoint[],
   normalize: boolean,
-  elementScope: SupportedMeasures,
-  currentScope: Scope,
 ): DucLine[] => {
-  const coordinates = points.map((point) => point[dimension].scoped);
+  const coordinates = points.map((point) => getCoord(point, dimension));
   const maxCoordinate = Math.max(...coordinates);
   const minCoordinate = Math.min(...coordinates);
   const size = maxCoordinate - minCoordinate;
   const scale = size === 0 ? 1 : newSize / size;
 
-  let translation: ScopedValue = 0 as ScopedValue;
+  let translation = 0;
 
   if (normalize && points.length > 0) {
-    const scaledFirstPointCoordinate = points[0][dimension].scoped * scale;
-    translation = (points[0][dimension].scoped -
-      scaledFirstPointCoordinate) as ScopedValue;
+    const scaledFirstPointCoordinate = getCoord(points[0], dimension) * scale;
+    translation = getCoord(points[0], dimension) - scaledFirstPointCoordinate;
   }
 
   const scaledLines = lines.map((line): DucLine => {
@@ -166,11 +153,7 @@ export const rescaleLines = (
       ...start,
       handle: start.handle ? {
         ...start.handle,
-        [dimension]: getPrecisionValueFromScoped(
-          (start.handle[dimension].scoped * scale + translation) as ScopedValue,
-          elementScope,
-          currentScope,
-        ),
+        [dimension]: getCoord(start.handle, dimension) * scale + translation,
       } : null
     };
 
@@ -178,11 +161,7 @@ export const rescaleLines = (
       ...end,
       handle: end.handle ? {
         ...end.handle,
-        [dimension]: getPrecisionValueFromScoped(
-          (end.handle[dimension].scoped * scale + translation) as ScopedValue,
-          elementScope,
-          currentScope,
-        ),
+        [dimension]: getCoord(end.handle, dimension) * scale + translation,
       } : null
     };
 
@@ -439,7 +418,7 @@ export function getQuadraticBezierBoundingBox(
   p0: GeometricPoint,
   p1: GeometricPoint,
   p2: GeometricPoint,
-): { minX: ScopedValue; minY: ScopedValue; maxX: ScopedValue; maxY: ScopedValue } {
+): { minX: number; minY: number; maxX: number; maxY: number } {
   const tValues = [];
 
   // Find critical points where the derivative is zero
@@ -478,10 +457,10 @@ export function getQuadraticBezierBoundingBox(
   }
 
   return {
-    minX: Math.min(...xValues) as ScopedValue,
-    minY: Math.min(...yValues) as ScopedValue,
-    maxX: Math.max(...xValues) as ScopedValue,
-    maxY: Math.max(...yValues) as ScopedValue,
+    minX: Math.min(...xValues),
+    minY: Math.min(...yValues),
+    maxX: Math.max(...xValues),
+    maxY: Math.max(...yValues),
   };
 }
 
@@ -494,7 +473,7 @@ export function getCubicBezierBoundingBox(
   p1: GeometricPoint,
   p2: GeometricPoint,
   p3: GeometricPoint,
-): { minX: ScopedValue; minY: ScopedValue; maxX: ScopedValue; maxY: ScopedValue } {
+): { minX: number; minY: number; maxX: number; maxY: number } {
   const tValues = [];
 
   // Find critical points where the derivative is zero
@@ -546,10 +525,10 @@ export function getCubicBezierBoundingBox(
   }
 
   return {
-    minX: Math.min(...xValues) as ScopedValue,
-    minY: Math.min(...yValues) as ScopedValue,
-    maxX: Math.max(...xValues) as ScopedValue,
-    maxY: Math.max(...yValues) as ScopedValue,
+    minX: Math.min(...xValues),
+    minY: Math.min(...yValues),
+    maxX: Math.max(...xValues),
+    maxY: Math.max(...yValues),
   };
 }
 
@@ -658,16 +637,16 @@ export const getPointHandles = (element: DucLinearElement, pointIndex: number): 
     // Check if this point is the start of the line
     if (start.index === pointIndex && start.handle) {
       handles.handleOut = {
-        x: start.handle.x.scoped,
-        y: start.handle.y.scoped,
+        x: (start.handle.x as any)?.value ?? start.handle.x,
+        y: (start.handle.y as any)?.value ?? start.handle.y,
       };
     }
 
     // Check if this point is the end of the line
     if (end.index === pointIndex && end.handle) {
       handles.handleIn = {
-        x: end.handle.x.scoped,
-        y: end.handle.y.scoped,
+        x: (end.handle.x as any)?.value ?? end.handle.x,
+        y: (end.handle.y as any)?.value ?? end.handle.y,
       };
     }
   }
@@ -942,18 +921,19 @@ export const centerPoint = (a: GeometricPoint, b: GeometricPoint): GeometricPoin
 export const isPathALoop = (
   points: DucLinearElement["points"],
   /** Supply if you want the loop detection to account for current zoom */
-  zoomValue: Zoom["scoped"] = 1 as ScopedZoomValue,
-  elementScope: Scope,
-  currentScope: Scope
+  zoomValue: number = 1,
 ): boolean => {
   if (points.length >= 3) {
     const [first, last] = [points[0], points[points.length - 1]];
-    const lineConfirmThreshold = getPrecisionValueFromRaw(LINE_CONFIRM_THRESHOLD as RawValue, elementScope, currentScope)
-    const distance = distance2d(first.x.scoped, first.y.scoped, last.x.scoped, last.y.scoped);
+    const fx = getCoord(first, 'x');
+    const fy = getCoord(first, 'y');
+    const lx = getCoord(last, 'x');
+    const ly = getCoord(last, 'y');
+    const distance = distance2d(fx, fy, lx, ly);
 
     // Adjusting LINE_CONFIRM_THRESHOLD to current zoom so that when zoomed in
     // really close we make the threshold smaller, and vice versa.
-    return distance <= lineConfirmThreshold.scoped / zoomValue;
+    return distance <= LINE_CONFIRM_THRESHOLD / zoomValue;
   }
   return false;
 };
@@ -1287,13 +1267,18 @@ export const aabbForElement = (
   element: Readonly<DucElement>,
   offset?: [number, number, number, number],
 ): Bounds => {
+  const toNum = (v: any) => typeof v === "number" ? v : (v?.value ?? 0);
+  const ex = toNum(element.x);
+  const ey = toNum(element.y);
+  const ew = toNum(element.width);
+  const eh = toNum(element.height);
   const bbox = {
-    minX: element.x.scoped,
-    minY: element.y.scoped,
-    maxX: element.x.scoped + element.width.scoped,
-    maxY: element.y.scoped + element.height.scoped,
-    midX: element.x.scoped + element.width.scoped / 2,
-    midY: element.y.scoped + element.height.scoped / 2,
+    minX: ex,
+    minY: ey,
+    maxX: ex + ew,
+    maxY: ey + eh,
+    midX: ex + ew / 2,
+    midY: ey + eh / 2,
   };
 
   const center: GeometricPoint = { x: bbox.midX, y: bbox.midY };
@@ -1368,10 +1353,13 @@ export const getCenterForBounds = (bounds: Bounds): GeometricPoint => ({
 /**
  * Gets the center point for a DucElement.
  */
-export const getCenterForElement = (element: DucElement): GeometricPoint => ({
-  x: element.x.scoped + element.width.scoped / 2,
-  y: element.y.scoped + element.height.scoped / 2,
-});
+export const getCenterForElement = (element: DucElement): GeometricPoint => {
+  const toNum = (v: any) => typeof v === "number" ? v : (v?.value ?? 0);
+  return {
+    x: toNum(element.x) + toNum(element.width) / 2,
+    y: toNum(element.y) + toNum(element.height) / 2,
+  };
+};
 
 /**
  * Determines if two axis-aligned bounding boxes overlap.
@@ -1454,7 +1442,7 @@ export const getControlPointsForBezierCurve = (
   endPoint: GeometricPoint,
 ): (GeometricPoint)[] | null => {
   const endPointIndex = element.points.findIndex((p) =>
-    arePointsEqual(getScopedBezierPointFromDucPoint(p), endPoint),
+    arePointsEqual({ x: p.x, y: p.y }, endPoint),
   );
 
   if (endPointIndex < 1) {
@@ -1476,23 +1464,25 @@ export const getControlPointsForBezierCurve = (
   const startRef = line[0].index === startPointIndex ? line[0] : line[1];
   const endRef = line[1].index === startPointIndex ? line[1] : line[0];
   
-  const p0 = getScopedBezierPointFromDucPoint(element.points[startRef.index]);
-  const p3 = getScopedBezierPointFromDucPoint(element.points[endRef.index]);
+  const p0 = { x: element.points[startRef.index].x, y: element.points[startRef.index].y };
+  const p3 = { x: element.points[endRef.index].x, y: element.points[endRef.index].y };
 
   if (startRef.handle && endRef.handle) {
-    const p1 = getScopedBezierPointFromDucPoint(startRef.handle);
-    const p2 = getScopedBezierPointFromDucPoint(endRef.handle);
+    const p1 = { x: startRef.handle.x, y: startRef.handle.y };
+    const p2 = { x: endRef.handle.x, y: endRef.handle.y };
     return [p0, p1, p2, p3];
   }
 
   // Quadratic bezier, we need to convert to cubic
-  const p1 = getScopedBezierPointFromDucPoint(startRef.handle! || endRef.handle!);
+  const h = startRef.handle || endRef.handle;
+  if (!h) return null;
+  const p1 = { x: h.x, y: h.y };
   return [
     p0,
-    { x: p0.x + 2/3 * (p1.x - p0.x) as ScopedValue, y: p0.y + 2/3 * (p1.y - p0.y) as ScopedValue},
-    { x: p3.x + 2/3 * (p1.x - p3.x) as ScopedValue, y: p3.y + 2/3 * (p1.y - p3.y) as ScopedValue},
+    { x: p0.x + 2/3 * (p1.x - p0.x), y: p0.y + 2/3 * (p1.y - p0.y) },
+    { x: p3.x + 2/3 * (p1.x - p3.x), y: p3.y + 2/3 * (p1.y - p3.y) },
     p3
-  ]
+  ];
 };
 
 /**

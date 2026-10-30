@@ -43,7 +43,7 @@ Unlike custom binary encodings or JSON/XML formats that force developers to writ
 
 ## Architectural Modules
 
-1. **Document & Viewport State**: `duc_global_state` and `duc_local_state` maintain root document metadata, scope units (`mm`, `cm`, `m`, `in`, `ft`, `nm`), zoom level, scroll offset, and viewport modes (`pen_mode`, `view_mode`, `objects_snap_mode`, `grid_mode`, `outline_mode`).
+1. **Document & Viewport State**: `duc_global_state` and `duc_local_state` maintain root document metadata, zoom level, scroll offset, and viewport modes (`pen_mode`, `view_mode`, `objects_snap_mode`, `grid_mode`, `outline_mode`).
 2. **Physical Engineering Geometry (`elements`)**: Relational tables storing elements (`rectangle`, `ellipse`, `polygon`, `table`, `text`, `line`, `arrow`, `freedraw`, `image`, `frame`, `plot`, `doc`, `model`, `embeddable`, `pdf`) alongside spatial bounds, z-indexes, and layer bindings.
 3. **Visual Styling (`strokes` & `backgrounds`)**: Normalized styling tables supporting solid colors, linear/radial gradients, image fills, pattern hatches, line caps, line joins, and custom line heads.
 4. **Reusable Symbol Libraries (`blocks`)**: Block definition and instance tables for modular engineering symbol libraries.

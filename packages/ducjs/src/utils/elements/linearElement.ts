@@ -1,5 +1,3 @@
-import { getPrecisionValueFromRaw, getPrecisionValueFromScoped, getScopedBezierPointFromDucPoint } from "../../technical/scopes";
-import type { PrecisionValue, RawValue, Scope, ScopedValue } from "../../types";
 import type { DucLine, DucLinearElement, DucLinearLikeElement, DucPoint, DucTextElementWithContainer, ElementsMap, NonDeleted } from "../../types/elements";
 import { Bounds, GeometricPoint } from "../../types/geometry.types";
 import type { ValueOf } from "../../types/utility.types";
@@ -8,7 +6,7 @@ import { LINE_CONFIRM_THRESHOLD } from "../constants";
 import { centerPoint, getBezierXY, getControlPointsForBezierCurve, getCubicBezierBoundingBox, getQuadraticBezierBoundingBox, mapIntervalToBezierT, rotate, rotatePoint } from "../math";
 import { HANDLE_TYPE } from "../../enums";
 
-type SV = ScopedValue;
+type SV = number;
 
 export type HandleType = ValueOf<typeof HANDLE_TYPE> | null;
 export type HandleInfo = {
@@ -25,7 +23,7 @@ export type HandleInfo = {
 export const mergeOverlappingPoints = (
   points: DucPoint[],
   lines: DucLine[],
-  threshold: RawValue = LINE_CONFIRM_THRESHOLD as RawValue
+  threshold: number = LINE_CONFIRM_THRESHOLD
 ): { points: DucPoint[]; lines: DucLine[] } => {
   // Create copies to avoid mutating originals
   const pointsCopy = structuredClone(points);
@@ -88,8 +86,10 @@ const findOverlappingPointGroups = (points: DucPoint[], threshold: number): numb
 
   points.forEach((point, index) => {
     // Create a key based on rounded coordinates for threshold-based grouping
-    const roundedX = Math.round(point.x.value / threshold) * threshold;
-    const roundedY = Math.round(point.y.value / threshold) * threshold;
+    const px = typeof point.x === "number" ? point.x : ((point.x as any)?.value ?? 0);
+    const py = typeof point.y === "number" ? point.y : ((point.y as any)?.value ?? 0);
+    const roundedX = Math.round(px / threshold) * threshold;
+    const roundedY = Math.round(py / threshold) * threshold;
     const key = `${roundedX},${roundedY}`;
 
     if (!groups[key]) {
@@ -288,37 +288,39 @@ export const getNormalizedPoints = (
   element: DucLinearElement | {
     points: DucPoint[];
     lines: DucLine[];
-    x: PrecisionValue;
-    y: PrecisionValue;
-    scope: Scope
+    x: number;
+    y: number;
   },
-  currentScope: Scope
 ): {
   points: DucPoint[];
   lines: DucLine[];
-  x: PrecisionValue;
-  y: PrecisionValue;
+  x: number;
+  y: number;
 } => {
   const { points, x, y, lines } = element;
+  const numX = typeof x === "number" ? x : ((x as any)?.value ?? 0);
+  const numY = typeof y === "number" ? y : ((y as any)?.value ?? 0);
 
   if (points.length === 0) {
     // Handle empty points array: return element's current x/y and empty normalized points
     return {
       points: [],
-      x: getPrecisionValueFromRaw(x.value as RawValue, element.scope, currentScope),
-      y: getPrecisionValueFromRaw(y.value as RawValue, element.scope, currentScope),
-      lines: lines as DucLine[] || [],
+      x: numX,
+      y: numY,
+      lines: (lines as DucLine[]) || [],
     };
   }
 
-  const offsetX = points[0].x.value;
-  const offsetY = points[0].y.value;
+  const offsetX = typeof points[0].x === "number" ? points[0].x : ((points[0].x as any)?.value ?? 0);
+  const offsetY = typeof points[0].y === "number" ? points[0].y : ((points[0].y as any)?.value ?? 0);
 
   const normalizedPoints: DucPoint[] = points.map((point) => {
+    const px = typeof point.x === "number" ? point.x : ((point.x as any)?.value ?? 0);
+    const py = typeof point.y === "number" ? point.y : ((point.y as any)?.value ?? 0);
     return {
       ...point,
-      x: getPrecisionValueFromRaw(((point.x.value - offsetX) as RawValue), element.scope, currentScope),
-      y: getPrecisionValueFromRaw(((point.y.value - offsetY) as RawValue), element.scope, currentScope),
+      x: px - offsetX,
+      y: py - offsetY,
     };
   });
 
@@ -329,16 +331,8 @@ export const getNormalizedPoints = (
         ...start,
         handle: start.handle
           ? {
-            x: getPrecisionValueFromRaw(
-              (start.handle.x.value - offsetX) as RawValue,
-              element.scope,
-              currentScope,
-            ),
-            y: getPrecisionValueFromRaw(
-              (start.handle.y.value - offsetY) as RawValue,
-              element.scope,
-              currentScope,
-            ),
+            x: (typeof start.handle.x === "number" ? start.handle.x : ((start.handle.x as any)?.value ?? 0)) - offsetX,
+            y: (typeof start.handle.y === "number" ? start.handle.y : ((start.handle.y as any)?.value ?? 0)) - offsetY,
           }
           : null,
       },
@@ -346,16 +340,8 @@ export const getNormalizedPoints = (
         ...end,
         handle: end.handle
           ? {
-            x: getPrecisionValueFromRaw(
-              (end.handle.x.value - offsetX) as RawValue,
-              element.scope,
-              currentScope,
-            ),
-            y: getPrecisionValueFromRaw(
-              (end.handle.y.value - offsetY) as RawValue,
-              element.scope,
-              currentScope,
-            ),
+            x: (typeof end.handle.x === "number" ? end.handle.x : ((end.handle.x as any)?.value ?? 0)) - offsetX,
+            y: (typeof end.handle.y === "number" ? end.handle.y : ((end.handle.y as any)?.value ?? 0)) - offsetY,
           }
           : null,
       },
@@ -365,8 +351,8 @@ export const getNormalizedPoints = (
   return {
     points: normalizedPoints,
     lines: normalizedLines,
-    x: getPrecisionValueFromRaw(((x.value + offsetX) as RawValue), element.scope, currentScope),
-    y: getPrecisionValueFromRaw(((y.value + offsetY) as RawValue), element.scope, currentScope),
+    x: numX + offsetX,
+    y: numY + offsetY,
   };
 }
 
@@ -375,26 +361,17 @@ export const getNormalizedPoints = (
 export const getPointsGlobalCoordinates = (
   element: DucLinearLikeElement,
   elementsMap: ElementsMap,
-  currentScope: Scope,
 ): DucPoint[] => {
-  const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap, currentScope);
+  const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
   const cx = (x1 + x2) / 2;
   const cy = (y1 + y2) / 2;
+  const elX = typeof element.x === "number" ? element.x : 0;
+  const elY = typeof element.y === "number" ? element.y : 0;
   return element.points.map((point) => {
-    let { x, y } = element;
-    // FIXME: We need to handle the element.lines handles here
-    // let handleIn = point.handleIn
-    // let handleOut = point.handleOut
-    const rotatePoint = rotate(x.scoped + point.x.scoped, y.scoped + point.y.scoped, cx, cy, element.angle);
-    // if (point.isCurve) {
-    //   if(handleIn)
-    //     handleIn = rotate(x + handleIn.x, y + handleIn.y, cx, cy, element.angle);
-    //   if(handleOut)
-    //     handleOut = rotate(x + handleOut.x, y + handleOut.y, cx, cy, element.angle);
-    // }
-    x = getPrecisionValueFromScoped(rotatePoint.x as ScopedValue, element.scope, currentScope);
-    y = getPrecisionValueFromScoped(rotatePoint.y as ScopedValue, element.scope, currentScope);
-    return { ...point, x, y } as const;
+    const ptX = typeof point.x === "number" ? point.x : 0;
+    const ptY = typeof point.y === "number" ? point.y : 0;
+    const rotatePoint = rotate(elX + ptX, elY + ptY, cx, cy, element.angle);
+    return { ...point, x: rotatePoint.x, y: rotatePoint.y } as const;
   });
 }
 
@@ -403,14 +380,13 @@ export const getPointGlobalCoordinates = (
   element: DucLinearLikeElement,
   point: GeometricPoint,
   elementsMap: ElementsMap,
-  currentScope: Scope,
 ): GeometricPoint => {
-  const [x1_sv, y1_sv, x2_sv, y2_sv] = getElementAbsoluteCoords(element, elementsMap, currentScope);
+  const [x1_sv, y1_sv, x2_sv, y2_sv] = getElementAbsoluteCoords(element, elementsMap);
   const cx = (x1_sv + x2_sv) / 2;
   const cy = (y1_sv + y2_sv) / 2;
 
-  let elementX = element.x.scoped;
-  let elementY = element.y.scoped;
+  const elementX = typeof element.x === "number" ? element.x : 0;
+  const elementY = typeof element.y === "number" ? element.y : 0;
   const rotatedPoint = rotate(elementX + point.x, elementY + point.y, cx, cy, element.angle);
 
   return { x: rotatedPoint.x, y: rotatedPoint.y };
@@ -420,12 +396,10 @@ export const getBoundTextElementPosition = (
   element: DucLinearLikeElement,
   boundTextElement: DucTextElementWithContainer,
   elementsMap: ElementsMap,
-  currentScope: Scope,
 ): GeometricPoint | null => {
   const points = getPointsGlobalCoordinates(
     element,
     elementsMap,
-    currentScope,
   );
   if (points.length < 2) {
     return null;
@@ -436,34 +410,40 @@ export const getBoundTextElementPosition = (
     const index = Math.floor(element.points.length / 2);
     const midPoint = getPointGlobalCoordinates(
       element,
-      getScopedBezierPointFromDucPoint(element.points[index]),
+      { x: element.points[index].x, y: element.points[index].y },
       elementsMap,
-      currentScope,
     );
-    x = midPoint.x - boundTextElement.width.scoped / 2;
-    y = midPoint.y - boundTextElement.height.scoped / 2;
+    const btw = typeof boundTextElement.width === "number" ? boundTextElement.width : 0;
+    const bth = typeof boundTextElement.height === "number" ? boundTextElement.height : 0;
+    x = midPoint.x - btw / 2;
+    y = midPoint.y - bth / 2;
     } else {
     const index = element.points.length / 2 - 1;
     let midSegmentMidpoint: GeometricPoint | null = null;
 
     if (element.points.length === 2) {
+      const p0x = typeof points[0].x === "number" ? points[0].x : 0;
+      const p0y = typeof points[0].y === "number" ? points[0].y : 0;
+      const p1x = typeof points[1].x === "number" ? points[1].x : 0;
+      const p1y = typeof points[1].y === "number" ? points[1].y : 0;
       midSegmentMidpoint = centerPoint(
-        { x: points[0].x.scoped, y: points[0].y.scoped },
-        { x: points[1].x.scoped, y: points[1].y.scoped },
+        { x: p0x, y: p0y },
+        { x: p1x, y: p1y },
       );
     } else {
       midSegmentMidpoint = getSegmentMidPoint(
         element,
-        getScopedBezierPointFromDucPoint(points[index]),
-        getScopedBezierPointFromDucPoint(points[index + 1]),
+        { x: points[index].x, y: points[index].y },
+        { x: points[index + 1].x, y: points[index + 1].y },
         index + 1,
         elementsMap,
-        currentScope,
       );
     }
     if (midSegmentMidpoint) {
-      x = midSegmentMidpoint.x - boundTextElement.width.scoped / 2;
-      y = midSegmentMidpoint.y - boundTextElement.height.scoped / 2;
+      const btw = typeof boundTextElement.width === "number" ? boundTextElement.width : 0;
+      const bth = typeof boundTextElement.height === "number" ? boundTextElement.height : 0;
+      x = midSegmentMidpoint.x - btw / 2;
+      y = midSegmentMidpoint.y - bth / 2;
     }
   }
   return { x, y };
@@ -473,7 +453,6 @@ export const getLinearElementAbsoluteCoords = (
   element: DucLinearElement,
   elementsMap: ElementsMap,
   includeBoundText: boolean = false,
-  currentScope: Scope,
   returnUnrotatedBoundsOnly: boolean = true,
 ): ElementAbsoluteCoords => {
   const { points, lines, angle, x: elX, y: elY } = element;
@@ -492,6 +471,11 @@ export const getLinearElementAbsoluteCoords = (
     let maxX = -Infinity;
     let maxY = -Infinity;
 
+    const ex = typeof elX === "number" ? elX : 0;
+    const ey = typeof elY === "number" ? elY : 0;
+    const getPtX = (p: DucPoint) => typeof p.x === "number" ? p.x : 0;
+    const getPtY = (p: DucPoint) => typeof p.y === "number" ? p.y : 0;
+
     if (lines && lines.length > 0) {
       for (const line of lines) {
         const startPoint = points[line[0].index];
@@ -501,24 +485,24 @@ export const getLinearElementAbsoluteCoords = (
         }
 
         const absoluteStartPoint = {
-          x: elX.scoped + startPoint.x.scoped,
-          y: elY.scoped + startPoint.y.scoped,
+          x: ex + getPtX(startPoint),
+          y: ey + getPtY(startPoint),
         };
         const absoluteEndPoint = {
-          x: elX.scoped + endPoint.x.scoped,
-          y: elY.scoped + endPoint.y.scoped,
+          x: ex + getPtX(endPoint),
+          y: ey + getPtY(endPoint),
         };
         const startHandle = line[0].handle;
         const endHandle = line[1].handle;
 
         if (startHandle && endHandle) {
           const absoluteStartHandle = {
-            x: elX.scoped + startHandle.x.scoped,
-            y: elY.scoped + startHandle.y.scoped,
+            x: ex + getPtX(startHandle),
+            y: ey + getPtY(startHandle),
           };
           const absoluteEndHandle = {
-            x: elX.scoped + endHandle.x.scoped,
-            y: elY.scoped + endHandle.y.scoped,
+            x: ex + getPtX(endHandle),
+            y: ey + getPtY(endHandle),
           };
 
           const p0 = rotate(
@@ -558,8 +542,8 @@ export const getLinearElementAbsoluteCoords = (
         } else if (startHandle || endHandle) {
           const controlHandle = startHandle || endHandle;
           const absoluteControlHandle = {
-            x: elX.scoped + controlHandle!.x.scoped,
-            y: elY.scoped + controlHandle!.y.scoped,
+            x: ex + getPtX(controlHandle!),
+            y: ey + getPtY(controlHandle!),
           };
 
           const p0 = rotate(
@@ -614,15 +598,15 @@ export const getLinearElementAbsoluteCoords = (
       // Fallback for elements without lines
       for (let i = 0; i < points.length - 1; i++) {
         const p0 = rotate(
-          elX.scoped + points[i].x.scoped,
-          elY.scoped + points[i].y.scoped,
+          ex + getPtX(points[i]),
+          ey + getPtY(points[i]),
           cx,
           cy,
           angle,
         );
         const p1 = rotate(
-          elX.scoped + points[i + 1].x.scoped,
-          elY.scoped + points[i + 1].y.scoped,
+          ex + getPtX(points[i + 1]),
+          ey + getPtY(points[i + 1]),
           cx,
           cy,
           angle,
@@ -653,7 +637,6 @@ export const getLinearElementAbsoluteCoords = (
         elementsMap,
         [coords[0], coords[1], coords[2], coords[3]],
         boundTextElement,
-        currentScope,
       );
     }
   }
@@ -668,7 +651,6 @@ export const getMinMaxXYWithBoundText = (
   elementsMap: ElementsMap,
   elementBounds: Bounds,
   boundTextElement: DucTextElementWithContainer,
-  currentScope: Scope,
 ): ElementAbsoluteCoords => {
   let [x1, y1, x2, y2] = elementBounds;
   const cx = (x1 + x2) / 2 as SV;
@@ -677,7 +659,6 @@ export const getMinMaxXYWithBoundText = (
     element,
     boundTextElement,
     elementsMap,
-    currentScope,
   );
 
   if (boundTextCoords === null) {
@@ -685,8 +666,10 @@ export const getMinMaxXYWithBoundText = (
   }
 
   const { x: boundTextX1, y: boundTextY1 } = boundTextCoords;
-  const boundTextX2 = boundTextX1 + boundTextElement.width.scoped;
-  const boundTextY2 = boundTextY1 + boundTextElement.height.scoped;
+  const btw = typeof boundTextElement.width === "number" ? boundTextElement.width : 0;
+  const bth = typeof boundTextElement.height === "number" ? boundTextElement.height : 0;
+  const boundTextX2 = boundTextX1 + btw;
+  const boundTextY2 = boundTextY1 + bth;
 
   const topLeftRotatedPoint = rotatePoint({ x: x1, y: y1 }, { x: cx, y: cy }, element.angle);
   const topRightRotatedPoint = rotatePoint({ x: x2, y: y1 }, { x: cx, y: cy }, element.angle);
@@ -771,18 +754,17 @@ export const getSegmentMidPoint = (
   endPoint: GeometricPoint,
   endPointIndex: number,
   elementsMap: ElementsMap,
-  currentScope: Scope,
 ): GeometricPoint => {
   let segmentMidPoint = centerPoint(startPoint, endPoint);
   if (element.points.length > 2 && element.roundness) {
     const controlPoints = getControlPointsForBezierCurve(
       element,
-      getScopedBezierPointFromDucPoint(element.points[endPointIndex]),
+      { x: element.points[endPointIndex].x, y: element.points[endPointIndex].y },
     );
     if (controlPoints) {
       const t = mapIntervalToBezierT(
         element,
-        getScopedBezierPointFromDucPoint(element.points[endPointIndex]),
+        { x: element.points[endPointIndex].x, y: element.points[endPointIndex].y },
         0.5,
       );
 
@@ -797,13 +779,12 @@ export const getSegmentMidPoint = (
         element,
         { x: tx, y: ty },
         elementsMap,
-        currentScope,
       );
     }
   }
 
   return segmentMidPoint;
-} 
+}; 
 
 
 /**

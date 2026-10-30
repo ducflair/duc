@@ -3,33 +3,34 @@
   "instructions": [
     "CONTRIBUTING.md"
   ],
-  "command": {
+  "commands": {
     "gen-commit-message": {
       "template": "Generate the commit message for the staged changes (if no staged changes fallback to checking the unstaged changes) using the /commit-messages skill. On the response, print only the message as a code block with the proposed commit message",
       "description": "Generate commit message for the code changes"
     }
   },
-  "permission": {
-    "bash": {
-      "cargo check*": "allow",
-      "cargo build*": "allow",
-      "cargo test*": "allow",
-      "bun ducpdf:test*": "allow",
-      "bun ducpdf:build*": "allow",
-      "bun ducjs:build*": "allow",
-      "bun ducrs:build*": "allow",
-      "bun ducpy:test*": "allow",
-      "bun test*": "allow",
-      "git *": "ask",
-      "git status *": "allow",
-      "git log *": "allow",
-      "git diff *": "allow",
-      "git show *": "allow",
-      "sst*": "deny",
-      "bun run sst:*": "deny",
-      "bun sst:*": "deny",
-      "npx sst:*": "deny",
-      "bunx sst:*": "deny",
-    }
-  }
+  "permissions": [
+    { "action": "shell", "resource": "cargo check*", "effect": "allow" },
+    { "action": "shell", "resource": "cargo build*", "effect": "allow" },
+    { "action": "shell", "resource": "cargo test*", "effect": "allow" },
+
+    { "action": "shell", "resource": "bun ducpdf:test*", "effect": "allow" },
+    { "action": "shell", "resource": "bun ducpdf:build*", "effect": "allow" },
+    { "action": "shell", "resource": "bun ducjs:build*", "effect": "allow" },
+    { "action": "shell", "resource": "bun ducrs:build*", "effect": "allow" },
+    { "action": "shell", "resource": "bun ducpy:test*", "effect": "allow" },
+    { "action": "shell", "resource": "bun test*", "effect": "allow" },
+
+    { "action": "shell", "resource": "git *", "effect": "ask" },
+    { "action": "shell", "resource": "git status *", "effect": "allow" },
+    { "action": "shell", "resource": "git log *", "effect": "allow" },
+    { "action": "shell", "resource": "git diff *", "effect": "allow" },
+    { "action": "shell", "resource": "git show *", "effect": "allow" },
+
+    { "action": "shell", "resource": "sst*", "effect": "deny" },
+    { "action": "shell", "resource": "bun run sst:*", "effect": "deny" },
+    { "action": "shell", "resource": "bun sst:*", "effect": "deny" },
+    { "action": "shell", "resource": "npx sst:*", "effect": "deny" },
+    { "action": "shell", "resource": "bunx sst:*", "effect": "deny" }
+  ]
 }

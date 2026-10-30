@@ -10,13 +10,14 @@ import pytest
 from ducpy.parse import parse_duc
 from ducpy.search import ExternalFileSearchTarget, search_duc_elements
 from ducpy.search.image_ocr import server_side_ocr_available
+from _dev.dev_utils import get_duc_fixture_path
 
 
 _OCR_AVAILABLE = server_side_ocr_available()
 
 
 def _asset_input_path(filename: str) -> Path:
-    return Path(__file__).resolve().parents[5] / "assets" / "testing" / "duc-files" / filename
+    return get_duc_fixture_path(filename)
 
 
 def _run_external_file_search(

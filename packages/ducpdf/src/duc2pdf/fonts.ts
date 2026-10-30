@@ -1,7 +1,7 @@
 import type { ExportedDataState } from 'ducjs';
 
 // Font families that are bundled in the WASM binary (no need to fetch)
-const BUNDLED_FONTS = new Set(['Roboto Mono']);
+const BUNDLED_FONTS = new Set(['Roboto Mono', 'Arial', 'Helvetica', 'Liberation Sans', 'sans-serif']);
 
 // Metadata JSON URL (small file, cacheable via CDN)
 const GOOGLE_FONTS_METADATA_URL = 'https://cdn.jsdelivr.net/npm/google-font-metadata@6/data/google-fonts-v1.json';

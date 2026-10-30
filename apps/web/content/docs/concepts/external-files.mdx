@@ -1,7 +1,7 @@
 ---
 title: "External Files & Revisions"
 description: "How .duc decouples raw asset binary payloads from document data structures and manages deliberate point-in-time file revisions."
-date: 2026-07-25
+date: 2026-10-20
 authors: [jorgedanisc]
 ---
 
@@ -15,14 +15,53 @@ Embedding raw binary payloads directly inside structural records bloats document
 
 ## Decoupling Payloads from Data Structures
 
-An External File (`DucExternalFile`) acts as a dedicated storage container inside the database schema. Canvas elements, block definitions, and other data structures store only an `ExternalFileId` reference rather than embedding binary data directly.
+An External File (`DucExternalFile`) records an asset's identity, revisions, and active payload. A revision can carry embedded bytes or an explicit local-file locator. Canvas elements, block definitions, and other data structures store only an `ExternalFileId` reference rather than embedding binary data directly.
 
 ### Separation of Concerns
 
 1. **Structural Identity**: The referencing element or data structure maintains its coordinates, properties, attached issues, and charter links.
-2. **Payload Storage**: The external file container stores the raw binary payload itself, independent of how any single referencing record is structured.
+2. **Payload Storage**: Revision metadata identifies the payload, which is embedded in the container or resolved by the host from its explicit locator, independent of the referencing record.
 
 This separation allows any data structure in `.duc`, not just canvas elements, to attach binary assets without altering its own record format or spatial identity.
+
+---
+
+## Local File Locators
+
+A revision's optional `locator` identifies a native file without embedding its bytes:
+
+```json
+{ "kind": "relative", "path": "assets/building.ifc", "originalPath": "assets/building.ifc" }
+```
+
+```json
+{ "kind": "absolute", "path": "/Users/jane/models/building.ifc" }
+```
+
+`kind` is explicit. A relative path resolves against the directory containing the owning `.duc`, never the process working directory. An absolute path names a rooted POSIX path, Windows drive path, or UNC share. Native `file:` URIs are normalized by the locator helpers. Percent escapes are decoded in file URIs; percent signs in native paths are preserved.
+
+The host can preserve `originalPath` for relocation and user-facing recovery. Moving a drawing requires keeping relative asset locations valid or rebasing the locators. An absolute locator remains tied to the host path it names.
+
+`ducjs`, `ducpy`, and `ducrs` expose locator resolution and preserve the metadata through serialization, including metadata-only reads. The SQLite container stores it in `external_file_locators`, keyed by revision. The locator does not grant filesystem access or upload permission; the application must enforce those permissions before reading bytes.
+
+Resolution exposes these states:
+
+| State | Meaning |
+| --- | --- |
+| `resolved` | A valid native target path was obtained; supplied existence and readability checks passed |
+| `unresolved` | The locator is invalid or a relative locator has no owning `.duc` path |
+| `missing` | The host's existence check could not find the target |
+| `inaccessible` | The host's readability check could not access the target |
+
+Without filesystem checks, `resolved` proves path resolution only. A host must still open the file successfully. Preserve the locator when a target is missing or inaccessible so the user can locate or authorize it.
+
+A native link points to a file that can change outside the drawing. Hosts should compare the resolved bytes with the revision checksum and record a new active revision when adopting changed content. The locator alone does not preserve a historical copy of those external bytes.
+
+## Generated Model Artifacts
+
+A [Model Element](/docs/concepts/elements/model-element) references its generated artifact through `fileIds` and output metadata. The external revision carries the bytes; `customData.modelOutput` records the artifact file ID, renderer, content hash, source and input fingerprints, and generation identity. IFC preview data can use a separate external file.
+
+Source inputs and generated output are separate references. Generated artifact and preview files must be excluded from runtime inputs so writing output cannot invalidate itself.
 
 ---
 
@@ -32,7 +71,7 @@ File updates in `.duc` are managed through **Revisions** (`revisions`).
 
 ### Deliberate Revision Triggers
 
-Revisions are not generated automatically on every minor edit or save. A revision is created only when a user or application explicitly adds one to an external file. This is a deliberate design choice: it keeps the revision history limited to points in a file's life that were actually worth marking, a review, a delivery, a milestone, rather than every incidental change made along the way.
+A revision is created when a user or application adds one to an external file. Applications can record a source replacement, an adopted change to a linked file, or a regenerated model artifact. Ordinary drawing saves do not require a new revision for unchanged bytes.
 
 ```mermaid
 flowchart TD

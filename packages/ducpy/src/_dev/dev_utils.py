@@ -18,30 +18,49 @@ FIXTURE_CDN = "https://cdn.jsdelivr.net/gh/ducflair/fixtures@main/src"
 _FIXTURE_GITHUB_RAW = "https://raw.githubusercontent.com/ducflair/fixtures/main/src"
 
 
-def get_testing_assets_dir() -> str:
-    """Dynamically resolve the assets/testing directory within the repository.
+def get_fixture_cache_dir(category: str = "") -> Path:
+    """Return the fixture cache directory, e.g. <repo_root>/.cache/fixtures/<category>."""
+    if os.environ.get("DUC_FIXTURES_DIR"):
+        base = Path(os.environ["DUC_FIXTURES_DIR"])
+    else:
+        # Walk up to locate repo root (looking for .git or bun.lock or pyproject.toml)
+        path = Path(__file__).resolve().parent
+        repo_root = None
+        for parent in path.parents:
+            if (parent / ".git").is_dir() or (parent / "bun.lock").is_file():
+                repo_root = parent
+                break
+        if repo_root is None:
+            repo_root = path.parents[3]
+        base = repo_root / ".cache" / "fixtures"
 
-    This walks up the directory tree starting from the location of this file
-    until it finds the `assets/testing` folder. If not found, it checks
-    from the current working directory, ensuring robust relative resolution.
+    target = base / category if category else base
+    target.mkdir(parents=True, exist_ok=True)
+    return target
+
+
+def get_testing_assets_dir() -> str:
+    """Dynamically resolve the assets/testing or fixture cache directory within the repository.
+
+    This walks up the directory tree looking for `assets/testing`. If not found,
+    it falls back to the persistent `.cache/fixtures` directory.
     """
-    # Start at the location of this utility file
     path = Path(__file__).resolve().parent
 
-    # Walk up the tree looking for assets/testing
+    # 1. Check for legacy assets/testing folder
     for parent in path.parents:
         candidate = parent / "assets" / "testing"
         if candidate.is_dir():
             return str(candidate.resolve())
 
-    # Fallback to checking the current working directory
     cwd = Path.cwd()
     for parent in [cwd] + list(cwd.parents):
         candidate = parent / "assets" / "testing"
         if candidate.is_dir():
             return str(candidate.resolve())
 
-    raise FileNotFoundError("Could not locate repository 'assets/testing' directory.")
+    # 2. Fall back to the fixture cache directory
+    return str(get_fixture_cache_dir())
 
 
 def _download_with_headers(url: str, timeout: int) -> bytes:
@@ -67,10 +86,10 @@ def _download_with_headers(url: str, timeout: int) -> bytes:
         return response.read()
 
 
-def download_fixture_from_cdn(path: str, timeout: int = 30) -> bytes:
+def download_fixture_from_cdn(path: str, timeout: int = 60) -> bytes:
     """Download fixture bytes from the fixture CDN with automatic fallback.
 
-    First tries jsDelivr (``FIXTURE_CDN``).  If jsDelivr returns a plain-text
+    First tries jsDelivr (``FIXTURE_CDN``). If jsDelivr returns a plain-text
     error such as *"File size exceeded the configured limit of 20 MB"*, the
     helper falls back to GitHub raw content (``_FIXTURE_GITHUB_RAW``).
 
@@ -91,8 +110,8 @@ def download_fixture_from_cdn(path: str, timeout: int = 30) -> bytes:
 
     try:
         data = _download_with_headers(primary_url, timeout)
-    except urllib.error.HTTPError:
-        # non-2xx from jsDelivr – try GitHub raw immediately
+    except (urllib.error.HTTPError, urllib.error.URLError):
+        # non-2xx or connection error from jsDelivr – try GitHub raw immediately
         fallback_url = f"{_FIXTURE_GITHUB_RAW}/{path}"
         data = _download_with_headers(fallback_url, timeout)
         return data
@@ -109,23 +128,53 @@ def download_fixture_from_cdn(path: str, timeout: int = 30) -> bytes:
     return data
 
 
+def get_asset_path(path: str, prefer_local: bool = True) -> Path:
+    """Return local filesystem Path to an asset, downloading and caching if missing.
+
+    Args:
+        path: Relative path inside ``src/`` (e.g. ``"duc-files/universal.duc"``).
+        prefer_local: If ``True`` (default), checks local cache or legacy assets
+                      directory before downloading.
+
+    Returns:
+        Path to the local cached file.
+    """
+    cache_dir = get_fixture_cache_dir()
+    cached = cache_dir / path
+
+    if prefer_local:
+        if cached.is_file() and cached.stat().st_size > 0:
+            return cached
+
+        # Check legacy assets/testing path
+        for parent in Path(__file__).resolve().parents:
+            legacy = parent / "assets" / "testing" / path
+            if legacy.is_file() and legacy.stat().st_size > 0:
+                cached.parent.mkdir(parents=True, exist_ok=True)
+                cached.write_bytes(legacy.read_bytes())
+                return cached
+
+    # Download and cache
+    data = download_fixture_from_cdn(path)
+    cached.parent.mkdir(parents=True, exist_ok=True)
+    cached.write_bytes(data)
+    return cached
+
+
+def get_duc_fixture_path(filename: str, prefer_local: bool = True) -> Path:
+    """Convenience helper to retrieve a .duc fixture Path."""
+    return get_asset_path(f"duc-files/{filename}", prefer_local=prefer_local)
+
+
 def get_asset_bytes(path: str, prefer_local: bool = True) -> bytes:
     """Return raw bytes of a test asset, preferring a local copy if present.
 
     Args:
         path: Relative path inside ``src/`` (e.g. ``"pdf-files/test.pdf"``).
-        prefer_local: If ``True`` (default), first look under the repository's
-                      ``assets/testing`` directory before falling back to the
-                      CDN.
+        prefer_local: If ``True`` (default), first look under local cache before
+                      falling back to downloading.
 
     Returns:
         Raw bytes of the asset.
     """
-    if prefer_local:
-        assets_dir = get_testing_assets_dir()
-        local_path = os.path.join(assets_dir, path)
-        if os.path.exists(local_path):
-            with open(local_path, "rb") as f:
-                return f.read()
-
-    return download_fixture_from_cdn(path)
+    return get_asset_path(path, prefer_local=prefer_local).read_bytes()

@@ -1,18 +1,17 @@
 import { describe, expect, it } from 'bun:test';
-import { getPrecisionValueFromRaw, newFreeDrawElement, restore } from 'ducjs';
+import { newFreeDrawElement, restore } from 'ducjs';
 import { convertDucToPdf, prepareDucPdfSource } from '../src/duc2pdf';
 import { validatePdf } from './helpers';
 
 describe('prepared PDF state', () => {
   it('adds the document envelope and removes non-cloneable easing functions', async () => {
-    const precision = (value: number) => getPrecisionValueFromRaw(value as any, 'mm', 'mm');
     const restored = restore(
       {
-        elements: [newFreeDrawElement('mm', {
-          x: precision(0),
-          y: precision(0),
-          width: precision(10),
-          height: precision(10),
+        elements: [newFreeDrawElement({
+          x: 0,
+          y: 0,
+          width: 10,
+          height: 10,
           zIndex: 0,
           label: 'Clone-safe stroke',
           isPlot: true,
@@ -20,8 +19,8 @@ describe('prepared PDF state', () => {
           layerId: null,
           simulatePressure: true,
           points: [
-            { x: precision(0), y: precision(0) },
-            { x: precision(10), y: precision(10) },
+            { x: 0, y: 0 },
+            { x: 10, y: 10 },
           ],
         })],
       },

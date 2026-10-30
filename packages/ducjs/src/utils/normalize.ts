@@ -1,6 +1,6 @@
 import { MAX_ZOOM, MIN_ZOOM } from "./constants";
 import { clamp, round } from "./math";
-import type { NormalizedZoomValue, ScopedValue } from "../types";
+import type { NormalizedZoomValue } from "../types";
 import { DucElement, FixedPoint } from "../types/elements";
 
 export const getNormalizedZoom = (zoom: number): NormalizedZoomValue => {
@@ -25,28 +25,34 @@ export const normalizeFixedPoint = <T extends FixedPoint | null>(
 export const getNormalizedDimensions = (
   element: Pick<DucElement, "width" | "height" | "x" | "y">,
 ): {
-  width: ScopedValue;
-  height: ScopedValue;
-  x: ScopedValue;
-  y: ScopedValue;
+  width: number;
+  height: number;
+  x: number;
+  y: number;
 } => {
+  const toNum = (v: any): number => (typeof v === "number" ? v : (v?.value ?? 0));
+  const elWidth = toNum(element.width);
+  const elHeight = toNum(element.height);
+  const elX = toNum(element.x);
+  const elY = toNum(element.y);
+
   const ret = {
-    width: element.width.scoped,
-    height: element.height.scoped,
-    x: element.x.scoped,
-    y: element.y.scoped,
+    width: elWidth,
+    height: elHeight,
+    x: elX,
+    y: elY,
   };
 
-  if (element.width.scoped < 0) {
-    const nextWidth = Math.abs(element.width.scoped);
-    ret.width = nextWidth as ScopedValue;
-    ret.x = element.x.scoped - nextWidth as ScopedValue;
+  if (elWidth < 0) {
+    const nextWidth = Math.abs(elWidth);
+    ret.width = nextWidth;
+    ret.x = elX - nextWidth;
   }
 
-  if (element.height.scoped < 0) {
-    const nextHeight = Math.abs(element.height.scoped);
-    ret.height = nextHeight as ScopedValue;
-    ret.y = element.y.scoped - nextHeight as ScopedValue;
+  if (elHeight < 0) {
+    const nextHeight = Math.abs(elHeight);
+    ret.height = nextHeight;
+    ret.y = elY - nextHeight;
   }
 
   return ret;

@@ -9,6 +9,9 @@ import ducpy as duc
 
 def _duc_fixture_paths(test_assets_dir: str) -> list[str]:
     fixture_dir = os.path.join(test_assets_dir, "duc-files")
+    if not os.path.isdir(fixture_dir) or not os.listdir(fixture_dir):
+        from _dev.dev_utils import get_fixture_cache_dir
+        fixture_dir = str(get_fixture_cache_dir("duc-files"))
     return sorted(
         os.path.join(fixture_dir, name)
         for name in os.listdir(fixture_dir)

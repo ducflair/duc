@@ -1,3 +1,4 @@
+mod locator;
 use pyo3::prelude::*;
 use std::fs::File;
 
@@ -125,6 +126,7 @@ fn get_migrations(_py: Python<'_>) -> PyResult<Vec<(i64, i64, String)>> {
 /// Native duc file format operations.
 #[pymodule]
 fn ducpy_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    locator::register(m)?;
     m.add_function(wrap_pyfunction!(parse_duc, m)?)?;
     m.add_function(wrap_pyfunction!(serialize_duc, m)?)?;
     m.add_function(wrap_pyfunction!(list_external_files, m)?)?;

@@ -36,7 +36,6 @@ mod integration_tests {
             regions: Vec::new(),
             layers: Vec::new(),
             duc_local_state: Some(DucLocalState {
-                scope: "mm".to_string(),
                 scroll_x: 0.0,
                 scroll_y: 0.0,
                 zoom: 1.0,
@@ -60,8 +59,6 @@ mod integration_tests {
             }),
             duc_global_state: Some(DucGlobalState {
                 view_background_color: "#ffffff".to_string(),
-                main_scope: "mm".to_string(),
-                scope_exponent_threshold: 3,
             }),
             version_graph: None,
             external_files: None,
@@ -573,7 +570,6 @@ mod integration_tests {
             width: 100.0,
             height: 80.0,
             angle: 0.0,
-            scope: "m".to_string(),
             label: "Ellipse Test".to_string(),
             description: None,
             is_visible: true,
@@ -710,5 +706,105 @@ mod integration_tests {
         let mut plot_base = base.clone();
         plot_base.is_plot = true;
         assert!(streamer.should_render_element(&plot_base));
+    }
+
+    #[test]
+    fn freedraw_positions_and_scales_accurately_without_shrinking() {
+        use duc::types::{DucElementEnum, DucFreeDrawElement, DucPoint, ElementWrapper};
+        use hipdf::lopdf::{content::Content, Document};
+
+        let mut base = sample_element_base();
+        base.id = "fd_test_1".to_string();
+        base.x = 50.0;
+        base.y = 100.0;
+        base.width = 80.0;
+        base.height = 120.0;
+
+        let freedraw = DucFreeDrawElement {
+            base,
+            points: vec![
+                DucPoint { x: 0.0, y: 0.0, mirroring: None },
+                DucPoint { x: 40.0, y: 60.0, mirroring: None },
+                DucPoint { x: 80.0, y: 120.0, mirroring: None },
+            ],
+            size: 16.0,
+            thinning: 0.5,
+            smoothing: 0.5,
+            streamline: 0.5,
+            easing: "easeOutSine".to_string(),
+            start: None,
+            end: None,
+            pressures: vec![],
+            simulate_pressure: true,
+            last_committed_point: None,
+            // Path bounds: min_x = -10, min_y = -10, max_x = 90, max_y = 130 (width = 100, height = 140)
+            svg_path: Some("M -10 -10 L 90 -10 L 90 130 L -10 130 Z".to_string()),
+        };
+
+        let mut state = test_state();
+        state.elements = vec![ElementWrapper {
+            element: DucElementEnum::DucFreeDrawElement(freedraw),
+        }];
+
+        let options = ConversionOptions {
+            mode: ConversionMode::Crop {
+                offset_x: 0.0,
+                offset_y: 0.0,
+                width: Some(500.0),
+                height: Some(500.0),
+            },
+            scale: Some(1.0),
+            ..Default::default()
+        };
+
+        let pdf_bytes = convert_exported_data_to_pdf_with_fonts_and_options(
+            state,
+            options,
+            HashMap::new(),
+        )
+        .expect("conversion of freedraw to PDF should succeed");
+
+        assert!(pdf_bytes.starts_with(b"%PDF-"));
+
+        let doc = Document::load_mem(&pdf_bytes).expect("PDF should load into Document");
+        let pages = doc.get_pages();
+        assert!(!pages.is_empty(), "PDF should have at least one page");
+
+        let first_page_id = *pages.values().next().expect("first page");
+        let content_data = doc
+            .get_page_content(first_page_id)
+            .expect("page content stream");
+        let content = Content::decode(&content_data).expect("content decode");
+
+        // Find the Form XObject invocation (operator "Do") and preceding "cm"
+        let mut found_xobject = false;
+        let mut xobject_cm_args: Option<Vec<f32>> = None;
+
+        for (idx, op) in content.operations.iter().enumerate() {
+            if op.operator == "Do" {
+                found_xobject = true;
+                // The immediately preceding cm operator should place the XObject
+                if idx > 0 && content.operations[idx - 1].operator == "cm" {
+                    let operands: Vec<f32> = content.operations[idx - 1]
+                        .operands
+                        .iter()
+                        .filter_map(|obj| obj.as_float().ok().or_else(|| obj.as_i64().ok().map(|i| i as f32)))
+                        .collect();
+                    xobject_cm_args = Some(operands);
+                }
+            }
+        }
+
+        assert!(found_xobject, "Expected Form XObject 'Do' operator in content");
+        let cm = xobject_cm_args.expect("Expected 'cm' matrix before 'Do'");
+        assert_eq!(cm.len(), 6);
+
+        // Scale must be 1.0 (no distortion or shrink)
+        assert!((cm[0] - 1.0).abs() < 1e-4, "scale_x should be 1.0, got {}", cm[0]);
+        assert!((cm[3] - 1.0).abs() < 1e-4, "scale_y should be 1.0, got {}", cm[3]);
+
+        // Position: min_x = -10, max_y = 130 -> placed at (-10.0, -130.0) in element local space
+        assert!((cm[4] - (-10.0)).abs() < 1e-3, "position X should be -10, got {}", cm[4]);
+        assert!((cm[5] - (-130.0)).abs() < 1e-3, "position Y should be -130, got {}", cm[5]);
     }
 }

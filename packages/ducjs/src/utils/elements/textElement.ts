@@ -1,6 +1,5 @@
 import { TEXT_ALIGN, VERTICAL_ALIGN } from "../../enums";
-import { SupportedMeasures, getPrecisionValueFromRaw, getScopedBezierPointFromDucPoint } from "../../technical/scopes";
-import { DucLocalState, RawValue, Scope, ScopedValue } from "../../types";
+import { DucLocalState } from "../../types";
 import { DucElement, DucElementType, DucPoint, DucTextContainer, DucTextElement, DucTextElementWithContainer, ElementsMap, FontFamilyValues, FontString, NonDeletedDucElement } from "../../types/elements";
 import { isArrowElement, isBoundToContainer, isTextElement } from "../../types/elements/typeChecks";
 import { GeometricPoint } from "../../types/geometry.types";
@@ -11,62 +10,63 @@ import { adjustXYWithRotation } from "../math";
 import { normalizeText } from "../normalize";
 import { getBoundTextElementPosition, getPointGlobalCoordinates, getPointsGlobalCoordinates, getSegmentMidPoint } from "./linearElement";
 
+const toNum = (val: any, fallback = 0): number =>
+  typeof val === "number" ? val : (val?.value ?? fallback);
+
 export const computeBoundTextPosition = (
   container: DucElement,
   boundTextElement: DucTextElementWithContainer,
   elementsMap: ElementsMap,
-  currentScope: SupportedMeasures,
-): { x: ScopedValue; y: ScopedValue } => {
+): { x: number; y: number } => {
   if (isArrowElement(container)) {
     const coords = getBoundTextElementPosition(
       container,
       boundTextElement,
       elementsMap,
-      currentScope,
     );
     if (coords === null) {
       return {
-        x: getPrecisionValueFromRaw(0 as RawValue, boundTextElement.scope, currentScope).scoped,
-        y: getPrecisionValueFromRaw(0 as RawValue, boundTextElement.scope, currentScope).scoped,
+        x: 0,
+        y: 0,
       };
     }
-    return { x: coords.x as ScopedValue, y: coords.y as ScopedValue };
+    return { x: coords.x, y: coords.y };
   }
   const containerCoords = getContainerCoords(container);
   const maxContainerHeight = getBoundTextMaxHeight(container, boundTextElement);
   const maxContainerWidth = getBoundTextMaxWidth(container, boundTextElement);
 
-  let x;
-  let y;
+  const bth = toNum(boundTextElement.height);
+  const btw = toNum(boundTextElement.width);
+
+  let x: number;
+  let y: number;
   if (boundTextElement.verticalAlign === VERTICAL_ALIGN.TOP) {
     y = containerCoords.y;
   } else if (boundTextElement.verticalAlign === VERTICAL_ALIGN.BOTTOM) {
-    y = containerCoords.y + (maxContainerHeight - boundTextElement.height.value);
+    y = containerCoords.y + (maxContainerHeight - bth);
   } else {
     y =
       containerCoords.y +
-      (maxContainerHeight / 2 - boundTextElement.height.value / 2);
+      (maxContainerHeight / 2 - bth / 2);
   }
   if (boundTextElement.textAlign === TEXT_ALIGN.LEFT) {
     x = containerCoords.x;
   } else if (boundTextElement.textAlign === TEXT_ALIGN.RIGHT) {
-    x = containerCoords.x + (maxContainerWidth - boundTextElement.width.value);
+    x = containerCoords.x + (maxContainerWidth - btw);
   } else {
     x =
-      containerCoords.x + (maxContainerWidth / 2 - boundTextElement.width.value / 2);
+      containerCoords.x + (maxContainerWidth / 2 - btw / 2);
   }
 
-  const xValue = getPrecisionValueFromRaw(x as RawValue, boundTextElement.scope, currentScope);
-  const yValue = getPrecisionValueFromRaw(y as RawValue, boundTextElement.scope, currentScope);
-  return { x: xValue.scoped, y: yValue.scoped };
+  return { x, y };
 };
 
 export const measureText = (
   text: string,
   font: FontString,
   lineHeight: DucTextElement["lineHeight"],
-  currentScope: Scope,
-): { width: RawValue; height: RawValue } => {
+): { width: number; height: number } => {
   text = text
     .split("\n")
     // replace empty lines with single space because leading/trailing empty
@@ -79,13 +79,12 @@ export const measureText = (
   const safeFontSize = (Number.isFinite(parsedFontSize) && parsedFontSize > 0)
     ? parsedFontSize
     : DEFAULT_FONT_SIZE;
-  const fontSize = getPrecisionValueFromRaw(safeFontSize as RawValue, currentScope, currentScope);
-  const height = getTextHeight(text, fontSize, lineHeight);
+  const height = getTextHeight(text, safeFontSize, lineHeight);
   const width = getTextWidth(text, font);
 
   // Defensive: ensure we never return 0 or NaN dimensions
-  const safeWidth = (Number.isFinite(width) && width > 0) ? width : 1 as RawValue;
-  const safeHeight = (Number.isFinite(height) && height > 0) ? height : (safeFontSize * lineHeight) as RawValue;
+  const safeWidth = (Number.isFinite(width) && width > 0) ? width : 1;
+  const safeHeight = (Number.isFinite(height) && height > 0) ? height : (safeFontSize * lineHeight);
   return { width: safeWidth, height: safeHeight };
 };
 
@@ -94,18 +93,18 @@ export const measureText = (
  * aligning with the W3C spec.
  */
 export const getLineHeightInPx = (
-  fontSize: DucTextElement["fontSize"],
+  fontSize: DucTextElement["fontSize"] | number,
   lineHeight: DucTextElement["lineHeight"],
-): RawValue => {
-  return fontSize.value * lineHeight as RawValue;
+): number => {
+  return toNum(fontSize, DEFAULT_FONT_SIZE) * lineHeight;
 };
 
 // FIXME rename to getApproxMinContainerHeight
 export const getApproxMinLineHeight = (
-  fontSize: DucTextElement["fontSize"],
+  fontSize: DucTextElement["fontSize"] | number,
   lineHeight: DucTextElement["lineHeight"],
-): RawValue => {
-  return getLineHeightInPx(fontSize, lineHeight) + (BOUND_TEXT_PADDING * 2) as RawValue;
+): number => {
+  return getLineHeightInPx(fontSize, lineHeight) + BOUND_TEXT_PADDING * 2;
 };
 
 let canvas: HTMLCanvasElement | undefined;
@@ -128,7 +127,7 @@ const getLineWidth = (
   font: FontString,
   forceAdvanceWidth?: true,
   isTestEnv?: boolean,
-): RawValue => {
+): number => {
   if (!canvas) {
     canvas = document.createElement("canvas");
   }
@@ -154,40 +153,40 @@ const getLineWidth = (
     // fallback to advance width if the actual width is zero, i.e. on text editing start
     // or when actual width does not respect whitespace chars, i.e. spaces
     // otherwise actual width should always be bigger
-    return Math.ceil(Math.max(actualWidth, advanceWidth)) as RawValue;
+    return Math.ceil(Math.max(actualWidth, advanceWidth));
   }
 
   // since in test env the canvas measureText algo
   // doesn't measure text and instead just returns number of
   // characters hence we assume that each letteris 10px
   if (isTestEnv) {
-    return Math.ceil(advanceWidth * 10) as RawValue;
+    return Math.ceil(advanceWidth * 10);
   }
 
-  return Math.ceil(advanceWidth) as RawValue;
+  return Math.ceil(advanceWidth);
 };
 
 export const getTextWidth = (
   text: string,
   font: FontString,
   forceAdvanceWidth?: true,
-): RawValue => {
+): number => {
   const lines = splitIntoLines(text);
   let width = 0;
   lines.forEach((line) => {
     width = Math.max(width, getLineWidth(line, font, forceAdvanceWidth));
   });
 
-  return width as RawValue;
+  return width;
 };
 
 export const getTextHeight = (
   text: DucTextElement["text"],
   fontSize: DucTextElement["fontSize"],
   lineHeight: DucTextElement["lineHeight"],
-): RawValue => {
+): number => {
   const lineCount = splitIntoLines(text).length;
-  return getLineHeightInPx(fontSize, lineHeight) * lineCount as RawValue;
+  return getLineHeightInPx(fontSize, lineHeight) * lineCount;
 };
 
 export const parseTokens = (text: string) => {
@@ -386,104 +385,99 @@ const DUMMY_TEXT = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toLocaleUpperCase();
 export const getApproxMinLineWidth = (
   font: FontString,
   lineHeight: DucTextElement["lineHeight"],
-  currentScope: SupportedMeasures,
-): RawValue => {
+): number => {
   const maxCharWidth = getMaxCharWidth(font);
   if (maxCharWidth === 0) {
     return (
-      measureText(DUMMY_TEXT.split("").join("\n"), font, lineHeight, currentScope).width +
+      measureText(DUMMY_TEXT.split("").join("\n"), font, lineHeight).width +
       BOUND_TEXT_PADDING * 2
-    ) as RawValue;
+    );
   }
-  return (maxCharWidth + BOUND_TEXT_PADDING * 2) as RawValue;
+  return maxCharWidth + BOUND_TEXT_PADDING * 2;
 };
 
-export const getMinCharWidth = (font: FontString): RawValue => {
+export const getMinCharWidth = (font: FontString): number => {
   const cache = charWidth.getCache(font);
   if (!cache) {
-    return 0 as RawValue;
+    return 0;
   }
   const cacheWithOutEmpty = cache.filter((val) => val !== undefined);
 
-  return Math.min(...cacheWithOutEmpty) as RawValue;
+  return Math.min(...cacheWithOutEmpty);
 };
 
-export const getMaxCharWidth = (font: FontString): RawValue => {
+export const getMaxCharWidth = (font: FontString): number => {
   const cache = charWidth.getCache(font);
   if (!cache) {
-    return 0 as RawValue;
+    return 0;
   }
   const cacheWithOutEmpty = cache.filter((val) => val !== undefined);
-  return Math.max(...cacheWithOutEmpty) as RawValue;
+  return Math.max(...cacheWithOutEmpty);
 };
 
 
 export const getContainerCenter = (
   container: DucElement,
-  DucState: DucLocalState,
+  _DucState: DucLocalState,
   elementsMap: ElementsMap,
 ): GeometricPoint => {
   if (!isArrowElement(container)) {
     return {
-      x: container.x.scoped + container.width.scoped / 2,
-      y: container.y.scoped + container.height.scoped / 2,
+      x: toNum(container.x) + toNum(container.width) / 2,
+      y: toNum(container.y) + toNum(container.height) / 2,
     };
   }
   const points = getPointsGlobalCoordinates(
     container,
     elementsMap,
-    DucState.scope,
   );
   if (points.length % 2 === 1) {
     const index = Math.floor(container.points.length / 2);
     const midPoint = getPointGlobalCoordinates(
       container,
-      getScopedBezierPointFromDucPoint(container.points[index]),
+      { x: container.points[index].x, y: container.points[index].y },
       elementsMap,
-      DucState.scope,
     );
     return { x: midPoint.x, y: midPoint.y };
   }
   const index = container.points.length / 2 - 1;
-  // const initialMidSegmentMidpoint = getEditorMidPoints(
-  //   container,
-  //   elementsMap,
-  //   DucState,
-  // )[index];
   let initialMidSegmentMidpoint: DucPoint | undefined; // FIXME: provide a better implementation for mid points handling
-  const initMidPoints = initialMidSegmentMidpoint && getScopedBezierPointFromDucPoint(initialMidSegmentMidpoint);
-  // Remove casting in the future
+  const initMidPoints = initialMidSegmentMidpoint && { x: initialMidSegmentMidpoint.x, y: initialMidSegmentMidpoint.y };
   let midSegmentMidpoint = initMidPoints && { x: initMidPoints.x, y: initMidPoints.y };
   if (!midSegmentMidpoint) {
     midSegmentMidpoint = getSegmentMidPoint(
       container,
-      getScopedBezierPointFromDucPoint(points[index]),
-      getScopedBezierPointFromDucPoint(points[index + 1]),
+      { x: points[index].x, y: points[index].y },
+      { x: points[index + 1].x, y: points[index + 1].y },
       index + 1,
       elementsMap,
-      DucState.scope,
     );
   }
   return { x: midSegmentMidpoint.x, y: midSegmentMidpoint.y };
 };
 
-export const getContainerCoords = (container: NonDeletedDucElement): { x: RawValue; y: RawValue } => {
+export const getContainerCoords = (container: NonDeletedDucElement): { x: number; y: number } => {
   let offsetX = BOUND_TEXT_PADDING;
   let offsetY = BOUND_TEXT_PADDING;
 
+  const width = toNum(container.width);
+  const height = toNum(container.height);
+  const cx = toNum(container.x);
+  const cy = toNum(container.y);
+
   if (container.type === "ellipse") {
     // The derivation of coordinates is explained in https://github.com/excalidraw/excalidraw/pull/6172
-    offsetX += (container.width.value / 2) * (1 - Math.sqrt(2) / 2);
-    offsetY += (container.height.value / 2) * (1 - Math.sqrt(2) / 2);
+    offsetX += (width / 2) * (1 - Math.sqrt(2) / 2);
+    offsetY += (height / 2) * (1 - Math.sqrt(2) / 2);
   }
   // The derivation of coordinates is explained in https://github.com/excalidraw/excalidraw/pull/6265
   if (container.type === "polygon") {
-    offsetX += container.width.value / 4;
-    offsetY += container.height.value / 4;
+    offsetX += width / 4;
+    offsetY += height / 4;
   }
   return {
-    x: container.x.value + offsetX as RawValue,
-    y: container.y.value + offsetY as RawValue,
+    x: cx + offsetX,
+    y: cy + offsetY,
   };
 };
 
@@ -542,81 +536,81 @@ export const isValidTextContainer = (element: {
 }) => VALID_CONTAINER_TYPES.has(element.type);
 
 export const computeContainerDimensionForBoundText = (
-  dimension: RawValue,
+  dimension: number,
   containerType: ExtractSetType<typeof VALID_CONTAINER_TYPES>,
-): RawValue => {
-  dimension = Math.ceil(dimension) as RawValue;
-  const padding = (BOUND_TEXT_PADDING * 2) as RawValue;
+): number => {
+  dimension = Math.ceil(dimension);
+  const padding = BOUND_TEXT_PADDING * 2;
 
   if (containerType === "ellipse") {
-    return Math.round(((dimension + padding) / Math.sqrt(2)) * 2) as RawValue;
+    return Math.round(((dimension + padding) / Math.sqrt(2)) * 2);
   }
   if (containerType === "arrow") {
-    return (dimension + padding * 8) as RawValue;
+    return dimension + padding * 8;
   }
   if (containerType === "diamond") {
-    return (2 * (dimension + padding)) as RawValue;
+    return 2 * (dimension + padding);
   }
-  return (dimension + padding) as RawValue;
+  return dimension + padding;
 };
 
 export const getBoundTextMaxWidth = (
   container: DucElement,
   boundTextElement: DucTextElement | null,
-): RawValue => {
-  const { width } = container;
+): number => {
+  const width = toNum(container.width);
   if (isArrowElement(container)) {
     const minWidth =
-      (boundTextElement?.fontSize.value ?? DEFAULT_FONT_SIZE) *
+      toNum(boundTextElement?.fontSize, DEFAULT_FONT_SIZE) *
       ARROW_LABEL_FONT_SIZE_TO_MIN_WIDTH_RATIO;
-    return Math.max(ARROW_LABEL_WIDTH_FRACTION * width.value, minWidth) as RawValue;
+    return Math.max(ARROW_LABEL_WIDTH_FRACTION * width, minWidth);
   }
   if (container.type === "ellipse") {
     // The width of the largest rectangle inscribed inside an ellipse is
     // Math.round((ellipse.width / 2) * Math.sqrt(2)) which is derived from
     // equation of an ellipse -https://github.com/excalidraw/excalidraw/pull/6172
-    return (Math.round((width.value / 2) * Math.sqrt(2)) - BOUND_TEXT_PADDING * 2) as RawValue;
+    return Math.round((width / 2) * Math.sqrt(2)) - BOUND_TEXT_PADDING * 2;
   }
   if (container.type === "polygon") {
     // The width of the largest rectangle inscribed inside a rhombus is
     // Math.round(width / 2) - https://github.com/excalidraw/excalidraw/pull/6265
-    return (Math.round(width.value / 2) - BOUND_TEXT_PADDING * 2) as RawValue;
+    return Math.round(width / 2) - BOUND_TEXT_PADDING * 2;
   }
-  return (width.value - BOUND_TEXT_PADDING * 2) as RawValue;
+  return width - BOUND_TEXT_PADDING * 2;
 };
 
 export const getBoundTextMaxHeight = (
   container: DucElement,
   boundTextElement: DucTextElementWithContainer,
-): RawValue => {
-  const { height } = container;
+): number => {
+  const height = toNum(container.height);
 
   if (isArrowElement(container)) {
-    const containerHeight = height.value - BOUND_TEXT_PADDING * 8 * 2;
+    const containerHeight = height - BOUND_TEXT_PADDING * 8 * 2;
     if (containerHeight <= 0) {
-      return boundTextElement.height.value;
+      return toNum(boundTextElement.height);
     }
-    return height.value;
+    return height;
   }
   if (container.type === "ellipse") {
     // The height of the largest rectangle inscribed inside an ellipse is
     // Math.round((ellipse.height / 2) * Math.sqrt(2)) which is derived from
     // equation of an ellipse - https://github.com/excalidraw/excalidraw/pull/6172
-    return (Math.round((height.value / 2) * Math.sqrt(2)) - BOUND_TEXT_PADDING * 2) as RawValue;
+    return Math.round((height / 2) * Math.sqrt(2)) - BOUND_TEXT_PADDING * 2;
   }
   if (container.type === "polygon") {
     // The height of the largest rectangle inscribed inside a rhombus is
     // Math.round(height / 2) - https://github.com/excalidraw/excalidraw/pull/6265
-    return (Math.round(height.value / 2) - BOUND_TEXT_PADDING * 2) as RawValue;
+    return Math.round(height / 2) - BOUND_TEXT_PADDING * 2;
   }
-  return (height.value - BOUND_TEXT_PADDING * 2) as RawValue;
+  return height - BOUND_TEXT_PADDING * 2;
 };
 
-export const isMeasureTextSupported = (currentScope: SupportedMeasures) => {
+export const isMeasureTextSupported = () => {
   const width = getTextWidth(
     DUMMY_TEXT,
     getFontString({
-      fontSize: getPrecisionValueFromRaw(DEFAULT_FONT_SIZE as RawValue, currentScope, currentScope),
+      fontSize: DEFAULT_FONT_SIZE,
       fontFamily: DEFAULT_FONT_FAMILY,
     }),
   );
@@ -626,9 +620,8 @@ export const isMeasureTextSupported = (currentScope: SupportedMeasures) => {
 export const getMinTextElementWidth = (
   font: FontString,
   lineHeight: DucTextElement["lineHeight"],
-  currentScope: SupportedMeasures,
-): RawValue => {
-  return measureText("", font, lineHeight, currentScope).width + BOUND_TEXT_PADDING * 2 as RawValue;
+): number => {
+  return measureText("", font, lineHeight).width + BOUND_TEXT_PADDING * 2;
 };
 
 /** retrieves text from text elements and concatenates to a single string */
@@ -678,7 +671,7 @@ export const getFontString = ({
   fontSize: DucTextElement["fontSize"];
   fontFamily: FontFamilyValues | string;
 }) => {
-  return `${fontSize.scoped}px ${getFontFamilyString({ fontFamily })}` as FontString;
+  return `${toNum(fontSize)}px ${getFontFamilyString({ fontFamily })}` as FontString;
 };
 
 /** computes element x/y offset based on textAlign/verticalAlign */
@@ -688,8 +681,8 @@ export const getTextElementPositionOffsets = (
     verticalAlign: DucTextElement["verticalAlign"];
   },
   metrics: {
-    width: RawValue;
-    height: RawValue;
+    width: number;
+    height: number;
   },
 ) => {
   return {
@@ -707,7 +700,6 @@ export const refreshTextDimensions = (
   textElement: DucTextElement,
   container: DucTextContainer | null,
   elementsMap: ElementsMap,
-  currentScope: Scope,
   text = textElement.text,
 ) => {
   if (textElement.isDeleted) {
@@ -719,22 +711,22 @@ export const refreshTextDimensions = (
       getFontString({ fontFamily: textElement.fontFamily, fontSize: textElement.fontSize }),
       container
         ? getBoundTextMaxWidth(container, textElement)
-        : textElement.width.scoped,
+        : toNum(textElement.width),
     );
   }
-  const dimensions = getAdjustedDimensions(textElement, elementsMap, text, currentScope);
+  const dimensions = getAdjustedDimensions(textElement, elementsMap, text);
 
   // Defensive minimums — ensure height is always at least one line.
   // Use negated >= to also catch NaN (NaN < x is always false).
-  const rawMinLineHeight = textElement.fontSize.value * textElement.lineHeight;
+  const rawMinLineHeight = toNum(textElement.fontSize, DEFAULT_FONT_SIZE) * textElement.lineHeight;
   const minLineHeight = (Number.isFinite(rawMinLineHeight) && rawMinLineHeight > 0)
     ? rawMinLineHeight
     : DEFAULT_FONT_SIZE * textElement.lineHeight;
   if (!(dimensions.height >= minLineHeight)) {
-    dimensions.height = minLineHeight as RawValue;
+    dimensions.height = minLineHeight;
   }
   if (!(dimensions.width > 0)) {
-    dimensions.width = (textElement.autoResize ? 1 : textElement.width.value) as RawValue;
+    dimensions.width = textElement.autoResize ? 1 : toNum(textElement.width, 1);
   }
 
   return { text, ...dimensions };
@@ -751,37 +743,37 @@ export const splitIntoLines = (text: string) => {
  */
 export const detectLineHeight = (textElement: DucTextElement) => {
   const lineCount = splitIntoLines(textElement.text).length;
-  return (textElement.height.scoped /
-    lineCount /
-    textElement.fontSize.scoped) as DucTextElement["lineHeight"];
+  const h = toNum(textElement.height);
+  const fs = toNum(textElement.fontSize, DEFAULT_FONT_SIZE);
+  return (h / lineCount / fs) as DucTextElement["lineHeight"];
 };
 
 export const getAdjustedDimensions = (
   element: DucTextElement,
   elementsMap: ElementsMap,
   nextText: string,
-  currentScope: Scope,
 ): {
-  x: RawValue;
-  y: RawValue;
-  width: RawValue;
-  height: RawValue;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 } => {
   let { width: nextWidth, height: nextHeight } = measureText(
     nextText,
     getFontString({ fontFamily: element.fontFamily, fontSize: element.fontSize }),
     element.lineHeight,
-    currentScope,
   );
 
   // wrapped text
   if (!element.autoResize) {
-    nextWidth = element.width.value;
+    nextWidth = toNum(element.width);
   }
 
   const { textAlign, verticalAlign } = element;
-  let x: RawValue;
-  let y: RawValue;
+  const elX = toNum(element.x);
+  const elY = toNum(element.y);
+  let x: number;
+  let y: number;
   if (
     textAlign === TEXT_ALIGN.CENTER &&
     verticalAlign === VERTICAL_ALIGN.MIDDLE &&
@@ -792,26 +784,22 @@ export const getAdjustedDimensions = (
       element.text,
       getFontString({ fontFamily: element.fontFamily, fontSize: element.fontSize }),
       element.lineHeight,
-      currentScope,
     );
     const offsets = getTextElementPositionOffsets(element, {
-      width: nextWidth - prevMetrics.width as RawValue,
-      height: nextHeight - prevMetrics.height as RawValue,
+      width: nextWidth - prevMetrics.width,
+      height: nextHeight - prevMetrics.height,
     });
 
-    x = element.x.value - offsets.x as RawValue;
-    y = element.y.value - offsets.y as RawValue;
+    x = elX - offsets.x;
+    y = elY - offsets.y;
   } else {
-    const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap, currentScope);
-    const nextWidthValue = getPrecisionValueFromRaw(nextWidth, element.scope, currentScope);
-    const nextHeightValue = getPrecisionValueFromRaw(nextHeight, element.scope, currentScope);
+    const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
 
     const [nextX1, nextY1, nextX2, nextY2] = getResizedElementAbsoluteCoords(
       element,
-      nextWidthValue.scoped,
-      nextHeightValue.scoped,
+      nextWidth,
+      nextHeight,
       false,
-      currentScope,
     );
     const deltaX1 = (x1 - nextX1) / 2;
     const deltaY1 = (y1 - nextY1) / 2;
@@ -824,23 +812,23 @@ export const getAdjustedDimensions = (
         e: textAlign === TEXT_ALIGN.CENTER || textAlign === TEXT_ALIGN.LEFT,
         w: textAlign === TEXT_ALIGN.CENTER || textAlign === TEXT_ALIGN.RIGHT,
       },
-      element.x.value,
-      element.y.value,
+      elX,
+      elY,
       element.angle,
       deltaX1,
       deltaY1,
       deltaX2,
       deltaY2,
     );
-    x = rotationPoint.x as RawValue;
-    y = rotationPoint.y as RawValue;
+    x = rotationPoint.x;
+    y = rotationPoint.y;
   }
 
   return {
     width: nextWidth,
     height: nextHeight,
-    x: Number.isFinite(x) ? x : element.x.value,
-    y: Number.isFinite(y) ? y : element.y.value,
+    x: Number.isFinite(x) ? x : elX,
+    y: Number.isFinite(y) ? y : elY,
   };
 };
 
