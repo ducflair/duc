@@ -8,14 +8,34 @@
  */
 const fs = require("fs");
 const path = require("path");
+const { execSync } = require("child_process");
 
 const cargoTomlPath = process.argv[2];
-const version = process.argv[3];
+let version = process.argv[3];
 
-if (!cargoTomlPath || !version) {
-  console.error("Usage: node scripts/cargo-set-duc-dep-version.js <cargoTomlPath> <version>");
-  console.error("Example: node scripts/cargo-set-duc-dep-version.js packages/ducpdf/src/duc2pdf/Cargo.toml 2");
+if (!cargoTomlPath) {
+  console.error("Usage: node scripts/cargo-set-duc-dep-version.js <cargoTomlPath> [version]");
+  console.error("Example: node scripts/cargo-set-duc-dep-version.js packages/ducpdf/src/duc2pdf/Cargo.toml auto");
+  console.error("Example: node scripts/cargo-set-duc-dep-version.js packages/ducpdf/src/duc2pdf/Cargo.toml 4");
   process.exit(1);
+}
+
+function resolveDucMajorVersion() {
+  try {
+    const output = execSync("git tag -l 'ducrs@*' | sed 's/ducrs@//' | sort -V | tail -n1", {
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "ignore"],
+    }).trim();
+    if (output) {
+      const match = output.match(/^(\d+)/);
+      if (match) return match[1];
+    }
+  } catch {}
+  return "4";
+}
+
+if (!version || version === "auto" || version === "latest") {
+  version = resolveDucMajorVersion();
 }
 
 let fullPath = path.resolve(process.cwd(), cargoTomlPath);
