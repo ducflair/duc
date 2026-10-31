@@ -9,10 +9,10 @@ repository = "https://github.com/ducflair/duc/tree/main/packages/ducpdf/src/duc2
 readme = "README.md"
 keywords = ["duc", "pdf", "cad", "converter"]
 include = [
-  "src/", 
+  "src/**", 
   "Cargo.toml", 
   "README.md", 
-  "fonts/RobotoMono-Variable.ttf"
+  "fonts/**",
 ]
 
 [lib]
