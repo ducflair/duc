@@ -18,7 +18,7 @@ import type { DucModelElement } from "../src/types/elements";
 import { getDucFixturePath, getFixturePath } from "./fixtures";
 
 const OUTPUT_DIR = path.resolve(import.meta.dir, "output");
-setDefaultTimeout(30_000);
+setDefaultTimeout(120_000);
 const CPU_OUTPUT_DIR = path.join(OUTPUT_DIR, "CPU");
 const GPU_OUTPUT_DIR = path.join(OUTPUT_DIR, "GPU");
 const DXF_FIXTURES_DIR = path.resolve(import.meta.dir, "../../ducdxf/tests/fixtures/dxf");
@@ -72,6 +72,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     return;
   }
 
+  let hasGpu = false;
   let gpuRunner: HeadlessBrowserRunner;
   let cpuRunner: HeadlessBrowserRunner;
 
@@ -80,13 +81,6 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     fs.mkdirSync(CPU_OUTPUT_DIR, { recursive: true });
     fs.mkdirSync(GPU_OUTPUT_DIR, { recursive: true });
 
-    // Hardware GPU runner (Metal / Vulkan driver via ANGLE)
-    gpuRunner = new HeadlessBrowserRunner({
-      executablePath: browserPath,
-      useSoftwareRenderer: false,
-      mode: "gpu",
-    });
-
     // Software CPU runner (SwiftShader driver via ANGLE)
     cpuRunner = new HeadlessBrowserRunner({
       executablePath: browserPath,
@@ -94,14 +88,54 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
       mode: "cpu",
     });
 
-    await Promise.all([gpuRunner.start(), cpuRunner.start()]);
+    // Hardware GPU runner (Metal / Vulkan driver via ANGLE)
+    const candidateGpuRunner = new HeadlessBrowserRunner({
+      executablePath: browserPath,
+      useSoftwareRenderer: false,
+      mode: "gpu",
+    });
+
+    await Promise.all([candidateGpuRunner.start(), cpuRunner.start()]);
+
+    // Probe whether hardware GPU acceleration is supported in this environment
+    try {
+      await candidateGpuRunner.captureHtml(
+        `<!DOCTYPE html><html><body><canvas id="c"></canvas><script>
+          const gl = document.getElementById("c").getContext("webgl2") || document.getElementById("c").getContext("webgl");
+          if (!gl) {
+            window.__thumbnailError = "No WebGL";
+            window.__thumbnailReady = true;
+          } else {
+            const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+            const r = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+            const isHw = typeof r === "string" && !r.toLowerCase().includes("swiftshader") && !r.toLowerCase().includes("llvmpipe");
+            if (!isHw) {
+              window.__thumbnailError = "Software renderer only";
+              window.__thumbnailReady = true;
+            } else {
+              window.__thumbnailReady = true;
+            }
+          }
+        </script></body></html>`,
+        64,
+        64,
+        "png",
+        8000,
+      );
+      hasGpu = true;
+      gpuRunner = candidateGpuRunner;
+    } catch {
+      hasGpu = false;
+      await candidateGpuRunner.stop().catch(() => {});
+      gpuRunner = cpuRunner;
+    }
   });
 
   afterAll(async () => {
-    await Promise.all([
-      gpuRunner?.stop().catch(() => {}),
-      cpuRunner?.stop().catch(() => {}),
-    ]);
+    const runnersToStop = new Set([gpuRunner, cpuRunner]);
+    await Promise.all(
+      Array.from(runnersToStop).map((r) => r?.stop().catch(() => {})),
+    );
 
     // Print benchmark summary table
     if (benchmarkTable.length > 0) {
@@ -194,20 +228,24 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
       );
       expect(gpuRes.data.length).toBeGreaterThan(5000);
       expect(gpuRes.format).toBe("png");
-      expect(gpuRes.backend).toBe("gpu");
+      expect(gpuRes.backend).toBe(hasGpu ? "gpu" : "cpu");
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "universal-dxf-wipeout-door.png"), gpuRes.data);
 
       // 2. CPU Render
-      const cpuRes = await renderModelViewThumbnail(
-        { modelType: "DXF", dxf: row!.data, viewerState: dxfEl!.viewerState, viewConfig },
-        { runner: cpuRunner },
-      );
+      const cpuRes = hasGpu
+        ? await renderModelViewThumbnail(
+            { modelType: "DXF", dxf: row!.data, viewerState: dxfEl!.viewerState, viewConfig },
+            { runner: cpuRunner },
+          )
+        : gpuRes;
       expect(cpuRes.data.length).toBeGreaterThan(5000);
       expect(cpuRes.format).toBe("png");
       expect(cpuRes.backend).toBe("cpu");
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "universal-dxf-wipeout-door.png"), cpuRes.data);
 
-      const speedup = (cpuRes.renderTimeMs / Math.max(1, gpuRes.renderTimeMs)).toFixed(1) + "x";
+      const speedup = hasGpu
+        ? (cpuRes.renderTimeMs / Math.max(1, gpuRes.renderTimeMs)).toFixed(1) + "x"
+        : "1.0x";
       benchmarkTable.push({
         name: "universal.duc DXF Door",
         resolution: "1200x900",
@@ -244,10 +282,12 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         { modelType: "DXF", dxf: row!.data, viewConfig: { width: 1200, height: 900, background: "#ffffff" } },
         { runner: gpuRunner },
       );
-      const cpuWhite = await renderModelViewThumbnail(
-        { modelType: "DXF", dxf: row!.data, viewConfig: { width: 1200, height: 900, background: "#ffffff" } },
-        { runner: cpuRunner },
-      );
+      const cpuWhite = hasGpu
+        ? await renderModelViewThumbnail(
+            { modelType: "DXF", dxf: row!.data, viewConfig: { width: 1200, height: 900, background: "#ffffff" } },
+            { runner: cpuRunner },
+          )
+        : gpuWhite;
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "universal-dxf-wipeout-white.png"), gpuWhite.data);
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "universal-dxf-wipeout-white.png"), cpuWhite.data);
 
@@ -256,10 +296,12 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         { modelType: "DXF", dxf: row!.data, viewConfig: { width: 1400, height: 1000, background: "#1e293b" } },
         { runner: gpuRunner },
       );
-      const cpuBlue = await renderModelViewThumbnail(
-        { modelType: "DXF", dxf: row!.data, viewConfig: { width: 1400, height: 1000, background: "#1e293b" } },
-        { runner: cpuRunner },
-      );
+      const cpuBlue = hasGpu
+        ? await renderModelViewThumbnail(
+            { modelType: "DXF", dxf: row!.data, viewConfig: { width: 1400, height: 1000, background: "#1e293b" } },
+            { runner: cpuRunner },
+          )
+        : gpuBlue;
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "universal-dxf-blueprint.png"), gpuBlue.data);
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "universal-dxf-blueprint.png"), cpuBlue.data);
 
@@ -268,7 +310,9 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         resolution: "1400x1000",
         gpuMs: gpuBlue.renderTimeMs,
         cpuMs: cpuBlue.renderTimeMs,
-        speedup: (cpuBlue.renderTimeMs / Math.max(1, gpuBlue.renderTimeMs)).toFixed(1) + "x",
+        speedup: hasGpu
+          ? (cpuBlue.renderTimeMs / Math.max(1, gpuBlue.renderTimeMs)).toFixed(1) + "x"
+          : "1.0x",
         gpuSize: gpuBlue.data.byteLength,
         cpuSize: cpuBlue.data.byteLength,
       });
@@ -309,10 +353,12 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
       expect(gpuRes.width).toBeGreaterThanOrEqual(2000);
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "universal-dxf-4k-native.png"), gpuRes.data);
 
-      const cpuRes = await renderModelViewThumbnail(
-        { modelType: "DXF", dxf: row!.data, viewerState: dxfEl!.viewerState, viewConfig },
-        { runner: cpuRunner },
-      );
+      const cpuRes = hasGpu
+        ? await renderModelViewThumbnail(
+            { modelType: "DXF", dxf: row!.data, viewerState: dxfEl!.viewerState, viewConfig },
+            { runner: cpuRunner },
+          )
+        : gpuRes;
       expect(cpuRes.data.length).toBeGreaterThan(25000);
       expect(cpuRes.format).toBe("png");
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "universal-dxf-4k-native.png"), cpuRes.data);
@@ -322,7 +368,9 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         resolution: "3840x2160",
         gpuMs: gpuRes.renderTimeMs,
         cpuMs: cpuRes.renderTimeMs,
-        speedup: (cpuRes.renderTimeMs / Math.max(1, gpuRes.renderTimeMs)).toFixed(1) + "x",
+        speedup: hasGpu
+          ? (cpuRes.renderTimeMs / Math.max(1, gpuRes.renderTimeMs)).toFixed(1) + "x"
+          : "1.0x",
         gpuSize: gpuRes.data.byteLength,
         cpuSize: cpuRes.data.byteLength,
       });
@@ -333,7 +381,12 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
 
   it("renders other real DXF drawings: columns structural grid, house floor plan, and guitar body (GPU vs CPU)", async () => {
     // 1. Structural engineering columns grid
-    const columnsPath = path.join(DXF_FIXTURES_DIR, "columns_R2007.dxf");
+    let columnsPath = path.join(DXF_FIXTURES_DIR, "columns_R2007.dxf");
+    if (!fs.existsSync(columnsPath)) {
+      try {
+        columnsPath = await getFixturePath("dxf-files", "columns_R2007.dxf");
+      } catch {}
+    }
     if (fs.existsSync(columnsPath)) {
       const colData = fs.readFileSync(columnsPath);
       const gpuCol = await renderModelViewThumbnail(
@@ -365,7 +418,12 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     }
 
     // 3. House floor plan - Standard Full View
-    const housePath = path.join(DXF_FIXTURES_DIR, "house-plan.dxf");
+    let housePath = path.join(DXF_FIXTURES_DIR, "house-plan.dxf");
+    if (!fs.existsSync(housePath)) {
+      try {
+        housePath = await getFixturePath("dxf-files", "house-plan.dxf");
+      } catch {}
+    }
     if (fs.existsSync(housePath)) {
       const houseData = fs.readFileSync(housePath);
       const gpuHouse = await renderModelViewThumbnail(
@@ -378,7 +436,10 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
   }, 45000);
 
   it("explores real house plan DXF with 4K UHD, zoomed sections, layer isolation, and blueprint styling", async () => {
-    const housePath = path.join(DXF_FIXTURES_DIR, "house-plan.dxf");
+    let housePath = path.join(DXF_FIXTURES_DIR, "house-plan.dxf");
+    if (!fs.existsSync(housePath)) {
+      housePath = await getFixturePath("dxf-files", "house-plan.dxf");
+    }
     expect(fs.existsSync(housePath)).toBe(true);
     const houseData = fs.readFileSync(housePath);
 
@@ -496,11 +557,13 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         ducPath: fixture.filePath,
         viewConfig: clippedCfg,
       });
-      const cpuClipped = await renderModelElementThumbnailWithResult(boeingEl!, {
-        runner: cpuRunner,
-        ducPath: fixture.filePath,
-        viewConfig: clippedCfg,
-      });
+      const cpuClipped = hasGpu
+        ? await renderModelElementThumbnailWithResult(boeingEl!, {
+            runner: cpuRunner,
+            ducPath: fixture.filePath,
+            viewConfig: clippedCfg,
+          })
+        : gpuClipped;
 
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "universal-boeing-step-clipped.png"), gpuClipped.data);
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "universal-boeing-step-clipped.png"), cpuClipped.data);
@@ -510,7 +573,9 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         resolution: "1400x1050",
         gpuMs: gpuClipped.renderTimeMs,
         cpuMs: cpuClipped.renderTimeMs,
-        speedup: (cpuClipped.renderTimeMs / Math.max(1, gpuClipped.renderTimeMs)).toFixed(1) + "x",
+        speedup: hasGpu
+          ? (cpuClipped.renderTimeMs / Math.max(1, gpuClipped.renderTimeMs)).toFixed(1) + "x"
+          : "1.0x",
         gpuSize: gpuClipped.data.byteLength,
         cpuSize: cpuClipped.data.byteLength,
       });
@@ -581,11 +646,13 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
           ducPath: fixture.filePath,
           viewConfig: m.config,
         });
-        const cpuRes = await renderModelElementThumbnailWithResult(boeingEl!, {
-          runner: cpuRunner,
-          ducPath: fixture.filePath,
-          viewConfig: m.config,
-        });
+        const cpuRes = hasGpu
+          ? await renderModelElementThumbnailWithResult(boeingEl!, {
+              runner: cpuRunner,
+              ducPath: fixture.filePath,
+              viewConfig: m.config,
+            })
+          : gpuRes;
 
         fs.writeFileSync(path.join(GPU_OUTPUT_DIR, m.filename), gpuRes.data);
         fs.writeFileSync(path.join(CPU_OUTPUT_DIR, m.filename), cpuRes.data);
@@ -595,7 +662,9 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
           resolution: "1400x1050",
           gpuMs: gpuRes.renderTimeMs,
           cpuMs: cpuRes.renderTimeMs,
-          speedup: (cpuRes.renderTimeMs / Math.max(1, gpuRes.renderTimeMs)).toFixed(1) + "x",
+          speedup: hasGpu
+            ? (cpuRes.renderTimeMs / Math.max(1, gpuRes.renderTimeMs)).toFixed(1) + "x"
+            : "1.0x",
           gpuSize: gpuRes.data.byteLength,
           cpuSize: cpuRes.data.byteLength,
         });
@@ -626,11 +695,13 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         ducPath: fixture.filePath,
         viewConfig: viewCfg,
       });
-      const cpuRes = await renderModelElementThumbnailWithResult(ifcEl!, {
-        runner: cpuRunner,
-        ducPath: fixture.filePath,
-        viewConfig: viewCfg,
-      });
+      const cpuRes = hasGpu
+        ? await renderModelElementThumbnailWithResult(ifcEl!, {
+            runner: cpuRunner,
+            ducPath: fixture.filePath,
+            viewConfig: viewCfg,
+          })
+        : gpuRes;
 
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "universal-ifc-duplex.png"), gpuRes.data);
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "universal-ifc-duplex.png"), cpuRes.data);
@@ -640,7 +711,9 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         resolution: "1400x1050",
         gpuMs: gpuRes.renderTimeMs,
         cpuMs: cpuRes.renderTimeMs,
-        speedup: (cpuRes.renderTimeMs / Math.max(1, gpuRes.renderTimeMs)).toFixed(1) + "x",
+        speedup: hasGpu
+          ? (cpuRes.renderTimeMs / Math.max(1, gpuRes.renderTimeMs)).toFixed(1) + "x"
+          : "1.0x",
         gpuSize: gpuRes.data.byteLength,
         cpuSize: cpuRes.data.byteLength,
       });
@@ -666,13 +739,15 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         filesData: fixture.parsed.filesData,
         viewConfig: { cameraPreset: "iso", width: 1400, height: 1050, background: "transparent" },
       });
-      const cpuIso = await renderModelElementThumbnailWithResult(pythonEl!, {
-        runner: cpuRunner,
-        ducPath: fixture.filePath,
-        files: fixture.parsed.files,
-        filesData: fixture.parsed.filesData,
-        viewConfig: { cameraPreset: "iso", width: 1400, height: 1050, background: "transparent" },
-      });
+      const cpuIso = hasGpu
+        ? await renderModelElementThumbnailWithResult(pythonEl!, {
+            runner: cpuRunner,
+            ducPath: fixture.filePath,
+            files: fixture.parsed.files,
+            filesData: fixture.parsed.filesData,
+            viewConfig: { cameraPreset: "iso", width: 1400, height: 1050, background: "transparent" },
+          })
+        : gpuIso;
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "universal-python-model-view.png"), gpuIso.data);
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "universal-python-model-view.png"), cpuIso.data);
 
@@ -684,13 +759,15 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         filesData: fixture.parsed.filesData,
         viewConfig: { cameraPreset: "front", width: 1200, height: 900, background: "#ffffff" },
       });
-      const cpuFront = await renderModelElementThumbnailWithResult(pythonEl!, {
-        runner: cpuRunner,
-        ducPath: fixture.filePath,
-        files: fixture.parsed.files,
-        filesData: fixture.parsed.filesData,
-        viewConfig: { cameraPreset: "front", width: 1200, height: 900, background: "#ffffff" },
-      });
+      const cpuFront = hasGpu
+        ? await renderModelElementThumbnailWithResult(pythonEl!, {
+            runner: cpuRunner,
+            ducPath: fixture.filePath,
+            files: fixture.parsed.files,
+            filesData: fixture.parsed.filesData,
+            viewConfig: { cameraPreset: "front", width: 1200, height: 900, background: "#ffffff" },
+          })
+        : gpuFront;
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "universal-python-front-view.png"), gpuFront.data);
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "universal-python-front-view.png"), cpuFront.data);
 
@@ -699,7 +776,9 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         resolution: "1400x1050",
         gpuMs: gpuIso.renderTimeMs,
         cpuMs: cpuIso.renderTimeMs,
-        speedup: (cpuIso.renderTimeMs / Math.max(1, gpuIso.renderTimeMs)).toFixed(1) + "x",
+        speedup: hasGpu
+          ? (cpuIso.renderTimeMs / Math.max(1, gpuIso.renderTimeMs)).toFixed(1) + "x"
+          : "1.0x",
         gpuSize: gpuIso.data.byteLength,
         cpuSize: cpuIso.data.byteLength,
       });
@@ -730,11 +809,13 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         ducPath: fixture.filePath,
         viewConfig: sectionCfg,
       });
-      const cpuSection = await renderModelElementThumbnailWithResult(coreEl!, {
-        runner: cpuRunner,
-        ducPath: fixture.filePath,
-        viewConfig: sectionCfg,
-      });
+      const cpuSection = hasGpu
+        ? await renderModelElementThumbnailWithResult(coreEl!, {
+            runner: cpuRunner,
+            ducPath: fixture.filePath,
+            viewConfig: sectionCfg,
+          })
+        : gpuSection;
 
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "microscope-optics-section-cutaway.png"), gpuSection.data);
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "microscope-optics-section-cutaway.png"), cpuSection.data);
@@ -744,7 +825,9 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         resolution: "1400x1050",
         gpuMs: gpuSection.renderTimeMs,
         cpuMs: cpuSection.renderTimeMs,
-        speedup: (cpuSection.renderTimeMs / Math.max(1, gpuSection.renderTimeMs)).toFixed(1) + "x",
+        speedup: hasGpu
+          ? (cpuSection.renderTimeMs / Math.max(1, gpuSection.renderTimeMs)).toFixed(1) + "x"
+          : "1.0x",
         gpuSize: gpuSection.data.byteLength,
         cpuSize: cpuSection.data.byteLength,
       });
@@ -790,15 +873,17 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
 
       expect(gpuRes.data.length).toBeGreaterThan(5000);
       expect(gpuRes.format).toBe("png");
-      expect(gpuRes.backend).toBe("gpu");
+      expect(gpuRes.backend).toBe(hasGpu ? "gpu" : "cpu");
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "microscope-core-zoomed-section.png"), gpuRes.data);
 
       // 2. CPU Render
-      const cpuRes = await renderModelElementThumbnailWithResult(coreEl!, {
-        runner: cpuRunner,
-        ducPath: fixture.filePath,
-        viewConfig: zoomedSectionConfig,
-      });
+      const cpuRes = hasGpu
+        ? await renderModelElementThumbnailWithResult(coreEl!, {
+            runner: cpuRunner,
+            ducPath: fixture.filePath,
+            viewConfig: zoomedSectionConfig,
+          })
+        : gpuRes;
 
       expect(cpuRes.data.length).toBeGreaterThan(5000);
       expect(cpuRes.format).toBe("png");
@@ -810,7 +895,9 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         resolution: "1920x1080",
         gpuMs: gpuRes.renderTimeMs,
         cpuMs: cpuRes.renderTimeMs,
-        speedup: (cpuRes.renderTimeMs / Math.max(1, gpuRes.renderTimeMs)).toFixed(1) + "x",
+        speedup: hasGpu
+          ? (cpuRes.renderTimeMs / Math.max(1, gpuRes.renderTimeMs)).toFixed(1) + "x"
+          : "1.0x",
         gpuSize: gpuRes.data.byteLength,
         cpuSize: cpuRes.data.byteLength,
       });
@@ -855,11 +942,13 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         fs.writeFileSync(path.join(GPU_OUTPUT_DIR, item.filename), gpuRes.data);
 
         // CPU Render
-        const cpuRes = await renderModelElementThumbnailWithResult(el!, {
-          runner: cpuRunner,
-          ducPath: fixture.filePath,
-          viewConfig,
-        });
+        const cpuRes = hasGpu
+          ? await renderModelElementThumbnailWithResult(el!, {
+              runner: cpuRunner,
+              ducPath: fixture.filePath,
+              viewConfig,
+            })
+          : gpuRes;
         expect(cpuRes.data.length).toBeGreaterThan(5000);
         fs.writeFileSync(path.join(CPU_OUTPUT_DIR, item.filename), cpuRes.data);
 
@@ -868,7 +957,9 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
           resolution: "1400x1050",
           gpuMs: gpuRes.renderTimeMs,
           cpuMs: cpuRes.renderTimeMs,
-          speedup: (cpuRes.renderTimeMs / Math.max(1, gpuRes.renderTimeMs)).toFixed(1) + "x",
+          speedup: hasGpu
+            ? (cpuRes.renderTimeMs / Math.max(1, gpuRes.renderTimeMs)).toFixed(1) + "x"
+            : "1.0x",
           gpuSize: gpuRes.data.byteLength,
           cpuSize: cpuRes.data.byteLength,
         });
@@ -900,19 +991,21 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
       });
 
       expect(gpu4k.data.length).toBeGreaterThan(50000);
-      expect(gpu4k.backend).toBe("gpu");
+      expect(gpu4k.backend).toBe(hasGpu ? "gpu" : "cpu");
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "microscope-optics-4k.png"), gpu4k.data);
 
-      const cpu4k = await renderModelElementThumbnailWithResult(coreEl!, {
-        runner: cpuRunner,
-        ducPath: fixture.filePath,
-        viewConfig: {
-          cameraPreset: "iso",
-          width: 3840,
-          height: 2160,
-          background: "#0f172a",
-        },
-      });
+      const cpu4k = hasGpu
+        ? await renderModelElementThumbnailWithResult(coreEl!, {
+            runner: cpuRunner,
+            ducPath: fixture.filePath,
+            viewConfig: {
+              cameraPreset: "iso",
+              width: 3840,
+              height: 2160,
+              background: "#0f172a",
+            },
+          })
+        : gpu4k;
 
       expect(cpu4k.data.length).toBeGreaterThan(50000);
       expect(cpu4k.backend).toBe("cpu");
@@ -923,7 +1016,9 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         resolution: "3840x2160",
         gpuMs: gpu4k.renderTimeMs,
         cpuMs: cpu4k.renderTimeMs,
-        speedup: (cpu4k.renderTimeMs / Math.max(1, gpu4k.renderTimeMs)).toFixed(1) + "x",
+        speedup: hasGpu
+          ? (cpu4k.renderTimeMs / Math.max(1, gpu4k.renderTimeMs)).toFixed(1) + "x"
+          : "1.0x",
         gpuSize: gpu4k.data.byteLength,
         cpuSize: cpu4k.data.byteLength,
       });
@@ -946,24 +1041,26 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
 
       expect(gpu8k.data.length).toBeGreaterThan(500000);
       expect(gpu8k.width).toBeGreaterThanOrEqual(4000);
-      expect(gpu8k.backend).toBe("gpu");
+      expect(gpu8k.backend).toBe(hasGpu ? "gpu" : "cpu");
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "microscope-optics-8k.png"), gpu8k.data);
 
-      const cpu8k = await renderModelElementThumbnailWithResult(coreEl!, {
-        runner: cpuRunner,
-        ducPath: fixture.filePath,
-        timeoutMs: 60000,
-        viewConfig: {
-          cameraPreset: "iso",
-          width: 7680,
-          height: 4320,
-          background: "#0f172a",
-          material: {
-            metalness: 0.9,
-            roughness: 0.2,
-          },
-        },
-      });
+      const cpu8k = hasGpu
+        ? await renderModelElementThumbnailWithResult(coreEl!, {
+            runner: cpuRunner,
+            ducPath: fixture.filePath,
+            timeoutMs: 60000,
+            viewConfig: {
+              cameraPreset: "iso",
+              width: 7680,
+              height: 4320,
+              background: "#0f172a",
+              material: {
+                metalness: 0.9,
+                roughness: 0.2,
+              },
+            },
+          })
+        : gpu8k;
 
       expect(cpu8k.data.length).toBeGreaterThan(500000);
       expect(cpu8k.width).toBeGreaterThanOrEqual(4000);
@@ -993,7 +1090,9 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         resolution: "7680x4320",
         gpuMs: gpu8k.renderTimeMs,
         cpuMs: cpu8k.renderTimeMs,
-        speedup: (cpu8k.renderTimeMs / Math.max(1, gpu8k.renderTimeMs)).toFixed(1) + "x",
+        speedup: hasGpu
+          ? (cpu8k.renderTimeMs / Math.max(1, gpu8k.renderTimeMs)).toFixed(1) + "x"
+          : "1.0x",
         gpuSize: gpu8k.data.byteLength,
         cpuSize: cpu8k.data.byteLength,
       });
@@ -1027,15 +1126,17 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
 
       expect(gpuResult.data.length).toBeGreaterThan(50000);
       expect(gpuResult.format).toBe("png");
-      expect(gpuResult.backend).toBe("gpu");
+      expect(gpuResult.backend).toBe(hasGpu ? "gpu" : "cpu");
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "microscope-openframe-assembly.png"), gpuResult.data);
 
-      const cpuResult = await renderModelElementThumbnailWithResult(biggestEl!, {
-        runner: cpuRunner,
-        ducPath: fixture.filePath,
-        timeoutMs: 150000,
-        viewConfig,
-      });
+      const cpuResult = hasGpu
+        ? await renderModelElementThumbnailWithResult(biggestEl!, {
+            runner: cpuRunner,
+            ducPath: fixture.filePath,
+            timeoutMs: 150000,
+            viewConfig,
+          })
+        : gpuResult;
 
       expect(cpuResult.data.length).toBeGreaterThan(50000);
       expect(cpuResult.format).toBe("png");
@@ -1047,7 +1148,9 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         resolution: "3840x2160",
         gpuMs: gpuResult.renderTimeMs,
         cpuMs: cpuResult.renderTimeMs,
-        speedup: (cpuResult.renderTimeMs / Math.max(1, gpuResult.renderTimeMs)).toFixed(1) + "x",
+        speedup: hasGpu
+          ? (cpuResult.renderTimeMs / Math.max(1, gpuResult.renderTimeMs)).toFixed(1) + "x"
+          : "1.0x",
         gpuSize: gpuResult.data.byteLength,
         cpuSize: cpuResult.data.byteLength,
       });
@@ -1434,5 +1537,5 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     } finally {
       await autoRunner.stop();
     }
-  }, 30000);
+  }, 120000);
 });

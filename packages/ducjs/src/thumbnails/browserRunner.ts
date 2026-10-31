@@ -451,6 +451,7 @@ export class HeadlessBrowserRunner {
           isGpu: isGpu ?? !this.useSoftwareRenderer,
         };
       } finally {
+        this.sessionExceptions.delete(sessionId);
         await this.sendCdp("Target.closeTarget", { targetId }).catch(() => {});
       }
     } finally {
