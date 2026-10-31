@@ -94,6 +94,7 @@ export class HeadlessBrowserRunner {
   private mode: BrowserRendererMode;
   private useSoftwareRenderer: boolean;
   private isShuttingDown = false;
+  private isAutoUserDataDir = false;
   private sessionExceptions = new Map<string, string>();
 
   constructor(options: BrowserRunnerOptions = {}) {
@@ -105,6 +106,14 @@ export class HeadlessBrowserRunner {
     }
     this.executablePath = resolved;
     this.userDataDir = options.userDataDir;
+    if (!this.userDataDir) {
+      try {
+        this.userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "duc-chrome-profile-"));
+        this.isAutoUserDataDir = true;
+      } catch {
+        // Fall back to undefined if tempdir fails
+      }
+    }
     if (options.mode === "cpu" || options.useSoftwareRenderer === true) {
       this.mode = "cpu";
       this.useSoftwareRenderer = true;
@@ -214,7 +223,7 @@ export class HeadlessBrowserRunner {
       });
       this.browserProcess?.once("exit", (code) => {
         clearTimeout(timeout);
-        reject(new Error(`Chrome exited prematurely with code ${code}`));
+        reject(new Error(`Chrome exited prematurely with code ${code}. Stderr: ${stderrBuffer.slice(0, 500)}`));
       });
     });
 
@@ -476,6 +485,11 @@ export class HeadlessBrowserRunner {
       if (this.browserProcess && !this.browserProcess.killed) {
         this.browserProcess.kill("SIGKILL");
         this.browserProcess = null;
+      }
+      if (this.isAutoUserDataDir && this.userDataDir) {
+        try {
+          fs.rmSync(this.userDataDir, { recursive: true, force: true });
+        } catch {}
       }
     } catch {
       // Best-effort cleanup
