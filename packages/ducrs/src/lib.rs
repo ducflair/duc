@@ -1,4 +1,5 @@
 pub mod external_file_chunks;
+mod external_file_locators;
 #[allow(unused_imports)]
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
@@ -7,6 +8,7 @@ pub mod parse;
 pub mod serde_utils;
 pub mod serialize;
 pub mod types;
+pub mod locator;
 
 // SQLite storage layer and high-level document API
 pub mod api;

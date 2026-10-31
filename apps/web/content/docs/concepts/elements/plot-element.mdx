@@ -50,10 +50,10 @@ The spatial paper composition of a Plot Element is governed by its `layout` attr
 ```ts
 export type PlotLayout = {
   margins: {
-    top: PrecisionValue;
-    right: PrecisionValue;
-    bottom: PrecisionValue;
-    left: PrecisionValue;
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
   };
 };
 
@@ -64,4 +64,4 @@ export type DucPlotElement = _DucStackElementBase & {
 ```
 
 - **Paper Dimensions**: The element's canvas `width` and `height` correspond directly to physical paper size dimensions.
-- **Margin Insets (`margins`)**: Specifies explicit `top`, `right`, `bottom`, and `left` margin insets (`PrecisionValue`), defining printable boundary limits for enclosed elements.
+- **Margin Insets (`margins`)**: Specifies explicit `top`, `right`, `bottom`, and `left` margin insets (`number`), defining printable boundary limits for enclosed elements.

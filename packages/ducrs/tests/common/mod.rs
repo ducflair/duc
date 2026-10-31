@@ -10,8 +10,47 @@ use duc::types::*;
 
 static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
+pub const FIXTURE_BASE_URL: &str = "https://raw.githubusercontent.com/ducflair/fixtures/main/src";
+
+pub const OFFICIAL_DUC_FILES: &[&str] = &[
+    "barrel-sauna.duc",
+    "blocks_instances.duc",
+    "colosseum.duc",
+    "empire-state-building.duc",
+    "fielconforto-electric-cable-layout.duc",
+    "heads.duc",
+    "microscope-core.duc",
+    "model-element-fonts.duc",
+    "ponte-d-antonia-ferreira.duc",
+    "satellite.duc",
+    "universal.duc",
+    "welcome-to-scopture.duc",
+];
+
+pub fn ensure_fixtures() -> PathBuf {
+    static INIT: std::sync::Once = std::sync::Once::new();
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let cache_dir = manifest_dir.join("../../.cache/fixtures/duc-files");
+    let _ = fs::create_dir_all(&cache_dir);
+
+    INIT.call_once(|| {
+        for file in OFFICIAL_DUC_FILES {
+            let target_path = cache_dir.join(file);
+            if target_path.exists() && fs::metadata(&target_path).map(|m| m.len()).unwrap_or(0) > 0 {
+                continue;
+            }
+            let url = format!("{}/duc-files/{}", FIXTURE_BASE_URL, file);
+            let _ = std::process::Command::new("curl")
+                .args(["-fsSL", &url, "-o", target_path.to_str().unwrap()])
+                .status();
+        }
+    });
+
+    cache_dir
+}
+
 pub fn assets_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/testing/duc-files")
+    ensure_fixtures()
 }
 
 pub fn all_duc_files() -> Vec<PathBuf> {
@@ -173,12 +212,9 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
 
     let global_state = Some(DucGlobalState {
         view_background_color: "#101820".to_string(),
-        main_scope: "mm".to_string(),
-        scope_exponent_threshold: 3,
     });
 
     let local_state = Some(DucLocalState {
-        scope: "mm".to_string(),
         scroll_x: 125.5,
         scroll_y: -42.25,
         zoom: 1.75,
@@ -284,6 +320,7 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
                             message: Some("initial".to_string()),
                             created: 1_700_000_601,
                             last_retrieved: Some(1_700_000_602),
+                            locator: None,
                         },
                     ),
                     (
@@ -297,6 +334,7 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
                             message: Some("updated".to_string()),
                             created: 1_700_000_603,
                             last_retrieved: None,
+                            locator: None,
                         },
                     ),
                 ]),
@@ -320,6 +358,7 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
                         message: None,
                         created: 1_700_000_701,
                         last_retrieved: Some(1_700_000_702),
+                        locator: None,
                     },
                 )]),
                 version: Some(4),
@@ -779,7 +818,6 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
         anchor: Some(DucIssueAnchor::Canvas {
             x: 10.0,
             y: 20.0,
-            scope: Some("mm".to_string()),
         }),
         author_id: "agent:test".to_string(),
         assignee_ids: None,
@@ -876,7 +914,6 @@ fn sample_base(id: &str, z_index: f32) -> DucElementBase {
         width: 100.0 + f64::from(z_index),
         height: 50.0 + f64::from(z_index),
         angle: 0.25 * f64::from(z_index),
-        scope: "mm".to_string(),
         label: format!("Element {id}"),
         description: Some(format!("Element description for {id}")),
         is_visible: true,

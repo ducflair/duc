@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from ducpy.enums import TEXT_ALIGN
@@ -86,7 +87,6 @@ class DucIssueMessage:
 class DucIssueCanvasAnchor:
     x: float
     y: float
-    scope: Optional[str] = None
     type: str = "canvas"
 
 
@@ -132,13 +132,10 @@ class DucIssue:
 @dataclass
 class DucGlobalState:
     view_background_color: str
-    main_scope: str
-    scope_exponent_threshold: int
 
 
 @dataclass
 class DucLocalState:
-    scope: str
     scroll_x: float
     scroll_y: float
     zoom: float
@@ -226,6 +223,18 @@ class DisplayPrecision:
     linear: int = 2
     angular: int = 2
 
+class ExternalFileLocatorKind(str, Enum):
+    RELATIVE = "relative"
+    ABSOLUTE = "absolute"
+
+
+@dataclass
+class ExternalFileLocator:
+    kind: ExternalFileLocatorKind
+    path: str
+    original_path: Optional[str] = None
+
+
 @dataclass
 class ExternalFileRevision:
     id: str
@@ -236,6 +245,7 @@ class ExternalFileRevision:
     source_name: Optional[str] = None
     message: Optional[str] = None
     last_retrieved: Optional[int] = None
+    locator: Optional[ExternalFileLocator] = None
 
 @dataclass
 class DucExternalFile:

@@ -41,13 +41,56 @@ content = content.replace(/^version\s*=\s*"[^"]+"/m, `version = "${version}"`);
 fs.writeFileSync(fullPath, content);
 console.log(`Updated [package] version to "${version}" in ${fullPath}`);
 
-// Also update any workspace dependent crates that specify a version requirement for 'duc' (e.g. duc2pdf)
-const duc2pdfPath = path.join(repoRoot, "packages/ducpdf/src/duc2pdf/Cargo.toml");
-if (fs.existsSync(duc2pdfPath)) {
-  let duc2pdfContent = fs.readFileSync(duc2pdfPath, "utf8");
-  if (/duc\s*=\s*\{\s*version\s*=\s*"[^"]+"/m.test(duc2pdfContent)) {
-    duc2pdfContent = duc2pdfContent.replace(/(duc\s*=\s*\{\s*version\s*=\s*")[^"]+(")/m, `$1${version}$2`);
-    fs.writeFileSync(duc2pdfPath, duc2pdfContent);
-    console.log(`Updated dependent duc version to "${version}" in ${duc2pdfPath}`);
+// Also update any workspace dependent crates that specify a version requirement for 'duc' (e.g. duc2pdf, ducdxf)
+const pkgNameMatch = content.match(/^name\s*=\s*"([^"]+)"/m);
+const pkgName = pkgNameMatch ? pkgNameMatch[1] : "duc";
+
+function findWorkspaceCargoTomls(root) {
+  const tomls = new Set();
+  const rootCargoToml = path.join(root, "Cargo.toml");
+  if (fs.existsSync(rootCargoToml)) {
+    const rootContent = fs.readFileSync(rootCargoToml, "utf8");
+    const membersMatch = rootContent.match(/members\s*=\s*\[([\s\S]*?)\]/);
+    if (membersMatch) {
+      const memberPaths = [...membersMatch[1].matchAll(/"([^"]+)"/g)].map(m => m[1]);
+      for (const m of memberPaths) {
+        const p = path.join(root, m, "Cargo.toml");
+        if (fs.existsSync(p)) tomls.add(path.resolve(p));
+      }
+    }
+  }
+  const knownCrates = [
+    "packages/ducpdf/src/duc2pdf/Cargo.toml",
+    "packages/ducdxf/Cargo.toml",
+  ];
+  for (const rel of knownCrates) {
+    const p = path.join(root, rel);
+    if (fs.existsSync(p)) tomls.add(path.resolve(p));
+  }
+  return Array.from(tomls);
+}
+
+const workspaceTomls = findWorkspaceCargoTomls(repoRoot);
+for (const tomlPath of workspaceTomls) {
+  if (path.resolve(tomlPath) === fullPath) continue;
+
+  let tomlContent = fs.readFileSync(tomlPath, "utf8");
+  let modified = false;
+
+  const depInlineRegex = new RegExp(`(${pkgName}\\s*=\\s*\\{[^}]*?\\bversion\\s*=\\s*")[^"]+(")`, "g");
+  if (depInlineRegex.test(tomlContent)) {
+    tomlContent = tomlContent.replace(depInlineRegex, `$1${version}$2`);
+    modified = true;
+  }
+
+  const depSectionRegex = new RegExp(`(\\[(?:dependencies|dev-dependencies|build-dependencies)(?:\\.[^\\]]+)?\\.${pkgName}\\][\\s\\S]*?\\bversion\\s*=\\s*")[^"]+(")`, "g");
+  if (depSectionRegex.test(tomlContent)) {
+    tomlContent = tomlContent.replace(depSectionRegex, `$1${version}$2`);
+    modified = true;
+  }
+
+  if (modified) {
+    fs.writeFileSync(tomlPath, tomlContent);
+    console.log(`Updated dependent ${pkgName} version to "${version}" in ${tomlPath}`);
   }
 }

@@ -1068,11 +1068,12 @@ export const segmentIntersectRectangleElement = (
   segment: LineSegment,
   gap: number = 0,
 ): GeometricPoint[] => {
+  const toNum = (v: any) => typeof v === "number" ? v : (v?.value ?? 0);
   const bounds = [
-    element.x.scoped - gap,
-    element.y.scoped - gap,
-    element.x.scoped + element.width.scoped + gap,
-    element.y.scoped + element.height.scoped + gap,
+    toNum(element.x) - gap,
+    toNum(element.y) - gap,
+    toNum(element.x) + toNum(element.width) + gap,
+    toNum(element.y) + toNum(element.height) + gap,
   ] as [number, number, number, number];
   const center = {
     x: (bounds[0] + bounds[2]) / 2,

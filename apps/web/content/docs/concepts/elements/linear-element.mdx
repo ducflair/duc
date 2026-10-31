@@ -61,7 +61,7 @@ Linear elements can bind their endpoints (`startBinding` and `endBinding`) to ta
 export type DucPointBinding = {
   elementId: string;
   focus: number; // Border position offset (-1 to 1)
-  gap: PrecisionValue; // Clearance distance from target border
+  gap: number; // Clearance distance from target border
   fixedPoint: FixedPoint | null; // Fixed normalized coordinates [x, y] inside bound element (0.0 to 1.0)
   point: {
     index: number;

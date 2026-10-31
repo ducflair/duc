@@ -20,7 +20,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "src/duc2pdf/fonts/LiberationSans-LICENSE.txt"
   ],
   "publishConfig": {
     "access": "public"
@@ -53,9 +54,10 @@
     "ducjs": "workspace:^"
   },
   "devDependencies": {
-    "typescript": "^5.4.5",
+    "@embedpdf/pdfium": "2.15.0",
+    "typescript": "^5.9.3",
     "typedoc": "^0.27.9",
-    "wasm-pack": "^0.12.1",
-    "@types/node": "^20.12.2"
+    "wasm-pack": "^0.15.0",
+    "@types/node": "^20.19.43"
   }
 }

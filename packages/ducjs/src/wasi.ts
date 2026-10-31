@@ -10,8 +10,9 @@
  */
 
 import { WASI } from "node:wasi";
+import { spawn } from "node:child_process";
 import { readFileSync, existsSync, writeFileSync, unlinkSync, mkdirSync, statSync, rmdirSync, rmSync, mkdtempSync } from "node:fs";
-import { join, dirname, resolve, relative } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import os from "node:os";
 import type { ExportedDataState } from "./types";
@@ -23,13 +24,7 @@ const _dirname = typeof import.meta !== "undefined"
 
 const isBunRuntime = () => typeof process !== "undefined" && typeof process.versions?.bun === "string";
 
-const getDefaultTempDir = () => isBunRuntime()
-  ? join(process.cwd(), ".duc-wasi-tmp")
-  : os.tmpdir();
-
-const toBunWasiPath = (path: string) => isBunRuntime()
-  ? relative(process.cwd(), path) || "."
-  : path;
+const getDefaultTempDir = () => os.tmpdir();
 
 const isSuccessfulWasiExit = (error: unknown) => {
   const candidate = error as { code?: unknown; exitCode?: unknown; message?: unknown };
@@ -71,6 +66,7 @@ function loadWasiBinary(): Promise<Uint8Array> {
       resolve(_dirname, "..", "node_modules", "ducjs", "dist", "ducjs_wasi.wasm"),
       resolve(_dirname, "..", "ducjs", "dist", "ducjs_wasi.wasm"),
       resolve(_dirname, "ducjs_wasi.wasm"),
+      resolve(_dirname, "..", "dist", "ducjs_wasi.wasm"),
     ];
 
     for (const candidate of candidates) {
@@ -126,7 +122,7 @@ export async function streamToDucFile(
   const outputDir = dirname(outputPath);
 
   try {
-    await runWasi(["ducjs-wasi", isBunRuntime() ? toBunWasiPath(outputPath) : `/output/${outputPath.split("/").pop()!}`, isBunRuntime() ? toBunWasiPath(manifestPath) : "/tmp/manifest.jsonl"], {
+    await runWasi(["ducjs-wasi", `/output/${outputPath.split("/").pop()!}`, "/tmp/manifest.jsonl"], {
       "/": "/",
       ".": process.cwd(),
       "/tmp": manifestDir,
@@ -223,7 +219,7 @@ const writeExternalFileSidecars = (
     writeFileSync(sourcePath, data);
     entries.push({
       ...revision,
-      sourcePath: isBunRuntime() ? toBunWasiPath(sourcePath) : `/tmp/${filename}`,
+      sourcePath: `/tmp/${filename}`,
       sizeBytes: revision.sizeBytes || data.byteLength,
     });
     index += 1;
@@ -239,6 +235,31 @@ const writeExternalFileSidecars = (
 
 const runWasi = async (args: string[], preopens: Record<string, string>) => {
   const wasmBinary = await loadWasiBinary();
+  if (isBunRuntime()) {
+    // Run SQLite WASI with Node's implementation; Bun can trap in call_indirect.
+    const directory = mkdtempSync(join(os.tmpdir(), "duc-wasi-node-"));
+    const binaryPath = join(directory, "serializer.wasm");
+    const configPath = join(directory, "config.json");
+    writeFileSync(binaryPath, wasmBinary);
+    writeFileSync(configPath, JSON.stringify({ args, preopens, binaryPath }));
+    const script = `
+      const { WASI } = require('node:wasi');
+      const { readFileSync } = require('node:fs');
+      const config = JSON.parse(readFileSync(process.argv[1], 'utf8'));
+      const wasi = new WASI({ version: 'preview1', args: config.args, preopens: config.preopens, env: {} });
+      WebAssembly.compile(readFileSync(config.binaryPath)).then(module => WebAssembly.instantiate(module, wasi.getImportObject())).then(instance => wasi.start(instance)).catch(error => { console.error(error); process.exitCode = 1; });
+    `;
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const child = spawn(process.env.DUCJS_NODE_PATH || 'node', ['--no-warnings', '-e', script, configPath], { stdio: ['ignore', 'ignore', 'pipe'] });
+        let errors = '';
+        child.stderr.on('data', chunk => { if (errors.length < 16384) errors += chunk.toString().slice(0, 16384 - errors.length); });
+        child.once('error', error => reject(new Error(`Cannot launch Node.js WASI runtime: ${error.message}`)));
+        child.once('close', code => code === 0 ? resolve() : reject(new Error(`WASI serialization failed (${code}): ${errors.trim()}`)));
+      });
+    } finally { rmSync(directory, { recursive: true, force: true }); }
+    return;
+  }
   const wasi = new WASI({
     version: "preview1",
     args,
@@ -283,10 +304,10 @@ export async function serializeStateToDucFile(
       [
         "ducjs-wasi",
         "--state-json",
-        isBunRuntime() ? toBunWasiPath(statePath) : "/tmp/state.json",
-        isBunRuntime() ? toBunWasiPath(outputPath) : `/output/${outputPath.split("/").pop()!}`,
+        "/tmp/state.json",
+        `/output/${outputPath.split("/").pop()!}`,
         ...(externalManifestPath
-          ? [isBunRuntime() ? toBunWasiPath(externalManifestPath) : "/tmp/external-files.jsonl"]
+          ? ["/tmp/external-files.jsonl"]
           : []),
       ],
       {

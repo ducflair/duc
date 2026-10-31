@@ -9,9 +9,9 @@ use crate::utils::freedraw_bounds::{
 use crate::utils::style_resolver::StyleResolver;
 use crate::utils::svg_to_pdf::{svg_to_pdf, svg_to_pdf_with_dimensions};
 use crate::{
-    calculate_required_scale, calculate_required_scale_with_crop_dimensions,
-    validate_coordinates_with_scale, ConversionError, ConversionMode, ConversionOptions,
-    ConversionResult, PDF_USER_UNIT,
+    calculate_bounding_box, calculate_required_scale,
+    calculate_required_scale_with_crop_dimensions, ConversionError, ConversionMode,
+    ConversionOptions, ConversionResult, PDF_USER_UNIT,
 };
 use bigcolor::BigColor;
 use duc::types::{
@@ -362,11 +362,16 @@ impl DucToPdfBuilder {
             (primary_font.clone(), font_resource_name.clone()),
         );
 
+        let mut font_data = font_data;
+        for family in ["Arial", "Helvetica", "Liberation Sans", "sans-serif"] {
+            font_data.entry(family.to_string()).or_insert_with(|| include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"), "/fonts/LiberationSans-Regular.ttf"
+            )).to_vec());
+        }
         for (family_name, ttf_bytes) in font_data {
             match Font::from_bytes(ttf_bytes, Some(format!("{}.ttf", family_name))) {
                 Ok(font) => match font_manager.embed_font(&mut document, font.clone()) {
                     Ok((_, res_name)) => {
-                        log_info!("Embedded font '{}' as {}", family_name, res_name);
                         font_map.insert(family_name, (font, res_name));
                     }
                     Err(e) => {
@@ -520,53 +525,41 @@ impl DucToPdfBuilder {
         scale: Option<f64>,
         crop_offset: Option<(f64, f64)>,
     ) -> ConversionResult<()> {
-        // If crop offset is specified, only validate coordinates after applying the offset
-        if let Some((offset_x_mm, offset_y_mm)) = crop_offset {
-            // Assume all coordinates are already in millimeters
+        let eff_scale = scale.unwrap_or(1.0);
 
-            // With crop offset, we're adjusting the viewport, so we need to validate
-            // that all elements when adjusted by the offset are still within bounds
+        let has_plots = data.elements.iter().any(|elem| {
+            if let DucElementEnum::DucPlotElement(plot) = &elem.element {
+                !plot.stack_element_base.base.is_deleted
+            } else {
+                false
+            }
+        });
+
+        if has_plots && crop_offset.is_none() {
             for element_wrapper in &data.elements {
-                let base = Self::get_element_base(&element_wrapper.element);
-
-                // Assume all coordinates are already in millimeters
-                let (x_mm, y_mm, width_mm, height_mm) = (base.x, base.y, base.width, base.height);
-
-                let adjusted_x = x_mm - offset_x_mm;
-                let adjusted_y = y_mm - offset_y_mm;
-
-                // CRITICAL: Validate that coordinates don't exceed limits
-                let final_scale = validate_coordinates_with_scale(adjusted_x, adjusted_y, scale)?;
-                let final_scale2 = validate_coordinates_with_scale(
-                    adjusted_x + width_mm,
-                    adjusted_y + height_mm,
-                    scale,
-                )?;
-
-                // If auto-scaling was applied, ensure we use the most restrictive scale
-                if scale.is_none() && (final_scale < 1.0 || final_scale2 < 1.0) {
-                    let required_scale = final_scale.min(final_scale2);
-                    if required_scale < 1.0 {
-                        return Err(ConversionError::InvalidDucData(format!(
-                            "Crop specifications result in coordinates that exceed PDF limits. Required scale: {:.6}", 
-                            required_scale
-                        )));
+                if let DucElementEnum::DucPlotElement(plot) = &element_wrapper.element {
+                    let base = &plot.stack_element_base.base;
+                    if !base.is_deleted {
+                        if base.width * eff_scale > crate::MAX_COMFORTABLE_MM
+                            || base.height * eff_scale > crate::MAX_COMFORTABLE_MM
+                        {
+                            return Err(ConversionError::ScaleExceedsBounds(
+                                base.width,
+                                base.height,
+                                eff_scale,
+                            ));
+                        }
                     }
                 }
             }
             return Ok(());
         }
 
-        // Otherwise validate all elements - assume all coordinates are in millimeters
-        for element_wrapper in &data.elements {
-            let base = Self::get_element_base(&element_wrapper.element);
-
-            // Assume all coordinates are already in millimeters
-            let (x_mm, y_mm, width_mm, height_mm) = (base.x, base.y, base.width, base.height);
-
-            validate_coordinates_with_scale(x_mm, y_mm, scale)?;
-            validate_coordinates_with_scale(x_mm + width_mm, y_mm + height_mm, scale)?;
+        let (_min_x, _min_y, width, height) = calculate_bounding_box(data);
+        if width * eff_scale > crate::MAX_COMFORTABLE_MM || height * eff_scale > crate::MAX_COMFORTABLE_MM {
+            return Err(ConversionError::ScaleExceedsBounds(width, height, eff_scale));
         }
+
         Ok(())
     }
 
@@ -618,23 +611,21 @@ impl DucToPdfBuilder {
             info.set("Author", Object::string_literal(author.as_str()));
         }
 
-        // Set subject
-        if let Some(subject) = &self.context.options.metadata_subject {
-            info.set("Subject", Object::string_literal(subject.as_str()));
-        }
-
         // Set creator and producer
-        info.set("Creator", Object::string_literal("DUC to PDF Converter"));
+        // info.set("Creator", Object::string_literal(""));
         info.set("Producer", Object::string_literal("ducpdf"));
 
-        // Set version info with scale information
-        let scale_info = if self.context.scale < 1.0 {
-            format!("Scale: 1:{:.4}", 1.0 / self.context.scale)
-        } else if self.context.scale > 1.0 {
-            format!("Scale: {:.4}:1", self.context.scale)
-        } else {
-            "Scale: 1:1".to_string()
+        // Format scale information cleanly (e.g. "Scale: 1:1", "Scale: 1:20", "Scale: 10:1")
+        let scale_info = crate::format_scale_string(self.context.scale);
+
+        // Set subject / description to clearly communicate scale to PDF viewers
+        let subject_text = match &self.context.options.metadata_subject {
+            Some(subject) if !subject.trim().is_empty() => {
+                format!("{}, {}", subject.trim(), scale_info)
+            }
+            _ => scale_info.clone(),
         };
+        info.set("Subject", Object::string_literal(subject_text.as_str()));
 
         let keywords = format!(
             "DUC version: {}, Source: {}, {}",
@@ -718,12 +709,16 @@ impl DucToPdfBuilder {
                     file.id
                 ))
             })?;
-        let svg_data = rev_data.ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!(
-                "No data blob for revision {}",
-                file.active_revision_id
-            ))
-        })?;
+        let svg_data = match rev_data {
+            Some(data) => data,
+            None => {
+                log_warn!(
+                    "No data blob for revision {}, skipping SVG preload",
+                    file.active_revision_id
+                );
+                return Ok(0);
+            }
+        };
 
         // Convert SVG to PDF using the utility and get dimensions
         let (pdf_bytes, svg_width, svg_height) =
@@ -800,12 +795,16 @@ impl DucToPdfBuilder {
                     file.id
                 ))
             })?;
-        let image_data = rev_data.ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!(
-                "No data blob for revision {}",
-                file.active_revision_id
-            ))
-        })?;
+        let image_data = match rev_data {
+            Some(data) => data,
+            None => {
+                log_warn!(
+                    "No data blob for revision {}, skipping image preload",
+                    file.active_revision_id
+                );
+                return Ok(0);
+            }
+        };
         let mime_type = &revision.mime_type;
 
         // Create image directly from bytes (WASM-compatible)
@@ -867,12 +866,16 @@ impl DucToPdfBuilder {
                     file.id
                 ))
             })?;
-        let pdf_data = rev_data.ok_or_else(|| {
-            ConversionError::ResourceLoadError(format!(
-                "No data blob for revision {}",
-                file.active_revision_id
-            ))
-        })?;
+        let pdf_data = match rev_data {
+            Some(data) => data,
+            None => {
+                log_warn!(
+                    "No data blob for revision {}, skipping PDF preload",
+                    file.active_revision_id
+                );
+                return Ok(0);
+            }
+        };
         let mime_type = &revision.mime_type;
         let embed_id = format!("pdf_{}", file.id);
 
@@ -1004,15 +1007,9 @@ impl DucToPdfBuilder {
                         };
 
                         // Calculate bounding box using the SVG path when available for accurate bounds
-                        let svg_document = if let Some(bounds) =
+                        let (svg_document, calculated_bounds) = if let Some(bounds) =
                             self.select_freedraw_bounds(freedraw)
                         {
-                            // Cache the calculated bounding box for later use in stream_freedraw
-                            self.context
-                                .resource_cache
-                                .freedraw_bboxes
-                                .insert(freedraw.base.id.clone(), bounds);
-
                             let mut width = bounds.width();
                             let mut height = bounds.height();
 
@@ -1066,8 +1063,15 @@ impl DucToPdfBuilder {
                             let translate_x = format_number(-bounds.min_x);
                             let translate_y = format_number(-bounds.min_y);
 
+                            let effective_bounds = FreeDrawBounds {
+                                min_x: bounds.min_x,
+                                min_y: bounds.min_y,
+                                max_x: bounds.min_x + width,
+                                max_y: bounds.min_y + height,
+                            };
+
                             // Normalize the path so the viewport starts at (0,0)
-                            format!(
+                            let doc = format!(
                                 r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}"><g transform="translate({tx} {ty})"><path d="{path}" fill="{fill}" fill-opacity="{opacity}" /></g></svg>"#,
                                 width = width_str,
                                 height = height_str,
@@ -1076,16 +1080,37 @@ impl DucToPdfBuilder {
                                 path = svg_path,
                                 fill = stroke_color.as_str(),
                                 opacity = stroke_opacity,
-                            )
+                            );
+
+                            (doc, Some(effective_bounds))
                         } else {
-                            // Fallback to document without viewBox if bbox calculation fails
-                            format!(
-                                r#"<svg xmlns="http://www.w3.org/2000/svg"><path d="{}" fill="{}" fill-opacity="{}" /></svg>"#,
-                                svg_path,
-                                stroke_color.as_str(),
-                                stroke_opacity
-                            )
+                            let width = freedraw.base.width.abs().max(freedraw.size.abs()).max(1.0);
+                            let height = freedraw.base.height.abs().max(freedraw.size.abs()).max(1.0);
+                            let width_str = format_number(width);
+                            let height_str = format_number(height);
+                            let fallback_bounds = FreeDrawBounds {
+                                min_x: 0.0,
+                                min_y: 0.0,
+                                max_x: width,
+                                max_y: height,
+                            };
+                            let doc = format!(
+                                r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}"><path d="{path}" fill="{fill}" fill-opacity="{opacity}" /></svg>"#,
+                                width = width_str,
+                                height = height_str,
+                                path = svg_path,
+                                fill = stroke_color.as_str(),
+                                opacity = stroke_opacity,
+                            );
+                            (doc, Some(fallback_bounds))
                         };
+
+                        if let Some(bounds) = calculated_bounds {
+                            self.context
+                                .resource_cache
+                                .freedraw_bboxes
+                                .insert(freedraw.base.id.clone(), bounds);
+                        }
 
                         // Convert SVG content to PDF
                         match svg_to_pdf(svg_document.as_bytes()) {
@@ -1293,7 +1318,6 @@ impl DucToPdfBuilder {
         } else {
             // If no local state exists, create one with the offset
             let new_local_state = duc::types::DucLocalState {
-                scope: "mm".to_string(), // Always use mm for internal processing
                 scroll_x: offset_x_mm,
                 scroll_y: offset_y_mm,
                 zoom: 1.0,
@@ -1350,6 +1374,9 @@ impl DucToPdfBuilder {
         // Setup page resources including XObjects
         let resources = self.create_page_resources()?;
 
+        let page_width_pt = (page_width * PDF_USER_UNIT as f64) as f32;
+        let page_height_pt = (page_height * PDF_USER_UNIT as f64) as f32;
+
         // Create page dictionary
         let mut page = Dictionary::new();
         page.set("Type", Object::Name("Page".as_bytes().to_vec()));
@@ -1358,8 +1385,8 @@ impl DucToPdfBuilder {
             Object::Array(vec![
                 Object::Real(0.0),
                 Object::Real(0.0),
-                Object::Real(page_width as f32),
-                Object::Real(page_height as f32),
+                Object::Real(page_width_pt),
+                Object::Real(page_height_pt),
             ]),
         );
         page.set(
@@ -1367,12 +1394,11 @@ impl DucToPdfBuilder {
             Object::Array(vec![
                 Object::Real(0.0),
                 Object::Real(0.0),
-                Object::Real(page_width as f32),
-                Object::Real(page_height as f32),
+                Object::Real(page_width_pt),
+                Object::Real(page_height_pt),
             ]),
         );
 
-        page.set("UserUnit", Object::Real(PDF_USER_UNIT));
         page.set("Contents", Object::Reference(content_id));
         page.set("Resources", Object::Dictionary(resources));
 
@@ -1410,6 +1436,9 @@ impl DucToPdfBuilder {
         // Setup page resources including XObjects
         let resources = self.create_page_resources()?;
 
+        let page_width_pt = (page_width * PDF_USER_UNIT as f64) as f32;
+        let page_height_pt = (page_height * PDF_USER_UNIT as f64) as f32;
+
         // Create page dictionary
         let mut page = Dictionary::new();
         page.set("Type", Object::Name("Page".as_bytes().to_vec()));
@@ -1418,8 +1447,8 @@ impl DucToPdfBuilder {
             Object::Array(vec![
                 Object::Real(0.0),
                 Object::Real(0.0),
-                Object::Real(page_width as f32),
-                Object::Real(page_height as f32),
+                Object::Real(page_width_pt),
+                Object::Real(page_height_pt),
             ]),
         );
         page.set(
@@ -1427,12 +1456,11 @@ impl DucToPdfBuilder {
             Object::Array(vec![
                 Object::Real(0.0),
                 Object::Real(0.0),
-                Object::Real(page_width as f32),
-                Object::Real(page_height as f32),
+                Object::Real(page_width_pt),
+                Object::Real(page_height_pt),
             ]),
         );
 
-        page.set("UserUnit", Object::Real(PDF_USER_UNIT));
         page.set("Contents", Object::Reference(content_id));
         page.set("Resources", Object::Dictionary(resources));
 
@@ -1515,6 +1543,20 @@ impl DucToPdfBuilder {
 
         // Save graphics state once for the entire page
         operations.push(Operation::new("q", vec![]));
+
+        // Scale from millimeters to PDF points (1 mm = 72.0 / 25.4 pt)
+        // This ensures the content drawn in millimeters matches standard point-based PDF user space
+        operations.push(Operation::new(
+            "cm",
+            vec![
+                Object::Real(PDF_USER_UNIT),
+                Object::Real(0.0),
+                Object::Real(0.0),
+                Object::Real(PDF_USER_UNIT),
+                Object::Real(0.0),
+                Object::Real(0.0),
+            ],
+        ));
 
         // Determine which background color to use:
         // - In PLOT mode: use plot element's background (passed as page_background_color)
@@ -1705,9 +1747,7 @@ impl DucToPdfBuilder {
 
         Ok(Stream::new(stream_dict, content_bytes))
     }
-    /// Stream elements organized by layers
-    /// This function organizes elements into unlayered and layered groups,
-    /// ensuring all elements are rendered within the same transformation context
+    /// Preserve global paint order while marking contiguous OCG layer runs.
     fn stream_elements_by_layer(
         &mut self,
         bounds: (f64, f64, f64, f64),
@@ -1751,33 +1791,30 @@ impl DucToPdfBuilder {
         self.element_streamer
             .set_svg_dimensions(self.context.resource_cache.svg_dimensions.clone());
 
-        let is_plot_mode = matches!(self.context.options.mode, ConversionMode::Plot);
-        let (scroll_x, scroll_y) = if is_plot_mode {
-            (0.0, 0.0)
-        } else if let Some(state) = &self.context.exported_data.duc_local_state {
-            (state.scroll_x, state.scroll_y)
-        } else {
-            (0.0, 0.0)
-        };
-
-        // === Phase 1: Stream unlayered elements ===
-        // These elements don't belong to any layer and render first
-        let unlayered_elements: Vec<ElementWrapper> = self
-            .context
-            .exported_data
-            .elements
-            .iter()
-            .filter(|element_wrapper| {
-                let base =
-                    crate::builder::DucToPdfBuilder::get_element_base(&element_wrapper.element);
-                base.layer_id.is_none()
-            })
-            .cloned()
-            .collect();
-
-        if !unlayered_elements.is_empty() {
-            let ops = self.element_streamer.stream_elements_within_bounds(
-                &unlayered_elements,
+        // OCG membership must not reorder paint. Batch only adjacent elements of
+        // the same layer after a stable global z-order sort.
+        let mut ordered = self.context.exported_data.elements.clone();
+        ordered.sort_by(|a, b| {
+            Self::get_element_base(&a.element).z_index
+                .partial_cmp(&Self::get_element_base(&b.element).z_index)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        let mut start = 0;
+        while start < ordered.len() {
+            let layer_id = &Self::get_element_base(&ordered[start].element).layer_id;
+            let mut end = start + 1;
+            while end < ordered.len()
+                && &Self::get_element_base(&ordered[end].element).layer_id == layer_id {
+                end += 1;
+            }
+            let prop = layer_id.as_ref().and_then(|id| self.layer_prop_names.get(id));
+            if let Some(prop) = prop {
+                all_operations.push(Operation::new("BDC", vec![
+                    Object::Name(b"OC".to_vec()), Object::Name(prop.as_bytes().to_vec()),
+                ]));
+            }
+            all_operations.extend(self.element_streamer.stream_elements_within_bounds(
+                &ordered[start..end],
                 &self.context.exported_data.elements,
                 bounds,
                 self.context.exported_data.duc_local_state.as_ref(),
@@ -1787,115 +1824,12 @@ impl DucToPdfBuilder {
                 &mut self.image_manager,
                 &self.ocg_manager,
                 &mut self.document,
-            )?;
-            all_operations.extend(ops);
-        }
-
-        // === Phase 2: Stream layered elements with OCG marking ===
-        // Each layer is wrapped in BDC/EMC markers for proper layer visibility control
-        for layer in &self.context.exported_data.layers {
-            let layer_elements: Vec<ElementWrapper> = self
-                .context
-                .exported_data
-                .elements
-                .iter()
-                .filter(|element_wrapper| {
-                    let base =
-                        crate::builder::DucToPdfBuilder::get_element_base(&element_wrapper.element);
-
-                    // Check if element belongs to this layer
-                    let belongs_to_layer = base
-                        .layer_id
-                        .as_ref()
-                        .map_or(false, |layer_id| layer_id == &layer.id);
-
-                    if !belongs_to_layer {
-                        return false;
-                    }
-
-                    // Verify element (including duplications) intersects with page bounds
-                    let (bounds_x, bounds_y, bounds_width, bounds_height) = bounds;
-                    let bounds_max_x = bounds_x + bounds_width;
-                    let bounds_max_y = bounds_y + bounds_height;
-
-                    let offsets = self
-                        .element_streamer
-                        .get_element_duplication_offsets(&element_wrapper.element)
-                        .unwrap_or_else(|| vec![(0.0, 0.0)]);
-
-                    let mut intersects = false;
-                    for (x_off, y_off) in offsets {
-                        let elem_x = base.x + scroll_x + x_off;
-                        let elem_y = base.y + scroll_y + y_off;
-                        let elem_max_x = elem_x + base.width;
-                        let elem_max_y = elem_y + base.height;
-
-                        let this_intersects = !(elem_x > bounds_max_x
-                            || elem_max_x < bounds_x
-                            || elem_y > bounds_max_y
-                            || elem_max_y < bounds_y);
-
-                        if this_intersects {
-                            intersects = true;
-                            break;
-                        }
-                    }
-
-                    if !intersects {
-                        let base_id = &base.id;
-                        let instance_id = base.instance_id.as_deref().unwrap_or("<none>");
-                        log_info!(
-                            "Skipping layered element '{}' (instance {}) - no duplicated instance intersects bounds. bounds=({},{},{},{}) scroll=({}, {})",
-                            base_id,
-                            instance_id,
-                            bounds_x,
-                            bounds_y,
-                            bounds_width,
-                            bounds_height,
-                            scroll_x,
-                            scroll_y
-                        );
-                    }
-
-                    intersects
-                })
-                .cloned()
-                .collect();
-
-            if layer_elements.is_empty() {
-                continue;
+            )?);
+            if prop.is_some() {
+                all_operations.push(Operation::new("EMC", vec![]));
             }
-
-            // Begin marked content for layer (BDC)
-            if let Some(prop_name) = self.layer_prop_names.get(&layer.id) {
-                all_operations.push(Operation::new(
-                    "BDC",
-                    vec![
-                        Object::Name(b"OC".to_vec()),
-                        Object::Name(prop_name.as_bytes().to_vec()),
-                    ],
-                ));
-            }
-
-            // Stream all elements within this layer
-            let layer_ops = self.element_streamer.stream_elements_within_bounds(
-                &layer_elements,
-                &self.context.exported_data.elements,
-                bounds,
-                self.context.exported_data.duc_local_state.as_ref(),
-                &mut self.resource_streamer,
-                &mut self.hatching_manager,
-                &mut self.pdf_embedder,
-                &mut self.image_manager,
-                &self.ocg_manager,
-                &mut self.document,
-            )?;
-            all_operations.extend(layer_ops);
-
-            // End marked content for layer (EMC)
-            all_operations.push(Operation::new("EMC", vec![]));
+            start = end;
         }
-
         Ok(all_operations)
     }
 

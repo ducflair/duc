@@ -1,16 +1,16 @@
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 use serde::Serialize;
 
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 use std::borrow::Cow;
 
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 use wasm_bindgen::prelude::*;
 
 /// Serialize a value to JsValue using serde-wasm-bindgen with
 /// `serialize_maps_as_objects(true)` so that internally-tagged enums
 /// and `#[serde(flatten)]` produce plain JS objects (not `Map`s).
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 fn to_js<T: Serialize>(value: &T) -> Result<JsValue, JsError> {
     let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
     value
@@ -20,7 +20,7 @@ fn to_js<T: Serialize>(value: &T) -> Result<JsValue, JsError> {
 
 // ── OPFS Document Session ──────────────────────────────────────────────────
 
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_name = "DucOpfsDocument")]
 pub struct DucOpfsDocument {
     inner: duc::api::DucDocument,
@@ -31,7 +31,7 @@ pub struct DucOpfsDocument {
 
 /// Incrementally replaces one OPFS database without retaining the imported
 /// SQLite payload in WASM memory.
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_name = "DucOpfsImporter")]
 pub struct DucOpfsImporter {
     util: sqlite_wasm_vfs::sahpool::OpfsSAHPoolUtil,
@@ -41,7 +41,7 @@ pub struct DucOpfsImporter {
     finished: bool,
 }
 
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_class = "DucOpfsImporter")]
 impl DucOpfsImporter {
     /// Begin replacing `name`. Any prior database with the same closed name is
@@ -150,7 +150,7 @@ impl DucOpfsImporter {
     }
 }
 
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 impl Drop for DucOpfsImporter {
     fn drop(&mut self) {
         if !self.finished {
@@ -159,7 +159,7 @@ impl Drop for DucOpfsImporter {
     }
 }
 
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_class = "DucOpfsDocument")]
 impl DucOpfsDocument {
     /// Open or create a persistent OPFS-backed DUC SQLite document.
@@ -496,7 +496,7 @@ impl DucOpfsDocument {
     }
 }
 
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 async fn opfs_sahpool_util(
     namespace: Option<&str>,
 ) -> Result<sqlite_wasm_vfs::sahpool::OpfsSAHPoolUtil, JsError> {
@@ -521,7 +521,7 @@ async fn opfs_sahpool_util(
         .map_err(|e| JsError::new(&format!("{e:?}")))
 }
 
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 fn optional_bytes_to_js(data: Option<Vec<u8>>) -> Result<JsValue, JsError> {
     match data {
         Some(bytes) => Ok(js_sys::Uint8Array::from(bytes.as_slice()).into()),
@@ -539,7 +539,7 @@ fn optional_bytes_to_js(data: Option<Vec<u8>>) -> Result<JsValue, JsError> {
 // DucOpfsDocument (browser) or the WASI binary (Node.js) instead.
 
 /// Parse a `.duc` file (Uint8Array) into a JS object (ExportedDataState).
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_name = "parseDuc")]
 pub fn parse_duc(buf: &[u8]) -> Result<JsValue, JsError> {
     let state = duc::parse::parse_duc_bytes(buf).map_err(|e| JsError::new(&format!("{e}")))?;
@@ -547,7 +547,7 @@ pub fn parse_duc(buf: &[u8]) -> Result<JsValue, JsError> {
 }
 
 /// Serialize a JS object (ExportedDataState) into `.duc` bytes (Uint8Array).
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_name = "serializeDuc")]
 pub fn serialize_duc(data: JsValue) -> Result<Vec<u8>, JsError> {
     let state: duc::types::ExportedDataState =
@@ -556,7 +556,7 @@ pub fn serialize_duc(data: JsValue) -> Result<Vec<u8>, JsError> {
 }
 
 /// Restore the document state at `version_number` from a `.duc` file buffer.
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_name = "restoreVersion")]
 pub fn restore_version(duc_buf: &[u8], version_number: f64) -> Result<JsValue, JsError> {
     let conn = duc::parse::open_duc_bytes_connection(duc_buf)
@@ -570,7 +570,7 @@ pub fn restore_version(duc_buf: &[u8], version_number: f64) -> Result<JsValue, J
 }
 
 /// Restore a specific checkpoint by its ID from a `.duc` file buffer.
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_name = "restoreCheckpoint")]
 pub fn restore_checkpoint(duc_buf: &[u8], checkpoint_id: &str) -> Result<JsValue, JsError> {
     let conn = duc::parse::open_duc_bytes_connection(duc_buf)
@@ -584,7 +584,7 @@ pub fn restore_checkpoint(duc_buf: &[u8], checkpoint_id: &str) -> Result<JsValue
 }
 
 /// List all versions (checkpoints + deltas) from a `.duc` file buffer.
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_name = "listVersions")]
 pub fn list_versions(duc_buf: &[u8]) -> Result<JsValue, JsError> {
     let conn = duc::parse::open_duc_bytes_connection(duc_buf)
@@ -598,7 +598,7 @@ pub fn list_versions(duc_buf: &[u8]) -> Result<JsValue, JsError> {
 }
 
 /// Read the full VersionGraph from a `.duc` file buffer.
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_name = "readVersionGraph")]
 pub fn read_version_graph(duc_buf: &[u8]) -> Result<JsValue, JsError> {
     let conn = duc::parse::open_duc_bytes_connection(duc_buf)
@@ -615,7 +615,7 @@ pub fn read_version_graph(duc_buf: &[u8]) -> Result<JsValue, JsError> {
 }
 
 /// Revert the document to a specific version, removing all newer versions.
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_name = "revertToVersion")]
 pub fn revert_to_version(duc_buf: &[u8], target_version: f64) -> Result<JsValue, JsError> {
     let conn = duc::parse::open_duc_bytes_connection(duc_buf)
@@ -629,7 +629,7 @@ pub fn revert_to_version(duc_buf: &[u8], target_version: f64) -> Result<JsValue,
 }
 
 /// Helper: convert a `RestoredVersion` to a JS value.
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 fn to_restored_js(r: &duc::api::version_control::RestoredVersion) -> Result<JsValue, JsError> {
     let obj = js_sys::Object::new();
     js_sys::Reflect::set(
@@ -666,7 +666,7 @@ fn to_restored_js(r: &duc::api::version_control::RestoredVersion) -> Result<JsVa
 /// its own constant. When this value is bumped in Rust, the version control
 /// system will automatically handle migration bookkeeping (closing old chains,
 /// recording migrations) the next time a checkpoint or delta is created.
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_name = "getCurrentSchemaVersion")]
 pub fn get_current_schema_version() -> i32 {
     duc::api::version_control::CURRENT_SCHEMA_VERSION
@@ -682,7 +682,7 @@ pub fn get_current_schema_version() -> i32 {
 /// Returns an encoded changeset (`Uint8Array`) ready for storage in a
 /// `Delta.payload`. bsdiff finds matching blocks even when they shift
 /// offsets, which is critical for SQLite databases.
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_name = "createDeltaChangeset")]
 pub fn create_delta_changeset(base_state: &[u8], current_state: &[u8]) -> Result<Vec<u8>, JsError> {
     duc::api::version_control::create_bsdiff_changeset(base_state, current_state)
@@ -696,9 +696,14 @@ pub fn create_delta_changeset(base_state: &[u8], current_state: &[u8]) -> Result
 ///
 /// Handles all changeset formats transparently:
 ///   - v3 (bsdiff), v2 (XOR diff), v1 (gzip full snapshot)
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(all(target_family = "wasm", target_os = "unknown", not(feature = "locator-only")))]
 #[wasm_bindgen(js_name = "applyDeltaChangeset")]
 pub fn apply_delta_changeset(base_state: &[u8], changeset: &[u8]) -> Result<Vec<u8>, JsError> {
     duc::api::version_control::apply_delta_changeset(base_state, changeset)
         .map_err(|e| JsError::new(&format!("{e}")))
 }
+
+#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+mod locator;
+#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+pub use locator::*;

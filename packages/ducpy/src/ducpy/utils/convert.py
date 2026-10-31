@@ -37,12 +37,19 @@ _FLATTEN_KEYS = frozenset({
     "styles",
     "linear_base",
     "stack_element_base",
+    "stack_base",
 })
+
+_IDENTITY_MAP_FIELDS = frozenset({"files", "external_files", "files_data", "revisions"})
 
 
 def deep_camel_to_snake(obj: Any) -> Any:
     if isinstance(obj, dict):
-        return {camel_to_snake(k): deep_camel_to_snake(v) for k, v in obj.items()}
+        return {camel_to_snake(k): (
+            {identity: deep_camel_to_snake(value) for identity, value in v.items()}
+            if camel_to_snake(k) in _IDENTITY_MAP_FIELDS and isinstance(v, dict)
+            else deep_camel_to_snake(v)
+        ) for k, v in obj.items()}
     if isinstance(obj, list):
         return [deep_camel_to_snake(item) for item in obj]
     return obj
@@ -53,7 +60,11 @@ def deep_snake_to_camel(obj: Any) -> Any:
         result = {}
         for k, v in obj.items():
             ck = _SNAKE_TO_CAMEL_OVERRIDES.get(k, snake_to_camel(k))
-            result[ck] = deep_snake_to_camel(v)
+            result[ck] = (
+                {identity: deep_snake_to_camel(value) for identity, value in v.items()}
+                if camel_to_snake(k) in _IDENTITY_MAP_FIELDS and isinstance(v, dict)
+                else deep_snake_to_camel(v)
+            )
         return result
     if isinstance(obj, list):
         return [deep_snake_to_camel(item) for item in obj]
@@ -64,17 +75,20 @@ def deep_snake_to_camel(obj: Any) -> Any:
     return obj
 
 
-def _flatten_dict(d: dict) -> dict:
+def _flatten_dict(d: dict, *, preserve_stack_base: bool = False) -> dict:
     """Recursively flatten keys that Rust serde #[serde(flatten)] would flatten.
 
-    Walks the entire dict so that nested flatten keys (e.g. ``stack_element_base``
-    -> ``stack_base`` -> ``styles``) are all merged into the appropriate level.
+    Stack elements keep their nested stack_base; layers, groups and regions
+    flatten it. Styles are flattened in both representations.
     """
     result: dict = {}
     for k, v in d.items():
+        if k in _IDENTITY_MAP_FIELDS and isinstance(v, dict):
+            result[k] = {identity: _flatten_dict(value) if isinstance(value, dict) else value for identity, value in v.items()}
+            continue
         if isinstance(v, dict):
-            v = _flatten_dict(v)
-            if k in _FLATTEN_KEYS:
+            v = _flatten_dict(v, preserve_stack_base=k == "stack_element_base")
+            if k in _FLATTEN_KEYS and not (k == "stack_base" and preserve_stack_base):
                 result.update(v)
             else:
                 result[k] = v
@@ -101,7 +115,7 @@ def to_serializable(obj: Any) -> Any:
         d = _flatten_dict(d)
         return deep_snake_to_camel(d)
     if isinstance(obj, dict):
-        return deep_snake_to_camel(obj)
+        return deep_snake_to_camel(_flatten_dict(obj))
     if isinstance(obj, list):
         return [to_serializable(item) for item in obj]
     if isinstance(obj, bytes):

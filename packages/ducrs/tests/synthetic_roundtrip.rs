@@ -229,3 +229,23 @@ fn synthetic_roundtrip_numbers_deltas_per_base_checkpoint() {
     assert_eq!(parsed_graph.latest_version_id, "delta-4");
     let _ = fs::remove_file(path);
 }
+
+#[test]
+fn external_locators_survive_native_document_roundtrip_without_embedded_data() {
+    use duc::types::{ExternalFileLocator, ExternalFileLocatorKind};
+    let mut state = common::synthetic_roundtrip_state();
+    for file in state.external_files.as_mut().unwrap().values_mut() {
+        for revision in file.revisions.values_mut() {
+            revision.locator = Some(ExternalFileLocator { kind: ExternalFileLocatorKind::Relative, path: "assets/part.ifc".into(), original_path: Some("/original/part.ifc".into()) });
+        }
+    }
+    state.external_files_data = None;
+    let mut writer = DucSession::create_export_session().unwrap();
+    writer.write_document_state(&state).unwrap();
+    let path = finish_session_to_temp_path(writer, "locator-roundtrip");
+    let reader = DucSession::open_path(&path).unwrap();
+    let parsed = reader.read_document_state().unwrap();
+    assert_eq!(parsed.external_files, state.external_files);
+    assert!(parsed.external_files_data.is_none());
+    let _ = fs::remove_file(path);
+}

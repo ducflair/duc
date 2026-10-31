@@ -5,6 +5,7 @@ members = [
     "packages/ducjs/crate",
     "packages/ducpy/crate",
     "packages/ducpdf/src/duc2pdf",
+    "packages/ducdxf",
     "packages/ducsvg/src/pdf2svg",
     "patches/sqlite-wasm-vfs",
 ]

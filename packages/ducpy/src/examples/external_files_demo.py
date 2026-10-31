@@ -32,7 +32,6 @@ def create_duc_with_external_files():
 
     duc_global_state = (duc.StateBuilder()
         .build_global_state()
-        .with_main_scope("mm")
         .build())
 
     duc_local_state = (duc.StateBuilder()

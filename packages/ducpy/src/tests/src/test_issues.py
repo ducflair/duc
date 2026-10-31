@@ -21,7 +21,7 @@ def test_issues_roundtrip(test_output_dir):
                 reactions={"+1": ["engineer"]},
                 created_at=1_715_000_001_000,
             )
-            .with_canvas_anchor(120.0, 80.0, scope="mm")
+            .with_canvas_anchor(120.0, 80.0)
             .build(),
         duc.StateBuilder()
             .with_id("issue-2")
@@ -51,7 +51,6 @@ def test_issues_roundtrip(test_output_dir):
     assert parsed.issues[0].assignee_ids == ["engineer"]
     assert parsed.issues[0].messages[0].reactions["+1"] == ["engineer"]
     assert parsed.issues[0].anchor.type == "canvas"
-    assert parsed.issues[0].anchor.scope == "mm"
     assert parsed.issues[1].status == "dismissed"
     assert parsed.issues[1].anchor.type == "model"
     assert list(parsed.issues[1].anchor.point) == [1.0, 2.0, 3.0]

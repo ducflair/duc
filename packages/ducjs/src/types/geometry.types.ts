@@ -1,5 +1,5 @@
 import { AXIS } from "../enums";
-import { ScopedValue, ValueOf } from ".";
+import { ValueOf } from ".";
 
 /**
  * Axis such as X, Y, Z
@@ -10,10 +10,10 @@ export type Axis = ValueOf<typeof AXIS>;
  * x and y position of top left corner, x and y position of bottom right corner
  */
 export type Bounds = readonly [
-  minX: ScopedValue,
-  minY: ScopedValue,
-  maxX: ScopedValue,
-  maxY: ScopedValue,
+  minX: number,
+  minY: number,
+  maxX: number,
+  maxY: number,
 ];
 
 /**
@@ -35,7 +35,6 @@ export type Radian = number & { __brand: "Radian" };
 export type Percentage = number & { __brand: "Percentage" };
 
 // a point is specified by its coordinate (x, y)
-// These Points are always scoped ScopedValue
 export type GeometricPoint = { x: number; y: number };
 export type GeometricVector = GeometricPoint;
 

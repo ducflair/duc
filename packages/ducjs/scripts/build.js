@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { buildLocator } from './build-locator.js';
 import { spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 import os from 'os';
@@ -235,10 +236,16 @@ function buildWasm(cratePath, outDir, wasmPackBin) {
 
 function buildWasi(cratePath, outDir) {
   return new Promise((resolve, reject) => {
+    const sdk = process.env.WASI_SDK_PATH;
+    const homebrew = process.arch === 'arm64' ? '/opt/homebrew' : '/usr/local';
+    const compiler = sdk ? path.join(sdk, 'bin', process.platform === 'win32' ? 'clang.exe' : 'clang')
+      : process.platform === 'darwin' ? `${homebrew}/opt/llvm/bin/clang` : 'clang';
+    const flags = sdk ? `--sysroot="${path.join(sdk, 'share/wasi-sysroot')}"`
+      : process.platform === 'darwin' ? `--sysroot=${homebrew}/share/wasi-sysroot` : '--sysroot=/usr -isystem /usr/include/wasm32-wasi';
     const env = {
       ...process.env,
-      CC_wasm32_wasip1: process.env.CC_wasm32_wasip1 || '/opt/homebrew/opt/llvm/bin/clang',
-      CFLAGS_wasm32_wasip1: process.env.CFLAGS_wasm32_wasip1 || '--sysroot=/opt/homebrew/share/wasi-sysroot',
+      CC_wasm32_wasip1: process.env.CC_wasm32_wasip1 || compiler,
+      CFLAGS_wasm32_wasip1: process.env.CFLAGS_wasm32_wasip1 || flags,
     };
 
     console.log('Building WASI (Node.js) binary...');
@@ -281,7 +288,7 @@ function buildWasi(cratePath, outDir) {
 // ── Main ───────────────────────────────────────────────────────────────────
 
 async function main() {
-  const buildWasiToo = process.argv.includes('--wasi');
+  const buildWasiToo = process.argv.includes('--wasi') || fs.existsSync(path.join(__dirname, '..', 'pkg', 'ducjs_wasi.wasm'));
   const manifestDir = __dirname;
   const packageRoot = path.join(manifestDir, '..');
   const schemaSqlPath = path.join(packageRoot, '..', '..', 'schema', 'duc.sql');
@@ -298,7 +305,7 @@ async function main() {
   // 1. Rebuild WASM from Rust crate (regenerates pkg/)
   await buildWasm(cratePath, pkgDir, wasmPackBin);
 
-  // 1b. Optionally build WASI binary for Node.js backend
+  // Keep an existing backend WASI binary paired with the browser serializer schema.
   if (buildWasiToo) {
     await buildWasi(cratePath, pkgDir);
   }
@@ -316,6 +323,7 @@ async function main() {
 
   // 4. Copy wasm artifacts to dist so TS emits stable dist-relative imports
   copyWasmArtifactsToDist(pkgDir, distDir);
+  await buildLocator(wasmPackBin, distDir);
 
   // 5. Run TypeScript compiler
   const env = {
@@ -326,7 +334,39 @@ async function main() {
 
   const tsc = spawn('npx', ['tsc'], { env, stdio: 'inherit' });
 
-  tsc.on('close', (code) => process.exit(code));
+  tsc.on('close', (code) => {
+    if (code !== 0) {
+      process.exit(code);
+    }
+
+    // 6. Bundle clientEntry.ts into dist/thumbnails/lib/clientBundle.min.js for headless thumbnail rendering
+    const clientEntrySrc = path.join(packageRoot, 'src', 'thumbnails', 'lib', 'clientEntry.ts');
+    const clientBundleDst = path.join(distDir, 'thumbnails', 'lib', 'clientBundle.min.js');
+    if (fs.existsSync(clientEntrySrc)) {
+      try {
+        fs.mkdirSync(path.dirname(clientBundleDst), { recursive: true });
+        console.log('Bundling clientEntry for headless thumbnails...');
+        const bundleProc = spawnSync(
+          'bun',
+          ['build', clientEntrySrc, '--target', 'browser', '--outfile', clientBundleDst, '--minify'],
+          { stdio: 'inherit' },
+        );
+        if (bundleProc.status === 0) {
+          console.log(`Client bundle: ${clientBundleDst} (${fs.statSync(clientBundleDst).size} bytes)`);
+        } else {
+          throw new Error(`Thumbnail client bundle failed with exit code ${bundleProc.status}`);
+        }
+      } catch (err) {
+        console.error('Failed to bundle thumbnail client:', err.message);
+        process.exit(1);
+      }
+    } else {
+      console.error(`Missing thumbnail client entry: ${clientEntrySrc}`);
+      process.exit(1);
+    }
+
+    process.exit(0);
+  });
   tsc.on('error', (error) => {
     console.error('Error running TypeScript compiler:', error);
     process.exit(1);

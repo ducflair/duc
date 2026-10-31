@@ -1,8 +1,9 @@
 import { ELEMENT_CONTENT_PREFERENCE, STROKE_JOIN, STROKE_PLACEMENT, STROKE_PREFERENCE, TEXT_ALIGN, VERTICAL_ALIGN } from "../enums";
-import { MAX_ZOOM, MIN_ZOOM, NEUTRAL_SCOPE } from "../technical/scopes";
-import { RawValue, ScopedValue } from "../types";
 import { DucElement, DucEllipseElement, DucFreeDrawElement, DucTextElement, ElementBackground, ElementStroke, FontFamilyValues } from "../types/elements";
 import { Percentage, Radian } from "../types/geometry.types";
+
+export const MIN_ZOOM = 1e-32;
+export const MAX_ZOOM = 1e32;
 
 
 export const COLOR_PALETTE = {
@@ -44,11 +45,9 @@ export const IMAGE_MIME_TYPES = {
 
 export const MIME_TYPES = {
   json: "application/json",
-  // excalidraw data
-  duc: "application/vnd.duc-cad",
+  duc: "application/vnd.duc",
   ducfig: "application/vnd.duc-config",
   excalidrawlib: "application/vnd.excalidrawlib+json",
-  // image-encoded excalidraw data
   "excalidraw.svg": "image/svg+xml",
   "excalidraw.png": "image/png",
   binary: "application/octet-stream",
@@ -106,7 +105,6 @@ export const VERSIONS = {
 export const DEFAULT_ZOOM_STEP = 0.1;
 export const MIN_ZOOM_STEP = 0.0000001;
 export const MAX_ZOOM_STEP = 5;
-export { MAX_ZOOM, MIN_ZOOM };
 
 
 export const BOUND_TEXT_PADDING = 5;
@@ -262,7 +260,7 @@ export const DEFAULT_FRAME_STYLE: {
       visible: true,
       opacity: 1 as Percentage,
     },
-    width: { value: 2 as RawValue, scoped: 2 as ScopedValue },
+    width: 2,
     style: {
       preference: STROKE_PREFERENCE.SOLID,
       join: STROKE_JOIN.MITER,
@@ -277,7 +275,7 @@ export const DEFAULT_FRAME_STYLE: {
       opacity: 0.1 as Percentage,
     },
   }],
-  roundness: { value: 0 as RawValue, scoped: 0 as ScopedValue },
+  roundness: 0,
   radius: 8,
   nameOffsetY: 3,
   nameColorLightTheme: "#80808080",
@@ -294,7 +292,6 @@ export const DEFAULT_ELEMENT_PROPS: {
   roundness: DucElement["roundness"];
   opacity: DucElement["opacity"];
   locked: DucElement["locked"];
-  scope: DucElement["scope"];
   index: DucElement["index"];
   width: DucElement["width"];
   height: DucElement["height"];
@@ -312,7 +309,7 @@ export const DEFAULT_ELEMENT_PROPS: {
       visible: true,
       opacity: 1 as Percentage,
     },
-    width: { value: 2 as RawValue, scoped: 2 as ScopedValue },
+    width: 2,
     style: {
       preference: STROKE_PREFERENCE.SOLID,
       join: STROKE_JOIN.MITER,
@@ -329,13 +326,12 @@ export const DEFAULT_ELEMENT_PROPS: {
   },
   isVisible: true,
   isPlot: true,
-  roundness: { value: 0 as RawValue, scoped: 0 as ScopedValue },
+  roundness: 0,
   opacity: 1 as Percentage,
   locked: false,
-  scope: NEUTRAL_SCOPE,
   index: null,
-  width: { value: 0 as RawValue, scoped: 0 as ScopedValue },
-  height: { value: 0 as RawValue, scoped: 0 as ScopedValue },
+  width: 0,
+  height: 0,
   angle: 0 as Radian,
   groupIds: [],
   frameId: null,
@@ -370,13 +366,13 @@ export const DEFAULT_LINEAR_ELEMENT_STROKE: ElementStroke = {
 };
 
 export const DEFAULT_FREEDRAW_ELEMENT: {
-  size: RawValue;
+  size: number;
   thinning: DucFreeDrawElement["thinning"];
   smoothing: DucFreeDrawElement["smoothing"];
   streamline: DucFreeDrawElement["streamline"];
   easing: DucFreeDrawElement["easing"];
 } = {
-  size: 2 as RawValue,
+  size: 2,
   thinning: 0.6 as Percentage,
   streamline: 0.5 as Percentage,
   smoothing: 0.5 as Percentage,
@@ -469,7 +465,7 @@ export const PREDEFINED_HATCH_PATTERNS = {
 //       visible: true,
 //       opacity: 1,
 //     },
-//     width: { value: 1, scoped: 1 },
+//     width: 1,
 //     style: {
 //       preference: "solid",
 //       scale: 1,

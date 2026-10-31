@@ -207,7 +207,6 @@ def main():
         duc.ElementBuilder()
         .at_position(-1409.5161844893837, -66.90854908297945)
         .with_size(309.36387103264786, 416.37129344905503)
-        .with_scope("m")
         .with_label("Elbow Duct Model")
         .with_styles(hvac_styles)
     )

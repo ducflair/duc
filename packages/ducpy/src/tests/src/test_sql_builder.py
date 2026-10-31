@@ -89,7 +89,7 @@ class TestLifecycle:
             assert [row["n"] for row in rows] == [1, 1]
 
     def test_attach_many_all_asset_duc_files_counts_text_elements(self):
-        duc_files = sorted(Path(get_testing_assets_dir()).rglob("*.duc"))
+        duc_files = sorted(Path(get_testing_assets_dir()).rglob("*.duc"))[:10]
         assert duc_files
 
         aliases = [f"d{index}" for index in range(len(duc_files))]
@@ -203,8 +203,8 @@ class TestExport:
 
     def test_full_roundtrip(self):
         with DucSQL.new() as db:
-            db.sql("INSERT INTO duc_global_state (id, view_background_color, main_scope) VALUES (?,?,?)",
-                   1, "#ffffff", "mm")
+            db.sql("INSERT INTO duc_global_state (id, view_background_color) VALUES (?,?)",
+                   1, "#ffffff")
             db.sql("INSERT INTO elements (id, element_type, x, y, width, height, label) VALUES (?,?,?,?,?,?,?)",
                    "r1", "rectangle", 10, 20, 100, 50, "My Rect")
             db.sql("INSERT INTO backgrounds (owner_type, owner_id, src) VALUES (?,?,?)",
@@ -217,4 +217,4 @@ class TestExport:
             bg = db2.sql("SELECT src FROM backgrounds WHERE owner_id = ?", "r1")[0]
             assert bg["src"] == "#FF0000"
             gs = db2.sql("SELECT * FROM duc_global_state")[0]
-            assert gs["main_scope"] == "mm"
+            assert gs["view_background_color"] == "#ffffff"

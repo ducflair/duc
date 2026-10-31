@@ -2,9 +2,6 @@
 Utility constants for DucPy package.
 """
 
-# Default scope for measurements
-DEFAULT_SCOPE = "mm"
-
 # Default colors
 DEFAULT_STROKE_COLOR = "#000000"
 DEFAULT_FILL_COLOR = "#ffffff"

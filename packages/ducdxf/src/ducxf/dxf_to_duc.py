@@ -41,15 +41,6 @@ ACI_TO_HEX = {
     # ... A more extensive list can be added for full coverage.
 }
 
-DXF_INSERT_UNITS = ezdxf.enums.InsertUnits
-INSUNITS_TO_DUC_UNITS = {
-    DXF_INSERT_UNITS.Unitless: "mm", DXF_INSERT_UNITS.Inches: "in", DXF_INSERT_UNITS.Feet: "ft", 
-    DXF_INSERT_UNITS.Miles: "mi", DXF_INSERT_UNITS.Millimeters: "mm", DXF_INSERT_UNITS.Centimeters: "cm", DXF_INSERT_UNITS.Meters: "m", DXF_INSERT_UNITS.Kilometers: "km",DXF_INSERT_UNITS.Microinches: "µin", 
-    DXF_INSERT_UNITS.Mils: "mil", DXF_INSERT_UNITS.Yards: "yd", DXF_INSERT_UNITS.Angstroms: "Å", 
-    DXF_INSERT_UNITS.Nanometers: "nm",DXF_INSERT_UNITS.Microns: "µm", DXF_INSERT_UNITS.Decimeters: "dm", 
-    DXF_INSERT_UNITS.Decameters: "dam", DXF_INSERT_UNITS.Hectometers: "hm", DXF_INSERT_UNITS.Gigameters: "Gm", DXF_INSERT_UNITS.AstronomicalUnits: "au", DXF_INSERT_UNITS.Lightyears: "ly", DXF_INSERT_UNITS.Parsecs: "pc", DXF_INSERT_UNITS.USSurveyFeet: "ft", DXF_INSERT_UNITS.USSurveyInch: "in", DXF_INSERT_UNITS.USSurveyYard: "yd", DXF_INSERT_UNITS.USSurveyMile: "mi",
-}
-
 DXF_LENGTH_UNITS = ezdxf.enums.LengthUnits
 LUNITS_TO_DUC = {
   DXF_LENGTH_UNITS.Scientific: DIMENSION_UNITS_FORMAT.SCIENTIFIC,
@@ -175,7 +166,6 @@ def convert_header(header, doc):
     use_annotative = cannoscale is not None
     
     duc_global_state = (duc.StateBuilder().build_global_state()
-        .with_main_scope(INSUNITS_TO_DUC_UNITS[units])
         .with_dash_spacing_scale(ltscale)
         .with_use_annotative_scaling(use_annotative)
         .build())
@@ -216,7 +206,6 @@ def convert_header(header, doc):
     celtscale = header.get("$CELTSCALE", 1.0)
     
     duc_local_state = (duc.StateBuilder().build_local_state()
-        .with_scope(INSUNITS_TO_DUC_UNITS[units])
         .with_outline_mode_enabled(outline_mode)
         .build())
     

@@ -4,8 +4,6 @@ import {
   LINE_SPACING_TYPE,
 } from "../../enums";
 
-import { getPrecisionValueFromRaw } from "../../technical/scopes";
-import { RawValue, Scope } from "../../types";
 import {
   DucArrowElement,
   DucDocElement,
@@ -86,11 +84,11 @@ export const newElementWith = <TElement extends DucElement>(
 
 const _newElementBase = <T extends DucElement>(
   type: T["type"],
-  currentScope: Scope,
-  {
+  opts: ElementConstructorOpts & Omit<Partial<DucGenericElement>, "type">,
+) => {
+  const {
     x,
     y,
-    scope = currentScope,
     zIndex,
     index = DEFAULT_ELEMENT_PROPS.index,
     label,
@@ -114,8 +112,8 @@ const _newElementBase = <T extends DucElement>(
     locked = DEFAULT_ELEMENT_PROPS.locked,
     description = null,
     ...rest
-  }: ElementConstructorOpts & Omit<Partial<DucGenericElement>, "type">,
-) => {
+  } = opts;
+
   // assign type to guard against excess properties
   const element: Merge<DucGenericElement, { type: T["type"] }> = {
     id: rest.id || randomId(),
@@ -136,7 +134,6 @@ const _newElementBase = <T extends DucElement>(
     frameId,
     roundness,
     label,
-    scope,
     seed: rest.seed ?? randomInteger(),
     version: rest.version || 1,
     versionNonce: rest.versionNonce ?? 0,
@@ -155,132 +152,127 @@ const _newElementBase = <T extends DucElement>(
   return element;
 };
 
-export const newElement = (
-  currentScope: Scope,
-  opts: {
-    type: DucGenericElement["type"];
-  } & ElementConstructorOpts,
-): NonDeleted<DucGenericElement> =>
-  _newElementBase<DucGenericElement>(opts.type, currentScope, opts);
+type NewGenericOpts = {
+  type: DucGenericElement["type"];
+} & ElementConstructorOpts;
 
-export const newEmbeddableElement = (
-  currentScope: Scope,
-  opts: {
-    type: "embeddable";
-  } & ElementConstructorOpts,
-): NonDeleted<DucEmbeddableElement> => {
+export function newElement(opts: NewGenericOpts): NonDeleted<DucGenericElement> {
+  return _newElementBase<DucGenericElement>(opts.type, opts);
+}
+
+type NewEmbeddableOpts = {
+  type: "embeddable";
+} & ElementConstructorOpts;
+
+export function newEmbeddableElement(opts: NewEmbeddableOpts): NonDeleted<DucEmbeddableElement> {
   return {
     ...opts,
-    ..._newElementBase<DucEmbeddableElement>(
-      opts.type,
-      currentScope,
-      opts,
-    ),
+    ..._newElementBase<DucEmbeddableElement>(opts.type, opts),
   };
-};
+}
 
-export const newFrameElement = (
-  currentScope: Scope,
-  opts: Partial<DucFrameElement> & ElementConstructorOpts,
-): NonDeleted<DucFrameElement> => ({
-  ...getDefaultStackProperties(),
-  clip: false,
-  labelVisible: true,
-  ..._newElementBase<DucFrameElement>("frame", currentScope, opts),
-  type: "frame",
-});
+type NewFrameOpts = Partial<DucFrameElement> & ElementConstructorOpts;
 
-export const newPlotElement = (
-  currentScope: Scope,
-  opts: Partial<DucPlotElement> & ElementConstructorOpts,
-): NonDeleted<DucPlotElement> => ({
-  ...getDefaultStackProperties(),
-  clip: false,
-  labelVisible: true,
-  layout: {
-    margins: {
-      top: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
-      right: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
-      bottom: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
-      left: getPrecisionValueFromRaw(0 as RawValue, currentScope, currentScope),
-    }
-  },
-  ..._newElementBase<DucPlotElement>("plot", currentScope, opts),
-  type: "plot",
-});
-
-export const newEllipseElement = (
-  currentScope: Scope,
-  opts: {
-    type: "ellipse";
-    ratio?: DucEllipseElement["ratio"];
-    startAngle?: DucEllipseElement["startAngle"];
-    endAngle?: DucEllipseElement["endAngle"];
-    showAuxCrosshair?: DucEllipseElement["showAuxCrosshair"];
-  } & ElementConstructorOpts,
-): NonDeleted<DucEllipseElement> => {
+export function newFrameElement(opts: NewFrameOpts): NonDeleted<DucFrameElement> {
   return {
-    ..._newElementBase<DucEllipseElement>(opts.type, currentScope, opts),
+    ...getDefaultStackProperties(),
+    clip: false,
+    labelVisible: true,
+    ..._newElementBase<DucFrameElement>("frame", opts),
+    type: "frame",
+  };
+}
+
+type NewPlotOpts = Partial<DucPlotElement> & ElementConstructorOpts;
+
+export function newPlotElement(opts: NewPlotOpts): NonDeleted<DucPlotElement> {
+  return {
+    ...getDefaultStackProperties(),
+    clip: false,
+    labelVisible: true,
+    layout: {
+      margins: {
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+      },
+    },
+    ..._newElementBase<DucPlotElement>("plot", opts),
+    type: "plot",
+  };
+}
+
+type NewEllipseOpts = {
+  type: "ellipse";
+  ratio?: DucEllipseElement["ratio"];
+  startAngle?: DucEllipseElement["startAngle"];
+  endAngle?: DucEllipseElement["endAngle"];
+  showAuxCrosshair?: DucEllipseElement["showAuxCrosshair"];
+} & ElementConstructorOpts;
+
+export function newEllipseElement(opts: NewEllipseOpts): NonDeleted<DucEllipseElement> {
+  return {
+    ..._newElementBase<DucEllipseElement>(opts.type, opts),
     ratio: opts.ratio || DEFAULT_ELLIPSE_ELEMENT.ratio,
     startAngle: opts.startAngle || DEFAULT_ELLIPSE_ELEMENT.startAngle,
     endAngle: opts.endAngle || DEFAULT_ELLIPSE_ELEMENT.endAngle,
     showAuxCrosshair: opts.showAuxCrosshair || DEFAULT_ELLIPSE_ELEMENT.showAuxCrosshair,
   };
-};
+}
 
-export const newPolygonElement = (
-  currentScope: Scope,
-  opts: {
-    type: "polygon";
-    sides?: DucPolygonElement["sides"];
-  } & ElementConstructorOpts,
-): NonDeleted<DucPolygonElement> => {
+type NewPolygonOpts = {
+  type: "polygon";
+  sides?: DucPolygonElement["sides"];
+} & ElementConstructorOpts;
+
+export function newPolygonElement(opts: NewPolygonOpts): NonDeleted<DucPolygonElement> {
   return {
-    ..._newElementBase<DucPolygonElement>(opts.type, currentScope, opts),
+    ..._newElementBase<DucPolygonElement>(opts.type, opts),
     sides: opts.sides || DEFAULT_POLYGON_SIDES,
   };
-};
+}
 
-export const newTextElement = (
-  currentScope: Scope,
-  opts: {
-    text: string;
-    originalText?: string;
-  } & Partial<DucTextElement> & ElementConstructorOpts,
-): NonDeleted<DucTextElement> => {
-  const scope = opts.scope ?? currentScope;
+type NewTextOpts = {
+  text: string;
+  originalText?: string;
+} & Partial<DucTextElement> & ElementConstructorOpts;
+
+export function newTextElement(opts: NewTextOpts): NonDeleted<DucTextElement> {
   const fontFamily = opts.fontFamily || (DEFAULT_FONT_FAMILY as string);
-  const fontSize = opts.fontSize || getPrecisionValueFromRaw(DEFAULT_FONT_SIZE as RawValue, scope, currentScope);
+  const fontSize = typeof opts.fontSize === "number" ? opts.fontSize : ((opts.fontSize as any)?.value ?? DEFAULT_FONT_SIZE);
   const lineHeight = opts.lineHeight || (1.2 as DucTextElement["lineHeight"]);
   const text = normalizeText(opts.text);
-  const metrics = measureText(text, getFontString({ fontFamily, fontSize }), lineHeight, currentScope);
+  const metrics = measureText(text, getFontString({ fontFamily, fontSize }), lineHeight);
   const textAlign = opts.textAlign || DEFAULT_TEXT_ALIGN;
   const verticalAlign = opts.verticalAlign || DEFAULT_VERTICAL_ALIGN;
   const offsets = getTextElementPositionOffsets({ textAlign, verticalAlign }, metrics);
 
   // Minimum dimensions: at least 1px wide, at least one line high (NaN-safe)
-  const rawMinLineHeight = fontSize.value * lineHeight;
+  const rawMinLineHeight = fontSize * lineHeight;
   const minLineHeight = (Number.isFinite(rawMinLineHeight) && rawMinLineHeight > 0)
     ? rawMinLineHeight
     : DEFAULT_FONT_SIZE * lineHeight;
-  const finalWidth = (Number.isFinite(metrics.width) && metrics.width > 0) ? metrics.width : 1 as RawValue;
+  const finalWidth = (Number.isFinite(metrics.width) && metrics.width > 0) ? metrics.width : 1;
   const finalHeight = (Number.isFinite(metrics.height) && metrics.height > 0)
-    ? Math.max(metrics.height, minLineHeight) as RawValue
-    : minLineHeight as RawValue;
+    ? Math.max(metrics.height, minLineHeight)
+    : minLineHeight;
 
-  const x = getPrecisionValueFromRaw(opts.x.value - offsets.x as RawValue, scope, currentScope);
-  const y = getPrecisionValueFromRaw(opts.y.value - offsets.y as RawValue, scope, currentScope);
+  const rawX = typeof opts.x === "number" ? opts.x : ((opts.x as any)?.value ?? 0);
+  const rawY = typeof opts.y === "number" ? opts.y : ((opts.y as any)?.value ?? 0);
+  const x = rawX - offsets.x;
+  const y = rawY - offsets.y;
 
   return {
-    ..._newElementBase<DucTextElement>("text", currentScope, { ...opts, x, y }),
+    ..._newElementBase<DucTextElement>("text", { ...opts, x, y }),
     type: "text",
     text,
     fontSize,
     fontFamily,
     textAlign,
     verticalAlign,
-    width: getPrecisionValueFromRaw(finalWidth, scope, currentScope),
-    height: getPrecisionValueFromRaw(finalHeight, scope, currentScope),
+    width: finalWidth,
+    height: finalHeight,
     containerId: opts.containerId || null,
     originalText: opts.originalText ?? text,
     autoResize: opts.autoResize ?? true,
@@ -294,20 +286,18 @@ export const newTextElement = (
     isUpsideDown: opts.isUpsideDown ?? false,
     isBackwards: opts.isBackwards ?? false,
   };
-};
+}
 
-export const newFreeDrawElement = (
-  currentScope: Scope,
-  opts: {
-    simulatePressure: boolean;
-  } & Partial<DucFreeDrawElement> & ElementConstructorOpts,
-): NonDeleted<DucFreeDrawElement> => {
-  const scope = opts.scope ?? currentScope;
+type NewFreeDrawOpts = {
+  simulatePressure: boolean;
+} & Partial<DucFreeDrawElement> & ElementConstructorOpts;
+
+export function newFreeDrawElement(opts: NewFreeDrawOpts): NonDeleted<DucFreeDrawElement> {
   return {
-    ..._newElementBase<DucFreeDrawElement>("freedraw", currentScope, opts),
+    ..._newElementBase<DucFreeDrawElement>("freedraw", opts),
     type: "freedraw",
     points: opts.points || [],
-    size: opts.size || getPrecisionValueFromRaw(DEFAULT_FREEDRAW_ELEMENT.size, scope, currentScope),
+    size: typeof opts.size === "number" ? opts.size : ((opts.size as any)?.value ?? DEFAULT_FREEDRAW_ELEMENT.size),
     pressures: opts.pressures || [],
     simulatePressure: opts.simulatePressure,
     thinning: opts.thinning ?? DEFAULT_FREEDRAW_ELEMENT.thinning,
@@ -319,37 +309,39 @@ export const newFreeDrawElement = (
     end: opts.end || null,
     svgPath: null,
   };
-};
+}
 
-export const newLinearElement = (
-  currentScope: Scope,
-  opts: Partial<DucLinearElement> & ElementConstructorOpts,
-): NonDeleted<DucLinearElement> => ({
-  ..._newElementBase<DucLinearElement>("line", currentScope, opts),
-  type: "line",
-  points: opts.points || [],
-  lines: opts.lines || [],
-  pathOverrides: opts.pathOverrides || [],
-  lastCommittedPoint: null,
-  startBinding: null,
-  endBinding: null,
-  wipeoutBelow: opts.wipeoutBelow ?? false,
-});
+type NewLinearOpts = Partial<DucLinearElement> & ElementConstructorOpts;
 
-export const newArrowElement = (
-  currentScope: Scope,
-  opts: Partial<DucArrowElement> & ElementConstructorOpts,
-): NonDeleted<DucArrowElement> => ({
-  ..._newElementBase<DucArrowElement>("arrow", currentScope, opts),
-  type: "arrow",
-  points: opts.points || [],
-  lines: opts.lines || [],
-  pathOverrides: opts.pathOverrides || [],
-  lastCommittedPoint: null,
-  startBinding: null,
-  endBinding: null,
-  elbowed: opts.elbowed ?? true,
-});
+export function newLinearElement(opts: NewLinearOpts): NonDeleted<DucLinearElement> {
+  return {
+    ..._newElementBase<DucLinearElement>("line", opts),
+    type: "line",
+    points: opts.points || [],
+    lines: opts.lines || [],
+    pathOverrides: opts.pathOverrides || [],
+    lastCommittedPoint: null,
+    startBinding: null,
+    endBinding: null,
+    wipeoutBelow: opts.wipeoutBelow ?? false,
+  };
+}
+
+type NewArrowOpts = Partial<DucArrowElement> & ElementConstructorOpts;
+
+export function newArrowElement(opts: NewArrowOpts): NonDeleted<DucArrowElement> {
+  return {
+    ..._newElementBase<DucArrowElement>("arrow", opts),
+    type: "arrow",
+    points: opts.points || [],
+    lines: opts.lines || [],
+    pathOverrides: opts.pathOverrides || [],
+    lastCommittedPoint: null,
+    startBinding: null,
+    endBinding: null,
+    elbowed: opts.elbowed ?? true,
+  };
+}
 
 const withDisabledContentVisibility = <T extends ElementBackground | ElementStroke>(
   items: readonly T[] | undefined,
@@ -385,70 +377,79 @@ const getDocumentElementStyle = (opts: ElementConstructorOpts) => ({
   background: withDisabledContentVisibility(opts.background as ElementBackground[] | undefined, DEFAULT_ELEMENT_PROPS.background),
 });
 
-export const newImageElement = (
-  currentScope: Scope,
-  opts: Partial<DucImageElement> & ElementConstructorOpts,
-): NonDeleted<DucImageElement> => ({
-  ..._newElementBase<DucImageElement>("image", currentScope, {
-    ...opts,
-    ...getMediaElementStyle(opts),
-  }),
-  type: "image",
-  status: opts.status ?? IMAGE_STATUS.PENDING,
-  fileId: opts.fileId ?? null,
-  scaleFlip: opts.scaleFlip ?? [1, 1],
-  crop: null,
-  filter: null,
-});
+type NewImageOpts = Partial<DucImageElement> & ElementConstructorOpts;
 
-export const newTableElement = (
-  currentScope: Scope,
-  opts: Partial<DucTableElement> & ElementConstructorOpts,
-): NonDeleted<DucTableElement> => ({
-  ..._newElementBase<DucTableElement>("table", currentScope, opts),
-  fileId: opts.fileId ?? null,
-  gridConfig: {
-    columns: opts.gridConfig?.columns ?? 1,
-    gapX: opts.gridConfig?.gapX ?? 0,
-    gapY: opts.gridConfig?.gapY ?? 0,
-    firstPageAlone: opts.gridConfig?.firstPageAlone ?? false,
-    scale: opts.gridConfig?.scale ?? 1,
-  },
-  type: "table",
-});
+export function newImageElement(opts: NewImageOpts): NonDeleted<DucImageElement> {
+  return {
+    ..._newElementBase<DucImageElement>("image", {
+      ...opts,
+      ...getMediaElementStyle(opts),
+    }),
+    type: "image",
+    status: opts.status ?? IMAGE_STATUS.PENDING,
+    fileId: opts.fileId ?? null,
+    scaleFlip: opts.scaleFlip ?? [1, 1],
+    crop: null,
+    filter: null,
+  };
+}
 
-export const newDocElement = (
-  currentScope: Scope,
-  opts: Partial<DucDocElement> & ElementConstructorOpts,
-): NonDeleted<DucDocElement> => ({
-  ..._newElementBase<DucDocElement>("doc", currentScope, {
-    ...opts,
-    ...getDocumentElementStyle(opts),
-  }),
-  type: "doc",
-  text: opts.text || "",
-  fileId: opts.fileId ?? null,
-  referencedFileIds: opts.referencedFileIds ?? [],
-  gridConfig: {
-    columns: opts.gridConfig?.columns ?? 1,
-    gapX: opts.gridConfig?.gapX ?? 0,
-    gapY: opts.gridConfig?.gapY ?? 0,
-    firstPageAlone: opts.gridConfig?.firstPageAlone ?? false,
-    scale: opts.gridConfig?.scale ?? 1,
-  },
-});
+type NewTableOpts = Partial<DucTableElement> & ElementConstructorOpts;
 
-export const newPdfElement = (currentScope: Scope, opts: Partial<DucPdfElement> & ElementConstructorOpts): NonDeleted<DucPdfElement> => ({
-  fileId: null,
-  gridConfig: { columns: 1, gapX: 0, gapY: 0, firstPageAlone: false, scale: 1 },
-  ..._newElementBase<DucPdfElement>("pdf", currentScope, {
-    ...opts,
-    ...getDocumentElementStyle(opts),
-  }),
-  type: "pdf",
-});
+export function newTableElement(opts: NewTableOpts): NonDeleted<DucTableElement> {
+  return {
+    ..._newElementBase<DucTableElement>("table", opts),
+    fileId: opts.fileId ?? null,
+    gridConfig: {
+      columns: opts.gridConfig?.columns ?? 1,
+      gapX: opts.gridConfig?.gapX ?? 0,
+      gapY: opts.gridConfig?.gapY ?? 0,
+      firstPageAlone: opts.gridConfig?.firstPageAlone ?? false,
+      scale: opts.gridConfig?.scale ?? 1,
+    },
+    type: "table",
+  };
+}
 
-export const newModelElement = (currentScope: Scope, opts: Partial<DucModelElement> & ElementConstructorOpts): NonDeleted<DucModelElement> => {
+type NewDocOpts = Partial<DucDocElement> & ElementConstructorOpts;
+
+export function newDocElement(opts: NewDocOpts): NonDeleted<DucDocElement> {
+  return {
+    ..._newElementBase<DucDocElement>("doc", {
+      ...opts,
+      ...getDocumentElementStyle(opts),
+    }),
+    type: "doc",
+    text: opts.text || "",
+    fileId: opts.fileId ?? null,
+    referencedFileIds: opts.referencedFileIds ?? [],
+    gridConfig: {
+      columns: opts.gridConfig?.columns ?? 1,
+      gapX: opts.gridConfig?.gapX ?? 0,
+      gapY: opts.gridConfig?.gapY ?? 0,
+      firstPageAlone: opts.gridConfig?.firstPageAlone ?? false,
+      scale: opts.gridConfig?.scale ?? 1,
+    },
+  };
+}
+
+type NewPdfOpts = Partial<DucPdfElement> & ElementConstructorOpts;
+
+export function newPdfElement(opts: NewPdfOpts): NonDeleted<DucPdfElement> {
+  return {
+    fileId: null,
+    gridConfig: { columns: 1, gapX: 0, gapY: 0, firstPageAlone: false, scale: 1 },
+    ..._newElementBase<DucPdfElement>("pdf", {
+      ...opts,
+      ...getDocumentElementStyle(opts),
+    }),
+    type: "pdf",
+  };
+}
+
+type NewModelOpts = Partial<DucModelElement> & ElementConstructorOpts;
+
+export function newModelElement(opts: NewModelOpts): NonDeleted<DucModelElement> {
   const modelType = (opts as Partial<DucModelElement>).modelType?.toLowerCase();
   const backgroundFallback = modelType === "dxf" || modelType === "dwg"
     ? getDxfDefaultBackground()
@@ -464,13 +465,13 @@ export const newModelElement = (currentScope: Scope, opts: Partial<DucModelEleme
     thumbnail: null,
     fileIds: [],
     viewerState: null,
-    ..._newElementBase<DucModelElement>("model", currentScope, {
+    ..._newElementBase<DucModelElement>("model", {
       ...opts,
       ...modelStyle,
     }),
     type: 'model',
   };
-};
+}
 
 // Simplified deep clone for the purpose of cloning DucElement.
 //

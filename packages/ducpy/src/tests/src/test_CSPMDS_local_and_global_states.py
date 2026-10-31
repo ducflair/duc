@@ -50,10 +50,8 @@ def test_cspmds_local_and_global_states(test_output_dir):
         .with_readonly(False)
         .with_extra(
             view_background_color="#FFFFFF",
-            main_scope="mm",
             dash_spacing_scale=1.0,
             is_dash_spacing_affected_by_viewport_scale=False,
-            scope_exponent_threshold=6,
             dimensions_associative_by_default=True,
             use_annotative_scaling=False,
             linear_precision=2,
@@ -69,7 +67,6 @@ def test_cspmds_local_and_global_states(test_output_dir):
         .with_version("1.0")
         .with_readonly(False)
         .with_extra(
-            scope="mm",
             active_standard_id="default",
             scroll_x=0.0,
             scroll_y=0.0,
@@ -115,11 +112,8 @@ def test_cspmds_local_and_global_states(test_output_dir):
     
     # === MUTATE ===
     print("🔧 MUTATE: Modifying state properties...")
-    # Access the main_scope through the extra attributes
-    if hasattr(parsed_global_state, 'main_scope'):
-        mutate_builder.mutate_global_state(parsed_global_state, main_scope="cm")
-    if hasattr(parsed_local_state, 'scope'):
-        mutate_builder.mutate_local_state(parsed_local_state, scope="cm")
+    mutate_builder.mutate_global_state(parsed_global_state, view_background_color="#123456")
+    mutate_builder.mutate_local_state(parsed_local_state, zoom=2.0)
     print("✅ Mutated state properties")
     
     # === DELETE ===
@@ -168,19 +162,19 @@ def test_local_and_global_states_via_sql():
         # Insert global state
         db.sql(
             "INSERT INTO duc_global_state "
-            "(id, view_background_color, main_scope, scope_exponent_threshold) "
-            "VALUES (?,?,?,?)",
-            1, "#FFFFFF", "mm", 6,
+            "(id, view_background_color) "
+            "VALUES (?,?)",
+            1, "#FFFFFF",
         )
 
         # Insert local state
         db.sql(
             "INSERT INTO duc_local_state "
-            "(id, scope, scroll_x, scroll_y, zoom, is_binding_enabled, "
+            "(id, scroll_x, scroll_y, zoom, is_binding_enabled, "
             "pen_mode, view_mode_enabled, objects_snap_mode_enabled, grid_mode_enabled, "
             "outline_mode_enabled, decimal_places) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-            1, "mm", 0.0, 0.0, 1.0, 1, 0, 0, 1, 1, 0, 2,
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            1, 0.0, 0.0, 1.0, 1, 0, 0, 1, 1, 0, 2,
         )
 
         # Add default current-item stroke/background via duc_local_state owner
@@ -196,16 +190,15 @@ def test_local_and_global_states_via_sql():
         # Verify
         gs = db.sql("SELECT * FROM duc_global_state")[0]
         assert gs["view_background_color"] == "#FFFFFF"
-        assert gs["main_scope"] == "mm"
 
         ls = db.sql("SELECT * FROM duc_local_state")[0]
         assert ls["zoom"] == 1.0
         assert ls["is_binding_enabled"] == 1
 
         # Mutate global state
-        db.sql("UPDATE duc_global_state SET main_scope = ?, view_background_color = ? WHERE id = 1", "cm", "#F0F0F0")
+        db.sql("UPDATE duc_global_state SET view_background_color = ? WHERE id = 1", "#F0F0F0")
         gs2 = db.sql("SELECT * FROM duc_global_state")[0]
-        assert gs2["main_scope"] == "cm" and gs2["view_background_color"] == "#F0F0F0"
+        assert gs2["view_background_color"] == "#F0F0F0"
 
         # Mutate local state
         db.sql("UPDATE duc_local_state SET zoom = ?, scroll_x = ?, scroll_y = ? WHERE id = 1", 2.5, 100.0, -50.0)
@@ -216,7 +209,7 @@ def test_local_and_global_states_via_sql():
 
     # Roundtrip
     with DucSQL.from_bytes(raw) as db2:
-        assert db2.sql("SELECT main_scope FROM duc_global_state")[0][0] == "cm"
+        assert db2.sql("SELECT view_background_color FROM duc_global_state")[0][0] == "#F0F0F0"
         assert db2.sql("SELECT zoom FROM duc_local_state")[0][0] == 2.5
 
 

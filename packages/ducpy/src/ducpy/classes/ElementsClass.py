@@ -223,7 +223,6 @@ class DucElementBase:
     width: float
     height: float
     angle: float
-    scope: str
     label: str
     is_visible: bool
     seed: int

@@ -16,11 +16,13 @@ from ducpy.search import (
     search_duc_models,
 )
 
+from _dev.dev_utils import get_duc_fixture_path
+
 ASSET = "universal.duc"
 
 
 def _asset_input_path(filename: str) -> Path:
-    return Path(__file__).resolve().parents[5] / "assets" / "testing" / "duc-files" / filename
+    return get_duc_fixture_path(filename)
 
 
 def _model_by_label(parsed_asset: dict, label: str) -> dict:

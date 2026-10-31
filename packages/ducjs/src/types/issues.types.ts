@@ -1,4 +1,4 @@
-import { Actor, Scope, Viewer3DState } from ".";
+import { Actor, Viewer3DState } from ".";
 
 
 
@@ -28,7 +28,6 @@ export type DucIssueAnchor =
     /** Canvas location in drawing units. */
     x: number;
     y: number;
-    scope?: Scope;
   }
   | {
     type: "element";
