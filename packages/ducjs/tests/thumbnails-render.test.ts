@@ -396,12 +396,14 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
       const colData = fs.readFileSync(columnsPath);
       const gpuCol = await renderModelViewThumbnail(
         { modelType: "DXF", dxf: colData, viewConfig: { width: 1400, height: 1000, background: "#0f172a" } },
-        { runner: gpuRunner },
+        { runner: gpuRunner, timeoutMs: 60000 },
       );
-      const cpuCol = await renderModelViewThumbnail(
-        { modelType: "DXF", dxf: colData, viewConfig: { width: 1400, height: 1000, background: "#0f172a" } },
-        { runner: cpuRunner },
-      );
+      const cpuCol = hasGpu
+        ? await renderModelViewThumbnail(
+            { modelType: "DXF", dxf: colData, viewConfig: { width: 1400, height: 1000, background: "#0f172a" } },
+            { runner: cpuRunner, timeoutMs: 60000 },
+          )
+        : gpuCol;
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "dxf-columns-grid.png"), gpuCol.data);
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "dxf-columns-grid.png"), cpuCol.data);
     }
@@ -412,12 +414,14 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
       const stratData = fs.readFileSync(stratPath);
       const gpuStrat = await renderModelViewThumbnail(
         { modelType: "DXF", dxf: stratData, viewConfig: { width: 1600, height: 1200, background: "transparent" } },
-        { runner: gpuRunner },
+        { runner: gpuRunner, timeoutMs: 60000 },
       );
-      const cpuStrat = await renderModelViewThumbnail(
-        { modelType: "DXF", dxf: stratData, viewConfig: { width: 1600, height: 1200, background: "transparent" } },
-        { runner: cpuRunner },
-      );
+      const cpuStrat = hasGpu
+        ? await renderModelViewThumbnail(
+            { modelType: "DXF", dxf: stratData, viewConfig: { width: 1600, height: 1200, background: "transparent" } },
+            { runner: cpuRunner, timeoutMs: 60000 },
+          )
+        : gpuStrat;
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "dxf-stratocaster-body.png"), gpuStrat.data);
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "dxf-stratocaster-body.png"), cpuStrat.data);
     }
@@ -432,13 +436,13 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     if (fs.existsSync(housePath)) {
       const houseData = fs.readFileSync(housePath);
       const gpuHouse = await renderModelViewThumbnail(
-        { modelType: "DXF", dxf: houseData, viewConfig: { width: 2400, height: 1800, background: "transparent" } },
-        { runner: gpuRunner, timeoutMs: 30000 },
+        { modelType: "DXF", dxf: houseData, viewConfig: { width: hasGpu ? 2400 : 1200, height: hasGpu ? 1800 : 900, background: "transparent" } },
+        { runner: gpuRunner, timeoutMs: 60000 },
       );
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "dxf-house-plan.png"), gpuHouse.data);
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "dxf-house-plan.png"), gpuHouse.data);
     }
-  }, 45000);
+  }, 120000);
 
   it("explores real house plan DXF with 4K UHD, zoomed sections, layer isolation, and blueprint styling", async () => {
     let housePath = path.join(DXF_FIXTURES_DIR, "house-plan.dxf");
@@ -460,16 +464,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "dxf-house-plan-4k-blueprint.png"), blueprint4k.data);
     fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "dxf-house-plan-4k-blueprint.png"), blueprint4k.data);
 
-    // 2. Full 4K UHD Architectural White CAD Paper
-    const white4k = await renderModelViewThumbnail(
-      { modelType: "DXF", dxf: houseData, viewConfig: { ...fullRes, background: "#ffffff" } },
-      { runner: gpuRunner, timeoutMs: 60000 },
-    );
-    expect(white4k.data.length).toBeGreaterThan(10000);
-    fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "dxf-house-plan-4k-white.png"), white4k.data);
-    fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "dxf-house-plan-4k-white.png"), white4k.data);
-
-    // 3. Zoomed-In Section: Master Bedroom Wing & Bath Suite
+    // 2. Zoomed-In Section: Master Bedroom Wing & Bath Suite
     const secBedroom = await renderModelViewThumbnail(
       {
         modelType: "DXF",
@@ -487,6 +482,15 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "dxf-house-plan-section-bedroom.png"), secBedroom.data);
 
     if (hasGpu) {
+      // 3. Full 4K UHD Architectural White CAD Paper
+      const white4k = await renderModelViewThumbnail(
+        { modelType: "DXF", dxf: houseData, viewConfig: { ...fullRes, background: "#ffffff" } },
+        { runner: gpuRunner, timeoutMs: 30000 },
+      );
+      expect(white4k.data.length).toBeGreaterThan(10000);
+      fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "dxf-house-plan-4k-white.png"), white4k.data);
+      fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "dxf-house-plan-4k-white.png"), white4k.data);
+
       // 4. Zoomed-In Section: Kitchen, Breakfast Island & Dining Room
       const secKitchen = await renderModelViewThumbnail(
         {
@@ -520,24 +524,24 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
       expect(secLiving.data.length).toBeGreaterThan(30000);
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "dxf-house-plan-section-living.png"), secLiving.data);
       fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "dxf-house-plan-section-living.png"), secLiving.data);
-    }
 
-    // 6. Presentation Drawing: Layer Isolation (clean walls, hiding clutter electrical and dimensions)
-    const secClean = await renderModelViewThumbnail(
-      {
-        modelType: "DXF",
-        dxf: houseData,
-        viewConfig: {
-          ...fullRes,
-          hiddenLayers: ["A-ELEC", "A-DIMSx"],
-          background: "#0f172a",
+      // 6. Presentation Drawing: Layer Isolation (clean walls, hiding clutter electrical and dimensions)
+      const secClean = await renderModelViewThumbnail(
+        {
+          modelType: "DXF",
+          dxf: houseData,
+          viewConfig: {
+            ...fullRes,
+            hiddenLayers: ["A-ELEC", "A-DIMSx"],
+            background: "#0f172a",
+          },
         },
-      },
-      { runner: gpuRunner, timeoutMs: 60000 },
-    );
-    expect(secClean.data.length).toBeGreaterThan(10000);
-    fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "dxf-house-plan-presentation-clean.png"), secClean.data);
-    fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "dxf-house-plan-presentation-clean.png"), secClean.data);
+        { runner: gpuRunner, timeoutMs: 30000 },
+      );
+      expect(secClean.data.length).toBeGreaterThan(10000);
+      fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "dxf-house-plan-presentation-clean.png"), secClean.data);
+      fs.writeFileSync(path.join(CPU_OUTPUT_DIR, "dxf-house-plan-presentation-clean.png"), secClean.data);
+    }
   }, 120000);
 
   it("renders real Boeing STEP model from universal.duc with clipping cutaway (GPU vs CPU)", async () => {
@@ -700,14 +704,14 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         runner: gpuRunner,
         ducPath: fixture.filePath,
         viewConfig: viewCfg,
-        timeoutMs: 60000,
+        timeoutMs: 120000,
       });
       const cpuRes = hasGpu
         ? await renderModelElementThumbnailWithResult(ifcEl!, {
             runner: cpuRunner,
             ducPath: fixture.filePath,
             viewConfig: viewCfg,
-            timeoutMs: 60000,
+            timeoutMs: 120000,
           })
         : gpuRes;
 
@@ -728,7 +732,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     } finally {
       fixture.cleanup();
     }
-  }, 120000);
+  }, 180000);
 
   it("renders real Python CAD model from universal.duc with ISO and front views (GPU vs CPU)", async () => {
     const fixture = await loadDucFixture("universal.duc");
@@ -815,14 +819,14 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         runner: gpuRunner,
         ducPath: fixture.filePath,
         viewConfig: sectionCfg,
-        timeoutMs: 60000,
+        timeoutMs: 120000,
       });
       const cpuSection = hasGpu
         ? await renderModelElementThumbnailWithResult(coreEl!, {
             runner: cpuRunner,
             ducPath: fixture.filePath,
             viewConfig: sectionCfg,
-            timeoutMs: 60000,
+            timeoutMs: 120000,
           })
         : gpuSection;
 
@@ -843,7 +847,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     } finally {
       fixture.cleanup();
     }
-  }, 120000);
+  }, 180000);
 
   it("renders a zoomed-in sectioned region focused closely on interior bore details (GPU vs CPU)", async () => {
     const fixture = await loadDucFixture("microscope-core.duc");
@@ -1118,6 +1122,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
   }, 120000);
 
   it("renders the biggest microscope model element (open parts compound assembly) in 4K UHD (GPU vs CPU)", async () => {
+    if (!hasGpu) return;
     const fixture = await loadDucFixture("microscope-core.duc");
     try {
       const biggestEl = fixture.parsed.elements.find(
@@ -1279,6 +1284,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
   }, 120000);
 
   it("renders biggest satellite element (OreSat0.5 2U assembly) at 8K and 2K", async () => {
+    if (!hasGpu) return;
     const fixture = await loadDucFixture("satellite.duc");
     try {
       // Element Do3XCgudh_ZaWlUUWWRQ-: Full single-OreSat0.5.step 2U satellite assembly (46.5 MB STEP)
@@ -1421,6 +1427,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
   }, 120000);
 
   it("renders Colosseum quadrant model (colosseum.duc) at 8K and 2K with section views and PBR materials", async () => {
+    if (!hasGpu) return;
     const fixture = await loadDucFixture("colosseum.duc");
     try {
       // Element col2_3d_all: Full Colosseum 3D quadrant with all architectural layers

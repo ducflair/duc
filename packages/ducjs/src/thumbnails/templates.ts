@@ -533,11 +533,14 @@ export function getDxfDefaultFontDataUrl(): string | null {
 
   const fontCandidates = [
     process.env.DUC_DXF_FONT_PATH,
+    path.resolve(CURRENT_DIR, "../../../../assets/fonts/RobotoMono-Variable.ttf"),
     path.resolve(CURRENT_DIR, "../../../assets/fonts/RobotoMono-Variable.ttf"),
     path.resolve(CURRENT_DIR, "../../assets/fonts/RobotoMono-Variable.ttf"),
     path.resolve(CURRENT_DIR, "../assets/fonts/RobotoMono-Variable.ttf"),
     path.resolve(process.cwd(), "assets/fonts/RobotoMono-Variable.ttf"),
+    path.resolve(process.cwd(), "../assets/fonts/RobotoMono-Variable.ttf"),
     path.resolve(process.cwd(), "../../assets/fonts/RobotoMono-Variable.ttf"),
+    path.resolve(process.cwd(), "../../../assets/fonts/RobotoMono-Variable.ttf"),
     path.resolve(process.cwd(), "../dxf-renderer/demo/fonts/Roboto-Regular.ttf"),
     path.resolve(process.cwd(), "../../dxf-renderer/demo/fonts/Roboto-Regular.ttf"),
     "/System/Library/Fonts/Supplemental/Arial.ttf",
@@ -597,14 +600,15 @@ export function buildDxfViewerHtml(
         "complex",
       ],
     });
+  } else {
+    // Online/CDN fallback fonts for symbols, Greek math, and extended unicode if no local font
+    fontSources.push(
+      "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
+      "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/hinted/ttf/NotoSansSymbols/NotoSansSymbols-Regular.ttf",
+      "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/hinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf",
+      "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/hinted/ttf/NotoSansMath/NotoSansMath-Regular.ttf",
+    );
   }
-  // Online/CDN fallback fonts for symbols, Greek math, and extended unicode
-  fontSources.push(
-    "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
-    "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/hinted/ttf/NotoSansSymbols/NotoSansSymbols-Regular.ttf",
-    "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/hinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf",
-    "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/hinted/ttf/NotoSansMath/NotoSansMath-Regular.ttf",
-  );
   const fontsJson = safeJsonStringify(fontSources);
 
   return `<!DOCTYPE html>

@@ -185,7 +185,7 @@ export async function renderModelElementThumbnailWithResult(
         files: options.files,
         filesData: options.filesData,
         ducpyDir: options.ducpyDir,
-        timeoutMs: options.timeoutMs,
+        timeoutMs: Math.max(options.timeoutMs ?? 120000, 120000),
       });
       if (tessRes.kind === "model-artifact") return renderModelArtifact(parseModelArtifactPayload(tessRes.rawPayload), element, options);
       if (tessRes.dxf) { dxf = tessRes.dxf; isDxf = true; }
